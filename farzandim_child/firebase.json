@@ -1,0 +1,25 @@
+{
+  "firestore": {
+    "indexes": "firestore.indexes.json"
+  },
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "farzandim-mvp",
+          "appId": "1:163835260058:android:bc9bac1f0fc5e301d30323",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "farzandim-mvp",
+          "configurations": {
+            "android": "1:163835260058:android:bc9bac1f0fc5e301d30323",
+            "ios": "1:163835260058:ios:7b98e6fe27d4840bd30323"
+          }
+        }
+      }
+    }
+  }
+}

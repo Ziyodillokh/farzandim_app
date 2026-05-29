@@ -1,0 +1,130 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <!-- Internet — Firebase, Firestore, FCM uchun -->
+    <uses-permission android:name="android.permission.INTERNET"/>
+
+    <!-- Joylashuv — bola haqida ota-onaga xabar berish -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
+
+    <!-- Kamera — kelajak foto so'rovlari uchun -->
+    <uses-permission android:name="android.permission.CAMERA"/>
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+    <uses-feature android:name="android.hardware.camera"/>
+
+    <!-- Bildirishnomalar — Android 13+ runtime ruxsati -->
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+
+    <!-- Wi-Fi va tarmoq holati — DeviceInfoService uchun -->
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+
+    <!-- Foreground Service (8.F) — bola joylashuvini doimiy kuzatish -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <uses-permission android:name="android.permission.WAKE_LOCK"/>
+
+    <!-- Auto-start at boot -->
+    <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
+
+    <!-- Battery optimization istisno so'rash -->
+    <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
+
+    <!-- App Restrictions Bosqich 1: foydalanish statistikasi -->
+    <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
+        tools:ignore="ProtectedPermissions"/>
+    <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
+        tools:ignore="QueryAllPackagesPermission"/>
+
+    <!-- SIM kartadan telefon raqamini o'qish (Sprint 4.1 SOS dialer):
+         Android 8+ uchun READ_PHONE_NUMBERS, eski versiyalar uchun
+         READ_PHONE_STATE fallback. SimInfoPlugin shu permission'ni
+         tekshirib SIM'dan raqamni o'qiydi. iOS'da bunday API yo'q. -->
+    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
+    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+
+    <!-- App Restrictions Bosqich 4A: overlay + restriction FGS -->
+    <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
+    <!-- Faqat Android 14+ (API 34+) majburiy — eski versiyalarda ignor qilinadi -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
+        android:minSdkVersion="34"
+        tools:ignore="UnusedAttribute"/>
+
+    <application
+        android:label="farzandim_child"
+        android:name="${applicationName}"
+        android:icon="@mipmap/ic_launcher">
+        <activity
+            android:name=".MainActivity"
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:taskAffinity=""
+            android:theme="@style/LaunchTheme"
+            android:configChanges="orientation|keyboardHidden|keyboard|screenSize|smallestScreenSize|locale|layoutDirection|fontScale|screenLayout|density|uiMode"
+            android:hardwareAccelerated="true"
+            android:windowSoftInputMode="adjustResize">
+            <!-- Specifies an Android theme to apply to this Activity as soon as
+                 the Android process has started. This theme is visible to the user
+                 while the Flutter UI initializes. After that, this theme continues
+                 to determine the Window background behind the Flutter UI. -->
+            <meta-data
+              android:name="io.flutter.embedding.android.NormalTheme"
+              android:resource="@style/NormalTheme"
+              />
+            <intent-filter>
+                <action android:name="android.intent.action.MAIN"/>
+                <category android:name="android.intent.category.LAUNCHER"/>
+            </intent-filter>
+        </activity>
+        <!-- Don't delete the meta-data below.
+             This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
+        <meta-data
+            android:name="flutterEmbedding"
+            android:value="2" />
+
+        <!-- FCM default notification channel — Parent App'dan kelgan
+             voice/video/photo push'larini ushbu high-importance channel
+             orqali ko'rsatish. FcmService runtime'da yaratadi. -->
+        <meta-data
+            android:name="com.google.firebase.messaging.default_notification_channel_id"
+            android:value="farzandim_child_default"/>
+
+        <!-- flutter_foreground_task — Foreground Service tipini
+             location+dataSync ga override qilish (Android 14+).
+             Plugin'ning o'z service'i qayta ro'yxatdan o'tkaziladi. -->
+        <service
+            android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
+            android:foregroundServiceType="location|dataSync"
+            android:exported="false"
+            android:stopWithTask="false"
+            tools:replace="android:foregroundServiceType" />
+
+        <!-- App Restrictions Bosqich 4A: cheklov xizmati.
+             foregroundServiceType="specialUse" + property — faqat Android 14+ uchun.
+             Eski Android versiyalarida bu atributlar ignor qilinadi. -->
+        <service
+            android:name=".RestrictionService"
+            android:exported="false"
+            android:foregroundServiceType="specialUse"
+            tools:targetApi="34">
+            <property
+                android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
+                android:value="App restriction enforcement for parental control"
+                tools:targetApi="34"/>
+        </service>
+    </application>
+    <!-- Required to query activities that can process text, see:
+         https://developer.android.com/training/package-visibility and
+         https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
+
+         In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
+    <queries>
+        <intent>
+            <action android:name="android.intent.action.PROCESS_TEXT"/>
+            <data android:mimeType="text/plain"/>
+        </intent>
+    </queries>
+</manifest>

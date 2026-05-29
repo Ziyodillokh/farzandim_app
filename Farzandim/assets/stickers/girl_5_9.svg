@@ -1,0 +1,12 @@
+<svg width="200" height="200" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <title>Girl 5-9 years</title>
+  <circle cx="50" cy="50" r="50" fill="#1C1C24"/>
+  <path d="M 24,44 Q 22,18 50,18 Q 78,18 76,44 Q 76,68 50,72 Q 24,68 24,44 Z" fill="#3D2A1F"/>
+  <circle cx="50" cy="46" r="20" fill="#FBCFB0"/>
+  <circle cx="42" cy="48" r="2" fill="#2A2A35"/>
+  <circle cx="58" cy="48" r="2" fill="#2A2A35"/>
+  <path d="M 45,56 Q 50,58 55,56" stroke="#2A2A35" stroke-width="1.5" fill="none" stroke-linecap="round"/>
+  <path d="M 30,90 Q 30,72 50,68 Q 70,72 70,90 Z" fill="#F5A2C8"/>
+  <circle cx="22" cy="36" r="6" fill="#3D2A1F"/>
+  <circle cx="78" cy="36" r="6" fill="#3D2A1F"/>
+</svg>

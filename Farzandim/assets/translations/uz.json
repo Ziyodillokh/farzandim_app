@@ -1,0 +1,521 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Bekor qilish",
+    "save": "Saqlash",
+    "delete": "O'chirish",
+    "edit": "Tahrirlash",
+    "back": "Orqaga",
+    "next": "Keyingi",
+    "confirm": "Tasdiqlash",
+    "yes": "Ha",
+    "no": "Yo'q",
+    "loading": "Yuklanmoqda...",
+    "error": "Xato",
+    "retry": "Qayta urinish",
+    "close": "Yopish"
+  },
+  "languages": {
+    "uz": "O'zbekcha",
+    "ru": "Ruscha",
+    "en": "Inglizcha"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Xush kelibsiz",
+      "subtitle": "Farzandingizni onlayn himoya qiling",
+      "signUpButton": "Ro'yxatdan o'tish",
+      "signInButton": "Akkauntga kirish",
+      "continueButton": "Telegram orqali davom etish"
+    },
+    "signIn": {
+      "title": "Akkauntga kirish",
+      "emailLabel": "Email manzil",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Parol",
+      "forgotPassword": "Parolingizni unutdingizmi?",
+      "submitButton": "Akkauntga kirish"
+    },
+    "signUp": {
+      "title": "Ro'yxatdan o'tish",
+      "phoneTab": "Telefon raqam",
+      "emailTab": "Elektron pochta",
+      "phoneLabel": "Telefon raqam",
+      "phoneHint": "90 123 45 67",
+      "emailLabel": "Email manzil",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Parol",
+      "passwordHint": "Kamida 6 belgi",
+      "continueButton": "Davom etish",
+      "consent": {
+        "prefix": "Men ",
+        "privacy": "Maxfiylik siyosati",
+        "and": " va ",
+        "terms": "Foydalanish shartlari",
+        "suffix": "ni o'qib chiqdim va qabul qilaman."
+      }
+    },
+    "forgotPassword": {
+      "title": "Parolni tiklash",
+      "subtitle": "Email manzilingizni kiriting,\nparolni tiklash havolasi yuboriladi.",
+      "emailLabel": "Email manzil",
+      "emailHint": "email@example.com",
+      "submitButton": "Reset linkini yuborish",
+      "remembered": "Esladingizmi? ",
+      "backToSignIn": "Akkauntga kirish",
+      "dialog": {
+        "title": "Email yuborildi",
+        "content": "Parolni tiklash havolasi {email} manziliga yuborildi. Email'ingizni tekshiring."
+      }
+    },
+    "verifyOtp": {
+      "title": "SMS kod",
+      "codeSentTo": "6 raqamli kod yuborildi:\n",
+      "resendIn": "Qayta yuborish: {seconds} s",
+      "resend": "Qayta yuborish",
+      "resentSnack": "SMS qaytadan yuborildi",
+      "submitButton": "Tasdiqlash"
+    }
+  },
+  "formatters": {
+    "duration": "{hours} st {minutes} daq",
+    "now": "hozir",
+    "minutesAgo": "{minutes} daq oldin",
+    "hoursAgo": "{hours} soat oldin"
+  },
+  "notifications": {
+    "title": "Bildirishnomalar",
+    "markAllRead": "O'qildi qil",
+    "emptyTitle": "Bildirishnomalar yo'q",
+    "emptySubtitle": "Bola haqida muhim xabarlar shu yerda paydo bo'ladi.",
+    "sos": {
+      "title": "SOS!",
+      "subtitle": "{name} yordam kerakligini bildirdi",
+      "locationButton": "Joylashuv",
+      "callButton": "Qo'ng'iroq",
+      "callSnack": "Qo'ng'iroq qilinmoqda...",
+      "callNoPhone": "Bola telefon raqami kiritilmagan",
+      "callFailed": "Telefon dialer ochilmadi",
+      "close": "Yopish"
+    }
+  },
+  "dashboard": {
+    "emptyState": {
+      "message": "Farzandingizni dastur orqali kuzatib borish uchun uni qo'shing",
+      "addButton": "Yangi bola qo'shish"
+    },
+    "connection": {
+      "connected": "Qurilma ulangan",
+      "disconnected": "Qurilma ulanmagan"
+    },
+    "quickActions": {
+      "device": "Qurilma sozlamalari",
+      "voice": "Ovoz xabarlari",
+      "appRestrictions": "Ilova cheklovlari",
+      "location": "Joylashuv",
+      "schedules": "Jadvallar"
+    }
+  },
+  "schedules": {
+    "headerTitle": "Jadvallar",
+    "newFab": "Yangi jadval",
+    "errorPrefix": "Xato: {error}",
+    "empty": {
+      "title": "Bu kunda jadval yo'q",
+      "subtitle": "Yangi jadval qo'shish uchun pastdagi tugmani bosing."
+    },
+    "edit": {
+      "titleAdd": "Yangi jadval",
+      "titleEdit": "Jadvalni tahrirlash",
+      "typeLabel": "Turi",
+      "titleFieldLabel": "Sarlavha",
+      "titleFieldHint": "Maktab / Sport / Uyqu / ...",
+      "timeLabel": "Vaqt",
+      "startLabel": "Boshi",
+      "endLabel": "Oxiri",
+      "weekdaysLabel": "Hafta kunlari",
+      "shortcutAll": "Har kuni",
+      "shortcutWeekdays": "Hafta ichi",
+      "shortcutWeekend": "Hafta oxiri",
+      "reminderLabel": "Reminder",
+      "reminderOff": "O'chirilgan",
+      "reminderMinutes": "{minutes} daqiqa",
+      "activeTitle": "Yoqilgan",
+      "activeSubtitle": "O'chirilgan bo'lsa reminder yuborilmaydi",
+      "savingButton": "Saqlanmoqda...",
+      "saveButton": "Saqlash",
+      "updateButton": "Yangilash",
+      "saveErrorPrefix": "Saqlashda xato: {error}",
+      "deleteErrorPrefix": "O'chirishda xato: {error}"
+    }
+  },
+  "fullScreenMap": {
+    "searchHint": "Manzil qidiring...",
+    "missingKeyTitle": "API kalit topilmadi",
+    "missingKeyHint": "--dart-define-from-file=env.json bilan ishga tushiring",
+    "centerLabel": "Markaz tanlangan",
+    "confirmButton": "Tasdiqlash"
+  },
+  "geoZoneEdit": {
+    "headerAdd": "Yangi geo-zona",
+    "headerEdit": "Geo-zonani tahrirlash",
+    "mapHint": "Xaritada bosib markazni belgilang yoki markerni torting",
+    "nameLabel": "Nom",
+    "nameHint": "Uy / Maktab / ...",
+    "iconLabel": "Belgi",
+    "radiusLabel": "Radius",
+    "radiusValue": "{meters} metr",
+    "notificationsLabel": "Bildirishnomalar",
+    "notifyOnEnter": "Kirsa xabar berish",
+    "notifyOnExit": "Chiqsa xabar berish",
+    "saveButton": "Saqlash",
+    "updateButton": "Yangilash",
+    "saveErrorPrefix": "Saqlashda xato: {error}",
+    "deleteDialog": {
+      "title": "Geo-zonani o'chirish?",
+      "content": "{name} geo-zonasi butunlay o'chiriladi.",
+      "cancel": "Bekor qilish",
+      "delete": "O'chirish"
+    },
+    "deleteErrorPrefix": "O'chirishda xato: {error}"
+  },
+  "geoZoneEvents": {
+    "headerTitle": "Tarix",
+    "errorPrefix": "Xato: {error}",
+    "empty": {
+      "title": "Hali tarix yo'q",
+      "subtitle": "{name} geo-zonalarga kirsa yoki\nchiqsa shu yerda ko'rinadi"
+    },
+    "tile": {
+      "fallbackChildName": "Bola",
+      "eventLine": {
+        "enter": "{name} {zone}ga kirdi",
+        "exit": "{name} {zone}dan chiqdi"
+      },
+      "dateToday": "Bugun",
+      "dateYesterday": "Kecha"
+    }
+  },
+  "geoZones": {
+    "headerTitle": "Geo-zonalar",
+    "historyTooltip": "Tarix",
+    "fallbackChildName": "Bola",
+    "errorPrefix": "Xato: {error}",
+    "newFab": "Yangi",
+    "last24h": {
+      "eventCount": "Oxirgi 24 soatda {count} ta event",
+      "viewLink": "Ko'rish"
+    },
+    "empty": {
+      "title": "Hali geo-zona qo'shilmagan",
+      "subtitle": "Bola tez-tez boradigan joylarni belgilang. Bola kirsa yoki chiqsa sizga xabar keladi.",
+      "addButton": "Yangi geo-zona qo'shish"
+    },
+    "card": {
+      "radius": "{meters}m radius"
+    }
+  },
+  "appRestrictions": {
+    "headerTitle": "Ilova cheklovlari",
+    "fallbackChildName": "Bola",
+    "errorPrefix": "Xato: {error}",
+    "noChildren": "Bola qo'shilmagan",
+    "tabs": {
+      "all": "Hammasi",
+      "restricted": "Cheklov bo'yicha"
+    },
+    "emptyAll": "Hali ma'lumot yo'q\n{name} ilovalardan foydalansa\nshu yerda ko'rinadi",
+    "emptyRestricted": "Hali cheklov yo'q\nIlova ustiga bosib limit qo'ying",
+    "limitSheet": {
+      "todayUsage": "Bugun: {usage}",
+      "timeLimit": "Vaqt cheklovi",
+      "chip15": "15 daq",
+      "chip30": "30 daq",
+      "chip60": "1 soat",
+      "chip120": "2 soat",
+      "chip180": "3 soat",
+      "blockTitle": "Butunlay bloklash",
+      "blockSubtitle": "Ilova umuman ochilmaydi",
+      "savingButton": "Saqlanmoqda...",
+      "saveButton": "Saqlash",
+      "removeButton": "Cheklovni olib tashlash",
+      "saveErrorPrefix": "Saqlashda xato: {error}",
+      "removeErrorPrefix": "O'chirishda xato: {error}"
+    },
+    "quickActions": {
+      "block15": "Hozir bloklash (15 daq)",
+      "setLimit": "Limit qo'yish",
+      "removeRestriction": "Cheklovni olib tashlash",
+      "errorPrefix": "Xato: {error}"
+    },
+    "empty": {
+      "title": "Hali ilova ma'lumotlari yo'q",
+      "subtitle": "Bola Child App'ni o'rnatishi va ishlatishi bilan ilovalar ro'yxati avtomatik paydo bo'ladi."
+    }
+  },
+  "locationHistory": {
+    "headerTitle": "Harakatlanish tarixi",
+    "fallbackChildName": "Bola",
+    "range": {
+      "24h": "24 soat",
+      "7d": "7 kun",
+      "30d": "30 kun"
+    },
+    "stats": {
+      "points": "{count} ta nuqta",
+      "distance": "{km} km"
+    },
+    "empty": {
+      "title": "Hali tarix yo'q",
+      "subtitle": "Bola harakat qila boshlagach,\nyo'l shu yerda ko'rinadi"
+    },
+    "errorPrefix": "Xato: {error}",
+    "viewButton": "Tarixni ko'rish"
+  },
+  "location": {
+    "updatedSuffix": "{time} yangilangan",
+    "moving": "Harakatda",
+    "stationary": "Joyida turibdi",
+    "accuracy": "~{meters}m aniqlik",
+    "geoZonesButton": "Geo-zonalar",
+    "picker": {
+      "title": "Bolani tanlang"
+    },
+    "noLocation": {
+      "title": "Hali joylashuv ma'lumoti yo'q",
+      "subtitle": "{name} qurilmasida Farzandim ochilib, joylashuv ruxsati berilishini kuting."
+    },
+    "error": {
+      "title": "Joylashuvni yuklash xatosi"
+    },
+    "noChildren": "Bola qo'shilmagan. Avval Dashboard'da bola yarating."
+  },
+  "deviceSettings": {
+    "headerTitle": "Qurilma sozlamalari",
+    "sectionDevice": "QURILMA",
+    "sectionStatus": "HOLAT",
+    "row": {
+      "model": "Model",
+      "system": "Tizim",
+      "appVersion": "Ilova versiyasi",
+      "battery": "Batareya",
+      "wifi": "Wi-Fi",
+      "lastSeen": "So'nggi faollik"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "disconnected": "Qurilma ulanmagan"
+    },
+    "headerCardTitle": "{name}'ning telefoni",
+    "awaitingTitle": "Qurilma ma'lumoti yo'q",
+    "awaitingSubtitle": "Bola hali Child App'ni o'rnatmagan yoki ulanmagan. Oila kodini ber va Child App'ni o'rnatishini kut.",
+    "childNotFound": "Bola topilmadi.",
+    "disconnectButton": "Qurilmani uzish",
+    "disconnectDialog": {
+      "title": "Qurilmani uzish?",
+      "content": "Bola qurilmasi ulanishi to'xtatiladi. Yangi oila kodi generatsiya qilinadi — qaytadan ulash uchun shu kodni Child App'ga kiritish kerak bo'ladi.",
+      "cancel": "Bekor qilish",
+      "confirm": "Uzish"
+    },
+    "disconnectSuccessSnack": "Qurilma uzildi. Yangi oila kodi: {code}",
+    "disconnectErrorPrefix": "Xato: {error}",
+    "disconnectGenericError": "Qurilmani uzib bo'lmadi"
+  },
+  "voiceChat": {
+    "headerSubtitle": "Ovozli xabarlar",
+    "fallbackChildName": "Bola",
+    "emptyTitle": "Birinchi ovozli xabar",
+    "emptySubtitle": "Pastdagi tugmani bosib turib {name} ga\novozli xabar yuboring",
+    "errorPrefix": "Xato: {error}",
+    "loadFailedSnack": "Ovozli xabar yuklanmadi",
+    "micPermissionSnack": "Mikrofon ruxsati kerak",
+    "tooShortSnack": "Ovoz juda qisqa — uzunroq bosib turing",
+    "sendErrorDefault": "Yuborishda xato",
+    "cancelTooltip": "Bekor qilish"
+  },
+  "voiceMessages": {
+    "headerTitle": "Ovozli xabarlar",
+    "noChildren": "Bola qo'shilmagan",
+    "noMessages": "Hali xabarlar yo'q",
+    "youPrefix": "Siz: ",
+    "durationSeconds": "{seconds} sek",
+    "loading": "Yuklanmoqda...",
+    "error": "Xato",
+    "errorPrefix": "Xato: {error}",
+    "relativeTime": {
+      "justNow": "hozirgina",
+      "minutes": "{minutes} daq",
+      "hours": "{hours} soat",
+      "days": "{days} kun"
+    }
+  },
+  "legal": {
+    "lastUpdated": "So'nggi yangilanish: {date}",
+    "disclaimer": "Ushbu matn template hisoblanadi va yuridik ekspert tomonidan rasmiy tasdiqlanmagan. Yakuniy production versiyasida litsenziyalangan yurist ko'rib chiqishi shart.",
+    "privacyPolicyTitle": "Maxfiylik siyosati",
+    "termsOfServiceTitle": "Foydalanish shartlari"
+  },
+  "profile": {
+    "headerTitle": "Profil",
+    "nameLabel": "Ism",
+    "nameHint": "Ismingizni kiriting",
+    "phoneLabel": "Telefon raqam",
+    "phoneHint": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailHint": "email@example.com",
+    "telegramAvatarHint": "Avatar Telegram hisobingizdan keladi",
+    "saveButton": "Saqlash",
+    "savedSnack": "Profil saqlandi",
+    "errorPrefix": "Saqlash xatosi: {error}"
+  },
+  "about": {
+    "headerTitle": "Ilova haqida",
+    "appName": "Farzandim",
+    "version": "Versiya 1.0.0 (MVP)",
+    "description1": "Farzandim — O'zbekistondagi birinchi oilaviy xavfsizlik ilovasi.",
+    "description2": "Bizning maqsadimiz — har bir oilada ota-onalar va bolalar o'rtasida xavfsiz va tushunchali aloqa o'rnatish.",
+    "termsLink": "Foydalanuvchi shartnomasi",
+    "privacyLink": "Maxfiylik siyosati",
+    "madeWithLove": "Made with ❤ in Tashkent"
+  },
+  "deleteAccount": {
+    "headerTitle": "Hisobni o'chirish",
+    "title": "Hisobni butunlay o'chirish",
+    "subtitle": "Bu amal qaytarib bo'lmaydi. Quyidagilar butunlay o'chiriladi:",
+    "items": {
+      "profile": "Profilingiz (ism, telefon, email, foto)",
+      "children": "Bola hisoblari va sozlamalari",
+      "messages": "Ovozli va video xabarlar (chat tarixi)",
+      "geoZones": "Geo-zonalar va hodisalar tarixi",
+      "schedules": "Jadvallar va eslatmalar",
+      "restrictions": "Ilova cheklov sozlamalari"
+    },
+    "confirmWord": "O'CHIRISH",
+    "confirmInstruction": "Tasdiqlash uchun '{word}' so'zini yozing:",
+    "deleteButton": "Hisobni butunlay o'chirish",
+    "cancelButton": "Bekor qilish",
+    "deletedSnack": "Hisobingiz o'chirildi",
+    "errorPrefix": "O'chirish xatosi: {error}",
+    "unexpectedError": "Kutilmagan xato: {error}"
+  },
+  "settings": {
+    "title": "Sozlamalar",
+    "sections": {
+      "profile": "PROFIL",
+      "children": "BOLALAR",
+      "notifications": "BILDIRISHNOMALAR",
+      "language": "TIL VA MINTAQA",
+      "help": "YORDAM"
+    },
+    "profile": {
+      "title": "Profil ma'lumotlari",
+      "placeholder": "Ism, telefon, email"
+    },
+    "children": {
+      "title": "Bolalarni boshqarish",
+      "subtitle": "{count} ta bola"
+    },
+    "notificationToggles": {
+      "push": "Push xabarlar",
+      "location": "Joylashuv xabarlari",
+      "geoZone": "Geo-zona xabarlari"
+    },
+    "language": {
+      "title": "Til",
+      "dialogTitle": "Tilni tanlang"
+    },
+    "help": {
+      "about": "Ilova haqida",
+      "support": "Texnik yordam",
+      "privacy": "Maxfiylik siyosati",
+      "terms": "Foydalanish shartlari"
+    },
+    "supportDialog": {
+      "title": "Texnik yordam",
+      "subtitle": "Bizga bog'laning — savollarga 24 soat ichida javob beramiz.",
+      "emailLabel": "Email",
+      "phoneLabel": "Telefon",
+      "telegramLabel": "Telegram",
+      "close": "Yopish",
+      "copiedSnack": "{label} nusxalandi"
+    },
+    "logout": {
+      "button": "Chiqish",
+      "dialogTitle": "Chiqish",
+      "dialogContent": "Hisobdan chiqishni xohlaysizmi?",
+      "cancel": "Bekor qilish",
+      "confirm": "Chiqish"
+    },
+    "deleteAccount": "Hisobni butunlay o'chirish"
+  },
+  "childManagement": {
+    "list": {
+      "title": "Bolalar",
+      "addChildFab": "Bola qo'shish",
+      "ageAndRegion": "{age} yosh • {region}",
+      "connected": "Ulangan",
+      "disconnected": "Ulanmagan",
+      "emptyTitle": "Hali bola qo'shilmagan",
+      "emptyAddButton": "Bola qo'shish",
+      "editAction": "Tahrirlash",
+      "deleteAction": "O'chirish",
+      "deleteDialog": {
+        "title": "Bolani o'chirish?",
+        "content": "{name}ning barcha ma'lumotlari (joylashuv, geo-zonalar va tarix) butunlay o'chiriladi. Bu amalni bekor qilib bo'lmaydi.",
+        "cancel": "Bekor qilish",
+        "delete": "O'chirish"
+      },
+      "deletedSnack": "{name} o'chirildi",
+      "errorTitle": "Ma'lumotlarni olishda xato",
+      "errorPrefix": "Xatolik: {error}"
+    },
+    "addEdit": {
+      "addTitle": "Yangi bola qo'shish",
+      "editTitle": "Bola ma'lumotlarini tahrirlash",
+      "photoLabel": "Fotosurat",
+      "nameLabel": "Ism",
+      "nameHint": "Ismini kiriting",
+      "ageLabel": "Yoshi",
+      "ageHint": "Yoshini tanlang",
+      "ageItem": "{age} yosh",
+      "regionLabel": "Hudud",
+      "regionHint": "Hududni tanlang",
+      "genderLabel": "Jinsi",
+      "backButton": "Orqaga",
+      "saveButton": "Saqlash",
+      "updateButton": "Yangilash",
+      "errorPrefix": "Xatolik: {error}"
+    },
+    "familyCode": {
+      "headerTitle": "Bola qo'shish",
+      "title": "Ilovani o'rnating",
+      "subtitle": "Ushbu kodni kiriting",
+      "regenerateButton": "Yangi qurilma ulash",
+      "regenerating": "Yaratilmoqda...",
+      "shareButton": "Farzandingizni taklif qilish",
+      "shareMessage": "Salom! Men senga Farzandim ilovasini taklif qilyapman 🎯\n\nBu ilova orqali biz xavfsiz aloqada bo'lamiz va sen qiziqarli ta'lim kontentlarini ham ko'rishing mumkin.\n\n🔑 Oila kodi: {code}\n\nIlovani o'rnatib, shu kodni kiritasan.\n\nSevamiz, oilam ❤️",
+      "shareSubject": "Farzandim ilovasi",
+      "errorPrefix": "Xato: {error}",
+      "regenerateConfirm": {
+        "title": "Yangi qurilma ulash",
+        "question": "{name} uchun yangi qurilma ulashga ishonchingiz komilmi?",
+        "warningTitle": "Diqqat",
+        "warningBullet1": "Eski qurilma ulanishi uziladi",
+        "warningBullet2": "Yangi familyCode olinadi (24 soat)",
+        "warningBullet3": "Bola yangi App'da yangi kodni kiritadi",
+        "preservedNote": "Eski xabarlar, jadval, geo-zonalar saqlanadi",
+        "cancel": "Bekor qilish",
+        "continue": "Davom etish"
+      },
+      "newCodeDialog": {
+        "title": "Yangi kod tayyor",
+        "instruction": "{name} ning yangi qurilmasida bu kodni kiriting:",
+        "expiryNote": "24 soat amal qiladi",
+        "copy": "Nusxalash",
+        "copiedSnack": "Kod nusxalandi",
+        "close": "Yopish"
+      }
+    }
+  }
+}

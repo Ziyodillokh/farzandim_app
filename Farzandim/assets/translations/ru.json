@@ -1,0 +1,521 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Отмена",
+    "save": "Сохранить",
+    "delete": "Удалить",
+    "edit": "Изменить",
+    "back": "Назад",
+    "next": "Далее",
+    "confirm": "Подтвердить",
+    "yes": "Да",
+    "no": "Нет",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "retry": "Повторить",
+    "close": "Закрыть"
+  },
+  "languages": {
+    "uz": "Узбекский",
+    "ru": "Русский",
+    "en": "Английский"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Добро пожаловать",
+      "subtitle": "Защитите вашего ребёнка онлайн",
+      "signUpButton": "Зарегистрироваться",
+      "signInButton": "Войти в аккаунт",
+      "continueButton": "Продолжить через Telegram"
+    },
+    "signIn": {
+      "title": "Вход в аккаунт",
+      "emailLabel": "Email адрес",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Пароль",
+      "forgotPassword": "Забыли пароль?",
+      "submitButton": "Войти"
+    },
+    "signUp": {
+      "title": "Регистрация",
+      "phoneTab": "Телефон",
+      "emailTab": "Email",
+      "phoneLabel": "Номер телефона",
+      "phoneHint": "90 123 45 67",
+      "emailLabel": "Email адрес",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Пароль",
+      "passwordHint": "Минимум 6 символов",
+      "continueButton": "Продолжить",
+      "consent": {
+        "prefix": "Я прочитал(а) и принимаю ",
+        "privacy": "Политику конфиденциальности",
+        "and": " и ",
+        "terms": "Условия использования",
+        "suffix": "."
+      }
+    },
+    "forgotPassword": {
+      "title": "Восстановление пароля",
+      "subtitle": "Введите ваш email,\nмы отправим ссылку для сброса пароля.",
+      "emailLabel": "Email адрес",
+      "emailHint": "email@example.com",
+      "submitButton": "Отправить ссылку",
+      "remembered": "Вспомнили? ",
+      "backToSignIn": "Войти",
+      "dialog": {
+        "title": "Письмо отправлено",
+        "content": "Ссылка для сброса пароля отправлена на {email}. Проверьте вашу почту."
+      }
+    },
+    "verifyOtp": {
+      "title": "SMS код",
+      "codeSentTo": "Код из 6 цифр отправлен на:\n",
+      "resendIn": "Повторно: {seconds} с",
+      "resend": "Отправить повторно",
+      "resentSnack": "SMS отправлено повторно",
+      "submitButton": "Подтвердить"
+    }
+  },
+  "formatters": {
+    "duration": "{hours} ч {minutes} мин",
+    "now": "сейчас",
+    "minutesAgo": "{minutes} мин назад",
+    "hoursAgo": "{hours} ч назад"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "markAllRead": "Прочитать всё",
+    "emptyTitle": "Уведомлений нет",
+    "emptySubtitle": "Важные сообщения о ребёнке будут появляться здесь.",
+    "sos": {
+      "title": "SOS!",
+      "subtitle": "{name} сообщил(а), что нужна помощь",
+      "locationButton": "Местоположение",
+      "callButton": "Позвонить",
+      "callSnack": "Звонок выполняется...",
+      "callNoPhone": "Номер телефона ребёнка не указан",
+      "callFailed": "Не удалось открыть телефонный набор",
+      "close": "Закрыть"
+    }
+  },
+  "dashboard": {
+    "emptyState": {
+      "message": "Добавьте ребёнка, чтобы следить за ним через приложение",
+      "addButton": "Добавить ребёнка"
+    },
+    "connection": {
+      "connected": "Устройство подключено",
+      "disconnected": "Устройство не подключено"
+    },
+    "quickActions": {
+      "device": "Настройки устройства",
+      "voice": "Голосовые сообщения",
+      "appRestrictions": "Ограничения приложений",
+      "location": "Местоположение",
+      "schedules": "Расписания"
+    }
+  },
+  "schedules": {
+    "headerTitle": "Расписания",
+    "newFab": "Новое расписание",
+    "errorPrefix": "Ошибка: {error}",
+    "empty": {
+      "title": "В этот день расписаний нет",
+      "subtitle": "Нажмите кнопку ниже, чтобы добавить новое расписание."
+    },
+    "edit": {
+      "titleAdd": "Новое расписание",
+      "titleEdit": "Редактирование расписания",
+      "typeLabel": "Тип",
+      "titleFieldLabel": "Название",
+      "titleFieldHint": "Школа / Спорт / Сон / ...",
+      "timeLabel": "Время",
+      "startLabel": "Начало",
+      "endLabel": "Конец",
+      "weekdaysLabel": "Дни недели",
+      "shortcutAll": "Каждый день",
+      "shortcutWeekdays": "Будни",
+      "shortcutWeekend": "Выходные",
+      "reminderLabel": "Напоминание",
+      "reminderOff": "Отключено",
+      "reminderMinutes": "{minutes} мин",
+      "activeTitle": "Включено",
+      "activeSubtitle": "Если отключено, напоминание не отправляется",
+      "savingButton": "Сохранение...",
+      "saveButton": "Сохранить",
+      "updateButton": "Обновить",
+      "saveErrorPrefix": "Ошибка сохранения: {error}",
+      "deleteErrorPrefix": "Ошибка удаления: {error}"
+    }
+  },
+  "fullScreenMap": {
+    "searchHint": "Поиск адреса...",
+    "missingKeyTitle": "API-ключ не найден",
+    "missingKeyHint": "Запустите с --dart-define-from-file=env.json",
+    "centerLabel": "Центр выбран",
+    "confirmButton": "Подтвердить"
+  },
+  "geoZoneEdit": {
+    "headerAdd": "Новая гео-зона",
+    "headerEdit": "Редактирование гео-зоны",
+    "mapHint": "Нажмите на карте, чтобы выбрать центр, или перетащите маркер",
+    "nameLabel": "Название",
+    "nameHint": "Дом / Школа / ...",
+    "iconLabel": "Иконка",
+    "radiusLabel": "Радиус",
+    "radiusValue": "{meters} м",
+    "notificationsLabel": "Уведомления",
+    "notifyOnEnter": "Уведомлять при входе",
+    "notifyOnExit": "Уведомлять при выходе",
+    "saveButton": "Сохранить",
+    "updateButton": "Обновить",
+    "saveErrorPrefix": "Ошибка сохранения: {error}",
+    "deleteDialog": {
+      "title": "Удалить гео-зону?",
+      "content": "Гео-зона {name} будет полностью удалена.",
+      "cancel": "Отмена",
+      "delete": "Удалить"
+    },
+    "deleteErrorPrefix": "Ошибка удаления: {error}"
+  },
+  "geoZoneEvents": {
+    "headerTitle": "История",
+    "errorPrefix": "Ошибка: {error}",
+    "empty": {
+      "title": "Истории пока нет",
+      "subtitle": "Когда {name} войдёт в гео-зону или\nвыйдет, события появятся здесь"
+    },
+    "tile": {
+      "fallbackChildName": "Ребёнок",
+      "eventLine": {
+        "enter": "{name} вошёл(а) в {zone}",
+        "exit": "{name} вышел(а) из {zone}"
+      },
+      "dateToday": "Сегодня",
+      "dateYesterday": "Вчера"
+    }
+  },
+  "geoZones": {
+    "headerTitle": "Гео-зоны",
+    "historyTooltip": "История",
+    "fallbackChildName": "Ребёнок",
+    "errorPrefix": "Ошибка: {error}",
+    "newFab": "Новая",
+    "last24h": {
+      "eventCount": "{count} событий за последние 24 часа",
+      "viewLink": "Посмотреть"
+    },
+    "empty": {
+      "title": "Гео-зоны ещё не добавлены",
+      "subtitle": "Отметьте места, где часто бывает ребёнок. Вы получите уведомление, когда он войдёт или выйдет.",
+      "addButton": "Добавить гео-зону"
+    },
+    "card": {
+      "radius": "радиус {meters}м"
+    }
+  },
+  "appRestrictions": {
+    "headerTitle": "Ограничения приложений",
+    "fallbackChildName": "Ребёнок",
+    "errorPrefix": "Ошибка: {error}",
+    "noChildren": "Дети не добавлены",
+    "tabs": {
+      "all": "Все",
+      "restricted": "С ограничениями"
+    },
+    "emptyAll": "Данных пока нет\nКак только {name} начнёт пользоваться приложениями,\nони появятся здесь",
+    "emptyRestricted": "Ограничений пока нет\nНажмите на приложение, чтобы установить лимит",
+    "limitSheet": {
+      "todayUsage": "Сегодня: {usage}",
+      "timeLimit": "Лимит времени",
+      "chip15": "15 мин",
+      "chip30": "30 мин",
+      "chip60": "1 ч",
+      "chip120": "2 ч",
+      "chip180": "3 ч",
+      "blockTitle": "Полностью заблокировать",
+      "blockSubtitle": "Приложение нельзя будет открыть",
+      "savingButton": "Сохранение...",
+      "saveButton": "Сохранить",
+      "removeButton": "Снять ограничение",
+      "saveErrorPrefix": "Ошибка сохранения: {error}",
+      "removeErrorPrefix": "Ошибка удаления: {error}"
+    },
+    "quickActions": {
+      "block15": "Заблокировать сейчас (15 мин)",
+      "setLimit": "Установить лимит",
+      "removeRestriction": "Снять ограничение",
+      "errorPrefix": "Ошибка: {error}"
+    },
+    "empty": {
+      "title": "Данных о приложениях пока нет",
+      "subtitle": "Список приложений появится автоматически, как только ребёнок установит и начнёт пользоваться Child App."
+    }
+  },
+  "locationHistory": {
+    "headerTitle": "История перемещений",
+    "fallbackChildName": "Ребёнок",
+    "range": {
+      "24h": "24 ч",
+      "7d": "7 дней",
+      "30d": "30 дней"
+    },
+    "stats": {
+      "points": "{count} точек",
+      "distance": "{km} км"
+    },
+    "empty": {
+      "title": "Истории пока нет",
+      "subtitle": "Как только ребёнок начнёт двигаться,\nмаршрут появится здесь"
+    },
+    "errorPrefix": "Ошибка: {error}",
+    "viewButton": "Посмотреть историю"
+  },
+  "location": {
+    "updatedSuffix": "обновлено {time}",
+    "moving": "В движении",
+    "stationary": "На месте",
+    "accuracy": "~{meters}м точность",
+    "geoZonesButton": "Гео-зоны",
+    "picker": {
+      "title": "Выберите ребёнка"
+    },
+    "noLocation": {
+      "title": "Данных о местоположении пока нет",
+      "subtitle": "Дождитесь, пока {name} откроет Farzandim на устройстве и предоставит разрешение на местоположение."
+    },
+    "error": {
+      "title": "Ошибка загрузки местоположения"
+    },
+    "noChildren": "Дети не добавлены. Сначала создайте ребёнка в Dashboard."
+  },
+  "deviceSettings": {
+    "headerTitle": "Настройки устройства",
+    "sectionDevice": "УСТРОЙСТВО",
+    "sectionStatus": "СТАТУС",
+    "row": {
+      "model": "Модель",
+      "system": "Система",
+      "appVersion": "Версия приложения",
+      "battery": "Батарея",
+      "wifi": "Wi-Fi",
+      "lastSeen": "Последняя активность"
+    },
+    "status": {
+      "online": "Онлайн",
+      "offline": "Офлайн",
+      "disconnected": "Устройство не подключено"
+    },
+    "headerCardTitle": "Телефон {name}",
+    "awaitingTitle": "Данных устройства нет",
+    "awaitingSubtitle": "Ребёнок ещё не установил приложение или не подключился. Передайте семейный код и подождите, пока он установит Child App.",
+    "childNotFound": "Ребёнок не найден.",
+    "disconnectButton": "Отключить устройство",
+    "disconnectDialog": {
+      "title": "Отключить устройство?",
+      "content": "Соединение с устройством ребёнка будет прервано. Будет создан новый семейный код — введите его в Child App, чтобы подключиться заново.",
+      "cancel": "Отмена",
+      "confirm": "Отключить"
+    },
+    "disconnectSuccessSnack": "Устройство отключено. Новый семейный код: {code}",
+    "disconnectErrorPrefix": "Ошибка: {error}",
+    "disconnectGenericError": "Не удалось отключить устройство"
+  },
+  "voiceChat": {
+    "headerSubtitle": "Голосовые сообщения",
+    "fallbackChildName": "Ребёнок",
+    "emptyTitle": "Первое голосовое сообщение",
+    "emptySubtitle": "Зажмите кнопку ниже, чтобы отправить\nголосовое сообщение для {name}",
+    "errorPrefix": "Ошибка: {error}",
+    "loadFailedSnack": "Не удалось загрузить голосовое сообщение",
+    "micPermissionSnack": "Нужен доступ к микрофону",
+    "tooShortSnack": "Слишком коротко — удерживайте дольше",
+    "sendErrorDefault": "Ошибка отправки",
+    "cancelTooltip": "Отмена"
+  },
+  "voiceMessages": {
+    "headerTitle": "Голосовые сообщения",
+    "noChildren": "Дети не добавлены",
+    "noMessages": "Сообщений ещё нет",
+    "youPrefix": "Вы: ",
+    "durationSeconds": "{seconds} сек",
+    "loading": "Загрузка...",
+    "error": "Ошибка",
+    "errorPrefix": "Ошибка: {error}",
+    "relativeTime": {
+      "justNow": "только что",
+      "minutes": "{minutes} мин",
+      "hours": "{hours} ч",
+      "days": "{days} д"
+    }
+  },
+  "legal": {
+    "lastUpdated": "Последнее обновление: {date}",
+    "disclaimer": "Текст ниже представлен на узбекском и пока не локализован. Документ является шаблоном и требует проверки квалифицированным юристом перед production-релизом.",
+    "privacyPolicyTitle": "Политика конфиденциальности",
+    "termsOfServiceTitle": "Условия использования"
+  },
+  "profile": {
+    "headerTitle": "Профиль",
+    "nameLabel": "Имя",
+    "nameHint": "Введите ваше имя",
+    "phoneLabel": "Номер телефона",
+    "phoneHint": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailHint": "email@example.com",
+    "telegramAvatarHint": "Аватар берётся из вашего Telegram",
+    "saveButton": "Сохранить",
+    "savedSnack": "Профиль сохранён",
+    "errorPrefix": "Ошибка сохранения: {error}"
+  },
+  "about": {
+    "headerTitle": "О приложении",
+    "appName": "Farzandim",
+    "version": "Версия 1.0.0 (MVP)",
+    "description1": "Farzandim — первое в Узбекистане приложение для семейной безопасности.",
+    "description2": "Наша цель — установить безопасное и доверительное общение между родителями и детьми в каждой семье.",
+    "termsLink": "Пользовательское соглашение",
+    "privacyLink": "Политика конфиденциальности",
+    "madeWithLove": "Made with ❤ in Tashkent"
+  },
+  "deleteAccount": {
+    "headerTitle": "Удаление аккаунта",
+    "title": "Полное удаление аккаунта",
+    "subtitle": "Это действие необратимо. Будут безвозвратно удалены:",
+    "items": {
+      "profile": "Ваш профиль (имя, телефон, email, фото)",
+      "children": "Аккаунты детей и настройки",
+      "messages": "Голосовые и видео сообщения (история чата)",
+      "geoZones": "Гео-зоны и история событий",
+      "schedules": "Расписания и напоминания",
+      "restrictions": "Настройки ограничений приложений"
+    },
+    "confirmWord": "УДАЛИТЬ",
+    "confirmInstruction": "Для подтверждения введите слово '{word}':",
+    "deleteButton": "Удалить аккаунт полностью",
+    "cancelButton": "Отмена",
+    "deletedSnack": "Ваш аккаунт удалён",
+    "errorPrefix": "Ошибка удаления: {error}",
+    "unexpectedError": "Непредвиденная ошибка: {error}"
+  },
+  "settings": {
+    "title": "Настройки",
+    "sections": {
+      "profile": "ПРОФИЛЬ",
+      "children": "ДЕТИ",
+      "notifications": "УВЕДОМЛЕНИЯ",
+      "language": "ЯЗЫК И РЕГИОН",
+      "help": "ПОМОЩЬ"
+    },
+    "profile": {
+      "title": "Данные профиля",
+      "placeholder": "Имя, телефон, email"
+    },
+    "children": {
+      "title": "Управление детьми",
+      "subtitle": "{count} детей"
+    },
+    "notificationToggles": {
+      "push": "Push-уведомления",
+      "location": "Уведомления о местоположении",
+      "geoZone": "Уведомления о гео-зонах"
+    },
+    "language": {
+      "title": "Язык",
+      "dialogTitle": "Выберите язык"
+    },
+    "help": {
+      "about": "О приложении",
+      "support": "Техническая поддержка",
+      "privacy": "Политика конфиденциальности",
+      "terms": "Условия использования"
+    },
+    "supportDialog": {
+      "title": "Техническая поддержка",
+      "subtitle": "Свяжитесь с нами — ответим на ваши вопросы в течение 24 часов.",
+      "emailLabel": "Email",
+      "phoneLabel": "Телефон",
+      "telegramLabel": "Telegram",
+      "close": "Закрыть",
+      "copiedSnack": "{label} скопирован"
+    },
+    "logout": {
+      "button": "Выйти",
+      "dialogTitle": "Выход",
+      "dialogContent": "Хотите выйти из аккаунта?",
+      "cancel": "Отмена",
+      "confirm": "Выйти"
+    },
+    "deleteAccount": "Полностью удалить аккаунт"
+  },
+  "childManagement": {
+    "list": {
+      "title": "Дети",
+      "addChildFab": "Добавить ребёнка",
+      "ageAndRegion": "{age} лет • {region}",
+      "connected": "Подключён",
+      "disconnected": "Не подключён",
+      "emptyTitle": "Дети пока не добавлены",
+      "emptyAddButton": "Добавить ребёнка",
+      "editAction": "Изменить",
+      "deleteAction": "Удалить",
+      "deleteDialog": {
+        "title": "Удалить ребёнка?",
+        "content": "Все данные {name} (местоположение, гео-зоны и история) будут безвозвратно удалены. Это действие нельзя отменить.",
+        "cancel": "Отмена",
+        "delete": "Удалить"
+      },
+      "deletedSnack": "{name} удалён",
+      "errorTitle": "Ошибка при загрузке данных",
+      "errorPrefix": "Ошибка: {error}"
+    },
+    "addEdit": {
+      "addTitle": "Новый ребёнок",
+      "editTitle": "Редактирование ребёнка",
+      "photoLabel": "Фото",
+      "nameLabel": "Имя",
+      "nameHint": "Введите имя",
+      "ageLabel": "Возраст",
+      "ageHint": "Выберите возраст",
+      "ageItem": "{age} лет",
+      "regionLabel": "Регион",
+      "regionHint": "Выберите регион",
+      "genderLabel": "Пол",
+      "backButton": "Назад",
+      "saveButton": "Сохранить",
+      "updateButton": "Обновить",
+      "errorPrefix": "Ошибка: {error}"
+    },
+    "familyCode": {
+      "headerTitle": "Добавить ребёнка",
+      "title": "Установите приложение",
+      "subtitle": "Введите этот код",
+      "regenerateButton": "Подключить новое устройство",
+      "regenerating": "Создаётся...",
+      "shareButton": "Пригласить ребёнка",
+      "shareMessage": "Привет! Я приглашаю тебя в приложение Фарзандим 🎯\n\nЧерез это приложение мы будем на безопасной связи, а ты также сможешь смотреть интересный обучающий контент.\n\n🔑 Семейный код: {code}\n\nУстанови приложение и введи этот код.\n\nЛюбим тебя, твоя семья ❤️",
+      "shareSubject": "Приложение Фарзандим",
+      "errorPrefix": "Ошибка: {error}",
+      "regenerateConfirm": {
+        "title": "Подключить новое устройство",
+        "question": "Вы уверены, что хотите подключить новое устройство для {name}?",
+        "warningTitle": "Внимание",
+        "warningBullet1": "Соединение со старым устройством будет прервано",
+        "warningBullet2": "Будет создан новый код (на 24 часа)",
+        "warningBullet3": "Ребёнок введёт новый код в новом приложении",
+        "preservedNote": "Старые сообщения, расписания и гео-зоны сохранятся",
+        "cancel": "Отмена",
+        "continue": "Продолжить"
+      },
+      "newCodeDialog": {
+        "title": "Новый код готов",
+        "instruction": "Введите этот код на новом устройстве {name}:",
+        "expiryNote": "Действует 24 часа",
+        "copy": "Копировать",
+        "copiedSnack": "Код скопирован",
+        "close": "Закрыть"
+      }
+    }
+  }
+}

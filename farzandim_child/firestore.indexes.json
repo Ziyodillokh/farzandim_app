@@ -1,0 +1,41 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "voice_messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "parentUid", "order": "ASCENDING" },
+        { "fieldPath": "childId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "DESCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "voice_messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "parentUid", "order": "ASCENDING" },
+        { "fieldPath": "childId", "order": "ASCENDING" },
+        { "fieldPath": "createdAt", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "voice_messages",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "parentUid", "order": "ASCENDING" },
+        { "fieldPath": "childId", "order": "ASCENDING" },
+        { "fieldPath": "sender", "order": "ASCENDING" },
+        { "fieldPath": "status", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": [
+    {
+      "collectionGroup": "children",
+      "fieldPath": "familyCode",
+      "indexes": [
+        { "order": "ASCENDING", "queryScope": "COLLECTION_GROUP" }
+      ]
+    }
+  ]
+}

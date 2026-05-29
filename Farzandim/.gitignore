@@ -1,0 +1,75 @@
+# Miscellaneous
+*.class
+*.hprof
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Firebase — loyiha-spesifik konfiguratsiya fayllari.
+# Yangi developer klon qilganida `flutterfire configure --project=...`
+# komandasi orqali qayta yaratiladi.
+#
+# Eslatma: Firebase rasmiy hujjatlari `firebase_options.dart`'ni commit
+# qilish xavfsiz deb yozadi (API key — public identifier, secret emas).
+# Lekin shaxsiy/loyiha qarorimiz bilan saqlamaymiz.
+lib/firebase_options.dart
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_app_id_file.json
+
+# Katta PDF dizayn fayllari — git uchun og'ir (Parent: 133 MB,
+# GitHub'ning 100 MB chegarasidan oshib ketadi). Mahalliy saqlanadi,
+# zarurat bo'lsa cloud storage (Drive/Dropbox) orqali ulashinadi.
+docs/*.pdf
+
+# Claude Code mahalliy sozlamalari (foydalanuvchi-spesifik, jamoa
+# bilan bo'lishilmaydi). Loyiha-keng sozlamalar `.claude/settings.json`
+# (".local" siz) bo'lib, u commit qilinishi mumkin.
+.claude/settings.local.json
+
+# Dart-side API kalitlari (Places API). `flutter run`'da
+# `--dart-define-from-file=env.json` orqali Dart'ga uzatiladi.
+# Yangi developer klon qilganda `env.example.json`'dan `env.json`'ga
+# nusxa olib o'z kalitlarini qo'yadi.
+env.json
+assets/env.json

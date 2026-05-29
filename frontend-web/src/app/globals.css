@@ -1,0 +1,68 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root, .dark {
+    /* Farzandim aniq ranglari (Flutter app_colors.dart dan 1:1) */
+    --background: 240 26% 6%;        /* #0A0A12 */
+    --background-top: 225 26% 14%;    /* #1B212F */
+    --background-bottom: 240 39% 6%;  /* #0A0A16 */
+    --foreground: 0 0% 100%;          /* #FFFFFF — textPrimary */
+
+    --card: 240 13% 13%;              /* #1C1C24 — surface */
+    --card-foreground: 0 0% 100%;
+    --surface-variant: 240 12% 17%;   /* #252530 */
+
+    --popover: 240 13% 13%;
+    --popover-foreground: 0 0% 100%;
+
+    /* Lime green — primary aksent */
+    --primary: 76 87% 67%;            /* #C5F562 */
+    --primary-dark: 77 56% 56%;       /* #A3CE4F */
+    --primary-light: 77 87% 75%;      /* #D4F783 */
+    --primary-foreground: 240 26% 6%;
+
+    /* Turquoise — secondary aksent */
+    --secondary: 174 53% 50%;         /* #3DBFB4 */
+    --secondary-dark: 174 56% 38%;    /* #2A9990 */
+    --secondary-foreground: 0 0% 100%;
+
+    --muted: 240 12% 17%;
+    --muted-foreground: 240 11% 63%;  /* #9999A8 — textSecondary */
+    --text-tertiary: 240 7% 45%;      /* #6B6B78 */
+
+    --accent: 240 12% 17%;
+    --accent-foreground: 0 0% 100%;
+
+    --success: 142 71% 58%;           /* #4ADE80 */
+    --warning: 41 96% 56%;            /* #FBBF24 */
+    --destructive: 0 84% 60%;         /* #EF4444 */
+    --destructive-foreground: 0 0% 100%;
+    --info: 217 91% 68%;              /* #60A5FA */
+
+    --border: 240 12% 19%;            /* #2A2A35 */
+    --divider: 240 11% 14%;           /* #1F1F28 */
+    --input: 240 12% 17%;
+    --ring: 76 87% 67%;
+    --radius: 1rem;
+  }
+}
+
+@layer base {
+  * { @apply border-border; }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+/* Gradient background (Flutter GradientBackground widget) */
+.gradient-bg {
+  background: linear-gradient(180deg, hsl(var(--background-top)) 0%, hsl(var(--background-bottom)) 100%);
+}
+
+::-webkit-scrollbar { width: 8px; height: 8px; }
+::-webkit-scrollbar-track { background: hsl(var(--background)); }
+::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 4px; }
+::-webkit-scrollbar-thumb:hover { background: hsl(var(--muted-foreground)); }

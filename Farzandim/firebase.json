@@ -1,0 +1,38 @@
+{
+  "flutter": {
+    "platforms": {
+      "android": {
+        "default": {
+          "projectId": "farzandim-mvp",
+          "appId": "1:163835260058:android:5d32a5f36a0b4708d30323",
+          "fileOutput": "android/app/google-services.json"
+        }
+      },
+      "dart": {
+        "lib/firebase_options.dart": {
+          "projectId": "farzandim-mvp",
+          "configurations": {
+            "android": "1:163835260058:android:5d32a5f36a0b4708d30323",
+            "ios": "1:163835260058:ios:77bdcd42ba4b0675d30323"
+          }
+        }
+      },
+      "ios": {
+        "default": {
+          "projectId": "farzandim-mvp",
+          "appId": "1:163835260058:ios:77bdcd42ba4b0675d30323",
+          "uploadDebugSymbols": true,
+          "fileOutput": "ios/Runner/GoogleService-Info.plist"
+        }
+      },
+      "macos": {
+        "default": {
+          "projectId": "farzandim-mvp",
+          "appId": "1:163835260058:ios:77bdcd42ba4b0675d30323",
+          "uploadDebugSymbols": false,
+          "fileOutput": "macos/Runner/GoogleService-Info.plist"
+        }
+      }
+    }
+  }
+}

@@ -1,0 +1,167 @@
+import 'package:flutter/foundation.dart';
+
+/// Bola qurilmasidagi bitta ilova ustida foydalanish ma'lumoti.
+///
+/// Bola App `UsageStatsManager` orqali olib `app_usage/{day}` hujjatga
+/// yozadi. Multiple entries bo'lishi mumkin (Android API'sida `INTERVAL_DAILY`
+/// 2 kunga qaytadi) — UI'da [AppUsageDay.aggregatedApps] bilan birlashtiriladi.
+@immutable
+class AppUsageEntry {
+  /// `AppUsageEntry` konstruktor.
+  const AppUsageEntry({
+    required this.packageName,
+    required this.appName,
+    required this.totalTimeMs,
+    required this.lastTimeUsed,
+    this.iconBase64,
+    this.iconUrl,
+  });
+
+  /// Map'dan parse — Backend JSON yoki cache'dagi `apps` array elementlari.
+  /// `lastTimeUsed` epoch millis (int) yoki ISO 8601 (string) bo'lishi mumkin.
+  factory AppUsageEntry.fromMap(Map<String, dynamic> map) {
+    return AppUsageEntry(
+      packageName: map['packageName'] as String? ?? '',
+      appName: map['appName'] as String? ?? '',
+      totalTimeMs: (map['totalTimeMs'] as num?)?.toInt() ?? 0,
+      lastTimeUsed: _parseLastTimeUsed(map['lastTimeUsed']),
+      iconBase64: map['iconBase64'] as String?,
+      iconUrl: map['iconUrl'] as String?,
+    );
+  }
+
+  static DateTime _parseLastTimeUsed(dynamic raw) {
+    if (raw is int) {
+      return DateTime.fromMillisecondsSinceEpoch(raw);
+    }
+    if (raw is String && raw.isNotEmpty) {
+      return DateTime.tryParse(raw) ?? DateTime.now();
+    }
+    return DateTime.now();
+  }
+
+  /// Android paket nomi (`com.tiktok`, `com.instagram.android`, ...).
+  final String packageName;
+
+  /// Foydalanuvchi-friendly nom (`TikTok`, `Instagram`, ...).
+  final String appName;
+
+  /// Foydalanish vaqti (millisekund).
+  final int totalTimeMs;
+
+  /// Oxirgi marta ishlatilgan vaqt.
+  final DateTime lastTimeUsed;
+
+  /// Bola App tomonidan yuborilgan PNG ikonkasi (base64-encoded,
+  /// odatda 96x96). `null` bo'lsa `AppIconWidget` paket nomidan
+  /// fallback `IconData` ko'rsatadi.
+  final String? iconBase64;
+
+  /// Backend MinIO signed URL (1 soat amal qiladi) — Sprint 4.4.29.
+  /// Priority `iconUrl > iconBase64 > Material fallback`.
+  final String? iconUrl;
+
+  /// `Duration` ko'rinishida foydalanish vaqti.
+  Duration get totalTime => Duration(milliseconds: totalTimeMs);
+
+  /// `2 soat 30 daq` / `5 daq` / `< 1 daq` formatda matn.
+  String get formattedTime {
+    final h = totalTime.inHours;
+    final m = totalTime.inMinutes % 60;
+    if (h == 0 && m == 0) return '< 1 daq';
+    if (h == 0) return '$m daq';
+    if (m == 0) return '$h soat';
+    return '$h soat $m daq';
+  }
+}
+
+/// Bir kunlik foydalanish ma'lumotlari (Firestore doc).
+///
+/// **Firestore:**
+/// `users/{parentUid}/children/{childId}/app_usage/{YYYY-MM-DD}`
+/// — bola App har 15 daqiqada yangilanib turadi (background sync).
+@immutable
+class AppUsageDay {
+  /// `AppUsageDay` konstruktor.
+  const AppUsageDay({
+    required this.date,
+    required this.updatedAt,
+    required this.apps,
+  });
+
+  /// `YYYY-MM-DD` format (document ID).
+  final String date;
+
+  /// Bola App oxirgi sync vaqti (server timestamp).
+  final DateTime updatedAt;
+
+  /// Xom apps ro'yxati — `aggregatedApps` orqali tartibga solinadi.
+  final List<AppUsageEntry> apps;
+
+  /// `packageName` bo'yicha aggregatlangan ro'yxat (vaqt bo'yicha desc).
+  ///
+  /// Android `INTERVAL_DAILY` ba'zan bir paket uchun ikki yozuv qaytaradi
+  /// — bu yerda yig'ib tartiblaymiz: jami vaqt qo'shiladi, oxirgi
+  /// ishlatilgan vaqt eng kechki olinadi.
+  List<AppUsageEntry> get aggregatedApps {
+    final map = <String, AppUsageEntry>{};
+
+    for (final app in apps) {
+      final existing = map[app.packageName];
+      if (existing == null) {
+        map[app.packageName] = app;
+      } else {
+        map[app.packageName] = AppUsageEntry(
+          packageName: app.packageName,
+          appName: app.appName,
+          totalTimeMs: existing.totalTimeMs + app.totalTimeMs,
+          lastTimeUsed: app.lastTimeUsed.isAfter(existing.lastTimeUsed)
+              ? app.lastTimeUsed
+              : existing.lastTimeUsed,
+          iconBase64: app.iconBase64 ?? existing.iconBase64,
+          iconUrl: app.iconUrl ?? existing.iconUrl,
+        );
+      }
+    }
+
+    final list = map.values.toList()
+      ..sort((a, b) => b.totalTimeMs.compareTo(a.totalTimeMs));
+    return list;
+  }
+
+  /// Sistema appalari (launcher, settings, va h.k.) filterlangan ro'yxat.
+  ///
+  /// Foydalanuvchi uchun chiroyli — faqat o'sha bola ishlatadigan ilovalar
+  /// (TikTok, YouTube, Instagram, va h.k.). System paket prefixlarini va
+  /// o'zining App'imizni (`com.farzandim.*`) chiqarib tashlaymiz.
+  List<AppUsageEntry> get filteredApps {
+    const systemPrefixes = [
+      'com.android.',
+      'com.samsung.android.',
+      'com.sec.android.',
+      'com.google.android.gms',
+      'com.google.android.packageinstaller',
+      'com.google.android.permissioncontroller',
+      'com.google.android.inputmethod',
+      'com.farzandim.', // o'zining ilovamiz
+    ];
+
+    return aggregatedApps.where((app) {
+      return !systemPrefixes
+          .any((prefix) => app.packageName.startsWith(prefix));
+    }).toList();
+  }
+
+  /// UI'da ko'rsatiladigan ilovalar — fallback bilan.
+  ///
+  /// Agar [filteredApps] bo'sh emas bo'lsa, foydalanuvchi ilovalari
+  /// ko'rsatiladi (production scenariy: TikTok, YouTube, va h.k.).
+  /// Aks holda (test telefon — bola faqat launcher/settings ishlatgan)
+  /// barcha aggregatlangan ilovalar ko'rsatiladi (system'lar bilan birga)
+  /// — foydalanuvchi hech bo'lmaganda nimadir ko'radi.
+  List<AppUsageEntry> get displayApps {
+    final filtered = filteredApps;
+    if (filtered.isNotEmpty) return filtered;
+    return aggregatedApps;
+  }
+}

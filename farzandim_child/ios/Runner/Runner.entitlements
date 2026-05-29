@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!--
+	  Push bildirishnoma (APNs). Release/TestFlight build uchun "production".
+	  Xcode'da Signing & Capabilities > + Capability > Push Notifications
+	  qo'shilganda Xcode bu faylni avtomatik boshqaradi va project.pbxproj'ga
+	  CODE_SIGN_ENTITLEMENTS sifatida ulaydi.
+	-->
+	<key>aps-environment</key>
+	<string>development</string>
+</dict>
+</plist>

@@ -1,0 +1,154 @@
+name: farzandim_child
+description: "Farzandim Child App — bola tomonidagi ilova (oilaga ulanish, joylashuv yuborish, SOS)."
+publish_to: 'none'
+
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  flutter:
+    sdk: flutter
+
+  # State management
+  flutter_riverpod: ^2.6.1
+
+  # Routing
+  go_router: ^14.6.2
+
+  # Firebase
+  firebase_core: ^3.6.0
+  firebase_auth: ^5.3.1
+  cloud_firestore: ^5.4.4
+  firebase_messaging: ^15.1.3
+  firebase_storage: ^12.3.4
+
+  # Local storage
+  shared_preferences: ^2.3.2
+
+  # ─── Sprint 4.4: Backend REST migration ─────────────────────────
+  # Dio — HTTP client (Firestore SDK o'rniga). Interceptor'lar bilan
+  # JWT Bearer header + 401 refresh + logging.
+  dio: ^5.7.0
+
+  # Sprint 4.4.11: Backend Socket.io real-time events
+  # (voice/photo/notification/schedule WS).
+  socket_io_client: ^2.0.3+1
+
+  # flutter_secure_storage — JWT access/refresh tokenlarini xavfsiz
+  # saqlash (KeyStore Android, Keychain iOS).
+  flutter_secure_storage: ^9.2.2
+
+  # Lokalizatsiya — uz/ru/en (Sprint 4.3). Parent App allaqachon
+  # 3 tilda — Child App'ni ham moslashtirish (regional bolalar
+  # uchun qulay UX). JSON fayllar assets/translations/'da.
+  easy_localization: ^3.0.7
+
+  # Utils
+  permission_handler: ^11.3.0
+  geolocator: ^11.0.0
+  intl: ^0.20.2
+
+  # Device info
+  device_info_plus: ^11.1.0
+  battery_plus: ^6.0.3
+  network_info_plus: ^6.0.0
+  connectivity_plus: ^6.1.0
+  package_info_plus: ^8.1.0
+
+  # Camera (foto so'rovga javob uchun)
+  image_picker: ^1.1.2
+
+  # Background / Foreground Service
+  flutter_foreground_task: ^8.17.0
+
+  # Video player
+  video_player: ^2.9.2
+
+  # Audio player
+  just_audio: ^0.9.42
+
+  # Quiz / contest UX
+  confetti: ^0.7.0
+  share_plus: ^10.0.0
+  audioplayers: ^6.1.0
+
+  # Video xabar yozish (Telegram-style)
+  camera: ^0.11.0+2
+  path_provider: ^2.1.4
+
+  # Video compression — Telegram round video upload uchun
+  # (LowQuality 30s → ~2-4 MB, Backend 413 oldini olish)
+  video_compress: ^3.1.4
+
+  # Ovozli xabar yozish
+  record: ^5.1.2
+
+  # Tipografika — Inter shrifti har platforma'da bir xil ko'rinadi.
+  # Parent App bilan brand consistency.
+  google_fonts: ^6.2.1
+
+  # Micro-experience paketlari (2025 UX standartlari)
+  # — flutter_animate: deklarativ fade/slide/scale animatsiyalar
+  # — shimmer: skeleton loading (CircularProgressIndicator o'rniga)
+  # — flutter_svg: FARO maskot vector formati
+  # — confetti allaqachon ulangan (yuqorida)
+  flutter_animate: ^4.5.0
+  shimmer: ^3.0.0
+  flutter_svg: ^2.0.10+1
+
+  # flutter_local_notifications — Parent voice/video push'larida
+  # foreground ovoz/vibratsiya (FCM o'zi foreground'da UI ko'rsatmaydi).
+  # Sprint 4.4.23.
+  flutter_local_notifications: ^17.2.3
+
+  # url_launcher — Play Market / App Store / APK direct link ochish
+  # uchun (Sprint 4.4.28 app update banner & force dialog).
+  url_launcher: ^6.3.1
+  flutter_pdfview: ^1.4.4
+  phosphor_flutter: ^2.1.0
+
+# `record_linux 0.7.2` + `record_platform_interface 1.5.0` orasida API
+# nomutanosibligi (RecordLinux.startStream signature). Eski stable
+# versiyalarga override qilamiz — Android/iOS uchun hech qanday ta'sir
+# yo'q (faqat Linux platform plugin'iga tegadi).
+dependency_overrides:
+  record_linux: 0.7.1
+  record_platform_interface: 1.2.0
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+
+  flutter_lints: ^5.0.0
+
+  # Brand asset generators — bir martalik ishlatildi
+  flutter_launcher_icons: ^0.14.1
+  flutter_native_splash: ^2.4.1
+
+flutter:
+  uses-material-design: true
+
+  assets:
+    - assets/images/
+    - assets/icons/         # child_logo_icon.png, child_app_logo.png
+    - assets/mascot/        # FARO maskot (PNG + SVG) — 2026-05-14
+    - assets/translations/  # uz.json, ru.json, en.json — easy_localization
+
+# Launcher icon konfiguratsiyasi (flutter_launcher_icons)
+flutter_launcher_icons:
+  android: "ic_launcher"
+  ios: true
+  image_path: "assets/icons/child_logo_icon.png"
+  min_sdk_android: 21
+  adaptive_icon_background: "#0A0A16"
+  adaptive_icon_foreground: "assets/icons/child_logo_icon.png"
+
+# Splash screen (flutter_native_splash) — yangi LOGO/ICON konvensiya
+flutter_native_splash:
+  color: "#0A0A16"
+  image: assets/icons/child_app_icon_white.png
+  android_12:
+    color: "#0A0A16"
+    image: assets/icons/child_logo_icon.png

@@ -1,0 +1,100 @@
+import {
+  Controller,
+  Post,
+  Get,
+  Body,
+  Param,
+  Req,
+  HttpCode,
+  HttpStatus,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiResponse,
+  ApiParam,
+} from '@nestjs/swagger';
+import { Request } from 'express';
+import { AuthService } from './auth.service';
+import { TelegramAuthDto } from './dto/telegram-auth.dto';
+import { RefreshTokenDto } from './dto/refresh-token.dto';
+import { ChildPairDto } from './dto/child-pair.dto';
+import { Public } from '../../common/decorators';
+import { ConsumerJwtAuthGuard } from '../../common/guards';
+import { CurrentUser } from '../../common/decorators';
+import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+
+@ApiTags('Auth')
+@Controller('auth')
+@UseGuards(ConsumerJwtAuthGuard)
+export class AuthController {
+  constructor(private readonly authService: AuthService) {}
+
+  @Post('telegram')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Authenticate via Telegram Login Widget' })
+  @ApiResponse({ status: 200, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 401, description: 'Invalid hash or expired auth data' })
+  async telegramLogin(
+    @Body() dto: TelegramAuthDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.telegramLogin(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Post('refresh')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Refresh access token using refresh token (rotation)' })
+  @ApiResponse({ status: 200, description: 'New access + refresh tokens' })
+  @ApiResponse({ status: 401, description: 'Invalid, expired or revoked token' })
+  async refresh(@Body() dto: RefreshTokenDto) {
+    return this.authService.refreshToken(dto.refreshToken);
+  }
+
+  @Post('child-pair')
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: 'Pair child device using family code (anonymous endpoint)',
+  })
+  @ApiResponse({ status: 201, description: 'Child paired, tokens returned' })
+  @ApiResponse({ status: 404, description: 'Family code not found' })
+  @ApiResponse({
+    status: 409,
+    description: 'Child already paired, awaiting parent confirmation',
+  })
+  async childPair(@Body() dto: ChildPairDto, @Req() req: Request) {
+    return this.authService.childPair(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Get('child-pair-status/:id')
+  @Public()
+  @ApiOperation({ summary: 'Poll re-pair request status' })
+  @ApiParam({ name: 'id', description: 'Pair request ID' })
+  @ApiResponse({ status: 200, description: 'Current pair request status' })
+  @ApiResponse({ status: 404, description: 'Pair request not found' })
+  async childPairStatus(@Param('id') id: string) {
+    return this.authService.childPairStatus(id);
+  }
+
+  @Post('logout')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Logout — revokes all refresh tokens by incrementing tokenVersion',
+  })
+  @ApiResponse({ status: 200, description: 'Logged out successfully' })
+  async logout(@CurrentUser() user: JwtPayload) {
+    return this.authService.logout(user.userId);
+  }
+}

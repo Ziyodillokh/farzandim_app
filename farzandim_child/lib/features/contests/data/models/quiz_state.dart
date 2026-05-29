@@ -1,0 +1,93 @@
+// ─────────────────────────────────────────────────────────────────────
+// QuizState — konkurs savol-javob holati
+// ─────────────────────────────────────────────────────────────────────
+//
+// Sprint 5.7d: `questions: List<QuestionModel>` field qo'shildi. Real
+// backend'dan kelgan questions ishlatiladi; agar bo'sh bo'lsa
+// `MockQuestions.all` fallback (offline/401/eski sessiya).
+
+import 'package:farzandim_child/features/contests/data/mock_questions.dart';
+import 'package:farzandim_child/features/contests/data/models/question_model.dart';
+
+enum QuizStatus { loading, intro, playing, paused, finished }
+
+enum AnswerState { none, correct, wrong, timeout }
+
+class QuizState {
+  final QuizStatus status;
+  final int currentIndex;
+  final int? selectedAnswer;
+  final AnswerState answerState;
+  final int totalScore;
+  final int correctCount;
+  final int wrongCount;
+  final int currentStreak;
+  final int maxStreak;
+  final int timeRemaining;
+  final Duration totalElapsed;
+  final List<int?> answers;
+  final List<QuestionModel> questions;
+
+  const QuizState({
+    this.status = QuizStatus.loading,
+    this.currentIndex = 0,
+    this.selectedAnswer,
+    this.answerState = AnswerState.none,
+    this.totalScore = 0,
+    this.correctCount = 0,
+    this.wrongCount = 0,
+    this.currentStreak = 0,
+    this.maxStreak = 0,
+    this.timeRemaining = 40,
+    this.totalElapsed = Duration.zero,
+    this.answers = const [],
+    this.questions = const [],
+  });
+
+  List<QuestionModel> get effectiveQuestions =>
+      questions.isEmpty ? MockQuestions.all : questions;
+
+  QuestionModel get currentQuestion => effectiveQuestions[currentIndex];
+
+  bool get isLastQuestion =>
+      currentIndex >= effectiveQuestions.length - 1;
+
+  double get accuracy {
+    final total = correctCount + wrongCount;
+    return total > 0 ? correctCount / total : 0;
+  }
+
+  QuizState copyWith({
+    QuizStatus? status,
+    int? currentIndex,
+    int? selectedAnswer,
+    bool clearSelected = false,
+    AnswerState? answerState,
+    int? totalScore,
+    int? correctCount,
+    int? wrongCount,
+    int? currentStreak,
+    int? maxStreak,
+    int? timeRemaining,
+    Duration? totalElapsed,
+    List<int?>? answers,
+    List<QuestionModel>? questions,
+  }) {
+    return QuizState(
+      status: status ?? this.status,
+      currentIndex: currentIndex ?? this.currentIndex,
+      selectedAnswer:
+          clearSelected ? null : (selectedAnswer ?? this.selectedAnswer),
+      answerState: answerState ?? this.answerState,
+      totalScore: totalScore ?? this.totalScore,
+      correctCount: correctCount ?? this.correctCount,
+      wrongCount: wrongCount ?? this.wrongCount,
+      currentStreak: currentStreak ?? this.currentStreak,
+      maxStreak: maxStreak ?? this.maxStreak,
+      timeRemaining: timeRemaining ?? this.timeRemaining,
+      totalElapsed: totalElapsed ?? this.totalElapsed,
+      answers: answers ?? this.answers,
+      questions: questions ?? this.questions,
+    );
+  }
+}

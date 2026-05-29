@@ -1,0 +1,170 @@
+// ─────────────────────────────────────────────────────────────────────
+// FARZANDIM CHILD — COLOR SYSTEM (Sprint UI.1, Duolingo-inspired)
+// ─────────────────────────────────────────────────────────────────────
+//
+// Light theme asosiy (bola UX uchun). Duolingo design language:
+// playful, yorug', child-friendly, WCAG AA compliant.
+//
+// Usage guidelines:
+//   primary    — Main CTA tugmalar, success, FARO accent
+//   secondary  — Info, location, navigation hints
+//   accent     — Rewards, stars, balls (kam ishlatish)
+//   warning    — Battery low, schedule ogohlantirishlar
+//   danger     — Faqat SOS, emergency (juda kam)
+//
+// Hech bir widget'da to'g'ridan-to'g'ri `Color(0xFF...)` yozilmaydi —
+// faqat shu yerdan: `AppColors.primary`, `AppColors.bgPrimary`, ...
+
+import 'package:flutter/material.dart';
+
+/// Farzandim Child App color tokens.
+class AppColors {
+  AppColors._();
+
+  // ============ PRIMARY (Duolingo Green) ============
+  /// Asosiy CTA tugma fon, success state, FARO accent.
+  static const Color primary = Color(0xFF58CC02);
+
+  /// Hover state (web), pressed state (mobile).
+  static const Color primaryHover = Color(0xFF46A302);
+
+  /// Disabled tugma fon.
+  static const Color primaryDisabled = Color(0xFF9CCC65);
+
+  /// 3D button pastki shadow (Sprint UI.2 PlayfulButton uchun).
+  static const Color primaryShadow = Color(0xFF46A302);
+
+  // ============ SECONDARY (Friendly Blue) ============
+  /// Info, location, navigation hints uchun.
+  static const Color secondary = Color(0xFF1CB0F6);
+
+  static const Color secondaryHover = Color(0xFF0E96D6);
+  static const Color secondaryShadow = Color(0xFF0E96D6);
+
+  // ============ ACCENT (Sunshine Yellow) ============
+  /// Rewards, stars, achievements — kam ishlatish (<5%).
+  static const Color accent = Color(0xFFFFC800);
+
+  static const Color accentHover = Color(0xFFE5B400);
+  static const Color accentShadow = Color(0xFFE5B400);
+
+  // ============ STATUS ============
+  /// Battery low, schedule warnings.
+  static const Color warning = Color(0xFFFF9600);
+  static const Color warningShadow = Color(0xFFCC7700);
+
+  /// SOS, emergency (juda kam ishlatish).
+  static const Color danger = Color(0xFFFF4B4B);
+  static const Color dangerShadow = Color(0xFFCC3030);
+
+  /// Success = primary (Duolingo convention).
+  static const Color success = primary;
+
+  /// Info = secondary.
+  static const Color info = secondary;
+
+  /// Sprint 4.4 legacy alias — eski kod `AppColors.error` ishlatadi.
+  /// Yangi kod `AppColors.danger` ishlatishi kerak.
+  static const Color error = danger;
+
+  // ============ BACKGROUNDS (Light Mode — asosiy) ============
+  /// Scaffold asosiy fon (oq).
+  static const Color bgPrimary = Color(0xFFFFFFFF);
+
+  /// Surface — kartalar, dialog'lar, BottomSheet (very light gray).
+  static const Color bgSurface = Color(0xFFF7F7F7);
+
+  /// Soft yellow surface — rewards/achievements section'lari.
+  static const Color bgAccent = Color(0xFFFFF8E7);
+
+  /// Cosmic sky tint — onboarding, hero sections.
+  static const Color bgSky = Color(0xFFE0F2FE);
+
+  // ============ BACKGROUNDS (Dark Mode — fallback) ============
+  static const Color bgPrimaryDark = Color(0xFF131F24);
+  static const Color bgSurfaceDark = Color(0xFF1E2D32);
+  static const Color bgCardDark = Color(0xFF2D4147);
+
+  // ============ TEXT ============
+  /// Asosiy matn (dark navy, oq fonda).
+  static const Color textPrimary = Color(0xFF1A2B3B);
+
+  /// Ikkilamchi matn.
+  static const Color textSecondary = Color(0xFF4A5568);
+
+  /// Uchlamchi matn (helper, caption).
+  static const Color textTertiary = Color(0xFF94A3B8);
+
+  /// Primary tugma ichidagi matn (oq).
+  static const Color textOnPrimary = Color(0xFFFFFFFF);
+
+  /// Accent (sariq) tugma ichidagi matn (dark).
+  static const Color textOnAccent = Color(0xFF1A2B3B);
+
+  // ============ SURFACES (alias — eski kod uchun) ============
+  /// Sprint 4.4 legacy alias — eski kod `AppColors.surface` ishlatadi.
+  /// Yangi kod `AppColors.bgSurface` ishlatishi kerak.
+  static const Color surface = bgSurface;
+  static const Color surfaceVariant = Color(0xFFEDF2F7);
+
+  // ============ DIVIDERS / BORDERS ============
+  static const Color divider = Color(0xFFE2E8F0);
+  static const Color border = Color(0xFFCBD5E0);
+
+  // ============ SHADOWS ============
+  /// Light shadow (kartalar uchun, 6% opacity).
+  static const Color shadowLight = Color(0x0F1A2B3B);
+
+  /// Medium shadow (8% opacity).
+  static const Color shadowMedium = Color(0x141A2B3B);
+
+  /// FAB sariq glow (16% accent).
+  static const Color shadowFAB = Color(0x29FFC800);
+
+  // ============ UZBEK PRIDE (use sparingly, <5%) ============
+  /// Sprint UI.1 — milliy element'lar, splash, branding accent.
+  static const Color uzbFlagBlue = Color(0xFF1EB5E5);
+  static const Color uzbFlagRed = Color(0xFFCE1126);
+  static const Color uzbFlagGreen = Color(0xFF1EAF53);
+
+  // ============ CATEGORY PALETTE (Sprint UI.1) ============
+  /// Gamification, ranking, achievement, audiobooks uchun per-kategoriya
+  /// accent ranglar. Default Material palette'ga asoslangan. Backend
+  /// kelajakda har kategoriya uchun rang yuborsa, shu konstantalar
+  /// fallback bo'ladi.
+  static const Color catPurple = Color(0xFF8B5CF6);
+  static const Color catViolet = Color(0xFFA78BFA);
+  static const Color catIndigo = Color(0xFF6366F1);
+  static const Color catBlue = Color(0xFF60A5FA);
+  static const Color catTeal = Color(0xFF14B8A6);
+  static const Color catEmerald = Color(0xFF10B981);
+  static const Color catGreen = Color(0xFF50C878);
+  static const Color catEmeraldLight = Color(0xFF34D399);
+  static const Color catAmber = Color(0xFFFBBF24);
+  static const Color catGold = Color(0xFFFFD700);
+  static const Color catOrange = Color(0xFFFB923C);
+  static const Color catOrangeDark = Color(0xFFF97316);
+  static const Color catOrangeLight = Color(0xFFFFA726);
+  static const Color catOrangeWarm = Color(0xFFFFB627);
+  static const Color catPink = Color(0xFFEC4899);
+  static const Color catPinkRose = Color(0xFFE85D75);
+  static const Color catPinkVibrant = Color(0xFFE4405F);
+  static const Color catRed = Color(0xFFFF5252);
+  static const Color catRedDark = Color(0xFFD32F2F);
+  static const Color catLavender = Color(0xFF8B95DD);
+  static const Color catLavenderDark = Color(0xFF5963C9);
+  static const Color catMint = Color(0xFF4DC4B7);
+  static const Color catLime = Color(0xFFD0FF6E);
+  static const Color catLimeBright = Color(0xFFC5F562);
+
+  // ============ LEGACY ALIASES (Sprint 4.4 backwards compat) ============
+  /// Sprint 4.4'da `primaryDark` ishlatilgan — yangi `primaryHover` alias.
+  static const Color primaryDark = primaryHover;
+
+  /// Sprint 4.4'da `backgroundTop` ishlatilgan (gradient) — endi flat,
+  /// alias `bgPrimary`.
+  static const Color backgroundTop = bgPrimary;
+
+  /// Sprint 4.4'da `backgroundBottom` ishlatilgan — alias `bgPrimary`.
+  static const Color backgroundBottom = bgPrimary;
+}

@@ -1,0 +1,953 @@
+// Farzandim Backend Schema
+// Generated: 2026-05-13
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// USERS - Parent va Child
+// ============================================
+model User {
+  id          String   @id @default(uuid())
+  phone       String?   @unique
+  role        UserRole
+  name        String?
+  telegramId  String?  @unique @map("telegram_id")
+  avatarUrl   String?  @map("avatar_url")
+  language    String   @default("uz")
+  isActive    Boolean  @default(true) @map("is_active")
+  tokenVersion Int     @default(0) @map("token_version") // Sprint 6 P1 — logout'da increment
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  // Parent relations
+  childrenAsParent Child[] @relation("ParentChildren")
+  
+  // Child relations
+  childRecord     Child?  @relation("ChildUser")
+  
+  // FCM tokens
+  fcmTokens       FcmToken[]
+
+  // Messages
+  sentMessages    VoiceMessage[] @relation("Sender")
+  receivedMessages VoiceMessage[] @relation("Receiver")
+
+  // Sprint 4.4: yangi modullar
+  sentVideos       VideoMessage[] @relation("VideoSender")
+  receivedVideos   VideoMessage[] @relation("VideoReceiver")
+  photoRequestsAsParent PhotoRequest[] @relation("ParentPhotoRequests")
+
+  // Sprint 5.2 — admin monetization
+  payments         Payment[]
+
+  // Sprint 6 — P0 monetizatsiya
+  subscriptions    Subscription[]
+
+  @@map("users")
+}
+
+enum UserRole {
+  PARENT
+  CHILD
+}
+
+// ============================================
+// CHILDREN - Parent ↔ Child mapping
+// ============================================
+model Child {
+  id           String   @id @default(uuid())
+  parentId     String   @map("parent_id")
+  childUserId  String?  @unique @map("child_user_id")
+  name         String
+  age          Int?
+  gender       String?
+  region       String?
+  photoPath    String?  @map("photo_path")
+  familyCode   String   @unique @map("family_code")
+  pairedAt     DateTime? @map("paired_at")
+  isConnected  Boolean  @default(false) @map("is_connected")
+  lastSeenAt   DateTime? @map("last_seen_at")
+
+  // Device info (Child App POST /location bilan birga yuboradi)
+  batteryLevel   Int?     @map("battery_level")
+  isCharging     Boolean? @map("is_charging")
+  deviceModel    String?  @map("device_model")
+  androidVersion String?  @map("android_version")
+  appVersion     String?  @map("app_version")
+  wifiName       String?  @map("wifi_name")
+
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  // Relations
+  parent       User    @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  childUser    User?   @relation("ChildUser", fields: [childUserId], references: [id], onDelete: SetNull)
+  locations    Location[]
+  schedules    Schedule[]
+  routines     Routine[]
+  geoZones     GeoZone[]
+  geoZoneEvents GeoZoneEvent[]
+
+  // Sprint 4.4: yangi modullar
+  notifications Notification[]
+  feedback      Feedback[]
+  profile       ChildProfile?
+  xpEvents      XpEvent[]
+  photoRequests PhotoRequest[]
+  sosAlerts     SosAlert[]
+  installedApps InstalledApp[]
+  appUsages     AppUsage[]
+  appLimits     AppLimit[]
+  pairRequests  ChildPairRequest[]
+
+  // Sprint 5.4 — admin Olympiad attempts
+  olympiadAttempts OlympiadAttempt[]
+
+  @@map("children")
+  @@index([parentId])
+  @@index([familyCode])
+}
+
+// ============================================
+// LOCATIONS - History
+// ============================================
+model Location {
+  id          String   @id @default(uuid())
+  childId     String   @map("child_id")
+  latitude    Float
+  longitude   Float
+  accuracy    Float?
+  speed       Float?
+  batteryLevel Int?    @map("battery_level")
+  isCharging  Boolean? @map("is_charging")
+  createdAt   DateTime @default(now()) @map("created_at")
+  
+  child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+  
+  @@map("locations")
+  @@index([childId, createdAt(sort: Desc)])
+}
+
+// ============================================
+// VOICE MESSAGES
+// ============================================
+model VoiceMessage {
+  id              String   @id @default(uuid())
+  senderId        String   @map("sender_id")
+  receiverId      String   @map("receiver_id")
+  storagePath     String   @map("storage_path")
+  durationSeconds Int?     @map("duration_seconds")
+  isRead          Boolean  @default(false) @map("is_read")
+  createdAt       DateTime @default(now()) @map("created_at")
+  
+  sender   User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
+  
+  @@map("voice_messages")
+  @@index([receiverId, isRead])
+  @@index([senderId])
+}
+
+// ============================================
+// SCHEDULES - App restrictions
+// ============================================
+model Schedule {
+  id           String   @id @default(uuid())
+  childId      String   @map("child_id")
+  name         String
+  startTime    String   @map("start_time")  // "HH:MM"
+  endTime      String   @map("end_time")
+  daysOfWeek   Int[]    @map("days_of_week") // [1,2,3,4,5]
+  action       ScheduleAction
+  isActive     Boolean  @default(true) @map("is_active")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+  
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  
+  @@map("schedules")
+  @@index([childId])
+}
+
+enum ScheduleAction {
+  BLOCK
+  ALLOW
+}
+
+// ============================================
+// ROUTINES - Bola kun rejasi (Uxlash/Maktab/Sport...)
+// Child Dashboard'da ko'rsatish uchun, enforcement YO'Q.
+// Cheklash (BLOCK/ALLOW) uchun Schedule modeli ishlatiladi.
+// ============================================
+model Routine {
+  id           String      @id @default(uuid())
+  childId      String      @map("child_id")
+  title        String                              // "Uxlash vaqti", "Maktab"
+  type         RoutineType
+  startHour    Int         @map("start_hour")     // 0-23
+  startMinute  Int         @map("start_minute")   // 0-59
+  endHour      Int         @map("end_hour")
+  endMinute    Int         @map("end_minute")
+  weekdays     Int[]                               // ISO 8601 [1=Mon...7=Sun]
+  isActive     Boolean     @default(true) @map("is_active")
+  createdAt    DateTime    @default(now()) @map("created_at")
+  updatedAt    DateTime    @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("routines")
+  @@index([childId, isActive])
+}
+
+enum RoutineType {
+  SLEEP
+  SCHOOL
+  HOMEWORK
+  SPORT
+  OTHER
+}
+
+// ============================================
+// GEO ZONES
+// ============================================
+model GeoZone {
+  id            String   @id @default(uuid())
+  childId       String   @map("child_id")
+  name          String
+  centerLat     Float    @map("center_lat")
+  centerLng     Float    @map("center_lng")
+  radiusMeters  Int      @map("radius_meters")
+  alertOnEnter  Boolean  @default(false) @map("alert_on_enter")
+  alertOnExit   Boolean  @default(false) @map("alert_on_exit")
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  
+  child  Child          @relation(fields: [childId], references: [id], onDelete: Cascade)
+  events GeoZoneEvent[]
+
+  @@map("geo_zones")
+  @@index([childId])
+}
+
+// --- Geo-zona kirish/chiqish hodisalari tarixi (Sprint 6 — P2) ---
+model GeoZoneEvent {
+  id        String   @id @default(uuid())
+  zoneId    String   @map("zone_id")
+  childId   String   @map("child_id")
+  type      String   // enter | exit
+  latitude  Float
+  longitude Float
+  createdAt DateTime @default(now()) @map("created_at")
+
+  zone  GeoZone @relation(fields: [zoneId], references: [id], onDelete: Cascade)
+  child Child   @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("geo_zone_events")
+  @@index([childId, createdAt(sort: Desc)])
+  @@index([zoneId])
+}
+
+// ============================================
+// FCM TOKENS
+// ============================================
+model FcmToken {
+  id         String   @id @default(uuid())
+  userId     String   @map("user_id")
+  token      String   @unique
+  deviceType String?  @map("device_type")  // 'android' | 'ios'
+  deviceId   String?  @map("device_id")
+  createdAt  DateTime @default(now()) @map("created_at")
+  
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  
+  @@map("fcm_tokens")
+  @@index([userId])
+}
+
+// ============================================
+// AUDIT LOGS
+// ============================================
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?  @map("user_id")
+  action       String
+  resourceType String?  @map("resource_type")
+  resourceId   String?  @map("resource_id")
+  data         Json?
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  createdAt    DateTime @default(now()) @map("created_at")
+  
+  @@map("audit_logs")
+  @@index([userId, createdAt(sort: Desc)])
+}
+
+// ============================================
+// SPRINT 4.4 MODULLARI
+// ============================================
+
+// --- Video messages (voice-messages bilan o'xshash) ---
+model VideoMessage {
+  id              String   @id @default(uuid())
+  senderId        String   @map("sender_id")
+  receiverId      String   @map("receiver_id")
+  storagePath     String   @map("storage_path")
+  thumbnailPath   String?  @map("thumbnail_path")
+  durationSeconds Int?     @map("duration_seconds")
+  isRead          Boolean  @default(false) @map("is_read")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  sender   User @relation("VideoSender", fields: [senderId], references: [id], onDelete: Cascade)
+  receiver User @relation("VideoReceiver", fields: [receiverId], references: [id], onDelete: Cascade)
+
+  @@map("video_messages")
+  @@index([receiverId, isRead])
+  @@index([senderId])
+}
+
+// --- Notifications ---
+model Notification {
+  id        String           @id @default(uuid())
+  childId   String           @map("child_id")
+  type      NotificationType
+  title     String
+  body      String
+  data      Json?
+  isRead    Boolean          @default(false) @map("is_read")
+  // Sprint 6 P2 — admin broadcast bog'lanishi (open/click tracking)
+  adminNotificationId String?   @map("admin_notification_id")
+  clickedAt           DateTime? @map("clicked_at")
+  createdAt DateTime         @default(now()) @map("created_at")
+
+  child             Child              @relation(fields: [childId], references: [id], onDelete: Cascade)
+  adminNotification AdminNotification? @relation(fields: [adminNotificationId], references: [id], onDelete: SetNull)
+
+  @@map("notifications")
+  @@index([childId, isRead])
+  @@index([childId, createdAt(sort: Desc)])
+  @@index([adminNotificationId])
+}
+
+enum NotificationType {
+  ACHIEVEMENT
+  CONTEST
+  SCHEDULE
+  PARENT_REQUEST
+  VOICE
+  GEO_ZONE
+  SYSTEM
+}
+
+// --- Feedback (child → parent emoji + matn) ---
+model Feedback {
+  id        String        @id @default(uuid())
+  childId   String        @map("child_id")
+  emoji     FeedbackEmoji
+  message   String?
+  context   String?
+  isRead    Boolean       @default(false) @map("is_read")
+  createdAt DateTime      @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("feedback")
+  @@index([childId, isRead])
+  @@index([childId, createdAt(sort: Desc)])
+}
+
+enum FeedbackEmoji {
+  HAPPY
+  EXCITED
+  THINKING
+  WINKING
+  SAD
+  ANGRY
+  TIRED
+  LOVE
+}
+
+// --- Gamification: ChildProfile (1-to-1 with Child) ---
+model ChildProfile {
+  id               String   @id @default(uuid())
+  childId          String   @unique @map("child_id")
+  xp               Int      @default(0)
+  donBalance       Int      @default(0) @map("don_balance")
+  level            Int      @default(1)
+  status           String   @default("Boshlovchi")
+  streakDays       Int      @default(0) @map("streak_days")
+  lastActivityDate DateTime? @map("last_activity_date")
+  achievements     Json     @default("[]")
+  createdAt        DateTime @default(now()) @map("created_at")
+  updatedAt        DateTime @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("child_profiles")
+}
+
+// --- Gamification: XpEvent (append-only ledger) ---
+model XpEvent {
+  id        String      @id @default(uuid())
+  childId   String      @map("child_id")
+  type      XpEventType
+  xpDelta   Int         @map("xp_delta")
+  donDelta  Int         @default(0) @map("don_delta")
+  relatedId String?     @map("related_id")
+  source    Json?
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("xp_events")
+  @@index([childId, createdAt(sort: Desc)])
+}
+
+enum XpEventType {
+  BOOK_READ
+  CONTEST_JOIN
+  CONTEST_WIN
+  CREATIVE_JOIN
+  CREATIVE_WIN
+  COURSE_LESSON
+  DAILY_GOAL
+  STREAK_WEEKLY
+  CONTENT_POST
+  OTHER
+}
+
+// --- Photo requests ---
+model PhotoRequest {
+  id            String             @id @default(uuid())
+  parentId      String             @map("parent_id")
+  childId       String             @map("child_id")
+  status        PhotoRequestStatus @default(PENDING)
+  photoPath     String?            @map("photo_path")
+  thumbnailPath String?            @map("thumbnail_path")
+  message       String?
+  requestedAt   DateTime           @default(now()) @map("requested_at")
+  completedAt   DateTime?          @map("completed_at")
+  declinedAt    DateTime?          @map("declined_at")
+
+  parent User  @relation("ParentPhotoRequests", fields: [parentId], references: [id], onDelete: Cascade)
+  child  Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("photo_requests")
+  @@index([childId, status])
+  @@index([parentId, status])
+}
+
+enum PhotoRequestStatus {
+  PENDING
+  COMPLETED
+  DECLINED
+}
+
+// --- SOS alerts ---
+model SosAlert {
+  id          String    @id @default(uuid())
+  childId     String    @map("child_id")
+  latitude    Float?
+  longitude   Float?
+  accuracy    Float?
+  status      SosStatus @default(ACTIVE)
+  deviceInfo  Json?     @map("device_info")
+  resolvedAt  DateTime? @map("resolved_at")
+  resolvedBy  String?   @map("resolved_by")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("sos_alerts")
+  @@index([childId, status])
+  @@index([status, createdAt(sort: Desc)])
+}
+
+enum SosStatus {
+  ACTIVE
+  RESOLVED
+}
+
+// --- Installed apps (snapshot batch sync) ---
+model InstalledApp {
+  id            String   @id @default(uuid())
+  childId       String   @map("child_id")
+  packageName   String   @map("package_name")
+  appName       String   @map("app_name")
+  versionName   String?  @map("version_name")
+  versionCode   Int?     @map("version_code")
+  installSource String?  @map("install_source")
+  iconPath      String?  @map("icon_path")
+  isSystem      Boolean  @default(false) @map("is_system")
+  firstSeenAt   DateTime @default(now()) @map("first_seen_at")
+  lastSeenAt    DateTime @default(now()) @map("last_seen_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("installed_apps")
+  @@unique([childId, packageName])
+  @@index([childId])
+}
+
+// --- App usage (daily stats) ---
+model AppUsage {
+  id           String    @id @default(uuid())
+  childId      String    @map("child_id")
+  packageName  String    @map("package_name")
+  date         DateTime  @db.Date
+  foregroundMs BigInt    @default(0) @map("foreground_ms")
+  lastUsedAt   DateTime? @map("last_used_at")
+  openCount    Int       @default(0) @map("open_count")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("app_usage")
+  @@unique([childId, packageName, date])
+  @@index([childId, date])
+}
+
+// --- Child pair-request: re-pair flow Parent confirm bilan ---
+// Bola App reinstall qildi yoki yangi qurilma → familyCode bilan ulanmoqchi,
+// lekin child.childUserId allaqachon mavjud. Parent tasdiqlasagina re-pair.
+// Security: kim familyCode bilsa, parent confirm'siz bola accountini o'g'irlay olmaydi.
+model ChildPairRequest {
+  id          String            @id @default(uuid())
+  childId     String            @map("child_id")
+  status      PairRequestStatus @default(PENDING)
+  deviceInfo  Json?             @map("device_info")
+  ipAddress   String?           @map("ip_address")
+  userAgent   String?           @map("user_agent")
+  // Approved bo'lganda yaratilgan yangi User (polling orqali bola JWT oladi)
+  newUserId   String?           @map("new_user_id")
+  createdAt   DateTime          @default(now()) @map("created_at")
+  decidedAt   DateTime?         @map("decided_at")
+  expiresAt   DateTime          @map("expires_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("child_pair_requests")
+  @@index([childId, status])
+  @@index([status, expiresAt])
+}
+
+enum PairRequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  EXPIRED
+}
+
+// --- App limits (per-package daily/weekly limit, YouTube/TikTok addiction) ---
+// Window-based Schedule (BLOCK/ALLOW) bilan birga ishlaydi:
+//   Schedule = vaqt oraliq (21:00-07:00 BLOCK barcha apps)
+//   AppLimit = per-package quota (com.youtube 15 min/kun)
+model AppLimit {
+  id            String   @id @default(uuid())
+  childId       String   @map("child_id")
+  packageName   String   @map("package_name")
+  dailyLimitMs  BigInt   @map("daily_limit_ms")    // 0 = no limit
+  weeklyLimitMs BigInt?  @map("weekly_limit_ms")   // null = no weekly limit
+  isActive      Boolean  @default(true) @map("is_active")
+  createdAt     DateTime @default(now()) @map("created_at")
+  updatedAt     DateTime @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("app_limits")
+  @@unique([childId, packageName])
+  @@index([childId, isActive])
+}
+
+// ============================================
+// ADMIN PANEL — Kontentlar (Sprint 5.6)
+// Videolar, audiokitoblar, kitoblar, o'yinlar + umumiy kategoriya jadval.
+// Bu PR'da MinIO multipart upload yo'q — URL-asoslangan create (admin
+// CDN/YouTube link kiritadi). Multipart upload Sprint 5.6b'da.
+// ============================================
+model ContentCategory {
+  id        String   @id @default(uuid())
+  kind      String   // video | audiobook | book | game
+  slug      String
+  name      String
+  sortOrder Int      @default(0) @map("sort_order")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  @@map("content_categories")
+  @@unique([kind, slug])
+  @@index([kind])
+}
+
+model Video {
+  id          String   @id @default(uuid())
+  title       String
+  description String?
+  url         String
+  thumbnail   String?
+  // Sprint 5.6c — MinIO storage path. Bo'sh bo'lsa demoq url/thumbnail tashqi
+  // CDN; bor bo'lsa har consumer fetch'da signed URL qayta generatsiya qilinadi.
+  storageKey      String? @map("storage_key")
+  thumbStorageKey String? @map("thumb_storage_key")
+  durationSec Int?     @map("duration_sec")
+  ageFrom     Int      @default(0) @map("age_from")
+  ageTo       Int      @default(18) @map("age_to")
+  categoryId  String?  @map("category_id")
+  category    String?  // legacy denorm slug
+  planRequired String  @default("free") @map("plan_required")
+  level       String?  // beginner | intermediate | advanced
+  status      String   @default("pending") // pending | approved | rejected | hidden
+  featured    Boolean  @default(false)
+  views       Int      @default(0)
+  likes       Int      @default(0)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  @@map("videos")
+  @@index([status])
+  @@index([categoryId])
+  @@index([planRequired])
+  @@index([featured])
+}
+
+model Audiobook {
+  id           String   @id @default(uuid())
+  title        String
+  author       String
+  description  String?
+  audioUrl     String   @map("audio_url")
+  thumbnail    String?
+  // Sprint 5.6c — MinIO storage path
+  storageKey      String? @map("storage_key")
+  thumbStorageKey String? @map("thumb_storage_key")
+  durationSec  Int?     @map("duration_sec")
+  partsCount   Int      @default(1) @map("parts_count")
+  ageFrom      Int      @default(0) @map("age_from")
+  ageTo        Int      @default(18) @map("age_to")
+  categoryId   String?  @map("category_id")
+  category     String?
+  planRequired String   @default("free") @map("plan_required")
+  status       String   @default("pending") // pending | approved | rejected | hidden
+  listens      Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("audiobooks")
+  @@index([status])
+  @@index([categoryId])
+}
+
+model Book {
+  id           String   @id @default(uuid())
+  title        String
+  author       String
+  description  String?
+  pdfUrl       String?  @map("pdf_url")
+  coverUrl     String?  @map("cover_url")
+  // Sprint 5.6d — MinIO storage paths (consumer endpoint har request'da re-sign)
+  storageKey      String? @map("storage_key")
+  thumbStorageKey String? @map("thumb_storage_key")
+  pages        Int      @default(0)
+  ageFrom      Int      @default(0) @map("age_from")
+  ageTo        Int      @default(18) @map("age_to")
+  category     String   @default("school") // school | adabiyot | fan | tarjima
+  categoryId   String?  @map("category_id")
+  planRequired String   @default("free") @map("plan_required")
+  status       String   @default("pending") // pending | approved | rejected | hidden
+  reads        Int      @default(0)
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  @@map("books")
+  @@index([status])
+  @@index([category])
+}
+
+// ============================================
+// ADMIN PANEL — Konkurslar / Olimpiada (Sprint 5.4)
+// Konsept v2 markaziy g'oyasi. Admin yaratadi → bola Child App'da ishlaydi
+// → Attempt jadvalida saqlanadi. Hozircha admin tomonida full lifecycle
+// (draft/published) va statistikalar (participants, leaderboard).
+// ============================================
+model Olympiad {
+  id                  String   @id @default(uuid())
+  title               String
+  description         String?
+  subject             String   // Matematika, Ona tili, Ingliz, Fizika, Kimyo, IT, Aralash
+  ageFrom             Int      @map("age_from")
+  ageTo               Int      @map("age_to")
+  type                String   @default("test") // test | creative | mixed
+  difficulty          String   @default("o'rta") // oson | o'rta | qiyin
+  startTime           DateTime @map("start_time")
+  endTime             DateTime @map("end_time")
+  durationMin         Int      @default(30) @map("duration_min")
+  maxAttempts         Int      @default(1) @map("max_attempts")
+  xpReward            Int      @default(50) @map("xp_reward")
+  shuffleQuestions    Boolean  @default(true) @map("shuffle_questions")
+  shuffleAnswers      Boolean  @default(true) @map("shuffle_answers")
+  hideResults         Boolean  @default(false) @map("hide_results")
+  allowBack           Boolean  @default(true) @map("allow_back")
+  certificateEnabled  Boolean  @default(true) @map("certificate_enabled")
+  status              String   @default("draft") // draft | published | archived
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  questions OlympiadQuestion[]
+  attempts  OlympiadAttempt[]
+
+  @@map("olympiads")
+  @@index([status])
+  @@index([subject])
+  @@index([startTime])
+}
+
+model OlympiadQuestion {
+  id           String   @id @default(uuid())
+  olympiadId   String   @map("olympiad_id")
+  text         String
+  options      String[]
+  correctIndex Int      @map("correct_index")
+  points       Int      @default(10)
+  orderIdx     Int      @default(0) @map("order_idx")
+  createdAt    DateTime @default(now()) @map("created_at")
+  updatedAt    DateTime @updatedAt @map("updated_at")
+
+  olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+
+  @@map("olympiad_questions")
+  @@index([olympiadId, orderIdx])
+}
+
+model OlympiadAttempt {
+  id              String   @id @default(uuid())
+  olympiadId      String   @map("olympiad_id")
+  childId         String   @map("child_id")
+  startedAt       DateTime @default(now()) @map("started_at")
+  finishedAt      DateTime? @map("finished_at")
+  status          String   @default("in_progress") // in_progress | finished | abandoned
+  score           Int      @default(0)
+  totalPoints     Int      @default(0) @map("total_points")
+  correctAnswers  Int      @default(0) @map("correct_answers")
+  questionsTotal  Int      @default(0) @map("questions_total")
+  timeSec         Int      @default(0) @map("time_sec")
+  answers         Json     @default("[]") // [{ questionId, selectedIndex, isCorrect }]
+
+  olympiad Olympiad @relation(fields: [olympiadId], references: [id], onDelete: Cascade)
+  child    Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("olympiad_attempts")
+  @@index([olympiadId, score])
+  @@index([childId])
+  @@unique([olympiadId, childId])
+}
+
+// ============================================
+// ADMIN PANEL — Bildirishnoma broadcast (Sprint 5.3)
+// Per-child `Notification` modelidan farqli: bu admin tomonidan auditoriyaga
+// yuborilgan bulk push. Hozircha real FCM fan-out qilinmaydi — yozuv va
+// sintetik metric (delivered/opened/clicked) saqlanadi.
+// ============================================
+model AdminNotification {
+  id              String   @id @default(uuid())
+  title           String
+  message         String
+  targetType      String   @map("target_type") // all | parents | children | premium | age_group
+  filters         Json     @default("{}")
+  imageUrl        String?  @map("image_url")
+  deepLink        String?  @map("deep_link")
+  status          String   @default("sent") // sent | scheduled | queued | sending | failed
+  scheduledAt     DateTime? @map("scheduled_at")
+  sentAt          DateTime? @map("sent_at")
+  deliveredCount  Int      @default(0) @map("delivered_count")
+  openedCount     Int      @default(0) @map("opened_count")
+  clickedCount    Int      @default(0) @map("clicked_count")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+  createdById     String?  @map("created_by_id")
+
+  notifications Notification[]
+
+  @@map("admin_notifications")
+  @@index([status])
+  @@index([targetType])
+  @@index([createdAt])
+}
+
+// ============================================
+// ADMIN PANEL — Monetization (Sprint 5.2)
+// Tariflar (Plan), Promokodlar (Promocode), To'lov tarixi (Payment).
+// User'lar bilan Telegram-bind FK orqali bog'lanadi (consumer side).
+// ============================================
+model Plan {
+  id              String   @id @default(uuid())
+  slug            String   @unique
+  name            String
+  description     String?
+  priceUzs        Int      @default(0) @map("price_uzs")
+  period          String   @default("monthly") // free | monthly | yearly
+  entitlementTier String   @default("standard") @map("entitlement_tier") // free | standard | premium
+  badge           String?
+  features        String[] @default([])
+  isActive        Boolean  @default(true) @map("is_active")
+  sortOrder       Int      @default(0) @map("sort_order")
+  createdAt       DateTime @default(now()) @map("created_at")
+  updatedAt       DateTime @updatedAt @map("updated_at")
+
+  promocodes    Promocode[]
+  payments      Payment[]
+  subscriptions Subscription[]
+
+  @@map("plans")
+}
+
+model Promocode {
+  id          String    @id @default(uuid())
+  code        String    @unique
+  discountPct Int       @map("discount_pct")
+  usageLimit  Int       @default(0) @map("usage_limit")
+  usedCount   Int       @default(0) @map("used_count")
+  expiresAt   DateTime? @map("expires_at")
+  status      String    @default("active") // active | inactive | archived
+  planId      String?   @map("plan_id")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
+
+  plan Plan? @relation(fields: [planId], references: [id], onDelete: SetNull)
+
+  @@map("promocodes")
+  @@index([status])
+  @@index([planId])
+}
+
+model Payment {
+  id             String    @id @default(uuid())
+  userId         String?   @map("user_id")
+  planId         String?   @map("plan_id")
+  planName       String?   @map("plan_name") // snapshot — Plan o'chirilsa ham qoladi
+  subscriptionId String?   @map("subscription_id") // Sprint 6 — to'lov aktivlashtirgan obuna
+  amount         Int       // so'm (UZS)
+  method         String    // click | payme | uzum_bank | visa | mastercard
+  status         String    @default("success") // success | pending | failed | refunded | cancelled
+  externalId     String?   @map("external_id") // provayder tranzaksiya ID'si
+  idempotencyKey String?   @unique @map("idempotency_key") // takroriy checkout/callback'ni bloklaydi
+  providerData   Json?     @map("provider_data") // provayder callback'idan kelgan xom payload
+  promocodeId    String?   @map("promocode_id")
+  notes          String?
+  paidAt         DateTime? @map("paid_at") // muvaffaqiyatli to'lov vaqti
+  createdAt      DateTime  @default(now()) @map("created_at")
+  updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at")
+
+  user         User?         @relation(fields: [userId], references: [id], onDelete: SetNull)
+  plan         Plan?         @relation(fields: [planId], references: [id], onDelete: SetNull)
+  subscription Subscription? @relation(fields: [subscriptionId], references: [id], onDelete: SetNull)
+
+  @@map("payments")
+  @@index([userId])
+  @@index([planId])
+  @@index([subscriptionId])
+  @@index([method])
+  @@index([createdAt])
+}
+
+// ============================================
+// SUBSCRIPTION (Sprint 6 — P0 monetizatsiya)
+// Foydalanuvchining aktiv obunasi. To'lov success bo'lganda yaratiladi yoki
+// uzaytiriladi. consumer-content plan-gating shu modeldan o'qiydi —
+// avvalgi Payment-scan approximation o'rniga.
+// ============================================
+model Subscription {
+  id          String             @id @default(uuid())
+  userId      String             @map("user_id")
+  planId      String?            @map("plan_id")
+  status      SubscriptionStatus @default(PENDING)
+  startedAt   DateTime?          @map("started_at")
+  expiresAt   DateTime?          @map("expires_at")
+  autoRenew   Boolean            @default(false) @map("auto_renew")
+  cancelledAt DateTime?          @map("cancelled_at")
+  createdAt   DateTime           @default(now()) @map("created_at")
+  updatedAt   DateTime           @updatedAt @map("updated_at")
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
+  payments Payment[]
+
+  @@map("subscriptions")
+  @@index([userId, status])
+  @@index([status, expiresAt])
+}
+
+enum SubscriptionStatus {
+  PENDING
+  ACTIVE
+  EXPIRED
+  CANCELLED
+}
+
+// ============================================
+// ADMIN PANEL — Moderator (Sprint 5.1)
+// Alohida auth flow (email + password + JWT audience "admin-panel"),
+// hech qanday Telegram bog'lanishi yo'q. Permission kalitlari
+// admin_panel Flutter Web tomonidagi staff_permissions.dart bilan mos.
+// ============================================
+model ModeratorAuditLog {
+  id           String   @id @default(uuid())
+  moderatorId  String?  @map("moderator_id") // null = anonymous (failed login)
+  email        String?                       // captured at action time (immutable)
+  action       String                         // "auth.login.success", "video.approve", ...
+  resourceType String?  @map("resource_type") // "video" | "moderator" | ...
+  resourceId   String?  @map("resource_id")   // target id
+  status       String   @default("success")   // success | failure
+  ipAddress    String?  @map("ip_address")
+  userAgent    String?  @map("user_agent")
+  details      Json?                          // free-form (payload, error, ...)
+  createdAt    DateTime @default(now()) @map("created_at")
+
+  @@map("moderator_audit_logs")
+  @@index([moderatorId, createdAt(sort: Desc)])
+  @@index([action, createdAt(sort: Desc)])
+  @@index([resourceType, resourceId])
+}
+
+model Moderator {
+  id                String   @id @default(uuid())
+  name              String
+  email             String   @unique
+  phone             String?
+  passwordHash      String   @map("password_hash")
+  moderatorRoleKey  String   @map("moderator_role_key") // super_admin | finance | content_maker | support | custom
+  permissions       String[] @default([])
+  status            String   @default("active") // active | blocked
+  tokenVersion      Int      @default(0) @map("token_version") // Sprint 6 P1 — logout'da increment
+  lastActivityAt    DateTime? @map("last_activity_at")
+  // Sprint 5.x — TOTP 2FA (Google Authenticator, Authy, ...)
+  twoFactorEnabled     Boolean  @default(false) @map("two_factor_enabled")
+  twoFactorSecret      String?  @map("two_factor_secret") // base32 TOTP secret
+  twoFactorBackupCodes String[] @default([]) @map("two_factor_backup_codes") // bcrypt hashed, single-use
+  twoFactorEnabledAt   DateTime? @map("two_factor_enabled_at")
+  createdAt         DateTime @default(now()) @map("created_at")
+  updatedAt         DateTime @updatedAt @map("updated_at")
+
+  @@map("moderators")
+  @@index([moderatorRoleKey])
+  @@index([status])
+}
+
+// ============================================
+// OTP (Phone verification)
+// ============================================
+model OtpCode {
+  id        String   @id @default(uuid())
+  phone     String
+  code      String
+  attempts  Int      @default(0)
+  expiresAt DateTime @map("expires_at")
+  verifiedAt DateTime? @map("verified_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  
+  @@map("otp_codes")
+  @@index([phone, createdAt(sort: Desc)])
+}

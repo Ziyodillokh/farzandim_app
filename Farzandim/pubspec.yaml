@@ -1,0 +1,251 @@
+name: farzandim
+description: "Farzandim — O'zbekiston ota-onalari uchun oilaviy aloqa va ta'lim platformasi (Parent App)."
+# Loyiha private — pub.dev'ga publish qilmaymiz
+publish_to: 'none'
+
+# Versiya: <semver>+<build_number>
+# Android: build_number = versionCode, iOS: build_number = CFBundleVersion
+version: 1.0.0+1
+
+environment:
+  sdk: ^3.11.1
+
+dependencies:
+  # Audio session — telefon zvonok / boshqa audio kelganda voice player'ni
+  # avtomatik to'xtatish uchun (Bosqich 11). just_audio bilan birga
+  # ishlatiladi: AVAudioSession (iOS) / AudioFocus (Android) wrapper.
+  audio_session: ^0.1.21
+
+  # iOS uslubidagi ikonkalar (Cupertino)
+  cupertino_icons: ^1.0.8
+
+  # ─── Sprint 4.4: Backend REST migration ─────────────────────────
+  # Dio — HTTP client (Firestore SDK o'rniga). Interceptor'lar bilan
+  # JWT Bearer header + 401 refresh + logging.
+  dio: ^5.7.0
+
+  # Lokalizatsiya — uz/ru/en uchun (Sprint 3.3). JSON fayllar
+  # `assets/translations/{lang}.json`'da. Tanlanган til
+  # SharedPreferences'da avtomatik saqlanadi.
+  easy_localization: ^3.0.7
+
+  # Firebase Analytics — DAU/MAU, auto screen tracking (Sprint 1.5).
+  # FirebaseAnalyticsObserver go_router observers ichida ishlatadi.
+  firebase_analytics: ^11.3.3
+
+  # Firebase App Check — Play Integrity (Android) + DeviceCheck (iOS).
+  # API kalitlarini reverse-engineered APK / bot'lardan himoya
+  # qiladi: faqat haqiqiy Farzandim app Firestore/Auth/Functions'ga
+  # so'rov yubora oladi (Sprint 2.3).
+  firebase_app_check: ^0.3.1+1
+
+  # Firebase asosiy paketi — initializeApp uchun.
+  firebase_core: ^3.6.0
+
+  # Firebase Crashlytics — production crash report (Sprint 1.5).
+  # Debug mode'da o'chirilgan (main.dart guard'i).
+  firebase_crashlytics: ^4.1.3
+
+  # Firebase Cloud Messaging — push notifications (Bosqich 6.B).
+  firebase_messaging: ^15.1.3
+
+  flutter:
+    sdk: flutter
+
+  # flutter_animate — deklarativ animatsiyalar (.fadeIn().slideY()...)
+  # Stagger entrance va micro-interaction'lar uchun (Sprint 4.7).
+  flutter_animate: ^4.5.0
+
+  # flutter_local_notifications — foreground'da kelgan FCM xabarini
+  # tizim notification sifatida ko'rsatish (ovoz + vibratsiya). Backend
+  # data-only push yuborsa, FCM avtomatik UI ko'rsatmaydi — manual kerak
+  # (Sprint 4.4.23).
+  flutter_local_notifications: ^17.2.3
+
+  # State management — Riverpod 2.x
+  flutter_riverpod: ^2.6.1
+
+  # flutter_secure_storage — JWT access/refresh tokenlarini xavfsiz
+  # saqlash (KeyStore Android, Keychain iOS). SharedPreferences emas
+  # — secrets uchun encrypted storage (Sprint 4.4).
+  flutter_secure_storage: ^9.2.2
+
+  # SVG renderer — brand logolari va custom ikonkalar uchun
+  # (Apple, Google, va h.k. — assets/icons/*.svg).
+  flutter_svg: ^2.0.10
+
+  # Routing — Flutter rasmiy tavsiyasi
+  go_router: ^14.6.2
+
+  # Inter shriftini Internet'dan olib keladi (Google Fonts)
+  google_fonts: ^6.2.1
+
+  # Google Maps widget — xarita, marker, geo-zonalar.
+  # Android: API kalit AndroidManifest'ga (build.gradle.kts orqali
+  # local.properties'dan in'ektsiya qilinadi — git'ga tushmaydi).
+  google_maps_flutter: ^2.6.0
+
+  # Places API autocomplete — manzilni qidirish uchun (Bosqich 4.2.2).
+  # API kalit Dart'ga `--dart-define-from-file=env.json` orqali
+  # uzatiladi (`api_keys.dart` String.fromEnvironment'dan o'qiydi).
+  google_places_flutter: ^2.0.8
+
+  # Galeriya/kameradan rasm tanlash (bola fotosi uchun).
+  # Web'da galeriya HTML file input orqali ishlaydi, kamera faqat
+  # mobilda. `XFile.readAsBytes()` orqali Uint8List olamiz —
+  # universal (web/iOS/Android'da bir xil ishlaydi).
+  image_picker: ^1.0.7
+
+  # Native kamera — Telegram uslubidagi yumaloq video xabarlar uchun
+  # (Sprint 4.4.x). `image_picker.pickVideo` faqat OS kamera ekranini
+  # ochadi; bizga inline preview + long-press recording kerak, shuning
+  # uchun to'g'ridan-to'g'ri `CameraController` ishlatamiz.
+  camera: ^0.11.0+2
+
+  # Audio player — ovozli xabarlarni tinglash uchun (Bosqich 8+9).
+  # URL'dan stream, speed control (1x/1.5x/2x), pozitsiya kuzatish.
+  just_audio: ^0.9.40
+
+  # Vaqtinchalik fayllar uchun (Bosqich 10) — record paketi audio
+  # yozadigan fayl yo'lini shu yerdan oladi (`getTemporaryDirectory()`).
+  path_provider: ^2.1.4
+
+  # Runtime ruxsatlar (joylashuv, kamera, mikrofon, va h.k.) so'rash.
+  permission_handler: ^11.3.0
+
+  # Audio recording — Bosqich 10. Hold-to-record gesture, AAC LC encoder,
+  # real-time amplitude stream (live waveform uchun).
+  record: ^5.1.2
+
+  # Native share sheet — Android intent picker, iOS UIActivityVC,
+  # web Web Share API. Oila kodi va taklif matnini boshqa ilovalarga
+  # (WhatsApp, Telegram, SMS) yuborish uchun.
+  share_plus: ^10.0.2
+
+  # shared_preferences — bildirishnomalar tarixi va boshqa kichik
+  # ma'lumotlarni saqlash (Sprint 4.4.21).
+  shared_preferences: ^2.3.2
+
+  # package_info_plus — joriy app versiya va build number (Sprint 4.4.28
+  # AppUpdate version check uchun).
+  package_info_plus: ^8.1.0
+
+  # shimmer — loading skeleton (CircularProgressIndicator o'rniga).
+  # Zamonaviy app standartining hissi (Sprint 4.7).
+  shimmer: ^3.0.0
+
+  # video_compress — Telegram round video uchun client-side compression
+  # (Sprint 4.4.34). Backend bodyLimit oshmaganidan, ~10 MB → ~1 MB
+  # ga kamaytirib yuboramiz. Native API (FFmpeg binary'siz, kichik APK).
+  video_compress: ^3.1.4
+
+  # socket_io_client — Backend Socket.io WebSocket'iga ulanish
+  # (Sprint 4.4). 6 ta real-time event tipi: schedule/routine/
+  # geo_zone/location updates + geo_zone:alert + voice:received.
+  # JWT auth.handshake bilan.
+  socket_io_client: ^2.0.3+1
+
+  # tel:/mailto:/https: URI'larni native dialer/email/browser bilan
+  # ochish. SOS dialog'dagi "Qo'ng'iroq" tugmasi `tel:+998...` URI bilan
+  # telefon dialer'ini ochadi (Sprint 4.1).
+  url_launcher: ^6.3.1
+
+  video_player: ^2.11.1
+
+  # webview_flutter — Telegram Login Widget'ni WebView'da ochish
+  # (Sprint 4.4). login.html farzandimedu.uz'da hosting qilingan,
+  # auth tugagach FlutterAuth JavascriptChannel orqali JSON
+  # token + user'ni qaytaradi.
+  webview_flutter: ^4.10.0
+
+# `record` paketi tranzitiv `record_linux 0.7.2` keltiradi, bu eski
+# implementatsiya `record_platform_interface 1.5.0` bilan nomos
+# (`startStream`/`hasPermission` API o'zgargan). Build vaqtida xato:
+#   "RecordLinux is missing implementations for 'startStream'".
+# Yangi `record_linux ^1.0.0` versiyasini majburiy ishlatamiz.
+# Bir xil bug Child App'da bo'lgan va xuddi shu yechim qo'llanilgan.
+dependency_overrides:
+  record_linux: ^1.0.0
+
+dev_dependencies:
+  # Launcher ikonka generatori — bitta PNG'dan barcha platform va o'lcham
+  # variantlarini avtomatik yaratadi. `dart run flutter_launcher_icons`.
+  flutter_launcher_icons: ^0.14.4
+
+  # Splash screen generatori (Android 12 + iOS Storyboard)
+  flutter_native_splash: ^2.4.1
+
+  flutter_test:
+    sdk: flutter
+
+  # Linter — flutter_lints'dan kuchliroq, professional standart
+  very_good_analysis: ^6.0.0
+
+# ─── flutter_launcher_icons konfiguratsiyasi ────────────────────────
+# Yangi brand assets: assets/icons/parent_logo_icon.png (2026-05-14).
+# `dart run flutter_launcher_icons` chaqirilganda ishlaydi.
+flutter_launcher_icons:
+  android: true
+  ios: true
+  image_path: "assets/icons/parent_logo_icon.png"
+  min_sdk_android: 21
+
+  # iOS app icon'da alpha (shaffoflik) ruxsat etilmaydi — shaffof
+  # burchaklarni dark fon (#0A0A12) bilan to'ldiradi.
+  remove_alpha_ios: true
+  background_color_ios: "#0A0A12"
+
+  # Web manifest icons + favicon.
+  web:
+    generate: true
+    image_path: "assets/icons/parent_logo_icon.png"
+    background_color: "#0A0A12"
+    theme_color: "#C5F562"
+
+# ─── flutter_native_splash konfiguratsiyasi ─────────────────────────
+flutter_native_splash:
+  color: "#0A0A16"
+  image: assets/app_icon/parent_app_icon_white.png
+  android_12:
+    color: "#0A0A16"
+    image: assets/icons/parent_logo_icon.png
+
+# For information on the generic Dart part of this file, see the
+# following page: https://dart.dev/tools/pub/pubspec
+
+# The following section is specific to Flutter packages.
+flutter:
+
+  uses-material-design: true
+
+  # Loyiha resurslari. Papka oxiridagi `/` — papka ichidagi barcha
+  # fayllarni o'z ichiga olishni anglatadi (yangi rasm qo'shsangiz,
+  # `flutter pub get` qaytadan ishga tushirish kerak).
+  assets:
+    - assets/app_icon/     # telefon home screen ikonkalari
+    - assets/icons/        # logo'lar (parent_logo_icon.png, va h.k.)
+    - assets/images/       # welcome_bg, kelajakdagi rasmlar
+    - assets/stickers/     # bola avatar default stickerlari (boy/girl x yosh)
+    - assets/translations/ # uz.json, ru.json, en.json — easy_localization
+    - assets/map_styles/   # Google Maps custom JSON style (dark premium)
+    - assets/env.json      # API kalitlar (git-ignored, har dev o'zi)
+
+  # To add custom fonts to your application, add a fonts section here,
+  # in this "flutter" section. Each entry in this list should have a
+  # "family" key with the font family name, and a "fonts" key with a
+  # list giving the asset and other descriptors for the font. For
+  # example:
+  # fonts:
+  #   - family: Schyler
+  #     fonts:
+  #       - asset: fonts/Schyler-Regular.ttf
+  #       - asset: fonts/Schyler-Italic.ttf
+  #         style: italic
+  #   - family: Trajan Pro
+  #     fonts:
+  #       - asset: fonts/TrajanPro.ttf
+  #       - asset: fonts/TrajanPro_Bold.ttf
+  #         weight: 700
+  #
+  # For details regarding fonts from package dependencies,
+  # see https://flutter.dev/to/font-from-package

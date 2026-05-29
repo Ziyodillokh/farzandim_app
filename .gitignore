@@ -1,0 +1,116 @@
+# ─── Sirlar va credential'lar (XECH QACHON push qilinmaydi) ───
+.env
+.env.local
+.env.*.local
+.env.production
+**/.env
+**/.env.local
+**/google-services.json
+**/GoogleService-Info.plist
+**/firebase_options.dart
+**/serviceAccountKey.json
+**/key.properties
+**/*.keystore
+**/*.jks
+**/*.p12
+**/*.p8
+
+# ─── Node.js ───
+node_modules/
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+.pnpm-debug.log*
+
+# ─── NestJS / TypeScript build ───
+dist/
+**/dist/
+*.tsbuildinfo
+.tsc-cache/
+
+# ─── Next.js ───
+.next/
+**/.next/
+out/
+**/out/
+.vercel/
+
+# ─── Flutter / Dart ───
+.dart_tool/
+**/.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+build/
+**/build/
+*.iml
+.idea/
+**/.idea/
+
+# Flutter platform-specific
+**/ios/Pods/
+**/ios/.symlinks/
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/flutter_export_environment.sh
+**/ios/Runner/GeneratedPluginRegistrant.*
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+**/android/app/release/
+**/android/app/debug/
+**/android/captures/
+**/android/gradlew.bat.lock
+**/android/.cxx/
+**/linux/flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+
+# ─── IDE / Editor ───
+.vscode/
+**/.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+Thumbs.db
+*.suo
+*.user
+
+# ─── Logs ───
+*.log
+logs/
+**/logs/
+
+# ─── Test va coverage ───
+coverage/
+**/coverage/
+.nyc_output/
+junit.xml
+
+# ─── Prisma ───
+**/prisma/migrations/migration_lock.toml.bak
+
+# ─── Temporary va backup ───
+*.tmp
+*.bak
+*.swp
+*~
+.cache/
+
+# ─── Eski APK fayllar (push qilmaymiz) ───
+*.apk
+*.aab
+*.ipa
+
+# ─── Eski yangiliklar (juda katta) ───
+**/hs_err_pid*.log
+
+# ─── Yangi NestJS frontend-web env ───
+frontend-web/.env.local
+
+# ─── Yangi NestJS backend env ───
+backend/.env

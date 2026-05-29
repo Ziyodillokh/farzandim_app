@@ -1,0 +1,14 @@
+# Dart analyzer sozlamalari. `flutter analyze` shu fayldan foydalanadi.
+# Very Good Analysis — Very Good Ventures (Flutter agency) tomonidan
+# tayyorlangan qat'iy lint qoidalari to'plami.
+include: package:very_good_analysis/analysis_options.yaml
+
+# Bu joyga loyiha bo'yicha qoidalarni o'zgartirsa bo'ladi (hozircha bo'sh).
+# analyzer:
+#   exclude:
+#     - "**/*.g.dart"      # generated kod (json_serializable)
+#     - "**/*.freezed.dart" # generated kod (freezed)
+#
+# linter:
+#   rules:
+#     public_member_api_docs: false  # har bir public class uchun doc shart emas

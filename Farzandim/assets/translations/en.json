@@ -1,0 +1,521 @@
+{
+  "common": {
+    "ok": "OK",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "next": "Next",
+    "confirm": "Confirm",
+    "yes": "Yes",
+    "no": "No",
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "close": "Close"
+  },
+  "languages": {
+    "uz": "Uzbek",
+    "ru": "Russian",
+    "en": "English"
+  },
+  "auth": {
+    "welcome": {
+      "title": "Welcome",
+      "subtitle": "Protect your child online",
+      "signUpButton": "Sign up",
+      "signInButton": "Sign in",
+      "continueButton": "Continue with Telegram"
+    },
+    "signIn": {
+      "title": "Sign in",
+      "emailLabel": "Email address",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot password?",
+      "submitButton": "Sign in"
+    },
+    "signUp": {
+      "title": "Sign up",
+      "phoneTab": "Phone",
+      "emailTab": "Email",
+      "phoneLabel": "Phone number",
+      "phoneHint": "90 123 45 67",
+      "emailLabel": "Email address",
+      "emailHint": "email@example.com",
+      "passwordLabel": "Password",
+      "passwordHint": "Minimum 6 characters",
+      "continueButton": "Continue",
+      "consent": {
+        "prefix": "I have read and accept the ",
+        "privacy": "Privacy Policy",
+        "and": " and ",
+        "terms": "Terms of Service",
+        "suffix": "."
+      }
+    },
+    "forgotPassword": {
+      "title": "Reset password",
+      "subtitle": "Enter your email address,\nwe'll send a reset link.",
+      "emailLabel": "Email address",
+      "emailHint": "email@example.com",
+      "submitButton": "Send reset link",
+      "remembered": "Remembered? ",
+      "backToSignIn": "Sign in",
+      "dialog": {
+        "title": "Email sent",
+        "content": "A password reset link has been sent to {email}. Please check your inbox."
+      }
+    },
+    "verifyOtp": {
+      "title": "SMS code",
+      "codeSentTo": "A 6-digit code was sent to:\n",
+      "resendIn": "Resend in: {seconds}s",
+      "resend": "Resend",
+      "resentSnack": "SMS resent",
+      "submitButton": "Verify"
+    }
+  },
+  "formatters": {
+    "duration": "{hours} h {minutes} min",
+    "now": "now",
+    "minutesAgo": "{minutes} min ago",
+    "hoursAgo": "{hours} h ago"
+  },
+  "notifications": {
+    "title": "Notifications",
+    "markAllRead": "Mark all read",
+    "emptyTitle": "No notifications",
+    "emptySubtitle": "Important messages about your child will appear here.",
+    "sos": {
+      "title": "SOS!",
+      "subtitle": "{name} reported they need help",
+      "locationButton": "Location",
+      "callButton": "Call",
+      "callSnack": "Calling...",
+      "callNoPhone": "Child's phone number not set",
+      "callFailed": "Could not open phone dialer",
+      "close": "Close"
+    }
+  },
+  "dashboard": {
+    "emptyState": {
+      "message": "Add your child to start monitoring through the app",
+      "addButton": "Add new child"
+    },
+    "connection": {
+      "connected": "Device connected",
+      "disconnected": "Device disconnected"
+    },
+    "quickActions": {
+      "device": "Device settings",
+      "voice": "Voice messages",
+      "appRestrictions": "App restrictions",
+      "location": "Location",
+      "schedules": "Schedules"
+    }
+  },
+  "schedules": {
+    "headerTitle": "Schedules",
+    "newFab": "New schedule",
+    "errorPrefix": "Error: {error}",
+    "empty": {
+      "title": "No schedules on this day",
+      "subtitle": "Tap the button below to add a new schedule."
+    },
+    "edit": {
+      "titleAdd": "New schedule",
+      "titleEdit": "Edit schedule",
+      "typeLabel": "Type",
+      "titleFieldLabel": "Title",
+      "titleFieldHint": "School / Sport / Sleep / ...",
+      "timeLabel": "Time",
+      "startLabel": "Start",
+      "endLabel": "End",
+      "weekdaysLabel": "Weekdays",
+      "shortcutAll": "Every day",
+      "shortcutWeekdays": "Weekdays",
+      "shortcutWeekend": "Weekend",
+      "reminderLabel": "Reminder",
+      "reminderOff": "Off",
+      "reminderMinutes": "{minutes} min",
+      "activeTitle": "Enabled",
+      "activeSubtitle": "When disabled, reminders are not sent",
+      "savingButton": "Saving...",
+      "saveButton": "Save",
+      "updateButton": "Update",
+      "saveErrorPrefix": "Save error: {error}",
+      "deleteErrorPrefix": "Delete error: {error}"
+    }
+  },
+  "fullScreenMap": {
+    "searchHint": "Search address...",
+    "missingKeyTitle": "API key not found",
+    "missingKeyHint": "Run with --dart-define-from-file=env.json",
+    "centerLabel": "Center selected",
+    "confirmButton": "Confirm"
+  },
+  "geoZoneEdit": {
+    "headerAdd": "New geo-zone",
+    "headerEdit": "Edit geo-zone",
+    "mapHint": "Tap on the map to set the center, or drag the marker",
+    "nameLabel": "Name",
+    "nameHint": "Home / School / ...",
+    "iconLabel": "Icon",
+    "radiusLabel": "Radius",
+    "radiusValue": "{meters} m",
+    "notificationsLabel": "Notifications",
+    "notifyOnEnter": "Notify on enter",
+    "notifyOnExit": "Notify on exit",
+    "saveButton": "Save",
+    "updateButton": "Update",
+    "saveErrorPrefix": "Save error: {error}",
+    "deleteDialog": {
+      "title": "Delete geo-zone?",
+      "content": "The {name} geo-zone will be permanently deleted.",
+      "cancel": "Cancel",
+      "delete": "Delete"
+    },
+    "deleteErrorPrefix": "Delete error: {error}"
+  },
+  "geoZoneEvents": {
+    "headerTitle": "History",
+    "errorPrefix": "Error: {error}",
+    "empty": {
+      "title": "No history yet",
+      "subtitle": "When {name} enters or leaves a geo-zone,\nevents will appear here"
+    },
+    "tile": {
+      "fallbackChildName": "Child",
+      "eventLine": {
+        "enter": "{name} entered {zone}",
+        "exit": "{name} left {zone}"
+      },
+      "dateToday": "Today",
+      "dateYesterday": "Yesterday"
+    }
+  },
+  "geoZones": {
+    "headerTitle": "Geo-zones",
+    "historyTooltip": "History",
+    "fallbackChildName": "Child",
+    "errorPrefix": "Error: {error}",
+    "newFab": "New",
+    "last24h": {
+      "eventCount": "{count} events in the last 24 hours",
+      "viewLink": "View"
+    },
+    "empty": {
+      "title": "No geo-zones yet",
+      "subtitle": "Mark places your child visits often. You'll be notified when they enter or leave.",
+      "addButton": "Add geo-zone"
+    },
+    "card": {
+      "radius": "{meters}m radius"
+    }
+  },
+  "appRestrictions": {
+    "headerTitle": "App restrictions",
+    "fallbackChildName": "Child",
+    "errorPrefix": "Error: {error}",
+    "noChildren": "No children added",
+    "tabs": {
+      "all": "All",
+      "restricted": "Restricted"
+    },
+    "emptyAll": "No data yet\nWhen {name} starts using apps,\nthey'll appear here",
+    "emptyRestricted": "No restrictions yet\nTap an app to set a limit",
+    "limitSheet": {
+      "todayUsage": "Today: {usage}",
+      "timeLimit": "Time limit",
+      "chip15": "15 min",
+      "chip30": "30 min",
+      "chip60": "1 h",
+      "chip120": "2 h",
+      "chip180": "3 h",
+      "blockTitle": "Block completely",
+      "blockSubtitle": "The app cannot be opened at all",
+      "savingButton": "Saving...",
+      "saveButton": "Save",
+      "removeButton": "Remove restriction",
+      "saveErrorPrefix": "Save error: {error}",
+      "removeErrorPrefix": "Delete error: {error}"
+    },
+    "quickActions": {
+      "block15": "Block now (15 min)",
+      "setLimit": "Set limit",
+      "removeRestriction": "Remove restriction",
+      "errorPrefix": "Error: {error}"
+    },
+    "empty": {
+      "title": "No app data yet",
+      "subtitle": "The app list will appear automatically as soon as your child installs and uses Child App."
+    }
+  },
+  "locationHistory": {
+    "headerTitle": "Movement history",
+    "fallbackChildName": "Child",
+    "range": {
+      "24h": "24 h",
+      "7d": "7 days",
+      "30d": "30 days"
+    },
+    "stats": {
+      "points": "{count} points",
+      "distance": "{km} km"
+    },
+    "empty": {
+      "title": "No history yet",
+      "subtitle": "Once your child starts moving,\ntheir path will appear here"
+    },
+    "errorPrefix": "Error: {error}",
+    "viewButton": "View history"
+  },
+  "location": {
+    "updatedSuffix": "updated {time}",
+    "moving": "Moving",
+    "stationary": "Stationary",
+    "accuracy": "~{meters}m accuracy",
+    "geoZonesButton": "Geo-zones",
+    "picker": {
+      "title": "Select child"
+    },
+    "noLocation": {
+      "title": "No location data yet",
+      "subtitle": "Wait for {name} to open Farzandim on their device and grant location permission."
+    },
+    "error": {
+      "title": "Error loading location"
+    },
+    "noChildren": "No children added. First create a child in Dashboard."
+  },
+  "deviceSettings": {
+    "headerTitle": "Device settings",
+    "sectionDevice": "DEVICE",
+    "sectionStatus": "STATUS",
+    "row": {
+      "model": "Model",
+      "system": "System",
+      "appVersion": "App version",
+      "battery": "Battery",
+      "wifi": "Wi-Fi",
+      "lastSeen": "Last seen"
+    },
+    "status": {
+      "online": "Online",
+      "offline": "Offline",
+      "disconnected": "Device disconnected"
+    },
+    "headerCardTitle": "{name}'s phone",
+    "awaitingTitle": "No device data",
+    "awaitingSubtitle": "Your child hasn't installed Child App or hasn't paired yet. Share the family code and wait for them to install Child App.",
+    "childNotFound": "Child not found.",
+    "disconnectButton": "Disconnect device",
+    "disconnectDialog": {
+      "title": "Disconnect device?",
+      "content": "The connection to your child's device will be cut. A new family code will be generated — enter it in Child App to reconnect.",
+      "cancel": "Cancel",
+      "confirm": "Disconnect"
+    },
+    "disconnectSuccessSnack": "Device disconnected. New family code: {code}",
+    "disconnectErrorPrefix": "Error: {error}",
+    "disconnectGenericError": "Could not disconnect device"
+  },
+  "voiceChat": {
+    "headerSubtitle": "Voice messages",
+    "fallbackChildName": "Child",
+    "emptyTitle": "First voice message",
+    "emptySubtitle": "Press and hold the button below to send\na voice message to {name}",
+    "errorPrefix": "Error: {error}",
+    "loadFailedSnack": "Could not load voice message",
+    "micPermissionSnack": "Microphone permission required",
+    "tooShortSnack": "Too short — hold longer",
+    "sendErrorDefault": "Send error",
+    "cancelTooltip": "Cancel"
+  },
+  "voiceMessages": {
+    "headerTitle": "Voice messages",
+    "noChildren": "No children added",
+    "noMessages": "No messages yet",
+    "youPrefix": "You: ",
+    "durationSeconds": "{seconds} sec",
+    "loading": "Loading...",
+    "error": "Error",
+    "errorPrefix": "Error: {error}",
+    "relativeTime": {
+      "justNow": "just now",
+      "minutes": "{minutes} min",
+      "hours": "{hours} h",
+      "days": "{days} d"
+    }
+  },
+  "legal": {
+    "lastUpdated": "Last updated: {date}",
+    "disclaimer": "The text below is shown in Uzbek and is not yet localized. This document is a template and requires review by a licensed lawyer before production release.",
+    "privacyPolicyTitle": "Privacy Policy",
+    "termsOfServiceTitle": "Terms of Service"
+  },
+  "profile": {
+    "headerTitle": "Profile",
+    "nameLabel": "Name",
+    "nameHint": "Enter your name",
+    "phoneLabel": "Phone number",
+    "phoneHint": "+998 90 123 45 67",
+    "emailLabel": "Email",
+    "emailHint": "email@example.com",
+    "telegramAvatarHint": "Avatar comes from your Telegram account",
+    "saveButton": "Save",
+    "savedSnack": "Profile saved",
+    "errorPrefix": "Save error: {error}"
+  },
+  "about": {
+    "headerTitle": "About",
+    "appName": "Farzandim",
+    "version": "Version 1.0.0 (MVP)",
+    "description1": "Farzandim is the first family safety app in Uzbekistan.",
+    "description2": "Our mission is to establish safe and understanding communication between parents and children in every family.",
+    "termsLink": "Terms of Service",
+    "privacyLink": "Privacy Policy",
+    "madeWithLove": "Made with ❤ in Tashkent"
+  },
+  "deleteAccount": {
+    "headerTitle": "Delete account",
+    "title": "Permanently delete account",
+    "subtitle": "This action cannot be undone. The following will be permanently deleted:",
+    "items": {
+      "profile": "Your profile (name, phone, email, photo)",
+      "children": "Children accounts and settings",
+      "messages": "Voice and video messages (chat history)",
+      "geoZones": "Geo-zones and event history",
+      "schedules": "Schedules and reminders",
+      "restrictions": "App restriction settings"
+    },
+    "confirmWord": "DELETE",
+    "confirmInstruction": "Type '{word}' to confirm:",
+    "deleteButton": "Permanently delete account",
+    "cancelButton": "Cancel",
+    "deletedSnack": "Your account has been deleted",
+    "errorPrefix": "Delete error: {error}",
+    "unexpectedError": "Unexpected error: {error}"
+  },
+  "settings": {
+    "title": "Settings",
+    "sections": {
+      "profile": "PROFILE",
+      "children": "CHILDREN",
+      "notifications": "NOTIFICATIONS",
+      "language": "LANGUAGE & REGION",
+      "help": "HELP"
+    },
+    "profile": {
+      "title": "Profile information",
+      "placeholder": "Name, phone, email"
+    },
+    "children": {
+      "title": "Manage children",
+      "subtitle": "{count} children"
+    },
+    "notificationToggles": {
+      "push": "Push notifications",
+      "location": "Location alerts",
+      "geoZone": "Geo-zone alerts"
+    },
+    "language": {
+      "title": "Language",
+      "dialogTitle": "Select language"
+    },
+    "help": {
+      "about": "About the app",
+      "support": "Support",
+      "privacy": "Privacy Policy",
+      "terms": "Terms of Service"
+    },
+    "supportDialog": {
+      "title": "Support",
+      "subtitle": "Contact us — we'll respond to your questions within 24 hours.",
+      "emailLabel": "Email",
+      "phoneLabel": "Phone",
+      "telegramLabel": "Telegram",
+      "close": "Close",
+      "copiedSnack": "{label} copied"
+    },
+    "logout": {
+      "button": "Sign out",
+      "dialogTitle": "Sign out",
+      "dialogContent": "Do you want to sign out?",
+      "cancel": "Cancel",
+      "confirm": "Sign out"
+    },
+    "deleteAccount": "Permanently delete account"
+  },
+  "childManagement": {
+    "list": {
+      "title": "Children",
+      "addChildFab": "Add child",
+      "ageAndRegion": "{age} years • {region}",
+      "connected": "Connected",
+      "disconnected": "Disconnected",
+      "emptyTitle": "No children added yet",
+      "emptyAddButton": "Add child",
+      "editAction": "Edit",
+      "deleteAction": "Delete",
+      "deleteDialog": {
+        "title": "Delete child?",
+        "content": "All of {name}'s data (location, geo-zones, and history) will be permanently deleted. This action cannot be undone.",
+        "cancel": "Cancel",
+        "delete": "Delete"
+      },
+      "deletedSnack": "{name} deleted",
+      "errorTitle": "Error loading data",
+      "errorPrefix": "Error: {error}"
+    },
+    "addEdit": {
+      "addTitle": "Add new child",
+      "editTitle": "Edit child details",
+      "photoLabel": "Photo",
+      "nameLabel": "Name",
+      "nameHint": "Enter name",
+      "ageLabel": "Age",
+      "ageHint": "Select age",
+      "ageItem": "{age} years",
+      "regionLabel": "Region",
+      "regionHint": "Select region",
+      "genderLabel": "Gender",
+      "backButton": "Back",
+      "saveButton": "Save",
+      "updateButton": "Update",
+      "errorPrefix": "Error: {error}"
+    },
+    "familyCode": {
+      "headerTitle": "Add child",
+      "title": "Install the app",
+      "subtitle": "Enter this code",
+      "regenerateButton": "Connect new device",
+      "regenerating": "Creating...",
+      "shareButton": "Invite your child",
+      "shareMessage": "Hi! I'm inviting you to the Farzandim app 🎯\n\nThrough this app we'll stay safely connected, and you can also see interesting educational content.\n\n🔑 Family code: {code}\n\nInstall the app and enter this code.\n\nLove, your family ❤️",
+      "shareSubject": "Farzandim app",
+      "errorPrefix": "Error: {error}",
+      "regenerateConfirm": {
+        "title": "Connect new device",
+        "question": "Are you sure you want to connect a new device for {name}?",
+        "warningTitle": "Warning",
+        "warningBullet1": "Connection to the old device will be cut",
+        "warningBullet2": "A new family code will be generated (24 hours)",
+        "warningBullet3": "Child enters the new code on the new app",
+        "preservedNote": "Old messages, schedules, and geo-zones are preserved",
+        "cancel": "Cancel",
+        "continue": "Continue"
+      },
+      "newCodeDialog": {
+        "title": "New code is ready",
+        "instruction": "Enter this code on {name}'s new device:",
+        "expiryNote": "Valid for 24 hours",
+        "copy": "Copy",
+        "copiedSnack": "Code copied",
+        "close": "Close"
+      }
+    }
+  }
+}
