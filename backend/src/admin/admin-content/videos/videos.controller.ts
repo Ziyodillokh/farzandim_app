@@ -30,7 +30,7 @@ import { Permissions } from '../../../common/decorators';
 
 @ApiTags('Admin - Content Videos')
 @ApiBearerAuth('admin-jwt')
-@Controller('admin/content/videos')
+@Controller('admin/videos')
 @UseGuards(AdminJwtAuthGuard, PermissionsGuard)
 @Permissions('manage_content')
 export class VideosController {

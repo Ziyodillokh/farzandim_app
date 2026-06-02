@@ -30,7 +30,7 @@ import { Permissions } from '../../../common/decorators';
 
 @ApiTags('Admin - Content Audiobooks')
 @ApiBearerAuth('admin-jwt')
-@Controller('admin/content/audiobooks')
+@Controller('admin/audiobooks')
 @UseGuards(AdminJwtAuthGuard, PermissionsGuard)
 @Permissions('manage_content')
 export class AudiobooksController {

@@ -19,7 +19,7 @@ import { Permissions } from '../../../common/decorators';
 
 @ApiTags('Admin - Content Categories')
 @ApiBearerAuth('admin-jwt')
-@Controller('admin/content/categories')
+@Controller('admin/categories')
 @UseGuards(AdminJwtAuthGuard, PermissionsGuard)
 @Permissions('manage_content')
 export class CategoriesController {
