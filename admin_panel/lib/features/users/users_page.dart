@@ -151,16 +151,16 @@ class _UsersPageState extends State<UsersPage> {
           ),
           LayoutBuilder(
             builder: (context, c) {
-              final wide = c.maxWidth >= 960;
-              final search = SearchField(
-                controller: _search,
-                width: wide ? null : double.infinity,
-                onChanged: (_) {},
-              );
-              final filters = [
+              // Breakpoint'lar: wide ≥1200 — search + 3 dropdown bir qatorda
+              //                  med  ≥760  — search + dropdowns wrap qiladi
+              //                  narrow      — hammasi vertikal
+              final wide = c.maxWidth >= 1200;
+              final medium = c.maxWidth >= 760;
+              final filters = <Widget>[
                 AppFilterDropdown(
                   hint: 'Barcha rollar',
                   selectedValue: _roleFilter,
+                  width: 180,
                   items: const [
                     DropdownMenuItem(value: '', child: Text('Barcha rollar')),
                     DropdownMenuItem(value: 'parent', child: Text('Ota-ona')),
@@ -176,6 +176,7 @@ class _UsersPageState extends State<UsersPage> {
                 AppFilterDropdown(
                   hint: 'Barcha statuslar',
                   selectedValue: _statusFilter,
+                  width: 180,
                   items: const [
                     DropdownMenuItem(value: '', child: Text('Barcha statuslar')),
                     DropdownMenuItem(value: 'active', child: Text('Aktiv')),
@@ -191,6 +192,7 @@ class _UsersPageState extends State<UsersPage> {
                 AppFilterDropdown(
                   hint: 'Barcha obunalar',
                   selectedValue: _planFilter,
+                  width: 180,
                   prefix: const Icon(Icons.filter_list_rounded, size: 20),
                   items: const [
                     DropdownMenuItem(value: '', child: Text('Barcha obunalar')),
@@ -207,25 +209,53 @@ class _UsersPageState extends State<UsersPage> {
                   },
                 ),
               ];
+
+              final search = SearchField(
+                controller: _search,
+                width: wide ? null : double.infinity,
+                onChanged: (_) {},
+              );
+
               if (wide) {
+                // Search Expanded + 3 dropdown bir qatorda (≥1200px)
+                final children = <Widget>[Expanded(child: search)];
+                for (final f in filters) {
+                  children.add(const SizedBox(width: AppSpacing.sm));
+                  children.add(f);
+                }
                 return Row(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: children,
+                );
+              }
+              if (medium) {
+                // ≥760px lekin <1200px — search yuqorida full-width,
+                // filterlar pastda Wrap qatorida.
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(child: search),
-                    const SizedBox(width: AppSpacing.sm),
-                    ...filters.expand((w) => [w, const SizedBox(width: AppSpacing.sm)]),
+                    search,
+                    const SizedBox(height: AppSpacing.sm),
+                    Wrap(
+                      spacing: AppSpacing.sm,
+                      runSpacing: AppSpacing.sm,
+                      children: filters,
+                    ),
                   ],
                 );
               }
+              // Mobil — hammasi vertikal stretch
               return Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   search,
-                  const SizedBox(height: AppSpacing.xs),
-                  Wrap(
-                    spacing: AppSpacing.sm,
-                    runSpacing: AppSpacing.xs,
-                    children: filters,
+                  const SizedBox(height: AppSpacing.sm),
+                  ...filters.map(
+                    (f) => Padding(
+                      padding: const EdgeInsets.only(bottom: AppSpacing.xs),
+                      // Mobil ekranda dropdown to'liq kenglikda
+                      child: SizedBox(width: double.infinity, child: f),
+                    ),
                   ),
                 ],
               );
@@ -368,23 +398,26 @@ class _UsersPageState extends State<UsersPage> {
                               }).toList(),
                             ),
                           ),
-                          const SizedBox(height: AppSpacing.sm),
-                          AppPagination(
-                            page: data.page,
-                            totalPages: data.totalPages,
-                            onPrev: data.page > 1
-                                ? () => setState(() {
-                                      _page = data.page - 1;
-                                      _future = _load();
-                                    })
-                                : null,
-                            onNext: data.page < data.totalPages
-                                ? () => setState(() {
-                                      _page = data.page + 1;
-                                      _future = _load();
-                                    })
-                                : null,
-                          ),
+                          // Pagination: faqat totalPages > 1 bo'lganda ko'rsatamiz
+                          if (data.totalPages > 1) ...[
+                            const SizedBox(height: AppSpacing.sm),
+                            AppPagination(
+                              page: data.page,
+                              totalPages: data.totalPages,
+                              onPrev: data.page > 1
+                                  ? () => setState(() {
+                                        _page = data.page - 1;
+                                        _future = _load();
+                                      })
+                                  : null,
+                              onNext: data.page < data.totalPages
+                                  ? () => setState(() {
+                                        _page = data.page + 1;
+                                        _future = _load();
+                                      })
+                                  : null,
+                            ),
+                          ],
                         ],
                       );
                     },

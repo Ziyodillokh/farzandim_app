@@ -130,6 +130,8 @@ class AppFilterDropdown extends StatelessWidget {
   final List<DropdownMenuItem<String>> items;
   final ValueChanged<String?>? onChanged;
   final Widget? prefix;
+  /// Maxsus width — `null` bo'lsa 180–220 oralig'ida ekran kengligiga moslashadi.
+  final double? width;
   const AppFilterDropdown({
     super.key,
     required this.hint,
@@ -137,12 +139,13 @@ class AppFilterDropdown extends StatelessWidget {
     required this.items,
     this.onChanged,
     this.prefix,
+    this.width,
   });
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      width: 200,
+      width: width ?? 180,
       child: DropdownButtonFormField<String>(
         initialValue: items.any((e) => e.value == selectedValue)
             ? selectedValue
@@ -366,18 +369,25 @@ class AppTable extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       padding: EdgeInsets.zero,
-      child: SingleChildScrollView(
-        scrollDirection: Axis.horizontal,
-        child: DataTable(
-          headingRowColor: WidgetStateProperty.all(AppColors.backgroundAlt),
-          headingRowHeight: 56,
-          dataRowMinHeight: 56,
-          dataRowMaxHeight: 64,
-          horizontalMargin: AppSpacing.sm,
-          columnSpacing: AppSpacing.md,
-          headingTextStyle: AppTextStyles.tableHeader,
-          columns: columns,
-          rows: rows,
+      child: LayoutBuilder(
+        builder: (context, constraints) => SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          // Min-width = available width — table to'liq kenglikni egallaydi,
+          // kichik ekranda gorizontal scroll qo'shiladi.
+          child: ConstrainedBox(
+            constraints: BoxConstraints(minWidth: constraints.maxWidth),
+            child: DataTable(
+              headingRowColor: WidgetStateProperty.all(AppColors.backgroundAlt),
+              headingRowHeight: 56,
+              dataRowMinHeight: dataRowMinHeight,
+              dataRowMaxHeight: dataRowMaxHeight,
+              horizontalMargin: AppSpacing.md,
+              columnSpacing: AppSpacing.lg,
+              headingTextStyle: AppTextStyles.tableHeader,
+              columns: columns,
+              rows: rows,
+            ),
+          ),
         ),
       ),
     );
