@@ -24,13 +24,13 @@ class AppEnvironment {
 
   /// Base URL the Flutter admin panel talks to.
   ///
-  /// - Dev (local admin_panel/backend): `http://127.0.0.1:3000/api/v1`
-  /// - Prod (real farzandim-backend): `https://farzandimedu.uz/api`
+  /// - Dev (local NestJS backend): `http://localhost:3000/api`
+  /// - Prod (production server):   `https://farzandimedu.uz/api`
   ///
-  /// Override via `--dart-define=API_BASE_URL=...`.
+  /// Override via `--dart-define-from-file=env.json` or `--dart-define=API_BASE_URL=...`.
   static const apiBaseUrl = String.fromEnvironment(
     'API_BASE_URL',
-    defaultValue: 'http://127.0.0.1:3000/api/v1',
+    defaultValue: 'http://localhost:3000/api',
   );
 
   static String get backendOrigin {
