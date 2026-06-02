@@ -1,35 +1,28 @@
-import 'dart:ui' as ui;
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
-import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
-import 'package:farzandim/features/dashboard/presentation/widgets/child_page_view.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
-import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
+import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
-/// Asosiy ekran — auth qilingan foydalanuvchi uchun bola monitoringi.
+/// Asosiy ekran — Figma 1:1, dinamik bola monitoringi.
 ///
-/// **Conditional UI:**
-/// - **Empty state** (`children.isEmpty`): "Bola qo'shing" call-to-action
-///   karta.
-/// - **Has children**: yuqorida `ChildPageView` (swipe), pastida Quick
-///   Action grid va yumaloq Settings tugmasi.
-///
-/// Tanlangan bola `selectedChildIndexProvider` orqali bog'lanadi —
-/// `ChildPageView` swipe qilganda boshqa kartalar avtomatik yangilanadi.
+/// **Empty state**: bola yo'q bo'lsa "Bola qo'shing" CTA.
+/// **Has children**: header (logo + bell), bola kartasi (ism/qurilma/batareya
+/// + avatar), reyting (lime), bugungi ekran vaqti + ilovalar + bloklash,
+/// 6 ta quick action, pastda "Foydalanish vaqti" + sozlamalar.
 class DashboardScreen extends ConsumerWidget {
   /// `DashboardScreen` konstruktor.
   const DashboardScreen({super.key});
@@ -44,7 +37,7 @@ class DashboardScreen extends ConsumerWidget {
         child: SafeArea(
           child: children.isEmpty
               ? const _EmptyState()
-              : _DashboardContent(children: children),
+              : _DashboardBody(children: children),
         ),
       ),
     );
@@ -61,37 +54,103 @@ class _EmptyState extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const SizedBox(height: AppDimensions.md),
-          const _TopBar(),
-          const SizedBox(height: AppDimensions.xl),
-          Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            ),
-            padding: const EdgeInsets.all(AppDimensions.xl),
-            constraints: const BoxConstraints(minHeight: 280),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  'dashboard.emptyState.message'.tr(),
-                  textAlign: TextAlign.center,
-                  style: AppTextStyles.bodyM,
+          const _Header(),
+          const SizedBox(height: AppDimensions.lg),
+
+          // ─── Placeholder bola header (hali bola yo'q) ───
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'dashboard.emptyState.placeholderName'.tr(),
+                      style: AppTextStyles.headlineL.copyWith(
+                        fontWeight: FontWeight.w800,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      'dashboard.emptyState.placeholderDevice'.tr(),
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: AppDimensions.sm),
+                    const _BatteryBar(level: null),
+                  ],
                 ),
-                const SizedBox(height: AppDimensions.lg),
-                PrimaryButton(
-                  label: 'dashboard.emptyState.addButton'.tr(),
-                  icon: Icons.add,
-                  expanded: false,
-                  onPressed: () => context.push(AppRoutes.addChild),
+              ),
+              const SizedBox(width: AppDimensions.md),
+              // Bo'sh avatar (person silueti).
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.surfaceVariant,
+                  border: Border.all(color: AppColors.border),
                 ),
-              ],
+                child: const Icon(
+                  Icons.person_rounded,
+                  size: 30,
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.lg),
+
+          // ─── Asosiy karta: "Bola qo'shing" ───
+          Expanded(
+            child: Container(
+              width: double.infinity,
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+              ),
+              padding: const EdgeInsets.all(AppDimensions.xl),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    'dashboard.emptyState.message'.tr(),
+                    textAlign: TextAlign.center,
+                    style: AppTextStyles.bodyM.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: AppDimensions.lg),
+                  PrimaryButton(
+                    label: 'dashboard.emptyState.addButton'.tr(),
+                    icon: Icons.add,
+                    expanded: false,
+                    onPressed: () => context.push(AppRoutes.addChild),
+                  ),
+                ],
+              ),
             ),
           ),
-          const Spacer(),
-          const _SettingsCircleButton(),
+          const SizedBox(height: AppDimensions.md),
+
+          // ─── Pastki bar ───
+          Row(
+            children: [
+              Expanded(
+                child: _UsageTimePill(
+                  onTap: () => context.push(AppRoutes.addChild),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.md),
+              _SettingsGear(onTap: () => context.push(AppRoutes.settings)),
+            ],
+          ),
           const SizedBox(height: AppDimensions.md),
         ],
       ),
@@ -99,131 +158,105 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ════════════════════════ HAS-CHILDREN CONTENT ════════════════════════
+// ════════════════════════ DASHBOARD BODY ════════════════════════
 
-/// Stack-based glassmorphism layout:
-///   Layer 1 (pastda): scroll kontenti (ScreenTimeChart + QuickActions)
-///   Layer 2 (yuqorida): glass plate — TopBar + ChildPageView
-///   Layer 3 (pastda): glass plate — Settings tugmasi
-///
-/// Header/footer balandligi har build'da `GlobalKey` orqali o'lchanadi —
-/// scroll kontenti `padding(top/bottom)` orqali plate ostiga "kirib boradi"
-/// va `BackdropFilter` blur effekt beradi (Telegram/iOS-style glass).
-class _DashboardContent extends ConsumerStatefulWidget {
-  const _DashboardContent({required this.children});
+class _DashboardBody extends ConsumerStatefulWidget {
+  const _DashboardBody({required this.children});
 
   final List<Child> children;
 
   @override
-  ConsumerState<_DashboardContent> createState() =>
-      _DashboardContentState();
+  ConsumerState<_DashboardBody> createState() => _DashboardBodyState();
 }
 
-class _DashboardContentState extends ConsumerState<_DashboardContent> {
-  final GlobalKey _headerKey = GlobalKey();
-  final GlobalKey _footerKey = GlobalKey();
-  double _headerHeight = 0;
-  double _footerHeight = 0;
-  bool _measureScheduled = false;
+class _DashboardBodyState extends ConsumerState<_DashboardBody> {
+  bool _blockAll = false;
 
-  // Layout o'lchash. `build()` har safar chaqirsa ham, bir frame ichida
-  // faqat bitta postFrameCallback ro'yxatdan o'tadi (#3 audit — har build'da
-  // callback registratsiyasi to'planib ketishini oldini oladi). Layout
-  // o'zgarsa (masalan UpdateBanner ko'rinsa) — keyingi build qayta o'lchaydi.
-  void _measureAfterLayout() {
-    if (_measureScheduled) return;
-    _measureScheduled = true;
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _measureScheduled = false;
-      if (!mounted) return;
-      final headerBox =
-          _headerKey.currentContext?.findRenderObject() as RenderBox?;
-      final footerBox =
-          _footerKey.currentContext?.findRenderObject() as RenderBox?;
-      final hh = headerBox?.size.height ?? 0;
-      final fh = footerBox?.size.height ?? 0;
-      if (hh != _headerHeight || fh != _footerHeight) {
-        setState(() {
-          _headerHeight = hh;
-          _footerHeight = fh;
-        });
-      }
-    });
+  void _comingSoon() {
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text('auth.social.comingSoon'.tr()),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: AppColors.surfaceVariant,
+        ),
+      );
   }
 
   @override
   Widget build(BuildContext context) {
-    // UpdateBanner ko'rinishi yoki bola karta o'lchami o'zgarsa —
-    // har build'dan keyin qayta o'lchaymiz.
-    _measureAfterLayout();
+    final children = widget.children;
+    final selectedIndex =
+        ref.watch(selectedChildIndexProvider).clamp(0, children.length - 1);
+    final child = children[selectedIndex];
 
-    final selectedIndex = ref
-        .watch(selectedChildIndexProvider)
-        .clamp(0, widget.children.length - 1);
-    final currentChild = widget.children[selectedIndex];
-
-    return Stack(
+    return Column(
       children: [
-        // Layer 1: Scroll kontenti (full-bleed, top/bottom glass plate ostiga
-        // kirib boradi). Padding header/footer balandligiga moslashtirilgan.
-        Positioned.fill(
+        Expanded(
           child: SingleChildScrollView(
-            padding: EdgeInsets.fromLTRB(
+            padding: const EdgeInsets.fromLTRB(
               AppDimensions.lg,
-              _headerHeight + AppDimensions.md,
+              AppDimensions.md,
               AppDimensions.lg,
-              _footerHeight + AppDimensions.md,
+              AppDimensions.md,
             ),
             child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ScreenTimeChart(childId: currentChild.id),
+                const _Header(),
                 const SizedBox(height: AppDimensions.lg),
-                _QuickActionsGrid(childId: currentChild.id),
+
+                // ─── Bola: ism / qurilma / batareya + avatar karusel ───
+                _ChildHeader(
+                  children: children,
+                  selectedIndex: selectedIndex,
+                  onSelect: (i) =>
+                      ref.read(selectedChildIndexProvider.notifier).state = i,
+                ),
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Reyting ───
+                _RatingSection(child: child),
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Bugun sarflangan vaqt ───
+                _TimeCard(
+                  childId: child.id,
+                  blockAll: _blockAll,
+                  onBlockChanged: (v) {
+                    setState(() => _blockAll = v);
+                    _comingSoon();
+                  },
+                ),
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Quick actions ───
+                _QuickActionsGrid(childId: child.id),
               ],
             ),
           ),
         ),
 
-        // Layer 2: Yuqoridagi glass plate — TopBar + UpdateBanner + Child.
-        Positioned(
-          top: 0,
-          left: 0,
-          right: 0,
-          child: _GlassPlate(
-            child: KeyedSubtree(
-              key: _headerKey,
-              child: Column(
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.symmetric(
-                      horizontal: AppDimensions.lg,
-                      vertical: AppDimensions.md,
-                    ),
-                    child: _TopBar(),
-                  ),
-                  const UpdateBanner(),
-                  ChildPageView(children: widget.children),
-                  const SizedBox(height: AppDimensions.md),
-                ],
-              ),
-            ),
+        // ─── Pastki bar: Foydalanish vaqti + sozlamalar ───
+        Padding(
+          padding: const EdgeInsets.fromLTRB(
+            AppDimensions.lg,
+            AppDimensions.sm,
+            AppDimensions.lg,
+            AppDimensions.md,
           ),
-        ),
-
-        // Layer 3: Pastdagi glass plate — Settings tugmasi.
-        Positioned(
-          bottom: 0,
-          left: 0,
-          right: 0,
-          child: _GlassPlate(
-            isTop: false,
-            child: KeyedSubtree(
-              key: _footerKey,
-              child: const Padding(
-                padding: EdgeInsets.symmetric(vertical: AppDimensions.md),
-                child: _SettingsCircleButton(),
+          child: Row(
+            children: [
+              Expanded(
+                child: _UsageTimePill(
+                  onTap: () =>
+                      context.push(AppRoutes.appRestrictionsPath(child.id)),
+                ),
               ),
-            ),
+              const SizedBox(width: AppDimensions.md),
+              _SettingsGear(onTap: () => context.push(AppRoutes.settings)),
+            ],
           ),
         ),
       ],
@@ -231,62 +264,10 @@ class _DashboardContentState extends ConsumerState<_DashboardContent> {
   }
 }
 
-/// Glassmorphism plate — kuchli `BackdropFilter` blur + ko'p shaffof fon.
-///
-/// Telegram/iOS uslubi: tagidagi kontent xira ko'rinadi, plate juda shaffof
-/// (ko'proq frosted glass effekt). Atrofida nozik oq chiziq — shine edge.
-class _GlassPlate extends StatelessWidget {
-  const _GlassPlate({required this.child, this.isTop = true});
+// ════════════════════════ HEADER ════════════════════════
 
-  final Widget child;
-
-  /// `true` bo'lsa pastida shine chiziq, `false` bo'lsa yuqorida.
-  final bool isTop;
-
-  @override
-  Widget build(BuildContext context) {
-    return ClipRect(
-      child: BackdropFilter(
-        filter: ui.ImageFilter.blur(sigmaX: 40, sigmaY: 40),
-        child: DecoratedBox(
-          decoration: BoxDecoration(
-            // Juda shaffof gradient — kontent plate ostidan aniq ko'rinadi.
-            gradient: LinearGradient(
-              begin: isTop ? Alignment.topCenter : Alignment.bottomCenter,
-              end: isTop ? Alignment.bottomCenter : Alignment.topCenter,
-              colors: [
-                AppColors.background.withValues(alpha: 0.22),
-                AppColors.background.withValues(alpha: 0.02),
-              ],
-            ),
-            // Plate chetida nozik oq shine chiziq (1px).
-            border: Border(
-              top: isTop
-                  ? BorderSide.none
-                  : BorderSide(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      width: 1,
-                    ),
-              bottom: isTop
-                  ? BorderSide(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      width: 1,
-                    )
-                  : BorderSide.none,
-            ),
-          ),
-          child: child,
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════ KICHIK WIDGET'LAR ════════════════════════
-
-/// Top bar: chap tomonda logo, o'ngda bell.
-class _TopBar extends StatelessWidget {
-  const _TopBar();
+class _Header extends StatelessWidget {
+  const _Header();
 
   @override
   Widget build(BuildContext context) {
@@ -294,8 +275,8 @@ class _TopBar extends StatelessWidget {
       children: [
         Image.asset(
           'assets/icons/parent_logo_icon.png',
-          height: 64,
-          width: 64,
+          height: 44,
+          width: 44,
           fit: BoxFit.contain,
         ),
         const Spacer(),
@@ -305,16 +286,12 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-/// Bell ikona + o'qilmagan xabarlar soni badge'i.
-///
-/// `unreadCountProvider`'ga obuna — yangi xabar kelganda yoki
-/// "Hammasini o'qildi qil" bossa avtomatik qayta render qilinadi.
 class _NotificationBell extends ConsumerWidget {
   const _NotificationBell();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unreadCount = ref.watch(unreadCountProvider);
+    final unread = ref.watch(unreadCountProvider);
     return Material(
       color: AppColors.surface,
       shape: const CircleBorder(),
@@ -333,35 +310,17 @@ class _NotificationBell extends ConsumerWidget {
                   color: AppColors.textPrimary,
                 ),
               ),
-              if (unreadCount > 0)
+              if (unread > 0)
                 Positioned(
-                  top: 6,
-                  right: 6,
+                  top: 8,
+                  right: 8,
                   child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 4,
-                      vertical: 1,
-                    ),
-                    constraints: const BoxConstraints(
-                      minWidth: 16,
-                      minHeight: 16,
-                    ),
+                    width: 10,
+                    height: 10,
                     decoration: BoxDecoration(
                       color: AppColors.error,
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(
-                        color: AppColors.surface,
-                        width: 1.5,
-                      ),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      unreadCount > 9 ? '9+' : '$unreadCount',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      shape: BoxShape.circle,
+                      border: Border.all(color: AppColors.surface, width: 1.5),
                     ),
                   ),
                 ),
@@ -373,7 +332,449 @@ class _NotificationBell extends ConsumerWidget {
   }
 }
 
-/// Quick actions grid — 6 ta tugma, 2x3.
+// ════════════════════════ CHILD HEADER ════════════════════════
+
+class _ChildHeader extends StatelessWidget {
+  const _ChildHeader({
+    required this.children,
+    required this.selectedIndex,
+    required this.onSelect,
+  });
+
+  final List<Child> children;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+
+  @override
+  Widget build(BuildContext context) {
+    final child = children[selectedIndex];
+    final battery = child.deviceInfo?.batteryLevel;
+
+    return Row(
+      children: [
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                child.name,
+                style: AppTextStyles.headlineL.copyWith(
+                  fontWeight: FontWeight.w800,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: 2),
+              Text(
+                child.deviceModel?.isNotEmpty ?? false
+                    ? child.deviceModel!
+                    : 'dashboard.noDevice'.tr(),
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+              const SizedBox(height: AppDimensions.sm),
+              _BatteryBar(level: battery),
+            ],
+          ),
+        ),
+        const SizedBox(width: AppDimensions.md),
+
+        // Avatar karusel — bir nechta bola bo'lsa gorizontal tanlanadi.
+        SizedBox(
+          height: 64,
+          width: children.length > 1 ? 92 : 64,
+          child: ListView.builder(
+            scrollDirection: Axis.horizontal,
+            reverse: true,
+            itemCount: children.length,
+            itemBuilder: (context, i) {
+              final isSelected = i == selectedIndex;
+              return GestureDetector(
+                onTap: () => onSelect(i),
+                child: Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: _ChildAvatar(
+                    child: children[i],
+                    size: 60,
+                    highlighted: isSelected,
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BatteryBar extends StatelessWidget {
+  const _BatteryBar({required this.level});
+
+  final int? level;
+
+  @override
+  Widget build(BuildContext context) {
+    const segments = 6;
+    final filled = level == null
+        ? 0
+        : ((level! / 100) * segments).round().clamp(0, segments);
+    final color = (level ?? 0) <= 20 ? AppColors.error : AppColors.primary;
+
+    return Row(
+      children: [
+        for (var i = 0; i < segments; i++)
+          Container(
+            margin: const EdgeInsets.only(right: 4),
+            width: 18,
+            height: 6,
+            decoration: BoxDecoration(
+              color: i < filled ? color : AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+        if (level != null) ...[
+          const SizedBox(width: 4),
+          Text(
+            '$level%',
+            style: AppTextStyles.label.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+class _ChildAvatar extends StatelessWidget {
+  const _ChildAvatar({
+    required this.child,
+    required this.size,
+    this.highlighted = false,
+  });
+
+  final Child child;
+  final double size;
+  final bool highlighted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        border: Border.all(
+          color: highlighted ? AppColors.primary : AppColors.border,
+          width: highlighted ? 2.5 : 1,
+        ),
+      ),
+      child: ClipOval(
+        child: child.photoUrl != null && child.photoUrl!.isNotEmpty
+            ? Image.network(
+                child.photoUrl!,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _sticker(),
+              )
+            : _sticker(),
+      ),
+    );
+  }
+
+  Widget _sticker() {
+    return ColoredBox(
+      color: AppColors.surfaceVariant,
+      child: Padding(
+        padding: const EdgeInsets.all(6),
+        child: SvgPicture.asset(child.defaultStickerPath),
+      ),
+    );
+  }
+}
+
+// ════════════════════════ RATING ════════════════════════
+
+class _RatingSection extends ConsumerWidget {
+  const _RatingSection({required this.child});
+
+  final Child child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(childProfileProvider(child.id)).valueOrNull;
+    final xp = profile?.xp ?? 0;
+    final donBalance = profile?.donBalance ?? 0;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              'dashboard.rating.title'.tr(),
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: () =>
+                  context.push(AppRoutes.childAchievementsPath(child.id)),
+              child: Row(
+                children: [
+                  Text(
+                    'dashboard.rating.details'.tr(),
+                    style: AppTextStyles.bodyS.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const Icon(
+                    Icons.chevron_right_rounded,
+                    size: 18,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: AppDimensions.sm),
+        Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.lg,
+            vertical: AppDimensions.md,
+          ),
+          decoration: BoxDecoration(
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          ),
+          child: Row(
+            children: [
+              Text(
+                '$donBalance',
+                style: AppTextStyles.headlineL.copyWith(
+                  color: AppColors.background,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              const SizedBox(width: AppDimensions.md),
+              _ChildAvatar(child: child, size: 44),
+              const SizedBox(width: AppDimensions.md),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      child.name,
+                      style: AppTextStyles.bodyM.copyWith(
+                        color: AppColors.background,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    if (child.region.isNotEmpty)
+                      Text(
+                        child.region,
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.background.withValues(alpha: 0.7),
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: AppDimensions.sm),
+              const Icon(
+                Icons.star_rounded,
+                size: 20,
+                color: Color(0xFF6D28D9),
+              ),
+              const SizedBox(width: 4),
+              Text(
+                '$xp',
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.background,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ════════════════════════ TIME CARD ════════════════════════
+
+class _TimeCard extends ConsumerWidget {
+  const _TimeCard({
+    required this.childId,
+    required this.blockAll,
+    required this.onBlockChanged,
+  });
+
+  final String childId;
+  final bool blockAll;
+  final ValueChanged<bool> onBlockChanged;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final day = ref.watch(todayUsageProvider(childId)).valueOrNull;
+    final apps = day == null
+        ? const <_AppBrief>[]
+        : (day.apps.toList()
+              ..sort((a, b) => b.totalTimeMs.compareTo(a.totalTimeMs)))
+            .map((a) => _AppBrief(a.appName, a.iconUrl))
+            .toList();
+    final totalMs =
+        day?.apps.fold<int>(0, (sum, a) => sum + a.totalTimeMs) ?? 0;
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.lg),
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'dashboard.screenTime.todayTitle'.tr(),
+            style: AppTextStyles.bodyS.copyWith(
+              color: AppColors.textSecondary,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.xs),
+          Text(
+            _formatDuration(totalMs),
+            style: AppTextStyles.headlineXL.copyWith(
+              fontWeight: FontWeight.w800,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.md),
+
+          // Ilova ikonkalari (top 6).
+          if (apps.isNotEmpty)
+            Row(
+              children: [
+                for (final app in apps.take(6)) ...[
+                  _AppIcon(iconUrl: app.iconUrl, name: app.name),
+                  const SizedBox(width: AppDimensions.sm),
+                ],
+                if (apps.length > 6)
+                  Container(
+                    width: 36,
+                    height: 36,
+                    decoration: const BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      shape: BoxShape.circle,
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      '+${apps.length - 6}',
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          const SizedBox(height: AppDimensions.md),
+
+          // Bloklash toggle.
+          Container(
+            padding: const EdgeInsets.symmetric(
+              horizontal: AppDimensions.md,
+              vertical: AppDimensions.sm,
+            ),
+            decoration: BoxDecoration(
+              color: AppColors.surfaceVariant,
+              borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(
+                    'dashboard.screenTime.blockAll'.tr(),
+                    style: AppTextStyles.bodyS,
+                  ),
+                ),
+                Switch.adaptive(
+                  value: blockAll,
+                  onChanged: onBlockChanged,
+                  activeTrackColor: AppColors.primary,
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  static String _formatDuration(int ms) {
+    final h = ms ~/ 3600000;
+    final m = (ms % 3600000) ~/ 60000;
+    if (h == 0) return '$m daq';
+    return '$h st $m daq';
+  }
+}
+
+class _AppBrief {
+  const _AppBrief(this.name, this.iconUrl);
+  final String name;
+  final String? iconUrl;
+}
+
+class _AppIcon extends StatelessWidget {
+  const _AppIcon({required this.iconUrl, required this.name});
+
+  final String? iconUrl;
+  final String name;
+
+  @override
+  Widget build(BuildContext context) {
+    final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    return Container(
+      width: 36,
+      height: 36,
+      decoration: const BoxDecoration(
+        color: AppColors.surfaceVariant,
+        shape: BoxShape.circle,
+      ),
+      clipBehavior: Clip.antiAlias,
+      alignment: Alignment.center,
+      child: iconUrl != null && iconUrl!.isNotEmpty
+          ? Image.network(
+              iconUrl!,
+              width: 36,
+              height: 36,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => _fallback(letter),
+            )
+          : _fallback(letter),
+    );
+  }
+
+  Widget _fallback(String letter) {
+    return Text(
+      letter,
+      style: AppTextStyles.bodyS.copyWith(
+        color: AppColors.textPrimary,
+        fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+// ════════════════════════ QUICK ACTIONS ════════════════════════
+
 class _QuickActionsGrid extends StatelessWidget {
   const _QuickActionsGrid({required this.childId});
 
@@ -381,36 +782,35 @@ class _QuickActionsGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Stagger entrance — har kvadrat status-coded accent rangida.
-    final tiles = [
+    final tiles = <QuickActionTile>[
       QuickActionTile(
         icon: Icons.smartphone,
         label: 'dashboard.quickActions.device'.tr(),
-        accentColor: AppColors.info, // ko'k — qurilma
+        accentColor: AppColors.info,
         onTap: () => context.push(AppRoutes.qaDevicePath(childId)),
       ),
       QuickActionTile(
-        icon: Icons.mic,
-        label: 'dashboard.quickActions.voice'.tr(),
-        accentColor: AppColors.primary, // lime — ovoz (asosiy)
+        icon: Icons.chat_bubble_outline_rounded,
+        label: 'dashboard.quickActions.messenger'.tr(),
+        accentColor: AppColors.primary,
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),
       ),
       QuickActionTile(
         icon: Icons.timer_outlined,
         label: 'dashboard.quickActions.appRestrictions'.tr(),
-        accentColor: AppColors.warning, // sariq — vaqt cheklov
+        accentColor: AppColors.warning,
         onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
       ),
       QuickActionTile(
         icon: Icons.location_on_outlined,
-        label: 'dashboard.quickActions.location'.tr(),
-        accentColor: AppColors.success, // yashil — joylashuv
-        onTap: () => context.push(AppRoutes.locationPath(childId)),
+        label: 'dashboard.quickActions.locationHistory'.tr(),
+        accentColor: AppColors.success,
+        onTap: () => context.push(AppRoutes.locationHistoryPath(childId)),
       ),
       QuickActionTile(
         icon: Icons.calendar_today_outlined,
         label: 'dashboard.quickActions.schedules'.tr(),
-        accentColor: AppColors.error, // qizil — jadval
+        accentColor: AppColors.error,
         onTap: () => context.push(AppRoutes.schedulesPath(childId)),
       ),
     ];
@@ -419,55 +819,78 @@ class _QuickActionsGrid extends StatelessWidget {
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
       crossAxisCount: 2,
-      childAspectRatio: 1.1,
+      childAspectRatio: 1.05,
       crossAxisSpacing: 12,
       mainAxisSpacing: 12,
-      children: [
-        for (var i = 0; i < tiles.length; i++)
-          tiles[i]
-              .animate()
-              .fadeIn(
-                duration: 400.ms,
-                delay: (80 * i).ms,
-                curve: Curves.easeOut,
-              )
-              .moveY(
-                begin: 16,
-                end: 0,
-                duration: 400.ms,
-                delay: (80 * i).ms,
-                curve: Curves.easeOutCubic,
-              ),
-      ],
+      children: tiles,
     );
   }
 }
 
-/// Empty state'dagi pastki settings tugmasi (yumaloq, border bilan).
-class _SettingsCircleButton extends StatelessWidget {
-  const _SettingsCircleButton();
+// ════════════════════════ BOTTOM BAR ════════════════════════
+
+class _UsageTimePill extends StatelessWidget {
+  const _UsageTimePill({required this.onTap});
+
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Center(
+    final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
+    return SizedBox(
+      height: AppDimensions.buttonHeight,
       child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(
-          side: BorderSide(color: AppColors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
+        color: AppColors.primary,
+        borderRadius: borderRadius,
         child: InkWell(
-          onTap: () => context.push(AppRoutes.settings),
-          child: const SizedBox(
-            width: 56,
-            height: 56,
-            child: Center(
-              child: Icon(
-                Icons.settings_outlined,
-                size: 24,
-                color: AppColors.textPrimary,
-              ),
+          onTap: onTap,
+          borderRadius: borderRadius,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  Icons.pie_chart_rounded,
+                  size: 20,
+                  color: AppColors.background,
+                ),
+                const SizedBox(width: AppDimensions.sm),
+                Text(
+                  'dashboard.usageTime'.tr(),
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.background,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _SettingsGear extends StatelessWidget {
+  const _SettingsGear({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.surface,
+      shape: const CircleBorder(side: BorderSide(color: AppColors.border)),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: const SizedBox(
+          width: 56,
+          height: 56,
+          child: Icon(
+            Icons.settings_outlined,
+            size: 24,
+            color: AppColors.textPrimary,
           ),
         ),
       ),

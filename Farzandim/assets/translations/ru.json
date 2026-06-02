@@ -30,11 +30,12 @@
     },
     "signIn": {
       "title": "Вход в аккаунт",
-      "emailLabel": "Email адрес",
-      "emailHint": "email@example.com",
+      "emailLabel": "Эл. почта или номер телефона",
+      "emailHint": "email@example.com или +998 90 123 45 67",
       "passwordLabel": "Пароль",
       "forgotPassword": "Забыли пароль?",
-      "submitButton": "Войти"
+      "submitButton": "Войти",
+      "signUpButton": "Создать аккаунт"
     },
     "signUp": {
       "title": "Регистрация",
@@ -53,7 +54,8 @@
         "and": " и ",
         "terms": "Условия использования",
         "suffix": "."
-      }
+      },
+      "submitButton": "Зарегистрироваться"
     },
     "forgotPassword": {
       "title": "Восстановление пароля",
@@ -75,6 +77,22 @@
       "resend": "Отправить повторно",
       "resentSnack": "SMS отправлено повторно",
       "submitButton": "Подтвердить"
+    },
+    "social": {
+      "comingSoon": "Скоро будет доступно",
+      "apple": "Apple",
+      "google": "Google"
+    },
+    "addAccount": {
+      "instructionsTitle": "Инструкция",
+      "expiresIn": "Истекает через",
+      "waiting": "Ожидание подтверждения...",
+      "expired": "Срок истёк",
+      "refresh": "Обновить QR-код",
+      "step1": "Откройте приложение на основном устройстве",
+      "step2": "Перейдите в раздел Активные сессии",
+      "step3": "Нажмите кнопку «Добавить аккаунт»",
+      "step4": "Отсканируйте этот QR-код"
     }
   },
   "formatters": {
@@ -102,7 +120,9 @@
   "dashboard": {
     "emptyState": {
       "message": "Добавьте ребёнка, чтобы следить за ним через приложение",
-      "addButton": "Добавить ребёнка"
+      "addButton": "Добавить ребёнка",
+      "placeholderName": "Добавить ребёнка",
+      "placeholderDevice": "Модель телефона"
     },
     "connection": {
       "connected": "Устройство подключено",
@@ -113,8 +133,22 @@
       "voice": "Голосовые сообщения",
       "appRestrictions": "Ограничения приложений",
       "location": "Местоположение",
-      "schedules": "Расписания"
-    }
+      "schedules": "Расписания",
+      "callHistory": "История звонков",
+      "ambientSound": "Окружающий звук",
+      "locationHistory": "История перемещений",
+      "messenger": "Messenger"
+    },
+    "rating": {
+      "title": "Рейтинг ребёнка",
+      "details": "Подробнее"
+    },
+    "screenTime": {
+      "todayTitle": "Время за сегодня",
+      "blockAll": "Заблокировать все приложения"
+    },
+    "usageTime": "Время использования",
+    "noDevice": "Устройство не подключено"
   },
   "schedules": {
     "headerTitle": "Расписания",
@@ -515,7 +549,8 @@
         "copy": "Копировать",
         "copiedSnack": "Код скопирован",
         "close": "Закрыть"
-      }
+      },
+      "supportLink": "Техподдержка"
     }
   }
 }

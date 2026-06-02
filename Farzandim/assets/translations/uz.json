@@ -30,11 +30,12 @@
     },
     "signIn": {
       "title": "Akkauntga kirish",
-      "emailLabel": "Email manzil",
-      "emailHint": "email@example.com",
+      "emailLabel": "Elektron pochta yoki telefon raqam",
+      "emailHint": "email@example.com yoki +998 90 123 45 67",
       "passwordLabel": "Parol",
       "forgotPassword": "Parolingizni unutdingizmi?",
-      "submitButton": "Akkauntga kirish"
+      "submitButton": "Akkauntga kirish",
+      "signUpButton": "Akkauntga qo'shilish"
     },
     "signUp": {
       "title": "Ro'yxatdan o'tish",
@@ -53,7 +54,8 @@
         "and": " va ",
         "terms": "Foydalanish shartlari",
         "suffix": "ni o'qib chiqdim va qabul qilaman."
-      }
+      },
+      "submitButton": "Ro'yxatdan o'tish"
     },
     "forgotPassword": {
       "title": "Parolni tiklash",
@@ -75,6 +77,22 @@
       "resend": "Qayta yuborish",
       "resentSnack": "SMS qaytadan yuborildi",
       "submitButton": "Tasdiqlash"
+    },
+    "social": {
+      "comingSoon": "Tez orada qo'shiladi",
+      "apple": "Apple",
+      "google": "Google"
+    },
+    "addAccount": {
+      "instructionsTitle": "Yo'riqnoma",
+      "expiresIn": "Muddati tugaydi",
+      "waiting": "Tasdiqlash kutilmoqda...",
+      "expired": "Muddati tugadi",
+      "refresh": "QR kodni yangilash",
+      "step1": "Ilovani asosiy qurilmangizda oching",
+      "step2": "Faol sessiyalar bo'limiga kiring",
+      "step3": "Boshqa hisob qo'shish tugmasini bosing",
+      "step4": "Ushbu QR kodni skanerlang"
     }
   },
   "formatters": {
@@ -102,7 +120,9 @@
   "dashboard": {
     "emptyState": {
       "message": "Farzandingizni dastur orqali kuzatib borish uchun uni qo'shing",
-      "addButton": "Yangi bola qo'shish"
+      "addButton": "Yangi bola qo'shish",
+      "placeholderName": "Yangi farzand qo'shish",
+      "placeholderDevice": "Telefon modeli"
     },
     "connection": {
       "connected": "Qurilma ulangan",
@@ -113,8 +133,22 @@
       "voice": "Ovoz xabarlari",
       "appRestrictions": "Ilova cheklovlari",
       "location": "Joylashuv",
-      "schedules": "Jadvallar"
-    }
+      "schedules": "Jadvallar",
+      "callHistory": "Qo'ng'iroqlar tarixi",
+      "ambientSound": "Atrofdagi ovoz",
+      "locationHistory": "Harakatlanish tarixi",
+      "messenger": "Messenger"
+    },
+    "rating": {
+      "title": "Farzandingiz reytingi",
+      "details": "Batafsil"
+    },
+    "screenTime": {
+      "todayTitle": "Bugun sarflangan vaqt",
+      "blockAll": "Barcha ilovalarni bloklash"
+    },
+    "usageTime": "Foydalanish vaqti",
+    "noDevice": "Qurilma ulanmagan"
   },
   "schedules": {
     "headerTitle": "Jadvallar",
@@ -515,7 +549,8 @@
         "copy": "Nusxalash",
         "copiedSnack": "Kod nusxalandi",
         "close": "Yopish"
-      }
+      },
+      "supportLink": "Texnik yordam olish"
     }
   }
 }

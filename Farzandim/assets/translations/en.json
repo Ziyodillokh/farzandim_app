@@ -30,11 +30,12 @@
     },
     "signIn": {
       "title": "Sign in",
-      "emailLabel": "Email address",
-      "emailHint": "email@example.com",
+      "emailLabel": "Email or phone number",
+      "emailHint": "email@example.com or +998 90 123 45 67",
       "passwordLabel": "Password",
       "forgotPassword": "Forgot password?",
-      "submitButton": "Sign in"
+      "submitButton": "Sign in",
+      "signUpButton": "Create account"
     },
     "signUp": {
       "title": "Sign up",
@@ -53,7 +54,8 @@
         "and": " and ",
         "terms": "Terms of Service",
         "suffix": "."
-      }
+      },
+      "submitButton": "Sign up"
     },
     "forgotPassword": {
       "title": "Reset password",
@@ -75,6 +77,22 @@
       "resend": "Resend",
       "resentSnack": "SMS resent",
       "submitButton": "Verify"
+    },
+    "social": {
+      "comingSoon": "Coming soon",
+      "apple": "Apple",
+      "google": "Google"
+    },
+    "addAccount": {
+      "instructionsTitle": "Instructions",
+      "expiresIn": "Expires in",
+      "waiting": "Waiting for confirmation...",
+      "expired": "Expired",
+      "refresh": "Refresh QR code",
+      "step1": "Open the app on your main device",
+      "step2": "Go to the Active sessions section",
+      "step3": "Tap the Add account button",
+      "step4": "Scan this QR code"
     }
   },
   "formatters": {
@@ -102,7 +120,9 @@
   "dashboard": {
     "emptyState": {
       "message": "Add your child to start monitoring through the app",
-      "addButton": "Add new child"
+      "addButton": "Add new child",
+      "placeholderName": "Add a child",
+      "placeholderDevice": "Phone model"
     },
     "connection": {
       "connected": "Device connected",
@@ -113,8 +133,22 @@
       "voice": "Voice messages",
       "appRestrictions": "App restrictions",
       "location": "Location",
-      "schedules": "Schedules"
-    }
+      "schedules": "Schedules",
+      "callHistory": "Call history",
+      "ambientSound": "Ambient sound",
+      "locationHistory": "Movement history",
+      "messenger": "Messenger"
+    },
+    "rating": {
+      "title": "Child's rating",
+      "details": "Details"
+    },
+    "screenTime": {
+      "todayTitle": "Time spent today",
+      "blockAll": "Block all apps"
+    },
+    "usageTime": "Usage time",
+    "noDevice": "Device not connected"
   },
   "schedules": {
     "headerTitle": "Schedules",
@@ -515,7 +549,8 @@
         "copy": "Copy",
         "copiedSnack": "Code copied",
         "close": "Close"
-      }
+      },
+      "supportLink": "Get technical support"
     }
   }
 }

@@ -21,6 +21,8 @@ import { AuthService } from './auth.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
 import { Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
@@ -43,6 +45,33 @@ export class AuthController {
     @Req() req: Request,
   ) {
     return this.authService.telegramLogin(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Post('register')
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Register a parent via email/phone + password' })
+  @ApiResponse({ status: 201, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 400, description: 'Email/phone missing or invalid' })
+  @ApiResponse({ status: 409, description: 'Email or phone already registered' })
+  async register(@Body() dto: RegisterDto, @Req() req: Request) {
+    return this.authService.register(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Post('login')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login a parent via email/phone + password' })
+  @ApiResponse({ status: 200, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 401, description: 'Invalid credentials' })
+  async login(@Body() dto: LoginDto, @Req() req: Request) {
+    return this.authService.login(dto, {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });

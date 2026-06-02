@@ -84,14 +84,17 @@ class _QuickActionTileState extends State<QuickActionTile> {
             splashColor: accent.withValues(alpha: 0.12),
             highlightColor: accent.withValues(alpha: 0.06),
             child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.md),
+              padding: const EdgeInsets.all(
+                AppDimensions.sm + AppDimensions.xs,
+              ),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   // Yumaloq accent fonda ikonka (15% alpha + 25% border)
                   Container(
-                    width: 48,
-                    height: 48,
+                    width: 44,
+                    height: 44,
                     decoration: BoxDecoration(
                       color: accent.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
@@ -99,17 +102,19 @@ class _QuickActionTileState extends State<QuickActionTile> {
                         color: accent.withValues(alpha: 0.25),
                       ),
                     ),
-                    child: Icon(widget.icon, size: 24, color: accent),
+                    child: Icon(widget.icon, size: 22, color: accent),
                   ),
-                  const SizedBox(height: 10),
-                  Text(
-                    widget.label,
-                    textAlign: TextAlign.center,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w600,
+                  const SizedBox(height: 8),
+                  Flexible(
+                    child: Text(
+                      widget.label,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
                 ],

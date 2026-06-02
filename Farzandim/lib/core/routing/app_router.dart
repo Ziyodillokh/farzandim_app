@@ -16,6 +16,10 @@
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/auth/presentation/screens/add_account_screen.dart';
+import 'package:farzandim/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:farzandim/features/auth/presentation/screens/sign_in_screen.dart';
+import 'package:farzandim/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/telegram_login_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
@@ -44,6 +48,7 @@ import 'package:farzandim/features/settings/presentation/screens/settings_screen
 import 'package:farzandim/features/pair_requests/presentation/screens/pair_requests_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -78,6 +83,10 @@ CustomTransitionPage<T> _slidePage<T>(Widget child) {
 const _authRoutes = <String>[
   AppRoutes.welcome,
   AppRoutes.telegramLogin, // Telegram Login — yagona auth ekran
+  AppRoutes.signIn,
+  AppRoutes.signUp,
+  AppRoutes.forgotPassword,
+  AppRoutes.addAccount,
 ];
 
 /// Firebase + Backend auth providerlarga listen qilib `notifyListeners`
@@ -92,6 +101,21 @@ class _AuthRefreshNotifier extends ChangeNotifier {
   }
 }
 
+/// Firebase ishga tushirilgan bo'lsa Analytics observer qaytaradi, aks
+/// holda bo'sh ro'yxat — web preview Firebase'siz ishlashi uchun.
+List<NavigatorObserver> _analyticsObservers() {
+  try {
+    if (Firebase.apps.isNotEmpty) {
+      return [
+        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+      ];
+    }
+  } catch (_) {
+    // Firebase plugin mavjud emas / ishga tushmagan — observer'siz.
+  }
+  return <NavigatorObserver>[];
+}
+
 /// Ilovaning yagona `GoRouter` obyekti — `routerProvider` orqali olinadi.
 ///
 /// `MaterialApp.router(routerConfig: ref.watch(routerProvider))`.
@@ -104,9 +128,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     debugLogDiagnostics: true,
     refreshListenable: notifier,
     // Sprint 1.5: auto screen_view event'lar Analytics'ga.
-    observers: [
-      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-    ],
+    // Firebase ishga tushirilmagan bo'lsa (web preview) — observer'siz.
+    observers: _analyticsObservers(),
 
     // ─── Auth-protected redirect ───
     //
@@ -132,7 +155,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
 
-    routes: <RouteBase>[
+    routes: buildAppRoutes(),
+  );
+});
+
+/// Ilovaning barcha route'lari. `routerProvider` (real ilova) va preview
+/// harness (main_preview.dart) ikkisi ham shu ro'yxatni ishlatadi — shu
+/// sabab preview'da ham barcha ekranlar ochiladi (page-not-found bo'lmaydi).
+List<RouteBase> buildAppRoutes() {
+  return <RouteBase>[
     // Welcome ekran — auth qilmagan foydalanuvchilar uchun bosh sahifa.
     GoRoute(
       path: AppRoutes.welcome,
@@ -143,6 +174,31 @@ final routerProvider = Provider<GoRouter>((ref) {
     GoRoute(
       path: AppRoutes.telegramLogin,
       pageBuilder: (context, state) => _slidePage(const TelegramLoginScreen()),
+    ),
+
+    // Akkauntga kirish — email/telefon + parol.
+    GoRoute(
+      path: AppRoutes.signIn,
+      pageBuilder: (context, state) => _slidePage(const SignInScreen()),
+    ),
+
+    // Ro'yxatdan o'tish — telefon/email tab + parol.
+    GoRoute(
+      path: AppRoutes.signUp,
+      pageBuilder: (context, state) => _slidePage(const SignUpScreen()),
+    ),
+
+    // Parolni tiklash (UI stub).
+    GoRoute(
+      path: AppRoutes.forgotPassword,
+      pageBuilder: (context, state) =>
+          _slidePage(const ForgotPasswordScreen()),
+    ),
+
+    // Akkauntga qo'shilish — QR orqali boshqa qurilmaga ulanish.
+    GoRoute(
+      path: AppRoutes.addAccount,
+      pageBuilder: (context, state) => _slidePage(const AddAccountScreen()),
     ),
 
     // Dashboard — auth qilgan foydalanuvchining asosiy ekrani.
@@ -323,6 +379,5 @@ final routerProvider = Provider<GoRouter>((ref) {
         ),
       ),
     ),
-    ],
-  );
-});
+  ];
+}

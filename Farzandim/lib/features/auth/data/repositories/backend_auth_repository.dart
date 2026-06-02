@@ -44,6 +44,44 @@ class BackendAuthRepository {
   final Dio _dio;
   final TokenStorage _tokenStorage;
 
+  /// Email yoki telefon + parol bilan ro'yxatdan o'tish.
+  /// Backend: POST /api/auth/register → { accessToken, refreshToken, user }.
+  /// Kamida `email` yoki `phone` berilishi shart.
+  Future<AuthSession> register({
+    required String password,
+    String? email,
+    String? phone,
+    String? name,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/register',
+      data: <String, dynamic>{
+        if (email != null && email.isNotEmpty) 'email': email,
+        if (phone != null && phone.isNotEmpty) 'phone': phone,
+        'password': password,
+        if (name != null && name.isNotEmpty) 'name': name,
+      },
+    );
+    return AuthSession.fromJson(response.data ?? <String, dynamic>{});
+  }
+
+  /// Email yoki telefon + parol bilan kirish.
+  /// Backend: POST /api/auth/login → { accessToken, refreshToken, user }.
+  /// `identifier` — email manzili yoki +998 telefon raqami.
+  Future<AuthSession> login({
+    required String identifier,
+    required String password,
+  }) async {
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/login',
+      data: <String, dynamic>{
+        'identifier': identifier,
+        'password': password,
+      },
+    );
+    return AuthSession.fromJson(response.data ?? <String, dynamic>{});
+  }
+
   /// login.html FlutterAuth callback'idan kelgan JSON'ni saqlaydi.
   /// Tokens secure storage'ga, user obyekti caller'ga qaytariladi.
   Future<AuthUser> saveSession(AuthSession session) async {

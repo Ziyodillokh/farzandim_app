@@ -74,6 +74,9 @@ dependencies:
   # (Apple, Google, va h.k. — assets/icons/*.svg).
   flutter_svg: ^2.0.10
 
+  # QR kod generatsiya — "Akkauntga qo'shilish" (boshqa qurilmaga ulanish).
+  qr_flutter: ^4.1.0
+
   # Routing — Flutter rasmiy tavsiyasi
   go_router: ^14.6.2
 

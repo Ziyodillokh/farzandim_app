@@ -24,6 +24,18 @@ class AppRoutes {
   /// Firebase phone OTP'dan migrate qilingan yangi auth.
   static const String telegramLogin = '/login-telegram';
 
+  /// Akkauntga kirish — email/telefon + parol.
+  static const String signIn = '/sign-in';
+
+  /// Ro'yxatdan o'tish — telefon/email tab + parol.
+  static const String signUp = '/sign-up';
+
+  /// Parolni tiklash (hozircha UI stub — backend keyin ulanadi).
+  static const String forgotPassword = '/forgot-password';
+
+  /// Akkauntga qo'shilish — boshqa qurilmaga QR orqali ulanish.
+  static const String addAccount = '/add-account';
+
   /// Asosiy ekran — auth qilingan foydalanuvchilar uchun.
   static const String dashboard = '/dashboard';
 

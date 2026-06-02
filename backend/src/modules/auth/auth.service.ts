@@ -3,6 +3,7 @@ import {
   UnauthorizedException,
   ConflictException,
   NotFoundException,
+  BadRequestException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
@@ -16,6 +17,12 @@ import { EnvConfig } from '../../common/config/env.schema';
 import { TelegramService, TelegramAuthData } from './strategies/telegram.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
+import { RegisterDto } from './dto/register.dto';
+import { LoginDto } from './dto/login.dto';
+import {
+  hashPassword,
+  verifyPassword,
+} from '../../admin/admin-auth/helpers/password';
 
 const PAIR_REQUEST_TTL_MIN = 5;
 
@@ -136,6 +143,142 @@ export class AuthService {
       },
       accessToken,
       refreshToken,
+    };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Email / Telefon + Parol — Register & Login                         */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Ota-ona (PARENT) ro'yxatdan o'tishi — email yoki telefon + parol.
+   * Kamida bittasi (email yoki phone) berilishi shart.
+   */
+  async register(
+    dto: RegisterDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const email = dto.email?.trim().toLowerCase() || undefined;
+    const phone = dto.phone?.trim() || undefined;
+
+    if (!email && !phone) {
+      throw new BadRequestException(
+        'Email yoki telefon raqamdan kamida bittasi kerak',
+      );
+    }
+
+    // Takrorlanish tekshiruvi
+    if (email) {
+      const exists = await this.prisma.user.findUnique({ where: { email } });
+      if (exists) {
+        throw new ConflictException("Bu email allaqachon ro'yxatdan o'tgan");
+      }
+    }
+    if (phone) {
+      const exists = await this.prisma.user.findUnique({ where: { phone } });
+      if (exists) {
+        throw new ConflictException(
+          "Bu telefon raqam allaqachon ro'yxatdan o'tgan",
+        );
+      }
+    }
+
+    const passwordHash = await hashPassword(dto.password);
+
+    const user = await this.prisma.user.create({
+      data: {
+        role: 'PARENT',
+        email: email ?? null,
+        phone: phone ?? null,
+        passwordHash,
+        name: dto.name?.trim() || null,
+      },
+    });
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      'CREATE',
+      user.id,
+      { method: email ? 'email' : 'phone' },
+      reqMeta,
+    );
+
+    return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Email yoki telefon + parol bilan kirish.
+   * Xavfsizlik: user topilmasa ham, parol noto'g'ri ham — bir xil xabar.
+   */
+  async login(
+    dto: LoginDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const identifier = dto.identifier.trim();
+    const isEmail = identifier.includes('@');
+
+    const user = await this.prisma.user.findUnique({
+      where: isEmail
+        ? { email: identifier.toLowerCase() }
+        : { phone: identifier },
+    });
+
+    if (!user || !user.passwordHash) {
+      throw new UnauthorizedException("Login yoki parol noto'g'ri");
+    }
+
+    const valid = await verifyPassword(dto.password, user.passwordHash);
+    if (!valid) {
+      throw new UnauthorizedException("Login yoki parol noto'g'ri");
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Hisob bloklangan');
+    }
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      'LOGIN',
+      user.id,
+      { method: isEmail ? 'email' : 'phone' },
+      reqMeta,
+    );
+
+    return this.buildAuthResponse(user);
+  }
+
+  /**
+   * Login/register javobini quradi: tokens + minimal user obyekti.
+   * Telegram login bilan bir xil shaklda (Flutter AuthSession.fromJson).
+   */
+  private buildAuthResponse(user: {
+    id: string;
+    role: string;
+    name: string | null;
+    avatarUrl: string | null;
+    telegramId: string | null;
+    language: string;
+    tokenVersion: number;
+  }) {
+    const payload: JwtPayload = {
+      userId: user.id,
+      role: user.role as 'PARENT' | 'CHILD',
+      tokenVersion: user.tokenVersion,
+    };
+
+    return {
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        telegramId: user.telegramId,
+        language: user.language,
+      },
+      accessToken: this.signAccessToken(payload),
+      refreshToken: this.signRefreshToken(payload),
     };
   }
 
