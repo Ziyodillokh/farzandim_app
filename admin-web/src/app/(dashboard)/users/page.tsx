@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, UserPlus } from 'lucide-react';
+import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -66,9 +66,13 @@ export default function UsersPage() {
             Hammasi <span className="text-muted-foreground">({data?.total ?? 0})</span>
           </h2>
         </div>
-        <Button>
-          <UserPlus className="h-4 w-4" />
-          Foydalanuvchi qo&apos;shish
+        <Button
+          variant="outline"
+          onClick={() => exportUsersCsv(data?.items ?? [])}
+          disabled={!data || data.items.length === 0}
+        >
+          <Download className="h-4 w-4" />
+          CSV eksport
         </Button>
       </div>
 
@@ -284,4 +288,29 @@ function RowSkeleton() {
       <td className="px-4 py-3"><Skeleton className="h-7 w-7 rounded-md" /></td>
     </tr>
   );
+}
+
+/* ─── CSV export ─── */
+
+function exportUsersCsv(users: AdminUserListItem[]) {
+  if (users.length === 0) return;
+  const headers = ['Ism', 'Email', 'Telefon', 'Rol', 'Status', 'Obuna', 'Oxirgi faollik'];
+  const rows = users.map((u) => [
+    u.name,
+    u.email ?? '',
+    u.phone ?? '',
+    u.kind === 'child' || u.role === 'CHILD' ? 'Bola' : 'Ota-ona',
+    u.status === 'active' ? 'Faol' : 'Bloklangan',
+    u.planLabel || 'Free',
+    u.lastActivityAt ?? '',
+  ]);
+  const escape = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = [headers, ...rows].map((r) => r.map(escape).join(',')).join('\n');
+  const blob = new Blob(['﻿' + csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `farzandim-users-${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
 }

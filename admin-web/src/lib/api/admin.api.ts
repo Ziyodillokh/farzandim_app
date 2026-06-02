@@ -87,7 +87,7 @@ export const moderatorsApi = {
   list: (params?: { page?: number; limit?: number; q?: string }) =>
     api.get<RawPaginated<Moderator>>('/admin/moderators', { params }).then(normalizePagination),
   detail: (id: string) => api.get<Moderator>(`/admin/moderators/${id}`),
-  create: (data: { name: string; email: string; phone?: string; moderatorRoleKey: string; permissions?: string[] }) =>
+  create: (data: { name: string; email: string; phone?: string; moderatorRoleKey: string; password: string; permissions?: string[] }) =>
     api.post<Moderator>('/admin/moderators', data),
   update: (id: string, data: Partial<Moderator>) => api.patch<Moderator>(`/admin/moderators/${id}`, data),
   block: (id: string) => api.post(`/admin/moderators/${id}/block`),
@@ -112,6 +112,14 @@ export const contentApi = {
     detail: (id: string) => api.get<Video>(`/admin/videos/${id}`),
     create: (data: Partial<Video>) => api.post<Video>('/admin/videos/create', data),
     update: (id: string, data: Partial<Video>) => api.patch<Video>(`/admin/videos/${id}`, data),
+    /** Multipart: videoFile + thumbnailFile? + metadata JSON */
+    upload: (videoFile: File, metadata: Record<string, unknown>, thumbnailFile?: File | null, onProgress?: (p: number) => void) => {
+      const form = new FormData();
+      form.append('videoFile', videoFile);
+      if (thumbnailFile) form.append('thumbnailFile', thumbnailFile);
+      form.append('metadata', JSON.stringify(metadata));
+      return api.postForm<Video>('/admin/videos/upload', form, onProgress);
+    },
     approve: (id: string) => api.patch(`/admin/videos/${id}/approve`),
     reject: (id: string) => api.patch(`/admin/videos/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/videos/${id}`),
@@ -120,6 +128,13 @@ export const contentApi = {
     list: (params: ContentListParams = {}) =>
       api.get<RawPaginated<Audiobook>>('/admin/audiobooks', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Audiobook>(`/admin/audiobooks/${id}`),
+    upload: (audioFile: File, metadata: Record<string, unknown>, thumbnailFile?: File | null, onProgress?: (p: number) => void) => {
+      const form = new FormData();
+      form.append('audioFile', audioFile);
+      if (thumbnailFile) form.append('thumbnailFile', thumbnailFile);
+      form.append('metadata', JSON.stringify(metadata));
+      return api.postForm<Audiobook>('/admin/audiobooks/upload', form, onProgress);
+    },
     approve: (id: string) => api.patch(`/admin/audiobooks/${id}/approve`),
     reject: (id: string) => api.patch(`/admin/audiobooks/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/audiobooks/${id}`),
@@ -129,6 +144,13 @@ export const contentApi = {
       api.get<RawPaginated<Book>>('/admin/books', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Book>(`/admin/books/${id}`),
     create: (data: Partial<Book>) => api.post<Book>('/admin/books/create', data),
+    upload: (pdfFile: File, metadata: Record<string, unknown>, coverFile?: File | null, onProgress?: (p: number) => void) => {
+      const form = new FormData();
+      form.append('pdfFile', pdfFile);
+      if (coverFile) form.append('coverFile', coverFile);
+      form.append('metadata', JSON.stringify(metadata));
+      return api.postForm<Book>('/admin/books/upload', form, onProgress);
+    },
     approve: (id: string) => api.patch(`/admin/books/${id}/approve`),
     reject: (id: string) => api.patch(`/admin/books/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/books/${id}`),
@@ -171,6 +193,24 @@ export const notificationsApi = {
     ),
   detail: (id: string) => api.get<AdminNotification>(`/admin/notifications/${id}`),
   remove: (id: string) => api.delete(`/admin/notifications/${id}`),
+  create: (data: {
+    title: string;
+    message: string;
+    targetType: string;
+    filters?: Record<string, unknown>;
+    imageUrl?: string;
+    deepLink?: string;
+    scheduledAt?: string;
+  }) => api.post<AdminNotification>('/admin/notifications', data),
+  uploadImage: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.postForm<{ url: string }>('/admin/notifications/upload-image', form);
+  },
+  aiGenerate: () =>
+    api.post<Array<{ title: string; message: string; targetType?: string }>>(
+      '/admin/notifications/ai-generate',
+    ),
 };
 
 // ───────────────────────── OLYMPIADS ─────────────────────────
@@ -178,11 +218,42 @@ export const olympiadsApi = {
   list: (params?: { page?: number; limit?: number; status?: string }) =>
     api.get<RawPaginated<Olympiad>>('/admin/olympiads', { params }).then(normalizePagination),
   detail: (id: string) => api.get<Olympiad>(`/admin/olympiads/${id}`),
-  create: (data: Partial<Olympiad>) => api.post<Olympiad>('/admin/olympiads', data),
+  create: (data: OlympiadCreatePayload) => api.post<Olympiad>('/admin/olympiads', data),
+  update: (id: string, data: Partial<OlympiadCreatePayload>) =>
+    api.patch<Olympiad>(`/admin/olympiads/${id}`, data),
   publish: (id: string) => api.post(`/admin/olympiads/${id}/publish`),
+  archive: (id: string) => api.post(`/admin/olympiads/${id}/archive`),
   leaderboard: (id: string, limit = 100) =>
     api.get(`/admin/olympiads/${id}/leaderboard`, { params: { limit } }),
 };
+
+export interface OlympiadQuestionInput {
+  text: string;
+  options: string[];
+  correctIndex: number;
+  points: number;
+}
+
+export interface OlympiadCreatePayload {
+  title: string;
+  description?: string;
+  subject: string;
+  ageFrom: number;
+  ageTo: number;
+  type: string;
+  difficulty: string;
+  startTime: string;
+  endTime: string;
+  durationMin: number;
+  maxAttempts: number;
+  xpReward: number;
+  shuffleQuestions: boolean;
+  shuffleAnswers: boolean;
+  hideResults: boolean;
+  allowBack: boolean;
+  certificateEnabled: boolean;
+  questions: OlympiadQuestionInput[];
+}
 
 // ───────────────────────── ANALYTICS ─────────────────────────
 export const analyticsApi = {

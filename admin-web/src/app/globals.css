@@ -12,13 +12,13 @@
 
 @layer base {
   :root {
-    /* Asosiy fon va matn */
+    /* Asosiy fon va matn — yuqori kontrast, tiniq */
     --background: 0 0% 99%;              /* #FCFCFC — yumshoq oq */
-    --foreground: 240 10% 6%;            /* #0F1015 — qora-ko'k oraliq */
+    --foreground: 240 14% 10%;           /* #16161D — to'q, aniq matn */
     --card: 0 0% 100%;                   /* sof oq */
-    --card-foreground: 240 10% 6%;
+    --card-foreground: 240 14% 10%;
     --popover: 0 0% 100%;
-    --popover-foreground: 240 10% 6%;
+    --popover-foreground: 240 14% 10%;
 
     /* Lime green — brendning yuragi */
     --primary: 78 90% 47%;               /* #84CC16 — lime-500 */
@@ -28,11 +28,11 @@
 
     /* Ikkilamchi va xira */
     --secondary: 240 5% 96%;
-    --secondary-foreground: 240 6% 14%;
+    --secondary-foreground: 240 8% 18%;
     --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    --muted-foreground: 240 6% 38%;      /* #5A5A66 — to'qroq, o'qiladigan xira matn */
     --accent: 76 70% 96%;                /* lime tinted hover bg */
-    --accent-foreground: 240 6% 14%;
+    --accent-foreground: 240 8% 16%;
 
     /* Status ranglari */
     --destructive: 0 75% 55%;            /* #DC2626 — red-600 */
@@ -74,7 +74,7 @@
     --secondary: 240 5% 12%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 5% 12%;
-    --muted-foreground: 240 4% 60%;
+    --muted-foreground: 240 5% 68%;      /* dark mode — yorqinroq xira matn */
     --accent: 78 40% 12%;
     --accent-foreground: 0 0% 96%;
 

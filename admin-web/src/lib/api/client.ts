@@ -106,6 +106,18 @@ class ApiClient {
   post<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.instance.post<T>(url, data, config).then((r) => r.data);
   }
+  /** Multipart upload (FormData). onProgress optional. */
+  postForm<T>(url: string, form: FormData, onProgress?: (pct: number) => void) {
+    return this.instance
+      .post<T>(url, form, {
+        headers: { 'Content-Type': 'multipart/form-data' },
+        timeout: 25 * 60 * 1000, // 25 daqiqa — katta video upload uchun
+        onUploadProgress: (e) => {
+          if (onProgress && e.total) onProgress(Math.round((e.loaded / e.total) * 100));
+        },
+      })
+      .then((r) => r.data);
+  }
   put<T>(url: string, data?: unknown, config?: AxiosRequestConfig) {
     return this.instance.put<T>(url, data, config).then((r) => r.data);
   }

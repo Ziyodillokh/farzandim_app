@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Bell, Send, Eye, MousePointerClick, CheckCheck } from 'lucide-react';
+import { NotificationComposer } from '@/components/notifications/notification-composer';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,7 +32,9 @@ const STATUS_VARIANT: Record<string, 'success' | 'warning' | 'info' | 'destructi
 };
 
 export default function NotificationsPage() {
+  const qc = useQueryClient();
   const [page, setPage] = useState(1);
+  const [composerOpen, setComposerOpen] = useState(false);
   const limit = 15;
 
   const { data: stats } = useQuery({
@@ -52,10 +55,19 @@ export default function NotificationsPage() {
         title="Bildirishnomalar"
         count={data?.total}
         actions={
-          <Button>
+          <Button onClick={() => setComposerOpen(true)}>
             <Send className="h-4 w-4" /> Yangi xabar
           </Button>
         }
+      />
+
+      <NotificationComposer
+        open={composerOpen}
+        onOpenChange={setComposerOpen}
+        onSuccess={() => {
+          qc.invalidateQueries({ queryKey: ['notifications'] });
+          qc.invalidateQueries({ queryKey: ['notifications-stats'] });
+        }}
       />
 
       {/* Stats row */}

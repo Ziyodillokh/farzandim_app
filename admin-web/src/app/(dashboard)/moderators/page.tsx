@@ -26,6 +26,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { moderatorsApi } from '@/lib/api/admin.api';
 import { cn, formatPhone, formatRelative, initials } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
+import { ModeratorFormModal } from '@/components/moderators/moderator-form-modal';
 import type { Moderator } from '@/types/api.types';
 
 const ROLE_CFG: Record<string, { label: string; variant: 'default' | 'info' | 'warning' | 'secondary' }> = {
@@ -39,6 +40,7 @@ export default function ModeratorsPage() {
   const qc = useQueryClient();
   const [q, setQ] = useState('');
   const [page, setPage] = useState(1);
+  const [createOpen, setCreateOpen] = useState(false);
   const limit = 20;
 
   const params = { q, page, limit };
@@ -87,10 +89,16 @@ export default function ModeratorsPage() {
         title="Moderatorlar"
         count={data?.total}
         actions={
-          <Button>
+          <Button onClick={() => setCreateOpen(true)}>
             <UserPlus className="h-4 w-4" /> Yangi moderator
           </Button>
         }
+      />
+
+      <ModeratorFormModal
+        open={createOpen}
+        onOpenChange={setCreateOpen}
+        onSuccess={invalidate}
       />
 
       {/* Filter bar */}

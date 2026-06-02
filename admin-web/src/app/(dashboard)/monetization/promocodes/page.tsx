@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Ticket, Plus, Infinity as InfinityIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { EmptyState } from '@/components/common/empty-state';
 import { monetizationApi } from '@/lib/api/admin.api';
 import { cn } from '@/lib/utils';
+import { PromocodeFormModal } from '@/components/monetization/promocode-form-modal';
 import type { Promocode } from '@/types/api.types';
 
 const STATUS_META: Record<Promocode['status'], { label: string; variant: 'success' | 'secondary' | 'destructive'; dot: string }> = {
@@ -26,10 +28,14 @@ function formatDate(iso: string | null): string {
 }
 
 export default function PromocodesPage() {
+  const qc = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['promocodes'],
     queryFn: () => monetizationApi.promocodes.list(),
   });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['promocodes'] });
 
   return (
     <div className="container mx-auto max-w-screen-2xl px-6 py-8">
@@ -38,11 +44,13 @@ export default function PromocodesPage() {
         title="Promokodlar"
         count={data?.length}
         actions={
-          <Button>
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" /> Yangi promokod
           </Button>
         }
       />
+
+      <PromocodeFormModal open={createOpen} onOpenChange={setCreateOpen} onSuccess={invalidate} />
 
       <Card className="overflow-hidden">
         <div className="overflow-x-auto">

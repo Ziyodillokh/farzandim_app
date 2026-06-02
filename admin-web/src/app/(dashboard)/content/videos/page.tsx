@@ -16,6 +16,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { ContentStatusBadge } from '@/components/common/status-badge';
 import { DataPagination } from '@/components/common/data-pagination';
 import { EmptyState } from '@/components/common/empty-state';
+import { VideoUploadModal } from '@/components/content/video-upload-modal';
 import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatDuration, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
@@ -32,6 +33,7 @@ export default function VideosPage() {
   const qc = useQueryClient();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [uploadOpen, setUploadOpen] = useState(false);
   const limit = 12;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -65,10 +67,16 @@ export default function VideosPage() {
         title="Videolar"
         count={data?.total}
         actions={
-          <Button>
+          <Button onClick={() => setUploadOpen(true)}>
             <Plus className="h-4 w-4" /> Video qo&apos;shish
           </Button>
         }
+      />
+
+      <VideoUploadModal
+        open={uploadOpen}
+        onOpenChange={setUploadOpen}
+        onSuccess={invalidate}
       />
 
       {/* Status tabs */}

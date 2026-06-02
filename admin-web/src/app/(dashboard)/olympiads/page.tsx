@@ -22,6 +22,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { olympiadsApi } from '@/lib/api/admin.api';
 import { cn, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
+import { OlympiadWizard } from '@/components/olympiads/olympiad-wizard';
 import type { Olympiad } from '@/types/api.types';
 
 const STATUS_TABS = [
@@ -47,6 +48,7 @@ export default function OlympiadsPage() {
   const qc = useQueryClient();
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
+  const [wizardOpen, setWizardOpen] = useState(false);
   const limit = 20;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -71,10 +73,16 @@ export default function OlympiadsPage() {
         title="Konkurslar"
         count={data?.total}
         actions={
-          <Button>
+          <Button onClick={() => setWizardOpen(true)}>
             <Plus className="h-4 w-4" /> Yangi konkurs
           </Button>
         }
+      />
+
+      <OlympiadWizard
+        open={wizardOpen}
+        onOpenChange={setWizardOpen}
+        onSuccess={() => qc.invalidateQueries({ queryKey: ['olympiads'] })}
       />
 
       {/* Status tabs */}

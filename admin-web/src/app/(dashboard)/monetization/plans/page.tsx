@@ -1,6 +1,7 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
+import { useState } from 'react';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Check, Plus, Sparkles, CircleDollarSign } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { EmptyState } from '@/components/common/empty-state';
 import { monetizationApi } from '@/lib/api/admin.api';
 import { cn, formatUzs } from '@/lib/utils';
+import { PlanFormModal } from '@/components/monetization/plan-form-modal';
 import type { Plan } from '@/types/api.types';
 
 const PERIOD_LABEL: Record<Plan['period'], string> = {
@@ -26,10 +28,14 @@ const TIER_META: Record<Plan['entitlementTier'], { label: string; variant: 'seco
 };
 
 export default function PlansPage() {
+  const qc = useQueryClient();
+  const [createOpen, setCreateOpen] = useState(false);
   const { data, isLoading } = useQuery({
     queryKey: ['plans'],
     queryFn: () => monetizationApi.plans.list(),
   });
+
+  const invalidate = () => qc.invalidateQueries({ queryKey: ['plans'] });
 
   const plans = (data ?? []).slice().sort((a, b) => a.sortOrder - b.sortOrder);
 
@@ -40,11 +46,13 @@ export default function PlansPage() {
         title="Tariflar"
         count={data?.length}
         actions={
-          <Button>
+          <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" /> Yangi tarif
           </Button>
         }
       />
+
+      <PlanFormModal open={createOpen} onOpenChange={setCreateOpen} onSuccess={invalidate} />
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -67,7 +75,7 @@ export default function PlansPage() {
             title="Tarif topilmadi"
             description="Hozircha tariflar yo'q. Yangi tarif qo'shing."
             action={
-              <Button>
+              <Button onClick={() => setCreateOpen(true)}>
                 <Plus className="h-4 w-4" /> Yangi tarif
               </Button>
             }
