@@ -46,11 +46,42 @@ export interface TwoFactorStatus {
 }
 
 // ─── Generic ────────────────────────────────────────────────────
+/**
+ * Backend ikki xil pagination formatdan foydalanadi:
+ *  - users/moderators: { items, page, totalPages, total }  (flat)
+ *  - content/payments: { items, pagination: { page, totalPages, total, limit } }
+ * normalizePagination() ikkalasini bitta shaklga keltiradi.
+ */
 export interface Paginated<T> {
   items: T[];
   page: number;
   totalPages: number;
   total: number;
+}
+
+export interface RawPaginated<T> {
+  items: T[];
+  page?: number;
+  totalPages?: number;
+  total?: number;
+  pagination?: { page: number; totalPages: number; total: number; limit: number };
+}
+
+export function normalizePagination<T>(raw: RawPaginated<T>): Paginated<T> {
+  if (raw.pagination) {
+    return {
+      items: raw.items,
+      page: raw.pagination.page,
+      totalPages: raw.pagination.totalPages,
+      total: raw.pagination.total,
+    };
+  }
+  return {
+    items: raw.items,
+    page: raw.page ?? 1,
+    totalPages: raw.totalPages ?? 1,
+    total: raw.total ?? raw.items.length,
+  };
 }
 
 // ─── Dashboard ──────────────────────────────────────────────────

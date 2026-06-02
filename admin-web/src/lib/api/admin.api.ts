@@ -5,6 +5,7 @@
  * Backend Swagger endpointlariga 1:1 mos.
  */
 import { api } from './client';
+import { normalizePagination } from '@/types/api.types';
 import type {
   AdminNotification,
   AdminUser,
@@ -21,6 +22,7 @@ import type {
   Payment,
   Plan,
   Promocode,
+  RawPaginated,
   TwoFactorStatus,
   TwoFactorVerifyResponse,
   Video,
@@ -83,7 +85,7 @@ export const usersApi = {
 // ───────────────────────── MODERATORS ─────────────────────────
 export const moderatorsApi = {
   list: (params?: { page?: number; limit?: number; q?: string }) =>
-    api.get<Paginated<Moderator>>('/admin/moderators', { params }),
+    api.get<RawPaginated<Moderator>>('/admin/moderators', { params }).then(normalizePagination),
   detail: (id: string) => api.get<Moderator>(`/admin/moderators/${id}`),
   create: (data: { name: string; email: string; phone?: string; moderatorRoleKey: string; permissions?: string[] }) =>
     api.post<Moderator>('/admin/moderators', data),
@@ -106,7 +108,7 @@ export interface ContentListParams {
 export const contentApi = {
   videos: {
     list: (params: ContentListParams = {}) =>
-      api.get<Paginated<Video>>('/admin/videos', { params }),
+      api.get<RawPaginated<Video>>('/admin/videos', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Video>(`/admin/videos/${id}`),
     create: (data: Partial<Video>) => api.post<Video>('/admin/videos/create', data),
     update: (id: string, data: Partial<Video>) => api.patch<Video>(`/admin/videos/${id}`, data),
@@ -116,7 +118,7 @@ export const contentApi = {
   },
   audiobooks: {
     list: (params: ContentListParams = {}) =>
-      api.get<Paginated<Audiobook>>('/admin/audiobooks', { params }),
+      api.get<RawPaginated<Audiobook>>('/admin/audiobooks', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Audiobook>(`/admin/audiobooks/${id}`),
     approve: (id: string) => api.patch(`/admin/audiobooks/${id}/approve`),
     reject: (id: string) => api.patch(`/admin/audiobooks/${id}/reject`),
@@ -124,7 +126,7 @@ export const contentApi = {
   },
   books: {
     list: (params: ContentListParams = {}) =>
-      api.get<Paginated<Book>>('/admin/books', { params }),
+      api.get<RawPaginated<Book>>('/admin/books', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Book>(`/admin/books/${id}`),
     create: (data: Partial<Book>) => api.post<Book>('/admin/books/create', data),
     approve: (id: string) => api.patch(`/admin/books/${id}/approve`),
@@ -154,14 +156,14 @@ export const monetizationApi = {
   },
   payments: {
     list: (params: { page?: number; limit?: number; status?: string; method?: string } = {}) =>
-      api.get<Paginated<Payment>>('/admin/monetization/payments', { params }),
+      api.get<RawPaginated<Payment>>('/admin/monetization/payments', { params }).then(normalizePagination),
   },
 };
 
 // ───────────────────────── NOTIFICATIONS ─────────────────────────
 export const notificationsApi = {
   list: (params?: { page?: number; limit?: number; status?: string }) =>
-    api.get<Paginated<AdminNotification>>('/admin/notifications', { params }),
+    api.get<RawPaginated<AdminNotification>>('/admin/notifications', { params }).then(normalizePagination),
   history: () => api.get<AdminNotification[]>('/admin/notifications/history'),
   stats: () =>
     api.get<{ total: number; delivered: number; opened: number; clicked: number }>(
@@ -174,7 +176,7 @@ export const notificationsApi = {
 // ───────────────────────── OLYMPIADS ─────────────────────────
 export const olympiadsApi = {
   list: (params?: { page?: number; limit?: number; status?: string }) =>
-    api.get<Paginated<Olympiad>>('/admin/olympiads', { params }),
+    api.get<RawPaginated<Olympiad>>('/admin/olympiads', { params }).then(normalizePagination),
   detail: (id: string) => api.get<Olympiad>(`/admin/olympiads/${id}`),
   create: (data: Partial<Olympiad>) => api.post<Olympiad>('/admin/olympiads', data),
   publish: (id: string) => api.post(`/admin/olympiads/${id}/publish`),
@@ -198,6 +200,6 @@ export const auditApi = {
     action?: string;
     from?: string;
     to?: string;
-  }) => api.get<Paginated<AuditLogEntry>>('/admin/audit-log', { params }),
+  }) => api.get<RawPaginated<AuditLogEntry>>('/admin/audit-log', { params }).then(normalizePagination),
   actions: () => api.get<string[]>('/admin/audit-log/actions'),
 };
