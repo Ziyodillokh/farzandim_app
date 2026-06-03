@@ -240,8 +240,10 @@ class RestrictionService : Service() {
     /**
      * Bugun (00:00 dan hozirgacha) paket foreground'da bo'lgan vaqt (ms).
      *
-     * Sprint 4.4.39: foreground + foreground service vaqt (YouTube fon
-     * audio kabilar). totalTimeInForeground + totalTimeForegroundServiceUsed.
+     * FAQAT foreground (ekranda faol) vaqt — "Raqamli Salomatlik" bilan bir
+     * xil. Foreground SERVICE vaqti (fon audio/navigator) qo'shilmaydi, aks
+     * holda limit fonda o'ynagan musiqani ham hisoblab, ilovani noto'g'ri
+     * bloklab qo'yardi.
      */
     private fun getTodayUsageMs(packageName: String): Long {
         return try {
@@ -259,12 +261,7 @@ class RestrictionService : Service() {
 
             val aggregate = usm.queryAndAggregateUsageStats(startOfDay, now)
             val stat = aggregate[packageName] ?: return 0L
-            val foregroundMs = stat.totalTimeInForeground
-            val serviceMs =
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-                    try { stat.totalTimeForegroundServiceUsed } catch (_: Exception) { 0L }
-                } else 0L
-            foregroundMs + serviceMs
+            stat.totalTimeInForeground
         } catch (e: Exception) {
             Log.e(TAG, "getTodayUsageMs error", e)
             0L

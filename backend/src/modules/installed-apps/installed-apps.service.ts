@@ -10,7 +10,10 @@ import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { BatchUpsertAppsDto, InstalledAppDto } from './dto/batch-upsert-apps.dto';
 
-const MAX_ICON_SIZE_BYTES = 50 * 1024; // 50 KB
+// 96x96 PNG ikona odatda 5–30 KB, lekin murakkab (adaptiv/gradient)
+// ikonalar 50 KB dan oshib, jimgina rad etilardi → ota-onada ikona
+// ko'rinmасди. Chegarani 256 KB ga oshirdik (baribir kichik, xavfsiz).
+const MAX_ICON_SIZE_BYTES = 256 * 1024; // 256 KB
 const ICON_SIGNED_URL_TTL = 3600; // 1 hour
 
 function decodeIconBase64(raw: string): { buffer: Buffer; mime: string } | null {

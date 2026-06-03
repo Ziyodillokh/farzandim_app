@@ -186,17 +186,17 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
         val pm = context.packageManager
         return aggregateStats.values
             .map { stat ->
-                // Sprint 4.4.39: foreground vaqt + foreground service vaqt
-                // (Android 10+). YouTube fon audio, Spotify, navigator —
-                // foreground service sifatida ishlaydi va totalTimeInForeground
-                // ga kirmaydi. totalTimeForegroundServiceUsed bilan qo'shamiz.
-                val foregroundMs = stat.totalTimeInForeground
-                val serviceMs = getForegroundServiceTimeMs(stat)
-                val totalMs = foregroundMs + serviceMs
-                Triple(stat, totalMs, serviceMs)
+                // FAQAT foreground (ekranda faol ko'ringan) vaqt — Android
+                // "Raqamli Salomatlik" bilan bir xil. Foreground SERVICE vaqti
+                // (Spotify/YouTube fon audio, navigator) QO'SHILMAYDI: ular
+                // ekranda ochiq emas, shuning uchun "ekran vaqti" emas. Ilgari
+                // totalTimeForegroundServiceUsed qo'shilib, musiqa fonda
+                // o'ynaganda ham vaqt yozilardi — bu noto'g'ri edi.
+                val totalMs = stat.totalTimeInForeground
+                Pair(stat, totalMs)
             }
             .filter { it.second > 0 }
-            .map { (stat, totalMs, _) ->
+            .map { (stat, totalMs) ->
                 var appName = stat.packageName
                 var iconBase64: String? = null
 
@@ -223,23 +223,6 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                 map
             }
             .sortedByDescending { it["totalTimeMs"] as Long }
-    }
-
-    /**
-     * Sprint 4.4.39: foreground service vaqt (Android 10+, API 29).
-     * YouTube fon audio, Spotify, navigation app — foreground service
-     * sifatida ishlaydi. UsageStats.totalTimeForegroundServiceUsed field
-     * shu vaqtni o'lchaydi. Eski Android versiyalarda 0 qaytaradi.
-     */
-    private fun getForegroundServiceTimeMs(stat: UsageStats): Long {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) return 0L
-        return try {
-            stat.totalTimeForegroundServiceUsed
-        } catch (_: NoSuchMethodError) {
-            0L
-        } catch (_: Exception) {
-            0L
-        }
     }
 
     private fun getInstalledApps(): List<Map<String, Any>> {
