@@ -98,7 +98,7 @@ final routerProvider = Provider<GoRouter>((ref) {
   );
 
   return GoRouter(
-    initialLocation: '/splash',
+    initialLocation: '/pairing',
     refreshListenable: refresh,
     redirect: (context, state) {
       final pairing = ref.read(pairingStateProvider);
@@ -108,9 +108,9 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Splash, welcome, pairing — har doim ruxsat (pairing oqimi).
       const publicPaths = {'/splash', '/welcome', '/pairing'};
 
-      // Pairing yo'q va himoyalangan ekran → /welcome
+      // Pairing yo'q va himoyalangan ekran → /pairing
       if (!isPaired && !publicPaths.contains(loc)) {
-        return '/welcome';
+        return '/pairing';
       }
 
       // Pairing endigina tugadi (kullanici hali /pairing yoki /welcome'da).

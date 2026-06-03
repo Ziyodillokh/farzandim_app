@@ -29,8 +29,8 @@
     "codeHint": "Get the code from your parents"
   },
   "pairing": {
-    "appName": "Farzandim",
-    "subtitle": "Enter the code from your parent's app",
+    "appName": "Farzandim:",
+    "subtitle": "Enter the code from the parental-control app",
     "hint": "Connect your phone to your parent's phone",
     "helpLink": "Where do I get the code?",
     "helpTitle": "Where do I get the code?",

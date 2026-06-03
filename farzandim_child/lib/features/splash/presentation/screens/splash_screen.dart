@@ -42,7 +42,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final pairing = ref.read(pairingStateProvider);
     if (!pairing.isPaired) {
-      context.go('/welcome');
+      context.go('/pairing');
       return;
     }
 

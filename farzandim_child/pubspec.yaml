@@ -107,15 +107,17 @@ dependencies:
   # uchun (Sprint 4.4.28 app update banner & force dialog).
   url_launcher: ^6.3.1
   flutter_pdfview: ^1.4.4
-  phosphor_flutter: ^2.1.0
+  # phosphor_flutter: olib tashlandi — yangi Flutter bilan mos kelmadi
+  # (IconData `final` class). AppIcons hozir Material Icons ishlatadi.
 
 # `record_linux 0.7.2` + `record_platform_interface 1.5.0` orasida API
 # nomutanosibligi (RecordLinux.startStream signature). Eski stable
 # versiyalarga override qilamiz — Android/iOS uchun hech qanday ta'sir
 # yo'q (faqat Linux platform plugin'iga tegadi).
 dependency_overrides:
-  record_linux: 0.7.1
-  record_platform_interface: 1.2.0
+  # Web build uchun overrides olib tashlandi — record_web 1.3.0
+  # platform_interface 2.0+ talab qiladi. Linux uchun build paytida
+  # qaytarilishi kerak (mahalliy web dev uchun emas).
 
 dev_dependencies:
   flutter_test:

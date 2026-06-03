@@ -2,20 +2,13 @@
 // PairingScreen — bola 5 raqamli oila kodini kiritadi
 // ─────────────────────────────────────────────────────────────────────
 //
-// 5 ta alohida TextField — har biriga 1 raqam.
-// Avtomatik:
-//   - Raqam kiritilsa → keyingi box'ga fokus
-//   - Backspace bosilsa (bo'sh box) → oldingi box'ga fokus
-//   - 5-chi raqam kiritilgach → avto-pairing boshlanadi
-//
-// Pairing muvaffaqiyatli → /permissions ga.
-// Xato → SnackBar + box'lar tozalanadi + 1-chi box'ga fokus.
+// Figma dizayni — dark fon, 5 ta katta yumshoq kvadrat box, ko'k link.
+// Theme'ga bog'liq emas (har doim dark) — onboarding ekrani.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -28,11 +21,26 @@ class PairingScreen extends ConsumerStatefulWidget {
 }
 
 class _PairingScreenState extends ConsumerState<PairingScreen> {
+  // ─── Figma palitrasi ─────────────────────────────────────────────
+  static const Color _bg = Color(0xFF0B0B12);
+  static const Color _boxFill = Color(0xFF2A2A33);
+  static const Color _titleColor = Color(0xFFFFFFFF);
+  static const Color _hintColor = Color(0xFFB5B5BD);
+  static const Color _linkColor = Color(0xFF6B70F5);
+
   final List<TextEditingController> _controllers =
       List.generate(5, (_) => TextEditingController());
   final List<FocusNode> _focusNodes = List.generate(5, (_) => FocusNode());
 
   bool _isPairing = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _focusNodes[0].requestFocus();
+    });
+  }
 
   @override
   void dispose() {
@@ -48,7 +56,6 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   String get _code => _controllers.map((c) => c.text).join();
   bool get _isFull => _code.length == 5;
 
-  /// 5-raqam to'lganda avtomatik chaqiriladi.
   Future<void> _onCodeComplete() async {
     if (!_isFull) return;
 
@@ -59,7 +66,6 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         await ref.read(pairingStateProvider.notifier).tryPair(_code);
 
     if (!mounted) return;
-
     setState(() => _isPairing = false);
 
     if (success) {
@@ -67,7 +73,6 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       return;
     }
 
-    // Backend 0.6.0 — 409 AWAITING_PARENT_CONFIRM → waiting ekran.
     final pairingState = ref.read(pairingStateProvider);
     if (pairingState.status == PairingStatus.awaitingParent &&
         pairingState.pairRequestId != null) {
@@ -75,7 +80,6 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       return;
     }
 
-    // Boshqa xato — SnackBar + box'larni tozalash
     final error = pairingState.errorMessage;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -93,77 +97,84 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 28),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Yuqoridan ekran balandligining ~14% bo'sh joy — kontent
+              // optik markazga yaqinroq tushadi.
+              SizedBox(height: MediaQuery.of(context).size.height * 0.14),
 
-                // Title
-                Text(
-                  'pairing.appName'.tr(),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
+              // ─── Title (Figma: "Farzandim:" + 2-line subtitle, white bold) ───
+              Text(
+                '${'pairing.appName'.tr()}\n${'pairing.subtitle'.tr()}',
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w700,
+                  color: _titleColor,
+                  height: 1.3,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'pairing.subtitle'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 56),
+
+              // ─── 5 ta code box ───
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, _buildCodeBox),
+              ),
+
+              const SizedBox(height: 28),
+
+              // ─── Hint matn ───
+              Text(
+                'pairing.hint'.tr(),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: _hintColor,
+                  height: 1.4,
                 ),
+                textAlign: TextAlign.center,
+              ),
 
-                const SizedBox(height: 60),
+              const SizedBox(height: 24),
 
-                // 5 ta input box
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(5, _buildCodeBox),
-                ),
-
-                const SizedBox(height: 32),
-
-                Text(
-                  'pairing.hint'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 24),
-
-                // Help link
-                TextButton(
-                  onPressed: _showHelp,
-                  child: Text(
-                    'pairing.helpLink'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 15,
-                      decoration: TextDecoration.underline,
+              // ─── Help link (ko'k underlined) ───
+              Center(
+                child: GestureDetector(
+                  onTap: _showHelp,
+                  behavior: HitTestBehavior.opaque,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 6),
+                    child: Text(
+                      'pairing.helpLink'.tr(),
+                      style: const TextStyle(
+                        color: _linkColor,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        decoration: TextDecoration.underline,
+                        decorationColor: _linkColor,
+                      ),
                     ),
                   ),
                 ),
+              ),
 
-                const Spacer(),
+              const Spacer(),
 
-                if (_isPairing)
-                  const CircularProgressIndicator(color: AppColors.primary),
-
-                const SizedBox(height: 16),
-              ],
-            ),
+              if (_isPairing)
+                const Padding(
+                  padding: EdgeInsets.only(bottom: 24),
+                  child: Center(
+                    child: CircularProgressIndicator(color: _linkColor),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
@@ -171,33 +182,35 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   }
 
   Widget _buildCodeBox(int index) {
-    final hasValue = _controllers[index].text.isNotEmpty;
-
-    return Container(
+    return SizedBox(
       width: 56,
       height: 64,
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: hasValue ? AppColors.primary : Colors.transparent,
-          width: 2,
-        ),
-      ),
       child: TextField(
         controller: _controllers[index],
         focusNode: _focusNodes[index],
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         maxLength: 1,
+        cursorColor: _titleColor,
+        cursorWidth: 2,
         style: const TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w700,
+          color: _titleColor,
         ),
-        decoration: const InputDecoration(
+        decoration: InputDecoration(
           counterText: '',
-          border: InputBorder.none,
+          filled: true,
+          fillColor: _boxFill,
+          contentPadding: EdgeInsets.zero,
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: BorderSide.none,
+          ),
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 4) {
@@ -205,12 +218,10 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
           } else if (value.isEmpty && index > 0) {
             _focusNodes[index - 1].requestFocus();
           }
-
           if (_isFull) {
             _onCodeComplete();
           }
-
-          setState(() {}); // border rangini yangilash uchun
+          setState(() {});
         },
       ),
     );
@@ -220,19 +231,22 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: const Color(0xFF1A1A22),
         title: Text(
           'pairing.helpTitle'.tr(),
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: const TextStyle(color: _titleColor),
         ),
         content: Text(
           'pairing.helpContent'.tr(),
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+          style: const TextStyle(color: _hintColor, height: 1.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('pairing.helpClose'.tr()),
+            child: Text(
+              'pairing.helpClose'.tr(),
+              style: const TextStyle(color: _linkColor),
+            ),
           ),
         ],
       ),

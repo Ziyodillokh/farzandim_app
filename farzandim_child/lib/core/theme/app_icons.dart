@@ -1,105 +1,101 @@
 // ─────────────────────────────────────────────────────────────────────
-// FARZANDIM CHILD — ICON SYSTEM (Sprint UI.3, Phosphor Icons)
+// FARZANDIM CHILD — ICON SYSTEM (Material Icons fallback)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Phosphor Icons (Bold weight) — Duolingo-style child-friendly.
-// Hech bir widget'da to'g'ridan-to'g'ri `PhosphorIcons.X` chaqirilmaydi —
-// faqat shu yerdan: `AppIcons.home`, `AppIcons.mic`, ...
-//
-// Material Icons (Icons.X) ham fallback sifatida saqlanadi — eski kod
-// ishlashda davom etadi, yangi kod `AppIcons` ishlatishi kerak.
+// DEV: Phosphor Icons paketi yangi Flutter bilan mos kelmadi
+// (IconData `final` class bo'lib qoldi). Hozir Material Icons rounded
+// variantlari ishlatiladi — bola-do'st (yumaloq burchaklar) ko'rinish.
 
-import 'package:flutter/widgets.dart';
-import 'package:phosphor_flutter/phosphor_flutter.dart';
+import 'package:flutter/material.dart';
 
 class AppIcons {
   AppIcons._();
 
   // ============ NAVIGATION ============
-  static const IconData home = PhosphorIconsBold.house;
-  static const IconData voice = PhosphorIconsBold.microphone;
-  static const IconData location = PhosphorIconsBold.mapPin;
-  static const IconData schedule = PhosphorIconsBold.clock;
-  static const IconData settings = PhosphorIconsBold.gear;
-  static const IconData profile = PhosphorIconsBold.userCircle;
+  static const IconData home = Icons.home_rounded;
+  static const IconData voice = Icons.mic_rounded;
+  static const IconData location = Icons.location_on_rounded;
+  static const IconData schedule = Icons.access_time_rounded;
+  static const IconData settings = Icons.settings_rounded;
+  static const IconData profile = Icons.account_circle_rounded;
 
   // ============ VOICE / AUDIO ============
-  static const IconData play = PhosphorIconsBold.play;
-  static const IconData pause = PhosphorIconsBold.pause;
-  static const IconData stop = PhosphorIconsBold.stop;
-  static const IconData replay = PhosphorIconsBold.arrowCounterClockwise;
-  static const IconData mic = PhosphorIconsBold.microphone;
-  static const IconData micOff = PhosphorIconsBold.microphoneSlash;
-  static const IconData speaker = PhosphorIconsBold.speakerHigh;
-  static const IconData speakerOff = PhosphorIconsBold.speakerX;
+  static const IconData play = Icons.play_arrow_rounded;
+  static const IconData pause = Icons.pause_rounded;
+  static const IconData stop = Icons.stop_rounded;
+  static const IconData replay = Icons.replay_rounded;
+  static const IconData mic = Icons.mic_rounded;
+  static const IconData micOff = Icons.mic_off_rounded;
+  static const IconData speaker = Icons.volume_up_rounded;
+  static const IconData speakerOff = Icons.volume_off_rounded;
 
   // ============ ACTIONS ============
-  static const IconData send = PhosphorIconsBold.paperPlaneTilt;
-  static const IconData reply = PhosphorIconsBold.arrowBendUpLeft;
-  static const IconData delete = PhosphorIconsBold.trash;
-  static const IconData edit = PhosphorIconsBold.pencilSimple;
-  static const IconData close = PhosphorIconsBold.x;
-  static const IconData check = PhosphorIconsBold.check;
-  static const IconData add = PhosphorIconsBold.plus;
-  static const IconData back = PhosphorIconsBold.caretLeft;
-  static const IconData forward = PhosphorIconsBold.caretRight;
-  static const IconData refresh = PhosphorIconsBold.arrowsClockwise;
-  static const IconData copy = PhosphorIconsBold.copy;
-  static const IconData share = PhosphorIconsBold.shareNetwork;
+  static const IconData send = Icons.send_rounded;
+  static const IconData reply = Icons.reply_rounded;
+  static const IconData delete = Icons.delete_rounded;
+  static const IconData edit = Icons.edit_rounded;
+  static const IconData close = Icons.close_rounded;
+  static const IconData check = Icons.check_rounded;
+  static const IconData add = Icons.add_rounded;
+  static const IconData back = Icons.chevron_left_rounded;
+  static const IconData forward = Icons.chevron_right_rounded;
+  static const IconData refresh = Icons.refresh_rounded;
+  static const IconData copy = Icons.copy_rounded;
+  static const IconData share = Icons.share_rounded;
 
   // ============ STATUS ============
-  static const IconData success = PhosphorIconsBold.checkCircle;
-  static const IconData warning = PhosphorIconsBold.warning;
-  static const IconData error = PhosphorIconsBold.xCircle;
-  static const IconData info = PhosphorIconsBold.info;
-  static const IconData block = PhosphorIconsBold.prohibit;
+  static const IconData success = Icons.check_circle_rounded;
+  static const IconData warning = Icons.warning_amber_rounded;
+  static const IconData error = Icons.error_rounded;
+  static const IconData info = Icons.info_rounded;
+  static const IconData block = Icons.block_rounded;
 
   // ============ NOTIFICATIONS ============
-  static const IconData bell = PhosphorIconsBold.bell;
-  static const IconData bellOff = PhosphorIconsBold.bellSlash;
-  static const IconData message = PhosphorIconsBold.chatCircle;
+  static const IconData bell = Icons.notifications_rounded;
+  static const IconData bellOff = Icons.notifications_off_rounded;
+  static const IconData message = Icons.chat_rounded;
 
   // ============ SCHEDULE / TIME ============
-  static const IconData scheduleActive = PhosphorIconsBold.timer;
-  static const IconData calendar = PhosphorIconsBold.calendarBlank;
-  static const IconData hourglass = PhosphorIconsBold.hourglass;
+  static const IconData scheduleActive = Icons.timer_rounded;
+  static const IconData calendar = Icons.calendar_today_rounded;
+  static const IconData hourglass = Icons.hourglass_bottom_rounded;
 
   // ============ LOCATION ============
-  static const IconData mapPin = PhosphorIconsBold.mapPin;
-  static const IconData geoZone = PhosphorIconsBold.mapTrifold;
-  static const IconData navigation = PhosphorIconsBold.navigationArrow;
+  static const IconData mapPin = Icons.location_on_rounded;
+  static const IconData geoZone = Icons.map_rounded;
+  static const IconData navigation = Icons.navigation_rounded;
 
   // ============ SETTINGS ============
-  static const IconData language = PhosphorIconsBold.translate;
-  static const IconData privacy = PhosphorIconsBold.shieldCheck;
-  static const IconData about = PhosphorIconsBold.info;
-  static const IconData logout = PhosphorIconsBold.signOut;
-  static const IconData camera = PhosphorIconsBold.camera;
-  static const IconData video = PhosphorIconsBold.videoCamera;
-  static const IconData image = PhosphorIconsBold.image;
-  static const IconData download = PhosphorIconsBold.downloadSimple;
-  static const IconData upload = PhosphorIconsBold.uploadSimple;
+  static const IconData language = Icons.translate_rounded;
+  static const IconData privacy = Icons.shield_rounded;
+  static const IconData about = Icons.info_rounded;
+  static const IconData logout = Icons.logout_rounded;
+  static const IconData camera = Icons.camera_alt_rounded;
+  static const IconData video = Icons.videocam_rounded;
+  static const IconData image = Icons.image_rounded;
+  static const IconData download = Icons.download_rounded;
+  static const IconData upload = Icons.upload_rounded;
 
   // ============ REWARDS (FARO / gamification) ============
-  static const IconData star = PhosphorIconsBold.star;
-  static const IconData trophy = PhosphorIconsBold.trophy;
-  static const IconData streak = PhosphorIconsBold.fire;
-  static const IconData gift = PhosphorIconsBold.gift;
-  static const IconData medal = PhosphorIconsBold.medal;
-  static const IconData heart = PhosphorIconsBold.heart;
-  static const IconData crown = PhosphorIconsBold.crown;
+  static const IconData star = Icons.star_rounded;
+  static const IconData trophy = Icons.emoji_events_rounded;
+  static const IconData streak = Icons.local_fire_department_rounded;
+  static const IconData gift = Icons.card_giftcard_rounded;
+  static const IconData medal = Icons.military_tech_rounded;
+  static const IconData heart = Icons.favorite_rounded;
+  static const IconData crown = Icons.workspace_premium_rounded;
 
   // ============ MISC ============
-  static const IconData people = PhosphorIconsBold.users;
-  static const IconData family = PhosphorIconsBold.usersThree;
-  static const IconData chevronRight = PhosphorIconsBold.caretRight;
-  static const IconData chevronLeft = PhosphorIconsBold.caretLeft;
-  static const IconData chevronUp = PhosphorIconsBold.caretUp;
-  static const IconData chevronDown = PhosphorIconsBold.caretDown;
-  static const IconData expandMore = PhosphorIconsBold.caretDown;
-  static const IconData expandLess = PhosphorIconsBold.caretUp;
-  static const IconData search = PhosphorIconsBold.magnifyingGlass;
-  static const IconData filter = PhosphorIconsBold.funnel;
-  static const IconData menu = PhosphorIconsBold.list;
-  static const IconData moreVert = PhosphorIconsBold.dotsThreeVertical;
+  static const IconData people = Icons.group_rounded;
+  static const IconData family = Icons.groups_rounded;
+  static const IconData chevronRight = Icons.chevron_right_rounded;
+  static const IconData chevronLeft = Icons.chevron_left_rounded;
+  static const IconData chevronUp = Icons.expand_less_rounded;
+  static const IconData chevronDown = Icons.expand_more_rounded;
+  static const IconData expandMore = Icons.expand_more_rounded;
+  static const IconData expandLess = Icons.expand_less_rounded;
+  static const IconData search = Icons.search_rounded;
+  static const IconData filter = Icons.filter_list_rounded;
+  static const IconData menu = Icons.menu_rounded;
+  static const IconData moreVert = Icons.more_vert_rounded;
 }
