@@ -877,7 +877,7 @@ class _QuickActionsGrid extends StatelessWidget {
         onTap: () => context.push(AppRoutes.qaDevicePath(childId)),
       ),
       QuickActionTile(
-        icon: Icons.chat_bubble_outline_rounded,
+        icon: Icons.telegram,
         label: 'dashboard.quickActions.messenger'.tr(),
         accentColor: AppColors.primary,
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),

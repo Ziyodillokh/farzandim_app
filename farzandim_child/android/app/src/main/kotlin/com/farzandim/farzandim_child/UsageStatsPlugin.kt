@@ -1,7 +1,7 @@
 package com.farzandim.farzandim_child
 
 import android.app.AppOpsManager
-import android.app.usage.UsageStats
+import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
@@ -149,12 +149,16 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
      * Bola foydalanish statistikasi — bugungi (kalendar kun 00:00 → hozir)
      * yoki oxirgi N kun.
      *
-     * Sprint 4.4.37: `queryUsageStats(INTERVAL_DAILY, ...)` o'rniga
-     * `queryAndAggregateUsageStats(start, end)` ishlatamiz. INTERVAL_DAILY
-     * eski snapshot qaytaradi (hozirgi sessiya hisoblanmaydi), va kalendar
-     * kun emas, balki rolling 24h interval bo'lar edi. Aggregate metod —
-     * real-time (hozirgi foreground ham hisoblanadi) va bitta package
-     * uchun 1 ta jami qiymat qaytaradi.
+     * EVENT-BASED — Android "Raqamli Salomatlik" bilan bir xil. Har paketning
+     * ACTIVITY_RESUMED → ACTIVITY_PAUSED/STOPPED sessiyalari yig'iladi: ya'ni
+     * FAQAT foydalanuvchi ekranni yoqib, ilovani ochib, ekranda ko'rgan vaqt.
+     *
+     * Nega aggregate (totalTimeInForeground) emas:
+     *  - Fon-service ilovalar (Internet Speed Meter, musiqa pleyer, navigator)
+     *    hech qachon activity ochmaydi → 0 (hisoblanmaydi). Avval ular ham
+     *    "ekran vaqti"ga kirib ketardi.
+     *  - Ekran o'chsa, foreground activity PAUSED bo'ladi → sessiya yopiladi,
+     *    ekran o'chiq vaqt qo'shilmaydi.
      */
     private fun getUsageStats(days: Int): List<Map<String, Any>> {
         if (!hasUsageStatsPermission()) return emptyList()
@@ -164,7 +168,7 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
 
         val endTime = System.currentTimeMillis()
         val startTime: Long = if (days <= 1) {
-            // Bugun: kalendar kun boshidan (00:00) hozirgacha — real-time.
+            // Bugun: kalendar kun boshidan (00:00) hozirgacha.
             val cal = java.util.Calendar.getInstance().apply {
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)
@@ -173,49 +177,61 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             }
             cal.timeInMillis
         } else {
-            // Ko'p kun: rolling N×24h (haftalik view uchun, real-time
-            // emasligi muhim emas — aggregate haftalik).
             endTime - (days * 24L * 60L * 60L * 1000L)
         }
 
-        // queryAndAggregateUsageStats: Map<packageName, UsageStats>
-        // real-time totalTimeInForeground bilan (hozirgi sessiya ham).
-        val aggregateStats: Map<String, UsageStats> =
-            usageStatsManager.queryAndAggregateUsageStats(startTime, endTime)
+        // package → jami foreground ms / oxirgi ts / ochiq sessiya boshi.
+        val totals = HashMap<String, Long>()
+        val lastUsed = HashMap<String, Long>()
+        val resumeAt = HashMap<String, Long>()
+
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val ev = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(ev)
+            val pkg = ev.packageName ?: continue
+            when (ev.eventType) {
+                UsageEvents.Event.ACTIVITY_RESUMED -> {
+                    resumeAt[pkg] = ev.timeStamp
+                }
+                UsageEvents.Event.ACTIVITY_PAUSED,
+                UsageEvents.Event.ACTIVITY_STOPPED -> {
+                    val start = resumeAt.remove(pkg)
+                    if (start != null && ev.timeStamp > start) {
+                        totals[pkg] = (totals[pkg] ?: 0L) + (ev.timeStamp - start)
+                        lastUsed[pkg] = ev.timeStamp
+                    }
+                }
+            }
+        }
+        // Hozir ham foreground'da ochiq sessiyalarni hozirgacha yopamiz.
+        for ((pkg, start) in resumeAt) {
+            if (endTime > start) {
+                totals[pkg] = (totals[pkg] ?: 0L) + (endTime - start)
+                lastUsed[pkg] = endTime
+            }
+        }
 
         val pm = context.packageManager
-        return aggregateStats.values
-            .map { stat ->
-                // FAQAT foreground (ekranda faol ko'ringan) vaqt — Android
-                // "Raqamli Salomatlik" bilan bir xil. Foreground SERVICE vaqti
-                // (Spotify/YouTube fon audio, navigator) QO'SHILMAYDI: ular
-                // ekranda ochiq emas, shuning uchun "ekran vaqti" emas. Ilgari
-                // totalTimeForegroundServiceUsed qo'shilib, musiqa fonda
-                // o'ynaganda ham vaqt yozilardi — bu noto'g'ri edi.
-                val totalMs = stat.totalTimeInForeground
-                Pair(stat, totalMs)
-            }
-            .filter { it.second > 0 }
-            .map { (stat, totalMs) ->
-                var appName = stat.packageName
+        return totals.entries
+            .filter { it.value > 0L }
+            .map { (pkg, totalMs) ->
+                var appName = pkg
                 var iconBase64: String? = null
 
                 try {
-                    val appInfo = pm.getApplicationInfo(stat.packageName, 0)
+                    val appInfo = pm.getApplicationInfo(pkg, 0)
                     appName = pm.getApplicationLabel(appInfo).toString()
-                    val drawable = pm.getApplicationIcon(appInfo)
-                    iconBase64 = drawableToBase64(drawable)
+                    iconBase64 = drawableToBase64(pm.getApplicationIcon(appInfo))
                 } catch (_: PackageManager.NameNotFoundException) {
-                    // Package no longer installed — fall back to packageName
+                    // Package endi yo'q — packageName fallback.
                 }
 
                 val map = mutableMapOf<String, Any>(
-                    "packageName" to stat.packageName,
+                    "packageName" to pkg,
                     "appName" to appName,
                     "totalTimeMs" to totalMs,
-                    "lastTimeUsed" to stat.lastTimeUsed,
-                    "firstTimeStamp" to stat.firstTimeStamp,
-                    "lastTimeStamp" to stat.lastTimeStamp,
+                    "lastTimeUsed" to (lastUsed[pkg] ?: endTime),
                 )
                 if (iconBase64 != null) {
                     map["iconBase64"] = iconBase64

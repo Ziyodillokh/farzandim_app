@@ -129,11 +129,15 @@ class AppUsageDay {
     return list;
   }
 
+  /// 1 daqiqadan kam ishlatilgan ilovalar yashiriladi (ms).
+  static const int _minVisibleMs = 60000;
+
   /// Sistema appalari (launcher, settings, va h.k.) filterlangan ro'yxat.
   ///
   /// Foydalanuvchi uchun chiroyli — faqat o'sha bola ishlatadigan ilovalar
   /// (TikTok, YouTube, Instagram, va h.k.). System paket prefixlarini va
-  /// o'zining App'imizni (`com.farzandim.*`) chiqarib tashlaymiz.
+  /// o'zining App'imizni (`com.farzandim.*`) chiqarib tashlaymiz. 1 daqiqadan
+  /// kam ishlatilgan ilovalar ham chiqariladi.
   List<AppUsageEntry> get filteredApps {
     const systemPrefixes = [
       'com.android.',
@@ -147,21 +151,16 @@ class AppUsageDay {
     ];
 
     return aggregatedApps.where((app) {
+      // 1 daqiqadan kam ishlatilgan ilovalar ko'rsatilmaydi (foydalanuvchi
+      // talabi — faqat haqiqatda ochilgan ilovalar).
+      if (app.totalTimeMs < _minVisibleMs) return false;
       return !systemPrefixes
           .any((prefix) => app.packageName.startsWith(prefix));
     }).toList();
   }
 
-  /// UI'da ko'rsatiladigan ilovalar — fallback bilan.
-  ///
-  /// Agar [filteredApps] bo'sh emas bo'lsa, foydalanuvchi ilovalari
-  /// ko'rsatiladi (production scenariy: TikTok, YouTube, va h.k.).
-  /// Aks holda (test telefon — bola faqat launcher/settings ishlatgan)
-  /// barcha aggregatlangan ilovalar ko'rsatiladi (system'lar bilan birga)
-  /// — foydalanuvchi hech bo'lmaganda nimadir ko'radi.
-  List<AppUsageEntry> get displayApps {
-    final filtered = filteredApps;
-    if (filtered.isNotEmpty) return filtered;
-    return aggregatedApps;
-  }
+  /// UI'da ko'rsatiladigan ilovalar — faqat haqiqatda ekran yoqib ishlatilgan
+  /// (≥1 daqiqa, system emas) ilovalar. Ilgari bo'sh bo'lsa system ilovalarga
+  /// fallback bo'lardi; endi foydalanuvchi talabiga ko'ra faqat real ilovalar.
+  List<AppUsageEntry> get displayApps => filteredApps;
 }

@@ -135,13 +135,24 @@ List<AppCombined> combineAppData({
   final seenPackages = <String>{};
 
   if (usage != null) {
-    for (final app in usage.displayApps) {
+    // <1 daqiqa va system ilovalar `filteredApps`da chiqarib tashlangan,
+    // lekin ularni "seen" deb belgilaymiz — pastdagi cheklov ro'yxatida
+    // 0-usage bo'lib qayta paydo bo'lib qolmasin.
+    for (final app in usage.aggregatedApps) {
       seenPackages.add(app.packageName);
+    }
+    for (final app in usage.filteredApps) {
+      // Real nom: bola qurilmasidagi ilova yorlig'i (installed-apps'dan).
+      // Usage endpoint nomni bermaydi (packageName qaytadi) — shuning uchun
+      // installed-apps'dagi haqiqiy nom afzal ("telegram.org" emas "Telegram").
       final installed = installedMap[app.packageName];
+      final name = (installed != null && installed.appName.isNotEmpty)
+          ? installed.appName
+          : app.appName;
       result.add(
         AppCombined(
           packageName: app.packageName,
-          appName: app.appName,
+          appName: name,
           usageTimeMs: app.totalTimeMs,
           iconBase64: app.iconBase64 ?? installed?.iconBase64,
           iconUrl: app.iconUrl ?? installed?.iconUrl,
@@ -151,17 +162,19 @@ List<AppCombined> combineAppData({
     }
   }
 
-  // Cheklov bor, lekin bugun foydalanilmagan ilovalar.
-  // Iconlar installedAppsMap'dan tortib olinadi (Backend /app-limits
-  // response'da iconUrl yo'q).
+  // Cheklov bor, lekin bugun ishlatilmagan ilovalar — mavjud limitlarni
+  // ko'rish/boshqarish uchun ko'rsatamiz.
   for (final r in restrictions) {
     if (!seenPackages.contains(r.packageName)) {
       seenPackages.add(r.packageName);
       final installed = installedMap[r.packageName];
+      final name = (installed != null && installed.appName.isNotEmpty)
+          ? installed.appName
+          : r.appName;
       result.add(
         AppCombined(
           packageName: r.packageName,
-          appName: r.appName,
+          appName: name,
           usageTimeMs: 0,
           iconBase64: installed?.iconBase64,
           iconUrl: installed?.iconUrl,
@@ -171,24 +184,9 @@ List<AppCombined> combineAppData({
     }
   }
 
-  // Sprint 4.1: o'rnatilgan ilovalar (hali ishlatilmagan va cheklov yo'q).
-  // Child App `installed_apps` collection'ga UsageSyncService yozadi.
-  // Empty `appName` bo'lganlar (parse xato yoki noma'lum) o'tkazib
-  // yuboriladi — UI'da nomsiz ilovalar foydasiz.
-  for (final app in installedApps) {
-    if (seenPackages.contains(app.packageName)) continue;
-    if (app.appName.isEmpty) continue;
-    result.add(
-      AppCombined(
-        packageName: app.packageName,
-        appName: app.appName,
-        usageTimeMs: 0,
-        iconBase64: app.iconBase64,
-        iconUrl: app.iconUrl,
-        restriction: restrictionMap[app.packageName],
-      ),
-    );
-  }
+  // Eslatma: ilgari bu yerda BARCHA o'rnatilgan ilovalar (0 usage) ham
+  // qo'shilardi. Endi foydalanuvchi talabiga ko'ra faqat haqiqatda ekran
+  // yoqib ishlatilgan (≥1 daqiqa) va cheklangan ilovalar ko'rsatiladi.
 
   const statusOrder = [
     UsageStatus.exceeded,
