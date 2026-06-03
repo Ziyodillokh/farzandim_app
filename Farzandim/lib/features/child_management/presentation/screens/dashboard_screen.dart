@@ -17,6 +17,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
+/// Bir ota-ona maksimal nechta farzand qo'sha oladi (backend ham cheklaydi).
+const int _kMaxChildren = 3;
+
 /// Asosiy ekran — Figma 1:1, dinamik bola monitoringi.
 ///
 /// **Empty state**: bola yo'q bo'lsa "Bola qo'shing" CTA.
@@ -171,6 +174,22 @@ class _DashboardBody extends ConsumerStatefulWidget {
 
 class _DashboardBodyState extends ConsumerState<_DashboardBody> {
   bool _blockAll = false;
+  late final PageController _pageController;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = ref
+        .read(selectedChildIndexProvider)
+        .clamp(0, widget.children.length - 1);
+    _pageController = PageController(initialPage: initial);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
 
   void _comingSoon() {
     ScaffoldMessenger.of(context)
@@ -187,58 +206,79 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
   @override
   Widget build(BuildContext context) {
     final children = widget.children;
+    final canAdd = children.length < _kMaxChildren;
+    final pageCount = children.length + (canAdd ? 1 : 0);
     final selectedIndex =
         ref.watch(selectedChildIndexProvider).clamp(0, children.length - 1);
-    final child = children[selectedIndex];
 
     return Column(
       children: [
+        // ─── Fiksirlangan tepa: LOGO + bell ───
+        const Padding(
+          padding: EdgeInsets.fromLTRB(
+            AppDimensions.lg,
+            AppDimensions.md,
+            AppDimensions.lg,
+            AppDimensions.sm,
+          ),
+          child: _Header(),
+        ),
+
+        // ─── Gorizontal PageView — har bola TO'LIQ ekran ───
+        // Chapga sursa keyingi bola butunlay ochiladi (oldingisi ko'rinmaydi).
+        // Oxirgi sahifa (agar <3 bola) — yangi bola qo'shish.
         Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppDimensions.lg,
-              AppDimensions.md,
-              AppDimensions.lg,
-              AppDimensions.md,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const _Header(),
-                const SizedBox(height: AppDimensions.lg),
-
-                // ─── Bola: ism / qurilma / batareya + avatar karusel ───
-                _ChildHeader(
-                  children: children,
-                  selectedIndex: selectedIndex,
-                  onSelect: (i) =>
-                      ref.read(selectedChildIndexProvider.notifier).state = i,
+          child: PageView.builder(
+            controller: _pageController,
+            itemCount: pageCount,
+            onPageChanged: (i) {
+              // Faqat bola sahifalarida tanlovni yangilaymiz (add sahifasida
+              // selectedIndex oxirgi bolada qoladi — pastki bar uchun).
+              if (i < children.length) {
+                ref.read(selectedChildIndexProvider.notifier).state = i;
+              }
+            },
+            itemBuilder: (context, i) {
+              if (i >= children.length) {
+                return const _AddChildPage();
+              }
+              final c = children[i];
+              return SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(
+                  AppDimensions.lg,
+                  AppDimensions.sm,
+                  AppDimensions.lg,
+                  AppDimensions.md,
                 ),
-                const SizedBox(height: AppDimensions.lg),
-
-                // ─── Reyting ───
-                _RatingSection(child: child),
-                const SizedBox(height: AppDimensions.lg),
-
-                // ─── Bugun sarflangan vaqt ───
-                _TimeCard(
-                  childId: child.id,
-                  blockAll: _blockAll,
-                  onBlockChanged: (v) {
-                    setState(() => _blockAll = v);
-                    _comingSoon();
-                  },
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _ChildInfoHeader(
+                      child: c,
+                      childCount: children.length,
+                      selectedIndex: i,
+                    ),
+                    const SizedBox(height: AppDimensions.lg),
+                    _RatingSection(child: c),
+                    const SizedBox(height: AppDimensions.lg),
+                    _TimeCard(
+                      childId: c.id,
+                      blockAll: _blockAll,
+                      onBlockChanged: (v) {
+                        setState(() => _blockAll = v);
+                        _comingSoon();
+                      },
+                    ),
+                    const SizedBox(height: AppDimensions.lg),
+                    _QuickActionsGrid(childId: c.id),
+                  ],
                 ),
-                const SizedBox(height: AppDimensions.lg),
-
-                // ─── Quick actions ───
-                _QuickActionsGrid(childId: child.id),
-              ],
-            ),
+              );
+            },
           ),
         ),
 
-        // ─── Pastki bar: Foydalanish vaqti + sozlamalar ───
+        // ─── Fiksirlangan pastki bar: Foydalanish vaqti + sozlamalar ───
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppDimensions.lg,
@@ -250,8 +290,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
             children: [
               Expanded(
                 child: _UsageTimePill(
-                  onTap: () =>
-                      context.push(AppRoutes.appRestrictionsPath(child.id)),
+                  onTap: () => context.push(
+                    AppRoutes.appRestrictionsPath(children[selectedIndex].id),
+                  ),
                 ),
               ),
               const SizedBox(width: AppDimensions.md),
@@ -334,22 +375,22 @@ class _NotificationBell extends ConsumerWidget {
 
 // ════════════════════════ CHILD HEADER ════════════════════════
 
-class _ChildHeader extends StatelessWidget {
-  const _ChildHeader({
-    required this.children,
+/// Bitta bolaning header'i — ism, qurilma, yashil sanoq indikatori + avatar.
+/// Bolalar orasida o'tish PageView orqali (bu yerda strip yo'q) — yashil
+/// segmentlar qaysi bola ko'rsatilayotganini bildiradi.
+class _ChildInfoHeader extends StatelessWidget {
+  const _ChildInfoHeader({
+    required this.child,
+    required this.childCount,
     required this.selectedIndex,
-    required this.onSelect,
   });
 
-  final List<Child> children;
+  final Child child;
+  final int childCount;
   final int selectedIndex;
-  final ValueChanged<int> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    final child = children[selectedIndex];
-    final battery = child.deviceInfo?.batteryLevel;
-
     return Row(
       children: [
         Expanded(
@@ -376,37 +417,112 @@ class _ChildHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppDimensions.sm),
-              _BatteryBar(level: battery),
+              // Yashil segmentlar = bola SONI + qaysi biri ko'rsatilayapti.
+              _ChildCountIndicator(
+                count: childCount,
+                selected: selectedIndex,
+              ),
             ],
           ),
         ),
         const SizedBox(width: AppDimensions.md),
+        _ChildAvatar(child: child, size: 64, highlighted: true),
+      ],
+    );
+  }
+}
 
-        // Avatar karusel — bir nechta bola bo'lsa gorizontal tanlanadi.
-        SizedBox(
-          height: 64,
-          width: children.length > 1 ? 92 : 64,
-          child: ListView.builder(
-            scrollDirection: Axis.horizontal,
-            reverse: true,
-            itemCount: children.length,
-            itemBuilder: (context, i) {
-              final isSelected = i == selectedIndex;
-              return GestureDetector(
-                onTap: () => onSelect(i),
-                child: Padding(
-                  padding: const EdgeInsets.only(left: 8),
-                  child: _ChildAvatar(
-                    child: children[i],
-                    size: 60,
-                    highlighted: isSelected,
+/// Yashil segmentli indikator — bola SONINI va tanlanganini ko'rsatadi.
+/// Har segment = bitta bola; tanlangani kengroq va yorqinroq.
+class _ChildCountIndicator extends StatelessWidget {
+  const _ChildCountIndicator({required this.count, required this.selected});
+
+  final int count;
+  final int selected;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < count; i++)
+          AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            curve: Curves.easeOut,
+            margin: const EdgeInsets.only(right: 4),
+            width: i == selected ? 22 : 12,
+            height: 6,
+            decoration: BoxDecoration(
+              color: i == selected
+                  ? AppColors.primary
+                  : AppColors.primary.withValues(alpha: 0.3),
+              borderRadius: BorderRadius.circular(3),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+/// PageView'ning oxirgi sahifasi — yangi bola qo'shish (max 3 tagacha).
+/// Bolalar sahifalaridan keyin chapga sursa shu ko'rinadi.
+class _AddChildPage extends StatelessWidget {
+  const _AddChildPage();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.lg,
+        AppDimensions.sm,
+        AppDimensions.lg,
+        AppDimensions.md,
+      ),
+      child: Center(
+        child: Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AppColors.surface,
+            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+          ),
+          padding: const EdgeInsets.all(AppDimensions.xl),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: AppColors.primary.withValues(alpha: 0.12),
+                  border: Border.all(
+                    color: AppColors.primary.withValues(alpha: 0.5),
                   ),
                 ),
-              );
-            },
+                child: const Icon(
+                  Icons.person_add_alt_1_rounded,
+                  color: AppColors.primary,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.md),
+              Text(
+                'dashboard.emptyState.message'.tr(),
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+              const SizedBox(height: AppDimensions.lg),
+              PrimaryButton(
+                label: 'dashboard.emptyState.addButton'.tr(),
+                icon: Icons.add,
+                expanded: false,
+                onPressed: () => context.push(AppRoutes.addChild),
+              ),
+            ],
           ),
         ),
-      ],
+      ),
     );
   }
 }

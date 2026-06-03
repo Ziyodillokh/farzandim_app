@@ -76,8 +76,24 @@ async function bootstrap() {
     .map((o: string) => o.trim())
     .filter(Boolean);
 
+  // Lokal/LAN origin'lar (localhost + xususiy IP diapazonlari) — dev/preview
+  // uchun istalgan portda ruxsat etiladi. Shu sabab telefon hotspoti yoki
+  // router IP'si o'zgarsa ham CORS qayta sozlanmaydi.
+  const lanOriginRegex =
+    /^https?:\/\/(localhost|127\.0\.0\.1|10\.\d{1,3}\.\d{1,3}\.\d{1,3}|192\.168\.\d{1,3}\.\d{1,3}|172\.(1[6-9]|2\d|3[01])\.\d{1,3}\.\d{1,3})(:\d+)?$/;
+
   app.enableCors({
-    origin: corsOrigins,
+    origin: (origin, cb) => {
+      if (
+        !origin ||
+        corsOrigins.includes(origin) ||
+        lanOriginRegex.test(origin)
+      ) {
+        cb(null, true);
+      } else {
+        cb(null, false);
+      }
+    },
     credentials: true,
     methods: ['GET', 'HEAD', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],

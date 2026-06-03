@@ -2,6 +2,7 @@ import {
   Injectable,
   NotFoundException,
   ForbiddenException,
+  BadRequestException,
   InternalServerErrorException,
   UnsupportedMediaTypeException,
   PayloadTooLargeException,
@@ -21,6 +22,7 @@ const ALLOWED_AVATAR_MIMES = [
   'image/webp',
 ];
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
+const MAX_CHILDREN_PER_PARENT = 3; // Bir ota-ona maksimal 3 ta farzand
 
 @Injectable()
 export class ChildrenService {
@@ -74,6 +76,14 @@ export class ChildrenService {
     dto: CreateChildDto,
     reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
   ) {
+    // Maksimal 3 ta farzand cheklovi.
+    const existingCount = await this.prisma.child.count({ where: { parentId } });
+    if (existingCount >= MAX_CHILDREN_PER_PARENT) {
+      throw new BadRequestException(
+        `Maksimal ${MAX_CHILDREN_PER_PARENT} ta farzand qo'shish mumkin`,
+      );
+    }
+
     const familyCode = await this.generateUniqueFamilyCode();
 
     const child = await this.prisma.child.create({
