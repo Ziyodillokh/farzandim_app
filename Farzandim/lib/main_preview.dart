@@ -15,6 +15,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/auth/token_storage.dart';
+import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/routing/app_router.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:flutter/material.dart';
@@ -35,6 +36,12 @@ Future<void> main() async {
         // tokenlarni localStorage (SharedPreferences)'da saqlaymiz —
         // OperationError yo'q VA sahifa yangilanganda token saqlanadi.
         tokenStorageProvider.overrideWithValue(_WebTokenStorage()),
+        // API URL'ni joriy brauzer host'idan olamiz: sahifa qaysi IP'da
+        // ochilgan bo'lsa, backend ham o'sha IP:3000 da. IP o'zgarsa ham
+        // qayta build shart emas.
+        apiBaseUrlProvider.overrideWithValue(
+          'http://${Uri.base.host}:3000/api',
+        ),
       ],
       child: EasyLocalization(
         supportedLocales: const [Locale('uz'), Locale('ru'), Locale('en')],

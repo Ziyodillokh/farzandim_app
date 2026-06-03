@@ -32,12 +32,17 @@ import 'package:farzandim/core/config/env_config.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// API base URL — default `EnvConfig.apiUrl` (mobil/production). Web preview
+/// uni override qiladi va joriy brauzer host'idan oladi (IP o'zgarsa ham
+/// qayta build shart emas).
+final apiBaseUrlProvider = Provider<String>((_) => EnvConfig.apiUrl);
+
 /// Singleton Dio provider — barcha repository'lar shundan o'qiydi.
 final dioClientProvider = Provider<Dio>((ref) {
   final tokenStorage = ref.watch(tokenStorageProvider);
   final dio = Dio(
     BaseOptions(
-      baseUrl: EnvConfig.apiUrl,
+      baseUrl: ref.watch(apiBaseUrlProvider),
       connectTimeout: const Duration(seconds: 10),
       receiveTimeout: const Duration(seconds: 30),
       sendTimeout: const Duration(seconds: 30),
