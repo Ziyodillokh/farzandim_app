@@ -17,6 +17,7 @@
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -42,7 +43,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final pairing = ref.read(pairingStateProvider);
     if (!pairing.isPaired) {
-      context.go('/welcome');
+      // Bola ilovasida birinchi ekran — kodni kiritish (Welcome o'tkazib
+      // yuboriladi). Dizayn talabiga ko'ra ota-ona kodini darhol so'raydi.
+      context.go('/pairing');
+      return;
+    }
+
+    // Web preview'da permission_handler / UsageStats — UnimplementedError.
+    // Pair bo'lgan bo'lsa to'g'ridan-to'g'ri dashboard'ga.
+    if (kIsWeb) {
+      context.go('/dashboard');
       return;
     }
 

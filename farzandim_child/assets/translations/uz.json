@@ -29,8 +29,8 @@
     "codeHint": "Ota-onangizdan kod oling"
   },
   "pairing": {
-    "appName": "Farzandim",
-    "subtitle": "Ota-ona ilovasidan olingan kodni kiriting",
+    "appName": "Farzandim:",
+    "subtitle": "Ota-ona nazorati ilovasida olingan kodni kiriting",
     "hint": "Bolaning telefonini ota-onaning telefoniga ulang",
     "helpLink": "Kodni qayerdan olaman?",
     "helpTitle": "Kodni qaerdan olaman?",

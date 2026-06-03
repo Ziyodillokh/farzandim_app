@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect } from 'react';
+import { Suspense, useEffect } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuthStore } from '@/stores/auth.store';
 
@@ -9,7 +9,7 @@ import { useAuthStore } from '@/stores/auth.store';
  * Faqat development uchun. URL:
  *   /dev-login?token=...&refresh=...&userId=...&name=...&role=PARENT
  */
-export default function DevLoginPage() {
+function DevLoginInner() {
   const router = useRouter();
   const params = useSearchParams();
   const setAuth = useAuthStore((s) => s.setAuth);
@@ -44,5 +44,19 @@ export default function DevLoginPage() {
     <div className="flex min-h-screen items-center justify-center text-muted-foreground">
       Login qilinmoqda…
     </div>
+  );
+}
+
+export default function DevLoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="flex min-h-screen items-center justify-center text-muted-foreground">
+          Yuklanmoqda…
+        </div>
+      }
+    >
+      <DevLoginInner />
+    </Suspense>
   );
 }

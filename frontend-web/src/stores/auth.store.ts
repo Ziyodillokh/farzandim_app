@@ -1,15 +1,8 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
+import type { User } from '@/types/api.types';
 
-export interface User {
-  id: string;
-  name: string | null;
-  phone: string | null;
-  role: 'PARENT' | 'CHILD';
-  avatarUrl: string | null;
-  telegramId: string | null;
-  language: string;
-}
+export type { User };
 
 interface AuthState {
   user: User | null;

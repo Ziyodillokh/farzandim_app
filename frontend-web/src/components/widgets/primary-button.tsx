@@ -28,6 +28,7 @@ interface BaseProps {
   isLoading?: boolean;
   expanded?: boolean;
   children: ReactNode;
+  className?: string;
 }
 
 interface ButtonProps extends BaseProps, Omit<ButtonHTMLAttributes<HTMLButtonElement>, 'children'> {

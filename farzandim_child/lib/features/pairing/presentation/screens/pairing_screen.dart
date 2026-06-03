@@ -15,7 +15,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,7 +63,9 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     setState(() => _isPairing = false);
 
     if (success) {
-      context.go('/permissions');
+      // Web preview'da permission_handler ishlamaydi — to'g'ridan-to'g'ri
+      // dashboard'ga o'tamiz. Mobile'da odatdagidek ruxsatlar ekraniga.
+      context.go(kIsWeb ? '/dashboard' : '/permissions');
       return;
     }
 
@@ -90,80 +92,89 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     setState(() {});
   }
 
+  // Dizayn talabiga ko'ra ekran solid dark fon, oq matn, binafsha link
+  // (UI mockup'ga qat'iy mos). Theme rangidan mustaqil — pairing
+  // bola ilovasining birinchi ekrani.
+  static const Color _bgDark = Color(0xFF0E0E14);
+  static const Color _boxFill = Color(0xFF2A2A33);
+  static const Color _linkColor = Color(0xFF7C5CFF);
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              children: [
-                const SizedBox(height: 60),
+      backgroundColor: _bgDark,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 24),
+          child: Column(
+            children: [
+              const SizedBox(height: 150),
 
-                // Title
-                Text(
-                  'pairing.appName'.tr(),
+              // Title — ikki qatorli qalin sarlavha (UI mockup'ga 1:1).
+              // appName birinchi qator, subtitle ikkinchi qator — ikkalasi
+              // ham bir xil og'irlikda (FontWeight.bold).
+              Text(
+                '${'pairing.appName'.tr()}\n${'pairing.subtitle'.tr()}',
+                style: const TextStyle(
+                  fontSize: 22,
+                  fontWeight: FontWeight.w700,
+                  color: Colors.white,
+                  height: 1.35,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 48),
+
+              // 5 ta input box
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: List.generate(5, _buildCodeBox),
+              ),
+
+              const SizedBox(height: 28),
+
+              Text(
+                'pairing.hint'.tr(),
+                style: const TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                  height: 1.4,
+                ),
+                textAlign: TextAlign.center,
+              ),
+
+              const SizedBox(height: 20),
+
+              // Help link — binafsha, underline.
+              TextButton(
+                onPressed: _showHelp,
+                style: TextButton.styleFrom(
+                  foregroundColor: _linkColor,
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
+                ),
+                child: Text(
+                  'pairing.helpLink'.tr(),
                   style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  'pairing.subtitle'.tr(),
-                  style: const TextStyle(
-                    fontSize: 16,
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 60),
-
-                // 5 ta input box
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: List.generate(5, _buildCodeBox),
-                ),
-
-                const SizedBox(height: 32),
-
-                Text(
-                  'pairing.hint'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-
-                const SizedBox(height: 24),
-
-                // Help link
-                TextButton(
-                  onPressed: _showHelp,
-                  child: Text(
-                    'pairing.helpLink'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 15,
-                      decoration: TextDecoration.underline,
-                    ),
+                    color: _linkColor,
+                    fontSize: 15,
+                    fontWeight: FontWeight.w600,
+                    decoration: TextDecoration.underline,
+                    decorationColor: _linkColor,
                   ),
                 ),
+              ),
 
-                const Spacer(),
+              const Spacer(),
 
-                if (_isPairing)
-                  const CircularProgressIndicator(color: AppColors.primary),
+              if (_isPairing)
+                const CircularProgressIndicator(color: _linkColor),
 
-                const SizedBox(height: 16),
-              ],
-            ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -174,13 +185,13 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     final hasValue = _controllers[index].text.isNotEmpty;
 
     return Container(
-      width: 56,
+      width: 58,
       height: 64,
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        color: _boxFill,
+        borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: hasValue ? AppColors.primary : Colors.transparent,
+          color: hasValue ? _linkColor : Colors.transparent,
           width: 2,
         ),
       ),
@@ -190,14 +201,23 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
         maxLength: 1,
+        cursorColor: Colors.white,
         style: const TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.bold,
-          color: AppColors.textPrimary,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
         ),
         decoration: const InputDecoration(
           counterText: '',
           border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          // App theme'da inputDecorationTheme oq fill bersa ham,
+          // shu yerda majburiy shaffof — Container fonidan keladi.
+          filled: true,
+          fillColor: Colors.transparent,
+          contentPadding: EdgeInsets.zero,
+          isCollapsed: true,
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 4) {

@@ -47,6 +47,9 @@ app.*.map.json
 # Local Claude Code settings
 .claude/
 
+# Per-dev API kalitlar / lokal backend URL (CI'da secret'dan tiklanadi).
+env.json
+
 # Local notes / scratch
 firebase.txt
 

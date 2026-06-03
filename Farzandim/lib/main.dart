@@ -62,7 +62,13 @@ Future<void> main() async {
         FlutterError.onError =
             FirebaseCrashlytics.instance.recordFlutterFatalError;
         PlatformDispatcher.instance.onError = (error, stack) {
-          FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+          // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
+          // .catchError bilan yutib yuboramiz.
+          FirebaseCrashlytics.instance
+              .recordError(error, stack, fatal: true)
+              .catchError((Object _) {
+            debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
+          });
           return true;
         };
         await FirebaseAnalytics.instance
@@ -94,8 +100,19 @@ Future<void> main() async {
       );
     },
     (error, stack) {
+      // DEV: Firebase init bo'lmagan paytda Crashlytics chaqirilsa
+      // `pluginConstants` assertion async error sifatida portlaydi.
+      // Firebase.apps.isEmpty bilan birinchi tekshirib olamiz.
+      if (Firebase.apps.isEmpty) {
+        debugPrint('[DEV] Uncaught (no Firebase): $error\n$stack');
+        return;
+      }
       try {
-        FirebaseCrashlytics.instance.recordError(error, stack, fatal: true);
+        FirebaseCrashlytics.instance
+            .recordError(error, stack, fatal: true)
+            .catchError((Object _) {
+          debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
+        });
       } catch (_) {
         debugPrint('[DEV] Uncaught: $error\n$stack');
       }

@@ -19,6 +19,7 @@ import 'package:farzandim_child/features/background/data/services/background_ser
 import 'package:farzandim_child/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim_child/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/date_symbol_data_local.dart';
@@ -29,9 +30,16 @@ Future<void> main() async {
   // easy_localization init — JSON tarjima fayllarini yuklash uchun.
   await EasyLocalization.ensureInitialized();
 
-  await Firebase.initializeApp(
-    options: DefaultFirebaseOptions.currentPlatform,
-  );
+  // DEV: Firebase config'siz ham app ishga tushsin (stub bilan kompilyatsiya
+  // o'tadi, lekin runtime'da real loyiha kalit'lari bo'lmasa initializeApp
+  // xato beradi). Auth/Firestore/FCM bunday holatda no-op.
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (e) {
+    debugPrint('[DEV] Firebase init skipped: $e');
+  }
 
   // Locale ma'lumotlarini yuklash — `DateFormat('d MMMM', 'uz')` kabi
   // non-default locale ishlatilganda kerak (LocaleDataException oldini oladi).
@@ -39,7 +47,10 @@ Future<void> main() async {
   await initializeDateFormatting('ru_RU', null);
 
   // Foreground Service notification kanali va options.
-  BackgroundService.init();
+  // Web'da no-op — flutter_foreground_task faqat Android/iOS.
+  if (!kIsWeb) {
+    BackgroundService.init();
+  }
 
   // Offline buffer — internet qaytganda eski qoldiqlarni flush qiladi.
   OfflineBuffer().start();

@@ -20,6 +20,16 @@ export interface PaginatedResponse<T> {
 }
 
 // ───── Auth ─────
+export interface User {
+  id: string;
+  name: string | null;
+  phone: string | null;
+  role: 'PARENT' | 'CHILD';
+  avatarUrl: string | null;
+  telegramId: string | null;
+  language: string;
+}
+
 export interface AuthTokens {
   accessToken: string;
   refreshToken: string;

@@ -105,17 +105,25 @@ class _AuthRefreshNotifier extends ChangeNotifier {
 
 /// Firebase ishga tushirilgan bo'lsa Analytics observer qaytaradi, aks
 /// holda bo'sh ro'yxat — web preview Firebase'siz ishlashi uchun.
+///
+/// DEV stub firebase_options bilan ishlatilganda `Firebase.apps` to'la
+/// bo'lishi mumkin, lekin Analytics'ning haqiqiy API kaliti yo'q —
+/// har navigatsiyada 400 Bad Request. Project ID dev-stub bo'lsa
+/// observer'ni o'chirib qo'yamiz.
 List<NavigatorObserver> _analyticsObservers() {
   try {
-    if (Firebase.apps.isNotEmpty) {
-      return [
-        FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-      ];
+    if (Firebase.apps.isEmpty) return <NavigatorObserver>[];
+    final projectId = Firebase.apps.first.options.projectId;
+    if (projectId.contains('dev-stub')) {
+      return <NavigatorObserver>[];
     }
+    return [
+      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
+    ];
   } catch (_) {
     // Firebase plugin mavjud emas / ishga tushmagan — observer'siz.
+    return <NavigatorObserver>[];
   }
-  return <NavigatorObserver>[];
 }
 
 /// Ilovaning yagona `GoRouter` obyekti — `routerProvider` orqali olinadi.
