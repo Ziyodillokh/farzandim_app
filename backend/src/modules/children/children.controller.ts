@@ -13,6 +13,8 @@ import {
   UseInterceptors,
   UploadedFile,
   BadRequestException,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -28,7 +30,7 @@ import { Request } from 'express';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
-import { CurrentUser, Roles } from '../../common/decorators';
+import { CurrentUser, Roles, Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 
@@ -165,6 +167,17 @@ export class ChildrenController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.childrenService.getAvatarUrl(id, user.userId);
+  }
+
+  // Avatar rasm proxy — telefon → backend → MinIO (signed URL reachability
+  // muammosini chetlaydi). @Public: rasm childId UUID orqali olinadi.
+  @Get(':id/avatar/image')
+  @Public()
+  @Header('Cache-Control', 'public, max-age=3600')
+  @ApiOperation({ summary: 'Stream child avatar image (proxy)' })
+  async avatarImage(@Param('id') id: string): Promise<StreamableFile> {
+    const obj = await this.childrenService.getAvatarObject(id);
+    return new StreamableFile(obj.body, { type: obj.contentType });
   }
 
   @Delete(':id/avatar')

@@ -301,6 +301,20 @@ export class ChildrenService {
     return { url, expiresIn: 3600 };
   }
 
+  /** Avatar baytlarini proxy uchun qaytaradi (auth'siz, childId UUID orqali). */
+  async getAvatarObject(id: string) {
+    const child = await this.prisma.child.findUnique({ where: { id } });
+    if (!child?.photoPath) {
+      throw new NotFoundException('No avatar uploaded');
+    }
+    try {
+      return await this.storage.getObject(BUCKETS.avatars, child.photoPath);
+    } catch {
+      // Obyekt MinIO'da yo'q (o'chirilgan/ko'chirilmagan) — 500 emas, 404.
+      throw new NotFoundException('Avatar object not found');
+    }
+  }
+
   /* ------------------------------------------------------------------ */
   /*  DELETE /children/:id/avatar                                        */
   /* ------------------------------------------------------------------ */

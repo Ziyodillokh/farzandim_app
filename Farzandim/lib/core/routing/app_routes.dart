@@ -138,6 +138,22 @@ class AppRoutes {
   static String qaDevicePath(String childId) =>
       '/quick-actions/device/$childId';
 
+  /// Bola qurilmasidagi ilova ruxsatlari (Device Settings ichidan).
+  static const String appPermissionsPattern =
+      '/quick-actions/permissions/:childId';
+
+  /// Berilgan bola id'si uchun ilova ruxsatlari path.
+  static String appPermissionsPath(String childId) =>
+      '/quick-actions/permissions/$childId';
+
+  /// Bitta ruxsat uchun ilovalar ro'yxati ("Kamera uchun ruxsatlar").
+  static const String permissionAppsPattern =
+      '/quick-actions/permissions/:childId/:permission';
+
+  /// Berilgan bola + ruxsat uchun ilovalar ro'yxati path.
+  static String permissionAppsPath(String childId, String permission) =>
+      '/quick-actions/permissions/$childId/$permission';
+
   /// Bola bilan ovozli xabar chati (Telegram-style, per child).
   ///
   /// Dashboard'dagi bola karta'sidagi "Ovoz xabarlari" tugmasi shu

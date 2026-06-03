@@ -88,7 +88,8 @@ class ScreenTimeChart extends ConsumerWidget {
       );
     }
 
-    final todayKey = _key(DateTime.now());
+    // Toshkent (UTC+5) bugungi kuni — bar shu vaqt bilan belgilanadi.
+    final todayKey = _key(DateTime.now().toUtc().add(const Duration(hours: 5)));
     final maxMs = totals
         .map((t) => t.totalMs)
         .fold<int>(0, (a, b) => a > b ? a : b);

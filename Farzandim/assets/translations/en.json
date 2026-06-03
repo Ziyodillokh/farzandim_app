@@ -354,7 +354,14 @@
     },
     "disconnectSuccessSnack": "Device disconnected. New family code: {code}",
     "disconnectErrorPrefix": "Error: {error}",
-    "disconnectGenericError": "Could not disconnect device"
+    "disconnectGenericError": "Could not disconnect device",
+    "loudSound": "Loud sound",
+    "activity": "Activity",
+    "appPermissionsRow": "App permissions",
+    "unknownSources": {
+      "title": "Apps from unknown sources",
+      "desc": "Block installing apps from sources other than Play Market"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Voice messages",
@@ -552,5 +559,21 @@
       },
       "supportLink": "Get technical support"
     }
+  },
+  "appPermissions": {
+    "headerTitle": "App permissions",
+    "items": {
+      "location": "Location",
+      "camera": "Camera",
+      "contacts": "Contacts",
+      "microphone": "Microphone",
+      "sms": "SMS",
+      "calendar": "Calendar",
+      "phone": "Phone",
+      "storage": "Storage"
+    },
+    "detailNote": "Permission status appears once the child's device reports data.",
+    "appsTitle": "{name} permissions",
+    "saved": "Saved"
   }
 }

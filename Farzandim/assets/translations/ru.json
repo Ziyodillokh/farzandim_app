@@ -354,7 +354,14 @@
     },
     "disconnectSuccessSnack": "Устройство отключено. Новый семейный код: {code}",
     "disconnectErrorPrefix": "Ошибка: {error}",
-    "disconnectGenericError": "Не удалось отключить устройство"
+    "disconnectGenericError": "Не удалось отключить устройство",
+    "loudSound": "Громкий звук",
+    "activity": "Активность",
+    "appPermissionsRow": "Разрешения приложения",
+    "unknownSources": {
+      "title": "Приложения из неизвестных источников",
+      "desc": "Запретить установку приложений из источников, кроме Play Market"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Голосовые сообщения",
@@ -552,5 +559,21 @@
       },
       "supportLink": "Техподдержка"
     }
+  },
+  "appPermissions": {
+    "headerTitle": "Разрешения приложения",
+    "items": {
+      "location": "Местоположение",
+      "camera": "Камера",
+      "contacts": "Контакты",
+      "microphone": "Микрофон",
+      "sms": "SMS",
+      "calendar": "Календарь",
+      "phone": "Телефон",
+      "storage": "Память"
+    },
+    "detailNote": "Статус разрешения появится после данных с устройства ребёнка.",
+    "appsTitle": "Разрешения для «{name}»",
+    "saved": "Сохранено"
   }
 }

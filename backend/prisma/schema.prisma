@@ -107,6 +107,7 @@ model Child {
   installedApps InstalledApp[]
   appUsages     AppUsage[]
   appLimits     AppLimit[]
+  appPermissions AppPermissionPolicy[]
   pairRequests  ChildPairRequest[]
 
   // Sprint 5.4 — admin Olympiad attempts
@@ -564,6 +565,25 @@ model AppLimit {
   @@map("app_limits")
   @@unique([childId, packageName])
   @@index([childId, isActive])
+}
+
+// Per-app ruxsat siyosati — ota-ona qaysi ilova qaysi ruxsatdan
+// foydalanishini boshqaradi (camera, microphone, location, ...).
+// Yozuv yo'q = default ruxsat berilgan (allowed=true).
+model AppPermissionPolicy {
+  id          String   @id @default(uuid())
+  childId     String   @map("child_id")
+  packageName String   @map("package_name")
+  permission  String // camera|microphone|location|contacts|sms|calendar|phone|storage
+  allowed     Boolean  @default(true)
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("app_permission_policies")
+  @@unique([childId, packageName, permission])
+  @@index([childId, permission])
 }
 
 // ============================================

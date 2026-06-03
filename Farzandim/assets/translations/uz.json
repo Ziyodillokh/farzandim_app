@@ -354,7 +354,14 @@
     },
     "disconnectSuccessSnack": "Qurilma uzildi. Yangi oila kodi: {code}",
     "disconnectErrorPrefix": "Xato: {error}",
-    "disconnectGenericError": "Qurilmani uzib bo'lmadi"
+    "disconnectGenericError": "Qurilmani uzib bo'lmadi",
+    "loudSound": "Baland ovoz",
+    "activity": "Faollik",
+    "appPermissionsRow": "Ilova uchun ruxsatlar",
+    "unknownSources": {
+      "title": "Notanish manbalardan ilovalar",
+      "desc": "Saidali Play Marketdan boshqa manbalardan olingan ilovalarni o'rnatishga ruxsat berilmasin"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Ovozli xabarlar",
@@ -552,5 +559,21 @@
       },
       "supportLink": "Texnik yordam olish"
     }
+  },
+  "appPermissions": {
+    "headerTitle": "Ilova uchun ruxsatlar",
+    "items": {
+      "location": "Joylashuv",
+      "camera": "Kamera",
+      "contacts": "Kontaktlar",
+      "microphone": "Mikrofon",
+      "sms": "SMS",
+      "calendar": "Taqvim",
+      "phone": "Telefon",
+      "storage": "Xotira"
+    },
+    "detailNote": "Bu ruxsatning holati bola qurilmasi ma'lumot yuborgach aniq ko'rinadi.",
+    "appsTitle": "{name} uchun ruxsatlar",
+    "saved": "Saqlandi"
   }
 }

@@ -82,6 +82,13 @@ class Child {
       age: (json['age'] as int?) ?? 0,
       gender: _parseGender(json['gender'] as String?),
       region: (json['region'] as String?) ?? '',
+      // Backend `photoPath` (MinIO key) — bu yerda faqat MAVJUDLIK bayrog'i
+      // sifatida ishlatiladi. Ko'rsatish uchun proxy URL
+      // `childAvatarUrlProvider` tomonidan quriladi
+      // (`/children/:id/avatar/image`). Storage key'ni to'g'ridan-to'g'ri
+      // network URL sifatida ishlatib bo'lmaydi.
+      photoUrl:
+          (json['photoPath'] as String?) ?? (json['photoUrl'] as String?),
       deviceModel: deviceModel,
       familyCode: (json['familyCode'] as String?) ?? '',
       isConnected: (json['isConnected'] as bool?) ?? false,

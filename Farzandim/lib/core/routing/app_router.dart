@@ -35,7 +35,9 @@ import 'package:farzandim/features/location/presentation/screens/location_histor
 import 'package:farzandim/features/location/presentation/screens/location_map_screen.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
+import 'package:farzandim/features/quick_actions/presentation/screens/app_permissions_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/device_settings_screen.dart';
+import 'package:farzandim/features/quick_actions/presentation/screens/permission_apps_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/voice_messages_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
 import 'package:farzandim/features/gamification/presentation/screens/child_achievements_screen.dart';
@@ -318,6 +320,21 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.qaDevicePattern,
       pageBuilder: (context, state) => _slidePage(
         DeviceSettingsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.appPermissionsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        AppPermissionsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.permissionAppsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        PermissionAppsScreen(
+          childId: state.pathParameters['childId']!,
+          permission: state.pathParameters['permission']!,
+        ),
       ),
     ),
     GoRoute(

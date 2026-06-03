@@ -6,10 +6,13 @@ import 'package:farzandim/features/app_restrictions/data/models/app_combined.dar
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_combined_tile.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_tile_skeleton.dart';
+import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Bola ilovalar foydalanish + cheklov ekrani (PDF p13 layout).
 ///
@@ -34,30 +37,22 @@ class AppRestrictionsScreen extends ConsumerStatefulWidget {
 }
 
 class _AppRestrictionsScreenState
-    extends ConsumerState<AppRestrictionsScreen>
-    with SingleTickerProviderStateMixin {
-  late final TabController _tabController;
+    extends ConsumerState<AppRestrictionsScreen> {
+  late String _childId;
 
   @override
   void initState() {
     super.initState();
-    _tabController = TabController(length: 2, vsync: this);
-  }
-
-  @override
-  void dispose() {
-    _tabController.dispose();
-    super.dispose();
+    _childId = widget.childId;
   }
 
   @override
   Widget build(BuildContext context) {
-    final usageAsync = ref.watch(todayUsageProvider(widget.childId));
-    final restrictionsAsync =
-        ref.watch(restrictionsProvider(widget.childId));
-    final installedAsync =
-        ref.watch(installedAppsProvider(widget.childId));
-    final child = ref.watch(childByIdProvider(widget.childId));
+    final children = ref.watch(childrenListProvider);
+    final usageAsync = ref.watch(todayUsageProvider(_childId));
+    final restrictionsAsync = ref.watch(restrictionsProvider(_childId));
+    final installedAsync = ref.watch(installedAppsProvider(_childId));
+    final child = ref.watch(childByIdProvider(_childId));
     final childName =
         child?.name ?? 'appRestrictions.fallbackChildName'.tr();
 
@@ -67,13 +62,17 @@ class _AppRestrictionsScreenState
         child: SafeArea(
           child: Column(
             children: [
-              _AppBar(tabController: _tabController),
+              _FaollikHeader(title: 'deviceSettings.activity'.tr()),
+              if (children.length > 1)
+                _ChildChips(
+                  children: children,
+                  selectedId: _childId,
+                  onSelect: (id) => setState(() => _childId = id),
+                ),
               Expanded(
                 child: usageAsync.when(
                   data: (usage) => restrictionsAsync.when(
                     data: (restrictions) {
-                      // installed_apps stream parallel — empty list
-                      // bo'lsa ham combineAppData ishlaydi (default `[]`).
                       final installed =
                           installedAsync.valueOrNull ?? const [];
                       final allApps = combineAppData(
@@ -81,28 +80,46 @@ class _AppRestrictionsScreenState
                         restrictions: restrictions,
                         installedApps: installed,
                       );
-                      final restrictedApps = allApps
-                          .where((a) => a.hasLimit)
-                          .toList();
 
-                      return TabBarView(
-                        controller: _tabController,
+                      return ListView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppDimensions.lg,
+                          AppDimensions.md,
+                          AppDimensions.lg,
+                          AppDimensions.lg,
+                        ),
                         children: [
-                          _AppList(
-                            apps: allApps,
-                            emptyText: 'appRestrictions.emptyAll'.tr(
-                              namedArgs: {'name': childName},
-                            ),
-                            onTap: _showLimitSheet,
-                            onLongPress: _showQuickActions,
-                          ),
-                          _AppList(
-                            apps: restrictedApps,
-                            emptyText:
-                                'appRestrictions.emptyRestricted'.tr(),
-                            onTap: _showLimitSheet,
-                            onLongPress: _showQuickActions,
-                          ),
+                          // Bugungi jami + haftalik grafik (reuse).
+                          ScreenTimeChart(childId: _childId),
+                          const SizedBox(height: AppDimensions.lg),
+                          if (allApps.isEmpty)
+                            Padding(
+                              padding: const EdgeInsets.symmetric(
+                                vertical: AppDimensions.xl,
+                              ),
+                              child: Text(
+                                'appRestrictions.emptyAll'.tr(
+                                  namedArgs: {'name': childName},
+                                ),
+                                textAlign: TextAlign.center,
+                                style: AppTextStyles.bodyS.copyWith(
+                                  color: AppColors.textSecondary,
+                                  height: 1.4,
+                                ),
+                              ),
+                            )
+                          else
+                            for (final app in allApps)
+                              Padding(
+                                padding: const EdgeInsets.only(
+                                  bottom: AppDimensions.sm,
+                                ),
+                                child: AppCombinedTile(
+                                  app: app,
+                                  onTap: () => _showLimitSheet(app),
+                                  onLongPress: () => _showQuickActions(app),
+                                ),
+                              ),
                         ],
                       );
                     },
@@ -181,130 +198,93 @@ class _AppRestrictionsScreenState
   }
 }
 
-class _AppBar extends StatelessWidget {
-  const _AppBar({required this.tabController});
+/// "Faollik" header — ← + markazda sarlavha.
+class _FaollikHeader extends StatelessWidget {
+  const _FaollikHeader({required this.title});
 
-  final TabController tabController;
+  final String title;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md,
-            vertical: AppDimensions.sm,
+    return Padding(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.md,
+        vertical: AppDimensions.sm,
+      ),
+      child: Row(
+        children: [
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: IconButton(
+              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              onPressed: () => context.pop(),
+            ),
           ),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 48,
-                height: 48,
-                child: IconButton(
-                  icon: const Icon(
-                    Icons.arrow_back,
-                    color: AppColors.textPrimary,
-                  ),
-                  onPressed: () => Navigator.of(context).pop(),
-                ),
+          Expanded(
+            child: Center(
+              child: Text(
+                title,
+                style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
-              Expanded(
-                child: Center(
-                  child: Text(
-                    'appRestrictions.headerTitle'.tr(),
-                    style:
-                        AppTextStyles.headlineL.copyWith(fontSize: 20),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 48),
-            ],
+            ),
           ),
-        ),
-        TabBar(
-          controller: tabController,
-          labelColor: AppColors.primary,
-          unselectedLabelColor: AppColors.textSecondary,
-          indicatorColor: AppColors.primary,
-          dividerColor: Colors.transparent,
-          labelStyle: AppTextStyles.bodyM.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
-          tabs: [
-            Tab(text: 'appRestrictions.tabs.all'.tr()),
-            Tab(text: 'appRestrictions.tabs.restricted'.tr()),
-          ],
-        ),
-      ],
+          const SizedBox(width: 48),
+        ],
+      ),
     );
   }
 }
 
-class _AppList extends StatelessWidget {
-  const _AppList({
-    required this.apps,
-    required this.emptyText,
-    required this.onTap,
-    required this.onLongPress,
+/// Bola tanlash chiplari (gorizontal) — tanlangani lime.
+class _ChildChips extends StatelessWidget {
+  const _ChildChips({
+    required this.children,
+    required this.selectedId,
+    required this.onSelect,
   });
 
-  final List<AppCombined> apps;
-  final String emptyText;
-  final void Function(AppCombined) onTap;
-  final void Function(AppCombined) onLongPress;
+  final List<Child> children;
+  final String selectedId;
+  final ValueChanged<String> onSelect;
 
   @override
   Widget build(BuildContext context) {
-    if (apps.isEmpty) {
-      return Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.xl),
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.apps,
-                  size: 50,
-                  color: AppColors.primary,
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+        itemCount: children.length,
+        separatorBuilder: (_, __) => const SizedBox(width: AppDimensions.sm),
+        itemBuilder: (context, i) {
+          final c = children[i];
+          final selected = c.id == selectedId;
+          return GestureDetector(
+            onTap: () => onSelect(c.id),
+            child: Container(
+              alignment: Alignment.center,
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.lg,
+              ),
+              decoration: BoxDecoration(
+                color: selected ? AppColors.primary : AppColors.surface,
+                borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+                border: Border.all(
+                  color: selected ? AppColors.primary : AppColors.border,
                 ),
               ),
-              const SizedBox(height: AppDimensions.lg),
-              Text(
-                emptyText,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
+              child: Text(
+                c.name,
+                style: AppTextStyles.bodyS.copyWith(
+                  color:
+                      selected ? AppColors.background : AppColors.textPrimary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return ListView.separated(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.sm),
-      itemCount: apps.length,
-      separatorBuilder: (_, __) => Padding(
-        padding: const EdgeInsets.only(left: 80),
-        child: Divider(
-          height: 1,
-          thickness: 0.5,
-          color: AppColors.textSecondary.withValues(alpha: 0.1),
-        ),
-      ),
-      itemBuilder: (_, i) => AppCombinedTile(
-        app: apps[i],
-        onTap: () => onTap(apps[i]),
-        onLongPress: () => onLongPress(apps[i]),
+            ),
+          );
+        },
       ),
     );
   }

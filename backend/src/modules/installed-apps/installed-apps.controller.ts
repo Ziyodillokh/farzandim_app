@@ -9,10 +9,12 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { InstalledAppsService } from './installed-apps.service';
 import { BatchUpsertAppsDto } from './dto/batch-upsert-apps.dto';
@@ -53,5 +55,19 @@ export class InstalledAppsController {
       user.userId,
       query.includeSystem === 'true',
     );
+  }
+
+  // Ilova ikonasi proxy — telefon → backend → MinIO. @Public: ikona
+  // childId + paket nomi orqali olinadi (past sezgirlikdagi rasm).
+  @Get('children/:childId/installed-apps/:packageName/icon')
+  @Public()
+  @Header('Cache-Control', 'public, max-age=86400')
+  @ApiOperation({ summary: 'Stream installed-app icon (proxy)' })
+  async iconImage(
+    @Param('childId') childId: string,
+    @Param('packageName') packageName: string,
+  ): Promise<StreamableFile> {
+    const obj = await this.service.getIconObject(childId, packageName);
+    return new StreamableFile(obj.body, { type: obj.contentType });
   }
 }

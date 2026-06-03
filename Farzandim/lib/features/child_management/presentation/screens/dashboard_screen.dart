@@ -10,11 +10,11 @@ import 'package:farzandim/features/dashboard/presentation/providers/selected_chi
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 
 /// Bir ota-ona maksimal nechta farzand qo'sha oladi (backend ham cheklaydi).
@@ -426,7 +426,7 @@ class _ChildInfoHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppDimensions.md),
-        _ChildAvatar(child: child, size: 64, highlighted: true),
+        ChildAvatar(child: child),
       ],
     );
   }
@@ -566,52 +566,6 @@ class _BatteryBar extends StatelessWidget {
   }
 }
 
-class _ChildAvatar extends StatelessWidget {
-  const _ChildAvatar({
-    required this.child,
-    required this.size,
-    this.highlighted = false,
-  });
-
-  final Child child;
-  final double size;
-  final bool highlighted;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: highlighted ? AppColors.primary : AppColors.border,
-          width: highlighted ? 2.5 : 1,
-        ),
-      ),
-      child: ClipOval(
-        child: child.photoUrl != null && child.photoUrl!.isNotEmpty
-            ? Image.network(
-                child.photoUrl!,
-                fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _sticker(),
-              )
-            : _sticker(),
-      ),
-    );
-  }
-
-  Widget _sticker() {
-    return ColoredBox(
-      color: AppColors.surfaceVariant,
-      child: Padding(
-        padding: const EdgeInsets.all(6),
-        child: SvgPicture.asset(child.defaultStickerPath),
-      ),
-    );
-  }
-}
-
 // ════════════════════════ RATING ════════════════════════
 
 class _RatingSection extends ConsumerWidget {
@@ -676,7 +630,7 @@ class _RatingSection extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppDimensions.md),
-              _ChildAvatar(child: child, size: 44),
+              ChildAvatar(child: child, size: 44, showBorder: false),
               const SizedBox(width: AppDimensions.md),
               Expanded(
                 child: Column(
@@ -741,14 +695,16 @@ class _TimeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final day = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    final apps = day == null
-        ? const <_AppBrief>[]
-        : (day.apps.toList()
-              ..sort((a, b) => b.totalTimeMs.compareTo(a.totalTimeMs)))
-            .map((a) => _AppBrief(a.appName, a.iconUrl))
-            .toList();
-    final totalMs =
-        day?.apps.fold<int>(0, (sum, a) => sum + a.totalTimeMs) ?? 0;
+    // FAQAT foydalanuvchi ilovalari (system/launcher/orqa-fon emas) — aks
+    // holda jami "47 soat" bo'lib ketadi. `filteredApps` system prefixlarni
+    // chiqarib tashlaydi va foreground vaqtini beradi.
+    final filtered = day?.filteredApps ?? const [];
+    final apps =
+        filtered.map((a) => _AppBrief(a.appName, a.iconUrl)).toList();
+    // Xavfsizlik: bir kun 24 soatdan oshmaydi (buggy data'dan himoya).
+    final totalMs = filtered
+        .fold<int>(0, (sum, a) => sum + a.totalTimeMs)
+        .clamp(0, 24 * 60 * 60 * 1000);
 
     return Container(
       width: double.infinity,
@@ -775,31 +731,46 @@ class _TimeCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.md),
 
-          // Ilova ikonkalari (top 6).
+          // Ilova ikonkalari — ekran kengligiga moslab nechta sig'sa shuncha
+          // (qolganlari "+N" badge). Qat'iy 6 ta tor telefonlarda overflow
+          // berardi ("qisilib qolyapti" muammosi).
           if (apps.isNotEmpty)
-            Row(
-              children: [
-                for (final app in apps.take(6)) ...[
-                  _AppIcon(iconUrl: app.iconUrl, name: app.name),
-                  const SizedBox(width: AppDimensions.sm),
-                ],
-                if (apps.length > 6)
-                  Container(
-                    width: 36,
-                    height: 36,
-                    decoration: const BoxDecoration(
-                      color: AppColors.surfaceVariant,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      '+${apps.length - 6}',
-                      style: AppTextStyles.label.copyWith(
-                        color: AppColors.textSecondary,
+            LayoutBuilder(
+              builder: (context, constraints) {
+                const iconSlot = 36.0 + AppDimensions.sm; // ikonka + oraliq
+                final fit = (constraints.maxWidth / iconSlot)
+                    .floor()
+                    .clamp(1, apps.length);
+                // Hammasi sig'masa, oxirgi slotni "+N" badge uchun qoldiramiz.
+                final iconCount =
+                    fit < apps.length ? (fit - 1).clamp(1, apps.length) : fit;
+                final shown = apps.take(iconCount).toList();
+                final remaining = apps.length - shown.length;
+                return Row(
+                  children: [
+                    for (final app in shown) ...[
+                      _AppIcon(iconUrl: app.iconUrl, name: app.name),
+                      const SizedBox(width: AppDimensions.sm),
+                    ],
+                    if (remaining > 0)
+                      Container(
+                        width: 36,
+                        height: 36,
+                        decoration: const BoxDecoration(
+                          color: AppColors.surfaceVariant,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: Text(
+                          '+$remaining',
+                          style: AppTextStyles.label.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
+                        ),
                       ),
-                    ),
-                  ),
-              ],
+                  ],
+                );
+              },
             ),
           const SizedBox(height: AppDimensions.md),
 
@@ -931,14 +902,20 @@ class _QuickActionsGrid extends StatelessWidget {
       ),
     ];
 
-    return GridView.count(
+    // `childAspectRatio` o'rniga `mainAxisExtent` — tile balandligi ekran
+    // kengligiga bog'liq EMAS. Aks holda tor telefonlarda tile qisilib,
+    // ikonka + 2 qatorli matn sig'may qolardi ("qisilib qolyapti" muammosi).
+    return GridView.builder(
       shrinkWrap: true,
       physics: const NeverScrollableScrollPhysics(),
-      crossAxisCount: 2,
-      childAspectRatio: 1.05,
-      crossAxisSpacing: 12,
-      mainAxisSpacing: 12,
-      children: tiles,
+      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+        crossAxisCount: 2,
+        crossAxisSpacing: 12,
+        mainAxisSpacing: 12,
+        mainAxisExtent: 118,
+      ),
+      itemCount: tiles.length,
+      itemBuilder: (_, i) => tiles[i],
     );
   }
 }

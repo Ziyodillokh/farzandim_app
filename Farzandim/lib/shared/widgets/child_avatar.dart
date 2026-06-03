@@ -74,19 +74,26 @@ class ChildAvatar extends ConsumerWidget {
     );
   }
 
-  /// Avatar rasmi — bytes / Firestore URL / Backend signed URL / sticker.
+  /// Avatar rasmi — bytes / to'g'ridan http URL / Backend proxy / sticker.
   ///
   /// Prioritet:
   /// 1. `child.photoBytes` — transient, foydalanuvchi tanlagan rasm
-  /// 2. `child.photoUrl` — Firestore mode (eski Firebase Storage URL)
-  /// 3. `backendUrl` — Backend mode (signed URL, 1h)
+  /// 2. `child.photoUrl` faqat `http...` bo'lsa — eski Firestore URL
+  /// 3. `backendUrl` — Backend rasm proxy (`/children/:id/avatar/image`)
   /// 4. Default sticker
+  ///
+  /// Eslatma: Backend mode'da `child.photoUrl` — MinIO storage *key*
+  /// (masalan `child-avatars/uuid.jpg`), network URL emas. Shuning uchun
+  /// faqat `http` bilan boshlansa to'g'ridan ishlatamiz, aks holda proxy.
   Widget _buildAvatarImage(String? backendUrl) {
     final bytes = child.photoBytes;
     if (bytes != null) {
       return Image.memory(bytes, fit: BoxFit.cover);
     }
-    final url = child.photoUrl ?? backendUrl;
+    final directUrl = child.photoUrl;
+    final url = (directUrl != null && directUrl.startsWith('http'))
+        ? directUrl
+        : backendUrl;
     if (url != null) {
       return Image.network(
         url,

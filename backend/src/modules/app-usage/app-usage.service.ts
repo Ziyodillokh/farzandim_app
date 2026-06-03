@@ -8,6 +8,37 @@ import { AuditService } from '../../common/audit/audit.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 
+// O'zbekiston (Toshkent) UTC+5 — DST yo'q. Kun chegarasi shu vaqt bilan.
+const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+// Bir kun maksimal foreground vaqti (xato data'dan himoya).
+const MAX_DAY_MS = 24 * 60 * 60 * 1000;
+
+// System / launcher / orqa-fon paketlari — ekran vaqtiga kirmaydi.
+const SYSTEM_PREFIXES = [
+  'com.android.',
+  'com.samsung.android.',
+  'com.sec.android.',
+  'com.google.android.gms',
+  'com.google.android.packageinstaller',
+  'com.google.android.permissioncontroller',
+  'com.google.android.inputmethod',
+  'com.miui.',
+  'com.mi.android',
+  'com.transsion.',
+  'com.farzandim.',
+];
+
+function isSystemPackage(pkg: string): boolean {
+  return pkg === 'android' || SYSTEM_PREFIXES.some((p) => pkg.startsWith(p));
+}
+
+/** Toshkent (UTC+5) "hozir" — UTC komponentlari local sanani beradi. */
+function tashkentDayKey(offsetDays = 0): string {
+  const d = new Date(Date.now() + TASHKENT_OFFSET_MS);
+  d.setUTCDate(d.getUTCDate() + offsetDays);
+  return d.toISOString().slice(0, 10);
+}
+
 @Injectable()
 export class AppUsageService {
   constructor(
@@ -112,28 +143,23 @@ export class AppUsageService {
   async weekly(childId: string, userId: string) {
     await this.validateChildAccess(childId, userId);
 
-    const today = new Date();
+    // Oxirgi 7 kun — Toshkent (UTC+5) sanasi bo'yicha.
     const dayKeys: string[] = [];
     for (let i = 6; i >= 0; i -= 1) {
-      const d = new Date(
-        Date.UTC(
-          today.getUTCFullYear(),
-          today.getUTCMonth(),
-          today.getUTCDate() - i,
-        ),
-      );
-      dayKeys.push(d.toISOString().slice(0, 10));
+      dayKeys.push(tashkentDayKey(-i));
     }
     const fromDate = new Date(`${dayKeys[0]}T00:00:00.000Z`);
 
     const rows = await this.prisma.appUsage.findMany({
       where: { childId, date: { gte: fromDate } },
-      select: { date: true, foregroundMs: true },
+      select: { date: true, foregroundMs: true, packageName: true },
     });
 
     const totalsByDay = new Map<string, number>();
     for (const key of dayKeys) totalsByDay.set(key, 0);
     for (const row of rows) {
+      // System/orqa-fon paketlarni ekran vaqtiga qo'shmaymiz.
+      if (isSystemPackage(row.packageName)) continue;
       const key = row.date.toISOString().slice(0, 10);
       if (totalsByDay.has(key)) {
         totalsByDay.set(
@@ -144,7 +170,8 @@ export class AppUsageService {
     }
 
     const days = dayKeys.map((date) => {
-      const totalMs = totalsByDay.get(date) ?? 0;
+      // Bir kun maks 24 soat.
+      const totalMs = Math.min(totalsByDay.get(date) ?? 0, MAX_DAY_MS);
       return { date, totalMs, totalMinutes: Math.round(totalMs / 60000) };
     });
     const weekTotalMs = days.reduce((sum, d) => sum + d.totalMs, 0);

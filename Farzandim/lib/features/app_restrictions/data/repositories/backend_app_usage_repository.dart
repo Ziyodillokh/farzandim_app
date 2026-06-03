@@ -37,62 +37,55 @@ class BackendAppUsageRepository {
       final data = response.data;
       if (data == null) return const [];
       final list = data['apps'] as List<dynamic>? ?? const [];
-      return list
-          .map((m) => AppUsageEntry.fromMap({
-                'packageName': (m as Map)['packageName'],
-                'appName': m['appName'],
-                'totalTimeMs': 0,
-                'lastTimeUsed': m['lastSeenAt'],
-                'iconBase64': m['iconBase64'],
-                // Backend MinIO signed URL (Sprint 4.4.29).
-                'iconUrl': m['iconUrl'],
-              }))
-          .toList();
+      return list.map((m) {
+        final map = m as Map;
+        final pkg = '${map['packageName']}';
+        // Backend signed MinIO URL telefon uchun yetib bo'lmaydi
+        // (MINIO_PUBLIC_URL ichki manzil). Backend ikona bor deb belgilasa
+        // (iconUrl != null), barqaror proxy URL quramiz — backend rasmni
+        // o'zi stream qiladi (`/installed-apps/:pkg/icon`).
+        final hasIcon = map['iconUrl'] != null || map['iconPath'] != null;
+        final iconUrl = hasIcon ? _iconProxyUrl(childId, pkg) : null;
+        return AppUsageEntry.fromMap({
+          'packageName': pkg,
+          'appName': map['appName'],
+          'totalTimeMs': 0,
+          'lastTimeUsed': map['lastSeenAt'],
+          'iconBase64': map['iconBase64'],
+          'iconUrl': iconUrl,
+        });
+      }).toList();
     } on DioException catch (e) {
       debugPrint('BackendAppUsageRepository.getInstalledApps: $e');
       return const [];
     }
   }
 
-  /// Sprint 5.x — 7 kunlik kunlik totals (Parent dashboard ScreenTimeChart uchun).
-  /// `endDate`'dan 6 kun oldingi `from` bilan haftalik aggregate.
+  /// Ilova ikonasi proxy URL — backend MinIO'dan rasmni stream qiladi.
+  String _iconProxyUrl(String childId, String packageName) =>
+      '${_dio.options.baseUrl}/children/$childId/installed-apps/'
+      '${Uri.encodeComponent(packageName)}/icon';
+
+  /// 7 kunlik kunlik totals — backend `/weekly` (system filtrlangan + UTC+5).
+  /// `endDate` faqat xato holatidagi fallback uchun (server o'zi hisoblaydi).
   Future<List<DailyUsageTotal>> getWeeklyTotals({
     required String childId,
     required DateTime endDate,
   }) async {
-    final start = endDate.subtract(const Duration(days: 6));
-    final fromStr = _formatDate(start);
-    final toStr = _formatDate(endDate);
     try {
       final response = await _dio.get<Map<String, dynamic>>(
-        '/children/$childId/app-usage',
-        queryParameters: {'from': fromStr, 'to': toStr, 'limit': 1000},
+        '/children/$childId/app-usage/weekly',
       );
-      final entries =
-          response.data?['usage'] as List<dynamic>? ?? const <dynamic>[];
-
-      // Backend `date`'ni ISO datetime sifatida qaytaradi (Prisma DateTime →
-      // "2026-05-19T00:00:00.000Z"). Kalit "YYYY-MM-DD" bo'lishi shart —
-      // shuning uchun har bir entry'ni parse qilib local key'ga aylantiramiz.
-      final totals = <String, int>{};
-      for (final m in entries) {
-        final json = m as Map<String, dynamic>;
-        final dateRaw = json['date'] as String?;
-        if (dateRaw == null) continue;
-        final parsed = DateTime.tryParse(dateRaw);
-        if (parsed == null) continue;
-        final key = _formatDate(parsed.toLocal());
-        final ms = (json['foregroundMs'] as num?)?.toInt() ?? 0;
-        totals[key] = (totals[key] ?? 0) + ms;
-      }
-
-      final result = <DailyUsageTotal>[];
-      for (var i = 0; i < 7; i++) {
-        final day = start.add(Duration(days: i));
-        final key = _formatDate(day);
-        result.add(DailyUsageTotal(date: day, totalMs: totals[key] ?? 0));
-      }
-      return result;
+      final days = response.data?['days'] as List<dynamic>? ?? const [];
+      return days.map((d) {
+        final m = d as Map;
+        final date =
+            DateTime.tryParse('${m['date']}') ?? DateTime.now();
+        return DailyUsageTotal(
+          date: date,
+          totalMs: (m['totalMs'] as num?)?.toInt() ?? 0,
+        );
+      }).toList();
     } on DioException catch (e) {
       debugPrint('BackendAppUsageRepository.getWeeklyTotals: $e');
       final start = endDate.subtract(const Duration(days: 6));
@@ -106,19 +99,18 @@ class BackendAppUsageRepository {
     }
   }
 
-  static String _formatDate(DateTime d) {
-    final m = d.month.toString().padLeft(2, '0');
-    final day = d.day.toString().padLeft(2, '0');
-    return '${d.year}-$m-$day';
+  /// Toshkent (UTC+5) bugungi sanasi "YYYY-MM-DD".
+  static String tashkentTodayStr() {
+    final t = DateTime.now().toUtc().add(const Duration(hours: 5));
+    return '${t.year.toString().padLeft(4, '0')}-'
+        '${t.month.toString().padLeft(2, '0')}-'
+        '${t.day.toString().padLeft(2, '0')}';
   }
 
-  /// Bola uchun bugungi `AppUsageDay` aggregat.
+  /// Bola uchun bugungi `AppUsageDay` aggregat (Toshkent sanasi bilan).
   Future<AppUsageDay?> getTodayUsage(String childId) async {
     try {
-      final today = DateTime.now();
-      final dateStr = '${today.year.toString().padLeft(4, '0')}-'
-          '${today.month.toString().padLeft(2, '0')}-'
-          '${today.day.toString().padLeft(2, '0')}';
+      final dateStr = tashkentTodayStr();
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/app-usage',
         queryParameters: {'from': dateStr, 'to': dateStr, 'limit': 500},
@@ -127,14 +119,18 @@ class BackendAppUsageRepository {
       if (data == null) return null;
       final entries = data['usage'] as List<dynamic>? ?? const [];
       if (entries.isEmpty) return null;
-      final apps = entries
-          .map((m) => AppUsageEntry.fromMap({
-                'packageName': (m as Map)['packageName'],
-                'appName': m['packageName'], // appName Backend'da yo'q
-                'totalTimeMs': (m['foregroundMs'] as num?)?.toInt() ?? 0,
-                'lastTimeUsed': m['lastUsedAt'],
-              }))
-          .toList();
+      final apps = entries.map((m) {
+        final pkg = '${(m as Map)['packageName']}';
+        return AppUsageEntry.fromMap({
+          'packageName': pkg,
+          'appName': m['packageName'], // appName usage endpoint'da yo'q
+          'totalTimeMs': (m['foregroundMs'] as num?)?.toInt() ?? 0,
+          'lastTimeUsed': m['lastUsedAt'],
+          // Real ikona proxy — backend ikonani saqlagan bo'lsa stream qiladi,
+          // aks holda 404 → harf fallback (AppIcon errorBuilder).
+          'iconUrl': _iconProxyUrl(childId, pkg),
+        });
+      }).toList();
       return AppUsageDay(
         date: dateStr,
         updatedAt: DateTime.now(),

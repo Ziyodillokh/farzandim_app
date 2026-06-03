@@ -158,6 +158,14 @@ class BackendChildRepository {
     return Child.fromJson(data);
   }
 
+  /// Avatar rasm proxy URL — `GET /api/children/:id/avatar/image`.
+  ///
+  /// Backend MinIO'dan rasmni stream qiladi (signed URL'ga qaraganda
+  /// ishonchli: telefon ichki MinIO endpointiga ulanolmaydi). URL barqaror —
+  /// bola foto yuklagan bo'lsa shu manzilda rasm turadi, aks holda 404.
+  String avatarProxyUrl(String childId) =>
+      '${_dio.options.baseUrl}/children/$childId/avatar/image';
+
   /// Avatar ko'rish uchun signed URL — `GET /api/children/:id/avatar`.
   /// URL 1 soat amal qiladi (expiresIn: 3600). Photo yo'q bo'lsa null.
   Future<String?> getAvatarUrl(String childId) async {

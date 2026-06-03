@@ -158,11 +158,18 @@ final childActionsProvider =
   ChildActionsNotifier.new,
 );
 
-/// Bola avatar URL — Backend signed URL (1 soat amal qiladi).
+/// Bola avatar URL — Backend rasm proxy (`/children/:id/avatar/image`).
+///
+/// Tarmoq so'rovisiz: bola `photoUrl` (backend `photoPath` bayrog'i) bor
+/// bo'lsa barqaror proxy URL quriladi, aks holda `null` (default sticker).
+/// Proxy MinIO'dan rasmni stream qiladi — signed URL'dan ishonchliroq
+/// (telefon ichki MinIO endpointiga ulanolmaydi).
 final childAvatarUrlProvider =
     FutureProvider.family<String?, String>((ref, childId) async {
   final backendAuth = ref.watch(backendAuthProvider);
   if (backendAuth is! AuthAuthenticated) return null;
+  final child = ref.watch(childByIdProvider(childId));
+  if (child == null || child.photoUrl == null) return null;
   final repo = ref.watch(backendChildRepositoryProvider);
-  return repo.getAvatarUrl(childId);
+  return repo.avatarProxyUrl(childId);
 });

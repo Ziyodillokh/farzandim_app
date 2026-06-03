@@ -89,6 +89,25 @@ export class StorageService implements OnModuleInit {
   }
 
   /**
+   * Obyekt baytlarini ichki (reachable) MinIO klientidan o'qiydi — image
+   * proxy uchun (telefon → backend → MinIO). Signed URL reachability
+   * muammosini chetlaydi.
+   */
+  async getObject(
+    bucket: BucketName,
+    key: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    const res = await this.s3.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key }),
+    );
+    const bytes = await res.Body!.transformToByteArray();
+    return {
+      body: Buffer.from(bytes),
+      contentType: res.ContentType ?? 'application/octet-stream',
+    };
+  }
+
+  /**
    * Ensure all required buckets exist. Idempotent.
    */
   async ensureBuckets(): Promise<void> {

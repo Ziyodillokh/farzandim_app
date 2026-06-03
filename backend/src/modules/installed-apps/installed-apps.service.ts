@@ -188,4 +188,24 @@ export class InstalledAppsService {
 
     return { apps: withIconUrls, count: withIconUrls.length };
   }
+
+  /**
+   * Ilova ikonasi baytlarini proxy uchun qaytaradi (auth'siz). Telefon
+   * signed MinIO URL'ga ulanolmasligi sababli — backend ichidan o'qiymiz.
+   */
+  async getIconObject(childId: string, packageName: string) {
+    const app = await this.prisma.installedApp.findUnique({
+      where: { childId_packageName: { childId, packageName } },
+      select: { iconPath: true },
+    });
+    if (!app?.iconPath) {
+      throw new NotFoundException('No icon');
+    }
+    try {
+      return await this.storage.getObject(BUCKETS.appIcons, app.iconPath);
+    } catch {
+      // Obyekt MinIO'da yo'q — 500 emas, toza 404 (UI fallback ko'rsatadi).
+      throw new NotFoundException('Icon object not found');
+    }
+  }
 }
