@@ -1,0 +1,219 @@
+name: Deploy → test.farzandimedu.uz
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Yangi platformani (NestJS backend + Next.js admin + Flutter) serverning
+# "chetiga" (alohida papka/port/DB) deploy qiladi. Eski platformaga TEGMAYDI.
+#
+# Kerakli repo secretlari (Settings → Secrets and variables → Actions):
+#   SSH_HOST      – server IP/host (masalan 95.182.118.39)
+#   SSH_USER      – SSH foydalanuvchi (masalan farzandim)
+#   SSH_PASSWORD  – SSH paroli
+#
+# Faqat YANGI folderlar deploy qilinadi: backend, admin-web, Farzandim, farzandim_child.
+# Eski folderlar (farzandim-backend, admin_panel, _archive, tz) bu yerda tilga olinmaydi.
+#
+# Eslatma: birinchi marta server "bootstrap" qilingan bo'lishi kerak
+# (~/new-platform papkasi, farzandim_v2 DB, .env fayllar, systemd service
+#  farzandim-v2-backend, pm2 ecosystem, nginx + SSL). Buni alohida bir marta sozlaymiz.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'backend/**'
+      - 'admin-web/**'
+      - 'Farzandim/**'
+      - 'farzandim_child/**'
+      - '.github/workflows/deploy-test.yml'
+  workflow_dispatch:
+    inputs:
+      component:
+        description: 'Qaysi komponent deploy qilinsin'
+        type: choice
+        default: all
+        options:
+          - all
+          - backend
+          - admin-web
+          - flutter
+
+# Bir vaqtning o'zida bitta deploy ishlasin (parallel deploy'lar to'qnashmasin)
+concurrency:
+  group: deploy-test
+  cancel-in-progress: false
+
+env:
+  TEST_DOMAIN: test.farzandimedu.uz
+  API_URL: https://test.farzandimedu.uz/api
+  WS_URL: wss://test.farzandimedu.uz
+  REMOTE_BASE: new-platform        # serverda ~/new-platform
+  NODE_VERSION: '22'
+  FLUTTER_VERSION: '3.44.0'
+  SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
+
+jobs:
+  # ── Qaysi folderlar o'zgarganini aniqlaymiz (faqat o'zgarganini deploy qilish uchun) ──
+  changes:
+    runs-on: ubuntu-22.04
+    outputs:
+      backend: ${{ steps.f.outputs.backend }}
+      admin:   ${{ steps.f.outputs.admin }}
+      flutter: ${{ steps.f.outputs.flutter }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: f
+        with:
+          filters: |
+            backend:
+              - 'backend/**'
+            admin:
+              - 'admin-web/**'
+            flutter:
+              - 'Farzandim/**'
+              - 'farzandim_child/**'
+
+  # ─────────────────────────── BACKEND (NestJS) ───────────────────────────
+  backend:
+    needs: changes
+    if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04   # serverning Ubuntu 22.04 bilan bir xil (native modullar mos kelishi uchun)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Build (npm ci + prisma generate + nest build)
+        working-directory: backend
+        run: |
+          npm ci
+          npx prisma generate
+          npm run build
+
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+
+      # node_modules + dist ham yuklanadi (runner=server=22.04, native bog'lanishlar mos).
+      # .env serverda turadi va o'chirilmaydi (--exclude himoya qiladi).
+      - name: Upload to server
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e rsync -az --delete \
+            --exclude '.env' --exclude '.git' \
+            -e "ssh ${SSH_OPTS}" \
+            backend/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/"
+
+      - name: Migrate DB & restart service
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
+          set -euo pipefail
+          cd ~/new-platform/backend
+          npx prisma migrate deploy          # faqat farzandim_v2 bazaga (yangi migration'lar)
+          sudo systemctl restart farzandim-v2-backend.service   # sudoers NOPASSWD bilan
+          sleep 3
+          systemctl is-active farzandim-v2-backend.service
+          curl -fsS http://127.0.0.1:3100/health || curl -fsS http://127.0.0.1:3100/ -o /dev/null
+          echo "backend OK"
+          EOF
+
+  # ─────────────────────────── ADMIN PANEL (Next.js) ───────────────────────────
+  admin-web:
+    needs: changes
+    if: ${{ needs.changes.outputs.admin == 'true' || github.event.inputs.component == 'admin-web' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+          cache-dependency-path: admin-web/package-lock.json
+
+      # API manzili BUILD paytida "bake" qilinadi (NEXT_PUBLIC_*)
+      - name: Build (npm ci + next build)
+        working-directory: admin-web
+        env:
+          NEXT_PUBLIC_API_URL: ${{ env.API_URL }}
+          NEXT_PUBLIC_WS_URL: ${{ env.WS_URL }}
+          NEXT_PUBLIC_APP_NAME: Farzandim
+          NEXT_TELEMETRY_DISABLED: '1'
+        run: |
+          npm ci
+          npm run build
+
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+
+      - name: Upload to server
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e rsync -az --delete \
+            --exclude '.env*' --exclude '.git' \
+            -e "ssh ${SSH_OPTS}" \
+            admin-web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/admin-web/"
+
+      - name: Restart pm2 app (v2-admin :3101)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
+          set -euo pipefail
+          cd ~/new-platform/admin-web
+          pm2 reload v2-admin --update-env || pm2 start ~/new-platform/ecosystem.config.js --only v2-admin
+          pm2 save
+          sleep 2
+          curl -fsS http://127.0.0.1:3101/ -o /dev/null && echo "admin-web OK"
+          EOF
+
+  # ─────────────────────────── FLUTTER (parent + child → web) ───────────────────────────
+  flutter:
+    needs: changes
+    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Build parent web (/app/)
+        working-directory: Farzandim
+        run: |
+          flutter pub get
+          flutter build web --release --base-href /app/ \
+            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+
+      - name: Build child web (/child/)
+        working-directory: farzandim_child
+        run: |
+          [ -f web/index.html ] || flutter create --platforms web .
+          flutter pub get
+          flutter build web --release --base-href /child/ \
+            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+
+      - name: Upload static builds (nginx beradi)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" \
+            Farzandim/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/"
+          sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" \
+            farzandim_child/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/child/"
