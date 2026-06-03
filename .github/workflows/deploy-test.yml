@@ -7,9 +7,7 @@ name: Deploy → test.farzandimedu.uz
 # Kerakli repo secretlari (Settings → Secrets and variables → Actions):
 #   SSH_HOST              – server IP/host (masalan 95.182.118.39)
 #   SSH_USER              – SSH foydalanuvchi (masalan farzandim)
-#   SSH_PRIVATE_KEY_B64   – deploy SSH private kalit (ed25519), BASE64 qilingan (bitta qator).
-#                           Pubkey serverning ~/.ssh/authorized_keys da.
-#                           base64 — nusxalashda satr-ko'chish buzilmasligi uchun.
+#   SSH_PASSWORD          – SSH paroli (masalan Adgjmptw1@111) — TO'G'RI kiritilishi shart!
 #   FIREBASE_CONFIGS_B64  – base64( tar.gz ): firebase_options.dart + google-services.json (4 fayl)
 #   MAPS_API_KEY          – (ixtiyoriy) Google Maps kaliti; bo'sh bo'lsa xarita ishlamaydi
 #
@@ -50,7 +48,7 @@ env:
   REMOTE_BASE: new-platform
   NODE_VERSION: '22'
   FLUTTER_VERSION: '3.44.0'
-  SSH_OPTS: -i ~/.ssh/deploy_key -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o IdentitiesOnly=yes -o ConnectTimeout=20
+  SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
 
 jobs:
   # ── Qaysi folderlar o'zgarganini aniqlaymiz ──
@@ -79,16 +77,10 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.backend == 'true' || github.event.inputs.component == 'backend' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSH key
-        env:
-          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -102,17 +94,17 @@ jobs:
           npx prisma generate
           npm run build
 
-      - name: Install rsync
-        run: sudo apt-get update && sudo apt-get install -y rsync
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
 
       - name: Upload to server
         run: |
-          rsync -az --delete --exclude '.env' --exclude '.git' -e "ssh ${SSH_OPTS}" \
+          sshpass -e rsync -az --delete --exclude '.env' --exclude '.git' -e "ssh ${SSH_OPTS}" \
             backend/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/"
 
       - name: Migrate DB & restart service
         run: |
-          ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
           set -euo pipefail
           cd ~/new-platform/backend
           npx prisma migrate deploy
@@ -128,16 +120,10 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.admin == 'true' || github.event.inputs.component == 'admin-web' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSH key
-        env:
-          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
-
       - uses: actions/setup-node@v4
         with:
           node-version: ${{ env.NODE_VERSION }}
@@ -155,17 +141,17 @@ jobs:
           npm ci
           npm run build
 
-      - name: Install rsync
-        run: sudo apt-get update && sudo apt-get install -y rsync
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
 
       - name: Upload to server
         run: |
-          rsync -az --delete --exclude '.env*' --exclude '.git' -e "ssh ${SSH_OPTS}" \
+          sshpass -e rsync -az --delete --exclude '.env*' --exclude '.git' -e "ssh ${SSH_OPTS}" \
             admin-web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/admin-web/"
 
       - name: Restart pm2 app (v2-admin :3101)
         run: |
-          ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" bash -se <<'EOF'
           set -euo pipefail
           cd ~/new-platform/admin-web
           pm2 reload v2-admin --update-env || pm2 start ~/new-platform/ecosystem.config.js --only v2-admin
@@ -179,15 +165,10 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSH key
-        env:
-          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - name: Restore Firebase config
         env:
@@ -216,7 +197,6 @@ jobs:
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
-      # child hozircha web'ga to'liq moslashmagan bo'lishi mumkin — xato bo'lsa job to'xtamaydi
       - name: Build child web (/child/)
         working-directory: farzandim_child
         continue-on-error: true
@@ -227,21 +207,20 @@ jobs:
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
-      - name: Install rsync
-        run: sudo apt-get update && sudo apt-get install -y rsync
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
 
       - name: Upload static builds (nginx beradi)
         run: |
-          # --exclude '*.apk' — apk job yuklagan APK fayllarni o'chirmaslik uchun
-          rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
+          sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
             Farzandim/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/"
           if [ -f farzandim_child/build/web/index.html ]; then
-            rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
+            sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
               farzandim_child/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/child/"
           else
             echo "child web build yo'q — o'tkazib yuborildi"
           fi
-          ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
 
   # ─────────────────────────── APK (parent + child → release .apk) ───────────────────────────
@@ -250,15 +229,10 @@ jobs:
     needs: changes
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
       - uses: actions/checkout@v4
-
-      - name: Setup SSH key
-        env:
-          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
-        run: |
-          mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - name: Restore Firebase config
         env:
@@ -301,18 +275,18 @@ jobs:
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
-      - name: Install rsync
-        run: sudo apt-get update && sudo apt-get install -y rsync
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
 
       - name: Upload APKs to server (/app/*.apk)
         run: |
           P="Farzandim/build/app/outputs/flutter-apk/app-release.apk"
           C="farzandim_child/build/app/outputs/flutter-apk/app-release.apk"
-          scp ${SSH_OPTS} "$P" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-parent.apk"
+          sshpass -e scp ${SSH_OPTS} "$P" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-parent.apk"
           if [ -f "$C" ]; then
-            scp ${SSH_OPTS} "$C" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-child.apk"
+            sshpass -e scp ${SSH_OPTS} "$C" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-child.apk"
           else
             echo "child APK build yo'q — o'tkazib yuborildi"
           fi
-          ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
