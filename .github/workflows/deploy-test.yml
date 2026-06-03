@@ -7,9 +7,9 @@ name: Deploy → test.farzandimedu.uz
 # Kerakli repo secretlari (Settings → Secrets and variables → Actions):
 #   SSH_HOST              – server IP/host (masalan 95.182.118.39)
 #   SSH_USER              – SSH foydalanuvchi (masalan farzandim)
-#   SSH_PRIVATE_KEY       – deploy uchun SSH private kalit (ed25519).
+#   SSH_PRIVATE_KEY_B64   – deploy SSH private kalit (ed25519), BASE64 qilingan (bitta qator).
 #                           Pubkey serverning ~/.ssh/authorized_keys da.
-#                           (Parol auth o'rniga — CI uchun ishonchli usul.)
+#                           base64 — nusxalashda satr-ko'chish buzilmasligi uchun.
 #   FIREBASE_CONFIGS_B64  – base64( tar.gz ): firebase_options.dart + google-services.json (4 fayl)
 #   MAPS_API_KEY          – (ixtiyoriy) Google Maps kaliti; bo'sh bo'lsa xarita ishlamaydi
 #
@@ -84,10 +84,10 @@ jobs:
 
       - name: Setup SSH key
         env:
-          DEPLOY_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - uses: actions/setup-node@v4
         with:
@@ -133,10 +133,10 @@ jobs:
 
       - name: Setup SSH key
         env:
-          DEPLOY_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - uses: actions/setup-node@v4
         with:
@@ -184,10 +184,10 @@ jobs:
 
       - name: Setup SSH key
         env:
-          DEPLOY_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - name: Restore Firebase config
         env:
@@ -255,10 +255,10 @@ jobs:
 
       - name: Setup SSH key
         env:
-          DEPLOY_KEY: ${{ secrets.SSH_PRIVATE_KEY }}
+          DEPLOY_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
         run: |
           mkdir -p ~/.ssh && chmod 700 ~/.ssh
-          echo "$DEPLOY_KEY" > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
+          echo "$DEPLOY_KEY_B64" | base64 -d > ~/.ssh/deploy_key && chmod 600 ~/.ssh/deploy_key
 
       - name: Restore Firebase config
         env:
