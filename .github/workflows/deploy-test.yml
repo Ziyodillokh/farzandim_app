@@ -196,6 +196,16 @@ jobs:
           FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
         run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
 
+      # Farzandim/assets/env.json gitignore'da ("har dev o'zi") — CI uchun yaratamiz.
+      # API URL dart-define orqali beriladi; bu fayl asset talabini va Maps kalitini qondiradi.
+      - name: Create env.json
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          mkdir -p Farzandim/assets
+          printf '{\n  "MAPS_API_KEY": "%s",\n  "API_BASE_URL": "https://%s",\n  "WS_BASE_URL": "wss://%s"\n}\n' \
+            "$MAPS_API_KEY" "$TEST_DOMAIN" "$TEST_DOMAIN" > Farzandim/assets/env.json
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -257,6 +267,16 @@ jobs:
         env:
           FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
         run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
+      # Farzandim/assets/env.json gitignore'da ("har dev o'zi") — CI uchun yaratamiz.
+      # API URL dart-define orqali beriladi; bu fayl asset talabini va Maps kalitini qondiradi.
+      - name: Create env.json
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          mkdir -p Farzandim/assets
+          printf '{\n  "MAPS_API_KEY": "%s",\n  "API_BASE_URL": "https://%s",\n  "WS_BASE_URL": "wss://%s"\n}\n' \
+            "$MAPS_API_KEY" "$TEST_DOMAIN" "$TEST_DOMAIN" > Farzandim/assets/env.json
 
       - uses: actions/setup-java@v4
         with:
