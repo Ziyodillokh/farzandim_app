@@ -10,6 +10,8 @@ name: Deploy → test.farzandimedu.uz
 #   SSH_PASSWORD          – SSH paroli (masalan Adgjmptw1@111) — TO'G'RI kiritilishi shart!
 #   FIREBASE_CONFIGS_B64  – base64( tar.gz ): firebase_options.dart + google-services.json (4 fayl)
 #   MAPS_API_KEY          – (ixtiyoriy) Google Maps kaliti; bo'sh bo'lsa xarita ishlamaydi
+#   ANDROID_SIGNING_B64   – base64( tar.gz ): release keystore + key.properties (parent+child).
+#                           Doimiy imzo → APK telefon ustiga yangilanadi (debug imzo har safar o'zgaradi).
 #
 # Faqat YANGI folderlar deploy qilinadi: backend, admin-web, Farzandim, farzandim_child.
 # Birinchi marta server "bootstrap" qilingan bo'lishi kerak (infra/bootstrap-test.sh).
@@ -271,11 +273,17 @@ jobs:
             echo "--- $gp ---"; grep -E 'jvmargs' "$gp"
           done
 
+      # Doimiy release keystore (har build bir xil imzo → telefon ustiga yangilanadi)
+      - name: Restore Android signing (release keystore)
+        env:
+          ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
+        run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
+
       - name: Build parent APK
         working-directory: Farzandim
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink \
+          flutter build apk --release --no-shrink --build-number=${{ github.run_number }} \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
@@ -284,7 +292,7 @@ jobs:
         continue-on-error: true
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink \
+          flutter build apk --release --no-shrink --build-number=${{ github.run_number }} \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
