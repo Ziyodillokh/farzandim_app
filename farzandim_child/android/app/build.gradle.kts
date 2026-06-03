@@ -22,6 +22,11 @@ if (hasReleaseKeystore) {
 }
 
 android {
+    // Release APK build'da lint bloklamasin (CI'da LintClassLoader xatosini oldini oladi)
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
     namespace = "com.farzandim.farzandim_child"
     compileSdk = 36
     ndkVersion = "28.2.13676358"

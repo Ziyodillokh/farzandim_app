@@ -259,6 +259,18 @@ jobs:
           channel: stable
           cache: true
 
+      # Runner'da 7GB RAM bor — Gradle/lint xotirasini oshiramiz (lokal 4GB sozlamasi kam edi).
+      # Bu "LintClassLoaderBuildService failed to stop" (metaspace/heap OOM) xatosini hal qiladi.
+      - name: Tune Gradle memory for CI
+        run: |
+          for gp in Farzandim/android/gradle.properties farzandim_child/android/gradle.properties; do
+            [ -f "$gp" ] || continue
+            sed -i 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Xss512k/' "$gp"
+            sed -i 's/^kotlin\.daemon\.jvmargs=.*/kotlin.daemon.jvmargs=-Xmx2g/' "$gp"
+            grep -q '^org.gradle.jvmargs' "$gp" || echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g' >> "$gp"
+            echo "--- $gp ---"; grep -E 'jvmargs' "$gp"
+          done
+
       - name: Build parent APK
         working-directory: Farzandim
         run: |

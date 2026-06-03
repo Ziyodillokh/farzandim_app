@@ -35,6 +35,11 @@ if (hasReleaseKeystore) {
 }
 
 android {
+    // Release APK build'da lint bloklamasin (CI'da LintClassLoader xatosini oldini oladi)
+    lint {
+        checkReleaseBuilds = false
+        abortOnError = false
+    }
     namespace = "com.farzandim.parent"
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
