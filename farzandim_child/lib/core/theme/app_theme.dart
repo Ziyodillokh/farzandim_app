@@ -13,6 +13,7 @@
 //   - Inter shrift (google_fonts) — Parent App bilan brand consistency
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 

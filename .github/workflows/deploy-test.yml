@@ -5,9 +5,15 @@ name: Deploy → test.farzandimedu.uz
 # "chetiga" (alohida papka/port/DB) deploy qiladi. Eski platformaga TEGMAYDI.
 #
 # Kerakli repo secretlari (Settings → Secrets and variables → Actions):
-#   SSH_HOST      – server IP/host (masalan 95.182.118.39)
-#   SSH_USER      – SSH foydalanuvchi (masalan farzandim)
-#   SSH_PASSWORD  – SSH paroli
+#   SSH_HOST              – server IP/host (masalan 95.182.118.39)
+#   SSH_USER              – SSH foydalanuvchi (masalan farzandim)
+#   SSH_PASSWORD          – SSH paroli
+#   FIREBASE_CONFIGS_B64  – base64( tar.gz ) — gitignore'dagi Firebase config'lar:
+#                           Farzandim/lib/firebase_options.dart,
+#                           Farzandim/android/app/google-services.json,
+#                           farzandim_child/lib/firebase_options.dart,
+#                           farzandim_child/android/app/google-services.json
+#                           (Flutter web + APK build'i shu fayllarsiz ishlamaydi)
 #
 # Faqat YANGI folderlar deploy qilinadi: backend, admin-web, Farzandim, farzandim_child.
 # Eski folderlar (farzandim-backend, admin_panel, _archive, tz) bu yerda tilga olinmaydi.
@@ -37,6 +43,7 @@ on:
           - backend
           - admin-web
           - flutter
+          - apk
 
 # Bir vaqtning o'zida bitta deploy ishlasin (parallel deploy'lar to'qnashmasin)
 concurrency:
@@ -183,6 +190,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # gitignore'dagi Firebase config'larni tiklaymiz (firebase_options.dart, ...)
+      - name: Restore Firebase config
+        env:
+          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
+        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
@@ -215,15 +228,79 @@ jobs:
         env:
           SSHPASS: ${{ secrets.SSH_PASSWORD }}
         run: |
-          sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" \
+          # --exclude '*.apk' — apk job yuklagan APK fayllarni o'chirib yubormaslik uchun
+          sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
             Farzandim/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/"
           # child faqat build muvaffaqiyatli bo'lsa yuklanadi
           if [ -f farzandim_child/build/web/index.html ]; then
-            sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" \
+            sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
               farzandim_child/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/child/"
           else
             echo "child web build yo'q — o'tkazib yuborildi"
           fi
           # nginx (www-data) statik fayllarni o'qiy olishi uchun
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
+
+  # ─────────────────────────── APK (parent + child → release .apk) ───────────────────────────
+  # Build runner'da (Android SDK + Java 17). APK'lar serverga /app/ ostiga yuklanadi:
+  #   https://test.farzandimedu.uz/app/farzandim-parent.apk
+  #   https://test.farzandimedu.uz/app/farzandim-child.apk
+  apk:
+    needs: changes
+    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Firebase config
+        env:
+          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
+        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Build parent APK
+        working-directory: Farzandim
+        run: |
+          flutter pub get
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+
+      # child APK xato bersa job to'xtamasin (parent baribir yuklansin)
+      - name: Build child APK
+        working-directory: farzandim_child
+        continue-on-error: true
+        run: |
+          flutter pub get
+          flutter build apk --release \
+            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+
+      - name: Install transfer tools
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+
+      - name: Upload APKs to server (/app/*.apk)
+        env:
+          SSHPASS: ${{ secrets.SSH_PASSWORD }}
+        run: |
+          P="Farzandim/build/app/outputs/flutter-apk/app-release.apk"
+          C="farzandim_child/build/app/outputs/flutter-apk/app-release.apk"
+          sshpass -e scp ${SSH_OPTS} "$P" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-parent.apk"
+          if [ -f "$C" ]; then
+            sshpass -e scp ${SSH_OPTS} "$C" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-child.apk"
+          else
+            echo "child APK build yo'q — o'tkazib yuborildi"
+          fi
           sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
