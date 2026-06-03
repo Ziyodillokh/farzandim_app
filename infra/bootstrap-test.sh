@@ -54,6 +54,8 @@ log "1/8  Papkalar"
 mkdir -p "$BASE/backend" "$BASE/admin-web" "$BASE/flutter/parent" \
          "$BASE/flutter/child" "$BASE/minio-data" "$BASE/secrets"
 chmod 700 "$BASE/secrets"
+# nginx (www-data) home ichidagi statik flutter fayllarga kira olishi uchun
+chmod o+x "$HOME_DIR"
 
 # ---- secret generatsiya / saqlash (idempotent) ------------------------------
 gen_secret() { # $1 = fayl nomi, $2 = uzunlik (hex)
@@ -200,9 +202,9 @@ module.exports = {
     {
       name: 'v2-admin',
       cwd: '$BASE/admin-web',
-      script: 'npm',
-      args: 'run start',
-      env: { NODE_ENV: 'production', PORT: '$ADMIN_PORT' },
+      script: '$BASE/admin-web/node_modules/next/dist/bin/next',
+      args: 'start -p $ADMIN_PORT',
+      env: { NODE_ENV: 'production' },
       max_restarts: 10,
       autorestart: true,
     },
@@ -231,8 +233,8 @@ server {
     server_name $DOMAIN;
     client_max_body_size 100M;
 
-    # Backend API (NestJS, global prefix /api)
-    location /api/ {
+    # Backend API (NestJS, global prefix /api) — bare /api ham tutilsin
+    location /api {
         proxy_pass http://127.0.0.1:$BACKEND_PORT;
         proxy_http_version 1.1;
         proxy_set_header Host \$host;
