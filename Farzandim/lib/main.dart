@@ -49,30 +49,41 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
-        await FirebaseAppCheck.instance.activate(
-          androidProvider: kDebugMode
-              ? AndroidProvider.debug
-              : AndroidProvider.playIntegrity,
-          appleProvider: kDebugMode
-              ? AppleProvider.debug
-              : AppleProvider.deviceCheck,
-        );
-        await FirebaseCrashlytics.instance
-            .setCrashlyticsCollectionEnabled(!kDebugMode);
-        FlutterError.onError =
-            FirebaseCrashlytics.instance.recordFlutterFatalError;
-        PlatformDispatcher.instance.onError = (error, stack) {
-          // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
-          // .catchError bilan yutib yuboramiz.
-          FirebaseCrashlytics.instance
-              .recordError(error, stack, fatal: true)
-              .catchError((Object _) {
-            debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
-          });
-          return true;
-        };
-        await FirebaseAnalytics.instance
-            .setAnalyticsCollectionEnabled(!kDebugMode);
+
+        // App Check / Crashlytics / Analytics — faqat mobil (Android/iOS).
+        // Web preview build'da ular kerak emas va konsolni xato bilan
+        // to'ldiradi:
+        //   • Analytics web API kalit bilan dynamic-config fetch qiladi →
+        //     [400] "API key not valid" (har screen_view'da takrorlanadi).
+        //   • Crashlytics web platformani umuman qo'llab-quvvatlamaydi.
+        //   • App Check web uchun reCAPTCHA provider talab qiladi.
+        // Shu sababli web'da Firebase faqat core init bo'ladi.
+        if (!kIsWeb) {
+          await FirebaseAppCheck.instance.activate(
+            androidProvider: kDebugMode
+                ? AndroidProvider.debug
+                : AndroidProvider.playIntegrity,
+            appleProvider: kDebugMode
+                ? AppleProvider.debug
+                : AppleProvider.deviceCheck,
+          );
+          await FirebaseCrashlytics.instance
+              .setCrashlyticsCollectionEnabled(!kDebugMode);
+          FlutterError.onError =
+              FirebaseCrashlytics.instance.recordFlutterFatalError;
+          PlatformDispatcher.instance.onError = (error, stack) {
+            // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
+            // .catchError bilan yutib yuboramiz.
+            FirebaseCrashlytics.instance
+                .recordError(error, stack, fatal: true)
+                .catchError((Object _) {
+              debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
+            });
+            return true;
+          };
+          await FirebaseAnalytics.instance
+              .setAnalyticsCollectionEnabled(!kDebugMode);
+        }
       } catch (e) {
         debugPrint('[DEV] Firebase init skipped: $e');
       }

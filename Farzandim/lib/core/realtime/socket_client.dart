@@ -76,6 +76,23 @@ class SocketClient {
   /// Joriy socket. `connect()` chaqirilmagan bo'lsa `null`.
   io.Socket? get socket => _socket;
 
+  /// Socket.io engine HTTP(S) **origin** URL kutadi — `wss://`/`ws://` emas.
+  /// Agar `wss://host` (portsiz) berilsa, Dart `Uri.parse` `wss` uchun
+  /// standart portni bilmaydi va engine `wss://host:0/socket.io/` quradi →
+  /// WebSocket connect xato (`TransportError`, konsolda `:0` port). Shu
+  /// sababli `wss`→`https`, `ws`→`http` ga aylantiramiz: `https` default
+  /// port 443 to'g'ri aniqlanadi va engine websocket'ni o'zi `wss`ga
+  /// ko'taradi.
+  static String _resolveOrigin(String wsBaseUrl) {
+    if (wsBaseUrl.startsWith('wss://')) {
+      return wsBaseUrl.replaceFirst('wss://', 'https://');
+    }
+    if (wsBaseUrl.startsWith('ws://')) {
+      return wsBaseUrl.replaceFirst('ws://', 'http://');
+    }
+    return wsBaseUrl;
+  }
+
   void _setState(SocketConnectionState next) {
     if (_state == next) return;
     _state = next;
@@ -98,7 +115,7 @@ class SocketClient {
     _setState(SocketConnectionState.connecting);
 
     _socket = io.io(
-      EnvConfig.wsBaseUrl,
+      _resolveOrigin(EnvConfig.wsBaseUrl),
       io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()

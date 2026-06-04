@@ -52,6 +52,7 @@ import 'package:farzandim/features/pair_requests/presentation/screens/pair_reque
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -113,6 +114,10 @@ class _AuthRefreshNotifier extends ChangeNotifier {
 /// observer'ni o'chirib qo'yamiz.
 List<NavigatorObserver> _analyticsObservers() {
   try {
+    // Web preview'da Analytics ishlatilmaydi — `FirebaseAnalytics.instance`
+    // JS SDK'da dynamic-config fetch'ni triggerlaydi va web API kalit bilan
+    // har navigatsiyada [400] "API key not valid" xatosi chiqadi.
+    if (kIsWeb) return <NavigatorObserver>[];
     if (Firebase.apps.isEmpty) return <NavigatorObserver>[];
     final projectId = Firebase.apps.first.options.projectId;
     if (projectId.contains('dev-stub')) {
