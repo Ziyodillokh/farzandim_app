@@ -138,6 +138,20 @@
             </intent-filter>
         </service>
 
+        <!-- Ring ekrani — qulf ustida ko'rinadi va ekranni yoqadi (Family Link
+             kabi). RingService full-screen intent orqali ochadi. Yengil
+             Activity (Flutter engine'siz). -->
+        <activity
+            android:name=".RingActivity"
+            android:exported="false"
+            android:showWhenLocked="true"
+            android:turnScreenOn="true"
+            android:excludeFromRecents="true"
+            android:launchMode="singleInstance"
+            android:taskAffinity=""
+            android:theme="@android:style/Theme.Material.NoActionBar"
+            tools:targetApi="27"/>
+
         <!-- Ring foreground service — STREAM_ALARM orqali baland jiringlaydi.
              specialUse (mediaPlayback emas) — Android 14'da background FCM'dan
              ishga tushishi uchun (mediaPlayback MediaSession talab qiladi). -->

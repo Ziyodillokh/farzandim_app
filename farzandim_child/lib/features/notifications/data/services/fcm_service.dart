@@ -149,6 +149,21 @@ class FcmService {
     await _localNotifications.show(id, title, body, details);
   }
 
+  /// Pair/login MUVAFFAQIYATIDAN KEYIN chaqiriladi — token backend'ga
+  /// kafolatli ro'yxatga olinadi. Aks holda `init()` pair'dan OLDIN ishlab
+  /// (JWT hali yo'q), register 401 bo'lib jimgina yutilardi → backend'da
+  /// token bo'lmasdi → "Baland ovoz" ring `sent:0` jim no-op bo'lardi.
+  Future<void> refreshRegistration() async {
+    try {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await _registerToBackend(token);
+      }
+    } catch (e) {
+      debugPrint('FCM refreshRegistration xato: $e');
+    }
+  }
+
   Future<void> _registerToBackend(String token) async {
     try {
       final deviceId = await _getOrCreateDeviceId();

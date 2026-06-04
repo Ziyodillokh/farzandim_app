@@ -23,6 +23,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
+import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
 import 'package:farzandim_child/features/device_info/data/services/device_info_service.dart';
@@ -94,6 +96,16 @@ class ChildBackgroundTaskHandler extends TaskHandler {
       statsService: UsageStatsService(),
       childId: _childId!,
     )..start();
+
+    // FCM token'ni backend'ga QAYTA ro'yxatdan o'tkazamiz. Birinchi pair'da
+    // UI isolate init() JWT'dan oldin ishlab token yetmagan bo'lishi mumkin
+    // (register 401 -> backend'da token yo'q -> "Baland ovoz" ring sent:0
+    // jim no-op). Bu yer pair'dan keyin VA har ishga tushganda ishlaydi.
+    unawaited(
+      FcmService(
+        backendRepo: BackendFcmRepository(dio: createBackendDio(TokenStorage())),
+      ).refreshRegistration(),
+    );
   }
 
   @override

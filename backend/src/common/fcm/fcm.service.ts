@@ -79,9 +79,12 @@ export class FcmService {
       ? {
           tokens,
           data: payload.data,
-          android: { priority: 'high' },
+          // ttl 60s — "ring/find device" real-time buyruq. Qurilma offline/Doze
+          // bo'lsa FCM uni 60s'dan keyin tashlaydi (soatlardan keyin kutilmaganda
+          // jiringlamasin). priority 'high' — Doze'dan uyg'otadi (load-bearing).
+          android: { priority: 'high', ttl: 60_000 },
           apns: {
-            headers: { 'apns-priority': '10' },
+            headers: { 'apns-priority': '10', 'apns-expiration': '0' },
             payload: { aps: { 'content-available': 1 } },
           },
         }

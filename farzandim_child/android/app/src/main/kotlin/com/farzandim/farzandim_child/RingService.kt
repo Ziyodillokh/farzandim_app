@@ -122,32 +122,58 @@ class RingService : Service() {
     }
 
     private fun startRinging() {
+        // Re-entrancy: oldingi ring bo'lsa avval TO'LIQ to'xtatamiz. Aks holda
+        // eski MediaPlayer "leak" bo'lib abadiy jiringlardi va saqlangan alarm
+        // ovozi MAX bilan ustiga yozilib, keyin MAX'da "tiklanib" qolardi.
+        if (mediaPlayer != null) {
+            stopRinging()
+        }
         try {
             val am = getSystemService(Context.AUDIO_SERVICE) as AudioManager
-            // Joriy alarm ovozini saqlaymiz (crash-safety uchun diskka ham) va
-            // maksimal qilamiz — silent/vibratsiyada ham eshitiladi.
-            val prev = am.getStreamVolume(AudioManager.STREAM_ALARM)
-            getSharedPreferences(PREFS, Context.MODE_PRIVATE).edit()
-                .putInt(KEY_PREV_VOL, prev).apply()
+            val prefs = getSharedPreferences(PREFS, Context.MODE_PRIVATE)
+            // FAQAT asl ovoz saqlanmagan bo'lsa saqlaymiz — takroriy ring MAX'ni
+            // "asl" deb saqlab qo'ymasin (crash-safety uchun diskda).
+            if (prefs.getInt(KEY_PREV_VOL, -1) < 0) {
+                prefs.edit()
+                    .putInt(
+                        KEY_PREV_VOL,
+                        am.getStreamVolume(AudioManager.STREAM_ALARM),
+                    ).apply()
+            }
             am.setStreamVolume(
                 AudioManager.STREAM_ALARM,
                 am.getStreamMaxVolume(AudioManager.STREAM_ALARM),
                 0,
             )
 
-            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-            mediaPlayer = MediaPlayer().apply {
-                setDataSource(this@RingService, uri)
-                setAudioAttributes(
-                    AudioAttributes.Builder()
-                        .setUsage(AudioAttributes.USAGE_ALARM)
-                        .setContentType(AudioAttributes.CONTENT_TYPE_SONIFICATION)
-                        .build(),
-                )
-                isLooping = true
-                prepare()
-                start()
+            // ALARM birinchi — ringtone "Silent"ga qo'yilgan bo'lsa
+            // TYPE_RINGTONE null bo'lishi mumkin; alarm/notification kamdan-kam.
+            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
+            if (uri == null) {
+                Log.e(TAG, "no default sound uri")
+            } else {
+                mediaPlayer = MediaPlayer().apply {
+                    setDataSource(this@RingService, uri)
+                    setAudioAttributes(
+                        AudioAttributes.Builder()
+                            .setUsage(AudioAttributes.USAGE_ALARM)
+                            .setContentType(
+                                AudioAttributes.CONTENT_TYPE_SONIFICATION,
+                            )
+                            .build(),
+                    )
+                    isLooping = true
+                    // prepareAsync — main thread'ni bloklamaydi (ANR / FGS 5s
+                    // deadline xavfi yo'q); tayyor bo'lgach o'zi boshlanadi.
+                    setOnPreparedListener { it.start() }
+                    setOnErrorListener { _, what, extra ->
+                        Log.e(TAG, "MediaPlayer error what=$what extra=$extra")
+                        true
+                    }
+                    prepareAsync()
+                }
             }
         } catch (e: Exception) {
             Log.e(TAG, "startRinging error", e)
@@ -167,19 +193,15 @@ class RingService : Service() {
             Log.e(TAG, "vibrate error", e)
         }
 
-        // WakeLock — CPU ishlashini + EKRANNI YOQISHNI ta'minlaydi (Family
-        // Link kabi). SCREEN_BRIGHT + ACQUIRE_CAUSES_WAKEUP deprecated, lekin
-        // ko'p qurilmalarda ekranni yoqadi; full-screen intent bilan birga
-        // ishonchli uyg'otish beradi. PARTIAL fallback — agar tashlasa CPU.
+        // WakeLock — CPU'ni tirik tutadi (ovoz ijro etilishi uchun). Ekranni
+        // YOQISH endi RingActivity (turnScreenOn/showWhenLocked) zimmasida —
+        // deprecated SCREEN_BRIGHT wakelock Android 10+'da baribir no-op edi.
         try {
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            @Suppress("DEPRECATION")
-            val flags = PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
-                PowerManager.ACQUIRE_CAUSES_WAKEUP or
-                PowerManager.ON_AFTER_RELEASE
-            wakeLock = pm.newWakeLock(flags, "farzandim:ring").apply {
-                acquire(MAX_DURATION_MS + 10_000L)
-            }
+            wakeLock = pm.newWakeLock(
+                PowerManager.PARTIAL_WAKE_LOCK,
+                "farzandim:ring",
+            ).apply { acquire(MAX_DURATION_MS + 10_000L) }
         } catch (e: Exception) {
             Log.e(TAG, "wakelock error", e)
         }
@@ -240,8 +262,9 @@ class RingService : Service() {
         val stopPending = PendingIntent.getService(this, 1, stopIntent, piFlags)
 
         // Full-screen intent — ekran o'chiq/qulflangan bo'lsa ham UYG'OTADI
-        // (Google Family Link / qo'ng'iroq kabi). MainActivity'ni ochadi.
-        val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
+        // (Family Link kabi). RingActivity showWhenLocked + turnScreenOn bilan
+        // ekranni yoqadi va qulf ustida To'xtatish tugmasini ko'rsatadi.
+        val fullScreenIntent = Intent(this, RingActivity::class.java).apply {
             flags = Intent.FLAG_ACTIVITY_NEW_TASK or
                 Intent.FLAG_ACTIVITY_SINGLE_TOP
         }
