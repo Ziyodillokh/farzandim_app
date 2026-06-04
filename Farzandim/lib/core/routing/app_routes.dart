@@ -69,6 +69,9 @@ class AppRoutes {
   /// Faol sessiyalar — login qilingan qurilmalar (Sprint 7).
   static const String settingsSessions = '/settings/sessions';
 
+  /// Qo'llab-quvvatlash chati (Sprint 7).
+  static const String support = '/support';
+
   /// Bolalarni boshqarish ro'yxati (Bosqich 7.2).
   static const String settingsChildren = '/settings/children';
 

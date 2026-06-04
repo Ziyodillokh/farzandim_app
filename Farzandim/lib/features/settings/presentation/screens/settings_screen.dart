@@ -91,7 +91,7 @@ class SettingsScreen extends ConsumerWidget {
                           _MenuItem(
                             icon: Icons.help_outline_rounded,
                             title: 'settings.menu.support'.tr(),
-                            onTap: () => _comingSoon(context),
+                            onTap: () => context.push(AppRoutes.support),
                           ),
                           _MenuItem(
                             icon: Icons.info_outline_rounded,
@@ -136,20 +136,6 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _shareApp() async {
     await Share.share('settings.shareText'.tr());
-  }
-
-  // ─── Tez kunda (qo'llab-quvvatlash) ───
-
-  void _comingSoon(BuildContext context) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text('settings.comingSoon'.tr()),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceVariant,
-        ),
-      );
   }
 
   // ─── Til dialog ───

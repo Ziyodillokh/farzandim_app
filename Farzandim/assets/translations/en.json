@@ -541,6 +541,26 @@
       "retry": "Retry"
     }
   },
+  "support": {
+    "operator": "Operator",
+    "online": "Online",
+    "today": "Today",
+    "welcome": "Welcome to Farzandim 24/7 support chat! How can we help you?",
+    "autoReply": {
+      "0": "Thank you for your request! Our specialist will reply shortly.",
+      "1": "Got it. Please wait a moment — we're checking.",
+      "2": "Received. If you have more details, please write them here."
+    },
+    "fileReply": "Your file has been received. We'll review it and reply soon.",
+    "inputHint": "Your message",
+    "attachError": "Couldn't attach the file",
+    "fileUnavailable": "File is not available right now",
+    "attach": {
+      "image": "Photo",
+      "video": "Video",
+      "document": "Document"
+    }
+  },
   "childManagement": {
     "list": {
       "title": "Children",

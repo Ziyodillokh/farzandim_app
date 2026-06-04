@@ -48,6 +48,7 @@ import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_scre
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
+import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/pair_requests/presentation/screens/pair_requests_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
@@ -271,6 +272,11 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.settingsSessions,
       pageBuilder: (context, state) =>
           _slidePage(const ActiveSessionsScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.support,
+      pageBuilder: (context, state) =>
+          _slidePage(const SupportChatScreen()),
     ),
     // Profil va Bolalar boshqaruvi — Bosqich 7.3 va 7.2.
     GoRoute(

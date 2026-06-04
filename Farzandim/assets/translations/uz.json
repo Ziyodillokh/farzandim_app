@@ -541,6 +541,26 @@
       "retry": "Qayta urinish"
     }
   },
+  "support": {
+    "operator": "Operator",
+    "online": "Onlayn",
+    "today": "Bugun",
+    "welcome": "Farzandim 24/7 qo'llab-quvvatlash chatiga xush kelibsiz! Sizga qanday yordam bera olamiz?",
+    "autoReply": {
+      "0": "So'rovingiz uchun rahmat! Mutaxassisimiz tez orada javob beradi.",
+      "1": "Tushunarli. Iltimos, biroz kuting — tekshirib chiqamiz.",
+      "2": "Qabul qilindi. Qo'shimcha ma'lumot bo'lsa, shu yerga yozib qoldiring."
+    },
+    "fileReply": "Faylingiz qabul qilindi. Tekshirib, tez orada javob beramiz.",
+    "inputHint": "Xabaringiz",
+    "attachError": "Faylni biriktirib bo'lmadi",
+    "fileUnavailable": "Fayl hozircha mavjud emas",
+    "attach": {
+      "image": "Rasm",
+      "video": "Video",
+      "document": "Hujjat"
+    }
+  },
   "childManagement": {
     "list": {
       "title": "Bolalar",

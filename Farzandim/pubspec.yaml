@@ -99,6 +99,13 @@ dependencies:
   # universal (web/iOS/Android'da bir xil ishlaydi).
   image_picker: ^1.0.7
 
+  # file_picker — qo'llab-quvvatlash chatida hujjat (PDF/DOCX/...) tanlash.
+  # Web'da bytes, mobilda path qaytaradi.
+  file_picker: ^8.1.4
+
+  # open_filex — chatdagi hujjatni native ilova bilan ochish (mobil).
+  open_filex: ^4.5.0
+
   # Native kamera — Telegram uslubidagi yumaloq video xabarlar uchun
   # (Sprint 4.4.x). `image_picker.pickVideo` faqat OS kamera ekranini
   # ochadi; bizga inline preview + long-press recording kerak, shuning
