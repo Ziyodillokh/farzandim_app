@@ -55,10 +55,16 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
                     color: AppColors.primary.withOpacity(0.15),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(
-                    AppIcons.mic,
-                    color: AppColors.primary,
-                    size: 28,
+                  // Telegram-style paper plane (rounded) — Material'ning
+                  // `send_rounded` ikonkasi. Telegram brand'idan farqli
+                  // (qirralari yumshatilgan, brand color o'rniga app primary).
+                  child: const Padding(
+                    padding: EdgeInsets.only(right: 3),
+                    child: Icon(
+                      AppIcons.send,
+                      color: AppColors.primary,
+                      size: 26,
+                    ),
                   ),
                 ),
                 unreadAsync.when(
@@ -105,7 +111,7 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   const Text(
-                    'Ovozli xabarlar',
+                    'Messanger',
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 15,

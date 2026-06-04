@@ -21,6 +21,28 @@ async function bootstrap() {
     }),
   );
 
+  // Fastify default JSON parser bo'sh body bo'lganda 400 qaytaradi —
+  // ko'plab DELETE so'rovlari (DELETE /users/me kabi) Content-Type:
+  // application/json yuboradi lekin body bo'sh. Standart Dio/Axios
+  // klienti yo'lda kerak qilinmagan Content-Type qo'shadi. NestJS
+  // FastifyAdapter'ning `useBodyParser` orqali default JSON parser'ni
+  // bo'sh body'ni undefined sifatida qabul qiladigan versiya bilan
+  // almashtiramiz.
+  app.useBodyParser(
+    'application/json',
+    { bodyLimit: 100 * 1024 * 1024 },
+    (_req: unknown, body: Buffer, done: (err: Error | null, body?: unknown) => void) => {
+      if (!body || body.length === 0) {
+        return done(null, undefined);
+      }
+      try {
+        done(null, JSON.parse(body.toString('utf8')));
+      } catch (err) {
+        done(err as Error);
+      }
+    },
+  );
+
   const config = app.get(ConfigService<EnvConfig, true>);
 
   // ── Global prefix ──
