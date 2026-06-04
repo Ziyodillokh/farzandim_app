@@ -88,13 +88,21 @@ model Child {
   appVersion     String?  @map("app_version")
   wifiName       String?  @map("wifi_name")
 
+  // Stop-detection state machine (incremental — har location yozuvida yangilanadi)
+  // anchor = joriy klaster boshlangan nuqta; openStop = ochiq to'xtash (agar bor).
+  stopAnchorLat  Float?    @map("stop_anchor_lat")
+  stopAnchorLng  Float?    @map("stop_anchor_lng")
+  stopAnchorAt   DateTime? @map("stop_anchor_at")
+  openStopId     String?   @map("open_stop_id")
+
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")
-  
+
   // Relations
   parent       User    @relation("ParentChildren", fields: [parentId], references: [id], onDelete: Cascade)
   childUser    User?   @relation("ChildUser", fields: [childUserId], references: [id], onDelete: SetNull)
   locations    Location[]
+  locationStops LocationStop[]
   schedules    Schedule[]
   routines     Routine[]
   geoZones     GeoZone[]
@@ -136,9 +144,32 @@ model Location {
   createdAt   DateTime @default(now()) @map("created_at")
   
   child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
-  
+
   @@map("locations")
   @@index([childId, createdAt(sort: Desc)])
+}
+
+// ============================================
+// LOCATION STOPS - to'xtagan joylar (xaritada marker)
+// ============================================
+// Backend incremental stop-detection bola bir joyda ≥2.5 daqiqa turganda
+// bitta yozuv yaratadi (markaz, kelgan/ketgan vaqt, davomiylik). Harakat
+// nuqtalari bu yerga yozilmaydi — ular faqat `locations` (yupqa chiziq).
+model LocationStop {
+  id          String    @id @default(uuid())
+  childId     String    @map("child_id")
+  latitude    Float
+  longitude   Float
+  arrivedAt   DateTime  @map("arrived_at")
+  leftAt      DateTime? @map("left_at") // null = hali shu yerda
+  durationSec Int       @default(0) @map("duration_sec")
+  pointCount  Int       @default(1) @map("point_count")
+  createdAt   DateTime  @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("location_stops")
+  @@index([childId, arrivedAt(sort: Desc)])
 }
 
 // ============================================

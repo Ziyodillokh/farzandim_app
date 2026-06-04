@@ -87,4 +87,22 @@ export class LocationController {
       query,
     );
   }
+
+  @Get('children/:childId/location/stops')
+  @ApiOperation({
+    summary: "To'xtagan joylar (xaritadagi markerlar) — stop-detection",
+  })
+  @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })
+  @ApiQuery({ name: 'from', required: false, description: 'Start date (ISO 8601)' })
+  @ApiQuery({ name: 'to', required: false, description: 'End date (ISO 8601)' })
+  @ApiResponse({ status: 200, description: 'Array of stops' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Child not found' })
+  async getStops(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Query() query: LocationHistoryQueryDto,
+  ) {
+    return this.locationService.getStops(childId, user.userId, query);
+  }
 }

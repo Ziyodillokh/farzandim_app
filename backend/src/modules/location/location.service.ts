@@ -17,6 +17,22 @@ export interface GeofenceEvent {
   type: 'enter' | 'exit';
 }
 
+// ── Stop-detection sozlamalari ──
+/** Klaster radiusi — shu masofadagi nuqtalar "bir joy" hisoblanadi. */
+const STOP_RADIUS_M = 50;
+/** Minimal to'xtash davomiyligi — shundan kam bo'lsa marker yaratilmaydi. */
+const MIN_STOP_SEC = 150; // 2.5 daqiqa
+
+/** detectStop uchun kerakli minimal Child maydonlari. */
+interface StopState {
+  id: string;
+  parentId: string;
+  stopAnchorLat: number | null;
+  stopAnchorLng: number | null;
+  stopAnchorAt: Date | null;
+  openStopId: string | null;
+}
+
 @Injectable()
 export class LocationService {
   private readonly logger = new Logger(LocationService.name);
@@ -51,6 +67,15 @@ export class LocationService {
     }
     if (child.childUserId !== userId && child.parentId !== userId) {
       throw new ForbiddenException('Forbidden');
+    }
+
+    // Stop-detection — dedup'dan OLDIN ishlaydi (statsionar nuqtalar ham
+    // to'xtashni aniqlashga hissa qo'shadi). Xato bo'lsa location yozuvi
+    // baribir davom etadi.
+    try {
+      await this.detectStop(child, latitude, longitude, this.parseAt(dto.capturedAt));
+    } catch (err) {
+      this.logger.warn({ err }, 'stop detection failed');
     }
 
     // Device info update on child record
@@ -281,5 +306,153 @@ export class LocationService {
     });
 
     return { locations, count: locations.length };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  GET /children/:childId/location/stops — to'xtagan joylar           */
+  /* ------------------------------------------------------------------ */
+
+  async getStops(
+    childId: string,
+    userId: string,
+    query: LocationHistoryQueryDto,
+  ) {
+    const child = await this.prisma.child.findUnique({
+      where: { id: childId },
+    });
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+    if (child.parentId !== userId && child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const { from, to } = query;
+    const arrivedAtFilter: Record<string, Date> = {};
+    if (from) arrivedAtFilter.gte = new Date(from);
+    if (to) arrivedAtFilter.lte = new Date(to);
+
+    const stops = await this.prisma.locationStop.findMany({
+      where: {
+        childId,
+        ...(Object.keys(arrivedAtFilter).length > 0 && {
+          arrivedAt: arrivedAtFilter,
+        }),
+      },
+      orderBy: { arrivedAt: 'asc' },
+    });
+
+    return { stops, count: stops.length };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Stop detection — incremental state machine                         */
+  /* ------------------------------------------------------------------ */
+  //
+  // Algoritm (har location nuqtasida, dedup'dan oldin):
+  //   - `anchor` = joriy klaster boshlangan nuqta (lat/lng/at).
+  //   - Yangi nuqta anchor'dan <= STOP_RADIUS_M bo'lsa → bola hali shu joyda:
+  //       * dwell = now - anchorAt. dwell >= MIN_STOP_SEC bo'lsa va ochiq
+  //         to'xtash yo'q bo'lsa → yangi LocationStop yaratiladi.
+  //       * Ochiq to'xtash bor bo'lsa → davomiyligi/leftAt yangilanadi.
+  //   - Yangi nuqta anchor'dan uzoq bo'lsa → bola harakatlandi: anchor yangi
+  //     nuqtaga ko'chiriladi, ochiq to'xtash yopiladi (oxirgi leftAt bilan).
+  //
+  // Natija: faqat ≥2.5 daqiqa turilgan joylar marker bo'ladi; harakat
+  // nuqtalari (locations) faqat yupqa chiziq uchun. "Belgi kam, hech biri
+  // o'tkazilmaydi".
+
+  private async detectStop(
+    child: StopState,
+    latitude: number,
+    longitude: number,
+    at: Date,
+  ): Promise<void> {
+    const { stopAnchorLat, stopAnchorLng, stopAnchorAt, openStopId } = child;
+
+    // Anchor hali yo'q (birinchi nuqta) — o'rnatamiz.
+    if (stopAnchorLat === null || stopAnchorLng === null || stopAnchorAt === null) {
+      await this.prisma.child.update({
+        where: { id: child.id },
+        data: {
+          stopAnchorLat: latitude,
+          stopAnchorLng: longitude,
+          stopAnchorAt: at,
+          openStopId: null,
+        },
+      });
+      return;
+    }
+
+    const dist = distanceMeters(
+      stopAnchorLat,
+      stopAnchorLng,
+      latitude,
+      longitude,
+    );
+
+    if (dist <= STOP_RADIUS_M) {
+      // Anchor atrofida — potensial yoki davom etayotgan to'xtash.
+      const dwellSec = Math.max(
+        0,
+        Math.round((at.getTime() - stopAnchorAt.getTime()) / 1000),
+      );
+
+      if (openStopId) {
+        // Ochiq to'xtashni yangilash (o'chirilgan bo'lsa jim o'tamiz).
+        await this.prisma.locationStop
+          .update({
+            where: { id: openStopId },
+            data: {
+              leftAt: at,
+              durationSec: dwellSec,
+              pointCount: { increment: 1 },
+            },
+          })
+          .catch(() => undefined);
+      } else if (dwellSec >= MIN_STOP_SEC) {
+        // Yangi to'xtash ochish — markaz = klaster boshi (anchor).
+        const stop = await this.prisma.locationStop.create({
+          data: {
+            childId: child.id,
+            latitude: stopAnchorLat,
+            longitude: stopAnchorLng,
+            arrivedAt: stopAnchorAt,
+            leftAt: at,
+            durationSec: dwellSec,
+            pointCount: 2,
+          },
+        });
+        await this.prisma.child.update({
+          where: { id: child.id },
+          data: { openStopId: stop.id },
+        });
+        this.realtime.emitToUser(child.parentId, 'location:stop', {
+          childId: child.id,
+          stop,
+        });
+      }
+      // else: hali 2.5 daqiqa bo'lmadi — anchor saqlanadi, kutamiz.
+    } else {
+      // Harakat — anchor yangi nuqtaga ko'chadi, ochiq to'xtash yopiladi.
+      await this.prisma.child.update({
+        where: { id: child.id },
+        data: {
+          stopAnchorLat: latitude,
+          stopAnchorLng: longitude,
+          stopAnchorAt: at,
+          openStopId: null,
+        },
+      });
+    }
+  }
+
+  /** ISO 8601 client timestamp → Date. Noto'g'ri/bo'sh bo'lsa server vaqti. */
+  private parseAt(raw?: string): Date {
+    if (raw) {
+      const d = new Date(raw);
+      if (!Number.isNaN(d.getTime())) return d;
+    }
+    return new Date();
   }
 }

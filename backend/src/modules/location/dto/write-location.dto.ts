@@ -73,4 +73,14 @@ export class WriteLocationDto {
   @IsString()
   @MaxLength(100)
   wifiName?: string;
+
+  @ApiPropertyOptional({
+    description:
+      'Client timestamp (ISO 8601) — offline buffer flush paytida to\'g\'ri ' +
+      'stop-detection uchun. Bo\'lmasa server vaqti ishlatiladi.',
+    example: '2026-06-05T09:41:00.000Z',
+  })
+  @IsOptional()
+  @IsString()
+  capturedAt?: string;
 }
