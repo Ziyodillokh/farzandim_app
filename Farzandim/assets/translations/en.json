@@ -319,7 +319,12 @@
     },
     "stats": {
       "points": "{count} points",
+      "places": "{count} places",
       "distance": "{km} km"
+    },
+    "places": {
+      "title": "Places visited",
+      "unknown": "Unknown place"
     },
     "empty": {
       "title": "No history yet",

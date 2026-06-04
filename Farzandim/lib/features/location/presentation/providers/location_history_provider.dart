@@ -7,6 +7,7 @@
 
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
+import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,4 +33,20 @@ final locationHistoryProvider = FutureProvider.family<
   );
   // Backend DESC qaytaradi — polyline uchun ASC qilamiz.
   return history.reversed.toList();
+});
+
+/// Bola to'xtagan joylari (backend stop-detection) — xaritada marker.
+/// Bir xil `LocationHistoryQuery` kaliti bilan (sana oralig'i).
+final locationStopsProvider =
+    FutureProvider.family<List<LocationStop>, LocationHistoryQuery>(
+        (ref, query) async {
+  final auth = ref.watch(backendAuthProvider);
+  if (auth is! AuthAuthenticated) return const [];
+
+  final repo = ref.watch(backendLocationRepositoryProvider);
+  return repo.getStops(
+    childId: query.childId,
+    from: DateTime.fromMillisecondsSinceEpoch(query.fromMs),
+    to: DateTime.fromMillisecondsSinceEpoch(query.toMs),
+  );
 });

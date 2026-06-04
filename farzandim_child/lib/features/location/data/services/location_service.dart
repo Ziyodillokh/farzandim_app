@@ -45,10 +45,13 @@ class LocationService {
 
   // Firestore field olib tashlandi — Backend POST /location ishlatamiz.
 
-  /// Heartbeat oralig'i — bola harakatlanmagan paytda ham har shu
-  /// vaqtda Firestore'ga oxirgi pozitsiyani yozadi (tarix bo'sh
-  /// qolmasligi uchun). Konsept: 10m+ harakat YOKI 10 daqiqa heartbeat.
-  static const Duration _heartbeatInterval = Duration(minutes: 10);
+  /// Heartbeat oralig'i — bola harakatlanmagan paytda ham har shu vaqtda
+  /// backend'ga oxirgi pozitsiyani yuboradi. Backend stop-detection shu
+  /// statsionar nuqtalardan to'xtashni aniqlaydi (≥2.5 daqiqa). 60s tanlandi:
+  /// 2.5 daqiqalik to'xtash ~3 ta sample beradi → hech qaysi to'xtash
+  /// o'tkazib yuborilmaydi. Backend <10m dedup qiladi — bu nuqtalar yo'l
+  /// chizig'iga (locations) bloat qo'shmaydi, faqat stop-detection'ni quvvatlaydi.
+  static const Duration _heartbeatInterval = Duration(seconds: 60);
 
   StreamSubscription<Position>? _positionSub;
   Timer? _heartbeatTimer;

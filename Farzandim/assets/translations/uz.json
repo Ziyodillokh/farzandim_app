@@ -319,7 +319,12 @@
     },
     "stats": {
       "points": "{count} ta nuqta",
+      "places": "{count} ta joy",
       "distance": "{km} km"
+    },
+    "places": {
+      "title": "Tashrif buyurilgan joylar",
+      "unknown": "Noma'lum joy"
     },
     "empty": {
       "title": "Hali tarix yo'q",

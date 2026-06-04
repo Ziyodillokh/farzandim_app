@@ -6,13 +6,26 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
+import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/services/dwell_detector.dart';
+import 'package:farzandim/features/location/data/services/geocoding_service.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
 import 'package:farzandim/features/location/presentation/utils/avatar_marker_builder.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+
+/// To'xtagan joy manzili (reverse geocoding) — "lat,lng" kalit, keshli.
+final _placeAddressProvider =
+    FutureProvider.family<String?, String>((ref, latLng) async {
+  final parts = latLng.split(',');
+  if (parts.length != 2) return null;
+  final lat = double.tryParse(parts[0]);
+  final lng = double.tryParse(parts[1]);
+  if (lat == null || lng == null) return null;
+  return ref.watch(geocodingServiceProvider).reverse(lat, lng);
+});
 
 /// Bola harakat tarixini xaritada polyline sifatida ko'rsatuvchi ekran.
 ///
@@ -97,19 +110,31 @@ class _LocationHistoryScreenState
     super.dispose();
   }
 
+  /// Joylar ro'yxatidan biror to'xtash bosilganda xaritani unga markazlash.
+  void _goToStop(LatLng target) {
+    _mapController?.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: target, zoom: 16),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final child = ref.watch(childByIdProvider(widget.childId));
     final childName =
         child?.name ?? 'locationHistory.fallbackChildName'.tr();
 
-    final historyAsync = ref.watch(
-      locationHistoryProvider((
-        childId: widget.childId,
-        fromMs: _fromDt.millisecondsSinceEpoch,
-        toMs: _toDt.millisecondsSinceEpoch,
-      )),
+    final query = (
+      childId: widget.childId,
+      fromMs: _fromDt.millisecondsSinceEpoch,
+      toMs: _toDt.millisecondsSinceEpoch,
     );
+    final historyAsync = ref.watch(locationHistoryProvider(query));
+    // Backend stop-detection topgan to'xtagan joylar (markerlar manbasi).
+    final stops =
+        ref.watch(locationStopsProvider(query)).valueOrNull ??
+            const <LocationStop>[];
 
     // Avatar marker for end pin
     if (child != null && _avatarMarker == null) {
@@ -153,6 +178,7 @@ class _LocationHistoryScreenState
                   ? const _EmptyState()
                   : _MapLayer(
                       points: points,
+                      stops: stops,
                       avatarMarker: _avatarMarker,
                       openDwellIndex: _openDwellIndex,
                       onDwellTap: (idx) {
@@ -188,7 +214,8 @@ class _LocationHistoryScreenState
                 fromDt: _fromDt,
                 toDt: _toDt,
                 onCustomDateTap: _pickDateRange,
-                pointsCount: historyAsync.valueOrNull?.length ?? 0,
+                stops: stops,
+                onPlaceTap: _goToStop,
                 distanceKm: _calculateDistanceKm(
                   historyAsync.valueOrNull,
                 ),
@@ -262,6 +289,7 @@ class _LocationHistoryScreenState
 class _MapLayer extends StatefulWidget {
   const _MapLayer({
     required this.points,
+    required this.stops,
     required this.onMapCreated,
     required this.openDwellIndex,
     required this.onDwellTap,
@@ -270,6 +298,7 @@ class _MapLayer extends StatefulWidget {
   });
 
   final List<ChildLocation> points;
+  final List<LocationStop> stops;
   final BitmapDescriptor? avatarMarker;
   final int? openDwellIndex;
   final void Function(int idx) onDwellTap;
@@ -317,29 +346,13 @@ class _MapLayerState extends State<_MapLayer> {
     final chronological = widget.points;
     final start = chronological.first;
     final end = chronological.last;
+    // Harakat yo'li — yupqa chiziq (to'xtashlar alohida marker).
     final polyline = Polyline(
       polylineId: const PolylineId('history'),
       points: chronological.map((p) => p.latLng).toList(),
       color: AppColors.primary,
-      width: 5,
+      width: 3,
     );
-
-    // Dwell detection — 20+ daqiqa to'xtagan joylar.
-    final rawDwells = DwellDetector.detect(
-      chronological,
-      minDwellMinutes: 20,
-    );
-    // Bir xil joyga bir necha tashrif aggregatsiyasi
-    // (masala: maktab 08-13 + 16-18 → bitta marker, 2 visit).
-    final dwells = DwellDetector.aggregateByLocation(
-      rawDwells,
-      mergeRadiusMeters: 100,
-    );
-    // Dwell label markerlarni asinxron tayyorlash — cache signature
-    // bilan infinite loop'ning oldini olamiz.
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _ensureDwellLabels(dwells);
-    });
 
     final markers = <Marker>{
       Marker(
@@ -361,50 +374,89 @@ class _MapLayerState extends State<_MapLayer> {
             BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueRed,
             ),
-        anchor: widget.avatarMarker != null
-            ? const Offset(0.5, 1.0)
-            : const Offset(0.5, 1.0),
+        anchor: const Offset(0.5, 1.0),
         infoWindow: InfoWindow(
           title: 'Hozir',
           snippet: _hhmmDate(end.updatedAt),
         ),
       ),
     };
+    final circles = <Circle>{};
 
-    // Aggregated dwell markers — kichik moviy dot, tap'da popup ochiladi.
-    for (var i = 0; i < dwells.length; i++) {
-      final d = dwells[i];
-      final isOpen = widget.openDwellIndex == i;
-      final icon = isOpen
-          ? _dwellLabels['dwell_$i']
-          : BitmapDescriptor.defaultMarkerWithHue(
+    if (widget.stops.isNotEmpty) {
+      // ── Backend stop-detection markerlari (asosiy manba) ──
+      // Har to'xtash — raqamlangan moviy pin, info'da davomiylik + vaqt.
+      for (var i = 0; i < widget.stops.length; i++) {
+        final s = widget.stops[i];
+        markers.add(
+          Marker(
+            markerId: MarkerId('stop_${s.id}'),
+            position: s.latLng,
+            icon: BitmapDescriptor.defaultMarkerWithHue(
               BitmapDescriptor.hueAzure,
-            );
-      markers.add(
-        Marker(
-          markerId: MarkerId('dwell_$i'),
-          position: d.center,
-          icon: icon ?? BitmapDescriptor.defaultMarker,
-          anchor: isOpen
-              ? const Offset(0.5, 1.0)
-              : const Offset(0.5, 0.5),
-          consumeTapEvents: true,
-          onTap: () => widget.onDwellTap(i),
-        ),
+            ),
+            infoWindow: InfoWindow(
+              title: '${i + 1}. ${s.durationLabel}',
+              snippet: s.timeRange,
+            ),
+          ),
+        );
+        circles.add(
+          Circle(
+            circleId: CircleId('stop_circle_${s.id}'),
+            center: s.latLng,
+            radius: 40,
+            fillColor: AppColors.info.withValues(alpha: 0.15),
+            strokeColor: AppColors.info,
+            strokeWidth: 2,
+          ),
+        );
+      }
+    } else {
+      // ── Fallback: client-side dwell detection ──
+      // Backend stop hali yo'q (yangi feature) yoki eski data uchun.
+      final rawDwells = DwellDetector.detect(
+        chronological,
+        minDwellMinutes: 20,
       );
+      final dwells = DwellDetector.aggregateByLocation(
+        rawDwells,
+        mergeRadiusMeters: 100,
+      );
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _ensureDwellLabels(dwells);
+      });
+      for (var i = 0; i < dwells.length; i++) {
+        final d = dwells[i];
+        final isOpen = widget.openDwellIndex == i;
+        final icon = isOpen
+            ? _dwellLabels['dwell_$i']
+            : BitmapDescriptor.defaultMarkerWithHue(
+                BitmapDescriptor.hueAzure,
+              );
+        markers.add(
+          Marker(
+            markerId: MarkerId('dwell_$i'),
+            position: d.center,
+            icon: icon ?? BitmapDescriptor.defaultMarker,
+            anchor:
+                isOpen ? const Offset(0.5, 1.0) : const Offset(0.5, 0.5),
+            consumeTapEvents: true,
+            onTap: () => widget.onDwellTap(i),
+          ),
+        );
+        circles.add(
+          Circle(
+            circleId: CircleId('dwell_circle_$i'),
+            center: d.center,
+            radius: 50,
+            fillColor: AppColors.info.withValues(alpha: 0.15),
+            strokeColor: AppColors.info,
+            strokeWidth: 2,
+          ),
+        );
+      }
     }
-
-    final circles = <Circle>{
-      for (var i = 0; i < dwells.length; i++)
-        Circle(
-          circleId: CircleId('dwell_circle_$i'),
-          center: dwells[i].center,
-          radius: 50,
-          fillColor: AppColors.info.withValues(alpha: 0.15),
-          strokeColor: AppColors.info,
-          strokeWidth: 2,
-        ),
-    };
 
     return GoogleMap(
       initialCameraPosition: CameraPosition(
@@ -524,14 +576,16 @@ class _BottomPanel extends StatelessWidget {
     required this.fromDt,
     required this.toDt,
     required this.onCustomDateTap,
-    required this.pointsCount,
+    required this.stops,
+    required this.onPlaceTap,
     required this.distanceKm,
   });
 
   final DateTime fromDt;
   final DateTime toDt;
   final VoidCallback onCustomDateTap;
-  final int pointsCount;
+  final List<LocationStop> stops;
+  final void Function(LatLng target) onPlaceTap;
   final double distanceKm;
 
   String _formatDate(DateTime dt) =>
@@ -562,6 +616,34 @@ class _BottomPanel extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // ── Tashrif buyurilgan joylar (backend to'xtashlari) ──
+          if (stops.isNotEmpty) ...[
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                'locationHistory.places.title'.tr(),
+                style: AppTextStyles.bodyM.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.sm),
+            SizedBox(
+              height: 96,
+              child: ListView.separated(
+                scrollDirection: Axis.horizontal,
+                itemCount: stops.length,
+                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                itemBuilder: (_, i) => _PlaceCard(
+                  index: i,
+                  stop: stops[i],
+                  onTap: () => onPlaceTap(stops[i].latLng),
+                ),
+              ),
+            ),
+            const SizedBox(height: AppDimensions.md),
+          ],
+
           // Faqat sana filtri — premium lime pill (3 ta preset chip
           // olib tashlandi, foydalanuvchi so'rovi 4.4.32).
           Material(
@@ -611,8 +693,8 @@ class _BottomPanel extends StatelessWidget {
             children: [
               _StatItem(
                 icon: Icons.place_outlined,
-                value: 'locationHistory.stats.points'.tr(
-                  namedArgs: {'count': '$pointsCount'},
+                value: 'locationHistory.stats.places'.tr(
+                  namedArgs: {'count': '${stops.length}'},
                 ),
               ),
               const SizedBox(width: AppDimensions.lg),
@@ -651,6 +733,93 @@ class _StatItem extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ════════════════════════ PLACE CARD ════════════════════════
+
+class _PlaceCard extends ConsumerWidget {
+  const _PlaceCard({
+    required this.index,
+    required this.stop,
+    required this.onTap,
+  });
+
+  final int index;
+  final LocationStop stop;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final key = '${stop.latitude.toStringAsFixed(5)},'
+        '${stop.longitude.toStringAsFixed(5)}';
+    final address = ref.watch(_placeAddressProvider(key)).valueOrNull;
+
+    return Material(
+      color: AppColors.surfaceVariant,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: Container(
+          width: 210,
+          padding: const EdgeInsets.all(12),
+          child: Row(
+            children: [
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  color: AppColors.info.withValues(alpha: 0.2),
+                  shape: BoxShape.circle,
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  '${index + 1}',
+                  style: AppTextStyles.bodyS.copyWith(
+                    color: AppColors.info,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      address ?? 'locationHistory.places.unknown'.tr(),
+                      style: AppTextStyles.bodyS.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      stop.durationLabel,
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      stop.timeRange,
+                      style: AppTextStyles.label.copyWith(
+                        color: AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

@@ -25,6 +25,7 @@ import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
+import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -99,6 +100,32 @@ class BackendLocationRepository {
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendLocationRepository.getHistory: $e');
+      return const [];
+    }
+  }
+
+  /// Bola to'xtagan joylari (backend stop-detection). Xaritada marker.
+  /// `from`/`to` ISO 8601 (UTC). Xato bo'lsa bo'sh ro'yxat.
+  Future<List<LocationStop>> getStops({
+    required String childId,
+    DateTime? from,
+    DateTime? to,
+  }) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/children/$childId/location/stops',
+        queryParameters: {
+          if (from != null) 'from': from.toUtc().toIso8601String(),
+          if (to != null) 'to': to.toUtc().toIso8601String(),
+        },
+      );
+      final list = response.data?['stops'] as List<dynamic>? ?? const [];
+      return list
+          .map((e) =>
+              LocationStop.fromBackendJson(e as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      debugPrint('BackendLocationRepository.getStops: $e');
       return const [];
     }
   }

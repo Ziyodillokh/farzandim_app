@@ -319,7 +319,12 @@
     },
     "stats": {
       "points": "{count} точек",
+      "places": "{count} мест",
       "distance": "{km} км"
+    },
+    "places": {
+      "title": "Посещённые места",
+      "unknown": "Неизвестное место"
     },
     "empty": {
       "title": "Истории пока нет",
