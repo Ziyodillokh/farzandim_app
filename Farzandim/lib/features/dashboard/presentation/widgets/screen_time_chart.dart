@@ -12,10 +12,36 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 7 kunlik usage provider — selectedChildId family.
+///
+/// Realtime: ekran ochiq ekan har 30 sek backend'dan qayta o'qiydi. Bola
+/// qurilmasi usage sync qilgach ota-ona 30 sek ichida yangi qiymatni ko'radi
+/// (avval `FutureProvider` edi — faqat ekran qayta ochilganda yangilanardi).
 final weeklyChildUsageProvider =
-    FutureProvider.family<List<DailyUsageTotal>, String>((ref, childId) async {
+    StreamProvider.family<List<DailyUsageTotal>, String>((ref, childId) async* {
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-  return repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+  yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+  await for (final _
+      in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
+    yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+  }
+});
+
+/// Bugungi ekran vaqti (ms) — server `/weekly` (system filtrlangan +
+/// Toshkent UTC+5) avtoritar kunlik jamisidan olinadi.
+///
+/// **Yagona manba:** dashboard `_TimeCard` va detail `ScreenTimeChart` ayni
+/// shu provider'dan o'qiydi — shuning uchun ikki ekranda qiymat DOIM bir xil
+/// va realtime bo'ladi (avval dashboard per-app yig'indini alohida hisoblardi,
+/// shu sababli 1h7m ↔ 1h22m kabi farq chiqardi).
+final todayScreenTimeMsProvider = Provider.family<int, String>((ref, childId) {
+  final weekly =
+      ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
+  if (weekly.isEmpty) return 0;
+  String key(DateTime d) => '${d.year}-${d.month}-${d.day}';
+  final todayKey = key(DateTime.now().toUtc().add(const Duration(hours: 5)));
+  final match = weekly.where((x) => key(x.date) == todayKey);
+  final ms = match.isNotEmpty ? match.first.totalMs : weekly.last.totalMs;
+  return ms.clamp(0, 24 * 60 * 60 * 1000);
 });
 
 class ScreenTimeChart extends ConsumerWidget {
@@ -36,6 +62,7 @@ class ScreenTimeChart extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final weeklyAsync = ref.watch(weeklyChildUsageProvider(childId));
+    final todayMs = ref.watch(todayScreenTimeMsProvider(childId));
 
     return Container(
       padding: const EdgeInsets.all(20),
@@ -70,12 +97,12 @@ class ScreenTimeChart extends ConsumerWidget {
             ),
           ),
         ),
-        data: (totals) => _buildChart(totals),
+        data: (totals) => _buildChart(totals, todayMs),
       ),
     );
   }
 
-  Widget _buildChart(List<DailyUsageTotal> totals) {
+  Widget _buildChart(List<DailyUsageTotal> totals, int todayMs) {
     if (totals.isEmpty) {
       return const SizedBox(
         height: 220,
@@ -95,15 +122,10 @@ class ScreenTimeChart extends ConsumerWidget {
         .fold<int>(0, (a, b) => a > b ? a : b);
     final maxHours = (maxMs / 3600000).ceil().clamp(2, 24);
 
-    // Bugungi kun jami vaqti.
-    final todayTotal = totals
-        .firstWhere(
-          (t) => _key(t.date) == todayKey,
-          orElse: () => totals.last,
-        )
-        .totalMs;
-    final hours = todayTotal ~/ 3600000;
-    final minutes = (todayTotal % 3600000) ~/ 60000;
+    // Bugungi kun jami vaqti — dashboard `_TimeCard` bilan AYNI manba
+    // (`todayScreenTimeMsProvider`), shuning uchun ikki ekranda bir xil.
+    final hours = todayMs ~/ 3600000;
+    final minutes = (todayMs % 3600000) ~/ 60000;
     final title = hours == 0 ? '$minutes daq' : '$hours st $minutes daq';
 
     return Column(

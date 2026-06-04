@@ -3,7 +3,6 @@ import {
   NotFoundException,
   ForbiddenException,
   BadRequestException,
-  ConflictException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
@@ -120,36 +119,39 @@ export class AppLimitsService {
     const err = validateLimits(dailyLimitMs, weeklyLimitMs);
     if (err) throw new BadRequestException(err);
 
-    try {
-      const limit = await this.prisma.appLimit.create({
-        data: {
-          childId,
-          packageName: dto.packageName,
-          dailyLimitMs,
-          weeklyLimitMs,
-          isActive: dto.isActive ?? true,
-        },
-      });
+    // Idempotent upsert — (childId, packageName) unique. Cheklov allaqachon
+    // mavjud bo'lsa yangilaymiz (409 Conflict bermaymiz). Mobil klient
+    // ba'zan GET muvaffaqiyatsiz bo'lganda noto'g'ri POST qiladi — bu
+    // doim xavfsiz ishlashini kafolatlaydi.
+    const limit = await this.prisma.appLimit.upsert({
+      where: {
+        childId_packageName: { childId, packageName: dto.packageName },
+      },
+      create: {
+        childId,
+        packageName: dto.packageName,
+        dailyLimitMs,
+        weeklyLimitMs,
+        isActive: dto.isActive ?? true,
+      },
+      update: {
+        dailyLimitMs,
+        weeklyLimitMs,
+        isActive: dto.isActive ?? true,
+      },
+    });
 
-      await this.audit.log(
-        userId,
-        'app_limit',
-        'CREATE',
-        limit.id,
-        { packageName: limit.packageName },
-        request,
-      );
-      this.realtime.emitToChild(childId, 'app_limit:created', serialize(limit));
+    await this.audit.log(
+      userId,
+      'app_limit',
+      'CREATE',
+      limit.id,
+      { packageName: limit.packageName },
+      request,
+    );
+    this.realtime.emitToChild(childId, 'app_limit:created', serialize(limit));
 
-      return serialize(limit);
-    } catch (e: unknown) {
-      if (e && typeof e === 'object' && 'code' in e && (e as { code: string }).code === 'P2002') {
-        throw new ConflictException(
-          `App limit already exists for package: ${dto.packageName}`,
-        );
-      }
-      throw e;
-    }
+    return serialize(limit);
   }
 
   async update(

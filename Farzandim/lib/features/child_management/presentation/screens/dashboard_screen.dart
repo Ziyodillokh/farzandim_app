@@ -9,6 +9,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
+import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
@@ -693,16 +694,16 @@ class _TimeCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final day = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    // FAQAT foydalanuvchi ilovalari (system/launcher/orqa-fon emas) — aks
-    // holda jami "47 soat" bo'lib ketadi. `filteredApps` system prefixlarni
-    // chiqarib tashlaydi va foreground vaqtini beradi.
+    // FAQAT foydalanuvchi ilovalari (system/launcher/orqa-fon emas) — ikonka
+    // qatori uchun. `filteredApps` system prefixlarni chiqarib tashlaydi.
     final filtered = day?.filteredApps ?? const [];
     final apps =
         filtered.map((a) => _AppBrief(a.appName, a.iconUrl)).toList();
-    // Xavfsizlik: bir kun 24 soatdan oshmaydi (buggy data'dan himoya).
-    final totalMs = filtered
-        .fold<int>(0, (sum, a) => sum + a.totalTimeMs)
-        .clamp(0, 24 * 60 * 60 * 1000);
+    // Bugungi jami vaqt — detail "Ekran vaqti" bilan AYNI avtoritar manba
+    // (server `/weekly`, system filtrlangan + Toshkent, 30 sek polling). Avval
+    // bu yer per-app yig'indini alohida hisoblardi → dashboard ↔ detail farq
+    // qilardi (1h7m ↔ 1h22m) va realtime emas edi.
+    final totalMs = ref.watch(todayScreenTimeMsProvider(childId));
 
     return Container(
       width: double.infinity,
@@ -880,16 +881,14 @@ class _QuickActionsGrid extends StatelessWidget {
         accentColor: AppColors.primary,
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),
       ),
+      // "Qurilma cheklovlari" olib tashlandi — "Ilova cheklovlari" bilan ayni
+      // narsa edi. Endi yagona "Ilova cheklovlari" (app_restrictions_screen:
+      // foydalanish + per-app `AppLimitModal`). Eski "Qurilma cheklovlari"
+      // ekrani (`app_limits_screen`) endi quick action'dan ochilmaydi.
       QuickActionTile(
         icon: Icons.lock_clock,
-        label: 'dashboard.quickActions.appLimits'.tr(),
-        accentColor: const Color(0xFFA78BFA),
-        onTap: () => context.push(AppRoutes.appLimitsPath(childId)),
-      ),
-      QuickActionTile(
-        icon: Icons.timer_outlined,
         label: 'dashboard.quickActions.appRestrictions'.tr(),
-        accentColor: AppColors.warning,
+        accentColor: const Color(0xFFA78BFA),
         onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
       ),
       QuickActionTile(

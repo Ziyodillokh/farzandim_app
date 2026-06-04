@@ -14,6 +14,15 @@ export class CreateAppLimitDto {
   @MaxLength(255)
   packageName: string;
 
+  // Eski mobil klientlar (appName yuboradigan build'lar) bilan moslik uchun
+  // qabul qilinadi, lekin saqlanmaydi (AppLimit modelida appName ustuni yo'q —
+  // nom installed-apps'dan olinadi). Bo'lmaganda forbidNonWhitelisted 400 berardi.
+  @ApiPropertyOptional({ example: 'YouTube' })
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  appName?: string;
+
   @ApiProperty({
     description: 'Daily limit in milliseconds (number or numeric string)',
     example: 900000,

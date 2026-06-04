@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
+import 'package:farzandim_child/core/utils/tashkent_time.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
@@ -135,7 +136,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
 
     // Notification matnini yangilash — foydalanuvchi service ishlayotganini
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.
-    final timeStr = DateFormat('HH:mm').format(timestamp);
+    final timeStr = DateFormat('HH:mm').format(toTashkent(timestamp));
     FlutterForegroundTask.updateService(
       notificationTitle: 'Farzandim ishlayapti',
       notificationText: "Oxirgi yangilanish: $timeStr",
