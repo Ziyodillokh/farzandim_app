@@ -99,11 +99,15 @@
     "duration": "{hours} h {minutes} min",
     "now": "now",
     "minutesAgo": "{minutes} min ago",
-    "hoursAgo": "{hours} h ago"
+    "hoursAgo": "{hours} h ago",
+    "yesterday": "Yesterday"
   },
   "notifications": {
     "title": "Notifications",
     "markAllRead": "Mark all read",
+    "review": "Review",
+    "reject": "Reject",
+    "rejected": "Request rejected",
     "emptyTitle": "No notifications",
     "emptySubtitle": "Important messages about your child will appear here.",
     "sos": {
@@ -531,10 +535,12 @@
       "empty": "No active sessions",
       "unknownLocation": "Unknown location",
       "endSession": "End session",
-      "revokeConfirmTitle": "End session?",
-      "revokeConfirmContent": "{device} will be signed out.",
-      "endAllConfirmTitle": "End all other sessions?",
-      "endAllConfirmContent": "All devices except this one will be signed out.",
+      "confirmYes": "Yes",
+      "confirmNo": "No",
+      "revokeConfirmTitle": "End session",
+      "revokeConfirmContent": "Do you confirm ending the session?",
+      "endAllConfirmTitle": "End all sessions",
+      "endAllConfirmContent": "Do you confirm ending all other sessions?",
       "endedSnack": "Session ended",
       "endedAllSnack": "Other sessions ended",
       "loadError": "Failed to load sessions",

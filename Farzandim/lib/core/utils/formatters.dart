@@ -41,6 +41,12 @@ String formatRelativeTime(DateTime time) {
       namedArgs: {'hours': '${diff.inHours}'},
     );
   }
+  // Kecha — kalendar kuni bo'yicha (24 soatdan emas).
+  final todayStart = DateTime(now.year, now.month, now.day);
+  final timeStart = DateTime(time.year, time.month, time.day);
+  if (todayStart.difference(timeStart).inDays == 1) {
+    return 'formatters.yesterday'.tr();
+  }
   final day = time.day.toString().padLeft(2, '0');
   final month = time.month.toString().padLeft(2, '0');
   return '$day.$month';

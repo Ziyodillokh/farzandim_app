@@ -14,6 +14,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/settings/data/models/user_session.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -313,13 +314,10 @@ class _Trailing extends StatelessWidget {
   }
 
   Future<void> _confirmRevoke(BuildContext context) async {
-    final ok = await _showConfirm(
+    final ok = await _showEndSessionConfirm(
       context,
       title: 'settings.sessions.revokeConfirmTitle'.tr(),
-      content: 'settings.sessions.revokeConfirmContent'.tr(
-        namedArgs: {'device': session.displayName},
-      ),
-      confirmLabel: 'settings.sessions.endSession'.tr(),
+      content: 'settings.sessions.revokeConfirmContent'.tr(),
     );
     if (ok && context.mounted) {
       onRevoke!.call();
@@ -353,11 +351,10 @@ class _EndAllOthersButton extends StatelessWidget {
   }
 
   Future<void> _confirm(BuildContext context) async {
-    final ok = await _showConfirm(
+    final ok = await _showEndSessionConfirm(
       context,
       title: 'settings.sessions.endAllConfirmTitle'.tr(),
       content: 'settings.sessions.endAllConfirmContent'.tr(),
-      confirmLabel: 'settings.sessions.endAllOthers'.tr(),
     );
     if (ok && context.mounted) {
       onConfirmed();
@@ -499,43 +496,35 @@ void _snack(BuildContext context, String message) {
     );
 }
 
-Future<bool> _showConfirm(
+/// Figma 1:1 — iOS uslubidagi tasdiq alert'i: "Ha" (ko'k) / "Yo'q" (qizil).
+/// `true` → "Ha" (yakunlash), `false` → "Yo'q"/bekor.
+Future<bool> _showEndSessionConfirm(
   BuildContext context, {
   required String title,
   required String content,
-  required String confirmLabel,
 }) async {
-  final result = await showDialog<bool>(
+  final result = await showCupertinoDialog<bool>(
     context: context,
-    builder: (dialogContext) => AlertDialog(
-      backgroundColor: AppColors.surface,
-      title: Text(
-        title,
-        style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-      ),
-      content: Text(
-        content,
-        style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
-      ),
-      actions: [
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(false),
-          child: Text(
-            'common.cancel'.tr(),
-            style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
-          ),
+    builder: (dialogContext) => CupertinoTheme(
+      data: const CupertinoThemeData(brightness: Brightness.light),
+      child: CupertinoAlertDialog(
+        title: Text(title),
+        content: Padding(
+          padding: const EdgeInsets.only(top: 6),
+          child: Text(content),
         ),
-        TextButton(
-          onPressed: () => Navigator.of(dialogContext).pop(true),
-          child: Text(
-            confirmLabel,
-            style: AppTextStyles.bodyM.copyWith(
-              color: AppColors.error,
-              fontWeight: FontWeight.w600,
-            ),
+        actions: [
+          CupertinoDialogAction(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            child: Text('settings.sessions.confirmYes'.tr()),
           ),
-        ),
-      ],
+          CupertinoDialogAction(
+            isDestructiveAction: true,
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: Text('settings.sessions.confirmNo'.tr()),
+          ),
+        ],
+      ),
     ),
   );
   return result ?? false;

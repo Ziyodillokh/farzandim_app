@@ -210,6 +210,14 @@ class AppNotification {
   /// to'ldirilmaydi.
   final Map<String, dynamic>? data;
 
+  /// Parent qaror qabul qilishi kerak bo'lgan xabarmi — kartochkada
+  /// "Tekshirish" / "Rad etish" tugmalari ko'rsatiladi. Hozircha faqat
+  /// `pairRequest` (yangi qurilma ulanmoqchi).
+  bool get isActionable => type == NotificationType.pairRequest;
+
+  /// pairRequest uchun — `data['pairRequestId']` (rad etish API'siga kerak).
+  String? get pairRequestId => data?['pairRequestId'] as String?;
+
   /// Yangi `AppNotification` — `markAsRead` uchun ishlatamiz.
   AppNotification copyWith({bool? isRead}) {
     return AppNotification(

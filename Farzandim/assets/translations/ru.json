@@ -99,11 +99,15 @@
     "duration": "{hours} ч {minutes} мин",
     "now": "сейчас",
     "minutesAgo": "{minutes} мин назад",
-    "hoursAgo": "{hours} ч назад"
+    "hoursAgo": "{hours} ч назад",
+    "yesterday": "Вчера"
   },
   "notifications": {
     "title": "Уведомления",
     "markAllRead": "Прочитать всё",
+    "review": "Проверить",
+    "reject": "Отклонить",
+    "rejected": "Запрос отклонён",
     "emptyTitle": "Уведомлений нет",
     "emptySubtitle": "Важные сообщения о ребёнке будут появляться здесь.",
     "sos": {
@@ -531,10 +535,12 @@
       "empty": "Нет активных сессий",
       "unknownLocation": "Неизвестное местоположение",
       "endSession": "Завершить сессию",
-      "revokeConfirmTitle": "Завершить сессию?",
-      "revokeConfirmContent": "Устройство {device} выйдет из аккаунта.",
-      "endAllConfirmTitle": "Завершить все другие сессии?",
-      "endAllConfirmContent": "Все устройства, кроме этого, выйдут из аккаунта.",
+      "confirmYes": "Да",
+      "confirmNo": "Нет",
+      "revokeConfirmTitle": "Завершить сессию",
+      "revokeConfirmContent": "Подтверждаете завершение сессии?",
+      "endAllConfirmTitle": "Завершить все сессии",
+      "endAllConfirmContent": "Подтверждаете завершение всех других сессий?",
       "endedSnack": "Сессия завершена",
       "endedAllSnack": "Другие сессии завершены",
       "loadError": "Не удалось загрузить сессии",
