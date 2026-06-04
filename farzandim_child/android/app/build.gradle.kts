@@ -80,4 +80,12 @@ flutter {
 
 dependencies {
     coreLibraryDesugaring("com.android.tools:desugar_jdk_libs:2.1.4")
+
+    // FarzandimMessagingService (native "ring" FCM ushlovchisi) firebase-messaging
+    // SDK klasslariga (RemoteMessage, FirebaseMessagingService) TO'G'RIDAN kirishi
+    // kerak. firebase_messaging Flutter plugin ularni faqat `implementation`
+    // sifatida beradi, shuning uchun app modulida ko'rinmaydi. firebase_core
+    // ishlatadigan BoM versiyasi bilan bir xil (33.16.0) — ziddiyat yo'q.
+    implementation(platform("com.google.firebase:firebase-bom:33.16.0"))
+    implementation("com.google.firebase:firebase-messaging")
 }

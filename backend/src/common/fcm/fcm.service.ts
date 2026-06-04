@@ -8,6 +8,12 @@ export interface PushPayload {
   title: string;
   body: string;
   data?: Record<string, string>;
+  /**
+   * `true` bo'lsa `notification` bloki yuborilmaydi — sof DATA xabar.
+   * Bu Android'da ilova fonda/yopiq bo'lsa ham `onBackgroundMessage`
+   * handlerini ishga tushiradi (masalan "ring" buyrug'i uchun zarur).
+   */
+  dataOnly?: boolean;
 }
 
 export interface PushResult {
@@ -69,13 +75,23 @@ export class FcmService {
       return { sent: 0, failed: tokens.length, invalidTokens: [] };
     }
 
-    const message: admin.messaging.MulticastMessage = {
-      tokens,
-      notification: { title: payload.title, body: payload.body },
-      data: payload.data,
-      android: { priority: 'high' },
-      apns: { payload: { aps: { sound: 'default' } } },
-    };
+    const message: admin.messaging.MulticastMessage = payload.dataOnly
+      ? {
+          tokens,
+          data: payload.data,
+          android: { priority: 'high' },
+          apns: {
+            headers: { 'apns-priority': '10' },
+            payload: { aps: { 'content-available': 1 } },
+          },
+        }
+      : {
+          tokens,
+          notification: { title: payload.title, body: payload.body },
+          data: payload.data,
+          android: { priority: 'high' },
+          apns: { payload: { aps: { sound: 'default' } } },
+        };
 
     const response = await admin.messaging().sendEachForMulticast(message);
 

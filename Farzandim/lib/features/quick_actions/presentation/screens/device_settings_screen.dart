@@ -6,6 +6,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/child_management/data/models/child_device_info.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
@@ -17,7 +18,7 @@ import 'package:go_router/go_router.dart';
 /// Qurilma kartasi (model + batareya + holat — `deviceInfo`dan dinamik),
 /// "Baland ovoz" / "Faollik" tugmalari, "Ilova uchun ruxsatlar" yo'li va
 /// "Notanish manbalardan ilovalar" toggle'i.
-class DeviceSettingsScreen extends ConsumerWidget {
+class DeviceSettingsScreen extends ConsumerStatefulWidget {
   /// `DeviceSettingsScreen` konstruktor.
   const DeviceSettingsScreen({required this.childId, super.key});
 
@@ -25,10 +26,24 @@ class DeviceSettingsScreen extends ConsumerWidget {
   final String childId;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DeviceSettingsScreen> createState() =>
+      _DeviceSettingsScreenState();
+}
+
+class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Ekran ochilganda eng so'nggi qurilma ma'lumotini ko'rsatish uchun
+    // bolalar ro'yxatini yangilaymiz (child heartbeat backend'ni yangilaydi).
+    Future.microtask(() => ref.invalidate(childrenProvider));
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final child = ref
         .watch(childrenListProvider)
-        .firstWhereOrNull((c) => c.id == childId);
+        .firstWhereOrNull((c) => c.id == widget.childId);
 
     if (child == null) return const _ChildNotFound();
 
@@ -48,27 +63,42 @@ class DeviceSettingsScreen extends ConsumerWidget {
   }
 }
 
-void _comingSoon(BuildContext context) {
+void _snack(BuildContext context, String text) {
   ScaffoldMessenger.of(context)
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text('auth.social.comingSoon'.tr()),
+        content: Text(text),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.surfaceVariant,
       ),
     );
 }
 
+/// Bola qurilmasini baland ovozda jiringlatish (qurilmani topish).
+Future<void> _ringDevice(
+  BuildContext context,
+  WidgetRef ref,
+  String childId,
+) async {
+  _snack(context, 'deviceSettings.ringSending'.tr());
+  try {
+    await ref.read(backendChildRepositoryProvider).ringDevice(childId);
+    if (context.mounted) _snack(context, 'deviceSettings.ringSent'.tr());
+  } catch (_) {
+    if (context.mounted) _snack(context, 'deviceSettings.ringError'.tr());
+  }
+}
+
 // ════════════════════════ CONTENT ════════════════════════
 
-class _Content extends StatelessWidget {
+class _Content extends ConsumerWidget {
   const _Content({required this.child});
 
   final Child child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.lg,
@@ -90,7 +120,7 @@ class _Content extends StatelessWidget {
                 child: _ActionTile(
                   icon: Icons.volume_up_rounded,
                   label: 'deviceSettings.loudSound'.tr(),
-                  onTap: () => _comingSoon(context),
+                  onTap: () => _ringDevice(context, ref, child.id),
                 ),
               ),
               const SizedBox(width: AppDimensions.md),
@@ -133,7 +163,13 @@ class _DeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isOnline = (child.isConnected) && (info?.isOnline ?? false);
+    // Online — `lastSeenAt` yangiligiga qarab (heartbeat oxirgi 5 daqiqada
+    // kelganmi). Avval faqat `isConnected` edi va hech qachon offline
+    // bo'lmasdi; endi heartbeat to'xtasa qurilma offline ko'rinadi.
+    final lastSeen = child.lastSeenAt;
+    final isOnline = child.isConnected &&
+        lastSeen != null &&
+        DateTime.now().difference(lastSeen) < const Duration(minutes: 5);
     final battery = info?.batteryLevel;
 
     return Container(
@@ -372,7 +408,7 @@ class _UnknownSourcesCardState extends State<_UnknownSourcesCard> {
                 activeThumbColor: AppColors.primary,
                 onChanged: (v) {
                   setState(() => _blocked = v);
-                  _comingSoon(context);
+                  _snack(context, 'auth.social.comingSoon'.tr());
                 },
               ),
             ],

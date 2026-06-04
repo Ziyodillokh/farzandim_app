@@ -158,6 +158,13 @@ class BackendChildRepository {
     return Child.fromJson(data);
   }
 
+  /// Bola qurilmasini baland ovozda jiringlatish — `POST /children/:id/ring`.
+  /// Backend FCM data push yuboradi; bola qurilmasi silent rejimda ham
+  /// STREAM_ALARM orqali jiringlaydi (qurilmani topish).
+  Future<void> ringDevice(String childId) async {
+    await _dio.post<void>('/children/$childId/ring');
+  }
+
   /// Avatar rasm proxy URL — `GET /api/children/:id/avatar/image`.
   ///
   /// Backend MinIO'dan rasmni stream qiladi (signed URL'ga qaraganda

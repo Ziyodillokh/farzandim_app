@@ -27,6 +27,12 @@
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
+    <!-- "Baland ovoz" (qurilmani topish) — jiringlash + vibratsiya -->
+    <uses-permission android:name="android.permission.VIBRATE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"
+        android:minSdkVersion="34"
+        tools:ignore="UnusedAttribute"/>
+
     <!-- Auto-start at boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
@@ -115,6 +121,28 @@
                 android:value="App restriction enforcement for parental control"
                 tools:targetApi="34"/>
         </service>
+
+        <!-- "Baland ovoz" — ring native FCM ushlovchisi. Plugin'ning standart
+             messaging service'ini olib tashlab, uni KENGAYTIRGAN subclass bilan
+             almashtiramiz: "ring" data push'ni native ushlaydi (ilova yopiq
+             bo'lsa ham), qolganlarini super() Flutter'ga uzatadi. -->
+        <service
+            android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
+            tools:node="remove"/>
+        <service
+            android:name=".FarzandimMessagingService"
+            android:exported="false">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+            </intent-filter>
+        </service>
+
+        <!-- Ring foreground service — STREAM_ALARM orqali baland jiringlaydi -->
+        <service
+            android:name=".RingService"
+            android:exported="false"
+            android:foregroundServiceType="mediaPlayback"
+            tools:targetApi="34"/>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

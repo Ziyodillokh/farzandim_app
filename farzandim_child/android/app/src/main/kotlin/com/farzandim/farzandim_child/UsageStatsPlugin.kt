@@ -180,36 +180,72 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             endTime - (days * 24L * 60L * 60L * 1000L)
         }
 
-        // package → jami foreground ms / oxirgi ts / ochiq sessiya boshi.
         val totals = HashMap<String, Long>()
         val lastUsed = HashMap<String, Long>()
-        val resumeAt = HashMap<String, Long>()
+
+        // SINGLE-CURRENT-FOREGROUND state machine. OS foreground'da bir vaqtda
+        // FAQAT bitta ilova bo'ladi. Yangi ACTIVITY_RESUMED kelganda oldingi
+        // ilovaning sessiyasi o'sha vaqtda yopiladi (parallel hisob yo'q).
+        // Ekran o'chsa/qulflansa sessiya yopiladi va ekran o'chiq vaqt
+        // hisoblanmaydi. Bu — orphan RESUMED (PAUSED kelmagan) butun kunni
+        // qo'shib yuborgan "21 soat" xatosini va fon ilovalarni bartaraf etadi.
+        var currentPkg: String? = null
+        var currentStart = 0L
+        var screenInteractive = true // oyna boshida yoniq deb hisoblaymiz
+
+        fun closeCurrent(at: Long) {
+            val pkg = currentPkg ?: return
+            if (at > currentStart) {
+                totals[pkg] = (totals[pkg] ?: 0L) + (at - currentStart)
+                lastUsed[pkg] = at
+            }
+            currentPkg = null
+            currentStart = 0L
+        }
 
         val events = usageStatsManager.queryEvents(startTime, endTime)
         val ev = UsageEvents.Event()
         while (events.hasNextEvent()) {
             events.getNextEvent(ev)
-            val pkg = ev.packageName ?: continue
+            val t = ev.timeStamp
             when (ev.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
-                    resumeAt[pkg] = ev.timeStamp
+                    val pkg = ev.packageName ?: continue
+                    // Ekran o'chiq paytdagi fon activity launch'larini
+                    // (masalan com.microsoft.appmanager) hisoblamaymiz.
+                    if (!screenInteractive) continue
+                    if (currentPkg != pkg) {
+                        closeCurrent(t) // oldingi foreground ilovani yopamiz
+                        currentPkg = pkg
+                        currentStart = t
+                    }
                 }
                 UsageEvents.Event.ACTIVITY_PAUSED,
                 UsageEvents.Event.ACTIVITY_STOPPED -> {
-                    val start = resumeAt.remove(pkg)
-                    if (start != null && ev.timeStamp > start) {
-                        totals[pkg] = (totals[pkg] ?: 0L) + (ev.timeStamp - start)
-                        lastUsed[pkg] = ev.timeStamp
+                    if (currentPkg == ev.packageName) {
+                        closeCurrent(t)
                     }
+                }
+                UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+                UsageEvents.Event.KEYGUARD_SHOWN,
+                UsageEvents.Event.DEVICE_SHUTDOWN -> {
+                    // Ekran o'chdi / qulflandi / o'chirildi — sessiyani yopamiz
+                    // va ekran qayta yonguncha hisoblamaymiz.
+                    closeCurrent(t)
+                    screenInteractive = false
+                }
+                UsageEvents.Event.SCREEN_INTERACTIVE,
+                UsageEvents.Event.KEYGUARD_HIDDEN -> {
+                    screenInteractive = true
+                    // Bu yerda avtomatik sessiya ochmaymiz — keyingi haqiqiy
+                    // ACTIVITY_RESUMED kutiladi.
                 }
             }
         }
-        // Hozir ham foreground'da ochiq sessiyalarni hozirgacha yopamiz.
-        for ((pkg, start) in resumeAt) {
-            if (endTime > start) {
-                totals[pkg] = (totals[pkg] ?: 0L) + (endTime - start)
-                lastUsed[pkg] = endTime
-            }
+        // Hali ochiq sessiyani FAQAT ekran yoniq bo'lsa hozirgacha yopamiz.
+        // Ekran o'chgan bo'lsa currentPkg allaqachon null — butun kun qo'shilmaydi.
+        if (screenInteractive) {
+            closeCurrent(endTime)
         }
 
         val pm = context.packageManager

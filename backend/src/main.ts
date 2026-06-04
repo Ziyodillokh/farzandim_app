@@ -65,6 +65,15 @@ async function bootstrap() {
     await import('@fastify/cookie').then((m) => m.default),
   );
 
+  // Multipart/form-data — Fastify adapter ostida Multer (platform-express)
+  // ISHLAMAYDI. Shu plugin avatar/video/voice/photo upload'larini parse qiladi.
+  // req.file() / req.parts() orqali fayllar o'qiladi. fileSize bodyLimit bilan
+  // mos (100 MB); har endpoint o'z service'ida kichikroq cheklov qo'yadi.
+  await app.register(
+    await import('@fastify/multipart').then((m) => m.default),
+    { limits: { fileSize: 100 * 1024 * 1024 } },
+  );
+
   // application/x-www-form-urlencoded parser is auto-registered by NestJS Fastify
   // adapter (registerUrlencodedContentParser). No need for @fastify/formbody.
   // Click webhook receives parsed body via @Body() automatically.

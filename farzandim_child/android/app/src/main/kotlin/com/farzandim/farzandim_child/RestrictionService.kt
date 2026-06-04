@@ -238,12 +238,11 @@ class RestrictionService : Service() {
     }
 
     /**
-     * Bugun (00:00 dan hozirgacha) paket foreground'da bo'lgan vaqt (ms).
-     *
-     * FAQAT foreground (ekranda faol) vaqt — "Raqamli Salomatlik" bilan bir
-     * xil. Foreground SERVICE vaqti (fon audio/navigator) qo'shilmaydi, aks
-     * holda limit fonda o'ynagan musiqani ham hisoblab, ilovani noto'g'ri
-     * bloklab qo'yardi.
+     * Bugun (00:00 dan hozirgacha) paket EKRANDA FAOL foreground'da bo'lgan
+     * vaqt (ms). Event-based (queryEvents) — UsageStatsPlugin.getUsageStats
+     * bilan bir xil mantiq: faqat ekran yoniq paytdagi haqiqiy foreground
+     * sessiyalari. Fon-service / fon activity launch hisoblanmaydi (aks holda
+     * limit noto'g'ri ishlardi).
      */
     private fun getTodayUsageMs(packageName: String): Long {
         return try {
@@ -259,9 +258,48 @@ class RestrictionService : Service() {
             val startOfDay = cal.timeInMillis
             val now = System.currentTimeMillis()
 
-            val aggregate = usm.queryAndAggregateUsageStats(startOfDay, now)
-            val stat = aggregate[packageName] ?: return 0L
-            stat.totalTimeInForeground
+            val events = usm.queryEvents(startOfDay, now)
+            val ev = UsageEvents.Event()
+            var total = 0L
+            var openStart = 0L // >0 → paket hozir foreground'da
+            var screenInteractive = true
+            while (events.hasNextEvent()) {
+                events.getNextEvent(ev)
+                val t = ev.timeStamp
+                when (ev.eventType) {
+                    UsageEvents.Event.ACTIVITY_RESUMED -> {
+                        if (ev.packageName == packageName) {
+                            if (screenInteractive && openStart == 0L) openStart = t
+                        } else if (openStart > 0L) {
+                            // boshqa ilova foreground'ga chiqdi — bizniki yopiladi
+                            total += t - openStart
+                            openStart = 0L
+                        }
+                    }
+                    UsageEvents.Event.ACTIVITY_PAUSED,
+                    UsageEvents.Event.ACTIVITY_STOPPED -> {
+                        if (ev.packageName == packageName && openStart > 0L) {
+                            total += t - openStart
+                            openStart = 0L
+                        }
+                    }
+                    UsageEvents.Event.SCREEN_NON_INTERACTIVE,
+                    UsageEvents.Event.KEYGUARD_SHOWN,
+                    UsageEvents.Event.DEVICE_SHUTDOWN -> {
+                        if (openStart > 0L) {
+                            total += t - openStart
+                            openStart = 0L
+                        }
+                        screenInteractive = false
+                    }
+                    UsageEvents.Event.SCREEN_INTERACTIVE,
+                    UsageEvents.Event.KEYGUARD_HIDDEN -> {
+                        screenInteractive = true
+                    }
+                }
+            }
+            if (screenInteractive && openStart > 0L) total += now - openStart
+            total
         } catch (e: Exception) {
             Log.e(TAG, "getTodayUsageMs error", e)
             0L

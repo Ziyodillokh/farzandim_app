@@ -9,8 +9,6 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   BadRequestException,
 } from '@nestjs/common';
 import {
@@ -21,8 +19,8 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
@@ -30,6 +28,16 @@ import { VerifyPhoneDto } from './dto/verify-phone.dto';
 import { CurrentUser } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+
+/** @fastify/multipart yuklagan fayl (req.file()). */
+interface MultipartFile {
+  toBuffer(): Promise<Buffer>;
+  mimetype: string;
+  filename: string;
+}
+interface MultipartRequest {
+  file(): Promise<MultipartFile | undefined>;
+}
 
 @ApiTags('Users')
 @ApiBearerAuth('consumer-jwt')
@@ -74,7 +82,6 @@ export class UsersController {
   }
 
   @Post('me/avatar')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -90,15 +97,18 @@ export class UsersController {
   @ApiResponse({ status: 415, description: 'Unsupported image format' })
   async uploadAvatar(
     @CurrentUser() user: JwtPayload,
-    @UploadedFile() file: Express.Multer.File,
+    @Req() req: FastifyRequest,
   ) {
-    if (!file) {
+    // Fastify adapter — @fastify/multipart req.file() (main.ts'da ro'yxatda).
+    const data = await (req as unknown as MultipartRequest).file();
+    if (!data) {
       throw new BadRequestException('Fayl yuborilmadi');
     }
+    const buffer = await data.toBuffer();
     return this.usersService.uploadAvatar(user.userId, {
-      buffer: file.buffer,
-      mimetype: file.mimetype,
-      originalname: file.originalname,
+      buffer,
+      mimetype: data.mimetype,
+      originalname: data.filename,
     });
   }
 

@@ -10,8 +10,6 @@ import {
   HttpCode,
   HttpStatus,
   UseGuards,
-  UseInterceptors,
-  UploadedFile,
   BadRequestException,
   StreamableFile,
   Header,
@@ -25,14 +23,25 @@ import {
   ApiConsumes,
   ApiBody,
 } from '@nestjs/swagger';
-import { FileInterceptor } from '@nestjs/platform-express';
 import { Request } from 'express';
+import { FastifyRequest } from 'fastify';
 import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
+import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { CurrentUser, Roles, Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+
+/** @fastify/multipart yuklagan fayl (req.file()). */
+interface MultipartFile {
+  toBuffer(): Promise<Buffer>;
+  mimetype: string;
+  filename: string;
+}
+interface MultipartRequest {
+  file(): Promise<MultipartFile | undefined>;
+}
 
 @ApiTags('Children')
 @ApiBearerAuth('consumer-jwt')
@@ -78,6 +87,41 @@ export class ChildrenController {
     return this.childrenService.findOne(id, user.userId);
   }
 
+  @Post(':id/device-info')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Child device heartbeat (model/battery/wifi + lastSeen, no GPS)',
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Device info updated' })
+  async updateDeviceInfo(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateDeviceInfoDto,
+  ) {
+    return this.childrenService.updateDeviceInfo(id, user.userId, dto);
+  }
+
+  @Post(':id/ring')
+  @Roles('PARENT')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Ring the child device loudly even on silent (find device)',
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Ring command sent via FCM' })
+  @ApiResponse({ status: 400, description: 'Child device not paired' })
+  async ring(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+    @Req() req: Request,
+  ) {
+    return this.childrenService.ring(id, user.userId, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
   @Put(':id')
   @Roles('PARENT')
   @ApiOperation({ summary: 'Update child data (parent only)' })
@@ -118,7 +162,6 @@ export class ChildrenController {
 
   @Post(':id/avatar')
   @Roles('PARENT')
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -136,19 +179,22 @@ export class ChildrenController {
   async uploadAvatar(
     @Param('id') id: string,
     @CurrentUser() user: JwtPayload,
-    @UploadedFile() file: Express.Multer.File,
-    @Req() req: Request,
+    @Req() req: FastifyRequest,
   ) {
-    if (!file) {
+    // Fastify adapter — Multer ishlamaydi. @fastify/multipart req.file() bilan
+    // o'qiymiz (main.ts'da ro'yxatdan o'tgan).
+    const data = await (req as unknown as MultipartRequest).file();
+    if (!data) {
       throw new BadRequestException('No file uploaded');
     }
+    const buffer = await data.toBuffer();
     return this.childrenService.uploadAvatar(
       id,
       user.userId,
       {
-        buffer: file.buffer,
-        mimetype: file.mimetype,
-        originalname: file.originalname,
+        buffer,
+        mimetype: data.mimetype,
+        originalname: data.filename,
       },
       {
         ip: req.ip,

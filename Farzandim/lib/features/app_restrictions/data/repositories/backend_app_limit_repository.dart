@@ -74,11 +74,13 @@ class BackendAppLimitRepository {
           data: {'dailyLimitMs': dailyLimitMs},
         );
       } else {
+        // DIQQAT: `appName` yuborilmaydi — backend `CreateAppLimitDto`'da
+        // bunday maydon yo'q, global ValidationPipe `forbidNonWhitelisted`
+        // begona maydonni 400 qiladi. AppLimit modelida appName ustuni yo'q.
         await _dio.post<void>(
           '/children/$childId/app-limits',
           data: {
             'packageName': packageName,
-            'appName': appName,
             'dailyLimitMs': dailyLimitMs,
           },
         );
@@ -163,4 +165,5 @@ class _AppLimitWire {
     );
   }
 }
+
 

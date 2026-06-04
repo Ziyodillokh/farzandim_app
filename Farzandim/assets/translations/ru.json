@@ -356,6 +356,9 @@
     "disconnectErrorPrefix": "Ошибка: {error}",
     "disconnectGenericError": "Не удалось отключить устройство",
     "loudSound": "Громкий звук",
+    "ringSending": "Вызов устройства...",
+    "ringSent": "Устройство зазвонило",
+    "ringError": "Не удалось вызвать устройство",
     "activity": "Активность",
     "appPermissionsRow": "Разрешения приложения",
     "unknownSources": {

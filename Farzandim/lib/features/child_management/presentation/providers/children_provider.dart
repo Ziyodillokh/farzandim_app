@@ -6,7 +6,6 @@
 // Bolalar ma'lumotlari faqat Backend REST orqali keladi (Telegram auth).
 
 import 'dart:async';
-import 'dart:typed_data';
 
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -14,6 +13,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/shared/models/result.dart';
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bolalar ro'yxati — Backend REST orqali.
@@ -85,8 +85,9 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
         try {
           child = await _repo.uploadAvatar(child.id, photoBytes);
           _invalidateAvatar(child.id);
-        } catch (_) {
-          // Avatar upload xato — fotosiz davom etamiz.
+        } catch (e) {
+          // Avatar upload xato — fotosiz davom etamiz (lekin log qoldiramiz).
+          debugPrint('addChild: avatar upload xato: $e');
         }
       }
       state = const AsyncValue.data(null);
@@ -111,8 +112,9 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
         try {
           await _repo.uploadAvatar(childId, newPhotoBytes);
           _invalidateAvatar(childId);
-        } catch (_) {
-          // Avatar upload xato — metadata saqlangan, fotosiz.
+        } catch (e) {
+          // Avatar upload xato — metadata saqlangan, fotosiz (log qoldiramiz).
+          debugPrint('updateChild: avatar upload xato: $e');
         }
       }
       state = const AsyncValue.data(null);

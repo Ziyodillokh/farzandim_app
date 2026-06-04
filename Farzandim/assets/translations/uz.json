@@ -356,6 +356,9 @@
     "disconnectErrorPrefix": "Xato: {error}",
     "disconnectGenericError": "Qurilmani uzib bo'lmadi",
     "loudSound": "Baland ovoz",
+    "ringSending": "Qurilma chaqirilmoqda...",
+    "ringSent": "Qurilma jiringlatildi",
+    "ringError": "Qurilmani jiringlatib bo'lmadi",
     "activity": "Faollik",
     "appPermissionsRow": "Ilova uchun ruxsatlar",
     "unknownSources": {

@@ -356,6 +356,9 @@
     "disconnectErrorPrefix": "Error: {error}",
     "disconnectGenericError": "Could not disconnect device",
     "loudSound": "Loud sound",
+    "ringSending": "Ringing device...",
+    "ringSent": "Device is ringing",
+    "ringError": "Could not ring the device",
     "activity": "Activity",
     "appPermissionsRow": "App permissions",
     "unknownSources": {
