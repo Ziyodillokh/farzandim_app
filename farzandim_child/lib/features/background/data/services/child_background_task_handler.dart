@@ -12,6 +12,8 @@
 // Eslatma: `backgroundEntry` top-level + @pragma('vm:entry-point') —
 // Flutter Engine isolate'ni boshlash uchun shu shartlarni qo'yadi.
 
+import 'dart:async';
+
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -79,6 +81,11 @@ class ChildBackgroundTaskHandler extends TaskHandler {
 
   @override
   void onRepeatEvent(DateTime timestamp) {
+    // Kafolatlangan device-info heartbeat (har 60s, foreground service bilan).
+    // Ichki 20s timer ishlamay qolsa ham qurilma online qoladi va batareya/
+    // zaryadlanish yangilanadi (token avtomatik refresh bo'ladi).
+    unawaited(_deviceInfoService?.ping() ?? Future<void>.value());
+
     // Notification matnini yangilash — foydalanuvchi service ishlayotganini
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.
     final timeStr = DateFormat('HH:mm').format(timestamp);

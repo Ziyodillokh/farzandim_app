@@ -19,7 +19,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final dioClientProvider = Provider<Dio>((ref) {
-  final tokenStorage = ref.watch(tokenStorageProvider);
+  return createBackendDio(ref.watch(tokenStorageProvider));
+});
+
+/// Backend Dio yaratish — auth (Bearer) + refresh (401 → /auth/refresh + retry)
+/// interceptorlari bilan. UI isolate (provider) VA background isolate
+/// (DeviceInfoService/LocationService) shu funksiyani ishlatadi, shunda
+/// 15-daqiqalik access token tugasa avtomatik yangilanadi (heartbeat/location
+/// to'xtab qolmaydi). Riverpod'siz, har joyda ishlaydi.
+Dio createBackendDio(TokenStorage tokenStorage) {
   final dio = Dio(
     BaseOptions(
       baseUrl: EnvConfig.apiUrl,
@@ -44,7 +52,7 @@ final dioClientProvider = Provider<Dio>((ref) {
   }
 
   return dio;
-});
+}
 
 class _AuthInterceptor extends Interceptor {
   _AuthInterceptor(this._storage);

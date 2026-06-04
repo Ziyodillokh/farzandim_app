@@ -29,44 +29,19 @@ import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
-import 'package:farzandim_child/core/config/env_config.dart';
+import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/offline/offline_buffer.dart';
 
 class LocationService {
   // ─── Backend Dio (Sprint 4.4) ─────────────────────────────────────
-  // Self-contained — main + background isolate'da bir xil ishlaydi.
-  // Token har request'da TokenStorage'dan o'qiladi (refresh interceptor
-  // emas — LocationService o'zi ishlamoqda paytida token refresh
-  // boshqa joyda boshqariladi).
+  // Auth + REFRESH interceptorli (createBackendDio). 15-daqiqalik access
+  // token tugaganda avtomatik yangilanadi — shu sababli background
+  // isolate'da ham (app yopiq) joylashuv/device-info to'xtab qolmaydi.
   late final Dio _dio = _buildDio();
   final TokenStorage _tokenStorage = TokenStorage();
   final OfflineBuffer _offlineBuffer = OfflineBuffer();
 
-  Dio _buildDio() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: EnvConfig.apiUrl,
-        connectTimeout: const Duration(seconds: 10),
-        sendTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    )..interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) async {
-            final token = await _tokenStorage.readAccessToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
-            }
-            handler.next(options);
-          },
-        ),
-      );
-    return dio;
-  }
+  Dio _buildDio() => createBackendDio(_tokenStorage);
 
   // Firestore field olib tashlandi — Backend POST /location ishlatamiz.
 

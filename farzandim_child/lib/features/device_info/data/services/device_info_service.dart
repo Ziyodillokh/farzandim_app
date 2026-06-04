@@ -23,7 +23,7 @@ import 'package:network_info_plus/network_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
-import 'package:farzandim_child/core/config/env_config.dart';
+import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/device_info/data/models/child_device_info.dart';
 
 class DeviceInfoService {
@@ -40,29 +40,16 @@ class DeviceInfoService {
   /// yangilanishi uchun). Ota-ona ekranida ham 10s'da bir qayta o'qiladi.
   static const Duration _interval = Duration(seconds: 20);
 
-  Dio _buildDio() {
-    return Dio(
-      BaseOptions(
-        baseUrl: EnvConfig.apiUrl,
-        connectTimeout: const Duration(seconds: 10),
-        sendTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    )..interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) async {
-            final token = await _tokenStorage.readAccessToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
-            }
-            handler.next(options);
-          },
-        ),
-      );
+  // Auth + REFRESH interceptorli Dio — 15-daqiqalik access token tugaganda
+  // avtomatik yangilanadi, shu sababli heartbeat to'xtab qolmaydi (ilgari
+  // o'z Dio'sida refresh yo'q edi → 15 daqiqadan keyin 401 → offline).
+  Dio _buildDio() => createBackendDio(_tokenStorage);
+
+  /// Foreground service (background isolate) `onRepeatEvent`'idan chaqiriladi —
+  /// kafolatlangan 60s heartbeat (ichki timer hiqqildasa ham online qoladi).
+  Future<void> ping() async {
+    _dio ??= _buildDio();
+    await _sendUpdate();
   }
 
   /// Pairing tugagach chaqiriladi — darhol bir heartbeat + davriy timer.
