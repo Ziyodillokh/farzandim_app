@@ -77,6 +77,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
     required int endMinute,
     required int reminderMinutes, // Backend'da yo'q — saqlanmaydi
     bool isActive = true,
+    List<String> blockedApps = const [],
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -93,6 +94,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
         endMinute: endMinute,
         reminderMinutes: reminderMinutes,
         isActive: isActive,
+        blockedApps: blockedApps,
         createdAt: DateTime.now(),
         updatedAt: DateTime.now(),
       );
@@ -121,6 +123,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
     int? endMinute,
     int? reminderMinutes,
     bool? isActive,
+    List<String>? blockedApps,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -134,6 +137,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
         endMinute: endMinute,
         reminderMinutes: reminderMinutes,
         isActive: isActive,
+        blockedApps: blockedApps,
         updatedAt: DateTime.now(),
       );
       await _repo.updateRoutine(

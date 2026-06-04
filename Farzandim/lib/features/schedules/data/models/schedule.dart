@@ -174,6 +174,7 @@ class Schedule {
     required this.createdAt,
     required this.updatedAt,
     this.isActive = true,
+    this.blockedApps = const [],
   });
 
   /// Backend REST `Routine` JSON'idan parse (Sprint 4.4.4).
@@ -209,6 +210,9 @@ class Schedule {
         .map((d) => weekdayFromIso(d as int))
         .toList(growable: false);
 
+    final blockedRaw = json['blockedApps'] as List<dynamic>? ?? const [];
+    final blockedApps = blockedRaw.map((e) => '$e').toList(growable: false);
+
     return Schedule(
       id: json['id'] as String? ?? '',
       parentUid: parentUid,
@@ -222,6 +226,7 @@ class Schedule {
       endMinute: (json['endMinute'] as num?)?.toInt() ?? 0,
       reminderMinutes: 10, // Backend'da yo'q
       isActive: json['isActive'] as bool? ?? true,
+      blockedApps: blockedApps,
       createdAt: _parseBackendIso(json['createdAt'] as String?) ??
           DateTime.now(),
       updatedAt: _parseBackendIso(json['updatedAt'] as String?) ??
@@ -240,6 +245,7 @@ class Schedule {
       'endMinute': endMinute,
       'weekdays': weekdays.map((w) => w.iso).toList(),
       'isActive': isActive,
+      'blockedApps': blockedApps,
     };
   }
 
@@ -318,6 +324,10 @@ class Schedule {
   /// Yozuv yoqilganmi (false bo'lsa Cloud Function reminder yubormaydi).
   final bool isActive;
 
+  /// "Ilova cheklovlar" — jadval oynasida (startTime..endTime, weekdays)
+  /// bloklanadigan ilova paketlari. Bo'sh bo'lsa "Kiritilmagan".
+  final List<String> blockedApps;
+
   /// Yaratilgan vaqt (server timestamp).
   final DateTime createdAt;
 
@@ -391,6 +401,7 @@ class Schedule {
     int? endMinute,
     int? reminderMinutes,
     bool? isActive,
+    List<String>? blockedApps,
     DateTime? createdAt,
     DateTime? updatedAt,
   }) {
@@ -407,6 +418,7 @@ class Schedule {
       endMinute: endMinute ?? this.endMinute,
       reminderMinutes: reminderMinutes ?? this.reminderMinutes,
       isActive: isActive ?? this.isActive,
+      blockedApps: blockedApps ?? this.blockedApps,
       createdAt: createdAt ?? this.createdAt,
       updatedAt: updatedAt ?? this.updatedAt,
     );

@@ -76,4 +76,13 @@ export class CreateRoutineDto {
   @IsOptional()
   @IsBoolean()
   isActive?: boolean;
+
+  @ApiPropertyOptional({
+    type: [String],
+    description: 'Jadval oynasida bloklanadigan ilova paketlari (Ilova cheklovlar)',
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  blockedApps?: string[];
 }

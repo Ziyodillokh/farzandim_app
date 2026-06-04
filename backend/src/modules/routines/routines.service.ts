@@ -120,6 +120,7 @@ export class RoutinesService {
         endMinute: dto.endMinute,
         weekdays,
         isActive: dto.isActive ?? true,
+        blockedApps: dto.blockedApps ?? [],
       },
     });
 

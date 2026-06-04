@@ -22,13 +22,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
-import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
-import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
 import 'package:farzandim_child/features/device_info/data/services/device_info_service.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
+import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
+import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
+import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
+import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
 import 'package:farzandim_child/firebase_options.dart';
 
 @pragma('vm:entry-point')
@@ -43,6 +47,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
   DeviceInfoService? _deviceInfoService;
   LocationService? _locationService;
   UsageSyncService? _usageSyncService;
+  RestrictionsSyncService? _restrictionsSyncService;
 
   String? _parentUid;
   String? _childId;
@@ -97,6 +102,19 @@ class ChildBackgroundTaskHandler extends TaskHandler {
       childId: _childId!,
     )..start();
 
+    // Cheklov sync (jadval oynasi + app-limit) — background isolate'da ham
+    // ishlaydi, shu sababli bola BOSHQA ilova ishlatganda (farzandim fonda)
+    // ham jadval bloklari yangilanadi. Native RestrictionService prefs'ni
+    // o'qib enforce qiladi.
+    _restrictionsSyncService = RestrictionsSyncService(
+      scheduleRepo:
+          BackendScheduleRepository(dio: createBackendDio(TokenStorage())),
+      appLimitRepo:
+          BackendAppLimitRepository(dio: createBackendDio(TokenStorage())),
+      routineRepo:
+          BackendRoutineRepository(dio: createBackendDio(TokenStorage())),
+    )..start(childId: _childId!);
+
     // FCM token'ni backend'ga QAYTA ro'yxatdan o'tkazamiz. Birinchi pair'da
     // UI isolate init() JWT'dan oldin ishlab token yetmagan bo'lishi mumkin
     // (register 401 -> backend'da token yo'q -> "Baland ovoz" ring sent:0
@@ -129,6 +147,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     _deviceInfoService?.stop();
     _locationService?.stop();
     _usageSyncService?.dispose();
+    _restrictionsSyncService?.dispose();
   }
 
   @override

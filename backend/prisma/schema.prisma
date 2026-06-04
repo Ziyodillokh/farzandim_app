@@ -203,6 +203,7 @@ model Routine {
   endMinute    Int         @map("end_minute")
   weekdays     Int[]                               // ISO 8601 [1=Mon...7=Sun]
   isActive     Boolean     @default(true) @map("is_active")
+  blockedApps  String[]    @default([]) @map("blocked_apps") // "Ilova cheklovlar" — oyna ichida bloklanadigan paketlar
   createdAt    DateTime    @default(now()) @map("created_at")
   updatedAt    DateTime    @updatedAt @map("updated_at")
 

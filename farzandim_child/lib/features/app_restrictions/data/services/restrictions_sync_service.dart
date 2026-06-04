@@ -27,14 +27,18 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
+import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
 
 class RestrictionsSyncService {
   RestrictionsSyncService({
     required BackendScheduleRepository scheduleRepo,
     required BackendAppLimitRepository appLimitRepo,
+    required BackendRoutineRepository routineRepo,
   })  : _scheduleRepo = scheduleRepo,
-        _appLimitRepo = appLimitRepo;
+        _appLimitRepo = appLimitRepo,
+        _routineRepo = routineRepo;
 
   static const _prefsKeyBlocked = 'restriction.blocked_packages';
   static const _prefsKeyLimits = 'restriction.limits';
@@ -42,6 +46,7 @@ class RestrictionsSyncService {
 
   final BackendScheduleRepository _scheduleRepo;
   final BackendAppLimitRepository _appLimitRepo;
+  final BackendRoutineRepository _routineRepo;
   Timer? _syncTimer;
   String? _childId;
 
@@ -54,8 +59,10 @@ class RestrictionsSyncService {
     debugPrint('RestrictionsSync: start $childId');
 
     unawaited(_syncNow());
+    // 1 daqiqa — jadval oynasi chegaralarida (masalan 22:00 boshlanish)
+    // blok ~1 daqiqada kuchga kiradi (avval 5 daqiqa edi — juda sekin).
     _syncTimer = Timer.periodic(
-      const Duration(minutes: 5),
+      const Duration(minutes: 1),
       (_) => unawaited(_syncNow()),
     );
   }
@@ -67,13 +74,15 @@ class RestrictionsSyncService {
   Future<void> _syncNow() async {
     if (_childId == null) return;
     try {
-      // Parallel fetch — ikkalasi mustaqil.
+      // Parallel fetch — uchchalasi mustaqil.
       final results = await Future.wait([
         _scheduleRepo.getSchedules(_childId!),
         _appLimitRepo.getLimits(_childId!),
+        _routineRepo.getRoutines(_childId!),
       ]);
       final policies = results[0] as List<AppSchedulePolicy>;
       final limits = results[1] as List<AppLimit>;
+      final routines = results[2] as List<Schedule>;
 
       // 1. Schedule window'da BLOCK bormi?
       final isWindowBlock = _isCurrentlyBlockedByWindow(policies);
@@ -98,9 +107,14 @@ class RestrictionsSyncService {
         blockedPkgs.add(_wildcardAll);
       }
 
-      // 4. SharedPreferences yozish (comma-separated).
+      // 3b. Jadval (Routine) "Ilova cheklovlar" — hozir aktiv oynadagi har
+      //     routine'ning tanlangan ilovalarini bloklaymiz (per-app). Native
+      //     RestrictionService blocked_packages'ni o'qib enforce qiladi.
+      blockedPkgs.addAll(_routineActiveBlockedApps(routines));
+
+      // 4. SharedPreferences yozish (comma-separated, takrorsiz).
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setString(_prefsKeyBlocked, blockedPkgs.join(','));
+      await prefs.setString(_prefsKeyBlocked, blockedPkgs.toSet().join(','));
       await prefs.setString(_prefsKeyLimits, limitEntries.join(','));
 
       debugPrint(
@@ -132,6 +146,28 @@ class RestrictionsSyncService {
       }
     }
     return false;
+  }
+
+  /// Hozir aktiv jadval (Routine) oynalaridagi "Ilova cheklovlar" paketlari.
+  /// isActive + bugungi kun + vaqt oynasi ichida bo'lsa shu routine'ning
+  /// blockedApps'i qaytariladi (per-app blok).
+  static List<String> _routineActiveBlockedApps(List<Schedule> routines) {
+    final now = DateTime.now();
+    final nowMinutes = now.hour * 60 + now.minute;
+    final isoWeekday = now.weekday; // 1..7
+    final result = <String>[];
+    for (final r in routines) {
+      if (!r.isActive) continue;
+      if (r.blockedApps.isEmpty) continue;
+      // Weekday enum index 0 = monday = ISO 1.
+      if (!r.weekdays.any((w) => w.index + 1 == isoWeekday)) continue;
+      final startMin = r.startHour * 60 + r.startMinute;
+      final endMin = r.endHour * 60 + r.endMinute;
+      if (_isInWindow(nowMinutes, startMin, endMin)) {
+        result.addAll(r.blockedApps);
+      }
+    }
+    return result;
   }
 
   static int? _parseHhMm(String hhmm) {

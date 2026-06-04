@@ -49,6 +49,9 @@ class Schedule {
   final List<Weekday> weekdays;
   final bool isActive;
 
+  /// "Ilova cheklovlar" — jadval oynasida bloklanadigan paketlar.
+  final List<String> blockedApps;
+
   const Schedule({
     required this.id,
     required this.title,
@@ -59,6 +62,7 @@ class Schedule {
     required this.endMinute,
     required this.weekdays,
     required this.isActive,
+    this.blockedApps = const [],
   });
 
   /// Backend REST `Routine` JSON'idan parse (Sprint 4.4.9 Day 3).
@@ -97,6 +101,9 @@ class Schedule {
       endMinute: (json['endMinute'] as num?)?.toInt() ?? 0,
       weekdays: weekdays,
       isActive: json['isActive'] as bool? ?? true,
+      blockedApps: ((json['blockedApps'] as List?) ?? const [])
+          .map((e) => '$e')
+          .toList(growable: false),
     );
   }
 

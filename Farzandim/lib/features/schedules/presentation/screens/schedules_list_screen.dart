@@ -1,55 +1,41 @@
-import 'package:easy_localization/easy_localization.dart';
+// ─────────────────────────────────────────────────────────────────────
+// SchedulesListScreen — "Jadval" (Figma 1:1, dinamik)
+// ─────────────────────────────────────────────────────────────────────
+//
+// Ikkita yig'iladigan karta: "Uyqu vaqtida bloklash" (SLEEP) va "Dars vaqti"
+// (SCHOOL). Har kartada master toggle: YOQILGAN bo'lsa 3 qator ochiladi:
+//   - "Bugun"            → vaqt oraliqi (bosilsa tahrirlanadi)
+//   - "Haftalik jadval"  → qaysi kunlar (bosilsa tahrirlanadi)
+//   - "Ilova cheklovlar" → oyna ichida bloklanadigan ilovalar (picker)
+// O'CHIRILGAN bo'lsa karta yig'iladi (faqat sarlavha + toggle).
+//
+// Ma'lumot mavjud Routine model + schedulesProvider/scheduleActionsProvider
+// (Backend CRUD) bilan — dublikat kod yo'q.
+
+// ignore_for_file: public_member_api_docs
+
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/utils/extensions.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
-import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/skeleton_card.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Bola jadvallari ekran (per-child).
-///
-/// **UI:**
-/// - Yuqorida day picker (7 ta chip — Du-Ya), bugungi kun default
-///   tanlangan, lime green
-/// - Tanlangan kunda boshlanadigan yozuvlar timeline tarzida
-///   (Stream Firestore'dan)
-/// - Pastdagi FAB → bottom sheet (yangi/tahrirlash)
-/// - Karta tap → tahrirlash sheet'i
-/// - Switch — `isActive` toggle (Cloud Function reminder uchun)
-class SchedulesListScreen extends ConsumerStatefulWidget {
-  /// `SchedulesListScreen` konstruktor.
+class SchedulesListScreen extends ConsumerWidget {
   const SchedulesListScreen({required this.childId, super.key});
 
-  /// Qaysi bola uchun jadvallar.
   final String childId;
 
   @override
-  ConsumerState<SchedulesListScreen> createState() =>
-      _SchedulesListScreenState();
-}
-
-class _SchedulesListScreenState
-    extends ConsumerState<SchedulesListScreen> {
-  late int _selectedDayIso; // 1=Du ... 7=Ya
-
-  @override
-  void initState() {
-    super.initState();
-    _selectedDayIso = DateTime.now().weekday;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final schedulesAsync =
-        ref.watch(schedulesProvider(widget.childId));
-    final selectedWeekday = weekdayFromIso(_selectedDayIso);
+  Widget build(BuildContext context, WidgetRef ref) {
+    final schedulesAsync = ref.watch(schedulesProvider(childId));
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -58,42 +44,43 @@ class _SchedulesListScreenState
           child: Column(
             children: [
               const _Header(),
-              _DayPicker(
-                selectedIso: _selectedDayIso,
-                onChanged: (d) => setState(() => _selectedDayIso = d),
-              ),
-              const SizedBox(height: AppDimensions.md),
               Expanded(
                 child: schedulesAsync.when(
-                  data: (all) {
-                    final dayEntries = all
-                        .where(
-                          (s) => s.weekdays.contains(selectedWeekday),
-                        )
-                        .toList()
-                      ..sort(
-                        (a, b) =>
-                            a.startMinutes.compareTo(b.startMinutes),
-                      );
-
-                    if (dayEntries.isEmpty) return const _EmptyDay();
-                    return _Timeline(
-                      entries: dayEntries,
-                      onEdit: _onEdit,
-                    );
-                  },
-                  // Skeleton: schedule card list (default height 88)
-                  loading: () => const SkeletonList(
-                    itemCount: 4,
-                    padding: EdgeInsets.fromLTRB(16, 8, 16, 24),
+                  data: (all) => ListView(
+                    padding: const EdgeInsets.fromLTRB(
+                      AppDimensions.lg,
+                      AppDimensions.sm,
+                      AppDimensions.lg,
+                      AppDimensions.xl,
+                    ),
+                    children: [
+                      _ScheduleCard(
+                        childId: childId,
+                        type: ScheduleType.sleep,
+                        title: 'Uyqu vaqtida bloklash',
+                        schedule: all.firstWhereOrNull(
+                          (s) => s.type == ScheduleType.sleep,
+                        ),
+                      ),
+                      const SizedBox(height: AppDimensions.lg),
+                      _ScheduleCard(
+                        childId: childId,
+                        type: ScheduleType.school,
+                        title: 'Dars vaqti',
+                        schedule: all.firstWhereOrNull(
+                          (s) => s.type == ScheduleType.school,
+                        ),
+                      ),
+                    ],
+                  ),
+                  loading: () => const Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                   error: (e, _) => Center(
                     child: Padding(
                       padding: const EdgeInsets.all(AppDimensions.lg),
                       child: Text(
-                        'schedules.errorPrefix'.tr(
-                          namedArgs: {'error': '$e'},
-                        ),
+                        'Xato: $e',
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodyS.copyWith(
                           color: AppColors.textSecondary,
@@ -107,34 +94,6 @@ class _SchedulesListScreenState
           ),
         ),
       ),
-      floatingActionButton: FloatingActionButton.extended(
-        onPressed: _onAdd,
-        backgroundColor: AppColors.primary,
-        foregroundColor: AppColors.background,
-        icon: const Icon(Icons.add),
-        label: Text(
-          'schedules.newFab'.tr(),
-          style: AppTextStyles.bodyM.copyWith(
-            color: AppColors.background,
-            fontWeight: FontWeight.w600,
-          ),
-        ),
-      ),
-    );
-  }
-
-  Future<void> _onAdd() => _openSheet(null);
-  Future<void> _onEdit(Schedule entry) => _openSheet(entry);
-
-  Future<void> _openSheet(Schedule? entry) async {
-    await showModalBottomSheet<void>(
-      context: context,
-      isScrollControlled: true,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _ScheduleEditSheet(
-        childId: widget.childId,
-        entry: entry,
-      ),
     );
   }
 }
@@ -147,28 +106,29 @@ class _Header extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: AppDimensions.sm,
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.sm,
+        AppDimensions.sm,
+        AppDimensions.sm,
+        AppDimensions.md,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: IconButton(
-              icon: const Icon(
-                Icons.arrow_back,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () => context.pop(),
+          IconButton(
+            onPressed: () => context.pop(),
+            icon: const Icon(
+              Icons.arrow_back_rounded,
+              color: AppColors.textPrimary,
             ),
           ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'schedules.headerTitle'.tr(),
-                style: AppTextStyles.headlineL.copyWith(fontSize: 20),
+          const Expanded(
+            child: Text(
+              'Jadval',
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
@@ -179,32 +139,420 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ════════════════════════ DAY PICKER ════════════════════════
+// ════════════════════════ SCHEDULE CARD ════════════════════════
 
-class _DayPicker extends StatelessWidget {
-  const _DayPicker({required this.selectedIso, required this.onChanged});
+class _ScheduleCard extends ConsumerWidget {
+  const _ScheduleCard({
+    required this.childId,
+    required this.type,
+    required this.title,
+    required this.schedule,
+  });
 
-  final int selectedIso;
-  final ValueChanged<int> onChanged;
+  final String childId;
+  final ScheduleType type;
+  final String title;
+  final Schedule? schedule;
+
+  bool get _isOn => schedule != null && schedule!.isActive;
+
+  // Yangi yaratiladigan jadval uchun aqlli default'lar.
+  ({int sh, int sm, int eh, int em, List<Weekday> days}) get _defaults {
+    if (type == ScheduleType.sleep) {
+      return (sh: 22, sm: 0, eh: 7, em: 0, days: Weekday.values);
+    }
+    return (
+      sh: 8,
+      sm: 0,
+      eh: 14,
+      em: 0,
+      days: const [
+        Weekday.monday,
+        Weekday.tuesday,
+        Weekday.wednesday,
+        Weekday.thursday,
+        Weekday.friday,
+      ],
+    );
+  }
+
+  Future<void> _onToggle(WidgetRef ref, bool value) async {
+    final actions = ref.read(scheduleActionsProvider.notifier);
+    final current = schedule;
+    if (value) {
+      if (current == null) {
+        final d = _defaults;
+        await actions.addSchedule(
+          childId: childId,
+          title: title,
+          type: type,
+          weekdays: d.days,
+          startHour: d.sh,
+          startMinute: d.sm,
+          endHour: d.eh,
+          endMinute: d.em,
+          reminderMinutes: 0,
+        );
+      } else {
+        await actions.toggleActive(
+          childId: childId,
+          scheduleId: current.id,
+          current: current,
+          isActive: true,
+        );
+      }
+    } else if (current != null) {
+      await actions.toggleActive(
+        childId: childId,
+        scheduleId: current.id,
+        current: current,
+        isActive: false,
+      );
+    }
+  }
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final accent = type.color;
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+      ),
+      padding: const EdgeInsets.all(AppDimensions.md),
+      child: Column(
+        children: [
+          // ─── Sarlavha + toggle ───
+          Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: accent.withValues(alpha: 0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(type.icon, color: accent, size: 20),
+              ),
+              const SizedBox(width: AppDimensions.md),
+              Expanded(
+                child: Text(
+                  title,
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              Switch.adaptive(
+                value: _isOn,
+                activeTrackColor: AppColors.success,
+                onChanged: (v) => _onToggle(ref, v),
+              ),
+            ],
+          ),
+
+          // ─── Yoqilgan bo'lsa: 3 qator ───
+          if (_isOn && schedule != null) ...[
+            const SizedBox(height: AppDimensions.sm),
+            const Divider(height: 1, color: AppColors.divider),
+            _SubRow(
+              label: 'Bugun',
+              value: schedule!.timeRangeFormatted,
+              onTap: () => _editTime(context, ref, schedule!),
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            _SubRow(
+              label: 'Haftalik jadval',
+              value: schedule!.weekdaysFormatted,
+              onTap: () => _editDays(context, ref, schedule!),
+            ),
+            const Divider(height: 1, color: AppColors.divider),
+            _SubRow(
+              label: 'Ilova cheklovlar',
+              trailing: _AppsTrailing(
+                childId: childId,
+                packages: schedule!.blockedApps,
+              ),
+              onTap: () => _editApps(context, ref, schedule!),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  // ─── Vaqt oraliqi tahrirlash ───
+  Future<void> _editTime(
+    BuildContext context,
+    WidgetRef ref,
+    Schedule s,
+  ) async {
+    final start = await showTimePicker(
+      context: context,
+      initialTime: s.startTime,
+      helpText: 'Boshlanish vaqti',
+    );
+    if (start == null || !context.mounted) return;
+    final end = await showTimePicker(
+      context: context,
+      initialTime: s.endTime,
+      helpText: 'Tugash vaqti',
+    );
+    if (end == null) return;
+    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+          childId: childId,
+          scheduleId: s.id,
+          current: s,
+          startHour: start.hour,
+          startMinute: start.minute,
+          endHour: end.hour,
+          endMinute: end.minute,
+        );
+  }
+
+  // ─── Hafta kunlari tahrirlash ───
+  Future<void> _editDays(
+    BuildContext context,
+    WidgetRef ref,
+    Schedule s,
+  ) async {
+    final result = await showModalBottomSheet<List<Weekday>>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusL),
+        ),
+      ),
+      builder: (_) => _DaysSheet(initial: s.weekdays),
+    );
+    if (result == null || result.isEmpty) return;
+    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+          childId: childId,
+          scheduleId: s.id,
+          current: s,
+          weekdays: result,
+        );
+  }
+
+  // ─── Ilova cheklovlar (picker) ───
+  Future<void> _editApps(
+    BuildContext context,
+    WidgetRef ref,
+    Schedule s,
+  ) async {
+    final result = await showModalBottomSheet<List<String>>(
+      context: context,
+      backgroundColor: AppColors.surface,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(
+          top: Radius.circular(AppDimensions.radiusL),
+        ),
+      ),
+      builder: (_) => _AppPickerSheet(
+        childId: childId,
+        initial: s.blockedApps,
+      ),
+    );
+    if (result == null) return;
+    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+          childId: childId,
+          scheduleId: s.id,
+          current: s,
+          blockedApps: result,
+        );
+  }
+}
+
+class _SubRow extends StatelessWidget {
+  const _SubRow({
+    required this.label,
+    required this.onTap,
+    this.value,
+    this.trailing,
+  });
+
+  final String label;
+  final String? value;
+  final Widget? trailing;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                label,
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.textSecondary,
+                ),
+              ),
+            ),
+            if (value != null)
+              Text(
+                value!,
+                style: AppTextStyles.bodyM.copyWith(
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            if (trailing != null) trailing!,
+            const SizedBox(width: 6),
+            const Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textTertiary,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Ilova cheklovlar" o'ng tomoni — tanlangan ikonalar yoki "Kiritilmagan".
+class _AppsTrailing extends ConsumerWidget {
+  const _AppsTrailing({required this.childId, required this.packages});
+
+  final String childId;
+  final List<String> packages;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (packages.isEmpty) {
+      return Text(
+        'Kiritilmagan',
+        style: AppTextStyles.bodyM.copyWith(color: AppColors.textTertiary),
+      );
+    }
+    final installed =
+        ref.watch(installedAppsProvider(childId)).valueOrNull ?? const [];
+    final byPkg = {for (final a in installed) a.packageName: a};
+    final shown = packages.take(3).toList();
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        for (var i = 0; i < shown.length; i++)
+          Padding(
+            padding: EdgeInsets.only(left: i == 0 ? 0 : 4),
+            child: AppIconWidget(
+              packageName: shown[i],
+              iconUrl: byPkg[shown[i]]?.iconUrl,
+              size: 26,
+            ),
+          ),
+        if (packages.length > 3)
+          Padding(
+            padding: const EdgeInsets.only(left: 4),
+            child: Text(
+              '+${packages.length - 3}',
+              style: AppTextStyles.bodyS.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
+// ════════════════════════ DAYS SHEET ════════════════════════
+
+class _DaysSheet extends StatefulWidget {
+  const _DaysSheet({required this.initial});
+
+  final List<Weekday> initial;
+
+  @override
+  State<_DaysSheet> createState() => _DaysSheetState();
+}
+
+class _DaysSheetState extends State<_DaysSheet> {
+  late final Set<Weekday> _selected = {...widget.initial};
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding:
-          const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
-      child: Row(
+      padding: const EdgeInsets.fromLTRB(
+        AppDimensions.lg,
+        AppDimensions.md,
+        AppDimensions.lg,
+        AppDimensions.xl,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          for (final w in Weekday.values)
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 3),
-                child: _DayChip(
-                  label: w.label,
-                  isSelected: w.iso == selectedIso,
-                  onTap: () => onChanged(w.iso),
-                ),
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: AppColors.border,
+                borderRadius: BorderRadius.circular(2),
               ),
             ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+          Text(
+            'Haftalik jadval',
+            style: AppTextStyles.headlineL.copyWith(
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+          Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              for (final w in Weekday.values)
+                _DayChip(
+                  label: w.label,
+                  selected: _selected.contains(w),
+                  onTap: () => setState(() {
+                    if (_selected.contains(w)) {
+                      _selected.remove(w);
+                    } else {
+                      _selected.add(w);
+                    }
+                  }),
+                ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.lg),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: _selected.isEmpty
+                  ? null
+                  : () {
+                      final list = _selected.toList()
+                        ..sort((a, b) => a.iso.compareTo(b.iso));
+                      Navigator.of(context).pop(list);
+                    },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: AppColors.background,
+                padding: const EdgeInsets.symmetric(
+                  vertical: AppDimensions.md,
+                ),
+                shape: RoundedRectangleBorder(
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusPill),
+                ),
+              ),
+              child: const Text(
+                'Saqlash',
+                style: TextStyle(fontWeight: FontWeight.w700),
+              ),
+            ),
+          ),
         ],
       ),
     );
@@ -214,34 +562,31 @@ class _DayPicker extends StatelessWidget {
 class _DayChip extends StatelessWidget {
   const _DayChip({
     required this.label,
-    required this.isSelected,
+    required this.selected,
     required this.onTap,
   });
 
   final String label;
-  final bool isSelected;
+  final bool selected;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: isSelected ? AppColors.primary : AppColors.surface,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          height: 44,
-          child: Center(
-            child: Text(
-              label,
-              style: AppTextStyles.bodyS.copyWith(
-                color: isSelected
-                    ? AppColors.background
-                    : AppColors.textPrimary,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 44,
+        height: 44,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: selected ? AppColors.primary : AppColors.surfaceVariant,
+          shape: BoxShape.circle,
+        ),
+        child: Text(
+          label,
+          style: AppTextStyles.bodyS.copyWith(
+            color: selected ? AppColors.background : AppColors.textPrimary,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ),
@@ -249,300 +594,34 @@ class _DayChip extends StatelessWidget {
   }
 }
 
-// ════════════════════════ TIMELINE / EMPTY ════════════════════════
+// ════════════════════════ APP PICKER SHEET ════════════════════════
 
-class _EmptyDay extends StatelessWidget {
-  const _EmptyDay();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding:
-            const EdgeInsets.symmetric(horizontal: AppDimensions.xl),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(
-              Icons.event_available_outlined,
-              size: 64,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppDimensions.md),
-            Text(
-              'schedules.empty.title'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'schedules.empty.subtitle'.tr(),
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textSecondary,
-                fontSize: 13,
-              ),
-              textAlign: TextAlign.center,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-class _Timeline extends StatelessWidget {
-  const _Timeline({required this.entries, required this.onEdit});
-
-  final List<Schedule> entries;
-  final void Function(Schedule) onEdit;
-
-  @override
-  Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.lg,
-        0,
-        AppDimensions.lg,
-        96, // FAB ostidan ko'rinishi uchun
-      ),
-      itemCount: entries.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (_, i) => _EntryCard(
-        entry: entries[i],
-        onTap: () => onEdit(entries[i]),
-      )
-          // Stagger: har timeline entry 50ms kechikish bilan
-          .animate()
-          .fadeIn(
-            duration: 300.ms,
-            delay: (50 * i).ms,
-          )
-          .slideY(
-            begin: 0.1,
-            end: 0,
-            duration: 300.ms,
-            delay: (50 * i).ms,
-            curve: Curves.easeOutCubic,
-          ),
-    );
-  }
-}
-
-class _EntryCard extends ConsumerWidget {
-  const _EntryCard({required this.entry, required this.onTap});
-
-  final Schedule entry;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final color = entry.type.color;
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.md),
-          child: IntrinsicHeight(
-            child: Row(
-              children: [
-                // Vaqt + vertikal chiziq.
-                SizedBox(
-                  width: 48,
-                  child: Column(
-                    children: [
-                      Text(
-                        entry.startTimeFormatted,
-                        style: AppTextStyles.label.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      Expanded(
-                        child: Container(
-                          width: 2,
-                          margin:
-                              const EdgeInsets.symmetric(vertical: 4),
-                          color: AppColors.border,
-                        ),
-                      ),
-                      Text(
-                        entry.endTimeFormatted,
-                        style: AppTextStyles.label.copyWith(
-                          color: AppColors.textSecondary,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: AppDimensions.md),
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.2),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(entry.type.icon, color: color, size: 22),
-                ),
-                const SizedBox(width: AppDimensions.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        entry.title.isEmpty
-                            ? entry.type.label
-                            : entry.title,
-                        style: AppTextStyles.bodyM.copyWith(
-                          fontWeight: FontWeight.w700,
-                          color: entry.isActive
-                              ? AppColors.textPrimary
-                              : AppColors.textSecondary,
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        entry.weekdaysFormatted,
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      if (entry.reminderMinutes > 0) ...[
-                        const SizedBox(height: 4),
-                        Row(
-                          children: [
-                            const Icon(
-                              Icons.notifications_outlined,
-                              size: 14,
-                              color: AppColors.textSecondary,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${entry.reminderMinutes} daqiqa oldin',
-                              style: AppTextStyles.label.copyWith(
-                                color: AppColors.textSecondary,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-                Switch(
-                  value: entry.isActive,
-                  onChanged: (v) async {
-                    await ref
-                        .read(scheduleActionsProvider.notifier)
-                        .toggleActive(
-                          childId: entry.childId,
-                          scheduleId: entry.id,
-                          current: entry,
-                          isActive: v,
-                        );
-                  },
-                  activeThumbColor: AppColors.background,
-                  activeTrackColor: AppColors.primary,
-                  inactiveThumbColor: AppColors.textSecondary,
-                  inactiveTrackColor: AppColors.border,
-                  materialTapTargetSize:
-                      MaterialTapTargetSize.shrinkWrap,
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════ EDIT SHEET ════════════════════════
-
-class _ScheduleEditSheet extends ConsumerStatefulWidget {
-  const _ScheduleEditSheet({required this.childId, this.entry});
+class _AppPickerSheet extends ConsumerStatefulWidget {
+  const _AppPickerSheet({required this.childId, required this.initial});
 
   final String childId;
-  final Schedule? entry;
+  final List<String> initial;
 
   @override
-  ConsumerState<_ScheduleEditSheet> createState() =>
-      _ScheduleEditSheetState();
+  ConsumerState<_AppPickerSheet> createState() => _AppPickerSheetState();
 }
 
-class _ScheduleEditSheetState
-    extends ConsumerState<_ScheduleEditSheet> {
-  late TextEditingController _titleController;
-  late TimeOfDay _startTime;
-  late TimeOfDay _endTime;
-  late Set<Weekday> _selectedWeekdays;
-  late ScheduleType _type;
-  late int _reminderMinutes;
-  late bool _isActive;
-  bool _saving = false;
-
-  /// Reminder uchun ruxsat etilgan qiymatlar.
-  static const _reminderOptions = [0, 5, 10, 15, 30];
-
-  bool get _isEditMode => widget.entry != null;
-
-  bool get _isFormValid =>
-      _titleController.text.trim().isNotEmpty &&
-      _selectedWeekdays.isNotEmpty;
-
-  @override
-  void initState() {
-    super.initState();
-    final e = widget.entry;
-    _titleController = TextEditingController(
-      text: e?.title ?? ScheduleType.school.label,
-    );
-    _startTime = e?.startTime ?? const TimeOfDay(hour: 9, minute: 0);
-    _endTime = e?.endTime ?? const TimeOfDay(hour: 10, minute: 0);
-    _selectedWeekdays = e?.weekdays.toSet() ??
-        {weekdayFromIso(DateTime.now().weekday)};
-    _type = e?.type ?? ScheduleType.school;
-    _reminderMinutes = e?.reminderMinutes ?? 10;
-    _isActive = e?.isActive ?? true;
-  }
-
-  @override
-  void dispose() {
-    _titleController.dispose();
-    super.dispose();
-  }
+class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
+  late final Set<String> _selected = {...widget.initial};
 
   @override
   Widget build(BuildContext context) {
-    final viewInsets = MediaQuery.viewInsetsOf(context);
-    return Padding(
-      padding: EdgeInsets.only(bottom: viewInsets.bottom),
-      child: Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.vertical(
-            top: Radius.circular(AppDimensions.radiusL),
-          ),
-        ),
-        constraints: BoxConstraints(
-          maxHeight: MediaQuery.sizeOf(context).height * 0.9,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    final installedAsync = ref.watch(installedAppsProvider(widget.childId));
+    return DraggableScrollableSheet(
+      expand: false,
+      initialChildSize: 0.7,
+      maxChildSize: 0.92,
+      minChildSize: 0.5,
+      builder: (context, scrollController) {
+        return Column(
           children: [
-            // Drag handle.
+            const SizedBox(height: AppDimensions.sm),
             Container(
-              margin: const EdgeInsets.only(top: 8),
               width: 40,
               height: 4,
               decoration: BoxDecoration(
@@ -551,638 +630,127 @@ class _ScheduleEditSheetState
               ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.lg,
-                AppDimensions.md,
-                AppDimensions.lg,
-                AppDimensions.sm,
-              ),
+              padding: const EdgeInsets.all(AppDimensions.lg),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
-                      _isEditMode
-                          ? 'schedules.edit.titleEdit'.tr()
-                          : 'schedules.edit.titleAdd'.tr(),
+                      'Ilova cheklovlar',
                       style: AppTextStyles.headlineL.copyWith(
-                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
                       ),
                     ),
                   ),
-                  if (_isEditMode)
-                    IconButton(
-                      icon: const Icon(
-                        Icons.delete_outline,
-                        color: AppColors.error,
+                  TextButton(
+                    onPressed: () =>
+                        Navigator.of(context).pop(_selected.toList()),
+                    child: Text(
+                      'Saqlash',
+                      style: AppTextStyles.bodyM.copyWith(
+                        color: AppColors.primary,
+                        fontWeight: FontWeight.w700,
                       ),
-                      onPressed: _saving ? null : _onDelete,
                     ),
+                  ),
                 ],
               ),
             ),
-            Flexible(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: AppDimensions.lg,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _Label('schedules.edit.typeLabel'.tr()),
-                    const SizedBox(height: AppDimensions.sm),
-                    _TypeSelector(
-                      selected: _type,
-                      onChanged: (t) => setState(() {
-                        _type = t;
-                        // Default sarlavha — foydalanuvchi yozmagan
-                        // bo'lsa type label avtomatik to'ldiriladi.
-                        // 'custom' tanlansa bo'sh qoldirib, foydalanuvchi
-                        // o'z matnini kiritsin.
-                        if (t != ScheduleType.custom &&
-                            (_titleController.text.trim().isEmpty ||
-                                ScheduleType.values.any(
-                                  (st) => st.label == _titleController
-                                      .text.trim(),
-                                ))) {
-                          _titleController.text = t.label;
-                        }
-                      }),
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _Label('schedules.edit.titleFieldLabel'.tr()),
-                    const SizedBox(height: AppDimensions.sm),
-                    CustomTextField(
-                      controller: _titleController,
-                      hint: 'schedules.edit.titleFieldHint'.tr(),
-                      maxLength: 40,
-                      onChanged: (_) => setState(() {}),
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _Label('schedules.edit.timeLabel'.tr()),
-                    const SizedBox(height: AppDimensions.sm),
-                    Row(
-                      children: [
-                        Expanded(
-                          child: _TimeField(
-                            label: 'schedules.edit.startLabel'.tr(),
-                            time: _startTime,
-                            onTap: () => _pickTime(true),
-                          ),
+            Expanded(
+              child: installedAsync.when(
+                data: (apps) {
+                  final list = apps
+                      .where((a) => a.appName.isNotEmpty)
+                      .toList()
+                    ..sort((a, b) => a.appName.compareTo(b.appName));
+                  if (list.isEmpty) {
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(AppDimensions.xl),
+                        child: Text(
+                          "Ilovalar ro'yxati hali yuklanmadi",
+                          style: TextStyle(color: AppColors.textSecondary),
                         ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: _TimeField(
-                            label: 'schedules.edit.endLabel'.tr(),
-                            time: _endTime,
-                            onTap: () => _pickTime(false),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _Label('schedules.edit.weekdaysLabel'.tr()),
-                    const SizedBox(height: AppDimensions.sm),
-                    _ShortcutDays(
-                      selected: _selectedWeekdays,
-                      onSelectAll: () => setState(() {
-                        _selectedWeekdays = Weekday.values.toSet();
-                      }),
-                      onSelectWeekdays: () => setState(() {
-                        _selectedWeekdays = const {
-                          Weekday.monday,
-                          Weekday.tuesday,
-                          Weekday.wednesday,
-                          Weekday.thursday,
-                          Weekday.friday,
-                        };
-                      }),
-                      onSelectWeekend: () => setState(() {
-                        _selectedWeekdays = const {
-                          Weekday.saturday,
-                          Weekday.sunday,
-                        };
-                      }),
-                    ),
-                    const SizedBox(height: AppDimensions.sm),
-                    _DaysSelector(
-                      selected: _selectedWeekdays,
-                      onToggle: (w) => setState(() {
-                        if (_selectedWeekdays.contains(w)) {
-                          _selectedWeekdays.remove(w);
+                      ),
+                    );
+                  }
+                  return ListView.builder(
+                    controller: scrollController,
+                    itemCount: list.length,
+                    itemBuilder: (_, i) => _AppPickRow(
+                      app: list[i],
+                      selected: _selected.contains(list[i].packageName),
+                      onChanged: (sel) => setState(() {
+                        if (sel) {
+                          _selected.add(list[i].packageName);
                         } else {
-                          _selectedWeekdays.add(w);
+                          _selected.remove(list[i].packageName);
                         }
                       }),
                     ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _Label('schedules.edit.reminderLabel'.tr()),
-                    const SizedBox(height: AppDimensions.sm),
-                    _ReminderSelector(
-                      selected: _reminderMinutes,
-                      options: _reminderOptions,
-                      onChanged: (m) =>
-                          setState(() => _reminderMinutes = m),
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _ActiveToggle(
-                      value: _isActive,
-                      onChanged: (v) => setState(() => _isActive = v),
-                    ),
-                    const SizedBox(height: AppDimensions.xl),
-                  ],
+                  );
+                },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: AppColors.primary),
                 ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(
-                AppDimensions.lg,
-                AppDimensions.sm,
-                AppDimensions.lg,
-                AppDimensions.lg,
-              ),
-              child: PrimaryButton(
-                label: _saving
-                    ? 'schedules.edit.savingButton'.tr()
-                    : (_isEditMode
-                        ? 'schedules.edit.updateButton'.tr()
-                        : 'schedules.edit.saveButton'.tr()),
-                icon: Icons.check,
-                onPressed:
-                    (_isFormValid && !_saving) ? _onSave : null,
+                error: (e, _) => Center(
+                  child: Text(
+                    'Xato: $e',
+                    style: const TextStyle(color: AppColors.textSecondary),
+                  ),
+                ),
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Future<void> _pickTime(bool isStart) async {
-    final initial = isStart ? _startTime : _endTime;
-    final picked = await showTimePicker(
-      context: context,
-      initialTime: initial,
-    );
-    if (picked == null) return;
-    setState(() {
-      if (isStart) {
-        _startTime = picked;
-      } else {
-        _endTime = picked;
-      }
-    });
-  }
-
-  Future<void> _onSave() async {
-    setState(() => _saving = true);
-    final notifier = ref.read(scheduleActionsProvider.notifier);
-    final daysList = _selectedWeekdays.toList()
-      ..sort((a, b) => a.iso.compareTo(b.iso));
-    final title = _titleController.text.trim();
-
-    final result = _isEditMode
-        ? await notifier.updateSchedule(
-            childId: widget.childId,
-            scheduleId: widget.entry!.id,
-            current: widget.entry!,
-            title: title,
-            type: _type,
-            weekdays: daysList,
-            startHour: _startTime.hour,
-            startMinute: _startTime.minute,
-            endHour: _endTime.hour,
-            endMinute: _endTime.minute,
-            reminderMinutes: _reminderMinutes,
-            isActive: _isActive,
-          )
-        : await notifier.addSchedule(
-            childId: widget.childId,
-            title: title,
-            type: _type,
-            weekdays: daysList,
-            startHour: _startTime.hour,
-            startMinute: _startTime.minute,
-            endHour: _endTime.hour,
-            endMinute: _endTime.minute,
-            reminderMinutes: _reminderMinutes,
-            isActive: _isActive,
-          );
-
-    if (!mounted) return;
-    if (result.isSuccess) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'schedules.edit.saveErrorPrefix'.tr(
-              namedArgs: {'error': '${result.error}'},
-            ),
-          ),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
-  }
-
-  Future<void> _onDelete() async {
-    setState(() => _saving = true);
-    final result = await ref
-        .read(scheduleActionsProvider.notifier)
-        .deleteSchedule(
-          childId: widget.childId,
-          scheduleId: widget.entry!.id,
         );
-    if (!mounted) return;
-    if (result.isSuccess) {
-      Navigator.of(context).pop();
-    } else {
-      setState(() => _saving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'schedules.edit.deleteErrorPrefix'.tr(
-              namedArgs: {'error': '${result.error}'},
-            ),
-          ),
-          backgroundColor: AppColors.error,
-        ),
-      );
-    }
-  }
-}
-
-// ════════════════════════ FORM HELPERS ════════════════════════
-
-class _Label extends StatelessWidget {
-  const _Label(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
+      },
     );
   }
 }
 
-class _TimeField extends StatelessWidget {
-  const _TimeField({
-    required this.label,
-    required this.time,
-    required this.onTap,
-  });
-
-  final String label;
-  final TimeOfDay time;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final formatted =
-        '${time.hour.toString().padLeft(2, '0')}:'
-        '${time.minute.toString().padLeft(2, '0')}';
-    final borderRadius =
-        BorderRadius.circular(AppDimensions.radiusPill);
-    return Material(
-      color: AppColors.surfaceVariant,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.lg,
-            vertical: 14,
-          ),
-          child: Row(
-            children: [
-              Text(
-                label,
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const Spacer(),
-              Text(
-                formatted,
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'monospace',
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ShortcutDays extends StatelessWidget {
-  const _ShortcutDays({
+class _AppPickRow extends StatelessWidget {
+  const _AppPickRow({
+    required this.app,
     required this.selected,
-    required this.onSelectAll,
-    required this.onSelectWeekdays,
-    required this.onSelectWeekend,
-  });
-
-  final Set<Weekday> selected;
-  final VoidCallback onSelectAll;
-  final VoidCallback onSelectWeekdays;
-  final VoidCallback onSelectWeekend;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      children: [
-        _ShortcutChip(
-          label: 'schedules.edit.shortcutAll'.tr(),
-          onTap: onSelectAll,
-        ),
-        _ShortcutChip(
-          label: 'schedules.edit.shortcutWeekdays'.tr(),
-          onTap: onSelectWeekdays,
-        ),
-        _ShortcutChip(
-          label: 'schedules.edit.shortcutWeekend'.tr(),
-          onTap: onSelectWeekend,
-        ),
-      ],
-    );
-  }
-}
-
-class _ShortcutChip extends StatelessWidget {
-  const _ShortcutChip({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final borderRadius =
-        BorderRadius.circular(AppDimensions.radiusPill);
-    return Material(
-      color: AppColors.surfaceVariant,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 6,
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _DaysSelector extends StatelessWidget {
-  const _DaysSelector({required this.selected, required this.onToggle});
-
-  final Set<Weekday> selected;
-  final ValueChanged<Weekday> onToggle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        for (final w in Weekday.values)
-          Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 3),
-              child: _DayChip(
-                label: w.label,
-                isSelected: selected.contains(w),
-                onTap: () => onToggle(w),
-              ),
-            ),
-          ),
-      ],
-    );
-  }
-}
-
-class _TypeSelector extends StatelessWidget {
-  const _TypeSelector({required this.selected, required this.onChanged});
-
-  final ScheduleType selected;
-  final ValueChanged<ScheduleType> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      runSpacing: 8,
-      children: [
-        for (final t in ScheduleType.values)
-          _TypeChip(
-            type: t,
-            isSelected: t == selected,
-            onTap: () => onChanged(t),
-          ),
-      ],
-    );
-  }
-}
-
-class _TypeChip extends StatelessWidget {
-  const _TypeChip({
-    required this.type,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final ScheduleType type;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final color = type.color;
-    final bgColor = isSelected ? color : AppColors.surfaceVariant;
-    final fgColor =
-        isSelected ? AppColors.background : AppColors.textPrimary;
-    final borderRadius =
-        BorderRadius.circular(AppDimensions.radiusPill);
-    return Material(
-      color: bgColor,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(type.icon, size: 16, color: fgColor),
-              const SizedBox(width: 6),
-              Text(
-                type.label,
-                style: AppTextStyles.bodyS.copyWith(
-                  color: fgColor,
-                  fontWeight: FontWeight.w600,
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ReminderSelector extends StatelessWidget {
-  const _ReminderSelector({
-    required this.selected,
-    required this.options,
     required this.onChanged,
   });
 
-  final int selected;
-  final List<int> options;
-  final ValueChanged<int> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Wrap(
-      spacing: 8,
-      children: [
-        for (final m in options)
-          _ReminderChip(
-            minutes: m,
-            isSelected: m == selected,
-            onTap: () => onChanged(m),
-          ),
-      ],
-    );
-  }
-}
-
-class _ReminderChip extends StatelessWidget {
-  const _ReminderChip({
-    required this.minutes,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final int minutes;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final label = minutes == 0
-        ? 'schedules.edit.reminderOff'.tr()
-        : 'schedules.edit.reminderMinutes'.tr(
-            namedArgs: {'minutes': '$minutes'},
-          );
-    final borderRadius =
-        BorderRadius.circular(AppDimensions.radiusPill);
-    return Material(
-      color: isSelected ? AppColors.primary : AppColors.surfaceVariant,
-      borderRadius: borderRadius,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 8,
-          ),
-          child: Text(
-            label,
-            style: AppTextStyles.bodyS.copyWith(
-              color: isSelected
-                  ? AppColors.background
-                  : AppColors.textPrimary,
-              fontWeight: FontWeight.w600,
-              fontSize: 13,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ActiveToggle extends StatelessWidget {
-  const _ActiveToggle({required this.value, required this.onChanged});
-
-  final bool value;
+  final AppUsageEntry app;
+  final bool selected;
   final ValueChanged<bool> onChanged;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      ),
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: 8,
-      ),
-      child: Row(
-        children: [
-          Icon(
-            value
-                ? Icons.notifications_active_outlined
-                : Icons.notifications_off_outlined,
-            color: value ? AppColors.primary : AppColors.textSecondary,
-            size: 20,
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'schedules.edit.activeTitle'.tr(),
-                  style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-                Text(
-                  'schedules.edit.activeSubtitle'.tr(),
-                  style: AppTextStyles.label.copyWith(
-                    color: AppColors.textSecondary,
-                  ),
-                ),
-              ],
+    return InkWell(
+      onTap: () => onChanged(!selected),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.lg,
+          vertical: AppDimensions.sm,
+        ),
+        child: Row(
+          children: [
+            AppIconWidget(
+              packageName: app.packageName,
+              iconUrl: app.iconUrl,
+              size: 40,
             ),
-          ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.background,
-            activeTrackColor: AppColors.primary,
-            inactiveThumbColor: AppColors.textSecondary,
-            inactiveTrackColor: AppColors.border,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
-        ],
+            const SizedBox(width: AppDimensions.md),
+            Expanded(
+              child: Text(
+                app.appName,
+                style: AppTextStyles.bodyM,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            Checkbox(
+              value: selected,
+              activeColor: AppColors.primary,
+              checkColor: AppColors.background,
+              onChanged: (v) => onChanged(v ?? false),
+            ),
+          ],
+        ),
       ),
     );
   }
