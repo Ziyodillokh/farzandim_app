@@ -105,17 +105,24 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPaired = pairing.isPaired;
       final loc = state.matchedLocation;
 
-      // Splash, welcome, pairing — har doim ruxsat (pairing oqimi).
-      const publicPaths = {'/splash', '/welcome', '/pairing'};
+      // Splash va pairing — har doim ruxsat (pairing oqimi).
+      // Welcome ekran olib tashlandi — bola ilovasi to'g'ridan-to'g'ri kodni
+      // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
+      const publicPaths = {'/splash', '/pairing'};
 
-      // Pairing yo'q va himoyalangan ekran → /welcome
-      if (!isPaired && !publicPaths.contains(loc)) {
-        return '/welcome';
+      // Eski /welcome URL'lari → /pairing.
+      if (loc == '/welcome') {
+        return '/pairing';
       }
 
-      // Pairing endigina tugadi (kullanici hali /pairing yoki /welcome'da).
+      // Pairing yo'q va himoyalangan ekran → /pairing
+      if (!isPaired && !publicPaths.contains(loc)) {
+        return '/pairing';
+      }
+
+      // Pairing endigina tugadi (kullanici hali /pairing'da).
       // Splash permission'larni tekshirib to'g'ri ekranga yo'naltiradi.
-      if (isPaired && (loc == '/welcome' || loc == '/pairing')) {
+      if (isPaired && loc == '/pairing') {
         return '/splash';
       }
 

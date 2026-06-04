@@ -1,23 +1,30 @@
 // ─────────────────────────────────────────────────────────────────────
-// PermissionSetupScreen — sistema-darajadagi 4 ta ruxsatni yig'ish
+// PermissionSetupScreen — Pair'dan keyingi ruxsat yig'ish ekrani
 // ─────────────────────────────────────────────────────────────────────
 //
-// Pairing → /permissions (location/notification/camera) tugagach,
-// shu ekran ochiladi va sistema sozlamalarini talab qiluvchi 4 ta
-// ruxsatni yig'adi:
-//   1. Joylashuv (background — locationAlways)
-//   2. Batareya optimizatsiyasi (whitelist)
-//   3. PACKAGE_USAGE_STATS (UsageStatsManager)
-//   4. SYSTEM_ALERT_WINDOW (overlay)
+// Dizayn talabiga ko'ra 10 ta toggle (mockup'ga 1:1):
+//   1.  SYSTEM_ALERT_WINDOW (overlay)            — Boshqa ilovalar ustida
+//   2.  locationAlways                           — Geolokatsiya
+//   3.  ignoreBatteryOptimizations               — Quvvat optimizatsiya
+//   4.  Microphone                               — Mikrofon (voice msg)
+//   5.  PACKAGE_USAGE_STATS                      — Ilova statistikasi
+//   6.  Background data (OEM, no standart API)   — Orqa fon ma'lumot
+//   7.  POST_NOTIFICATIONS                       — Bildirishnomalar (FCM)
+//   8.  Autostart (Xiaomi/MIUI, OEM)             — Avto-ishga tushirish
+//   9.  Boshqa OEM ruxsatlari (placeholder)
+//   10. Notification Listener access
 //
-// Hammasi yashil bo'lgach RestrictionService avtomatik boshlanadi
-// va Dashboard'ga o'tiladi. Lifecycle resume → recheck.
+// Lifecycle resume → recheck (sistema sozlamalaridan qaytgach).
+// Web preview'da Android API'lar UnimplementedError beradi —
+// har biri try/catch bilan o'ralib mock 'false' qaytaradi.
+// "Keyingisi" tugma'si — hammasi yashil bo'lganida yashil rangda,
+// aks holda kulrang/disabled. Web'da har doim enabled (mock holat).
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -34,15 +41,31 @@ class PermissionSetupScreen extends ConsumerStatefulWidget {
 class _PermissionSetupScreenState
     extends ConsumerState<PermissionSetupScreen>
     with WidgetsBindingObserver {
-  final _usageService = UsageStatsService();
+  // Solid dark palette — dizayn UI'ga mos (theme rangidan mustaqil).
+  static const Color _bgTop = Color(0xFF14132B);
+  static const Color _bgBottom = Color(0xFF0B0A18);
+  static const Color _cardFill = Color(0xFF1F1D33);
+  static const Color _hintText = Color(0xFFB0AFC2);
+  static const Color _toggleOff = Color(0xFFE43A6D);
+  static const Color _toggleOn = Color(0xFF8FE26B);
+  static const Color _buttonEnabled = Color(0xFF8FE26B);
+  static const Color _buttonDisabled = Color(0xFF6F6F76);
 
-  bool _locationGranted = false;
-  bool _batteryOptimized = false;
-  bool _usageStatsGranted = false;
-  bool _overlayGranted = false;
+  final UsageStatsService _usage = UsageStatsService();
+
+  // ─── Toggle holatlari (dizaynga ko'ra 10 ta) ───────────────────────
+  bool _overlay = false; // 1 — SYSTEM_ALERT_WINDOW
+  bool _location = false; // 2 — locationAlways
+  bool _battery = false; // 3 — ignoreBatteryOptimizations
+  bool _mic = false; // 4 — microphone
+  bool _usageStats = false; // 5 — PACKAGE_USAGE_STATS
+  bool _bgData = false; // 6 — unrestricted background data (OEM)
+  bool _notif = false; // 7 — POST_NOTIFICATIONS
+  bool _autostart = false; // 8 — Xiaomi autostart (OEM)
+  bool _otherOem = false; // 9 — boshqa OEM (placeholder)
+  bool _notifListener = false; // 10 — notification listener access
 
   bool _checking = false;
-  bool _finishing = false;
 
   @override
   void initState() {
@@ -64,288 +87,408 @@ class _PermissionSetupScreenState
     }
   }
 
-  Future<void> _checkAll() async {
-    if (_checking || _finishing) return;
-    setState(() => _checking = true);
-
-    final locStatus = await Permission.location.status;
-    final bgLocStatus = await Permission.locationAlways.status;
-    final locGranted = locStatus.isGranted && bgLocStatus.isGranted;
-
-    final batteryStatus =
-        await Permission.ignoreBatteryOptimizations.status;
-
-    final usageGranted = await _usageService.hasPermission();
-    final overlayGranted = await _usageService.hasOverlayPermission();
-
-    if (!mounted) return;
-    setState(() {
-      _locationGranted = locGranted;
-      _batteryOptimized = batteryStatus.isGranted;
-      _usageStatsGranted = usageGranted;
-      _overlayGranted = overlayGranted;
-      _checking = false;
-    });
-
-    if (_allGranted) {
-      await _finishSetup();
+  Future<bool> _safeStatus(Future<PermissionStatus> Function() fn) async {
+    try {
+      final s = await fn();
+      return s.isGranted;
+    } catch (_) {
+      return false;
     }
   }
 
-  bool get _allGranted =>
-      _locationGranted &&
-      _batteryOptimized &&
-      _usageStatsGranted &&
-      _overlayGranted;
+  Future<void> _checkAll() async {
+    if (_checking) return;
+    if (kIsWeb) {
+      // Web'da permission_handler UnimplementedError tashlaydi — saqlab
+      // qo'yilgan toggle holatini buzmaslik uchun shu yerda qaytamiz.
+      return;
+    }
+    setState(() => _checking = true);
 
-  Future<void> _finishSetup() async {
-    if (_finishing) return;
-    setState(() => _finishing = true);
-
-    await _usageService.startRestrictionService();
-    // app_usage + installed_apps Firestore sync timer'ini boshlash.
-    ref.read(usageSyncServiceProvider)?.start();
+    final overlay = await _safe(_usage.hasOverlayPermission);
+    final loc = await _safeStatus(() => Permission.locationAlways.status);
+    final batt =
+        await _safeStatus(() => Permission.ignoreBatteryOptimizations.status);
+    final mic = await _safeStatus(() => Permission.microphone.status);
+    final usage = await _safe(_usage.hasPermission);
+    final notif = await _safeStatus(() => Permission.notification.status);
 
     if (!mounted) return;
+    setState(() {
+      _overlay = overlay;
+      _location = loc;
+      _battery = batt;
+      _mic = mic;
+      _usageStats = usage;
+      _notif = notif;
+      _checking = false;
+    });
+  }
+
+  Future<bool> _safe(Future<bool> Function() fn) async {
+    try {
+      return await fn();
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ─── Per-permission request handler'lar ─────────────────────────────
+  Future<void> _toggle({
+    required bool current,
+    required Future<void> Function() request,
+    required void Function(bool) setMock,
+  }) async {
+    if (kIsWeb) {
+      // Web preview — mock toggle (haqiqiy permission API yo'q).
+      setState(() => setMock(!current));
+      return;
+    }
+    try {
+      await request();
+    } catch (_) {
+      /* sistemali sozlama ochilmasa jim */
+    }
+    await _checkAll();
+  }
+
+  bool get _allGranted =>
+      _overlay &&
+      _location &&
+      _battery &&
+      _mic &&
+      _usageStats &&
+      _bgData &&
+      _notif &&
+      _autostart &&
+      _otherOem &&
+      _notifListener;
+
+  void _onNext() {
+    // Mobile'da hammasi yoqilmasa tugma disabled — bu yerda safety check.
+    if (!kIsWeb && !_allGranted) return;
     context.go('/dashboard');
-  }
-
-  Future<void> _requestLocation() async {
-    await Permission.location.request();
-    await Permission.locationAlways.request();
-    await _checkAll();
-  }
-
-  Future<void> _requestBattery() async {
-    await Permission.ignoreBatteryOptimizations.request();
-    await _checkAll();
-  }
-
-  Future<void> _requestUsageStats() async {
-    await _usageService.openSettings();
-    // Resume lifecycle'da auto-recheck
-  }
-
-  Future<void> _requestOverlay() async {
-    await _usageService.openOverlaySettings();
-    // Resume lifecycle'da auto-recheck
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
-      body: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(24, 24, 24, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'permissionSetup.title'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    'permissionSetup.subtitle'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 14,
-                      height: 1.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: ListView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                children: [
-                  _PermissionStep(
-                    number: 1,
-                    icon: AppIcons.mapPin,
-                    title: 'permissionSetup.step1Title'.tr(),
-                    subtitle: 'permissionSetup.step1Subtitle'.tr(),
-                    granted: _locationGranted,
-                    onPressed:
-                        _locationGranted ? null : _requestLocation,
-                  ),
-                  const SizedBox(height: 12),
-                  _PermissionStep(
-                    number: 2,
-                    icon: Icons.battery_full,
-                    title: 'permissionSetup.step2Title'.tr(),
-                    subtitle: 'permissionSetup.step2Subtitle'.tr(),
-                    granted: _batteryOptimized,
-                    onPressed:
-                        _batteryOptimized ? null : _requestBattery,
-                  ),
-                  const SizedBox(height: 12),
-                  _PermissionStep(
-                    number: 3,
-                    icon: AppIcons.schedule,
-                    title: 'permissionSetup.step3Title'.tr(),
-                    subtitle: 'permissionSetup.step3Subtitle'.tr(),
-                    granted: _usageStatsGranted,
-                    onPressed:
-                        _usageStatsGranted ? null : _requestUsageStats,
-                  ),
-                  const SizedBox(height: 12),
-                  _PermissionStep(
-                    number: 4,
-                    icon: Icons.layers,
-                    title: 'permissionSetup.step4Title'.tr(),
-                    subtitle: 'permissionSetup.step4Subtitle'.tr(),
-                    granted: _overlayGranted,
-                    onPressed: _overlayGranted ? null : _requestOverlay,
-                  ),
-                  const SizedBox(height: 24),
-                  if (!_allGranted)
-                    Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: BoxDecoration(
-                        color: AppColors.surface,
-                        borderRadius: BorderRadius.circular(12),
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [_bgTop, _bgBottom],
+          ),
+        ),
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+            child: Column(
+              children: [
+                _buildHeader(),
+                const SizedBox(height: 16),
+                Expanded(
+                  child: ListView(
+                    padding: EdgeInsets.zero,
+                    children: [
+                      _PermissionCard(
+                        title: 'permissionSetup.p_overlay'.tr(),
+                        hint: 'permissionSetup.p_overlayHint'.tr(),
+                        value: _overlay,
+                        onChanged: (v) => _toggle(
+                          current: _overlay,
+                          request: () => _usage.openOverlaySettings(),
+                          setMock: (b) => _overlay = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
                       ),
-                      child: Row(
-                        children: [
-                          const Icon(
-                            Icons.info_outline,
-                            color: AppColors.textSecondary,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(
-                              'permissionSetup.autoContinueHint'.tr(),
-                              style: const TextStyle(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                              ),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_location'.tr(),
+                        value: _location,
+                        onChanged: (v) => _toggle(
+                          current: _location,
+                          request: () async {
+                            await Permission.location.request();
+                            await Permission.locationAlways.request();
+                          },
+                          setMock: (b) => _location = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
                       ),
-                    ),
-                ],
-              ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_battery'.tr(),
+                        value: _battery,
+                        onChanged: (v) => _toggle(
+                          current: _battery,
+                          request: () =>
+                              Permission.ignoreBatteryOptimizations.request(),
+                          setMock: (b) => _battery = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_mic'.tr(),
+                        value: _mic,
+                        onChanged: (v) => _toggle(
+                          current: _mic,
+                          request: () => Permission.microphone.request(),
+                          setMock: (b) => _mic = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_usage'.tr(),
+                        value: _usageStats,
+                        onChanged: (v) => _toggle(
+                          current: _usageStats,
+                          request: () => _usage.openSettings(),
+                          setMock: (b) => _usageStats = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_backgroundData'.tr(),
+                        value: _bgData,
+                        // Background data API standartda yo'q — manual toggle.
+                        onChanged: (v) => setState(() => _bgData = !_bgData),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_notif'.tr(),
+                        value: _notif,
+                        onChanged: (v) => _toggle(
+                          current: _notif,
+                          request: () => Permission.notification.request(),
+                          setMock: (b) => _notif = b,
+                        ),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_autostart'.tr(),
+                        value: _autostart,
+                        // Autostart — OEM-specific (Xiaomi/MIUI), standart API yo'q.
+                        onChanged: (v) =>
+                            setState(() => _autostart = !_autostart),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_other'.tr(),
+                        value: _otherOem,
+                        onChanged: (v) =>
+                            setState(() => _otherOem = !_otherOem),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 12),
+                      _PermissionCard(
+                        title: 'permissionSetup.p_notifListener'.tr(),
+                        value: _notifListener,
+                        onChanged: (v) =>
+                            setState(() => _notifListener = !_notifListener),
+                        offColor: _toggleOff,
+                        onColor: _toggleOn,
+                        cardColor: _cardFill,
+                        hintColor: _hintText,
+                      ),
+                      const SizedBox(height: 16),
+                    ],
+                  ),
+                ),
+                _buildNextButton(),
+              ],
             ),
-          ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildHeader() {
+    // Device name — device_info_plus dan o'qib ko'rsatish mumkin,
+    // hozircha ringtone-safe placeholder.
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            'Xiaomi-23110NRD0DA',
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 13,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ),
+        const SizedBox(height: 6),
+        Text(
+          'permissionSetup.title'.tr(),
+          style: const TextStyle(
+            color: Colors.white,
+            fontSize: 22,
+            fontWeight: FontWeight.w700,
+            height: 1.3,
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildNextButton() {
+    // Web preview'da har doim enabled — chunki permission API yo'q.
+    // Mobile'da hammasi yoqilmaguncha disabled (kulrang).
+    final enabled = kIsWeb ? true : _allGranted;
+    return SizedBox(
+      width: double.infinity,
+      height: 56,
+      child: ElevatedButton(
+        onPressed: enabled ? _onNext : null,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: _buttonEnabled,
+          disabledBackgroundColor: _buttonDisabled,
+          foregroundColor: Colors.black,
+          disabledForegroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(999),
+          ),
+          elevation: 0,
+        ),
+        child: Text(
+          'permissionSetup.next'.tr(),
+          style: const TextStyle(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
         ),
       ),
     );
   }
 }
 
-class _PermissionStep extends StatelessWidget {
-  const _PermissionStep({
-    required this.number,
-    required this.icon,
+// ─── Yagona ruxsat kartasi ─────────────────────────────────────────────
+class _PermissionCard extends StatelessWidget {
+  const _PermissionCard({
     required this.title,
-    required this.subtitle,
-    required this.granted,
-    this.onPressed,
+    required this.value,
+    required this.onChanged,
+    required this.offColor,
+    required this.onColor,
+    required this.cardColor,
+    required this.hintColor,
+    this.hint,
   });
 
-  final int number;
-  final IconData icon;
   final String title;
-  final String subtitle;
-  final bool granted;
-  final VoidCallback? onPressed;
+  final String? hint;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+  final Color offColor;
+  final Color onColor;
+  final Color cardColor;
+  final Color hintColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: granted
-            ? Border.all(color: AppColors.primary, width: 2)
-            : null,
+        color: cardColor,
+        borderRadius: BorderRadius.circular(18),
       ),
       child: Row(
         children: [
-          Container(
-            width: 48,
-            height: 48,
-            decoration: BoxDecoration(
-              color: granted
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.15),
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(
-              granted ? AppIcons.check : icon,
-              color: granted ? Colors.black : AppColors.primary,
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 16),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'permissionSetup.stepNumber'.tr(
-                    namedArgs: {
-                      'number': '$number',
-                      'title': title,
-                    },
-                  ),
+                  title,
                   style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 15,
+                    color: Colors.white,
+                    fontSize: 14,
                     fontWeight: FontWeight.w600,
+                    height: 1.35,
                   ),
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  subtitle,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                if (hint != null) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    hint!,
+                    style: TextStyle(
+                      color: hintColor,
+                      fontSize: 12,
+                      height: 1.35,
+                    ),
                   ),
-                ),
+                ],
               ],
             ),
           ),
-          if (granted)
-            const Icon(
-              AppIcons.success,
-              color: AppColors.primary,
-              size: 24,
-            )
-          else
-            ElevatedButton(
-              onPressed: onPressed,
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 16,
-                  vertical: 8,
-                ),
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(999),
-                ),
-                minimumSize: const Size(0, 36),
+          const SizedBox(width: 12),
+          // Custom iOS-style toggle — Material Switch ranglarini
+          // material 3 inconsistent qiladi, shu sabab custom yozildi.
+          GestureDetector(
+            onTap: () => onChanged(!value),
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 180),
+              width: 50,
+              height: 30,
+              padding: const EdgeInsets.all(3),
+              decoration: BoxDecoration(
+                color: value ? onColor : offColor,
+                borderRadius: BorderRadius.circular(999),
               ),
-              child: Text(
-                'permissionSetup.grantButton'.tr(),
-                style: const TextStyle(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+              child: AnimatedAlign(
+                duration: const Duration(milliseconds: 180),
+                curve: Curves.easeOutCubic,
+                alignment:
+                    value ? Alignment.centerRight : Alignment.centerLeft,
+                child: Container(
+                  width: 24,
+                  height: 24,
+                  decoration: const BoxDecoration(
+                    color: Colors.white,
+                    shape: BoxShape.circle,
+                  ),
                 ),
               ),
             ),
+          ),
         ],
       ),
     );

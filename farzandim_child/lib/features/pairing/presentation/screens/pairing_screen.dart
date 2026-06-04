@@ -15,7 +15,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,9 +62,9 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     setState(() => _isPairing = false);
 
     if (success) {
-      // Web preview'da permission_handler ishlamaydi — to'g'ridan-to'g'ri
-      // dashboard'ga o'tamiz. Mobile'da odatdagidek ruxsatlar ekraniga.
-      context.go(kIsWeb ? '/dashboard' : '/permissions');
+      // Pairing'dan keyin sistema ruxsatlari ekrani — Android'da haqiqiy
+      // permission'larni so'raydi, web'da mock toggle'lar (preview).
+      context.go('/permission-setup');
       return;
     }
 
