@@ -146,10 +146,12 @@ class RingService : Service() {
                 0,
             )
 
-            // ALARM birinchi — ringtone "Silent"ga qo'yilgan bo'lsa
-            // TYPE_RINGTONE null bo'lishi mumkin; alarm/notification kamdan-kam.
-            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
-                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+            // RINGTONE birinchi — telefonning qo'ng'iroq ringtonesi chalinadi.
+            // Lekin pastda USAGE_ALARM (alarm stream) ishlatiladi, shu sabab
+            // silent/vibratsiya rejimida ham baland eshitiladi. Ringtone "Silent"ga
+            // qo'yilgan bo'lsa null bo'lishi mumkin -> ALARM/NOTIFICATION fallback.
+            val uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE)
+                ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM)
                 ?: RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION)
             if (uri == null) {
                 Log.e(TAG, "no default sound uri")
