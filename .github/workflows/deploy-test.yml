@@ -112,10 +112,24 @@ jobs:
           npx prisma migrate deploy
           npx prisma generate          # server muhiti uchun Prisma engine (runner enginesi yuklanmaydi)
           sudo /usr/bin/systemctl restart farzandim-v2-backend.service
-          sleep 4
-          systemctl is-active farzandim-v2-backend.service
-          curl -fsS -m 10 http://127.0.0.1:3100/api -o /dev/null
-          echo "backend OK"
+          # Backend ishga tushishi (Prisma connect + ~30 modul + Fastify plugin,
+          # ayniqsa migratsiyadan keyingi birinchi boot) 4s'dan ko'p olishi
+          # mumkin. 60s gacha retry qilamiz — aks holda soxta "deploy failed".
+          ok=0
+          for i in $(seq 1 30); do
+            if curl -fsS -m 5 http://127.0.0.1:3100/api -o /dev/null 2>/dev/null; then
+              ok=1
+              echo "backend OK (urinish $i)"
+              break
+            fi
+            sleep 2
+          done
+          if [ "$ok" != "1" ]; then
+            echo "backend 60s ichida javob bermadi — service holati + loglar:"
+            systemctl is-active farzandim-v2-backend.service || true
+            sudo journalctl -u farzandim-v2-backend.service -n 60 --no-pager || true
+            exit 1
+          fi
           EOF
 
   # ─────────────────────────── ADMIN PANEL (Next.js) ───────────────────────────
