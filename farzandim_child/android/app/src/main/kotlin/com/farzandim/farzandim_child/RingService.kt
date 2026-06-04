@@ -101,14 +101,23 @@ class RingService : Service() {
 
     private fun startAsForeground() {
         val notification = buildNotification()
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                NOTIFICATION_ID,
-                notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PLAYBACK,
-            )
-        } else {
-            startForeground(NOTIFICATION_ID, notification)
+        // specialUse — RestrictionService bilan bir xil (bu ilovada ishlashi
+        // tasdiqlangan). mediaPlayback Android 14'da background FCM'dan ishga
+        // tushmas edi (MediaSession talab qiladi) -> ring umuman ishlamasdi.
+        try {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                startForeground(
+                    NOTIFICATION_ID,
+                    notification,
+                    ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE,
+                )
+            } else {
+                startForeground(NOTIFICATION_ID, notification)
+            }
+        } catch (e: Exception) {
+            // FGS ishga tushmasa ham (kvota/cheklov) ringtone baribir chalinadi
+            // (jarayon qisqa muddat tirik). Sukut saqlab davom etamiz.
+            Log.e(TAG, "startForeground failed", e)
         }
     }
 
@@ -158,13 +167,19 @@ class RingService : Service() {
             Log.e(TAG, "vibrate error", e)
         }
 
-        // WakeLock — ekran o'chiq bo'lsa ham jiringlashni ta'minlaydi.
+        // WakeLock — CPU ishlashini + EKRANNI YOQISHNI ta'minlaydi (Family
+        // Link kabi). SCREEN_BRIGHT + ACQUIRE_CAUSES_WAKEUP deprecated, lekin
+        // ko'p qurilmalarda ekranni yoqadi; full-screen intent bilan birga
+        // ishonchli uyg'otish beradi. PARTIAL fallback — agar tashlasa CPU.
         try {
             val pm = getSystemService(Context.POWER_SERVICE) as PowerManager
-            wakeLock = pm.newWakeLock(
-                PowerManager.PARTIAL_WAKE_LOCK,
-                "farzandim:ring",
-            ).apply { acquire(MAX_DURATION_MS + 10_000L) }
+            @Suppress("DEPRECATION")
+            val flags = PowerManager.SCREEN_BRIGHT_WAKE_LOCK or
+                PowerManager.ACQUIRE_CAUSES_WAKEUP or
+                PowerManager.ON_AFTER_RELEASE
+            wakeLock = pm.newWakeLock(flags, "farzandim:ring").apply {
+                acquire(MAX_DURATION_MS + 10_000L)
+            }
         } catch (e: Exception) {
             Log.e(TAG, "wakelock error", e)
         }
@@ -217,20 +232,32 @@ class RingService : Service() {
         val stopIntent = Intent(this, RingService::class.java).apply {
             action = ACTION_STOP
         }
-        val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+        val piFlags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
         } else {
             PendingIntent.FLAG_UPDATE_CURRENT
         }
-        val stopPending = PendingIntent.getService(this, 1, stopIntent, flags)
+        val stopPending = PendingIntent.getService(this, 1, stopIntent, piFlags)
+
+        // Full-screen intent — ekran o'chiq/qulflangan bo'lsa ham UYG'OTADI
+        // (Google Family Link / qo'ng'iroq kabi). MainActivity'ni ochadi.
+        val fullScreenIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        val fullScreenPending =
+            PendingIntent.getActivity(this, 2, fullScreenIntent, piFlags)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Farzandim")
             .setContentText("Qurilma chaqirilmoqda")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
-            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setPriority(NotificationCompat.PRIORITY_MAX)
             .setCategory(NotificationCompat.CATEGORY_ALARM)
+            .setVisibility(NotificationCompat.VISIBILITY_PUBLIC)
             .setOngoing(true)
+            .setFullScreenIntent(fullScreenPending, true)
+            .setContentIntent(fullScreenPending)
             .addAction(
                 android.R.drawable.ic_menu_close_clear_cancel,
                 "To'xtatish",
