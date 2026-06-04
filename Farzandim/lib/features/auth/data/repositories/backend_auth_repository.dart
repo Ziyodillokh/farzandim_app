@@ -23,6 +23,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/auth/token_storage.dart';
+import 'package:farzandim/core/device/device_meta.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,6 +54,7 @@ class BackendAuthRepository {
     String? phone,
     String? name,
   }) async {
+    final device = await currentDeviceMeta();
     final response = await _dio.post<Map<String, dynamic>>(
       '/auth/register',
       data: <String, dynamic>{
@@ -60,6 +62,7 @@ class BackendAuthRepository {
         if (phone != null && phone.isNotEmpty) 'phone': phone,
         'password': password,
         if (name != null && name.isNotEmpty) 'name': name,
+        ...device.toJson(),
       },
     );
     return AuthSession.fromJson(response.data ?? <String, dynamic>{});
@@ -72,11 +75,13 @@ class BackendAuthRepository {
     required String identifier,
     required String password,
   }) async {
+    final device = await currentDeviceMeta();
     final response = await _dio.post<Map<String, dynamic>>(
       '/auth/login',
       data: <String, dynamic>{
         'identifier': identifier,
         'password': password,
+        ...device.toJson(),
       },
     );
     return AuthSession.fromJson(response.data ?? <String, dynamic>{});
@@ -140,9 +145,15 @@ class BackendAuthRepository {
     }
   }
 
-  /// Logout — tokens'ni o'chiradi. (Backend session'i JWT stateless,
-  /// server-side revoke kerak bo'lsa keyinroq /api/auth/logout qo'shiladi.)
+  /// Logout — backend'da joriy sessiyani tugatadi va local tokens'ni o'chiradi.
+  /// Backend revoke best-effort: tarmoq yo'q / token muddati o'tgan bo'lsa
+  /// ham local logout bajariladi.
   Future<void> logout() async {
+    try {
+      await _dio.post<void>('/auth/logout');
+    } on DioException {
+      // Offline / token expired — local tozalash baribir davom etadi.
+    }
     await _tokenStorage.clear();
   }
 

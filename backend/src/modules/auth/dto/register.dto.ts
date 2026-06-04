@@ -36,4 +36,19 @@ export class RegisterDto {
   @IsString()
   @MaxLength(100)
   name?: string;
+
+  @ApiPropertyOptional({
+    example: 'Redmi Note 12S',
+    description: 'Qurilma modeli (Faol sessiyalar)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  deviceModel?: string;
+
+  @ApiPropertyOptional({ example: 'android', enum: ['android', 'ios', 'web'] })
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  platform?: string;
 }

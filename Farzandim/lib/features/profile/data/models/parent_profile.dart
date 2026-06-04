@@ -30,6 +30,8 @@ class ParentProfile {
     return ParentProfile(
       name: (user.displayName ?? '').trim(),
       photoUrl: user.photoUrl,
+      phoneNumber: user.phone,
+      email: user.email,
     );
   }
 

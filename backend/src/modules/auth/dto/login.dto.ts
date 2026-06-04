@@ -1,5 +1,5 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsNotEmpty, IsString } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsNotEmpty, IsOptional, IsString, MaxLength } from 'class-validator';
 
 /**
  * Email yoki telefon + parol bilan kirish.
@@ -18,4 +18,19 @@ export class LoginDto {
   @IsString()
   @IsNotEmpty({ message: "Parolni kiriting" })
   password!: string;
+
+  @ApiPropertyOptional({
+    example: 'Redmi Note 12S',
+    description: 'Qurilma modeli (Faol sessiyalar)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  deviceModel?: string;
+
+  @ApiPropertyOptional({ example: 'android', enum: ['android', 'ios', 'web'] })
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  platform?: string;
 }

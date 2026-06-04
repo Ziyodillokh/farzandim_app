@@ -11,6 +11,7 @@ import 'package:farzandim/features/dashboard/presentation/providers/selected_chi
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
@@ -143,17 +144,13 @@ class _EmptyState extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.md),
 
-          // ─── Pastki bar ───
-          Row(
-            children: [
-              Expanded(
-                child: _UsageTimePill(
-                  onTap: () => context.push(AppRoutes.addChild),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.md),
-              _SettingsGear(onTap: () => context.push(AppRoutes.settings)),
-            ],
+          // ─── Pastki navigatsiya (Foydalanish vaqti ↔ Sozlamalar) ───
+          AppBottomNav(
+            activeIndex: 0,
+            activityLabel: 'dashboard.usageTime'.tr(),
+            settingsLabel: 'settings.title'.tr(),
+            onActivity: () => context.push(AppRoutes.addChild),
+            onSettings: () => context.push(AppRoutes.settings),
           ),
           const SizedBox(height: AppDimensions.md),
         ],
@@ -291,18 +288,14 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
             AppDimensions.lg,
             AppDimensions.md,
           ),
-          child: Row(
-            children: [
-              Expanded(
-                child: _UsageTimePill(
-                  onTap: () => context.push(
-                    AppRoutes.appRestrictionsPath(children[selectedIndex].id),
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.md),
-              _SettingsGear(onTap: () => context.push(AppRoutes.settings)),
-            ],
+          child: AppBottomNav(
+            activeIndex: 0,
+            activityLabel: 'dashboard.usageTime'.tr(),
+            settingsLabel: 'settings.title'.tr(),
+            onActivity: () => context.push(
+              AppRoutes.appRestrictionsPath(children[selectedIndex].id),
+            ),
+            onSettings: () => context.push(AppRoutes.settings),
           ),
         ),
       ],
@@ -927,77 +920,6 @@ class _QuickActionsGrid extends StatelessWidget {
       ),
       itemCount: tiles.length,
       itemBuilder: (_, i) => tiles[i],
-    );
-  }
-}
-
-// ════════════════════════ BOTTOM BAR ════════════════════════
-
-class _UsageTimePill extends StatelessWidget {
-  const _UsageTimePill({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
-    return SizedBox(
-      height: AppDimensions.buttonHeight,
-      child: Material(
-        color: AppColors.primary,
-        borderRadius: borderRadius,
-        child: InkWell(
-          onTap: onTap,
-          borderRadius: borderRadius,
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(
-                  Icons.pie_chart_rounded,
-                  size: 20,
-                  color: AppColors.background,
-                ),
-                const SizedBox(width: AppDimensions.sm),
-                Text(
-                  'dashboard.usageTime'.tr(),
-                  style: AppTextStyles.bodyM.copyWith(
-                    color: AppColors.background,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _SettingsGear extends StatelessWidget {
-  const _SettingsGear({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      shape: const CircleBorder(side: BorderSide(color: AppColors.border)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: const SizedBox(
-          width: 56,
-          height: 56,
-          child: Icon(
-            Icons.settings_outlined,
-            size: 24,
-            color: AppColors.textPrimary,
-          ),
-        ),
-      ),
     );
   }
 }

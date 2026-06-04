@@ -509,7 +509,37 @@
       "cancel": "Cancel",
       "confirm": "Sign out"
     },
-    "deleteAccount": "Permanently delete account"
+    "deleteAccount": "Permanently delete account",
+    "comingSoon": "Coming soon",
+    "shareText": "Farzandim — a safe family app for your child's location, screen time and peace of mind. Download: https://farzandimedu.uz",
+    "menu": {
+      "addChild": "Add child",
+      "editChild": "Edit child details",
+      "sessions": "Active sessions",
+      "language": "Language",
+      "support": "Contact support",
+      "about": "About the app",
+      "share": "Share"
+    },
+    "sessions": {
+      "title": "Active sessions",
+      "yourSession": "Your session",
+      "otherSessions": "Other sessions",
+      "endAllOthers": "End all other sessions",
+      "current": "Current",
+      "addAccount": "Add another account",
+      "empty": "No active sessions",
+      "unknownLocation": "Unknown location",
+      "endSession": "End session",
+      "revokeConfirmTitle": "End session?",
+      "revokeConfirmContent": "{device} will be signed out.",
+      "endAllConfirmTitle": "End all other sessions?",
+      "endAllConfirmContent": "All devices except this one will be signed out.",
+      "endedSnack": "Session ended",
+      "endedAllSnack": "Other sessions ended",
+      "loadError": "Failed to load sessions",
+      "retry": "Retry"
+    }
   },
   "childManagement": {
     "list": {

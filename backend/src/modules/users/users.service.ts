@@ -66,6 +66,7 @@ export class UsersService {
       select: {
         id: true,
         phone: true,
+        email: true,
         role: true,
         name: true,
         avatarUrl: true,

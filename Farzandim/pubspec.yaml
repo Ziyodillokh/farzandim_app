@@ -133,6 +133,10 @@ dependencies:
   # AppUpdate version check uchun).
   package_info_plus: ^8.1.0
 
+  # device_info_plus — "Faol sessiyalar" uchun qurilma modeli/platforma
+  # (login'da backendga yuboriladi: "Redmi Note 12S", "iPhone 14 Pro Max").
+  device_info_plus: ^11.2.0
+
   # shimmer — loading skeleton (CircularProgressIndicator o'rniga).
   # Zamonaviy app standartining hissi (Sprint 4.7).
   shimmer: ^3.0.0

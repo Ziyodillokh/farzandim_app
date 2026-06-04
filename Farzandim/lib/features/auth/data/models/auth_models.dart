@@ -64,6 +64,8 @@ class AuthUser {
     this.photoUrl,
     this.telegramId,
     this.language,
+    this.phone,
+    this.email,
   });
 
   factory AuthUser.fromJson(Map<String, dynamic> json) {
@@ -84,6 +86,13 @@ class AuthUser {
       // Backend telegramId String sifatida qaytaradi (BigInt overflow xavfi).
       telegramId: json['telegramId']?.toString(),
       language: json['language'] as String?,
+      // GET /users/me — qaysi usul bilan ro'yxatdan o'tgani (phone/email).
+      phone: (json['phone'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['phone'] as String).trim(),
+      email: (json['email'] as String?)?.trim().isEmpty ?? true
+          ? null
+          : (json['email'] as String).trim(),
     );
   }
 
@@ -104,6 +113,12 @@ class AuthUser {
 
   /// Foydalanuvchi tanlagan til: 'uz' | 'ru' | 'en'. Backend default 'uz'.
   final String? language;
+
+  /// Telefon raqami (phone bilan ro'yxatdan o'tgan bo'lsa). GET /users/me.
+  final String? phone;
+
+  /// Email (email bilan ro'yxatdan o'tgan bo'lsa). GET /users/me.
+  final String? email;
 
   bool get isParent => role == 'parent';
   bool get isChild => role == 'child';

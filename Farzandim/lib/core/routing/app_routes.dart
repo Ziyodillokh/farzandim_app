@@ -66,6 +66,9 @@ class AppRoutes {
   /// Profil tahrirlash (Bosqich 7.3).
   static const String settingsProfile = '/settings/profile';
 
+  /// Faol sessiyalar — login qilingan qurilmalar (Sprint 7).
+  static const String settingsSessions = '/settings/sessions';
+
   /// Bolalarni boshqarish ro'yxati (Bosqich 7.2).
   static const String settingsChildren = '/settings/children';
 

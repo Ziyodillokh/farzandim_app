@@ -2,6 +2,7 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Param,
   Req,
@@ -120,10 +121,44 @@ export class AuthController {
   @ApiBearerAuth('consumer-jwt')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({
-    summary: 'Logout — revokes all refresh tokens by incrementing tokenVersion',
+    summary: 'Logout — joriy qurilma sessiyasini tugatadi',
   })
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   async logout(@CurrentUser() user: JwtPayload) {
-    return this.authService.logout(user.userId);
+    return this.authService.logout(user.userId, user.sid);
+  }
+
+  /* ──────────────── Faol sessiyalar ──────────────── */
+
+  @Get('sessions')
+  @ApiBearerAuth('consumer-jwt')
+  @ApiOperation({ summary: 'Faol sessiyalar (login qilingan qurilmalar)' })
+  @ApiResponse({ status: 200, description: 'Sessiyalar ro\'yxati' })
+  async sessions(@CurrentUser() user: JwtPayload) {
+    return this.authService.listSessions(user.userId, user.sid);
+  }
+
+  // DIQQAT: `others` `:id`'dan OLDIN — static route param'ga tushib qolmasin.
+  @Delete('sessions/others')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Joriydan boshqa barcha sessiyalarni tugatish' })
+  @ApiResponse({ status: 200, description: 'Tugatilgan sessiyalar soni' })
+  async revokeOtherSessions(@CurrentUser() user: JwtPayload) {
+    return this.authService.revokeOtherSessions(user.userId, user.sid);
+  }
+
+  @Delete('sessions/:id')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'Session ID' })
+  @ApiOperation({ summary: 'Bitta sessiyani tugatish' })
+  @ApiResponse({ status: 200, description: 'Sessiya tugatildi' })
+  @ApiResponse({ status: 404, description: 'Sessiya topilmadi' })
+  async revokeSession(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.authService.revokeSession(user.userId, id);
   }
 }

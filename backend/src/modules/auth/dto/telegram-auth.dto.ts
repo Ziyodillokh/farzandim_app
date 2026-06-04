@@ -4,6 +4,7 @@ import {
   IsString,
   IsOptional,
   IsUrl,
+  MaxLength,
 } from 'class-validator';
 
 export class TelegramAuthDto {
@@ -38,4 +39,19 @@ export class TelegramAuthDto {
   @ApiProperty({ description: 'HMAC-SHA256 hash from Telegram' })
   @IsString()
   hash!: string;
+
+  @ApiPropertyOptional({
+    example: 'Redmi Note 12S',
+    description: 'Qurilma modeli (Faol sessiyalar)',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(120)
+  deviceModel?: string;
+
+  @ApiPropertyOptional({ example: 'web', enum: ['android', 'ios', 'web'] })
+  @IsOptional()
+  @IsString()
+  @MaxLength(16)
+  platform?: string;
 }

@@ -509,7 +509,37 @@
       "cancel": "Отмена",
       "confirm": "Выйти"
     },
-    "deleteAccount": "Полностью удалить аккаунт"
+    "deleteAccount": "Полностью удалить аккаунт",
+    "comingSoon": "Скоро",
+    "shareText": "Farzandim — семейное приложение для безопасности ребёнка: геолокация, экранное время и спокойствие. Скачать: https://farzandimedu.uz",
+    "menu": {
+      "addChild": "Добавить ребёнка",
+      "editChild": "Редактировать данные ребёнка",
+      "sessions": "Активные сессии",
+      "language": "Язык",
+      "support": "Связаться с поддержкой",
+      "about": "О приложении",
+      "share": "Поделиться"
+    },
+    "sessions": {
+      "title": "Активные сессии",
+      "yourSession": "Ваша сессия",
+      "otherSessions": "Другие сессии",
+      "endAllOthers": "Завершить все другие сессии",
+      "current": "Текущая",
+      "addAccount": "Добавить другой аккаунт",
+      "empty": "Нет активных сессий",
+      "unknownLocation": "Неизвестное местоположение",
+      "endSession": "Завершить сессию",
+      "revokeConfirmTitle": "Завершить сессию?",
+      "revokeConfirmContent": "Устройство {device} выйдет из аккаунта.",
+      "endAllConfirmTitle": "Завершить все другие сессии?",
+      "endAllConfirmContent": "Все устройства, кроме этого, выйдут из аккаунта.",
+      "endedSnack": "Сессия завершена",
+      "endedAllSnack": "Другие сессии завершены",
+      "loadError": "Не удалось загрузить сессии",
+      "retry": "Повторить"
+    }
   },
   "childManagement": {
     "list": {

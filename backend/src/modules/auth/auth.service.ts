@@ -23,8 +23,20 @@ import {
   hashPassword,
   verifyPassword,
 } from '../../admin/admin-auth/helpers/password';
+import { randomUUID } from 'crypto';
+import {
+  ReqMeta,
+  extractClientIp,
+  resolveGeo,
+} from '../../common/helpers/geo-ip';
 
 const PAIR_REQUEST_TTL_MIN = 5;
+
+/** Qurilma ma'lumotlari (login DTO'laridan keladi). */
+interface DeviceMeta {
+  deviceModel?: string;
+  platform?: string;
+}
 
 @Injectable()
 export class AuthService {
@@ -46,7 +58,12 @@ export class AuthService {
 
   private signAccessToken(payload: JwtPayload): string {
     return this.jwtService.sign(
-      { userId: payload.userId, role: payload.role, tokenVersion: payload.tokenVersion },
+      {
+        userId: payload.userId,
+        role: payload.role,
+        tokenVersion: payload.tokenVersion,
+        ...(payload.sid && { sid: payload.sid }),
+      },
       {
         secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
         expiresIn: this.config.get('JWT_ACCESS_EXPIRES', { infer: true }),
@@ -56,9 +73,15 @@ export class AuthService {
     );
   }
 
-  private signRefreshToken(payload: JwtPayload): string {
+  private signRefreshToken(payload: JwtPayload, rjti?: string): string {
     return this.jwtService.sign(
-      { userId: payload.userId, role: payload.role, tokenVersion: payload.tokenVersion },
+      {
+        userId: payload.userId,
+        role: payload.role,
+        tokenVersion: payload.tokenVersion,
+        ...(payload.sid && { sid: payload.sid }),
+        ...(rjti && { rjti }),
+      },
       {
         secret: this.config.get('JWT_REFRESH_SECRET', { infer: true }),
         expiresIn: this.config.get('JWT_REFRESH_EXPIRES', { infer: true }),
@@ -68,12 +91,68 @@ export class AuthService {
     );
   }
 
-  private verifyRefreshToken(token: string): JwtPayload {
-    return this.jwtService.verify<JwtPayload>(token, {
+  private verifyRefreshToken(token: string): JwtPayload & { rjti?: string } {
+    return this.jwtService.verify<JwtPayload & { rjti?: string }>(token, {
       secret: this.config.get('JWT_REFRESH_SECRET', { infer: true }),
       audience: 'farzandim-consumer',
       issuer: 'farzandim-backend',
     });
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Sessiya (Faol sessiyalar) — login'da yaratiladi                     */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Yangi sessiya yaratadi (qurilma + IP saqlaydi) va `{ sid, rjti }`
+   * qaytaradi. Geo (shahar/davlat) fon rejimida aniqlanadi — login'ni
+   * sekinlashtirmaslik uchun.
+   */
+  private async createSession(
+    userId: string,
+    device: DeviceMeta,
+    reqMeta?: ReqMeta,
+  ): Promise<{ sid: string; rjti: string }> {
+    const rjti = randomUUID();
+    const ip = extractClientIp(reqMeta);
+    const userAgent =
+      (reqMeta?.headers?.['user-agent'] as string | undefined) ?? null;
+
+    const session = await this.prisma.userSession.create({
+      data: {
+        userId,
+        jti: rjti,
+        deviceModel: device.deviceModel?.trim() || null,
+        platform: device.platform?.trim() || null,
+        ipAddress: ip,
+        userAgent: userAgent ? userAgent.slice(0, 400) : null,
+      },
+    });
+
+    // Fire-and-forget geo — login javobini kutdirmaydi.
+    void resolveGeo(ip).then((geo) => {
+      if (geo.city || geo.country) {
+        this.prisma.userSession
+          .update({
+            where: { id: session.id },
+            data: { city: geo.city, country: geo.country },
+          })
+          .catch(() => undefined);
+      }
+    });
+
+    return { sid: session.id, rjti };
+  }
+
+  /** access + refresh tokenlarni sid + rjti bilan imzolaydi. */
+  private issueTokens(
+    payload: JwtPayload,
+    rjti?: string,
+  ): { accessToken: string; refreshToken: string } {
+    return {
+      accessToken: this.signAccessToken(payload),
+      refreshToken: this.signRefreshToken(payload, rjti),
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -124,13 +203,18 @@ export class AuthService {
       reqMeta,
     );
 
+    const { sid, rjti } = await this.createSession(
+      user.id,
+      { deviceModel: dto.deviceModel, platform: dto.platform ?? 'web' },
+      reqMeta,
+    );
     const payload: JwtPayload = {
       userId: user.id,
       role: user.role as 'PARENT' | 'CHILD',
       tokenVersion: user.tokenVersion,
+      sid,
     };
-    const accessToken = this.signAccessToken(payload);
-    const refreshToken = this.signRefreshToken(payload);
+    const { accessToken, refreshToken } = this.issueTokens(payload, rjti);
 
     return {
       user: {
@@ -204,7 +288,11 @@ export class AuthService {
       reqMeta,
     );
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(
+      user,
+      { deviceModel: dto.deviceModel, platform: dto.platform },
+      reqMeta,
+    );
   }
 
   /**
@@ -246,27 +334,38 @@ export class AuthService {
       reqMeta,
     );
 
-    return this.buildAuthResponse(user);
+    return this.buildAuthResponse(
+      user,
+      { deviceModel: dto.deviceModel, platform: dto.platform },
+      reqMeta,
+    );
   }
 
   /**
    * Login/register javobini quradi: tokens + minimal user obyekti.
    * Telegram login bilan bir xil shaklda (Flutter AuthSession.fromJson).
    */
-  private buildAuthResponse(user: {
-    id: string;
-    role: string;
-    name: string | null;
-    avatarUrl: string | null;
-    telegramId: string | null;
-    language: string;
-    tokenVersion: number;
-  }) {
+  private async buildAuthResponse(
+    user: {
+      id: string;
+      role: string;
+      name: string | null;
+      avatarUrl: string | null;
+      telegramId: string | null;
+      language: string;
+      tokenVersion: number;
+    },
+    device: DeviceMeta = {},
+    reqMeta?: ReqMeta,
+  ) {
+    const { sid, rjti } = await this.createSession(user.id, device, reqMeta);
     const payload: JwtPayload = {
       userId: user.id,
       role: user.role as 'PARENT' | 'CHILD',
       tokenVersion: user.tokenVersion,
+      sid,
     };
+    const { accessToken, refreshToken } = this.issueTokens(payload, rjti);
 
     return {
       user: {
@@ -277,8 +376,8 @@ export class AuthService {
         telegramId: user.telegramId,
         language: user.language,
       },
-      accessToken: this.signAccessToken(payload),
-      refreshToken: this.signRefreshToken(payload),
+      accessToken,
+      refreshToken,
     };
   }
 
@@ -287,7 +386,7 @@ export class AuthService {
   /* ------------------------------------------------------------------ */
 
   async refreshToken(token: string) {
-    let payload: JwtPayload;
+    let payload: JwtPayload & { rjti?: string };
     try {
       payload = this.verifyRefreshToken(token);
     } catch {
@@ -301,21 +400,44 @@ export class AuthService {
       throw new UnauthorizedException('User not found or inactive');
     }
 
-    // tokenVersion mismatch means logout was called => reject
+    // tokenVersion mismatch means "logout everywhere" was called => reject
     if ((payload.tokenVersion ?? 0) !== user.tokenVersion) {
       throw new UnauthorizedException('Token revoked');
+    }
+
+    // ── Sessiya-asosli tokenlar (sid bor) — revoke + rotation tekshiruvi ──
+    let newRjti: string | undefined;
+    if (payload.sid) {
+      const session = await this.prisma.userSession.findUnique({
+        where: { id: payload.sid },
+      });
+      if (!session || session.revokedAt) {
+        throw new UnauthorizedException('Session revoked');
+      }
+      // Refresh token reuse detection: eski rjti bilan kelsa — sessiyani
+      // tugatamiz (o'g'irlangan token belgisi).
+      if (payload.rjti && session.jti !== payload.rjti) {
+        await this.prisma.userSession.update({
+          where: { id: session.id },
+          data: { revokedAt: new Date() },
+        });
+        throw new UnauthorizedException('Session revoked');
+      }
+      newRjti = randomUUID();
+      await this.prisma.userSession.update({
+        where: { id: session.id },
+        data: { jti: newRjti, lastSeenAt: new Date() },
+      });
     }
 
     const newPayload: JwtPayload = {
       userId: user.id,
       role: user.role as 'PARENT' | 'CHILD',
       tokenVersion: user.tokenVersion,
+      sid: payload.sid,
     };
 
-    return {
-      accessToken: this.signAccessToken(newPayload),
-      refreshToken: this.signRefreshToken(newPayload),
-    };
+    return this.issueTokens(newPayload, newRjti);
   }
 
   /* ------------------------------------------------------------------ */
@@ -502,11 +624,74 @@ export class AuthService {
   /*  Logout — increment tokenVersion, all refresh tokens become invalid */
   /* ------------------------------------------------------------------ */
 
-  async logout(userId: string): Promise<{ ok: true }> {
-    await this.prisma.user.update({
-      where: { id: userId },
-      data: { tokenVersion: { increment: 1 } },
-    });
+  async logout(userId: string, sid?: string): Promise<{ ok: true }> {
+    if (sid) {
+      // Faqat shu qurilma sessiyasini tugatamiz (boshqa qurilmalar qoladi).
+      await this.prisma.userSession.updateMany({
+        where: { id: sid, userId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+    } else {
+      // Legacy (sid yo'q token) — barcha refresh tokenlarni bekor qilamiz.
+      await this.prisma.user.update({
+        where: { id: userId },
+        data: { tokenVersion: { increment: 1 } },
+      });
+    }
     return { ok: true };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Faol sessiyalar — ro'yxat + uzoqdan tugatish                        */
+  /* ------------------------------------------------------------------ */
+
+  /** Foydalanuvchining tugatilmagan sessiyalari (joriy sessiya belgilangan). */
+  async listSessions(userId: string, currentSid?: string) {
+    const sessions = await this.prisma.userSession.findMany({
+      where: { userId, revokedAt: null },
+      orderBy: { lastSeenAt: 'desc' },
+    });
+    return sessions.map((s) => ({
+      id: s.id,
+      deviceModel: s.deviceModel,
+      platform: s.platform,
+      ipAddress: s.ipAddress,
+      city: s.city,
+      country: s.country,
+      createdAt: s.createdAt.toISOString(),
+      lastSeenAt: s.lastSeenAt.toISOString(),
+      isCurrent: s.id === currentSid,
+    }));
+  }
+
+  /** Bitta sessiyani tugatish (egalik tekshiriladi). */
+  async revokeSession(
+    userId: string,
+    sessionId: string,
+  ): Promise<{ ok: true }> {
+    const result = await this.prisma.userSession.updateMany({
+      where: { id: sessionId, userId, revokedAt: null },
+      data: { revokedAt: new Date() },
+    });
+    if (result.count === 0) {
+      throw new NotFoundException('Sessiya topilmadi');
+    }
+    return { ok: true };
+  }
+
+  /** Joriydan boshqa BARCHA sessiyalarni tugatish. */
+  async revokeOtherSessions(
+    userId: string,
+    currentSid?: string,
+  ): Promise<{ count: number }> {
+    const result = await this.prisma.userSession.updateMany({
+      where: {
+        userId,
+        revokedAt: null,
+        ...(currentSid && { id: { not: currentSid } }),
+      },
+      data: { revokedAt: new Date() },
+    });
+    return { count: result.count };
   }
 }

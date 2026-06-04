@@ -52,6 +52,9 @@ model User {
   // Sprint 6 — P0 monetizatsiya
   subscriptions    Subscription[]
 
+  // Faol sessiyalar (login qilingan qurilmalar)
+  sessions         UserSession[]
+
   @@map("users")
 }
 
@@ -976,4 +979,31 @@ model OtpCode {
   
   @@map("otp_codes")
   @@index([phone, createdAt(sort: Desc)])
+}
+
+// ============================================
+// USER SESSIONS — "Faol sessiyalar" (login qilingan qurilmalar)
+// ============================================
+// Har login (telegram/email/phone) yangi sessiya yaratadi. Refresh
+// token rotation `jti` orqali bog'lanadi. Foydalanuvchi boshqa
+// qurilmalarni uzoqdan tugata oladi (revokedAt set → refresh rad etiladi).
+model UserSession {
+  id          String    @id @default(uuid())
+  userId      String    @map("user_id")
+  // Refresh token JTI (rotation'da yangilanadi) — reuse detection.
+  jti         String    @unique
+  deviceModel String?   @map("device_model") // "Redmi Note 12S", "iPhone 14 Pro Max"
+  platform    String? // "android" | "ios" | "web"
+  ipAddress   String?   @map("ip_address")
+  city        String?
+  country     String?
+  userAgent   String?   @map("user_agent")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  lastSeenAt  DateTime  @default(now()) @map("last_seen_at")
+  revokedAt   DateTime? @map("revoked_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@map("user_sessions")
+  @@index([userId, revokedAt])
 }

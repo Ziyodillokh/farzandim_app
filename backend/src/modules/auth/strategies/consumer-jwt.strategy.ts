@@ -29,6 +29,7 @@ export class ConsumerJwtStrategy extends PassportStrategy(
       userId: payload.userId,
       role: payload.role,
       tokenVersion: payload.tokenVersion,
+      sid: payload.sid,
     };
   }
 }
