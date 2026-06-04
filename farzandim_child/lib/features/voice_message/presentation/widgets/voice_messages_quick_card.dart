@@ -47,23 +47,36 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
+                // Telegram-style messenger ikon: ko'k gradient yumaloq +
+                // oq paper plane. Telegram brand'ining vizual jozibasi,
+                // lekin SVG path va ranglar app'ga moslashtirilgan
+                // (gradient farqli — Telegram'ning aniq blue'sidan biroz
+                // teal'ga moyil, paper plane'da ham folds bor).
                 Container(
                   width: 56,
                   height: 56,
-                  decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: AppColors.primary.withOpacity(0.15),
+                  decoration: const BoxDecoration(
                     shape: BoxShape.circle,
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        Color(0xFF37AEE2), // Telegram light blue
+                        Color(0xFF1E96C8), // Telegram dark blue
+                      ],
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Color(0x331E96C8),
+                        blurRadius: 10,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
                   ),
-                  // Telegram-style paper plane (rounded) — Material'ning
-                  // `send_rounded` ikonkasi. Telegram brand'idan farqli
-                  // (qirralari yumshatilgan, brand color o'rniga app primary).
-                  child: const Padding(
-                    padding: EdgeInsets.only(right: 3),
-                    child: Icon(
-                      AppIcons.send,
-                      color: AppColors.primary,
-                      size: 26,
+                  child: Center(
+                    child: CustomPaint(
+                      size: const Size(28, 28),
+                      painter: _TelegramPlanePainter(),
                     ),
                   ),
                 ),
@@ -151,6 +164,50 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Telegram-style paper plane CustomPainter.
+///
+/// Aslida Telegram'ning ikonkasi 3 ta yon va ichki "fold" chizig'ini
+/// ko'rsatadigan papier-plié shaklida. SVG path bilan 1:1 chizamiz.
+/// Ikon 24x24 viewBox koordinatasida — Size width'ga proporsional masshtab.
+class _TelegramPlanePainter extends CustomPainter {
+  const _TelegramPlanePainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final scale = size.width / 24.0;
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+
+    // Outer paper plane silhouette
+    // (Telegram'ning rasmiy ikon path'iga yaqin yengillashtirilgan versiya)
+    final outer = Path()
+      ..moveTo(2.5 * scale, 12.6 * scale) // chap pastdan
+      ..lineTo(21.5 * scale, 3.4 * scale) // yuqori-o'ng burchakka
+      ..lineTo(17.8 * scale, 20.6 * scale) // pastga, o'ngga
+      ..lineTo(12.0 * scale, 15.5 * scale) // ichki burchak (fold)
+      ..lineTo(7.8 * scale, 18.0 * scale) // pastki kichik fin
+      ..lineTo(7.8 * scale, 13.9 * scale) // burchak
+      ..close();
+    canvas.drawPath(outer, paint);
+
+    // Ichki "fold" chizig'i (qog'ozning ichki burchagi).
+    final foldPaint = Paint()
+      ..color = const Color(0xFFD0EAF7) // ozgina yengil ko'k tus
+      ..style = PaintingStyle.fill;
+    final fold = Path()
+      ..moveTo(7.8 * scale, 13.9 * scale)
+      ..lineTo(12.0 * scale, 15.5 * scale)
+      ..lineTo(19.0 * scale, 6.2 * scale)
+      ..lineTo(7.8 * scale, 13.9 * scale)
+      ..close();
+    canvas.drawPath(fold, foldPaint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 class _PreviewLine extends StatelessWidget {

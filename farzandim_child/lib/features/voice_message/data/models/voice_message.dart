@@ -22,6 +22,10 @@ class VoiceMessage {
   final VoiceMessageStatus status;
   final DateTime? createdAt;
   final DateTime? seenAt;
+  // Text xabar (Telegram-style chat). Audio xabarda null.
+  final String? text;
+
+  bool get isText => text != null && text!.isNotEmpty;
 
   const VoiceMessage({
     this.id,
@@ -35,6 +39,7 @@ class VoiceMessage {
     this.status = VoiceMessageStatus.sent,
     this.createdAt,
     this.seenAt,
+    this.text,
   });
 
   Map<String, dynamic> toFirestore() {
@@ -92,6 +97,7 @@ class VoiceMessage {
       // Agar `Z`/`+` marker yo'q bo'lsa, Dart parse local time deb tushunadi
       // (toLocal() effekti yo'q) — Z'ni majburlab qo'shamiz.
       createdAt: _parseBackendIso(json['createdAt'] as String?),
+      text: json['text'] as String?,
     );
   }
 

@@ -54,8 +54,92 @@ class ChatBubble extends ConsumerWidget {
     return result;
   }
 
+  // Telegram-style text bubble — audio playback'ga aloqasi yo'q.
+  // Audio'ga qarama-qarshi: oddiy rounded chip, oxirida vaqt + ✓.
+  Widget _buildTextBubble(BuildContext context) {
+    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
+    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
+    final metaColor = isOwn
+        // ignore: deprecated_member_use
+        ? Colors.black.withOpacity(0.55)
+        : AppColors.textSecondary;
+    final isSeen = message.status == VoiceMessageStatus.seen;
+    final time =
+        message.createdAt != null ? _formatTime(message.createdAt!) : '';
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(flex: 1),
+          Flexible(
+            flex: 5,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 80),
+              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+              decoration: BoxDecoration(
+                color: bubbleColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                  bottomRight: Radius.circular(isOwn ? 4 : 18),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      message.text ?? '',
+                      style: TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        height: 1.35,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        time,
+                        style: TextStyle(color: metaColor, fontSize: 11),
+                      ),
+                      if (isOwn) ...[
+                        const SizedBox(width: 4),
+                        Icon(
+                          isSeen ? Icons.done_all : Icons.check,
+                          color: isSeen
+                              // ignore: deprecated_member_use
+                              ? Colors.black.withOpacity(0.7)
+                              : metaColor,
+                          size: 14,
+                        ),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(flex: 1),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Telegram-style text xabar — alohida bubble.
+    if (message.isText) {
+      return _buildTextBubble(context);
+    }
+
     final currentId = ref.watch(currentlyPlayingIdProvider).value;
     final isCurrent = currentId == message.id;
 

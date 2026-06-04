@@ -118,6 +118,33 @@ class BackendVoiceMessageRepository {
     }
   }
 
+  /// Text xabar yuborish (Telegram-style chat).
+  /// Audio fayl yo'q — `POST /api/voice-messages/text` { receiverId, text }.
+  /// Backend Socket.io orqali receiver'ga real-time emit qiladi.
+  Future<String?> sendText({
+    required String receiverId,
+    required String text,
+  }) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/voice-messages/text',
+        data: <String, dynamic>{
+          'receiverId': receiverId,
+          'text': trimmed,
+        },
+      );
+      return response.data?['id'] as String?;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVoiceMessageRepository.sendText xato '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
   /// Audio fayl signed URL (1 soat amal qiladi).
   Future<String?> getFileUrl(String messageId) async {
     try {

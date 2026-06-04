@@ -15,7 +15,7 @@ import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-class ChatInputBar extends StatelessWidget {
+class ChatInputBar extends StatefulWidget {
   const ChatInputBar({
     required this.isRecording,
     required this.isUploading,
@@ -24,6 +24,7 @@ class ChatInputBar extends StatelessWidget {
     required this.onLongPressStart,
     required this.onLongPressEnd,
     required this.onCancel,
+    required this.onSendText,
     super.key,
   });
 
@@ -34,9 +35,48 @@ class ChatInputBar extends StatelessWidget {
   final VoidCallback onLongPressStart;
   final VoidCallback onLongPressEnd;
   final VoidCallback onCancel;
+  // Telegram-style text yuborish.
+  final ValueChanged<String> onSendText;
+
+  @override
+  State<ChatInputBar> createState() => _ChatInputBarState();
+}
+
+class _ChatInputBarState extends State<ChatInputBar> {
+  late final TextEditingController _textController;
+  late final FocusNode _focusNode;
+  String _draft = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _textController = TextEditingController();
+    _focusNode = FocusNode();
+    _textController.addListener(() {
+      if (_textController.text != _draft) {
+        setState(() => _draft = _textController.text);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _textController.dispose();
+    _focusNode.dispose();
+    super.dispose();
+  }
+
+  void _sendText() {
+    final trimmed = _textController.text.trim();
+    if (trimmed.isEmpty) return;
+    widget.onSendText(trimmed);
+    _textController.clear();
+    setState(() => _draft = '');
+  }
 
   @override
   Widget build(BuildContext context) {
+    final hasText = _draft.trim().isNotEmpty;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -51,123 +91,220 @@ class ChatInputBar extends StatelessWidget {
       child: SafeArea(
         top: false,
         child: Row(
+          crossAxisAlignment: CrossAxisAlignment.end,
           children: [
-            if (isRecording)
+            if (widget.isRecording)
               IconButton(
-                onPressed: onCancel,
+                onPressed: widget.onCancel,
                 icon: const Icon(
                   AppIcons.delete,
                   color: Colors.red,
                   size: 28,
                 ),
               ),
-            if (isRecording)
+            if (widget.isRecording)
               Expanded(
                 child: _RecordingIndicator(
-                  elapsedSeconds: elapsedSeconds,
-                  amplitudes: amplitudes,
+                  elapsedSeconds: widget.elapsedSeconds,
+                  amplitudes: widget.amplitudes,
                 ),
               )
             else
-              const Expanded(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 12),
-                  child: Text(
-                    'Mikrofonni bosing — boshlash/to\'xtatish',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 13,
+              // Telegram-style text input — rounded chip ko'rinishida.
+              Expanded(
+                child: Container(
+                  constraints:
+                      const BoxConstraints(minHeight: 48, maxHeight: 140),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: AppColors.surface,
+                    borderRadius: BorderRadius.circular(24),
+                  ),
+                  child: TextField(
+                    controller: _textController,
+                    focusNode: _focusNode,
+                    enabled: !widget.isUploading,
+                    minLines: 1,
+                    maxLines: 5,
+                    textInputAction: TextInputAction.send,
+                    keyboardType: TextInputType.multiline,
+                    onSubmitted: (_) => _sendText(),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontSize: 15,
+                    ),
+                    decoration: const InputDecoration(
+                      hintText: 'Xabar yozing…',
+                      hintStyle: TextStyle(
+                        color: AppColors.textSecondary,
+                        fontSize: 15,
+                      ),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      isCollapsed: true,
                     ),
                   ),
                 ),
               ),
             const SizedBox(width: 8),
-            GestureDetector(
-              behavior: HitTestBehavior.opaque,
-              // Sprint 4.4.5: ikkala UX (tap toggle + long press).
-              // - Tap: 1-bosish boshlaydi, 2-bosish tugatadi+send
-              // - Long press: WhatsApp/Telegram klassik UX (bosib turish)
-              onTap: isUploading
-                  ? null
-                  : () {
-                      if (isRecording) {
-                        onLongPressEnd();
+            // Text bo'lmasa — mic, bo'lsa — send. Telegram bilan bir xil UX.
+            hasText && !widget.isRecording
+                ? _SendButton(onTap: _sendText, isUploading: widget.isUploading)
+                : _MicButton(
+                    isRecording: widget.isRecording,
+                    isUploading: widget.isUploading,
+                    onTap: () {
+                      if (widget.isRecording) {
+                        widget.onLongPressEnd();
                       } else {
-                        onLongPressStart();
+                        widget.onLongPressStart();
                       }
                     },
-              onLongPressStart:
-                  isUploading ? null : (_) => onLongPressStart(),
-              onLongPressEnd:
-                  isUploading ? null : (_) => onLongPressEnd(),
-              child: Container(
-                width: 80,
-                height: 80,
-                decoration: BoxDecoration(
-                  gradient: isRecording
-                      ? const LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: [AppColors.catRed, AppColors.catRedDark],
-                        )
-                      : LinearGradient(
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                          colors: isUploading
-                              // ignore: deprecated_member_use
-                              ? [
-                                  // ignore: deprecated_member_use
-                                  AppColors.primary.withOpacity(0.6),
-                                  // ignore: deprecated_member_use
-                                  AppColors.primary.withOpacity(0.4),
-                                ]
-                              : const [
-                                  AppColors.catLime,
-                                  AppColors.primaryHover,
-                                ],
-                        ),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    // ignore: deprecated_member_use
-                    color: Colors.white.withOpacity(0.15),
-                    width: 2,
+                    onLongPressStart: widget.onLongPressStart,
+                    onLongPressEnd: widget.onLongPressEnd,
                   ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (isRecording
-                              ? AppColors.catRed
-                              : AppColors.primary)
-                          // ignore: deprecated_member_use
-                          .withOpacity(isRecording ? 0.5 : 0.4),
-                      blurRadius: isRecording ? 24 : 18,
-                      spreadRadius: isRecording ? 4 : 2,
-                    ),
-                  ],
-                ),
-                child: isUploading
-                    ? const Center(
-                        child: SizedBox(
-                          width: 22,
-                          height: 22,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.5,
-                            color: Colors.black,
-                          ),
-                        ),
-                      )
-                    : Icon(
-                        isRecording
-                            ? AppIcons.stop
-                            : AppIcons.mic,
-                        color: isRecording
-                            ? Colors.white
-                            : Colors.black,
-                        size: 40,
-                      ),
-              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Telegram-style 'Send' tugma ─────────────────────────────────────
+class _SendButton extends StatelessWidget {
+  const _SendButton({required this.onTap, required this.isUploading});
+
+  final VoidCallback onTap;
+  final bool isUploading;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isUploading ? null : onTap,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF37AEE2), // Telegram light blue
+              Color(0xFF1E96C8), // Telegram dark blue
+            ],
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x551E96C8),
+              blurRadius: 14,
+              offset: Offset(0, 4),
             ),
           ],
         ),
+        child: Padding(
+          padding: const EdgeInsets.only(left: 4),
+          child: isUploading
+              ? const Center(
+                  child: SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.5,
+                      color: Colors.white,
+                    ),
+                  ),
+                )
+              : const Icon(
+                  Icons.send_rounded,
+                  color: Colors.white,
+                  size: 24,
+                ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Mic tugma (eski UX saqlandi — long press / tap toggle) ──────────
+class _MicButton extends StatelessWidget {
+  const _MicButton({
+    required this.isRecording,
+    required this.isUploading,
+    required this.onTap,
+    required this.onLongPressStart,
+    required this.onLongPressEnd,
+  });
+
+  final bool isRecording;
+  final bool isUploading;
+  final VoidCallback onTap;
+  final VoidCallback onLongPressStart;
+  final VoidCallback onLongPressEnd;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: isUploading ? null : onTap,
+      onLongPressStart: isUploading ? null : (_) => onLongPressStart(),
+      onLongPressEnd: isUploading ? null : (_) => onLongPressEnd(),
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: isRecording
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.catRed, AppColors.catRedDark],
+                )
+              : LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: isUploading
+                      ? [
+                          // ignore: deprecated_member_use
+                          AppColors.primary.withOpacity(0.6),
+                          // ignore: deprecated_member_use
+                          AppColors.primary.withOpacity(0.4),
+                        ]
+                      : const [
+                          AppColors.catLime,
+                          AppColors.primaryHover,
+                        ],
+                ),
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: (isRecording ? AppColors.catRed : AppColors.primary)
+                  // ignore: deprecated_member_use
+                  .withOpacity(isRecording ? 0.5 : 0.35),
+              blurRadius: isRecording ? 20 : 14,
+              spreadRadius: isRecording ? 3 : 1,
+            ),
+          ],
+        ),
+        child: isUploading
+            ? const Center(
+                child: SizedBox(
+                  width: 20,
+                  height: 20,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.5,
+                    color: Colors.black,
+                  ),
+                ),
+              )
+            : Icon(
+                isRecording ? AppIcons.stop : AppIcons.mic,
+                color: isRecording ? Colors.white : Colors.black,
+                size: 28,
+              ),
       ),
     );
   }

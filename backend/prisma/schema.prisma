@@ -145,14 +145,17 @@ model VoiceMessage {
   id              String   @id @default(uuid())
   senderId        String   @map("sender_id")
   receiverId      String   @map("receiver_id")
-  storagePath     String   @map("storage_path")
+  // Audio xabar fayl yo'li. Text xabarda bo'sh bo'lishi mumkin.
+  storagePath     String?  @map("storage_path")
   durationSeconds Int?     @map("duration_seconds")
+  // Text xabar matni. Audio xabarda null bo'ladi.
+  text            String?  @db.Text
   isRead          Boolean  @default(false) @map("is_read")
   createdAt       DateTime @default(now()) @map("created_at")
-  
+
   sender   User @relation("Sender", fields: [senderId], references: [id], onDelete: Cascade)
   receiver User @relation("Receiver", fields: [receiverId], references: [id], onDelete: Cascade)
-  
+
   @@map("voice_messages")
   @@index([receiverId, isRead])
   @@index([senderId])

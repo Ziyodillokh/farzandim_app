@@ -84,6 +84,42 @@ export class VoiceMessagesController {
     });
   }
 
+  // ─── Text xabar (Telegram-style chat) ─────────────────────────────
+  // Body: { receiverId: string, text: string }
+  // Audio yo'q — faqat matn. Schema'da storage_path nullable, text non-null.
+  @Post('text')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Send a text message (Telegram-style chat)' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['receiverId', 'text'],
+      properties: {
+        receiverId: { type: 'string', format: 'uuid' },
+        text: { type: 'string', maxLength: 4000 },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Text message created' })
+  async sendText(
+    @CurrentUser() user: JwtPayload,
+    @Body() body: { receiverId?: string; text?: string },
+  ) {
+    const receiverId = body?.receiverId;
+    const rawText = body?.text;
+    if (!receiverId) {
+      throw new BadRequestException('receiverId required');
+    }
+    if (!rawText || rawText.trim().length === 0) {
+      throw new BadRequestException('text bo\'sh bo\'lishi mumkin emas');
+    }
+    const text = rawText.trim();
+    if (text.length > 4000) {
+      throw new BadRequestException('text maksimum 4000 belgi');
+    }
+    return this.voiceMessagesService.sendText(user.userId, receiverId, text);
+  }
+
   @Get()
   @ApiOperation({ summary: 'List voice messages for the current user' })
   @ApiQuery({ name: 'role', required: false, enum: ['sent', 'received'] })

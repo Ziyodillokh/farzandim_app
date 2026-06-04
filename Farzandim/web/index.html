@@ -96,6 +96,15 @@
       document.getElementById("splash-branding")?.remove();
       document.body.style.background = "transparent";
     }
+    // Flutter engine tayyor bo'lganda splash'ni avtomatik olib tashlaydi
+    // (flutter_native_splash Dart tomondan chaqirilmagani uchun manual).
+    // Bir nechta event'larni tinglaymiz — turli Flutter versiyalarida
+    // har xil event nomlari ishlatilishi mumkin. Safety net: 4 sekunddan
+    // keyin majburiy olib tashlash.
+    window.addEventListener('flutter-first-frame', removeSplashFromWeb);
+    window.addEventListener('load', function() {
+      setTimeout(removeSplashFromWeb, 4000);
+    });
   </script>
 </head>
 <body>

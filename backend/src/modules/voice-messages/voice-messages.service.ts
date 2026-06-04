@@ -123,6 +123,54 @@ export class VoiceMessagesService {
     return voiceMessage;
   }
 
+  // ─── Text xabar (Telegram-style chat) ─────────────────────────────
+  // Audio fayl yo'q — storagePath null, text to'ldirilgan.
+  // Socket.io orqali real-time broadcast — qabul qiluvchi UI darhol
+  // yangilanadi (Parent App'da messanger karta + chat).
+  async sendText(senderId: string, receiverId: string, text: string) {
+    if (senderId === receiverId) {
+      throw new BadRequestException('Yuboruvchi va qabul qiluvchi bir xil');
+    }
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
+    });
+    if (!receiver) {
+      throw new BadRequestException('Qabul qiluvchi topilmadi');
+    }
+
+    const voiceMessage = await this.prisma.voiceMessage.create({
+      data: {
+        senderId,
+        receiverId,
+        text,
+        storagePath: null,
+        durationSeconds: null,
+      },
+      include: {
+        sender: { select: USER_SELECT },
+        receiver: { select: USER_SELECT },
+      },
+    });
+
+    this.realtime.emitToUser(receiverId, 'voice:received', voiceMessage);
+
+    try {
+      await this.fcm.sendPushToUser(receiverId, {
+        title: voiceMessage.sender.name ?? 'Yangi xabar',
+        body: text.length > 80 ? `${text.slice(0, 80)}…` : text,
+        data: {
+          type: 'voice',
+          messageId: voiceMessage.id,
+          senderId,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Text push failed for message ${voiceMessage.id}`, err);
+    }
+
+    return voiceMessage;
+  }
+
   async list(userId: string, role?: 'sent' | 'received') {
     let where: any;
     if (role === 'received') {
@@ -157,6 +205,10 @@ export class VoiceMessagesService {
       throw new ForbiddenException('Forbidden');
     }
 
+    if (!message.storagePath) {
+      // Text xabarda audio yo'q.
+      throw new BadRequestException('Bu xabarda audio fayl yo\'q');
+    }
     try {
       const url = await this.storage.getSignedUrl(BUCKETS.voice, message.storagePath, 3600);
       return { url, expiresIn: 3600 };
@@ -207,10 +259,12 @@ export class VoiceMessagesService {
       throw new ForbiddenException('Forbidden');
     }
 
-    try {
-      await this.storage.delete(BUCKETS.voice, message.storagePath);
-    } catch (err) {
-      this.logger.warn('MinIO delete failed, removing DB row anyway', err);
+    if (message.storagePath) {
+      try {
+        await this.storage.delete(BUCKETS.voice, message.storagePath);
+      } catch (err) {
+        this.logger.warn('MinIO delete failed, removing DB row anyway', err);
+      }
     }
 
     await this.prisma.voiceMessage.delete({ where: { id: messageId } });
