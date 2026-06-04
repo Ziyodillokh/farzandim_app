@@ -4,8 +4,6 @@
 
 // ignore_for_file: public_member_api_docs
 
-import 'dart:io' show Platform;
-
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim/features/app_update/data/repositories/backend_app_version_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -24,7 +22,13 @@ final appUpdateProvider =
 class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
   @override
   Future<AppUpdateStatus> build() async {
-    return _check();
+    try {
+      return await _check();
+    } catch (e, st) {
+      debugPrint('AppUpdate.build xato: $e\n$st');
+      final pkg = await PackageInfo.fromPlatform();
+      return AppUpdateStatus.unknown(pkg.version);
+    }
   }
 
   Future<void> refresh() async {
@@ -41,7 +45,11 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
       return AppUpdateStatus.unknown(current);
     }
 
-    final platform = Platform.isAndroid ? info.android : info.ios;
+    // Web'da dart:io Platform UnsupportedError tashlaydi — kIsWeb bilan himoya.
+    // Web build Android APK'ni directApkUrl orqali tarqatadi → web'ni android deb olamiz.
+    final isAndroid =
+        kIsWeb || defaultTargetPlatform == TargetPlatform.android;
+    final platform = isAndroid ? info.android : info.ios;
 
     final ltMin = compareSemver(current, platform.minSupported) < 0;
     if (info.isForceUpdate || ltMin) {

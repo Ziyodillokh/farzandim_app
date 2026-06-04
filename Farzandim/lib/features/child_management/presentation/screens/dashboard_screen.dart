@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
@@ -223,6 +224,10 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
           ),
           child: _Header(),
         ),
+
+        // Soft-update banner — yangi versiya bo'lsa "Yangilash" taklifi chiqadi
+        // (yangilanish bo'lmasa o'zi SizedBox.shrink qaytaradi).
+        const UpdateBanner(),
 
         // ─── Gorizontal PageView — har bola TO'LIQ ekran ───
         // Chapga sursa keyingi bola butunlay ochiladi (oldingisi ko'rinmaydi).
