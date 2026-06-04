@@ -202,6 +202,28 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
       );
   }
 
+  /// Tepadan pastga tortilganda — tanlangan bolaning BARCHA dashboard
+  /// provayderlarini invalidate qilib, backend'dan qayta o'qiydi. Spinner
+  /// yangi ma'lumot kelguncha (yoki 8s himoya) ko'rinib turadi.
+  Future<void> _onRefresh(String childId) async {
+    ref
+      ..invalidate(childrenProvider)
+      ..invalidate(todayUsageProvider(childId))
+      ..invalidate(installedAppsProvider(childId))
+      ..invalidate(restrictionsProvider(childId))
+      ..invalidate(weeklyChildUsageProvider(childId))
+      ..invalidate(childProfileProvider(childId));
+    try {
+      await Future.wait([
+        ref.read(childrenProvider.future),
+        ref.read(todayUsageProvider(childId).future),
+        ref.read(weeklyChildUsageProvider(childId).future),
+      ]).timeout(const Duration(seconds: 8));
+    } catch (_) {
+      // Tarmoq xatosi/timeout — spinner baribir yopiladi, UI reaktiv yangilanadi.
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final children = widget.children;
@@ -246,35 +268,44 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
                 return const _AddChildPage();
               }
               final c = children[i];
-              return SingleChildScrollView(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.lg,
-                  AppDimensions.sm,
-                  AppDimensions.lg,
-                  AppDimensions.md,
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _ChildInfoHeader(
-                      child: c,
-                      childCount: children.length,
-                      selectedIndex: i,
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _RatingSection(child: c),
-                    const SizedBox(height: AppDimensions.lg),
-                    _TimeCard(
-                      childId: c.id,
-                      blockAll: _blockAll,
-                      onBlockChanged: (v) {
-                        setState(() => _blockAll = v);
-                        _comingSoon();
-                      },
-                    ),
-                    const SizedBox(height: AppDimensions.lg),
-                    _QuickActionsGrid(childId: c.id),
-                  ],
+              // Tepadan pastga tortsa — shu bolaning BARCHA ma'lumotlari qayta
+              // yuklanadi (RefreshIndicator). AlwaysScrollableScrollPhysics —
+              // kalta sahifada ham pull-to-refresh ishlashi uchun.
+              return RefreshIndicator(
+                color: AppColors.primary,
+                backgroundColor: AppColors.surface,
+                onRefresh: () => _onRefresh(c.id),
+                child: SingleChildScrollView(
+                  physics: const AlwaysScrollableScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(
+                    AppDimensions.lg,
+                    AppDimensions.sm,
+                    AppDimensions.lg,
+                    AppDimensions.md,
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _ChildInfoHeader(
+                        child: c,
+                        childCount: children.length,
+                        selectedIndex: i,
+                      ),
+                      const SizedBox(height: AppDimensions.lg),
+                      _RatingSection(child: c),
+                      const SizedBox(height: AppDimensions.lg),
+                      _TimeCard(
+                        childId: c.id,
+                        blockAll: _blockAll,
+                        onBlockChanged: (v) {
+                          setState(() => _blockAll = v);
+                          _comingSoon();
+                        },
+                      ),
+                      const SizedBox(height: AppDimensions.lg),
+                      _QuickActionsGrid(childId: c.id),
+                    ],
+                  ),
                 ),
               );
             },
@@ -703,7 +734,12 @@ class _TimeCard extends ConsumerWidget {
     // (server `/weekly`, system filtrlangan + Toshkent, 30 sek polling). Avval
     // bu yer per-app yig'indini alohida hisoblardi → dashboard ↔ detail farq
     // qilardi (1h7m ↔ 1h22m) va realtime emas edi.
+    final weeklyAsync = ref.watch(weeklyChildUsageProvider(childId));
     final totalMs = ref.watch(todayScreenTimeMsProvider(childId));
+    // Birinchi yuklash paytida "0 daq" o'rniga "—" — ma'lumot hali kelmaganda
+    // noto'g'ri 0 ko'rsatib, keyin sakrab o'zgarmasligi uchun (startup "0 then
+    // corrects" muammosi).
+    final isFirstLoad = weeklyAsync.isLoading && !weeklyAsync.hasValue;
 
     return Container(
       width: double.infinity,
@@ -723,7 +759,7 @@ class _TimeCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.xs),
           Text(
-            _formatDuration(totalMs),
+            isFirstLoad ? '—' : _formatDuration(totalMs),
             style: AppTextStyles.headlineXL.copyWith(
               fontWeight: FontWeight.w800,
             ),

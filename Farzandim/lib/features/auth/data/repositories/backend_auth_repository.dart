@@ -21,12 +21,15 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'dart:convert';
+
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/auth/token_storage.dart';
 import 'package:farzandim/core/device/device_meta.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final backendAuthRepositoryProvider = Provider<BackendAuthRepository>((ref) {
   return BackendAuthRepository(
@@ -44,6 +47,10 @@ class BackendAuthRepository {
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
+
+  /// Optimistik startup uchun oxirgi user profilini lokal saqlash kaliti.
+  /// Token emas — maxfiy emas, shuning uchun SharedPreferences yetarli.
+  static const _cachedUserKey = 'auth.cached_user.v1';
 
   /// Email yoki telefon + parol bilan ro'yxatdan o'tish.
   /// Backend: POST /api/auth/register → { accessToken, refreshToken, user }.
@@ -94,6 +101,7 @@ class BackendAuthRepository {
       accessToken: session.tokens.accessToken,
       refreshToken: session.tokens.refreshToken,
     );
+    await _cacheUser(session.user);
     return session.user;
   }
 
@@ -132,15 +140,45 @@ class BackendAuthRepository {
     }
   }
 
-  /// Joriy user profilini Backend'dan oladi. Tokens kerak.
-  /// 401 holatida DioClient interceptor refresh chaqiradi.
-  Future<AuthUser?> me() async {
+  /// Joriy user profilini Backend'dan oladi va lokal cache'ga yozadi.
+  ///
+  /// **Xatoni YUTMAYDI** (bootstrap tarmoq xatosi va auth xatosini ajrata
+  /// olishi uchun):
+  ///   - Muvaffaqiyat → AuthUser (token amal qiladi, cache yangilanadi).
+  ///   - 401 (DioClient interceptor refresh ham fail) → DioException(401)
+  ///     tashlaydi → token o'lik → logout.
+  ///   - Tarmoq xatosi (offline) → DioException(connectionError) tashlaydi →
+  ///     caller optimistik holatni saqlashi mumkin.
+  Future<AuthUser?> verifySession() async {
+    final response = await _dio.get<Map<String, dynamic>>('/users/me');
+    final data = response.data;
+    if (data == null) return null;
+    final user = AuthUser.fromJson(data);
+    await _cacheUser(user);
+    return user;
+  }
+
+  /// Oxirgi muvaffaqiyatli user profilini lokal saqlaydi (optimistik startup).
+  Future<void> _cacheUser(AuthUser user) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/users/me');
-      final data = response.data;
-      if (data == null) return null;
-      return AuthUser.fromJson(data);
-    } on DioException {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(_cachedUserKey, jsonEncode(user.toJson()));
+    } catch (_) {
+      // Cache best-effort — xato bo'lsa jim o'tamiz.
+    }
+  }
+
+  /// Lokal saqlangan user (tarmoqsiz). Optimistik startup uchun — `/users/me`
+  /// javobini kutmasdan darhol "kirgan" holatga o'tish imkonini beradi.
+  Future<AuthUser?> cachedUser() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final raw = prefs.getString(_cachedUserKey);
+      if (raw == null || raw.isEmpty) return null;
+      final json = jsonDecode(raw);
+      if (json is! Map<String, dynamic>) return null;
+      return AuthUser.fromJson(json);
+    } catch (_) {
       return null;
     }
   }
@@ -155,6 +193,12 @@ class BackendAuthRepository {
       // Offline / token expired — local tozalash baribir davom etadi.
     }
     await _tokenStorage.clear();
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_cachedUserKey);
+    } catch (_) {
+      // best-effort
+    }
   }
 
   /// Splash/startup tekshiruvi — refresh token bormi?

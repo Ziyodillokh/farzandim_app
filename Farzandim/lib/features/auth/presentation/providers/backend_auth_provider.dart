@@ -62,8 +62,8 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
 
   final BackendAuthRepository _repo;
 
-  /// Startup'da chaqiriladi (SplashScreen). Tokens bor-yo'qligini
-  /// tekshiradi va kerak bo'lsa /users/me chaqiradi.
+  /// Startup'da chaqiriladi. Tokens bor-yo'qligini tekshiradi va saqlangan
+  /// user bo'lsa OPTIMISTIK ravishda darhol "kirgan" holatga o'tadi.
   Future<void> bootstrap() async {
     final has = await _repo.hasSession();
     if (!has) {
@@ -71,15 +71,36 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       return;
     }
 
-    final user = await _repo.me();
-    if (user == null) {
-      // Refresh ham fail — logout
-      await _repo.logout();
-      state = const AuthAnonymous();
-      return;
+    // OPTIMISTIK RESTORE: saqlangan user bo'lsa `/users/me` tarmoq javobini
+    // KUTMASDAN darhol AuthAuthenticated'ga o'tamiz. Router darhol dashboard'ga
+    // boradi — avvalgi ~2s "login sahifa ko'rinib turib keyin kiradi" flash'i
+    // yo'qoladi. Profil fonda tasdiqlanadi/yangilanadi.
+    final cached = await _repo.cachedUser();
+    if (cached != null) {
+      state = AuthAuthenticated(cached);
     }
 
-    state = AuthAuthenticated(user);
+    try {
+      final user = await _repo.verifySession();
+      if (user != null) {
+        state = AuthAuthenticated(user);
+      } else if (cached == null) {
+        state = const AuthAnonymous();
+      }
+    } on DioException catch (e) {
+      if (e.response?.statusCode == 401) {
+        // Token o'lik (refresh ham muvaffaqiyatsiz) — chiqamiz.
+        await _repo.logout();
+        state = const AuthAnonymous();
+      } else if (cached == null) {
+        // Tarmoq xatosi + cache yo'q — kira olmaymiz.
+        state = const AuthAnonymous();
+      }
+      // else: tarmoq xatosi + cache bor → optimistik holat saqlanadi (offline
+      //       bo'lsa ham dashboard ochiladi; haqiqiy 401 Dio interceptor'da).
+    } catch (_) {
+      if (cached == null) state = const AuthAnonymous();
+    }
   }
 
   /// Login muvaffaqiyatli tugadi — tokens va user obyektini saqlaydi.

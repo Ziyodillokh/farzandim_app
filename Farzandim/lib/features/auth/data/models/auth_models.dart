@@ -122,6 +122,19 @@ class AuthUser {
 
   bool get isParent => role == 'parent';
   bool get isChild => role == 'child';
+
+  /// Lokal cache uchun (optimistik startup). `fromJson` o'qiy oladigan
+  /// kalitlar bilan — `displayName`/`photoUrl` (round-trip xavfsiz).
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        'id': id,
+        'role': role,
+        'displayName': displayName,
+        'photoUrl': photoUrl,
+        'telegramId': telegramId,
+        'language': language,
+        'phone': phone,
+        'email': email,
+      };
 }
 
 /// `FlutterAuth.postMessage(JSON)` orqali login.html'dan keladi.

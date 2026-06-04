@@ -249,7 +249,13 @@ class RestrictionService : Service() {
             val usm = getSystemService(Context.USAGE_STATS_SERVICE)
                 as UsageStatsManager
 
-            val cal = java.util.Calendar.getInstance().apply {
+            // Kun chegarasi — Toshkent (Asia/Tashkent, UTC+5). Ota-ona ilovasi
+            // va backend "bugun"ni Toshkent bo'yicha hisoblaydi; enforcement
+            // ham ayni shu chegarani ishlatishi shart (aks holda yarim kechada
+            // limit noto'g'ri reset bo'ladi yoki usage mos kelmaydi).
+            val cal = java.util.Calendar.getInstance(
+                java.util.TimeZone.getTimeZone("Asia/Tashkent"),
+            ).apply {
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)
                 set(java.util.Calendar.SECOND, 0)
@@ -432,7 +438,7 @@ class RestrictionService : Service() {
         }
 
         val hint = TextView(ctx).apply {
-            text = "Ota-ona cheklov qo'ygan"
+            text = "Ota-onangiz tomonidan bloklangan"
             setTextColor(Color.parseColor("#6B6B78")) // AppColors.textTertiary
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER

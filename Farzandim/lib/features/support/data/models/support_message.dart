@@ -24,6 +24,8 @@ class SupportMessage {
     this.fileSize,
     this.filePath,
     this.bytes,
+    this.attachmentKey,
+    this.mimeType,
   });
 
   final String id;
@@ -45,6 +47,16 @@ class SupportMessage {
 
   /// Rasm preview baytlari — transient (sessiya). Saqlanmaydi.
   final Uint8List? bytes;
+
+  /// Backend MinIO key (yuklangach) — SAQLANADI. Bu bo'lsa biriktirma qayta
+  /// ishga tushgandan keyin ham proxy orqali ko'rsatiladi/yuklab olinadi.
+  final String? attachmentKey;
+
+  /// MIME turi (masalan `image/png`, `video/mp4`) — backend'dan keladi.
+  final String? mimeType;
+
+  /// Biriktirma backend'ga yuklanganmi (qayta ishga tushganda ham mavjud).
+  bool get hasRemote => attachmentKey != null && attachmentKey!.isNotEmpty;
 
   bool get isUser => sender == SupportSender.user;
   bool get isOperator => sender == SupportSender.operator;
@@ -71,7 +83,12 @@ class SupportMessage {
     return '$kb KB';
   }
 
-  SupportMessage copyWith({Uint8List? bytes, String? filePath}) {
+  SupportMessage copyWith({
+    Uint8List? bytes,
+    String? filePath,
+    String? attachmentKey,
+    String? mimeType,
+  }) {
     return SupportMessage(
       id: id,
       sender: sender,
@@ -82,10 +99,13 @@ class SupportMessage {
       fileSize: fileSize,
       filePath: filePath ?? this.filePath,
       bytes: bytes ?? this.bytes,
+      attachmentKey: attachmentKey ?? this.attachmentKey,
+      mimeType: mimeType ?? this.mimeType,
     );
   }
 
-  /// SharedPreferences uchun — transient (`bytes`/`filePath`) saqlanmaydi.
+  /// SharedPreferences uchun — transient (`bytes`/`filePath`) saqlanmaydi,
+  /// lekin `attachmentKey` SAQLANADI (qayta yuklashda proxy orqali ko'rsatish).
   Map<String, dynamic> toJson() => <String, dynamic>{
         'id': id,
         'sender': sender.name,
@@ -94,6 +114,8 @@ class SupportMessage {
         if (attachmentType != null) 'attachmentType': attachmentType!.name,
         if (fileName != null) 'fileName': fileName,
         if (fileSize != null) 'fileSize': fileSize,
+        if (attachmentKey != null) 'attachmentKey': attachmentKey,
+        if (mimeType != null) 'mimeType': mimeType,
       };
 
   factory SupportMessage.fromJson(Map<String, dynamic> j) {
@@ -117,6 +139,8 @@ class SupportMessage {
       attachmentType: type,
       fileName: j['fileName'] as String?,
       fileSize: (j['fileSize'] as num?)?.toInt(),
+      attachmentKey: j['attachmentKey'] as String?,
+      mimeType: j['mimeType'] as String?,
     );
   }
 

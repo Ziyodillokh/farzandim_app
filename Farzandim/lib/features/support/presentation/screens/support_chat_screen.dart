@@ -12,6 +12,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/support/data/models/support_message.dart';
+import 'package:farzandim/features/support/data/repositories/support_attachment_repository.dart';
 import 'package:farzandim/features/support/presentation/providers/support_chat_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:file_picker/file_picker.dart';
@@ -177,11 +178,15 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       final picked = await ImagePicker().pickVideo(source: ImageSource.gallery);
       if (picked == null) return;
       final size = await picked.length();
+      // Web'da filePath yo'q → upload uchun bytes shart. Mobil'da filePath
+      // yetarli (katta videoni xotiraga yuklamaymiz — fromFile stream qiladi).
+      final bytes = kIsWeb ? await picked.readAsBytes() : null;
       await ref.read(supportChatProvider.notifier).sendAttachment(
             type: SupportAttachmentType.video,
             fileName: picked.name,
             fileSize: size,
             filePath: kIsWeb ? null : picked.path,
+            bytes: bytes,
           );
     } catch (_) {
       _attachError();
@@ -190,9 +195,11 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
   Future<void> _pickDocument() async {
     try {
+      // Web'da filePath yo'q → withData: true bilan bytes o'qiymiz. Mobil'da
+      // filePath yetarli (xotira tejaladi).
       final result = await FilePicker.platform.pickFiles(
         type: FileType.any,
-        withData: false,
+        withData: kIsWeb,
       );
       if (result == null || result.files.isEmpty) return;
       final f = result.files.first;
@@ -201,6 +208,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
             fileName: f.name,
             fileSize: f.size,
             filePath: kIsWeb ? null : f.path,
+            bytes: kIsWeb ? f.bytes : null,
           );
     } catch (_) {
       _attachError();
@@ -446,17 +454,22 @@ class _TextBubble extends StatelessWidget {
 
 // ─── Rasm ───
 
-class _ImageBubble extends StatelessWidget {
+class _ImageBubble extends ConsumerWidget {
   const _ImageBubble({required this.message});
   final SupportMessage message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final bytes = message.bytes;
+    // Sessiya: bytes; qayta yuklashdan keyin: backend proxy URL (attachmentKey).
+    final url = message.hasRemote
+        ? ref
+            .read(supportAttachmentRepositoryProvider)
+            .urlForKey(message.attachmentKey!)
+        : null;
+    final hasImage = bytes != null || url != null;
     return GestureDetector(
-      onTap: bytes != null
-          ? () => _openFullImage(context, bytes)
-          : null,
+      onTap: hasImage ? () => _openFullImage(context, bytes, url) : null,
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.primary,
@@ -472,6 +485,27 @@ class _ImageBubble extends StatelessWidget {
                 width: 240,
                 fit: BoxFit.cover,
               )
+            else if (url != null)
+              Image.network(
+                url,
+                width: 240,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) =>
+                    _ImagePlaceholder(name: message.fileName),
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return const SizedBox(
+                    width: 240,
+                    height: 160,
+                    child: Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.background,
+                        strokeWidth: 2,
+                      ),
+                    ),
+                  );
+                },
+              )
             else
               _ImagePlaceholder(name: message.fileName),
             Positioned(
@@ -485,7 +519,7 @@ class _ImageBubble extends StatelessWidget {
     );
   }
 
-  void _openFullImage(BuildContext context, Uint8List bytes) {
+  void _openFullImage(BuildContext context, Uint8List? bytes, String? url) {
     showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
@@ -496,7 +530,9 @@ class _ImageBubble extends StatelessWidget {
           alignment: Alignment.topRight,
           children: [
             InteractiveViewer(
-              child: Image.memory(bytes, fit: BoxFit.contain),
+              child: bytes != null
+                  ? Image.memory(bytes, fit: BoxFit.contain)
+                  : Image.network(url!, fit: BoxFit.contain),
             ),
             IconButton(
               icon: const Icon(Icons.close_rounded, color: Colors.white),
@@ -526,16 +562,59 @@ class _ImagePlaceholder extends StatelessWidget {
   }
 }
 
+// ─── Biriktirma faylni ochish (video/hujjat uchun umumiy) ───
+//
+// Sessiya `filePath` → to'g'ridan ochadi. Qayta yuklashdan keyin `filePath`
+// yo'q, lekin `attachmentKey` bor → backend proxy'dan vaqtinchalik papkaga
+// yuklab olib ochadi (mobil). Web yoki xato bo'lsa — "fayl mavjud emas".
+Future<void> _openSupportFile(
+  BuildContext context,
+  WidgetRef ref,
+  SupportMessage message,
+) async {
+  final path = message.filePath;
+  if (path != null) {
+    await OpenFilex.open(path);
+    return;
+  }
+  final messenger = ScaffoldMessenger.of(context);
+  void unavailable() => messenger
+    ..hideCurrentSnackBar()
+    ..showSnackBar(
+      SnackBar(
+        content: Text('support.fileUnavailable'.tr()),
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: AppColors.surfaceVariant,
+      ),
+    );
+  if (message.hasRemote && !kIsWeb) {
+    try {
+      final local = await ref
+          .read(supportAttachmentRepositoryProvider)
+          .downloadToTemp(
+            key: message.attachmentKey!,
+            fileName: message.fileName ?? 'fayl',
+          );
+      await OpenFilex.open(local);
+      return;
+    } catch (_) {
+      unavailable();
+      return;
+    }
+  }
+  unavailable();
+}
+
 // ─── Video ───
 
-class _VideoBubble extends StatelessWidget {
+class _VideoBubble extends ConsumerWidget {
   const _VideoBubble({required this.message});
   final SupportMessage message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => _openVideo(context),
+      onTap: () => _openSupportFile(context, ref, message),
       child: Container(
         width: 240,
         decoration: BoxDecoration(
@@ -574,40 +653,23 @@ class _VideoBubble extends StatelessWidget {
       ),
     );
   }
-
-  Future<void> _openVideo(BuildContext context) async {
-    final path = message.filePath;
-    if (path != null) {
-      await OpenFilex.open(path);
-    } else {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('support.fileUnavailable'.tr()),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceVariant,
-          ),
-        );
-    }
-  }
 }
 
 // ─── Hujjat ───
 
-class _DocumentBubble extends StatelessWidget {
+class _DocumentBubble extends ConsumerWidget {
   const _DocumentBubble({required this.message});
   final SupportMessage message;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isUser = message.isUser;
     final fg = isUser ? AppColors.background : AppColors.textPrimary;
     final subColor = isUser
         ? AppColors.background.withValues(alpha: 0.6)
         : AppColors.textSecondary;
     return GestureDetector(
-      onTap: () => _openDoc(context),
+      onTap: () => _openSupportFile(context, ref, message),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
@@ -672,22 +734,6 @@ class _DocumentBubble extends StatelessWidget {
     );
   }
 
-  Future<void> _openDoc(BuildContext context) async {
-    final path = message.filePath;
-    if (path != null) {
-      await OpenFilex.open(path);
-    } else {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('support.fileUnavailable'.tr()),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceVariant,
-          ),
-        );
-    }
-  }
 }
 
 class _TimeChip extends StatelessWidget {

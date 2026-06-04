@@ -19,6 +19,8 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_combined.dart';
+import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart'
+    show AppLimitException;
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -762,16 +764,20 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
             ),
           );
       }
-    } catch (_) {
+    } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
+        // Aniq sabab (AppLimitException) ko'rsatamiz — generic "saqlashda
+        // xatolik" o'rniga, foydalanuvchi muammoni tushunishi uchun.
         ScaffoldMessenger.of(context)
           ..hideCurrentSnackBar()
           ..showSnackBar(
             SnackBar(
-              content: Text('appLimits.saveError'.tr()),
+              content: Text(
+                e is AppLimitException ? e.message : 'appLimits.saveError'.tr(),
+              ),
               behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceVariant,
+              backgroundColor: AppColors.error,
             ),
           );
       }

@@ -53,9 +53,17 @@ class BackendAppLimitRepository {
     }
   }
 
-  /// Upsert: agar `packageName` uchun limit mavjud bo'lsa PUT,
-  /// aks holda POST. Backend `(childId, packageName)` unique
-  /// bo'lishi taxmin qilinadi.
+  /// Cheklov o'rnatish/yangilash.
+  ///
+  /// Backend POST endi **idempotent upsert** (`(childId, packageName)` unique):
+  /// mavjud bo'lsa yangilaydi, aks holda yaratadi. Shuning uchun GET-then-PUT
+  /// kerak emas — DOIM POST qilamiz. (Avval GET muvaffaqiyatsiz bo'lsa
+  /// `_getLimits` jim `[]` qaytarib, noto'g'ri yo'l tanlanardi va 409/xato
+  /// "saqlashda xatolik" sifatida ko'rinardi.)
+  ///
+  /// `appName` yuborilmaydi (backend modelida yo'q; backend eski klientlar
+  /// uchun qabul qilsa-da, e'tiborsiz qoldiradi). Xato bo'lsa aniq sababli
+  /// [AppLimitException] tashlaydi.
   Future<bool> upsert({
     required String childId,
     required String packageName,
@@ -63,67 +71,85 @@ class BackendAppLimitRepository {
     required int dailyLimitMs,
   }) async {
     try {
-      final existing = await _getLimits(childId);
-      final match = existing
-          .where((l) => l.packageName == packageName)
-          .cast<_AppLimitWire?>()
-          .firstWhere((_) => true, orElse: () => null);
-      if (match != null) {
-        await _dio.put<void>(
-          '/app-limits/${match.id}',
-          data: {'dailyLimitMs': dailyLimitMs},
-        );
-      } else {
-        // DIQQAT: `appName` yuborilmaydi — backend `CreateAppLimitDto`'da
-        // bunday maydon yo'q, global ValidationPipe `forbidNonWhitelisted`
-        // begona maydonni 400 qiladi. AppLimit modelida appName ustuni yo'q.
-        await _dio.post<void>(
-          '/children/$childId/app-limits',
-          data: {
-            'packageName': packageName,
-            'dailyLimitMs': dailyLimitMs,
-          },
-        );
-      }
+      await _dio.post<void>(
+        '/children/$childId/app-limits',
+        data: {
+          'packageName': packageName,
+          'dailyLimitMs': dailyLimitMs,
+        },
+      );
       return true;
     } on DioException catch (e) {
       debugPrint(
         'BackendAppLimitRepository.upsert xato '
         '${e.response?.statusCode} body=${e.response?.data}',
       );
-      rethrow;
+      throw AppLimitException(_messageForDioError(e));
     }
   }
 
-  /// Cheklovni o'chirish.
-  ///
-  /// **Eslatma:** Fastify 5 JSON parser DELETE bo'sh body bilan
-  /// `FST_ERR_CTP_INVALID_JSON_BODY` 400 qaytaradi. Bo'sh `{}` yuboramiz
-  /// (worth: markAsRead pattern bilan bir xil).
+  /// Cheklovni o'chirish (cheklanmagan). Backend DELETE id bo'yicha, shuning
+  /// uchun avval `(childId, packageName)` bo'yicha id topamiz.
   Future<bool> remove({
     required String childId,
     required String packageName,
   }) async {
+    final _AppLimitWire? match;
     try {
       final existing = await _getLimits(childId);
-      final match = existing
+      match = existing
           .where((l) => l.packageName == packageName)
           .cast<_AppLimitWire?>()
           .firstWhere((_) => true, orElse: () => null);
-      if (match == null) return true; // already absent
-      await _dio.delete<void>(
-        '/app-limits/${match.id}',
-        data: <String, dynamic>{},
-      );
+    } on DioException catch (e) {
+      throw AppLimitException(_messageForDioError(e));
+    }
+    if (match == null) return true; // allaqachon yo'q
+    try {
+      await _dio.delete<void>('/app-limits/${match.id}');
       return true;
     } on DioException catch (e) {
       debugPrint(
         'BackendAppLimitRepository.remove xato '
         '${e.response?.statusCode} body=${e.response?.data}',
       );
-      return false;
+      throw AppLimitException(_messageForDioError(e));
     }
   }
+
+  /// DioException'dan foydalanuvchiga ko'rsatish uchun aniq o'zbekcha xabar.
+  String _messageForDioError(DioException e) {
+    final code = e.response?.statusCode;
+    final data = e.response?.data;
+    String? serverMsg;
+    if (data is Map) {
+      final m = data['message'];
+      if (m is String) {
+        serverMsg = m;
+      } else if (m is List && m.isNotEmpty) {
+        serverMsg = m.map((x) => '$x').join(', ');
+      }
+    }
+    if (code == null) {
+      return 'Internet aloqasi yo\'q yoki server javob bermadi. Qayta urinib ko\'ring.';
+    }
+    if (code == 401) return 'Sessiya muddati tugagan — qaytadan kiring.';
+    if (code == 403) return 'Bu bola sizning akkauntingizga ulanmagan.';
+    if (code == 404) return 'Bola topilmadi.';
+    return serverMsg ?? 'Saqlashda xatolik (server $code).';
+  }
+}
+
+/// App-limit operatsiyasi muvaffaqiyatsiz bo'lganda — aniq, ko'rsatish mumkin
+/// bo'lgan xabar bilan (generic "saqlashda xatolik" o'rniga).
+class AppLimitException implements Exception {
+  AppLimitException(this.message);
+
+  /// Foydalanuvchiga ko'rsatiladigan o'zbekcha xabar.
+  final String message;
+
+  @override
+  String toString() => message;
 }
 
 @immutable

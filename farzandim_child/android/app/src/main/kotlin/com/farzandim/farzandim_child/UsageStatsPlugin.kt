@@ -168,8 +168,13 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
 
         val endTime = System.currentTimeMillis()
         val startTime: Long = if (days <= 1) {
-            // Bugun: kalendar kun boshidan (00:00) hozirgacha.
-            val cal = java.util.Calendar.getInstance().apply {
+            // Bugun: Toshkent (Asia/Tashkent, UTC+5) kun boshidan (00:00)
+            // hozirgacha. Backend va ota-ona ilovasi "bugun"ni Toshkent
+            // bo'yicha hisoblaydi — bir xil chegara enforcement (Restriction
+            // Service) bilan ham mos kelishi uchun.
+            val cal = java.util.Calendar.getInstance(
+                java.util.TimeZone.getTimeZone("Asia/Tashkent"),
+            ).apply {
                 set(java.util.Calendar.HOUR_OF_DAY, 0)
                 set(java.util.Calendar.MINUTE, 0)
                 set(java.util.Calendar.SECOND, 0)
