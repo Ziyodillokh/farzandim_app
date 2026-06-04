@@ -20,6 +20,11 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:farzandim_child/core/auth/token_storage.dart';
+import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
 import 'package:farzandim_child/features/device_info/data/services/device_info_service.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
 import 'package:farzandim_child/firebase_options.dart';
@@ -35,6 +40,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
   // Firebase hali init qilinmagan bo'ladi. onStart()'dan keyin yaratamiz.
   DeviceInfoService? _deviceInfoService;
   LocationService? _locationService;
+  UsageSyncService? _usageSyncService;
 
   String? _parentUid;
   String? _childId;
@@ -77,6 +83,17 @@ class ChildBackgroundTaskHandler extends TaskHandler {
       childId: _childId!,
       childName: childName,
     );
+
+    // Foydalanish (faollik) sync'i — background isolate'da ham ishlaydi, shu
+    // sababli ilova fonda bo'lsa ham ekran vaqti ~1 daqiqada yangilanadi
+    // (avval faqat UI isolate'da edi → ilova yopilsa faollik kechikardi).
+    _usageSyncService = UsageSyncService(
+      backendRepo: BackendInstalledAppsRepository(
+        dio: createBackendDio(TokenStorage()),
+      ),
+      statsService: UsageStatsService(),
+      childId: _childId!,
+    )..start();
   }
 
   @override
@@ -99,6 +116,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
   Future<void> onDestroy(DateTime timestamp) async {
     _deviceInfoService?.stop();
     _locationService?.stop();
+    _usageSyncService?.dispose();
   }
 
   @override

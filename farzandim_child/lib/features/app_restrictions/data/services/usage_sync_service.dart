@@ -44,11 +44,12 @@ class UsageSyncService {
     unawaited(_syncUsage());
     unawaited(_syncInstalledApps());
 
-    // Sync interval 2 daqiqa — Parent UI 30 sek polling bilan birga
-    // foydalanish vaqti 2-3 daqiqa ichida yangilanadi (eski 15 daq
-    // juda sekin edi — 'real-time' UX hissi yo'q).
+    // Sync interval 60 sek — Parent UI 30 sek polling bilan birga foydalanish
+    // vaqti ~1 daqiqa ichida yangilanadi. Background isolate'da ham ishlaydi
+    // (ChildBackgroundTaskHandler), shuning uchun ilova fonda bo'lsa ham
+    // faollik kechikmaydi.
     _usageTimer = Timer.periodic(
-      const Duration(minutes: 2),
+      const Duration(seconds: 60),
       (_) => unawaited(_syncUsage()),
     );
 

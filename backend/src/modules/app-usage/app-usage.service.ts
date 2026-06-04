@@ -13,18 +13,27 @@ const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
 // Bir kun maksimal foreground vaqti (xato data'dan himoya).
 const MAX_DAY_MS = 24 * 60 * 60 * 1000;
 
-// System / launcher / orqa-fon paketlari — ekran vaqtiga kirmaydi.
+// Launcher / systemUI / klaviatura / fon servislar — ekran vaqtiga kirmaydi.
+// MUHIM: parent `AppUsageDay.filteredApps` bilan BIR XIL (tor) ro'yxat —
+// aks holda haftalik grafik soni `_TimeCard` jamisidan farq qilardi
+// (masalan soat/kamera grafikdan tushib qolardi). Soat/kamera/sozlamalar
+// kabi foydalanuvchi ilovalari KO'RINADI.
 const SYSTEM_PREFIXES = [
-  'com.android.',
-  'com.samsung.android.',
-  'com.sec.android.',
+  // Launcher'lar (uy ekrani).
+  'com.android.launcher',
+  'com.sec.android.app.launcher',
+  'com.miui.home',
+  'com.google.android.apps.nexuslauncher',
+  // System UI / fon servislar.
+  'com.android.systemui',
   'com.google.android.gms',
   'com.google.android.packageinstaller',
   'com.google.android.permissioncontroller',
+  // Klaviaturalar (IME).
   'com.google.android.inputmethod',
-  'com.miui.',
-  'com.mi.android',
-  'com.transsion.',
+  'com.sec.android.inputmethod',
+  'com.samsung.android.honeyboard',
+  // O'zimizning ilovalar.
   'com.farzandim.',
 ];
 
