@@ -30,6 +30,7 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/motivati
 import 'package:farzandim_child/features/dashboard/presentation/widgets/schedule_mini_card.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/section_header.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/sos_button.dart';
+import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/voice_messages_quick_card.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
@@ -230,9 +231,10 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     Map<String, dynamic>? childData,
     AsyncValue<Map<String, dynamic>?> parentInfo,
   ) {
-    // Sprint 4.4.29: bola rasmi (Parent App'dan yuklangan) header avatar'da.
-    final avatarUrlAsync = ref.watch(childAvatarUrlProvider(childId));
-    final avatarUrl = avatarUrlAsync.valueOrNull;
+    // Bell'ga unread badge — notifications provider'dan o'qiymiz.
+    // valueOrNull — Firestore permission-denied bo'lsa ham crash qilmaslik.
+    final unreadCount =
+        ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
 
     return RefreshIndicator(
       color: AppColors.primary,
@@ -250,8 +252,8 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           DashboardTopHeader(
-            photoUrl: avatarUrl,
-            onAvatarTap: () => context.push('/account-edit'),
+            unreadCount: unreadCount,
+            onNotificationsTap: () => context.push('/notifications'),
             onSettingsTap: () => context.push('/settings'),
           ),
           // Sprint 4.4.28: yangi versiya mavjud bo'lsa banner (dismissable).

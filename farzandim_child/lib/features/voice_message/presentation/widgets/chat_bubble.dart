@@ -55,14 +55,16 @@ class ChatBubble extends ConsumerWidget {
   }
 
   // Telegram-style text bubble — audio playback'ga aloqasi yo'q.
-  // Audio'ga qarama-qarshi: oddiy rounded chip, oxirida vaqt + ✓.
+  // Own bubble — Telegram brand blue gradient + oq matn.
+  // Receiver bubble — oq fonda qora matn (Telegram receiver).
   Widget _buildTextBubble(BuildContext context) {
-    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
-    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
+    const tgBlue1 = Color(0xFF37AEE2);
+    const tgBlue2 = Color(0xFF1E96C8);
+    final textColor = isOwn ? Colors.white : AppColors.textPrimary;
     final metaColor = isOwn
         // ignore: deprecated_member_use
-        ? Colors.black.withOpacity(0.55)
-        : AppColors.textSecondary;
+        ? Colors.white.withOpacity(0.75)
+        : AppColors.textTertiary;
     final isSeen = message.status == VoiceMessageStatus.seen;
     final time =
         message.createdAt != null ? _formatTime(message.createdAt!) : '';
@@ -79,13 +81,27 @@ class ChatBubble extends ConsumerWidget {
               constraints: const BoxConstraints(minWidth: 80),
               padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
               decoration: BoxDecoration(
-                color: bubbleColor,
+                color: isOwn ? null : Colors.white,
+                gradient: isOwn
+                    ? const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [tgBlue1, tgBlue2],
+                      )
+                    : null,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: Radius.circular(isOwn ? 18 : 4),
                   bottomRight: Radius.circular(isOwn ? 4 : 18),
                 ),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Color(0x14000000),
+                    blurRadius: 6,
+                    offset: Offset(0, 1),
+                  ),
+                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -114,10 +130,7 @@ class ChatBubble extends ConsumerWidget {
                         const SizedBox(width: 4),
                         Icon(
                           isSeen ? Icons.done_all : Icons.check,
-                          color: isSeen
-                              // ignore: deprecated_member_use
-                              ? Colors.black.withOpacity(0.7)
-                              : metaColor,
+                          color: Colors.white,
                           size: 14,
                         ),
                       ],
@@ -173,12 +186,11 @@ class ChatBubble extends ConsumerWidget {
             ? '1.5×'
             : '2×';
 
-    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
-    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
-    final waveformColor = isOwn
-        // ignore: deprecated_member_use
-        ? Colors.black.withOpacity(0.6)
-        : AppColors.primary;
+    // Telegram-style: own — blue gradient, receiver — oq.
+    final bubbleColor = isOwn ? const Color(0xFF1E96C8) : Colors.white;
+    final textColor = isOwn ? Colors.white : AppColors.textPrimary;
+    final waveformColor =
+        isOwn ? Colors.white : const Color(0xFF37AEE2);
     final isSeen = message.status == VoiceMessageStatus.seen;
     // Premium: 36 ta rounded pill — Parent bubble bilan parallel.
     const barCount = 36;

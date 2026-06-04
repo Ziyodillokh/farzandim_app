@@ -20,7 +20,6 @@
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -32,13 +31,8 @@ class ChildBottomNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Sprint 4.4.9: notifications hali Firestore'da (migrate qilinmagan).
-    // Firestore permission-denied → AsyncError. `valueOrNull` exception
-    // throw qilmasdan null qaytaradi → badge ko'rsatilmaydi, app crash'siz.
-    final unreadCount =
-        ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
-    // Content library disabled bo'lsa bottom nav butunlay yashirinadi
-    // (4 tab ham mock data ekranlariga olib boradi).
+    // Content library disabled bo'lsa bottom nav butunlay yashirinadi.
+    // Bildirishnoma badge endi yuqori header'da ko'rinadi.
     if (!kEnableContentLibrary) {
       return const SizedBox.shrink();
     }
@@ -108,16 +102,8 @@ class ChildBottomNavigation extends ConsumerWidget {
                       }
                     },
                   ),
-                  _NavItem(
-                    icon: AppIcons.bell,
-                    active: location == '/notifications',
-                    badgeCount: unreadCount,
-                    onTap: () {
-                      if (location != '/notifications') {
-                        context.push('/notifications');
-                      }
-                    },
-                  ),
+                  // Bildirishnoma ikonkasi yuqori header'ga ko'chirildi —
+                  // pastki nav'da takrorlanmaydi.
                 ],
               ),
             ),

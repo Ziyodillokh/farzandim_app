@@ -403,26 +403,15 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               ),
             ),
             const SizedBox(width: 12),
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  'voiceChat.headerParent'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                Text(
-                  'voiceChat.headerSubtitle'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
-                  ),
-                ),
-              ],
+            // Subtitle ("Ovozli xabarlar") olib tashlandi — bu endi
+            // umumiy messanger ekran, faqat sub'ekt nomi ko'rinadi.
+            Text(
+              'voiceChat.headerParent'.tr(),
+              style: const TextStyle(
+                color: AppColors.textPrimary,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),

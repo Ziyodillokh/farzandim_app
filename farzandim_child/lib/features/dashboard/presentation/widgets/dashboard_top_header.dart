@@ -1,36 +1,62 @@
 // ─────────────────────────────────────────────────────────────────────
-// DashboardTopHeader — Dashboard yuqorisi (Sprint UI.4 redesign)
+// DashboardTopHeader — Dashboard yuqorisi
 // ─────────────────────────────────────────────────────────────────────
 //
 // Chap: Farzandim logo 58×58 (asset).
-// O'ng: Settings tugma (48×48) + Avatar circle 58×58.
-//   - Settings → /settings (til, tema, hisob, ...)
-//   - Avatar → /account-edit (Parent App'dan yuklangan bola rasmi).
+// O'ng: Settings tugma (48×48) +
+//   - `onNotificationsTap` berilsa: 🔔 bell (badge bilan) — Dashboard.
+//   - aks holda: 👤 avatar circle — boshqa ekranlar (Videos/Rankings/...).
+//
+// Avatar URL — provider'dan avtomatik o'qiladi (pairing state'dagi childId
+// orqali `childAvatarUrlProvider`). Foydalanuvchi rasm yuklagan bo'lsa
+// shu rasm ko'rinadi; aks holda fallback person icon.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
+import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
+import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 const double _kHeaderSize = 58;
 
-class DashboardTopHeader extends StatelessWidget {
+class DashboardTopHeader extends ConsumerWidget {
   const DashboardTopHeader({
-    required this.onAvatarTap,
+    this.onAvatarTap,
     this.onSettingsTap,
     this.photoUrl,
+    this.onNotificationsTap,
+    this.unreadCount = 0,
     super.key,
   });
 
-  /// Parent App'dan yuklangan bola rasmining signed URL.
-  /// `null` bo'lsa default `Icon.person` ko'rinadi.
+  // ─── Avatar (eski rejim — boshqa ekranlar uchun) ────────────────
+  /// Parent App'dan yuklangan bola rasmining signed URL. `null` bo'lsa
+  /// provider'dan avtomatik o'qiladi (pairing state'dagi childId orqali).
   final String? photoUrl;
-  final VoidCallback onAvatarTap;
+  final VoidCallback? onAvatarTap;
+
+  // ─── Bildirishnoma (yangi rejim — Dashboard uchun) ──────────────
+  final VoidCallback? onNotificationsTap;
+  final int unreadCount;
 
   /// Sozlamalar tugmasi tap. `null` bo'lsa tugma ko'rinmaydi.
   final VoidCallback? onSettingsTap;
 
+  bool get _useBell => onNotificationsTap != null;
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // photoUrl explicit berilmagan bo'lsa — provider'dan auto-fetch.
+    // Foydalanuvchi rasm yuklagan bo'lsa bu signed URL'ni qaytaradi.
+    String? resolvedPhoto = photoUrl;
+    if (!_useBell && resolvedPhoto == null) {
+      final childId = ref.watch(pairingStateProvider).childId;
+      if (childId != null && childId.isNotEmpty) {
+        resolvedPhoto = ref.watch(childAvatarUrlProvider(childId)).valueOrNull;
+      }
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -46,7 +72,16 @@ class DashboardTopHeader extends StatelessWidget {
             _SettingsButton(onTap: onSettingsTap!),
             const SizedBox(width: 12),
           ],
-          _Avatar(photoUrl: photoUrl, onTap: onAvatarTap),
+          if (_useBell)
+            _NotificationsButton(
+              onTap: onNotificationsTap!,
+              badgeCount: unreadCount,
+            )
+          else
+            _Avatar(
+              photoUrl: resolvedPhoto,
+              onTap: onAvatarTap ?? () {},
+            ),
         ],
       ),
     );
@@ -75,6 +110,73 @@ class _SettingsButton extends StatelessWidget {
           color: AppColors.textSecondary,
           size: 22,
         ),
+      ),
+    );
+  }
+}
+
+// ─── Bildirishnoma tugmasi (avval pastki nav'da edi) ──────────────────
+class _NotificationsButton extends StatelessWidget {
+  const _NotificationsButton({required this.onTap, required this.badgeCount});
+
+  final VoidCallback onTap;
+  final int badgeCount;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Stack(
+        clipBehavior: Clip.none,
+        children: [
+          Container(
+            width: _kHeaderSize,
+            height: _kHeaderSize,
+            decoration: BoxDecoration(
+              color: AppColors.bgSurface,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.border, width: 1.5),
+            ),
+            child: const Icon(
+              AppIcons.bell,
+              color: AppColors.textSecondary,
+              size: 28,
+            ),
+          ),
+          if (badgeCount > 0)
+            Positioned(
+              top: -2,
+              right: -2,
+              child: Container(
+                constraints: const BoxConstraints(
+                  minWidth: 20,
+                  minHeight: 20,
+                ),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 5,
+                  vertical: 2,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.error,
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.bgPrimary,
+                    width: 2,
+                  ),
+                ),
+                child: Text(
+                  badgeCount > 99 ? '99+' : '$badgeCount',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 11,
+                    fontWeight: FontWeight.bold,
+                    height: 1.0,
+                  ),
+                ),
+              ),
+            ),
+        ],
       ),
     );
   }
