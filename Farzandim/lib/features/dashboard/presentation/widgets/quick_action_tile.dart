@@ -55,69 +55,84 @@ class _QuickActionTileState extends State<QuickActionTile> {
       scale: _pressed ? 0.95 : 1.0,
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
-      child: Material(
-        color: Colors.transparent,
-        borderRadius: borderRadius,
-        clipBehavior: Clip.antiAlias,
-        child: Ink(
-          decoration: BoxDecoration(
-            borderRadius: borderRadius,
-            // Nozik diagonal gradient — surfaceVariant'dan surface'gacha
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [
-                AppColors.surfaceVariant,
-                AppColors.surface,
-              ],
+      // Soft shadow — kartani fon ustidan ajratib, "ko'tarilgan" ko'rinish
+      // beradi (ilgari kartalar fon bilan qo'shilib ketardi).
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          borderRadius: borderRadius,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 14,
+              offset: const Offset(0, 5),
             ),
-            border: Border.all(
-              color: AppColors.border,
-            ),
-          ),
-          child: InkWell(
-            onTap: widget.onTap,
-            onTapDown: (_) => _setPressed(true),
-            onTapUp: (_) => _setPressed(false),
-            onTapCancel: () => _setPressed(false),
-            borderRadius: borderRadius,
-            splashColor: accent.withValues(alpha: 0.12),
-            highlightColor: accent.withValues(alpha: 0.06),
-            child: Padding(
-              padding: const EdgeInsets.all(
-                AppDimensions.sm + AppDimensions.xs,
-              ),
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Yumaloq accent fonda ikonka (15% alpha + 25% border)
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: accent.withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                      border: Border.all(
-                        color: accent.withValues(alpha: 0.25),
-                      ),
-                    ),
-                    child: Icon(widget.icon, size: 22, color: accent),
-                  ),
-                  const SizedBox(height: 8),
-                  Flexible(
-                    child: Text(
-                      widget.label,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.textPrimary,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          borderRadius: borderRadius,
+          clipBehavior: Clip.antiAlias,
+          child: Ink(
+            decoration: BoxDecoration(
+              borderRadius: borderRadius,
+              // Fon gradientidan yorqinroq tonlar — karta bo'rtib turadi.
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  Color(0xFF30303D),
+                  Color(0xFF22222C),
                 ],
+              ),
+              // Yengil oq qirra — chegara aniq ko'rinadi.
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.08),
+              ),
+            ),
+            child: InkWell(
+              onTap: widget.onTap,
+              onTapDown: (_) => _setPressed(true),
+              onTapUp: (_) => _setPressed(false),
+              onTapCancel: () => _setPressed(false),
+              borderRadius: borderRadius,
+              splashColor: accent.withValues(alpha: 0.14),
+              highlightColor: accent.withValues(alpha: 0.07),
+              child: Padding(
+                padding: const EdgeInsets.all(
+                  AppDimensions.sm + AppDimensions.xs,
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Yumaloq accent fonda ikonka (18% alpha + 30% border).
+                    Container(
+                      width: 46,
+                      height: 46,
+                      decoration: BoxDecoration(
+                        color: accent.withValues(alpha: 0.18),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: accent.withValues(alpha: 0.30),
+                        ),
+                      ),
+                      child: Icon(widget.icon, size: 23, color: accent),
+                    ),
+                    const SizedBox(height: 8),
+                    Flexible(
+                      child: Text(
+                        widget.label,
+                        textAlign: TextAlign.center,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.textPrimary,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),

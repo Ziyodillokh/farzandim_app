@@ -132,6 +132,7 @@
       "device": "Qurilma sozlamalari",
       "voice": "Ovoz xabarlari",
       "appRestrictions": "Ilova cheklovlari",
+      "appLimits": "Qurilma cheklovlari",
       "location": "Joylashuv",
       "schedules": "Jadvallar",
       "callHistory": "Qo'ng'iroqlar tarixi",
@@ -248,6 +249,23 @@
     "card": {
       "radius": "{meters}m radius"
     }
+  },
+  "appLimits": {
+    "title": "Ilova cheklovlari",
+    "tabAll": "Hammasi",
+    "tabLimited": "Cheklov bo'yicha",
+    "blocked": "Bloklangan",
+    "noApps": "Hali ilova ishlatilmagan",
+    "block": "Ilovani bloklash",
+    "blockDesc": "Ilova umuman ochilmaydi",
+    "setLimit": "Limit belgilash",
+    "edit": "Tahrirlash",
+    "unlimited": "Cheklanmagan vaqt",
+    "cancel": "Bekor qilish",
+    "apply": "Qo'llash",
+    "saved": "Saqlandi",
+    "saveError": "Saqlab bo'lmadi",
+    "pickDuration": "Limit vaqtini tanlang"
   },
   "appRestrictions": {
     "headerTitle": "Ilova cheklovlari",

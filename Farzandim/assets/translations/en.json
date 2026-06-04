@@ -132,6 +132,7 @@
       "device": "Device settings",
       "voice": "Voice messages",
       "appRestrictions": "App restrictions",
+      "appLimits": "Device limits",
       "location": "Location",
       "schedules": "Schedules",
       "callHistory": "Call history",
@@ -248,6 +249,23 @@
     "card": {
       "radius": "{meters}m radius"
     }
+  },
+  "appLimits": {
+    "title": "App restrictions",
+    "tabAll": "All",
+    "tabLimited": "Limited",
+    "blocked": "Blocked",
+    "noApps": "No apps used yet",
+    "block": "Block app",
+    "blockDesc": "App will not open at all",
+    "setLimit": "Set limit",
+    "edit": "Edit",
+    "unlimited": "Unlimited",
+    "cancel": "Cancel",
+    "apply": "Apply",
+    "saved": "Saved",
+    "saveError": "Could not save",
+    "pickDuration": "Pick limit duration"
   },
   "appRestrictions": {
     "headerTitle": "App restrictions",

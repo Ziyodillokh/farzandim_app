@@ -179,6 +179,13 @@ class AppRoutes {
   static String appRestrictionsPath(String childId) =>
       '/app-restrictions/$childId';
 
+  /// "Qurilma cheklovlari" — ilova limitlari ekrani (Figma 1:1).
+  /// `:childId` — qaysi bolaning cheklovlari.
+  static const String appLimitsPattern = '/app-limits/:childId';
+
+  /// Berilgan bola id'si uchun App Limits path.
+  static String appLimitsPath(String childId) => '/app-limits/$childId';
+
   /// Bola jadvali (Schedules feature — Firestore CRUD).
   /// `:childId` — qaysi bolaning jadvallari (per-child).
   static const String schedulesPattern = '/schedules/:childId';

@@ -883,6 +883,12 @@ class _QuickActionsGrid extends StatelessWidget {
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),
       ),
       QuickActionTile(
+        icon: Icons.lock_clock,
+        label: 'dashboard.quickActions.appLimits'.tr(),
+        accentColor: const Color(0xFFA78BFA),
+        onTap: () => context.push(AppRoutes.appLimitsPath(childId)),
+      ),
+      QuickActionTile(
         icon: Icons.timer_outlined,
         label: 'dashboard.quickActions.appRestrictions'.tr(),
         accentColor: AppColors.warning,

@@ -49,9 +49,10 @@ final installedAppsProvider =
   final repo = ref.watch(backendAppUsageRepositoryProvider);
   yield await repo.getInstalledApps(childId: childId);
 
-  // 5 daqiqada bir refresh — installed apps kamdan-kam o'zgaradi
+  // 60 sekundda bir refresh — yangi pair qilingan qurilmada nomlar/ikonalar
+  // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).
   await for (final _
-      in Stream<int>.periodic(const Duration(minutes: 5), (i) => i)) {
+      in Stream<int>.periodic(const Duration(seconds: 60), (i) => i)) {
     yield await repo.getInstalledApps(childId: childId);
   }
 });

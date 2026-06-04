@@ -36,8 +36,9 @@ class DeviceInfoService {
   Dio? _dio;
   String? _childId;
 
-  /// Heartbeat oralig'i — har 60 sek qurilma ma'lumoti yangilanadi.
-  static const Duration _interval = Duration(seconds: 60);
+  /// Heartbeat oralig'i — har 20 sek (batareya/zaryadlanish deyarli real-time
+  /// yangilanishi uchun). Ota-ona ekranida ham 10s'da bir qayta o'qiladi.
+  static const Duration _interval = Duration(seconds: 20);
 
   Dio _buildDio() {
     return Dio(

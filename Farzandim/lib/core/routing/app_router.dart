@@ -14,6 +14,7 @@
 //   context.pop();                        // orqaga qaytish
 
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/add_account_screen.dart';
@@ -359,6 +360,12 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.appRestrictionsPattern,
       pageBuilder: (context, state) => _slidePage(
         AppRestrictionsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.appLimitsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        AppLimitsScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

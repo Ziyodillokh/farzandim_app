@@ -131,10 +131,24 @@ export class AppUsageService {
       take: limit,
     });
 
-    // BigInt -> number for JSON serialization
+    // Real ilova nomini (PackageManager label) InstalledApp jadvalidan olamiz —
+    // usage'da faqat packageName bor, shuning uchun ota-onada "org.telegram..."
+    // emas "Telegram" ko'rinishi uchun nomni shu yerda biriktiramiz.
+    const pkgs = Array.from(new Set(usage.map((u) => u.packageName)));
+    const installed =
+      pkgs.length > 0
+        ? await this.prisma.installedApp.findMany({
+            where: { childId, packageName: { in: pkgs } },
+            select: { packageName: true, appName: true },
+          })
+        : [];
+    const nameByPkg = new Map(installed.map((a) => [a.packageName, a.appName]));
+
+    // BigInt -> number for JSON serialization + real appName.
     const serialized = usage.map((u) => ({
       ...u,
       foregroundMs: Number(u.foregroundMs),
+      appName: nameByPkg.get(u.packageName) ?? null,
     }));
 
     return { usage: serialized, count: serialized.length };

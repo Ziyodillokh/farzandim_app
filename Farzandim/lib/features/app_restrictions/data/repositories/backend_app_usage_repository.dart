@@ -120,12 +120,17 @@ class BackendAppUsageRepository {
       final entries = data['usage'] as List<dynamic>? ?? const [];
       if (entries.isEmpty) return null;
       final apps = entries.map((m) {
-        final pkg = '${(m as Map)['packageName']}';
+        final map = m as Map;
+        final pkg = '${map['packageName']}';
+        // Backend endi InstalledApp'dan real nomni qo'shadi (appName). Bo'lmasa
+        // packageName fallback (keyin combineAppData installedMap bilan ham
+        // to'ldiradi).
+        final realName = map['appName'] as String?;
         return AppUsageEntry.fromMap({
           'packageName': pkg,
-          'appName': m['packageName'], // appName usage endpoint'da yo'q
-          'totalTimeMs': (m['foregroundMs'] as num?)?.toInt() ?? 0,
-          'lastTimeUsed': m['lastUsedAt'],
+          'appName': (realName != null && realName.isNotEmpty) ? realName : pkg,
+          'totalTimeMs': (map['foregroundMs'] as num?)?.toInt() ?? 0,
+          'lastTimeUsed': map['lastUsedAt'],
           // Real ikona proxy — backend ikonani saqlagan bo'lsa stream qiladi,
           // aks holda 404 → harf fallback (AppIcon errorBuilder).
           'iconUrl': _iconProxyUrl(childId, pkg),

@@ -132,22 +132,31 @@ class AppUsageDay {
   /// 1 daqiqadan kam ishlatilgan ilovalar yashiriladi (ms).
   static const int _minVisibleMs = 60000;
 
-  /// Sistema appalari (launcher, settings, va h.k.) filterlangan ro'yxat.
+  /// Faqat launcher, systemUI, klaviatura va pure-fon servislarni chiqaramiz.
   ///
-  /// Foydalanuvchi uchun chiroyli — faqat o'sha bola ishlatadigan ilovalar
-  /// (TikTok, YouTube, Instagram, va h.k.). System paket prefixlarini va
-  /// o'zining App'imizni (`com.farzandim.*`) chiqarib tashlaymiz. 1 daqiqadan
-  /// kam ishlatilgan ilovalar ham chiqariladi.
+  /// MUHIM: ilgari `com.android.*` butunlay filtrlanardi va shu sababli SOAT
+  /// (com.android.deskclock), kamera, kalkulyator kabi foydalanuvchi haqiqatan
+  /// ishlatadigan ilovalar yo'qolardi. Endi faqat aniq tizimiy/fon paketlar
+  /// chiqariladi — "Raqamli Salomatlik" kabi. (Event-based hisob fon
+  /// servislarni allaqachon 0 qiladi, shuning uchun keng filtr shart emas.)
   List<AppUsageEntry> get filteredApps {
     const systemPrefixes = [
-      'com.android.',
-      'com.samsung.android.',
-      'com.sec.android.',
+      // Launcher'lar (uy ekrani) — foreground'da ko'rinadi, lekin "ilova" emas.
+      'com.android.launcher',
+      'com.sec.android.app.launcher',
+      'com.miui.home',
+      'com.google.android.apps.nexuslauncher',
+      // System UI / fon servislar.
+      'com.android.systemui',
       'com.google.android.gms',
       'com.google.android.packageinstaller',
       'com.google.android.permissioncontroller',
+      // Klaviaturalar (IME) — overlay, "ekran vaqti" emas.
       'com.google.android.inputmethod',
-      'com.farzandim.', // o'zining ilovamiz
+      'com.sec.android.inputmethod',
+      'com.samsung.android.honeyboard',
+      // O'zimizning ilovalar.
+      'com.farzandim.',
     ];
 
     return aggregatedApps.where((app) {

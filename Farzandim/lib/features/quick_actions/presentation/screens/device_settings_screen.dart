@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -31,12 +33,25 @@ class DeviceSettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
+  Timer? _refreshTimer;
+
   @override
   void initState() {
     super.initState();
     // Ekran ochilganda eng so'nggi qurilma ma'lumotini ko'rsatish uchun
     // bolalar ro'yxatini yangilaymiz (child heartbeat backend'ni yangilaydi).
     Future.microtask(() => ref.invalidate(childrenProvider));
+    // Ekran ochiq turganda har 10s yangilab turamiz — batareya/zaryadlanish/
+    // online holat deyarli real-time ko'rinadi (child 20s heartbeat).
+    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) ref.invalidate(childrenProvider);
+    });
+  }
+
+  @override
+  void dispose() {
+    _refreshTimer?.cancel();
+    super.dispose();
   }
 
   @override
