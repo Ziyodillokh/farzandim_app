@@ -12,17 +12,21 @@ plugins {
     id("dev.flutter.flutter-gradle-plugin")
 }
 
-// ─── local.properties dan secret kalitlarni o'qish ───────────────────
-// MAPS_API_KEY git'ga commit qilinmaydi — har dev/build mashinasida
-// qo'lda yozish kerak. Topilmasa bo'sh string — bu holda xarita
-// ishlamaydi, lekin build muvaffaqiyatli bo'ladi.
+// ─── local.properties yoki ENV dan secret kalitlarni o'qish ──────────
+// MAPS_API_KEY git'ga commit qilinmaydi. Lokal: local.properties'ga yoziladi.
+// CI (GitHub Actions): MAPS_API_KEY env-var sifatida beriladi (local.properties
+// yozilmaydi) — shuning uchun env fallback. Topilmasa bo'sh string (xarita
+// ishlamaydi, lekin build buzilmaydi).
 val localProperties = Properties().apply {
     val file = rootProject.file("local.properties")
     if (file.exists()) {
         load(FileInputStream(file))
     }
 }
-val mapsApiKey: String = localProperties.getProperty("MAPS_API_KEY", "")
+val mapsApiKey: String =
+    localProperties.getProperty("MAPS_API_KEY")
+        ?: System.getenv("MAPS_API_KEY")
+        ?: ""
 
 // ─── Release signing (H6) — key.properties dan o'qiladi (git'ga kirmaydi) ──
 // Fayl mavjud bo'lsa release build shu keystore bilan imzolanadi; bo'lmasa

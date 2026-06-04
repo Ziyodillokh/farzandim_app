@@ -485,14 +485,15 @@ class _ChildSelectorChip extends ConsumerWidget {
 
 // ════════════════════════ BOTTOM CARD ════════════════════════
 
-class _BottomCard extends StatelessWidget {
+class _BottomCard extends ConsumerWidget {
   const _BottomCard({required this.child, required this.location});
 
   final Child child;
   final ChildLocation location;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final address = ref.watch(childAddressProvider(child.id)).valueOrNull;
     return Container(
       decoration: const BoxDecoration(
         color: AppColors.surface,
@@ -543,6 +544,31 @@ class _BottomCard extends StatelessWidget {
                 _BatteryPill(info: child.deviceInfo!),
             ],
           ),
+
+          // Manzil (reverse geocoding) — eng muhim ma'lumot.
+          if (address != null && address.isNotEmpty) ...[
+            const SizedBox(height: AppDimensions.md),
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Icon(Icons.place_rounded,
+                    size: 18, color: AppColors.primary),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    address,
+                    style: AppTextStyles.bodyM.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w500,
+                      height: 1.3,
+                    ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ],
+            ),
+          ],
 
           const SizedBox(height: AppDimensions.md),
 

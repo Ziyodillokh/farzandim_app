@@ -208,11 +208,15 @@ jobs:
 
       - name: Build parent web (/app/)
         working-directory: Farzandim
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           flutter pub get
           flutter build web --release --base-href /app/ \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          # Google Maps JS kalitini build chiqishiga inject (web'da xarita uchun).
+          sed -i "s|__MAPS_API_KEY__|${MAPS_API_KEY}|g" build/web/index.html
 
       - name: Build child web (/child/)
         working-directory: farzandim_child
