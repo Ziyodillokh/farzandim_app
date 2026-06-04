@@ -101,7 +101,7 @@ jobs:
 
       - name: Upload to server
         run: |
-          sshpass -e rsync -az --delete --exclude '.env' --exclude '.git' -e "ssh ${SSH_OPTS}" \
+          sshpass -e rsync -az --delete --exclude '.env' --exclude '.git' --exclude 'config/app-versions.json' -e "ssh ${SSH_OPTS}" \
             backend/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/"
 
       - name: Migrate DB & restart service
@@ -283,7 +283,8 @@ jobs:
         working-directory: Farzandim
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink --build-number=${{ github.run_number }} \
+          flutter build apk --release --no-shrink \
+            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
@@ -292,7 +293,8 @@ jobs:
         continue-on-error: true
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink --build-number=${{ github.run_number }} \
+          flutter build apk --release --no-shrink \
+            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
@@ -311,3 +313,27 @@ jobs:
           fi
           sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
+
+      # Version manifest — ilova /api/app/version dan o'qiydi va "Yangilash" tugmasini ko'rsatadi.
+      # latest = build versiyasi (versionName), shu sabab yangi build = yangilanish chiqadi.
+      - name: Update version manifest (config/app-versions.json)
+        run: |
+          V="1.0.${{ github.run_number }}"
+          cat > app-versions.json <<EOF
+          {
+            "parent": {
+              "android": { "latest": "$V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-parent.apk" },
+              "ios": { "latest": "1.0.0", "minSupported": "1.0.0" },
+              "releaseNotes": "Yangi versiya $V",
+              "isForceUpdate": false
+            },
+            "child": {
+              "android": { "latest": "$V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-child.apk" },
+              "ios": { "latest": "1.0.0", "minSupported": "1.0.0" },
+              "releaseNotes": "Yangi versiya $V",
+              "isForceUpdate": false
+            }
+          }
+          EOF
+          sshpass -e scp ${SSH_OPTS} app-versions.json "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/config/app-versions.json"
+          echo "version manifest yangilandi: $V"
