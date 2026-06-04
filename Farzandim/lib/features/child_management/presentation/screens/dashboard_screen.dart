@@ -881,15 +881,16 @@ class _QuickActionsGrid extends StatelessWidget {
         accentColor: AppColors.primary,
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),
       ),
-      // "Qurilma cheklovlari" olib tashlandi — "Ilova cheklovlari" bilan ayni
-      // narsa edi. Endi yagona "Ilova cheklovlari" (app_restrictions_screen:
-      // foydalanish + per-app `AppLimitModal`). Eski "Qurilma cheklovlari"
-      // ekrani (`app_limits_screen`) endi quick action'dan ochilmaydi.
+      // "Ilova cheklovlari" — eski "Qurilma cheklovlari" ekrani
+      // (`app_limits_screen`, Figma 1:1: 2-tab ro'yxat + `AppLimitModal`)
+      // shunchaki "Ilova cheklovlari" deb nomlanadi (soat ikona, eskisidek).
+      // Ortiqcha ikkinchi cheklov kartasi (Faollik) olib tashlandi — Faollik
+      // endi faqat pastdagi "Foydalanish vaqti" tugmasidan ochiladi.
       QuickActionTile(
         icon: Icons.lock_clock,
         label: 'dashboard.quickActions.appRestrictions'.tr(),
         accentColor: const Color(0xFFA78BFA),
-        onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
+        onTap: () => context.push(AppRoutes.appLimitsPath(childId)),
       ),
       QuickActionTile(
         icon: Icons.location_on_outlined,

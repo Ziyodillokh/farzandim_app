@@ -1,8 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────
-// AppLimitsScreen — "Qurilma cheklovlari" (Figma 1:1, dinamik)
+// AppLimitsScreen — "Ilova cheklovlari" (Figma 1:1, dinamik)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Dashboard "Qurilma cheklovlari" tugmasidan ochiladi. Ikkita tab:
+// Dashboard "Ilova cheklovlari" (soat ikona) tugmasidan ochiladi. (Avval
+// "Qurilma cheklovlari" deb nomlanardi — asli ilova cheklovlari edi, shuning
+// uchun nomi to'g'rilandi.) Ikkita tab:
 //   - "Hammasi"        — bola ishlatgan barcha ilovalar
 //   - "Cheklov bo'yicha" — faqat limit yoki blok qo'yilgan ilovalar
 // Ilova ustiga bosilsa — modal: bloklash / limit belgilash / cheksiz.
