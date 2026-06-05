@@ -137,7 +137,7 @@ class AppCombinedTile extends StatelessWidget {
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.chevron_right,
               color: AppColors.textSecondary,
               size: 20,
@@ -164,7 +164,7 @@ class _UsageRow extends StatelessWidget {
     if (app.isBlocked) {
       return Row(
         children: [
-          const Icon(
+          Icon(
             Icons.block,
             color: AppColors.error,
             size: 14,

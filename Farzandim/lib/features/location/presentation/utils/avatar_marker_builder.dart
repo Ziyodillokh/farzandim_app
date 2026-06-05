@@ -28,7 +28,8 @@ class AvatarMarkerBuilder {
     required String fallbackKey,
     double pinWidth = 72,
     double pinHeight = 92,
-    Color accent = AppColors.primary,
+    // Marker xaritada — fixed lime (default param const bo'lishi shart).
+    Color accent = const Color(0xFFC5F562),
   }) async {
     final cacheKey = '${avatarUrl ?? "null"}_$fallbackKey'
         '_${accent.value.toRadixString(16)}_${pinWidth.toInt()}';
@@ -225,7 +226,8 @@ class DwellLabelMarker {
   static Future<BitmapDescriptor> build({
     required String label,
     required String subtitle,
-    Color accent = AppColors.info,
+    // Fixed info ko'k (default param const bo'lishi shart).
+    Color accent = const Color(0xFF60A5FA),
   }) async {
     final cacheKey = '${label}__$subtitle';
     if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;

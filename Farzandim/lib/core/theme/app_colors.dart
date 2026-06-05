@@ -1,164 +1,93 @@
 // ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — RANG TIZIMI (Color System)
+// FARZANDIM — RANG TIZIMI (Color System) — Light + Dark
 // ─────────────────────────────────────────────────────────────────────
 //
-// Loyihaning BARCHA ranglari shu fayldagina yashaydi.
-// Hech bir widget'da to'g'ridan-to'g'ri `Color(0xFF...)` yozilmaydi —
-// faqat shu yerdan olib ishlatamiz:
+// Loyihaning BARCHA ranglari shu fayldagina yashaydi. Widget'larda
+// `AppColors.background`, `AppColors.surface`, ... ishlatiladi.
 //
-//   Container(color: AppColors.background)
-//   Text('Salom', style: TextStyle(color: AppColors.textPrimary))
+// **Theme-aware (kam-churn arxitektura):** har rang `static const` emas,
+// balki GETTER. Getter joriy `brightness` qiymatiga qarab dark yoki light
+// rangni qaytaradi. Shu sababli 800+ murojaatni o'zgartirmasdan light mode
+// qo'shildi — `app.dart` har build'da `AppColors.brightness` ni theme
+// provider'dan o'rnatadi.
 //
-// Nega? Kelajakda biror rangni o'zgartirsangiz (masalan, brand rangi
-// yangilansa), faqat shu faylni o'zgartirasiz — butun ilova yangilanadi.
-//
-// Dizayn falsafasi: Dark mode (qora fon, oq matn, lime green aksent).
+// Eslatma: getter `const` emas — shuning uchun `const Container(color:
+// AppColors.background)` ishlamaydi. Bunday joylardan `const` olib tashlandi.
+// `onPrimary` esa haqiqiy `const` (qiymati o'zgarmaydi) — uning const
+// ishlatilishi buzilmaydi.
 
 import 'package:flutter/material.dart';
 
-/// Farzandim ilovasining rang palitrasi.
-///
-/// Bu klassdan obyekt yaratilmaydi — faqat static maydonlardan
-/// foydalaniladi: `AppColors.primary`, `AppColors.background`, ...
+/// Farzandim rang palitrasi (light + dark). Obyekt yaratilmaydi — faqat
+/// static getterlar: `AppColors.primary`, `AppColors.background`, ...
 class AppColors {
-  // Private konstruktor — `AppColors()` deb chaqirib bo'lmaydi.
   AppColors._();
 
-  // ────────────── FON RANGLARI (Backgrounds) ──────────────
+  /// Joriy yorqinlik. `app.dart` har build'da theme provider'ga qarab
+  /// o'rnatadi. Barcha rang getterlari shu qiymatdan foydalanadi.
+  static Brightness brightness = Brightness.dark;
 
-  /// Solid fon — kam ishlatamiz, asosan PrimaryButton'dagi qora matn rangi
-  /// uchun (`onPrimary`). Ekranlar fon'i `GradientBackground` orqali
-  /// `backgroundTop` → `backgroundBottom` gradient sifatida quriladi.
-  static const Color background = Color(0xFF0A0A12);
+  static bool get isDark => brightness == Brightness.dark;
 
-  /// Gradient fonning **yuqori** rangi — moviy tusli to'q kulrang.
-  /// PDF dizayni'dan olingan.
-  ///
-  /// Qayerda: `GradientBackground` widget'i (chap.col), Scaffold ortida
-  /// `scaffoldBackgroundColor: Colors.transparent` orqali ko'rinadi.
-  static const Color backgroundTop = Color(0xFF1B212F);
+  /// Dark/light qiymatdan birini tanlaydi (ARGB int).
+  static Color _c(int dark, int light) => Color(isDark ? dark : light);
 
-  /// Gradient fonning **pastki** rangi — chuqur qora.
-  /// PDF dizayni'dan olingan.
-  static const Color backgroundBottom = Color(0xFF0A0A16);
+  // ────────────── FON (Backgrounds) ──────────────
+  // Dark: gradient avval surface'ga juda yaqin edi (kartalar yopishib
+  // qolardi) — endi gradient QORAYTIRILDI, surface bo'rtib chiqadi.
+  // Light: yumshoq oq-kulrang fon, oq kartalar aniq ajralib turadi.
 
-  /// Karta, modal va dialog'lar uchun fon.
-  ///
-  /// `background`'dan bir oz och — element fondan ajralib turishi uchun.
-  ///
-  /// Qayerda: `Card`, `Dialog`, `BottomSheet`, `AppBar`,
-  /// dashboard'dagi statistika karta'lari.
-  static const Color surface = Color(0xFF1C1C24);
+  /// Solid fon (asosan onPrimary qora matn uchun emas — endi `onPrimary`).
+  static Color get background => _c(0xFF0A0A12, 0xFFF2F4F8);
 
-  /// `surface`'dan yana bir oz ko'tarilgan sath.
-  ///
-  /// Qayerda: `TextField` fon, surface ustidagi nested element'lar
-  /// (masalan, kartani ichidagi tugma).
-  static const Color surfaceVariant = Color(0xFF252530);
+  /// Gradient fon — yuqori rang.
+  static Color get backgroundTop => _c(0xFF13161F, 0xFFFFFFFF);
 
-  // ────────────── ASOSIY AKSENT (Primary) ──────────────
-  //
-  // PDF dizayni bo'yicha UI palitra: lime green tugmalar, faol holatlar,
-  // aksent. **Bu logo brand sxemasidan farq qiladi** — logo'lar moviy/
-  // turkuaz, lekin UI lime green. Ikki sxemani aralashtirmaymiz.
+  /// Gradient fon — pastki rang.
+  static Color get backgroundBottom => _c(0xFF080810, 0xFFE9ECF2);
 
-  /// Lime green — UI'ning **asosiy aksent rangi**.
-  ///
-  /// Yorqin, e'tiborni jalb qiluvchi, "harakat" rangi. Qora fonda
-  /// kuchli kontrast hosil qiladi (qora matn yaxshi o'qiladi).
-  ///
-  /// Qayerda: `PrimaryButton` fon, "Davom etish" / "Saqlash" tugmalari,
-  /// faol toggle, tanlangan tab, ahamiyatli ikonkalar
-  /// (oila kodi raqamlari).
-  static const Color primary = Color(0xFFC5F562);
+  /// Karta, modal, dialog, AppBar foni — fondan aniq ajralib turadi.
+  static Color get surface => _c(0xFF1E1F28, 0xFFFFFFFF);
 
-  /// `primary`'ning to'qroq variant'i.
-  ///
-  /// Qayerda: tugma **bosilganda** (pressed state), to'q lime aksent.
-  static const Color primaryDark = Color(0xFFA3CE4F);
+  /// surface ustidagi nested element (TextField, karta ichidagi tugma).
+  static Color get surfaceVariant => _c(0xFF282933, 0xFFEEF1F6);
 
-  /// `primary`'ning yorug'roq variant'i.
-  ///
-  /// Qayerda: hover holati (web/desktop), kuchsizroq aksent, soft
-  /// highlight fon.
-  static const Color primaryLight = Color(0xFFD4F783);
+  // ────────────── ASOSIY AKSENT (Primary) — lime brand ──────────────
+  // Brand rangi ikkala rejimda bir xil (lime green + qora matn) — kuchli
+  // kontrast, tugmalar ikkala fonda ham bo'rtib chiqadi.
 
-  // ────────────── IKKILAMCHI AKSENT (Secondary) ──────────────
-  //
-  // Turkuaz — logo brand'idan kelgan. UI'da kam ishlatiladi (asosan
-  // logo PNG'larida ko'rinadi). Maxsus aksent kerak bo'lganda foydali
-  // (masalan, statistika diagrammalari, "yangi" badge'lar).
+  static Color get primary => _c(0xFFC5F562, 0xFFC5F562);
+  static Color get primaryDark => _c(0xFFA3CE4F, 0xFFA3CE4F);
+  static Color get primaryLight => _c(0xFFD4F783, 0xFFD4F783);
 
-  /// Turkuaz — ikkilamchi aksent rangi.
-  ///
-  /// Logodan olingan. UI'da kam, lekin maxsus joylar uchun saqlangan
-  /// (chart'lar, badge'lar).
-  static const Color secondary = Color(0xFF3DBFB4);
+  /// Lime (primary) USTIDAGI matn/ikon rangi — ikkala rejimda ham DOIM
+  /// to'q (lime yorqin). `background` o'rniga shu ishlatiladi (light mode'da
+  /// `background` och bo'lib qoladi → lime ustida o'qilmaydi). Bu HAQIQIY
+  /// `const` — uning ustidagi `const` widget'lar buzilmaydi.
+  static const Color onPrimary = Color(0xFF0E1208);
 
-  /// `secondary`'ning to'qroq variant'i.
-  ///
-  /// Qayerda: turkuaz aksent pressed state, dark teal badge'lar.
-  static const Color secondaryDark = Color(0xFF2A9990);
+  // ────────────── IKKILAMCHI AKSENT (Secondary) — turkuaz ──────────────
 
-  // ────────────── MATN RANGLARI (Text) ──────────────
+  static Color get secondary => _c(0xFF3DBFB4, 0xFF2FA99E);
+  static Color get secondaryDark => _c(0xFF2A9990, 0xFF1F8A80);
 
-  /// Asosiy matn — eng yuqori kontrast.
-  ///
-  /// Qayerda: sarlavhalar (`headlineLarge`, `titleLarge`),
-  /// asosiy paragrafalar, AppBar sarlavha, faol holatdagi yozuvlar.
-  static const Color textPrimary = Color(0xFFFFFFFF);
+  // ────────────── MATN (Text) ──────────────
 
-  /// Ikkilamchi matn — kontrast pastroq, e'tibor olmaydi.
-  ///
-  /// Qayerda: ListTile `subtitle`, "5 daqiqa oldin" kabi vaqt yorlig'i,
-  /// description matni, kichik tushuntirishlar.
-  static const Color textSecondary = Color(0xFF9999A8);
+  static Color get textPrimary => _c(0xFFFFFFFF, 0xFF14161D);
+  static Color get textSecondary => _c(0xFF9999A8, 0xFF5A5D6B);
+  static Color get textTertiary => _c(0xFF6B6B78, 0xFF9398A5);
 
-  /// Eng kuchsiz matn — placeholder, hint, disabled holatlar.
-  ///
-  /// Qayerda: `TextField` hint matni ("Ismni kiriting..."),
-  /// **disabled** tugma matni, "ma'lumot yo'q" kabi bo'sh holat yozuvlari.
-  static const Color textTertiary = Color(0xFF6B6B78);
+  // ────────────── HOLAT (Status) ──────────────
+  // Light'da to'qroq (600) tuslar — oq fonda o'qiladi.
 
-  // ────────────── HOLAT RANGLARI (Status) ──────────────
-
-  /// Yashil — muvaffaqiyat, faol, online.
-  ///
-  /// Qayerda: "Saqlandi" snackbar, bola online belgisi (avatar uchidagi
-  /// yashil nuqta), success xabarlar, ✓ ikonka.
-  static const Color success = Color(0xFF4ADE80);
-
-  /// Sariq — diqqat, ogohlantirish (xato emas).
-  ///
-  /// Qayerda: "Batareya 20%dan past", "Joylashuv 1 soat oldin yangilangan",
-  /// warning snackbar, "tasdiqlanmagan" yorlig'i.
-  static const Color warning = Color(0xFFFBBF24);
-
-  /// Qizil — xato, xavf, SOS.
-  ///
-  /// Qayerda: SOS bildirishnoma karta, xato xabarlari ("Internet yo'q"),
-  /// "O'chirish" tugmasi, validatsiya xato matni, batareya juda kam (5%).
-  static const Color error = Color(0xFFEF4444);
-
-  /// Ko'k — neutral ma'lumot, link.
-  ///
-  /// Qayerda: info snackbar, "Batafsil" linklari, ma'lumot ikonkalari (ⓘ),
-  /// neutral xabarlar (xato ham, muvaffaqiyat ham emas).
-  static const Color info = Color(0xFF60A5FA);
+  static Color get success => _c(0xFF4ADE80, 0xFF16A34A);
+  static Color get warning => _c(0xFFFBBF24, 0xFFD97706);
+  static Color get error => _c(0xFFEF4444, 0xFFDC2626);
+  static Color get info => _c(0xFF60A5FA, 0xFF2563EB);
 
   // ────────────── CHEGARALAR (Borders) ──────────────
+  // Kuchaytirildi — tugma/karta fondan aniq ajralib tursin.
 
-  /// Tashqi chegara chizig'i.
-  ///
-  /// `surface`'dan bir oz yorug'roq — sezilarli, lekin urg'u bermaydi.
-  ///
-  /// Qayerda: `TextField` border, `OutlinedButton` chegarasi,
-  /// karta atrofidagi chiziq.
-  static const Color border = Color(0xFF2A2A35);
-
-  /// Yumshoq ajratuvchi chiziq — eng xira.
-  ///
-  /// Qayerda: ListView ichidagi `Divider`, sozlamalar bo'limlarini
-  /// ajratuvchi gorizontal chiziq.
-  static const Color divider = Color(0xFF1F1F28);
+  static Color get border => _c(0xFF34353F, 0xFFDDE1E8);
+  static Color get divider => _c(0xFF24252E, 0xFFE8EBF0);
 }

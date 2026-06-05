@@ -136,7 +136,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
         children: [
           WebViewWidget(controller: _controller),
           if (_loading)
-            const Center(
+            Center(
               child: CircularProgressIndicator(
                 color: Color(0xFFC5F562), // AppColors.primary
               ),

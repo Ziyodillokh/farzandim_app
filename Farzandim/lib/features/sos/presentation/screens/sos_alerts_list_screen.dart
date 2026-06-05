@@ -78,7 +78,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -154,7 +154,7 @@ class _AlertsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(provider);
     return async.when(
-      loading: () => const Center(
+      loading: () => Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       ),
       error: (e, _) => Center(
@@ -208,7 +208,7 @@ class _AlertsList extends ConsumerWidget {
     final lng = (alert['longitude'] as num?)?.toDouble();
     if (lat == null || lng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Joylashuv yo\'q'),
           backgroundColor: AppColors.warning,
         ),
@@ -278,14 +278,14 @@ class _AlertsList extends ConsumerWidget {
     if (ok) {
       ref.invalidate(sosAlertsByStatusProvider);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('SOS hal qilindi'),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Resolve xato'),
           backgroundColor: AppColors.error,
         ),
@@ -404,7 +404,7 @@ class _AlertTile extends StatelessWidget {
                     onPressed: onShowMap,
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
@@ -491,7 +491,7 @@ class _LocationMapDialog extends StatelessWidget {
             padding: const EdgeInsets.all(AppDimensions.md),
             child: Row(
               children: [
-                const Icon(
+                Icon(
                   Icons.location_on_rounded,
                   color: AppColors.error,
                 ),
@@ -503,7 +503,7 @@ class _LocationMapDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(Icons.close, color: AppColors.textPrimary),
+                  icon: Icon(Icons.close, color: AppColors.textPrimary),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],

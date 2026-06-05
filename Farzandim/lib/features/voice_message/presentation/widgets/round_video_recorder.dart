@@ -337,7 +337,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_initializing)
-                    const SizedBox(
+                    SizedBox(
                       width: 48,
                       height: 48,
                       child: CircularProgressIndicator(
@@ -405,7 +405,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           const SizedBox(height: 24),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
+            child: Text(
               'Yopish',
               style: TextStyle(color: AppColors.primary, fontSize: 14),
             ),
@@ -561,7 +561,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                   end: Alignment.bottomRight,
                   colors: isActive
                       ? const [Color(0xFFFF5252), Color(0xFFE53935)]
-                      : const [AppColors.primary, AppColors.primaryDark],
+                      : [AppColors.primary, AppColors.primaryDark],
                 ),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.85),

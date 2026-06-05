@@ -41,7 +41,7 @@ class SkeletonBox extends StatelessWidget {
         width: width,
         height: height,
         decoration: shape == BoxShape.circle
-            ? const BoxDecoration(
+            ? BoxDecoration(
                 color: AppColors.surface,
                 shape: BoxShape.circle,
               )
@@ -140,7 +140,7 @@ class SkeletonRowCard extends StatelessWidget {
             Container(
               width: 48,
               height: 48,
-              decoration: const BoxDecoration(
+              decoration: BoxDecoration(
                 color: AppColors.surfaceVariant,
                 shape: BoxShape.circle,
               ),

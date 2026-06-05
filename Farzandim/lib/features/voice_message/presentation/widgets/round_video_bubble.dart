@@ -184,7 +184,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                 ),
                               )
                             else if (_loadingThumb)
-                              const Center(
+                              Center(
                                 child: SizedBox(
                                   width: 28,
                                   height: 28,
@@ -195,7 +195,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                 ),
                               )
                             else
-                              const Center(
+                              Center(
                                 child: Icon(
                                   Icons.videocam_off_outlined,
                                   color: AppColors.textTertiary,
@@ -390,7 +390,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                     ),
                   )
                 else
-                  const SizedBox(
+                  SizedBox(
                     width: 48,
                     height: 48,
                     child: CircularProgressIndicator(

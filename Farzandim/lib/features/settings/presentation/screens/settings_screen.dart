@@ -294,7 +294,7 @@ class _IdentifierPill extends StatelessWidget {
       child: Text(
         text,
         style: AppTextStyles.bodyS.copyWith(
-          color: AppColors.background,
+          color: AppColors.onPrimary,
           fontWeight: FontWeight.w700,
         ),
       ),
@@ -308,7 +308,7 @@ class _OverflowMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: const Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
+      icon: Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -326,7 +326,7 @@ class _OverflowMenu extends ConsumerWidget {
           value: 'logout',
           child: Row(
             children: [
-              const Icon(Icons.logout_rounded,
+              Icon(Icons.logout_rounded,
                   color: AppColors.textPrimary, size: 20),
               const SizedBox(width: 12),
               Text('settings.logout.button'.tr(), style: AppTextStyles.bodyM),
@@ -337,7 +337,7 @@ class _OverflowMenu extends ConsumerWidget {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(Icons.delete_outline_rounded,
+              Icon(Icons.delete_outline_rounded,
                   color: AppColors.error, size: 20),
               const SizedBox(width: 12),
               Text(
@@ -419,7 +419,7 @@ class _MenuCard extends StatelessWidget {
           for (var i = 0; i < items.length; i++) ...[
             items[i],
             if (i != items.length - 1)
-              const Divider(
+              Divider(
                 height: 1,
                 thickness: 1,
                 indent: 56,
@@ -486,7 +486,7 @@ class _MenuItem extends StatelessWidget {
               ),
               const SizedBox(width: AppDimensions.sm),
             ],
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               color: AppColors.textTertiary,
               size: 22,
@@ -526,7 +526,7 @@ class _LanguageOption extends StatelessWidget {
             const SizedBox(width: AppDimensions.md),
             Expanded(child: Text(language.label, style: AppTextStyles.bodyM)),
             if (isSelected)
-              const Icon(Icons.check_circle,
+              Icon(Icons.check_circle,
                   color: AppColors.primary, size: 20),
           ],
         ),

@@ -73,7 +73,7 @@ class SchedulesListScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                   error: (e, _) => Center(
@@ -116,12 +116,12 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
             ),
           ),
-          const Expanded(
+          Expanded(
             child: Text(
               'Jadval',
               textAlign: TextAlign.center,
@@ -254,19 +254,19 @@ class _ScheduleCard extends ConsumerWidget {
           // ─── Yoqilgan bo'lsa: 3 qator ───
           if (_isOn && schedule != null) ...[
             const SizedBox(height: AppDimensions.sm),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: AppColors.divider),
             _SubRow(
               label: 'Bugun',
               value: schedule!.timeRangeFormatted,
               onTap: () => _editTime(context, ref, schedule!),
             ),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: AppColors.divider),
             _SubRow(
               label: 'Haftalik jadval',
               value: schedule!.weekdaysFormatted,
               onTap: () => _editDays(context, ref, schedule!),
             ),
-            const Divider(height: 1, color: AppColors.divider),
+            Divider(height: 1, color: AppColors.divider),
             _SubRow(
               label: 'Ilova cheklovlar',
               trailing: _AppsTrailing(
@@ -404,7 +404,7 @@ class _SubRow extends StatelessWidget {
               ),
             if (trailing != null) trailing!,
             const SizedBox(width: 6),
-            const Icon(
+            Icon(
               Icons.chevron_right_rounded,
               size: 20,
               color: AppColors.textTertiary,
@@ -538,7 +538,7 @@ class _DaysSheetState extends State<_DaysSheet> {
                     },
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.background,
+                foregroundColor: AppColors.onPrimary,
                 padding: const EdgeInsets.symmetric(
                   vertical: AppDimensions.md,
                 ),
@@ -663,7 +663,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                       .toList()
                     ..sort((a, b) => a.appName.compareTo(b.appName));
                   if (list.isEmpty) {
-                    return const Center(
+                    return Center(
                       child: Padding(
                         padding: EdgeInsets.all(AppDimensions.xl),
                         child: Text(
@@ -689,13 +689,13 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                     ),
                   );
                 },
-                loading: () => const Center(
+                loading: () => Center(
                   child: CircularProgressIndicator(color: AppColors.primary),
                 ),
                 error: (e, _) => Center(
                   child: Text(
                     'Xato: $e',
-                    style: const TextStyle(color: AppColors.textSecondary),
+                    style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),
               ),
@@ -746,7 +746,7 @@ class _AppPickRow extends StatelessWidget {
             Checkbox(
               value: selected,
               activeColor: AppColors.primary,
-              checkColor: AppColors.background,
+              checkColor: AppColors.onPrimary,
               onChanged: (v) => onChanged(v ?? false),
             ),
           ],

@@ -119,7 +119,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
     );
   }
 
-  Widget _loading() => const Center(
+  Widget _loading() => Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
 
@@ -157,7 +157,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_rounded,
               color: AppColors.textPrimary,
             ),
@@ -284,7 +284,7 @@ class _AppList extends StatelessWidget {
                   onTap: () => _openModal(context, apps[i]),
                 ),
                 if (i != apps.length - 1)
-                  const Divider(
+                  Divider(
                     height: 1,
                     indent: 64,
                     endIndent: 16,
@@ -388,7 +388,7 @@ class _RightStatus extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+          Icon(Icons.block_rounded, size: 18, color: AppColors.error),
         ],
       );
     }
@@ -404,7 +404,7 @@ class _RightStatus extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          const Icon(
+          Icon(
             Icons.hourglass_empty_rounded,
             size: 18,
             color: AppColors.primary,
@@ -413,7 +413,7 @@ class _RightStatus extends StatelessWidget {
       );
     }
     // Limit yo'q — bosib qo'yish mumkinligini bildiruvchi xira ikonka.
-    return const Icon(
+    return Icon(
       Icons.hourglass_empty_rounded,
       size: 18,
       color: AppColors.textTertiary,
@@ -543,7 +543,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
               onTap: () => setState(() => _mode = _LimitMode.limit),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.hourglass_empty_rounded,
                     color: AppColors.primary,
                     size: 22,
@@ -588,7 +588,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
               onTap: () => setState(() => _mode = _LimitMode.unlimited),
               child: Row(
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.all_inclusive_rounded,
                     color: AppColors.textSecondary,
                     size: 22,
@@ -614,7 +614,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                         _saving ? null : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
-                      side: const BorderSide(color: AppColors.border),
+                      side: BorderSide(color: AppColors.border),
                       padding: const EdgeInsets.symmetric(
                         vertical: AppDimensions.md,
                       ),
@@ -632,7 +632,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                     onPressed: _saving ? null : _apply,
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.background,
+                      foregroundColor: AppColors.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         vertical: AppDimensions.md,
                       ),
@@ -642,12 +642,12 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                       ),
                     ),
                     child: _saving
-                        ? const SizedBox(
+                        ? SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(
                               strokeWidth: 2,
-                              color: AppColors.background,
+                              color: AppColors.onPrimary,
                             ),
                           )
                         : Text(
@@ -702,7 +702,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                     onPressed: () => Navigator.of(ctx).pop(picked),
                     style: ElevatedButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.background,
+                      foregroundColor: AppColors.onPrimary,
                       padding: const EdgeInsets.symmetric(
                         vertical: AppDimensions.md,
                       ),

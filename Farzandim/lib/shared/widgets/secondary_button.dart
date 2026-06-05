@@ -81,7 +81,7 @@ class SecondaryButton extends StatelessWidget {
 
   Widget _buildContent(bool isDisabled) {
     if (isLoading) {
-      return const SizedBox(
+      return SizedBox(
         width: 16,
         height: 16,
         child: CircularProgressIndicator(

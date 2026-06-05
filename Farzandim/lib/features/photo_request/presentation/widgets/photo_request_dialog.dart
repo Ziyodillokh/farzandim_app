@@ -66,14 +66,14 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
     if (ok) {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Rasm so\'rovi yuborildi'),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Yuborilmadi, qaytadan urinib ko\'ring'),
           backgroundColor: AppColors.error,
         ),
@@ -87,7 +87,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
       backgroundColor: AppColors.surface,
       title: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.photo_camera_rounded,
             color: AppColors.primary,
           ),
@@ -151,7 +151,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
         TextButton(
           onPressed: _isSending ? null : _onSend,
           child: _isSending
-              ? const SizedBox(
+              ? SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(

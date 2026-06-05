@@ -178,7 +178,7 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
           ),
 
           if (_loading)
-            const ColoredBox(
+            ColoredBox(
               color: Colors.black54,
               child: Center(
                 child: CircularProgressIndicator(color: AppColors.primary),

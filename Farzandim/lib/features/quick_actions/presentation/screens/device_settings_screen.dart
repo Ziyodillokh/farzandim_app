@@ -204,7 +204,7 @@ class _DeviceCard extends StatelessWidget {
               borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             ),
             alignment: Alignment.center,
-            child: const Icon(
+            child: Icon(
               Icons.smartphone_rounded,
               size: 32,
               color: AppColors.textSecondary,
@@ -371,7 +371,7 @@ class _NavRow extends StatelessWidget {
                   ),
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right_rounded,
                 size: 22,
                 color: AppColors.textTertiary,
@@ -507,7 +507,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),

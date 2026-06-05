@@ -2,7 +2,9 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/realtime/socket_providers.dart';
 import 'package:farzandim/core/routing/app_router.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_theme.dart';
+import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim/features/app_update/presentation/dialogs/force_update_dialog.dart';
 import 'package:farzandim/features/app_update/presentation/providers/app_update_provider.dart';
@@ -37,6 +39,12 @@ class FarzandimApp extends ConsumerWidget {
     // Socket.io lifecycle — auth state'ga listen qilib avtomatik
     // connect/disconnect qiladi. Side-effect, value qaytarmaydi.
     ref.watch(socketLifecycleProvider);
+
+    // Theme (light/dark) — toggle'ga qarab AppColors.brightness o'rnatiladi.
+    // Root build descendant'lardan OLDIN ishlaydi → keyin barcha widget'lar
+    // to'g'ri rangni o'qiydi.
+    final themeMode = ref.watch(themeModeProvider);
+    AppColors.brightness = themeMode.brightness;
 
     // FCM token re-registratsiya — login muvaffaqiyatli tugagach.
     // `fcmInitializerProvider` token'ni startup'da yuboradi, ammo o'sha
@@ -173,7 +181,7 @@ class FarzandimApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Farzandim',
       debugShowCheckedModeBanner: false,
-      theme: AppTheme.dark,
+      theme: AppTheme.build(),
       routerConfig: ref.watch(routerProvider),
       scaffoldMessengerKey: _scaffoldMessengerKey,
       // easy_localization delegate va supportedLocales — `EasyLocalization`

@@ -159,7 +159,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.smartphone,
               color: AppColors.primary,
             ),
@@ -230,7 +230,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             onPressed: () => Navigator.of(ctx).pop(true),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
+              foregroundColor: AppColors.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.circular(AppDimensions.radiusPill),
@@ -263,7 +263,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            const Icon(
+            Icon(
               Icons.check_circle,
               color: AppColors.primary,
             ),
@@ -337,7 +337,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
                 ),
               );
             },
-            icon: const Icon(
+            icon: Icon(
               Icons.copy,
               color: AppColors.primary,
               size: 18,
@@ -353,7 +353,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             onPressed: () => Navigator.of(ctx).pop(),
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
+              foregroundColor: AppColors.onPrimary,
               shape: RoundedRectangleBorder(
                 borderRadius:
                     BorderRadius.circular(AppDimensions.radiusPill),
@@ -484,7 +484,7 @@ class _Header extends StatelessWidget {
           InkWell(
             onTap: () => context.go(AppRoutes.dashboard),
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            child: const Padding(
+            child: Padding(
               padding: EdgeInsets.all(AppDimensions.sm),
               child: Icon(
                 Icons.arrow_back,
@@ -631,7 +631,7 @@ class _RegenerateCodeButton extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (isLoading)
-                    const SizedBox(
+                    SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(
@@ -640,7 +640,7 @@ class _RegenerateCodeButton extends StatelessWidget {
                       ),
                     )
                   else
-                    const Icon(
+                    Icon(
                       Icons.smartphone,
                       size: 18,
                       color: AppColors.primary,

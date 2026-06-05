@@ -52,14 +52,14 @@ class ForceUpdateDialog extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 alignment: Alignment.center,
-                child: const Icon(
+                child: Icon(
                   Icons.system_update_alt_rounded,
                   color: AppColors.primary,
                   size: 36,
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 'Ilovani yangilang',
                 style: TextStyle(
                   color: AppColors.textPrimary,
@@ -68,7 +68,7 @@ class ForceUpdateDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Yangi versiya zarur. Eski versiya bilan davom etib bo‘lmaydi.',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -93,7 +93,7 @@ class ForceUpdateDialog extends StatelessWidget {
                   ),
                   child: Text(
                     info.releaseNotes,
-                    style: const TextStyle(
+                    style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 13,
                       height: 1.4,
@@ -148,7 +148,7 @@ class _VersionRow extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
         _versionChip('Joriy', current, AppColors.textSecondary),
-        const Icon(
+        Icon(
           Icons.arrow_forward_rounded,
           color: AppColors.textTertiary,
           size: 20,
@@ -163,7 +163,7 @@ class _VersionRow extends StatelessWidget {
       children: [
         Text(
           label,
-          style: const TextStyle(
+          style: TextStyle(
             color: AppColors.textTertiary,
             fontSize: 11,
             fontWeight: FontWeight.w500,
@@ -238,7 +238,7 @@ class _SecondaryButton extends StatelessWidget {
         onPressed: onPressed,
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.border),
+          side: BorderSide(color: AppColors.border),
           padding: const EdgeInsets.symmetric(vertical: 12),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

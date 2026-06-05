@@ -51,7 +51,7 @@ class UpdateBanner extends ConsumerWidget {
                   color: AppColors.primary.withValues(alpha: 0.2),
                   borderRadius: BorderRadius.circular(10),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.system_update_alt_rounded,
                   color: AppColors.primary,
                   size: 20,
@@ -64,7 +64,7 @@ class UpdateBanner extends ConsumerWidget {
                   children: [
                     Text(
                       'Yangi versiya mavjud (${platformInfo.latest})',
-                      style: const TextStyle(
+                      style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
@@ -76,7 +76,7 @@ class UpdateBanner extends ConsumerWidget {
                         info.releaseNotes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
+                        style: TextStyle(
                           color: AppColors.textSecondary,
                           fontSize: 12,
                           height: 1.3,
@@ -109,7 +109,7 @@ class UpdateBanner extends ConsumerWidget {
               ),
               IconButton(
                 tooltip: 'Yopish (24 soat)',
-                icon: const Icon(
+                icon: Icon(
                   Icons.close_rounded,
                   size: 18,
                   color: AppColors.textSecondary,

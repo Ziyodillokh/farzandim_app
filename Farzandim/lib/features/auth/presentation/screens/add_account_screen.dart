@@ -113,7 +113,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
 
               // ─── QR / loading / error ───
               if (_loading)
-                const SizedBox(
+                SizedBox(
                   height: 260,
                   child: Center(
                     child: CircularProgressIndicator(color: AppColors.primary),
@@ -343,7 +343,7 @@ class _InstructionsCard extends StatelessWidget {
         children: [
           for (var i = 0; i < steps.length; i++) ...[
             if (i > 0)
-              const Divider(height: 1, color: AppColors.divider, indent: 20),
+              Divider(height: 1, color: AppColors.divider, indent: 20),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimensions.lg,

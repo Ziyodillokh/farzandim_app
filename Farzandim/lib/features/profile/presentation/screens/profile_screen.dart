@@ -208,14 +208,14 @@ class _EditableAvatar extends StatelessWidget {
             ),
             clipBehavior: Clip.antiAlias,
             child: isUploading
-                ? const Center(
+                ? Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
                       color: AppColors.primary,
                     ),
                   )
                 : (photoUrl == null || photoUrl!.isEmpty
-                    ? const Icon(
+                    ? Icon(
                         Icons.person_rounded,
                         color: AppColors.textSecondary,
                         size: 48,
@@ -223,7 +223,7 @@ class _EditableAvatar extends StatelessWidget {
                     : Image.network(
                         photoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => const Icon(
+                        errorBuilder: (_, __, ___) => Icon(
                           Icons.person_rounded,
                           color: AppColors.textSecondary,
                           size: 48,
@@ -270,7 +270,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),

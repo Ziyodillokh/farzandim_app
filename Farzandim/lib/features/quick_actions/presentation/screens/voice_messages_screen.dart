@@ -45,7 +45,7 @@ class VoiceMessagesScreen extends ConsumerWidget {
                   data: (children) => children.isEmpty
                       ? const _NoChildren()
                       : _ChildrenList(onRefresh: onRefresh),
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primary,
                     ),
@@ -92,7 +92,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -125,7 +125,7 @@ class _NoChildren extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.child_care,
               size: 64,
               color: AppColors.textTertiary,
@@ -331,7 +331,7 @@ class _ChildVoiceTile extends ConsumerWidget {
                       );
                       return Row(
                         children: [
-                          const Icon(
+                          Icon(
                             Icons.mic,
                             size: 14,
                             color: AppColors.textSecondary,

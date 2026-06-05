@@ -101,7 +101,7 @@ class SettingsToggle extends StatelessWidget {
               Switch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: AppColors.background,
+                activeThumbColor: AppColors.onPrimary,
                 activeTrackColor: AppColors.primary,
                 inactiveThumbColor: AppColors.textSecondary,
                 inactiveTrackColor: AppColors.border,

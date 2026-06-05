@@ -190,7 +190,7 @@ class _UnreadDot extends StatelessWidget {
     return Container(
       width: 9,
       height: 9,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.error,
         shape: BoxShape.circle,
       ),

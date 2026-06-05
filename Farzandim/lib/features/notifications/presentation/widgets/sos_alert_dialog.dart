@@ -128,7 +128,7 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
                       shape: BoxShape.circle,
                     ),
                     alignment: Alignment.center,
-                    child: const Icon(
+                    child: Icon(
                       Icons.warning_rounded,
                       color: AppColors.error,
                       size: 36,

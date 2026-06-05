@@ -35,7 +35,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
               _Header(),
               Expanded(
                 child: sessionsAsync.when(
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primary,
                     ),
@@ -72,7 +72,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back_ios_new_rounded,
                 size: 20,
                 color: AppColors.textPrimary,
@@ -307,7 +307,7 @@ class _Trailing extends StatelessWidget {
       );
     }
     return IconButton(
-      icon: const Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+      icon: Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
       tooltip: 'settings.sessions.endSession'.tr(),
       onPressed: () => _confirmRevoke(context),
     );
@@ -337,7 +337,7 @@ class _EndAllOthersButton extends StatelessWidget {
     return Center(
       child: TextButton.icon(
         onPressed: () => _confirm(context),
-        icon: const Icon(Icons.back_hand_rounded,
+        icon: Icon(Icons.back_hand_rounded,
             color: AppColors.error, size: 18),
         label: Text(
           'settings.sessions.endAllOthers'.tr(),
@@ -389,7 +389,7 @@ class _AddAccountBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.qr_code_rounded,
+                  Icon(Icons.qr_code_rounded,
                       color: AppColors.background, size: 22),
                   const SizedBox(width: AppDimensions.sm),
                   Text(
@@ -425,7 +425,7 @@ class _EmptyState extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: MediaQuery.of(context).size.height * 0.28),
-          const Icon(Icons.devices_other_rounded,
+          Icon(Icons.devices_other_rounded,
               color: AppColors.textTertiary, size: 56),
           const SizedBox(height: AppDimensions.md),
           Center(
@@ -452,7 +452,7 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.cloud_off_rounded,
+          Icon(Icons.cloud_off_rounded,
               color: AppColors.textTertiary, size: 48),
           const SizedBox(height: AppDimensions.md),
           Text(

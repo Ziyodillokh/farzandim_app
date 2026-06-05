@@ -32,7 +32,7 @@ class GradientBackground extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return DecoratedBox(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -40,7 +40,7 @@ class GradientBackground extends StatelessWidget {
             AppColors.backgroundTop,
             AppColors.backgroundBottom,
           ],
-          stops: [0, 0.5],
+          stops: const [0, 0.5],
         ),
       ),
       child: child,

@@ -74,7 +74,7 @@ class CustomDropdown<T> extends StatelessWidget {
           ),
           // To'liq kenglikni egallaydi — pill shaklining ichida.
           isExpanded: true,
-          icon: const Icon(
+          icon: Icon(
             Icons.keyboard_arrow_down,
             color: AppColors.textSecondary,
           ),

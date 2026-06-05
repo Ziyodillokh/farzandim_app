@@ -128,7 +128,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -179,7 +179,7 @@ class _LinkTile extends StatelessWidget {
                   style: AppTextStyles.bodyM,
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 22,
                 color: AppColors.textSecondary,

@@ -266,7 +266,7 @@ class _ChildDropdown extends ConsumerWidget {
               style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(width: 4),
-            const Icon(
+            Icon(
               Icons.keyboard_arrow_down_rounded,
               size: 20,
               color: AppColors.textSecondary,
@@ -297,7 +297,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),

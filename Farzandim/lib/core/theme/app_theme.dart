@@ -23,37 +23,34 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Farzandim ilovasining theme'lari.
+/// Farzandim ilovasining theme'i — **light va dark** (theme-aware).
 ///
-/// Hozircha **faqat dark theme** bor. Light mode keyingi versiyalarga
-/// qoldirilgan (CLAUDE.md: "Theme: DARK MODE (default)").
+/// `AppColors.brightness` ni `app.dart` theme provider'dan o'rnatadi, keyin
+/// `AppTheme.build()` joriy yorqinlikka mos `ThemeData` quradi. Bitta
+/// build — `AppColors` getterlari rangni o'zi tanlaydi (light/dark).
 class AppTheme {
   AppTheme._();
 
-  /// Dark theme — ilovaning yagona theme'i.
-  ///
-  /// `MaterialApp(theme: AppTheme.dark)` deb chaqiriladi.
-  static ThemeData get dark {
+  /// Joriy `AppColors.brightness` ga mos ThemeData. `app.dart` brightness'ni
+  /// o'rnatgandan keyin chaqiriladi.
+  static ThemeData build() {
+    final isDark = AppColors.isDark;
     return ThemeData(
-      // Material 3 yangi Flutter'da default — alohida yozish shart emas.
-      brightness: Brightness.dark,
+      brightness: AppColors.brightness,
 
       // ────── 1. RANG TIZIMI (ColorScheme) ──────
-      //
-      // Material widget'lari ColorScheme'ga qarab ranglarni tanlaydi.
-      // Masalan, ElevatedButton avtomatik `primary` fon va `onPrimary`
-      // matn rangini oladi.
-      colorScheme: const ColorScheme.dark(
+      colorScheme:
+          (isDark ? const ColorScheme.dark() : const ColorScheme.light())
+              .copyWith(
         primary: AppColors.primary, // lime green (#C5F562)
-        onPrimary: AppColors.background, // lime green ustida qora matn
-        secondary: AppColors.secondary, // turkuaz (#3DBFB4)
-        onSecondary: AppColors.background,
-        surface: AppColors.surface, // Card, Dialog, BottomSheet fon
-        // onSurface defaulti `Colors.white` — `textPrimary` ham aynan oq,
-        // shuning uchun yozish shart emas.
+        onPrimary: AppColors.onPrimary, // lime ustida DOIM to'q matn
+        secondary: AppColors.secondary,
+        onSecondary: AppColors.onPrimary,
+        surface: AppColors.surface,
+        onSurface: AppColors.textPrimary,
         surfaceContainerHighest: AppColors.surfaceVariant,
         error: AppColors.error,
-        onError: AppColors.textPrimary,
+        onError: Colors.white,
         outline: AppColors.border,
       ),
 
@@ -100,9 +97,9 @@ class AppTheme {
         elevation: 0, // tag'imdagi soya yo'q (flat dizayn)
         centerTitle: false,
         titleTextStyle: AppTextStyles.headlineL,
-        // Status bar (tepadagi vaqt, batareya): oq ikonkalar
-        // (qora fonda yaxshi ko'rinadi).
-        systemOverlayStyle: SystemUiOverlayStyle.light,
+        // Status bar ikonlari: dark mode'da oq, light mode'da qora.
+        systemOverlayStyle:
+            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
       ),
 
       // ────── 4. ELEVATEDBUTTON (PrimaryButton stilining bazasi) ──────
@@ -117,7 +114,7 @@ class AppTheme {
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.background, // lime green ustida qora
+          foregroundColor: AppColors.onPrimary, // lime green ustida DOIM to'q
           disabledBackgroundColor: AppColors.surfaceVariant,
           disabledForegroundColor: AppColors.textTertiary,
           minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
@@ -139,7 +136,7 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
           minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
-          side: const BorderSide(color: AppColors.textPrimary),
+          side: BorderSide(color: AppColors.textPrimary),
           shape: const RoundedRectangleBorder(
             borderRadius:
                 BorderRadius.all(Radius.circular(AppDimensions.radiusPill)),
@@ -168,15 +165,15 @@ class AppTheme {
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: const BorderSide(color: AppColors.border),
+          borderSide: BorderSide(color: AppColors.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+          borderSide: BorderSide(color: AppColors.primary, width: 2),
         ),
         errorBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-          borderSide: const BorderSide(color: AppColors.error),
+          borderSide: BorderSide(color: AppColors.error),
         ),
         hintStyle: AppTextStyles.bodyM.copyWith(
           color: AppColors.textTertiary,
@@ -187,13 +184,13 @@ class AppTheme {
       ),
 
       // ────── 7. IKONKALAR ──────
-      iconTheme: const IconThemeData(
+      iconTheme: IconThemeData(
         color: AppColors.textPrimary,
         size: AppDimensions.iconM,
       ),
 
       // ────── 8. AJRATUVCHI CHIZIQ (Divider) ──────
-      dividerTheme: const DividerThemeData(
+      dividerTheme: DividerThemeData(
         color: AppColors.divider,
         thickness: 1,
         space: 1,

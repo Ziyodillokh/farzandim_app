@@ -197,7 +197,7 @@ class _FaollikHeader extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),

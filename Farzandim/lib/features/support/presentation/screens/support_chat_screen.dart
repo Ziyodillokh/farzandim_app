@@ -249,7 +249,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(Icons.arrow_back_ios_new_rounded,
+            icon: Icon(Icons.arrow_back_ios_new_rounded,
                 size: 20, color: AppColors.textPrimary),
             onPressed: () => context.pop(),
           ),
@@ -290,14 +290,14 @@ class _OperatorAvatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.primary,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Icon(
         Icons.favorite_rounded,
-        color: AppColors.background,
+        color: AppColors.onPrimary,
         size: size * 0.5,
       ),
     );
@@ -309,7 +309,7 @@ class _CallButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      shape: const CircleBorder(side: BorderSide(color: AppColors.border)),
+      shape: CircleBorder(side: BorderSide(color: AppColors.border)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
@@ -323,7 +323,7 @@ class _CallButton extends StatelessWidget {
               ),
             );
         },
-        child: const SizedBox(
+        child: SizedBox(
           width: 44,
           height: 44,
           child: Icon(Icons.call_outlined,
@@ -494,12 +494,12 @@ class _ImageBubble extends ConsumerWidget {
                     _ImagePlaceholder(name: message.fileName),
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;
-                  return const SizedBox(
+                  return SizedBox(
                     width: 240,
                     height: 160,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.background,
+                        color: AppColors.onPrimary,
                         strokeWidth: 2,
                       ),
                     ),
@@ -556,7 +556,7 @@ class _ImagePlaceholder extends StatelessWidget {
       height: 160,
       color: AppColors.surfaceVariant,
       alignment: Alignment.center,
-      child: const Icon(Icons.image_rounded,
+      child: Icon(Icons.image_rounded,
           color: AppColors.textTertiary, size: 40),
     );
   }
@@ -801,7 +801,7 @@ class _InputBar extends StatelessWidget {
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onAttach,
-              child: const SizedBox(
+              child: SizedBox(
                 width: 48,
                 height: 48,
                 child: Icon(Icons.attach_file_rounded,

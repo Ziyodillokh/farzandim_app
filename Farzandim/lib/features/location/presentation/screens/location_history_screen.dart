@@ -79,7 +79,7 @@ class _LocationHistoryScreenState
       ),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: const ColorScheme.dark(
+          colorScheme: ColorScheme.dark(
             primary: AppColors.primary,
             onPrimary: Colors.black,
             surface: AppColors.surface,
@@ -155,7 +155,7 @@ class _LocationHistoryScreenState
           children: [
             // Map layer (full screen).
             historyAsync.when(
-              loading: () => const Center(
+              loading: () => Center(
                 child: CircularProgressIndicator(
                   color: AppColors.primary,
                 ),
@@ -522,7 +522,7 @@ class _TopBar extends StatelessWidget {
                   Text(
                     childName,
                     style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.background,
+                      color: AppColors.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                     overflow: TextOverflow.ellipsis,
@@ -560,7 +560,7 @@ class _CircleIconButton extends StatelessWidget {
             child: Icon(
               icon,
               size: 24,
-              color: AppColors.background,
+              color: AppColors.onPrimary,
             ),
           ),
         ),
@@ -601,7 +601,7 @@ class _BottomPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
@@ -837,7 +837,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.route_outlined,
               size: 80,
               color: AppColors.textSecondary,

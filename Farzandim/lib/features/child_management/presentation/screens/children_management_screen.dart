@@ -41,7 +41,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                   data: (children) => children.isEmpty
                       ? const _EmptyState()
                       : _ChildrenList(children: children),
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primary,
                     ),
@@ -61,12 +61,12 @@ class ChildrenManagementScreen extends ConsumerWidget {
           : FloatingActionButton.extended(
               onPressed: () => context.push(AppRoutes.addChild),
               backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.background,
+              foregroundColor: AppColors.onPrimary,
               icon: const Icon(Icons.add),
               label: Text(
                 'childManagement.list.addChildFab'.tr(),
                 style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
@@ -93,7 +93,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -128,7 +128,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.child_care_outlined,
               size: 80,
               color: AppColors.textSecondary,
@@ -307,12 +307,12 @@ class _FamilyCodePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.tag, size: 12, color: AppColors.background),
+          Icon(Icons.tag, size: 12, color: AppColors.onPrimary),
           const SizedBox(width: 4),
           Text(
             code,
             style: AppTextStyles.label.copyWith(
-              color: AppColors.background,
+              color: AppColors.onPrimary,
               fontWeight: FontWeight.w700,
               fontFamily: 'monospace',
             ),
@@ -331,7 +331,7 @@ class _ActionMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: const Icon(
+      icon: Icon(
         Icons.more_vert,
         color: AppColors.textPrimary,
       ),
@@ -349,7 +349,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'edit',
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.edit_outlined,
                 size: 20,
                 color: AppColors.textPrimary,
@@ -368,7 +368,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'delete',
           child: Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.delete_outline,
                 size: 20,
                 color: AppColors.error,
@@ -478,7 +478,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.error_outline,
               size: 56,
               color: AppColors.error,

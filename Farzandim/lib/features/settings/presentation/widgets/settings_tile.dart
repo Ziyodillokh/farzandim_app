@@ -116,7 +116,7 @@ class _SettingsTileState extends State<SettingsTile> {
                   ),
                 ),
                 widget.trailing ??
-                    const Icon(
+                    Icon(
                       Icons.chevron_right_rounded,
                       size: 22,
                       color: AppColors.textTertiary,

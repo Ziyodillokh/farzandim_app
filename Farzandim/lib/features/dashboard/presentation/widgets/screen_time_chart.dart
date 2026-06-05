@@ -68,12 +68,13 @@ class ScreenTimeChart extends ConsumerWidget {
   static const List<String> _shortDays = [
     'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya',
   ];
-  static const Color _todayBar = AppColors.primary;
-  static const Color _otherBar = AppColors.surfaceVariant;
-  static const TextStyle _yAxisStyle = TextStyle(
-    fontSize: 11,
-    color: AppColors.textSecondary,
-  );
+  // Getter — theme almashganda rang yangilanishi uchun (cached field emas).
+  static Color get _todayBar => AppColors.primary;
+  static Color get _otherBar => AppColors.surfaceVariant;
+  static TextStyle get _yAxisStyle => TextStyle(
+        fontSize: 11,
+        color: AppColors.textSecondary,
+      );
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -87,7 +88,7 @@ class ScreenTimeChart extends ConsumerWidget {
         borderRadius: BorderRadius.circular(16),
       ),
       child: weeklyAsync.when(
-        loading: () => const SizedBox(
+        loading: () => SizedBox(
           height: 220,
           child: Center(
             child: CircularProgressIndicator(color: AppColors.primary),
@@ -99,7 +100,7 @@ class ScreenTimeChart extends ConsumerWidget {
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Text(
+                Text(
                   'Statistika yuklanmadi',
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
@@ -120,7 +121,7 @@ class ScreenTimeChart extends ConsumerWidget {
 
   Widget _buildChart(List<DailyUsageTotal> totals, int todayMs) {
     if (totals.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 220,
         child: Center(
           child: Text(
@@ -147,7 +148,7 @@ class ScreenTimeChart extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Ekran vaqti',
           style: TextStyle(
             fontSize: 13,
@@ -158,7 +159,7 @@ class ScreenTimeChart extends ConsumerWidget {
         const SizedBox(height: 4),
         Text(
           title,
-          style: const TextStyle(
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.bold,
             color: AppColors.textPrimary,
@@ -212,7 +213,7 @@ class ScreenTimeChart extends ConsumerWidget {
                 children: [
                   Text('$maxHours st', style: _yAxisStyle),
                   Text('${(maxHours / 2).floor()} st', style: _yAxisStyle),
-                  const Text('0', style: _yAxisStyle),
+                  Text('0', style: _yAxisStyle),
                   const SizedBox(height: 20),
                 ],
               ),

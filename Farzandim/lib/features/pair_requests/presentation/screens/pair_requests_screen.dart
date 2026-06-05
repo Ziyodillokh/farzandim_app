@@ -35,7 +35,7 @@ class PairRequestsScreen extends ConsumerWidget {
               _Header(childName: childName),
               Expanded(
                 child: requestsAsync.when(
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primary,
                     ),
@@ -87,7 +87,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -411,7 +411,7 @@ class _EmptyState extends StatelessWidget {
                 shape: BoxShape.circle,
               ),
               alignment: Alignment.center,
-              child: const Icon(
+              child: Icon(
                 Icons.check_circle_outline_rounded,
                 color: AppColors.success,
                 size: 48,

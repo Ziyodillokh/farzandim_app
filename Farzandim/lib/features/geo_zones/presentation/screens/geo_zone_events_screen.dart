@@ -66,7 +66,7 @@ class GeoZoneEventsScreen extends ConsumerWidget {
                       child: _EventsList(events: events),
                     );
                   },
-                  loading: () => const Center(
+                  loading: () => Center(
                     child: CircularProgressIndicator(
                       color: AppColors.primary,
                     ),
@@ -113,7 +113,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -209,7 +209,7 @@ class _EmptyEvents extends StatelessWidget {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.history,
                       size: 50,
                       color: AppColors.primary,

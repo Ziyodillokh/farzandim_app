@@ -40,7 +40,7 @@ class AuthErrorText extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        const Icon(
+        Icon(
           Icons.error_outline_rounded,
           size: AppDimensions.iconS,
           color: AppColors.error,
@@ -65,7 +65,7 @@ class AuthBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: const Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+      icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
       onPressed: () {
         if (context.canPop()) {
           context.pop();

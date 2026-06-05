@@ -66,7 +66,7 @@ class _SocialButtonState extends State<SocialButton> {
             borderRadius: borderRadius,
             child: Center(
               child: _isLoading
-                  ? const SizedBox(
+                  ? SizedBox(
                       width: 16,
                       height: 16,
                       child: CircularProgressIndicator(

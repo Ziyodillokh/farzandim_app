@@ -488,7 +488,7 @@ class _LeaderboardRow extends StatelessWidget {
                         child: Text(
                           'Siz',
                           style: AppTextStyles.label.copyWith(
-                            color: AppColors.background,
+                            color: AppColors.onPrimary,
                             fontWeight: FontWeight.w700,
                           ),
                         ),

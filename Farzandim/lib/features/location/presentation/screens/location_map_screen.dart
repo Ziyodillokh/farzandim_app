@@ -292,7 +292,7 @@ class _RecenterFab extends StatelessWidget {
             vertical: 14,
           ),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
+            gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.primaryDark],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
@@ -384,7 +384,7 @@ class _CircleIconButton extends StatelessWidget {
             child: Icon(
               icon,
               size: 24,
-              color: AppColors.background,
+              color: AppColors.onPrimary,
             ),
           ),
         ),
@@ -421,15 +421,15 @@ class _ChildSelectorChip extends ConsumerWidget {
               Text(
                 child.name,
                 style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               if (hasMultiple) ...[
                 const SizedBox(width: 2),
-                const Icon(
+                Icon(
                   Icons.arrow_drop_down,
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                 ),
               ],
             ],
@@ -467,7 +467,7 @@ class _ChildSelectorChip extends ConsumerWidget {
                 leading: ChildAvatar(child: c, size: 40),
                 title: Text(c.name, style: AppTextStyles.bodyM),
                 trailing: c.id == child.id
-                    ? const Icon(Icons.check, color: AppColors.primary)
+                    ? Icon(Icons.check, color: AppColors.primary)
                     : null,
                 onTap: () => Navigator.of(sheetContext).pop(c),
               ),
@@ -495,7 +495,7 @@ class _BottomCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final address = ref.watch(childAddressProvider(child.id)).valueOrNull;
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
@@ -551,7 +551,7 @@ class _BottomCard extends ConsumerWidget {
             Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.place_rounded,
+                Icon(Icons.place_rounded,
                     size: 18, color: AppColors.primary),
                 const SizedBox(width: 8),
                 Expanded(
@@ -575,7 +575,7 @@ class _BottomCard extends ConsumerWidget {
           // Status row: harakat + aniqlik.
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.location_on,
                 size: 18,
                 color: AppColors.primary,
@@ -655,7 +655,7 @@ class _NoLocationState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.location_off_outlined,
                     size: 80,
                     color: AppColors.textSecondary,
@@ -709,7 +709,7 @@ class _ErrorState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(
+                  Icon(
                     Icons.error_outline,
                     size: 64,
                     color: AppColors.error,

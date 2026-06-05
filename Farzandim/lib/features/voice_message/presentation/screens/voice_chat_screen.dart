@@ -787,7 +787,7 @@ class _VideoRecordButton extends StatelessWidget {
           ],
         ),
         child: isUploading
-            ? const Center(
+            ? Center(
                 child: SizedBox(
                   width: 20,
                   height: 20,
@@ -798,7 +798,7 @@ class _VideoRecordButton extends StatelessWidget {
                 ),
               )
             : ShaderMask(
-                shaderCallback: (rect) => const LinearGradient(
+                shaderCallback: (rect) => LinearGradient(
                   colors: [AppColors.primary, AppColors.primaryDark],
                   begin: Alignment.topCenter,
                   end: Alignment.bottomCenter,
@@ -837,7 +837,7 @@ class _ChatHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back,
               color: AppColors.textPrimary,
             ),
@@ -870,7 +870,7 @@ class _ChatHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.info_outline,
               color: AppColors.textPrimary,
             ),
@@ -894,7 +894,7 @@ class _FallbackAvatar extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
-      child: const Icon(
+      child: Icon(
         Icons.person,
         color: AppColors.primary,
         size: 22,
@@ -936,7 +936,7 @@ class _EmptyChat extends StatelessWidget {
                       color: AppColors.primary.withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.mic_outlined,
                       size: 50,
                       color: AppColors.primary,

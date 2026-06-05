@@ -101,13 +101,13 @@ class PrimaryButton extends StatelessWidget {
         child: CircularProgressIndicator(
           strokeWidth: 2,
           // Lime green fonda qora spinner — eng yuqori kontrast.
-          color: AppColors.background,
+          color: AppColors.onPrimary,
         ),
       );
     }
 
     final textColor =
-        isDisabled ? AppColors.textTertiary : AppColors.background;
+        isDisabled ? AppColors.textTertiary : AppColors.onPrimary;
     final textWidget = Text(
       label,
       style: AppTextStyles.bodyM.copyWith(

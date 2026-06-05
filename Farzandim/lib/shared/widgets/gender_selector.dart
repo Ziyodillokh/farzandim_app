@@ -69,8 +69,8 @@ class GenderSelector extends StatelessWidget {
     required VoidCallback onTap,
   }) {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
-    // Lime green fonida qora matn (PrimaryButton uslubi).
-    const selectedFg = AppColors.background;
+    // Lime green fonida DOIM qora matn (PrimaryButton uslubi).
+    const selectedFg = AppColors.onPrimary;
     final fg = isSelected ? selectedFg : AppColors.textPrimary;
 
     return Material(

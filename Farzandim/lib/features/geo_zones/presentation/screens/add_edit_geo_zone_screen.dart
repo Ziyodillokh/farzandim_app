@@ -361,7 +361,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -384,7 +384,7 @@ class _Header extends StatelessWidget {
               width: 48,
               height: 48,
               child: IconButton(
-                icon: const Icon(
+                icon: Icon(
                   Icons.delete_outline,
                   color: AppColors.textPrimary,
                 ),
@@ -545,7 +545,7 @@ class _NotificationToggles extends StatelessWidget {
             value: notifyOnEnter,
             onChanged: onEnterChanged,
           ),
-          const Divider(color: AppColors.border, height: 1),
+          Divider(color: AppColors.border, height: 1),
           _ToggleRow(
             icon: Icons.logout,
             iconColor: AppColors.error,
@@ -593,7 +593,7 @@ class _ToggleRow extends StatelessWidget {
           Switch(
             value: value,
             onChanged: onChanged,
-            activeThumbColor: AppColors.background,
+            activeThumbColor: AppColors.onPrimary,
             activeTrackColor: AppColors.primary,
             inactiveThumbColor: AppColors.textSecondary,
             inactiveTrackColor: AppColors.border,

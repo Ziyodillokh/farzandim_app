@@ -88,7 +88,7 @@ class _ActivePill extends StatelessWidget {
       // Parvoz paytida faqat yashil pill ko'rinadi (matn morf'lanmaydi —
       // kenglik o'zgargani uchun cho'zilmasin). Boshlanish/oxirida to'liq
       // ikona+matn ko'rinadi.
-      flightShuttleBuilder: (_, __, ___, ____, _____) => const DecoratedBox(
+      flightShuttleBuilder: (_, __, ___, ____, _____) => DecoratedBox(
         decoration: BoxDecoration(
           color: AppColors.primary,
           borderRadius: AppBottomNav._pillRadius,
@@ -104,14 +104,14 @@ class _ActivePill extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(icon, size: 20, color: AppColors.background),
+                Icon(icon, size: 20, color: AppColors.onPrimary),
                 const SizedBox(width: AppDimensions.sm),
                 Flexible(
                   child: Text(
                     label,
                     overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.background,
+                      color: AppColors.onPrimary,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
@@ -136,7 +136,7 @@ class _CircleButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      shape: const CircleBorder(side: BorderSide(color: AppColors.border)),
+      shape: CircleBorder(side: BorderSide(color: AppColors.border)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

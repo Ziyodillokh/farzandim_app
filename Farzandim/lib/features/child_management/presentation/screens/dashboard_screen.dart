@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
@@ -75,7 +76,7 @@ class _DashboardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: CircularProgressIndicator(color: AppColors.primary),
     );
   }
@@ -134,7 +135,7 @@ class _EmptyState extends StatelessWidget {
                   color: AppColors.surfaceVariant,
                   border: Border.all(color: AppColors.border),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_rounded,
                   size: 30,
                   color: AppColors.textSecondary,
@@ -385,8 +386,43 @@ class _Header extends StatelessWidget {
           fit: BoxFit.contain,
         ),
         const Spacer(),
+        // Light/dark toggle — notification bell'ning CHAP tarafida.
+        const _ThemeToggle(),
+        const SizedBox(width: AppDimensions.sm),
         const _NotificationBell(),
       ],
+    );
+  }
+}
+
+/// ☀️/🌙 — light va dark rejim orasida almashtiradi (saqlanadi).
+class _ThemeToggle extends ConsumerWidget {
+  const _ThemeToggle();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isDark = ref.watch(themeModeProvider) == AppThemeMode.dark;
+    return Material(
+      color: AppColors.surface,
+      shape: CircleBorder(
+        side: BorderSide(color: AppColors.border),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: () => ref.read(themeModeProvider.notifier).toggle(),
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: Icon(
+              // Dark'da quyosh (light'ga o'tish), light'da oy (dark'ga o'tish).
+              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+              size: 23,
+              color: isDark ? AppColors.warning : AppColors.textPrimary,
+            ),
+          ),
+        ),
+      ),
     );
   }
 }
@@ -408,7 +444,7 @@ class _NotificationBell extends ConsumerWidget {
           height: 48,
           child: Stack(
             children: [
-              const Center(
+              Center(
                 child: Icon(
                   Icons.notifications_outlined,
                   size: 24,
@@ -562,7 +598,7 @@ class _AddChildPage extends StatelessWidget {
                     color: AppColors.primary.withValues(alpha: 0.5),
                   ),
                 ),
-                child: const Icon(
+                child: Icon(
                   Icons.person_add_alt_1_rounded,
                   color: AppColors.primary,
                   size: 30,
@@ -664,7 +700,7 @@ class _RatingSection extends ConsumerWidget {
                       color: AppColors.textSecondary,
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right_rounded,
                     size: 18,
                     color: AppColors.textSecondary,
@@ -689,7 +725,7 @@ class _RatingSection extends ConsumerWidget {
               Text(
                 '$donBalance',
                 style: AppTextStyles.headlineL.copyWith(
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -703,7 +739,7 @@ class _RatingSection extends ConsumerWidget {
                     Text(
                       child.name,
                       style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.background,
+                        color: AppColors.onPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
@@ -713,7 +749,7 @@ class _RatingSection extends ConsumerWidget {
                       Text(
                         child.region,
                         style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.background.withValues(alpha: 0.7),
+                          color: AppColors.onPrimary.withValues(alpha: 0.7),
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -731,7 +767,7 @@ class _RatingSection extends ConsumerWidget {
               Text(
                 '$xp',
                 style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.background,
+                  color: AppColors.onPrimary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -825,7 +861,7 @@ class _TimeCard extends ConsumerWidget {
                       Container(
                         width: 36,
                         height: 36,
-                        decoration: const BoxDecoration(
+                        decoration: BoxDecoration(
                           color: AppColors.surfaceVariant,
                           shape: BoxShape.circle,
                         ),
@@ -900,7 +936,7 @@ class _AppIcon extends StatelessWidget {
     return Container(
       width: 36,
       height: 36,
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         shape: BoxShape.circle,
       ),

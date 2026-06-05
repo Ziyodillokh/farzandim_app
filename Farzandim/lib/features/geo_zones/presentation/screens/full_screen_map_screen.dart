@@ -407,7 +407,7 @@ class _SearchResultTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          const Icon(
+          Icon(
             Icons.location_on,
             size: 20,
             color: AppColors.primary,
@@ -421,7 +421,7 @@ class _SearchResultTile extends StatelessWidget {
                 Text(
                   main,
                   style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.background,
+                    color: AppColors.onPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                   maxLines: 1,
@@ -456,7 +456,7 @@ class _CenterPinOverlay extends StatelessWidget {
     return Stack(
       alignment: Alignment.center,
       children: [
-        const Padding(
+        Padding(
           padding: EdgeInsets.only(bottom: 36),
           child: Icon(
             Icons.location_pin,
@@ -475,7 +475,7 @@ class _CenterPinOverlay extends StatelessWidget {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: AppColors.background,
+            color: AppColors.onPrimary,
             shape: BoxShape.circle,
             border: Border.all(color: Colors.white, width: 1.5),
           ),
@@ -496,7 +496,7 @@ class _BottomCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: const BoxDecoration(
+      decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
@@ -513,7 +513,7 @@ class _BottomCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(
+              Icon(
                 Icons.location_pin,
                 size: 24,
                 color: AppColors.primary,

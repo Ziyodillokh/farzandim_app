@@ -42,7 +42,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                 const _FilterTabs(),
                 Expanded(
                   child: requestsAsync.when(
-                    loading: () => const Center(
+                    loading: () => Center(
                       child: CircularProgressIndicator(
                         color: AppColors.primary,
                       ),
@@ -118,7 +118,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: const Icon(
+            icon: Icon(
               Icons.arrow_back_ios_new_rounded,
               color: AppColors.textPrimary,
               size: 20,
@@ -405,7 +405,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
   @override
   Widget build(BuildContext context) {
     if (_loading) {
-      return const SizedBox(
+      return SizedBox(
         height: 200,
         child: Center(
           child: CircularProgressIndicator(color: AppColors.primary),
@@ -443,7 +443,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
               height: 100,
               alignment: Alignment.center,
               color: AppColors.surfaceVariant,
-              child: const Icon(
+              child: Icon(
                 Icons.broken_image_rounded,
                 color: AppColors.textSecondary,
               ),
@@ -525,7 +525,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.photo_camera_outlined,
               color: AppColors.textSecondary,
               size: 64,

@@ -88,7 +88,7 @@ class _AddIcon extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: AppColors.textSecondary, width: 2),
       ),
-      child: const Icon(
+      child: Icon(
         Icons.add,
         color: AppColors.textSecondary,
         size: 28,
@@ -122,7 +122,7 @@ class _PhotoView extends StatelessWidget {
               height: 120,
               fit: BoxFit.cover,
               // Rasm baytlari buzuq bo'lsa fallback (kamdan-kam yuz beradi).
-              errorBuilder: (_, __, ___) => const ColoredBox(
+              errorBuilder: (_, __, ___) => ColoredBox(
                 color: AppColors.surfaceVariant,
                 child: Icon(
                   Icons.broken_image_outlined,
@@ -153,13 +153,13 @@ class _RemoveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      shape: const CircleBorder(
+      shape: CircleBorder(
         side: BorderSide(color: AppColors.border),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
-        child: const SizedBox(
+        child: SizedBox(
           width: 28,
           height: 28,
           child: Icon(

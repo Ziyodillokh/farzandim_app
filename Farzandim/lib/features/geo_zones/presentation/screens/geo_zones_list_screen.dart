@@ -100,12 +100,12 @@ class GeoZonesListScreen extends ConsumerWidget {
                 onPressed: () =>
                     context.push(AppRoutes.geoZonesAddPath(childId)),
                 backgroundColor: AppColors.primary,
-                foregroundColor: AppColors.background,
+                foregroundColor: AppColors.onPrimary,
                 icon: const Icon(Icons.add),
                 label: Text(
                   'geoZones.newFab'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
-                    color: AppColors.background,
+                    color: AppColors.onPrimary,
                     fontWeight: FontWeight.w600,
                   ),
                 ),
@@ -137,7 +137,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,
               ),
@@ -157,7 +157,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: const Icon(
+              icon: Icon(
                 Icons.history,
                 color: AppColors.textPrimary,
               ),
@@ -203,7 +203,7 @@ class _Last24HoursCard extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppDimensions.md - 4),
                 child: Row(
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.history,
                       color: AppColors.primary,
                       size: 22,
@@ -230,7 +230,7 @@ class _Last24HoursCard extends ConsumerWidget {
                       ),
                     ),
                     const SizedBox(width: 4),
-                    const Icon(
+                    Icon(
                       Icons.chevron_right,
                       size: 18,
                       color: AppColors.primary,
@@ -263,7 +263,7 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
+            Icon(
               Icons.fence_outlined,
               size: 80,
               color: AppColors.textSecondary,
@@ -406,7 +406,7 @@ class _ZoneCard extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(
+              Icon(
                 Icons.chevron_right,
                 size: 24,
                 color: AppColors.textPrimary,
