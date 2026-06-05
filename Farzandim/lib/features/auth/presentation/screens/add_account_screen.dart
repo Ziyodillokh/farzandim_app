@@ -1,34 +1,36 @@
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/features/auth/data/repositories/device_link_repository.dart';
 import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
-/// Akkauntga qo'shilish — boshqa qurilmaga ulanish uchun QR kod.
+/// Akkauntga qo'shilish — ikkinchi qurilmani ulash uchun QR kod (mas'ul).
 ///
-/// Foydalanuvchi asosiy qurilmasida "Faol sessiyalar" → "Boshqa hisob
-/// qo'shish" orqali bu QR kodni skanerlaydi. Hozircha QR oddiy session
-/// token bilan generatsiya qilinadi (real session oqimi keyinroq ulanadi).
-class AddAccountScreen extends StatefulWidget {
+/// "Faol sessiyalar" → "Boshqa hisob qo'shish" orqali ochiladi. Backend'dan
+/// qisqa muddatli device-link kod olinadi va QR ko'rsatiladi. Yangi qurilma
+/// kirish sahifasida "Akkauntga qo'shilish" → kamera bilan shu QR'ni
+/// skanerlab, ikkinchi qurilma sifatida kiradi.
+class AddAccountScreen extends ConsumerStatefulWidget {
   /// `AddAccountScreen` konstruktor.
   const AddAccountScreen({super.key});
 
   @override
-  State<AddAccountScreen> createState() => _AddAccountScreenState();
+  ConsumerState<AddAccountScreen> createState() => _AddAccountScreenState();
 }
 
-class _AddAccountScreenState extends State<AddAccountScreen>
+class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
     with SingleTickerProviderStateMixin {
-  static const int _ttlSeconds = 180; // 3:00
-
-  late String _token;
-  late int _secondsLeft;
+  String? _payload; // QR ichidagi device-link payload (null = yuklanmoqda)
+  int _secondsLeft = 0;
   Timer? _timer;
+  bool _loading = true;
+  String? _error;
   late final AnimationController _spin;
 
   @override
@@ -38,7 +40,7 @@ class _AddAccountScreenState extends State<AddAccountScreen>
       vsync: this,
       duration: const Duration(seconds: 2),
     )..repeat();
-    _regenerate();
+    _create();
   }
 
   @override
@@ -48,25 +50,35 @@ class _AddAccountScreenState extends State<AddAccountScreen>
     super.dispose();
   }
 
-  /// Yangi session token + sanoq taymerni qaytadan boshlaydi.
-  void _regenerate() {
-    final rnd = math.Random();
-    final suffix =
-        List.generate(8, (_) => rnd.nextInt(16).toRadixString(16)).join();
-    _token =
-        'farzandim://add-account?s=${DateTime.now().microsecondsSinceEpoch}$suffix';
-    _secondsLeft = _ttlSeconds;
-    _timer?.cancel();
-    _timer = Timer.periodic(const Duration(seconds: 1), (t) {
-      if (!mounted) return;
-      if (_secondsLeft <= 1) {
-        setState(() => _secondsLeft = 0);
-        t.cancel();
-      } else {
-        setState(() => _secondsLeft -= 1);
-      }
+  /// Backend'dan yangi device-link kod oladi va QR + sanoqni boshlaydi.
+  Future<void> _create() async {
+    setState(() {
+      _loading = true;
+      _error = null;
     });
-    setState(() {});
+    try {
+      final link = await ref.read(deviceLinkRepositoryProvider).create();
+      if (!mounted) return;
+      _payload = link.qrPayload;
+      _secondsLeft = link.expiresInSec;
+      _timer?.cancel();
+      _timer = Timer.periodic(const Duration(seconds: 1), (t) {
+        if (!mounted) return;
+        if (_secondsLeft <= 1) {
+          setState(() => _secondsLeft = 0);
+          t.cancel();
+        } else {
+          setState(() => _secondsLeft -= 1);
+        }
+      });
+      setState(() => _loading = false);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = "Kod yaratib bo'lmadi. Qayta urinib ko'ring.";
+      });
+    }
   }
 
   String get _formattedTime {
@@ -99,72 +111,100 @@ class _AddAccountScreenState extends State<AddAccountScreen>
             children: [
               const SizedBox(height: AppDimensions.sm),
 
-              // ─── QR karta (oq, yumaloq) ───
-              _QrCard(token: _token, expired: _expired, onRefresh: _regenerate),
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Sanoq taymer ───
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.timer_outlined,
-                    size: 18,
-                    color: _expired
-                        ? AppColors.error
-                        : AppColors.textSecondary,
+              // ─── QR / loading / error ───
+              if (_loading)
+                const SizedBox(
+                  height: 260,
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
-                  const SizedBox(width: AppDimensions.sm),
-                  Text(
-                    _expired
-                        ? 'auth.addAccount.expired'.tr()
-                        : '${'auth.addAccount.expiresIn'.tr()}: '
-                            '$_formattedTime',
-                    style: AppTextStyles.bodyM.copyWith(
+                )
+              else if (_error != null) ...[
+                const SizedBox(height: AppDimensions.xl),
+                Text(
+                  _error!,
+                  textAlign: TextAlign.center,
+                  style: AppTextStyles.bodyM.copyWith(color: AppColors.error),
+                ),
+                const SizedBox(height: AppDimensions.md),
+                TextButton.icon(
+                  onPressed: _create,
+                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  label: Text('auth.addAccount.refresh'.tr()),
+                  style: TextButton.styleFrom(foregroundColor: kAuthLinkColor),
+                ),
+                const SizedBox(height: AppDimensions.xl),
+              ] else ...[
+                _QrCard(
+                  token: _payload ?? '',
+                  expired: _expired,
+                  onRefresh: _create,
+                ),
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Sanoq taymer ───
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.timer_outlined,
+                      size: 18,
                       color: _expired
                           ? AppColors.error
                           : AppColors.textSecondary,
                     ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppDimensions.md),
-
-              // ─── Status: kutilmoqda / yangilash ───
-              if (_expired)
-                TextButton.icon(
-                  onPressed: _regenerate,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
-                  label: Text('auth.addAccount.refresh'.tr()),
-                  style: TextButton.styleFrom(
-                    foregroundColor: kAuthLinkColor,
-                    textStyle: AppTextStyles.bodyM.copyWith(
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                )
-              else
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    RotationTransition(
-                      turns: _spin,
-                      child: const Icon(
-                        Icons.sync_rounded,
-                        size: 18,
-                        color: kAuthLinkColor,
-                      ),
-                    ),
                     const SizedBox(width: AppDimensions.sm),
                     Text(
-                      'auth.addAccount.waiting'.tr(),
+                      _expired
+                          ? 'auth.addAccount.expired'.tr()
+                          : '${'auth.addAccount.expiresIn'.tr()}: '
+                              '$_formattedTime',
                       style: AppTextStyles.bodyM.copyWith(
-                        color: kAuthLinkColor,
-                        fontWeight: FontWeight.w600,
+                        color: _expired
+                            ? AppColors.error
+                            : AppColors.textSecondary,
                       ),
                     ),
                   ],
                 ),
+                const SizedBox(height: AppDimensions.md),
+
+                // ─── Status: kutilmoqda / yangilash ───
+                if (_expired)
+                  TextButton.icon(
+                    onPressed: _create,
+                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    label: Text('auth.addAccount.refresh'.tr()),
+                    style: TextButton.styleFrom(
+                      foregroundColor: kAuthLinkColor,
+                      textStyle: AppTextStyles.bodyM.copyWith(
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  )
+                else
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      RotationTransition(
+                        turns: _spin,
+                        child: const Icon(
+                          Icons.sync_rounded,
+                          size: 18,
+                          color: kAuthLinkColor,
+                        ),
+                      ),
+                      const SizedBox(width: AppDimensions.sm),
+                      Text(
+                        'auth.addAccount.waiting'.tr(),
+                        style: AppTextStyles.bodyM.copyWith(
+                          color: kAuthLinkColor,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ],
+                  ),
+              ],
 
               const SizedBox(height: AppDimensions.xl),
 
@@ -310,7 +350,6 @@ class _InstructionsCard extends StatelessWidget {
                 vertical: AppDimensions.md,
               ),
               child: Row(
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Text(
                     '${i + 1}.',

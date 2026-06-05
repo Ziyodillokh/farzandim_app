@@ -77,6 +77,9 @@ dependencies:
   # QR kod generatsiya — "Akkauntga qo'shilish" (boshqa qurilmaga ulanish).
   qr_flutter: ^4.1.0
 
+  # QR skaner (kamera) — kirish sahifasida "Akkauntga qo'shilish" → 2-qurilma.
+  mobile_scanner: ^6.0.7
+
   # Routing — Flutter rasmiy tavsiyasi
   go_router: ^14.6.2
 
