@@ -9,6 +9,8 @@ import {
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { GamificationService } from '../gamification/gamification.service';
+import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 
 function lifecycleOf(o: {
   status: string;
@@ -78,7 +80,10 @@ function questionRow(q: {
 
 @Injectable()
 export class ConsumerOlympiadsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly gamification: GamificationService,
+  ) {}
 
   private async loadChild(
     userId: string,
@@ -340,6 +345,15 @@ export class ConsumerOlympiadsService {
         finishedAt: new Date(),
         answers: graded as Prisma.InputJsonValue,
       },
+    });
+
+    // XP berish — test (olympiad) tugatildi → reyting shu XP'dan hisoblanadi.
+    // Idempotent (relatedId = attemptId) — qayta yuborilsa ikki marta bermaydi.
+    // `submitAttempt` allaqachon finished bo'lsa yuqorida 409 qaytaradi.
+    await this.gamification.awardXp(child.childId, {
+      type: XpEventType.CONTEST_WIN,
+      xpDelta: attempt.olympiad.xpReward,
+      relatedId: updated.id,
     });
 
     return {

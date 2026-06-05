@@ -33,6 +33,7 @@ import { AppUsageModule } from './modules/app-usage/app-usage.module';
 import { ChildPairRequestsModule } from './modules/child-pair-requests/child-pair-requests.module';
 import { AppVersionModule } from './modules/app-version/app-version.module';
 import { SupportModule } from './modules/support/support.module';
+import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { ConsumerContentModule } from './modules/consumer-content/consumer-content.module';
 import { ConsumerOlympiadsModule } from './modules/consumer-olympiads/consumer-olympiads.module';
 import { PaymentsModule } from './modules/payments/payments.module';
@@ -87,6 +88,7 @@ import { AppController } from './app.controller';
     ChildPairRequestsModule,
     AppVersionModule,
     SupportModule,
+    LeaderboardModule,
     ConsumerContentModule,
     ConsumerOlympiadsModule,
     PaymentsModule,
