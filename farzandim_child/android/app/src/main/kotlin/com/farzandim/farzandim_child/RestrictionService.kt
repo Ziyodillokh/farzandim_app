@@ -295,6 +295,7 @@ class RestrictionService : Service() {
         } catch (e: Exception) {
             Log.w(TAG, "install-source aniqlanmadi: $pkg — ${e.message}")
             false
+        }
     }
 
     private fun readBlockedPackages(): Set<String> {
