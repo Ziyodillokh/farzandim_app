@@ -101,12 +101,13 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         page: next,
         limit: _limit,
       );
+      // currentChild'ni qayta yozmaymiz — u birinchi sahifada o'rnatilgan va
+      // har sahifada bir xil (backend qayta hisoblaydi). Stale bo'lmaydi.
       state = state.copyWith(
         entries: [...state.entries, ...pageData.entries],
         hasMore: pageData.hasMore,
         loadingMore: false,
         page: next,
-        currentChild: pageData.currentChild ?? state.currentChild,
       );
     } catch (_) {
       state = state.copyWith(loadingMore: false, hasMore: false);

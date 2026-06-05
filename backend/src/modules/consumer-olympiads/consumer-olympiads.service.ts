@@ -1,5 +1,6 @@
 import {
   Injectable,
+  Logger,
   ForbiddenException,
   NotFoundException,
   ConflictException,
@@ -84,6 +85,29 @@ export class ConsumerOlympiadsService {
     private readonly prisma: PrismaService,
     private readonly gamification: GamificationService,
   ) {}
+
+  private readonly logger = new Logger(ConsumerOlympiadsService.name);
+
+  /// Test (olympiad) tugatilganda XP beradi. Idempotent (relatedId=attemptId).
+  /// Xato submit/answer javobini buzmasligi uchun try/catch (faqat log).
+  private async grantOlympiadXp(
+    childId: string,
+    attemptId: string,
+    xpReward: number,
+  ): Promise<void> {
+    try {
+      await this.gamification.awardXp(childId, {
+        type: XpEventType.CONTEST_WIN,
+        xpDelta: xpReward,
+        relatedId: attemptId,
+      });
+    } catch (e) {
+      this.logger.error(
+        `awardXp muvaffaqiyatsiz (attempt ${attemptId})`,
+        e as Error,
+      );
+    }
+  }
 
   private async loadChild(
     userId: string,
@@ -276,6 +300,16 @@ export class ConsumerOlympiadsService {
       },
     });
 
+    // Savol-savol oqimida ham test tugaganda XP beriladi (submitAttempt
+    // ishlatilmasligi mumkin). Idempotent (relatedId=attemptId).
+    if (isLastQuestion) {
+      await this.grantOlympiadXp(
+        child.childId,
+        updated.id,
+        attempt.olympiad.xpReward,
+      );
+    }
+
     return {
       isCorrect,
       correctIndex: question.correctIndex,
@@ -347,14 +381,13 @@ export class ConsumerOlympiadsService {
       },
     });
 
-    // XP berish — test (olympiad) tugatildi → reyting shu XP'dan hisoblanadi.
-    // Idempotent (relatedId = attemptId) — qayta yuborilsa ikki marta bermaydi.
-    // `submitAttempt` allaqachon finished bo'lsa yuqorida 409 qaytaradi.
-    await this.gamification.awardXp(child.childId, {
-      type: XpEventType.CONTEST_WIN,
-      xpDelta: attempt.olympiad.xpReward,
-      relatedId: updated.id,
-    });
+    // XP berish — test tugatildi → reyting shu XP'dan. Idempotent
+    // (relatedId=attemptId) + xato submit'ni buzmaydi (try/catch helper'da).
+    await this.grantOlympiadXp(
+      child.childId,
+      updated.id,
+      attempt.olympiad.xpReward,
+    );
 
     return {
       attemptId: updated.id,

@@ -150,7 +150,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
 
           // ─── Sticky "Siz" ───
-          if (st.currentChild != null)
+          // Faqat top-3'dan tashqarida ko'rsatamiz (top-3 podium'da ko'rinadi
+          // — dublikat bo'lmasin). rank 0 = bu davrda XP yo'q → baribir ko'rsatamiz.
+          if (st.currentChild != null &&
+              (st.currentChild!.rank == 0 || st.currentChild!.rank > 3))
             _CurrentChildRow(entry: st.currentChild!),
         ],
       ),

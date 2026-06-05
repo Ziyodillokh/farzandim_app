@@ -81,7 +81,12 @@ export class LeaderboardService {
         where: { childId },
         include: { child: { select: { name: true, region: true } } },
       });
-      if (my) {
+      // Region filtri faol bo'lsa va bola o'sha viloyatda bo'lmasa, "Siz"ni
+      // ko'rsatmaymiz (uni o'zi tegishli bo'lmagan viloyat reytingida
+      // joylashtirish noto'g'ri bo'lardi).
+      const regionMismatch =
+        region != null && (my?.child.region ?? '') !== region;
+      if (my && !regionMismatch) {
         // List tartibiga mos ketma-ket o'rin (xp desc, childId asc tiebreaker).
         const before = await this.prisma.childProfile.count({
           where: {
@@ -162,12 +167,13 @@ export class LeaderboardService {
       if (idx >= 0) {
         currentChild = { rank: idx + 1, ...ranked[idx] };
       } else {
-        // Bu davrda XP yo'q — 0 bilan ko'rsatamiz (rank 0 = ro'yxatda yo'q).
+        // Bu davrda XP yo'q — 0 bilan (faqat region mos kelsa; aks holda
+        // boshqa viloyatda "Siz"ni ko'rsatmaymiz).
         const c = await this.prisma.child.findUnique({
           where: { id: childId },
           select: { name: true, region: true },
         });
-        if (c) {
+        if (c && (!region || (c.region ?? '') === region)) {
           currentChild = {
             rank: 0,
             childId,
