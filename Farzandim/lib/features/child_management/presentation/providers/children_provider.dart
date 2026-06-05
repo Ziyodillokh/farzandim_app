@@ -16,26 +16,36 @@ import 'package:farzandim/shared/models/result.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Pull-to-refresh / manual refresh trigger. `invalidate` o'rniga bu counter
+/// oshiriladi: `invalidate` provider'ni DISPOSE qilib oldingi qiymatni
+/// yo'qotadi (dashboard bir lahza bo'sh "add-child" flash beradi), counter esa
+/// provider'ni RECOMPUTE qiladi → oldingi ro'yxat saqlanib turadi
+/// (`copyWithPrevious`), shuning uchun ekran bo'shab ketmaydi.
+final childrenRefreshTickProvider = StateProvider<int>((_) => 0);
+
 /// Bolalar ro'yxati — Backend REST orqali.
 ///
 /// Auth bo'lmasa bo'sh ro'yxat qaytaradi.
 /// CRUD operatsiyadan keyin `ref.invalidate(childrenProvider)` chaqiriladi.
 final childrenProvider = StreamProvider<List<Child>>((ref) {
-  final backendAuth = ref.watch(backendAuthProvider);
-  if (backendAuth is AuthAuthenticated) {
-    return _backendChildrenStream(ref);
-  }
-  return Stream.value(const <Child>[]);
+  // FAQAT "authenticated" holati o'zgarsa qayta ishga tushadi. Optimistik
+  // startup'da auth ikki marta emit qiladi (cached → fresh user) — `.select`
+  // bo'lmasa har emission qayta-fetch qilib, bir lahza bo'sh ro'yxat → "yangi
+  // bola qo'shish" sahifasiga otib ketardi (regressiya). User obyekti
+  // yangilanishi endi qayta-fetch QILMAYDI.
+  final isAuthed =
+      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  ref.watch(childrenRefreshTickProvider); // manual refresh trigger
+  if (!isAuthed) return Stream.value(const <Child>[]);
+  return _backendChildrenStream(ref);
 });
 
-/// Backend REST'dan bolalarni o'qiydi.
+/// Backend REST'dan bolalarni o'qiydi. Xato YUTILMAYDI (`yield []` qilmaymiz) —
+/// StreamProvider xato holatida oldingi qiymatni saqlaydi (copyWithPrevious),
+/// shuning uchun qayta-fetch xato bersa dashboard bo'sh "flash" bermaydi.
 Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
   final repo = ref.watch(backendChildRepositoryProvider);
-  try {
-    yield await repo.getChildren();
-  } catch (_) {
-    yield const <Child>[];
-  }
+  yield await repo.getChildren();
 }
 
 /// Bolalar ro'yxati — sinxron access.

@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
@@ -35,17 +36,47 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final children = ref.watch(childrenListProvider);
+    final isAuthed =
+        ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+    final childrenAsync = ref.watch(childrenProvider);
+    final children = childrenAsync.valueOrNull;
+
+    // Auth tiklanmoqda yoki bolalar hali yuklanmoqda → spinner. Bu add-child
+    // sahifaga "o'zidan o'zi otib ketish" (bo'sh ro'yxat flash) muammosini
+    // bartaraf etadi: faqat haqiqatan bola yo'q (settled) bo'lganda
+    // "Bola qo'shing" ko'rsatiladi. Qayta-fetch paytida oxirgi ro'yxat
+    // (valueOrNull, copyWithPrevious) saqlanib turadi.
+    final Widget body;
+    if (!isAuthed || children == null) {
+      body = const _DashboardLoading();
+    } else if (children.isEmpty) {
+      body = childrenAsync.isLoading
+          ? const _DashboardLoading()
+          : const _EmptyState();
+    } else {
+      body = _DashboardBody(children: children);
+    }
 
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: GradientBackground(
-        child: SafeArea(
-          child: children.isEmpty
-              ? const _EmptyState()
-              : _DashboardBody(children: children),
-        ),
+        child: SafeArea(child: body),
       ),
+    );
+  }
+}
+
+// ════════════════════════ LOADING ════════════════════════
+
+/// Dashboard yuklanish holati — auth tiklanmoqda yoki bolalar kelmoqda.
+/// `_EmptyState` (add-child) o'rniga ko'rsatiladi, shunda bo'sh "flash" bo'lmaydi.
+class _DashboardLoading extends StatelessWidget {
+  const _DashboardLoading();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: CircularProgressIndicator(color: AppColors.primary),
     );
   }
 }
@@ -206,8 +237,11 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
   /// provayderlarini invalidate qilib, backend'dan qayta o'qiydi. Spinner
   /// yangi ma'lumot kelguncha (yoki 8s himoya) ko'rinib turadi.
   Future<void> _onRefresh(String childId) async {
+    // childrenProvider'ni INVALIDATE qilmaymiz — u dispose bo'lib ekran bir
+    // lahza bo'shab ("add-child" flash) ketardi. O'rniga counter'ni oshiramiz:
+    // provider RECOMPUTE bo'ladi, oxirgi ro'yxat saqlanib turadi.
+    ref.read(childrenRefreshTickProvider.notifier).state++;
     ref
-      ..invalidate(childrenProvider)
       ..invalidate(todayUsageProvider(childId))
       ..invalidate(installedAppsProvider(childId))
       ..invalidate(restrictionsProvider(childId))

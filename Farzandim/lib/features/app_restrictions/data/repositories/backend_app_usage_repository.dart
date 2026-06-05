@@ -67,36 +67,28 @@ class BackendAppUsageRepository {
       '${Uri.encodeComponent(packageName)}/icon';
 
   /// 7 kunlik kunlik totals — backend `/weekly` (system filtrlangan + UTC+5).
-  /// `endDate` faqat xato holatidagi fallback uchun (server o'zi hisoblaydi).
+  /// `endDate` API mosligi uchun saqlanadi (server o'zi hisoblaydi).
+  ///
+  /// **Xato YUTILMAYDI:** avval xatoda 7 kun "0" qaytarardi — bu polling
+  /// so'rovi tarmoq blip'ida ekran vaqtini "0 daqiqa"ga tushirib yuborardi
+  /// (regressiya). Endi rethrow qilamiz → StreamProvider oldingi qiymatni
+  /// saqlaydi (yoki polling halqasi shu siklni o'tkazib yuboradi).
   Future<List<DailyUsageTotal>> getWeeklyTotals({
     required String childId,
     required DateTime endDate,
   }) async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/children/$childId/app-usage/weekly',
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/children/$childId/app-usage/weekly',
+    );
+    final days = response.data?['days'] as List<dynamic>? ?? const [];
+    return days.map((d) {
+      final m = d as Map;
+      final date = DateTime.tryParse('${m['date']}') ?? DateTime.now();
+      return DailyUsageTotal(
+        date: date,
+        totalMs: (m['totalMs'] as num?)?.toInt() ?? 0,
       );
-      final days = response.data?['days'] as List<dynamic>? ?? const [];
-      return days.map((d) {
-        final m = d as Map;
-        final date =
-            DateTime.tryParse('${m['date']}') ?? DateTime.now();
-        return DailyUsageTotal(
-          date: date,
-          totalMs: (m['totalMs'] as num?)?.toInt() ?? 0,
-        );
-      }).toList();
-    } on DioException catch (e) {
-      debugPrint('BackendAppUsageRepository.getWeeklyTotals: $e');
-      final start = endDate.subtract(const Duration(days: 6));
-      return List.generate(
-        7,
-        (i) => DailyUsageTotal(
-          date: start.add(Duration(days: i)),
-          totalMs: 0,
-        ),
-      );
-    }
+    }).toList();
   }
 
   /// Toshkent (UTC+5) bugungi sanasi "YYYY-MM-DD".

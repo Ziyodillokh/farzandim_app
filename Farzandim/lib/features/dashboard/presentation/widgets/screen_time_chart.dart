@@ -19,10 +19,26 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final weeklyChildUsageProvider =
     StreamProvider.family<List<DailyUsageTotal>, String>((ref, childId) async* {
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-  yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+  // Birinchi yuklash. Xato bo'lsa AsyncLoading qoladi (_TimeCard "—" ko'rsatadi),
+  // polling keyin qayta urinadi.
+  try {
+    yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+  } catch (_) {
+    // birinchi fetch xato — pastdagi polling retry qiladi
+  }
+  // Har 30 sek realtime poll. Xato (tarmoq blip) bo'lsa YIELD QILMAYMIZ —
+  // StreamProvider oxirgi qiymatni saqlaydi, shuning uchun ekran vaqti
+  // "0 daqiqa"ga tushib qolmaydi (avvalgi regressiya).
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
-    yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
+    try {
+      yield await repo.getWeeklyTotals(
+        childId: childId,
+        endDate: DateTime.now(),
+      );
+    } catch (_) {
+      // skip — oxirgi qiymat saqlanadi
+    }
   }
 });
 

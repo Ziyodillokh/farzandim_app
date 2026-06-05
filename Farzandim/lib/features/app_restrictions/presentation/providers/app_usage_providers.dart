@@ -20,8 +20,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// foydalanuvchi 30 sek ichida ko'radi).
 final todayUsageProvider =
     StreamProvider.family<AppUsageDay?, String>((ref, childId) async* {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) {
+  final isAuthed =
+      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  if (!isAuthed) {
     yield null;
     return;
   }
@@ -41,8 +42,9 @@ final todayUsageProvider =
 final installedAppsProvider =
     StreamProvider.family<List<AppUsageEntry>, String>(
         (ref, childId) async* {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) {
+  final isAuthed =
+      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  if (!isAuthed) {
     yield const <AppUsageEntry>[];
     return;
   }
@@ -67,8 +69,9 @@ final last7DaysUsageProvider =
 final restrictionsProvider =
     StreamProvider.family<List<AppRestriction>, String>(
         (ref, childId) async* {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) {
+  final isAuthed =
+      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  if (!isAuthed) {
     yield const <AppRestriction>[];
     return;
   }
