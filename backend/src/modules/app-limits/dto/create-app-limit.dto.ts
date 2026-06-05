@@ -1,9 +1,12 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { Type } from 'class-transformer';
 import {
   IsBoolean,
+  IsNumber,
   IsOptional,
   IsString,
   MaxLength,
+  Min,
   MinLength,
 } from 'class-validator';
 
@@ -23,18 +26,29 @@ export class CreateAppLimitDto {
   @MaxLength(255)
   appName?: string;
 
+  // DIQQAT: class-validator dekoratori SHART. `whitelist: true` dekoratorsiz
+  // maydonni o'chiradi va `forbidNonWhitelisted` "property dailyLimitMs should
+  // not exist" 400 qaytaradi (avval shu sabab limit umuman saqlanmasdi).
+  // `@Type(() => Number)` raqamli string'ni ham qabul qiladi (transform: true).
+  // 0 = bloklash.
   @ApiProperty({
-    description: 'Daily limit in milliseconds (number or numeric string)',
+    description: 'Daily limit in milliseconds (0 = block)',
     example: 900000,
   })
-  dailyLimitMs: number | string;
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  dailyLimitMs: number;
 
   @ApiPropertyOptional({
-    description: 'Weekly limit in milliseconds (number or numeric string)',
+    description: 'Weekly limit in milliseconds',
     example: 3600000,
   })
   @IsOptional()
-  weeklyLimitMs?: number | string;
+  @Type(() => Number)
+  @IsNumber()
+  @Min(0)
+  weeklyLimitMs?: number;
 
   @ApiPropertyOptional({ default: true })
   @IsBoolean()
