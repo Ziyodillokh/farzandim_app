@@ -52,6 +52,16 @@ export class AuthService {
     private readonly telegramService: TelegramService,
   ) {}
 
+  // ── Device-link (QR orqali 2-qurilma ulash) ──
+  // Qisqa muddatli kodlar in-memory saqlanadi (DB kerak emas — backend bitta
+  // instance, 5 daqiqalik oyna; restart'da yo'qolsa zarar yo'q).
+  private readonly _deviceLinks = new Map<
+    string,
+    { userId: string; expiresAt: number }
+  >();
+  private static readonly DEVICE_LINK_TTL_MS = 5 * 60 * 1000;
+  private static readonly MAX_PARENT_DEVICES = 2;
+
   /* ------------------------------------------------------------------ */
   /*  Token helpers                                                      */
   /* ------------------------------------------------------------------ */
@@ -379,6 +389,89 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Device-link — QR orqali ikkinchi qurilma ulash                      */
+  /* ------------------------------------------------------------------ */
+
+  /** Eskirgan kodlarni tozalaydi. */
+  private pruneDeviceLinks(): void {
+    const now = Date.now();
+    for (const [code, v] of this._deviceLinks) {
+      if (v.expiresAt < now) this._deviceLinks.delete(code);
+    }
+  }
+
+  /**
+   * Mas'ul qurilmada chaqiriladi — QR uchun qisqa muddatli kod yaratadi.
+   * Bu kodni faqat shu akkaunt egasi yaratadi → boshqa qurilma uni
+   * skanerlab kirsa, bu egasining ruxsati hisoblanadi.
+   */
+  createDeviceLink(userId: string): { code: string; expiresInSec: number } {
+    this.pruneDeviceLinks();
+    const code = randomUUID().replace(/-/g, '');
+    this._deviceLinks.set(code, {
+      userId,
+      expiresAt: Date.now() + AuthService.DEVICE_LINK_TTL_MS,
+    });
+    return {
+      code,
+      expiresInSec: Math.floor(AuthService.DEVICE_LINK_TTL_MS / 1000),
+    };
+  }
+
+  /**
+   * Yangi qurilma QR kodni skanerlab kiradi — parent tokenlarini oladi.
+   * Maks 2 qurilma: mas'ul (eng eski sessiya) saqlanadi; agar allaqachon
+   * 2 ta faol sessiya bo'lsa, egasidan boshqa hammasi chiqariladi va yangi
+   * qurilma 2-chi bo'ladi (egasi QR yaratgani uchun bu uning tasdiqi).
+   */
+  async redeemDeviceLink(
+    code: string,
+    device: DeviceMeta = {},
+    reqMeta?: ReqMeta,
+  ) {
+    this.pruneDeviceLinks();
+    const entry = this._deviceLinks.get(code);
+    if (!entry || entry.expiresAt < Date.now()) {
+      throw new UnauthorizedException('QR kod yaroqsiz yoki muddati tugagan');
+    }
+    this._deviceLinks.delete(code); // bir martalik
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: entry.userId },
+    });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Akkaunt topilmadi yoki bloklangan');
+    }
+
+    // Maks 2 qurilma — egasidan (eng eski sessiya) boshqasini chiqaramiz.
+    const active = await this.prisma.userSession.findMany({
+      where: { userId: user.id, revokedAt: null },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true },
+    });
+    if (active.length >= AuthService.MAX_PARENT_DEVICES) {
+      const toRevoke = active.slice(1).map((s) => s.id); // egasi (index 0) qoladi
+      if (toRevoke.length > 0) {
+        await this.prisma.userSession.updateMany({
+          where: { id: { in: toRevoke } },
+          data: { revokedAt: new Date() },
+        });
+      }
+    }
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      'DEVICE_LINK_REDEEM',
+      user.id,
+      { platform: device.platform },
+      reqMeta,
+    );
+
+    return this.buildAuthResponse(user, device, reqMeta);
   }
 
   /* ------------------------------------------------------------------ */

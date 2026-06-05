@@ -24,6 +24,7 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { RedeemDeviceLinkDto } from './dto/device-link.dto';
 import { Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
@@ -126,6 +127,41 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   async logout(@CurrentUser() user: JwtPayload) {
     return this.authService.logout(user.userId, user.sid);
+  }
+
+  /* ──────────────── Device-link (QR 2-qurilma) ──────────────── */
+
+  @Post('device-link/create')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "QR uchun qisqa muddatli ulanish kodi yaratish (mas'ul qurilma)",
+  })
+  @ApiResponse({ status: 201, description: 'Kod + amal qilish muddati' })
+  async createDeviceLink(@CurrentUser() user: JwtPayload) {
+    return this.authService.createDeviceLink(user.userId);
+  }
+
+  @Post('device-link/redeem')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'QR kodni skanerlab ikkinchi qurilma sifatida kirish',
+  })
+  @ApiResponse({ status: 200, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 401, description: 'Kod yaroqsiz yoki muddati tugagan' })
+  async redeemDeviceLink(
+    @Body() dto: RedeemDeviceLinkDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.redeemDeviceLink(
+      dto.code,
+      { deviceModel: dto.deviceModel, platform: dto.platform },
+      {
+        ip: req.ip,
+        headers: req.headers as Record<string, string | string[] | undefined>,
+      },
+    );
   }
 
   /* ──────────────── Faol sessiyalar ──────────────── */
