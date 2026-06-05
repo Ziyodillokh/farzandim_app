@@ -92,7 +92,9 @@ const _authRoutes = <String>[
   AppRoutes.signIn,
   AppRoutes.signUp,
   AppRoutes.forgotPassword,
-  AppRoutes.addAccount,
+  // DIQQAT: addAccount auth route EMAS — u mas'ul (kirgan) qurilmada
+  // "Faol seanslar → Boshqa hisob qo'shish" orqali QR yaratish uchun
+  // ochiladi. _authRoutes'da bo'lsa, kirgan user dashboard'ga otib ketardi.
 ];
 
 /// Firebase + Backend auth providerlarga listen qilib `notifyListeners`

@@ -59,7 +59,9 @@ class RestrictionService : Service() {
         private const val TAG = "RestrictionService"
         private const val CHANNEL_ID = "farzandim_restriction"
         private const val NOTIFICATION_ID = 4242
-        private const val POLL_INTERVAL_MS = 3000L
+        // 1 sek — bloklangan ilova ochilganda overlay tezroq chiqsin
+        // (avval 3 sek edi → "sal kechroq ochilyapti" muammosi).
+        private const val POLL_INTERVAL_MS = 1000L
 
         const val ACTION_START = "com.farzandim.action.START_RESTRICTION"
         const val ACTION_STOP = "com.farzandim.action.STOP_RESTRICTION"
@@ -262,14 +264,16 @@ class RestrictionService : Service() {
      */
     private fun isUnknownSource(pkg: String): Boolean {
         unknownSourceCache[pkg]?.let { return it }
-        val unknown = try {
+        return try {
             val pm = packageManager
             val ai = pm.getApplicationInfo(pkg, 0)
             val isSystem = (ai.flags and
                 (ApplicationInfo.FLAG_SYSTEM or
                     ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0
+            val unknown: Boolean
             if (isSystem) {
-                false
+                unknown = false
+                Log.d(TAG, "install-source: $pkg = SYSTEM (ruxsat)")
             } else {
                 val installer: String? =
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
@@ -278,13 +282,19 @@ class RestrictionService : Service() {
                         @Suppress("DEPRECATION")
                         pm.getInstallerPackageName(pkg)
                     }
-                installer == null || installer !in ALLOWED_INSTALLERS
+                unknown = installer == null || installer !in ALLOWED_INSTALLERS
+                Log.d(
+                    TAG,
+                    "install-source: $pkg installer=$installer unknown=$unknown",
+                )
             }
+            // Faqat MUVAFFAQIYATLI aniqlashda keshlaymiz — xato bo'lsa
+            // keshlamaymiz (keyingi pollda qayta urinadi, fail-open emas).
+            unknownSourceCache[pkg] = unknown
+            unknown
         } catch (e: Exception) {
+            Log.w(TAG, "install-source aniqlanmadi: $pkg — ${e.message}")
             false
-        }
-        unknownSourceCache[pkg] = unknown
-        return unknown
     }
 
     private fun readBlockedPackages(): Set<String> {

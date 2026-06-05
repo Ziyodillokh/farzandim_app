@@ -64,10 +64,12 @@ class RestrictionsSyncService {
     debugPrint('RestrictionsSync: start $childId');
 
     unawaited(_syncNow());
-    // 1 daqiqa — jadval oynasi chegaralarida (masalan 22:00 boshlanish)
-    // blok ~1 daqiqada kuchga kiradi (avval 5 daqiqa edi — juda sekin).
+    // 30 sek — background isolate'da WS yo'q, shu sababli periodic asosiy
+    // manba. Blok/limit shu muddatda kuchga kiradi (avval 1 daqiqa edi →
+    // "1 daqiqadan keyin" sekin sezilardi). Foreground'da WS event darhol
+    // sync qiladi.
     _syncTimer = Timer.periodic(
-      const Duration(minutes: 1),
+      const Duration(seconds: 30),
       (_) => unawaited(_syncNow()),
     );
   }
