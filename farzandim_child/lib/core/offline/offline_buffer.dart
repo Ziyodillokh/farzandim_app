@@ -196,7 +196,7 @@ class OfflineBuffer {
           final code = e.response?.statusCode ?? 0;
           if (code >= 400 && code < 500) {
             debugPrint(
-              'OfflineBuffer.flush: ${req.endpoint} ${code} — drop',
+              'OfflineBuffer.flush: ${req.endpoint} $code — drop',
             );
             continue;
           }

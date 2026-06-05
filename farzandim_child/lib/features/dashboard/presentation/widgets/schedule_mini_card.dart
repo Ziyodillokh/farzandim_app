@@ -42,8 +42,9 @@ class ScheduleMiniCard extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: context.adaptive.border, width: 0.5),
         ),
         child: Row(
           children: [
@@ -56,7 +57,7 @@ class ScheduleMiniCard extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(12),
               ),
               child: const Icon(
-                Icons.calendar_today,
+                Icons.calendar_today_rounded,
                 color: AppColors.primary,
                 size: 22,
               ),
@@ -71,8 +72,8 @@ class ScheduleMiniCard extends ConsumerWidget {
                     'dashboard.scheduleMiniTitle'.tr(
                       namedArgs: {'count': '${today.length}'},
                     ),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.adaptive.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -82,17 +83,17 @@ class ScheduleMiniCard extends ConsumerWidget {
                     subtitle,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.adaptive.textSecondary,
                       fontSize: 12,
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               AppIcons.chevronRight,
-              color: AppColors.textTertiary,
+              color: context.adaptive.textTertiary,
               size: 22,
             ),
           ],

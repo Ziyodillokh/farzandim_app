@@ -17,7 +17,6 @@
 // hamma ekranlarda ko'rinishi uchun (Spotify uslubi). Audio yo'q
 // bo'lsa SizedBox.shrink — joy band qilmaydi.
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
@@ -44,10 +43,10 @@ class ChildBottomNavigation extends ConsumerWidget {
       children: [
         const MiniAudioPlayer(),
         Container(
-          decoration: const BoxDecoration(
-            color: AppColors.surface,
+          decoration: BoxDecoration(
+            color: context.adaptive.bgSurface,
             border: Border(
-              top: BorderSide(color: AppColors.border),
+              top: BorderSide(color: context.adaptive.border),
             ),
           ),
           child: SafeArea(
@@ -59,6 +58,7 @@ class ChildBottomNavigation extends ConsumerWidget {
                 children: [
                   _NavItem(
                     icon: Icons.bar_chart_outlined,
+                    activeIcon: Icons.bar_chart_rounded,
                     active: location == '/dashboard',
                     onTap: () {
                       if (location != '/dashboard') {
@@ -66,26 +66,38 @@ class ChildBottomNavigation extends ConsumerWidget {
                       }
                     },
                   ),
+                  // Content hub — videolar + audiokitoblar + kitoblar
+                  // bitta tab ostida birlashtirildi. /content ekranida
+                  // TabBar orqali bo'limlar tanlanadi.
                   _NavItem(
-                    icon: Icons.ondemand_video,
-                    active: location == '/videos',
+                    icon: Icons.play_circle_outline,
+                    activeIcon: Icons.play_circle_fill_rounded,
+                    active: location == '/content' ||
+                        location == '/videos' ||
+                        location == '/audiobooks' ||
+                        location == '/books',
                     onTap: () {
-                      if (location != '/videos') {
-                        context.push('/videos');
+                      if (location != '/content') {
+                        context.push('/content');
                       }
                     },
                   ),
+                  // Messanger (o'rtada) — dashboard kartochkasi olib
+                  // tashlandi, endi alohida tab sifatida turadi.
                   _NavItem(
-                    icon: AppIcons.speaker,
-                    active: location == '/audiobooks',
+                    icon: Icons.chat_bubble_outline_rounded,
+                    activeIcon: Icons.chat_bubble_rounded,
+                    active: location == '/voice-chat',
                     onTap: () {
-                      if (location != '/audiobooks') {
-                        context.push('/audiobooks');
+                      if (location != '/voice-chat') {
+                        context.push('/voice-chat');
                       }
                     },
                   ),
+                  // Konkurslar — alohida tab (avvalgi joyiga qaytarildi).
                   _NavItem(
-                    icon: AppIcons.trophy,
+                    icon: Icons.emoji_events_outlined,
+                    activeIcon: Icons.emoji_events_rounded,
                     active: location == '/contests',
                     onTap: () {
                       if (location != '/contests') {
@@ -94,7 +106,8 @@ class ChildBottomNavigation extends ConsumerWidget {
                     },
                   ),
                   _NavItem(
-                    icon: AppIcons.profile,
+                    icon: Icons.person_outline_rounded,
+                    activeIcon: Icons.person_rounded,
                     active: location == '/profile',
                     onTap: () {
                       if (location != '/profile') {
@@ -119,13 +132,13 @@ class _NavItem extends StatelessWidget {
     required this.icon,
     required this.active,
     required this.onTap,
-    this.badgeCount = 0,
+    this.activeIcon,
   });
 
   final IconData icon;
+  final IconData? activeIcon;
   final bool active;
   final VoidCallback onTap;
-  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -142,59 +155,27 @@ class _NavItem extends StatelessWidget {
         height: 56,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: active
-              // ignore: deprecated_member_use
-              ? AppColors.primary.withOpacity(0.15)
-              : Colors.transparent,
+          gradient: active
+              ? const LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    Color(0x335ECB44),
+                    Color(0x22169E45),
+                  ],
+                )
+              : null,
+          color: active ? null : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: AnimatedScale(
           duration: const Duration(milliseconds: 200),
           curve: Curves.easeOutBack,
           scale: active ? 1.15 : 1.0,
-          child: Stack(
-            clipBehavior: Clip.none,
-            alignment: Alignment.center,
-            children: [
-              Icon(
-                icon,
-                color: active ? AppColors.primary : AppColors.textTertiary,
-                size: 28,
-              ),
-              if (badgeCount > 0)
-                Positioned(
-                  top: -2,
-                  right: -6,
-                  child: Container(
-                    constraints: const BoxConstraints(
-                      minWidth: 18,
-                      minHeight: 18,
-                    ),
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 5,
-                      vertical: 2,
-                    ),
-                    decoration: BoxDecoration(
-                      color: AppColors.error,
-                      borderRadius: BorderRadius.circular(999),
-                      border: Border.all(
-                        color: AppColors.surface,
-                        width: 1.5,
-                      ),
-                    ),
-                    child: Text(
-                      badgeCount > 99 ? '99+' : '$badgeCount',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 10,
-                        fontWeight: FontWeight.bold,
-                        height: 1.0,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
+          child: Icon(
+            active ? (activeIcon ?? icon) : icon,
+            color: active ? AppColors.primary : context.adaptive.textTertiary,
+            size: 28,
           ),
         ),
       ),

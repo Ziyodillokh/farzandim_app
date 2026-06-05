@@ -180,8 +180,13 @@ class AppTheme {
   }
 
   // ════════════════════════════════════════════════════════════════════
-  // DARK THEME (fallback — themeMode.system yoki toggle uchun)
+  // DARK THEME — Telegram night style (chuqur tunqorong'i + yashil aksent)
   // ════════════════════════════════════════════════════════════════════
+  //
+  // Light theme bilan toza parallel: bir xil 60+ propertilar to'ldirildi.
+  // Foydalanuvchi Settings'da dark mode tanlaganda butun ilova yaxlit
+  // ko'rinishda bo'ladi (har bir Card/Button/Input/Nav alohida
+  // yangilanmagani uchun "yarim dark" muammosi yo'qoladi).
   static ThemeData get darkTheme {
     return ThemeData(
       useMaterial3: true,
@@ -191,30 +196,44 @@ class AppTheme {
 
       colorScheme: const ColorScheme.dark(
         primary: AppColors.primary,
-        onPrimary: AppColors.textOnPrimary,
+        onPrimary: Colors.white,
         secondary: AppColors.secondary,
+        onSecondary: Colors.white,
         tertiary: AppColors.accent,
-        surface: AppColors.bgCardDark,
-        onSurface: Colors.white,
+        onTertiary: Colors.black,
+        surface: AppColors.bgSurfaceDark,
+        onSurface: AppColors.textPrimaryDark,
+        surfaceContainer: AppColors.bgCardDark,
+        surfaceContainerHigh: AppColors.bgCardDark,
         error: AppColors.danger,
+        onError: Colors.white,
+        outline: AppColors.borderDark,
+        outlineVariant: AppColors.dividerDark,
       ),
 
-      textTheme: _interTextTheme(Colors.white, Colors.white70),
+      textTheme: _interTextTheme(
+        AppColors.textPrimaryDark,
+        AppColors.textSecondaryDark,
+      ),
 
+      // ─── AppBar ───
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.bgPrimaryDark,
-        foregroundColor: Colors.white,
+        foregroundColor: AppColors.textPrimaryDark,
         elevation: 0,
+        scrolledUnderElevation: 0,
         centerTitle: true,
         titleTextStyle: GoogleFonts.inter(
           fontSize: 20,
           fontWeight: FontWeight.w700,
-          color: Colors.white,
+          color: AppColors.textPrimaryDark,
         ),
+        iconTheme: const IconThemeData(color: AppColors.textPrimaryDark),
       ),
 
+      // ─── Card ───
       cardTheme: CardThemeData(
-        color: AppColors.bgCardDark,
+        color: AppColors.bgSurfaceDark,
         elevation: 0,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(16),
@@ -222,6 +241,186 @@ class AppTheme {
         margin: EdgeInsets.zero,
       ),
 
+      dividerTheme: const DividerThemeData(
+        color: AppColors.dividerDark,
+        thickness: 1,
+        space: 1,
+      ),
+
+      // ─── Bottom Navigation ───
+      bottomNavigationBarTheme: const BottomNavigationBarThemeData(
+        backgroundColor: AppColors.bgPrimaryDark,
+        selectedItemColor: AppColors.primary,
+        unselectedItemColor: AppColors.textTertiaryDark,
+        type: BottomNavigationBarType.fixed,
+        elevation: 0,
+      ),
+
+      // ─── Tugmalar ───
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          minimumSize: const Size(64, _minButtonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+          ),
+          elevation: 0,
+        ),
+      ),
+
+      outlinedButtonTheme: OutlinedButtonThemeData(
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          minimumSize: const Size(64, _minButtonHeight),
+          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 14),
+          side: const BorderSide(color: AppColors.primary, width: 2),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
+          ),
+          textStyle: GoogleFonts.inter(
+            fontSize: 18,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+      ),
+
+      textButtonTheme: TextButtonThemeData(
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          minimumSize: const Size(48, _minInteractiveHeight),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          textStyle: GoogleFonts.inter(
+            fontSize: 17,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+      ),
+
+      iconButtonTheme: IconButtonThemeData(
+        style: IconButton.styleFrom(
+          foregroundColor: AppColors.textPrimaryDark,
+          minimumSize: const Size(_minInteractiveHeight, _minInteractiveHeight),
+        ),
+      ),
+
+      // ─── Input fields ───
+      inputDecorationTheme: InputDecorationTheme(
+        filled: true,
+        fillColor: AppColors.bgCardDark,
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderDark),
+        ),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.borderDark),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(12),
+          borderSide: const BorderSide(color: AppColors.primary, width: 2),
+        ),
+        labelStyle: const TextStyle(color: AppColors.textSecondaryDark),
+        hintStyle: const TextStyle(color: AppColors.textTertiaryDark),
+      ),
+
+      // ─── Dialog ───
+      dialogTheme: DialogThemeData(
+        backgroundColor: AppColors.bgSurfaceDark,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+        ),
+        titleTextStyle: GoogleFonts.inter(
+          fontSize: 20,
+          fontWeight: FontWeight.w700,
+          color: AppColors.textPrimaryDark,
+        ),
+        contentTextStyle: GoogleFonts.inter(
+          fontSize: 15,
+          color: AppColors.textSecondaryDark,
+        ),
+      ),
+
+      // ─── BottomSheet ───
+      bottomSheetTheme: const BottomSheetThemeData(
+        backgroundColor: AppColors.bgSurfaceDark,
+        modalBackgroundColor: AppColors.bgSurfaceDark,
+        elevation: 0,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+        ),
+      ),
+
+      // ─── SnackBar ───
+      snackBarTheme: SnackBarThemeData(
+        backgroundColor: AppColors.bgCardDark,
+        contentTextStyle: GoogleFonts.inter(
+          color: AppColors.textPrimaryDark,
+          fontSize: 14,
+        ),
+        actionTextColor: AppColors.primary,
+        behavior: SnackBarBehavior.floating,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+
+      // ─── Chip ───
+      chipTheme: ChipThemeData(
+        backgroundColor: AppColors.bgCardDark,
+        selectedColor: AppColors.primary,
+        labelStyle: const TextStyle(color: AppColors.textPrimaryDark),
+        secondaryLabelStyle: const TextStyle(color: Colors.white),
+        side: const BorderSide(color: AppColors.borderDark),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(12),
+        ),
+      ),
+
+      // ─── Switch / Checkbox ───
+      switchTheme: SwitchThemeData(
+        thumbColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? Colors.white
+              : AppColors.textTertiaryDark,
+        ),
+        trackColor: WidgetStateProperty.resolveWith(
+          (states) => states.contains(WidgetState.selected)
+              ? AppColors.primary
+              : AppColors.bgCardDark,
+        ),
+        trackOutlineColor: WidgetStateProperty.all(AppColors.borderDark),
+      ),
+
+      // ─── ListTile ───
+      listTileTheme: const ListTileThemeData(
+        iconColor: AppColors.textSecondaryDark,
+        textColor: AppColors.textPrimaryDark,
+      ),
+
+      // ─── Tab ───
+      tabBarTheme: TabBarThemeData(
+        labelColor: AppColors.primary,
+        unselectedLabelColor: AppColors.textSecondaryDark,
+        indicatorColor: AppColors.primary,
+        labelStyle: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+        unselectedLabelStyle: GoogleFonts.inter(
+          fontSize: 15,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+
+      // ─── Page transitions ───
       pageTransitionsTheme: const PageTransitionsTheme(
         builders: {
           TargetPlatform.android: ZoomPageTransitionsBuilder(),

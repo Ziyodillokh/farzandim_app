@@ -13,6 +13,7 @@ class SectionHeader extends StatelessWidget {
   const SectionHeader({
     required this.title,
     this.icon,
+    this.iconColor,
     this.actionLabel,
     this.onAction,
     super.key,
@@ -20,11 +21,13 @@ class SectionHeader extends StatelessWidget {
 
   final String title;
   final IconData? icon;
+  final Color? iconColor;
   final String? actionLabel;
   final VoidCallback? onAction;
 
   @override
   Widget build(BuildContext context) {
+    final color = iconColor ?? AppColors.primary;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
@@ -32,14 +35,23 @@ class SectionHeader extends StatelessWidget {
           child: Row(
             children: [
               if (icon != null) ...[
-                Icon(icon, color: AppColors.primary, size: 22),
+                Container(
+                  width: 28,
+                  height: 28,
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: color.withOpacity(0.15),
+                    shape: BoxShape.circle,
+                  ),
+                  child: Icon(icon, color: color, size: 16),
+                ),
                 const SizedBox(width: 8),
               ],
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.adaptive.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),

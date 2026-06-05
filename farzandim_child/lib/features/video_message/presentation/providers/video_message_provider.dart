@@ -7,6 +7,7 @@
 
 import 'dart:async';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -116,6 +117,52 @@ class VideoMessageUploadNotifier extends StateNotifier<UploadState> {
   VideoMessageUploadNotifier(this._ref) : super(const UploadState());
 
   final Ref _ref;
+
+  /// Web variant — fayl tizimisiz. Camera plugin'dan kelgan baytlarni
+  /// to'g'ridan-to'g'ri yuboradi (dart:io File ishlatmaydi).
+  Future<bool> sendBytes({
+    required Uint8List bytes,
+    required int durationSeconds,
+    String filename = 'video.mp4',
+  }) async {
+    final pairing = _ref.read(pairingStateProvider);
+    if (!pairing.isPaired ||
+        pairing.parentUid == null ||
+        pairing.childId == null) {
+      state = state.copyWith(
+        status: UploadStatus.error,
+        errorMessage: 'Pair qilingan emas',
+      );
+      return false;
+    }
+    state = const UploadState(status: UploadStatus.uploading, progress: 0.0);
+    try {
+      final id = await _ref
+          .read(backendVideoMessageRepositoryProvider)
+          .sendMessageBytes(
+            receiverId: pairing.parentUid!,
+            bytes: bytes,
+            filename: filename,
+            durationSeconds: durationSeconds,
+            onProgress: (p) {
+              state = state.copyWith(progress: p);
+            },
+          );
+      _ref.invalidate(videoMessagesProvider);
+      state = state.copyWith(
+        status: UploadStatus.sent,
+        progress: 1.0,
+        lastMessageId: id,
+      );
+      return true;
+    } catch (e) {
+      state = state.copyWith(
+        status: UploadStatus.error,
+        errorMessage: '$e',
+      );
+      return false;
+    }
+  }
 
   /// Video yuborish. `requestId` berilsa — Parent so'roviga javob deb
   /// hisoblanadi va `video_requests/{id}.status = 'completed'` yoziladi.

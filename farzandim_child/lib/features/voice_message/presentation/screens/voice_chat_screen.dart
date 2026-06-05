@@ -27,6 +27,7 @@ import 'package:farzandim_child/features/voice_message/presentation/widgets/roun
 import 'package:farzandim_child/features/voice_message/presentation/widgets/round_video_recorder.dart';
 import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -270,8 +271,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (xfile == null) return;
     if (!mounted) return;
 
-    final original = File(xfile.path);
-
     // Compress UI feedback
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(
@@ -293,47 +292,72 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ),
     );
 
-    File fileToUpload = original;
-    int? durationSeconds;
-    try {
-      final info = await VideoCompress.compressVideo(
-        original.path,
-        quality: VideoQuality.LowQuality,
-        deleteOrigin: false,
-        includeAudio: true,
-      );
-      if (info != null && info.path != null) {
-        fileToUpload = File(info.path!);
-        durationSeconds = info.duration != null
-            ? (info.duration! / 1000).round()
-            : null;
-        debugPrint(
-          'VideoCompress: ${original.lengthSync()} → ${fileToUpload.lengthSync()} bytes',
-        );
-      }
-    } catch (e) {
-      debugPrint('VideoCompress xato — original yuborilmoqda: $e');
-    }
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
-
-    final ok =
-        await ref.read(videoMessageUploadProvider.notifier).send(
-              videoFile: fileToUpload,
-              durationSeconds: durationSeconds ?? 0,
+    bool ok;
+    // ─── Web preview ─────────────────────────────────────────────────
+    // dart:io File va video_compress paketlari web'da ishlamaydi
+    // (UnsupportedError). XFile baytlarini to'g'ridan-to'g'ri yuboramiz.
+    if (kIsWeb) {
+      try {
+        final bytes = await xfile.readAsBytes();
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        // Brauzer kamera Chrome'da WebM beradi. XFile.name ba'zan
+        // kengaytmasiz keladi, shu sababli majburiy .webm qo'yamiz.
+        final rawName = xfile.name;
+        final hasExt = RegExp(r'\.[a-zA-Z0-9]{2,5}$').hasMatch(rawName);
+        final filename = hasExt ? rawName : '$rawName.webm';
+        ok = await ref.read(videoMessageUploadProvider.notifier).sendBytes(
+              bytes: bytes,
+              durationSeconds: 0,
+              filename: filename,
             );
+      } catch (e) {
+        if (!mounted) return;
+        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Video yuborilmadi: $e')),
+        );
+        return;
+      }
+    } else {
+      // ─── Mobile (Android/iOS) ──────────────────────────────────────
+      final original = File(xfile.path);
+      File fileToUpload = original;
+      int? durationSeconds;
+      try {
+        final info = await VideoCompress.compressVideo(
+          original.path,
+          quality: VideoQuality.LowQuality,
+          deleteOrigin: false,
+          includeAudio: true,
+        );
+        if (info != null && info.path != null) {
+          fileToUpload = File(info.path!);
+          durationSeconds = info.duration != null
+              ? (info.duration! / 1000).round()
+              : null;
+          debugPrint(
+            'VideoCompress: ${original.lengthSync()} → ${fileToUpload.lengthSync()} bytes',
+          );
+        }
+      } catch (e) {
+        debugPrint('VideoCompress xato — original yuborilmoqda: $e');
+      }
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+
+      ok = await ref.read(videoMessageUploadProvider.notifier).send(
+            videoFile: fileToUpload,
+            durationSeconds: durationSeconds ?? 0,
+          );
+    }
 
     if (!mounted) return;
 
     if (ok) {
-      try {
-        await original.delete();
-      } catch (_) {}
-      if (fileToUpload.path != original.path) {
-        try {
-          await fileToUpload.delete();
-        } catch (_) {}
-      }
+      // Mobile'da vaqtinchalik fayllarni tozalaymiz (web'da fayl yo'q).
+      // (Yuqoridagi mobile branch ichida `original` va `fileToUpload`
+      // lokal aniqlangan — bu yerga kelmagan.)
       ref.read(videoMessageUploadProvider.notifier).reset();
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
@@ -388,9 +412,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final isVideoUploading = videoUpload == UploadStatus.uploading;
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
+      backgroundColor: context.adaptive.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundBottom,
+        backgroundColor: context.adaptive.bgPrimary,
+        foregroundColor: context.adaptive.textPrimary,
         elevation: 0,
         title: Row(
           children: [
@@ -407,8 +432,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
             // umumiy messanger ekran, faqat sub'ekt nomi ko'rinadi.
             Text(
               'voiceChat.headerParent'.tr(),
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: context.adaptive.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
               ),
@@ -578,12 +603,9 @@ class _ChatInputBarState extends State<_ChatInputBar> {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: AppColors.backgroundBottom,
+        color: context.adaptive.bgPrimary,
         border: Border(
-          top: BorderSide(
-            // ignore: deprecated_member_use
-            color: AppColors.textSecondary.withOpacity(0.1),
-          ),
+          top: BorderSide(color: context.adaptive.border, width: 0.5),
         ),
       ),
       child: SafeArea(
@@ -616,8 +638,12 @@ class _ChatInputBarState extends State<_ChatInputBar> {
                   padding: const EdgeInsets.symmetric(
                       horizontal: 16, vertical: 4),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.adaptive.bgCard,
                     borderRadius: BorderRadius.circular(24),
+                    border: Border.all(
+                      color: context.adaptive.border,
+                      width: 0.5,
+                    ),
                   ),
                   child: TextField(
                     controller: _textController,
@@ -628,20 +654,22 @@ class _ChatInputBarState extends State<_ChatInputBar> {
                     textInputAction: TextInputAction.send,
                     keyboardType: TextInputType.multiline,
                     onSubmitted: (_) => _sendText(),
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.adaptive.textPrimary,
                       fontSize: 15,
                     ),
-                    decoration: const InputDecoration(
+                    decoration: InputDecoration(
                       hintText: 'Xabar yozing…',
                       hintStyle: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: context.adaptive.textTertiary,
                         fontSize: 15,
                       ),
+                      filled: false,
                       border: InputBorder.none,
                       enabledBorder: InputBorder.none,
                       focusedBorder: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 10),
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 10),
                       isCollapsed: true,
                     ),
                   ),
@@ -831,8 +859,9 @@ class _RecordingIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: Row(
         children: [
@@ -847,11 +876,11 @@ class _RecordingIndicator extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             _format(elapsedSeconds),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.adaptive.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              fontFeatures: [FontFeature.tabularFigures()],
+              fontFeatures: const [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(width: 12),
@@ -916,6 +945,7 @@ class _VideoRecordButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = context.adaptive.isDark;
     return GestureDetector(
       onTap: onPressed,
       child: Container(
@@ -923,13 +953,18 @@ class _VideoRecordButton extends StatelessWidget {
         height: 56,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              AppColors.surface,
-              AppColors.surfaceVariant,
-            ],
+            colors: isDark
+                ? const [
+                    AppColors.bgCardDark,
+                    AppColors.bgSurfaceDark,
+                  ]
+                : const [
+                    AppColors.surface,
+                    AppColors.surfaceVariant,
+                  ],
           ),
           border: Border.all(
             // ignore: deprecated_member_use

@@ -71,6 +71,70 @@ class BackendVideoMessageRepository {
         if (durationSeconds != null) 'durationSeconds': durationSeconds,
         'file': await MultipartFile.fromFile(videoFile.path),
       });
+      return _post(formData, onProgress);
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVideoMessageRepository.sendMessage: '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
+  /// Web-friendly variant — fayl tizimisiz (dart:io File yo'q).
+  /// Camera plugin'dan kelgan `Uint8List` baytlarini to'g'ridan-to'g'ri
+  /// yuboradi. Mobile'da ham ishlaydi, lekin asosan web preview uchun.
+  Future<String?> sendMessageBytes({
+    required String receiverId,
+    required Uint8List bytes,
+    String filename = 'video.webm',
+    String? mimeType,
+    int? durationSeconds,
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      // Brauzer kamera odatda WebM beradi (Chrome MediaRecorder default).
+      // Filename'da kengaytma yo'q bo'lsa Dio mimetype'ni
+      // application/octet-stream'ga qo'yadi → backend 415. Shu sababli
+      // contentType'ni majburiy beramiz.
+      final mime = mimeType ?? _guessMimeFromName(filename) ?? 'video/webm';
+      final fname = filename.contains('.') ? filename : '$filename.webm';
+      final formData = FormData.fromMap({
+        'receiverId': receiverId,
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: fname,
+          contentType: DioMediaType.parse(mime),
+        ),
+      });
+      return _post(formData, onProgress);
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVideoMessageRepository.sendMessageBytes: '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
+  /// Fayl kengaytmasi bo'yicha video MIME aniqlash. Brauzer kamera
+  /// odatda webm beradi; mobile (camera plugin) — mp4 yoki mov.
+  String? _guessMimeFromName(String filename) {
+    final lower = filename.toLowerCase();
+    if (lower.endsWith('.mp4')) return 'video/mp4';
+    if (lower.endsWith('.mov')) return 'video/quicktime';
+    if (lower.endsWith('.webm')) return 'video/webm';
+    if (lower.endsWith('.mkv')) return 'video/x-matroska';
+    if (lower.endsWith('.3gp')) return 'video/3gpp';
+    return null;
+  }
+
+  Future<String?> _post(
+    FormData formData,
+    void Function(double progress)? onProgress,
+  ) async {
+    try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/video-messages',
         data: formData,

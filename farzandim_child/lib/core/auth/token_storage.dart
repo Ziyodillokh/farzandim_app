@@ -70,6 +70,7 @@ class _SharedPrefsBackend implements _Backend {
 }
 
 class TokenStorage {
+  // ignore: library_private_types_in_public_api
   TokenStorage({_Backend? backend})
       : _backend = backend ??
             (kIsWeb ? _SharedPrefsBackend() : _SecureStorageBackend());

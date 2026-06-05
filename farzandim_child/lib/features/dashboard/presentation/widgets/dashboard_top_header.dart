@@ -101,13 +101,13 @@ class _SettingsButton extends StatelessWidget {
         width: 48,
         height: 48,
         decoration: BoxDecoration(
-          color: AppColors.bgSurface,
+          color: context.adaptive.bgSurface,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: context.adaptive.border, width: 1.5),
         ),
-        child: const Icon(
+        child: Icon(
           AppIcons.settings,
-          color: AppColors.textSecondary,
+          color: context.adaptive.textSecondary,
           size: 22,
         ),
       ),
@@ -133,13 +133,13 @@ class _NotificationsButton extends StatelessWidget {
             width: _kHeaderSize,
             height: _kHeaderSize,
             decoration: BoxDecoration(
-              color: AppColors.bgSurface,
+              color: context.adaptive.bgSurface,
               shape: BoxShape.circle,
-              border: Border.all(color: AppColors.border, width: 1.5),
+              border: Border.all(color: context.adaptive.border, width: 1.5),
             ),
-            child: const Icon(
+            child: Icon(
               AppIcons.bell,
-              color: AppColors.textSecondary,
+              color: context.adaptive.textSecondary,
               size: 28,
             ),
           ),
@@ -160,7 +160,7 @@ class _NotificationsButton extends StatelessWidget {
                   color: AppColors.error,
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.bgPrimary,
+                    color: context.adaptive.bgPrimary,
                     width: 2,
                   ),
                 ),
@@ -196,9 +196,9 @@ class _Avatar extends StatelessWidget {
         width: _kHeaderSize,
         height: _kHeaderSize,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border, width: 1.5),
+          border: Border.all(color: context.adaptive.border, width: 1.5),
         ),
         clipBehavior: Clip.antiAlias,
         child: photoUrl != null && photoUrl!.isNotEmpty
@@ -222,9 +222,9 @@ class _AvatarFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
+    return Icon(
       AppIcons.profile,
-      color: AppColors.textSecondary,
+      color: context.adaptive.textSecondary,
       size: 30,
     );
   }

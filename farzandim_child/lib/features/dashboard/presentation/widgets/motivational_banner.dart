@@ -37,7 +37,7 @@ class MotivationalBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.lightbulb_outline,
+              const Icon(Icons.lightbulb_rounded,
                   color: AppColors.primary, size: 18),
               const SizedBox(width: 8),
               Text(
@@ -54,8 +54,8 @@ class MotivationalBanner extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             message,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.adaptive.textPrimary,
               fontSize: 15,
               height: 1.4,
             ),

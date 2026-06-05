@@ -31,8 +31,9 @@ class AppUsageList extends ConsumerWidget {
 
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: usageAsync.when(
         loading: () => const _LoadingBox(),
@@ -56,8 +57,8 @@ class AppUsageList extends ConsumerWidget {
                 children: [
                   _UsageRow(app: app, limit: lim),
                   if (i < visible.length - 1)
-                    const Divider(
-                      color: AppColors.border,
+                    Divider(
+                      color: context.adaptive.divider,
                       height: 1,
                       indent: 16,
                       endIndent: 16,
@@ -97,10 +98,10 @@ class _UsageRow extends StatelessWidget {
                   app.appName.isEmpty ? app.packageName : app.appName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: context.adaptive.textPrimary,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -120,13 +121,15 @@ class _UsageRow extends StatelessWidget {
   Widget _buildSubtitle() {
     final lim = limit;
     if (lim == null) {
-      return Text(
-        app.formattedTime,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppColors.textSecondary,
-        ),
-      );
+      return Builder(builder: (ctx) {
+        return Text(
+          app.formattedTime,
+          style: TextStyle(
+            fontSize: 13,
+            color: ctx.adaptive.textSecondary,
+          ),
+        );
+      });
     }
 
     if (lim.isFullBlock) {
@@ -361,7 +364,7 @@ class _EmptyBox extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: const TextStyle(color: AppColors.textSecondary),
+          style: TextStyle(color: context.adaptive.textSecondary),
         ),
       ),
     );

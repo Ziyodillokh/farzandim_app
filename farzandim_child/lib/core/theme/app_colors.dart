@@ -80,10 +80,26 @@ class AppColors {
   /// Cosmic sky tint — onboarding, hero sections.
   static const Color bgSky = Color(0xFFE0F2FE);
 
-  // ============ BACKGROUNDS (Dark Mode — fallback) ============
-  static const Color bgPrimaryDark = Color(0xFF131F24);
-  static const Color bgSurfaceDark = Color(0xFF1E2D32);
-  static const Color bgCardDark = Color(0xFF2D4147);
+  // ============ BACKGROUNDS (Dark Mode — Telegram night style) ============
+  /// Asosiy fon (chuqur tunqorong'i).
+  static const Color bgPrimaryDark = Color(0xFF0E1117);
+
+  /// Surface — kartalar, dialog, bottomSheet (biroz yengilroq).
+  static const Color bgSurfaceDark = Color(0xFF161B22);
+
+  /// Yuqori-darajali karta fon (gradient/hover uchun).
+  static const Color bgCardDark = Color(0xFF1C232C);
+
+  /// Border/divider — kam ko'rinadigan ajratuvchi chiziq.
+  static const Color borderDark = Color(0xFF2A323D);
+
+  /// Divider — yanada yengil ajratish.
+  static const Color dividerDark = Color(0xFF1F262F);
+
+  // ============ TEXT (Dark Mode) ============
+  static const Color textPrimaryDark = Color(0xFFE6EDF3);
+  static const Color textSecondaryDark = Color(0xFF8B96A5);
+  static const Color textTertiaryDark = Color(0xFF6A7585);
 
   // ============ TEXT ============
   /// Asosiy matn (dark navy, oq fonda).
@@ -167,4 +183,40 @@ class AppColors {
 
   /// Sprint 4.4'da `backgroundBottom` ishlatilgan — alias `bgPrimary`.
   static const Color backgroundBottom = bgPrimary;
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// AdaptiveColors — Theme.brightness'ga qarab to'g'ri palette qaytaradi.
+// ═════════════════════════════════════════════════════════════════════
+//
+// Widget'lar `context.adaptive.surface` deb chaqirsa, dark mode'da
+// avtomatik dark surface, light mode'da light surface keladi.
+// Hardcoded `AppColors.bgSurface` o'rniga shu helper ishlatilsa,
+// butun ilova bir tugma bilan dark/light bo'la oladi.
+
+extension AdaptivePaletteX on BuildContext {
+  AdaptivePalette get adaptive => AdaptivePalette._(
+        Theme.of(this).brightness == Brightness.dark,
+      );
+}
+
+class AdaptivePalette {
+  const AdaptivePalette._(this.isDark);
+  final bool isDark;
+
+  Color get bgPrimary =>
+      isDark ? AppColors.bgPrimaryDark : AppColors.bgPrimary;
+  Color get bgSurface =>
+      isDark ? AppColors.bgSurfaceDark : AppColors.bgSurface;
+  Color get bgCard =>
+      isDark ? AppColors.bgCardDark : AppColors.bgSurface;
+  Color get textPrimary =>
+      isDark ? AppColors.textPrimaryDark : AppColors.textPrimary;
+  Color get textSecondary =>
+      isDark ? AppColors.textSecondaryDark : AppColors.textSecondary;
+  Color get textTertiary =>
+      isDark ? AppColors.textTertiaryDark : AppColors.textTertiary;
+  Color get border => isDark ? AppColors.borderDark : AppColors.border;
+  Color get divider => isDark ? AppColors.dividerDark : AppColors.divider;
+  Color get surface => bgCard; // legacy alias
 }

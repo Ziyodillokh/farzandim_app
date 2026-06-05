@@ -18,14 +18,24 @@ import { findFamilyLink } from '../../common/helpers/family-link';
 
 const USER_SELECT = { id: true, name: true, role: true, avatarUrl: true } as const;
 
-const ALLOWED_VIDEO_MIMES = [
+// Browser MediaRecorder formatlari ham qabul qilinishi uchun prefix bo'yicha
+// tekshiramiz (masalan, "video/webm;codecs=vp8,opus" yoki "video/mp4;codec=h264").
+const ALLOWED_VIDEO_MIME_PREFIXES = [
   'video/mp4',
   'video/quicktime',
   'video/webm',
   'video/3gpp',
   'video/x-matroska',
+  'video/mpeg',
+  'video/ogg',
 ];
 const MAX_VIDEO_SIZE_BYTES = 100 * 1024 * 1024; // 100 MB
+
+function isVideoMimeAllowed(mime: string): boolean {
+  if (!mime) return false;
+  const lower = mime.toLowerCase();
+  return ALLOWED_VIDEO_MIME_PREFIXES.some((prefix) => lower.startsWith(prefix));
+}
 
 @Injectable()
 export class VideoMessagesService {
@@ -44,7 +54,7 @@ export class VideoMessagesService {
     durationSeconds: number | undefined,
     file: { buffer: Buffer; mimetype: string; filename: string },
   ) {
-    if (!ALLOWED_VIDEO_MIMES.includes(file.mimetype)) {
+    if (!isVideoMimeAllowed(file.mimetype)) {
       throw new UnsupportedMediaTypeException(
         `Unsupported video format: ${file.mimetype}`,
       );

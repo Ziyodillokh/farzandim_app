@@ -34,8 +34,8 @@ class FamilyCard extends StatelessWidget {
       children: [
         Text(
           'dashboard.familyTitle'.tr(),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: context.adaptive.textPrimary,
             fontSize: 18,
             fontWeight: FontWeight.bold,
           ),
@@ -45,9 +45,9 @@ class FamilyCard extends StatelessWidget {
           width: double.infinity,
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: AppColors.surface,
+            color: context.adaptive.bgCard,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: AppColors.border),
+            border: Border.all(color: context.adaptive.border, width: 0.5),
           ),
           child: Row(
             children: [
@@ -60,7 +60,7 @@ class FamilyCard extends StatelessWidget {
                   shape: BoxShape.circle,
                 ),
                 child: const Icon(
-                  Icons.family_restroom,
+                  Icons.family_restroom_rounded,
                   color: AppColors.primary,
                   size: 24,
                 ),
@@ -72,8 +72,8 @@ class FamilyCard extends StatelessWidget {
                   children: [
                     Text(
                       'dashboard.familyParentLabel'.tr(),
-                      style: const TextStyle(
-                        color: AppColors.textTertiary,
+                      style: TextStyle(
+                        color: context.adaptive.textTertiary,
                         fontSize: 12,
                       ),
                     ),
@@ -82,8 +82,8 @@ class FamilyCard extends StatelessWidget {
                       _parentLabel(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.adaptive.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),

@@ -58,46 +58,69 @@ class AudioPlayerScreen extends ConsumerWidget {
               color: Colors.black.withOpacity(0.55),
             ),
           ),
+          // Pastdan tepaga qora gradient — kontent ostida o'qishni
+          // osonlashtirish va premium "deep" tuyg'usi.
+          Container(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  // ignore: deprecated_member_use
+                  Colors.black.withOpacity(0.25),
+                  // ignore: deprecated_member_use
+                  Colors.black.withOpacity(0.85),
+                ],
+              ),
+            ),
+          ),
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               child: Column(
                 children: [
                   _TopBar(book: book, state: state),
+                  const SizedBox(height: 12),
                   Expanded(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         _Cover(book: book),
-                        const SizedBox(height: 32),
+                        const SizedBox(height: 28),
+                        Text(
+                          book.author,
+                          textAlign: TextAlign.center,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w400,
+                            letterSpacing: 0.3,
+                            // ignore: deprecated_member_use
+                            color: Colors.white.withOpacity(0.75),
+                          ),
+                        ),
+                        const SizedBox(height: 4),
                         Text(
                           book.title,
                           textAlign: TextAlign.center,
                           maxLines: 2,
                           overflow: TextOverflow.ellipsis,
                           style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textPrimary,
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          book.author,
-                          style: const TextStyle(
-                            fontSize: 16,
-                            color: AppColors.textSecondary,
+                            fontSize: 26,
+                            fontWeight: FontWeight.w700,
+                            color: Colors.white,
+                            height: 1.2,
                           ),
                         ),
                         const SizedBox(height: 32),
                         _SliderRow(state: state),
-                        const SizedBox(height: 24),
-                        _Controls(state: state),
+                        const SizedBox(height: 16),
+                        _Controls(state: state, book: book),
                       ],
                     ),
                   ),
-                  _BottomActions(book: book),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -119,43 +142,53 @@ class _TopBar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.symmetric(vertical: 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          IconButton(
-            icon: const Icon(AppIcons.close,
-                color: AppColors.textPrimary, size: 28),
-            onPressed: () => Navigator.pop(context),
+          _GlassIconButton(
+            icon: Icons.keyboard_arrow_down_rounded,
+            onTap: () => Navigator.pop(context),
           ),
           if (state.hasSleepTimer)
-            Container(
-              padding: const EdgeInsets.symmetric(
-                  horizontal: 12, vertical: 6),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(AppIcons.hourglass,
-                      color: AppColors.primary, size: 16),
-                  const SizedBox(width: 6),
-                  Text(
-                    _formatDuration(state.sleepTimerRemaining),
-                    style: const TextStyle(
-                      color: AppColors.primary,
-                      fontSize: 13,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 8),
+                  decoration: BoxDecoration(
+                    // ignore: deprecated_member_use
+                    color: Colors.white.withOpacity(0.15),
+                    borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      // ignore: deprecated_member_use
+                      color: Colors.white.withOpacity(0.18),
                     ),
                   ),
-                ],
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      const Icon(AppIcons.hourglass,
+                          color: Colors.white, size: 14),
+                      const SizedBox(width: 6),
+                      Text(
+                        _formatDuration(state.sleepTimerRemaining),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
-          IconButton(
-            icon: const Icon(Icons.more_vert,
-                color: AppColors.textPrimary, size: 28),
-            onPressed: () => _openMenu(context, book),
+          _GlassIconButton(
+            icon: Icons.more_horiz_rounded,
+            onTap: () => _openMenu(context, book),
           ),
         ],
       ),
@@ -182,13 +215,13 @@ class _Cover extends StatelessWidget {
   Widget build(BuildContext context) {
     // 3:4 vertikal — kitob muqovasi proporsiyasi
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 260, maxHeight: 360),
+      constraints: const BoxConstraints(maxWidth: 280, maxHeight: 380),
       child: AspectRatio(
         aspectRatio: 3 / 4,
         child: Container(
           decoration: BoxDecoration(
             color: book.coverColor,
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
             image: book.coverUrl.isNotEmpty
                 ? DecorationImage(
                     image: NetworkImage(book.coverUrl),
@@ -198,26 +231,27 @@ class _Cover extends StatelessWidget {
             boxShadow: [
               BoxShadow(
                 // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.4),
-                blurRadius: 30,
-                offset: const Offset(0, 12),
+                color: Colors.black.withOpacity(0.55),
+                blurRadius: 40,
+                spreadRadius: 4,
+                offset: const Offset(0, 20),
               ),
             ],
           ),
           child: book.coverUrl.isEmpty
               ? Center(
                   child: Container(
-                    width: 80,
-                    height: 80,
+                    width: 90,
+                    height: 90,
                     decoration: BoxDecoration(
                       // ignore: deprecated_member_use
-                      color: Colors.white.withOpacity(0.3),
+                      color: Colors.white.withOpacity(0.25),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       AppIcons.speaker,
                       color: Colors.white,
-                      size: 48,
+                      size: 52,
                     ),
                   ),
                 )
@@ -245,15 +279,17 @@ class _SliderRow extends ConsumerWidget {
       children: [
         SliderTheme(
           data: SliderThemeData(
-            trackHeight: 4,
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 8),
+            trackHeight: 3,
+            thumbShape:
+                const RoundSliderThumbShape(enabledThumbRadius: 7),
             overlayShape:
                 const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: AppColors.primary,
-            inactiveTrackColor: AppColors.surfaceVariant,
-            thumbColor: AppColors.primary,
+            activeTrackColor: Colors.white,
             // ignore: deprecated_member_use
-            overlayColor: AppColors.primary.withOpacity(0.2),
+            inactiveTrackColor: Colors.white.withOpacity(0.25),
+            thumbColor: Colors.white,
+            // ignore: deprecated_member_use
+            overlayColor: Colors.white.withOpacity(0.15),
           ),
           child: Slider(
             value: state.position.inSeconds
@@ -274,13 +310,21 @@ class _SliderRow extends ConsumerWidget {
             children: [
               Text(
                 _formatDuration(state.position),
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  // ignore: deprecated_member_use
+                  color: Colors.white.withOpacity(0.75),
+                ),
               ),
               Text(
                 _formatDuration(state.duration),
-                style: const TextStyle(
-                    fontSize: 13, color: AppColors.textSecondary),
+                style: TextStyle(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  // ignore: deprecated_member_use
+                  color: Colors.white.withOpacity(0.75),
+                ),
               ),
             ],
           ),
@@ -293,128 +337,158 @@ class _SliderRow extends ConsumerWidget {
 // ─── Controls ────────────────────────────────────────────────────────
 
 class _Controls extends ConsumerWidget {
-  const _Controls({required this.state});
+  const _Controls({required this.state, required this.book});
 
   final AudioPlayerState state;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        IconButton(
-          icon: const Icon(Icons.replay_10,
-              color: AppColors.textPrimary, size: 40),
-          onPressed: () =>
-              ref.read(audioPlayerProvider.notifier).seekBackward(),
-        ),
-        const SizedBox(width: 16),
-        Container(
-          width: 72,
-          height: 72,
-          decoration: const BoxDecoration(
-            color: AppColors.primary,
-            shape: BoxShape.circle,
-          ),
-          child: IconButton(
-            icon: Icon(
-              state.isPlaying ? AppIcons.pause : AppIcons.play,
-              color: Colors.black,
-              size: 40,
-            ),
-            onPressed: () {
-              final notifier = ref.read(audioPlayerProvider.notifier);
-              if (state.isPlaying) {
-                notifier.pause();
-              } else {
-                notifier.resume();
-              }
-            },
-          ),
-        ),
-        const SizedBox(width: 16),
-        IconButton(
-          icon: const Icon(Icons.forward_10,
-              color: AppColors.textPrimary, size: 40),
-          onPressed: () =>
-              ref.read(audioPlayerProvider.notifier).seekForward(),
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Bottom: speed + like ───────────────────────────────────────────
-
-class _BottomActions extends ConsumerWidget {
-  const _BottomActions({required this.book});
-
   final AudiobookModel book;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final speed = ref.watch(audioSpeedProvider);
-
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          GestureDetector(
-            onTap: () => _openSpeedPicker(context),
-            child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    '${speed}x',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                  const Icon(
-                    Icons.keyboard_arrow_down,
-                    color: AppColors.textSecondary,
-                    size: 18,
-                  ),
-                ],
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      crossAxisAlignment: CrossAxisAlignment.center,
+      children: [
+        // Tezlik chip (chap)
+        GestureDetector(
+          onTap: () {
+            showModalBottomSheet<void>(
+              context: context,
+              backgroundColor: Colors.transparent,
+              builder: (_) => const _SpeedPickerSheet(),
+            );
+          },
+          behavior: HitTestBehavior.opaque,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: Text(
+                '${_formatSpeed(speed)}x',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ),
           ),
-          IconButton(
-            icon: const Icon(Icons.favorite_border,
-                color: AppColors.textPrimary, size: 28),
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content:
-                      Text("Sevimlilarga qo'shish tez orada"),
-                  duration: Duration(seconds: 2),
+        ),
+        // 15s ortga
+        _SeekButton(
+          icon: Icons.replay_10_rounded,
+          onTap: () =>
+              ref.read(audioPlayerProvider.notifier).seekBackward(),
+        ),
+        // Play/Pause (katta oq doira)
+        GestureDetector(
+          onTap: () {
+            final notifier = ref.read(audioPlayerProvider.notifier);
+            if (state.isPlaying) {
+              notifier.pause();
+            } else {
+              notifier.resume();
+            }
+          },
+          child: Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  color: Colors.black.withOpacity(0.3),
+                  blurRadius: 18,
+                  offset: const Offset(0, 6),
                 ),
-              );
-            },
+              ],
+            ),
+            child: Icon(
+              state.isPlaying
+                  ? Icons.pause_rounded
+                  : Icons.play_arrow_rounded,
+              color: Colors.black,
+              size: 44,
+            ),
           ),
-        ],
+        ),
+        // 15s oldinga
+        _SeekButton(
+          icon: Icons.forward_10_rounded,
+          onTap: () =>
+              ref.read(audioPlayerProvider.notifier).seekForward(),
+        ),
+        // O'ng bo'sh joy — chap "1x" bilan simmetriya
+        const SizedBox(width: 48, height: 48),
+      ],
+    );
+  }
+}
+
+class _SeekButton extends StatelessWidget {
+  const _SeekButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: Icon(
+          icon,
+          color: Colors.white,
+          size: 38,
+        ),
       ),
     );
   }
+}
 
-  void _openSpeedPicker(BuildContext context) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => const _SpeedPickerSheet(),
+// Yumshoq glass tugma — top bar uchun.
+class _GlassIconButton extends StatelessWidget {
+  const _GlassIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ClipOval(
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+          child: Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: Colors.white.withOpacity(0.12),
+              shape: BoxShape.circle,
+              border: Border.all(
+                // ignore: deprecated_member_use
+                color: Colors.white.withOpacity(0.15),
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 24),
+          ),
+        ),
+      ),
     );
   }
+}
+
+String _formatSpeed(double speed) {
+  if (speed == speed.roundToDouble()) return speed.toInt().toString();
+  return speed.toString();
 }
 
 // ─── Speed picker sheet ─────────────────────────────────────────────

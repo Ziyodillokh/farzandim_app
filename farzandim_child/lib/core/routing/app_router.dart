@@ -33,6 +33,7 @@ import 'package:farzandim_child/features/gamification/presentation/screens/profi
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim_child/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobooks_feed_screen.dart';
+import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_start_screen.dart';
@@ -211,6 +212,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/audiobooks',
         pageBuilder: (context, state) => _slidePage(state, const AudiobooksFeedScreen()),
+      ),
+      // Content hub — audiokitoblar + kitoblar + konkurslar bitta ekranda.
+      // Bottom nav endi shu yagona tabga olib boradi (avval 2 ta alohida edi).
+      GoRoute(
+        path: '/content',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ContentHubScreen()),
       ),
       GoRoute(
         path: '/audio-player',
