@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   IsEnum,
+  IsBoolean,
 } from 'class-validator';
 
 export enum Gender {
@@ -40,4 +41,14 @@ export class UpdateChildDto {
   @IsString()
   @MaxLength(100)
   region?: string;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      "Notanish manbalardan ilovalar — Play'dan boshqa manbadan o'rnatilgan " +
+      'ilovalarni bloklash (true = bloklansin).',
+  })
+  @IsOptional()
+  @IsBoolean()
+  blockUnknownSources?: boolean;
 }

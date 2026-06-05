@@ -30,6 +30,7 @@ class Child {
     this.deviceInfo,
     this.lastSeenAt,
     this.phoneNumber,
+    this.blockUnknownSources = false,
   });
 
   /// Backend REST JSON'dan `Child` yaratish (Sprint 4.4 Bosqich 3).
@@ -108,6 +109,7 @@ class Child {
           : null,
       lastSeenAt: _parseIso8601(json['lastSeenAt']),
       createdAt: _parseIso8601(json['createdAt']) ?? DateTime.now(),
+      blockUnknownSources: (json['blockUnknownSources'] as bool?) ?? false,
       // phoneNumber Backend'da yo'q (Sprint 4.4 skip — kelajakda Child App
       // SIM'dan o'qib alohida endpoint orqali yuboradi)
     );
@@ -191,6 +193,11 @@ class Child {
   /// SnackBar ko'rsatadi.
   final String? phoneNumber;
 
+  /// "Notanish manbalardan ilovalar" — Play Market'dan boshqa manbadan
+  /// o'rnatilgan ilovalarni bloklash (Qurilma sozlamalari toggle'i). `true`
+  /// bo'lsa bola qurilmasi sideload ilovalarni ishlatishni bloklaydi.
+  final bool blockUnknownSources;
+
   /// Default avatar sticker yo'li — `assets/stickers/`'dan, jinsi va
   /// yosh guruhiga qarab.
   ///
@@ -272,6 +279,7 @@ class Child {
     ChildDeviceInfo? deviceInfo,
     DateTime? lastSeenAt,
     String? phoneNumber,
+    bool? blockUnknownSources,
   }) {
     return Child(
       id: id ?? this.id,
@@ -290,6 +298,7 @@ class Child {
       deviceInfo: deviceInfo ?? this.deviceInfo,
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       phoneNumber: phoneNumber ?? this.phoneNumber,
+      blockUnknownSources: blockUnknownSources ?? this.blockUnknownSources,
     );
   }
 
@@ -315,7 +324,8 @@ class Child {
         other.pairedAt == pairedAt &&
         other.deviceInfo == deviceInfo &&
         other.lastSeenAt == lastSeenAt &&
-        other.phoneNumber == phoneNumber;
+        other.phoneNumber == phoneNumber &&
+        other.blockUnknownSources == blockUnknownSources;
   }
 
   @override
@@ -335,6 +345,7 @@ class Child {
         deviceInfo,
         lastSeenAt,
         phoneNumber,
+        blockUnknownSources,
       );
 
   @override

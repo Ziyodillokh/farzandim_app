@@ -27,6 +27,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
@@ -36,17 +37,21 @@ class RestrictionsSyncService {
     required BackendScheduleRepository scheduleRepo,
     required BackendAppLimitRepository appLimitRepo,
     required BackendRoutineRepository routineRepo,
+    required BackendDevicePolicyRepository devicePolicyRepo,
   })  : _scheduleRepo = scheduleRepo,
         _appLimitRepo = appLimitRepo,
-        _routineRepo = routineRepo;
+        _routineRepo = routineRepo,
+        _devicePolicyRepo = devicePolicyRepo;
 
   static const _prefsKeyBlocked = 'restriction.blocked_packages';
   static const _prefsKeyLimits = 'restriction.limits';
+  static const _prefsKeyBlockUnknown = 'restriction.block_unknown_sources';
   static const _wildcardAll = '*';
 
   final BackendScheduleRepository _scheduleRepo;
   final BackendAppLimitRepository _appLimitRepo;
   final BackendRoutineRepository _routineRepo;
+  final BackendDevicePolicyRepository _devicePolicyRepo;
   Timer? _syncTimer;
   String? _childId;
 
@@ -116,6 +121,15 @@ class RestrictionsSyncService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(_prefsKeyBlocked, blockedPkgs.toSet().join(','));
       await prefs.setString(_prefsKeyLimits, limitEntries.join(','));
+
+      // 5. "Notanish manbalardan ilovalar" siyosati — native
+      //    RestrictionService shu flag'ni o'qib Play'dan boshqa manbadagi
+      //    ilovalarni bloklaydi. Xato bo'lsa eski qiymat saqlanadi.
+      final blockUnknown =
+          await _devicePolicyRepo.getBlockUnknownSources(_childId!);
+      if (blockUnknown != null) {
+        await prefs.setBool(_prefsKeyBlockUnknown, blockUnknown);
+      }
 
       debugPrint(
         'RestrictionsSync: schedules=${policies.length} '

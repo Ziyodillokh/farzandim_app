@@ -165,6 +165,17 @@ class BackendChildRepository {
     await _dio.post<void>('/children/$childId/ring');
   }
 
+  /// "Notanish manbalardan ilovalar" toggle — `PUT /children/:id`.
+  /// `true` bo'lsa bola qurilmasi Play'dan boshqa manbadagi ilovalarni
+  /// bloklaydi (native enforce). Yangilangan `Child` qaytadi.
+  Future<Child> setBlockUnknownSources(String childId, bool value) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/children/$childId',
+      data: <String, dynamic>{'blockUnknownSources': value},
+    );
+    return Child.fromJson(response.data ?? <String, dynamic>{});
+  }
+
   /// Avatar rasm proxy URL — `GET /api/children/:id/avatar/image`.
   ///
   /// Backend MinIO'dan rasmni stream qiladi (signed URL'ga qaraganda

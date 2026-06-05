@@ -394,7 +394,10 @@
     "appPermissionsRow": "App permissions",
     "unknownSources": {
       "title": "Apps from unknown sources",
-      "desc": "Block installing apps from sources other than Play Market"
+      "desc": "{name} will be restricted from using apps from sources other than Play Market",
+      "enabledSnack": "Apps from unknown sources are now blocked",
+      "disabledSnack": "Apps from unknown sources are now allowed",
+      "errorSnack": "Couldn't save, please try again"
     }
   },
   "voiceChat": {

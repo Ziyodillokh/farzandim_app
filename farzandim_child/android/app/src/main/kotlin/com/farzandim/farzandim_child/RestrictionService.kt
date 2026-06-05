@@ -9,6 +9,7 @@ import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
 import android.content.SharedPreferences
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
 import android.graphics.Color
@@ -68,6 +69,24 @@ class RestrictionService : Service() {
         private const val PREFS_NAME = "FlutterSharedPreferences"
         private const val PREFS_KEY_BLOCKED = "flutter.restriction.blocked_packages"
         private const val PREFS_KEY_LIMITS = "flutter.restriction.limits"
+
+        // "Notanish manbalardan ilovalar" — Play'dan boshqa manbadagi
+        // ilovalarni bloklash flag'i (Dart device-policy sync yozadi).
+        private const val PREFS_KEY_BLOCK_UNKNOWN =
+            "flutter.restriction.block_unknown_sources"
+
+        // Ruxsat etilgan o'rnatuvchilar (rasmiy do'konlar) — bulardan
+        // o'rnatilgan ilovalar bloklanmaydi. Qolgani "notanish manba".
+        private val ALLOWED_INSTALLERS = setOf(
+            "com.android.vending",             // Google Play
+            "com.google.android.feedback",     // Play (ba'zi qurilmalar)
+            "com.sec.android.app.samsungapps", // Samsung Galaxy Store
+            "com.huawei.appmarket",            // Huawei AppGallery
+            "com.amazon.venezia",              // Amazon Appstore
+            "com.xiaomi.market",               // Xiaomi GetApps
+            "com.heytap.market",               // Oppo/Realme App Market
+            "com.vivo.appstore",               // Vivo App Store
+        )
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -76,6 +95,11 @@ class RestrictionService : Service() {
     private var windowManager: WindowManager? = null
     private var overlayView: View? = null
     private var currentBlockedPackage: String? = null
+
+    // Install-source kesh (paket → noma'lum manbami). O'rnatish manbasi
+    // o'zgarmaydi, shuning uchun bir marta hisoblab keshlaymiz (har 3s
+    // PackageManager chaqirmaslik uchun).
+    private val unknownSourceCache = HashMap<String, Boolean>()
 
     private val pollRunnable = object : Runnable {
         override fun run() {
@@ -160,8 +184,9 @@ class RestrictionService : Service() {
     private fun checkRestrictions() {
         val blocked = readBlockedPackages()
         val limits = readLimits() // Map<String, Int> minutes
+        val blockUnknown = readBlockUnknown()
 
-        if (blocked.isEmpty() && limits.isEmpty()) {
+        if (blocked.isEmpty() && limits.isEmpty() && !blockUnknown) {
             hideOverlay()
             return
         }
@@ -204,10 +229,62 @@ class RestrictionService : Service() {
             }
         }
 
+        // 2b. "Notanish manbalardan ilovalar" — Play/rasmiy do'kondan
+        //     bo'lmagan (sideload APK) ilova bo'lsa bloklash.
+        if (blockUnknown && isUnknownSource(foreground)) {
+            if (currentBlockedPackage != foreground) {
+                Log.d(TAG, "Notanish manba bloklandi: $foreground")
+                showOverlay(foreground)
+                currentBlockedPackage = foreground
+            }
+            return
+        }
+
         // 3. Bloklanmagan va limit oshmagan — overlay yopamiz
         if (overlayView != null) {
             hideOverlay()
         }
+    }
+
+    /** SharedPreferences'dan "notanish manba bloklash" flag'i. */
+    private fun readBlockUnknown(): Boolean {
+        val prefs: SharedPreferences =
+            getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        return prefs.getBoolean(PREFS_KEY_BLOCK_UNKNOWN, false)
+    }
+
+    /**
+     * Ilova "notanish manba"danmi (Play/rasmiy do'kon emas)?
+     *   - Tizim/oldindan o'rnatilgan ilovalar → ruxsat (false).
+     *   - Rasmiy do'kondan (ALLOWED_INSTALLERS) → ruxsat (false).
+     *   - Aks holda (sideload APK / null) → notanish manba (true).
+     * Aniqlay olmasak — bloklamaymiz (false), false-positive xavfi.
+     */
+    private fun isUnknownSource(pkg: String): Boolean {
+        unknownSourceCache[pkg]?.let { return it }
+        val unknown = try {
+            val pm = packageManager
+            val ai = pm.getApplicationInfo(pkg, 0)
+            val isSystem = (ai.flags and
+                (ApplicationInfo.FLAG_SYSTEM or
+                    ApplicationInfo.FLAG_UPDATED_SYSTEM_APP)) != 0
+            if (isSystem) {
+                false
+            } else {
+                val installer: String? =
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        pm.getInstallSourceInfo(pkg).installingPackageName
+                    } else {
+                        @Suppress("DEPRECATION")
+                        pm.getInstallerPackageName(pkg)
+                    }
+                installer == null || installer !in ALLOWED_INSTALLERS
+            }
+        } catch (e: Exception) {
+            false
+        }
+        unknownSourceCache[pkg] = unknown
+        return unknown
     }
 
     private fun readBlockedPackages(): Set<String> {

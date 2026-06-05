@@ -121,6 +121,28 @@ export class ChildrenService {
     return child;
   }
 
+  /**
+   * Qurilma siyosati — `blockUnknownSources`. Ota-ona (toggle uchun) yoki
+   * bola (enforce uchun) o'qiy oladi (yengil javob, egalik tekshiriladi).
+   */
+  async getDevicePolicy(id: string, userId: string) {
+    const child = await this.prisma.child.findUnique({
+      where: { id },
+      select: {
+        parentId: true,
+        childUserId: true,
+        blockUnknownSources: true,
+      },
+    });
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+    if (child.parentId !== userId && child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    return { blockUnknownSources: child.blockUnknownSources };
+  }
+
   /* ------------------------------------------------------------------ */
   /*  POST /children/:id/device-info — qurilma heartbeat (GPS'siz)        */
   /* ------------------------------------------------------------------ */

@@ -87,6 +87,21 @@ export class ChildrenController {
     return this.childrenService.findOne(id, user.userId);
   }
 
+  @Get(':id/device-policy')
+  @ApiOperation({
+    summary: 'Qurilma siyosati (blockUnknownSources) — ota-ona yoki bola o\'qiydi',
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: '{ blockUnknownSources }' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  @ApiResponse({ status: 404, description: 'Child not found' })
+  async getDevicePolicy(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.childrenService.getDevicePolicy(id, user.userId);
+  }
+
   @Post(':id/device-info')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

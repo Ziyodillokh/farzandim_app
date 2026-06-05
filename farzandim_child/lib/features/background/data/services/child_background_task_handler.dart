@@ -24,6 +24,7 @@ import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/utils/tashkent_time.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -114,6 +115,9 @@ class ChildBackgroundTaskHandler extends TaskHandler {
           BackendAppLimitRepository(dio: createBackendDio(TokenStorage())),
       routineRepo:
           BackendRoutineRepository(dio: createBackendDio(TokenStorage())),
+      devicePolicyRepo: BackendDevicePolicyRepository(
+        dio: createBackendDio(TokenStorage()),
+      ),
     )..start(childId: _childId!);
 
     // FCM token'ni backend'ga QAYTA ro'yxatdan o'tkazamiz. Birinchi pair'da

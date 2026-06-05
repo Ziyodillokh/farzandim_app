@@ -1,4 +1,5 @@
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
@@ -13,6 +14,7 @@ final restrictionsSyncServiceProvider =
     scheduleRepo: ref.watch(backendScheduleRepositoryProvider),
     appLimitRepo: ref.watch(backendAppLimitRepositoryProvider),
     routineRepo: ref.watch(backendRoutineRepositoryProvider),
+    devicePolicyRepo: ref.watch(backendDevicePolicyRepositoryProvider),
   );
   ref.onDispose(service.dispose);
   return service;

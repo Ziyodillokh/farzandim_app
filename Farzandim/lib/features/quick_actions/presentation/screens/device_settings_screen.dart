@@ -161,7 +161,7 @@ class _Content extends ConsumerWidget {
           const SizedBox(height: AppDimensions.lg),
 
           // ─── Notanish manbalardan ilovalar (toggle) ───
-          const _UnknownSourcesCard(),
+          _UnknownSourcesCard(child: child),
         ],
       ),
     );
@@ -386,15 +386,61 @@ class _NavRow extends StatelessWidget {
 
 // ════════════════════════ UNKNOWN SOURCES TOGGLE ════════════════════════
 
-class _UnknownSourcesCard extends StatefulWidget {
-  const _UnknownSourcesCard();
+class _UnknownSourcesCard extends ConsumerStatefulWidget {
+  const _UnknownSourcesCard({required this.child});
+
+  final Child child;
 
   @override
-  State<_UnknownSourcesCard> createState() => _UnknownSourcesCardState();
+  ConsumerState<_UnknownSourcesCard> createState() =>
+      _UnknownSourcesCardState();
 }
 
-class _UnknownSourcesCardState extends State<_UnknownSourcesCard> {
-  bool _blocked = true;
+class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
+  late bool _blocked = widget.child.blockUnknownSources;
+  bool _saving = false;
+
+  @override
+  void didUpdateWidget(_UnknownSourcesCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Backend'dan yangilangan qiymat kelsa (saqlash tugagach) sinxronlash —
+    // lekin saqlash jarayonida foydalanuvchi tanlovini ustun qo'yamiz.
+    if (!_saving &&
+        oldWidget.child.blockUnknownSources !=
+            widget.child.blockUnknownSources) {
+      _blocked = widget.child.blockUnknownSources;
+    }
+  }
+
+  Future<void> _onChanged(bool value) async {
+    if (_saving) return;
+    final previous = _blocked;
+    setState(() {
+      _blocked = value; // optimistik
+      _saving = true;
+    });
+    try {
+      await ref
+          .read(backendChildRepositoryProvider)
+          .setBlockUnknownSources(widget.child.id, value);
+      ref.invalidate(childrenProvider);
+      if (mounted) {
+        _snack(
+          context,
+          value
+              ? 'deviceSettings.unknownSources.enabledSnack'.tr()
+              : 'deviceSettings.unknownSources.disabledSnack'.tr(),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _blocked = previous); // revert
+        _snack(context, 'deviceSettings.unknownSources.errorSnack'.tr());
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -421,16 +467,15 @@ class _UnknownSourcesCardState extends State<_UnknownSourcesCard> {
               Switch.adaptive(
                 value: _blocked,
                 activeThumbColor: AppColors.primary,
-                onChanged: (v) {
-                  setState(() => _blocked = v);
-                  _snack(context, 'auth.social.comingSoon'.tr());
-                },
+                onChanged: _saving ? null : _onChanged,
               ),
             ],
           ),
           const SizedBox(height: AppDimensions.xs),
           Text(
-            'deviceSettings.unknownSources.desc'.tr(),
+            'deviceSettings.unknownSources.desc'.tr(
+              namedArgs: {'name': widget.child.name},
+            ),
             style: AppTextStyles.bodyS.copyWith(
               color: AppColors.textSecondary,
               height: 1.4,

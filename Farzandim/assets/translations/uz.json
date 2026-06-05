@@ -394,7 +394,10 @@
     "appPermissionsRow": "Ilova uchun ruxsatlar",
     "unknownSources": {
       "title": "Notanish manbalardan ilovalar",
-      "desc": "Saidali Play Marketdan boshqa manbalardan olingan ilovalarni o'rnatishga ruxsat berilmasin"
+      "desc": "{name} Play Marketdan boshqa manbalardan olingan ilovalarni ishlatishi cheklanadi",
+      "enabledSnack": "Notanish manbalardan ilovalar bloklandi",
+      "disabledSnack": "Notanish manbalardan ilovalar ruxsat etildi",
+      "errorSnack": "Saqlab bo'lmadi, qayta urinib ko'ring"
     }
   },
   "voiceChat": {

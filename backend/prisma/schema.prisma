@@ -88,6 +88,10 @@ model Child {
   appVersion     String?  @map("app_version")
   wifiName       String?  @map("wifi_name")
 
+  // Qurilma siyosati — "Notanish manbalardan ilovalar" (Play'dan boshqa
+  // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.
+  blockUnknownSources Boolean @default(false) @map("block_unknown_sources")
+
   // Stop-detection state machine (incremental — har location yozuvida yangilanadi)
   // anchor = joriy klaster boshlangan nuqta; openStop = ochiq to'xtash (agar bor).
   stopAnchorLat  Float?    @map("stop_anchor_lat")
