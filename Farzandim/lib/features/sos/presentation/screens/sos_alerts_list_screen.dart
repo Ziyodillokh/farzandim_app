@@ -112,6 +112,7 @@ class _Tabs extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border),
       ),
       child: TabBar(
         indicator: BoxDecoration(

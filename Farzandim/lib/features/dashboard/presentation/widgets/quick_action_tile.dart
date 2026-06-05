@@ -76,17 +76,23 @@ class _QuickActionTileState extends State<QuickActionTile> {
             decoration: BoxDecoration(
               borderRadius: borderRadius,
               // Fon gradientidan yorqinroq tonlar — karta bo'rtib turadi.
-              gradient: const LinearGradient(
+              // Theme-aware: light modeda och tonlar (textPrimary qora o'qiladi).
+              gradient: LinearGradient(
                 begin: Alignment.topLeft,
                 end: Alignment.bottomRight,
-                colors: [
-                  Color(0xFF30303D),
-                  Color(0xFF22222C),
-                ],
+                colors: AppColors.isDark
+                    ? const [
+                        Color(0xFF30303D),
+                        Color(0xFF22222C),
+                      ]
+                    : const [
+                        Color(0xFFFFFFFF),
+                        Color(0xFFF3F5F9),
+                      ],
               ),
-              // Yengil oq qirra — chegara aniq ko'rinadi.
+              // Yengil chegara — fonga yopishmasin (theme-aware).
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.08),
+                color: AppColors.border,
               ),
             ),
             child: InkWell(

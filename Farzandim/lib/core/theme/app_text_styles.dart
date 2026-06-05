@@ -34,11 +34,11 @@ class AppTextStyles {
   ///
   /// Qayerda: Welcome ekranidagi "Farzandim" sarlavhasi,
   /// dashboard'dagi "Salom, Aliyev!" salomlashish.
-  static final TextStyle headlineXL = GoogleFonts.inter(
-    fontSize: 32,
-    fontWeight: FontWeight.w700,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get headlineXL => GoogleFonts.inter(
+        fontSize: 32,
+        fontWeight: FontWeight.w700,
+        color: AppColors.textPrimary,
+      );
 
   /// **Headline L** — 22sp, Semibold (w600).
   ///
@@ -46,11 +46,11 @@ class AppTextStyles {
   ///
   /// Qayerda: "Mening farzandlarim", "Bugungi statistika",
   /// Dialog va BottomSheet sarlavhalari, AppBar title.
-  static final TextStyle headlineL = GoogleFonts.inter(
-    fontSize: 24,
-    fontWeight: FontWeight.w600,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get headlineL => GoogleFonts.inter(
+        fontSize: 24,
+        fontWeight: FontWeight.w600,
+        color: AppColors.textPrimary,
+      );
 
   /// **Body M** — 16sp, Regular (w400).
   ///
@@ -59,12 +59,12 @@ class AppTextStyles {
   /// Qayerda: paragrafalar, ListTile asosiy matni, tugma matni
   /// (PrimaryButton ichida — `label` o'rniga `bodyM` ham bo'ladi),
   /// TextField ichidagi terilayotgan matn.
-  static final TextStyle bodyM = GoogleFonts.inter(
-    fontSize: 17,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textPrimary,
-    height: 1.4,
-  );
+  static TextStyle get bodyM => GoogleFonts.inter(
+        fontSize: 17,
+        fontWeight: FontWeight.w400,
+        color: AppColors.textPrimary,
+        height: 1.4,
+      );
 
   /// **Body S** — 14sp, Regular (w400).
   ///
@@ -75,12 +75,12 @@ class AppTextStyles {
   ///
   /// Eslatma: bu joyda odatda `textSecondary` rangi qo'llaniladi —
   /// `.copyWith(color: AppColors.textSecondary)` qiling.
-  static final TextStyle bodyS = GoogleFonts.inter(
-    fontSize: 15,
-    fontWeight: FontWeight.w400,
-    color: AppColors.textPrimary,
-    height: 1.4,
-  );
+  static TextStyle get bodyS => GoogleFonts.inter(
+        fontSize: 15,
+        fontWeight: FontWeight.w400,
+        color: AppColors.textPrimary,
+        height: 1.4,
+      );
 
   /// **Label** — 12sp, Medium (w500).
   ///
@@ -88,9 +88,9 @@ class AppTextStyles {
   ///
   /// Qayerda: chip ichidagi yorliq ("Online"), badge raqamlari,
   /// kichik tugma matni, kategoriya nomlari.
-  static final TextStyle label = GoogleFonts.inter(
-    fontSize: 12,
-    fontWeight: FontWeight.w500,
-    color: AppColors.textPrimary,
-  );
+  static TextStyle get label => GoogleFonts.inter(
+        fontSize: 12,
+        fontWeight: FontWeight.w500,
+        color: AppColors.textPrimary,
+      );
 }

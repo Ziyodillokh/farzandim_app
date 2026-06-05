@@ -191,6 +191,7 @@ class _DeviceCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
       ),
       padding: const EdgeInsets.all(AppDimensions.md),
       child: Row(
@@ -308,7 +309,10 @@ class _ActionTile extends StatelessWidget {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
     return Material(
       color: AppColors.surface,
-      borderRadius: borderRadius,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -350,7 +354,10 @@ class _NavRow extends StatelessWidget {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
     return Material(
       color: AppColors.surface,
-      borderRadius: borderRadius,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

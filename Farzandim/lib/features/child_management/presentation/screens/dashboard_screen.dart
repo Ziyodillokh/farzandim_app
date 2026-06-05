@@ -152,6 +152,7 @@ class _EmptyState extends StatelessWidget {
               decoration: BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+                border: Border.all(color: AppColors.border),
               ),
               padding: const EdgeInsets.all(AppDimensions.xl),
               child: Column(
@@ -435,7 +436,9 @@ class _NotificationBell extends ConsumerWidget {
     final unread = ref.watch(unreadCountProvider);
     return Material(
       color: AppColors.surface,
-      shape: const CircleBorder(),
+      shape: CircleBorder(
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context.push(AppRoutes.notifications),
@@ -583,6 +586,7 @@ class _AddChildPage extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
           ),
           padding: const EdgeInsets.all(AppDimensions.xl),
           child: Column(
@@ -817,6 +821,7 @@ class _TimeCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

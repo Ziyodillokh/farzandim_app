@@ -531,6 +531,7 @@ class _NotificationToggles extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppColors.border),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,

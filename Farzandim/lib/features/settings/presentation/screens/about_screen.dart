@@ -55,6 +55,7 @@ class AboutScreen extends StatelessWidget {
                           borderRadius: BorderRadius.circular(
                             AppDimensions.radiusM,
                           ),
+                          border: Border.all(color: AppColors.border),
                         ),
                         padding: const EdgeInsets.all(AppDimensions.md),
                         child: Column(
@@ -161,7 +162,10 @@ class _LinkTile extends StatelessWidget {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
     return Material(
       color: AppColors.surface,
-      borderRadius: borderRadius,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

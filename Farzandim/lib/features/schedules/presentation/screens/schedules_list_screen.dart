@@ -218,6 +218,7 @@ class _ScheduleCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+        border: Border.all(color: AppColors.border),
       ),
       padding: const EdgeInsets.all(AppDimensions.md),
       child: Column(

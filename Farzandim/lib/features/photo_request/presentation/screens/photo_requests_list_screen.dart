@@ -152,6 +152,7 @@ class _FilterTabs extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.border),
       ),
       child: TabBar(
         isScrollable: true,

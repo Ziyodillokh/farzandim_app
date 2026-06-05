@@ -274,6 +274,7 @@ class _AppList extends StatelessWidget {
           decoration: BoxDecoration(
             color: AppColors.surface,
             borderRadius: BorderRadius.circular(AppDimensions.radiusL),
+            border: Border.all(color: AppColors.border),
           ),
           padding: const EdgeInsets.symmetric(vertical: AppDimensions.xs),
           child: Column(

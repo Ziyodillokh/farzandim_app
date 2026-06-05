@@ -423,9 +423,9 @@ class _TextBubble extends StatelessWidget {
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     final bg = isUser ? AppColors.primary : AppColors.surfaceVariant;
-    final fg = isUser ? AppColors.background : AppColors.textPrimary;
+    final fg = isUser ? AppColors.onPrimary : AppColors.textPrimary;
     final timeColor = isUser
-        ? AppColors.background.withValues(alpha: 0.6)
+        ? AppColors.onPrimary.withValues(alpha: 0.6)
         : AppColors.textTertiary;
     return Container(
       padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
@@ -664,9 +664,9 @@ class _DocumentBubble extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUser = message.isUser;
-    final fg = isUser ? AppColors.background : AppColors.textPrimary;
+    final fg = isUser ? AppColors.onPrimary : AppColors.textPrimary;
     final subColor = isUser
-        ? AppColors.background.withValues(alpha: 0.6)
+        ? AppColors.onPrimary.withValues(alpha: 0.6)
         : AppColors.textSecondary;
     return GestureDetector(
       onTap: () => _openSupportFile(context, ref, message),
@@ -684,13 +684,13 @@ class _DocumentBubble extends ConsumerWidget {
               height: 42,
               decoration: BoxDecoration(
                 color: isUser
-                    ? AppColors.background.withValues(alpha: 0.15)
+                    ? AppColors.onPrimary.withValues(alpha: 0.15)
                     : AppColors.primary.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
               child: Icon(Icons.insert_drive_file_rounded,
-                  color: isUser ? AppColors.background : AppColors.primary,
+                  color: isUser ? AppColors.onPrimary : AppColors.primary,
                   size: 22),
             ),
             const SizedBox(width: 10),
@@ -797,7 +797,10 @@ class _InputBar extends StatelessWidget {
           // Biriktirma tugmasi.
           Material(
             color: AppColors.surface,
-            borderRadius: BorderRadius.circular(14),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(14),
+              side: BorderSide(color: AppColors.border),
+            ),
             clipBehavior: Clip.antiAlias,
             child: InkWell(
               onTap: onAttach,
@@ -855,7 +858,7 @@ class _InputBar extends StatelessWidget {
                   child: Icon(
                     Icons.send_rounded,
                     color: hasText
-                        ? AppColors.background
+                        ? AppColors.onPrimary
                         : AppColors.textTertiary,
                     size: 20,
                   ),

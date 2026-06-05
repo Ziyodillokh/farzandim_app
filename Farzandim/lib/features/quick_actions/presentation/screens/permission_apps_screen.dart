@@ -191,6 +191,7 @@ class _AppPermissionRow extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,

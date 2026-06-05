@@ -47,7 +47,10 @@ class NotificationCard extends StatelessWidget {
 
     return Material(
       color: AppColors.surface,
-      borderRadius: radius,
+      shape: RoundedRectangleBorder(
+        borderRadius: radius,
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,

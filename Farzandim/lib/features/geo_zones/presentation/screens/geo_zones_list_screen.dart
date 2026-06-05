@@ -352,7 +352,10 @@ class _ZoneCard extends StatelessWidget {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
     return Material(
       color: AppColors.surface,
-      borderRadius: borderRadius,
+      shape: RoundedRectangleBorder(
+        borderRadius: borderRadius,
+        side: BorderSide(color: AppColors.border),
+      ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () => context

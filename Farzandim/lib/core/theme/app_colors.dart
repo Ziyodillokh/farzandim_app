@@ -40,8 +40,9 @@ class AppColors {
   /// Solid fon (asosan onPrimary qora matn uchun emas — endi `onPrimary`).
   static Color get background => _c(0xFF0A0A12, 0xFFF2F4F8);
 
-  /// Gradient fon — yuqori rang.
-  static Color get backgroundTop => _c(0xFF13161F, 0xFFFFFFFF);
+  /// Gradient fon — yuqori rang. Light'da yengil kulrang (sof oq EMAS) —
+  /// shunda oq `surface` kartalar tepada ham fonga yopishmasdan ajraladi.
+  static Color get backgroundTop => _c(0xFF13161F, 0xFFEDEFF3);
 
   /// Gradient fon — pastki rang.
   static Color get backgroundBottom => _c(0xFF080810, 0xFFE9ECF2);
@@ -75,7 +76,7 @@ class AppColors {
 
   static Color get textPrimary => _c(0xFFFFFFFF, 0xFF14161D);
   static Color get textSecondary => _c(0xFF9999A8, 0xFF5A5D6B);
-  static Color get textTertiary => _c(0xFF6B6B78, 0xFF9398A5);
+  static Color get textTertiary => _c(0xFF6B6B78, 0xFF686C7A);
 
   // ────────────── HOLAT (Status) ──────────────
   // Light'da to'qroq (600) tuslar — oq fonda o'qiladi.
@@ -88,6 +89,6 @@ class AppColors {
   // ────────────── CHEGARALAR (Borders) ──────────────
   // Kuchaytirildi — tugma/karta fondan aniq ajralib tursin.
 
-  static Color get border => _c(0xFF34353F, 0xFFDDE1E8);
+  static Color get border => _c(0xFF34353F, 0xFFCFD4DD);
   static Color get divider => _c(0xFF24252E, 0xFFE8EBF0);
 }
