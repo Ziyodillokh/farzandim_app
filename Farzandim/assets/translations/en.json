@@ -39,6 +39,10 @@
     },
     "signUp": {
       "title": "Sign up",
+      "firstNameLabel": "First name",
+      "firstNameHint": "Your first name",
+      "lastNameLabel": "Last name",
+      "lastNameHint": "Your last name",
       "phoneTab": "Phone",
       "emailTab": "Email",
       "phoneLabel": "Phone number",

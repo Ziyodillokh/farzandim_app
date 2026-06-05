@@ -39,6 +39,10 @@
     },
     "signUp": {
       "title": "Регистрация",
+      "firstNameLabel": "Имя",
+      "firstNameHint": "Ваше имя",
+      "lastNameLabel": "Фамилия",
+      "lastNameHint": "Ваша фамилия",
       "phoneTab": "Телефон",
       "emailTab": "Email",
       "phoneLabel": "Номер телефона",

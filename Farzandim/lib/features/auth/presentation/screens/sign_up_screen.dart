@@ -29,6 +29,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   /// 0 = telefon, 1 = email.
   int _activeTab = 0;
 
+  final _firstName = TextEditingController();
+  final _lastName = TextEditingController();
   final _phone = TextEditingController();
   final _email = TextEditingController();
   final _password = TextEditingController();
@@ -39,6 +41,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   @override
   void dispose() {
+    _firstName.dispose();
+    _lastName.dispose();
     _phone.dispose();
     _email.dispose();
     _password.dispose();
@@ -46,6 +50,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   bool get _canSubmit {
+    if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
+      return false;
+    }
     if (_password.text.length < 6) return false;
     if (_isPhone) {
       return _phone.text.trim().length == 9;
@@ -62,14 +69,18 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
 
     final notifier = ref.read(backendAuthProvider.notifier);
+    final fullName =
+        '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
     final err = _isPhone
         ? await notifier.registerWithPassword(
             phone: '+998${_phone.text.trim()}',
             password: _password.text,
+            name: fullName,
           )
         : await notifier.registerWithPassword(
             email: _email.text.trim(),
             password: _password.text,
+            name: fullName,
           );
 
     if (!mounted) return;
@@ -124,6 +135,26 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 textAlign: TextAlign.center,
               ),
               const SizedBox(height: AppDimensions.xl),
+
+              // ─── Ism + Familiya ───
+              AuthFieldLabel('auth.signUp.firstNameLabel'.tr()),
+              const SizedBox(height: AppDimensions.sm),
+              CustomTextField(
+                controller: _firstName,
+                hint: 'auth.signUp.firstNameHint'.tr(),
+                keyboardType: TextInputType.name,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: AppDimensions.lg),
+              AuthFieldLabel('auth.signUp.lastNameLabel'.tr()),
+              const SizedBox(height: AppDimensions.sm),
+              CustomTextField(
+                controller: _lastName,
+                hint: 'auth.signUp.lastNameHint'.tr(),
+                keyboardType: TextInputType.name,
+                onChanged: (_) => setState(() {}),
+              ),
+              const SizedBox(height: AppDimensions.lg),
 
               // ─── Tab: Telefon / Email ───
               TabSwitcher(

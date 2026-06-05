@@ -39,6 +39,10 @@
     },
     "signUp": {
       "title": "Ro'yxatdan o'tish",
+      "firstNameLabel": "Ism",
+      "firstNameHint": "Ismingiz",
+      "lastNameLabel": "Familiya",
+      "lastNameHint": "Familiyangiz",
       "phoneTab": "Telefon raqam",
       "emailTab": "Elektron pochta",
       "phoneLabel": "Telefon raqam",
