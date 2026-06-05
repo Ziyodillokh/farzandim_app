@@ -41,7 +41,7 @@ import 'package:farzandim/features/quick_actions/presentation/screens/device_set
 import 'package:farzandim/features/quick_actions/presentation/screens/permission_apps_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/voice_messages_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
-import 'package:farzandim/features/gamification/presentation/screens/child_achievements_screen.dart';
+import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
 import 'package:farzandim/features/photo_request/presentation/screens/photo_requests_list_screen.dart';
 import 'package:farzandim/features/schedules/presentation/screens/schedules_list_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
@@ -394,9 +394,11 @@ List<RouteBase> buildAppRoutes() {
       ),
     ),
     GoRoute(
+      // "Batafsil" → endi Reyting (leaderboard). Avval ChildAchievementsScreen
+      // edi; route path o'zgarmadi (dashboard navigatsiyasi shu).
       path: AppRoutes.childAchievementsPattern,
       pageBuilder: (context, state) => _slidePage(
-        ChildAchievementsScreen(
+        LeaderboardScreen(
           childId: state.pathParameters['childId']!,
         ),
       ),
