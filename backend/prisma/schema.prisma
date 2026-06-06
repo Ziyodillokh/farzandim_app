@@ -783,6 +783,10 @@ model OlympiadQuestion {
   options      String[]
   correctIndex Int      @map("correct_index")
   points       Int      @default(10)
+  // Savol rasmi (ixtiyoriy) — MinIO `olympiad` bucket kaliti. Matematik
+  // funksiyalar kabi yozib bo'lmaydigan savollar uchun. Proxy:
+  // GET /olympiad-images/:key (@Public, capability URL).
+  imageKey     String?  @map("image_key")
   orderIdx     Int      @default(0) @map("order_idx")
   createdAt    DateTime @default(now()) @map("created_at")
   updatedAt    DateTime @updatedAt @map("updated_at")

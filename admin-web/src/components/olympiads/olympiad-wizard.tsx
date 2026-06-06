@@ -3,7 +3,16 @@
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Check, ChevronLeft, ChevronRight, Plus, Trash2, Loader2 } from 'lucide-react';
+import {
+  Check,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Trash2,
+  Loader2,
+  ImagePlus,
+  X,
+} from 'lucide-react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
@@ -22,8 +31,11 @@ import { cn } from '@/lib/utils';
 const SUBJECTS = ['Matematika', 'Ona tili', 'Ingliz tili', 'Fizika', 'Kimyo', 'IT / Mantiq'];
 const STEPS = ['Asosiy', 'Vaqt', 'Savollar', 'Sozlamalar'];
 
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+const questionImageUrl = (key: string) => `${API_BASE}/olympiad-images/${key}`;
+
 function emptyQuestion(): OlympiadQuestionInput {
-  return { text: '', options: ['', '', '', ''], correctIndex: 0, points: 10 };
+  return { text: '', options: ['', '', '', ''], correctIndex: 0, points: 10, imageKey: null };
 }
 
 export function OlympiadWizard({
@@ -49,6 +61,24 @@ export function OlympiadWizard({
 
   // Step 2
   const [questions, setQuestions] = useState<OlympiadQuestionInput[]>([emptyQuestion()]);
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null);
+
+  const handleQuestionImage = async (qi: number, file?: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Rasm juda katta (maks 5 MB)');
+      return;
+    }
+    setUploadingIdx(qi);
+    try {
+      const { key } = await olympiadsApi.uploadQuestionImage(file);
+      setQuestions((qs) => qs.map((x, i) => (i === qi ? { ...x, imageKey: key } : x)));
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
+    } finally {
+      setUploadingIdx(null);
+    }
+  };
 
   // Step 3
   const [type, setType] = useState('test');
@@ -183,6 +213,51 @@ export function OlympiadWizard({
                     onChange={(e) => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, text: e.target.value } : x))}
                     className="mb-3"
                   />
+
+                  {/* Savol rasmi (ixtiyoriy) — matematik funksiyalar kabi
+                      yozib bo'lmaydigan savollar uchun. Avtomatik MinIO. */}
+                  <div className="mb-3">
+                    <input
+                      type="file"
+                      accept="image/*"
+                      id={`q-img-${qi}`}
+                      className="hidden"
+                      onChange={(e) => {
+                        void handleQuestionImage(qi, e.target.files?.[0]);
+                        e.target.value = '';
+                      }}
+                    />
+                    {q.imageKey ? (
+                      <div className="relative inline-block">
+                        {/* eslint-disable-next-line @next/next/no-img-element */}
+                        <img
+                          src={questionImageUrl(q.imageKey)}
+                          alt="Savol rasmi"
+                          className="max-h-44 rounded-lg border border-border object-contain"
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, imageKey: null } : x))}
+                          className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white shadow-soft"
+                          title="Rasmni o'chirish"
+                        >
+                          <X className="h-3.5 w-3.5" />
+                        </button>
+                      </div>
+                    ) : uploadingIdx === qi ? (
+                      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                        <Loader2 className="h-4 w-4 animate-spin" /> Rasm yuklanmoqda...
+                      </div>
+                    ) : (
+                      <label
+                        htmlFor={`q-img-${qi}`}
+                        className="inline-flex cursor-pointer items-center gap-2 rounded-lg border border-dashed border-border px-3 py-2 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                      >
+                        <ImagePlus className="h-4 w-4" /> Rasm yuklash (ixtiyoriy)
+                      </label>
+                    )}
+                  </div>
+
                   <div className="space-y-2">
                     {q.options.map((opt, oi) => (
                       <div key={oi} className="flex items-center gap-2">

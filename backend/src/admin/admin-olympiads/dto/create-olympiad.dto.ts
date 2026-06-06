@@ -40,6 +40,13 @@ export class QuestionDto {
   @IsInt()
   @Min(1)
   points?: number;
+
+  // Savol rasmi kaliti (upload endpointdan qaytadi). Ixtiyoriy.
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  imageKey?: string | null;
 }
 
 export class CreateOlympiadDto {

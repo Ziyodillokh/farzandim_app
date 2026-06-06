@@ -12,6 +12,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { monetizationApi } from '@/lib/api/admin.api';
 import { cn, formatUzs } from '@/lib/utils';
 import { PlanFormModal } from '@/components/monetization/plan-form-modal';
+import { planFeatureLabel } from '@/lib/constants/plan-features';
 import type { Plan } from '@/types/api.types';
 
 const PERIOD_LABEL: Record<Plan['period'], string> = {
@@ -141,7 +142,7 @@ function PlanCard({ plan }: { plan: Plan }) {
               <span className="mt-0.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-primary/10 text-primary">
                 <Check className="h-2.5 w-2.5" />
               </span>
-              <span className="text-foreground/90">{feature}</span>
+              <span className="text-foreground/90">{planFeatureLabel(feature)}</span>
             </li>
           ))
         )}

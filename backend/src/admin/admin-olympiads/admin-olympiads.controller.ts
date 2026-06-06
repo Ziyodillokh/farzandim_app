@@ -1,4 +1,5 @@
 import {
+  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -9,9 +10,18 @@ import {
   Patch,
   Post,
   Query,
+  Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiTags, ApiBearerAuth, ApiOperation, ApiQuery } from '@nestjs/swagger';
+import {
+  ApiTags,
+  ApiBearerAuth,
+  ApiOperation,
+  ApiQuery,
+  ApiConsumes,
+  ApiBody,
+} from '@nestjs/swagger';
+import { FastifyRequest } from 'fastify';
 import { AdminOlympiadsService } from './admin-olympiads.service';
 import { CreateOlympiadDto, QuestionDto } from './dto/create-olympiad.dto';
 import { UpdateOlympiadDto } from './dto/update-olympiad.dto';
@@ -54,6 +64,33 @@ export class AdminOlympiadsController {
       ageTo: ageTo !== undefined ? +ageTo : undefined,
       dateFrom,
       dateTo,
+    });
+  }
+
+  // Savol rasmi upload (Fastify multipart). Literal route — `:id` param
+  // route'lardan OLDIN turishi shart (router aniqligi uchun). Konkurs
+  // yaratishdan oldin chaqiriladi; qaytgan `key` savol payloadiga qo'shiladi.
+  @Post('question-image')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Upload an image for an olympiad question (max 5 MB)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file'],
+      properties: { file: { type: 'string', format: 'binary' } },
+    },
+  })
+  async uploadQuestionImage(@Req() req: FastifyRequest) {
+    const data = await (req as any).file();
+    if (!data) {
+      throw new BadRequestException('Fayl yuborilmadi');
+    }
+    const buffer = await data.toBuffer();
+    return this.service.uploadQuestionImage({
+      buffer,
+      mimetype: data.mimetype,
+      filename: data.filename,
     });
   }
 

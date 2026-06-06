@@ -2,15 +2,32 @@ import {
   BadRequestException,
   Injectable,
   NotFoundException,
+  PayloadTooLargeException,
+  UnsupportedMediaTypeException,
 } from '@nestjs/common';
 import { Prisma } from '@prisma/client';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
 import { PrismaService } from '../../common/database/prisma.service';
+import { StorageService } from '../../common/storage/storage.service';
+import { BUCKETS } from '../../common/storage/storage.constants';
 import { CreateOlympiadDto, QuestionDto } from './dto/create-olympiad.dto';
 import { UpdateOlympiadDto } from './dto/update-olympiad.dto';
 
+const MAX_IMAGE_BYTES = 5 * 1024 * 1024; // 5 MB
+const ALLOWED_IMAGE_MIMES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+];
+
 @Injectable()
 export class AdminOlympiadsService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly storage: StorageService,
+  ) {}
 
   private lifecycleOf(o: { status: string; startTime: Date; endTime: Date }): string {
     if (o.status !== 'published') return o.status;
@@ -58,6 +75,7 @@ export class AdminOlympiadsService {
       correctIndex: q.correctIndex,
       points: q.points,
       orderIdx: q.orderIdx,
+      imageKey: q.imageKey ?? null,
     };
   }
 
@@ -171,6 +189,7 @@ export class AdminOlympiadsService {
                 options: q.options,
                 correctIndex: q.correctIndex,
                 points: q.points ?? 10,
+                imageKey: q.imageKey ?? null,
                 orderIdx: idx,
               })),
             }
@@ -342,6 +361,7 @@ export class AdminOlympiadsService {
           options: dto.options,
           correctIndex: dto.correctIndex,
           points: dto.points ?? 10,
+          imageKey: dto.imageKey ?? null,
           orderIdx: (last?.orderIdx ?? -1) + 1,
         },
       });
@@ -358,6 +378,7 @@ export class AdminOlympiadsService {
     if (dto.options !== undefined) updates.options = dto.options;
     if (dto.correctIndex !== undefined) updates.correctIndex = dto.correctIndex;
     if (dto.points !== undefined) updates.points = dto.points;
+    if (dto.imageKey !== undefined) updates.imageKey = dto.imageKey ?? null;
     try {
       const updated = await this.prisma.olympiadQuestion.update({
         where: { id: questionId, olympiadId },
@@ -407,5 +428,40 @@ export class AdminOlympiadsService {
         finishedAt: a.finishedAt?.toISOString() ?? null,
       })),
     };
+  }
+
+  // ─── Savol rasmi upload (MinIO `olympiad` bucket) ──────────────────
+  // Matematik funksiyalar kabi yozib bo'lmaydigan savollar uchun. Konkurs
+  // yaratishdan oldin alohida chaqiriladi; qaytgan `key` savol bilan
+  // yuboriladi. Ko'rsatish: GET /olympiad-images/:key (@Public proxy).
+  async uploadQuestionImage(file: {
+    buffer: Buffer;
+    mimetype?: string;
+    filename?: string;
+  }): Promise<{ key: string }> {
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new BadRequestException("Bo'sh fayl");
+    }
+    if (file.buffer.length > MAX_IMAGE_BYTES) {
+      throw new PayloadTooLargeException('Rasm juda katta (maks 5 MB)');
+    }
+    const mime = file.mimetype || 'application/octet-stream';
+    if (!ALLOWED_IMAGE_MIMES.includes(mime)) {
+      throw new UnsupportedMediaTypeException(
+        `Qo'llab-quvvatlanmaydigan format: ${mime}`,
+      );
+    }
+    const ext = extname(file.filename || '') || '.jpg';
+    // Single-segment key (slash yo'q) — proxy `:key` path param uchun.
+    const key = `q_${randomUUID()}${ext}`;
+    await this.storage.upload(BUCKETS.olympiad, key, file.buffer, mime);
+    return { key };
+  }
+
+  /** Savol rasmini MinIO'dan o'qiydi (guardsiz public proxy uchun). */
+  async getQuestionImage(
+    key: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    return this.storage.getObject(BUCKETS.olympiad, key);
   }
 }

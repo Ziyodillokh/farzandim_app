@@ -225,6 +225,12 @@ export const olympiadsApi = {
   archive: (id: string) => api.post(`/admin/olympiads/${id}/archive`),
   leaderboard: (id: string, limit = 100) =>
     api.get(`/admin/olympiads/${id}/leaderboard`, { params: { limit } }),
+  // Savol rasmini MinIO'ga yuklaydi, `key` qaytaradi (savol payloadiga qo'shiladi).
+  uploadQuestionImage: (file: File) => {
+    const form = new FormData();
+    form.append('file', file);
+    return api.postForm<{ key: string }>('/admin/olympiads/question-image', form);
+  },
 };
 
 export interface OlympiadQuestionInput {
@@ -232,6 +238,7 @@ export interface OlympiadQuestionInput {
   options: string[];
   correctIndex: number;
   points: number;
+  imageKey?: string | null;
 }
 
 export interface OlympiadCreatePayload {

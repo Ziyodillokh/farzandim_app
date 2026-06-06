@@ -2,7 +2,6 @@
 
 import { useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
-import { X } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog,
@@ -16,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import {
   Select,
@@ -27,6 +26,10 @@ import {
 } from '@/components/ui/select';
 import { monetizationApi } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
+import {
+  PLAN_FEATURE_GROUPS,
+  TIER_FEATURE_PRESETS,
+} from '@/lib/constants/plan-features';
 import type { Plan } from '@/types/api.types';
 
 interface PlanFormModalProps {
@@ -65,8 +68,9 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
   const [entitlementTier, setEntitlementTier] = useState<Plan['entitlementTier']>('standard');
   const [badge, setBadge] = useState('');
   const [description, setDescription] = useState('');
-  const [features, setFeatures] = useState<string[]>([]);
-  const [featureInput, setFeatureInput] = useState('');
+  const [features, setFeatures] = useState<Set<string>>(
+    () => new Set(TIER_FEATURE_PRESETS.standard),
+  );
   const [isActive, setIsActive] = useState(true);
 
   const reset = () => {
@@ -78,8 +82,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
     setEntitlementTier('standard');
     setBadge('');
     setDescription('');
-    setFeatures([]);
-    setFeatureInput('');
+    setFeatures(new Set(TIER_FEATURE_PRESETS.standard));
     setIsActive(true);
   };
 
@@ -88,15 +91,21 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
     if (!slugEdited) setSlug(slugify(value));
   };
 
-  const addFeature = () => {
-    const trimmed = featureInput.trim();
-    if (!trimmed) return;
-    setFeatures((prev) => (prev.includes(trimmed) ? prev : [...prev, trimmed]));
-    setFeatureInput('');
+  // Daraja tanlanganda — shu darajaga mos funksiyalar to'plamini avtomatik
+  // belgilaymiz (monetizatsiya modeli). Keyin admin alohida yoqib/o'chiradi.
+  const handleTierChange = (value: Plan['entitlementTier']) => {
+    setEntitlementTier(value);
+    const preset = TIER_FEATURE_PRESETS[value];
+    if (preset) setFeatures(new Set(preset));
   };
 
-  const removeFeature = (feature: string) => {
-    setFeatures((prev) => prev.filter((f) => f !== feature));
+  const toggleFeature = (key: string) => {
+    setFeatures((prev) => {
+      const next = new Set(prev);
+      if (next.has(key)) next.delete(key);
+      else next.add(key);
+      return next;
+    });
   };
 
   const mutation = useMutation({
@@ -109,7 +118,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
         entitlementTier,
         badge: badge.trim() || null,
         description: description.trim() || null,
-        features,
+        features: Array.from(features),
         isActive,
       }),
     onSuccess: () => {
@@ -214,7 +223,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
               <Label>Daraja</Label>
               <Select
                 value={entitlementTier}
-                onValueChange={(v) => setEntitlementTier(v as Plan['entitlementTier'])}
+                onValueChange={(v) => handleTierChange(v as Plan['entitlementTier'])}
               >
                 <SelectTrigger>
                   <SelectValue />
@@ -250,41 +259,37 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="plan-feature">Imkoniyatlar</Label>
-            <div className="flex gap-2">
-              <Input
-                id="plan-feature"
-                value={featureInput}
-                onChange={(e) => setFeatureInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    e.preventDefault();
-                    addFeature();
-                  }
-                }}
-                placeholder="Masalan: Cheksiz video"
-              />
-              <Button type="button" variant="outline" className="shrink-0" onClick={addFeature}>
-                Qo&apos;shish
-              </Button>
+            <div className="flex items-center justify-between">
+              <Label>Imkoniyatlar</Label>
+              <span className="text-xs text-muted-foreground">
+                {features.size} ta tanlandi
+              </span>
             </div>
-            {features.length > 0 && (
-              <div className="flex flex-wrap gap-2 pt-1">
-                {features.map((feature) => (
-                  <Badge key={feature} variant="secondary" className="gap-1.5 pr-1.5">
-                    {feature}
-                    <button
-                      type="button"
-                      onClick={() => removeFeature(feature)}
-                      className="rounded-full p-0.5 hover:bg-foreground/10"
-                      aria-label="O'chirish"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </Badge>
-                ))}
-              </div>
-            )}
+            <div className="max-h-72 space-y-4 overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
+              {PLAN_FEATURE_GROUPS.map((grp) => (
+                <div key={grp.group} className="space-y-2">
+                  <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
+                    {grp.group}
+                  </p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {grp.features.map((feat) => (
+                      <label
+                        key={feat.key}
+                        htmlFor={`feat-${feat.key}`}
+                        className="flex cursor-pointer items-center gap-2 text-sm"
+                      >
+                        <Checkbox
+                          id={`feat-${feat.key}`}
+                          checked={features.has(feat.key)}
+                          onCheckedChange={() => toggleFeature(feat.key)}
+                        />
+                        <span className="text-foreground/90">{feat.label}</span>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
           </div>
 
           <div className="flex items-center justify-between rounded-lg border border-border p-3">

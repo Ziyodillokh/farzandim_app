@@ -69,6 +69,7 @@ function questionRow(q: {
   options: string[];
   points: number;
   orderIdx: number;
+  imageKey?: string | null;
 }) {
   return {
     id: q.id,
@@ -76,6 +77,7 @@ function questionRow(q: {
     options: q.options,
     points: q.points,
     orderIdx: q.orderIdx,
+    imageKey: q.imageKey ?? null,
   };
 }
 
