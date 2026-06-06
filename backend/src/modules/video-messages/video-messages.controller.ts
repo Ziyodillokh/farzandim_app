@@ -10,6 +10,8 @@ import {
   HttpStatus,
   UseGuards,
   BadRequestException,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -23,7 +25,7 @@ import {
 } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ParseUUIDPipe } from '../../common/pipes/parse-uuid.pipe';
 import { VideoMessagesService } from './video-messages.service';
@@ -99,6 +101,21 @@ export class VideoMessagesController {
     @Param('id', ParseUUIDPipe) id: string,
   ) {
     return this.videoMessagesService.getFileUrl(user.userId, id);
+  }
+
+  // @Public proxy stream — signed URL telefondan yetib bo'lmaydi (ichki
+  // MinIO manzili). `:id` UUID = capability URL. video_player shu URL'dan
+  // to'g'ridan o'ynaydi va birinchi kadr thumbnail bo'ladi.
+  @Get(':id/stream')
+  @Public()
+  @Header('Cache-Control', 'private, max-age=86400')
+  @ApiOperation({ summary: 'Stream a video message (proxy)' })
+  @ApiParam({ name: 'id', description: 'Video message UUID' })
+  async stream(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StreamableFile> {
+    const obj = await this.videoMessagesService.getVideoStream(id);
+    return new StreamableFile(obj.body, { type: obj.contentType });
   }
 
   @Delete(':id')

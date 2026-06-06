@@ -280,6 +280,26 @@ export class VoiceMessagesService {
     return this.storage.getObject(BUCKETS.chat, key);
   }
 
+  /**
+   * Audio faylni MinIO'dan o'qiydi (proxy stream uchun).
+   *
+   * Signed URL telefondan yetib bo'lmaydigan ichki MinIO manzilini
+   * qaytaradi — shu sabab proxy. `:id` UUID = capability URL (taxmin
+   * qilib bo'lmaydi), shuning uchun `@Public` xavfsiz (avatar/support
+   * bilan bir xil yondashuv).
+   */
+  async getAudioStream(
+    id: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    const message = await this.prisma.voiceMessage.findUnique({
+      where: { id },
+    });
+    if (!message || !message.storagePath) {
+      throw new NotFoundException('Audio topilmadi');
+    }
+    return this.storage.getObject(BUCKETS.voice, message.storagePath);
+  }
+
   async list(userId: string, role?: 'sent' | 'received') {
     let where: any;
     if (role === 'received') {

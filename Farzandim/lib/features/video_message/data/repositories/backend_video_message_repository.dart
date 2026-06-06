@@ -92,7 +92,7 @@ class BackendVideoMessageRepository {
     }
   }
 
-  /// Signed URL (1 soat) — video playback.
+  /// Signed URL (1 soat) — video playback (eski; proxy bilan almashtirildi).
   Future<String?> getFileUrl(String messageId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
@@ -103,6 +103,12 @@ class BackendVideoMessageRepository {
       return null;
     }
   }
+
+  /// Video proxy stream URL — `video_player` shu URL'dan to'g'ridan o'ynaydi
+  /// va birinchi kadrni thumbnail sifatida ko'rsatadi (auth header'siz,
+  /// @Public). Signed URL telefondan yetib bo'lmaydi — shuning uchun proxy.
+  String videoStreamUrl(String messageId) =>
+      '${_dio.options.baseUrl}/video-messages/$messageId/stream';
 
   Future<bool> deleteMessage(String messageId) async {
     try {

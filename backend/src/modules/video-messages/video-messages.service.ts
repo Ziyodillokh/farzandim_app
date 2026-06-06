@@ -162,6 +162,27 @@ export class VideoMessagesService {
     }
   }
 
+  /**
+   * Video faylni MinIO'dan o'qiydi (proxy stream uchun).
+   *
+   * Signed URL telefondan yetib bo'lmaydigan ichki MinIO manzilini
+   * qaytaradi — shu sabab proxy. `:id` UUID = capability URL, shuning
+   * uchun `@Public` xavfsiz (avatar/support/chat-media bilan bir xil).
+   * video_player shu URL'dan to'g'ridan o'ynaydi va birinchi kadrni
+   * thumbnail sifatida ko'rsatadi.
+   */
+  async getVideoStream(
+    id: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    const message = await this.prisma.videoMessage.findUnique({
+      where: { id },
+    });
+    if (!message || !message.storagePath) {
+      throw new NotFoundException('Video topilmadi');
+    }
+    return this.storage.getObject(BUCKETS.video, message.storagePath);
+  }
+
   async remove(userId: string, messageId: string) {
     const message = await this.prisma.videoMessage.findUnique({
       where: { id: messageId },

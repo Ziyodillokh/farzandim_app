@@ -118,29 +118,12 @@ class VoiceChatBubble extends ConsumerWidget {
             flex: 4,
             child: GestureDetector(
               onTap: () async {
-                // Sprint 4.4.5: Backend signed URL fetch.
-                // audioUrl bo'sh bo'lsa — Backend'dan signed URL olamiz
-                // (1 soat amal qiladi).
-                var url = message.audioUrl;
-                if (url.isEmpty) {
-                  url = await ref
-                          .read(backendVoiceMessageRepositoryProvider)
-                          .getFileUrl(message.id) ??
-                      '';
-                }
-                if (url.isEmpty) {
-                  if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content:
-                            Text('voiceChat.loadFailedSnack'.tr()),
-                        backgroundColor: Colors.red,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
-                  }
-                  return;
-                }
+                // Audio proxy stream URL — signed URL telefondan yetib
+                // bo'lmaydi (ichki MinIO manzili); just_audio shu @Public
+                // URL'dan to'g'ridan o'ynaydi.
+                final url = ref
+                    .read(backendVoiceMessageRepositoryProvider)
+                    .audioStreamUrl(message.id);
                 try {
                   await ref
                       .read(audioPlayerManagerProvider)

@@ -201,6 +201,22 @@ export class VoiceMessagesController {
     return this.voiceMessagesService.getFileUrl(user.userId, id);
   }
 
+  // @Public proxy stream — signed URL telefondan yetib bo'lmaydi (ichki
+  // MinIO manzili). `:id` UUID = capability URL (taxmin qilib bo'lmaydi),
+  // shuning uchun @Public xavfsiz. just_audio shu URL'dan to'g'ridan
+  // o'ynaydi (auth header'siz).
+  @Get(':id/stream')
+  @Public()
+  @Header('Cache-Control', 'private, max-age=86400')
+  @ApiOperation({ summary: 'Stream a voice message audio (proxy)' })
+  @ApiParam({ name: 'id', description: 'Voice message UUID' })
+  async stream(
+    @Param('id', ParseUUIDPipe) id: string,
+  ): Promise<StreamableFile> {
+    const obj = await this.voiceMessagesService.getAudioStream(id);
+    return new StreamableFile(obj.body, { type: obj.contentType });
+  }
+
   @Put(':id/read')
   @ApiOperation({ summary: 'Mark a voice message as read (receiver only)' })
   @ApiParam({ name: 'id', description: 'Voice message UUID' })

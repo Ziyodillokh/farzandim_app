@@ -13,7 +13,6 @@
 // video portret yoki landshaft bo'lsa ham doiraning to'liq markazidan
 // kesib olinadi (Telegram standartiga mos).
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/video_message/data/models/video_message.dart';
 import 'package:farzandim/features/video_message/data/repositories/backend_video_message_repository.dart';
@@ -59,17 +58,12 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
   Future<void> _loadThumbnail() async {
     if (!mounted) return;
     try {
-      final url = await ref
+      // Proxy stream URL — signed URL telefondan yetib bo'lmaydi (ichki
+      // MinIO manzili). Bu @Public URL video_player bilan to'g'ridan
+      // ochiladi va birinchi kadr thumbnail bo'ladi.
+      final url = ref
           .read(backendVideoMessageRepositoryProvider)
-          .getFileUrl(widget.message.id);
-      if (url == null || url.isEmpty) {
-        if (!mounted) return;
-        setState(() {
-          _loadingThumb = false;
-          _failed = true;
-        });
-        return;
-      }
+          .videoStreamUrl(widget.message.id);
       _signedUrl = url;
       final controller =
           VideoPlayerController.networkUrl(Uri.parse(url));
@@ -113,30 +107,17 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
   }
 
   Future<void> _openFullscreen() async {
-    // Signed URL hali bo'lmasa — fetch (thumbnail xato bergan bo'lsa).
-    var url = _signedUrl;
-    if (url == null || url.isEmpty) {
-      url = await ref
-          .read(backendVideoMessageRepositoryProvider)
-          .getFileUrl(widget.message.id);
-    }
-    if (url == null || url.isEmpty) {
-      if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('voiceChat.loadFailedSnack'.tr()),
-          backgroundColor: Colors.red,
-          duration: const Duration(seconds: 2),
-        ),
-      );
-      return;
-    }
+    // Proxy stream URL (signed URL telefondan yetib bo'lmaydi).
+    final url = _signedUrl ??
+        ref
+            .read(backendVideoMessageRepositoryProvider)
+            .videoStreamUrl(widget.message.id);
 
     if (!mounted) return;
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black87,
-      builder: (_) => _FullscreenVideoDialog(videoUrl: url!),
+      builder: (_) => _FullscreenVideoDialog(videoUrl: url),
     );
   }
 
