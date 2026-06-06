@@ -85,17 +85,12 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: const BoxDecoration(
-                color: AppColors.primary,
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(
-                Icons.shield_outlined,
-                color: Colors.black,
-                size: 50,
+            ClipOval(
+              child: Image.asset(
+                'assets/icons/child_logo_icon.png',
+                width: 112,
+                height: 112,
+                fit: BoxFit.cover,
               ),
             ),
             const SizedBox(height: 24),

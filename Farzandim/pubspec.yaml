@@ -225,7 +225,7 @@ flutter_native_splash:
   image: assets/app_icon/parent_app_icon_white.png
   android_12:
     color: "#0A0A16"
-    image: assets/icons/parent_logo_icon.png
+    image: assets/app_icon/parent_app_icon_white.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec

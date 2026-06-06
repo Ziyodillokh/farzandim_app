@@ -375,11 +375,13 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Image.asset(
-          'assets/icons/parent_logo_icon.png',
-          height: 44,
-          width: 44,
-          fit: BoxFit.contain,
+        ClipOval(
+          child: Image.asset(
+            'assets/icons/parent_logo_icon.png',
+            height: 44,
+            width: 44,
+            fit: BoxFit.cover,
+          ),
         ),
         const Spacer(),
         // Light/dark toggle — notification bell'ning CHAP tarafida.

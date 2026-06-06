@@ -61,11 +61,13 @@ class DashboardTopHeader extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Image.asset(
-            'assets/icons/child_logo_icon.png',
-            height: _kHeaderSize,
-            width: _kHeaderSize,
-            fit: BoxFit.contain,
+          ClipOval(
+            child: Image.asset(
+              'assets/icons/child_logo_icon.png',
+              height: _kHeaderSize,
+              width: _kHeaderSize,
+              fit: BoxFit.cover,
+            ),
           ),
           const Spacer(),
           if (onSettingsTap != null) ...[
