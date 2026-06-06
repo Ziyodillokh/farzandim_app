@@ -38,6 +38,20 @@ export class WriteLocationDto {
   @IsNumber()
   speed?: number;
 
+  // Bola ilovasi GPS'dan heading/altitude ham yuboradi. Hozir saqlanmaydi,
+  // lekin DTO'da e'lon qilinishi SHART — aks holda global ValidationPipe
+  // (whitelist + forbidNonWhitelisted) butun so'rovni "property heading
+  // should not exist" deb 400 bilan rad etadi va lokatsiya saqlanmaydi.
+  @ApiPropertyOptional({ example: 90.0, description: 'Heading in degrees (0-360)' })
+  @IsOptional()
+  @IsNumber()
+  heading?: number;
+
+  @ApiPropertyOptional({ example: 450.0, description: 'Altitude in meters' })
+  @IsOptional()
+  @IsNumber()
+  altitude?: number;
+
   @ApiPropertyOptional({ example: 85, minimum: 0, maximum: 100 })
   @IsOptional()
   @IsInt()

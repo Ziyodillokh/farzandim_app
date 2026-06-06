@@ -171,12 +171,18 @@ class BackendLocationRepository {
           }
 
           final locJson = data['location'];
-          if (locJson is! Map<String, dynamic>) {
+          // socket_io payload'ni ko'pincha Map<dynamic,dynamic> sifatida
+          // yetkazadi — qattiq Map<String,dynamic> cast real-time update'ni
+          // jimgina o'chirib qo'yardi. Yumshoq tekshirish + .from() bilan
+          // normalizatsiya qilamiz (marker real-vaqtda yangilanadi).
+          if (locJson is! Map) {
             debugPrint('LocRepo[$childId]: WS location field not Map — skip');
             return;
           }
           try {
-            final loc = ChildLocation.fromBackendJson(locJson);
+            final loc = ChildLocation.fromBackendJson(
+              Map<String, dynamic>.from(locJson),
+            );
             debugPrint(
               'LocRepo[$childId]: WS yangi joylashuv ${loc.latitude},${loc.longitude}',
             );
