@@ -23,13 +23,13 @@
     "en": "English"
   },
   "welcome": {
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "tagline": "Safe connection with your family",
     "startButton": "Get started",
     "codeHint": "Get the code from your parents"
   },
   "pairing": {
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "subtitle": "Enter the code from your parent's app",
     "hint": "Connect your phone to your parent's phone",
     "helpLink": "Where do I get the code?",
@@ -40,7 +40,7 @@
   },
   "permissions": {
     "title": "Permissions",
-    "subtitle": "Farzandim needs 3 permissions to work",
+    "subtitle": "Parvoz needs 3 permissions to work",
     "locationTitle": "Location",
     "locationDescription": "Your family will know where you are",
     "notificationTitle": "Notifications",
@@ -54,7 +54,7 @@
   },
   "permissionSetup": {
     "title": "Settings",
-    "subtitle": "Farzandim needs 4 permissions to work. Enable each one.",
+    "subtitle": "Parvoz needs 4 permissions to work. Enable each one.",
     "step1Title": "Location",
     "step1Subtitle": "For real-time location tracking",
     "step2Title": "Battery optimization",

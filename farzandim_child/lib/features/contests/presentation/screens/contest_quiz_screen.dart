@@ -912,7 +912,7 @@ class _ResultScreen extends StatelessWidget {
 
   Future<void> _onShare(BuildContext context) async {
     final text =
-        "Men Farzandim ilovasida '${contest.title}' konkursida "
+        "Men Parvoz ilovasida '${contest.title}' konkursida "
         "${state.correctCount}/10 to'g'ri javob berdim! 🏆\n"
         'Yiqqan ball: ${state.totalScore}\n\n'
         'Sen ham qatnash!';

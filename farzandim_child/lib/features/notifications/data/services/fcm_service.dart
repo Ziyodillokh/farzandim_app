@@ -23,7 +23,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// AndroidManifest'dagi default channel ID bilan mos kelishi shart.
 const String _defaultChannelId = 'farzandim_child_default';
-const String _defaultChannelName = 'Farzandim Child xabarlari';
+const String _defaultChannelName = 'Parvoz xabarlari';
 const String _defaultChannelDesc =
     'Ota-onadan ovozli/video xabar, foto so\'rovi, va boshqalar';
 

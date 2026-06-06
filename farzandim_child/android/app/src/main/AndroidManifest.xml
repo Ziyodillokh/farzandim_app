@@ -61,7 +61,7 @@
         tools:ignore="UnusedAttribute"/>
 
     <application
-        android:label="farzandim_child"
+        android:label="Parvoz"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity

@@ -20,7 +20,7 @@ class BackgroundService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'farzandim_child_bg',
-        channelName: 'Farzandim Child Service',
+        channelName: 'Parvoz xizmati',
         channelDescription:
             "Bola joylashuvini va holatini doimiy kuzatish uchun",
         channelImportance: NotificationChannelImportance.LOW,
@@ -50,7 +50,7 @@ class BackgroundService {
     // override qilingan — package'ning 8.17 API'sida serviceTypes parametri
     // yo'q, manifest orqali sozlanadi.
     await FlutterForegroundTask.startService(
-      notificationTitle: 'Farzandim ishlayapti',
+      notificationTitle: 'Parvoz ishlayapti',
       notificationText: "Oilangiz bilan bog'liqsiz",
       callback: backgroundEntry,
     );

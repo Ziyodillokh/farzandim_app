@@ -100,7 +100,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             ),
             const SizedBox(height: 24),
             const Text(
-              'Farzandim',
+              'Parvoz',
               style: TextStyle(
                 color: AppColors.textPrimary,
                 fontSize: 28,

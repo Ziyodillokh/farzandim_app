@@ -118,7 +118,7 @@ class ChildApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
 
     return MaterialApp.router(
-      title: 'Farzandim',
+      title: 'Parvoz',
       debugShowCheckedModeBanner: false,
       // Sprint UI.1: Light theme asosiy (Duolingo-style), dark fallback.
       theme: AppTheme.lightTheme,

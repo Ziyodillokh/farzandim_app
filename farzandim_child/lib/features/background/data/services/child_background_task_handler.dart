@@ -142,7 +142,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.
     final timeStr = DateFormat('HH:mm').format(toTashkent(timestamp));
     FlutterForegroundTask.updateService(
-      notificationTitle: 'Farzandim ishlayapti',
+      notificationTitle: 'Parvoz ishlayapti',
       notificationText: "Oxirgi yangilanish: $timeStr",
     );
   }

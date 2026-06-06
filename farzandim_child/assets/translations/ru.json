@@ -23,13 +23,13 @@
     "en": "Английский"
   },
   "welcome": {
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "tagline": "Безопасная связь с семьёй",
     "startButton": "Начать",
     "codeHint": "Получите код у родителей"
   },
   "pairing": {
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "subtitle": "Введите код из приложения родителей",
     "hint": "Свяжите телефон ребёнка с телефоном родителя",
     "helpLink": "Где взять код?",
@@ -40,7 +40,7 @@
   },
   "permissions": {
     "title": "Разрешения",
-    "subtitle": "Для работы Farzandim нужны 3 разрешения",
+    "subtitle": "Для работы Parvoz нужны 3 разрешения",
     "locationTitle": "Местоположение",
     "locationDescription": "Семья будет знать, где вы находитесь",
     "notificationTitle": "Уведомления",
@@ -54,7 +54,7 @@
   },
   "permissionSetup": {
     "title": "Настройки",
-    "subtitle": "Для работы Farzandim нужны 4 разрешения. Включите каждое.",
+    "subtitle": "Для работы Parvoz нужны 4 разрешения. Включите каждое.",
     "step1Title": "Местоположение",
     "step1Subtitle": "Для отслеживания местоположения в реальном времени",
     "step2Title": "Оптимизация батареи",
