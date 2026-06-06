@@ -9,6 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { extname } from 'path';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { FcmService } from '../../common/fcm/fcm.service';
@@ -29,6 +30,9 @@ const ALLOWED_MIMES = [
   'audio/wav',
 ];
 const MAX_SIZE_BYTES = 10 * 1024 * 1024; // 10 MB
+// Chat media (rasm / hujjat) — audio'dan kattaroq, lekin main.ts multipart
+// bodyLimit (100 MB) ichida. Telefon kamerasi rasmlari + odatiy hujjatlar.
+const MAX_MEDIA_SIZE_BYTES = 50 * 1024 * 1024; // 50 MB
 
 @Injectable()
 export class VoiceMessagesService {
@@ -171,6 +175,111 @@ export class VoiceMessagesService {
     return voiceMessage;
   }
 
+  // ─── Media xabar (Telegram-style chat: rasm / hujjat) ─────────────
+  // Fayl MinIO `chat` bucket'iga yuklanadi, `mediaKey` (single-segment,
+  // underscore — proxy path param uchun) DB'da saqlanadi. Klient
+  // `GET /voice-messages/media/:key` proxy orqali ko'rsatadi/yuklab oladi
+  // (signed URL telefondan yetib bo'lmaydigan ichki MinIO manzilini
+  // chetlaydi — support/avatar proxy bilan bir xil yondashuv).
+  async sendMedia(
+    senderId: string,
+    receiverId: string,
+    caption: string | undefined,
+    file: { buffer: Buffer; mimetype?: string; filename?: string },
+  ) {
+    if (!receiverId) {
+      throw new BadRequestException('receiverId required');
+    }
+    if (receiverId === senderId) {
+      throw new BadRequestException('Cannot send to yourself');
+    }
+    if (!file.buffer || file.buffer.length === 0) {
+      throw new BadRequestException("Bo'sh fayl");
+    }
+    if (file.buffer.length > MAX_MEDIA_SIZE_BYTES) {
+      throw new PayloadTooLargeException(
+        `Fayl juda katta, maks ${MAX_MEDIA_SIZE_BYTES} bayt`,
+      );
+    }
+
+    const receiver = await this.prisma.user.findUnique({
+      where: { id: receiverId },
+    });
+    if (!receiver) {
+      throw new NotFoundException('Receiver not found');
+    }
+
+    const link = await findFamilyLink(this.prisma, senderId, receiverId);
+    if (!link) {
+      throw new ForbiddenException(
+        'Sender and receiver are not in the same family',
+      );
+    }
+
+    const mime = file.mimetype || 'application/octet-stream';
+    const isImage = mime.startsWith('image/');
+    const mediaType = isImage ? 'image' : 'file';
+    const ext = extname(file.filename || '') || (isImage ? '.jpg' : '');
+    // Single-segment key (underscore, slash yo'q) — proxy `:key` path param
+    // uchun. Tasodifiy UUID → capability URL (taxmin qilib bo'lmaydi).
+    const mediaKey = `${senderId}_${randomUUID()}${ext}`;
+
+    try {
+      await this.storage.upload(BUCKETS.chat, mediaKey, file.buffer, mime);
+    } catch (err) {
+      this.logger.error('Chat media upload failed', err);
+      throw new InternalServerErrorException('Fayl yuklashda xatolik');
+    }
+
+    const trimmedCaption = caption?.trim();
+    const voiceMessage = await this.prisma.voiceMessage.create({
+      data: {
+        senderId,
+        receiverId,
+        storagePath: null,
+        durationSeconds: null,
+        text:
+          trimmedCaption && trimmedCaption.length > 0
+            ? trimmedCaption.slice(0, 4000)
+            : null,
+        mediaKey,
+        mediaType,
+        mimeType: mime,
+        fileName: file.filename ?? null,
+        fileSize: file.buffer.length,
+      },
+      include: {
+        sender: { select: USER_SELECT },
+        receiver: { select: USER_SELECT },
+      },
+    });
+
+    this.realtime.emitToUser(receiverId, 'voice:received', voiceMessage);
+
+    try {
+      await this.fcm.sendPushToUser(receiverId, {
+        title: voiceMessage.sender.name ?? 'Yangi xabar',
+        body: isImage ? '🖼 Rasm yubordi' : '📎 Hujjat yubordi',
+        data: {
+          type: 'voice',
+          messageId: voiceMessage.id,
+          senderId,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(`Media push failed for message ${voiceMessage.id}`, err);
+    }
+
+    return voiceMessage;
+  }
+
+  /** Chat media faylini MinIO'dan o'qiydi (proxy stream uchun). */
+  async getMediaObject(
+    key: string,
+  ): Promise<{ body: Buffer; contentType: string }> {
+    return this.storage.getObject(BUCKETS.chat, key);
+  }
+
   async list(userId: string, role?: 'sent' | 'received') {
     let where: any;
     if (role === 'received') {
@@ -264,6 +373,16 @@ export class VoiceMessagesService {
         await this.storage.delete(BUCKETS.voice, message.storagePath);
       } catch (err) {
         this.logger.warn('MinIO delete failed, removing DB row anyway', err);
+      }
+    }
+    if (message.mediaKey) {
+      try {
+        await this.storage.delete(BUCKETS.chat, message.mediaKey);
+      } catch (err) {
+        this.logger.warn(
+          'MinIO chat media delete failed, removing DB row anyway',
+          err,
+        );
       }
     }
 

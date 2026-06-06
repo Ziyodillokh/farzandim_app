@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/voice_message/data/models/voice_message.dart';
@@ -7,14 +10,15 @@ import 'package:farzandim/features/voice_message/presentation/providers/voice_me
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:open_filex/open_filex.dart';
+import 'package:path_provider/path_provider.dart';
 
-/// Telegram uslubidagi audio bubble.
+/// Telegram uslubidagi xabar bubble (matn / rasm / hujjat / audio).
 ///
-/// `isOwn = true` — ota-ona yuborgan (o'ng tomon, primary fon).
-/// `isOwn = false` — bola yuborgan (chap tomon, surface fon).
+/// `isOwn = true` — ota-ona yuborgan (o'ng tomon, primary/yashil fon).
+/// `isOwn = false` — bola yuborgan (chap tomon, surface/to'q fon).
 ///
-/// Tap → `AudioPlayerManager` orqali play/pause toggle. Hozir o'ynayotgan
-/// bubble waveform progress, position counter va speed badge ko'rsatadi.
+/// Audio: tap → `AudioPlayerManager` orqali play/pause toggle.
 class VoiceChatBubble extends ConsumerWidget {
   /// `VoiceChatBubble` konstruktor.
   const VoiceChatBubble({
@@ -58,6 +62,18 @@ class VoiceChatBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // ─── Telegram-style matn / media bubble'lari ───
+    if (message.isText) {
+      return _TextBubble(message: message, isOwn: isOwn);
+    }
+    if (message.isImage) {
+      return _ImageBubble(message: message, isOwn: isOwn);
+    }
+    if (message.isFile) {
+      return _FileBubble(message: message, isOwn: isOwn);
+    }
+
+    // ─── Audio (ovozli) bubble — mavjud dizayn ───
     final currentId = ref.watch(currentlyPlayingIdProvider).value;
     final isCurrent = currentId == message.id;
 
@@ -85,7 +101,7 @@ class VoiceChatBubble extends ConsumerWidget {
     final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
     final textColor = isOwn ? Colors.black : AppColors.textPrimary;
     final waveformColor =
-        isOwn ? Colors.black.withValues(alpha: 0.6) : AppColors.primary;
+        isOwn ? Colors.black.withValues(alpha: 0.6) : AppColors.accent;
 
     final displayDuration = isPlaying
         ? position
@@ -319,6 +335,485 @@ class VoiceChatBubble extends ConsumerWidget {
             ),
           ),
           if (!isOwn) const Spacer(),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Matn bubble (Telegram-style)
+// ─────────────────────────────────────────────────────────────────────
+
+String _formatTimeShort(DateTime dt) =>
+    '${dt.hour.toString().padLeft(2, '0')}:'
+    '${dt.minute.toString().padLeft(2, '0')}';
+
+class _TextBubble extends StatelessWidget {
+  const _TextBubble({required this.message, required this.isOwn});
+
+  final VoiceMessage message;
+  final bool isOwn;
+
+  @override
+  Widget build(BuildContext context) {
+    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
+    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
+    final metaColor = isOwn
+        ? Colors.black.withValues(alpha: 0.55)
+        : AppColors.textSecondary;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(flex: 1),
+          Flexible(
+            flex: 5,
+            child: Container(
+              constraints: const BoxConstraints(minWidth: 72),
+              padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
+              decoration: BoxDecoration(
+                color: bubbleColor,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                  bottomRight: Radius.circular(isOwn ? 4 : 18),
+                ),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    message.text ?? '',
+                    style: TextStyle(
+                      color: textColor,
+                      fontSize: 15,
+                      height: 1.35,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  _BubbleMeta(
+                    message: message,
+                    isOwn: isOwn,
+                    color: metaColor,
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(flex: 1),
+        ],
+      ),
+    );
+  }
+}
+
+/// Vaqt + (own bo'lsa) o'qildi belgisi — bubble pastki o'ng burchak.
+class _BubbleMeta extends StatelessWidget {
+  const _BubbleMeta({
+    required this.message,
+    required this.isOwn,
+    required this.color,
+  });
+
+  final VoiceMessage message;
+  final bool isOwn;
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        Text(
+          _formatTimeShort(message.createdAt),
+          style: TextStyle(color: color, fontSize: 11),
+        ),
+        if (isOwn) ...[
+          const SizedBox(width: 4),
+          Icon(
+            message.isSeen ? Icons.done_all : Icons.done,
+            size: 14,
+            color: message.isSeen
+                ? Colors.blue.shade700
+                : color,
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Rasm bubble
+// ─────────────────────────────────────────────────────────────────────
+
+class _ImageBubble extends ConsumerWidget {
+  const _ImageBubble({required this.message, required this.isOwn});
+
+  final VoiceMessage message;
+  final bool isOwn;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final url = ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .mediaUrl(message.mediaKey!);
+    final caption = message.text;
+    final hasCaption = caption != null && caption.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(flex: 1),
+          Flexible(
+            flex: 5,
+            child: Container(
+              decoration: BoxDecoration(
+                color: isOwn ? AppColors.primary : AppColors.surface,
+                borderRadius: BorderRadius.only(
+                  topLeft: const Radius.circular(18),
+                  topRight: const Radius.circular(18),
+                  bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                  bottomRight: Radius.circular(isOwn ? 4 : 18),
+                ),
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => _FullScreenImage(url: url),
+                      ),
+                    ),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(
+                        maxHeight: 280,
+                        minHeight: 120,
+                      ),
+                      child: Image.network(
+                        url,
+                        fit: BoxFit.cover,
+                        loadingBuilder: (context, child, progress) {
+                          if (progress == null) return child;
+                          return Container(
+                            height: 180,
+                            color: Colors.black.withValues(alpha: 0.08),
+                            child: Center(
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2,
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          height: 140,
+                          color: Colors.black.withValues(alpha: 0.08),
+                          child: Icon(
+                            Icons.broken_image_outlined,
+                            color: AppColors.textSecondary,
+                            size: 40,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(
+                      12,
+                      hasCaption ? 8 : 6,
+                      10,
+                      6,
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (hasCaption) ...[
+                          Text(
+                            caption,
+                            style: TextStyle(
+                              color: isOwn
+                                  ? Colors.black
+                                  : AppColors.textPrimary,
+                              fontSize: 15,
+                              height: 1.35,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                        ],
+                        _BubbleMeta(
+                          message: message,
+                          isOwn: isOwn,
+                          color: isOwn
+                              ? Colors.black.withValues(alpha: 0.55)
+                              : AppColors.textSecondary,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(flex: 1),
+        ],
+      ),
+    );
+  }
+}
+
+/// To'liq ekran rasm ko'rish (zoom).
+class _FullScreenImage extends StatelessWidget {
+  const _FullScreenImage({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      appBar: AppBar(
+        backgroundColor: Colors.black,
+        foregroundColor: Colors.white,
+        elevation: 0,
+      ),
+      body: Center(
+        child: InteractiveViewer(
+          minScale: 0.8,
+          maxScale: 4,
+          child: Image.network(
+            url,
+            fit: BoxFit.contain,
+            errorBuilder: (_, __, ___) => const Icon(
+              Icons.broken_image_outlined,
+              color: Colors.white54,
+              size: 64,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
+// Hujjat (file) bubble — tap → yuklab olib native ilovada ochish
+// ─────────────────────────────────────────────────────────────────────
+
+class _FileBubble extends ConsumerStatefulWidget {
+  const _FileBubble({required this.message, required this.isOwn});
+
+  final VoiceMessage message;
+  final bool isOwn;
+
+  @override
+  ConsumerState<_FileBubble> createState() => _FileBubbleState();
+}
+
+class _FileBubbleState extends ConsumerState<_FileBubble> {
+  bool _busy = false;
+
+  String _formatSize(int? bytes) {
+    if (bytes == null || bytes <= 0) return '';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  IconData _iconFor(String? mime, String? name) {
+    final m = mime ?? '';
+    final n = (name ?? '').toLowerCase();
+    if (m.contains('pdf') || n.endsWith('.pdf')) {
+      return Icons.picture_as_pdf_rounded;
+    }
+    if (m.startsWith('video/')) return Icons.movie_outlined;
+    if (m.startsWith('audio/')) return Icons.audiotrack_rounded;
+    if (m.contains('word') || n.endsWith('.doc') || n.endsWith('.docx')) {
+      return Icons.description_rounded;
+    }
+    if (m.contains('sheet') ||
+        m.contains('excel') ||
+        n.endsWith('.xls') ||
+        n.endsWith('.xlsx')) {
+      return Icons.table_chart_rounded;
+    }
+    if (m.contains('zip') || m.contains('rar') || m.contains('compressed')) {
+      return Icons.folder_zip_rounded;
+    }
+    return Icons.insert_drive_file_rounded;
+  }
+
+  Future<void> _openFile() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final repo = ref.read(backendVoiceMessageRepositoryProvider);
+      final url = repo.mediaUrl(widget.message.mediaKey!);
+      final dir = await getTemporaryDirectory();
+      final safeName = (widget.message.fileName ?? 'fayl')
+          .replaceAll(RegExp(r'[^\w\-. ]'), '_');
+      final savePath = '${dir.path}/${widget.message.id}_$safeName';
+      final file = File(savePath);
+      if (!file.existsSync() || file.lengthSync() == 0) {
+        await Dio().download(url, savePath);
+      }
+      final result = await OpenFilex.open(savePath);
+      if (result.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('voiceChat.fileOpenFailed'.tr()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('voiceChat.fileOpenFailed'.tr()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwn = widget.isOwn;
+    final message = widget.message;
+    final fg = isOwn ? Colors.black : AppColors.textPrimary;
+    final subColor = isOwn
+        ? Colors.black.withValues(alpha: 0.55)
+        : AppColors.textSecondary;
+    final iconBg =
+        isOwn ? Colors.black.withValues(alpha: 0.12) : AppColors.primary;
+    final iconFg = isOwn ? Colors.black : Colors.black;
+    final caption = message.text;
+    final hasCaption = caption != null && caption.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(flex: 1),
+          Flexible(
+            flex: 5,
+            child: GestureDetector(
+              onTap: _openFile,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(10, 10, 12, 8),
+                decoration: BoxDecoration(
+                  color: isOwn ? AppColors.primary : AppColors.surface,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                    bottomRight: Radius.circular(isOwn ? 4 : 18),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: iconBg,
+                            shape: BoxShape.circle,
+                          ),
+                          child: _busy
+                              ? Padding(
+                                  padding: const EdgeInsets.all(11),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: iconFg,
+                                  ),
+                                )
+                              : Icon(
+                                  _iconFor(message.mimeType, message.fileName),
+                                  color: iconFg,
+                                  size: 24,
+                                ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                message.fileName ?? 'voiceChat.fileGeneric'.tr(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: fg,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _formatSize(message.fileSize),
+                                style: TextStyle(
+                                  color: subColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (hasCaption) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        caption,
+                        style: TextStyle(
+                          color: fg,
+                          fontSize: 15,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 2),
+                    _BubbleMeta(
+                      message: message,
+                      isOwn: isOwn,
+                      color: subColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(flex: 1),
         ],
       ),
     );

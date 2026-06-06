@@ -15,14 +15,17 @@ import 'package:farzandim/features/voice_message/data/services/audio_player_mana
 import 'package:farzandim/features/voice_message/data/services/audio_recorder_service.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_upload_provider.dart';
+import 'package:farzandim/features/voice_message/presentation/widgets/chat_input_bar.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_bubble.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_recorder.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/voice_chat_bubble.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 
@@ -62,6 +65,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   final List<double> _amplitudes = [];
   DateTime? _recordingStartedAt;
   bool _isCanceled = false;
+
+  /// Media (rasm/hujjat) yuklanmoqda — input bar attach tugmasi spinner.
+  bool _isMediaUploading = false;
 
   /// Min davomiylik (1.5 sek) — bundan kam yozilgan bo'lsa upload
   /// qilinmaydi (snackbar ogohlantirish).
@@ -392,6 +398,101 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     }
   }
 
+  // ─── Telegram-style matn yuborish ────────────────────────────────
+  // Backend POST /voice-messages/text → Socket.io receiver'ga emit.
+  // Provider invalidate qilib ListView'ga yangi bubble qo'shamiz.
+  Future<void> _sendTextMessage(String text) async {
+    final receiverId = _resolveReceiverId();
+    if (receiverId == null) {
+      _showError('voiceChat.sendErrorDefault'.tr());
+      return;
+    }
+    try {
+      await ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .sendText(receiverId: receiverId, text: text);
+      ref.invalidate(voiceMessagesProvider(widget.childId));
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (_) {
+      _showError('voiceChat.sendErrorDefault'.tr());
+    }
+  }
+
+  // ─── Media (rasm / hujjat) tanlash + yuborish ────────────────────
+  Future<void> _pickGallery() async {
+    try {
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (x != null) await _sendMediaFile(File(x.path));
+    } catch (_) {
+      _showError('voiceChat.mediaSendError'.tr());
+    }
+  }
+
+  Future<void> _pickCamera() async {
+    try {
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (x != null) await _sendMediaFile(File(x.path));
+    } catch (_) {
+      _showError('voiceChat.mediaSendError'.tr());
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles();
+      final path = result?.files.single.path;
+      if (path != null) await _sendMediaFile(File(path));
+    } catch (_) {
+      _showError('voiceChat.mediaSendError'.tr());
+    }
+  }
+
+  Future<void> _sendMediaFile(File file) async {
+    final receiverId = _resolveReceiverId();
+    if (receiverId == null) {
+      _showError('voiceChat.mediaSendError'.tr());
+      return;
+    }
+    setState(() => _isMediaUploading = true);
+    try {
+      await ref.read(backendVoiceMessageRepositoryProvider).sendMedia(
+            receiverId: receiverId,
+            file: file,
+          );
+      ref.invalidate(voiceMessagesProvider(widget.childId));
+      if (!mounted) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (_) {
+      _showError('voiceChat.mediaSendError'.tr());
+    } finally {
+      if (mounted) setState(() => _isMediaUploading = false);
+    }
+  }
+
+  /// Bola Backend user ID (receiverId) — pair qilinmagan bo'lsa `null`.
+  String? _resolveReceiverId() {
+    final child = ref.read(childByIdProvider(widget.childId));
+    final id = child?.linkedDeviceUid;
+    if (id == null || id.isEmpty) return null;
+    return id;
+  }
+
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: Colors.red),
+    );
+  }
+
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
@@ -491,7 +592,24 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                   ),
                 ),
               ),
-              _buildInputBar(),
+              ChatInputBar(
+                isRecording: _isRecording,
+                isVoiceUploading: ref.watch(voiceUploadProvider).status ==
+                    UploadStatus.uploading,
+                isVideoUploading: ref.watch(videoUploadProvider).status ==
+                    VideoUploadStatus.uploading,
+                isMediaUploading: _isMediaUploading,
+                elapsedSeconds: _elapsedSeconds,
+                amplitudes: _amplitudes,
+                onLongPressStart: () => unawaited(_onLongPressStart()),
+                onLongPressEnd: () => unawaited(_onLongPressEnd()),
+                onCancel: () => unawaited(_abortRecording()),
+                onVideoPressed: () => unawaited(_onVideoRecordPressed()),
+                onSendText: (t) => unawaited(_sendTextMessage(t)),
+                onPickGallery: () => unawaited(_pickGallery()),
+                onPickCamera: () => unawaited(_pickCamera()),
+                onPickFile: () => unawaited(_pickFile()),
+              ),
             ],
           ),
         ),
@@ -499,319 +617,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     );
   }
 
-  // ─── Input bar ───────────────────────────────────────────────────
-  //
-  // **Bug fix:** ilgari idle/recording uchun 2 ta alohida widget bor
-  // edi. `setState`'da idle GestureDetector destroy bo'lib mid-gesture
-  // long-press subscription yo'qolardi → `onLongPressEnd` chaqirilmas
-  // edi. Endi bitta `Row` — mic GestureDetector stable pozitsiyada
-  // (har doim oxirgi child) + `ValueKey` element preservation uchun.
-  // Recording paytida atrofidagi UI o'zgaradi (delete + indicator
-  // paydo bo'ladi), lekin gesture saqlanadi.
-
-  Widget _buildInputBar() {
-    final isUploading =
-        ref.watch(voiceUploadProvider).status == UploadStatus.uploading;
-    final isVideoUploading = ref.watch(videoUploadProvider).status ==
-        VideoUploadStatus.uploading;
-
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.sm + 4),
-      decoration: BoxDecoration(
-        border: Border(
-          top: BorderSide(
-            color: AppColors.textSecondary.withValues(alpha: 0.1),
-          ),
-        ),
-      ),
-      child: Row(
-        children: [
-          // [0] Delete tugma (recording) yoki bo'sh — pozitsiya stable.
-          // `if-else` collection element: ro'yxat uzunligi har holatda
-          // bir xil (1 element), ternary o'rniga lint-friendly.
-          if (_isRecording)
-            IconButton(
-              icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.red,
-                size: 28,
-              ),
-              onPressed: _abortRecording,
-              tooltip: 'voiceChat.cancelTooltip'.tr(),
-            )
-          else
-            const SizedBox.shrink(),
-
-          // [1] Markaziy joy: indicator (recording) yoki bo'sh filler.
-          Expanded(
-            child: _isRecording
-                ? _RecordingIndicator(
-                    elapsedSeconds: _elapsedSeconds,
-                    amplitudes: _amplitudes,
-                  )
-                : const SizedBox.shrink(),
-          ),
-
-          // [2] Recording paytida 12px gap, idle holatda 0.
-          SizedBox(width: _isRecording ? 12 : 0),
-
-          // [2.5] Video record tugmasi — faqat idle holatda ko'rinadi
-          // (recording paytida UI'ni soddalashtirib turamiz).
-          if (!_isRecording) ...[
-            _VideoRecordButton(
-              isUploading: isVideoUploading,
-              onPressed: isUploading || isVideoUploading
-                  ? null
-                  : _onVideoRecordPressed,
-            ),
-            const SizedBox(width: 12),
-          ],
-
-          // [3] Mic GestureDetector — har doim shu pozitsiyada.
-          // ValueKey element matching kafolatlaydi: state o'zgarsa ham
-          // Flutter eski elementni qaytadan ishlatadi → long-press
-          // subscription saqlanadi va `onLongPressEnd` chaqiriladi.
-          GestureDetector(
-            key: const ValueKey('voice-mic-button'),
-            behavior: HitTestBehavior.opaque,
-            // Sprint 4.4.5: ikki UX qo'llab-quvvatlanadi:
-            // - Tap (qisqa bosish): toggle (start yoki stop+send)
-            // - Long press (bosib turish): bosgan paytda recording,
-            //   qo'yib yuborganda send (klassik WhatsApp/Telegram UX)
-            // Flutter GestureRecognizer ikkalasini parallel sezadi.
-            onTap: isUploading
-                ? null
-                : () {
-                    if (_isRecording) {
-                      _onLongPressEnd();
-                    } else {
-                      _onLongPressStart();
-                    }
-                  },
-            onLongPressStart:
-                isUploading ? null : (_) => _onLongPressStart(),
-            onLongPressEnd:
-                isUploading ? null : (_) => _onLongPressEnd(),
-            child: Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                gradient: _isRecording
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                      )
-                    : LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: isUploading
-                            ? [
-                                AppColors.primary.withValues(alpha: 0.6),
-                                AppColors.primaryDark.withValues(alpha: 0.6),
-                              ]
-                            : const [
-                                Color(0xFFD0FF6E),
-                                Color(0xFFA3CE4F),
-                              ],
-                      ),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: Colors.white.withValues(alpha: 0.15),
-                  width: 2,
-                ),
-                boxShadow: [
-                  BoxShadow(
-                    color: (_isRecording
-                            ? const Color(0xFFFF5252)
-                            : AppColors.primary)
-                        .withValues(alpha: _isRecording ? 0.5 : 0.4),
-                    blurRadius: _isRecording ? 24 : 18,
-                    spreadRadius: _isRecording ? 4 : 2,
-                  ),
-                ],
-              ),
-              child: isUploading
-                  ? const Center(
-                      child: SizedBox(
-                        width: 20,
-                        height: 20,
-                        child: CircularProgressIndicator(
-                          strokeWidth: 2,
-                          color: Colors.black,
-                        ),
-                      ),
-                    )
-                  : Icon(
-                      _isRecording
-                          ? Icons.stop_rounded
-                          : Icons.mic_rounded,
-                      color:
-                          _isRecording ? Colors.white : Colors.black,
-                      size: 40,
-                    ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Recording paytidagi waveform + timer + qizil dot bo'lim.
-///
-/// Faqat ko'rinish — gesture'lar tashqi `GestureDetector`'da. Shu
-/// widget atrofidagi UI rebuild bo'lganda mic gesture'iga ta'sir
-/// qilmaydi.
-class _RecordingIndicator extends StatelessWidget {
-  const _RecordingIndicator({
-    required this.elapsedSeconds,
-    required this.amplitudes,
-  });
-
-  final int elapsedSeconds;
-  final List<double> amplitudes;
-
-  @override
-  Widget build(BuildContext context) {
-    final m = (elapsedSeconds ~/ 60).toString().padLeft(2, '0');
-    final s = (elapsedSeconds % 60).toString().padLeft(2, '0');
-
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 12,
-        vertical: 8,
-      ),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            '$m:$s',
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 24,
-              child: ListView.builder(
-                scrollDirection: Axis.horizontal,
-                reverse: true,
-                physics: const NeverScrollableScrollPhysics(),
-                itemCount: amplitudes.length,
-                itemBuilder: (_, i) {
-                  final amp = amplitudes[amplitudes.length - 1 - i];
-                  final h = (amp * 24).clamp(2.0, 24.0);
-                  return Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 1),
-                    child: Center(
-                      child: Container(
-                        width: 2.5,
-                        height: h,
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(1),
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-/// Yumaloq video xabar yozish tugmasi (mic yonida).
-class _VideoRecordButton extends StatelessWidget {
-  const _VideoRecordButton({
-    required this.isUploading,
-    required this.onPressed,
-  });
-
-  final bool isUploading;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              AppColors.surface,
-              AppColors.surfaceVariant,
-            ],
-          ),
-          border: Border.all(
-            color: AppColors.primary.withValues(alpha: 0.7),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.22),
-              blurRadius: 14,
-              spreadRadius: 1,
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
-            ),
-          ],
-        ),
-        child: isUploading
-            ? Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
-                  ),
-                ),
-              )
-            : ShaderMask(
-                shaderCallback: (rect) => LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ).createShader(rect),
-                child: const Icon(
-                  Icons.videocam_rounded,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
-      ),
-    );
-  }
 }
 
 class _ChatHeader extends StatelessWidget {
@@ -896,7 +701,7 @@ class _FallbackAvatar extends StatelessWidget {
       ),
       child: Icon(
         Icons.person,
-        color: AppColors.primary,
+        color: AppColors.accent,
         size: 22,
       ),
     );
@@ -939,7 +744,7 @@ class _EmptyChat extends StatelessWidget {
                     child: Icon(
                       Icons.mic_outlined,
                       size: 50,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   const SizedBox(height: AppDimensions.lg),

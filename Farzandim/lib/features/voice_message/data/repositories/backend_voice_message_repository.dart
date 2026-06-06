@@ -95,6 +95,74 @@ class BackendVoiceMessageRepository {
     }
   }
 
+  /// Text xabar yuborish (Telegram-style chat).
+  /// `POST /voice-messages/text` { receiverId, text } — audio yo'q.
+  /// Backend Socket.io orqali receiver'ga real-time emit qiladi.
+  Future<String?> sendText({
+    required String receiverId,
+    required String text,
+  }) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return null;
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/voice-messages/text',
+        data: <String, dynamic>{
+          'receiverId': receiverId,
+          'text': trimmed,
+        },
+      );
+      return response.data?['id'] as String?;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVoiceMessageRepository.sendText xato '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
+  /// Media (rasm/hujjat) yuborish — multipart MinIO upload (`chat` bucket).
+  /// `POST /voice-messages/media` { file, receiverId, caption? }.
+  Future<String?> sendMedia({
+    required String receiverId,
+    required File file,
+    String? caption,
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      final trimmedCaption = caption?.trim();
+      final formData = FormData.fromMap({
+        'receiverId': receiverId,
+        if (trimmedCaption != null && trimmedCaption.isNotEmpty)
+          'caption': trimmedCaption,
+        'file': await MultipartFile.fromFile(file.path),
+      });
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/voice-messages/media',
+        data: formData,
+        onSendProgress: (count, total) {
+          if (total > 0 && onProgress != null) {
+            onProgress(count / total);
+          }
+        },
+      );
+      return response.data?['id'] as String?;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVoiceMessageRepository.sendMedia xato '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
+  /// Media fayl proxy URL — auth header'siz `Image.network` / yuklab olish
+  /// uchun (signed URL telefondan yetib bo'lmaydigan ichki MinIO manzilini
+  /// chetlaydi; support/avatar proxy bilan bir xil).
+  String mediaUrl(String key) =>
+      '${_dio.options.baseUrl}/voice-messages/media/$key';
+
   /// Audio fayl signed URL (1 soat amal qiladi).
   Future<String?> getFileUrl(String messageId) async {
     try {

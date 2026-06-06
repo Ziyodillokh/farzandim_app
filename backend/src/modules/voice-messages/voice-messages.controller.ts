@@ -14,6 +14,8 @@ import {
   BadRequestException,
   UnsupportedMediaTypeException,
   PayloadTooLargeException,
+  StreamableFile,
+  Header,
 } from '@nestjs/common';
 import {
   ApiTags,
@@ -27,7 +29,7 @@ import {
 } from '@nestjs/swagger';
 import { FastifyRequest } from 'fastify';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ParseUUIDPipe } from '../../common/pipes/parse-uuid.pipe';
 import { VoiceMessagesService } from './voice-messages.service';
@@ -118,6 +120,63 @@ export class VoiceMessagesController {
       throw new BadRequestException('text maksimum 4000 belgi');
     }
     return this.voiceMessagesService.sendText(user.userId, receiverId, text);
+  }
+
+  // ─── Media xabar (Telegram-style chat: rasm / hujjat) ──────────────
+  // Multipart: file + receiverId + (ixtiyoriy) caption. Fayl MinIO `chat`
+  // bucket'iga yuklanadi, xabar `mediaKey`/`mediaType` bilan saqlanadi.
+  @Post('media')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Send a media message (image/file, multipart, 50 MB max)' })
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['file', 'receiverId'],
+      properties: {
+        file: { type: 'string', format: 'binary', description: 'Image or document' },
+        receiverId: { type: 'string', format: 'uuid' },
+        caption: { type: 'string', maxLength: 4000 },
+      },
+    },
+  })
+  @ApiResponse({ status: 201, description: 'Media message created' })
+  async sendMedia(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    const data = await (req as any).file();
+    if (!data) {
+      throw new BadRequestException('Fayl yuborilmadi');
+    }
+
+    const buffer = await data.toBuffer();
+    const fields = data.fields as Record<string, any>;
+    const receiverId = fields?.receiverId?.value as string | undefined;
+    const caption = fields?.caption?.value as string | undefined;
+
+    if (!receiverId) {
+      throw new BadRequestException('receiverId required');
+    }
+
+    return this.voiceMessagesService.sendMedia(user.userId, receiverId, caption, {
+      buffer,
+      mimetype: data.mimetype,
+      filename: data.filename,
+    });
+  }
+
+  // @Public — Image.network / yuklab olish auth header'siz ishlashi uchun
+  // (support/app-icon proxy bilan bir xil). Key `{userId}_{uuid}{ext}` —
+  // tasodifiy UUID tufayli taxmin qilib bo'lmaydi (capability URL).
+  @Get('media/:key')
+  @Public()
+  @Header('Cache-Control', 'private, max-age=86400')
+  @ApiOperation({ summary: 'Stream a chat media file (proxy)' })
+  @ApiParam({ name: 'key', description: 'Media key from upload response' })
+  async downloadMedia(@Param('key') key: string): Promise<StreamableFile> {
+    const obj = await this.voiceMessagesService.getMediaObject(key);
+    return new StreamableFile(obj.body, { type: obj.contentType });
   }
 
   @Get()

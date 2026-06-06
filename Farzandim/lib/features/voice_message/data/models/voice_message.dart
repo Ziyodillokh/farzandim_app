@@ -29,6 +29,12 @@ class VoiceMessage {
     required this.status,
     required this.createdAt,
     this.seenAt,
+    this.text,
+    this.mediaKey,
+    this.mediaType,
+    this.mimeType,
+    this.fileName,
+    this.fileSize,
   });
 
   /// Backend REST `VoiceMessage` JSON'idan (Sprint 4.4.5).
@@ -77,6 +83,12 @@ class VoiceMessage {
       // Z'ni majburlab qo'shamiz.
       createdAt: _parseBackendIso(json['createdAt'] as String?) ??
           DateTime.now(),
+      text: json['text'] as String?,
+      mediaKey: json['mediaKey'] as String?,
+      mediaType: json['mediaType'] as String?,
+      mimeType: json['mimeType'] as String?,
+      fileName: json['fileName'] as String?,
+      fileSize: (json['fileSize'] as num?)?.toInt(),
     );
   }
 
@@ -126,6 +138,42 @@ class VoiceMessage {
   /// Ko'rilgan vaqt — `null` bo'lsa hali tinglanmagan.
   final DateTime? seenAt;
 
+  /// Text xabar matni (Telegram-style chat). Audio/media'da `null` yoki
+  /// media uchun caption sifatida ishlatilishi mumkin.
+  final String? text;
+
+  /// Media fayl kaliti (MinIO `chat` bucket) — proxy URL build qilish uchun.
+  final String? mediaKey;
+
+  /// Media turi: `'image'` yoki `'file'`. Media bo'lmasa `null`.
+  final String? mediaType;
+
+  /// Media MIME turi (masalan `image/jpeg`, `application/pdf`).
+  final String? mimeType;
+
+  /// Media original fayl nomi (hujjat bubble'da ko'rsatiladi).
+  final String? fileName;
+
+  /// Media fayl hajmi baytda (hujjat bubble'da ko'rsatiladi).
+  final int? fileSize;
+
   /// Ko'rilganmi (status == seen).
   bool get isSeen => status == VoiceMessageStatus.seen;
+
+  /// Media (rasm/hujjat) xabar — `mediaKey` MinIO `chat` bucket kaliti.
+  bool get hasMedia => mediaKey != null && mediaKey!.isNotEmpty;
+
+  /// Rasm media.
+  bool get isImage => hasMedia && mediaType == 'image';
+
+  /// Hujjat (rasm bo'lmagan) media.
+  bool get isFile => hasMedia && mediaType != 'image';
+
+  /// Faqat matnli xabar (audio/media yo'q). Backend matn xabarda
+  /// `durationSeconds == null` (→ 0) va `storagePath == null` keladi.
+  bool get isText =>
+      !hasMedia && durationSeconds == 0 && (text != null && text!.isNotEmpty);
+
+  /// Audio (ovozli) xabar — text/media bo'lmagan qolgan barcha holat.
+  bool get isAudio => !hasMedia && !isText;
 }

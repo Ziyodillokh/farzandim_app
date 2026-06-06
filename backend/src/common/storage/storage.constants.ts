@@ -8,6 +8,7 @@ export const BUCKETS = {
   contentBooks: 'farzandim-content-books',
   contentThumbnails: 'farzandim-content-thumbnails',
   support: 'farzandim-support',
+  chat: 'farzandim-chat',
 } as const;
 
 export type BucketName = (typeof BUCKETS)[keyof typeof BUCKETS];

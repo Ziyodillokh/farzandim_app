@@ -188,6 +188,13 @@ model VoiceMessage {
   durationSeconds Int?     @map("duration_seconds")
   // Text xabar matni. Audio xabarda null bo'ladi.
   text            String?  @db.Text
+  // Media xabar (Telegram-style chat: rasm / hujjat). Fayl MinIO `chat`
+  // bucket'da, `mediaKey` proxy orqali ko'rsatiladi. mediaType: 'image' | 'file'.
+  mediaKey        String?  @map("media_key")
+  mediaType       String?  @map("media_type")
+  mimeType        String?  @map("mime_type")
+  fileName        String?  @map("file_name")
+  fileSize        Int?     @map("file_size")
   isRead          Boolean  @default(false) @map("is_read")
   createdAt       DateTime @default(now()) @map("created_at")
 
