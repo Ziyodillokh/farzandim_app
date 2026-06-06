@@ -16,6 +16,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_combined.dart';
@@ -755,32 +756,17 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
       }
       if (mounted) {
         Navigator.of(context).pop();
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text('appLimits.saved'.tr()),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceVariant,
-            ),
-          );
+        AppToast.success(context, 'appLimits.saved'.tr());
       }
     } catch (e) {
       if (mounted) {
         setState(() => _saving = false);
         // Aniq sabab (AppLimitException) ko'rsatamiz — generic "saqlashda
         // xatolik" o'rniga, foydalanuvchi muammoni tushunishi uchun.
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                e is AppLimitException ? e.message : 'appLimits.saveError'.tr(),
-              ),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.error,
-            ),
-          );
+        AppToast.error(
+          context,
+          e is AppLimitException ? e.message : 'appLimits.saveError'.tr(),
+        );
       }
     }
   }

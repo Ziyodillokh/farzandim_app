@@ -1,6 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
@@ -67,20 +68,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           );
 
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.savedSnack'.tr())),
-      );
+      AppToast.success(context, 'profile.savedSnack'.tr());
       context.pop();
     } catch (e) {
       if (!mounted) return;
       setState(() => _isSaving = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'profile.errorPrefix'.tr(namedArgs: {'error': '$e'}),
-          ),
-          backgroundColor: AppColors.error,
-        ),
+      AppToast.error(
+        context,
+        'profile.errorPrefix'.tr(namedArgs: {'error': '$e'}),
       );
     }
   }
@@ -93,16 +88,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     try {
       await ref.read(profileProvider.notifier).uploadAvatar(bytes);
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('profile.savedSnack'.tr())),
-      );
+      AppToast.success(context, 'profile.savedSnack'.tr());
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('profile.errorPrefix'.tr(namedArgs: {'error': '$e'})),
-          backgroundColor: AppColors.error,
-        ),
+      AppToast.error(
+        context,
+        'profile.errorPrefix'.tr(namedArgs: {'error': '$e'}),
       );
     } finally {
       if (mounted) setState(() => _isUploadingAvatar = false);

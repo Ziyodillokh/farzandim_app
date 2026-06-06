@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
@@ -78,16 +79,12 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
   }
 }
 
-void _snack(BuildContext context, String text) {
-  ScaffoldMessenger.of(context)
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(text),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.surfaceVariant,
-      ),
-    );
+void _snack(BuildContext context, String text, {bool error = false}) {
+  if (error) {
+    AppToast.error(context, text);
+  } else {
+    AppToast.info(context, text);
+  }
 }
 
 /// Bola qurilmasini baland ovozda jiringlatish (qurilmani topish).
@@ -101,7 +98,7 @@ Future<void> _ringDevice(
     await ref.read(backendChildRepositoryProvider).ringDevice(childId);
     if (context.mounted) _snack(context, 'deviceSettings.ringSent'.tr());
   } catch (_) {
-    if (context.mounted) _snack(context, 'deviceSettings.ringError'.tr());
+    if (context.mounted) _snack(context, 'deviceSettings.ringError'.tr(), error: true);
   }
 }
 
@@ -442,7 +439,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     } catch (_) {
       if (mounted) {
         setState(() => _blocked = previous); // revert
-        _snack(context, 'deviceSettings.unknownSources.errorSnack'.tr());
+        _snack(context, 'deviceSettings.unknownSources.errorSnack'.tr(), error: true);
       }
     } finally {
       if (mounted) setState(() => _saving = false);

@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
@@ -255,14 +256,10 @@ class _AddEditGeoZoneScreenState
     if (result.isSuccess) {
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'geoZoneEdit.saveErrorPrefix'.tr(
-              namedArgs: {'error': '${result.error}'},
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppToast.error(
+        context,
+        'geoZoneEdit.saveErrorPrefix'.tr(
+          namedArgs: {'error': '${result.error}'},
         ),
       );
     }
@@ -326,14 +323,10 @@ class _AddEditGeoZoneScreenState
     if (result.isSuccess) {
       context.pop();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'geoZoneEdit.deleteErrorPrefix'.tr(
-              namedArgs: {'error': '${result.error}'},
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppToast.error(
+        context,
+        'geoZoneEdit.deleteErrorPrefix'.tr(
+          namedArgs: {'error': '${result.error}'},
         ),
       );
     }
