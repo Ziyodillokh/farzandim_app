@@ -69,12 +69,27 @@ class ScreenTimeChart extends ConsumerWidget {
     'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya',
   ];
   // Getter — theme almashganda rang yangilanishi uchun (cached field emas).
-  static Color get _todayBar => AppColors.primary;
-  static Color get _otherBar => AppColors.surfaceVariant;
+  // Bugun — to'q/boy yashil (accent: dark=lime, light=to'q yashil) — bo'rtib turadi.
+  static Color get _todayBar => AppColors.accent;
+  // O'tgan kunlar — OCHROQ yashil (avval surfaceVariant edi → kartaga yopishib
+  // ko'rinmasdi). Endi ikkala temada ham aniq ko'rinadigan ochroq yashil.
+  static Color get _otherBar =>
+      AppColors.isDark ? const Color(0xFF6E8F46) : const Color(0xFFAFD884);
   static TextStyle get _yAxisStyle => TextStyle(
         fontSize: 11,
         color: AppColors.textSecondary,
+        fontWeight: FontWeight.w500,
       );
+
+  /// Bar ustidagi "ishlatilgan vaqt" yorlig'i — ixcham (2.5s / 45d).
+  static String _barLabel(int ms) {
+    if (ms <= 0) return '';
+    final hoursF = ms / 3600000;
+    if (hoursF >= 1) {
+      return '${hoursF.toStringAsFixed(hoursF >= 10 ? 0 : 1)}s';
+    }
+    return '${ms ~/ 60000}d';
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -167,58 +182,109 @@ class ScreenTimeChart extends ConsumerWidget {
           ),
         ),
         const SizedBox(height: 24),
+        // ─── Grafik: chap soat-shkalasi + yengil gridline'lar + bar'lar ───
         SizedBox(
-          height: 180,
+          height: 150,
           child: Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Expanded(
-                child: Row(
+              // Y o'qi — soat shkalasi (gridline'larga tekis).
+              SizedBox(
+                width: 30,
+                height: 150,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                  children: totals.map((daily) {
-                    final value = daily.hours;
-                    final isToday = _key(daily.date) == todayKey;
-                    final heightPercent = value / maxHours;
-                    return Column(
-                      mainAxisAlignment: MainAxisAlignment.end,
-                      children: [
-                        Container(
-                          width: 28,
-                          height: (heightPercent * 140).clamp(2, 140),
-                          decoration: BoxDecoration(
-                            color: isToday ? _todayBar : _otherBar,
-                            borderRadius: BorderRadius.circular(8),
-                          ),
-                        ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _shortDays[(daily.date.weekday - 1) % 7],
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight:
-                                isToday ? FontWeight.w700 : FontWeight.w400,
-                            color: isToday
-                                ? AppColors.textPrimary
-                                : AppColors.textSecondary,
-                          ),
-                        ),
-                      ],
-                    );
-                  }).toList(),
+                  children: [
+                    Text('${maxHours}s', style: _yAxisStyle),
+                    Text('${(maxHours / 2).round()}s', style: _yAxisStyle),
+                    Text('0', style: _yAxisStyle),
+                  ],
                 ),
               ),
               const SizedBox(width: 8),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text('$maxHours st', style: _yAxisStyle),
-                  Text('${(maxHours / 2).floor()} st', style: _yAxisStyle),
-                  Text('0', style: _yAxisStyle),
-                  const SizedBox(height: 20),
-                ],
+              Expanded(
+                child: Stack(
+                  children: [
+                    // Yengil gorizontal gridline'lar (0 / yarim / max).
+                    Positioned.fill(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: List.generate(
+                          3,
+                          (_) => Container(height: 1, color: AppColors.divider),
+                        ),
+                      ),
+                    ),
+                    // Bar'lar — pastdan o'sadi.
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.end,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                      children: totals.map((daily) {
+                        final isToday = _key(daily.date) == todayKey;
+                        final ratio = daily.totalMs / (maxHours * 3600000);
+                        final barH = (ratio * 150).clamp(3.0, 150.0);
+                        return Container(
+                          width: 26,
+                          height: barH,
+                          decoration: BoxDecoration(
+                            color: isToday ? _todayBar : _otherBar,
+                            borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(7),
+                              bottom: Radius.circular(2),
+                            ),
+                          ),
+                        );
+                      }).toList(),
+                    ),
+                  ],
+                ),
               ),
             ],
+          ),
+        ),
+        const SizedBox(height: 8),
+        // ─── Kun + aniq ishlatilgan vaqt (bar'lar ostida tekis) ───
+        Padding(
+          padding: const EdgeInsets.only(left: 38),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+            children: totals.map((daily) {
+              final isToday = _key(daily.date) == todayKey;
+              final label = _barLabel(daily.totalMs);
+              return SizedBox(
+                width: 30,
+                child: Column(
+                  children: [
+                    Text(
+                      _shortDays[(daily.date.weekday - 1) % 7],
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 12,
+                        fontWeight:
+                            isToday ? FontWeight.w700 : FontWeight.w400,
+                        color: isToday
+                            ? AppColors.textPrimary
+                            : AppColors.textSecondary,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      label.isEmpty ? '—' : label,
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight:
+                            isToday ? FontWeight.w700 : FontWeight.w500,
+                        color: isToday
+                            ? _todayBar
+                            : AppColors.textTertiary,
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            }).toList(),
           ),
         ),
       ],

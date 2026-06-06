@@ -45,29 +45,12 @@ class AppCombinedTile extends StatelessWidget {
     }
   }
 
-  /// Status emoji — `noLimit` uchun bo'sh string.
-  String _statusEmoji(UsageStatus status) {
-    switch (status) {
-      case UsageStatus.healthy:
-        return '🟢';
-      case UsageStatus.warning:
-        return '🟡';
-      case UsageStatus.exceeded:
-        return '🔴';
-      case UsageStatus.blocked:
-        return '⛔';
-      case UsageStatus.noLimit:
-        return '';
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final hasLimit = app.hasLimit;
     final isBlocked = app.isBlocked;
     final progress = app.progressRatio;
     final statusColor = _statusColor(app.status);
-    final emoji = _statusEmoji(app.status);
 
     return InkWell(
       onTap: onTap,
@@ -106,14 +89,7 @@ class AppCombinedTile extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                       ),
-                      if (emoji.isNotEmpty)
-                        Padding(
-                          padding: const EdgeInsets.only(left: 6),
-                          child: Text(
-                            emoji,
-                            style: const TextStyle(fontSize: 14),
-                          ),
-                        ),
+                      _StatusBadge(app: app, statusColor: statusColor),
                     ],
                   ),
                   const SizedBox(height: 4),
@@ -209,6 +185,66 @@ class _UsageRow extends StatelessWidget {
       style: AppTextStyles.label.copyWith(
         color: AppColors.textSecondary,
         fontSize: 12,
+      ),
+    );
+  }
+}
+
+/// Ilova nomi yonidagi status nishoni (avval rangli emoji-dumaloq edi):
+/// - Limit bor: qumsoat + limit vaqti (status rangi)
+/// - Bloklangan: qizil "qumsoat o'chiq" (blok) nishoni
+/// - Limit yo'q: hech narsa
+class _StatusBadge extends StatelessWidget {
+  const _StatusBadge({required this.app, required this.statusColor});
+
+  final AppCombined app;
+  final Color statusColor;
+
+  @override
+  Widget build(BuildContext context) {
+    if (app.isBlocked) {
+      return _pill(
+        color: AppColors.error,
+        icon: Icons.hourglass_disabled,
+      );
+    }
+    if (app.hasLimit) {
+      return _pill(
+        color: statusColor,
+        icon: Icons.hourglass_bottom,
+        text: app.limitFormatted,
+      );
+    }
+    return const SizedBox.shrink();
+  }
+
+  Widget _pill({required Color color, required IconData icon, String? text}) {
+    return Padding(
+      padding: const EdgeInsets.only(left: 8),
+      child: Container(
+        padding: EdgeInsets.fromLTRB(text == null ? 7 : 8, 4, text == null ? 7 : 9, 4),
+        decoration: BoxDecoration(
+          color: color.withValues(alpha: 0.13),
+          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+          border: Border.all(color: color.withValues(alpha: 0.35)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 13, color: color),
+            if (text != null) ...[
+              const SizedBox(width: 4),
+              Text(
+                text,
+                style: AppTextStyles.label.copyWith(
+                  fontSize: 11,
+                  fontWeight: FontWeight.w700,
+                  color: color,
+                ),
+              ),
+            ],
+          ],
+        ),
       ),
     );
   }

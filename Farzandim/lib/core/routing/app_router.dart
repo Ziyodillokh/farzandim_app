@@ -14,6 +14,7 @@
 //   context.pop();                        // orqaga qaytish
 
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -106,6 +107,10 @@ const _authRoutes = <String>[
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(Ref ref) {
     ref.listen(backendAuthProvider, (_, __) => notifyListeners());
+    // Light/dark almashganda router sahifalarni QAYTA QURADI — aks holda
+    // joriy ekran (ayniqsa const DashboardScreen) AppColors o'zgarganini
+    // sezmay, eski temada qolib ketardi (faqat refresh/navigatsiyada o'zgarardi).
+    ref.listen(themeModeProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -187,7 +192,8 @@ List<RouteBase> buildAppRoutes() {
     // Welcome ekran — auth qilmagan foydalanuvchilar uchun bosh sahifa.
     GoRoute(
       path: AppRoutes.welcome,
-      builder: (context, state) => const WelcomeScreen(),
+      // const EMAS — light/dark toggle'da qayta qurilishi uchun (router refresh).
+      builder: (context, state) => WelcomeScreen(),
     ),
 
     // Telegram Login WebView (Sprint 4.4 — Backend auth migration).
@@ -225,7 +231,8 @@ List<RouteBase> buildAppRoutes() {
     // Bosqich 2.1: faqat empty state. Bosqich 3'da to'liq dashboard.
     GoRoute(
       path: AppRoutes.dashboard,
-      builder: (context, state) => const DashboardScreen(),
+      // const EMAS — light/dark toggle'da qayta qurilishi uchun (router refresh).
+      builder: (context, state) => DashboardScreen(),
     ),
 
     // Yangi bola qo'shish formasi.
