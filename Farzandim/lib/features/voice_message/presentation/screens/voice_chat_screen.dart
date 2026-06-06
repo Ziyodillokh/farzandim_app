@@ -519,7 +519,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     return Scaffold(
       backgroundColor: Colors.transparent,
       body: ChatBackground(
+        // bottom: false — pastki inset'ni ChatInputBar o'zining SafeArea'si
+        // boshqaradi, shunda wallpaper ekran pastigacha cho'ziladi va
+        // transparent input gesture-nav ustida suzib turadi.
         child: SafeArea(
+          bottom: false,
           child: Column(
             children: [
               _ChatHeader(

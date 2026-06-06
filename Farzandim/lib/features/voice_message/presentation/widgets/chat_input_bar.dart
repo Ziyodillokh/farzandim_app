@@ -209,23 +209,19 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final hasText = _draft.trim().isNotEmpty;
+    // Orqa fon YO'Q — input wallpaper ustida suzib turadi (iPhone/Telegram).
+    // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
     return Container(
-      decoration: BoxDecoration(
-        // Wallpaper ustida ham o'qilishi uchun solid chrome.
-        color: AppColors.background,
-        border: Border(
-          top: BorderSide(
-            color: AppColors.border,
-          ),
-        ),
-      ),
+      color: _showEmoji && !widget.isRecording
+          ? AppColors.surface
+          : Colors.transparent,
       child: SafeArea(
         top: false,
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Padding(
-              padding: const EdgeInsets.fromLTRB(8, 8, 8, 8),
+              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.end,
                 children: [
@@ -275,19 +271,21 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   Widget _buildInputChip() {
+    // Pill — `AppColors.surface` (light=oq, dark=qora), to'liq oval stadium.
+    // Ichida fonsiz TextField → ichki to'rtburchak yo'q (iPhone uslubi).
     return Container(
-      constraints: const BoxConstraints(minHeight: 50, maxHeight: 140),
+      constraints: const BoxConstraints(minHeight: 46, maxHeight: 132),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(28),
+        borderRadius: BorderRadius.circular(26),
         border: Border.all(
-          color: AppColors.border,
+          color: AppColors.border.withValues(alpha: 0.6),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.12),
-            blurRadius: 8,
+            color: Colors.black.withValues(alpha: 0.10),
+            blurRadius: 10,
             offset: const Offset(0, 2),
           ),
         ],
@@ -299,12 +297,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
           IconButton(
             onPressed: widget.isMediaUploading ? null : _toggleEmoji,
             visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(),
             icon: Icon(
               _showEmoji
                   ? Icons.keyboard_rounded
                   : Icons.emoji_emotions_outlined,
               color: AppColors.textSecondary,
-              size: 24,
+              size: 23,
             ),
           ),
           Expanded(
@@ -316,6 +316,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               maxLines: 5,
               textInputAction: TextInputAction.newline,
               keyboardType: TextInputType.multiline,
+              cursorColor: AppColors.primary,
               onTap: () {
                 if (_showEmoji) setState(() => _showEmoji = false);
               },
@@ -329,11 +330,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   color: AppColors.textSecondary,
                   fontSize: 15,
                 ),
+                filled: false,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
                 focusedBorder: InputBorder.none,
                 disabledBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 12),
+                contentPadding: const EdgeInsets.symmetric(vertical: 11),
                 isCollapsed: true,
               ),
             ),
@@ -342,10 +344,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
           IconButton(
             onPressed: widget.isMediaUploading ? null : _openAttachSheet,
             visualDensity: VisualDensity.compact,
+            padding: const EdgeInsets.all(8),
+            constraints: const BoxConstraints(),
             icon: widget.isMediaUploading
                 ? SizedBox(
-                    width: 22,
-                    height: 22,
+                    width: 21,
+                    height: 21,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
                       color: AppColors.primary,
@@ -356,7 +360,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     child: Icon(
                       Icons.attach_file_rounded,
                       color: AppColors.textSecondary,
-                      size: 24,
+                      size: 22,
                     ),
                   ),
           ),
@@ -401,8 +405,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
               }
             },
       child: Container(
-        width: 52,
-        height: 52,
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
           gradient: isRecording
               ? const LinearGradient(
@@ -418,32 +422,28 @@ class _ChatInputBarState extends State<ChatInputBar> {
                           AppColors.primary.withValues(alpha: 0.6),
                           AppColors.primaryDark.withValues(alpha: 0.6),
                         ]
-                      : const [Color(0xFFD0FF6E), Color(0xFFA3CE4F)],
+                      : [AppColors.primary, AppColors.primaryDark],
                 ),
           shape: BoxShape.circle,
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.15),
-            width: 2,
-          ),
           boxShadow: [
             BoxShadow(
               color: (isRecording
                       ? const Color(0xFFFF5252)
                       : AppColors.primary)
-                  .withValues(alpha: isRecording ? 0.5 : 0.4),
-              blurRadius: isRecording ? 22 : 16,
-              spreadRadius: isRecording ? 4 : 2,
+                  .withValues(alpha: isRecording ? 0.4 : 0.28),
+              blurRadius: isRecording ? 18 : 12,
+              spreadRadius: 1,
             ),
           ],
         ),
         child: disabled
             ? const Center(
                 child: SizedBox(
-                  width: 20,
-                  height: 20,
+                  width: 18,
+                  height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: Colors.black,
+                    color: AppColors.onPrimary,
                   ),
                 ),
               )
@@ -464,8 +464,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
                             ? 'video'
                             : 'mic',
                   ),
-                  color: Colors.black,
-                  size: 28,
+                  color: AppColors.onPrimary,
+                  size: 24,
                 ),
               ),
       ),
@@ -486,29 +486,29 @@ class _SendButton extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       onTap: disabled ? null : onTap,
       child: Container(
-        width: 52,
-        height: 52,
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: const LinearGradient(
+          gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFFD0FF6E), Color(0xFFA3CE4F)],
+            colors: [AppColors.primary, AppColors.primaryDark],
           ),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.4),
-              blurRadius: 16,
+              color: AppColors.primary.withValues(alpha: 0.28),
+              blurRadius: 12,
               spreadRadius: 1,
             ),
           ],
         ),
         child: const Padding(
-          padding: EdgeInsets.only(left: 3),
+          padding: EdgeInsets.only(left: 2),
           child: Icon(
             Icons.send_rounded,
-            color: Colors.black,
-            size: 24,
+            color: AppColors.onPrimary,
+            size: 22,
           ),
         ),
       ),
@@ -579,8 +579,8 @@ class _RecordingIndicator extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(28),
-        border: Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(26),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
       child: Row(
         children: [
@@ -736,7 +736,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
     final emojis = _categories[_category].emojis;
     return Container(
       height: 256,
-      color: AppColors.surface.withValues(alpha: 0.4),
+      color: AppColors.surface,
       child: Column(
         children: [
           // Kategoriya tablari.
