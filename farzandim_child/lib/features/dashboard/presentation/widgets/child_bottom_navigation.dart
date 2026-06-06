@@ -70,8 +70,8 @@ class ChildBottomNavigation extends ConsumerWidget {
                   // bitta tab ostida birlashtirildi. /content ekranida
                   // TabBar orqali bo'limlar tanlanadi.
                   _NavItem(
-                    icon: Icons.play_circle_outline,
-                    activeIcon: Icons.play_circle_fill_rounded,
+                    icon: Icons.video_library_outlined,
+                    activeIcon: Icons.video_library_rounded,
                     active: location == '/content' ||
                         location == '/videos' ||
                         location == '/audiobooks' ||
@@ -82,11 +82,12 @@ class ChildBottomNavigation extends ConsumerWidget {
                       }
                     },
                   ),
-                  // Messanger (o'rtada) — dashboard kartochkasi olib
-                  // tashlandi, endi alohida tab sifatida turadi.
+                  // Messanger — Telegram uslubidagi qog'oz samolyot
+                  // (Material send), lekin Telegram logosidan farqli — bu
+                  // doira ichida emas, pasdan ko'tarilgan oddiy samolyot.
                   _NavItem(
-                    icon: Icons.chat_bubble_outline_rounded,
-                    activeIcon: Icons.chat_bubble_rounded,
+                    icon: Icons.send_outlined,
+                    activeIcon: Icons.send_rounded,
                     active: location == '/voice-chat',
                     onTap: () {
                       if (location != '/voice-chat') {
@@ -106,7 +107,7 @@ class ChildBottomNavigation extends ConsumerWidget {
                     },
                   ),
                   _NavItem(
-                    icon: Icons.person_outline_rounded,
+                    icon: Icons.person_outlined,
                     activeIcon: Icons.person_rounded,
                     active: location == '/profile',
                     onTap: () {

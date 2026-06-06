@@ -43,12 +43,12 @@ class TimeRangePills extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isActive
                     ? AppColors.primary
-                    : AppColors.surface,
+                    : context.adaptive.bgCard,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isActive
                       ? AppColors.primary
-                      : AppColors.border,
+                      : context.adaptive.border,
                 ),
               ),
               alignment: Alignment.center,
@@ -57,7 +57,7 @@ class TimeRangePills extends ConsumerWidget {
                 style: TextStyle(
                   color: isActive
                       ? Colors.black
-                      : AppColors.textSecondary,
+                      : context.adaptive.textSecondary,
                   fontSize: 13,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.normal,

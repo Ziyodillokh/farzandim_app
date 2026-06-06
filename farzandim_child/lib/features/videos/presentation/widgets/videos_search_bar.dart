@@ -48,19 +48,24 @@ class _VideosSearchBarState extends ConsumerState<VideosSearchBar> {
             child: Container(
               height: 44,
               decoration: BoxDecoration(
-                color: AppColors.surface,
+                color: context.adaptive.bgCard,
                 borderRadius: BorderRadius.circular(22),
+                border: Border.all(
+                    color: context.adaptive.border, width: 0.5),
               ),
               child: TextField(
                 controller: _controller,
-                style: const TextStyle(color: AppColors.textPrimary),
+                style: TextStyle(color: context.adaptive.textPrimary),
                 decoration: InputDecoration(
                   hintText: 'videos.feed.searchHint'.tr(),
-                  hintStyle: const TextStyle(
-                      color: AppColors.textTertiary),
-                  prefixIcon: const Icon(Icons.search,
-                      color: AppColors.textSecondary),
+                  hintStyle: TextStyle(
+                      color: context.adaptive.textTertiary),
+                  prefixIcon: Icon(Icons.search,
+                      color: context.adaptive.textSecondary),
                   border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  filled: false,
                   contentPadding:
                       const EdgeInsets.symmetric(vertical: 12),
                 ),
@@ -80,8 +85,12 @@ class _VideosSearchBarState extends ConsumerState<VideosSearchBar> {
               decoration: BoxDecoration(
                 color: filterCount > 0
                     ? AppColors.primary
-                    : AppColors.surface,
+                    : context.adaptive.bgCard,
                 borderRadius: BorderRadius.circular(22),
+                border: filterCount > 0
+                    ? null
+                    : Border.all(
+                        color: context.adaptive.border, width: 0.5),
               ),
               child: Stack(
                 children: [
@@ -90,7 +99,7 @@ class _VideosSearchBarState extends ConsumerState<VideosSearchBar> {
                       Icons.tune,
                       color: filterCount > 0
                           ? Colors.black
-                          : AppColors.textPrimary,
+                          : context.adaptive.textPrimary,
                     ),
                   ),
                   if (filterCount > 0)

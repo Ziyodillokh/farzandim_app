@@ -20,8 +20,9 @@ class RankingTabs extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.adaptive.border, width: 0.5),
         ),
         child: Row(
           children: [
@@ -91,7 +92,7 @@ class _Tab extends ConsumerWidget {
               size: 16,
               color: isActive
                   ? Colors.black
-                  : AppColors.textSecondary,
+                  : context.adaptive.textSecondary,
             ),
             const SizedBox(width: 6),
             Text(
@@ -101,7 +102,7 @@ class _Tab extends ConsumerWidget {
                 fontWeight: FontWeight.w600,
                 color: isActive
                     ? Colors.black
-                    : AppColors.textSecondary,
+                    : context.adaptive.textSecondary,
               ),
             ),
           ],

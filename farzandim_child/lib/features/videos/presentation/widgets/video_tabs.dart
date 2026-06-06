@@ -62,8 +62,8 @@ class _Tab extends StatelessWidget {
               fontSize: 16,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               color: isActive
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+                  ? context.adaptive.textPrimary
+                  : context.adaptive.textSecondary,
             ),
           ),
           const SizedBox(height: 6),

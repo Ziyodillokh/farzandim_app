@@ -16,17 +16,37 @@ class StreakIndicator extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // DonWalletCard bilan vizual mos kelishi uchun bir xil tuzilish:
+    // 14px padding, 44px doira ichida ikon, label 2 satrgacha wrap.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            // ignore: deprecated_member_use
+            _fire.withOpacity(0.15),
+            // ignore: deprecated_member_use
+            _fire.withOpacity(0.05),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(20),
         // ignore: deprecated_member_use
         border: Border.all(color: _fire.withOpacity(0.4)),
       ),
       child: Row(
         children: [
-          const Icon(AppIcons.streak, color: _fire, size: 28),
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: _fire.withOpacity(0.2),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(AppIcons.streak, color: _fire, size: 28),
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: Column(
@@ -35,20 +55,43 @@ class StreakIndicator extends StatelessWidget {
               children: [
                 Text(
                   'gamification.streakTitle'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.adaptive.textSecondary,
                     fontSize: 11,
+                    fontWeight: FontWeight.w500,
+                    height: 1.2,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  'gamification.streakDays'
-                      .tr(namedArgs: {'days': '$streak'}),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 18,
-                    fontWeight: FontWeight.w700,
-                  ),
+                const SizedBox(height: 4),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Flexible(
+                      child: Text(
+                        '$streak',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: context.adaptive.textPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Text(
+                      'kun',
+                      style: TextStyle(
+                        color: _fire,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

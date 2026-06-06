@@ -17,18 +17,22 @@ class AudiobooksSearchBar extends ConsumerWidget {
       child: Container(
         height: 44,
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(22),
+          border: Border.all(color: context.adaptive.border, width: 0.5),
         ),
         child: TextField(
-          style: const TextStyle(color: AppColors.textPrimary),
-          decoration: const InputDecoration(
+          style: TextStyle(color: context.adaptive.textPrimary),
+          decoration: InputDecoration(
             hintText: 'Audiokitob qidirish...',
-            hintStyle: TextStyle(color: AppColors.textTertiary),
+            hintStyle: TextStyle(color: context.adaptive.textTertiary),
             prefixIcon:
-                Icon(Icons.search, color: AppColors.textSecondary),
+                Icon(Icons.search, color: context.adaptive.textSecondary),
             border: InputBorder.none,
-            contentPadding: EdgeInsets.symmetric(vertical: 12),
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            filled: false,
+            contentPadding: const EdgeInsets.symmetric(vertical: 12),
           ),
           onChanged: (value) {
             ref.read(audiobookSearchQueryProvider.notifier).state = value;

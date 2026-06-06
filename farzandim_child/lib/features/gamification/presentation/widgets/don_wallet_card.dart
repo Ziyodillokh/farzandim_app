@@ -1,25 +1,25 @@
 // ─────────────────────────────────────────────────────────────────────
-// DonWalletCard — DON valyuta balansi card
+// DonWalletCard — XP balansi card (avval DON valyuta edi)
 // ─────────────────────────────────────────────────────────────────────
 //
-// PDF p20: konkurs bonus "+5 DON" — bola valyuta yig'adi. Kelajakda
-// shop ekrani (sertifikat, kitob, tovar sotib olish).
+// Foydalanuvchi talabiga ko'ra DON valyuta o'rniga XP ko'rsatiladi —
+// "Mening XP balansim". Shop ekrani kelajakda alohida joyga
+// ko'chiriladi (DON valyuta backend'da saqlanib qoladi).
 
-import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
 class DonWalletCard extends StatelessWidget {
-  const DonWalletCard({required this.don, super.key});
+  const DonWalletCard({required this.xp, super.key});
 
-  final int don;
+  final int xp;
 
   static const Color _gold = AppColors.catGold;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topLeft,
@@ -35,33 +35,39 @@ class DonWalletCard extends StatelessWidget {
         // ignore: deprecated_member_use
         border: Border.all(color: _gold.withOpacity(0.4)),
       ),
+      // Row Expanded ostida tor joyga sig'ishi uchun ikon yumshoq kichik,
+      // tekst esa wrap qilinadi — overflow oldini olish.
       child: Row(
         children: [
           Container(
-            width: 56,
-            height: 56,
+            width: 44,
+            height: 44,
             decoration: BoxDecoration(
               // ignore: deprecated_member_use
               color: _gold.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
             child: const Icon(
-              Icons.monetization_on,
+              Icons.bolt_rounded,
               color: _gold,
-              size: 32,
+              size: 28,
             ),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: 10),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'gamification.donBalance'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
-                    fontSize: 12,
+                  'Mening XP balansim',
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    color: context.adaptive.textSecondary,
+                    fontSize: 11,
                     fontWeight: FontWeight.w500,
+                    height: 1.2,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -69,21 +75,25 @@ class DonWalletCard extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
                   children: [
-                    Text(
-                      '$don',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 28,
-                        fontWeight: FontWeight.bold,
-                        height: 1.0,
+                    Flexible(
+                      child: Text(
+                        '$xp',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: context.adaptive.textPrimary,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.0,
+                        ),
                       ),
                     ),
-                    const SizedBox(width: 6),
+                    const SizedBox(width: 4),
                     const Text(
-                      'DON',
+                      'XP',
                       style: TextStyle(
                         color: _gold,
-                        fontSize: 14,
+                        fontSize: 12,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

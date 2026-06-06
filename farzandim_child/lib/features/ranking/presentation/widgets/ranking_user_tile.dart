@@ -32,11 +32,11 @@ class RankingUserTile extends StatelessWidget {
         color: user.isCurrentUser
             // ignore: deprecated_member_use
             ? AppColors.primary.withOpacity(0.15)
-            : AppColors.surface,
+            : context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(12),
         border: user.isCurrentUser
             ? Border.all(color: AppColors.primary, width: 1.5)
-            : null,
+            : Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: Row(
         children: [
@@ -45,10 +45,10 @@ class RankingUserTile extends StatelessWidget {
             child: Text(
               '#$rank',
               textAlign: TextAlign.center,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: AppColors.textSecondary,
+                color: context.adaptive.textSecondary,
               ),
             ),
           ),
@@ -65,7 +65,7 @@ class RankingUserTile extends StatelessWidget {
                   ? Colors.green
                   : rankDiff < 0
                       ? AppColors.error
-                      : AppColors.textTertiary,
+                      : context.adaptive.textTertiary,
             ),
           ),
           const SizedBox(width: 8),
@@ -103,7 +103,7 @@ class RankingUserTile extends StatelessWidget {
                           fontWeight: user.isCurrentUser
                               ? FontWeight.bold
                               : FontWeight.w600,
-                          color: AppColors.textPrimary,
+                          color: context.adaptive.textPrimary,
                         ),
                       ),
                     ),
@@ -133,9 +133,9 @@ class RankingUserTile extends StatelessWidget {
                   children: [
                     Text(
                       '${user.age} yosh',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 11,
-                        color: AppColors.textTertiary,
+                        color: context.adaptive.textTertiary,
                       ),
                     ),
                     if (user.streakDays > 0) ...[
@@ -178,14 +178,14 @@ class RankingUserTile extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                   color: user.isCurrentUser
                       ? AppColors.primary
-                      : AppColors.textPrimary,
+                      : context.adaptive.textPrimary,
                 ),
               ),
-              const Text(
+              Text(
                 'ball',
                 style: TextStyle(
                   fontSize: 10,
-                  color: AppColors.textTertiary,
+                  color: context.adaptive.textTertiary,
                 ),
               ),
             ],

@@ -84,9 +84,9 @@ class _FilterButton extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: AppColors.border),
+          border: Border.all(color: context.adaptive.border),
         ),
         child: Row(
           children: [
@@ -96,14 +96,14 @@ class _FilterButton extends StatelessWidget {
               child: Text(
                 text,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: context.adaptive.textPrimary,
                   fontSize: 13,
                 ),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down,
-                color: AppColors.textSecondary, size: 18),
+            Icon(Icons.keyboard_arrow_down,
+                color: context.adaptive.textSecondary, size: 18),
           ],
         ),
       ),

@@ -23,7 +23,7 @@ class LevelProgressCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(20),
         // ignore: deprecated_member_use
         border: Border.all(color: status.color.withOpacity(0.3)),
@@ -39,8 +39,8 @@ class LevelProgressCard extends StatelessWidget {
                 children: [
                   Text(
                     'gamification.levelLabel'.tr(),
-                    style: const TextStyle(
-                      color: AppColors.textSecondary,
+                    style: TextStyle(
+                      color: context.adaptive.textSecondary,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -48,8 +48,8 @@ class LevelProgressCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     '$level',
-                    style: const TextStyle(
-                      color: AppColors.textPrimary,
+                    style: TextStyle(
+                      color: context.adaptive.textPrimary,
                       fontSize: 36,
                       fontWeight: FontWeight.bold,
                       height: 1.0,
@@ -80,7 +80,8 @@ class LevelProgressCard extends StatelessWidget {
             child: LinearProgressIndicator(
               value: progress,
               minHeight: 10,
-              backgroundColor: AppColors.surfaceVariant,
+              // ignore: deprecated_member_use
+              backgroundColor: context.adaptive.border.withOpacity(0.4),
               valueColor: AlwaysStoppedAnimation<Color>(status.color),
             ),
           ),
@@ -91,8 +92,8 @@ class LevelProgressCard extends StatelessWidget {
               Text(
                 'gamification.xpTotal'
                     .tr(namedArgs: {'xp': '${profile.xp}'}),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
+                style: TextStyle(
+                  color: context.adaptive.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w600,
                 ),
@@ -102,8 +103,8 @@ class LevelProgressCard extends StatelessWidget {
                     ? 'gamification.xpToNext'
                         .tr(namedArgs: {'xp': '$xpToNext'})
                     : 'gamification.xpMaxStatus'.tr(),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
+                style: TextStyle(
+                  color: context.adaptive.textSecondary,
                   fontSize: 12,
                 ),
               ),

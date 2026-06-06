@@ -46,8 +46,8 @@ class RankingScreen extends ConsumerWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Align(
                   alignment: Alignment.centerLeft,
                   child: Text(
@@ -55,7 +55,7 @@ class RankingScreen extends ConsumerWidget {
                     style: TextStyle(
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: context.adaptive.textPrimary,
                     ),
                   ),
                 ),

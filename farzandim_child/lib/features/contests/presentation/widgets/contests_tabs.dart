@@ -18,8 +18,9 @@ class ContestsTabs extends ConsumerWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: context.adaptive.border, width: 0.5),
         ),
         child: Row(
           children: [
@@ -74,7 +75,9 @@ class _Tab extends ConsumerWidget {
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: isActive ? Colors.black : AppColors.textSecondary,
+              color: isActive
+                  ? Colors.black
+                  : context.adaptive.textSecondary,
             ),
           ),
         ),

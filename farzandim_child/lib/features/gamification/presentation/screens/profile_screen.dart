@@ -11,6 +11,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/gamification/data/models/achievement.dart';
@@ -174,23 +175,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           const SizedBox(height: 16),
 
-          // === Header: ism + status ===
+          // === Header: avatar + ism + status ===
+          // Bola foto tap → /account-edit (yangi rasm yuklash). Foto
+          // bo'lmasa fallback person ikoni. Avatar atrofida status rangi
+          // bilan ring + pastki-o'ng tomonda kamera tugma.
           Row(
             children: [
-              Container(
-                width: 64,
-                height: 64,
-                decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
-                  color: profile.status.color.withOpacity(0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  profile.status.icon,
-                  color: profile.status.color,
-                  size: 32,
-                ),
-              ),
+              _ProfileAvatar(profile: profile, ref: ref),
               const SizedBox(width: 16),
               Expanded(
                 child: Column(
@@ -201,8 +192,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       childName,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.adaptive.textPrimary,
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
                       ),
@@ -223,13 +214,16 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               .slideY(begin: 0.1, end: 0),
           const SizedBox(height: 16),
 
-          // === DON + Streak (yon) ===
-          Row(
-            children: [
-              Expanded(child: DonWalletCard(don: profile.don)),
-              const SizedBox(width: 12),
-              Expanded(child: StreakIndicator(streak: profile.streak)),
-            ],
+          // === XP + Streak (yon — ikkalasi bir xil balandlikda) ===
+          IntrinsicHeight(
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Expanded(child: DonWalletCard(xp: profile.xp)),
+                const SizedBox(width: 12),
+                Expanded(child: StreakIndicator(streak: profile.streak)),
+              ],
+            ),
           )
               .animate()
               .fadeIn(duration: 400.ms, delay: 200.ms)
@@ -239,8 +233,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // === Yutuqlar ===
           Text(
             'gamification.achievementsTitle'.tr(),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.adaptive.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -252,8 +246,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           // === XP tarix ===
           Text(
             'gamification.recentActivityTitle'.tr(),
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.adaptive.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -326,18 +320,20 @@ class _EmptyHistory extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: Row(
         children: [
-          const Icon(Icons.history, color: AppColors.textSecondary, size: 24),
+          Icon(Icons.history,
+              color: context.adaptive.textSecondary, size: 24),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               'gamification.recentActivityEmpty'.tr(),
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.adaptive.textSecondary,
                 fontSize: 13,
               ),
             ),
@@ -359,8 +355,9 @@ class _XpEventTile extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: Row(
         children: [
@@ -384,8 +381,8 @@ class _XpEventTile extends StatelessWidget {
               event.type.translationKey.tr(),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: context.adaptive.textPrimary,
                 fontSize: 14,
                 fontWeight: FontWeight.w500,
               ),
@@ -411,6 +408,122 @@ class _XpEventTile extends StatelessWidget {
             ),
           ],
         ],
+      ),
+    );
+  }
+}
+
+// ─── Profile avatar — bola rasmi + tahrir overlay ────────────────────
+// Foto bo'lsa: dumaloq foto + status rangli ring + kamera badge.
+// Foto bo'lmasa: fallback person ikoni + status rangli ring + kamera badge.
+// Tap → /account-edit (yangi rasm yuklash).
+class _ProfileAvatar extends StatelessWidget {
+  const _ProfileAvatar({required this.profile, required this.ref});
+
+  final GamificationProfile profile;
+  final WidgetRef ref;
+
+  @override
+  Widget build(BuildContext context) {
+    final pairing = ref.watch(pairingStateProvider);
+    final childId = pairing.childId;
+    final photoUrl = (childId != null && childId.isNotEmpty)
+        ? ref.watch(childAvatarUrlProvider(childId)).valueOrNull
+        : null;
+
+    return GestureDetector(
+      onTap: () => context.push('/account-edit'),
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 72,
+        height: 72,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            // Status rangli ring
+            Container(
+              width: 72,
+              height: 72,
+              padding: const EdgeInsets.all(2.5),
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    profile.status.color,
+                    // ignore: deprecated_member_use
+                    profile.status.color.withOpacity(0.6),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: context.adaptive.bgPrimary,
+                  shape: BoxShape.circle,
+                ),
+                padding: const EdgeInsets.all(2),
+                child: ClipOval(
+                  child: photoUrl != null && photoUrl.isNotEmpty
+                      ? Image.network(
+                          photoUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              _PhotoFallback(profile: profile),
+                          loadingBuilder: (_, child, progress) =>
+                              progress == null
+                                  ? child
+                                  : _PhotoFallback(profile: profile),
+                        )
+                      : _PhotoFallback(profile: profile),
+                ),
+              ),
+            ),
+            // Kamera tugma — pastki o'ng burchakda
+            Positioned(
+              right: -2,
+              bottom: -2,
+              child: Container(
+                width: 26,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: AppColors.primary,
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: context.adaptive.bgPrimary,
+                    width: 2.5,
+                  ),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  Icons.camera_alt_rounded,
+                  color: Colors.white,
+                  size: 14,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _PhotoFallback extends StatelessWidget {
+  const _PhotoFallback({required this.profile});
+
+  final GamificationProfile profile;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      // ignore: deprecated_member_use
+      color: profile.status.color.withOpacity(0.18),
+      alignment: Alignment.center,
+      child: Icon(
+        Icons.person_rounded,
+        color: profile.status.color,
+        size: 36,
       ),
     );
   }

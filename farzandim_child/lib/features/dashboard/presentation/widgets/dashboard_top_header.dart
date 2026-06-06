@@ -88,6 +88,11 @@ class DashboardTopHeader extends ConsumerWidget {
   }
 }
 
+// Top header tugmalarining yagona o'lchami — settings + bell vizual mos
+// kelishi uchun (avval 48 vs 58 edi).
+const double _kHeaderButton = 48;
+const double _kHeaderButtonIcon = 24;
+
 class _SettingsButton extends StatelessWidget {
   const _SettingsButton({required this.onTap});
 
@@ -98,8 +103,8 @@ class _SettingsButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 48,
-        height: 48,
+        width: _kHeaderButton,
+        height: _kHeaderButton,
         decoration: BoxDecoration(
           color: context.adaptive.bgSurface,
           shape: BoxShape.circle,
@@ -108,7 +113,7 @@ class _SettingsButton extends StatelessWidget {
         child: Icon(
           AppIcons.settings,
           color: context.adaptive.textSecondary,
-          size: 22,
+          size: _kHeaderButtonIcon,
         ),
       ),
     );
@@ -130,8 +135,8 @@ class _NotificationsButton extends StatelessWidget {
         clipBehavior: Clip.none,
         children: [
           Container(
-            width: _kHeaderSize,
-            height: _kHeaderSize,
+            width: _kHeaderButton,
+            height: _kHeaderButton,
             decoration: BoxDecoration(
               color: context.adaptive.bgSurface,
               shape: BoxShape.circle,
@@ -140,7 +145,7 @@ class _NotificationsButton extends StatelessWidget {
             child: Icon(
               AppIcons.bell,
               color: context.adaptive.textSecondary,
-              size: 28,
+              size: _kHeaderButtonIcon,
             ),
           ),
           if (badgeCount > 0)

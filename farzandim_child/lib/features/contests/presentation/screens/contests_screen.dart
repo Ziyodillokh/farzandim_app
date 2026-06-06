@@ -47,12 +47,12 @@ class ContestsScreen extends ConsumerWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    const Text(
+                    Text(
                       'Konkurslar',
                       style: TextStyle(
                         fontSize: 28,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.textPrimary,
+                        color: context.adaptive.textPrimary,
                       ),
                     ),
                     GestureDetector(
@@ -111,16 +111,16 @@ class _List extends StatelessWidget {
             Icon(
               isActive ? AppIcons.trophy : Icons.history,
               size: 64,
-              color: AppColors.textTertiary,
+              color: context.adaptive.textTertiary,
             ),
             const SizedBox(height: 16),
             Text(
               isActive
                   ? "Hozircha aktiv konkurs yo'q"
                   : "Hozircha yakunlangan konkurs yo'q",
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
-                color: AppColors.textSecondary,
+                color: context.adaptive.textSecondary,
               ),
             ),
           ],

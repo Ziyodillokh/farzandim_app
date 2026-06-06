@@ -56,11 +56,11 @@ class _AchievementTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
           // ignore: deprecated_member_use
-          color: unlocked ? color : AppColors.border.withOpacity(0.5),
+          color: unlocked ? color : context.adaptive.border.withOpacity(0.5),
           width: 1,
         ),
       ),
@@ -85,8 +85,8 @@ class _AchievementTile extends StatelessWidget {
             textAlign: TextAlign.center,
             style: TextStyle(
               color: unlocked
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+                  ? context.adaptive.textPrimary
+                  : context.adaptive.textSecondary,
               fontSize: 11,
               fontWeight: FontWeight.w600,
               height: 1.2,

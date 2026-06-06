@@ -1,10 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────
-// ContentHubScreen — Videolar + Audiokitoblar + Kitoblar birlashmasi
+// ContentHubScreen — Videolar + Audiokitoblar (PDF kitoblar ichida)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Foydalanuvchi talabiga ko'ra videolar, audiokitoblar va kitoblar
-// bo'limlari pastki nav'da bitta tab ostida birlashtirildi. Bu yerda
-// 3 ta TopTab (Videolar / Audiokitoblar / Kitoblar) bilan yagona hub.
+// Foydalanuvchi talabiga ko'ra 2 ta TopTab — Videolar va Audiokitoblar.
+// PDF kitoblar Audiokitoblar tab ichida alohida section sifatida turadi
+// (Figma 2-rasmga muvofiq: Siz uchun vertikal cover+title list).
 // Konkurslar alohida bo'lim sifatida saqlandi (boshqa tab).
 //
 // Eski /videos, /audiobooks, /books route'lari saqlanadi (deep-link
@@ -15,7 +15,9 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
-import 'package:farzandim_child/features/books/presentation/widgets/books_feed_body.dart';
+import 'package:farzandim_child/features/books/data/models/book_model.dart';
+import 'package:farzandim_child/features/books/presentation/providers/books_providers.dart';
+import 'package:farzandim_child/features/books/presentation/widgets/book_section.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/videos/data/models/filter_state.dart';
@@ -37,7 +39,7 @@ class ContentHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
@@ -57,10 +59,9 @@ class ContentHubScreen extends ConsumerWidget {
                 Expanded(
                   child: TabBarView(
                     physics: const BouncingScrollPhysics(),
-                    children: [
-                      const _VideosTab(),
-                      _AudiobooksTab(ref: ref),
-                      const BooksFeedBody(),
+                    children: const [
+                      _VideosTab(),
+                      _AudiobooksTab(),
                     ],
                   ),
                 ),
@@ -74,7 +75,7 @@ class ContentHubScreen extends ConsumerWidget {
   }
 }
 
-// ─── Top tabs (3 ta) ─────────────────────────────────────────────────
+// ─── Top tabs (2 ta) — adaptive surface ──────────────────────────────
 class _TopTabs extends StatelessWidget {
   const _TopTabs();
 
@@ -83,8 +84,9 @@ class _TopTabs extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: context.adaptive.border, width: 0.5),
       ),
       child: TabBar(
         indicator: BoxDecoration(
@@ -93,7 +95,7 @@ class _TopTabs extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         labelColor: Colors.black,
-        unselectedLabelColor: AppColors.textSecondary,
+        unselectedLabelColor: context.adaptive.textSecondary,
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         unselectedLabelStyle:
             const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
@@ -101,7 +103,6 @@ class _TopTabs extends StatelessWidget {
         tabs: const [
           Tab(text: 'Videolar'),
           Tab(text: 'Audiokitoblar'),
-          Tab(text: 'Kitoblar'),
         ],
       ),
     );
@@ -169,60 +170,123 @@ class _VideosTab extends ConsumerWidget {
   }
 }
 
-// ─── Audiobooks tab (audiobooks_feed_screen mantiq qaytarildi) ────────
-class _AudiobooksTab extends StatelessWidget {
-  const _AudiobooksTab({required this.ref});
-
-  final WidgetRef ref;
+// ─── Audiobooks tab (audiokitoblar + PDF kitoblar) ────────────────────
+// Figma 2-rasmga muvofiq: yuqorida audiokitob sectionlari (horizontal),
+// pastida PDF kitoblar sectionlari (kategoriyalarga ajratilgan).
+class _AudiobooksTab extends ConsumerWidget {
+  const _AudiobooksTab();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final forYou = ref.watch(forYouAudiobooksProvider);
     final mostListened = ref.watch(mostListenedProvider);
     final newest = ref.watch(newestAudiobooksProvider);
     final allFiltered = ref.watch(filteredAudiobooksProvider);
+    final asyncBooks = ref.watch(backendBooksProvider);
+
+    final hasAudiobooks = allFiltered.isNotEmpty;
+    final books = asyncBooks.valueOrNull ?? const <BookModel>[];
+
+    if (!hasAudiobooks && books.isEmpty) {
+      return Column(
+        children: [
+          const AudiobooksSearchBar(),
+          const SizedBox(height: 8),
+          Expanded(child: _emptyAudiobooks()),
+        ],
+      );
+    }
+
+    // PDF kitoblarni kategoriya bo'yicha guruhlash (school / adabiyot /
+    // boshqalar) — barchasi Audiokitoblar tab ichida ko'rsatiladi.
+    final schoolBooks = books.where((b) => b.category == 'school').toList();
+    final adabiyotBooks = books.where((b) => b.category == 'adabiyot').toList();
+    final otherBooks = books
+        .where((b) => b.category != 'school' && b.category != 'adabiyot')
+        .toList();
 
     return Column(
       children: [
         const AudiobooksSearchBar(),
         const SizedBox(height: 8),
         Expanded(
-          child: allFiltered.isEmpty
-              ? _emptyAudiobooks()
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 180),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: 8),
-                      AudiobookSection(title: 'Siz uchun', books: forYou),
-                      const SizedBox(height: 24),
-                      AudiobookSection(
-                          title: "Eng ko'p o'qilgan", books: mostListened),
-                      const SizedBox(height: 24),
-                      AudiobookSection(
-                          title: "Yangi qo'shilgan", books: newest),
-                    ],
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.only(bottom: 180),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const SizedBox(height: 8),
+                if (forYou.isNotEmpty) ...[
+                  AudiobookSection(title: 'Siz uchun', books: forYou),
+                  const SizedBox(height: 24),
+                ],
+                if (mostListened.isNotEmpty) ...[
+                  AudiobookSection(
+                      title: "Eng ko'p o'qilgan", books: mostListened),
+                  const SizedBox(height: 24),
+                ],
+                if (newest.isNotEmpty) ...[
+                  AudiobookSection(
+                      title: "Yangi qo'shilgan", books: newest),
+                  const SizedBox(height: 24),
+                ],
+                // ─── PDF kitoblar (Audiokitoblar tab ichida) ─────────
+                if (books.isNotEmpty) ...[
+                  BookSection(
+                    title: 'Kitoblar',
+                    books: books,
+                    onTap: (b) => context.push('/books/pdf', extra: b),
                   ),
-                ),
+                  if (schoolBooks.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Maktab darsliklari',
+                      books: schoolBooks,
+                      onTap: (b) => context.push('/books/pdf', extra: b),
+                    ),
+                  ],
+                  if (adabiyotBooks.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Adabiyot',
+                      books: adabiyotBooks,
+                      onTap: (b) => context.push('/books/pdf', extra: b),
+                    ),
+                  ],
+                  if (otherBooks.isNotEmpty) ...[
+                    const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Boshqalar',
+                      books: otherBooks,
+                      onTap: (b) => context.push('/books/pdf', extra: b),
+                    ),
+                  ],
+                ],
+              ],
+            ),
+          ),
         ),
       ],
     );
   }
 
   Widget _emptyAudiobooks() {
-    return Center(
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: const [
-          Icon(Icons.headphones, size: 64, color: AppColors.textTertiary),
-          SizedBox(height: 16),
-          Text(
-            "Audiokitoblar topilmadi",
-            style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
-          ),
-        ],
-      ),
-    );
+    return Builder(builder: (ctx) {
+      return Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.headphones,
+                size: 64, color: ctx.adaptive.textTertiary),
+            const SizedBox(height: 16),
+            Text(
+              "Audiokitoblar topilmadi",
+              style: TextStyle(
+                  fontSize: 16, color: ctx.adaptive.textSecondary),
+            ),
+          ],
+        ),
+      );
+    });
   }
 }
