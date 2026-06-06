@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:video_compress/video_compress.dart';
 
-import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -15,12 +14,13 @@ import 'package:farzandim/features/voice_message/data/services/audio_player_mana
 import 'package:farzandim/features/voice_message/data/services/audio_recorder_service.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_upload_provider.dart';
+import 'package:farzandim/features/voice_message/presentation/screens/chat_settings_screen.dart';
+import 'package:farzandim/features/voice_message/presentation/widgets/chat_background.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/chat_input_bar.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_bubble.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_recorder.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/voice_chat_bubble.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -152,7 +152,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   }
 
   void _onInfoPressed() {
-    context.push(AppRoutes.qaDevicePath(widget.childId));
+    Navigator.of(context).push(
+      MaterialPageRoute<void>(
+        builder: (_) => const ChatSettingsScreen(),
+      ),
+    );
   }
 
   // ─── Recording handlers ──────────────────────────────────────────
@@ -514,7 +518,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
     return Scaffold(
       backgroundColor: Colors.transparent,
-      body: GradientBackground(
+      body: ChatBackground(
         child: SafeArea(
           child: Column(
             children: [
@@ -676,10 +680,11 @@ class _ChatHeader extends StatelessWidget {
           ),
           IconButton(
             icon: Icon(
-              Icons.info_outline,
+              Icons.more_vert,
               color: AppColors.textPrimary,
             ),
             onPressed: onInfo,
+            tooltip: 'chatSettings.title'.tr(),
           ),
         ],
       ),

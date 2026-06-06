@@ -211,9 +211,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final hasText = _draft.trim().isNotEmpty;
     return Container(
       decoration: BoxDecoration(
+        // Wallpaper ustida ham o'qilishi uchun solid chrome.
+        color: AppColors.background,
         border: Border(
           top: BorderSide(
-            color: AppColors.textSecondary.withValues(alpha: 0.1),
+            color: AppColors.border,
           ),
         ),
       ),
@@ -274,11 +276,21 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   Widget _buildInputChip() {
     return Container(
-      constraints: const BoxConstraints(minHeight: 48, maxHeight: 140),
+      constraints: const BoxConstraints(minHeight: 50, maxHeight: 140),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(
+          color: AppColors.border,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
@@ -564,10 +576,11 @@ class _RecordingIndicator extends StatelessWidget {
     final s = (elapsedSeconds % 60).toString().padLeft(2, '0');
 
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: AppColors.border),
       ),
       child: Row(
         children: [

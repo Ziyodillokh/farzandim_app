@@ -401,7 +401,7 @@
     }
   },
   "voiceChat": {
-    "headerSubtitle": "Голосовые сообщения",
+    "headerSubtitle": "Личные сообщения",
     "fallbackChildName": "Ребёнок",
     "emptyTitle": "Первое голосовое сообщение",
     "emptySubtitle": "Зажмите кнопку ниже, чтобы отправить\nголосовое сообщение для {name}",
@@ -420,6 +420,16 @@
     "fileOpenFailed": "Не удалось открыть файл",
     "fileGeneric": "Файл",
     "mediaSendError": "Файл не отправлен"
+  },
+  "chatSettings": {
+    "title": "Настройки чата",
+    "theme": "Тема",
+    "light": "Светлая",
+    "dark": "Тёмная",
+    "wallpaper": "Фон",
+    "wallpaperHint": "Выберите фон чата",
+    "default": "Стандарт",
+    "gallery": "Галерея"
   },
   "voiceMessages": {
     "headerTitle": "Голосовые сообщения",

@@ -401,7 +401,7 @@
     }
   },
   "voiceChat": {
-    "headerSubtitle": "Ovozli xabarlar",
+    "headerSubtitle": "Shaxsiy yozishmalar",
     "fallbackChildName": "Bola",
     "emptyTitle": "Birinchi ovozli xabar",
     "emptySubtitle": "Pastdagi tugmani bosib turib {name} ga\novozli xabar yuboring",
@@ -420,6 +420,16 @@
     "fileOpenFailed": "Faylni ochib bo'lmadi",
     "fileGeneric": "Fayl",
     "mediaSendError": "Fayl yuborilmadi"
+  },
+  "chatSettings": {
+    "title": "Chat sozlamalari",
+    "theme": "Mavzu",
+    "light": "Yorug'",
+    "dark": "Tungi",
+    "wallpaper": "Orqa fon",
+    "wallpaperHint": "Suhbat orqa fonini tanlang",
+    "default": "Standart",
+    "gallery": "Galereya"
   },
   "voiceMessages": {
     "headerTitle": "Ovozli xabarlar",

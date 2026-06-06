@@ -166,6 +166,7 @@ class VoiceChatBubble extends ConsumerWidget {
                     bottomLeft: Radius.circular(isOwn ? 20 : 4),
                     bottomRight: Radius.circular(isOwn ? 4 : 20),
                   ),
+                  boxShadow: _bubbleShadow,
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -332,6 +333,11 @@ String _formatTimeShort(DateTime dt) =>
     '${dt.hour.toString().padLeft(2, '0')}:'
     '${dt.minute.toString().padLeft(2, '0')}';
 
+/// Premium bubble soyasi — wallpaper ustida bubble bo'rtib turadi.
+const List<BoxShadow> _bubbleShadow = [
+  BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1)),
+];
+
 class _TextBubble extends StatelessWidget {
   const _TextBubble({required this.message, required this.isOwn});
 
@@ -366,6 +372,7 @@ class _TextBubble extends StatelessWidget {
                   bottomLeft: Radius.circular(isOwn ? 18 : 4),
                   bottomRight: Radius.circular(isOwn ? 4 : 18),
                 ),
+                boxShadow: _bubbleShadow,
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -451,93 +458,82 @@ class _ImageBubble extends ConsumerWidget {
     final caption = message.text;
     final hasCaption = caption != null && caption.isNotEmpty;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-      child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
-        children: [
-          if (isOwn) const Spacer(flex: 1),
-          Flexible(
-            flex: 5,
-            child: Container(
-              decoration: BoxDecoration(
-                color: isOwn ? AppColors.primary : AppColors.surface,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isOwn ? 18 : 4),
-                  bottomRight: Radius.circular(isOwn ? 4 : 18),
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(18),
+      bottomLeft: Radius.circular(isOwn ? 18 : 4),
+      bottomRight: Radius.circular(isOwn ? 4 : 18),
+    );
+
+    final image = GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(
+          builder: (_) => _FullScreenImage(url: url),
+        ),
+      ),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,
+          loadingBuilder: (context, child, progress) {
+            if (progress == null) return child;
+            return Container(
+              height: 200,
+              color: Colors.black.withValues(alpha: 0.08),
+              child: Center(
+                child: CircularProgressIndicator(
+                  strokeWidth: 2,
+                  color: AppColors.primary,
                 ),
               ),
-              clipBehavior: Clip.antiAlias,
+            );
+          },
+          errorBuilder: (_, __, ___) => Container(
+            height: 160,
+            color: Colors.black.withValues(alpha: 0.08),
+            child: Icon(
+              Icons.broken_image_outlined,
+              color: AppColors.textSecondary,
+              size: 40,
+            ),
+          ),
+        ),
+      ),
+    );
+
+    // Caption bo'lmasa — sof rasm + vaqt overlay (yashil "teppa" yo'q).
+    // Caption bo'lsa — rasm + matn bubble fonida.
+    final Widget content = hasCaption
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              color: isOwn ? AppColors.primary : AppColors.surface,
+              borderRadius: radius,
+              boxShadow: _bubbleShadow,
+            ),
+            child: ClipRRect(
+              borderRadius: radius,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  GestureDetector(
-                    onTap: () => Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => _FullScreenImage(url: url),
-                      ),
-                    ),
-                    child: ConstrainedBox(
-                      constraints: const BoxConstraints(
-                        maxHeight: 280,
-                        minHeight: 120,
-                      ),
-                      child: Image.network(
-                        url,
-                        fit: BoxFit.cover,
-                        loadingBuilder: (context, child, progress) {
-                          if (progress == null) return child;
-                          return Container(
-                            height: 180,
-                            color: Colors.black.withValues(alpha: 0.08),
-                            child: Center(
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2,
-                                color: AppColors.primary,
-                              ),
-                            ),
-                          );
-                        },
-                        errorBuilder: (_, __, ___) => Container(
-                          height: 140,
-                          color: Colors.black.withValues(alpha: 0.08),
-                          child: Icon(
-                            Icons.broken_image_outlined,
-                            color: AppColors.textSecondary,
-                            size: 40,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+                  image,
                   Padding(
-                    padding: EdgeInsets.fromLTRB(
-                      12,
-                      hasCaption ? 8 : 6,
-                      10,
-                      6,
-                    ),
+                    padding: const EdgeInsets.fromLTRB(12, 8, 10, 6),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        if (hasCaption) ...[
-                          Text(
-                            caption,
-                            style: TextStyle(
-                              color: isOwn
-                                  ? Colors.black
-                                  : AppColors.textPrimary,
-                              fontSize: 15,
-                              height: 1.35,
-                            ),
+                        Text(
+                          caption,
+                          style: TextStyle(
+                            color:
+                                isOwn ? Colors.black : AppColors.textPrimary,
+                            fontSize: 15,
+                            height: 1.35,
                           ),
-                          const SizedBox(height: 2),
-                        ],
+                        ),
+                        const SizedBox(height: 2),
                         _BubbleMeta(
                           message: message,
                           isOwn: isOwn,
@@ -551,8 +547,69 @@ class _ImageBubble extends ConsumerWidget {
                 ],
               ),
             ),
-          ),
+          )
+        : DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: radius,
+              boxShadow: _bubbleShadow,
+            ),
+            child: Stack(
+              children: [
+                ClipRRect(borderRadius: radius, child: image),
+                Positioned(
+                  right: 8,
+                  bottom: 8,
+                  child: _ImageOverlayMeta(message: message, isOwn: isOwn),
+                ),
+              ],
+            ),
+          );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(flex: 1),
+          Flexible(flex: 5, child: content),
           if (!isOwn) const Spacer(flex: 1),
+        ],
+      ),
+    );
+  }
+}
+
+/// Rasm ustidagi vaqt + o'qildi belgisi (caption yo'q rasm uchun).
+class _ImageOverlayMeta extends StatelessWidget {
+  const _ImageOverlayMeta({required this.message, required this.isOwn});
+
+  final VoiceMessage message;
+  final bool isOwn;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.45),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(
+            _formatTimeShort(message.createdAt),
+            style: const TextStyle(color: Colors.white, fontSize: 11),
+          ),
+          if (isOwn) ...[
+            const SizedBox(width: 3),
+            Icon(
+              message.isSeen ? Icons.done_all : Icons.done,
+              size: 13,
+              color: message.isSeen ? Colors.lightBlueAccent : Colors.white,
+            ),
+          ],
         ],
       ),
     );
@@ -716,6 +773,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                     bottomLeft: Radius.circular(isOwn ? 18 : 4),
                     bottomRight: Radius.circular(isOwn ? 4 : 18),
                   ),
+                  boxShadow: _bubbleShadow,
                 ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,

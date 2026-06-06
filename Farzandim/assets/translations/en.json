@@ -401,7 +401,7 @@
     }
   },
   "voiceChat": {
-    "headerSubtitle": "Voice messages",
+    "headerSubtitle": "Personal chat",
     "fallbackChildName": "Child",
     "emptyTitle": "First voice message",
     "emptySubtitle": "Press and hold the button below to send\na voice message to {name}",
@@ -420,6 +420,16 @@
     "fileOpenFailed": "Could not open file",
     "fileGeneric": "File",
     "mediaSendError": "File not sent"
+  },
+  "chatSettings": {
+    "title": "Chat settings",
+    "theme": "Theme",
+    "light": "Light",
+    "dark": "Dark",
+    "wallpaper": "Wallpaper",
+    "wallpaperHint": "Choose a chat background",
+    "default": "Default",
+    "gallery": "Gallery"
   },
   "voiceMessages": {
     "headerTitle": "Voice messages",
