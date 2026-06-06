@@ -74,7 +74,7 @@ class SchedulesListScreen extends ConsumerWidget {
                     ],
                   ),
                   loading: () => Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (e, _) => Center(
                     child: Padding(
@@ -586,7 +586,7 @@ class _DayChip extends StatelessWidget {
         child: Text(
           label,
           style: AppTextStyles.bodyS.copyWith(
-            color: selected ? AppColors.background : AppColors.textPrimary,
+            color: selected ? AppColors.onPrimary : AppColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
@@ -648,7 +648,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                     child: Text(
                       'Saqlash',
                       style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         fontWeight: FontWeight.w700,
                       ),
                     ),
@@ -691,7 +691,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                   );
                 },
                 loading: () => Center(
-                  child: CircularProgressIndicator(color: AppColors.primary),
+                  child: CircularProgressIndicator(color: AppColors.accent),
                 ),
                 error: (e, _) => Center(
                   child: Text(

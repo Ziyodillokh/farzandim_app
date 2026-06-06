@@ -59,7 +59,9 @@ class DashboardScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      // Solid theme baza — overscroll/pull-to-refresh paytida oq oyna foni
+      // ko'rinmasligi uchun (gradient ustidan chiziladi).
+      backgroundColor: AppColors.background,
       body: GradientBackground(
         child: SafeArea(child: body),
       ),
@@ -77,7 +79,7 @@ class _DashboardLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
+      child: CircularProgressIndicator(color: AppColors.accent),
     );
   }
 }
@@ -308,7 +310,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
               // yuklanadi (RefreshIndicator). AlwaysScrollableScrollPhysics —
               // kalta sahifada ham pull-to-refresh ishlashi uchun.
               return RefreshIndicator(
-                color: AppColors.primary,
+                color: AppColors.accent,
                 backgroundColor: AppColors.surface,
                 onRefresh: () => _onRefresh(c.id),
                 child: SingleChildScrollView(
@@ -604,7 +606,7 @@ class _AddChildPage extends StatelessWidget {
                 ),
                 child: Icon(
                   Icons.person_add_alt_1_rounded,
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                   size: 30,
                 ),
               ),
@@ -989,7 +991,7 @@ class _QuickActionsGrid extends StatelessWidget {
       QuickActionTile(
         icon: Icons.telegram,
         label: 'dashboard.quickActions.messenger'.tr(),
-        accentColor: AppColors.primary,
+        accentColor: AppColors.accent,
         onTap: () => context.push(AppRoutes.qaVoicePath(childId)),
       ),
       // "Ilova cheklovlari" — eski "Qurilma cheklovlari" ekrani

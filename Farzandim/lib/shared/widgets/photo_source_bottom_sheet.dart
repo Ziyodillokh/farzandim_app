@@ -135,7 +135,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(icon, color: AppColors.primary, size: AppDimensions.iconM),
+              Icon(icon, color: AppColors.accent, size: AppDimensions.iconM),
               const SizedBox(width: 12),
               Text(
                 label,

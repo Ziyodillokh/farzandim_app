@@ -446,7 +446,7 @@ class _IconPicker extends StatelessWidget {
               GeoZone.iconFromString(iconName),
               size: 24,
               color: isSelected
-                  ? AppColors.background
+                  ? AppColors.onPrimary
                   : AppColors.textPrimary,
             ),
           ),
@@ -483,7 +483,7 @@ class _RadiusSlider extends StatelessWidget {
                 namedArgs: {'meters': '${value.round()}'},
               ),
               style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.primary,
+                color: AppColors.accent,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -541,7 +541,7 @@ class _NotificationToggles extends StatelessWidget {
         children: [
           _ToggleRow(
             icon: Icons.login,
-            iconColor: AppColors.primary,
+            iconColor: AppColors.accent,
             label: 'geoZoneEdit.notifyOnEnter'.tr(),
             value: notifyOnEnter,
             onChanged: onEnterChanged,

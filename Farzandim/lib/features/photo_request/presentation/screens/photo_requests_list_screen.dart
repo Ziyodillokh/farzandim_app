@@ -44,7 +44,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                   child: requestsAsync.when(
                     loading: () => Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                       ),
                     ),
                     error: (e, _) => Center(
@@ -89,12 +89,12 @@ class PhotoRequestsListScreen extends ConsumerWidget {
           onPressed: () =>
               PhotoRequestDialog.show(context, childId: childId),
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.black,
+          foregroundColor: AppColors.onPrimary,
           icon: const Icon(Icons.photo_camera_rounded),
           label: Text(
             'Rasm so\'rash',
             style: AppTextStyles.bodyM.copyWith(
-              color: Colors.black,
+              color: AppColors.onPrimary,
               fontWeight: FontWeight.w600,
             ),
           ),
@@ -163,7 +163,7 @@ class _FilterTabs extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelColor: Colors.black,
+        labelColor: AppColors.onPrimary,
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: AppTextStyles.bodyM,
@@ -195,7 +195,7 @@ class _RequestsView extends ConsumerWidget {
       return _EmptyState(hint: emptyHint);
     }
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.accent,
       onRefresh: () async {
         ref.invalidate(photoRequestsProvider(childId));
       },
@@ -409,7 +409,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
       return SizedBox(
         height: 200,
         child: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
+          child: CircularProgressIndicator(color: AppColors.accent),
         ),
       );
     }

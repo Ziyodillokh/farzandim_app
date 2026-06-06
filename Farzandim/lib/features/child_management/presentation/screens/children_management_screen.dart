@@ -43,7 +43,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                       : _ChildrenList(children: children),
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (e, _) => _ErrorState(
@@ -508,7 +508,7 @@ class _ErrorState extends StatelessWidget {
               child: Text(
                 'common.retry'.tr(),
                 style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                   fontWeight: FontWeight.w600,
                 ),
               ),

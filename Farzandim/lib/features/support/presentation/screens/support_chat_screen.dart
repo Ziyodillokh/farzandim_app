@@ -690,7 +690,7 @@ class _DocumentBubble extends ConsumerWidget {
               ),
               alignment: Alignment.center,
               child: Icon(Icons.insert_drive_file_rounded,
-                  color: isUser ? AppColors.onPrimary : AppColors.primary,
+                  color: isUser ? AppColors.onPrimary : AppColors.accent,
                   size: 22),
             ),
             const SizedBox(width: 10),

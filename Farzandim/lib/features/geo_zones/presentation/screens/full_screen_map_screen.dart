@@ -516,7 +516,7 @@ class _BottomCard extends StatelessWidget {
               Icon(
                 Icons.location_pin,
                 size: 24,
-                color: AppColors.primary,
+                color: AppColors.accent,
               ),
               const SizedBox(width: 12),
               Expanded(

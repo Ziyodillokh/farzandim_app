@@ -161,7 +161,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
           children: [
             Icon(
               Icons.smartphone,
-              color: AppColors.primary,
+              color: AppColors.accent,
             ),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
@@ -207,7 +207,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             // Yashil ishonch karta — nima saqlanadi.
             _DialogInfoCard(
               icon: Icons.check_circle,
-              iconColor: AppColors.primary,
+              iconColor: AppColors.accent,
               title: '',
               titleColor: AppColors.textPrimary,
               singleLine:
@@ -265,7 +265,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
           children: [
             Icon(
               Icons.check_circle,
-              color: AppColors.primary,
+              color: AppColors.accent,
             ),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
@@ -302,7 +302,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
                 child: Text(
                   code,
                   style: AppTextStyles.headlineXL.copyWith(
-                    color: AppColors.primary,
+                    color: AppColors.accent,
                     fontSize: 32,
                     fontWeight: FontWeight.bold,
                     letterSpacing: 4,
@@ -339,13 +339,13 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             },
             icon: Icon(
               Icons.copy,
-              color: AppColors.primary,
+              color: AppColors.accent,
               size: 18,
             ),
             label: Text(
               'childManagement.familyCode.newCodeDialog.copy'.tr(),
               style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.primary,
+                color: AppColors.accent,
               ),
             ),
           ),
@@ -619,7 +619,7 @@ class _RegenerateCodeButton extends StatelessWidget {
           color: Colors.transparent,
           shape: RoundedRectangleBorder(
             side: BorderSide(
-              color: AppColors.primary.withValues(alpha: 0.5),
+              color: AppColors.accent.withValues(alpha: 0.5),
             ),
             borderRadius: borderRadius,
           ),
@@ -636,14 +636,14 @@ class _RegenerateCodeButton extends StatelessWidget {
                       height: 16,
                       child: CircularProgressIndicator(
                         strokeWidth: 2,
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                       ),
                     )
                   else
                     Icon(
                       Icons.smartphone,
                       size: 18,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   const SizedBox(width: AppDimensions.sm),
                   Text(
@@ -651,7 +651,7 @@ class _RegenerateCodeButton extends StatelessWidget {
                         ? 'childManagement.familyCode.regenerating'.tr()
                         : 'childManagement.familyCode.regenerateButton'.tr(),
                     style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                       fontWeight: FontWeight.w600,
                     ),
                   ),

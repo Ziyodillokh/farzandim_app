@@ -37,14 +37,14 @@ class PairRequestsScreen extends ConsumerWidget {
                 child: requestsAsync.when(
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (e, _) => Center(child: Text('Xato: $e')),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                       onRefresh: () async {
                         ref.invalidate(
                           pendingPairRequestsProvider(childId),
@@ -290,7 +290,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
             icon: Icons.timer_outlined,
             label: 'Muddat',
             value: _formatLeft(_left),
-            valueColor: isExpired ? AppColors.error : AppColors.primary,
+            valueColor: isExpired ? AppColors.error : AppColors.accent,
           ),
           const SizedBox(height: AppDimensions.md),
           Row(
@@ -318,19 +318,19 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                   onPressed: _busy || isExpired ? null : _approve,
                   style: TextButton.styleFrom(
                     backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
+                    foregroundColor: AppColors.onPrimary,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
                   icon: _busy
-                      ? const SizedBox(
+                      ? SizedBox(
                           width: 16,
                           height: 16,
                           child: CircularProgressIndicator(
                             strokeWidth: 2,
-                            color: Colors.black,
+                            color: AppColors.onPrimary,
                           ),
                         )
                       : const Icon(Icons.check_rounded, size: 18),
@@ -338,7 +338,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                     'Tasdiqlash',
                     style: AppTextStyles.bodyM.copyWith(
                       fontWeight: FontWeight.w600,
-                      color: Colors.black,
+                      color: AppColors.onPrimary,
                     ),
                   ),
                 ),

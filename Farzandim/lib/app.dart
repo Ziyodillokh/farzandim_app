@@ -182,6 +182,18 @@ class FarzandimApp extends ConsumerWidget {
       title: 'Farzandim',
       debugShowCheckedModeBanner: false,
       theme: AppTheme.build(),
+      // Light/dark almashishda Theme.of() asoslangan widget'lar 200ms
+      // crossfade qiladi, AppColors getter'lari esa darhol flip qiladi —
+      // bu "yarim-animatsiya" nomuvofiqligi jank beradi. Zero qilib bir
+      // kadrda BIRGA, aniq va tez almashtiramiz (professional).
+      themeAnimationDuration: Duration.zero,
+      // Global baza fon — BARCHA route'lar ortida theme rangi turadi. Transparent
+      // scaffold'larda overscroll/pull-to-refresh paytida oq OS oyna foni
+      // ko'rinmaydi (bitta joyda hal — har ekranni o'zgartirish shart emas).
+      builder: (context, child) => ColoredBox(
+        color: AppColors.background,
+        child: child ?? const SizedBox.shrink(),
+      ),
       routerConfig: ref.watch(routerProvider),
       scaffoldMessengerKey: _scaffoldMessengerKey,
       // easy_localization delegate va supportedLocales — `EasyLocalization`

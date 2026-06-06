@@ -48,7 +48,7 @@ class _SettingsTileState extends State<SettingsTile> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = widget.accentColor ?? AppColors.primary;
+    final accent = widget.accentColor ?? AppColors.accent;
     return AnimatedScale(
       scale: _pressed ? 0.98 : 1.0,
       duration: const Duration(milliseconds: 100),

@@ -467,7 +467,7 @@ class _ChildSelectorChip extends ConsumerWidget {
                 leading: ChildAvatar(child: c, size: 40),
                 title: Text(c.name, style: AppTextStyles.bodyM),
                 trailing: c.id == child.id
-                    ? Icon(Icons.check, color: AppColors.primary)
+                    ? Icon(Icons.check, color: AppColors.accent)
                     : null,
                 onTap: () => Navigator.of(sheetContext).pop(c),
               ),
@@ -552,7 +552,7 @@ class _BottomCard extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Icon(Icons.place_rounded,
-                    size: 18, color: AppColors.primary),
+                    size: 18, color: AppColors.accent),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -578,7 +578,7 @@ class _BottomCard extends ConsumerWidget {
               Icon(
                 Icons.location_on,
                 size: 18,
-                color: AppColors.primary,
+                color: AppColors.accent,
               ),
               const SizedBox(width: 6),
               Text(

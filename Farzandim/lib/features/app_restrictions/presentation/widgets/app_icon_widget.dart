@@ -121,7 +121,7 @@ class AppIconWidget extends StatelessWidget {
       alignment: Alignment.center,
       child: Icon(
         _fallbackIcon(packageName),
-        color: AppColors.primary,
+        color: AppColors.accent,
         size: size * 0.5,
       ),
     );

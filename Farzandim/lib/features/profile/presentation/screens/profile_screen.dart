@@ -204,14 +204,14 @@ class _EditableAvatar extends StatelessWidget {
             decoration: BoxDecoration(
               shape: BoxShape.circle,
               color: AppColors.surface,
-              border: Border.all(color: AppColors.primary, width: 2),
+              border: Border.all(color: AppColors.accent, width: 2),
             ),
             clipBehavior: Clip.antiAlias,
             child: isUploading
                 ? Center(
                     child: CircularProgressIndicator(
                       strokeWidth: 2.5,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   )
                 : (photoUrl == null || photoUrl!.isEmpty

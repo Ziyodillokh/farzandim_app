@@ -205,7 +205,7 @@ class _Last24HoursCard extends ConsumerWidget {
                   children: [
                     Icon(
                       Icons.history,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                       size: 22,
                     ),
                     const SizedBox(width: AppDimensions.sm + 4),
@@ -224,7 +224,7 @@ class _Last24HoursCard extends ConsumerWidget {
                     Text(
                       'geoZones.last24h.viewLink'.tr(),
                       style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         fontWeight: FontWeight.w600,
                         fontSize: 13,
                       ),
@@ -233,7 +233,7 @@ class _Last24HoursCard extends ConsumerWidget {
                     Icon(
                       Icons.chevron_right,
                       size: 18,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ],
                 ),
@@ -379,7 +379,7 @@ class _ZoneCard extends StatelessWidget {
                     zone.icon ?? zone.type.defaultIconName,
                   ),
                   size: 24,
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                 ),
               ),
               const SizedBox(width: AppDimensions.md),

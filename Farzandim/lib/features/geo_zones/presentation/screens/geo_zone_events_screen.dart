@@ -60,7 +60,7 @@ class GeoZoneEventsScreen extends ConsumerWidget {
                       );
                     }
                     return RefreshIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                       backgroundColor: AppColors.surface,
                       onRefresh: () => _onRefresh(ref),
                       child: _EventsList(events: events),
@@ -68,7 +68,7 @@ class GeoZoneEventsScreen extends ConsumerWidget {
                   },
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (e, _) => Center(
@@ -188,7 +188,7 @@ class _EmptyEvents extends StatelessWidget {
     // Empty state ham pull-to-refresh qabul qiladi — RefreshIndicator
     // scrollable child kutadi.
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.accent,
       backgroundColor: AppColors.surface,
       onRefresh: onRefresh,
       child: LayoutBuilder(
@@ -212,7 +212,7 @@ class _EmptyEvents extends StatelessWidget {
                     child: Icon(
                       Icons.history,
                       size: 50,
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   const SizedBox(height: AppDimensions.lg),

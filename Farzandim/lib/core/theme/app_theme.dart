@@ -54,13 +54,11 @@ class AppTheme {
         outline: AppColors.border,
       ),
 
-      // Scaffold fon — **transparent**. Har ekran o'z body'sini
-      // `GradientBackground` widget'i bilan o'rab oladi (PDF dizayni
-      // bo'yicha gradient fon).
-      //
-      // ⚠️ Eslatma: agar yangi ekran `GradientBackground` ichida emas bo'lsa,
-      // foni transparent ko'rinadi (web'da oq). Har Scaffold'ni tekshiring.
-      scaffoldBackgroundColor: Colors.transparent,
+      // Scaffold fon — solid theme baza rangi (AVVAL transparent edi).
+      // GradientBackground ustidan chiziladi, shuning uchun ko'rinish
+      // o'zgarmaydi; ammo overscroll/pull-to-refresh paytida content
+      // ortidan OQ oyna foni ko'rinib qolmaydi (theme rangi ko'rinadi).
+      scaffoldBackgroundColor: AppColors.background,
 
       // ────── 2. SHRIFT TIZIMI (TextTheme) ──────
       //

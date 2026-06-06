@@ -408,7 +408,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           return Padding(
             padding: const EdgeInsets.all(AppDimensions.md),
             child: Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(color: AppColors.accent),
             ),
           );
         }
@@ -439,7 +439,7 @@ class _LeaderboardRow extends StatelessWidget {
             : AppColors.surface,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         border: highlight
-            ? Border.all(color: AppColors.primary, width: 1.5)
+            ? Border.all(color: AppColors.accent, width: 1.5)
             : null,
       ),
       child: Row(
@@ -686,7 +686,7 @@ class _RegionPickerSheet extends StatelessWidget {
         isSelected
             ? Icons.radio_button_checked_rounded
             : Icons.radio_button_unchecked_rounded,
-        color: isSelected ? AppColors.primary : AppColors.textTertiary,
+        color: isSelected ? AppColors.accent : AppColors.textTertiary,
       ),
       onTap: () => Navigator.of(context).pop(value),
     );

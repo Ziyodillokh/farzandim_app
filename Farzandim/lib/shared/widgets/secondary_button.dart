@@ -62,8 +62,14 @@ class SecondaryButton extends StatelessWidget {
       child: DecoratedBox(
         decoration: BoxDecoration(
           // Qora-shaffof fon — rasm orqali yarim ko'rinadi.
-          color: const Color(0x66000000),
-          border: Border.all(color: Colors.white24),
+          // Dark/Welcome'da rasm fonidagi ko'rinish saqlanadi; light'da
+          // yorug' surfaceVariant fon + ko'rinadigan border.
+          color: AppColors.isDark
+              ? const Color(0x66000000)
+              : AppColors.surfaceVariant,
+          border: Border.all(
+            color: AppColors.isDark ? Colors.white24 : AppColors.border,
+          ),
           borderRadius: borderRadius,
         ),
         child: Material(

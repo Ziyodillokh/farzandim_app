@@ -89,7 +89,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
         children: [
           Icon(
             Icons.photo_camera_rounded,
-            color: AppColors.primary,
+            color: AppColors.accent,
           ),
           const SizedBox(width: AppDimensions.sm),
           Expanded(
@@ -156,13 +156,13 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.primary,
+                    color: AppColors.accent,
                   ),
                 )
               : Text(
                   'So\'rash',
                   style: AppTextStyles.bodyM.copyWith(
-                    color: AppColors.primary,
+                    color: AppColors.accent,
                     fontWeight: FontWeight.w600,
                   ),
                 ),

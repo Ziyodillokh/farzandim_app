@@ -258,7 +258,7 @@ class _ChildChips extends StatelessWidget {
                 c.name,
                 style: AppTextStyles.bodyS.copyWith(
                   color:
-                      selected ? AppColors.background : AppColors.textPrimary,
+                      selected ? AppColors.onPrimary : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

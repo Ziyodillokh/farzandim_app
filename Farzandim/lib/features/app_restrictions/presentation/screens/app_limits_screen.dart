@@ -223,7 +223,7 @@ class _ChildChips extends ConsumerWidget {
                     child?.name ?? '—',
                     style: AppTextStyles.bodyS.copyWith(
                       color: selected
-                          ? AppColors.background
+                          ? AppColors.onPrimary
                           : AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                     ),
@@ -408,7 +408,7 @@ class _RightStatus extends StatelessWidget {
           Icon(
             Icons.hourglass_empty_rounded,
             size: 18,
-            color: AppColors.primary,
+            color: AppColors.accent,
           ),
         ],
       );
@@ -546,7 +546,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                 children: [
                   Icon(
                     Icons.hourglass_empty_rounded,
-                    color: AppColors.primary,
+                    color: AppColors.accent,
                     size: 22,
                   ),
                   const SizedBox(width: AppDimensions.md),
@@ -575,7 +575,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                     icon: const Icon(Icons.edit_outlined, size: 16),
                     label: Text('appLimits.edit'.tr()),
                     style: TextButton.styleFrom(
-                      foregroundColor: AppColors.primary,
+                      foregroundColor: AppColors.accent,
                     ),
                   ),
                 ],

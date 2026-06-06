@@ -92,7 +92,7 @@ class ScreenTimeChart extends ConsumerWidget {
         loading: () => SizedBox(
           height: 220,
           child: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
+            child: CircularProgressIndicator(color: AppColors.accent),
           ),
         ),
         error: (_, _) => SizedBox(

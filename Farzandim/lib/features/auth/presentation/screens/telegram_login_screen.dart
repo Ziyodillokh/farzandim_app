@@ -27,6 +27,7 @@
 import 'dart:convert';
 
 import 'package:farzandim/core/config/env_config.dart';
+import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:flutter/foundation.dart';
@@ -129,16 +130,16 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
     return Scaffold(
       appBar: AppBar(
         title: const Text('Telegram bilan kirish'),
-        backgroundColor: const Color(0xFF1C1C24),
+        backgroundColor: AppColors.surface,
       ),
-      backgroundColor: const Color(0xFF0A0A12),
+      backgroundColor: AppColors.background,
       body: Stack(
         children: [
           WebViewWidget(controller: _controller),
           if (_loading)
             Center(
               child: CircularProgressIndicator(
-                color: Color(0xFFC5F562), // AppColors.primary
+                color: AppColors.primary,
               ),
             ),
           if (_error != null)

@@ -61,6 +61,12 @@ class AppColors {
   static Color get primaryDark => _c(0xFFA3CE4F, 0xFFA3CE4F);
   static Color get primaryLight => _c(0xFFD4F783, 0xFFD4F783);
 
+  /// Yashil AKSENT — FOREGROUND (ikona/matn/aksent chiziq) uchun. `primary`
+  /// (lime) FILL uchun ishlatiladi, ammo lime oq/och fon ustida yuvilib
+  /// ketadi. `accent` esa light'da TO'Q yashil (oq fonda aniq o'qiladi),
+  /// dark'da o'sha lime. ⚠️ Tugmalar/FILL'larga TEGMAYDI — faqat foreground.
+  static Color get accent => _c(0xFFC5F562, 0xFF3F7E16);
+
   /// Lime (primary) USTIDAGI matn/ikon rangi — ikkala rejimda ham DOIM
   /// to'q (lime yorqin). `background` o'rniga shu ishlatiladi (light mode'da
   /// `background` och bo'lib qoladi → lime ustida o'qilmaydi). Bu HAQIQIY

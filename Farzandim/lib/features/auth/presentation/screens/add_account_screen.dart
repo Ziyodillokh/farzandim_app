@@ -116,7 +116,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                 SizedBox(
                   height: 260,
                   child: Center(
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                 )
               else if (_error != null) ...[

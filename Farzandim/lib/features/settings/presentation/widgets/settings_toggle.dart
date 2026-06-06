@@ -39,6 +39,7 @@ class SettingsToggle extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final accent = accentColor ?? AppColors.primary;
+    final fg = accentColor ?? AppColors.accent;
     return Material(
       type: MaterialType.transparency,
       child: InkWell(
@@ -71,7 +72,7 @@ class SettingsToggle extends StatelessWidget {
                   ),
                 ),
                 alignment: Alignment.center,
-                child: Icon(icon, color: accent, size: 20),
+                child: Icon(icon, color: fg, size: 20),
               ),
               const SizedBox(width: 14),
               Expanded(

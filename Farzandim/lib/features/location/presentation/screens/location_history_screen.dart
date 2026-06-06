@@ -79,10 +79,14 @@ class _LocationHistoryScreenState
       ),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: ColorScheme.dark(
+          colorScheme: (AppColors.isDark
+                  ? const ColorScheme.dark()
+                  : const ColorScheme.light())
+              .copyWith(
             primary: AppColors.primary,
-            onPrimary: Colors.black,
+            onPrimary: AppColors.onPrimary,
             surface: AppColors.surface,
+            onSurface: AppColors.textPrimary,
           ),
         ),
         child: child!,
@@ -157,7 +161,7 @@ class _LocationHistoryScreenState
             historyAsync.when(
               loading: () => Center(
                 child: CircularProgressIndicator(
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                 ),
               ),
               error: (e, _) => Center(
@@ -660,20 +664,20 @@ class _BottomPanel extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(
+                    Icon(
                       Icons.date_range_rounded,
                       size: 20,
-                      color: Colors.black,
+                      color: AppColors.onPrimary,
                     ),
                     const SizedBox(width: 10),
                     Text(
                       _isSameDay
                           ? _formatDate(fromDt)
                           : '${_formatDate(fromDt)}  —  ${_formatDate(toDt)}',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
-                        color: Colors.black,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -723,7 +727,7 @@ class _StatItem extends StatelessWidget {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 18, color: AppColors.primary),
+        Icon(icon, size: 18, color: AppColors.accent),
         const SizedBox(width: 6),
         Text(
           value,
@@ -802,7 +806,7 @@ class _PlaceCard extends ConsumerWidget {
                     Text(
                       stop.durationLabel,
                       style: AppTextStyles.label.copyWith(
-                        color: AppColors.primary,
+                        color: AppColors.accent,
                         fontWeight: FontWeight.w600,
                       ),
                     ),

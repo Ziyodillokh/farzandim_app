@@ -121,7 +121,7 @@ class _Tabs extends StatelessWidget {
         ),
         indicatorSize: TabBarIndicatorSize.tab,
         dividerColor: Colors.transparent,
-        labelColor: Colors.black,
+        labelColor: AppColors.onPrimary,
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: AppTextStyles.bodyM,
@@ -156,7 +156,7 @@ class _AlertsList extends ConsumerWidget {
     final async = ref.watch(provider);
     return async.when(
       loading: () => Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: CircularProgressIndicator(color: AppColors.accent),
       ),
       error: (e, _) => Center(
         child: Padding(
@@ -177,7 +177,7 @@ class _AlertsList extends ConsumerWidget {
           );
         }
         return RefreshIndicator(
-          color: AppColors.primary,
+          color: AppColors.accent,
           onRefresh: () async {
             ref.invalidate(sosAlertsByStatusProvider);
           },
@@ -260,7 +260,7 @@ class _AlertsList extends ConsumerWidget {
             child: Text(
               'Hal qilish',
               style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.primary,
+                color: AppColors.accent,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -426,7 +426,7 @@ class _AlertTile extends StatelessWidget {
                     onPressed: onResolve,
                     style: TextButton.styleFrom(
                       backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.black,
+                      foregroundColor: AppColors.onPrimary,
                       padding: const EdgeInsets.symmetric(vertical: 12),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
@@ -437,7 +437,7 @@ class _AlertTile extends StatelessWidget {
                       'Hal qilish',
                       style: AppTextStyles.bodyM.copyWith(
                         fontWeight: FontWeight.w600,
-                        color: Colors.black,
+                        color: AppColors.onPrimary,
                       ),
                     ),
                   ),

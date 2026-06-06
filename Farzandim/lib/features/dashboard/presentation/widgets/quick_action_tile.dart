@@ -49,7 +49,7 @@ class _QuickActionTileState extends State<QuickActionTile> {
 
   @override
   Widget build(BuildContext context) {
-    final accent = widget.accentColor ?? AppColors.primary;
+    final accent = widget.accentColor ?? AppColors.accent;
     final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
     return AnimatedScale(
       scale: _pressed ? 0.95 : 1.0,

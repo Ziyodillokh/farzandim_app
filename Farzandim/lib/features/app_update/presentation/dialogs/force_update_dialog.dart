@@ -54,7 +54,7 @@ class ForceUpdateDialog extends StatelessWidget {
                 alignment: Alignment.center,
                 child: Icon(
                   Icons.system_update_alt_rounded,
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                   size: 36,
                 ),
               ),
@@ -153,7 +153,7 @@ class _VersionRow extends StatelessWidget {
           color: AppColors.textTertiary,
           size: 20,
         ),
-        _versionChip('Yangi', latest, AppColors.primary),
+        _versionChip('Yangi', latest, AppColors.accent),
       ],
     );
   }
@@ -201,7 +201,7 @@ class _PrimaryButton extends StatelessWidget {
         onPressed: onPressed,
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: Colors.black,
+          foregroundColor: AppColors.onPrimary,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),

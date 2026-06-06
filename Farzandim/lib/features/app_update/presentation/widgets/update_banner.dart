@@ -53,7 +53,7 @@ class UpdateBanner extends ConsumerWidget {
                 ),
                 child: Icon(
                   Icons.system_update_alt_rounded,
-                  color: AppColors.primary,
+                  color: AppColors.accent,
                   size: 20,
                 ),
               ),
@@ -90,7 +90,7 @@ class UpdateBanner extends ConsumerWidget {
               TextButton(
                 onPressed: () => _launch(status.targetUrl),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.primary,
+                  foregroundColor: AppColors.accent,
                   padding: const EdgeInsets.symmetric(
                     horizontal: 12,
                     vertical: 8,

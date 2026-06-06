@@ -263,7 +263,7 @@ class _Avatar extends StatelessWidget {
               _initials(name),
               style: AppTextStyles.headlineL.copyWith(
                 fontSize: 18,
-                color: AppColors.primary,
+                color: AppColors.accent,
               ),
             ),
     );
@@ -527,7 +527,7 @@ class _LanguageOption extends StatelessWidget {
             Expanded(child: Text(language.label, style: AppTextStyles.bodyM)),
             if (isSelected)
               Icon(Icons.check_circle,
-                  color: AppColors.primary, size: 20),
+                  color: AppColors.accent, size: 20),
           ],
         ),
       ),

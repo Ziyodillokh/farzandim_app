@@ -37,7 +37,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
                 child: sessionsAsync.when(
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (_, __) => _ErrorState(
@@ -121,7 +121,7 @@ class _SessionsList extends ConsumerWidget {
     }
 
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.accent,
       backgroundColor: AppColors.surface,
       onRefresh: () => ref.read(sessionsProvider.notifier).refresh(),
       child: ListView(
@@ -301,7 +301,7 @@ class _Trailing extends StatelessWidget {
       return Text(
         'settings.sessions.current'.tr(),
         style: AppTextStyles.bodyS.copyWith(
-          color: AppColors.primary,
+          color: AppColors.accent,
           fontWeight: FontWeight.w600,
         ),
       );
@@ -418,7 +418,7 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.accent,
       backgroundColor: AppColors.surface,
       onRefresh: onRefresh,
       child: ListView(
@@ -465,7 +465,7 @@ class _ErrorState extends StatelessWidget {
             child: Text(
               'settings.sessions.retry'.tr(),
               style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.primary,
+                color: AppColors.accent,
                 fontWeight: FontWeight.w600,
               ),
             ),

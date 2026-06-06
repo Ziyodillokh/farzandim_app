@@ -168,7 +168,7 @@ class _OtpBox extends StatelessWidget {
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
               borderSide: BorderSide(
-                color: AppColors.primary,
+                color: AppColors.accent,
                 width: 2,
               ),
             ),

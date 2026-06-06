@@ -41,7 +41,7 @@ class FeedbackInboxScreen extends ConsumerWidget {
                 child: feedbackAsync.when(
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (e, _) => Center(
@@ -50,7 +50,7 @@ class FeedbackInboxScreen extends ConsumerWidget {
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                       onRefresh: () async {
                         ref.invalidate(childFeedbackProvider(childId));
                       },
@@ -166,7 +166,7 @@ class _FeedbackTile extends ConsumerWidget {
         border: Border.all(
           color: isRead
               ? AppColors.border
-              : AppColors.primary.withValues(alpha: 0.4),
+              : AppColors.accent,
           width: isRead ? 1 : 1.5,
         ),
       ),
