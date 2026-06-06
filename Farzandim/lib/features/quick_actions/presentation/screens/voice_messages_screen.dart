@@ -47,7 +47,7 @@ class VoiceMessagesScreen extends ConsumerWidget {
                       : _ChildrenList(onRefresh: onRefresh),
                   loading: () => Center(
                     child: CircularProgressIndicator(
-                      color: AppColors.primary,
+                      color: AppColors.accent,
                     ),
                   ),
                   error: (e, _) => Center(
@@ -156,7 +156,7 @@ class _ChildrenList extends ConsumerWidget {
     final children = ref.watch(sortedChildrenForVoiceProvider);
 
     return RefreshIndicator(
-      color: AppColors.primary,
+      color: AppColors.accent,
       backgroundColor: AppColors.surface,
       onRefresh: onRefresh,
       child: ListView.separated(
