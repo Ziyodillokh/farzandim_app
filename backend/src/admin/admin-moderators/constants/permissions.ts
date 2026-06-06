@@ -39,6 +39,9 @@ export const ALL_ADMIN_PERMISSIONS = [
   // Analytics & Audit
   'view_analytics',
   'view_audit_log',
+
+  // Security (IP allowlist va xavfsizlik siyosati)
+  'manage_security',
 ] as const;
 
 export type AdminPermission = (typeof ALL_ADMIN_PERMISSIONS)[number];

@@ -121,6 +121,7 @@ export interface AdminUserListItem {
   phone: string | null;
   role: UserRole | string;
   status: 'active' | 'blocked';
+  plan: string;
   planLabel: string;
   lastActivityAt: string | null;
   avatarUrl: string | null;

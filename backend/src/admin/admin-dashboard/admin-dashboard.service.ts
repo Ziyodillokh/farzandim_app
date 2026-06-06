@@ -56,6 +56,12 @@ export class AdminDashboardService {
     const yesterdayStart = new Date(todayStart.getTime() - 86_400_000);
     const days = this.eachDay(from, to);
 
+    const rangeStart = this.startOfDay(from);
+    const rangeEnd = this.endOfDay(to);
+    const labels = days.map((d) => this.fmtLabel(d));
+    const dayIndex = new Map<string, number>();
+    days.forEach((d, i) => dayIndex.set(this.fmtLabel(d), i));
+
     const [
       todayLogins,
       yesterdayLogins,
@@ -63,121 +69,121 @@ export class AdminDashboardService {
       videosUploadedYesterday,
       totalParents,
       totalChildren,
+      audiobooksCount,
+      activeContests,
+      paidPlanBuyers,
+      userByDay,
+      childByDay,
+      sessions,
     ] = await Promise.all([
-      this.prisma.user.count({ where: { updatedAt: { gte: todayStart } } }),
-      this.prisma.user.count({
-        where: { updatedAt: { gte: yesterdayStart, lt: todayStart } },
+      // Bugun/kecha kirgan foydalanuvchilar (sessiyalar bo'yicha — real login).
+      this.prisma.userSession.count({ where: { createdAt: { gte: todayStart } } }),
+      this.prisma.userSession.count({
+        where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
       }),
-      this.prisma.videoMessage.count({
-        where: { createdAt: { gte: todayStart } },
-      }),
+      this.prisma.videoMessage.count({ where: { createdAt: { gte: todayStart } } }),
       this.prisma.videoMessage.count({
         where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
       }),
       this.prisma.user.count({ where: { role: 'PARENT' } }),
       this.prisma.child.count(),
+      // KPI — real qiymatlar.
+      this.prisma.audiobook.count(),
+      this.prisma.olympiad.count({
+        where: {
+          status: 'published',
+          startTime: { lte: now },
+          endTime: { gte: now },
+        },
+      }),
+      this.prisma.subscription.count({ where: { status: 'ACTIVE' } }),
+      // Kunlik ro'yxatdan o'tish (ota-ona/bola).
+      this.prisma.user.groupBy({
+        by: ['createdAt', 'role'],
+        where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
+        _count: { _all: true },
+      }),
+      this.prisma.child.groupBy({
+        by: ['createdAt'],
+        where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
+        _count: { _all: true },
+      }),
+      // Kunlik faol foydalanuvchilar (login sessiyalari + rol).
+      this.prisma.userSession.findMany({
+        where: { createdAt: { gte: rangeStart, lte: rangeEnd } },
+        select: { createdAt: true, user: { select: { role: true } } },
+      }),
     ]);
 
-    // Per-day breakdown (parents vs children) within the requested range.
-    const userByDay = await this.prisma.user.groupBy({
-      by: ['createdAt', 'role'],
-      where: {
-        createdAt: { gte: this.startOfDay(from), lte: this.endOfDay(to) },
-      },
-      _count: { _all: true },
-    });
-    const childByDay = await this.prisma.child.groupBy({
-      by: ['createdAt'],
-      where: {
-        createdAt: { gte: this.startOfDay(from), lte: this.endOfDay(to) },
-      },
-      _count: { _all: true },
-    });
-
-    const labels = days.map((d) => this.fmtLabel(d));
-    const parentSeries: number[] = days.map(() => 0);
-    const childSeries: number[] = days.map(() => 0);
-
-    const dayIndex = new Map<string, number>();
-    days.forEach((d, i) => dayIndex.set(this.fmtLabel(d), i));
-
+    // ─── usersGrowth: real kunlik ro'yxatdan o'tish ───
+    const regParent: number[] = days.map(() => 0);
+    const regChild: number[] = days.map(() => 0);
     for (const row of userByDay) {
       const i = dayIndex.get(this.fmtLabel(row.createdAt));
       if (i === undefined) continue;
-      if (row.role === 'PARENT')
-        parentSeries[i] = (parentSeries[i] ?? 0) + row._count._all;
+      if (row.role === 'PARENT') regParent[i] += row._count._all;
+      else regChild[i] += row._count._all;
     }
     for (const row of childByDay) {
       const i = dayIndex.get(this.fmtLabel(row.createdAt));
       if (i === undefined) continue;
-      childSeries[i] = (childSeries[i] ?? 0) + row._count._all;
+      regChild[i] += row._count._all;
     }
 
-    const parentSum = parentSeries.reduce((a, b) => a + b, 0);
-    const childSum = childSeries.reduce((a, b) => a + b, 0);
+    // ─── activeUsers: real kunlik login sessiyalari ───
+    const actParent: number[] = days.map(() => 0);
+    const actChild: number[] = days.map(() => 0);
+    for (const s of sessions) {
+      const i = dayIndex.get(this.fmtLabel(s.createdAt));
+      if (i === undefined) continue;
+      if (s.user?.role === 'PARENT') actParent[i] += 1;
+      else actChild[i] += 1;
+    }
 
-    const [activeParents, activeChildren] = await Promise.all([
-      this.prisma.user.count({
-        where: {
-          role: 'PARENT',
-          updatedAt: { gte: this.startOfDay(from), lte: this.endOfDay(to) },
-        },
-      }),
-      this.prisma.child.count({
-        where: {
-          lastSeenAt: { gte: this.startOfDay(from), lte: this.endOfDay(to) },
-        },
-      }),
-    ]);
-
-    const activeChartParent = days.map((_, i, arr) =>
-      Math.round(
-        (activeParents / Math.max(arr.length, 1)) *
-          (0.6 + 0.4 * Math.sin((i + 1) / 3)),
-      ),
-    );
-    const activeChartChild = days.map((_, i, arr) =>
-      Math.round(
-        (activeChildren / Math.max(arr.length, 1)) *
-          (0.7 + 0.3 * Math.cos((i + 1) / 3)),
-      ),
-    );
+    const totalUsers = totalParents + totalChildren;
+    const newInRange =
+      regParent.reduce((a, b) => a + b, 0) + regChild.reduce((a, b) => a + b, 0);
+    const actTotals = days.map((_, i) => actParent[i]! + actChild[i]!);
 
     return {
       summary: {
         todayLogins,
         videosUploaded,
-        audiobooks: 0,
-        activeContests: 0,
-        paidPlanBuyers: 0,
+        audiobooks: audiobooksCount,
+        activeContests,
+        paidPlanBuyers,
       },
       trends: {
         todayLogins: this.percentDelta(todayLogins, yesterdayLogins),
-        videosUploaded: this.percentDelta(
-          videosUploaded,
-          videosUploadedYesterday,
-        ),
+        videosUploaded: this.percentDelta(videosUploaded, videosUploadedYesterday),
         audiobooks: 0,
         activeContests: 0,
         paidPlanBuyers: 0,
       },
       charts: {
         usersGrowth: {
-          headlineTotal: totalParents + totalChildren,
+          headlineTotal: totalUsers,
           changePercent: this.percentDelta(
-            parentSum + childSum,
-            Math.max(1, parentSum + childSum - 1),
+            totalUsers,
+            Math.max(1, totalUsers - newInRange),
           ),
           labels,
-          parentSeries,
-          childSeries,
+          series: [
+            { name: 'Ota-onalar', data: regParent },
+            { name: 'Bolalar', data: regChild },
+          ],
         },
         activeUsers: {
-          headlineTotal: activeParents + activeChildren,
-          changePercent: 0,
+          headlineTotal: sessions.length,
+          changePercent: this.percentDelta(
+            actTotals[actTotals.length - 1] ?? 0,
+            actTotals[actTotals.length - 2] ?? 0,
+          ),
           labels,
-          parentSeries: activeChartParent,
-          childSeries: activeChartChild,
+          series: [
+            { name: 'Ota-onalar', data: actParent },
+            { name: 'Bolalar', data: actChild },
+          ],
         },
       },
       range: { from: from.toISOString(), to: to.toISOString() },

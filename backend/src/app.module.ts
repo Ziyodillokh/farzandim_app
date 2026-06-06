@@ -49,6 +49,8 @@ import { AdminOlympiadsModule } from './admin/admin-olympiads/admin-olympiads.mo
 import { AdminAnalyticsModule } from './admin/admin-analytics/admin-analytics.module';
 import { AdminContentModule } from './admin/admin-content/admin-content.module';
 import { AdminAuditLogModule } from './admin/admin-audit-log/admin-audit-log.module';
+import { AdminSecurityModule } from './admin/admin-security/admin-security.module';
+import { SecuritySettingsModule } from './common/security/security-settings.module';
 
 // App controller
 import { AppController } from './app.controller';
@@ -60,6 +62,7 @@ import { AppController } from './app.controller';
     // Infrastructure
     DatabaseModule,
     StorageModule,
+    SecuritySettingsModule,
     FcmModule,
     SmsModule,
     AuditModule,
@@ -104,6 +107,7 @@ import { AppController } from './app.controller';
     AdminAnalyticsModule,
     AdminContentModule,
     AdminAuditLogModule,
+    AdminSecurityModule,
   ],
   controllers: [AppController],
 })

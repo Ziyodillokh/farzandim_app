@@ -18,6 +18,9 @@ async function bootstrap() {
     new FastifyAdapter({
       bodyLimit: 100 * 1024 * 1024, // 100 MB
       forceCloseConnections: true,
+      // nginx orqasida — haqiqiy klient IP'sini X-Forwarded-For'dan oladi
+      // (admin IP allowlist enforcement uchun `request.ip` to'g'ri bo'lsin).
+      trustProxy: true,
     }),
   );
 

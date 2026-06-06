@@ -1053,3 +1053,17 @@ model UserSession {
   @@map("user_sessions")
   @@index([userId, revokedAt])
 }
+
+// ============================================
+// ADMIN SECURITY SETTINGS — singleton (IP allowlist va h.k.)
+// ============================================
+// Bitta qator (id = "singleton"). Admin panel xavfsizlik siyosati: IP
+// allowlist (yoqilgan bo'lsa faqat shu IP'lardan admin kira oladi).
+model AdminSecuritySettings {
+  id                 String   @id @default("singleton")
+  ipAllowlistEnabled Boolean  @default(false) @map("ip_allowlist_enabled")
+  ipAllowlist        String[] @default([]) @map("ip_allowlist")
+  updatedAt          DateTime @updatedAt @map("updated_at")
+
+  @@map("admin_security_settings")
+}

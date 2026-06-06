@@ -26,12 +26,14 @@ export class AdminUsersController {
   @ApiQuery({ name: 'q', required: false })
   @ApiQuery({ name: 'role', required: false })
   @ApiQuery({ name: 'status', required: false })
+  @ApiQuery({ name: 'plan', required: false })
   @ApiQuery({ name: 'page', required: false, type: Number })
   @ApiQuery({ name: 'limit', required: false, type: Number })
   async list(
     @Query('q') q?: string,
     @Query('role') role?: string,
     @Query('status') status?: string,
+    @Query('plan') plan?: string,
     @Query('page') page = 1,
     @Query('limit') limit = 20,
   ) {
@@ -39,6 +41,7 @@ export class AdminUsersController {
       q,
       role,
       status,
+      plan,
       page: Math.max(1, +page || 1),
       limit: Math.min(100, Math.max(1, +limit || 20)),
     });

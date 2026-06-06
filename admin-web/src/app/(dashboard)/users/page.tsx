@@ -191,7 +191,9 @@ function UserRow({ user }: { user: AdminUserListItem }) {
           </div>
         </div>
       </td>
-      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">{formatPhone(user.phone)}</td>
+      <td className="px-4 py-3 font-mono text-xs text-muted-foreground">
+        {user.phone ? formatPhone(user.phone) : '—'}
+      </td>
       <td className="px-4 py-3">
         <Badge variant={isChild ? 'info' : 'secondary'} size="sm">
           {isChild ? 'Bola' : 'Ota-ona'}

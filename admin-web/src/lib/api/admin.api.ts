@@ -71,7 +71,9 @@ export interface UsersListParams {
 
 export const usersApi = {
   list: (params: UsersListParams = {}) =>
-    api.get<Paginated<AdminUserListItem>>('/admin/users', { params }),
+    api
+      .get<RawPaginated<AdminUserListItem>>('/admin/users', { params })
+      .then(normalizePagination),
 
   detail: (id: string) => api.get<AdminUserListItem & Record<string, unknown>>(`/admin/users/${id}`),
 
@@ -279,5 +281,21 @@ export const auditApi = {
     from?: string;
     to?: string;
   }) => api.get<RawPaginated<AuditLogEntry>>('/admin/audit-log', { params }).then(normalizePagination),
-  actions: () => api.get<string[]>('/admin/audit-log/actions'),
+  // Backend `{ actions: string[] }` qaytaradi — massivni ajratamiz (aks holda
+  // sahifada `actions.map` xato beradi).
+  actions: () =>
+    api.get<{ actions: string[] }>('/admin/audit-log/actions').then((r) => r.actions ?? []),
+};
+
+// ───────────────────────── SECURITY SETTINGS (IP allowlist) ──────────
+export interface AdminSecuritySettings {
+  ipAllowlistEnabled: boolean;
+  ipAllowlist: string[];
+  currentIp: string;
+}
+
+export const securitySettingsApi = {
+  get: () => api.get<AdminSecuritySettings>('/admin/security-settings'),
+  update: (data: { ipAllowlistEnabled?: boolean; ipAllowlist?: string[] }) =>
+    api.patch<AdminSecuritySettings>('/admin/security-settings', data),
 };

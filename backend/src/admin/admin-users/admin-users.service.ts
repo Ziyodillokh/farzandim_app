@@ -22,20 +22,23 @@ export class AdminUsersService {
   private parentRow(u: {
     id: string;
     name: string | null;
+    email: string | null;
     phone: string | null;
     isActive: boolean;
     updatedAt: Date;
+    subscriptions?: { plan: { name: string; entitlementTier: string } | null }[];
   }): RowJson {
+    const sub = u.subscriptions?.[0];
     return {
       id: u.id,
       kind: 'parent',
       name: u.name?.trim() || '—',
-      email: null,
+      email: u.email,
       phone: u.phone,
       role: 'PARENT',
       status: u.isActive ? 'active' : 'blocked',
-      plan: 'free',
-      planLabel: 'Free',
+      plan: sub?.plan?.entitlementTier ?? 'free',
+      planLabel: sub?.plan?.name ?? 'Free',
       lastActivityAt: u.updatedAt.toISOString(),
     };
   }
@@ -45,13 +48,13 @@ export class AdminUsersService {
     name: string;
     lastSeenAt: Date | null;
     updatedAt: Date;
-    childUser?: { phone: string | null } | null;
+    childUser?: { phone: string | null; email: string | null } | null;
   }): RowJson {
     return {
       id: c.id,
       kind: 'child',
       name: c.name,
-      email: null,
+      email: c.childUser?.email ?? null,
       phone: c.childUser?.phone ?? null,
       role: 'CHILD',
       status: 'active',
@@ -65,16 +68,20 @@ export class AdminUsersService {
     q?: string;
     role?: string;
     status?: string;
+    plan?: string;
     page: number;
     limit: number;
   }) {
-    const { q, role, status, page, limit } = query;
+    const { q, role, status, plan, page, limit } = query;
     const kindFilter =
       role === 'parent' || role === 'PARENT'
         ? 'parent'
         : role === 'child' || role === 'CHILD'
           ? 'child'
           : null;
+    const planFilter = plan && plan.length > 0 ? plan : null;
+    // Bolalarda obuna yo'q (doimo free) — pulli tarif tanlansa ularni chiqarmaymiz.
+    const paidPlan = planFilter !== null && planFilter !== 'free';
 
     const parentWhere: Prisma.UserWhereInput = { role: 'PARENT' };
     if (status === 'active') parentWhere.isActive = true;
@@ -83,7 +90,13 @@ export class AdminUsersService {
       parentWhere.OR = [
         { name: { contains: q, mode: 'insensitive' } },
         { phone: { contains: q, mode: 'insensitive' } },
+        { email: { contains: q, mode: 'insensitive' } },
       ];
+    }
+    if (planFilter) {
+      parentWhere.subscriptions = paidPlan
+        ? { some: { status: 'ACTIVE', plan: { entitlementTier: planFilter } } }
+        : { none: { status: 'ACTIVE' } }; // free — faol obuna yo'q
     }
 
     const childWhere: Prisma.ChildWhereInput = {};
@@ -91,10 +104,12 @@ export class AdminUsersService {
       childWhere.OR = [
         { name: { contains: q, mode: 'insensitive' } },
         { childUser: { phone: { contains: q, mode: 'insensitive' } } },
+        { childUser: { email: { contains: q, mode: 'insensitive' } } },
       ];
     }
 
-    const childAllowed = kindFilter !== 'parent' && status !== 'blocked';
+    const childAllowed =
+      kindFilter !== 'parent' && status !== 'blocked' && !paidPlan;
     const parentAllowed = kindFilter !== 'child';
 
     const [parentTotal, childTotal] = await Promise.all([
@@ -115,6 +130,14 @@ export class AdminUsersService {
       parentAllowed
         ? this.prisma.user.findMany({
             where: parentWhere,
+            include: {
+              subscriptions: {
+                where: { status: 'ACTIVE' },
+                include: { plan: { select: { name: true, entitlementTier: true } } },
+                orderBy: { createdAt: 'desc' },
+                take: 1,
+              },
+            },
             orderBy: { updatedAt: 'desc' },
             take: fetchCount,
           })
@@ -122,7 +145,7 @@ export class AdminUsersService {
       childAllowed
         ? this.prisma.child.findMany({
             where: childWhere,
-            include: { childUser: { select: { phone: true } } },
+            include: { childUser: { select: { phone: true, email: true } } },
             orderBy: [{ lastSeenAt: 'desc' }, { updatedAt: 'desc' }],
             take: fetchCount,
           })
