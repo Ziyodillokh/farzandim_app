@@ -40,6 +40,9 @@
     <!-- Battery optimization istisno so'rash -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
+    <!-- Qadam sanagich (pedometer — TYPE_STEP_COUNTER) -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
+
     <!-- App Restrictions Bosqich 1: foydalanish statistikasi -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions"/>

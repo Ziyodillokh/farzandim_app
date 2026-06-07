@@ -146,7 +146,8 @@
       "callHistory": "Call history",
       "ambientSound": "Ambient sound",
       "locationHistory": "Movement history",
-      "messenger": "Messenger"
+      "messenger": "Messenger",
+      "weeklyReport": "Weekly report"
     },
     "rating": {
       "title": "Child's rating",
@@ -399,6 +400,17 @@
       "disabledSnack": "Apps from unknown sources are now allowed",
       "errorSnack": "Couldn't save, please try again"
     }
+  },
+  "weeklyReport": {
+    "title": "Weekly report",
+    "subtitle": "Last 7 days",
+    "steps": "Steps",
+    "screenTime": "Screen time",
+    "topApps": "Most used apps",
+    "weekTotal": "Week total",
+    "dailyAvg": "Daily average",
+    "noApps": "No data",
+    "error": "Could not load report"
   },
   "voiceChat": {
     "headerSubtitle": "Personal chat",

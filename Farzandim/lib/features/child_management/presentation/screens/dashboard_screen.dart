@@ -1012,6 +1012,12 @@ class _QuickActionsGrid extends StatelessWidget {
         accentColor: AppColors.error,
         onTap: () => context.push(AppRoutes.schedulesPath(childId)),
       ),
+      QuickActionTile(
+        icon: Icons.insights_rounded,
+        label: 'dashboard.quickActions.weeklyReport'.tr(),
+        accentColor: const Color(0xFFF59E0B),
+        onTap: () => context.push(AppRoutes.weeklyReportPath(childId)),
+      ),
     ];
 
     // `childAspectRatio` o'rniga `mainAxisExtent` — tile balandligi ekran

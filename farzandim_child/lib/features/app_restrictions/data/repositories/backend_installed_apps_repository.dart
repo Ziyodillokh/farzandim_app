@@ -90,4 +90,28 @@ class BackendInstalledAppsRepository {
       return false;
     }
   }
+
+  /// Kunlik qadam sonini yuboradi (Parvoz pedometer).
+  /// Backend `(childId, date)` unique key bilan upsert.
+  /// `entries` elementi: `date` (`"YYYY-MM-DD"`), `steps` (int).
+  Future<bool> upsertSteps({
+    required String childId,
+    required List<Map<String, dynamic>> entries,
+  }) async {
+    if (entries.isEmpty) return true;
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/children/$childId/steps',
+        data: {'entries': entries},
+      );
+      debugPrint('BackendSteps: ${entries.length} ta entry upsert qilindi');
+      return true;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendInstalledAppsRepository.upsertSteps xato '
+        '${e.response?.statusCode}',
+      );
+      return false;
+    }
+  }
 }

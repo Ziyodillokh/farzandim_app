@@ -16,6 +16,7 @@ import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { AppUsageService } from './app-usage.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
+import { BatchUpsertStepsDto } from './dto/batch-upsert-steps.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 import { Request } from 'express';
 
@@ -58,5 +59,28 @@ export class AppUsageController {
     @CurrentUser() user: JwtPayload,
   ) {
     return this.service.weekly(childId, user.userId);
+  }
+
+  // ─── Qadamlar (Parvoz pedometer) + haftalik hisobot ────────────────
+  @Post('children/:childId/steps')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Batch upsert daily step counts (child)' })
+  upsertSteps(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: BatchUpsertStepsDto,
+  ) {
+    return this.service.upsertSteps(childId, user.userId, dto.entries);
+  }
+
+  @Get('children/:childId/weekly-report')
+  @ApiOperation({
+    summary: 'Weekly report: screen time + steps + top apps (7 days)',
+  })
+  weeklyReport(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.weeklyReport(childId, user.userId);
   }
 }

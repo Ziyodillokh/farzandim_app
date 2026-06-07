@@ -5,6 +5,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/step_counter_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -36,6 +37,21 @@ final usageSyncServiceProvider = Provider<UsageSyncService?>((ref) {
   final service = UsageSyncService(
     backendRepo: backendRepo,
     statsService: stats,
+    childId: pairing.childId!,
+  );
+  ref.onDispose(service.dispose);
+  return service;
+});
+
+/// Qadam sanagich — pair'lashmagan bo'lsa null. `start()` pairing flow'da
+/// usageSync bilan birga chaqiriladi (foreground sensor stream).
+final stepCounterServiceProvider = Provider<StepCounterService?>((ref) {
+  final pairing = ref.read(pairingStateProvider);
+  if (pairing.childId == null) return null;
+
+  final backendRepo = ref.read(backendInstalledAppsRepositoryProvider);
+  final service = StepCounterService(
+    backendRepo: backendRepo,
     childId: pairing.childId!,
   );
   ref.onDispose(service.dispose);

@@ -199,6 +199,12 @@ class AppRoutes {
   /// Berilgan bola id'si uchun jadvallar list path.
   static String schedulesPath(String childId) => '/schedules/$childId';
 
+  /// Haftalik hisobot (qadam + ekran vaqti + ilovalar).
+  static const String weeklyReportPattern = '/weekly-report/:childId';
+
+  /// Berilgan bola id'si uchun haftalik hisobot path.
+  static String weeklyReportPath(String childId) => '/weekly-report/$childId';
+
   /// Bola yutuqlari (Gamification — Sprint 4.4.6).
   static const String childAchievementsPattern =
       '/achievements/:childId';

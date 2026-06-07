@@ -134,6 +134,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       // tiklanishda qaytadan boshlanadi. PACKAGE_USAGE_STATS yo'q
       // bo'lsa _syncNow ichida jim chiqadi (non-critical).
       _ref.read(usageSyncServiceProvider)?.start();
+      _ref.read(stepCounterServiceProvider)?.start();
 
       // Sprint 4.2: Firestore app_restrictions → SharedPreferences sync.
       // Kotlin RestrictionService SharedPreferences'dan o'qib bloklangan
@@ -215,6 +216,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
 
     // App usage sync (Sprint 4.1 bugfix — restart'da yo'qolardi).
     _ref.read(usageSyncServiceProvider)?.start();
+      _ref.read(stepCounterServiceProvider)?.start();
 
     await _ref.read(backgroundServiceProvider).start();
     await _startRestrictionServiceIfReady();
@@ -234,6 +236,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     }
     if (hasUsage) {
       _ref.read(usageSyncServiceProvider)?.start();
+      _ref.read(stepCounterServiceProvider)?.start();
 
       // Sprint 4.2: Firestore app_restrictions → SharedPreferences sync.
       // Kotlin RestrictionService SharedPreferences'dan o'qib bloklangan
@@ -386,6 +389,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       // 7c. App usage sync (Sprint 4.1 bugfix).
       try {
         _ref.read(usageSyncServiceProvider)?.start();
+      _ref.read(stepCounterServiceProvider)?.start();
       } catch (e) {
         debugPrint('[DEV] UsageSyncService skipped: $e');
       }
@@ -463,6 +467,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
           );
 
       _ref.read(usageSyncServiceProvider)?.start();
+      _ref.read(stepCounterServiceProvider)?.start();
       _ref.read(restrictionsSyncServiceProvider).start(childId: childId);
 
       await _ref.read(backgroundServiceProvider).start();

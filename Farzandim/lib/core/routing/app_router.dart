@@ -46,6 +46,7 @@ import 'package:farzandim/features/gamification/presentation/screens/leaderboard
 import 'package:farzandim/features/photo_request/presentation/screens/photo_requests_list_screen.dart';
 import 'package:farzandim/features/schedules/presentation/screens/schedules_list_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
+import 'package:farzandim/features/weekly_report/presentation/screens/weekly_report_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
@@ -398,6 +399,12 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.schedulesPattern,
       pageBuilder: (context, state) => _slidePage(
         SchedulesListScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.weeklyReportPattern,
+      pageBuilder: (context, state) => _slidePage(
+        WeeklyReportScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

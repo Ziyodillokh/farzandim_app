@@ -121,6 +121,7 @@ model Child {
   sosAlerts     SosAlert[]
   installedApps InstalledApp[]
   appUsages     AppUsage[]
+  stepDays      ChildStepDaily[]
   appLimits     AppLimit[]
   appPermissions AppPermissionPolicy[]
   pairRequests  ChildPairRequest[]
@@ -561,6 +562,23 @@ model AppUsage {
 
   @@map("app_usage")
   @@unique([childId, packageName, date])
+  @@index([childId, date])
+}
+
+// Bolaning kunlik qadam soni (Parvoz pedometer → backend). Haftalik
+// hisobotda ko'rsatiladi. `date` — Toshkent (UTC+5) kun chegarasi.
+model ChildStepDaily {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  date      DateTime @db.Date
+  steps     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("child_step_daily")
+  @@unique([childId, date])
   @@index([childId, date])
 }
 

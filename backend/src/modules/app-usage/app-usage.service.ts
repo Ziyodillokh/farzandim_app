@@ -163,14 +163,20 @@ export class AppUsageService {
     return { usage: serialized, count: serialized.length };
   }
 
+  private last7DayKeys(): string[] {
+    const keys: string[] = [];
+    for (let i = 6; i >= 0; i -= 1) keys.push(tashkentDayKey(-i));
+    return keys;
+  }
+
   async weekly(childId: string, userId: string) {
     await this.validateChildAccess(childId, userId);
+    return this.screenTimeWeekly(childId);
+  }
 
-    // Oxirgi 7 kun — Toshkent (UTC+5) sanasi bo'yicha.
-    const dayKeys: string[] = [];
-    for (let i = 6; i >= 0; i -= 1) {
-      dayKeys.push(tashkentDayKey(-i));
-    }
+  // Ekran vaqti — oxirgi 7 kun (Toshkent), system filtrlangan.
+  private async screenTimeWeekly(childId: string) {
+    const dayKeys = this.last7DayKeys();
     const fromDate = new Date(`${dayKeys[0]}T00:00:00.000Z`);
 
     const rows = await this.prisma.appUsage.findMany({
@@ -181,7 +187,6 @@ export class AppUsageService {
     const totalsByDay = new Map<string, number>();
     for (const key of dayKeys) totalsByDay.set(key, 0);
     for (const row of rows) {
-      // System/orqa-fon paketlarni ekran vaqtiga qo'shmaymiz.
       if (isSystemPackage(row.packageName)) continue;
       const key = row.date.toISOString().slice(0, 10);
       if (totalsByDay.has(key)) {
@@ -193,7 +198,6 @@ export class AppUsageService {
     }
 
     const days = dayKeys.map((date) => {
-      // Bir kun maks 24 soat.
       const totalMs = Math.min(totalsByDay.get(date) ?? 0, MAX_DAY_MS);
       return { date, totalMs, totalMinutes: Math.round(totalMs / 60000) };
     });
@@ -204,5 +208,97 @@ export class AppUsageService {
       weekTotalMs,
       weekTotalMinutes: Math.round(weekTotalMs / 60000),
     };
+  }
+
+  // Qadamlar — oxirgi 7 kun (Toshkent).
+  private async stepsWeekly(childId: string) {
+    const dayKeys = this.last7DayKeys();
+    const fromDate = new Date(`${dayKeys[0]}T00:00:00.000Z`);
+
+    const rows = await this.prisma.childStepDaily.findMany({
+      where: { childId, date: { gte: fromDate } },
+      select: { date: true, steps: true },
+    });
+
+    const byDay = new Map<string, number>();
+    for (const key of dayKeys) byDay.set(key, 0);
+    for (const row of rows) {
+      const key = row.date.toISOString().slice(0, 10);
+      if (byDay.has(key)) byDay.set(key, row.steps);
+    }
+
+    const days = dayKeys.map((date) => ({ date, steps: byDay.get(date) ?? 0 }));
+    const weekTotal = days.reduce((s, d) => s + d.steps, 0);
+    return { days, weekTotal, dailyAvg: Math.round(weekTotal / 7) };
+  }
+
+  // Hafta davomida eng ko'p ishlatilgan ilovalar (top 8, system'siz).
+  private async topApps(childId: string) {
+    const dayKeys = this.last7DayKeys();
+    const fromDate = new Date(`${dayKeys[0]}T00:00:00.000Z`);
+
+    const rows = await this.prisma.appUsage.findMany({
+      where: { childId, date: { gte: fromDate } },
+      select: { packageName: true, foregroundMs: true },
+    });
+
+    const byPkg = new Map<string, number>();
+    for (const row of rows) {
+      if (isSystemPackage(row.packageName)) continue;
+      byPkg.set(
+        row.packageName,
+        (byPkg.get(row.packageName) ?? 0) + Number(row.foregroundMs),
+      );
+    }
+    const sorted = [...byPkg.entries()]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8);
+    const pkgs = sorted.map(([p]) => p);
+    const installed =
+      pkgs.length > 0
+        ? await this.prisma.installedApp.findMany({
+            where: { childId, packageName: { in: pkgs } },
+            select: { packageName: true, appName: true },
+          })
+        : [];
+    const nameByPkg = new Map(installed.map((a) => [a.packageName, a.appName]));
+
+    return sorted.map(([packageName, totalMs]) => ({
+      packageName,
+      appName: nameByPkg.get(packageName) ?? packageName,
+      totalMs,
+      totalMinutes: Math.round(totalMs / 60000),
+    }));
+  }
+
+  /** Haftalik hisobot — ekran vaqti + qadamlar + top ilovalar (1 endpoint). */
+  async weeklyReport(childId: string, userId: string) {
+    await this.validateChildAccess(childId, userId);
+    const [screenTime, steps, topApps] = await Promise.all([
+      this.screenTimeWeekly(childId),
+      this.stepsWeekly(childId),
+      this.topApps(childId),
+    ]);
+    return { screenTime, steps, topApps };
+  }
+
+  /** Bola Parvoz pedometeridan kunlik qadamlarni yuboradi (batch upsert). */
+  async upsertSteps(
+    childId: string,
+    userId: string,
+    entries: Array<{ date: string; steps: number }>,
+  ) {
+    await this.validateChildAccess(childId, userId);
+    const ops = entries.map((e) => {
+      const dateObj = new Date(`${e.date}T00:00:00.000Z`);
+      const steps = Math.max(0, Math.min(200000, Math.round(e.steps)));
+      return this.prisma.childStepDaily.upsert({
+        where: { childId_date: { childId, date: dateObj } },
+        update: { steps },
+        create: { childId, date: dateObj, steps },
+      });
+    });
+    await this.prisma.$transaction(ops);
+    return { ok: true, upserted: entries.length };
   }
 }

@@ -146,7 +146,8 @@
       "callHistory": "История звонков",
       "ambientSound": "Окружающий звук",
       "locationHistory": "История перемещений",
-      "messenger": "Messenger"
+      "messenger": "Messenger",
+      "weeklyReport": "Еженедельный отчёт"
     },
     "rating": {
       "title": "Рейтинг ребёнка",
@@ -399,6 +400,17 @@
       "disabledSnack": "Приложения из неизвестных источников разрешены",
       "errorSnack": "Не удалось сохранить, попробуйте ещё раз"
     }
+  },
+  "weeklyReport": {
+    "title": "Еженедельный отчёт",
+    "subtitle": "Последние 7 дней",
+    "steps": "Шаги",
+    "screenTime": "Экранное время",
+    "topApps": "Самые используемые приложения",
+    "weekTotal": "Всего за неделю",
+    "dailyAvg": "В среднем в день",
+    "noApps": "Нет данных",
+    "error": "Не удалось загрузить отчёт"
   },
   "voiceChat": {
     "headerSubtitle": "Личные сообщения",

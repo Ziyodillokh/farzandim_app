@@ -75,7 +75,9 @@ class UsageSyncService {
         return;
       }
 
-      final now = DateTime.now();
+      // Toshkent (UTC+5) kun chegarasi — backend agregatsiyasi va haftalik
+      // hisobot bilan mos (qurilma vaqt zonasi boshqa bo'lsa ham to'g'ri sana).
+      final now = DateTime.now().toUtc().add(const Duration(hours: 5));
       final dayKey = '${now.year}-'
           '${now.month.toString().padLeft(2, '0')}-'
           '${now.day.toString().padLeft(2, '0')}';

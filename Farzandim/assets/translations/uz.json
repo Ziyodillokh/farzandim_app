@@ -146,7 +146,8 @@
       "callHistory": "Qo'ng'iroqlar tarixi",
       "ambientSound": "Atrofdagi ovoz",
       "locationHistory": "Harakatlanish tarixi",
-      "messenger": "Messenger"
+      "messenger": "Messenger",
+      "weeklyReport": "Haftalik hisobot"
     },
     "rating": {
       "title": "Farzandingiz reytingi",
@@ -399,6 +400,17 @@
       "disabledSnack": "Notanish manbalardan ilovalar ruxsat etildi",
       "errorSnack": "Saqlab bo'lmadi, qayta urinib ko'ring"
     }
+  },
+  "weeklyReport": {
+    "title": "Haftalik hisobot",
+    "subtitle": "Oxirgi 7 kun",
+    "steps": "Qadamlar",
+    "screenTime": "Ekran vaqti",
+    "topApps": "Eng ko'p ishlatilgan ilovalar",
+    "weekTotal": "Hafta jami",
+    "dailyAvg": "Kunlik o'rtacha",
+    "noApps": "Ma'lumot yo'q",
+    "error": "Hisobotni yuklab bo'lmadi"
   },
   "voiceChat": {
     "headerSubtitle": "Shaxsiy yozishmalar",
