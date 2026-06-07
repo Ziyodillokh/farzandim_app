@@ -126,7 +126,14 @@
     "sendErrorFallback": "не отправлено",
     "errorPrefix": "Ошибка: {error}",
     "cancelTooltip": "Отмена",
-    "loadFailed": "Не удалось загрузить голосовое сообщение"
+    "loadFailed": "Не удалось загрузить голосовое сообщение",
+    "messageHint": "Сообщение…",
+    "attachGallery": "Галерея",
+    "attachCamera": "Камера",
+    "attachFile": "Файл",
+    "voiceMode": "Голосовой режим",
+    "videoMode": "Видео-режим",
+    "mediaSendError": "Ошибка отправки файла"
   },
   "videoRecording": {
     "title": "Видео-сообщение",

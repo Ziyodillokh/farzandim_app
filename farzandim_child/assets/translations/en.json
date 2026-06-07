@@ -126,7 +126,14 @@
     "sendErrorFallback": "not sent",
     "errorPrefix": "Error: {error}",
     "cancelTooltip": "Cancel",
-    "loadFailed": "Could not load voice message"
+    "loadFailed": "Could not load voice message",
+    "messageHint": "Type a message…",
+    "attachGallery": "Gallery",
+    "attachCamera": "Camera",
+    "attachFile": "File",
+    "voiceMode": "Voice mode",
+    "videoMode": "Video mode",
+    "mediaSendError": "Failed to send file"
   },
   "videoRecording": {
     "title": "Video message",

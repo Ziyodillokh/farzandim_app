@@ -138,7 +138,14 @@
     "sendErrorFallback": "yuborilmadi",
     "errorPrefix": "Xato: {error}",
     "cancelTooltip": "Bekor qilish",
-    "loadFailed": "Ovozli xabar yuklanmadi"
+    "loadFailed": "Ovozli xabar yuklanmadi",
+    "messageHint": "Xabar yozing…",
+    "attachGallery": "Galereya",
+    "attachCamera": "Kamera",
+    "attachFile": "Fayl",
+    "voiceMode": "Ovoz rejimi",
+    "videoMode": "Video rejimi",
+    "mediaSendError": "Faylni yuborishda xato"
   },
   "videoRecording": {
     "title": "Video xabar",

@@ -22,14 +22,17 @@ import 'package:farzandim_child/features/voice_message/data/repositories/backend
 import 'package:farzandim_child/features/voice_message/data/services/audio_player_manager.dart';
 import 'package:farzandim_child/features/voice_message/data/services/audio_recorder_service.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/voice_message_provider.dart';
+import 'package:farzandim_child/features/voice_message/presentation/screens/chat_settings_screen.dart';
+import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_background.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_bubble.dart';
+import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_input_bar.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/round_video_bubble.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/round_video_recorder.dart';
-import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
+import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:video_compress/video_compress.dart';
@@ -55,6 +58,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   StreamSubscription<Amplitude>? _amplitudeSub;
   final List<double> _amplitudes = [];
   DateTime? _recordingStartedAt;
+
+  /// Media (rasm/hujjat) yuklanmoqda — attach tugmasi spinner.
+  bool _isMediaUploading = false;
 
   @override
   void initState() {
@@ -256,6 +262,75 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     }
   }
 
+  // ─── Media (rasm / hujjat) tanlash + yuborish ────────────────────
+
+  Future<void> _pickGallery() async {
+    try {
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.gallery,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (x != null) await _sendMediaFile(File(x.path));
+    } catch (_) {
+      _showError('Faylni yuborishda xato');
+    }
+  }
+
+  Future<void> _pickCamera() async {
+    try {
+      final x = await ImagePicker().pickImage(
+        source: ImageSource.camera,
+        imageQuality: 85,
+        maxWidth: 1920,
+      );
+      if (x != null) await _sendMediaFile(File(x.path));
+    } catch (_) {
+      _showError('Faylni yuborishda xato');
+    }
+  }
+
+  Future<void> _pickFile() async {
+    try {
+      final result = await FilePicker.platform.pickFiles();
+      final path = result?.files.single.path;
+      if (path != null) await _sendMediaFile(File(path));
+    } catch (_) {
+      _showError('Faylni yuborishda xato');
+    }
+  }
+
+  Future<void> _sendMediaFile(File file) async {
+    final pairing = ref.read(pairingStateProvider);
+    final parentUid = pairing.parentUid;
+    if (parentUid == null || parentUid.isEmpty) {
+      _showError('Ota-ona aniqlanmadi');
+      return;
+    }
+    setState(() => _isMediaUploading = true);
+    try {
+      await ref.read(backendVoiceMessageRepositoryProvider).sendMedia(
+            receiverId: parentUid,
+            file: file,
+          );
+      ref.invalidate(voiceMessagesProvider);
+      if (!mounted) return;
+      WidgetsBinding.instance
+          .addPostFrameCallback((_) => _scrollToBottom());
+    } catch (_) {
+      _showError('Faylni yuborishda xato');
+    } finally {
+      if (mounted) setState(() => _isMediaUploading = false);
+    }
+  }
+
+  void _showError(String msg) {
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text(msg), backgroundColor: AppColors.error),
+    );
+  }
+
   // ─── Round video recorder (Telegram-uslubi) ──────────────────────
 
   /// Yumaloq video modalini ochadi, tugagach client-side compress qilib
@@ -412,36 +487,69 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final isVideoUploading = videoUpload == UploadStatus.uploading;
 
     return Scaffold(
-      backgroundColor: context.adaptive.bgPrimary,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
-        backgroundColor: context.adaptive.bgPrimary,
+        backgroundColor: Colors.transparent,
         foregroundColor: context.adaptive.textPrimary,
         elevation: 0,
         title: Row(
           children: [
             CircleAvatar(
-              // ignore: deprecated_member_use
-              backgroundColor: AppColors.primary.withOpacity(0.2),
+              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
               child: const Icon(
                 AppIcons.profile,
                 color: AppColors.primary,
               ),
             ),
             const SizedBox(width: 12),
-            // Subtitle ("Ovozli xabarlar") olib tashlandi — bu endi
-            // umumiy messanger ekran, faqat sub'ekt nomi ko'rinadi.
-            Text(
-              'voiceChat.headerParent'.tr(),
-              style: TextStyle(
-                color: context.adaptive.textPrimary,
-                fontSize: 16,
-                fontWeight: FontWeight.w600,
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'voiceChat.headerParent'.tr(),
+                    style: TextStyle(
+                      color: context.adaptive.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                  Text(
+                    'voiceChat.headerSubtitle'.tr(),
+                    style: TextStyle(
+                      color: context.adaptive.textSecondary,
+                      fontSize: 12,
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ],
               ),
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.more_vert, color: context.adaptive.textPrimary),
+            tooltip: 'chatSettings.title'.tr(),
+            onPressed: () {
+              Navigator.of(context).push(
+                MaterialPageRoute<void>(
+                  builder: (_) => const ChatSettingsScreen(),
+                ),
+              );
+            },
+          ),
+        ],
       ),
-      body: Column(
+      body: ChatBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
         children: [
           Expanded(
             child: messagesAsync.when(
@@ -493,10 +601,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               ),
             ),
           ),
-          _ChatInputBar(
+          ChatInputBar(
             isRecording: _isRecording,
-            isUploading: isVoiceUploading,
+            isVoiceUploading: isVoiceUploading,
             isVideoUploading: isVideoUploading,
+            isMediaUploading: _isMediaUploading,
             elapsedSeconds: _elapsedSeconds,
             amplitudes: _amplitudes,
             onLongPressStart: () => unawaited(_onLongPressStart()),
@@ -506,509 +615,67 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                 ? null
                 : () => unawaited(_onVideoRecordPressed()),
             onSendText: (text) => unawaited(_sendTextMessage(text)),
+            onPickGallery: () => unawaited(_pickGallery()),
+            onPickCamera: () => unawaited(_pickCamera()),
+            onPickFile: () => unawaited(_pickFile()),
           ),
         ],
+          ),
+        ),
       ),
     );
   }
 }
+
+// ─────────────────────────────────────────────────────────────────────
+// Empty state — Parent App uslubidagi markazlashtirilgan mic ikona
+// ─────────────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
   const _EmptyState();
 
   @override
   Widget build(BuildContext context) {
-    // FARO faceIdle — "tinch holatda, javob kutmoqda" feel
-    return EmptyStateMascot(
-      faroVariant: FaroVariant.faceIdle,
-      title: 'voiceChat.emptyTitle'.tr(),
-      subtitle: 'voiceChat.emptySubtitle'.tr(),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────────────────────────────
-// Input bar — Telegram/WhatsApp-style mic + premium video tugma
-// ─────────────────────────────────────────────────────────────────────
-//
-// Mic gesture'i widget tree'da DOIMO bir xil pozitsiyada (oxirgi child)
-// — recording boshlangach faqat atrofidagi UI o'zgaradi. Aks holda
-// Flutter eski subscription'ni yo'qotib, `onLongPressEnd` chaqirilmaydi.
-
-class _ChatInputBar extends StatefulWidget {
-  const _ChatInputBar({
-    required this.isRecording,
-    required this.isUploading,
-    required this.isVideoUploading,
-    required this.elapsedSeconds,
-    required this.amplitudes,
-    required this.onLongPressStart,
-    required this.onLongPressEnd,
-    required this.onCancel,
-    required this.onVideoPressed,
-    required this.onSendText,
-  });
-
-  final bool isRecording;
-  final bool isUploading;
-  final bool isVideoUploading;
-  final int elapsedSeconds;
-  final List<double> amplitudes;
-  final VoidCallback onLongPressStart;
-  final VoidCallback onLongPressEnd;
-  final VoidCallback onCancel;
-  final VoidCallback? onVideoPressed;
-  // Telegram-style text yuborish.
-  final ValueChanged<String> onSendText;
-
-  @override
-  State<_ChatInputBar> createState() => _ChatInputBarState();
-}
-
-class _ChatInputBarState extends State<_ChatInputBar> {
-  late final TextEditingController _textController;
-  late final FocusNode _focusNode;
-  String _draft = '';
-
-  @override
-  void initState() {
-    super.initState();
-    _textController = TextEditingController();
-    _focusNode = FocusNode();
-    _textController.addListener(() {
-      if (_textController.text != _draft) {
-        setState(() => _draft = _textController.text);
-      }
-    });
-  }
-
-  @override
-  void dispose() {
-    _textController.dispose();
-    _focusNode.dispose();
-    super.dispose();
-  }
-
-  void _sendText() {
-    final trimmed = _textController.text.trim();
-    if (trimmed.isEmpty) return;
-    widget.onSendText(trimmed);
-    _textController.clear();
-    setState(() => _draft = '');
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final hasText = _draft.trim().isNotEmpty;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: context.adaptive.bgPrimary,
-        border: Border(
-          top: BorderSide(color: context.adaptive.border, width: 0.5),
-        ),
-      ),
-      child: SafeArea(
-        top: false,
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.end,
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            if (widget.isRecording)
-              IconButton(
-                onPressed: widget.onCancel,
-                icon: const Icon(
-                  AppIcons.delete,
-                  color: Colors.red,
-                  size: 28,
-                ),
-              ),
-            if (widget.isRecording)
-              Expanded(
-                child: _RecordingIndicator(
-                  elapsedSeconds: widget.elapsedSeconds,
-                  amplitudes: widget.amplitudes,
-                ),
-              )
-            else
-              // Telegram-style text input — rounded chip.
-              Expanded(
-                child: Container(
-                  constraints:
-                      const BoxConstraints(minHeight: 48, maxHeight: 140),
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: context.adaptive.bgCard,
-                    borderRadius: BorderRadius.circular(24),
-                    border: Border.all(
-                      color: context.adaptive.border,
-                      width: 0.5,
-                    ),
-                  ),
-                  child: TextField(
-                    controller: _textController,
-                    focusNode: _focusNode,
-                    enabled: !widget.isUploading,
-                    minLines: 1,
-                    maxLines: 5,
-                    textInputAction: TextInputAction.send,
-                    keyboardType: TextInputType.multiline,
-                    onSubmitted: (_) => _sendText(),
-                    style: TextStyle(
-                      color: context.adaptive.textPrimary,
-                      fontSize: 15,
-                    ),
-                    decoration: InputDecoration(
-                      hintText: 'Xabar yozing…',
-                      hintStyle: TextStyle(
-                        color: context.adaptive.textTertiary,
-                        fontSize: 15,
-                      ),
-                      filled: false,
-                      border: InputBorder.none,
-                      enabledBorder: InputBorder.none,
-                      focusedBorder: InputBorder.none,
-                      contentPadding:
-                          const EdgeInsets.symmetric(vertical: 10),
-                      isCollapsed: true,
-                    ),
-                  ),
-                ),
-              ),
-            // Video record tugmasi — faqat idle + text yo'q paytda.
-            if (!widget.isRecording && !hasText) ...[
-              const SizedBox(width: 8),
-              _VideoRecordButton(
-                isUploading: widget.isVideoUploading,
-                onPressed: widget.onVideoPressed,
-              ),
-            ],
-            const SizedBox(width: 8),
-            // Text bo'lmasa — mic, bo'lsa — Telegram-style ko'k send.
-            hasText && !widget.isRecording
-                ? _TelegramSendButton(
-                    onTap: _sendText,
-                    isUploading: widget.isUploading,
-                  )
-                : GestureDetector(
-                    key: const ValueKey('voice-mic-button'),
-                    behavior: HitTestBehavior.opaque,
-                    onTap: widget.isUploading
-                        ? null
-                        : () {
-                            if (widget.isRecording) {
-                              widget.onLongPressEnd();
-                            } else {
-                              widget.onLongPressStart();
-                            }
-                          },
-                    onLongPressStart: widget.isUploading
-                        ? null
-                        : (_) => widget.onLongPressStart(),
-                    onLongPressEnd: widget.isUploading
-                        ? null
-                        : (_) => widget.onLongPressEnd(),
-                    child: Container(
-                      width: 56,
-                      height: 56,
-                      decoration: BoxDecoration(
-                        gradient: widget.isRecording
-                            ? const LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [
-                                  AppColors.catRed,
-                                  AppColors.catRedDark
-                                ],
-                              )
-                            : LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: widget.isUploading
-                                    ? [
-                                        // ignore: deprecated_member_use
-                                        AppColors.primary.withOpacity(0.6),
-                                        // ignore: deprecated_member_use
-                                        AppColors.primary.withOpacity(0.4),
-                                      ]
-                                    : const [
-                                        AppColors.catLime,
-                                        AppColors.primaryHover,
-                                      ],
-                              ),
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: (widget.isRecording
-                                    ? AppColors.catRed
-                                    : AppColors.primary)
-                                // ignore: deprecated_member_use
-                                .withOpacity(
-                                    widget.isRecording ? 0.5 : 0.35),
-                            blurRadius: widget.isRecording ? 20 : 14,
-                            spreadRadius: widget.isRecording ? 3 : 1,
-                          ),
-                        ],
-                      ),
-                      child: widget.isUploading
-                          ? const Center(
-                              child: SizedBox(
-                                width: 20,
-                                height: 20,
-                                child: CircularProgressIndicator(
-                                  strokeWidth: 2.5,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            )
-                          : Icon(
-                              widget.isRecording
-                                  ? AppIcons.stop
-                                  : AppIcons.mic,
-                              color: widget.isRecording
-                                  ? Colors.white
-                                  : Colors.black,
-                              size: 28,
-                            ),
-                    ),
-                  ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ─── Telegram-style ko'k send tugmasi ────────────────────────────────
-class _TelegramSendButton extends StatelessWidget {
-  const _TelegramSendButton({
-    required this.onTap,
-    required this.isUploading,
-  });
-
-  final VoidCallback onTap;
-  final bool isUploading;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      behavior: HitTestBehavior.opaque,
-      onTap: isUploading ? null : onTap,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: const BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF37AEE2), // Telegram light blue
-              Color(0xFF1E96C8), // Telegram dark blue
-            ],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: Color(0x551E96C8),
-              blurRadius: 14,
-              offset: Offset(0, 4),
-            ),
-          ],
-        ),
-        child: Padding(
-          padding: const EdgeInsets.only(left: 4),
-          child: isUploading
-              ? const Center(
-                  child: SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.5,
-                      color: Colors.white,
-                    ),
-                  ),
-                )
-              : const Icon(
-                  Icons.send_rounded,
-                  color: Colors.white,
-                  size: 24,
-                ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RecordingIndicator extends StatelessWidget {
-  const _RecordingIndicator({
-    required this.elapsedSeconds,
-    required this.amplitudes,
-  });
-
-  final int elapsedSeconds;
-  final List<double> amplitudes;
-
-  String _format(int seconds) {
-    final m = (seconds ~/ 60).toString().padLeft(2, '0');
-    final s = (seconds % 60).toString().padLeft(2, '0');
-    return '$m:$s';
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 10,
-            height: 10,
-            decoration: const BoxDecoration(
-              color: Colors.red,
-              shape: BoxShape.circle,
-            ),
-          ),
-          const SizedBox(width: 8),
-          Text(
-            _format(elapsedSeconds),
-            style: TextStyle(
-              color: context.adaptive.textPrimary,
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: SizedBox(
-              height: 28,
-              child: _InlineWaveform(amplitudes: amplitudes),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _InlineWaveform extends StatelessWidget {
-  const _InlineWaveform({required this.amplitudes});
-
-  final List<double> amplitudes;
-
-  @override
-  Widget build(BuildContext context) {
-    if (amplitudes.isEmpty) return const SizedBox.shrink();
-    return ListView.builder(
-      scrollDirection: Axis.horizontal,
-      reverse: true,
-      physics: const NeverScrollableScrollPhysics(),
-      itemCount: amplitudes.length,
-      itemBuilder: (_, i) {
-        final amp = amplitudes[amplitudes.length - 1 - i];
-        final h = (amp * 28).clamp(2.0, 28.0);
-        return Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 1),
-          child: Center(
-            child: Container(
-              width: 3,
-              height: h,
+            Container(
+              width: 100,
+              height: 100,
               decoration: BoxDecoration(
+                color: AppColors.primary.withValues(alpha: 0.15),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.mic_outlined,
+                size: 50,
                 color: AppColors.primary,
-                borderRadius: BorderRadius.circular(2),
               ),
             ),
-          ),
-        );
-      },
-    );
-  }
-}
-
-/// Premium yumaloq video xabar yozish tugmasi (mic yonida).
-///
-/// Parent App'dagi `_VideoRecordButton` bilan vizual mos:
-/// surface gradient + double shadow + lime border + ShaderMask icon.
-class _VideoRecordButton extends StatelessWidget {
-  const _VideoRecordButton({
-    required this.isUploading,
-    required this.onPressed,
-  });
-
-  final bool isUploading;
-  final VoidCallback? onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    final isDark = context.adaptive.isDark;
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        width: 56,
-        height: 56,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: isDark
-                ? const [
-                    AppColors.bgCardDark,
-                    AppColors.bgSurfaceDark,
-                  ]
-                : const [
-                    AppColors.surface,
-                    AppColors.surfaceVariant,
-                  ],
-          ),
-          border: Border.all(
-            // ignore: deprecated_member_use
-            color: AppColors.primary.withOpacity(0.7),
-            width: 2,
-          ),
-          boxShadow: [
-            BoxShadow(
-              // ignore: deprecated_member_use
-              color: AppColors.primary.withOpacity(0.22),
-              blurRadius: 14,
-              spreadRadius: 1,
+            const SizedBox(height: 24),
+            Text(
+              'voiceChat.emptyTitle'.tr(),
+              style: TextStyle(
+                color: context.adaptive.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-            BoxShadow(
-              // ignore: deprecated_member_use
-              color: Colors.black.withOpacity(0.35),
-              blurRadius: 6,
-              offset: const Offset(0, 3),
+            const SizedBox(height: 8),
+            Text(
+              'voiceChat.emptySubtitle'.tr(),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: context.adaptive.textSecondary,
+                fontSize: 14,
+                height: 1.4,
+              ),
             ),
           ],
         ),
-        child: isUploading
-            ? const Center(
-                child: SizedBox(
-                  width: 20,
-                  height: 20,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    color: AppColors.primary,
-                  ),
-                ),
-              )
-            : ShaderMask(
-                shaderCallback: (rect) => const LinearGradient(
-                  colors: [AppColors.primary, AppColors.primaryDark],
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                ).createShader(rect),
-                child: const Icon(
-                  AppIcons.video,
-                  color: Colors.white,
-                  size: 28,
-                ),
-              ),
       ),
     );
   }

@@ -64,6 +64,9 @@ dependencies:
   # Camera (foto so'rovga javob uchun)
   image_picker: ^1.1.2
 
+  # Chat'da hujjat (PDF/DOCX/...) yuborish uchun
+  file_picker: ^8.1.4
+
   # Background / Foreground Service
   flutter_foreground_task: ^8.17.0
 
