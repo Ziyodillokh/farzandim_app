@@ -1,5 +1,6 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -72,20 +73,27 @@ class PrimaryButton extends StatelessWidget {
       // null = "tabiiy o'lcham" → kontent + padding kenglikda.
       width: expanded ? double.infinity : null,
       height: AppDimensions.buttonHeight,
-      child: Material(
-        color: isDisabled ? AppColors.surfaceVariant : AppColors.primary,
-        borderRadius: borderRadius,
-        child: InkWell(
-          onTap: isLoading ? null : onPressed,
+      child: DecoratedBox(
+        // Premium: enabled holatda lime ostida nozik brand glow — CTA bo'rtadi.
+        decoration: BoxDecoration(
           borderRadius: borderRadius,
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              horizontal: AppDimensions.lg,
-            ),
-            child: Center(
-              // expanded=false paytda Center kontentga teng kenglik oladi.
-              widthFactor: expanded ? null : 1,
-              child: _buildContent(isDisabled),
+          boxShadow: isDisabled ? null : AppShadows.glow(AppColors.primary),
+        ),
+        child: Material(
+          color: isDisabled ? AppColors.surfaceVariant : AppColors.primary,
+          borderRadius: borderRadius,
+          child: InkWell(
+            onTap: isLoading ? null : onPressed,
+            borderRadius: borderRadius,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(
+                horizontal: AppDimensions.lg,
+              ),
+              child: Center(
+                // expanded=false paytda Center kontentga teng kenglik oladi.
+                widthFactor: expanded ? null : 1,
+                child: _buildContent(isDisabled),
+              ),
             ),
           ),
         ),

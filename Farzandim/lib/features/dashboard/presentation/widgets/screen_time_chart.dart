@@ -7,6 +7,7 @@
 // Bugungi kun lime green bar, qolganlar slate.
 
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -102,6 +103,7 @@ class ScreenTimeChart extends ConsumerWidget {
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       child: weeklyAsync.when(
         loading: () => SizedBox(

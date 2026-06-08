@@ -38,6 +38,9 @@ class AppTextStyles {
         fontSize: 32,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
+        // Premium: katta sarlavhada zich tracking + zich line-height.
+        letterSpacing: -0.6,
+        height: 1.12,
       );
 
   /// **Headline L** — 22sp, Semibold (w600).
@@ -50,6 +53,8 @@ class AppTextStyles {
         fontSize: 24,
         fontWeight: FontWeight.w600,
         color: AppColors.textPrimary,
+        letterSpacing: -0.4,
+        height: 1.18,
       );
 
   /// **Body M** — 16sp, Regular (w400).
@@ -64,6 +69,7 @@ class AppTextStyles {
         fontWeight: FontWeight.w400,
         color: AppColors.textPrimary,
         height: 1.4,
+        letterSpacing: -0.1,
       );
 
   /// **Body S** — 14sp, Regular (w400).
@@ -92,5 +98,8 @@ class AppTextStyles {
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
+        // Kichik yorliqlar yengil ochilgan tracking bilan toza o'qiladi.
+        letterSpacing: 0.2,
+        height: 1.2,
       );
 }

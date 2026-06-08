@@ -60,6 +60,10 @@ class AppTheme {
       // ortidan OQ oyna foni ko'rinib qolmaydi (theme rangi ko'rinadi).
       scaffoldBackgroundColor: AppColors.background,
 
+      // Premium soya rangi — Material elevation'lar uchun. Light'da sof qora
+      // emas, salqin navy-tus (yumshoq, qimmatbaho); dark'da chuqur qora.
+      shadowColor: isDark ? Colors.black : const Color(0xFF171A2E),
+
       // ────── 2. SHRIFT TIZIMI (TextTheme) ──────
       //
       // 1) `GoogleFonts.interTextTheme()` — barcha 13 ta TextTheme
