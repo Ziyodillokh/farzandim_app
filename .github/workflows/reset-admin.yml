@@ -1,0 +1,39 @@
+name: Reset admin password
+
+# Qo'lda ishga tushiriladi (GitHub → Actions → "Reset admin password" → Run workflow).
+# Serverdagi mavjud scripts/seed-admin-quick.ts ni SSH orqali chaqiradi —
+# admin@farzandim.uz parolini tiklaydi/yaratadi (bcryptjs, login bilan mos).
+# Hech narsani deploy qilmaydi. Parol repoda saqlanmaydi: bo'sh qoldirsangiz
+# skriptning o'z standarti (Admin12345) ishlatiladi yoki ishga tushirishda kiritasiz.
+
+on:
+  workflow_dispatch:
+    inputs:
+      password:
+        description: "Yangi admin parol (bo'sh = skript standarti)"
+        required: false
+        default: ''
+
+concurrency:
+  group: reset-admin
+  cancel-in-progress: false
+
+jobs:
+  reset:
+    runs-on: ubuntu-22.04
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
+      SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
+      INPUT_PW: ${{ github.event.inputs.password }}
+    steps:
+      - name: Install sshpass
+        run: sudo apt-get update && sudo apt-get install -y sshpass
+
+      - name: Reset admin on server
+        run: |
+          REMOTE="cd ~/new-platform/backend && ADMIN_EMAIL=admin@farzandim.uz"
+          if [ -n "$INPUT_PW" ]; then
+            REMOTE="$REMOTE ADMIN_PASSWORD='$INPUT_PW'"
+          fi
+          REMOTE="$REMOTE npx tsx scripts/seed-admin-quick.ts"
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "$REMOTE"
