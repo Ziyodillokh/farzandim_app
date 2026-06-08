@@ -344,10 +344,13 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
         ),
 
         // ─── Fiksirlangan pastki bar: Foydalanish vaqti + sozlamalar ───
+        // Yuqoridagi quick-action plitkalari bilan ORASIDA aniq gradient
+        // bo'shlig'i — bottom nav shaffof fon ustida qalqib turadi (plitkalar
+        // ortida "to'rtburchak" bo'lib yopishib ko'rinmaydi).
         Padding(
           padding: const EdgeInsets.fromLTRB(
             AppDimensions.lg,
-            AppDimensions.sm,
+            AppDimensions.lg,
             AppDimensions.lg,
             AppDimensions.md,
           ),

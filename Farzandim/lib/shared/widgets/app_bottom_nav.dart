@@ -10,6 +10,7 @@
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 
@@ -94,12 +95,18 @@ class _ActivePill extends StatelessWidget {
           borderRadius: AppBottomNav._pillRadius,
         ),
       ),
-      child: Material(
-        color: AppColors.primary,
-        borderRadius: AppBottomNav._pillRadius,
-        child: InkWell(
-          onTap: onTap,
+      child: DecoratedBox(
+        // Premium: lime pill gradient ustida qalqib turadi (nozik brand glow).
+        decoration: BoxDecoration(
           borderRadius: AppBottomNav._pillRadius,
+          boxShadow: AppShadows.glow(AppColors.primary),
+        ),
+        child: Material(
+          color: AppColors.primary,
+          borderRadius: AppBottomNav._pillRadius,
+          child: InkWell(
+            onTap: onTap,
+            borderRadius: AppBottomNav._pillRadius,
           child: Center(
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -121,7 +128,8 @@ class _ActivePill extends StatelessWidget {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }
 
@@ -134,19 +142,26 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.surface,
-      shape: CircleBorder(side: BorderSide(color: AppColors.border)),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: AppBottomNav._height,
-          height: AppBottomNav._height,
-          child: Icon(
-            icon,
-            size: 22,
-            color: AppColors.textPrimary,
+    return Container(
+      // Premium: dumaloq tugma gradient ustida nozik qalqib turadi.
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: AppShadows.card,
+      ),
+      child: Material(
+        color: AppColors.surface,
+        shape: CircleBorder(side: BorderSide(color: AppColors.border)),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: AppBottomNav._height,
+            height: AppBottomNav._height,
+            child: Icon(
+              icon,
+              size: 22,
+              color: AppColors.textPrimary,
+            ),
           ),
         ),
       ),
