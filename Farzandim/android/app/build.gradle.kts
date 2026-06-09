@@ -28,6 +28,16 @@ val mapsApiKey: String =
         ?: System.getenv("MAPS_API_KEY")
         ?: ""
 
+// Himoya: kalit bo'sh bo'lsa xarita plitkalari chiqmaydi (bo'm-bo'sh kulrang).
+// Jimgina o'tib ketmasligi uchun build logida ko'rinadigan ogohlantirish beramiz.
+if (mapsApiKey.isBlank()) {
+    logger.warn(
+        "⚠️  MAPS_API_KEY BO'SH — Google Maps plitkalari chiqmaydi. " +
+            "Lokalda: android/local.properties'ga MAPS_API_KEY=... yozing. " +
+            "CI'da: 'Build parent APK' qadamiga env MAPS_API_KEY: \${{ secrets.MAPS_API_KEY }} bering.",
+    )
+}
+
 // ─── Release signing (H6) — key.properties dan o'qiladi (git'ga kirmaydi) ──
 // Fayl mavjud bo'lsa release build shu keystore bilan imzolanadi; bo'lmasa
 // debug imzo ishlatiladi (keystoresiz mashinada build buzilmasligi uchun).

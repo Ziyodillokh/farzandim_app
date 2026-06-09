@@ -299,6 +299,11 @@ jobs:
 
       - name: Build parent APK
         working-directory: Farzandim
+        env:
+          # Gradle (build.gradle.kts) System.getenv("MAPS_API_KEY") orqali o'qiydi va
+          # AndroidManifest'dagi ${MAPS_API_KEY} placeholder'iga yozadi. Busiz xarita
+          # plitkalari chiqmaydi (bo'sh kalit → bo'm-bo'sh kulrang xarita).
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           flutter pub get
           flutter build apk --release --no-shrink \
