@@ -500,16 +500,36 @@ class _BottomCard extends ConsumerWidget {
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
         ),
+        border: Border(top: BorderSide(color: AppColors.border)),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.28),
+            blurRadius: 24,
+            offset: const Offset(0, -6),
+          ),
+        ],
       ),
       padding: EdgeInsets.fromLTRB(
         AppDimensions.lg,
-        AppDimensions.lg,
+        AppDimensions.sm,
         AppDimensions.lg,
         MediaQuery.of(context).padding.bottom + AppDimensions.md,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Premium drag handle.
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: AppDimensions.md),
+              decoration: BoxDecoration(
+                color: AppColors.textTertiary.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
           Row(
             children: [
               ChildAvatar(child: child, size: 56),
@@ -572,25 +592,54 @@ class _BottomCard extends ConsumerWidget {
 
           const SizedBox(height: AppDimensions.md),
 
-          // Status row: harakat + aniqlik.
+          // Status row: harakat holati pill + aniqlik.
           Row(
             children: [
-              Icon(
-                Icons.location_on,
-                size: 18,
-                color: AppColors.accent,
-              ),
-              const SizedBox(width: 6),
-              Text(
-                location.isMoving
-                    ? 'location.moving'.tr()
-                    : 'location.stationary'.tr(),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w500,
+              Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+                decoration: BoxDecoration(
+                  color: (location.isMoving
+                          ? AppColors.accent
+                          : AppColors.success)
+                      .withValues(alpha: 0.14),
+                  borderRadius:
+                      BorderRadius.circular(AppDimensions.radiusPill),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(
+                      location.isMoving
+                          ? Icons.directions_walk_rounded
+                          : Icons.place_rounded,
+                      size: 16,
+                      color: location.isMoving
+                          ? AppColors.accent
+                          : AppColors.success,
+                    ),
+                    const SizedBox(width: 6),
+                    Text(
+                      location.isMoving
+                          ? 'location.moving'.tr()
+                          : 'location.stationary'.tr(),
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: location.isMoving
+                            ? AppColors.accent
+                            : AppColors.success,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ],
                 ),
               ),
               const Spacer(),
+              Icon(
+                Icons.gps_fixed_rounded,
+                size: 14,
+                color: AppColors.textSecondary,
+              ),
+              const SizedBox(width: 4),
               Text(
                 'location.accuracy'.tr(
                   namedArgs: {'meters': '${location.accuracy.round()}'},

@@ -19,9 +19,9 @@ export interface GeofenceEvent {
 
 // ── Stop-detection sozlamalari ──
 /** Klaster radiusi — shu masofadagi nuqtalar "bir joy" hisoblanadi. */
-const STOP_RADIUS_M = 50;
+const STOP_RADIUS_M = 20;
 /** Minimal to'xtash davomiyligi — shundan kam bo'lsa marker yaratilmaydi. */
-const MIN_STOP_SEC = 150; // 2.5 daqiqa
+const MIN_STOP_SEC = 180; // 3 daqiqa
 
 /** detectStop uchun kerakli minimal Child maydonlari. */
 interface StopState {

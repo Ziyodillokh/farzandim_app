@@ -1,11 +1,12 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/widgets/expandable_map.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
@@ -400,9 +401,22 @@ class _SectionTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text,
-      style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
+    return Row(
+      children: [
+        Container(
+          width: 3,
+          height: 16,
+          decoration: BoxDecoration(
+            color: AppColors.accent,
+            borderRadius: BorderRadius.circular(2),
+          ),
+        ),
+        const SizedBox(width: 8),
+        Text(
+          text,
+          style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
+        ),
+      ],
     );
   }
 }
@@ -418,29 +432,45 @@ class _IconPicker extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Wrap(
-      spacing: AppDimensions.sm,
-      runSpacing: AppDimensions.sm,
+      spacing: AppDimensions.sm + 2,
+      runSpacing: AppDimensions.sm + 2,
       children: GeoZone.availableIcons.map((iconName) {
         final isSelected = iconName == selected;
-        return InkWell(
+        return GestureDetector(
           onTap: () => onSelect(iconName),
-          borderRadius: BorderRadius.circular(12),
-          child: Container(
-            padding: const EdgeInsets.all(12),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 180),
+            curve: Curves.easeOut,
+            width: 54,
+            height: 54,
             decoration: BoxDecoration(
-              color:
-                  isSelected ? AppColors.primary : AppColors.surface,
+              gradient: isSelected
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.primary,
+                        AppColors.primary.withValues(alpha: 0.78),
+                      ],
+                    )
+                  : null,
+              color: isSelected ? null : AppColors.surface,
               border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
+                color:
+                    isSelected ? AppColors.primary : AppColors.border,
+                width: isSelected ? 1.5 : 1,
               ),
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(16),
+              boxShadow:
+                  isSelected ? AppShadows.glow(AppColors.primary) : null,
             ),
+            alignment: Alignment.center,
             child: Icon(
               GeoZone.iconFromString(iconName),
-              size: 24,
+              size: 25,
               color: isSelected
                   ? AppColors.onPrimary
-                  : AppColors.textPrimary,
+                  : AppColors.textSecondary,
             ),
           ),
         );
@@ -464,20 +494,40 @@ class _RadiusSlider extends StatelessWidget {
       children: [
         Row(
           children: [
+            Container(
+              width: 3,
+              height: 16,
+              decoration: BoxDecoration(
+                color: AppColors.accent,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(width: 8),
             Text(
               'geoZoneEdit.radiusLabel'.tr(),
               style: AppTextStyles.bodyM.copyWith(
-                fontWeight: FontWeight.w600,
+                fontWeight: FontWeight.w700,
               ),
             ),
             const Spacer(),
-            Text(
-              'geoZoneEdit.radiusValue'.tr(
-                namedArgs: {'meters': '${value.round()}'},
+            // Radius qiymati — accent pill.
+            Container(
+              padding: const EdgeInsets.symmetric(
+                horizontal: 10,
+                vertical: 4,
               ),
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.accent,
-                fontWeight: FontWeight.w600,
+              decoration: BoxDecoration(
+                color: AppColors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Text(
+                'geoZoneEdit.radiusValue'.tr(
+                  namedArgs: {'meters': '${value.round()}'},
+                ),
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.accent,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
             ),
           ],
@@ -485,10 +535,15 @@ class _RadiusSlider extends StatelessWidget {
         const SizedBox(height: 4),
         SliderTheme(
           data: SliderTheme.of(context).copyWith(
+            trackHeight: 5,
             activeTrackColor: AppColors.primary,
-            inactiveTrackColor: AppColors.surface,
+            inactiveTrackColor: AppColors.border,
             thumbColor: AppColors.primary,
             overlayColor: AppColors.primary.withValues(alpha: 0.2),
+            thumbShape: const RoundSliderThumbShape(
+              enabledThumbRadius: 10,
+            ),
+            trackShape: const RoundedRectSliderTrackShape(),
           ),
           child: Slider(
             value: value,
@@ -523,8 +578,9 @@ class _NotificationToggles extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
       ),
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,
@@ -533,7 +589,7 @@ class _NotificationToggles extends StatelessWidget {
       child: Column(
         children: [
           _ToggleRow(
-            icon: Icons.login,
+            icon: Icons.login_rounded,
             iconColor: AppColors.accent,
             label: 'geoZoneEdit.notifyOnEnter'.tr(),
             value: notifyOnEnter,
@@ -541,7 +597,7 @@ class _NotificationToggles extends StatelessWidget {
           ),
           Divider(color: AppColors.border, height: 1),
           _ToggleRow(
-            icon: Icons.logout,
+            icon: Icons.logout_rounded,
             iconColor: AppColors.error,
             label: 'geoZoneEdit.notifyOnExit'.tr(),
             value: notifyOnExit,
@@ -571,16 +627,26 @@ class _ToggleRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: iconColor),
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: iconColor.withValues(alpha: 0.12),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: iconColor),
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
               label,
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textPrimary,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ),

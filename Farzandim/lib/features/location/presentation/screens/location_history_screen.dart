@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
@@ -610,34 +611,66 @@ class _BottomPanel extends StatelessWidget {
         borderRadius: BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
         ),
+        border: Border(
+          top: BorderSide(color: AppColors.border),
+        ),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x47000000),
+            blurRadius: 24,
+            offset: Offset(0, -6),
+          ),
+        ],
       ),
       padding: EdgeInsets.fromLTRB(
         AppDimensions.lg,
-        AppDimensions.lg,
+        AppDimensions.sm,
         AppDimensions.lg,
         MediaQuery.of(context).padding.bottom + AppDimensions.md,
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Premium drag handle.
+          Container(
+            width: 40,
+            height: 4,
+            margin: const EdgeInsets.only(bottom: AppDimensions.md),
+            decoration: BoxDecoration(
+              color: AppColors.textTertiary.withValues(alpha: 0.4),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          ),
           // ── Tashrif buyurilgan joylar (backend to'xtashlari) ──
           if (stops.isNotEmpty) ...[
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Text(
-                'locationHistory.places.title'.tr(),
-                style: AppTextStyles.bodyM.copyWith(
-                  fontWeight: FontWeight.w700,
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: AppColors.accent,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
                 ),
-              ),
+                const SizedBox(width: 8),
+                Text(
+                  'locationHistory.places.title'.tr(),
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
             const SizedBox(height: AppDimensions.sm),
             SizedBox(
-              height: 96,
+              height: 104,
               child: ListView.separated(
                 scrollDirection: Axis.horizontal,
+                clipBehavior: Clip.none,
+                padding: const EdgeInsets.symmetric(vertical: 4),
                 itemCount: stops.length,
-                separatorBuilder: (_, __) => const SizedBox(width: 10),
+                separatorBuilder: (_, __) => const SizedBox(width: 12),
                 itemBuilder: (_, i) => _PlaceCard(
                   index: i,
                   stop: stops[i],
@@ -692,20 +725,24 @@ class _BottomPanel extends StatelessWidget {
             ),
           ),
           const SizedBox(height: AppDimensions.md),
-          // Stats row.
+          // Stats row — premium pill kartalar.
           Row(
             children: [
-              _StatItem(
-                icon: Icons.place_outlined,
-                value: 'locationHistory.stats.places'.tr(
-                  namedArgs: {'count': '${stops.length}'},
+              Expanded(
+                child: _StatItem(
+                  icon: Icons.place_rounded,
+                  value: 'locationHistory.stats.places'.tr(
+                    namedArgs: {'count': '${stops.length}'},
+                  ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.lg),
-              _StatItem(
-                icon: Icons.straighten,
-                value: 'locationHistory.stats.distance'.tr(
-                  namedArgs: {'km': distanceKm.toStringAsFixed(1)},
+              const SizedBox(width: 12),
+              Expanded(
+                child: _StatItem(
+                  icon: Icons.straighten_rounded,
+                  value: 'locationHistory.stats.distance'.tr(
+                    namedArgs: {'km': distanceKm.toStringAsFixed(1)},
+                  ),
                 ),
               ),
             ],
@@ -724,19 +761,42 @@ class _StatItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Icon(icon, size: 18, color: AppColors.accent),
-        const SizedBox(width: 6),
-        Text(
-          value,
-          style: AppTextStyles.bodyS.copyWith(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w600,
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.md,
+        vertical: 12,
+      ),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.14),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 17, color: AppColors.accent),
           ),
-        ),
-      ],
+          const SizedBox(width: 10),
+          Expanded(
+            child: Text(
+              value,
+              style: AppTextStyles.bodyS.copyWith(
+                color: AppColors.textPrimary,
+                fontWeight: FontWeight.w700,
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -760,67 +820,84 @@ class _PlaceCard extends ConsumerWidget {
         '${stop.longitude.toStringAsFixed(5)}';
     final address = ref.watch(_placeAddressProvider(key)).valueOrNull;
 
-    return Material(
-      color: AppColors.surfaceVariant,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Container(
-          width: 210,
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                decoration: BoxDecoration(
-                  color: AppColors.info.withValues(alpha: 0.2),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '${index + 1}',
-                  style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.info,
-                    fontWeight: FontWeight.w700,
+    final radius = BorderRadius.circular(AppDimensions.radiusM);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        boxShadow: AppShadows.card,
+      ),
+      child: Material(
+        color: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: radius,
+          side: BorderSide(color: AppColors.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: Container(
+            width: 220,
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                Container(
+                  width: 30,
+                  height: 30,
+                  decoration: BoxDecoration(
+                    gradient: LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [
+                        AppColors.info,
+                        AppColors.info.withValues(alpha: 0.75),
+                      ],
+                    ),
+                    shape: BoxShape.circle,
+                  ),
+                  alignment: Alignment.center,
+                  child: Text(
+                    '${index + 1}',
+                    style: AppTextStyles.bodyS.copyWith(
+                      color: Colors.white,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      address ?? 'locationHistory.places.unknown'.tr(),
-                      style: AppTextStyles.bodyS.copyWith(
-                        fontWeight: FontWeight.w600,
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        address ?? 'locationHistory.places.unknown'.tr(),
+                        style: AppTextStyles.bodyS.copyWith(
+                          fontWeight: FontWeight.w600,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
-                      stop.durationLabel,
-                      style: AppTextStyles.label.copyWith(
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w600,
+                      const SizedBox(height: 3),
+                      Text(
+                        stop.durationLabel,
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.accent,
+                          fontWeight: FontWeight.w600,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      stop.timeRange,
-                      style: AppTextStyles.label.copyWith(
-                        color: AppColors.textTertiary,
+                      const SizedBox(height: 2),
+                      Text(
+                        stop.timeRange,
+                        style: AppTextStyles.label.copyWith(
+                          color: AppColors.textTertiary,
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),
@@ -841,12 +918,28 @@ class _EmptyState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.route_outlined,
-              size: 80,
-              color: AppColors.textSecondary,
+            Container(
+              width: 110,
+              height: 110,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [
+                    AppColors.primary.withValues(alpha: 0.20),
+                    AppColors.primary.withValues(alpha: 0.06),
+                  ],
+                ),
+                shape: BoxShape.circle,
+              ),
+              alignment: Alignment.center,
+              child: Icon(
+                Icons.route_rounded,
+                size: 52,
+                color: AppColors.accent,
+              ),
             ),
-            const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.lg),
             Text(
               'locationHistory.empty.title'.tr(),
               style: AppTextStyles.headlineL.copyWith(fontSize: 18),
