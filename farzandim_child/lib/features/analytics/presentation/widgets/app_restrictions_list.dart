@@ -82,8 +82,8 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
                         meta: installed[blocked[i].packageName],
                       ),
                       if (i < blocked.length - 1)
-                        const Divider(
-                          color: AppColors.border,
+                        Divider(
+                          color: context.adaptive.border,
                           height: 1,
                           indent: 16,
                           endIndent: 16,
@@ -234,8 +234,8 @@ class _SectionHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.adaptive.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -261,9 +261,9 @@ class _SectionHeader extends StatelessWidget {
               AnimatedRotation(
                 turns: expanded ? 0.5 : 0,
                 duration: const Duration(milliseconds: 200),
-                child: const Icon(
+                child: Icon(
                   AppIcons.expandMore,
-                  color: AppColors.textSecondary,
+                  color: context.adaptive.textSecondary,
                   size: 22,
                 ),
               ),
@@ -285,7 +285,7 @@ class _RestrictionCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(
           color: accent.withValues(alpha: 0.18),
@@ -320,10 +320,10 @@ class _BlockedTile extends StatelessWidget {
               appName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.adaptive.textPrimary,
               ),
             ),
           ),
@@ -388,10 +388,10 @@ class _LimitedTile extends StatelessWidget {
               appName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.adaptive.textPrimary,
               ),
             ),
           ),

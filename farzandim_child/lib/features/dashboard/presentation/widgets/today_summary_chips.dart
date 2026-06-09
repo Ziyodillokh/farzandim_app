@@ -114,8 +114,8 @@ class _Chip extends StatelessWidget {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.adaptive.textSecondary,
                     fontSize: 11,
                   ),
                 ),
@@ -124,8 +124,8 @@ class _Chip extends StatelessWidget {
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.adaptive.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),

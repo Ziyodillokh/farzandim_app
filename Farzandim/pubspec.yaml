@@ -52,6 +52,20 @@ dependencies:
   flutter:
     sdk: flutter
 
+  # ─── Ijtimoiy login (Sprint 7) ──────────────────────────────────────
+  # Google Sign In — Android/iOS/web. Web uchun `web/index.html` ichida
+  # `<meta name="google-signin-client_id" ...>` qo'shish kerak.
+  # Native uchun: Android'da SHA-1, iOS'da REVERSED_CLIENT_ID Info.plist.
+  google_sign_in: ^6.2.1
+  # Web platform implementation (GIS — Google Identity Services).
+  # `google_sign_in` o'zicha web'da `MissingPluginException` beradi —
+  # bu paket o'sha implementation'ni ta'minlaydi.
+  google_sign_in_web: ^0.12.4+3
+
+  # Sign in with Apple — iOS/macOS nativ, Android/web OAuth redirect orqali.
+  # Backend Apple JWKS bilan ID token'ni tasdiqlaydi.
+  sign_in_with_apple: ^6.1.4
+
   # flutter_animate — deklarativ animatsiyalar (.fadeIn().slideY()...)
   # Stagger entrance va micro-interaction'lar uchun (Sprint 4.7).
   flutter_animate: ^4.5.0

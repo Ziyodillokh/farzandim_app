@@ -217,18 +217,18 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
           Row(
             children: [
               IconButton(
-                icon: const Icon(AppIcons.back,
-                    color: AppColors.textPrimary),
+                icon: Icon(AppIcons.back,
+                    color: context.adaptive.textPrimary),
                 onPressed: () => Navigator.pop(context),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
                   'account.title'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: context.adaptive.textPrimary,
                   ),
                 ),
               ),
@@ -249,8 +249,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                         width: 120,
                         height: 120,
                         decoration: BoxDecoration(
-                          color: AppColors.surface,
+                          color: context.adaptive.bgCard,
                           borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                            color: context.adaptive.border,
+                            width: 1,
+                          ),
                         ),
                         child: _buildPhoto(),
                       ),
@@ -261,17 +265,21 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                   const SizedBox(height: 8),
                   Container(
                     decoration: BoxDecoration(
-                      color: AppColors.surface,
+                      color: context.adaptive.bgCard,
                       borderRadius: BorderRadius.circular(12),
+                      border: Border.all(
+                        color: context.adaptive.border,
+                        width: 1,
+                      ),
                     ),
                     child: TextField(
                       controller: _nameController,
-                      style: const TextStyle(
-                          color: AppColors.textPrimary),
+                      style: TextStyle(
+                          color: context.adaptive.textPrimary),
                       decoration: InputDecoration(
                         hintText: 'account.nameHint'.tr(),
-                        hintStyle: const TextStyle(
-                            color: AppColors.textTertiary),
+                        hintStyle: TextStyle(
+                            color: context.adaptive.textTertiary),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.all(16),
                       ),
@@ -322,11 +330,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: context.adaptive.border),
                   ),
                   child: Text(
                     'account.backButton'.tr(),
-                    style: const TextStyle(color: AppColors.textPrimary),
+                    style:
+                        TextStyle(color: context.adaptive.textPrimary),
                   ),
                 ),
               ),
@@ -368,10 +377,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: AppColors.textPrimary,
+        color: context.adaptive.textPrimary,
       ),
     );
   }
@@ -386,8 +395,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       child: Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(12),
+          border: Border.all(
+            color: context.adaptive.border,
+            width: 1,
+          ),
         ),
         child: Row(
           children: [
@@ -396,13 +409,14 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                 text,
                 style: TextStyle(
                   color: isPlaceholder
-                      ? AppColors.textTertiary
-                      : AppColors.textPrimary,
+                      ? context.adaptive.textTertiary
+                      : context.adaptive.textPrimary,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down,
-                color: AppColors.textSecondary),
+            Icon(Icons.keyboard_arrow_down,
+                color: context.adaptive.textSecondary),
           ],
         ),
       ),
@@ -430,10 +444,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   }
 
   Widget _buildPhotoPlaceholder() {
-    return const Center(
+    return Center(
       child: Icon(
         AppIcons.camera,
-        color: AppColors.textTertiary,
+        color: context.adaptive.textTertiary,
         size: 32,
       ),
     );
@@ -448,7 +462,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   Future<void> _selectLanguage() async {
     final selected = await showModalBottomSheet<Locale>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: context.adaptive.bgCard,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -484,10 +498,10 @@ class _LanguagePickerSheet extends StatelessWidget {
           children: [
             Text(
               'account.languagePickerTitle'.tr(),
-              style: const TextStyle(
+              style: TextStyle(
                 fontSize: 16,
                 fontWeight: FontWeight.w600,
-                color: AppColors.textPrimary,
+                color: context.adaptive.textPrimary,
               ),
             ),
             const SizedBox(height: 12),
@@ -496,13 +510,14 @@ class _LanguagePickerSheet extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'languages.${locale.languageCode}'.tr(),
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style:
+                      TextStyle(color: context.adaptive.textPrimary),
                 ),
                 trailing: locale == current
                     ? const Icon(AppIcons.success,
                         color: AppColors.primary)
-                    : const Icon(Icons.radio_button_unchecked,
-                        color: AppColors.textTertiary),
+                    : Icon(Icons.radio_button_unchecked,
+                        color: context.adaptive.textTertiary),
                 onTap: () => Navigator.pop(context, locale),
               ),
           ],

@@ -52,6 +52,12 @@ class StepCounterService {
     if (_started) return;
     _started = true;
 
+    // Web'da Pedometer va ACTIVITY_RECOGNITION mavjud emas — jim chiqamiz.
+    if (kIsWeb) {
+      _started = false;
+      return;
+    }
+
     final status = await Permission.activityRecognition.request();
     if (!status.isGranted) {
       debugPrint('StepCounter: ACTIVITY_RECOGNITION ruxsati yo\'q');

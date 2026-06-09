@@ -155,46 +155,48 @@ class _UsageRow extends StatelessWidget {
     final remainingMs = limitMs - usedMs;
     final overLimit = remainingMs <= 0;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Text(
-              '${app.formattedTime} / ${_formatMs(limitMs)}',
-              style: TextStyle(
-                fontSize: 13,
-                color: overLimit
-                    ? AppColors.error
-                    : AppColors.textSecondary,
-                fontWeight:
-                    overLimit ? FontWeight.w600 : FontWeight.w400,
+    return Builder(builder: (ctx) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                '${app.formattedTime} / ${_formatMs(limitMs)}',
+                style: TextStyle(
+                  fontSize: 13,
+                  color: overLimit
+                      ? AppColors.error
+                      : ctx.adaptive.textSecondary,
+                  fontWeight:
+                      overLimit ? FontWeight.w600 : FontWeight.w400,
+                ),
               ),
-            ),
-            if (overLimit) ...[
-              const SizedBox(width: 6),
-              const Icon(
-                AppIcons.warning,
-                size: 13,
-                color: AppColors.error,
-              ),
+              if (overLimit) ...[
+                const SizedBox(width: 6),
+                const Icon(
+                  AppIcons.warning,
+                  size: 13,
+                  color: AppColors.error,
+                ),
+              ],
             ],
-          ],
-        ),
-        const SizedBox(height: 6),
-        ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: LinearProgressIndicator(
-            value: percent.toDouble(),
-            minHeight: 4,
-            backgroundColor: AppColors.border,
-            valueColor: AlwaysStoppedAnimation<Color>(
-              overLimit ? AppColors.error : AppColors.primary,
+          ),
+          const SizedBox(height: 6),
+          ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: LinearProgressIndicator(
+              value: percent.toDouble(),
+              minHeight: 4,
+              backgroundColor: ctx.adaptive.border,
+              valueColor: AlwaysStoppedAnimation<Color>(
+                overLimit ? AppColors.error : AppColors.primary,
+              ),
             ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   Widget? _buildTrailing() {
@@ -211,26 +213,28 @@ class _UsageRow extends StatelessWidget {
         ),
       );
     }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        const Text(
-          'Qoldi',
-          style: TextStyle(
-            fontSize: 10,
-            color: AppColors.textTertiary,
+    return Builder(builder: (ctx) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          Text(
+            'Qoldi',
+            style: TextStyle(
+              fontSize: 10,
+              color: ctx.adaptive.textTertiary,
+            ),
           ),
-        ),
-        Text(
-          _formatMs(remainingMs),
-          style: const TextStyle(
-            fontSize: 13,
-            color: AppColors.primary,
-            fontWeight: FontWeight.w700,
+          Text(
+            _formatMs(remainingMs),
+            style: const TextStyle(
+              fontSize: 13,
+              color: AppColors.primary,
+              fontWeight: FontWeight.w700,
+            ),
           ),
-        ),
-      ],
-    );
+        ],
+      );
+    });
   }
 
   static String _formatMs(int ms) {

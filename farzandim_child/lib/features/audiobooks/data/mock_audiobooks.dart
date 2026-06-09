@@ -22,7 +22,8 @@ class MockAudiobooks {
       title: 'Oltin baliq haqida ertak',
       author: 'A.Pushkin',
       description: 'Mashhur ertak — keksa kishi va oltin baliq',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1535591273668-578e31182c4f?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-1.mp3',
       durationSeconds: 372,
       duration: '6:12',
@@ -36,7 +37,8 @@ class MockAudiobooks {
       title: 'Layli va Majnun',
       author: 'Alisher Navoiy',
       description: 'Sevgi haqidagi mashhur doston',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1519682337058-a94d519337bc?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-2.mp3',
       durationSeconds: 425,
       duration: '7:05',
@@ -50,7 +52,8 @@ class MockAudiobooks {
       title: 'Sariqdevni minib',
       author: "Tog'ay Murod",
       description: 'Bolalar uchun qiziqarli hikoya',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1471970394675-613138e45da3?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-3.mp3',
       durationSeconds: 524,
       duration: '8:44',
@@ -64,7 +67,8 @@ class MockAudiobooks {
       title: 'Quyon va toshbaqa',
       author: 'Xalq ertagi',
       description: 'Mehnat va sabr haqidagi ertak',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1583512603805-3cc6b41f3edb?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-4.mp3',
       durationSeconds: 295,
       duration: '4:55',
@@ -78,7 +82,8 @@ class MockAudiobooks {
       title: 'Kichik shahzoda',
       author: 'A. de Saint-Exupéry',
       description: 'Falsafiy ertak — bola va astronavt',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1532012197267-da84d127e765?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-5.mp3',
       durationSeconds: 612,
       duration: '10:12',
@@ -92,7 +97,8 @@ class MockAudiobooks {
       title: 'Astronomik kashfiyotlar',
       author: "Ilmiy bo'lim",
       description: 'Koinot va sayyoralar haqida',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1502134249126-9f3755a50d78?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-6.mp3',
       durationSeconds: 480,
       duration: '8:00',
@@ -106,7 +112,8 @@ class MockAudiobooks {
       title: 'Aqlli Qulqush',
       author: 'Xalq ertagi',
       description: 'Aqlli qush haqidagi qiziqarli ertak',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1444464666168-49d633b86797?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-7.mp3',
       durationSeconds: 340,
       duration: '5:40',
@@ -120,7 +127,8 @@ class MockAudiobooks {
       title: 'Sherlok Xolms',
       author: 'A. Conan Doyle',
       description: 'Detektiv hikoyasi',
-      coverUrl: '',
+      coverUrl:
+          'https://images.unsplash.com/photo-1495446815901-a7297e633e8d?w=400&auto=format&fit=crop',
       audioUrl: '$_baseUrl/SoundHelix-Song-8.mp3',
       durationSeconds: 720,
       duration: '12:00',

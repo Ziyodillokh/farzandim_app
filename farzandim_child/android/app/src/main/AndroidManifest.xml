@@ -63,6 +63,11 @@
         android:minSdkVersion="34"
         tools:ignore="UnusedAttribute"/>
 
+    <!-- Background audio (just_audio_background) — telefon qulflanganda ham
+         audiokitob davom etadi. Android 14+ FOREGROUND_SERVICE_MEDIA_PLAYBACK
+         alohida ruxsat talab qiladi (avtomatik beriladi). -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
+
     <application
         android:label="Parvoz"
         android:name="${applicationName}"
@@ -168,6 +173,26 @@
                 android:value="Ring the child device on parent request (find device)"
                 tools:targetApi="34"/>
         </service>
+
+        <!-- Background audio (just_audio_background) — audiokitob telefon
+             qulflanganda davom etadi. Notification'da play/pause/skip. -->
+        <service
+            android:name="com.ryanheise.audioservice.AudioService"
+            android:foregroundServiceType="mediaPlayback"
+            android:exported="true"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.media.browse.MediaBrowserService"/>
+            </intent-filter>
+        </service>
+        <receiver
+            android:name="com.ryanheise.audioservice.MediaButtonReceiver"
+            android:exported="true"
+            tools:ignore="Instantiatable">
+            <intent-filter>
+                <action android:name="android.intent.action.MEDIA_BUTTON"/>
+            </intent-filter>
+        </receiver>
     </application>
     <!-- Required to query activities that can process text, see:
          https://developer.android.com/training/package-visibility and

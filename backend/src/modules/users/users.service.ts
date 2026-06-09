@@ -233,10 +233,9 @@ export class UsersService {
       },
     });
 
-    const smsResult = await this.sms.sendSms(
-      phone,
-      `Farzandim — tasdiqlash kodingiz: ${code}`,
-    );
+    // Eskiz tasdiqlangan REGISTER shabloni — boshqa matn yuborilsa
+    // Eskiz "not in template" xato qaytaradi.
+    const smsResult = await this.sms.sendRegisterCode(phone, code);
     if (!smsResult.sent) {
       this.logger.error({ phone, err: smsResult.error }, 'OTP SMS yuborilmadi');
       throw new BadGatewayException("SMS yuborib bo'lmadi");

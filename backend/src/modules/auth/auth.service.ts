@@ -15,10 +15,15 @@ import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { EnvConfig } from '../../common/config/env.schema';
 import { TelegramService, TelegramAuthData } from './strategies/telegram.service';
+import {
+  SocialAuthService,
+  VerifiedSocialUser,
+} from './strategies/social-auth.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SocialLoginDto } from './dto/social-login.dto';
 import {
   hashPassword,
   verifyPassword,
@@ -50,6 +55,7 @@ export class AuthService {
     private readonly fcm: FcmService,
     private readonly realtime: RealtimeGateway,
     private readonly telegramService: TelegramService,
+    private readonly socialAuth: SocialAuthService,
   ) {}
 
   // ── Device-link (QR orqali 2-qurilma ulash) ──
@@ -61,6 +67,20 @@ export class AuthService {
   >();
   private static readonly DEVICE_LINK_TTL_MS = 5 * 60 * 1000;
   private static readonly MAX_PARENT_DEVICES = 2;
+
+  // ── Child re-pair (QR orqali yangi qurilmaga ulash) ──
+  // Ota-ona QR generatsiya qiladi (har 45s yangilanadi), bola skanerlab
+  // o'sha bolaga qayta ulanadi. Foydalanish holatlari:
+  //   • Bola Parvoz ilovani o'chirib tashlagan / qayta o'rnatgan
+  //   • Telefon zavod sozlamalariga qaytarilgan / yo'qolgan / almashtirilgan
+  //   • FCM token yoki device ID o'zgargan
+  // Family code bilan re-pair flow'idan farqi: bu **ota-ona aktiv** initiatsiya
+  // qiladi (parent → QR → bola skaner), shuning uchun parent tasdiqi shart emas.
+  private readonly _childRepairTokens = new Map<
+    string,
+    { parentId: string; childId: string; expiresAt: number }
+  >();
+  private static readonly CHILD_REPAIR_TTL_MS = 45 * 1000;
 
   /* ------------------------------------------------------------------ */
   /*  Token helpers                                                      */
@@ -238,6 +258,116 @@ export class AuthService {
       accessToken,
       refreshToken,
     };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Google / Apple Social Login                                        */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Google ID token bilan login/register (single endpoint, upsert).
+   * Mavjud foydalanuvchini topish tartibi:
+   *   1) googleSub bo'yicha (avval ham Google bilan kirgan)
+   *   2) email bo'yicha (boshqa usulda ro'yxatdan o'tgan — googleSub'ni bog'laymiz)
+   *   3) topilmasa — yangi PARENT yaratiladi
+   */
+  async googleLogin(dto: SocialLoginDto, reqMeta?: ReqMeta) {
+    const verified = await this.socialAuth.verifyGoogleIdToken(dto.idToken);
+    return this.upsertSocialUser(verified, 'google', dto, reqMeta);
+  }
+
+  /**
+   * Apple ID token bilan login/register. Apple `name`'ni faqat birinchi
+   * roziligida yuboradi — Flutter alohida `name` field'da yuboradi.
+   */
+  async appleLogin(dto: SocialLoginDto, reqMeta?: ReqMeta) {
+    const verified = await this.socialAuth.verifyAppleIdToken(dto.idToken);
+    // Apple birinchi loginda name yuborgan bo'lsa, undan foydalanamiz.
+    if (!verified.name && dto.name) {
+      verified.name = dto.name;
+    }
+    return this.upsertSocialUser(verified, 'apple', dto, reqMeta);
+  }
+
+  /**
+   * Social provider'dan kelgan tasdiqlangan foydalanuvchini DB'ga
+   * yozadi/topadi va auth javobi (tokens + user) qaytaradi.
+   */
+  private async upsertSocialUser(
+    verified: VerifiedSocialUser,
+    provider: 'google' | 'apple',
+    dto: SocialLoginDto,
+    reqMeta?: ReqMeta,
+  ) {
+    const isGoogle = provider === 'google';
+    const email = verified.email?.toLowerCase();
+
+    // 1) Provider sub bo'yicha mavjud user'ni qidiramiz.
+    let user = await this.prisma.user.findUnique({
+      where: isGoogle
+        ? { googleSub: verified.sub }
+        : { appleSub: verified.sub },
+    });
+
+    let auditAction: 'CREATE' | 'LOGIN' = 'LOGIN';
+
+    if (!user && email && verified.emailVerified) {
+      // 2) Email bo'yicha topilsa — sub'ni o'sha akkauntga bog'laymiz.
+      const byEmail = await this.prisma.user.findUnique({ where: { email } });
+      if (byEmail) {
+        user = await this.prisma.user.update({
+          where: { id: byEmail.id },
+          data: {
+            ...(isGoogle
+              ? { googleSub: verified.sub }
+              : { appleSub: verified.sub }),
+            // Avatar/name'ni faqat bo'sh bo'lsa yangilaymiz — foydalanuvchi
+            // sozlamalardagi nomini buzmaymiz.
+            ...(verified.picture && !byEmail.avatarUrl
+              ? { avatarUrl: verified.picture }
+              : {}),
+            ...(verified.name && !byEmail.name
+              ? { name: verified.name }
+              : {}),
+          },
+        });
+      }
+    }
+
+    if (!user) {
+      // 3) Yangi user — PARENT roli bilan.
+      user = await this.prisma.user.create({
+        data: {
+          role: 'PARENT',
+          email: email ?? null,
+          ...(isGoogle
+            ? { googleSub: verified.sub }
+            : { appleSub: verified.sub }),
+          name: verified.name ?? null,
+          avatarUrl: verified.picture ?? null,
+        },
+      });
+      auditAction = 'CREATE';
+    }
+
+    if (!user.isActive) {
+      throw new UnauthorizedException('Hisob bloklangan');
+    }
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      auditAction,
+      user.id,
+      { method: provider },
+      reqMeta,
+    );
+
+    return this.buildAuthResponse(
+      user,
+      { deviceModel: dto.deviceModel, platform: dto.platform },
+      reqMeta,
+    );
   }
 
   /* ------------------------------------------------------------------ */
@@ -472,6 +602,166 @@ export class AuthService {
     );
 
     return this.buildAuthResponse(user, device, reqMeta);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Child Re-pair — QR orqali yangi qurilmaga ulash                    */
+  /* ------------------------------------------------------------------ */
+
+  /** Eskirgan repair tokenlarni tozalaydi. */
+  private pruneChildRepairTokens(): void {
+    const now = Date.now();
+    for (const [token, v] of this._childRepairTokens) {
+      if (v.expiresAt < now) this._childRepairTokens.delete(token);
+    }
+  }
+
+  /**
+   * Ota-onada chaqiriladi (bolalar ro'yxati → "Qayta ulash"). 45s yashaydigan
+   * token yaratadi. Ota-ona uni QR ko'rinishida ko'rsatadi, bola skanerlaydi.
+   * Egalik tekshiruvi: faqat shu bolaning ota-onasi token chiqara oladi.
+   */
+  async createChildRepairToken(
+    parentId: string,
+    childId: string,
+  ): Promise<{ token: string; expiresInSec: number }> {
+    const child = await this.prisma.child.findUnique({
+      where: { id: childId },
+      select: { id: true, parentId: true },
+    });
+    if (!child) throw new NotFoundException('Bola topilmadi');
+    if (child.parentId !== parentId) {
+      throw new UnauthorizedException(
+        "Faqat bolaning ota-onasi qayta ulash QR'ini yaratishi mumkin",
+      );
+    }
+
+    this.pruneChildRepairTokens();
+    const token = randomUUID().replace(/-/g, '');
+    this._childRepairTokens.set(token, {
+      parentId,
+      childId,
+      expiresAt: Date.now() + AuthService.CHILD_REPAIR_TTL_MS,
+    });
+    return {
+      token,
+      expiresInSec: Math.floor(AuthService.CHILD_REPAIR_TTL_MS / 1000),
+    };
+  }
+
+  /**
+   * Bola QR kodni skanerlab kiradi. Token tekshiriladi, yangi User
+   * (CHILD) yaratiladi, eski childUserId yangisi bilan almashtiriladi.
+   * Eski qurilma sessiyasi (agar bo'lsa) bekor qilinadi — eski telefon
+   * boshqa kira olmaydi.
+   *
+   * Parent app'ga WebSocket `child:repaired` event yuboriladi (modal
+   * yopish + child list yangilash uchun).
+   */
+  async redeemChildRepairToken(
+    token: string,
+    device: DeviceMeta = {},
+    reqMeta?: ReqMeta,
+  ) {
+    this.pruneChildRepairTokens();
+    const entry = this._childRepairTokens.get(token);
+    if (!entry || entry.expiresAt < Date.now()) {
+      throw new UnauthorizedException(
+        'QR kod yaroqsiz yoki muddati tugagan. Ota-onadan yangi kod oling.',
+      );
+    }
+    this._childRepairTokens.delete(token); // bir martalik
+
+    const child = await this.prisma.child.findUnique({
+      where: { id: entry.childId },
+    });
+    if (!child) {
+      throw new NotFoundException('Bola yo\'q (o\'chirilgan?)');
+    }
+
+    // Eski child user sessiyalarini bekor qilamiz (eski telefon endi
+    // bu akkauntga kira olmaydi).
+    const oldChildUserId = child.childUserId;
+    if (oldChildUserId) {
+      await this.prisma.userSession.updateMany({
+        where: { userId: oldChildUserId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      // tokenVersion'ni oshirish ham refresh tokenlarni bekor qiladi.
+      await this.prisma.user
+        .update({
+          where: { id: oldChildUserId },
+          data: { tokenVersion: { increment: 1 } },
+        })
+        .catch(() => undefined);
+    }
+
+    // Yangi child User yaratamiz.
+    const user = await this.prisma.user.create({
+      data: {
+        role: 'CHILD',
+        name: child.name,
+      },
+    });
+
+    // Bola yozuvini yangi User'ga bog'laymiz.
+    const updated = await this.prisma.child.update({
+      where: { id: child.id },
+      data: {
+        childUserId: user.id,
+        isConnected: true,
+        pairedAt: new Date(),
+        ...(device.deviceModel && { deviceModel: device.deviceModel }),
+      },
+    });
+
+    await this.audit.log(
+      user.id,
+      'auth',
+      'PAIR',
+      user.id,
+      {
+        childId: child.id,
+        method: 'qr_repair',
+        previousChildUserId: oldChildUserId,
+      },
+      reqMeta,
+    );
+
+    // Real-time: ota-ona ekraniga "muvaffaqiyatli ulandi" signal.
+    this.realtime.emitToUser(child.parentId, 'child:repaired', {
+      childId: child.id,
+      childName: child.name,
+      newChildUserId: user.id,
+      pairedAt: updated.pairedAt?.toISOString(),
+    });
+
+    const payload: JwtPayload = {
+      userId: user.id,
+      role: user.role as 'PARENT' | 'CHILD',
+      tokenVersion: user.tokenVersion,
+    };
+    const accessToken = this.signAccessToken(payload);
+    const refreshToken = this.signRefreshToken(payload);
+
+    return {
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        telegramId: user.telegramId,
+        language: user.language,
+      },
+      child: {
+        id: updated.id,
+        parentId: updated.parentId,
+        name: updated.name,
+        age: updated.age,
+      },
+    };
   }
 
   /* ------------------------------------------------------------------ */

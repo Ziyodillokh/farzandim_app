@@ -12,6 +12,7 @@ import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -39,7 +40,24 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
   Future<void> play(AudiobookModel book) async {
     state = state.copyWith(currentBook: book);
-    await _player.setUrl(book.audioUrl);
+    // MediaItem tag — lock screen va notification'da rasm + sarlavha
+    // ko'rsatish uchun. just_audio_background buni o'qib system media
+    // controls'ga uzatadi (Android: MediaSession, iOS: MPNowPlayingInfo).
+    await _player.setAudioSource(
+      AudioSource.uri(
+        Uri.parse(book.audioUrl),
+        tag: MediaItem(
+          id: book.id,
+          title: book.title,
+          artist: book.author,
+          album: 'Farzandim Edu',
+          duration: Duration(seconds: book.durationSeconds),
+          artUri: book.coverUrl.isNotEmpty
+              ? Uri.parse(book.coverUrl)
+              : null,
+        ),
+      ),
+    );
     await _player.play();
   }
 

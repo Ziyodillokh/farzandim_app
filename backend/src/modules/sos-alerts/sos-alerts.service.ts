@@ -63,17 +63,38 @@ export class SosAlertsService {
     });
     this.realtime.emitToChild(childId, 'sos:received', { alert });
 
+    // Push xabar matni: aniq, hissiy, harakatga undovchi.
+    // Lokatsiya bo'lsa Google Maps havolasi qo'shiladi — tap qilganda
+    // ota-ona darhol xaritada bola joylashuvini ko'radi.
+    const mapsUrl = alert.latitude && alert.longitude
+      ? `https://maps.google.com/?q=${alert.latitude},${alert.longitude}`
+      : null;
+
+    const title = `🆘 SOS — ${child.name}`;
+    const body = mapsUrl
+      ? `${child.name} yordam so'ramoqda! Joriy joylashuv: ${alert.latitude!.toFixed(5)}, ${alert.longitude!.toFixed(5)}`
+      : `${child.name} SOS bosdi — joylashuv yo'q. Tezda bog'laning.`;
+
     try {
       await this.fcm.sendPushToUser(child.parentId, {
-        title: `SOS ${child.name} -- yordam kerak!`,
-        body: alert.latitude
-          ? 'Bola SOS bosgan. Lokatsiya birga keldi.'
-          : 'Bola SOS bosgan. Tezda javob bering.',
+        title,
+        body,
         data: {
           type: 'sos',
           alertId: alert.id,
           childId,
+          childName: child.name,
           priority: 'high',
+          ...(alert.latitude !== null && alert.latitude !== undefined
+            ? { latitude: String(alert.latitude) }
+            : {}),
+          ...(alert.longitude !== null && alert.longitude !== undefined
+            ? { longitude: String(alert.longitude) }
+            : {}),
+          ...(alert.accuracy !== null && alert.accuracy !== undefined
+            ? { accuracy: String(alert.accuracy) }
+            : {}),
+          ...(mapsUrl ? { mapsUrl } : {}),
         },
       });
     } catch (err) {

@@ -9,11 +9,10 @@ import 'package:flutter_svg/flutter_svg.dart';
 /// "Google" yozuvi bilan), shuning uchun SocialButton alohida `label` matn
 /// olmaydi — faqat SVG'ni markazda ko'rsatadi.
 ///
-/// Bosilganda 1500ms loading simulyatsiyasi ko'rsatadi (real auth
-/// hissini beradi), keyin `onPressed` chaqiriladi. Bosqich 1.6'da
-/// haqiqiy Apple/Google Sign In integratsiya qilinganda bu kechikish
-/// olib tashlanadi.
-class SocialButton extends StatefulWidget {
+/// `onPressed` null bo'lsa, tugma o'chiriladi (loading paytida ishlatiladi).
+/// Haqiqiy auth chaqiruvi `onPressed` ichida bo'ladi — bu yerda artificial
+/// loading kechikishi yo'q.
+class SocialButton extends StatelessWidget {
   /// `SocialButton` konstruktor.
   const SocialButton({
     required this.iconAsset,
@@ -29,28 +28,13 @@ class SocialButton extends StatefulWidget {
   /// "Apple bilan kirish". Vizual ko'rinmaydi.
   final String semanticsLabel;
 
-  /// 1500ms simulyatsiyadan **keyin** chaqiriladi.
-  final VoidCallback onPressed;
-
-  @override
-  State<SocialButton> createState() => _SocialButtonState();
-}
-
-class _SocialButtonState extends State<SocialButton> {
-  bool _isLoading = false;
-
-  Future<void> _handleTap() async {
-    if (_isLoading) return;
-    setState(() => _isLoading = true);
-    await Future<void>.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    setState(() => _isLoading = false);
-    widget.onPressed();
-  }
+  /// Bosilganda chaqiriladi. `null` bo'lsa tugma o'chiriladi (disabled).
+  final VoidCallback? onPressed;
 
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
+    final disabled = onPressed == null;
     return SizedBox(
       height: AppDimensions.buttonHeight,
       child: DecoratedBox(
@@ -59,26 +43,20 @@ class _SocialButtonState extends State<SocialButton> {
           border: Border.all(color: AppColors.border),
           borderRadius: borderRadius,
         ),
-        child: Material(
-          type: MaterialType.transparency,
-          child: InkWell(
-            onTap: _isLoading ? null : _handleTap,
-            borderRadius: borderRadius,
-            child: Center(
-              child: _isLoading
-                  ? SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        color: AppColors.textPrimary,
-                      ),
-                    )
-                  : SvgPicture.asset(
-                      widget.iconAsset,
-                      height: 24,
-                      semanticsLabel: widget.semanticsLabel,
-                    ),
+        child: Opacity(
+          opacity: disabled ? 0.6 : 1.0,
+          child: Material(
+            type: MaterialType.transparency,
+            child: InkWell(
+              onTap: onPressed,
+              borderRadius: borderRadius,
+              child: Center(
+                child: SvgPicture.asset(
+                  iconAsset,
+                  height: 24,
+                  semanticsLabel: semanticsLabel,
+                ),
+              ),
             ),
           ),
         ),

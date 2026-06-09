@@ -1,6 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -94,8 +93,37 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     // Muvaffaqiyat: router redirect dashboard'ga olib o'tadi.
   }
 
-  void _socialComingSoon() {
-    AppToast.info(context, 'auth.social.comingSoon'.tr());
+  Future<void> _signInWithGoogle() async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final err = await ref.read(backendAuthProvider.notifier).signInWithGoogle();
+    if (!mounted) return;
+    if (err != null) {
+      setState(() {
+        _loading = false;
+        _error = err;
+      });
+    }
+    // Muvaffaqiyat: router redirect dashboard'ga olib o'tadi.
+  }
+
+  Future<void> _signInWithApple() async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final err = await ref.read(backendAuthProvider.notifier).signInWithApple();
+    if (!mounted) return;
+    if (err != null) {
+      setState(() {
+        _loading = false;
+        _error = err;
+      });
+    }
   }
 
   @override
@@ -212,14 +240,14 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ),
               const SizedBox(height: AppDimensions.lg),
 
-              // ─── Ijtimoiy: Apple / Google (hozircha UI) ───
+              // ─── Ijtimoiy: Apple / Google ───
               Row(
                 children: [
                   Expanded(
                     child: SocialButton(
                       iconAsset: 'assets/icons/ic_apple.svg',
                       semanticsLabel: 'auth.social.apple'.tr(),
-                      onPressed: _socialComingSoon,
+                      onPressed: _loading ? null : () => _signInWithApple(),
                     ),
                   ),
                   const SizedBox(width: AppDimensions.md),
@@ -227,7 +255,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                     child: SocialButton(
                       iconAsset: 'assets/icons/ic_google.svg',
                       semanticsLabel: 'auth.social.google'.tr(),
-                      onPressed: _socialComingSoon,
+                      onPressed: _loading ? null : () => _signInWithGoogle(),
                     ),
                   ),
                 ],

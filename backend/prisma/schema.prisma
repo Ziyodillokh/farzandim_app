@@ -17,10 +17,16 @@ model User {
   id          String   @id @default(uuid())
   phone       String?   @unique
   email       String?  @unique
-  passwordHash String? @map("password_hash") // null = Telegram-only foydalanuvchi
+  passwordHash String? @map("password_hash") // null = social-only (Telegram/Google/Apple) foydalanuvchi
   role        UserRole
   name        String?
   telegramId  String?  @unique @map("telegram_id")
+  // Google OAuth — Google ID token'dagi `sub` (Google subject ID). Bir
+  // marta o'zgarmas, email o'zgarsa ham bog'liqlik buzilmaydi.
+  googleSub   String?  @unique @map("google_sub")
+  // Apple Sign In — Apple ID token'dagi `sub`. Apple email odatda foydalanuvchi
+  // ruxsati bilan beriladi, lekin keyingi loginlarda kelmaydi; sub yagona stabil id.
+  appleSub    String?  @unique @map("apple_sub")
   avatarUrl   String?  @map("avatar_url")
   language    String   @default("uz")
   isActive    Boolean  @default(true) @map("is_active")

@@ -6,7 +6,6 @@ import 'package:intl/intl.dart';
 import '../../core/network/admin_api.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/theme/app_spacing.dart';
-import '../../core/ux/app_error_handler.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/error_state_view.dart';
 

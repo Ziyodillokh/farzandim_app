@@ -438,7 +438,7 @@ class _TwoFactorSetupDialogState extends State<_TwoFactorSetupDialog> {
                   icon: const Icon(Icons.copy, size: 18),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: _secret!));
-                    if (!context.mounted) return;
+                    if (!mounted) return;
                     AppFeedback.success(context, 'Nusxalandi');
                   },
                 ),
@@ -529,7 +529,7 @@ class _TwoFactorSetupDialogState extends State<_TwoFactorSetupDialog> {
                 await Clipboard.setData(
                   ClipboardData(text: _backupCodes.join('\n')),
                 );
-                if (!context.mounted) return;
+                if (!mounted) return;
                 AppFeedback.success(context, 'Backup kodlar nusxalandi');
               },
               icon: const Icon(Icons.copy_all, size: 18),

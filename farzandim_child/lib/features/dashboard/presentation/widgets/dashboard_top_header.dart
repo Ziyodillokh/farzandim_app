@@ -2,7 +2,8 @@
 // DashboardTopHeader — Dashboard yuqorisi
 // ─────────────────────────────────────────────────────────────────────
 //
-// Chap: Farzandim logo 58×58 (asset).
+// Chap: Farzandim logo 44×44 (asset). Tugmalardan bir oz kichikroq
+// bo'lishi vizual ierarxiyani saqlaydi — logo "qichqiriqsiz" turadi.
 // O'ng: Settings tugma (48×48) +
 //   - `onNotificationsTap` berilsa: 🔔 bell (badge bilan) — Dashboard.
 //   - aks holda: 👤 avatar circle — boshqa ekranlar (Videos/Rankings/...).
@@ -17,8 +18,10 @@ import 'package:farzandim_child/features/dashboard/presentation/providers/child_
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
-const double _kHeaderSize = 58;
+/// Logo + avatar diametri. Tugmalar bilan deyarli teng — vizual balans.
+const double _kHeaderSize = 50;
 
 class DashboardTopHeader extends ConsumerWidget {
   const DashboardTopHeader({
@@ -27,6 +30,8 @@ class DashboardTopHeader extends ConsumerWidget {
     this.photoUrl,
     this.onNotificationsTap,
     this.unreadCount = 0,
+    this.onSosTap,
+    this.showSos = true,
     super.key,
   });
 
@@ -42,6 +47,15 @@ class DashboardTopHeader extends ConsumerWidget {
 
   /// Sozlamalar tugmasi tap. `null` bo'lsa tugma ko'rinmaydi.
   final VoidCallback? onSettingsTap;
+
+  // ─── SOS pill (har doim mavjud — favqulodda yordam) ─────────────
+  /// SOS pill tap. `null` bo'lsa default — `/dashboard` ga o'tadi
+  /// (u yerda 3-sek hold-to-send tugmasi joylashgan).
+  final VoidCallback? onSosTap;
+
+  /// SOS pillni ko'rsatish (default `true`). Bola kirmagan / pairing
+  /// holatida bo'lmaganlar uchun `false` qilish mumkin.
+  final bool showSos;
 
   bool get _useBell => onNotificationsTap != null;
 
@@ -70,6 +84,12 @@ class DashboardTopHeader extends ConsumerWidget {
             ),
           ),
           const Spacer(),
+          if (showSos) ...[
+            _SosPill(
+              onTap: onSosTap ?? () => context.push('/dashboard'),
+            ),
+            const SizedBox(width: 12),
+          ],
           if (onSettingsTap != null) ...[
             _SettingsButton(onTap: onSettingsTap!),
             const SizedBox(width: 12),
@@ -92,8 +112,8 @@ class DashboardTopHeader extends ConsumerWidget {
 
 // Top header tugmalarining yagona o'lchami — settings + bell vizual mos
 // kelishi uchun (avval 48 vs 58 edi).
-const double _kHeaderButton = 48;
-const double _kHeaderButtonIcon = 24;
+const double _kHeaderButton = 52;
+const double _kHeaderButtonIcon = 26;
 
 class _SettingsButton extends StatelessWidget {
   const _SettingsButton({required this.onTap});
@@ -233,6 +253,58 @@ class _AvatarFallback extends StatelessWidget {
       AppIcons.profile,
       color: context.adaptive.textSecondary,
       size: 30,
+    );
+  }
+}
+
+// ─── SOS pill — favqulodda yordam tugmasi (yuqori header'da har doim) ──
+// Skreenshot dizayniga muvofiq: qizil rounded pill, oq bell ikona + "SOS".
+// Tap → dashboard'dagi 3-sek hold tugmasiga olib boradi (tasodifan
+// yuborilib qolmasin — safety mexanizm saqlanadi).
+class _SosPill extends StatelessWidget {
+  const _SosPill({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        height: _kHeaderButton,
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: AppColors.error,
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: const [
+            BoxShadow(
+              color: Color(0x33E53935),
+              blurRadius: 10,
+              offset: Offset(0, 3),
+            ),
+          ],
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.notifications_active_rounded,
+              color: Colors.white,
+              size: 18,
+            ),
+            SizedBox(width: 6),
+            Text(
+              'SOS',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 0.5,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

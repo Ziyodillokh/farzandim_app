@@ -32,7 +32,7 @@ class MiniAudioPlayer extends ConsumerWidget {
         margin:
             const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
         decoration: BoxDecoration(
-          color: AppColors.surface,
+          color: context.adaptive.bgCard,
           borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
@@ -50,15 +50,26 @@ class MiniAudioPlayer extends ConsumerWidget {
               padding: const EdgeInsets.all(8),
               child: Row(
                 children: [
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: book.coverColor,
-                      borderRadius: BorderRadius.circular(8),
+                  // Cover rasm — coverUrl bo'lsa, rasm; bo'lmasa rangli
+                  // fon + speaker ikona fallback.
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(8),
+                    child: SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: book.coverUrl.isNotEmpty
+                          ? Image.network(
+                              book.coverUrl,
+                              fit: BoxFit.cover,
+                              loadingBuilder: (_, child, progress) {
+                                if (progress == null) return child;
+                                return Container(color: book.coverColor);
+                              },
+                              errorBuilder: (_, __, ___) =>
+                                  _miniFallback(book.coverColor),
+                            )
+                          : _miniFallback(book.coverColor),
                     ),
-                    child: const Icon(AppIcons.speaker,
-                        color: Colors.white, size: 20),
                   ),
                   const SizedBox(width: 12),
                   Expanded(
@@ -69,8 +80,8 @@ class MiniAudioPlayer extends ConsumerWidget {
                           book.title,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textPrimary,
+                          style: TextStyle(
+                            color: context.adaptive.textPrimary,
                             fontSize: 13,
                             fontWeight: FontWeight.w600,
                           ),
@@ -80,17 +91,18 @@ class MiniAudioPlayer extends ConsumerWidget {
                           book.author,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: context.adaptive.textSecondary,
                             fontSize: 11,
+                            fontWeight: FontWeight.w500,
                           ),
                         ),
                       ],
                     ),
                   ),
                   IconButton(
-                    icon: const Icon(Icons.replay_10,
-                        color: AppColors.textPrimary),
+                    icon: Icon(Icons.replay_10,
+                        color: context.adaptive.textPrimary),
                     onPressed: () => ref
                         .read(audioPlayerProvider.notifier)
                         .seekBackward(),
@@ -114,15 +126,15 @@ class MiniAudioPlayer extends ConsumerWidget {
                     },
                   ),
                   IconButton(
-                    icon: const Icon(Icons.forward_10,
-                        color: AppColors.textPrimary),
+                    icon: Icon(Icons.forward_10,
+                        color: context.adaptive.textPrimary),
                     onPressed: () => ref
                         .read(audioPlayerProvider.notifier)
                         .seekForward(),
                   ),
                   IconButton(
-                    icon: const Icon(AppIcons.close,
-                        color: AppColors.textSecondary, size: 20),
+                    icon: Icon(AppIcons.close,
+                        color: context.adaptive.textSecondary, size: 20),
                     onPressed: () =>
                         ref.read(audioPlayerProvider.notifier).stop(),
                   ),
@@ -131,13 +143,25 @@ class MiniAudioPlayer extends ConsumerWidget {
             ),
             LinearProgressIndicator(
               value: progress.clamp(0.0, 1.0),
-              backgroundColor: AppColors.surfaceVariant,
+              backgroundColor: context.adaptive.border,
               valueColor: const AlwaysStoppedAnimation<Color>(
                   AppColors.primary),
               minHeight: 2,
             ),
           ],
         ),
+      ),
+    );
+  }
+
+  /// Rasm yo'q yoki yuklanmagan holatda — rangli fon + speaker ikona.
+  Widget _miniFallback(Color color) {
+    return Container(
+      color: color,
+      child: const Icon(
+        AppIcons.speaker,
+        color: Colors.white,
+        size: 20,
       ),
     );
   }

@@ -24,7 +24,9 @@ import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
 import { RegisterDto } from './dto/register.dto';
 import { LoginDto } from './dto/login.dto';
+import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
+import { RedeemRepairTokenDto } from './dto/redeem-repair-token.dto';
 import { Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
@@ -47,6 +49,32 @@ export class AuthController {
     @Req() req: Request,
   ) {
     return this.authService.telegramLogin(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Post('google')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login/register via Google ID token' })
+  @ApiResponse({ status: 200, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 401, description: 'Invalid Google ID token' })
+  async googleLogin(@Body() dto: SocialLoginDto, @Req() req: Request) {
+    return this.authService.googleLogin(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Post('apple')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Login/register via Apple ID token' })
+  @ApiResponse({ status: 200, description: 'Tokens + user profile returned' })
+  @ApiResponse({ status: 401, description: 'Invalid Apple ID token' })
+  async appleLogin(@Body() dto: SocialLoginDto, @Req() req: Request) {
+    return this.authService.appleLogin(dto, {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
@@ -127,6 +155,54 @@ export class AuthController {
   @ApiResponse({ status: 200, description: 'Logged out successfully' })
   async logout(@CurrentUser() user: JwtPayload) {
     return this.authService.logout(user.userId, user.sid);
+  }
+
+  /* ──────────────── Child Re-pair (QR yangi qurilma) ──────────────── */
+
+  @Post('child/:childId/repair-qr')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Bola uchun qayta ulash QR kodi yaratish (45s amal qiladi)",
+  })
+  @ApiParam({ name: 'childId', description: 'Bola ID' })
+  @ApiResponse({ status: 201, description: '{ token, expiresInSec }' })
+  @ApiResponse({ status: 401, description: 'Faqat shu bolaning ota-onasi' })
+  @ApiResponse({ status: 404, description: 'Bola topilmadi' })
+  async createChildRepairQr(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.authService.createChildRepairToken(user.userId, childId);
+  }
+
+  @Post('repair-redeem')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary:
+      "QR token bilan bolaga qayta ulanish (anonim — QR'ni bilish kifoya)",
+  })
+  @ApiResponse({
+    status: 200,
+    description: '{ accessToken, refreshToken, user, child }',
+  })
+  @ApiResponse({
+    status: 401,
+    description: 'Token yaroqsiz yoki muddati tugagan',
+  })
+  async redeemRepairToken(
+    @Body() dto: RedeemRepairTokenDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.redeemChildRepairToken(
+      dto.token,
+      { deviceModel: dto.deviceModel, platform: dto.platform },
+      {
+        ip: req.ip,
+        headers: req.headers as Record<string, string | string[] | undefined>,
+      },
+    );
   }
 
   /* ──────────────── Device-link (QR 2-qurilma) ──────────────── */

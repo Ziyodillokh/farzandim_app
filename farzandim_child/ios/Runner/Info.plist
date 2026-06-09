@@ -79,12 +79,13 @@
 		<string>Ovozli va video xabarlar yozish uchun mikrofon kerak.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Rasm tanlash va yuborish uchun galereyaga ruxsat kerak.</string>
-		<!-- Fon rejimlari: joylashuv kuzatuvi + push bildirishnoma -->
+		<!-- Fon rejimlari: joylashuv + push + audiokitob background playback -->
 		<key>UIBackgroundModes</key>
 		<array>
 			<string>location</string>
 			<string>remote-notification</string>
 			<string>fetch</string>
+			<string>audio</string>
 		</array>
 	</dict>
 </plist>

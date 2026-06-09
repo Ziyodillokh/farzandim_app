@@ -41,29 +41,40 @@ class VideoSection extends StatelessWidget {
               Row(
                 children: [
                   if (leadingIcon != null) ...[
+                    // Premium YouTube-style: to'liq rangli kvadrat (rounded),
+                    // oq ikona, nozik shadow + glow. Avval rang withOpacity'li
+                    // circle edi — past kontrast tufayli "xira" tuyulgan.
                     Container(
-                      width: 28,
-                      height: 28,
+                      width: 32,
+                      height: 32,
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
-                        color: (leadingIconColor ?? AppColors.primary)
-                            .withOpacity(0.15),
-                        shape: BoxShape.circle,
+                        color: leadingIconColor ?? AppColors.primary,
+                        borderRadius: BorderRadius.circular(8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: (leadingIconColor ?? AppColors.primary)
+                                // ignore: deprecated_member_use
+                                .withOpacity(0.35),
+                            blurRadius: 10,
+                            offset: const Offset(0, 3),
+                          ),
+                        ],
                       ),
                       child: Icon(
                         leadingIcon,
-                        size: 16,
-                        color: leadingIconColor ?? AppColors.primary,
+                        size: 20,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 8),
+                    const SizedBox(width: 10),
                   ],
                   Text(
                     title,
                     style: TextStyle(
                       fontSize: 18,
-                      fontWeight: FontWeight.bold,
+                      fontWeight: FontWeight.w800,
                       color: context.adaptive.textPrimary,
+                      letterSpacing: -0.2,
                     ),
                   ),
                 ],

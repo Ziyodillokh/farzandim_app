@@ -95,23 +95,23 @@ class _Banner extends StatelessWidget {
                 ),
               ),
               const SizedBox(width: 12),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       'Otangiz foto so\'rayapti',
                       style: TextStyle(
-                        color: AppColors.textPrimary,
+                        color: context.adaptive.textPrimary,
                         fontSize: 15,
                         fontWeight: FontWeight.w600,
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'Hozir bir foto oling — sizning xavfsizligingiz uchun',
                       style: TextStyle(
-                        color: AppColors.textSecondary,
+                        color: context.adaptive.textSecondary,
                         fontSize: 12,
                         height: 1.3,
                       ),

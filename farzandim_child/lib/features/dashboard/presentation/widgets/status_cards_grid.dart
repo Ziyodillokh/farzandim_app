@@ -106,8 +106,8 @@ class _StatusCard extends StatelessWidget {
           const SizedBox(height: 10),
           Text(
             label,
-            style: const TextStyle(
-              color: AppColors.textTertiary,
+            style: TextStyle(
+              color: context.adaptive.textTertiary,
               fontSize: 11,
             ),
           ),
@@ -116,8 +116,8 @@ class _StatusCard extends StatelessWidget {
             value,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: const TextStyle(
-              color: AppColors.textPrimary,
+            style: TextStyle(
+              color: context.adaptive.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),

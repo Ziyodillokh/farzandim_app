@@ -15,7 +15,6 @@
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 class AppTheme {
   AppTheme._();
@@ -62,7 +61,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimary,
@@ -105,7 +104,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -123,7 +122,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -135,7 +134,7 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           minimumSize: const Size(48, _minInteractiveHeight),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
@@ -223,7 +222,7 @@ class AppTheme {
         elevation: 0,
         scrolledUnderElevation: 0,
         centerTitle: true,
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimaryDark,
@@ -266,7 +265,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
@@ -284,7 +283,7 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 18,
             fontWeight: FontWeight.w700,
           ),
@@ -296,7 +295,7 @@ class AppTheme {
           foregroundColor: AppColors.primary,
           minimumSize: const Size(48, _minInteractiveHeight),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
-          textStyle: GoogleFonts.inter(
+          textStyle: TextStyle(
             fontSize: 17,
             fontWeight: FontWeight.w600,
           ),
@@ -337,12 +336,12 @@ class AppTheme {
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(20),
         ),
-        titleTextStyle: GoogleFonts.inter(
+        titleTextStyle: TextStyle(
           fontSize: 20,
           fontWeight: FontWeight.w700,
           color: AppColors.textPrimaryDark,
         ),
-        contentTextStyle: GoogleFonts.inter(
+        contentTextStyle: TextStyle(
           fontSize: 15,
           color: AppColors.textSecondaryDark,
         ),
@@ -361,7 +360,7 @@ class AppTheme {
       // ─── SnackBar ───
       snackBarTheme: SnackBarThemeData(
         backgroundColor: AppColors.bgCardDark,
-        contentTextStyle: GoogleFonts.inter(
+        contentTextStyle: TextStyle(
           color: AppColors.textPrimaryDark,
           fontSize: 14,
         ),
@@ -410,11 +409,11 @@ class AppTheme {
         labelColor: AppColors.primary,
         unselectedLabelColor: AppColors.textSecondaryDark,
         indicatorColor: AppColors.primary,
-        labelStyle: GoogleFonts.inter(
+        labelStyle: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
         ),
-        unselectedLabelStyle: GoogleFonts.inter(
+        unselectedLabelStyle: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w500,
         ),
@@ -441,8 +440,8 @@ class AppTheme {
   // PRIVATE — text theme builder
   // ════════════════════════════════════════════════════════════════════
   static TextTheme _interTextTheme(Color bodyColor, Color subduedColor) {
-    return GoogleFonts.interTextTheme(
-      TextTheme(
+    // Bazaviy TextTheme (Inter o'rniga system fontwith bir xil o'lcham/og'irlik).
+    final base = TextTheme(
         // Sarlavhalar — bola UX uchun kattalashtirilgan
         displayLarge: TextStyle(
           fontSize: 40,
@@ -514,7 +513,13 @@ class AppTheme {
           fontWeight: FontWeight.w500,
           color: subduedColor,
         ),
-      ),
-    );
+      );
+
+    // GoogleFonts olib tashlangan — `Inter` shrifti yuklab olishga
+    // harakat qiladi va asset/network bo'lmasa throw qiladi. System
+    // default shrift (Roboto/SF) ishlatish — vizual deyarli farq yo'q.
+    // Kelajakda Inter'ni `assets/fonts/Inter-*.ttf` sifatida qo'shsak,
+    // `fontFamily: 'Inter'`'ni TextStyle'larga qo'shamiz.
+    return base;
   }
 }

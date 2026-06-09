@@ -30,10 +30,26 @@
   <title>farzandim</title>
   <link rel="manifest" href="manifest.json">
 
-  <!-- Google Maps JavaScript API — web'da GoogleMap widget shusiz ishlamaydi
-       (xarita bo'sh chiqadi). __MAPS_API_KEY__ CI build paytida haqiqiy
-       kalitga almashtiriladi (deploy-test.yml). -->
-  <script src="https://maps.googleapis.com/maps/api/js?key=__MAPS_API_KEY__"></script>
+  <!-- Google Maps JavaScript API — web'da GoogleMap widget shusiz ishlamaydi.
+       Lokal dev'da kalit yo'q bo'lsa, script umuman yuklanmaydi (xato yo'q).
+       CI/prod build paytida `__MAPS_API_KEY__` haqiqiy kalitga almashtiriladi. -->
+  <script>
+    (function () {
+      var key = '__MAPS_API_KEY__';
+      if (key && key.indexOf('__') !== 0) {
+        var s = document.createElement('script');
+        s.src = 'https://maps.googleapis.com/maps/api/js?key=' + key + '&loading=async';
+        s.async = true;
+        document.head.appendChild(s);
+      }
+    })();
+  </script>
+
+  <!-- Google Sign In (web) — `google_sign_in` paketi shu meta tag'ni o'qiydi.
+       Qiymatni Google Cloud Console'da yaratilgan WEB OAuth Client ID bilan
+       almashtiring (masalan: 1234567890-abc.apps.googleusercontent.com).
+       Backend `aud` shu ID'ni tekshiradi (GOOGLE_CLIENT_IDS .env'da bo'lishi shart). -->
+  <meta name="google-signin-client_id" content="__GOOGLE_CLIENT_ID__.apps.googleusercontent.com">
   
   
   <meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" name="viewport">

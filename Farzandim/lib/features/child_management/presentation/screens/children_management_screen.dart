@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/child_management/presentation/widgets/repair_qr_dialog.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
@@ -343,6 +344,12 @@ class _ActionMenu extends ConsumerWidget {
         switch (action) {
           case 'edit':
             await context.push(AppRoutes.editChildPath(child.id));
+          case 'repair':
+            await RepairQrDialog.show(
+              context,
+              childId: child.id,
+              childName: child.name,
+            );
           case 'delete':
             await _confirmDelete(context, ref, child);
         }
@@ -362,6 +369,28 @@ class _ActionMenu extends ConsumerWidget {
                 'childManagement.list.editAction'.tr(),
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textPrimary,
+                ),
+              ),
+            ],
+          ),
+        ),
+        // Qayta ulash — bola telefoni o'zgargan / app o'chgan holatlar
+        // uchun. QR kod 45 sek amal qiladi.
+        PopupMenuItem<String>(
+          value: 'repair',
+          child: Row(
+            children: [
+              Icon(
+                Icons.qr_code_2_rounded,
+                size: 20,
+                color: AppColors.primary,
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Qayta ulash (QR)',
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.primary,
+                  fontWeight: FontWeight.w600,
                 ),
               ),
             ],

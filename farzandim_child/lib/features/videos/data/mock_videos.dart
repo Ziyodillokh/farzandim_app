@@ -6,6 +6,10 @@
 // W3C va test-videos.co.uk ochiq sample videolaridan — kelajakda
 // admin panel orqali Firestore'ga joylanadigan real videolar bilan
 // almashtiriladi.
+//
+// thumbnailUrl — Unsplash bepul rasmlardan, har mavzuga mos qilib
+// tanlangan. Real videolar yuklangach admin tomondan o'zgartiriladi.
+// `&w=600&auto=format&fit=crop` parametrlari yuklanish tezligi uchun.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 
@@ -33,7 +37,8 @@ class MockVideos {
       id: '1',
       title: 'Kasrlar va ulardagi amallar',
       description: "Boshlang'ich sinflar uchun matematika darsi",
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1635070041078-e363dbe005cb?w=600&auto=format&fit=crop',
       duration: '12:34',
       durationSeconds: 754,
       videoUrl: _sintel,
@@ -49,7 +54,8 @@ class MockVideos {
       id: '2',
       title: 'Quyosh tizimi sayyoralari',
       description: 'Astronomiya bilan tanishuv',
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1614728263952-84ea256f9679?w=600&auto=format&fit=crop',
       duration: '8:45',
       durationSeconds: 525,
       videoUrl: _bunny,
@@ -65,7 +71,8 @@ class MockVideos {
       id: '3',
       title: 'Ingliz tili - Family',
       description: "Oila a'zolari ingliz tilida",
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&auto=format&fit=crop',
       duration: '6:12',
       durationSeconds: 372,
       videoUrl: _movie300,
@@ -81,7 +88,8 @@ class MockVideos {
       id: '4',
       title: 'Suvning aylanishi',
       description: 'Tabiat hodisalari - suv aylanishi',
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1501594907352-04cda38ebc29?w=600&auto=format&fit=crop',
       duration: '10:20',
       durationSeconds: 620,
       videoUrl: _sintel,
@@ -97,7 +105,8 @@ class MockVideos {
       id: '5',
       title: 'Multfilm - Bola va dengiz',
       description: "Qiziqarli ta'limiy multfilm",
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1500964757637-c85e8a162699?w=600&auto=format&fit=crop',
       duration: '15:00',
       durationSeconds: 900,
       videoUrl: _bunny,
@@ -113,7 +122,8 @@ class MockVideos {
       id: '6',
       title: 'Futbol tarixi',
       description: "Futbolning paydo bo'lishi",
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1431324155629-1a6deb1dec8d?w=600&auto=format&fit=crop',
       duration: '18:30',
       durationSeconds: 1110,
       videoUrl: _movie300,
@@ -130,7 +140,8 @@ class MockVideos {
       id: '7',
       title: 'Kimyo - Suv molekulasi',
       description: 'H2O strukturasi va xususiyatlari',
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1554475901-4538ddfbccc2?w=600&auto=format&fit=crop',
       duration: '1:14',
       durationSeconds: 74,
       videoUrl: _bunnyReel,
@@ -146,7 +157,8 @@ class MockVideos {
       id: '8',
       title: 'Musiqa - Maqom',
       description: "O'zbek mumtoz musiqasi",
-      thumbnailUrl: '',
+      thumbnailUrl:
+          'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?w=600&auto=format&fit=crop',
       duration: '0:45',
       durationSeconds: 45,
       videoUrl: _jellyfishReel,

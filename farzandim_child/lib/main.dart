@@ -22,10 +22,32 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:just_audio_background/just_audio_background.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+
+  // Google Fonts runtime fetching — web'da CORS/network bilan xato bersa
+  // butun frame fail bo'ladi. Asset/bundled font yo'q bo'lsa system default
+  // (Roboto) ishlatamiz. Mobil'da ham xavfsiz: offline holatda crash yo'q.
+  GoogleFonts.config.allowRuntimeFetching = false;
+
+  // Background audio — telefon qulflanganda yoki ilova fonga o'tganda
+  // ham audiokitob davom etadi. Android: foreground service + media
+  // notification; iOS: AVAudioSession audio mode. Web'da no-op.
+  if (!kIsWeb) {
+    try {
+      await JustAudioBackground.init(
+        androidNotificationChannelId: 'uz.farzandim.audio.channel',
+        androidNotificationChannelName: 'Audiokitob',
+        androidNotificationOngoing: true,
+      );
+    } catch (e) {
+      debugPrint('[DEV] JustAudioBackground init skipped: $e');
+    }
+  }
 
   // easy_localization init — JSON tarjima fayllarini yuklash uchun.
   await EasyLocalization.ensureInitialized();

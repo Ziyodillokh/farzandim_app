@@ -44,6 +44,7 @@ import 'package:farzandim_child/features/dashboard/presentation/screens/child_da
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/screens/pair_waiting_screen.dart';
 import 'package:farzandim_child/features/pairing/presentation/screens/pairing_screen.dart';
+import 'package:farzandim_child/features/pairing/presentation/screens/qr_scanner_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permissions_screen.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/classic_video_player_screen.dart';
@@ -165,6 +166,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/pair-waiting',
         builder: (_, __) => const PairWaitingScreen(),
+      ),
+      // QR kod orqali qayta ulanish — pairing_screen'dan ochiladi.
+      GoRoute(
+        path: '/qr-scan',
+        builder: (_, __) => const QrScannerScreen(),
       ),
       GoRoute(
         path: '/permissions',

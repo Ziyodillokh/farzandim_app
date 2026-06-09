@@ -40,6 +40,7 @@ import 'package:farzandim_child/features/notifications/presentation/providers/no
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:farzandim_child/shared/widgets/skeleton_card.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -131,7 +132,14 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
   /// Foydalanuvchi qaysidir yo'l bilan permission'siz Dashboard'ga
   /// tushib qolsa (sistema sozlamalardan o'chirilgan, eski deep-link),
   /// /permission-setup ga qaytaramiz. Splash bilan bir xil 4 ta perm.
+  ///
+  /// Web'da `locationAlways`, `ignoreBatteryOptimizations`, usage stats
+  /// va overlay permission'lar mavjud emas — `permission_handler_html`
+  /// "not implemented" xato qaytaradi. Web faqat sinash/preview rejimi,
+  /// shuning uchun tekshiruvni o'tkazib yuboramiz.
   Future<void> _guardPermissions() async {
+    if (kIsWeb) return;
+
     final usageService = UsageStatsService();
     final locStatus = await Permission.locationAlways.status;
     final batteryStatus =
@@ -260,6 +268,10 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
             unreadCount: unreadCount,
             onNotificationsTap: () => context.push('/notifications'),
             onSettingsTap: () => context.push('/settings'),
+            // Dashboard'da SOS pill kerak emas — pastda alohida katta
+            // SosButton bor (3-sek hold-to-send). Yuqorida dublikat
+            // bo'lmasligi uchun yashiramiz.
+            showSos: false,
           ),
           // Logo tagidagi 3 kartali xulosa — XP / Level / Viloyat reytingi.
           const SizedBox(height: 8),
@@ -381,12 +393,12 @@ class _DashboardAudiobookMiniPlayer extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  const Text(
+                  Text(
                     'Audiokitoblar',
                     style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
+                      color: context.adaptive.textPrimary,
                     ),
                   ),
                 ],

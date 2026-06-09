@@ -81,16 +81,16 @@ class _Card extends StatelessWidget {
               children: [
                 Text(
                   'Oxirgi video xabar',
-                  style: const TextStyle(
-                    color: AppColors.textTertiary,
+                  style: TextStyle(
+                    color: context.adaptive.textTertiary,
                     fontSize: 11,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   time,
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.adaptive.textPrimary,
                     fontSize: 13,
                     fontWeight: FontWeight.w600,
                   ),

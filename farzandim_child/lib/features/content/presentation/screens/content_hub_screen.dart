@@ -75,31 +75,36 @@ class ContentHubScreen extends ConsumerWidget {
   }
 }
 
-// ─── Top tabs (2 ta) — adaptive surface ──────────────────────────────
+// ─── Top tabs (2 ta) — premium underline style (Figma asosida) ────────
+// Skreenshot dizayniga muvofiq: filled pill o'rniga pastdan rangli
+// chiziq, faol tab matni oq+bold, nofaol tab matni kulrang.
 class _TopTabs extends StatelessWidget {
   const _TopTabs();
+
+  // Brand accent — orange chiziq (skreenshotga mos). Tema accent emas,
+  // chunki content hub ichida LOGO ham orange (vizual yagonalik).
+  static const _accent = Color(0xFFFF6B35);
 
   @override
   Widget build(BuildContext context) {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
-      decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
-      ),
       child: TabBar(
-        indicator: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(14),
+        // Pastdan 3px qalin underline — premium app'lardagi standart.
+        indicator: const UnderlineTabIndicator(
+          borderSide: BorderSide(width: 3, color: _accent),
+          insets: EdgeInsets.symmetric(horizontal: 32),
         ),
-        indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.black,
-        unselectedLabelColor: context.adaptive.textSecondary,
-        labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+        indicatorSize: TabBarIndicatorSize.label,
+        labelColor: context.adaptive.textPrimary,
+        unselectedLabelColor: context.adaptive.textTertiary,
+        labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         unselectedLabelStyle:
-            const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
+            const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
         dividerColor: Colors.transparent,
+        labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
+        tabAlignment: TabAlignment.start,
+        isScrollable: true,
         tabs: const [
           Tab(text: 'Videolar'),
           Tab(text: 'Audiokitoblar'),

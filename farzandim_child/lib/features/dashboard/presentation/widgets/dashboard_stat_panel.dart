@@ -78,8 +78,12 @@ class DashboardStatPanel extends ConsumerWidget {
       regionRank = higherCount + 1;
     }
 
+    // Tashqi padding 6px — kartalar deyarli ekran chetlariga yetadi
+    // (full-bleed feel), lekin 6px nozik margin "edge-pressure"ni
+    // yo'qotmasdan saqlaydi. Kartalar orasi 8px — har biri ajralib
+    // turadi, ammo "yagona panel" hissini buzmaydi.
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      padding: const EdgeInsets.fromLTRB(6, 4, 6, 4),
       child: Row(
         children: [
           Expanded(
@@ -133,36 +137,68 @@ class _StatCard extends StatelessWidget {
   final Color iconColor;
   final String value;
   final String label;
+  // tightLabel — viloyat (uzunroq matn) uchun ozgina kichik shrift.
   final bool tightLabel;
 
   @override
   Widget build(BuildContext context) {
+    // Vertikal layout: kichik ikona chap yuqorida, qiymat va label
+    // pastda to'liq kenglikda — uzun matn ("Navoiy", "10-o'rin") kesilmaydi.
+    //
+    // Premium dizayn: nozik gradient (yuqoridan pastga ozgina och), ikona
+    // rangiga mos juda yengil glow, bordergradient effekti — kartalar
+    // "yassi" tuyulmasin.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+      padding: const EdgeInsets.fromLTRB(12, 10, 12, 12),
       decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            // ignore: deprecated_member_use
+            context.adaptive.bgCard,
+            // ignore: deprecated_member_use
+            Color.alphaBlend(
               // ignore: deprecated_member_use
-              color: iconColor.withOpacity(0.18),
-              shape: BoxShape.circle,
+              iconColor.withOpacity(0.06),
+              context.adaptive.bgCard,
             ),
-            child: Icon(icon, color: iconColor, size: 18),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          // ignore: deprecated_member_use
+          color: iconColor.withOpacity(0.18),
+          width: 1,
+        ),
+        boxShadow: [
+          BoxShadow(
+            // ignore: deprecated_member_use
+            color: Colors.black.withOpacity(0.25),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
           ),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 30,
+                height: 30,
+                decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
+                  color: iconColor.withOpacity(0.18),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 18),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
                   value,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
@@ -173,18 +209,19 @@ class _StatCard extends StatelessWidget {
                     height: 1.1,
                   ),
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    fontSize: tightLabel ? 10 : 11,
-                    color: context.adaptive.textSecondary,
-                    height: 1.1,
-                  ),
-                ),
-              ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: TextStyle(
+              fontSize: tightLabel ? 11 : 12,
+              color: context.adaptive.textSecondary,
+              height: 1.1,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ],

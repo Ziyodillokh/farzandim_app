@@ -69,8 +69,8 @@ class UpdateBanner extends ConsumerWidget {
                   children: [
                     Text(
                       'Yangi versiya mavjud (${platformInfo.latest})',
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
+                      style: TextStyle(
+                        color: context.adaptive.textPrimary,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
                       ),
@@ -81,8 +81,8 @@ class UpdateBanner extends ConsumerWidget {
                         info.releaseNotes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
+                        style: TextStyle(
+                          color: context.adaptive.textSecondary,
                           fontSize: 12,
                           height: 1.3,
                         ),

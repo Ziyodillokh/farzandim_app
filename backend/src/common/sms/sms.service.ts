@@ -53,9 +53,43 @@ export class SmsService {
     return this.cachedToken;
   }
 
+  /* ------------------------------------------------------------------ */
+  /*  Eskiz tasdiqlangan shablonlar (panel:my.eskiz.uz/sms/settings)    */
+  /* ------------------------------------------------------------------ */
+  // Har bir matn AYNAN shu shaklda yuborilishi shart — Eskiz strict
+  // template check qiladi, mos kelmasa "message is not in template"
+  // xato qaytaradi. `{code}` faqat raqamga almashtiriladi.
+
+  /** ID 77251 — parolni tiklash flow uchun. */
+  async sendResetCode(phone: string, code: string): Promise<SmsResult> {
+    return this.sendSms(
+      phone,
+      `Farzandim Edu ilovasida parolni tiklash uchun tasdiqlash kodi: ${code}`,
+    );
+  }
+
+  /** ID 77252 — ro'yxatdan o'tish (register) flow uchun. */
+  async sendRegisterCode(phone: string, code: string): Promise<SmsResult> {
+    return this.sendSms(
+      phone,
+      `Farzandim Edu ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
+    );
+  }
+
+  /** ID 77253 — login flow uchun. */
+  async sendLoginCode(phone: string, code: string): Promise<SmsResult> {
+    return this.sendSms(
+      phone,
+      `Farzandim Edu ilovasiga kirish uchun tasdiqlash kodi: ${code}`,
+    );
+  }
+
   /**
    * Send an SMS message via Eskiz.uz.
    * Auto-refreshes the auth token on 401.
+   *
+   * Tasdiqlangan shablonlar bilan ishlash uchun yuqoridagi `sendLoginCode`
+   * / `sendRegisterCode` / `sendResetCode` metodlardan foydalaning.
    */
   async sendSms(phone: string, message: string): Promise<SmsResult> {
     if (!this.isSmsConfigured()) {

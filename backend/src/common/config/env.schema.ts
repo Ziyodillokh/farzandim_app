@@ -90,6 +90,27 @@ const envSchema = z.object({
     z.string().optional(),
   ),
   ESKIZ_FROM: z.string().default('4546'),
+
+  // ─── Google Sign In (ixtiyoriy) ────────────────────────────────────
+  // Vergul bilan ajratilgan Google OAuth client ID'lar (Web/Android/iOS).
+  // Backend `aud` (audience) shu ro'yxatdagi bittasi bo'lishini tekshiradi.
+  // Bo'sh bo'lsa — /auth/google endpoint 503 qaytaradi (sozlanmagan).
+  GOOGLE_CLIENT_IDS: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+
+  // ─── Apple Sign In (ixtiyoriy) ─────────────────────────────────────
+  // iOS bundle ID (com.farzandim.app) — bundle ID nativ Apple flow uchun aud bo'ladi.
+  APPLE_BUNDLE_ID: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  // Service ID (com.farzandim.web) — Android/web OAuth flow uchun aud.
+  APPLE_SERVICE_ID: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

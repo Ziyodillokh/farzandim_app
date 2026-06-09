@@ -20,6 +20,7 @@
 import 'package:dio/dio.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
+import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 sealed class BackendAuthState {
@@ -48,12 +49,16 @@ final backendAuthProvider =
     StateNotifierProvider<BackendAuthNotifier, BackendAuthState>((ref) {
   return BackendAuthNotifier(
     repository: ref.watch(backendAuthRepositoryProvider),
+    socialSignIn: ref.watch(socialSignInServiceProvider),
   );
 });
 
 class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
-  BackendAuthNotifier({required BackendAuthRepository repository})
-      : _repo = repository,
+  BackendAuthNotifier({
+    required BackendAuthRepository repository,
+    required SocialSignInService socialSignIn,
+  })  : _repo = repository,
+        _social = socialSignIn,
         super(const AuthUnknown()) {
     // Auto-bootstrap: app ochilganda saqlangan token tekshiriladi.
     // AuthUnknown → AuthAuthenticated yoki AuthAnonymous'ga o'tadi.
@@ -61,6 +66,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
   }
 
   final BackendAuthRepository _repo;
+  final SocialSignInService _social;
 
   /// Startup'da chaqiriladi. Tokens bor-yo'qligini tekshiradi va saqlangan
   /// user bo'lsa OPTIMISTIK ravishda darhol "kirgan" holatga o'tadi.
@@ -161,6 +167,54 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       );
     } catch (_) {
       return 'Kutilmagan xatolik yuz berdi.';
+    }
+  }
+
+  /// Google bilan kirish/ro'yxatdan o'tish.
+  /// `null` qaytsa — muvaffaqiyat (router dashboard'ga o'tkazadi).
+  /// Foydalanuvchi modal'ni bekor qilsa ham `null` qaytadi (jim chiqamiz).
+  /// Aks holda — UI'da ko'rsatish uchun o'zbekcha xato xabari.
+  Future<String?> signInWithGoogle() async {
+    try {
+      final google = await _social.signInWithGoogle();
+      final session = await _repo.loginWithGoogle(idToken: google.idToken);
+      await _repo.saveSession(session);
+      state = AuthAuthenticated(session.user);
+      return null;
+    } on SocialSignInCancelled {
+      return null; // jim — foydalanuvchi o'zi yopdi
+    } on DioException catch (e) {
+      return _friendlyError(e, 'Google bilan kirishda xatolik.');
+    } catch (e) {
+      return "Google bilan kirib bo'lmadi: $e";
+    }
+  }
+
+  /// Apple bilan kirish/ro'yxatdan o'tish.
+  /// [serviceId] va [redirectUri] — Android/web OAuth flow uchun, iOS'da
+  /// kerak emas (nativ).
+  Future<String?> signInWithApple({
+    String? serviceId,
+    String? redirectUri,
+  }) async {
+    try {
+      final apple = await _social.signInWithApple(
+        serviceId: serviceId,
+        redirectUri: redirectUri,
+      );
+      final session = await _repo.loginWithApple(
+        idToken: apple.idToken,
+        name: apple.fullName,
+      );
+      await _repo.saveSession(session);
+      state = AuthAuthenticated(session.user);
+      return null;
+    } on SocialSignInCancelled {
+      return null;
+    } on DioException catch (e) {
+      return _friendlyError(e, 'Apple bilan kirishda xatolik.');
+    } catch (e) {
+      return "Apple bilan kirib bo'lmadi: $e";
     }
   }
 

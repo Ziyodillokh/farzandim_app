@@ -9,6 +9,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { ConsumerJwtStrategy } from './strategies/consumer-jwt.strategy';
 import { TelegramService } from './strategies/telegram.service';
+import { SocialAuthService } from './strategies/social-auth.service';
 
 @Module({
   imports: [
@@ -27,7 +28,7 @@ import { TelegramService } from './strategies/telegram.service';
     RealtimeModule,
   ],
   controllers: [AuthController],
-  providers: [AuthService, ConsumerJwtStrategy, TelegramService],
+  providers: [AuthService, ConsumerJwtStrategy, TelegramService, SocialAuthService],
   exports: [AuthService, JwtModule, PassportModule],
 })
 export class AuthModule {}

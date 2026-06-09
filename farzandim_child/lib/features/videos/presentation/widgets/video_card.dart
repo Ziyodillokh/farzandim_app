@@ -22,77 +22,114 @@ class VideoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Container(
-              height: 120,
-              decoration: BoxDecoration(
-                color: video.thumbnailColor,
-                borderRadius: BorderRadius.circular(12),
-                image: video.thumbnailUrl.isNotEmpty
-                    ? DecorationImage(
-                        image: NetworkImage(video.thumbnailUrl),
+            // Thumbnail — Image.network bilan errorBuilder/loadingBuilder
+            // (avval DecorationImage'da xato handling yo'q edi).
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                height: 120,
+                width: 160,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    if (video.thumbnailUrl.isNotEmpty)
+                      Image.network(
+                        video.thumbnailUrl,
                         fit: BoxFit.cover,
+                        loadingBuilder: (_, child, progress) {
+                          if (progress == null) return child;
+                          return Container(color: video.thumbnailColor);
+                        },
+                        errorBuilder: (_, __, ___) => Container(
+                          color: video.thumbnailColor,
+                        ),
                       )
-                    : null,
-              ),
-              child: Stack(
-                children: [
-                  Center(
-                    child: Container(
-                      width: 40,
-                      height: 40,
+                    else
+                      Container(color: video.thumbnailColor),
+                    // Dark gradient overlay — chap pastdan o'ngga, duration
+                    // pill o'qish uchun (har qanday rasm ustida ishlaydi).
+                    DecoratedBox(
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
-                        color: Colors.black.withOpacity(0.4),
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        AppIcons.play,
-                        color: Colors.white,
-                        size: 24,
-                      ),
-                    ),
-                  ),
-                  Positioned(
-                    bottom: 6,
-                    right: 6,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 6, vertical: 2),
-                      decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
-                        color: Colors.black.withOpacity(0.7),
-                        borderRadius: BorderRadius.circular(4),
-                      ),
-                      child: Text(
-                        video.duration,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 10,
-                          fontWeight: FontWeight.w500,
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            // ignore: deprecated_member_use
+                            Colors.black.withOpacity(0.4),
+                          ],
+                          stops: const [0.6, 1.0],
                         ),
                       ),
                     ),
-                  ),
-                ],
+                    Center(
+                      child: Container(
+                        width: 44,
+                        height: 44,
+                        decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
+                          color: Colors.black.withOpacity(0.55),
+                          shape: BoxShape.circle,
+                          border: Border.all(
+                            // ignore: deprecated_member_use
+                            color: Colors.white.withOpacity(0.3),
+                            width: 1.5,
+                          ),
+                        ),
+                        child: const Icon(
+                          AppIcons.play,
+                          color: Colors.white,
+                          size: 24,
+                        ),
+                      ),
+                    ),
+                    Positioned(
+                      bottom: 6,
+                      right: 6,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 6, vertical: 2),
+                        decoration: BoxDecoration(
+                          // ignore: deprecated_member_use
+                          color: Colors.black.withOpacity(0.75),
+                          borderRadius: BorderRadius.circular(4),
+                        ),
+                        child: Text(
+                          video.duration,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             const SizedBox(height: 8),
+            // Adaptive ranglar — dark mode'da AppColors.textPrimary qora
+            // bo'lgani uchun matn ko'rinmasdi. context.adaptive teme
+            // bo'yicha avtomatik oq/qora tanlaydi.
             Text(
               video.title,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.textPrimary,
+              style: TextStyle(
+                color: context.adaptive.textPrimary,
                 fontSize: 13,
-                fontWeight: FontWeight.w500,
+                fontWeight: FontWeight.w600,
+                height: 1.25,
               ),
             ),
-            const SizedBox(height: 2),
+            const SizedBox(height: 4),
             Text(
               video.category,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.adaptive.textSecondary,
                 fontSize: 11,
+                fontWeight: FontWeight.w500,
               ),
             ),
           ],

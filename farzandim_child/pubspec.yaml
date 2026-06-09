@@ -50,6 +50,10 @@ dependencies:
   geolocator: ^11.0.0
   intl: ^0.20.2
 
+  # QR kod skaner — bola Parent app'dan QR'ni skanerlab qayta ulanish
+  # uchun (re-pair flow). Kamera ruxsati so'raydi (Info.plist + Manifest).
+  mobile_scanner: ^5.2.3
+
   # Qadam sanagich — Android TYPE_STEP_COUNTER sensori (haftalik hisobot).
   # ACTIVITY_RECOGNITION ruxsati talab qilinadi (AndroidManifest).
   pedometer: ^4.0.2
@@ -75,6 +79,9 @@ dependencies:
 
   # Audio player
   just_audio: ^0.9.42
+  # Background audio — telefon qulflanganda ham audio davom etadi
+  # (Android: foreground service + media notification, iOS: AVAudioSession).
+  just_audio_background: ^0.0.1-beta.13
 
   # Quiz / contest UX
   confetti: ^0.7.0

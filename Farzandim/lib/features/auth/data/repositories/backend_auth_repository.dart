@@ -75,6 +75,42 @@ class BackendAuthRepository {
     return AuthSession.fromJson(response.data ?? <String, dynamic>{});
   }
 
+  /// Google ID token bilan login/register.
+  /// Backend: POST /api/auth/google → { accessToken, refreshToken, user }.
+  /// `idToken` — `google_sign_in` paketidan kelgan `idToken` (JWT).
+  Future<AuthSession> loginWithGoogle({required String idToken}) async {
+    final device = await currentDeviceMeta();
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/google',
+      data: <String, dynamic>{
+        'idToken': idToken,
+        ...device.toJson(),
+      },
+    );
+    return AuthSession.fromJson(response.data ?? <String, dynamic>{});
+  }
+
+  /// Apple ID token bilan login/register.
+  /// Backend: POST /api/auth/apple → { accessToken, refreshToken, user }.
+  /// `idToken` — `sign_in_with_apple` paketidan kelgan `identityToken`.
+  /// `name` — birinchi loginda Apple beradi (`AuthorizationCredentialAppleID
+  /// .givenName + familyName`); keyingi safar kelmaydi.
+  Future<AuthSession> loginWithApple({
+    required String idToken,
+    String? name,
+  }) async {
+    final device = await currentDeviceMeta();
+    final response = await _dio.post<Map<String, dynamic>>(
+      '/auth/apple',
+      data: <String, dynamic>{
+        'idToken': idToken,
+        if (name != null && name.isNotEmpty) 'name': name,
+        ...device.toJson(),
+      },
+    );
+    return AuthSession.fromJson(response.data ?? <String, dynamic>{});
+  }
+
   /// Email yoki telefon + parol bilan kirish.
   /// Backend: POST /api/auth/login → { accessToken, refreshToken, user }.
   /// `identifier` — email manzili yoki +998 telefon raqami.

@@ -42,11 +42,11 @@ class ScheduleTile extends StatelessWidget {
       decoration: BoxDecoration(
         color: isCurrent
             ? AppColors.primary.withValues(alpha: 0.15)
-            : AppColors.surface,
+            : context.adaptive.bgCard,
         borderRadius: BorderRadius.circular(16),
         border: isCurrent
             ? Border.all(color: AppColors.primary, width: 2)
-            : null,
+            : Border.all(color: context.adaptive.border, width: 1),
       ),
       child: Row(
         children: [
@@ -75,8 +75,8 @@ class ScheduleTile extends StatelessWidget {
                     Expanded(
                       child: Text(
                         schedule.title,
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.adaptive.textPrimary,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
@@ -106,10 +106,10 @@ class ScheduleTile extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   schedule.timeRangeFormatted,
-                  style: const TextStyle(
-                    color: AppColors.textSecondary,
+                  style: TextStyle(
+                    color: context.adaptive.textSecondary,
                     fontSize: 13,
-                    fontFeatures: [FontFeature.tabularFigures()],
+                    fontFeatures: const [FontFeature.tabularFigures()],
                   ),
                 ),
               ],

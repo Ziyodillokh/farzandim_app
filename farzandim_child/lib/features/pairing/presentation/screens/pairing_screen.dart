@@ -167,6 +167,63 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
                 ),
               ),
 
+              const SizedBox(height: 8),
+
+              // ─── YOKI ajratuvchi ───
+              Row(
+                children: [
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.white24,
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      'yoki',
+                      style: TextStyle(
+                        color: Colors.white54,
+                        fontSize: 13,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Container(
+                      height: 1,
+                      color: Colors.white24,
+                    ),
+                  ),
+                ],
+              ),
+
+              const SizedBox(height: 16),
+
+              // ─── QR orqali ulash tugmasi ───
+              SizedBox(
+                width: double.infinity,
+                height: 56,
+                child: ElevatedButton.icon(
+                  onPressed: () => context.push('/qr-scan'),
+                  icon: const Icon(Icons.qr_code_scanner, size: 22),
+                  label: const Text(
+                    'QR kod orqali ulash',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: _linkColor,
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                ),
+              ),
+
               const Spacer(),
 
               if (_isPairing)

@@ -5,10 +5,14 @@
 // 5 ta tile: Ekran qulflash, Takrorlash (Switch), Tezlik, Sifat,
 // Uyqu taymeri. Tezlik/Sifat/Uyqu tile bos → ikkinchi modal sheet
 // ochib variantni tanlash.
+//
+// Quality (Sifat) — hozircha faqat tanlov saqlanadi: mock videolarda
+// bir xil URL. Real ko'p sifatli videolar admin tomondan yuklanganda
+// `video.qualityUrls[quality]` orqali switch qilinadi.
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/player_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -21,40 +25,34 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
     final settings = ref.watch(playerSettingsProvider);
 
     return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      decoration: BoxDecoration(
+        color: context.adaptive.bgCard,
+        borderRadius:
+            const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.textTertiary,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+            _DragHandle(),
             Padding(
               padding: const EdgeInsets.all(16),
               child: Text(
                 'videos.player.settingsTitle'.tr(),
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: context.adaptive.textPrimary,
                 ),
               ),
             ),
-            const Divider(color: AppColors.border, height: 1),
+            Divider(color: context.adaptive.border, height: 1),
             _tile(
+              context: context,
               icon: Icons.lock_outline,
               title: 'videos.player.screenLock'.tr(),
-              trailing: const Icon(AppIcons.chevronRight,
-                  color: AppColors.textSecondary),
+              trailing: Icon(AppIcons.chevronRight,
+                  color: context.adaptive.textSecondary),
               onTap: () {
                 ref.read(playerSettingsProvider.notifier).state =
                     settings.copyWith(screenLocked: true);
@@ -62,6 +60,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               },
             ),
             _tile(
+              context: context,
               icon: Icons.repeat,
               title: 'videos.player.repeat'.tr(),
               trailing: Switch(
@@ -74,22 +73,25 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               ),
             ),
             _tile(
+              context: context,
               icon: Icons.speed,
               title: 'videos.player.speed'.tr(),
               subtitle: '${settings.speed}x',
-              trailing: const Icon(AppIcons.chevronRight,
-                  color: AppColors.textSecondary),
+              trailing: Icon(AppIcons.chevronRight,
+                  color: context.adaptive.textSecondary),
               onTap: () => _openSpeedPicker(context, ref),
             ),
             _tile(
+              context: context,
               icon: Icons.high_quality,
               title: 'videos.player.quality'.tr(),
               subtitle: settings.quality,
-              trailing: const Icon(AppIcons.chevronRight,
-                  color: AppColors.textSecondary),
+              trailing: Icon(AppIcons.chevronRight,
+                  color: context.adaptive.textSecondary),
               onTap: () => _openQualityPicker(context, ref),
             ),
             _tile(
+              context: context,
               icon: AppIcons.hourglass,
               title: 'videos.player.sleepTimer'.tr(),
               subtitle: settings.sleepTimerMinutes != null
@@ -99,8 +101,8 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
                       },
                     )
                   : 'videos.player.sleepOff'.tr(),
-              trailing: const Icon(AppIcons.chevronRight,
-                  color: AppColors.textSecondary),
+              trailing: Icon(AppIcons.chevronRight,
+                  color: context.adaptive.textSecondary),
               onTap: () => _openSleepTimerPicker(context, ref),
             ),
             const SizedBox(height: 16),
@@ -111,6 +113,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
   }
 
   Widget _tile({
+    required BuildContext context,
     required IconData icon,
     required String title,
     String? subtitle,
@@ -120,12 +123,12 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
     return ListTile(
       leading: Icon(icon, color: AppColors.primary),
       title: Text(title,
-          style: const TextStyle(color: AppColors.textPrimary)),
+          style: TextStyle(color: context.adaptive.textPrimary)),
       subtitle: subtitle != null
           ? Text(
               subtitle,
-              style: const TextStyle(
-                color: AppColors.textSecondary,
+              style: TextStyle(
+                color: context.adaptive.textSecondary,
                 fontSize: 12,
               ),
             )
@@ -143,8 +146,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       options: speeds.map((s) => '${s}x').toList(),
       currentValue: '${ref.read(playerSettingsProvider).speed}x',
       onSelect: (value) {
-        final speed =
-            double.parse(value.replaceAll('x', ''));
+        final speed = double.parse(value.replaceAll('x', ''));
         ref.read(playerSettingsProvider.notifier).state =
             ref.read(playerSettingsProvider).copyWith(speed: speed);
       },
@@ -160,6 +162,9 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       onSelect: (value) {
         ref.read(playerSettingsProvider.notifier).state =
             ref.read(playerSettingsProvider).copyWith(quality: value);
+        // Eslatma: hozirgi mock videolarda bitta URL. Real adaptive
+        // quality switching admin panelidan ko'p resolution yuklanganda
+        // ishga tushadi (video.qualityUrls map).
       },
     );
   }
@@ -171,44 +176,35 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: ctx.adaptive.bgCard,
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24)),
+              const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              _DragHandle(),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   'videos.player.sleepTimer'.tr(),
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: ctx.adaptive.textPrimary,
                   ),
                 ),
               ),
-              const Divider(color: AppColors.border, height: 1),
+              Divider(color: ctx.adaptive.border, height: 1),
               ListTile(
                 title: Text(
                   'videos.player.sleepOffButton'.tr(),
-                  style: const TextStyle(color: AppColors.textPrimary),
+                  style: TextStyle(color: ctx.adaptive.textPrimary),
                 ),
                 trailing: settings.sleepTimerMinutes == null
-                    ? const Icon(AppIcons.check,
-                        color: AppColors.primary)
+                    ? const Icon(AppIcons.check, color: AppColors.primary)
                     : null,
                 onTap: () {
                   ref.read(playerSettingsProvider.notifier).state =
@@ -222,8 +218,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
                     'videos.player.sleepMinutes'.tr(
                       namedArgs: {'min': '$min'},
                     ),
-                    style: const TextStyle(
-                        color: AppColors.textPrimary),
+                    style: TextStyle(color: ctx.adaptive.textPrimary),
                   ),
                   trailing: settings.sleepTimerMinutes == min
                       ? const Icon(AppIcons.check,
@@ -254,42 +249,33 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       context: context,
       backgroundColor: Colors.transparent,
       builder: (ctx) => Container(
-        decoration: const BoxDecoration(
-          color: AppColors.surface,
+        decoration: BoxDecoration(
+          color: ctx.adaptive.bgCard,
           borderRadius:
-              BorderRadius.vertical(top: Radius.circular(24)),
+              const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Container(
-                margin: const EdgeInsets.only(top: 12),
-                width: 40,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: AppColors.textTertiary,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
+              _DragHandle(),
               Padding(
                 padding: const EdgeInsets.all(16),
                 child: Text(
                   title,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: ctx.adaptive.textPrimary,
                   ),
                 ),
               ),
-              const Divider(color: AppColors.border, height: 1),
+              Divider(color: ctx.adaptive.border, height: 1),
               for (final option in options)
                 ListTile(
                   title: Text(
                     option,
-                    style: const TextStyle(
-                        color: AppColors.textPrimary),
+                    style: TextStyle(color: ctx.adaptive.textPrimary),
                   ),
                   trailing: option == currentValue
                       ? const Icon(AppIcons.check,
@@ -304,6 +290,22 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
             ],
           ),
         ),
+      ),
+    );
+  }
+}
+
+/// Bottom sheet'ning yuqorisidagi grip — drag indikator.
+class _DragHandle extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.only(top: 12),
+      width: 40,
+      height: 4,
+      decoration: BoxDecoration(
+        color: context.adaptive.textTertiary,
+        borderRadius: BorderRadius.circular(2),
       ),
     );
   }

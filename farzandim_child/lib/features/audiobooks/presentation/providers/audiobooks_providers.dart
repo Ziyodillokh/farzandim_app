@@ -8,6 +8,7 @@
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/features/audiobooks/data/mock_audiobooks.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
 
@@ -21,11 +22,13 @@ final backendAudiobooksProvider = FutureProvider<List<AudiobookModel>>((ref) asy
   return repo.fetchAudiobooks();
 });
 
+/// Backend bo'sh / loading / xato bersa MockAudiobooks fallback —
+/// foydalanuvchi har doim to'liq sahifa contentni ko'radi (UI sinmaydi).
 final effectiveAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {
   final async = ref.watch(backendAudiobooksProvider);
   return async.maybeWhen(
-    data: (list) => list,
-    orElse: () => const <AudiobookModel>[],
+    data: (list) => list.isEmpty ? MockAudiobooks.all : list,
+    orElse: () => MockAudiobooks.all,
   );
 });
 

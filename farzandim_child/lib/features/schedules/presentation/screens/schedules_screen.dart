@@ -92,18 +92,18 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
     final activeAsync = ref.watch(activeSchedulesProvider);
 
     return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
+      backgroundColor: context.adaptive.bgPrimary,
       appBar: AppBar(
-        backgroundColor: AppColors.backgroundBottom,
+        backgroundColor: context.adaptive.bgPrimary,
         elevation: 0,
         title: Text(
           'schedules.title'.tr(),
-          style: const TextStyle(
-            color: AppColors.textPrimary,
+          style: TextStyle(
+            color: context.adaptive.textPrimary,
             fontWeight: FontWeight.w600,
           ),
         ),
-        iconTheme: const IconThemeData(color: AppColors.textPrimary),
+        iconTheme: IconThemeData(color: context.adaptive.textPrimary),
       ),
       body: activeAsync.when(
         data: (_) {
@@ -119,16 +119,20 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(20),
                   decoration: BoxDecoration(
-                    color: AppColors.surface,
+                    color: context.adaptive.bgCard,
                     borderRadius: BorderRadius.circular(20),
+                    border: Border.all(
+                      color: context.adaptive.border,
+                      width: 1,
+                    ),
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
                         '${_greeting()}!',
-                        style: const TextStyle(
-                          color: AppColors.textPrimary,
+                        style: TextStyle(
+                          color: context.adaptive.textPrimary,
                           fontSize: 22,
                           fontWeight: FontWeight.bold,
                         ),
@@ -152,8 +156,8 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                                         current.endTimeFormatted,
                                   },
                                 ),
-                                style: const TextStyle(
-                                  color: AppColors.textPrimary,
+                                style: TextStyle(
+                                  color: context.adaptive.textPrimary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -163,9 +167,9 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                       else if (next != null)
                         Row(
                           children: [
-                            const Icon(
+                            Icon(
                               AppIcons.schedule,
-                              color: AppColors.textSecondary,
+                              color: context.adaptive.textSecondary,
                               size: 16,
                             ),
                             const SizedBox(width: 8),
@@ -177,8 +181,8 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                                     'until': _minutesUntil(next),
                                   },
                                 ),
-                                style: const TextStyle(
-                                  color: AppColors.textSecondary,
+                                style: TextStyle(
+                                  color: context.adaptive.textSecondary,
                                   fontSize: 14,
                                 ),
                               ),
@@ -188,8 +192,8 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                       else
                         Text(
                           'schedules.allDone'.tr(),
-                          style: const TextStyle(
-                            color: AppColors.textSecondary,
+                          style: TextStyle(
+                            color: context.adaptive.textSecondary,
                             fontSize: 14,
                           ),
                         ),
@@ -202,8 +206,8 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
                 padding: const EdgeInsets.symmetric(horizontal: 16),
                 child: Text(
                   'schedules.todayList'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.textPrimary,
+                  style: TextStyle(
+                    color: context.adaptive.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w600,
                   ),
@@ -243,7 +247,7 @@ class _SchedulesScreenState extends ConsumerState<SchedulesScreen> {
             child: Text(
               'schedules.errorPrefix'.tr(namedArgs: {'error': '$e'}),
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: context.adaptive.textSecondary),
             ),
           ),
         ),
