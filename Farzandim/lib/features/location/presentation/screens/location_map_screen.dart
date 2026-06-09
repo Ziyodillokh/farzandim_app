@@ -4,10 +4,10 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/core/utils/formatters.dart';
-import 'package:farzandim/features/child_management/data/models/child_device_info.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
@@ -16,7 +16,6 @@ import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/utils/avatar_marker_builder.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
-import 'package:farzandim/shared/widgets/secondary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -49,13 +48,6 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   String? _avatarCacheKey;
   bool _userMovedCamera = false;
   Timer? _recenterDebounce;
-  String? _premiumMapStyle;
-
-  @override
-  void initState() {
-    super.initState();
-    // Premium dark style olib tashlandi — foydalanuvchi default xohladi.
-  }
 
   @override
   void dispose() {
@@ -163,6 +155,8 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
           if (location == null) {
             return _NoLocationState(child: child);
           }
+          final screenH = MediaQuery.of(context).size.height;
+          const sheetInitial = 0.5;
           return Stack(
             children: [
               _MapLayer(
@@ -170,7 +164,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                 child: child,
                 zones: zones,
                 avatarMarker: _avatarMarker,
-                mapStyle: _premiumMapStyle,
+                bottomPadding: screenH * (sheetInitial - 0.06),
                 onCameraMoveStarted: _onCameraMoveStarted,
                 onMapCreated: (controller) {
                   _mapController = controller;
@@ -180,7 +174,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
               if (_userMovedCamera)
                 Positioned(
                   right: AppDimensions.md,
-                  bottom: 240,
+                  bottom: screenH * sheetInitial + AppDimensions.md,
                   child: _RecenterFab(
                     childName: child.name,
                     onTap: _recenter,
@@ -192,11 +186,17 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                   child: _TopBar(child: child),
                 ),
               ),
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: _BottomCard(child: child, location: location),
+              DraggableScrollableSheet(
+                initialChildSize: sheetInitial,
+                minChildSize: 0.32,
+                maxChildSize: 0.9,
+                snap: true,
+                snapSizes: const [sheetInitial, 0.9],
+                builder: (context, scrollController) => _LocationSheet(
+                  child: child,
+                  location: location,
+                  scrollController: scrollController,
+                ),
               ),
             ],
           );
@@ -214,7 +214,7 @@ class _MapLayer extends StatelessWidget {
     required this.child,
     required this.zones,
     required this.avatarMarker,
-    required this.mapStyle,
+    required this.bottomPadding,
     required this.onMapCreated,
     required this.onCameraMoveStarted,
   });
@@ -223,7 +223,7 @@ class _MapLayer extends StatelessWidget {
   final Child child;
   final List<GeoZone> zones;
   final BitmapDescriptor? avatarMarker;
-  final String? mapStyle;
+  final double bottomPadding;
   final void Function(GoogleMapController) onMapCreated;
   final VoidCallback onCameraMoveStarted;
 
@@ -251,13 +251,22 @@ class _MapLayer extends StatelessWidget {
         ),
       },
       circles: {
+        // Aniqlik halosi — "Joyida" holatiga mos yashil tus.
+        Circle(
+          circleId: const CircleId('accuracy'),
+          center: location.latLng,
+          radius: location.accuracy.clamp(20, 120).toDouble(),
+          fillColor: AppColors.success.withValues(alpha: 0.10),
+          strokeColor: AppColors.success.withValues(alpha: 0.45),
+          strokeWidth: 1,
+        ),
         for (final zone in zones)
           Circle(
             circleId: CircleId(zone.id),
             center: zone.center,
             radius: zone.radiusMeters,
-            fillColor: AppColors.primary.withValues(alpha: 0.15),
-            strokeColor: AppColors.primary,
+            fillColor: AppColors.accent.withValues(alpha: 0.12),
+            strokeColor: AppColors.accent,
             strokeWidth: 2,
           ),
       },
@@ -267,7 +276,7 @@ class _MapLayer extends StatelessWidget {
       compassEnabled: true,
       onMapCreated: onMapCreated,
       onCameraMoveStarted: onCameraMoveStarted,
-      padding: const EdgeInsets.only(bottom: 220),
+      padding: EdgeInsets.only(bottom: bottomPadding),
     );
   }
 }
@@ -317,16 +326,16 @@ class _RecenterFab extends StatelessWidget {
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(
+              Icon(
                 Icons.gps_fixed_rounded,
-                color: Colors.black,
+                color: AppColors.onPrimary,
                 size: 18,
               ),
               const SizedBox(width: 8),
               Text(
                 childName,
-                style: const TextStyle(
-                  color: Colors.black,
+                style: TextStyle(
+                  color: AppColors.onPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
                 ),
@@ -369,22 +378,28 @@ class _CircleIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.white,
-      shape: const CircleBorder(),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Center(
-            child: Icon(
-              icon,
-              size: 24,
-              color: AppColors.onPrimary,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        boxShadow: AppShadows.card,
+      ),
+      child: Material(
+        color: AppColors.surface,
+        shape: CircleBorder(
+          side: BorderSide(color: AppColors.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          child: SizedBox(
+            width: 48,
+            height: 48,
+            child: Center(
+              child: Icon(
+                icon,
+                size: 24,
+                color: AppColors.textPrimary,
+              ),
             ),
           ),
         ),
@@ -403,36 +418,43 @@ class _ChildSelectorChip extends ConsumerWidget {
     final children = ref.watch(childrenListProvider);
     final hasMultiple = children.length > 1;
 
-    return Material(
-      color: Colors.white,
-      borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      elevation: 4,
-      shadowColor: Colors.black26,
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: hasMultiple ? () => _openPicker(context, children) : null,
-        child: Padding(
-          padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              ChildAvatar(child: child, size: 32, showBorder: false),
-              const SizedBox(width: 8),
-              Text(
-                child.name,
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.w600,
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+        boxShadow: AppShadows.card,
+      ),
+      child: Material(
+        color: AppColors.surface,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+          side: BorderSide(color: AppColors.border),
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: hasMultiple ? () => _openPicker(context, children) : null,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                ChildAvatar(child: child, size: 32, showBorder: false),
+                const SizedBox(width: 8),
+                Text(
+                  child.name,
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
-              ),
-              if (hasMultiple) ...[
-                const SizedBox(width: 2),
-                Icon(
-                  Icons.arrow_drop_down,
-                  color: AppColors.onPrimary,
-                ),
+                if (hasMultiple) ...[
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.arrow_drop_down,
+                    color: AppColors.textSecondary,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),
@@ -483,200 +505,528 @@ class _ChildSelectorChip extends ConsumerWidget {
   }
 }
 
-// ════════════════════════ BOTTOM CARD ════════════════════════
+// ═══════════════ LOCATION SHEET (Command Deck) ═══════════════
 
-class _BottomCard extends ConsumerWidget {
-  const _BottomCard({required this.child, required this.location});
+/// Premium "boshqaruv paneli" pastki varaq (DraggableScrollableSheet ichida).
+///
+/// Tuzilma (ota-ona savollari tartibida): HERO (avatar + ism + JONLI puls) →
+/// MANZIL kartasi ("qayerda") → 3 metrika (holat / batareya / aniqlik) →
+/// 2 ta katta amal tugmasi (Geo-zonalar to'liq-rang CTA + Tarixni ko'rish).
+/// Faqat origin/main'da mavjud tokenlar ishlatiladi (GlassCard/glass token YO'Q).
+class _LocationSheet extends ConsumerWidget {
+  const _LocationSheet({
+    required this.child,
+    required this.location,
+    required this.scrollController,
+  });
 
   final Child child;
   final ChildLocation location;
+  final ScrollController scrollController;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final address = ref.watch(childAddressProvider(child.id)).valueOrNull;
-    return Container(
+    final zoneCount =
+        ref.watch(geoZonesProvider(child.id)).valueOrNull?.length ?? 0;
+    final battery = child.deviceInfo?.batteryLevel;
+    final isCharging = child.deviceInfo?.isCharging ?? false;
+    final isMoving = location.isMoving;
+    final topRadius = BorderRadius.vertical(
+      top: Radius.circular(AppDimensions.radiusL),
+    );
+
+    return DecoratedBox(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusL),
-        ),
+        borderRadius: topRadius,
         border: Border(top: BorderSide(color: AppColors.border)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.28),
-            blurRadius: 24,
-            offset: const Offset(0, -6),
-          ),
-        ],
+        boxShadow: AppShadows.elevated,
       ),
-      padding: EdgeInsets.fromLTRB(
-        AppDimensions.lg,
-        AppDimensions.sm,
-        AppDimensions.lg,
-        MediaQuery.of(context).padding.bottom + AppDimensions.md,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          // Premium drag handle.
-          Center(
-            child: Container(
-              width: 40,
-              height: 4,
-              margin: const EdgeInsets.only(bottom: AppDimensions.md),
-              decoration: BoxDecoration(
-                color: AppColors.textTertiary.withValues(alpha: 0.4),
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
+      child: ClipRRect(
+        borderRadius: topRadius,
+        child: ListView(
+          controller: scrollController,
+          padding: EdgeInsets.fromLTRB(
+            AppDimensions.lg,
+            AppDimensions.sm,
+            AppDimensions.lg,
+            MediaQuery.of(context).padding.bottom + AppDimensions.lg,
           ),
-          Row(
-            children: [
-              ChildAvatar(child: child, size: 56),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      child.name,
-                      style: AppTextStyles.headlineL.copyWith(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      'location.updatedSuffix'.tr(
-                        namedArgs: {
-                          'time': formatRelativeTime(location.updatedAt),
-                        },
-                      ),
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+          children: [
+            // Drag handle.
+            Center(
+              child: Container(
+                width: 44,
+                height: 4,
+                margin: const EdgeInsets.only(bottom: AppDimensions.md),
+                decoration: BoxDecoration(
+                  color: AppColors.textTertiary.withValues(alpha: 0.45),
+                  borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              if (child.deviceInfo?.batteryLevel != null)
-                _BatteryPill(info: child.deviceInfo!),
-            ],
-          ),
+            ),
 
-          // Manzil (reverse geocoding) — eng muhim ma'lumot.
-          if (address != null && address.isNotEmpty) ...[
-            const SizedBox(height: AppDimensions.md),
+            // ── HERO: avatar (mint halqa) + ism + JONLI puls ──
             Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.place_rounded,
-                    size: 18, color: AppColors.accent),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    address,
-                    style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.textPrimary,
-                      fontWeight: FontWeight.w500,
-                      height: 1.3,
+                Container(
+                  padding: const EdgeInsets.all(3),
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppColors.accent.withValues(alpha: 0.55),
+                      width: 2,
                     ),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
+                  ),
+                  child:
+                      ChildAvatar(child: child, size: 54, showBorder: false),
+                ),
+                const SizedBox(width: AppDimensions.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              child.name,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppTextStyles.headlineL.copyWith(
+                                fontSize: 20,
+                                fontWeight: FontWeight.w700,
+                                letterSpacing: -0.3,
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          const _LivePill(),
+                        ],
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        '${'location.command.now'.tr()} · '
+                        '${formatRelativeTime(location.updatedAt)}',
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
                   ),
                 ),
               ],
             ),
-          ],
 
-          const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.md),
 
-          // Status row: harakat holati pill + aniqlik.
-          Row(
-            children: [
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
-                decoration: BoxDecoration(
-                  color: (location.isMoving
-                          ? AppColors.accent
-                          : AppColors.success)
-                      .withValues(alpha: 0.14),
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusPill),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      location.isMoving
-                          ? Icons.directions_walk_rounded
-                          : Icons.place_rounded,
-                      size: 16,
-                      color: location.isMoving
-                          ? AppColors.accent
-                          : AppColors.success,
-                    ),
-                    const SizedBox(width: 6),
-                    Text(
-                      location.isMoving
-                          ? 'location.moving'.tr()
-                          : 'location.stationary'.tr(),
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: location.isMoving
-                            ? AppColors.accent
-                            : AppColors.success,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const Spacer(),
-              Icon(
-                Icons.gps_fixed_rounded,
-                size: 14,
-                color: AppColors.textSecondary,
-              ),
-              const SizedBox(width: 4),
-              Text(
-                'location.accuracy'.tr(
-                  namedArgs: {'meters': '${location.accuracy.round()}'},
-                ),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-            ],
-          ),
+            // ── MANZIL kartasi ("qayerda" — eng muhim ma'lumot) ──
+            _AddressCard(address: address),
 
-          const SizedBox(height: AppDimensions.lg - 4),
+            const SizedBox(height: AppDimensions.md),
 
-          // Action tugma.
-          Row(
-            children: [
-              Expanded(
-                child: SecondaryButton(
-                  label: 'location.geoZonesButton'.tr(),
-                  icon: Icons.fence_outlined,
-                  onPressed: () =>
-                      context.push(AppRoutes.geoZonesPath(child.id)),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: SecondaryButton(
-                  label: 'locationHistory.viewButton'.tr(),
-                  icon: Icons.route_outlined,
-                  onPressed: () => context.push(
-                    AppRoutes.locationHistoryPath(child.id),
+            // ── 3 metrika: holat / batareya / aniqlik ──
+            Row(
+              children: [
+                Expanded(
+                  child: _StatTile(
+                    icon: isMoving
+                        ? Icons.directions_walk_rounded
+                        : Icons.check_circle_rounded,
+                    tint: isMoving ? AppColors.accent : AppColors.success,
+                    value: isMoving
+                        ? 'location.command.statusMoving'.tr()
+                        : 'location.command.statusStationary'.tr(),
+                    label: 'location.command.statusLabel'.tr(),
+                    valueColored: true,
                   ),
                 ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatTile(
+                    icon: isCharging
+                        ? Icons.bolt_rounded
+                        : Icons.battery_full_rounded,
+                    tint: battery == null
+                        ? AppColors.textTertiary
+                        : battery >= 50
+                            ? AppColors.success
+                            : battery >= 20
+                                ? AppColors.warning
+                                : AppColors.error,
+                    value: battery == null ? '—' : '$battery%',
+                    label: 'location.command.batteryLabel'.tr(),
+                    valueColored: true,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _StatTile(
+                    icon: Icons.gps_fixed_rounded,
+                    tint: AppColors.info,
+                    value: 'location.command.accuracyValue'.tr(
+                      namedArgs: {'meters': '${location.accuracy.round()}'},
+                    ),
+                    label: 'location.command.accuracyLabel'.tr(),
+                    valueColored: false,
+                  ),
+                ),
+              ],
+            ),
+
+            const SizedBox(height: AppDimensions.lg),
+
+            // Amal tugmalari: 1-si to'liq-rang CTA, 2-si outline.
+            _ActionButton(
+              icon: Icons.fence_rounded,
+              label: 'location.geoZonesButton'.tr(),
+              trailing: zoneCount > 0
+                  ? 'location.command.zonesCount'
+                      .tr(namedArgs: {'count': '$zoneCount'})
+                  : null,
+              filled: true,
+              onTap: () => context.push(AppRoutes.geoZonesPath(child.id)),
+            ),
+            const SizedBox(height: 12),
+            _ActionButton(
+              icon: Icons.route_rounded,
+              label: 'location.command.historyButton'.tr(),
+              filled: false,
+              onTap: () =>
+                  context.push(AppRoutes.locationHistoryPath(child.id)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Jonli puls indikatori (real-vaqt signali) ───
+
+class _LivePill extends StatelessWidget {
+  const _LivePill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.accent.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          _PulseDot(color: AppColors.accent, size: 7),
+          const SizedBox(width: 6),
+          Text(
+            'location.command.live'.tr(),
+            style: AppTextStyles.label.copyWith(
+              color: AppColors.accent,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.5,
+              fontSize: 11,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Yumshoq nafas oluvchi puls nuqtasi — o'z AnimationController'ini saqlaydi
+/// (StatefulWidget, shunda stream qayta-build qilganda controller buzilmaydi).
+class _PulseDot extends StatefulWidget {
+  const _PulseDot({required this.color, this.size = 8});
+
+  final Color color;
+  final double size;
+
+  @override
+  State<_PulseDot> createState() => _PulseDotState();
+}
+
+class _PulseDotState extends State<_PulseDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1100),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        final t = Curves.easeInOut.transform(_controller.value);
+        return Container(
+          width: widget.size,
+          height: widget.size,
+          decoration: BoxDecoration(
+            color: widget.color,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: widget.color.withValues(alpha: 0.20 + 0.35 * (1 - t)),
+                blurRadius: 3 + 5 * t,
+                spreadRadius: 1 + 2 * t,
               ),
             ],
           ),
+        );
+      },
+    );
+  }
+}
+
+// ─── Manzil kartasi ───
+
+class _AddressCard extends StatelessWidget {
+  const _AddressCard({required this.address});
+
+  final String? address;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasAddress = address != null && address!.isNotEmpty;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: AppColors.accent.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            alignment: Alignment.center,
+            child:
+                Icon(Icons.place_rounded, size: 19, color: AppColors.accent),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: hasAddress
+                ? Text(
+                    address!,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyM.copyWith(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.w600,
+                      height: 1.25,
+                    ),
+                  )
+                : Text(
+                    'location.command.addressLoading'.tr(),
+                    style: AppTextStyles.bodyS.copyWith(
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+          ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── Metrika plitkasi (holat / batareya / aniqlik) ───
+
+class _StatTile extends StatelessWidget {
+  const _StatTile({
+    required this.icon,
+    required this.tint,
+    required this.value,
+    required this.label,
+    required this.valueColored,
+  });
+
+  final IconData icon;
+  final Color tint;
+  final String value;
+  final String label;
+  final bool valueColored;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(12),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+        boxShadow: AppShadows.card,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: tint.withValues(alpha: 0.16),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 16, color: tint),
+          ),
+          const SizedBox(height: 10),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerLeft,
+            child: Text(
+              value,
+              maxLines: 1,
+              style: AppTextStyles.headlineL.copyWith(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+                color: valueColored ? tint : AppColors.textPrimary,
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: AppTextStyles.bodyS.copyWith(
+              color: AppColors.textSecondary,
+              fontSize: 11.5,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Katta amal tugmasi (to'liq-rang CTA yoki outline) ───
+
+class _ActionButton extends StatelessWidget {
+  const _ActionButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.trailing,
+    this.filled = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final String? trailing;
+  final bool filled;
+
+  @override
+  Widget build(BuildContext context) {
+    final radius = BorderRadius.circular(AppDimensions.radiusPill);
+    return Material(
+      color: Colors.transparent,
+      child: Ink(
+        decoration: BoxDecoration(
+          gradient: filled
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primary, AppColors.primaryDark],
+                )
+              : null,
+          color: filled ? null : AppColors.surfaceVariant,
+          borderRadius: radius,
+          border: filled
+              ? null
+              : Border.all(color: AppColors.border, width: 1.4),
+          boxShadow: filled ? AppShadows.glow(AppColors.primary) : null,
+        ),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: SizedBox(
+            height: 56,
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 18),
+              child: Row(
+                children: [
+                  Icon(
+                    icon,
+                    size: 20,
+                    color: filled ? AppColors.onPrimary : AppColors.accent,
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            label,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: AppTextStyles.bodyM.copyWith(
+                              color: filled
+                                  ? AppColors.onPrimary
+                                  : AppColors.textPrimary,
+                              fontWeight:
+                                  filled ? FontWeight.w700 : FontWeight.w600,
+                            ),
+                          ),
+                        ),
+                        if (trailing != null) ...[
+                          const SizedBox(width: 8),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 7,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color:
+                                  AppColors.onPrimary.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: Text(
+                              trailing!,
+                              style: AppTextStyles.label.copyWith(
+                                color: AppColors.onPrimary,
+                                fontWeight: FontWeight.w700,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
+                  Icon(
+                    Icons.chevron_right_rounded,
+                    size: 20,
+                    color: filled
+                        ? AppColors.onPrimary.withValues(alpha: 0.75)
+                        : AppColors.textTertiary,
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -778,52 +1128,6 @@ class _ErrorState extends StatelessWidget {
                   ),
                 ],
               ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════ BATTERY PILL ════════════════════════
-
-class _BatteryPill extends StatelessWidget {
-  const _BatteryPill({required this.info});
-
-  final ChildDeviceInfo info;
-
-  Color _color(int level) {
-    if (level >= 50) return AppColors.success;
-    if (level >= 20) return AppColors.warning;
-    return AppColors.error;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final level = info.batteryLevel!;
-    final isCharging = info.isCharging ?? false;
-    final color = _color(level);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            isCharging ? Icons.battery_charging_full : Icons.battery_full,
-            size: 16,
-            color: color,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$level%',
-            style: AppTextStyles.bodyS.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
             ),
           ),
         ],

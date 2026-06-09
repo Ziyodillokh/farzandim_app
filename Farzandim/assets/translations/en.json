@@ -344,6 +344,19 @@
     "stationary": "Stationary",
     "accuracy": "~{meters}m accuracy",
     "geoZonesButton": "Geo-zones",
+    "command": {
+      "live": "LIVE",
+      "now": "Now",
+      "statusLabel": "Status",
+      "statusStationary": "At place",
+      "statusMoving": "Moving",
+      "batteryLabel": "Battery",
+      "accuracyLabel": "Accuracy",
+      "accuracyValue": "~{meters} m",
+      "addressLoading": "Locating address…",
+      "historyButton": "View history",
+      "zonesCount": "{count}"
+    },
     "picker": {
       "title": "Select child"
     },

@@ -344,6 +344,19 @@
     "stationary": "Joyida turibdi",
     "accuracy": "~{meters}m aniqlik",
     "geoZonesButton": "Geo-zonalar",
+    "command": {
+      "live": "JONLI",
+      "now": "Hozir",
+      "statusLabel": "Holat",
+      "statusStationary": "Joyida",
+      "statusMoving": "Harakatda",
+      "batteryLabel": "Batareya",
+      "accuracyLabel": "Aniqlik",
+      "accuracyValue": "~{meters} m",
+      "addressLoading": "Manzil aniqlanmoqda…",
+      "historyButton": "Tarixni ko'rish",
+      "zonesCount": "{count} ta"
+    },
     "picker": {
       "title": "Bolani tanlang"
     },

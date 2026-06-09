@@ -344,6 +344,19 @@
     "stationary": "На месте",
     "accuracy": "~{meters}м точность",
     "geoZonesButton": "Гео-зоны",
+    "command": {
+      "live": "LIVE",
+      "now": "Сейчас",
+      "statusLabel": "Статус",
+      "statusStationary": "На месте",
+      "statusMoving": "В движении",
+      "batteryLabel": "Батарея",
+      "accuracyLabel": "Точность",
+      "accuracyValue": "~{meters} м",
+      "addressLoading": "Определение адреса…",
+      "historyButton": "История",
+      "zonesCount": "{count}"
+    },
     "picker": {
       "title": "Выберите ребёнка"
     },
