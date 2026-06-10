@@ -17,6 +17,7 @@ import 'package:farzandim/features/gamification/presentation/providers/gamificat
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
+import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
@@ -38,8 +39,9 @@ class DashboardScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isAuthed =
-        ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+    final isAuthed = ref.watch(
+      backendAuthProvider.select((s) => s is AuthAuthenticated),
+    );
     final childrenAsync = ref.watch(childrenProvider);
     final children = childrenAsync.valueOrNull;
 
@@ -63,9 +65,7 @@ class DashboardScreen extends ConsumerWidget {
       // Solid theme baza — overscroll/pull-to-refresh paytida oq oyna foni
       // ko'rinmasligi uchun (gradient ustidan chiziladi).
       backgroundColor: AppColors.background,
-      body: GradientBackground(
-        child: SafeArea(child: body),
-      ),
+      body: GradientBackground(child: SafeArea(child: body)),
     );
   }
 }
@@ -79,9 +79,7 @@ class _DashboardLoading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(color: AppColors.accent),
-    );
+    return Center(child: CircularProgressIndicator(color: AppColors.accent));
   }
 }
 
@@ -150,14 +148,9 @@ class _EmptyState extends StatelessWidget {
 
           // ─── Asosiy karta: "Bola qo'shing" ───
           Expanded(
-            child: Container(
-              width: double.infinity,
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-                border: Border.all(color: AppColors.border),
-              ),
+            child: GlassCard(
               padding: const EdgeInsets.all(AppDimensions.xl),
+              radius: AppDimensions.radiusL,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -260,8 +253,10 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
     final children = widget.children;
     final canAdd = children.length < _kMaxChildren;
     final pageCount = children.length + (canAdd ? 1 : 0);
-    final selectedIndex =
-        ref.watch(selectedChildIndexProvider).clamp(0, children.length - 1);
+    final selectedIndex = ref
+        .watch(selectedChildIndexProvider)
+        .clamp(0, children.length - 1);
+    final isDark = AppColors.isDark;
 
     return Column(
       children: [
@@ -280,88 +275,123 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
         // (yangilanish bo'lmasa o'zi SizedBox.shrink qaytaradi).
         const UpdateBanner(),
 
-        // ─── Gorizontal PageView — har bola TO'LIQ ekran ───
-        // Chapga sursa keyingi bola butunlay ochiladi (oldingisi ko'rinmaydi).
-        // Oxirgi sahifa (agar <3 bola) — yangi bola qo'shish.
+        // ─── Pastki qism: scroll + SUZUVCHI nav (Stack) ───
+        // PageView butun bo'shliqni egallaydi; AppBottomNav uning USTIDA suzadi
+        // (orqa gradient + aurora nav ortidan UZLUKSIZ ko'rinadi — eski "footer
+        // to'rtburchak" yo'qoladi). Scroll pastki padding'i nav balandligini
+        // hisobga oladi, shunda oxirgi karta nav ostida yashirinmaydi.
         Expanded(
-          child: PageView.builder(
-            controller: _pageController,
-            itemCount: pageCount,
-            onPageChanged: (i) {
-              // Faqat bola sahifalarida tanlovni yangilaymiz (add sahifasida
-              // selectedIndex oxirgi bolada qoladi — pastki bar uchun).
-              if (i < children.length) {
-                ref.read(selectedChildIndexProvider.notifier).state = i;
-              }
-            },
-            itemBuilder: (context, i) {
-              if (i >= children.length) {
-                return const _AddChildPage();
-              }
-              final c = children[i];
-              // Tepadan pastga tortsa — shu bolaning BARCHA ma'lumotlari qayta
-              // yuklanadi (RefreshIndicator). AlwaysScrollableScrollPhysics —
-              // kalta sahifada ham pull-to-refresh ishlashi uchun.
-              return RefreshIndicator(
-                color: AppColors.accent,
-                backgroundColor: AppColors.surface,
-                onRefresh: () => _onRefresh(c.id),
-                child: SingleChildScrollView(
-                  physics: const AlwaysScrollableScrollPhysics(),
-                  padding: const EdgeInsets.fromLTRB(
-                    AppDimensions.lg,
-                    AppDimensions.sm,
-                    AppDimensions.lg,
-                    AppDimensions.md,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      _ChildInfoHeader(
-                        child: c,
-                        childCount: children.length,
-                        selectedIndex: i,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Positioned.fill(
+                child: PageView.builder(
+                  controller: _pageController,
+                  itemCount: pageCount,
+                  onPageChanged: (i) {
+                    // Faqat bola sahifalarida tanlovni yangilaymiz (add
+                    // sahifasida selectedIndex oxirgi bolada qoladi).
+                    if (i < children.length) {
+                      ref.read(selectedChildIndexProvider.notifier).state = i;
+                    }
+                  },
+                  itemBuilder: (context, i) {
+                    if (i >= children.length) {
+                      return const _AddChildPage();
+                    }
+                    final c = children[i];
+                    // Tepadan pastga tortsa — shu bolaning ma'lumoti qayta
+                    // yuklanadi. AlwaysScrollableScrollPhysics: kalta sahifada
+                    // ham pull-to-refresh ishlaydi.
+                    return RefreshIndicator(
+                      color: AppColors.accent,
+                      backgroundColor: AppColors.surface,
+                      onRefresh: () => _onRefresh(c.id),
+                      child: SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        // Pastki padding = lg + nav balandligi + bo'shliq:
+                        // oxirgi karta suzuvchi nav ostida qolib ketmaydi.
+                        padding: const EdgeInsets.fromLTRB(
+                          AppDimensions.lg,
+                          AppDimensions.sm,
+                          AppDimensions.lg,
+                          AppDimensions.lg +
+                              AppBottomNav.kBarHeight +
+                              AppDimensions.md +
+                              8,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            _ChildInfoHeader(
+                              child: c,
+                              childCount: children.length,
+                              selectedIndex: i,
+                            ),
+                            const SizedBox(height: AppDimensions.lg),
+                            _RatingSection(child: c),
+                            const SizedBox(height: AppDimensions.lg),
+                            _TimeCard(
+                              childId: c.id,
+                              blockAll: _blockAll,
+                              onBlockChanged: (v) {
+                                setState(() => _blockAll = v);
+                                _comingSoon();
+                              },
+                            ),
+                            const SizedBox(height: AppDimensions.lg),
+                            _QuickActionsGrid(childId: c.id),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: AppDimensions.lg),
-                      _RatingSection(child: c),
-                      const SizedBox(height: AppDimensions.lg),
-                      _TimeCard(
-                        childId: c.id,
-                        blockAll: _blockAll,
-                        onBlockChanged: (v) {
-                          setState(() => _blockAll = v);
-                          _comingSoon();
-                        },
+                    );
+                  },
+                ),
+              ),
+
+              // Fade scrim — nav ortidagi kontent yumshoq so'nadi (QATTIQ blok
+              // EMAS; faqat pastga qarab shaffofdan fon rangiga o'tadi, shunda
+              // suzuvchi nav aniq o'qiladi).
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: 110,
+                child: IgnorePointer(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.background.withValues(alpha: 0),
+                          AppColors.background.withValues(
+                            alpha: isDark ? 0.35 : 0.25,
+                          ),
+                        ],
                       ),
-                      const SizedBox(height: AppDimensions.lg),
-                      _QuickActionsGrid(childId: c.id),
-                    ],
+                    ),
                   ),
                 ),
-              );
-            },
-          ),
-        ),
+              ),
 
-        // ─── Fiksirlangan pastki bar: Foydalanish vaqti + sozlamalar ───
-        // Yuqoridagi quick-action plitkalari bilan ORASIDA aniq gradient
-        // bo'shlig'i — bottom nav shaffof fon ustida qalqib turadi (plitkalar
-        // ortida "to'rtburchak" bo'lib yopishib ko'rinmaydi).
-        Padding(
-          padding: const EdgeInsets.fromLTRB(
-            AppDimensions.lg,
-            AppDimensions.lg,
-            AppDimensions.lg,
-            AppDimensions.md,
-          ),
-          child: AppBottomNav(
-            activeIndex: 0,
-            activityLabel: 'dashboard.usageTime'.tr(),
-            settingsLabel: 'settings.title'.tr(),
-            onActivity: () => context.push(
-              AppRoutes.appRestrictionsPath(children[selectedIndex].id),
-            ),
-            onSettings: () => context.push(AppRoutes.settings),
+              // SUZUVCHI nav — orqa fon yo'q (shaffof): gradient + aurora ustida
+              // qalqaydi, glass kartalar bilan bir xil premium til.
+              Positioned(
+                left: AppDimensions.lg,
+                right: AppDimensions.lg,
+                bottom: AppDimensions.md,
+                child: AppBottomNav(
+                  activeIndex: 0,
+                  activityLabel: 'dashboard.usageTime'.tr(),
+                  settingsLabel: 'settings.title'.tr(),
+                  onActivity: () => context.push(
+                    AppRoutes.appRestrictionsPath(children[selectedIndex].id),
+                  ),
+                  onSettings: () => context.push(AppRoutes.settings),
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -378,12 +408,20 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        ClipOval(
-          child: Image.asset(
-            'assets/icons/parent_logo_icon.png',
-            height: 44,
-            width: 44,
-            fit: BoxFit.cover,
+        // Logo — header tugmalari bilan bir xil shisha doirada (professional).
+        GlassCard(
+          expandWidth: false,
+          width: 52,
+          radius: 26,
+          blurSigma: 20,
+          padding: const EdgeInsets.all(7),
+          child: ClipOval(
+            child: Image.asset(
+              'assets/icons/parent_logo_icon.png',
+              height: 38,
+              width: 38,
+              fit: BoxFit.cover,
+            ),
           ),
         ),
         const Spacer(),
@@ -403,24 +441,23 @@ class _ThemeToggle extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isDark = ref.watch(themeModeProvider) == AppThemeMode.dark;
-    return Material(
-      color: AppColors.surface,
-      shape: CircleBorder(
-        side: BorderSide(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => ref.read(themeModeProvider.notifier).toggle(),
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Center(
-            child: Icon(
-              // Dark'da quyosh (light'ga o'tish), light'da oy (dark'ga o'tish).
-              isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
-              size: 23,
-              color: isDark ? AppColors.warning : AppColors.textPrimary,
-            ),
+    // Glass doira — header tugmalar ham shisha tilida (qattiq surface emas).
+    return GlassCard(
+      expandWidth: false,
+      width: 48,
+      radius: 24,
+      blurSigma: 20,
+      padding: EdgeInsets.zero,
+      onTap: () => ref.read(themeModeProvider.notifier).toggle(),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Center(
+          child: Icon(
+            // Dark'da quyosh (light'ga o'tish), light'da oy (dark'ga o'tish).
+            isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+            size: 23,
+            color: isDark ? AppColors.warning : AppColors.textPrimary,
           ),
         ),
       ),
@@ -434,42 +471,41 @@ class _NotificationBell extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(unreadCountProvider);
-    return Material(
-      color: AppColors.surface,
-      shape: CircleBorder(
-        side: BorderSide(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(AppRoutes.notifications),
-        child: SizedBox(
-          width: 48,
-          height: 48,
-          child: Stack(
-            children: [
-              Center(
-                child: Icon(
-                  Icons.notifications_outlined,
-                  size: 24,
-                  color: AppColors.textPrimary,
-                ),
+    // Glass doira — _ThemeToggle bilan bir xil til.
+    return GlassCard(
+      expandWidth: false,
+      width: 48,
+      radius: 24,
+      blurSigma: 20,
+      padding: EdgeInsets.zero,
+      onTap: () => context.push(AppRoutes.notifications),
+      child: SizedBox(
+        width: 48,
+        height: 48,
+        child: Stack(
+          children: [
+            Center(
+              child: Icon(
+                Icons.notifications_outlined,
+                size: 24,
+                color: AppColors.textPrimary,
               ),
-              if (unread > 0)
-                Positioned(
-                  top: 8,
-                  right: 8,
-                  child: Container(
-                    width: 10,
-                    height: 10,
-                    decoration: BoxDecoration(
-                      color: AppColors.error,
-                      shape: BoxShape.circle,
-                      border: Border.all(color: AppColors.surface, width: 1.5),
-                    ),
+            ),
+            if (unread > 0)
+              Positioned(
+                top: 8,
+                right: 8,
+                child: Container(
+                  width: 10,
+                  height: 10,
+                  decoration: BoxDecoration(
+                    color: AppColors.error,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.surface, width: 1.5),
                   ),
                 ),
-            ],
-          ),
+              ),
+          ],
         ),
       ),
     );
@@ -521,10 +557,7 @@ class _ChildInfoHeader extends StatelessWidget {
               ),
               const SizedBox(height: AppDimensions.sm),
               // Yashil segmentlar = bola SONI + qaysi biri ko'rsatilayapti.
-              _ChildCountIndicator(
-                count: childCount,
-                selected: selectedIndex,
-              ),
+              _ChildCountIndicator(count: childCount, selected: selectedIndex),
             ],
           ),
         ),
@@ -556,8 +589,8 @@ class _ChildCountIndicator extends StatelessWidget {
             height: 6,
             decoration: BoxDecoration(
               color: i == selected
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.3),
+                  ? AppColors.accent
+                  : AppColors.accent.withValues(alpha: 0.3),
               borderRadius: BorderRadius.circular(3),
             ),
           ),
@@ -581,14 +614,9 @@ class _AddChildPage extends StatelessWidget {
         AppDimensions.md,
       ),
       child: Center(
-        child: Container(
-          width: double.infinity,
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            border: Border.all(color: AppColors.border),
-          ),
+        child: GlassCard(
           padding: const EdgeInsets.all(AppDimensions.xl),
+          radius: AppDimensions.radiusL,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -642,7 +670,7 @@ class _BatteryBar extends StatelessWidget {
     final filled = level == null
         ? 0
         : ((level! / 100) * segments).round().clamp(0, segments);
-    final color = (level ?? 0) <= 20 ? AppColors.error : AppColors.primary;
+    final color = (level ?? 0) <= 20 ? AppColors.error : AppColors.accent;
 
     return Row(
       children: [
@@ -660,9 +688,7 @@ class _BatteryBar extends StatelessWidget {
           const SizedBox(width: 4),
           Text(
             '$level%',
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.label.copyWith(color: AppColors.textSecondary),
           ),
         ],
       ],
@@ -715,21 +741,19 @@ class _RatingSection extends ConsumerWidget {
           ],
         ),
         const SizedBox(height: AppDimensions.sm),
-        Container(
+        GlassCard(
+          elevation: GlassElevation.raised,
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.lg,
             vertical: AppDimensions.md,
           ),
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          ),
+          radius: AppDimensions.radiusL,
           child: Row(
             children: [
               Text(
                 '$donBalance',
                 style: AppTextStyles.headlineL.copyWith(
-                  color: AppColors.onPrimary,
+                  color: AppColors.accent,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -743,7 +767,7 @@ class _RatingSection extends ConsumerWidget {
                     Text(
                       child.name,
                       style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.onPrimary,
+                        color: AppColors.textPrimary,
                         fontWeight: FontWeight.w700,
                       ),
                       maxLines: 1,
@@ -753,7 +777,7 @@ class _RatingSection extends ConsumerWidget {
                       Text(
                         child.region,
                         style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.onPrimary.withValues(alpha: 0.7),
+                          color: AppColors.textSecondary,
                         ),
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
@@ -762,16 +786,16 @@ class _RatingSection extends ConsumerWidget {
                 ),
               ),
               const SizedBox(width: AppDimensions.sm),
-              const Icon(
+              Icon(
                 Icons.star_rounded,
                 size: 20,
-                color: Color(0xFF6D28D9),
+                color: AppColors.featurePurple,
               ),
               const SizedBox(width: 4),
               Text(
                 '$xp',
                 style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.onPrimary,
+                  color: AppColors.textPrimary,
                   fontWeight: FontWeight.w800,
                 ),
               ),
@@ -802,8 +826,7 @@ class _TimeCard extends ConsumerWidget {
     // FAQAT foydalanuvchi ilovalari (system/launcher/orqa-fon emas) — ikonka
     // qatori uchun. `filteredApps` system prefixlarni chiqarib tashlaydi.
     final filtered = day?.filteredApps ?? const [];
-    final apps =
-        filtered.map((a) => _AppBrief(a.appName, a.iconUrl)).toList();
+    final apps = filtered.map((a) => _AppBrief(a.appName, a.iconUrl)).toList();
     // Bugungi jami vaqt — detail "Ekran vaqti" bilan AYNI avtoritar manba
     // (server `/weekly`, system filtrlangan + Toshkent, 30 sek polling). Avval
     // bu yer per-app yig'indini alohida hisoblardi → dashboard ↔ detail farq
@@ -815,22 +838,15 @@ class _TimeCard extends ConsumerWidget {
     // corrects" muammosi).
     final isFirstLoad = weeklyAsync.isLoading && !weeklyAsync.hasValue;
 
-    return Container(
-      width: double.infinity,
+    return GlassCard(
       padding: const EdgeInsets.all(AppDimensions.lg),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
+      radius: AppDimensions.radiusL,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'dashboard.screenTime.todayTitle'.tr(),
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.xs),
           Text(
@@ -848,12 +864,14 @@ class _TimeCard extends ConsumerWidget {
             LayoutBuilder(
               builder: (context, constraints) {
                 const iconSlot = 36.0 + AppDimensions.sm; // ikonka + oraliq
-                final fit = (constraints.maxWidth / iconSlot)
-                    .floor()
-                    .clamp(1, apps.length);
+                final fit = (constraints.maxWidth / iconSlot).floor().clamp(
+                  1,
+                  apps.length,
+                );
                 // Hammasi sig'masa, oxirgi slotni "+N" badge uchun qoldiramiz.
-                final iconCount =
-                    fit < apps.length ? (fit - 1).clamp(1, apps.length) : fit;
+                final iconCount = fit < apps.length
+                    ? (fit - 1).clamp(1, apps.length)
+                    : fit;
                 final shown = apps.take(iconCount).toList();
                 final remaining = apps.length - shown.length;
                 return Row(
@@ -1000,14 +1018,16 @@ class _QuickActionsGrid extends StatelessWidget {
       QuickActionTile(
         icon: Icons.lock_clock,
         label: 'dashboard.quickActions.appRestrictions'.tr(),
-        accentColor: const Color(0xFFA78BFA),
+        accentColor: AppColors.featurePurple,
         onTap: () => context.push(AppRoutes.appLimitsPath(childId)),
       ),
       QuickActionTile(
         icon: Icons.location_on_outlined,
         label: 'dashboard.quickActions.locationHistory'.tr(),
         accentColor: AppColors.success,
-        onTap: () => context.push(AppRoutes.locationHistoryPath(childId)),
+        // Jonli xarita (Command Deck) ochiladi; undan "Tarixni ko'rish" +
+        // "Geo-zonalar" tugmalari mavjud. (Avval to'g'ridan tarixga borardi.)
+        onTap: () => context.push(AppRoutes.locationPath(childId)),
       ),
       QuickActionTile(
         icon: Icons.calendar_today_outlined,
@@ -1018,7 +1038,7 @@ class _QuickActionsGrid extends StatelessWidget {
       QuickActionTile(
         icon: Icons.insights_rounded,
         label: 'dashboard.quickActions.weeklyReport'.tr(),
-        accentColor: const Color(0xFFF59E0B),
+        accentColor: AppColors.featureAmber,
         onTap: () => context.push(AppRoutes.weeklyReportPath(childId)),
       ),
     ];

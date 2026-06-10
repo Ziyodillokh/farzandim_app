@@ -33,45 +33,45 @@ class AppColors {
   static Color _c(int dark, int light) => Color(isDark ? dark : light);
 
   // ────────────── FON (Backgrounds) ──────────────
-  // Dark: gradient avval surface'ga juda yaqin edi (kartalar yopishib
-  // qolardi) — endi gradient QORAYTIRILDI, surface bo'rtib chiqadi.
-  // Light: yumshoq oq-kulrang fon, oq kartalar aniq ajralib turadi.
+  // Dark (Teal Glass — "Deep Sea" referens promt ranglari #0F2027 / #203A43 /
+  // #2C5364): boy, TO'YINGAN teal-petrol xona, tepada yorug' petrol, pastda
+  // chuqur teal. Fon LUMINOUS — shaffof frosted shisha kartalar shu teal'ni
+  // refraksiya qiladi. Light: yumshoq oq-kulrang fon, oq kartalar ajraladi.
 
-  /// Solid fon (asosan onPrimary qora matn uchun emas — endi `onPrimary`).
-  static Color get background => _c(0xFF0A0A12, 0xFFF2F4F8);
+  /// Solid fon — chuqur teal #0F2027 (dark), yumshoq oq-kulrang (light).
+  static Color get background => _c(0xFF0F2027, 0xFFF4F7F6);
 
-  /// Gradient fon — yuqori rang. Light'da yengil kulrang (sof oq EMAS) —
-  /// shunda oq `surface` kartalar tepada ham fonga yopishmasdan ajraladi.
-  static Color get backgroundTop => _c(0xFF13161F, 0xFFEDEFF3);
+  /// Gradient fon — yuqori rang #2C5364 (yorug' petrol-teal, yog'duni ushlaydi).
+  static Color get backgroundTop => _c(0xFF2C5364, 0xFFEEF2F0);
 
-  /// Gradient fon — pastki rang.
-  static Color get backgroundBottom => _c(0xFF080810, 0xFFE9ECF2);
+  /// Gradient fon — pastki rang #0F2027 (chuqur teal pol).
+  static Color get backgroundBottom => _c(0xFF0F2027, 0xFFE8EDEB);
 
-  /// Karta, modal, dialog, AppBar foni — fondan aniq ajralib turadi.
-  static Color get surface => _c(0xFF1E1F28, 0xFFFFFFFF);
+  /// Karta, modal, dialog foni (solid) va GlassCard blur'siz fallback asosi.
+  /// Dark: mid-teal #203A43 (gradientning o'rta tonni) — fondan yorug'roq.
+  static Color get surface => _c(0xFF203A43, 0xFFFFFFFF);
 
   /// surface ustidagi nested element (TextField, karta ichidagi tugma).
-  static Color get surfaceVariant => _c(0xFF282933, 0xFFEEF1F6);
+  static Color get surfaceVariant => _c(0xFF2A4A55, 0xFFE8F0ED);
 
-  // ────────────── ASOSIY AKSENT (Primary) — lime brand ──────────────
-  // Brand rangi ikkala rejimda bir xil (lime green + qora matn) — kuchli
-  // kontrast, tugmalar ikkala fonda ham bo'rtib chiqadi.
+  // ────────────── ASOSIY AKSENT (Primary) — brand yashil ──────────────
+  // Brand yashil FAQAT shu yerda (CTA fill). Dark'da biroz YORUG'ROQ
+  // (#2F6B5C) — neytral fon ustida tugma aniq ajralishi uchun.
 
-  static Color get primary => _c(0xFFC5F562, 0xFFC5F562);
-  static Color get primaryDark => _c(0xFFA3CE4F, 0xFFA3CE4F);
-  static Color get primaryLight => _c(0xFFD4F783, 0xFFD4F783);
+  static Color get primary => _c(0xFF2F6B5C, 0xFF235347);
+  static Color get primaryDark => _c(0xFF235347, 0xFF1A4339);
+  static Color get primaryLight => _c(0xFF3A8570, 0xFF2F6B5C);
 
   /// Yashil AKSENT — FOREGROUND (ikona/matn/aksent chiziq) uchun. `primary`
-  /// (lime) FILL uchun ishlatiladi, ammo lime oq/och fon ustida yuvilib
-  /// ketadi. `accent` esa light'da TO'Q yashil (oq fonda aniq o'qiladi),
-  /// dark'da o'sha lime. ⚠️ Tugmalar/FILL'larga TEGMAYDI — faqat foreground.
-  static Color get accent => _c(0xFFC5F562, 0xFF3F7E16);
+  /// FILL uchun. `accent` light'da TO'Q yashil (oq fonda o'qiladi), dark'da
+  /// yorqin yalpiz (#6ECFAA — neytral fon ustida porlaydi). ⚠️ FILL'ga
+  /// TEGMAYDI — faqat foreground.
+  static Color get accent => _c(0xFF6ECFAA, 0xFF0B2B26);
 
-  /// Lime (primary) USTIDAGI matn/ikon rangi — ikkala rejimda ham DOIM
-  /// to'q (lime yorqin). `background` o'rniga shu ishlatiladi (light mode'da
-  /// `background` och bo'lib qoladi → lime ustida o'qilmaydi). Bu HAQIQIY
-  /// `const` — uning ustidagi `const` widget'lar buzilmaydi.
-  static const Color onPrimary = Color(0xFF0E1208);
+  /// `primary` (brand yashil) USTIDAGI matn/ikon rangi — ikkala rejimda ham
+  /// DOIM oq (to'q yashil ustida aniq o'qiladi). Bu HAQIQIY `const` — uning
+  /// ustidagi `const` widget'lar buzilmaydi.
+  static const Color onPrimary = Color(0xFFFFFFFF);
 
   // ────────────── IKKILAMCHI AKSENT (Secondary) — turkuaz ──────────────
 
@@ -80,9 +80,10 @@ class AppColors {
 
   // ────────────── MATN (Text) ──────────────
 
-  static Color get textPrimary => _c(0xFFFFFFFF, 0xFF14161D);
-  static Color get textSecondary => _c(0xFF9999A8, 0xFF5A5D6B);
-  static Color get textTertiary => _c(0xFF6B6B78, 0xFF686C7A);
+  static Color get textPrimary => _c(0xFFF2F5F4, 0xFF0B2B26);
+  // Dark: yorug'roq karta-tepasida ham AA (>=4.5:1) o'qilishi uchun ko'tarildi.
+  static Color get textSecondary => _c(0xFFB4C0BC, 0xFF5A6B66);
+  static Color get textTertiary => _c(0xFF6B7874, 0xFF7A8E88);
 
   // ────────────── HOLAT (Status) ──────────────
   // Light'da to'qroq (600) tuslar — oq fonda o'qiladi.
@@ -95,6 +96,68 @@ class AppColors {
   // ────────────── CHEGARALAR (Borders) ──────────────
   // Kuchaytirildi — tugma/karta fondan aniq ajralib tursin.
 
-  static Color get border => _c(0xFF34353F, 0xFFCFD4DD);
-  static Color get divider => _c(0xFF24252E, 0xFFE8EBF0);
+  static Color get border => _c(0xFF294B53, 0xFFD4E0DD);
+  static Color get divider => _c(0xFF122F37, 0xFFE0EAE7);
+
+  // ────────────── REBRAND qo'shimcha tokenlari ──────────────
+  /// Grafik o'tgan-kun bar'i (muted teal — dark fonga mos).
+  static Color get chartBarMuted => _c(0xFF294A52, 0xFFB8D4CC);
+
+  /// Quick-action "binafsha" feature rangi.
+  static Color get featurePurple => _c(0xFF7C6FE0, 0xFF6B5DD0);
+
+  /// Quick-action "amber" feature rangi.
+  static Color get featureAmber => _c(0xFFD4A017, 0xFFC49210);
+
+  // ────────────── GLASS (Glassmorphism — Teal Frosted) ──────────────
+  // Dark: SHAFFOF frosted shisha (BackdropFilter blur) — orqa teal fon shisha
+  // orqali ko'rinadi va refraksiya qiladi. Opaque emas. "translucent dark
+  // surface + thin glowing border + soft teal reflection + glass highlight".
+  /// Shisha yuzasi — tekis fallback fill (light 75% oq; dark gradient zaxirasi).
+  static Color get glassFill => _c(0x24FFFFFF, 0xBFFFFFFF);
+
+  /// Yo'naltirilgan fill gradient — TEPA (yorug'roq, frost). Faqat dark.
+  static Color get glassFillTop => _c(0x30FFFFFF, 0xBFFFFFFF);
+
+  /// Yo'naltirilgan fill gradient — PAST (to'qroq → konveks chuqurlik). Dark.
+  static Color get glassFillBottom => _c(0x17FFFFFF, 0xBFFFFFFF);
+
+  /// Specular TEPA chizig'i (~1.5px) — realistik glass highlight: yuqoridan
+  /// tushgan yorqin salqin yorug'lik. Faqat dark.
+  static Color get glassTopHighlight => _c(0x99CFEFEA, 0x00000000);
+
+  /// Shisha chekka — YORQIN "glowing" rim (thin glowing border).
+  static Color get glassRim => _c(0x4DFFFFFF, 0xE6FFFFFF);
+
+  /// Shisha pastki chekka — nozik (asimmetrik border zaxirasi).
+  static Color get glassRimBottom => _c(0x1AFFFFFF, 0x66FFFFFF);
+
+  /// Shisha ichidagi tint — dark'da nozik TEAL reflektsiya (~9% #2C5364 →
+  /// "soft teal reflection"), light'da nozik yashil.
+  static Color get glassTint => _c(0x182C5364, 0x0D235347);
+
+  /// Aurora fon dog'lari (GradientBackground uchun).
+  static Color get auroraPrimary => primary;
+  static Color get auroraLight => primaryLight;
+  static Color get auroraAccent => accent;
+
+  // ────────────── QUICK ACTION TILE (toza shisha — referens) ──────────
+  // Blur'siz, lekin TOZA SHISHA: deyarli shaffof fill (fon ko'rinadi) + YORQIN
+  // crisp rim (ajralish chekkadan, oq fill emas) + sheen + specular. Badge ham
+  // toza shisha doira (oq glyph). 6 ta BackdropFilter'siz, lekin "sutli" emas.
+
+  /// Tile tanasi — yuqori (juda nozik frost, fon ko'rinadi). Dark/light.
+  static Color get qaTileFillTop => _c(0x14FFFFFF, 0xF0FFFFFF);
+
+  /// Tile tanasi — past (deyarli shaffof → konveks chuqurlik).
+  static Color get qaTileFillBottom => _c(0x08FFFFFF, 0xE6FFFFFF);
+
+  /// Tile ichki teal tint (dark) — nozik reflektsiya.
+  static Color get qaTileTint => _c(0x142C5364, 0x08235447);
+
+  /// Tile rim — YORQIN crisp chekka (asosiy ajralish belgisi).
+  static Color get qaTileRim => _c(0x66FFFFFF, 0xD9FFFFFF);
+
+  /// Tile label matni (dark'da yorug', xira emas).
+  static Color get qaTileLabel => _c(0xFFF5F8F7, 0xFF0B2B26);
 }

@@ -189,7 +189,7 @@ class _ScreenTimeCard extends StatelessWidget {
     final avgMin = (report.screenWeekMinutes / 7).round();
     return _Card(
       icon: Icons.timer_outlined,
-      accent: const Color(0xFFA78BFA),
+      accent: AppColors.featurePurple,
       title: 'weeklyReport.screenTime'.tr(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -213,7 +213,7 @@ class _ScreenTimeCard extends StatelessWidget {
                 report.screenDays.map((d) => d.totalMinutes.toDouble()).toList(),
             labels: report.screenDays.map((d) => _weekday(d.date)).toList(),
             maxValue: maxMin.toDouble(),
-            barColor: const Color(0xFFA78BFA),
+            barColor: AppColors.featurePurple,
             valueText: (v) => v >= 60
                 ? '${(v / 60).toStringAsFixed(v >= 600 ? 0 : 1)}s'
                 : '${v.toStringAsFixed(0)}m',

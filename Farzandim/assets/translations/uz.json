@@ -31,7 +31,7 @@
     "signIn": {
       "title": "Akkauntga kirish",
       "emailLabel": "Elektron pochta yoki telefon raqam",
-      "emailHint": "email@example.com yoki +998 90 123 45 67",
+      "emailHint": "Email yoki telefon raqam",
       "passwordLabel": "Parol",
       "forgotPassword": "Parolingizni unutdingizmi?",
       "submitButton": "Akkauntga kirish",
@@ -48,7 +48,7 @@
       "phoneLabel": "Telefon raqam",
       "phoneHint": "90 123 45 67",
       "emailLabel": "Email manzil",
-      "emailHint": "email@example.com",
+      "emailHint": "Email manzilingiz",
       "passwordLabel": "Parol",
       "passwordHint": "Kamida 6 belgi",
       "continueButton": "Davom etish",

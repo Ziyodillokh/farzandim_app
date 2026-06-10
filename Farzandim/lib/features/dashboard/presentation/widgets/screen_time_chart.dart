@@ -7,7 +7,7 @@
 // Bugungi kun lime green bar, qolganlar slate.
 
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_shadows.dart';
+import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -74,8 +74,7 @@ class ScreenTimeChart extends ConsumerWidget {
   static Color get _todayBar => AppColors.accent;
   // O'tgan kunlar — OCHROQ yashil (avval surfaceVariant edi → kartaga yopishib
   // ko'rinmasdi). Endi ikkala temada ham aniq ko'rinadigan ochroq yashil.
-  static Color get _otherBar =>
-      AppColors.isDark ? const Color(0xFF6E8F46) : const Color(0xFFAFD884);
+  static Color get _otherBar => AppColors.chartBarMuted;
   static TextStyle get _yAxisStyle => TextStyle(
         fontSize: 11,
         color: AppColors.textSecondary,
@@ -97,14 +96,9 @@ class ScreenTimeChart extends ConsumerWidget {
     final weeklyAsync = ref.watch(weeklyChildUsageProvider(childId));
     final todayMs = ref.watch(todayScreenTimeMsProvider(childId));
 
-    return Container(
+    return GlassCard(
       padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.card,
-      ),
+      radius: 16,
       child: weeklyAsync.when(
         loading: () => SizedBox(
           height: 220,

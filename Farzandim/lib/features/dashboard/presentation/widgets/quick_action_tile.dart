@@ -1,13 +1,19 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-/// Quick action grid tugmasi — kvadratga yaqin karta. Yumaloq accent fonli
-/// ikonka, ikkala tomon gradient, nozik border. Bosilganda 0.95 scale.
+/// Quick action grid tugmasi — "Luminous Glass Lite" premium tile.
 ///
-/// Dashboard'dagi quick actions grid'da ishlatiladi.
+/// `GlassCard(blur: false)` o'rniga MAXSUS yorug' tizim: gradient fill (konveks
+/// chuqurlik) + glowing rim + sheen + specular tepa chizig'i + accent rangli
+/// halo soya + gradient ikonka badge (OQ glyph). 6 ta BackdropFilter YO'Q —
+/// 60fps scroll, lekin hero GlassCard bilan bir xil premium daraja.
+///
+/// Rang faqat ikonka badge'da — tile tanasi 6 tasi uchun bir xil; bosilganda
+/// 0.95 scale + haptik.
 class QuickActionTile extends StatefulWidget {
   /// `QuickActionTile` konstruktor.
   const QuickActionTile({
@@ -18,17 +24,16 @@ class QuickActionTile extends StatefulWidget {
     super.key,
   });
 
-  /// Markaz ustki qismida ko'rinadigan ikonka.
+  /// Markaz ustki qismida ko'rinadigan ikonka (badge ichida, oq glyph).
   final IconData icon;
 
-  /// Ikonka ostidagi yorliq (14sp, oq, markazda).
+  /// Ikonka ostidagi yorliq (markazda, 2 qatorgacha).
   final String label;
 
   /// Tugma bosilganda chaqiriladi.
   final VoidCallback onTap;
 
-  /// Ikonkaning accent rangi (yumaloq fon + ikonkaning o'zi).
-  /// `null` bo'lsa `AppColors.primary` ishlatiladi.
+  /// Ikonka badge gradientining accent rangi. `null` bo'lsa `AppColors.accent`.
   final Color? accentColor;
 
   @override
@@ -50,100 +55,204 @@ class _QuickActionTileState extends State<QuickActionTile> {
   @override
   Widget build(BuildContext context) {
     final accent = widget.accentColor ?? AppColors.accent;
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
+    final isDark = AppColors.isDark;
+    final radius = BorderRadius.circular(AppDimensions.radiusTile);
+
     return AnimatedScale(
       scale: _pressed ? 0.95 : 1.0,
       duration: const Duration(milliseconds: 120),
       curve: Curves.easeOut,
-      // Soft shadow — kartani fon ustidan ajratib, "ko'tarilgan" ko'rinish
-      // beradi (ilgari kartalar fon bilan qo'shilib ketardi).
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          borderRadius: borderRadius,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 14,
-              offset: const Offset(0, 5),
-            ),
-          ],
-        ),
-        child: Material(
-          color: Colors.transparent,
-          borderRadius: borderRadius,
-          clipBehavior: Clip.antiAlias,
-          child: Ink(
-            decoration: BoxDecoration(
-              borderRadius: borderRadius,
-              // Fon gradientidan yorqinroq tonlar — karta bo'rtib turadi.
-              // Theme-aware: light modeda och tonlar (textPrimary qora o'qiladi).
-              gradient: LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: AppColors.isDark
-                    ? const [
-                        Color(0xFF30303D),
-                        Color(0xFF22222C),
-                      ]
-                    : const [
-                        Color(0xFFFFFFFF),
-                        Color(0xFFF3F5F9),
-                      ],
-              ),
-              // Yengil chegara — fonga yopishmasin (theme-aware).
-              border: Border.all(
-                color: AppColors.border,
-              ),
-            ),
-            child: InkWell(
-              onTap: widget.onTap,
-              onTapDown: (_) => _setPressed(true),
-              onTapUp: (_) => _setPressed(false),
-              onTapCancel: () => _setPressed(false),
-              borderRadius: borderRadius,
-              splashColor: accent.withValues(alpha: 0.14),
-              highlightColor: accent.withValues(alpha: 0.07),
-              child: Padding(
-                padding: const EdgeInsets.all(
-                  AppDimensions.sm + AppDimensions.xs,
+      // Listener press-state'ni boshqaradi; InkWell ripple + onTap.
+      child: Listener(
+        onPointerDown: (_) => _setPressed(true),
+        onPointerUp: (_) => _setPressed(false),
+        onPointerCancel: (_) => _setPressed(false),
+        // 1) Soya (clip TASHQARIDA) — accent halo bilan float.
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: radius,
+            boxShadow: AppShadows.qaTile,
+          ),
+          // 2) Clip.
+          child: ClipRRect(
+            borderRadius: radius,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                // 3-4) Tana — yo'naltirilgan gradient fill + teal tint.
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          AppColors.qaTileFillTop,
+                          AppColors.qaTileFillBottom,
+                        ],
+                      ),
+                    ),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(color: AppColors.qaTileTint),
+                    ),
+                  ),
                 ),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    // Yumaloq accent fonda ikonka (18% alpha + 30% border).
-                    Container(
-                      width: 46,
-                      height: 46,
+                // 5a) Sheen — yuqori-chapdan yumshoq yorug'lik.
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: accent.withValues(alpha: 0.18),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: accent.withValues(alpha: 0.30),
-                        ),
-                      ),
-                      child: Icon(widget.icon, size: 23, color: accent),
-                    ),
-                    const SizedBox(height: 8),
-                    Flexible(
-                      child: Text(
-                        widget.label,
-                        textAlign: TextAlign.center,
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textPrimary,
-                          fontWeight: FontWeight.w600,
+                        gradient: LinearGradient(
+                          begin: Alignment.topLeft,
+                          end: Alignment.center,
+                          colors: [
+                            Colors.white.withValues(
+                              alpha: isDark ? 0.12 : 0.30,
+                            ),
+                            Colors.white.withValues(alpha: 0),
+                          ],
                         ),
                       ),
                     ),
-                  ],
+                  ),
                 ),
-              ),
+                // 5b) Specular tepa chizig'i (~1.5px) — "haqiqiy shisha" belgisi.
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: 1.5,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.centerLeft,
+                          end: Alignment.centerRight,
+                          colors: [
+                            Colors.transparent,
+                            Colors.white.withValues(
+                              alpha: isDark ? 0.40 : 0.55,
+                            ),
+                            Colors.transparent,
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 5d-e) Kontent — Material + InkWell ripple + badge + label.
+                Positioned.fill(
+                  child: Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: widget.onTap,
+                      splashColor: accent.withValues(alpha: 0.12),
+                      highlightColor: accent.withValues(alpha: 0.06),
+                      child: Padding(
+                        padding: const EdgeInsets.all(
+                          AppDimensions.sm + AppDimensions.xs,
+                        ),
+                        child: Column(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            _PremiumIconBadge(
+                              icon: widget.icon,
+                              accent: accent,
+                            ),
+                            const SizedBox(height: AppDimensions.sm),
+                            Flexible(
+                              child: Text(
+                                widget.label,
+                                textAlign: TextAlign.center,
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: AppTextStyles.bodyS.copyWith(
+                                  fontSize: 13,
+                                  color: AppColors.qaTileLabel,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                // 5c) Rim — yorug' chekka (eng ustda, crisp).
+                Positioned.fill(
+                  child: IgnorePointer(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        borderRadius: radius,
+                        border: Border.all(
+                          color: AppColors.qaTileRim,
+                          width: 1.2,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
       ),
+    );
+  }
+}
+
+/// TOZA SHISHA ikonka badge (48×48) — referensdek: nozik oq fill gradient +
+/// crisp rim + OQ glyph (dark). Rangli gradient EMAS. Identity uchun juda nozik
+/// accent yog'du. Light'da accent-tinted (oq tile ustida ko'rinishi uchun).
+class _PremiumIconBadge extends StatelessWidget {
+  const _PremiumIconBadge({required this.icon, required this.accent});
+
+  final IconData icon;
+  final Color accent;
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = AppColors.isDark;
+    return Container(
+      width: 48,
+      height: 48,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        // Dark: toza oq shisha (fon ko'rinadi → glyph uchun yetarli to'q).
+        // Light: nozik accent-tinted (oq tile ustida ajraladi).
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: isDark
+              ? [
+                  Colors.white.withValues(alpha: 0.18),
+                  Colors.white.withValues(alpha: 0.07),
+                ]
+              : [
+                  accent.withValues(alpha: 0.22),
+                  accent.withValues(alpha: 0.12),
+                ],
+        ),
+        border: Border.all(
+          color: isDark
+              ? Colors.white.withValues(alpha: 0.48)
+              : accent.withValues(alpha: 0.40),
+        ),
+        boxShadow: [
+          // Neytral yumshoq soya — shisha ortida RANG yo'q (dark). Light'da
+          // oq tile uchun nozik accent yog'du qoladi (badge ko'rinishi uchun).
+          BoxShadow(
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.22)
+                : accent.withValues(alpha: 0.12),
+            blurRadius: isDark ? 10 : 14,
+            spreadRadius: -2,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 24, color: isDark ? Colors.white : accent),
     );
   }
 }

@@ -7,6 +7,7 @@ import 'package:farzandim/features/auth/presentation/providers/backend_auth_prov
 import 'package:farzandim/features/auth/presentation/screens/scan_account_screen.dart';
 import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
+import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/password_text_field.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:farzandim/shared/widgets/secondary_button.dart';
@@ -49,7 +50,9 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       _error = null;
     });
 
-    final err = await ref.read(backendAuthProvider.notifier).loginWithPassword(
+    final err = await ref
+        .read(backendAuthProvider.notifier)
+        .loginWithPassword(
           identifier: _identifier.text.trim(),
           password: _password.text,
         );
@@ -68,106 +71,108 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const AuthBackButton(),
       ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppDimensions.lg,
-            AppDimensions.sm,
-            AppDimensions.lg,
-            AppDimensions.xl,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: AppDimensions.sm),
-              Text(
-                'auth.signIn.title'.tr(),
-                style: AppTextStyles.headlineXL.copyWith(
-                  fontWeight: FontWeight.w800,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.xl + AppDimensions.sm),
-
-              // ─── Email / telefon ───
-              AuthFieldLabel('auth.signIn.emailLabel'.tr()),
-              const SizedBox(height: AppDimensions.sm),
-              CustomTextField(
-                controller: _identifier,
-                hint: 'auth.signIn.emailHint'.tr(),
-                keyboardType: TextInputType.emailAddress,
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Parol ───
-              AuthFieldLabel('auth.signIn.passwordLabel'.tr()),
-              const SizedBox(height: AppDimensions.sm),
-              PasswordTextField(
-                controller: _password,
-                hint: '••••••',
-                onChanged: (_) => setState(() {}),
-              ),
-
-              // ─── Parolni unutdingizmi? ───
-              Align(
-                alignment: Alignment.centerRight,
-                child: TextButton(
-                  onPressed: () => context.push(AppRoutes.forgotPassword),
-                  style: TextButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(
-                      vertical: AppDimensions.sm,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  child: Text(
-                    'auth.signIn.forgotPassword'.tr(),
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: kAuthLinkColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                  ),
-                ),
-              ),
-
-              if (_error != null) ...[
+      body: GradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.lg,
+              AppDimensions.sm,
+              AppDimensions.lg,
+              AppDimensions.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
                 const SizedBox(height: AppDimensions.sm),
-                AuthErrorText(_error!),
-              ],
+                Text(
+                  'auth.signIn.title'.tr(),
+                  style: AppTextStyles.headlineXL.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: AppDimensions.xl + AppDimensions.sm),
 
-              const SizedBox(height: AppDimensions.md),
+                // ─── Email / telefon ───
+                AuthFieldLabel('auth.signIn.emailLabel'.tr()),
+                const SizedBox(height: AppDimensions.sm),
+                CustomTextField(
+                  controller: _identifier,
+                  hint: 'auth.signIn.emailHint'.tr(),
+                  keyboardType: TextInputType.emailAddress,
+                  onChanged: (_) => setState(() {}),
+                ),
+                const SizedBox(height: AppDimensions.lg),
 
-              // ─── Asosiy: Akkauntga kirish ───
-              PrimaryButton(
-                label: 'auth.signIn.submitButton'.tr(),
-                isLoading: _loading,
-                onPressed: _canSubmit && !_loading ? _submit : null,
-              ),
-              const SizedBox(height: AppDimensions.sm + AppDimensions.xs),
+                // ─── Parol ───
+                AuthFieldLabel('auth.signIn.passwordLabel'.tr()),
+                const SizedBox(height: AppDimensions.sm),
+                PasswordTextField(
+                  controller: _password,
+                  hint: '••••••',
+                  onChanged: (_) => setState(() {}),
+                ),
 
-              // ─── Ikkilamchi: Akkauntga qo'shilish (QR kamera skaner) ───
-              // Asosiy qurilmaning QR kodini skanerlab, 2-qurilma sifatida
-              // kiradi. MaterialPageRoute (go_router stack'iga tegmasdan).
-              SecondaryButton(
-                label: 'auth.signIn.signUpButton'.tr(),
-                icon: Icons.qr_code_scanner_rounded,
-                onPressed: _loading
-                    ? null
-                    : () => Navigator.of(context).push(
+                // ─── Parolni unutdingizmi? ───
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => context.push(AppRoutes.forgotPassword),
+                    style: TextButton.styleFrom(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: AppDimensions.sm,
+                      ),
+                      minimumSize: Size.zero,
+                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                    ),
+                    child: Text(
+                      'auth.signIn.forgotPassword'.tr(),
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: kAuthLinkColor,
+                        fontWeight: FontWeight.w600,
+                      ),
+                    ),
+                  ),
+                ),
+
+                if (_error != null) ...[
+                  const SizedBox(height: AppDimensions.sm),
+                  AuthErrorText(_error!),
+                ],
+
+                const SizedBox(height: AppDimensions.md),
+
+                // ─── Asosiy: Akkauntga kirish ───
+                PrimaryButton(
+                  label: 'auth.signIn.submitButton'.tr(),
+                  isLoading: _loading,
+                  onPressed: _canSubmit && !_loading ? _submit : null,
+                ),
+                const SizedBox(height: AppDimensions.sm + AppDimensions.xs),
+
+                // ─── Ikkilamchi: Akkauntga qo'shilish (QR kamera skaner) ───
+                // Asosiy qurilmaning QR kodini skanerlab, 2-qurilma sifatida
+                // kiradi. MaterialPageRoute (go_router stack'iga tegmasdan).
+                SecondaryButton(
+                  label: 'auth.signIn.signUpButton'.tr(),
+                  icon: Icons.qr_code_scanner_rounded,
+                  onPressed: _loading
+                      ? null
+                      : () => Navigator.of(context).push(
                           MaterialPageRoute<void>(
                             builder: (_) => const ScanAccountScreen(),
                           ),
                         ),
-              ),
-            ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

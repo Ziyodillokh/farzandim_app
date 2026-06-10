@@ -80,6 +80,10 @@ class AppDimensions {
   /// "Bugun sarflangan vaqt" tipidagi).
   static const double radiusL = 24;
 
+  /// **radiusTile** — 24px. Quick action tile (toza shisha, referensdek
+  /// yumaloq premium chekka).
+  static const double radiusTile = 24;
+
   /// **radiusPill** — 999px. To'liq dumaloq (pill shape).
   ///
   /// Qayerda: PrimaryButton va SecondaryButton (CLAUDE.md tugma uslubi),

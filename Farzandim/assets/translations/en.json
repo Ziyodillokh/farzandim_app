@@ -31,7 +31,7 @@
     "signIn": {
       "title": "Sign in",
       "emailLabel": "Email or phone number",
-      "emailHint": "email@example.com or +998 90 123 45 67",
+      "emailHint": "Email or phone number",
       "passwordLabel": "Password",
       "forgotPassword": "Forgot password?",
       "submitButton": "Sign in",
@@ -48,7 +48,7 @@
       "phoneLabel": "Phone number",
       "phoneHint": "90 123 45 67",
       "emailLabel": "Email address",
-      "emailHint": "email@example.com",
+      "emailHint": "Your email address",
       "passwordLabel": "Password",
       "passwordHint": "Minimum 6 characters",
       "continueButton": "Continue",

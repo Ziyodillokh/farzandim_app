@@ -34,10 +34,13 @@ class SettingsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(profileProvider);
     // Boshqa qurilmalar soni (joriydan tashqari) — "Faol sessiyalar" badge'i.
-    final otherSessions = ref.watch(sessionsProvider).maybeWhen(
+    final otherSessions = ref
+        .watch(sessionsProvider)
+        .maybeWhen(
           data: (list) => list.where((s) => !s.isCurrent).length,
           orElse: () => 0,
         );
+    final isDark = AppColors.isDark;
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -46,83 +49,122 @@ class SettingsScreen extends ConsumerWidget {
           child: Column(
             children: [
               _ProfileHeader(profile: profile),
+              // ─── Scroll + SUZUVCHI nav (Stack) ───
+              // Menyu scroll'i butun bo'shliqni egallaydi; AppBottomNav uning
+              // USTIDA suzadi (orqa gradient + aurora uzluksiz ko'rinadi).
               Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.fromLTRB(
-                    AppDimensions.lg,
-                    AppDimensions.sm,
-                    AppDimensions.lg,
-                    AppDimensions.md,
-                  ),
-                  child: Column(
-                    children: [
-                      // ── Karta 1: bola ──
-                      _MenuCard(
-                        items: [
-                          _MenuItem(
-                            icon: Icons.person_add_alt_1_rounded,
-                            title: 'settings.menu.addChild'.tr(),
-                            onTap: () => context.push(AppRoutes.addChild),
-                          ),
-                          _MenuItem(
-                            icon: Icons.edit_rounded,
-                            title: 'settings.menu.editChild'.tr(),
-                            onTap: () =>
-                                context.push(AppRoutes.settingsChildren),
-                          ),
-                        ],
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  children: [
+                    Positioned.fill(
+                      child: SingleChildScrollView(
+                        padding: const EdgeInsets.fromLTRB(
+                          AppDimensions.lg,
+                          AppDimensions.sm,
+                          AppDimensions.lg,
+                          AppDimensions.lg +
+                              AppBottomNav.kBarHeight +
+                              AppDimensions.md +
+                              8,
+                        ),
+                        child: Column(
+                          children: [
+                            // ── Karta 1: bola ──
+                            _MenuCard(
+                              items: [
+                                _MenuItem(
+                                  icon: Icons.person_add_alt_1_rounded,
+                                  title: 'settings.menu.addChild'.tr(),
+                                  onTap: () => context.push(AppRoutes.addChild),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.edit_rounded,
+                                  title: 'settings.menu.editChild'.tr(),
+                                  onTap: () =>
+                                      context.push(AppRoutes.settingsChildren),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: AppDimensions.md),
+                            // ── Karta 2: sessiyalar / til / yordam ──
+                            _MenuCard(
+                              items: [
+                                _MenuItem(
+                                  icon: Icons.devices_rounded,
+                                  title: 'settings.menu.sessions'.tr(),
+                                  badge: otherSessions > 0
+                                      ? '$otherSessions'
+                                      : null,
+                                  onTap: () =>
+                                      context.push(AppRoutes.settingsSessions),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.language_rounded,
+                                  title: 'settings.menu.language'.tr(),
+                                  onTap: () =>
+                                      _showLanguageDialog(context, ref),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.help_outline_rounded,
+                                  title: 'settings.menu.support'.tr(),
+                                  onTap: () => context.push(AppRoutes.support),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.info_outline_rounded,
+                                  title: 'settings.menu.about'.tr(),
+                                  onTap: () =>
+                                      context.push(AppRoutes.settingsAbout),
+                                ),
+                                _MenuItem(
+                                  icon: Icons.share_rounded,
+                                  title: 'settings.menu.share'.tr(),
+                                  onTap: _shareApp,
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: AppDimensions.md),
-                      // ── Karta 2: sessiyalar / til / yordam ──
-                      _MenuCard(
-                        items: [
-                          _MenuItem(
-                            icon: Icons.devices_rounded,
-                            title: 'settings.menu.sessions'.tr(),
-                            badge: otherSessions > 0 ? '$otherSessions' : null,
-                            onTap: () =>
-                                context.push(AppRoutes.settingsSessions),
+                    ),
+                    // Fade scrim — nav ortidagi kontent yumshoq so'nadi (qattiq
+                    // blok EMAS; pastga qarab shaffofdan fon rangiga o'tadi).
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      height: 110,
+                      child: IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                AppColors.background.withValues(alpha: 0),
+                                AppColors.background.withValues(
+                                  alpha: isDark ? 0.35 : 0.25,
+                                ),
+                              ],
+                            ),
                           ),
-                          _MenuItem(
-                            icon: Icons.language_rounded,
-                            title: 'settings.menu.language'.tr(),
-                            onTap: () => _showLanguageDialog(context, ref),
-                          ),
-                          _MenuItem(
-                            icon: Icons.help_outline_rounded,
-                            title: 'settings.menu.support'.tr(),
-                            onTap: () => context.push(AppRoutes.support),
-                          ),
-                          _MenuItem(
-                            icon: Icons.info_outline_rounded,
-                            title: 'settings.menu.about'.tr(),
-                            onTap: () => context.push(AppRoutes.settingsAbout),
-                          ),
-                          _MenuItem(
-                            icon: Icons.share_rounded,
-                            title: 'settings.menu.share'.tr(),
-                            onTap: _shareApp,
-                          ),
-                        ],
+                        ),
                       ),
-                    ],
-                  ),
-                ),
-              ),
-              // ── Pastki navigatsiya ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.lg,
-                  AppDimensions.sm,
-                  AppDimensions.lg,
-                  AppDimensions.md,
-                ),
-                child: AppBottomNav(
-                  activeIndex: 1,
-                  activityLabel: 'dashboard.usageTime'.tr(),
-                  settingsLabel: 'settings.title'.tr(),
-                  onActivity: () => context.pop(),
-                  onSettings: () {},
+                    ),
+                    // SUZUVCHI nav — orqa fon yo'q (shaffof): gradient ustida
+                    // qalqaydi, glass kartalar bilan bir xil til.
+                    Positioned(
+                      left: AppDimensions.lg,
+                      right: AppDimensions.lg,
+                      bottom: AppDimensions.md,
+                      child: AppBottomNav(
+                        activeIndex: 1,
+                        activityLabel: 'dashboard.usageTime'.tr(),
+                        settingsLabel: 'settings.title'.tr(),
+                        onActivity: () => context.pop(),
+                        onSettings: () {},
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ],
@@ -250,10 +292,7 @@ class _Avatar extends StatelessWidget {
         color: AppColors.surfaceVariant,
         border: Border.all(color: AppColors.border),
         image: hasPhoto
-            ? DecorationImage(
-                image: NetworkImage(photoUrl!),
-                fit: BoxFit.cover,
-              )
+            ? DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover)
             : null,
       ),
       alignment: Alignment.center,
@@ -326,8 +365,11 @@ class _OverflowMenu extends ConsumerWidget {
           value: 'logout',
           child: Row(
             children: [
-              Icon(Icons.logout_rounded,
-                  color: AppColors.textPrimary, size: 20),
+              Icon(
+                Icons.logout_rounded,
+                color: AppColors.textPrimary,
+                size: 20,
+              ),
               const SizedBox(width: 12),
               Text('settings.logout.button'.tr(), style: AppTextStyles.bodyM),
             ],
@@ -337,8 +379,11 @@ class _OverflowMenu extends ConsumerWidget {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline_rounded,
-                  color: AppColors.error, size: 20),
+              Icon(
+                Icons.delete_outline_rounded,
+                color: AppColors.error,
+                size: 20,
+              ),
               const SizedBox(width: 12),
               Text(
                 'settings.deleteAccount'.tr(),
@@ -369,17 +414,16 @@ class _OverflowMenu extends ConsumerWidget {
             onPressed: () => Navigator.of(dialogContext).pop(),
             child: Text(
               'settings.logout.cancel'.tr(),
-              style:
-                  AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           TextButton(
             onPressed: () async {
               Navigator.of(dialogContext).pop();
               try {
-                await ref
-                    .read(fcmServiceProvider)
-                    .removeTokenForCurrentUser();
+                await ref.read(fcmServiceProvider).removeTokenForCurrentUser();
               } catch (_) {
                 // FCM Firestore mode'da bo'lmasa xato bo'lishi mumkin.
               }
@@ -526,8 +570,7 @@ class _LanguageOption extends StatelessWidget {
             const SizedBox(width: AppDimensions.md),
             Expanded(child: Text(language.label, style: AppTextStyles.bodyM)),
             if (isSelected)
-              Icon(Icons.check_circle,
-                  color: AppColors.accent, size: 20),
+              Icon(Icons.check_circle, color: AppColors.accent, size: 20),
           ],
         ),
       ),

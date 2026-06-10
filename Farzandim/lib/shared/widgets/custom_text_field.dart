@@ -1,3 +1,5 @@
+import 'dart:ui';
+
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -70,7 +72,9 @@ class CustomTextField extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
-    return TextField(
+    final isDark = AppColors.isDark;
+
+    final field = TextField(
       controller: controller,
       keyboardType: keyboardType,
       maxLength: maxLength,
@@ -80,28 +84,44 @@ class CustomTextField extends StatelessWidget {
       style: AppTextStyles.bodyM,
       decoration: InputDecoration(
         hintText: hint,
-        hintStyle: AppTextStyles.bodyM.copyWith(
-          color: AppColors.textTertiary,
-        ),
+        hintStyle: AppTextStyles.bodyM.copyWith(color: AppColors.textTertiary),
         prefixText: prefix,
         prefixStyle: AppTextStyles.bodyM,
         suffixIcon: suffix,
         // `maxLength` ostidagi counter ("0/9") yashirin.
         counterText: '',
         filled: true,
-        fillColor: AppColors.surface,
+        // Dark: yarim-shaffof teal — orqa gradient blur orqali ko'rinadi
+        // (shisha input). Light: tekis surface (o'zgarmaydi).
+        fillColor: isDark
+            ? AppColors.surface.withValues(alpha: 0.45)
+            : AppColors.surface,
         contentPadding: const EdgeInsets.symmetric(
           horizontal: AppDimensions.lg,
           vertical: 16,
         ),
         enabledBorder: OutlineInputBorder(
           borderRadius: borderRadius,
-          borderSide: BorderSide(color: AppColors.border),
+          // Dark'da yorqin "glowing" rim (shisha kartalardek).
+          borderSide: BorderSide(
+            color: isDark ? AppColors.glassRim : AppColors.border,
+            width: isDark ? 1.2 : 1,
+          ),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: borderRadius,
-          borderSide: BorderSide(color: AppColors.accent),
+          borderSide: BorderSide(color: AppColors.accent, width: 1.6),
         ),
+      ),
+    );
+
+    // Light: tekis solid field. Dark: shisha — clip + frost (BackdropFilter).
+    if (!isDark) return field;
+    return ClipRRect(
+      borderRadius: borderRadius,
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+        child: field,
       ),
     );
   }

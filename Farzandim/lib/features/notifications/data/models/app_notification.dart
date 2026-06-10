@@ -77,11 +77,11 @@ extension NotificationTypeX on NotificationType {
       case NotificationType.lowBattery:
         return const Color(0xFFFBBF24); // sariq
       case NotificationType.appLimit:
-        return const Color(0xFFA78BFA); // binafsha
+        return const Color(0xFF7C6FE0); // binafsha
       case NotificationType.scheduleStart:
         return const Color(0xFF60A5FA); // moviy
       case NotificationType.scheduleReminder:
-        return const Color(0xFFC5F562); // lime green (primary)
+        return const Color(0xFF235347); // brand forest green
       case NotificationType.offline:
         return const Color(0xFF9CA3AF); // kulrang
       case NotificationType.online:

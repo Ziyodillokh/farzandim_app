@@ -12,6 +12,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 /// Pastki navigatsiya — `activeIndex` 0 = Foydalanish vaqti, 1 = Sozlamalar.
@@ -31,7 +32,9 @@ class AppBottomNav extends StatelessWidget {
   final String activityLabel;
   final String settingsLabel;
 
-  static const double _height = 56;
+  /// Pastki nav balandligi — layout (floating Stack)'da scroll uchun pastki
+  /// bo'shliq hisoblashda ishlatiladi: `kBarHeight + md + 8`.
+  static const double kBarHeight = 56;
   static const _pillRadius = BorderRadius.all(
     Radius.circular(AppDimensions.radiusPill),
   );
@@ -39,8 +42,11 @@ class AppBottomNav extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final activityActive = activeIndex == 0;
+    // ⚠️ Root'da HECH QANDAY fon yo'q (Container/ColoredBox/gradient) — nav
+    // orqa gradient + aurora ustida SUZIB turadi. Faqat tugmalarning o'zi
+    // ko'rinadi: aktiv = solid yashil pill, inactive = frosted glass doira.
     return SizedBox(
-      height: _height,
+      height: kBarHeight,
       child: Row(
         children: [
           if (activityActive)
@@ -107,33 +113,37 @@ class _ActivePill extends StatelessWidget {
           child: InkWell(
             onTap: onTap,
             borderRadius: AppBottomNav._pillRadius,
-          child: Center(
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, size: 20, color: AppColors.onPrimary),
-                const SizedBox(width: AppDimensions.sm),
-                Flexible(
-                  child: Text(
-                    label,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.onPrimary,
-                      fontWeight: FontWeight.w700,
+            child: Center(
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(icon, size: 20, color: AppColors.onPrimary),
+                  const SizedBox(width: AppDimensions.sm),
+                  Flexible(
+                    child: Text(
+                      label,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppTextStyles.bodyM.copyWith(
+                        color: AppColors.onPrimary,
+                        fontWeight: FontWeight.w700,
+                      ),
                     ),
                   ),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ),
       ),
-    ),
-  );
+    );
   }
 }
 
-/// Kichik dumaloq (tanlanmagan) tugma.
+/// Kichik dumaloq (tanlanmagan) tugma — frosted glass doira.
+///
+/// `GlassCard` orqa gradient + aurora'ni frost qiladi, o'zi rim + sheen +
+/// floating soya beradi. Eski qattiq `surface` doira o'rniga — shisha
+/// kartalar bilan bir xil premium til.
 class _CircleButton extends StatelessWidget {
   const _CircleButton({required this.icon, required this.onTap});
 
@@ -142,27 +152,19 @@ class _CircleButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      // Premium: dumaloq tugma gradient ustida nozik qalqib turadi.
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: AppShadows.card,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        shape: CircleBorder(side: BorderSide(color: AppColors.border)),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            width: AppBottomNav._height,
-            height: AppBottomNav._height,
-            child: Icon(
-              icon,
-              size: 22,
-              color: AppColors.textPrimary,
-            ),
-          ),
+    return GlassCard(
+      // To'liq doira: eni = balandlik, radius = yarmi.
+      expandWidth: false,
+      width: AppBottomNav.kBarHeight,
+      radius: AppBottomNav.kBarHeight / 2,
+      blurSigma: 20,
+      padding: EdgeInsets.zero,
+      onTap: onTap,
+      child: SizedBox(
+        width: AppBottomNav.kBarHeight,
+        height: AppBottomNav.kBarHeight,
+        child: Center(
+          child: Icon(icon, size: 22, color: AppColors.textPrimary),
         ),
       ),
     );

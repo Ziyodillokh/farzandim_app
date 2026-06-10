@@ -31,7 +31,7 @@
     "signIn": {
       "title": "Вход в аккаунт",
       "emailLabel": "Эл. почта или номер телефона",
-      "emailHint": "email@example.com или +998 90 123 45 67",
+      "emailHint": "Эл. почта или телефон",
       "passwordLabel": "Пароль",
       "forgotPassword": "Забыли пароль?",
       "submitButton": "Войти",
@@ -48,7 +48,7 @@
       "phoneLabel": "Номер телефона",
       "phoneHint": "90 123 45 67",
       "emailLabel": "Email адрес",
-      "emailHint": "email@example.com",
+      "emailHint": "Ваша эл. почта",
       "passwordLabel": "Пароль",
       "passwordHint": "Минимум 6 символов",
       "continueButton": "Продолжить",

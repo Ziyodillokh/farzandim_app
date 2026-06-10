@@ -42,17 +42,18 @@ class AppTheme {
       colorScheme:
           (isDark ? const ColorScheme.dark() : const ColorScheme.light())
               .copyWith(
-        primary: AppColors.primary, // lime green (#C5F562)
-        onPrimary: AppColors.onPrimary, // lime ustida DOIM to'q matn
-        secondary: AppColors.secondary,
-        onSecondary: AppColors.onPrimary,
-        surface: AppColors.surface,
-        onSurface: AppColors.textPrimary,
-        surfaceContainerHighest: AppColors.surfaceVariant,
-        error: AppColors.error,
-        onError: Colors.white,
-        outline: AppColors.border,
-      ),
+                primary:
+                    AppColors.primary, // brand yashil (#235347 / dark #2F6B5C)
+                onPrimary: AppColors.onPrimary, // primary ustida DOIM oq matn
+                secondary: AppColors.secondary,
+                onSecondary: AppColors.onPrimary,
+                surface: AppColors.surface,
+                onSurface: AppColors.textPrimary,
+                surfaceContainerHighest: AppColors.surfaceVariant,
+                error: AppColors.error,
+                onError: Colors.white,
+                outline: AppColors.border,
+              ),
 
       // Scaffold fon — solid theme baza rangi (AVVAL transparent edi).
       // GradientBackground ustidan chiziladi, shuning uchun ko'rinish
@@ -62,7 +63,7 @@ class AppTheme {
 
       // Premium soya rangi — Material elevation'lar uchun. Light'da sof qora
       // emas, salqin navy-tus (yumshoq, qimmatbaho); dark'da chuqur qora.
-      shadowColor: isDark ? Colors.black : const Color(0xFF171A2E),
+      shadowColor: isDark ? Colors.black : const Color(0xFF0B2B26),
 
       // ────── 2. SHRIFT TIZIMI (TextTheme) ──────
       //
@@ -100,8 +101,9 @@ class AppTheme {
         centerTitle: false,
         titleTextStyle: AppTextStyles.headlineL,
         // Status bar ikonlari: dark mode'da oq, light mode'da qora.
-        systemOverlayStyle:
-            isDark ? SystemUiOverlayStyle.light : SystemUiOverlayStyle.dark,
+        systemOverlayStyle: isDark
+            ? SystemUiOverlayStyle.light
+            : SystemUiOverlayStyle.dark,
       ),
 
       // ────── 4. ELEVATEDBUTTON (PrimaryButton stilining bazasi) ──────
@@ -121,12 +123,11 @@ class AppTheme {
           disabledForegroundColor: AppColors.textTertiary,
           minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
           shape: const RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.all(Radius.circular(AppDimensions.radiusPill)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppDimensions.radiusPill),
+            ),
           ),
-          textStyle: AppTextStyles.bodyM.copyWith(
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
           elevation: 0,
         ),
       ),
@@ -140,12 +141,11 @@ class AppTheme {
           minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
           side: BorderSide(color: AppColors.textPrimary),
           shape: const RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.all(Radius.circular(AppDimensions.radiusPill)),
+            borderRadius: BorderRadius.all(
+              Radius.circular(AppDimensions.radiusPill),
+            ),
           ),
-          textStyle: AppTextStyles.bodyM.copyWith(
-            fontWeight: FontWeight.w500,
-          ),
+          textStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w500),
         ),
       ),
 
@@ -177,9 +177,7 @@ class AppTheme {
           borderRadius: BorderRadius.circular(AppDimensions.radiusM),
           borderSide: BorderSide(color: AppColors.error),
         ),
-        hintStyle: AppTextStyles.bodyM.copyWith(
-          color: AppColors.textTertiary,
-        ),
+        hintStyle: AppTextStyles.bodyM.copyWith(color: AppColors.textTertiary),
         labelStyle: AppTextStyles.bodyS.copyWith(
           color: AppColors.textSecondary,
         ),

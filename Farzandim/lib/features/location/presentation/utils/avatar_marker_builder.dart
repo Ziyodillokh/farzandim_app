@@ -29,7 +29,7 @@ class AvatarMarkerBuilder {
     double pinWidth = 72,
     double pinHeight = 92,
     // Marker xaritada — fixed lime (default param const bo'lishi shart).
-    Color accent = const Color(0xFFC5F562),
+    Color accent = const Color(0xFF235347),
   }) async {
     final cacheKey = '${avatarUrl ?? "null"}_$fallbackKey'
         '_${accent.value.toRadixString(16)}_${pinWidth.toInt()}';

@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
+import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/password_text_field.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:farzandim/shared/widgets/social_button.dart';
@@ -69,8 +70,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
 
     final notifier = ref.read(backendAuthProvider.notifier);
-    final fullName =
-        '${_firstName.text.trim()} ${_lastName.text.trim()}'.trim();
+    final fullName = '${_firstName.text.trim()} ${_lastName.text.trim()}'
+        .trim();
     final err = _isPhone
         ? await notifier.registerWithPassword(
             phone: '+998${_phone.text.trim()}',
@@ -129,138 +130,140 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: Colors.transparent,
+      extendBodyBehindAppBar: true,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: const AuthBackButton(),
       ),
-      body: SafeArea(
-        top: false,
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(
-            AppDimensions.lg,
-            AppDimensions.sm,
-            AppDimensions.lg,
-            AppDimensions.xl,
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              const SizedBox(height: AppDimensions.sm),
-              Text(
-                'auth.signUp.title'.tr(),
-                style: AppTextStyles.headlineXL.copyWith(
-                  fontWeight: FontWeight.w800,
+      body: GradientBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.lg,
+              AppDimensions.sm,
+              AppDimensions.lg,
+              AppDimensions.xl,
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                const SizedBox(height: AppDimensions.sm),
+                Text(
+                  'auth.signUp.title'.tr(),
+                  style: AppTextStyles.headlineXL.copyWith(
+                    fontWeight: FontWeight.w800,
+                  ),
+                  textAlign: TextAlign.center,
                 ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: AppDimensions.xl),
+                const SizedBox(height: AppDimensions.xl),
 
-              // ─── Ism + Familiya ───
-              AuthFieldLabel('auth.signUp.firstNameLabel'.tr()),
-              const SizedBox(height: AppDimensions.sm),
-              CustomTextField(
-                controller: _firstName,
-                hint: 'auth.signUp.firstNameHint'.tr(),
-                keyboardType: TextInputType.name,
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AppDimensions.lg),
-              AuthFieldLabel('auth.signUp.lastNameLabel'.tr()),
-              const SizedBox(height: AppDimensions.sm),
-              CustomTextField(
-                controller: _lastName,
-                hint: 'auth.signUp.lastNameHint'.tr(),
-                keyboardType: TextInputType.name,
-                onChanged: (_) => setState(() {}),
-              ),
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Tab: Telefon / Email ───
-              TabSwitcher(
-                tabs: [
-                  'auth.signUp.phoneTab'.tr(),
-                  'auth.signUp.emailTab'.tr(),
-                ],
-                activeIndex: _activeTab,
-                onChanged: (i) => setState(() {
-                  _activeTab = i;
-                  _error = null;
-                }),
-              ),
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Identifikator maydoni (telefon yoki email) ───
-              if (_isPhone) ...[
-                AuthFieldLabel('auth.signUp.phoneLabel'.tr()),
+                // ─── Ism + Familiya ───
+                AuthFieldLabel('auth.signUp.firstNameLabel'.tr()),
                 const SizedBox(height: AppDimensions.sm),
                 CustomTextField(
-                  controller: _phone,
-                  hint: 'auth.signUp.phoneHint'.tr(),
-                  prefix: '+998 ',
-                  keyboardType: TextInputType.phone,
-                  maxLength: 9,
-                  inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                  controller: _firstName,
+                  hint: 'auth.signUp.firstNameHint'.tr(),
+                  keyboardType: TextInputType.name,
                   onChanged: (_) => setState(() {}),
                 ),
-              ] else ...[
-                AuthFieldLabel('auth.signUp.emailLabel'.tr()),
+                const SizedBox(height: AppDimensions.lg),
+                AuthFieldLabel('auth.signUp.lastNameLabel'.tr()),
                 const SizedBox(height: AppDimensions.sm),
                 CustomTextField(
-                  controller: _email,
-                  hint: 'auth.signUp.emailHint'.tr(),
-                  keyboardType: TextInputType.emailAddress,
+                  controller: _lastName,
+                  hint: 'auth.signUp.lastNameHint'.tr(),
+                  keyboardType: TextInputType.name,
                   onChanged: (_) => setState(() {}),
                 ),
-              ],
-              const SizedBox(height: AppDimensions.lg),
+                const SizedBox(height: AppDimensions.lg),
 
-              // ─── Parol (telefon va email ikkalasida ham) ───
-              AuthFieldLabel('auth.signUp.passwordLabel'.tr()),
-              const SizedBox(height: AppDimensions.sm),
-              PasswordTextField(
-                controller: _password,
-                hint: 'auth.signUp.passwordHint'.tr(),
-                onChanged: (_) => setState(() {}),
-              ),
+                // ─── Tab: Telefon / Email ───
+                TabSwitcher(
+                  tabs: [
+                    'auth.signUp.phoneTab'.tr(),
+                    'auth.signUp.emailTab'.tr(),
+                  ],
+                  activeIndex: _activeTab,
+                  onChanged: (i) => setState(() {
+                    _activeTab = i;
+                    _error = null;
+                  }),
+                ),
+                const SizedBox(height: AppDimensions.lg),
 
-              if (_error != null) ...[
-                const SizedBox(height: AppDimensions.md),
-                AuthErrorText(_error!),
-              ],
-
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Asosiy: Ro'yxatdan o'tish ───
-              PrimaryButton(
-                label: 'auth.signUp.submitButton'.tr(),
-                isLoading: _loading,
-                onPressed: _canSubmit && !_loading ? _submit : null,
-              ),
-              const SizedBox(height: AppDimensions.lg),
-
-              // ─── Ijtimoiy: Apple / Google ───
-              Row(
-                children: [
-                  Expanded(
-                    child: SocialButton(
-                      iconAsset: 'assets/icons/ic_apple.svg',
-                      semanticsLabel: 'auth.social.apple'.tr(),
-                      onPressed: _loading ? null : () => _signInWithApple(),
-                    ),
+                // ─── Identifikator maydoni (telefon yoki email) ───
+                if (_isPhone) ...[
+                  AuthFieldLabel('auth.signUp.phoneLabel'.tr()),
+                  const SizedBox(height: AppDimensions.sm),
+                  CustomTextField(
+                    controller: _phone,
+                    hint: 'auth.signUp.phoneHint'.tr(),
+                    prefix: '+998 ',
+                    keyboardType: TextInputType.phone,
+                    maxLength: 9,
+                    inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+                    onChanged: (_) => setState(() {}),
                   ),
-                  const SizedBox(width: AppDimensions.md),
-                  Expanded(
-                    child: SocialButton(
-                      iconAsset: 'assets/icons/ic_google.svg',
-                      semanticsLabel: 'auth.social.google'.tr(),
-                      onPressed: _loading ? null : () => _signInWithGoogle(),
-                    ),
+                ] else ...[
+                  AuthFieldLabel('auth.signUp.emailLabel'.tr()),
+                  const SizedBox(height: AppDimensions.sm),
+                  CustomTextField(
+                    controller: _email,
+                    hint: 'auth.signUp.emailHint'.tr(),
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) => setState(() {}),
                   ),
                 ],
-              ),
-            ],
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Parol (telefon va email ikkalasida ham) ───
+                AuthFieldLabel('auth.signUp.passwordLabel'.tr()),
+                const SizedBox(height: AppDimensions.sm),
+                PasswordTextField(
+                  controller: _password,
+                  hint: 'auth.signUp.passwordHint'.tr(),
+                  onChanged: (_) => setState(() {}),
+                ),
+
+                if (_error != null) ...[
+                  const SizedBox(height: AppDimensions.md),
+                  AuthErrorText(_error!),
+                ],
+
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Asosiy: Ro'yxatdan o'tish ───
+                PrimaryButton(
+                  label: 'auth.signUp.submitButton'.tr(),
+                  isLoading: _loading,
+                  onPressed: _canSubmit && !_loading ? _submit : null,
+                ),
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Ijtimoiy: Apple / Google ───
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialButton(
+                        iconAsset: 'assets/icons/ic_apple.svg',
+                        semanticsLabel: 'auth.social.apple'.tr(),
+                        onPressed: _loading ? null : () => _signInWithApple(),
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.md),
+                    Expanded(
+                      child: SocialButton(
+                        iconAsset: 'assets/icons/ic_google.svg',
+                        semanticsLabel: 'auth.social.google'.tr(),
+                        onPressed: _loading ? null : () => _signInWithGoogle(),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
+            ),
           ),
         ),
       ),

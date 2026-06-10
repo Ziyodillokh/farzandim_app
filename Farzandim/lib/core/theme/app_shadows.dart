@@ -21,15 +21,15 @@ class AppShadows {
   static List<BoxShadow> get card => AppColors.isDark
       ? const [
           BoxShadow(
-            color: Color(0x42000000), // qora ~26%
-            blurRadius: 16,
-            offset: Offset(0, 6),
+            color: Color(0x50000000), // neytral fonda biroz chuqurroq qora
+            blurRadius: 18,
+            offset: Offset(0, 8),
           ),
         ]
       : const [
           // Salqin navy-tusli yumshoq soya — premium, sof qora emas.
           BoxShadow(
-            color: Color(0x14171A2E),
+            color: Color(0x140B2B26),
             blurRadius: 22,
             offset: Offset(0, 8),
             spreadRadius: -2,
@@ -52,7 +52,7 @@ class AppShadows {
         ]
       : const [
           BoxShadow(
-            color: Color(0x1F171A2E),
+            color: Color(0x1F0B2B26),
             blurRadius: 34,
             offset: Offset(0, 16),
             spreadRadius: -4,
@@ -66,11 +66,87 @@ class AppShadows {
 
   /// Brand glow — lime tugma ostidagi nozik yog'du (premium CTA).
   static List<BoxShadow> glow(Color color) => [
-        BoxShadow(
-          color: color.withValues(alpha: AppColors.isDark ? 0.30 : 0.32),
-          blurRadius: 18,
-          offset: const Offset(0, 8),
-          spreadRadius: -3,
-        ),
-      ];
+    BoxShadow(
+      color: color.withValues(alpha: AppColors.isDark ? 0.28 : 0.25),
+      blurRadius: 18,
+      offset: const Offset(0, 8),
+      spreadRadius: -3,
+    ),
+  ];
+
+  /// Shisha karta uchun ko'p-qatlamli "floating" soya (Samsung One UI 8).
+  static List<BoxShadow> get glass => AppColors.isDark
+      ? [
+          // a) Chuqur qora float — karta fon ustidan baland "suzadi".
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 40,
+            offset: const Offset(0, 16),
+            spreadRadius: -6,
+          ),
+          // b) Teal "neon" halo — shisha kartani teal yorug'lik bilan o'raydi.
+          BoxShadow(
+            color: const Color(0xFF3DBFB4).withValues(alpha: 0.09),
+            blurRadius: 28,
+            offset: const Offset(0, 8),
+            spreadRadius: -8,
+          ),
+          // c) Mint whisper — salqin chekka jilosi (juda nozik).
+          BoxShadow(
+            color: const Color(0xFF6ECFAA).withValues(alpha: 0.05),
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+            spreadRadius: -10,
+          ),
+          // d) Kontakt soyasi — yer bilan ulanish.
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.32),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFF0B2B26).withValues(alpha: 0.10),
+            blurRadius: 28,
+            offset: const Offset(0, 10),
+            spreadRadius: -2,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ];
+
+  /// Quick action tile — TOZA neytral float + nozik rim shadow. Rangli halo
+  /// YO'Q (shisha ortida rang bo'lmaydi — referens uslubi).
+  static List<BoxShadow> get qaTile => AppColors.isDark
+      ? [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.55),
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+            spreadRadius: -4,
+          ),
+          // Yuqori rim shadow (nozik yorug' chekka).
+          BoxShadow(
+            color: Colors.white.withValues(alpha: 0.06),
+            blurRadius: 1,
+            offset: const Offset(0, -1),
+          ),
+        ]
+      : [
+          BoxShadow(
+            color: const Color(0xFF0B2B26).withValues(alpha: 0.12),
+            blurRadius: 20,
+            offset: const Offset(0, 8),
+            spreadRadius: -2,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.06),
+            blurRadius: 6,
+            offset: const Offset(0, 2),
+          ),
+        ];
 }
