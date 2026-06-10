@@ -113,6 +113,9 @@
   },
   "notifications": {
     "title": "Notifications",
+    "blockApp": "Block",
+    "blockedSnack": "{app} blocked",
+    "blockError": "Could not block",
     "markAllRead": "Mark all read",
     "review": "Review",
     "reject": "Reject",

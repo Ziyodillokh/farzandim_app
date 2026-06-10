@@ -113,6 +113,9 @@
   },
   "notifications": {
     "title": "Bildirishnoma",
+    "blockApp": "Bloklash",
+    "blockedSnack": "{app} bloklandi",
+    "blockError": "Bloklab bo'lmadi",
     "markAllRead": "O'qildi qil",
     "review": "Tekshirish",
     "reject": "Rad etish",

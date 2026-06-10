@@ -113,6 +113,9 @@
   },
   "notifications": {
     "title": "Уведомления",
+    "blockApp": "Блокировать",
+    "blockedSnack": "{app} заблокирован",
+    "blockError": "Не удалось заблокировать",
     "markAllRead": "Прочитать всё",
     "review": "Проверить",
     "reject": "Отклонить",
