@@ -141,6 +141,14 @@ class _LocationHistoryScreenState
         ref.watch(locationStopsProvider(query)).valueOrNull ??
             const <LocationStop>[];
 
+    // Tarix nuqtalarini tozalash — yomon-aniqlik fix va statsionar jitter
+    // klasterlari olib tashlanadi (zigzag/soxta "borib-kelish" + shishgan
+    // masofa yo'qoladi). Backend yangi data'ni filtrlaydi; bu eski data'ni
+    // ham toza ko'rsatadi.
+    final track = _cleanTrack(
+      historyAsync.valueOrNull ?? const <ChildLocation>[],
+    );
+
     // Avatar marker for end pin
     if (child != null && _avatarMarker == null) {
       final avatarUrl = ref.watch(childAvatarUrlProvider(child.id)).valueOrNull;
@@ -179,29 +187,32 @@ class _LocationHistoryScreenState
                   ),
                 ),
               ),
-              data: (points) => points.isEmpty
-                  ? const _EmptyState()
-                  : _MapLayer(
-                      points: points,
-                      stops: stops,
-                      avatarMarker: _avatarMarker,
-                      openDwellIndex: _openDwellIndex,
-                      onDwellTap: (idx) {
-                        setState(() {
-                          _openDwellIndex =
-                              _openDwellIndex == idx ? null : idx;
-                        });
-                      },
-                      onMapTap: () {
-                        if (_openDwellIndex != null) {
-                          setState(() => _openDwellIndex = null);
-                        }
-                      },
-                      onMapCreated: (c) {
-                        _mapController = c;
-                        _fitToBounds(points);
-                      },
-                    ),
+              data: (points) {
+                if (points.isEmpty) return const _EmptyState();
+                // Tozalangan track (bo'sh bo'lib qolmasligi uchun fallback).
+                final shown = track.isNotEmpty ? track : points;
+                return _MapLayer(
+                  points: shown,
+                  stops: stops,
+                  avatarMarker: _avatarMarker,
+                  openDwellIndex: _openDwellIndex,
+                  onDwellTap: (idx) {
+                    setState(() {
+                      _openDwellIndex =
+                          _openDwellIndex == idx ? null : idx;
+                    });
+                  },
+                  onMapTap: () {
+                    if (_openDwellIndex != null) {
+                      setState(() => _openDwellIndex = null);
+                    }
+                  },
+                  onMapCreated: (c) {
+                    _mapController = c;
+                    _fitToBounds(shown);
+                  },
+                );
+              },
             ),
 
             // Top bar (back + title).
@@ -221,9 +232,7 @@ class _LocationHistoryScreenState
                 onCustomDateTap: _pickDateRange,
                 stops: stops,
                 onPlaceTap: _goToStop,
-                distanceKm: _calculateDistanceKm(
-                  historyAsync.valueOrNull,
-                ),
+                distanceKm: _calculateDistanceKm(track),
               ),
             ),
           ],
@@ -257,6 +266,30 @@ class _LocationHistoryScreenState
     _mapController!.animateCamera(
       CameraUpdate.newLatLngBounds(bounds, 80),
     );
+  }
+
+  /// Tarix nuqtalarini tozalaydi (professional joylashuv mantig'i):
+  ///  - aniqligi yomon (>100m) fix'lar tashlanadi (cell-tower/garbage);
+  ///  - oxirgi saqlangan nuqtadan <25m masofadagi nuqtalar yutiladi
+  ///    (statsionar GPS jitter — soxta "borib-kelish" zigzag va shishgan
+  ///    masofani oldini oladi).
+  /// Backend ham yangi data'ni filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
+  List<ChildLocation> _cleanTrack(List<ChildLocation> points) {
+    const maxAccuracyM = 100.0;
+    const minGapM = 25.0;
+    final cleaned = <ChildLocation>[];
+    for (final p in points) {
+      // accuracy == 0 → noma'lum (backend bermagan) → o'tkazamiz.
+      if (p.accuracy > maxAccuracyM) continue;
+      if (cleaned.isEmpty) {
+        cleaned.add(p);
+        continue;
+      }
+      if (_haversineKm(cleaned.last, p) * 1000 >= minGapM) {
+        cleaned.add(p);
+      }
+    }
+    return cleaned;
   }
 
   /// Polyline bo'ylab jami masofani km'da hisoblash (haversine).

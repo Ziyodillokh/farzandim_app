@@ -23,6 +23,19 @@ const STOP_RADIUS_M = 20;
 /** Minimal to'xtash davomiyligi — shundan kam bo'lsa marker yaratilmaydi. */
 const MIN_STOP_SEC = 180; // 3 daqiqa
 
+// ── Kirish (ingest) filtri — GPS "jitter" va xato fix'larni history'ga
+//    yozmaslik uchun. Muammo: bola bir joyda turganda GPS 10–40m sakraydi
+//    (heartbeat har 60s) → har sakrash >10m yangi nuqta → tarixda soxta
+//    "borib-kelish" zigzag + shishgan masofa (masalan 356 km). ──
+/** Aniqligi shundan yomon (kattaroq, m) fix history'ga yozilmaydi (cell-tower/garbage). */
+const MAX_ACCURACY_M = 100;
+/** Harakat chegarasi (m/s) — shundan tez bo'lsa "harakatda" deb hisoblanadi. */
+const MOVING_SPEED_MS = 1.3;
+/** Harakatda: yo'l chizig'i shu qadamda yoziladi (m) — nozik, ko'cha bo'ylab. */
+const MOVE_MIN_M = 12;
+/** Statsionar/noma'lum: jitter'ni yutish uchun shundan kam siljish yozilmaydi (m). */
+const JITTER_MIN_M = 35;
+
 /** detectStop uchun kerakli minimal Child maydonlari. */
 interface StopState {
   id: string;
@@ -89,7 +102,21 @@ export class LocationService {
     if (appVersion !== undefined) childDeviceUpdate.appVersion = appVersion;
     if (wifiName !== undefined) childDeviceUpdate.wifiName = wifiName;
 
-    // 10-meter deduplication
+    // ── Kirish filtri: jitter/garbage nuqtalar history'ga yozilmaydi ──
+    const acc = rest.accuracy ?? null;
+    const spd = rest.speed ?? null;
+
+    // (1) Aniqligi juda yomon (cell-tower) fix — history'ga yozmaymiz, lekin
+    //     qurilma ma'lumotini (batareya/last-seen) baribir yangilaymiz.
+    if (acc !== null && acc > MAX_ACCURACY_M) {
+      await this.prisma.child.update({
+        where: { id: childId },
+        data: childDeviceUpdate,
+      });
+      return { ok: true, written: false, reason: 'low_accuracy', accuracy: acc };
+    }
+
+    // Adaptiv deduplikatsiya — oxirgi yozilgan nuqtaga nisbatan.
     const lastLocation = await this.prisma.location.findFirst({
       where: { childId },
       orderBy: { createdAt: 'desc' },
@@ -102,12 +129,23 @@ export class LocationService {
         latitude,
         longitude,
       );
-      if (distance < 10) {
+      // (2) Harakatda bo'lsa nozik (12m), statsionar/noma'lum bo'lsa katta
+      //     (35m) chegara — bu uydagi GPS jitter'ini "yutadi" (zigzag/soxta
+      //     borib-kelish yo'qoladi), lekin haqiqiy harakatni saqlaydi.
+      const isMoving = spd !== null && spd >= MOVING_SPEED_MS;
+      const minMove = isMoving ? MOVE_MIN_M : JITTER_MIN_M;
+      if (distance < minMove) {
         await this.prisma.child.update({
           where: { id: childId },
           data: childDeviceUpdate,
         });
-        return { ok: true, written: false, reason: 'too_close', distance };
+        return {
+          ok: true,
+          written: false,
+          reason: 'too_close',
+          distance,
+          minMove,
+        };
       }
     }
 
