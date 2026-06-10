@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Choose your language",
+    "selectSubtitle": "Which language do you want to use the app in?",
+    "continueButton": "Continue"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Cancel",

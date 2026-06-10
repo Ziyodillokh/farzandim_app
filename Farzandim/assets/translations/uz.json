@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Tilni tanlang",
+    "selectSubtitle": "Ilovani qaysi tilda ishlatasiz?",
+    "continueButton": "Davom etish"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Bekor qilish",

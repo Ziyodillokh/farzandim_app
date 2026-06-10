@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Выберите язык",
+    "selectSubtitle": "На каком языке использовать приложение?",
+    "continueButton": "Продолжить"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Отмена",
