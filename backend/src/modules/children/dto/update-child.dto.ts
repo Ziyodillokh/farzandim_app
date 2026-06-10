@@ -42,6 +42,12 @@ export class UpdateChildDto {
   @MaxLength(100)
   region?: string;
 
+  @ApiPropertyOptional({ example: '+998901234567', maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phoneNumber?: string;
+
   @ApiPropertyOptional({
     example: true,
     description:

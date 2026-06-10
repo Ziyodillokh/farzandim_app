@@ -110,8 +110,9 @@ class Child {
       lastSeenAt: _parseIso8601(json['lastSeenAt']),
       createdAt: _parseIso8601(json['createdAt']) ?? DateTime.now(),
       blockUnknownSources: (json['blockUnknownSources'] as bool?) ?? false,
-      // phoneNumber Backend'da yo'q (Sprint 4.4 skip — kelajakda Child App
-      // SIM'dan o'qib alohida endpoint orqali yuboradi)
+      // SOS "Qo'ng'iroq" uchun — backend endi phoneNumber qaytaradi
+      // (ota-ona bola qo'shganda/tahrirlaganda kiritadi).
+      phoneNumber: json['phoneNumber'] as String?,
     );
   }
 
