@@ -99,6 +99,14 @@ const _authRoutes = <String>[
   // ochiladi. _authRoutes'da bo'lsa, kirgan user dashboard'ga otib ketardi.
 ];
 
+/// Ommaviy (public) routelar — auth holatidan QAT'I NAZAR ochiladi: login
+/// qilinmagan (ro'yxatdan o'tishdagi ommaviy offerta) HAM, kirgan foydalanuvchi
+/// (sozlamalar) HAM. Redirect ularga TEGMAYDI.
+const _publicRoutes = <String>[
+  AppRoutes.legalPrivacyPolicy,
+  AppRoutes.legalTermsOfService,
+];
+
 /// Firebase + Backend auth providerlarga listen qilib `notifyListeners`
 /// chaqiradigan ChangeNotifier — `GoRouter.refreshListenable` uchun.
 ///
@@ -133,9 +141,7 @@ List<NavigatorObserver> _analyticsObservers() {
     if (projectId.contains('dev-stub')) {
       return <NavigatorObserver>[];
     }
-    return [
-      FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance),
-    ];
+    return [FirebaseAnalyticsObserver(analytics: FirebaseAnalytics.instance)];
   } catch (_) {
     // Firebase plugin mavjud emas / ishga tushmagan — observer'siz.
     return <NavigatorObserver>[];
@@ -165,6 +171,10 @@ final routerProvider = Provider<GoRouter>((ref) {
 
       // Birinchi marta yuklanyapti — hech qanday redirect qilmaymiz.
       if (backendAuth is AuthUnknown) return null;
+
+      // Ommaviy hujjatlar (Maxfiylik/Shartlar) — har doim ochiladi, redirect
+      // qilmaymiz (ro'yxatdan o'tishda rozilik havolasi ishlashi uchun).
+      if (_publicRoutes.contains(state.matchedLocation)) return null;
 
       final isLoggedIn = backendAuth is AuthAuthenticated;
       final isAuthRoute = _authRoutes.contains(state.matchedLocation);
@@ -218,8 +228,7 @@ List<RouteBase> buildAppRoutes() {
     // Parolni tiklash (UI stub).
     GoRoute(
       path: AppRoutes.forgotPassword,
-      pageBuilder: (context, state) =>
-          _slidePage(const ForgotPasswordScreen()),
+      pageBuilder: (context, state) => _slidePage(const ForgotPasswordScreen()),
     ),
 
     // Akkauntga qo'shilish — QR orqali boshqa qurilmaga ulanish.
@@ -245,9 +254,8 @@ List<RouteBase> buildAppRoutes() {
     // Bolani tahrirlash — Bosqich 7.2.
     GoRoute(
       path: AppRoutes.editChildPattern,
-      pageBuilder: (context, state) => _slidePage(
-        AddChildScreen(childId: state.pathParameters['id']),
-      ),
+      pageBuilder: (context, state) =>
+          _slidePage(AddChildScreen(childId: state.pathParameters['id'])),
     ),
 
     // Oila kodi ekrani — bola qo'shilgandan keyin shu yerga keladi.
@@ -280,13 +288,11 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.settingsSessions,
-      pageBuilder: (context, state) =>
-          _slidePage(const ActiveSessionsScreen()),
+      pageBuilder: (context, state) => _slidePage(const ActiveSessionsScreen()),
     ),
     GoRoute(
       path: AppRoutes.support,
-      pageBuilder: (context, state) =>
-          _slidePage(const SupportChatScreen()),
+      pageBuilder: (context, state) => _slidePage(const SupportChatScreen()),
     ),
     // Profil va Bolalar boshqaruvi — Bosqich 7.3 va 7.2.
     GoRoute(
@@ -308,8 +314,7 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.legalTermsOfService,
-      pageBuilder: (context, state) =>
-          _slidePage(const TermsOfServiceScreen()),
+      pageBuilder: (context, state) => _slidePage(const TermsOfServiceScreen()),
     ),
 
     // Bola joylashuvi xaritada — Bosqich 4.1.
@@ -412,38 +417,29 @@ List<RouteBase> buildAppRoutes() {
       // edi; route path o'zgarmadi (dashboard navigatsiyasi shu).
       path: AppRoutes.childAchievementsPattern,
       pageBuilder: (context, state) => _slidePage(
-        LeaderboardScreen(
-          childId: state.pathParameters['childId']!,
-        ),
+        LeaderboardScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(
       path: AppRoutes.sosAlerts,
-      pageBuilder: (context, state) =>
-          _slidePage(const SosAlertsListScreen()),
+      pageBuilder: (context, state) => _slidePage(const SosAlertsListScreen()),
     ),
     GoRoute(
       path: AppRoutes.photoRequestsPattern,
       pageBuilder: (context, state) => _slidePage(
-        PhotoRequestsListScreen(
-          childId: state.pathParameters['childId']!,
-        ),
+        PhotoRequestsListScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(
       path: AppRoutes.feedbackInboxPattern,
       pageBuilder: (context, state) => _slidePage(
-        FeedbackInboxScreen(
-          childId: state.pathParameters['childId']!,
-        ),
+        FeedbackInboxScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(
       path: AppRoutes.pairRequestsPattern,
       pageBuilder: (context, state) => _slidePage(
-        PairRequestsScreen(
-          childId: state.pathParameters['childId']!,
-        ),
+        PairRequestsScreen(childId: state.pathParameters['childId']!),
       ),
     ),
   ];
