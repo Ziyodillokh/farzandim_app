@@ -43,6 +43,17 @@
       "signUpButton": "Akkauntga qo'shilish"
     },
     "signUp": {
+      "contactSubtitle": "Telefon yoki email orqali boshlang",
+      "sendCodeButton": "Kod yuborish",
+      "otpTitle": "Tasdiqlash kodi",
+      "otpSentTo": "5 xonali kod yuborildi:",
+      "demoHint": "Demo rejim: istalgan 5 xonali kodni kiriting",
+      "resendTimer": "Qayta yuborish — {time}",
+      "resentSnack": "Kod qaytadan yuborildi",
+      "profileTitle": "Ma'lumotlaringiz",
+      "confirmPasswordLabel": "Parolni takrorlash",
+      "confirmPasswordHint": "Parolni qayta kiriting",
+      "passwordMismatch": "Parollar mos kelmadi",
       "title": "Ro'yxatdan o'tish",
       "firstNameLabel": "Ism",
       "firstNameHint": "Ismingiz",

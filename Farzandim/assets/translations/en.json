@@ -43,6 +43,17 @@
       "signUpButton": "Create account"
     },
     "signUp": {
+      "contactSubtitle": "Start with your phone or email",
+      "sendCodeButton": "Send code",
+      "otpTitle": "Verification code",
+      "otpSentTo": "A 5-digit code was sent to:",
+      "demoHint": "Demo mode: enter any 5-digit code",
+      "resendTimer": "Resend in {time}",
+      "resentSnack": "Code resent",
+      "profileTitle": "Your details",
+      "confirmPasswordLabel": "Confirm password",
+      "confirmPasswordHint": "Re-enter password",
+      "passwordMismatch": "Passwords do not match",
       "title": "Sign up",
       "firstNameLabel": "First name",
       "firstNameHint": "Your first name",

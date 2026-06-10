@@ -43,6 +43,17 @@
       "signUpButton": "Создать аккаунт"
     },
     "signUp": {
+      "contactSubtitle": "Начните с телефона или email",
+      "sendCodeButton": "Отправить код",
+      "otpTitle": "Код подтверждения",
+      "otpSentTo": "Отправлен 5-значный код:",
+      "demoHint": "Демо-режим: введите любой 5-значный код",
+      "resendTimer": "Повторить — {time}",
+      "resentSnack": "Код отправлен повторно",
+      "profileTitle": "Ваши данные",
+      "confirmPasswordLabel": "Повторите пароль",
+      "confirmPasswordHint": "Введите пароль ещё раз",
+      "passwordMismatch": "Пароли не совпадают",
       "title": "Регистрация",
       "firstNameLabel": "Имя",
       "firstNameHint": "Ваше имя",
