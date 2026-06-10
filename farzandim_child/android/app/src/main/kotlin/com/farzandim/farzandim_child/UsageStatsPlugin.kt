@@ -287,14 +287,20 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             .sortedByDescending { it["totalTimeMs"] as Long }
     }
 
-    /** Ilova O'YIN'mi (CATEGORY_GAME). API 26+ category, eski'da FLAG_IS_GAME. */
+    /**
+     * Ilova O'YIN'mi. Ikkala signalni ham tekshiramiz (kengroq, ishonchli):
+     *  1) ApplicationInfo.category == CATEGORY_GAME (Play o'rnatadi, API 26+) —
+     *     lekin ba'zi o'yinlarda UNDEFINED bo'ladi, shuning uchun yetarli emas.
+     *  2) FLAG_IS_GAME (deprecated, lekin ba'zi o'yinlar manifestida bor).
+     */
     private fun isGame(appInfo: ApplicationInfo): Boolean {
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             appInfo.category == ApplicationInfo.CATEGORY_GAME
-        } else {
-            @Suppress("DEPRECATION")
-            (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+        ) {
+            return true
         }
+        @Suppress("DEPRECATION")
+        return (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
     }
 
     /**
