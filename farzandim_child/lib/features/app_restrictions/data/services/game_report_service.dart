@@ -30,18 +30,19 @@ class GameReportService {
 
   // Bir o'yin shu muddat ichida bir marta xabar qilinadi (takror push yo'q).
   static const _dedupMs = 5 * 60 * 1000;
+  // Har tekshiruvda shuncha orqaga qaraymiz. 60s sikldan kattaroq —
+  // UsageStats event'lari biroz kechikib kelishi mumkin (yo'qotmaslik uchun).
+  // Bir-birining ustiga tushgan oynalar dedup tufayli takror push bermaydi.
+  static const _lookbackMs = 90 * 1000;
 
-  int _lastCheckMs = 0;
   final Map<String, int> _lastReported = <String, int>{};
 
-  /// Oxirgi tekshiruvdan beri ochilgan o'yinlarni olib, backend'ga xabar.
+  /// Oxirgi ~90s ichida ochilgan o'yinlarni olib, backend'ga xabar.
   Future<void> check() async {
     final now = DateTime.now().millisecondsSinceEpoch;
-    // Birinchi siklda oxirgi 60s — service endi ishga tushgan.
-    final since = _lastCheckMs == 0 ? now - 60 * 1000 : _lastCheckMs;
-    _lastCheckMs = now;
     try {
-      final games = await _stats.getRecentGameForegrounds(sinceMs: since);
+      final games =
+          await _stats.getRecentGameForegrounds(sinceMs: now - _lookbackMs);
       for (final g in games) {
         final last = _lastReported[g.packageName] ?? 0;
         if (now - last < _dedupMs) continue;
