@@ -70,6 +70,25 @@ class BackendFcmRepository {
     }
   }
 
+  /// Diagnostika: o'ziga test push yuborish.
+  ///
+  /// Backend natijani qaytaradi:
+  ///   tokens — ro'yxatdan o'tgan token soni (0 → registratsiya muammosi)
+  ///   sent   — muvaffaqiyatli yuborilgan (>0 → FCM yetkazdi)
+  ///   failed — yuborilmagan (Firebase init xato yoki token yaroqsiz)
+  /// `null` qaytsa — so'rov umuman bormadi (auth/tarmoq).
+  Future<Map<String, dynamic>?> sendTestPush() async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>('/fcm/test');
+      return res.data;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendFcm.sendTestPush xato ${e.response?.statusCode} — ${e.message}',
+      );
+      return null;
+    }
+  }
+
   /// Foydalanuvchining barcha tokenlari (full logout / hisob o'chirish).
   Future<bool> deleteAllTokens() async {
     try {

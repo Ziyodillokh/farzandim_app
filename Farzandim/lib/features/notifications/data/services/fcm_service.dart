@@ -117,6 +117,12 @@ class FcmService {
     }
   }
 
+  /// Diagnostika: o'ziga test push yuborish (Settings tugmasi).
+  /// Backend `{ tokens, sent, failed, invalid }` qaytaradi yoki `null`.
+  Future<Map<String, dynamic>?> sendTestPush() async {
+    return _backendRepo?.sendTestPush();
+  }
+
   /// High-importance Android notification channel yaratish + iOS init.
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');

@@ -123,6 +123,11 @@ class SettingsScreen extends ConsumerWidget {
                                   title: 'settings.menu.share'.tr(),
                                   onTap: _shareApp,
                                 ),
+                                _MenuItem(
+                                  icon: Icons.notifications_active_rounded,
+                                  title: 'Push tekshirish (test)',
+                                  onTap: () => _sendTestPush(context, ref),
+                                ),
                               ],
                             ),
                           ],
@@ -181,6 +186,68 @@ class SettingsScreen extends ConsumerWidget {
 
   Future<void> _shareApp() async {
     await Share.share('settings.shareText'.tr());
+  }
+
+  // ─── Push diagnostikasi ───
+  //
+  // Backend o'ziga test push yuboradi va natijani qaytaradi. Bu o'yin/batareya
+  // push'i nega kelmasligini aniqlaydi:
+  //   tokens=0           → qurilma ro'yxatdan o'tmagan (chiqib qayta kiring)
+  //   sent>0 + push keldi → hammasi ishlaydi
+  //   sent>0 + push yo'q  → bildirishnoma ruxsati/telefon ko'rsatish muammosi
+  //   sent=0, failed>0   → server Firebase muammosi
+  Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
+    final messenger = ScaffoldMessenger.of(context);
+    messenger.showSnackBar(
+      const SnackBar(content: Text('Test push yuborilmoqda…')),
+    );
+
+    final res = await ref.read(fcmServiceProvider).sendTestPush();
+    if (!context.mounted) return;
+
+    final String title;
+    final String body;
+    if (res == null) {
+      title = '❌ So‘rov bormadi';
+      body = 'Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.';
+    } else {
+      final tokens = (res['tokens'] as num?)?.toInt() ?? 0;
+      final sent = (res['sent'] as num?)?.toInt() ?? 0;
+      final failed = (res['failed'] as num?)?.toInt() ?? 0;
+      if (tokens == 0) {
+        title = '⚠️ Qurilma ro‘yxatdan o‘tmagan';
+        body =
+            'Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech qanday '
+            'bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, qayta kiring '
+            '(login) — token avtomatik ro‘yxatdan o‘tadi.';
+      } else if (sent > 0) {
+        title = '✅ Yuborildi';
+        body =
+            'Server push yubordi (tokens=$tokens, sent=$sent).\n\nBir necha soniyada '
+            'bildirishnoma kelishi kerak. Agar KELMASA — telefon bildirishnoma '
+            'ruxsatini tekshiring.';
+      } else {
+        title = '❌ Server yubora olmadi';
+        body =
+            'tokens=$tokens, sent=$sent, failed=$failed.\n\nServer Firebase '
+            'muammosi — ishlab chiquvchiga shu sonlarni ayting.';
+      }
+    }
+
+    await showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(title, style: AppTextStyles.headlineL.copyWith(fontSize: 18)),
+        content: Text(body, style: AppTextStyles.bodyM),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
   }
 
   // ─── Til dialog ───
