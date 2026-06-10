@@ -426,7 +426,7 @@
     "activity": "Faollik",
     "appPermissionsRow": "Ilova uchun ruxsatlar",
     "unknownSources": {
-      "title": "Notanish manbalardan ilovalar",
+      "title": "Notanish manbalar",
       "desc": "{name} Play Marketdan boshqa manbalardan olingan ilovalarni ishlatishi cheklanadi",
       "enabledSnack": "Notanish manbalardan ilovalar bloklandi",
       "disabledSnack": "Notanish manbalardan ilovalar ruxsat etildi",

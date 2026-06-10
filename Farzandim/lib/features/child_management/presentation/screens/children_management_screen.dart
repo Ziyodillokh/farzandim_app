@@ -188,7 +188,6 @@ class _ChildCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     return SettingsCard(
       accent: AppColors.accent,
-      rail: false,
       onTap: () => context.push(AppRoutes.editChildPath(child.id)),
       child: Row(
         children: [

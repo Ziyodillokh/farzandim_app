@@ -89,7 +89,6 @@ class _PermissionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsCard(
       accent: AppColors.secondary,
-      rail: false,
       onTap: onTap,
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,

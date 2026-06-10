@@ -217,7 +217,6 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: AppColors.secondary,
-        rail: false,
         padding: const EdgeInsets.all(AppDimensions.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

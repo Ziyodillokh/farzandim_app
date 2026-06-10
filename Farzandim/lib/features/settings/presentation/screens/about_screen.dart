@@ -154,7 +154,6 @@ class _LinkTile extends StatelessWidget {
     return SettingsCard(
       accent: AppColors.accent,
       onTap: onTap,
-      rail: false,
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,
         vertical: 14,

@@ -347,7 +347,6 @@ class _ZoneCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsCard(
       accent: AppColors.info,
-      rail: false,
       onTap: () => context.push(AppRoutes.geoZonesEditPath(childId, zone.id)),
       padding: const EdgeInsets.all(AppDimensions.md),
       child: Row(

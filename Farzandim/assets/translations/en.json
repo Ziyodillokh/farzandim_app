@@ -426,7 +426,7 @@
     "activity": "Activity",
     "appPermissionsRow": "App permissions",
     "unknownSources": {
-      "title": "Apps from unknown sources",
+      "title": "Unknown sources",
       "desc": "{name} will be restricted from using apps from sources other than Play Market",
       "enabledSnack": "Apps from unknown sources are now blocked",
       "disabledSnack": "Apps from unknown sources are now allowed",

@@ -295,7 +295,6 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsCard(
       accent: AppColors.secondary,
-      rail: false,
       onTap: onTap,
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.lg),
       child: Column(
@@ -431,7 +430,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
                   ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.sm),
+              const SizedBox(width: AppDimensions.md),
               AppSwitch(
                 value: _blocked,
                 onChanged: _saving ? null : _onChanged,
