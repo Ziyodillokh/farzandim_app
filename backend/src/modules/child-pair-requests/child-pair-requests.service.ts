@@ -79,11 +79,23 @@ export class ChildPairRequestsService {
     const result = await this.prisma.$transaction(async (tx) => {
       const oldChildUserId = pairReq.child.childUserId;
 
-      // Soft-delete old child user + clean FCM tokens
+      // "Bir bola = bir qurilma" qoidasi: eski qurilmani majburan chiqarish.
+      //   - userSession revoke → barcha aktiv refresh tokenlar bekor
+      //   - tokenVersion++ → refreshToken (auth.service tekshiruvi) ham
+      //     darhol ishlamaydi (access token 15 daqiqada o'ladi)
+      //   - isActive=false → keyingi login/refresh urinishlari rad etiladi
+      //   - fcmToken o'chirildi → eski qurilmaga push xabarlar bormaydi
       if (oldChildUserId) {
+        await tx.userSession.updateMany({
+          where: { userId: oldChildUserId, revokedAt: null },
+          data: { revokedAt: new Date() },
+        });
         await tx.user.update({
           where: { id: oldChildUserId },
-          data: { isActive: false },
+          data: {
+            isActive: false,
+            tokenVersion: { increment: 1 },
+          },
         });
         await tx.fcmToken.deleteMany({ where: { userId: oldChildUserId } });
       }
@@ -147,6 +159,18 @@ export class ChildPairRequestsService {
       childId,
       newUserId: result.newUser.id,
     });
+
+    // Eski bola qurilmasiga "siz unpair bo'ldingiz" signali — UI darhol
+    // lokal ma'lumotlarni tozalab, qayta kod kiritish ekraniga qaytadi.
+    // Ovozi/lokatsiya foreground service'lari ham to'xtab, eski telefon
+    // bola profiliga kirishni davom ettira olmaydi.
+    if (result.oldChildUserId) {
+      this.realtime.emitToUser(result.oldChildUserId, 'child:unpaired', {
+        childId,
+        reason: 'NEW_DEVICE_APPROVED',
+        at: new Date().toISOString(),
+      });
+    }
 
     return {
       ok: true,

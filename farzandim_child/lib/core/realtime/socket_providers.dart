@@ -67,6 +67,16 @@ final socketLifecycleProvider = Provider<void>((ref) {
     subs.add(client.eventStream('schedule:deleted').listen(
           (_) => unawaited(sync.sync()),
         ));
+
+    // "Bir bola = bir qurilma" qoidasi: backend bola yangi qurilmaga
+    // (parent tasdiqi yoki QR re-pair orqali) ko'chgan paytda eski qurilma
+    // shu signalni oladi. Lokal pairing'ni avtomatik tozalab, /pairing
+    // ekraniga qaytarish — eski telefon foydalanuvchi profili bilan
+    // ishlashda davom etmaydi.
+    subs.add(client.eventStream('child:unpaired').listen((_) {
+      debugPrint('SocketLifecycle (Child): child:unpaired — local unpair');
+      unawaited(ref.read(pairingStateProvider.notifier).unpair());
+    }));
   }
 
   ref.listen<AppPairingState>(pairingStateProvider, (previous, next) {

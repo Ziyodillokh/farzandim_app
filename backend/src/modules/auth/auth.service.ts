@@ -680,19 +680,27 @@ export class AuthService {
     }
 
     // Eski child user sessiyalarini bekor qilamiz (eski telefon endi
-    // bu akkauntga kira olmaydi).
+    // bu akkauntga kira olmaydi). "Bir bola = bir qurilma" qoidasi.
     const oldChildUserId = child.childUserId;
     if (oldChildUserId) {
       await this.prisma.userSession.updateMany({
         where: { userId: oldChildUserId, revokedAt: null },
         data: { revokedAt: new Date() },
       });
-      // tokenVersion'ni oshirish ham refresh tokenlarni bekor qiladi.
+      // tokenVersion'ni oshirish refresh tokenlarni darhol bekor qiladi.
+      // isActive=false → keyingi login/refresh urinishlari ham rad etiladi.
       await this.prisma.user
         .update({
           where: { id: oldChildUserId },
-          data: { tokenVersion: { increment: 1 } },
+          data: {
+            isActive: false,
+            tokenVersion: { increment: 1 },
+          },
         })
+        .catch(() => undefined);
+      // FCM tokens tozalanadi — eski qurilmaga push xabarlar ketmaydi.
+      await this.prisma.fcmToken
+        .deleteMany({ where: { userId: oldChildUserId } })
         .catch(() => undefined);
     }
 
@@ -735,6 +743,16 @@ export class AuthService {
       newChildUserId: user.id,
       pairedAt: updated.pairedAt?.toISOString(),
     });
+
+    // Eski qurilmaga "siz unpair bo'ldingiz" — UI lokal prefs'ni tozalab
+    // /pairing ekraniga qaytadi. WebSocket hali tirik bo'lsa darhol ushlaydi.
+    if (oldChildUserId) {
+      this.realtime.emitToUser(oldChildUserId, 'child:unpaired', {
+        childId: child.id,
+        reason: 'QR_REPAIR_REDEEMED',
+        at: new Date().toISOString(),
+      });
+    }
 
     const payload: JwtPayload = {
       userId: user.id,
@@ -982,6 +1000,7 @@ export class AuthService {
   async childPairStatus(pairRequestId: string) {
     const pairRequest = await this.prisma.childPairRequest.findUnique({
       where: { id: pairRequestId },
+      include: { child: true },
     });
 
     if (!pairRequest) {
@@ -998,6 +1017,49 @@ export class AuthService {
         data: { status: 'EXPIRED', decidedAt: new Date() },
       });
       return { status: 'EXPIRED' };
+    }
+
+    // APPROVED — bolaga JWT, user va child obyektlarini qaytaramiz.
+    // Approve oqimi eski qurilmani allaqachon majburan chiqargan (session
+    // revoke + tokenVersion++ + isActive=false). Yangi qurilma shu polling
+    // orqali tokenni oladi va paired holatga o'tadi.
+    if (pairRequest.status === 'APPROVED' && pairRequest.newUserId) {
+      const newUser = await this.prisma.user.findUnique({
+        where: { id: pairRequest.newUserId },
+      });
+      if (!newUser) {
+        // newUserId saqlangan, lekin User yo'q — anomaliya. Fallback:
+        // shunchaki status qaytarib, child app qayta urinib ko'rsin.
+        return { status: pairRequest.status };
+      }
+
+      const payload: JwtPayload = {
+        userId: newUser.id,
+        role: newUser.role as 'PARENT' | 'CHILD',
+        tokenVersion: newUser.tokenVersion,
+      };
+      const accessToken = this.signAccessToken(payload);
+      const refreshToken = this.signRefreshToken(payload);
+
+      return {
+        status: 'APPROVED',
+        accessToken,
+        refreshToken,
+        user: {
+          id: newUser.id,
+          name: newUser.name,
+          role: newUser.role,
+          avatarUrl: newUser.avatarUrl,
+          telegramId: newUser.telegramId,
+          language: newUser.language,
+        },
+        child: {
+          id: pairRequest.child.id,
+          parentId: pairRequest.child.parentId,
+          name: pairRequest.child.name,
+          age: pairRequest.child.age,
+        },
+      };
     }
 
     return { status: pairRequest.status };
