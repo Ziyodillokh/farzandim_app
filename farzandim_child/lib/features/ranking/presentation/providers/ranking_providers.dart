@@ -37,6 +37,8 @@ final backendRankingProvider = FutureProvider<RankingResult>((ref) async {
   return ref.watch(rankingBackendRepositoryProvider).fetchRanking(range: apiRange);
 });
 
+/// Real backend ma'lumotidan foydalanadi. Backend bo'sh bo'lsa —
+/// ro'yxat bo'sh ko'rinadi (real holat). Mock fallback yo'q.
 final allUsersProvider = Provider<List<RankingUser>>((ref) {
   final async = ref.watch(backendRankingProvider);
   return async.maybeWhen(

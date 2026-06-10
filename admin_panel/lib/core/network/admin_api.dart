@@ -192,7 +192,7 @@ class AdminApi {
     await _guard(
       () => _client.post(
         '/admin/auth/2fa/disable',
-        data: {'password': password, if (code != null) 'code': code},
+        data: {'password': password, 'code': ?code},
       ),
     );
   }
@@ -216,8 +216,8 @@ class AdminApi {
           if (action != null && action.isNotEmpty) 'action': action,
           if (resourceType != null && resourceType.isNotEmpty) 'resourceType': resourceType,
           if (status != null && status.isNotEmpty) 'status': status,
-          if (from != null) 'from': from,
-          if (to != null) 'to': to,
+          'from': ?from,
+          'to': ?to,
         },
       ),
     );

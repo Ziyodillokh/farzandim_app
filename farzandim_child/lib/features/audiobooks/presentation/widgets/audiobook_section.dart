@@ -43,9 +43,8 @@ class AudiobookSection extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
                         color: (leadingIconColor ?? AppColors.primary)
-                            .withOpacity(0.15),
+                            .withValues(alpha: 0.15),
                         shape: BoxShape.circle,
                       ),
                       child: Icon(

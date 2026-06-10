@@ -26,7 +26,7 @@ import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart'
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
 import 'package:farzandim_child/features/sim_info/presentation/providers/sim_info_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show debugPrint;
+import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -104,6 +104,13 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         childName: childName,
         currentUserId: currentUserId,
       );
+
+      // Web — preview rejimi (telefonsiz brauzerda). Background xizmatlar
+      // (location/device-info/usage/restriction) — Android/iOS specific.
+      // Web'da chaqirilsa permission_handler / battery / device_info_plus
+      // platforma-spetsifik kod throw qiladi → konsol xato bilan to'lib
+      // ketadi. Web'da skip qilamiz, navigatsiya esa ishlaydi.
+      if (kIsWeb) return;
 
       // Saqlangan pairing'da qurilma ma'lumotini yangilashni boshlash.
       final deviceInfoService = _ref.read(deviceInfoServiceProvider);

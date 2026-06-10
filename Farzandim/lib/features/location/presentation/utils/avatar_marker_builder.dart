@@ -32,7 +32,7 @@ class AvatarMarkerBuilder {
     Color accent = const Color(0xFF235347),
   }) async {
     final cacheKey = '${avatarUrl ?? "null"}_$fallbackKey'
-        '_${accent.value.toRadixString(16)}_${pinWidth.toInt()}';
+        '_${accent.toARGB32().toRadixString(16)}_${pinWidth.toInt()}';
     if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
 
     ui.Image? avatarImage;

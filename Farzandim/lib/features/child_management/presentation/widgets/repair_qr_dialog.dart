@@ -236,8 +236,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              // ignore: deprecated_member_use
-              color: AppColors.primary.withOpacity(0.15),
+              color: AppColors.primary.withValues(alpha: 0.15),
               blurRadius: 24,
               spreadRadius: 2,
             ),

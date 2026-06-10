@@ -182,11 +182,8 @@ class _SecurityCard extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           twoFactorEnabled
-                              ? 'Yoqilgan' +
-                                  (enabledAt != null
-                                      ? ' · ${_fmtDate(enabledAt!)}'
-                                      : '')
-                              : 'O\'chirilgan',
+                              ? 'Yoqilgan${enabledAt != null ? ' · ${_fmtDate(enabledAt!)}' : ''}'
+                              : "O'chirilgan",
                           style: TextStyle(
                             color: twoFactorEnabled
                                 ? Colors.green
@@ -438,7 +435,7 @@ class _TwoFactorSetupDialogState extends State<_TwoFactorSetupDialog> {
                   icon: const Icon(Icons.copy, size: 18),
                   onPressed: () async {
                     await Clipboard.setData(ClipboardData(text: _secret!));
-                    if (!mounted) return;
+                    if (!context.mounted) return;
                     AppFeedback.success(context, 'Nusxalandi');
                   },
                 ),
@@ -529,7 +526,7 @@ class _TwoFactorSetupDialogState extends State<_TwoFactorSetupDialog> {
                 await Clipboard.setData(
                   ClipboardData(text: _backupCodes.join('\n')),
                 );
-                if (!mounted) return;
+                if (!context.mounted) return;
                 AppFeedback.success(context, 'Backup kodlar nusxalandi');
               },
               icon: const Icon(Icons.copy_all, size: 18),

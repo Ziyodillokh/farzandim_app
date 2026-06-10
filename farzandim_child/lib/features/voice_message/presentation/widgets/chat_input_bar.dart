@@ -16,6 +16,8 @@
 // Mic GestureDetector DOIMO oxirgi child + `ValueKey` — recording
 // boshlanganda long-press subscription yo'qolmaydi (onLongPressEnd ishlaydi).
 
+import 'dart:ui';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -100,6 +102,8 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   void dispose() {
+    _topToast?.remove();
+    _topToast = null;
     _controller.dispose();
     _focusNode.dispose();
     super.dispose();
@@ -135,6 +139,69 @@ class _ChatInputBarState extends State<ChatInputBar> {
     );
   }
 
+  /// Yuqorida ko'rinadigan blur toast — pastdagi SnackBar o'rniga.
+  /// 1.4 sek ichida o'zi yo'qoladi, statusbar tagidan tushadi.
+  OverlayEntry? _topToast;
+
+  void _showTopToast(String text) {
+    _topToast?.remove();
+    final overlay = Overlay.of(context);
+    final entry = OverlayEntry(
+      builder: (_) => Positioned(
+        top: MediaQuery.of(context).padding.top + 12,
+        left: 0,
+        right: 0,
+        child: Center(
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(999),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                    horizontal: 18, vertical: 12),
+                decoration: BoxDecoration(
+                  // ignore: deprecated_member_use
+                  color: Colors.black.withOpacity(0.55),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    // ignore: deprecated_member_use
+                    color: AppColors.primary.withOpacity(0.4),
+                    width: 1,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      // ignore: deprecated_member_use
+                      color: Colors.black.withOpacity(0.3),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    ),
+                  ],
+                ),
+                child: Text(
+                  text,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 0.2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+    overlay.insert(entry);
+    _topToast = entry;
+    Future.delayed(const Duration(milliseconds: 1600), () {
+      if (_topToast == entry) {
+        entry.remove();
+        _topToast = null;
+      }
+    });
+  }
+
   void _toggleMode() {
     HapticFeedback.selectionClick();
     setState(() {
@@ -145,15 +212,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final hint = _mode == ChatRecordMode.video
         ? 'voiceChat.videoMode'.tr()
         : 'voiceChat.voiceMode'.tr();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(hint),
-          duration: const Duration(milliseconds: 1400),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    _showTopToast(hint);
   }
 
   void _openAttachSheet() {

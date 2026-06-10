@@ -985,20 +985,26 @@ class _CreateWizardState extends State<_CreateWizard> {
         const SectionTitle('Auditoriya tanlash'),
         const SizedBox(height: 16),
         const Text('Auditoriya turi'),
-        for (final e in const {
-          'all': 'Hammasi',
-          'parents': 'Faqat ota-onalar',
-          'children': 'Faqat bolalar',
-          'premium': 'Premium foydalanuvchilar',
-          'age_group': 'Yosh guruhi (bolalar)',
-        }.entries)
-          RadioListTile<String>(
-            dense: true,
-            value: e.key,
-            groupValue: _target,
-            title: Text(e.value),
-            onChanged: (v) => setState(() => _target = v ?? 'all'),
+        RadioGroup<String>(
+          groupValue: _target,
+          onChanged: (v) => setState(() => _target = v ?? 'all'),
+          child: Column(
+            children: [
+              for (final e in const {
+                'all': 'Hammasi',
+                'parents': 'Faqat ota-onalar',
+                'children': 'Faqat bolalar',
+                'premium': 'Premium foydalanuvchilar',
+                'age_group': 'Yosh guruhi (bolalar)',
+              }.entries)
+                RadioListTile<String>(
+                  dense: true,
+                  value: e.key,
+                  title: Text(e.value),
+                ),
+            ],
           ),
+        ),
         if (_target == 'age_group') ...[
           const SizedBox(height: 8),
           const Text('Yosh oraligi (0–25)'),
@@ -1087,8 +1093,16 @@ class _CreateWizardState extends State<_CreateWizard> {
         const SectionTitle('Delivery Settings'),
         const SizedBox(height: 16),
         const Text('Delivery Time'),
-        RadioListTile<bool>(dense: true, value: false, groupValue: _schedule, title: const Text('Send Immediately'), onChanged: (v) => setState(() => _schedule = v ?? false)),
-        RadioListTile<bool>(dense: true, value: true, groupValue: _schedule, title: const Text('Schedule for Later'), onChanged: (v) => setState(() => _schedule = v ?? true)),
+        RadioGroup<bool>(
+          groupValue: _schedule,
+          onChanged: (v) => setState(() => _schedule = v ?? false),
+          child: const Column(
+            children: [
+              RadioListTile<bool>(dense: true, value: false, title: Text('Send Immediately')),
+              RadioListTile<bool>(dense: true, value: true, title: Text('Schedule for Later')),
+            ],
+          ),
+        ),
         Row(children: [
           Expanded(child: OutlinedButton.icon(onPressed: () async {
             final d = await showDatePicker(context: context, firstDate: DateTime.now(), lastDate: DateTime.now().add(const Duration(days: 365)), initialDate: _date);

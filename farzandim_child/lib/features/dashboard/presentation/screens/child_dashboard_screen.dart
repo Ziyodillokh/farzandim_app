@@ -383,7 +383,7 @@ class _DashboardAudiobookMiniPlayer extends ConsumerWidget {
                     width: 28,
                     height: 28,
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1DB954).withOpacity(0.15),
+                      color: const Color(0xFF1DB954).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(

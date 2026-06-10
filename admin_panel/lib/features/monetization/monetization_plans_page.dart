@@ -607,7 +607,7 @@ class _PlanCard extends StatelessWidget {
                         vertical: 4,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.sidebarLime.withOpacity(0.9),
+                        color: AppColors.sidebarLime.withValues(alpha: 0.9),
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(

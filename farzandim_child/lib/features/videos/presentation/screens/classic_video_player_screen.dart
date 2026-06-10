@@ -39,6 +39,14 @@ class _ClassicVideoPlayerScreenState
   Timer? _sleepTimer;
   Duration _sleepTimerRemaining = Duration.zero;
 
+  /// BoxFit.contain (default) — qora chiziqlar bilan to'liq video ko'rinadi.
+  /// BoxFit.cover — to'liq ekran, ammo yon tomonlari kesiladi.
+  /// Foydalanuvchi controls'da "fit" tugmasi bilan o'zgartiradi.
+  BoxFit _videoFit = BoxFit.contain;
+
+  /// Video init xato bo'lsa shu maydonga yoziladi → "Qaytadan" tugmasi.
+  String? _initError;
+
   @override
   void initState() {
     super.initState();
@@ -49,17 +57,33 @@ class _ClassicVideoPlayerScreenState
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
 
-    _controller = VideoPlayerController.networkUrl(
-      Uri.parse(widget.video.videoUrl),
-    );
+    _initController();
 
-    _controller.initialize().then((_) {
-      if (!mounted) return;
-      setState(() {});
-      _controller.play();
-      _isPlaying = true;
-      _startHideControlsTimer();
-    });
+    // listenManual — `ref.listen` `build()` ichida ba'zan tartibsiz
+    // ishlaydi (registratsiya o'zgargandan keyin). listenManual darhol
+    // ro'yxatdan o'tadi va widget life uchun saqlanadi.
+    ref.listenManual<PlayerSettings>(
+      playerSettingsProvider,
+      (prev, next) async {
+        if (!_controller.value.isInitialized) return;
+        if (prev?.speed != next.speed) {
+          await _controller.setPlaybackSpeed(next.speed);
+        }
+        if (prev?.repeat != next.repeat) {
+          await _controller.setLooping(next.repeat);
+        }
+        if (prev?.sleepTimerMinutes != next.sleepTimerMinutes) {
+          if (next.sleepTimerMinutes != null) {
+            _startSleepTimer(next.sleepTimerMinutes!);
+          } else {
+            _sleepTimer?.cancel();
+            _sleepTimer = null;
+            _sleepTimerRemaining = Duration.zero;
+            if (mounted) setState(() {});
+          }
+        }
+      },
+    );
   }
 
   @override
@@ -73,6 +97,40 @@ class _ClassicVideoPlayerScreenState
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     super.dispose();
+  }
+
+  /// Video controller yaratish + init + xato handling. Retry uchun ham
+  /// chaqiriladi — eski controller dispose qilinadi.
+  Future<void> _initController() async {
+    try {
+      _controller = VideoPlayerController.networkUrl(
+        Uri.parse(widget.video.videoUrl),
+      );
+      await _controller.initialize();
+      if (!mounted) return;
+      // Initial settings'ni darhol qo'llash.
+      final s = ref.read(playerSettingsProvider);
+      await _controller.setPlaybackSpeed(s.speed);
+      await _controller.setLooping(s.repeat);
+      setState(() {
+        _initError = null;
+      });
+      await _controller.play();
+      _isPlaying = true;
+      _startHideControlsTimer();
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _initError = "Videoni yuklab bo'lmadi. Internet aloqasini tekshiring.";
+      });
+    }
+  }
+
+  void _toggleFit() {
+    setState(() {
+      _videoFit = _videoFit == BoxFit.contain ? BoxFit.cover : BoxFit.contain;
+    });
+    _startHideControlsTimer();
   }
 
   void _startHideControlsTimer() {
@@ -142,46 +200,88 @@ class _ClassicVideoPlayerScreenState
 
   @override
   Widget build(BuildContext context) {
+    // Settings'ni watch qilamiz UI ko'rsatish uchun (lock icon, sleep
+    // timer matn). Real apply esa `initState`'dagi `listenManual` orqali.
     final settings = ref.watch(playerSettingsProvider);
-
-    ref.listen<PlayerSettings>(playerSettingsProvider, (prev, next) {
-      if (prev?.speed != next.speed) {
-        _controller.setPlaybackSpeed(next.speed);
-      }
-      if (prev?.repeat != next.repeat) {
-        _controller.setLooping(next.repeat);
-      }
-      if (prev?.sleepTimerMinutes != next.sleepTimerMinutes &&
-          next.sleepTimerMinutes != null) {
-        _startSleepTimer(next.sleepTimerMinutes!);
-      }
-      if (prev?.sleepTimerMinutes != null &&
-          next.sleepTimerMinutes == null) {
-        _sleepTimer?.cancel();
-        _sleepTimer = null;
-      }
-    });
 
     return Scaffold(
       backgroundColor: Colors.black,
       body: GestureDetector(
         onTap: _toggleControls,
+        // Ikki marta bos — fit (contain ↔ cover) toggle. YouTube-style.
+        onDoubleTap: _toggleFit,
         child: Stack(
           children: [
-            Center(
-              child: _controller.value.isInitialized
-                  ? AspectRatio(
-                      aspectRatio: _controller.value.aspectRatio,
-                      child: VideoPlayer(_controller),
-                    )
-                  : const CircularProgressIndicator(
-                      color: AppColors.primary),
-            ),
+            // Video qatlami — error / loading / playing 3 holat.
+            Positioned.fill(child: _buildVideoLayer()),
+            // Buffering indikator (ulanish sekin bo'lganda)
+            if (_controller.value.isInitialized &&
+                _controller.value.isBuffering)
+              const Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
             if (_showControls && !settings.screenLocked) _buildControls(),
             if (settings.screenLocked) _buildLockIndicator(),
             if (_sleepTimer != null && _sleepTimerRemaining.inSeconds > 0)
               _buildSleepTimerIndicator(),
           ],
+        ),
+      ),
+    );
+  }
+
+  /// Video qatlami:
+  /// • Xato bo'lsa — retry tugmasi
+  /// • Hali init bo'lmagan — spinner
+  /// • Tayyor — FittedBox bilan rendered (contain yoki cover)
+  Widget _buildVideoLayer() {
+    if (_initError != null) {
+      return Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.error_outline,
+                color: Colors.white70, size: 48),
+            const SizedBox(height: 12),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 32),
+              child: Text(
+                _initError!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.white, fontSize: 15),
+              ),
+            ),
+            const SizedBox(height: 20),
+            ElevatedButton.icon(
+              onPressed: _initController,
+              icon: const Icon(Icons.refresh),
+              label: const Text("Qaytadan urinib ko'rish"),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.primary,
+                foregroundColor: Colors.black,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+    if (!_controller.value.isInitialized) {
+      return const Center(
+        child: CircularProgressIndicator(color: AppColors.primary),
+      );
+    }
+    // FittedBox bilan rasm size widget'ga moslashtiriladi. BoxFit.contain
+    // (default) — to'liq video ko'rinadi, qora chiziqlar bilan. BoxFit.cover
+    // — to'liq ekran, ammo yon tomonlari kesiladi. Foydalanuvchi double-tap
+    // bilan o'zgartira oladi.
+    return SizedBox.expand(
+      child: FittedBox(
+        fit: _videoFit,
+        clipBehavior: Clip.hardEdge,
+        child: SizedBox(
+          width: _controller.value.size.width,
+          height: _controller.value.size.height,
+          child: VideoPlayer(_controller),
         ),
       ),
     );

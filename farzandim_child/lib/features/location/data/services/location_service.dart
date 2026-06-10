@@ -121,6 +121,10 @@ class LocationService {
     _parentUid = parentUid;
     _childId = childId;
 
+    // Web'da background location va permission_handler API yo'q —
+    // jim chiqamiz, real Android/iOS qurilmalarda ishlatiladi.
+    if (kIsWeb) return;
+
     // 1. Permission tekshirish
     final status = await Permission.locationWhenInUse.status;
     if (!status.isGranted) {

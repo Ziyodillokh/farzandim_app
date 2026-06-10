@@ -1340,40 +1340,46 @@ class _CreateKonkursDialogState extends State<_CreateKonkursDialog> {
               onChanged: (s) => q.text = s,
             ),
             const SizedBox(height: 4),
-            for (int o = 0; o < 4; o++)
-              ListTile(
-                dense: true,
-                leading: Radio<int>(
-                  value: o,
-                  groupValue: q.correct,
-                  activeColor: _kModalAccent,
-                  onChanged: (v) => setState(() => q.correct = v ?? 0),
-                ),
-                title: TextFormField(
-                  initialValue: [q.a, q.b, q.c, q.d][o],
-                  style: const TextStyle(color: Colors.white),
-                  decoration: _dec().copyWith(
-                    isDense: true,
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 8,
-                      vertical: 8,
+            RadioGroup<int>(
+              groupValue: q.correct,
+              onChanged: (v) => setState(() => q.correct = v ?? 0),
+              child: Column(
+                children: [
+                  for (int o = 0; o < 4; o++)
+                    ListTile(
+                      dense: true,
+                      leading: Radio<int>(
+                        value: o,
+                        activeColor: _kModalAccent,
+                      ),
+                      title: TextFormField(
+                        initialValue: [q.a, q.b, q.c, q.d][o],
+                        style: const TextStyle(color: Colors.white),
+                        decoration: _dec().copyWith(
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                            horizontal: 8,
+                            vertical: 8,
+                          ),
+                          hintText: "Variant ${"ABCD"[o]}",
+                        ),
+                        onChanged: (s) {
+                          if (o == 0) {
+                            q.a = s;
+                          } else if (o == 1) {
+                            q.b = s;
+                          } else if (o == 2) {
+                            q.c = s;
+                          } else {
+                            q.d = s;
+                          }
+                          setState(() {});
+                        },
+                      ),
                     ),
-                    hintText: "Variant ${"ABCD"[o]}",
-                  ),
-                  onChanged: (s) {
-                    if (o == 0) {
-                      q.a = s;
-                    } else if (o == 1) {
-                      q.b = s;
-                    } else if (o == 2) {
-                      q.c = s;
-                    } else {
-                      q.d = s;
-                    }
-                    setState(() {});
-                  },
-                ),
+                ],
               ),
+            ),
             Text("Ball: ${q.points}"),
             Slider(
               value: q.points.toDouble(),

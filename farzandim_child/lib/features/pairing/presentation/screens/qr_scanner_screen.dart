@@ -23,6 +23,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
@@ -40,10 +41,44 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   bool _processing = false;
   String? _status;
 
+  // Kamera ruxsati holati: null — hali so'ralmagan, true — berildi,
+  // false — rad etildi (foydalanuvchiga Sozlamalar tugmasi ko'rsatiladi).
+  // Ba'zi Android OEM (Xiaomi/Realme/HONOR) qurilmalarida mobile_scanner
+  // avtomatik so'ramaydi — shu sababli avval qo'lda so'raymiz.
+  bool? _cameraGranted;
+
+  @override
+  void initState() {
+    super.initState();
+    _ensureCameraPermission();
+  }
+
   @override
   void dispose() {
     _controller.dispose();
     super.dispose();
+  }
+
+  Future<void> _ensureCameraPermission() async {
+    if (kIsWeb) {
+      // Web: brauzer prompt'i mobile_scanner ichida ishlaydi.
+      setState(() => _cameraGranted = true);
+      return;
+    }
+    var status = await Permission.camera.status;
+    if (status.isDenied || status.isRestricted || status.isLimited) {
+      status = await Permission.camera.request();
+    }
+    if (!mounted) return;
+    setState(() => _cameraGranted = status.isGranted);
+    if (status.isGranted) {
+      // Ruxsat olingach kamera'ni qo'lda boshlaymiz — ba'zi
+      // qurilmalarda mobile_scanner mount paytida ruxsat yo'q
+      // bo'lsa keyin avtomatik qayta urinmaydi.
+      try {
+        await _controller.start();
+      } catch (_) {/* ignore — UI o'zi qayta urinishi mumkin */}
+    }
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -178,64 +213,187 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           ),
         ],
       ),
-      body: Stack(
-        children: [
-          MobileScanner(
-            controller: _controller,
-            onDetect: _onDetect,
-          ),
-          // Markazda yarim shaffof "viewfinder" frame
-          Center(
-            child: Container(
-              width: 260,
-              height: 260,
-              decoration: BoxDecoration(
-                border: Border.all(color: Colors.white70, width: 2),
-                borderRadius: BorderRadius.circular(20),
-              ),
-            ),
-          ),
-          // Pastdagi status / ko'rsatma
-          Positioned(
-            left: 20,
-            right: 20,
-            bottom: 60,
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.65),
-                borderRadius: BorderRadius.circular(16),
-              ),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    _status ??
-                        'Ota-ona telefonidagi QR kodni ramka ichiga to\'g\'rilang',
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
+      body: _cameraGranted == false
+          ? _PermissionDeniedView(
+              onRetry: _ensureCameraPermission,
+              onOpenSettings: openAppSettings,
+            )
+          : _cameraGranted == null
+              ? const Center(
+                  child: CircularProgressIndicator(color: Colors.white),
+                )
+              : _buildScannerBody(context),
+    );
+  }
+
+  Widget _buildScannerBody(BuildContext context) {
+    return Stack(
+      children: [
+        MobileScanner(
+          controller: _controller,
+          onDetect: _onDetect,
+          errorBuilder: (context, error, child) {
+            // mobile_scanner ichki xato (kamera band, OEM driver, va h.k.) —
+            // black screen o'rniga aniq xabar.
+            return Center(
+              child: Padding(
+                padding: const EdgeInsets.all(24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      Icons.videocam_off,
                       color: Colors.white,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
+                      size: 56,
                     ),
-                  ),
-                  if (_processing) ...[
                     const SizedBox(height: 12),
-                    const SizedBox(
-                      width: 22,
-                      height: 22,
-                      child: CircularProgressIndicator(
-                        color: Colors.white,
-                        strokeWidth: 2.4,
-                      ),
+                    Text(
+                      "Kamera ochilmadi: ${error.errorCode.name}",
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                    const SizedBox(height: 16),
+                    ElevatedButton(
+                      onPressed: () async {
+                        await _controller.stop();
+                        await _controller.start();
+                      },
+                      child: const Text('Qaytadan urinish'),
                     ),
                   ],
-                ],
+                ),
               ),
+            );
+          },
+        ),
+        // Markazda yarim shaffof "viewfinder" frame
+        Center(
+          child: Container(
+            width: 260,
+            height: 260,
+            decoration: BoxDecoration(
+              border: Border.all(color: Colors.white70, width: 2),
+              borderRadius: BorderRadius.circular(20),
             ),
           ),
-        ],
+        ),
+        // Pastdagi status / ko'rsatma
+        Positioned(
+          left: 20,
+          right: 20,
+          bottom: 60,
+          child: Container(
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              // ignore: deprecated_member_use
+              color: Colors.black.withOpacity(0.65),
+              borderRadius: BorderRadius.circular(16),
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  _status ??
+                      'Ota-ona telefonidagi QR kodni ramka ichiga to\'g\'rilang',
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+                if (_processing) ...[
+                  const SizedBox(height: 12),
+                  const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(
+                      color: Colors.white,
+                      strokeWidth: 2.4,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _PermissionDeniedView extends StatelessWidget {
+  const _PermissionDeniedView({
+    required this.onRetry,
+    required this.onOpenSettings,
+  });
+
+  final Future<void> Function() onRetry;
+  final Future<bool> Function() onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.no_photography_outlined,
+              color: Colors.white,
+              size: 72,
+            ),
+            const SizedBox(height: 20),
+            const Text(
+              'Kamera ruxsati kerak',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              "QR kodni skanerlash uchun kameraga ruxsat bering. "
+              "Agar oldin rad etgan bo'lsangiz, Sozlamalardan qo'lda yoqing.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white70, height: 1.4),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: () => onRetry(),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C5CFF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Ruxsat berish'),
+              ),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton(
+                onPressed: () => onOpenSettings(),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white54),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: const Text('Sozlamalarni ochish'),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
