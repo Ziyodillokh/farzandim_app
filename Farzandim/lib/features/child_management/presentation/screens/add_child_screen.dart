@@ -45,6 +45,7 @@ class AddChildScreen extends ConsumerStatefulWidget {
 
 class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   int? _selectedAge;
   String? _selectedRegion;
   Gender? _selectedGender;
@@ -71,6 +72,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
       final child = ref.read(childByIdProvider(widget.childId!));
       if (child != null) {
         _nameController.text = child.name;
+        _phoneController.text = child.phoneNumber ?? '';
         _selectedAge = child.age;
         _selectedRegion = child.region;
         _selectedGender = child.gender;
@@ -83,6 +85,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   void dispose() {
     // Memory leak'ning oldini olish uchun controller'ni yopamiz.
     _nameController.dispose();
+    _phoneController.dispose();
     super.dispose();
   }
 
@@ -146,6 +149,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
         age: _selectedAge!,
         gender: _selectedGender!,
         region: _selectedRegion!,
+        phoneNumber: _phoneController.text.trim(),
       );
       // Foydalanuvchi yangi foto tanlagan bo'lsa Storage'ga upload
       // qilinadi (eski URL almashtiriladi).
@@ -174,6 +178,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
       gender: _selectedGender!,
       region: _selectedRegion!,
       photoBytes: _photoBytes,
+      phoneNumber: _phoneController.text.trim(),
     );
 
     if (!mounted) return;
@@ -259,6 +264,17 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                         hint: 'childManagement.addEdit.nameHint'.tr(),
                         maxLength: 30,
                         onChanged: (_) => setState(() {}),
+                      ),
+                      const SizedBox(height: AppDimensions.lg),
+
+                      // ── Telefon raqami (ixtiyoriy — SOS "Qo'ng'iroq") ──
+                      _label('childManagement.addEdit.phoneLabel'.tr()),
+                      const SizedBox(height: AppDimensions.sm),
+                      CustomTextField(
+                        controller: _phoneController,
+                        hint: 'childManagement.addEdit.phoneHint'.tr(),
+                        keyboardType: TextInputType.phone,
+                        maxLength: 20,
                       ),
                       const SizedBox(height: AppDimensions.lg),
 

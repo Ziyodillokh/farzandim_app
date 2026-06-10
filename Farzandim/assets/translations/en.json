@@ -650,6 +650,8 @@
       "photoLabel": "Photo",
       "nameLabel": "Name",
       "nameHint": "Enter name",
+      "phoneLabel": "Phone number (optional)",
+      "phoneHint": "+998 90 123 45 67",
       "ageLabel": "Age",
       "ageHint": "Select age",
       "ageItem": "{age} years",

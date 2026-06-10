@@ -650,6 +650,8 @@
       "photoLabel": "Fotosurat",
       "nameLabel": "Ism",
       "nameHint": "Ismini kiriting",
+      "phoneLabel": "Telefon raqami (ixtiyoriy)",
+      "phoneHint": "+998 90 123 45 67",
       "ageLabel": "Yoshi",
       "ageHint": "Yoshini tanlang",
       "ageItem": "{age} yosh",

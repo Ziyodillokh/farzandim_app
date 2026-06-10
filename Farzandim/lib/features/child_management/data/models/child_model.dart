@@ -237,6 +237,8 @@ class Child {
       if (age > 0) 'age': age,
       'gender': gender == Gender.male ? 'male' : 'female',
       if (region.isNotEmpty) 'region': region,
+      if (phoneNumber != null && phoneNumber!.isNotEmpty)
+        'phoneNumber': phoneNumber,
     };
   }
 
