@@ -7,6 +7,7 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import { FcmService } from '../../common/fcm/fcm.service';
 import { CreateAppLimitDto } from './dto/create-app-limit.dto';
 import { UpdateAppLimitDto } from './dto/update-app-limit.dto';
 
@@ -61,7 +62,55 @@ export class AppLimitsService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
+    private readonly fcm: FcmService,
   ) {}
+
+  /** ms → "2 soat" / "30 daqiqa" / "2 soat 15 daqiqa". */
+  private formatDuration(ms: number): string {
+    const min = Math.round(ms / 60000);
+    if (min < 60) return `${min} daqiqa`;
+    const h = Math.floor(min / 60);
+    const m = min % 60;
+    return m === 0 ? `${h} soat` : `${h} soat ${m} daqiqa`;
+  }
+
+  /**
+   * Cheklov o'zgartirilganda akkauntning BOSHQA qurilmalariga (bir xil
+   * ota-ona hisobida 2-qurilma — masalan ona telefoni) push yuboradi.
+   * `sendPushToUser` user'ning barcha qurilma tokenlariga boradi; xato
+   * bo'lsa asosiy oqim buzilmaydi (fire-and-forget + try/catch).
+   */
+  private async notifyOtherDevices(
+    child: { id: string; parentId: string },
+    packageName: string,
+    dailyLimitMs: bigint,
+    isActive: boolean,
+  ): Promise<void> {
+    try {
+      const installed = await this.prisma.installedApp.findFirst({
+        where: { childId: child.id, packageName },
+        select: { appName: true },
+      });
+      const appLabel = installed?.appName ?? packageName;
+      const ms = Number(dailyLimitMs);
+      const limitText = !isActive
+        ? "o'chirildi"
+        : ms <= 0
+          ? 'cheksiz qilindi'
+          : `${this.formatDuration(ms)} qilindi`;
+      await this.fcm.sendPushToUser(child.parentId, {
+        title: "Cheklov o'zgartirildi",
+        body: `${appLabel}: kunlik ${limitText}`,
+        data: {
+          type: 'app_limit',
+          childId: child.id,
+          packageName,
+        },
+      });
+    } catch {
+      // push xatosi cheklov saqlanishiga ta'sir qilmaydi
+    }
+  }
 
   async findOne(id: string, userId: string) {
     const limit = await this.prisma.appLimit.findUnique({
@@ -150,6 +199,12 @@ export class AppLimitsService {
       request,
     );
     this.realtime.emitToChild(childId, 'app_limit:created', serialize(limit));
+    void this.notifyOtherDevices(
+      child,
+      limit.packageName,
+      limit.dailyLimitMs,
+      limit.isActive,
+    );
 
     return serialize(limit);
   }
@@ -199,6 +254,12 @@ export class AppLimitsService {
       updated.childId,
       'app_limit:updated',
       serialize(updated),
+    );
+    void this.notifyOtherDevices(
+      limit.child,
+      updated.packageName,
+      updated.dailyLimitMs,
+      updated.isActive,
     );
 
     return serialize(updated);
