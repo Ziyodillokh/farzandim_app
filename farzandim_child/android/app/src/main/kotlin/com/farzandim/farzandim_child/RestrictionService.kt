@@ -72,6 +72,14 @@ class RestrictionService : Service() {
         private const val PREFS_KEY_BLOCKED = "flutter.restriction.blocked_packages"
         private const val PREFS_KEY_LIMITS = "flutter.restriction.limits"
 
+        // O'yin (CATEGORY_GAME) foreground'ga chiqqanda shu prefs queue'ga
+        // JSON string sifatida yoziladi. Dart bg isolate (~60s) o'qib, tozalab,
+        // backend'ga POST qiladi → ota-onaga "o'ynayapti" push. (MethodChannel
+        // bg isolate'da ishlamaydi, shuning uchun aniqlash NATIVE shu yerda.)
+        private const val PREFS_KEY_GAME_PENDING = "flutter.game.pending"
+        // Bir o'yin shu muddat ichida queue'ga faqat bir marta (takror push yo'q).
+        private const val GAME_DEDUP_MS = 5 * 60 * 1000L
+
         // "Notanish manbalardan ilovalar" — Play'dan boshqa manbadagi
         // ilovalarni bloklash flag'i (Dart device-policy sync yozadi).
         private const val PREFS_KEY_BLOCK_UNKNOWN =
@@ -102,6 +110,12 @@ class RestrictionService : Service() {
     // o'zgarmaydi, shuning uchun bir marta hisoblab keshlaymiz (har 3s
     // PackageManager chaqirmaslik uchun).
     private val unknownSourceCache = HashMap<String, Boolean>()
+
+    // O'yin aniqlash keshlari: paket → o'yinmi; paket → oxirgi queue vaqti;
+    // oxirgi foreground paket (edge-trigger — faqat YANGI ochilganda queue).
+    private val gameCache = HashMap<String, Boolean>()
+    private val lastGameQueued = HashMap<String, Long>()
+    private var lastForegroundForGame: String? = null
 
     private val pollRunnable = object : Runnable {
         override fun run() {
@@ -184,6 +198,14 @@ class RestrictionService : Service() {
      *      oshgan bo'lsa overlay
      */
     private fun checkRestrictions() {
+        // O'YIN aniqlash — cheklovlardan QAT'IY NAZAR har poll'da ishlaydi
+        // (foreground o'yin bo'lsa prefs queue'ga qo'shiladi). Cheklov yo'q
+        // bo'lsa ham ishlashi shart — shuning uchun early-return'dan OLDINDA.
+        val foreground = getForegroundPackage()
+        if (foreground != null && foreground != packageName) {
+            detectAndQueueGame(foreground)
+        }
+
         val blocked = readBlockedPackages()
         val limits = readLimits() // Map<String, Int> minutes
         val blockUnknown = readBlockUnknown()
@@ -193,7 +215,7 @@ class RestrictionService : Service() {
             return
         }
 
-        val foreground = getForegroundPackage() ?: return
+        if (foreground == null) return
 
         // O'zining app'ini block qilmaslik (overlay loop'dan saqlash).
         if (foreground == packageName) {
@@ -397,6 +419,98 @@ class RestrictionService : Service() {
         } catch (e: Exception) {
             Log.e(TAG, "getTodayUsageMs error", e)
             0L
+        }
+    }
+
+    // ───────────────────────── O'YIN ANIQLASH ─────────────────────────
+
+    /** Ilova O'YIN'mi: CATEGORY_GAME (O+) YOKI FLAG_IS_GAME (eski/qo'shimcha). */
+    private fun isGame(ai: ApplicationInfo): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            ai.category == ApplicationInfo.CATEGORY_GAME
+        ) {
+            return true
+        }
+        @Suppress("DEPRECATION")
+        return (ai.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+    }
+
+    private fun isGamePkg(pkg: String): Boolean = gameCache.getOrPut(pkg) {
+        try {
+            isGame(packageManager.getApplicationInfo(pkg, 0))
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Foreground paket o'yin bo'lsa, u YANGI ochilgan bo'lsa (edge-trigger) va
+     * dedup oynasidan tashqarida bo'lsa — prefs queue'ga qo'shadi. Bola o'yinda
+     * uzoq tursa ham (har poll'da bir xil foreground) faqat bir marta qo'shiladi.
+     */
+    private fun detectAndQueueGame(foreground: String) {
+        if (foreground == packageName) return
+        if (!isGamePkg(foreground)) {
+            lastForegroundForGame = foreground
+            return
+        }
+        val now = System.currentTimeMillis()
+        val isNewForeground = lastForegroundForGame != foreground
+        lastForegroundForGame = foreground
+        val last = lastGameQueued[foreground] ?: 0L
+        // Faqat yangi ochilganda VA dedup oynasidan tashqarida.
+        if (!isNewForeground) return
+        if (now - last < GAME_DEDUP_MS) return
+        lastGameQueued[foreground] = now
+        appendGameToQueue(foreground, now)
+    }
+
+    /** O'yinni prefs JSON queue'ga qo'shadi (Dart bg isolate o'qiydi). */
+    private fun appendGameToQueue(pkg: String, ts: Long) {
+        try {
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(PREFS_KEY_GAME_PENDING, null)
+            val arr = if (raw.isNullOrBlank()) {
+                org.json.JSONArray()
+            } else {
+                org.json.JSONArray(raw)
+            }
+            // Bir xil paketning eski (dedup oynasidagi) yozuvini olib tashlaymiz.
+            val out = org.json.JSONArray()
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                if (o.optString("pkg") == pkg &&
+                    ts - o.optLong("ts") < GAME_DEDUP_MS
+                ) {
+                    continue
+                }
+                out.put(o)
+            }
+            val name = try {
+                packageManager
+                    .getApplicationLabel(packageManager.getApplicationInfo(pkg, 0))
+                    .toString()
+            } catch (e: Exception) {
+                pkg
+            }
+            out.put(
+                org.json.JSONObject()
+                    .put("pkg", pkg)
+                    .put("name", name)
+                    .put("ts", ts),
+            )
+            // Cheksiz o'smaslik uchun oxirgi 50 ta.
+            val capped = if (out.length() > 50) {
+                org.json.JSONArray().also {
+                    for (i in out.length() - 50 until out.length()) it.put(out.get(i))
+                }
+            } else {
+                out
+            }
+            prefs.edit().putString(PREFS_KEY_GAME_PENDING, capped.toString()).apply()
+            Log.d(TAG, "Game queued: $pkg ($name)")
+        } catch (e: Exception) {
+            Log.e(TAG, "appendGameToQueue error", e)
         }
     }
 
