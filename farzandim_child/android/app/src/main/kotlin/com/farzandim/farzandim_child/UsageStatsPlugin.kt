@@ -5,6 +5,7 @@ import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
 import android.content.Context
 import android.content.Intent
+import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.graphics.Bitmap
 import android.graphics.Canvas
@@ -49,6 +50,10 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             }
             "getInstalledApps" -> {
                 result.success(getInstalledApps())
+            }
+            "getRecentGameForegrounds" -> {
+                val sinceMs = call.argument<Number>("sinceMs")?.toLong() ?: 0L
+                result.success(getRecentGameForegrounds(sinceMs))
             }
             "hasOverlayPermission" -> result.success(hasOverlayPermission())
             "openOverlaySettings" -> {
@@ -280,6 +285,73 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                 map
             }
             .sortedByDescending { it["totalTimeMs"] as Long }
+    }
+
+    /** Ilova O'YIN'mi (CATEGORY_GAME). API 26+ category, eski'da FLAG_IS_GAME. */
+    private fun isGame(appInfo: ApplicationInfo): Boolean {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            appInfo.category == ApplicationInfo.CATEGORY_GAME
+        } else {
+            @Suppress("DEPRECATION")
+            (appInfo.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+        }
+    }
+
+    /**
+     * `sinceMs` dan beri foreground'ga chiqqan O'YINLAR (CATEGORY_GAME).
+     * Har paket uchun oxirgi foreground vaqti. Faqat o'yinlar filtrlanadi —
+     * ChildBackgroundTaskHandler buni har siklda o'qib backend'ga POST qiladi
+     * (ota-onaga "o'yin o'ynayapti" push). O'zimizning paketni hisoblamaymiz.
+     */
+    private fun getRecentGameForegrounds(sinceMs: Long): List<Map<String, Any>> {
+        if (!hasUsageStatsPermission()) return emptyList()
+
+        val usageStatsManager =
+            context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+        val endTime = System.currentTimeMillis()
+        // Default: oxirgi 5 daqiqa (sinceMs noto'g'ri bo'lsa).
+        val startTime =
+            if (sinceMs in 1 until endTime) sinceMs else endTime - 5L * 60L * 1000L
+
+        val pm = context.packageManager
+        // package → oxirgi foreground vaqti (faqat o'yinlar).
+        val gameLast = LinkedHashMap<String, Long>()
+        // appInfo keshi — har paketni bir marta tekshiramiz.
+        val gameCache = HashMap<String, Boolean>()
+
+        val events = usageStatsManager.queryEvents(startTime, endTime)
+        val ev = UsageEvents.Event()
+        while (events.hasNextEvent()) {
+            events.getNextEvent(ev)
+            if (ev.eventType != UsageEvents.Event.ACTIVITY_RESUMED) continue
+            val pkg = ev.packageName ?: continue
+            if (pkg == context.packageName) continue
+            val isGamePkg = gameCache.getOrPut(pkg) {
+                try {
+                    isGame(pm.getApplicationInfo(pkg, 0))
+                } catch (_: PackageManager.NameNotFoundException) {
+                    false
+                }
+            }
+            if (isGamePkg) {
+                gameLast[pkg] = ev.timeStamp
+            }
+        }
+
+        return gameLast.entries.map { (pkg, ts) ->
+            var appName = pkg
+            try {
+                appName = pm.getApplicationLabel(pm.getApplicationInfo(pkg, 0))
+                    .toString()
+            } catch (_: PackageManager.NameNotFoundException) {
+                // packageName fallback
+            }
+            mapOf(
+                "packageName" to pkg,
+                "appName" to appName,
+                "timestamp" to ts,
+            )
+        }
     }
 
     private fun getInstalledApps(): List<Map<String, Any>> {
