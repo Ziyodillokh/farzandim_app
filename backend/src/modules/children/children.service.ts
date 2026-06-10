@@ -12,6 +12,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { BatteryAlertService } from '../../common/battery/battery-alert.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
@@ -35,6 +36,7 @@ export class ChildrenService {
     private readonly storage: StorageService,
     private readonly audit: AuditService,
     private readonly fcm: FcmService,
+    private readonly batteryAlert: BatteryAlertService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -177,6 +179,17 @@ export class ChildrenService {
     if (dto.wifiName !== undefined) data.wifiName = dto.wifiName;
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
+
+    // Past batareya (<10%) crossing — YANGILASHDAN OLDIN tekshiramiz
+    // (prevBattery = child.batteryLevel). Aks holda device-info heartbeat
+    // batareyani jimgina past qilib crossing'ni "yeb" qo'yardi va ota-onaga
+    // push hech qachon kelmasdi. GPS yo'q → oxirgi ma'lum joylashuv olinadi.
+    void this.batteryAlert.checkCrossing(
+      child,
+      child.batteryLevel,
+      dto.batteryLevel,
+      dto.isCharging,
+    );
 
     await this.prisma.child.update({ where: { id }, data });
     return { ok: true };

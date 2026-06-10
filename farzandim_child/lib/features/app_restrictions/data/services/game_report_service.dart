@@ -57,6 +57,7 @@ class GameReportService {
       }
 
       final now = DateTime.now().millisecondsSinceEpoch;
+      final failed = <Map<String, dynamic>>[];
       for (final e in items) {
         if (e is! Map) continue;
         final m = e.cast<String, dynamic>();
@@ -65,15 +66,46 @@ class GameReportService {
         if (pkg.isEmpty) continue;
         final last = _lastReported[pkg] ?? 0;
         if (now - last < _dedupMs) continue;
-        _lastReported[pkg] = now;
-        await _report(pkg, name);
+        final ok = await _report(pkg, name);
+        if (ok) {
+          _lastReported[pkg] = now;
+        } else {
+          // POST yiqildi — o'yinni YO'QOTMAYMIZ, keyingi siklda qayta urinamiz.
+          failed.add(<String, dynamic>{
+            'pkg': pkg,
+            'name': name,
+            'ts': m['ts'] ?? now,
+          });
+        }
+      }
+
+      if (failed.isNotEmpty) {
+        await _requeue(failed);
       }
     } catch (e) {
       debugPrint('GameReportService.check xato: $e');
     }
   }
 
-  Future<void> _report(String packageName, String appName) async {
+  /// POST muvaffaqiyatsiz bo'lgan o'yinlarni queue'ga qaytaradi (native shu
+  /// orada qo'shgan yangi yozuvlar bilan birga — ularning ustidan yozmaymiz).
+  Future<void> _requeue(List<Map<String, dynamic>> failed) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.reload();
+      final raw = prefs.getString(_prefsKeyQueue);
+      final List<dynamic> current = (raw != null && raw.isNotEmpty)
+          ? (jsonDecode(raw) as List<dynamic>)
+          : <dynamic>[];
+      current.addAll(failed);
+      await prefs.setString(_prefsKeyQueue, jsonEncode(current));
+    } catch (e) {
+      debugPrint('GameReportService.requeue xato: $e');
+    }
+  }
+
+  /// Backend'ga POST. Muvaffaqiyatli bo'lsa `true`.
+  Future<bool> _report(String packageName, String appName) async {
     try {
       await _dio.post<void>(
         '/children/$_childId/game-open',
@@ -82,8 +114,10 @@ class GameReportService {
           'appName': appName,
         },
       );
+      return true;
     } catch (e) {
       debugPrint('GameReportService.report xato: $e');
+      return false;
     }
   }
 }

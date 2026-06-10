@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { BatteryAlertService } from '../../common/battery/battery-alert.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { distanceMeters } from '../../common/helpers/haversine';
 import { WriteLocationDto } from './dto/write-location.dto';
@@ -35,8 +36,6 @@ const MOVING_SPEED_MS = 1.3;
 const MOVE_MIN_M = 12;
 /** Statsionar/noma'lum: jitter'ni yutish uchun shundan kam siljish yozilmaydi (m). */
 const JITTER_MIN_M = 35;
-/** Batareya shu foizdan past tushganda ota-onaga push (bir marta — crossing). */
-const LOW_BATTERY_PCT = 10;
 
 /** detectStop uchun kerakli minimal Child maydonlari. */
 interface StopState {
@@ -55,6 +54,7 @@ export class LocationService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly fcm: FcmService,
+    private readonly batteryAlert: BatteryAlertService,
     private readonly realtime: RealtimeGateway,
   ) {}
 
@@ -104,19 +104,18 @@ export class LocationService {
     if (appVersion !== undefined) childDeviceUpdate.appVersion = appVersion;
     if (wifiName !== undefined) childDeviceUpdate.wifiName = wifiName;
 
-    // ── Past batareya (<10%) push — faqat ≥10 dan <10 ga o'tganda (bir marta),
-    //    quvvatlanmayotgan bo'lsa. child.batteryLevel hali ESKI qiymat (update
-    //    quyiroqda). Lokatsiya (lat/lng) push ichida — ota-ona joyni ko'radi.
-    const prevBattery = child.batteryLevel;
-    const newBattery = rest.batteryLevel ?? null;
-    const crossedLow =
-      newBattery !== null &&
-      newBattery < LOW_BATTERY_PCT &&
-      (prevBattery === null || prevBattery >= LOW_BATTERY_PCT) &&
-      !(rest.isCharging ?? false);
-    if (crossedLow) {
-      void this.notifyLowBattery(child, newBattery, latitude, longitude);
-    }
+    // ── Past batareya (<10%) push — umumiy BatteryAlertService orqali (bir
+    //    marta — crossing). child.batteryLevel hali ESKI qiymat (update
+    //    quyiroqda) → prevBattery sifatida uzatamiz. Lokatsiya push ichida —
+    //    ota-ona joyni ko'radi. Device-info heartbeat ham shu servisni
+    //    chaqiradi (aks holda u crossing'ni "yeb" qo'yardi).
+    void this.batteryAlert.checkCrossing(
+      child,
+      child.batteryLevel,
+      rest.batteryLevel,
+      rest.isCharging,
+      { latitude, longitude },
+    );
 
     // ── Kirish filtri: jitter/garbage nuqtalar history'ga yozilmaydi ──
     const acc = rest.accuracy ?? null;
@@ -508,30 +507,6 @@ export class LocationService {
   }
 
   /** ISO 8601 client timestamp → Date. Noto'g'ri/bo'sh bo'lsa server vaqti. */
-  /** Past batareya push — ota-onaning barcha qurilmalariga, lokatsiya bilan
-   *  (data.type=low_battery → parent ilovada joylashuv ekraniga olib boradi). */
-  private async notifyLowBattery(
-    child: { id: string; name: string; parentId: string },
-    level: number,
-    latitude: number,
-    longitude: number,
-  ): Promise<void> {
-    try {
-      await this.fcm.sendPushToUser(child.parentId, {
-        title: `${child.name} — batareya ${level}%`,
-        body: 'Quvvat kam qoldi. Tezroq quvvatlash kerak.',
-        data: {
-          type: 'low_battery',
-          childId: child.id,
-          latitude: String(latitude),
-          longitude: String(longitude),
-        },
-      });
-    } catch (err) {
-      this.logger.warn({ err }, 'low battery push failed');
-    }
-  }
-
   private parseAt(raw?: string): Date {
     if (raw) {
       const d = new Date(raw);

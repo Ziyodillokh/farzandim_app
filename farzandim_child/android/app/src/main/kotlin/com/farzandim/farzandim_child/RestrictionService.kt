@@ -117,6 +117,12 @@ class RestrictionService : Service() {
     private val lastGameQueued = HashMap<String, Long>()
     private var lastForegroundForGame: String? = null
 
+    // getForegroundPackage() "sticky" qiymati — uzoq turgan o'yin/ilovada
+    // queryEvents oynasida yangi ACTIVITY_RESUMED bo'lmasa, oxirgi ma'lum
+    // foreground'ni qaytaramiz (null o'rniga). Aks holda o'yin aniqlash oynasi
+    // juda tor bo'lib qoladi va uzoq o'ynalgan o'yin queue'ga tushmaydi.
+    private var lastForegroundSticky: String? = null
+
     private val pollRunnable = object : Runnable {
         override fun run() {
             if (!isRunning) return
@@ -515,15 +521,22 @@ class RestrictionService : Service() {
     }
 
     /**
-     * Oxirgi 5 sek ichida foreground bo'lgan paket nomi. UsageStatsManager
-     * MOVE_TO_FOREGROUND event'larini scan qiladi.
+     * Hozirgi foreground paket nomi. UsageStatsManager ACTIVITY_RESUMED
+     * event'larini scan qiladi.
+     *
+     * MUHIM: queryEvents FAQAT oyna ICHIDAGI event'larni qaytaradi (holat
+     * emas — hodisa). O'yin/ilova ochilib uzoq tursa, yangi RESUMED chiqmaydi
+     * → tor oyna (avval 5s) ~5s'dan keyin null qaytarardi va uzoq o'ynalgan
+     * o'yin aniqlanmasdi. Yechim: (1) oynani 60s ga kengaytirdik, (2) RESUMED
+     * topilmasa oxirgi ma'lum foreground'ni ("sticky") qaytaramiz. Edge-trigger
+     * buzilmaydi — sticky ham bir xil paket, isNewForeground=false bo'ladi.
      */
     private fun getForegroundPackage(): String? {
         return try {
             val usm = getSystemService(Context.USAGE_STATS_SERVICE)
                 as UsageStatsManager
             val end = System.currentTimeMillis()
-            val begin = end - 5000
+            val begin = end - 60_000L
 
             val events = usm.queryEvents(begin, end)
             val event = UsageEvents.Event()
@@ -535,7 +548,15 @@ class RestrictionService : Service() {
                     lastForeground = event.packageName
                 }
             }
-            lastForeground
+
+            if (lastForeground != null) {
+                lastForegroundSticky = lastForeground
+                lastForeground
+            } else {
+                // 60s ichida ham RESUMED yo'q (juda uzoq turgan o'yin / OEM
+                // usage throttling): oxirgi ma'lum foreground'ni qaytaramiz.
+                lastForegroundSticky
+            }
         } catch (e: Exception) {
             Log.e(TAG, "getForegroundPackage error", e)
             null
