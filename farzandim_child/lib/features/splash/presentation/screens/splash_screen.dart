@@ -17,12 +17,15 @@
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
+import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
+    show kOnboardingSeenKey;
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SplashScreen extends ConsumerStatefulWidget {
   const SplashScreen({super.key});
@@ -60,8 +63,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final pairing = ref.read(pairingStateProvider);
     if (!pairing.isPaired) {
-      // Bola ilovasida birinchi ekran — kodni kiritish (Welcome o'tkazib
-      // yuboriladi). Dizayn talabiga ko'ra ota-ona kodini darhol so'raydi.
+      // Birinchi ochilish bo'lsa — 3 ta slaydli onboarding'ni ko'rsatamiz.
+      // Foydalanuvchi tugatgach `onboarding_seen_v1=true` saqlanadi va
+      // keyingi startup'larda to'g'ridan-to'g'ri /pairing ga o'tiladi.
+      final prefs = await SharedPreferences.getInstance();
+      final onboardingSeen = prefs.getBool(kOnboardingSeenKey) ?? false;
+      if (!mounted) return;
+      if (!onboardingSeen) {
+        context.go('/onboarding');
+        return;
+      }
       context.go('/pairing');
       return;
     }

@@ -33,6 +33,7 @@ import 'package:farzandim_child/features/books/presentation/screens/books_feed_s
 import 'package:farzandim_child/features/books/presentation/screens/pdf_viewer_screen.dart';
 import 'package:farzandim_child/features/gamification/presentation/screens/profile_screen.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart';
 import 'package:farzandim_child/features/analytics/presentation/screens/analytics_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobooks_feed_screen.dart';
 import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
@@ -136,7 +137,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Splash va pairing — har doim ruxsat (pairing oqimi).
       // Welcome ekran olib tashlandi — bola ilovasi to'g'ridan-to'g'ri kodni
       // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
-      const publicPaths = {'/splash', '/pairing', '/consent'};
+      // /onboarding — birinchi marta ochilganda 3 ta slayd (bir martalik).
+      const publicPaths = {
+        '/splash',
+        '/pairing',
+        '/consent',
+        '/onboarding',
+      };
 
       // Eski /welcome URL'lari → /pairing.
       if (loc == '/welcome') {
@@ -190,6 +197,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/welcome',
         builder: (_, __) => const WelcomeScreen(),
+      ),
+      // 3 ta slaydli onboarding — birinchi ochilishda Splash yo'naltiradi.
+      // SharedPreferences `onboarding_seen_v1` tugagach qayta ko'rsatilmaydi.
+      GoRoute(
+        path: '/onboarding',
+        builder: (_, __) => const OnboardingScreen(),
       ),
       GoRoute(
         path: '/pairing',
