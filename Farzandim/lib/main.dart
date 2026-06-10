@@ -28,12 +28,24 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      // ⚡ Yuqori refresh rate (120Hz) — Android'da eng yuqori display rejimini
+      // so'raydi (Samsung va b. ilovani 60Hz'da cheklaydi). Web/iOS'da no-op
+      // (iOS allaqachon avtomatik). Xato bo'lsa app baribir ishlaydi.
+      if (!kIsWeb) {
+        try {
+          await FlutterDisplayMode.setHighRefreshRate();
+        } catch (_) {
+          // best-effort — qurilma qo'llab-quvvatlamasa 60Hz qoladi
+        }
+      }
 
       // API kalitlarni runtime'da assets/env.json'dan yuklash —
       // --dart-define-from-file flag'siz ham ishlaydi.
@@ -67,8 +79,9 @@ Future<void> main() async {
                 ? AppleProvider.debug
                 : AppleProvider.deviceCheck,
           );
-          await FirebaseCrashlytics.instance
-              .setCrashlyticsCollectionEnabled(!kDebugMode);
+          await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+            !kDebugMode,
+          );
           FlutterError.onError =
               FirebaseCrashlytics.instance.recordFlutterFatalError;
           PlatformDispatcher.instance.onError = (error, stack) {
@@ -77,12 +90,15 @@ Future<void> main() async {
             FirebaseCrashlytics.instance
                 .recordError(error, stack, fatal: true)
                 .catchError((Object _) {
-              debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
-            });
+                  debugPrint(
+                    '[DEV] Crashlytics failed; uncaught: $error\n$stack',
+                  );
+                });
             return true;
           };
-          await FirebaseAnalytics.instance
-              .setAnalyticsCollectionEnabled(!kDebugMode);
+          await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+            !kDebugMode,
+          );
         }
       } catch (e) {
         debugPrint('[DEV] Firebase init skipped: $e');
@@ -96,17 +112,11 @@ Future<void> main() async {
         EasyLocalization(
           // Qo'llab-quvvatlanadigan tillar — JSON fayllar
           // `assets/translations/{lang}.json` nomida bo'lishi shart.
-          supportedLocales: const [
-            Locale('uz'),
-            Locale('ru'),
-            Locale('en'),
-          ],
+          supportedLocales: const [Locale('uz'), Locale('ru'), Locale('en')],
           path: 'assets/translations',
           fallbackLocale: const Locale('uz'),
           startLocale: const Locale('uz'),
-          child: const ProviderScope(
-            child: FarzandimApp(),
-          ),
+          child: const ProviderScope(child: FarzandimApp()),
         ),
       );
     },
@@ -122,8 +132,8 @@ Future<void> main() async {
         FirebaseCrashlytics.instance
             .recordError(error, stack, fatal: true)
             .catchError((Object _) {
-          debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
-        });
+              debugPrint('[DEV] Crashlytics failed; uncaught: $error\n$stack');
+            });
       } catch (_) {
         debugPrint('[DEV] Uncaught: $error\n$stack');
       }

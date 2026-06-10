@@ -13,8 +13,27 @@ import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_pr
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Premium silliq scroll — iOS uslubidagi bouncing fizika (ham web, ham
+/// native). Sichqoncha/trackpad bilan ham drag (web'da test qulay).
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+}
 
 /// Farzandim ilovasining ildiz widget'i.
 ///
@@ -182,6 +201,8 @@ class FarzandimApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Farzandim',
       debugShowCheckedModeBanner: false,
+      // ⚡ Premium silliq scroll — iOS uslubidagi bouncing fizika (web+native).
+      scrollBehavior: const _AppScrollBehavior(),
       theme: AppTheme.build(),
       // Light/dark almashishda Theme.of() asoslangan widget'lar 200ms
       // crossfade qiladi, AppColors getter'lari esa darhol flip qiladi —
