@@ -22,6 +22,8 @@
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
+import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
+import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
@@ -98,19 +100,43 @@ final routerProvider = Provider<GoRouter>((ref) {
     pairingStateProvider,
     (_, __) => refresh.value++,
   );
+  // Parent Consent state (Store compliance) — rozilik berilgach
+  // router avtomatik /consent dan /splash ga o'tkazadi.
+  ref.listen<ConsentState>(
+    consentStateProvider,
+    (_, __) => refresh.value++,
+  );
 
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
     redirect: (context, state) {
       final pairing = ref.read(pairingStateProvider);
+      final consent = ref.read(consentStateProvider);
       final isPaired = pairing.isPaired;
       final loc = state.matchedLocation;
+
+      // ── Parent Consent guard (App Store / Play Store compliance) ──
+      // Rozilik holati hali SharedPreferences'dan o'qilmagan bo'lsa
+      // (`unknown`) — splash'da kutamiz, redirect qilmaymiz.
+      // Rozilik berilmagan bo'lsa — barcha boshqa marshrutlarni
+      // /consent ga yo'naltiramiz (/splash dan tashqari, u tekshiruvni
+      // bajaradi va o'zi /consent ga yo'naltiradi).
+      if (consent == ConsentState.notGiven &&
+          loc != '/consent' &&
+          loc != '/splash') {
+        return '/consent';
+      }
+      // Rozilik berilgach foydalanuvchi hali /consent da bo'lsa —
+      // /splash ga qaytarib pairing/permission tekshiruvini ishga tushir.
+      if (consent == ConsentState.given && loc == '/consent') {
+        return '/splash';
+      }
 
       // Splash va pairing — har doim ruxsat (pairing oqimi).
       // Welcome ekran olib tashlandi — bola ilovasi to'g'ridan-to'g'ri kodni
       // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
-      const publicPaths = {'/splash', '/pairing'};
+      const publicPaths = {'/splash', '/pairing', '/consent'};
 
       // Eski /welcome URL'lari → /pairing.
       if (loc == '/welcome') {
@@ -154,6 +180,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/splash',
         builder: (_, __) => const SplashScreen(),
+      ),
+      // Parent Consent — birinchi ochilishda ko'rsatiladi (Store compliance).
+      // SharedPreferences `parent_consent_v1 = true` saqlangach ko'rsatilmaydi.
+      GoRoute(
+        path: '/consent',
+        builder: (_, __) => const ConsentScreen(),
       ),
       GoRoute(
         path: '/welcome',

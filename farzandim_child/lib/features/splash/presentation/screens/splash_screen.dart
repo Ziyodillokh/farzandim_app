@@ -16,6 +16,7 @@
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
+import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -40,6 +41,22 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   Future<void> _route() async {
     await Future<void>.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
+
+    // Parent Consent (Store compliance) — birinchi ochilishda majburiy.
+    // `unknown` paytda SharedPreferences hali yuklanmagan, biroz kutamiz.
+    var consent = ref.read(consentStateProvider);
+    if (consent == ConsentState.unknown) {
+      for (var i = 0; i < 10; i++) {
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+        if (!mounted) return;
+        consent = ref.read(consentStateProvider);
+        if (consent != ConsentState.unknown) break;
+      }
+    }
+    if (consent == ConsentState.notGiven) {
+      context.go('/consent');
+      return;
+    }
 
     final pairing = ref.read(pairingStateProvider);
     if (!pairing.isPaired) {
