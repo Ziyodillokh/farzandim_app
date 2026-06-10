@@ -21,6 +21,7 @@ import 'package:farzandim/features/settings/presentation/providers/language_prov
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -71,6 +72,7 @@ class SettingsScreen extends ConsumerWidget {
                           children: [
                             // ── Karta 1: bola ──
                             _MenuCard(
+                              accent: AppColors.secondary,
                               items: [
                                 _MenuItem(
                                   icon: Icons.person_add_alt_1_rounded,
@@ -88,6 +90,7 @@ class SettingsScreen extends ConsumerWidget {
                             const SizedBox(height: AppDimensions.md),
                             // ── Karta 2: sessiyalar / til / yordam ──
                             _MenuCard(
+                              accent: AppColors.accent,
                               items: [
                                 _MenuItem(
                                   icon: Icons.devices_rounded,
@@ -446,18 +449,15 @@ class _OverflowMenu extends ConsumerWidget {
 // ════════════════════════ MENU CARD / ITEM ════════════════════════
 
 class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.items});
+  const _MenuCard({required this.items, required this.accent});
   final List<_MenuItem> items;
+  final Color accent;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
+    return SettingsCard(
+      accent: accent,
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
           for (var i = 0; i < items.length; i++) ...[

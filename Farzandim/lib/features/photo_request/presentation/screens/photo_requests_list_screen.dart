@@ -15,6 +15,7 @@ import 'package:farzandim/features/photo_request/data/repositories/backend_photo
 import 'package:farzandim/features/photo_request/presentation/providers/photo_request_provider.dart';
 import 'package:farzandim/features/photo_request/presentation/widgets/photo_request_dialog.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,19 +44,12 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                 Expanded(
                   child: requestsAsync.when(
                     loading: () => Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.accent,
-                      ),
+                      child: CircularProgressIndicator(color: AppColors.accent),
                     ),
-                    error: (e, _) => Center(
-                      child: Text('Yuklanmadi: $e'),
-                    ),
+                    error: (e, _) => Center(child: Text('Yuklanmadi: $e')),
                     data: (requests) => TabBarView(
                       children: [
-                        _RequestsView(
-                          childId: childId,
-                          requests: requests,
-                        ),
+                        _RequestsView(childId: childId, requests: requests),
                         _RequestsView(
                           childId: childId,
                           requests: requests
@@ -86,8 +80,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
           ),
         ),
         floatingActionButton: FloatingActionButton.extended(
-          onPressed: () =>
-              PhotoRequestDialog.show(context, childId: childId),
+          onPressed: () => PhotoRequestDialog.show(context, childId: childId),
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
           icon: const Icon(Icons.photo_camera_rounded),
@@ -207,10 +200,8 @@ class _RequestsView extends ConsumerWidget {
           AppDimensions.xl * 2,
         ),
         itemCount: requests.length,
-        itemBuilder: (_, i) => _RequestTile(
-          request: requests[i],
-          childId: childId,
-        ),
+        itemBuilder: (_, i) =>
+            _RequestTile(request: requests[i], childId: childId),
       ),
     );
   }
@@ -233,74 +224,63 @@ class _RequestTile extends ConsumerWidget {
 
     final (icon, color, label) = switch (status) {
       'COMPLETED' => (
-          Icons.check_circle_rounded,
-          AppColors.success,
-          'Bola rasm yubordi'
-        ),
-      'DECLINED' => (
-          Icons.cancel_rounded,
-          AppColors.error,
-          'Bola rad etdi'
-        ),
-      _ => (
-          Icons.schedule_rounded,
-          AppColors.warning,
-          'Kutilmoqda'
-        ),
+        Icons.check_circle_rounded,
+        AppColors.success,
+        'Bola rasm yubordi',
+      ),
+      'DECLINED' => (Icons.cancel_rounded, AppColors.error, 'Bola rad etdi'),
+      _ => (Icons.schedule_rounded, AppColors.warning, 'Kutilmoqda'),
     };
 
     return GestureDetector(
-      onLongPress: id.isEmpty
-          ? null
-          : () => _confirmDelete(context, ref, id),
-      child: Container(
-        margin: const EdgeInsets.only(bottom: AppDimensions.md),
-        padding: const EdgeInsets.all(AppDimensions.md),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: color.withValues(alpha: 0.3)),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              children: [
-                Icon(icon, color: color, size: 24),
-                const SizedBox(width: AppDimensions.sm),
-                Expanded(
-                  child: Text(
-                    label,
-                    style: AppTextStyles.bodyM.copyWith(
-                      color: color,
-                      fontWeight: FontWeight.w600,
+      onLongPress: id.isEmpty ? null : () => _confirmDelete(context, ref, id),
+      child: Padding(
+        padding: const EdgeInsets.only(bottom: AppDimensions.md),
+        child: SettingsCard(
+          accent: AppColors.featurePurple,
+          rail: false,
+          padding: const EdgeInsets.all(AppDimensions.md),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  SettingsIconChip(icon: icon, accent: color),
+                  const SizedBox(width: AppDimensions.sm),
+                  Expanded(
+                    child: Text(
+                      label,
+                      style: AppTextStyles.bodyM.copyWith(
+                        color: color,
+                        fontWeight: FontWeight.w600,
+                      ),
                     ),
                   ),
-                ),
-                if (time != null)
-                  Text(
-                    _formatTime(time),
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: AppColors.textSecondary,
+                  if (time != null)
+                    Text(
+                      _formatTime(time),
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
                     ),
-                  ),
-              ],
-            ),
-            if (message.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.sm),
-              Text(
-                '"$message"',
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textSecondary,
-                  fontStyle: FontStyle.italic,
-                ),
+                ],
               ),
+              if (message.isNotEmpty) ...[
+                const SizedBox(height: AppDimensions.sm),
+                Text(
+                  '"$message"',
+                  style: AppTextStyles.bodyS.copyWith(
+                    color: AppColors.textSecondary,
+                    fontStyle: FontStyle.italic,
+                  ),
+                ),
+              ],
+              if (status == 'COMPLETED') ...[
+                const SizedBox(height: AppDimensions.md),
+                _CompletedPhoto(requestId: id),
+              ],
             ],
-            if (status == 'COMPLETED') ...[
-              const SizedBox(height: AppDimensions.md),
-              _CompletedPhoto(requestId: id),
-            ],
-          ],
+          ),
         ),
       ),
     );
@@ -321,9 +301,7 @@ class _RequestTile extends ConsumerWidget {
         ),
         content: Text(
           'Bu so\'rov va u bilan bog\'liq rasm o\'chiriladi.',
-          style: AppTextStyles.bodyM.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -378,8 +356,7 @@ class _CompletedPhoto extends ConsumerStatefulWidget {
   final String requestId;
 
   @override
-  ConsumerState<_CompletedPhoto> createState() =>
-      _CompletedPhotoState();
+  ConsumerState<_CompletedPhoto> createState() => _CompletedPhotoState();
 }
 
 class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
@@ -423,9 +400,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
         ),
         child: Text(
           'Rasm yuklanmadi',
-          style: AppTextStyles.bodyS.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
         ),
       );
     }
@@ -460,10 +435,8 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
       PageRouteBuilder<void>(
         opaque: false,
         barrierColor: Colors.black,
-        pageBuilder: (_, __, ___) => _FullscreenPhoto(
-          url: url,
-          tag: 'photo_${widget.requestId}',
-        ),
+        pageBuilder: (_, __, ___) =>
+            _FullscreenPhoto(url: url, tag: 'photo_${widget.requestId}'),
       ),
     );
   }

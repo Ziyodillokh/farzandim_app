@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -86,41 +87,30 @@ class _PermissionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: BorderSide(color: AppColors.border),
+    return SettingsCard(
+      accent: AppColors.secondary,
+      rail: false,
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.md,
+        vertical: AppDimensions.md,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md,
-            vertical: AppDimensions.md,
+      child: Row(
+        children: [
+          SettingsIconChip(icon: icon, accent: AppColors.secondary),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(
+            child: Text(
+              name,
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w500),
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: AppColors.textSecondary),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Text(
-                  name,
-                  style: AppTextStyles.bodyM.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: AppColors.textTertiary,
-              ),
-            ],
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 22,
+            color: AppColors.textTertiary,
           ),
-        ),
+        ],
       ),
     );
   }

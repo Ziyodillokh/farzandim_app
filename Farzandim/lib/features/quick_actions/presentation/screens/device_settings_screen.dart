@@ -3,7 +3,6 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
@@ -11,7 +10,10 @@ import 'package:farzandim/features/child_management/data/models/child_device_inf
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -98,7 +100,8 @@ Future<void> _ringDevice(
     await ref.read(backendChildRepositoryProvider).ringDevice(childId);
     if (context.mounted) _snack(context, 'deviceSettings.ringSent'.tr());
   } catch (_) {
-    if (context.mounted) _snack(context, 'deviceSettings.ringError'.tr(), error: true);
+    if (context.mounted)
+      _snack(context, 'deviceSettings.ringError'.tr(), error: true);
   }
 }
 
@@ -152,8 +155,7 @@ class _Content extends ConsumerWidget {
           _NavRow(
             icon: Icons.smartphone_rounded,
             label: 'deviceSettings.appPermissionsRow'.tr(),
-            onTap: () =>
-                context.push(AppRoutes.appPermissionsPath(child.id)),
+            onTap: () => context.push(AppRoutes.appPermissionsPath(child.id)),
           ),
           const SizedBox(height: AppDimensions.lg),
 
@@ -179,34 +181,22 @@ class _DeviceCard extends StatelessWidget {
     // kelganmi). Avval faqat `isConnected` edi va hech qachon offline
     // bo'lmasdi; endi heartbeat to'xtasa qurilma offline ko'rinadi.
     final lastSeen = child.lastSeenAt;
-    final isOnline = child.isConnected &&
+    final isOnline =
+        child.isConnected &&
         lastSeen != null &&
         DateTime.now().difference(lastSeen) < const Duration(minutes: 5);
     final battery = info?.batteryLevel;
 
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      padding: const EdgeInsets.all(AppDimensions.md),
+    return SettingsCard(
+      accent: AppColors.secondary,
+      padding: const EdgeInsets.all(AppDimensions.lg),
       child: Row(
         children: [
-          // Qurilma rasm/ikona placeholder.
-          Container(
-            width: 64,
-            height: 64,
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              Icons.smartphone_rounded,
-              size: 32,
-              color: AppColors.textSecondary,
-            ),
+          // Qurilma ikonasi — premium accent chip.
+          SettingsIconChip(
+            icon: Icons.smartphone_rounded,
+            accent: AppColors.secondary,
+            size: 60,
           ),
           const SizedBox(width: AppDimensions.md),
           Expanded(
@@ -303,31 +293,20 @@ class _ActionTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: BorderSide(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: AppDimensions.lg),
-          child: Column(
-            children: [
-              Icon(icon, size: 26, color: AppColors.textPrimary),
-              const SizedBox(height: AppDimensions.sm),
-              Text(
-                label,
-                style: AppTextStyles.bodyS.copyWith(
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+    return SettingsCard(
+      accent: AppColors.secondary,
+      rail: false,
+      onTap: onTap,
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.lg),
+      child: Column(
+        children: [
+          SettingsIconChip(icon: icon, accent: AppColors.secondary, size: 46),
+          const SizedBox(height: AppDimensions.sm),
+          Text(
+            label,
+            style: AppTextStyles.bodyS.copyWith(fontWeight: FontWeight.w600),
           ),
-        ),
+        ],
       ),
     );
   }
@@ -336,11 +315,7 @@ class _ActionTile extends StatelessWidget {
 // ════════════════════════ NAV ROW ════════════════════════
 
 class _NavRow extends StatelessWidget {
-  const _NavRow({
-    required this.icon,
-    required this.label,
-    required this.onTap,
-  });
+  const _NavRow({required this.icon, required this.label, required this.onTap});
 
   final IconData icon;
   final String label;
@@ -348,41 +323,25 @@ class _NavRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: BorderSide(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md,
-            vertical: AppDimensions.md,
+    return SettingsCard(
+      accent: AppColors.secondary,
+      onTap: onTap,
+      child: Row(
+        children: [
+          SettingsIconChip(icon: icon, accent: AppColors.secondary),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
-          child: Row(
-            children: [
-              Icon(icon, size: 22, color: AppColors.textSecondary),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Text(
-                  label,
-                  style: AppTextStyles.bodyM.copyWith(
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-              Icon(
-                Icons.chevron_right_rounded,
-                size: 22,
-                color: AppColors.textTertiary,
-              ),
-            ],
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 22,
+            color: AppColors.textTertiary,
           ),
-        ),
+        ],
       ),
     );
   }
@@ -439,7 +398,11 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     } catch (_) {
       if (mounted) {
         setState(() => _blocked = previous); // revert
-        _snack(context, 'deviceSettings.unknownSources.errorSnack'.tr(), error: true);
+        _snack(
+          context,
+          'deviceSettings.unknownSources.errorSnack'.tr(),
+          error: true,
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -448,34 +411,34 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      ),
-      padding: const EdgeInsets.all(AppDimensions.md),
+    return SettingsCard(
+      accent: AppColors.secondary,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             children: [
+              SettingsIconChip(
+                icon: Icons.shield_outlined,
+                accent: AppColors.secondary,
+              ),
+              const SizedBox(width: AppDimensions.md),
               Expanded(
                 child: Text(
                   'deviceSettings.unknownSources.title'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
-                    fontWeight: FontWeight.w600,
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.md),
-              Switch.adaptive(
+              const SizedBox(width: AppDimensions.sm),
+              AppSwitch(
                 value: _blocked,
-                activeThumbColor: AppColors.primary,
                 onChanged: _saving ? null : _onChanged,
               ),
             ],
           ),
-          const SizedBox(height: AppDimensions.xs),
+          const SizedBox(height: AppDimensions.sm),
           Text(
             'deviceSettings.unknownSources.desc'.tr(
               namedArgs: {'name': widget.child.name},

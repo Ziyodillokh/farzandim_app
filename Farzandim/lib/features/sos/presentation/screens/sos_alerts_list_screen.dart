@@ -11,6 +11,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/sos/data/repositories/backend_sos_repository.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -155,9 +156,8 @@ class _AlertsList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final async = ref.watch(provider);
     return async.when(
-      loading: () => Center(
-        child: CircularProgressIndicator(color: AppColors.accent),
-      ),
+      loading: () =>
+          Center(child: CircularProgressIndicator(color: AppColors.accent)),
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.lg),
@@ -223,7 +223,7 @@ class _AlertsList extends ConsumerWidget {
         lng: lng,
         title:
             (alert['child'] as Map<String, dynamic>?)?['name'] as String? ??
-                'Bola',
+            'Bola',
       ),
     );
   }
@@ -243,16 +243,16 @@ class _AlertsList extends ConsumerWidget {
         ),
         content: Text(
           'Alert ACTIVE → RESOLVED holatiga o\'tadi.',
-          style:
-              AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
+          style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
               'Bekor qilish',
-              style:
-                  AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
             ),
           ),
           TextButton(
@@ -273,8 +273,7 @@ class _AlertsList extends ConsumerWidget {
     final id = alert['id'] as String?;
     if (id == null) return;
 
-    final ok =
-        await ref.read(backendSosRepositoryProvider).resolveAlert(id);
+    final ok = await ref.read(backendSosRepositoryProvider).resolveAlert(id);
     if (!context.mounted) return;
     if (ok) {
       ref.invalidate(sosAlertsByStatusProvider);
@@ -322,129 +321,113 @@ class _AlertTile extends StatelessWidget {
 
     final accent = showResolveButton ? AppColors.error : AppColors.success;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.md),
-      padding: const EdgeInsets.all(AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Icon(
-                  showResolveButton
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.md),
+      child: SettingsCard(
+        accent: accent,
+        rail: false,
+        padding: const EdgeInsets.all(AppDimensions.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SettingsIconChip(
+                  icon: showResolveButton
                       ? Icons.warning_amber_rounded
                       : Icons.check_rounded,
-                  color: accent,
-                  size: 24,
+                  accent: accent,
+                  size: 44,
                 ),
-              ),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      showResolveButton ? '$childName — SOS!' : childName,
-                      style: AppTextStyles.bodyM.copyWith(
-                        fontWeight: FontWeight.w700,
-                        color: accent,
-                      ),
-                    ),
-                    if (createdTime != null)
+                const SizedBox(width: AppDimensions.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
                       Text(
-                        _formatTime(createdTime),
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textSecondary,
+                        showResolveButton ? '$childName — SOS!' : childName,
+                        style: AppTextStyles.bodyM.copyWith(
+                          fontWeight: FontWeight.w700,
+                          color: accent,
                         ),
                       ),
-                    if (!showResolveButton && resolvedTime != null)
-                      Text(
-                        'Hal qilingan: ${_formatTime(resolvedTime)}',
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textTertiary,
-                          fontSize: 11,
+                      if (createdTime != null)
+                        Text(
+                          _formatTime(createdTime),
+                          style: AppTextStyles.bodyS.copyWith(
+                            color: AppColors.textSecondary,
+                          ),
                         ),
-                      ),
-                  ],
+                      if (!showResolveButton && resolvedTime != null)
+                        Text(
+                          'Hal qilingan: ${_formatTime(resolvedTime)}',
+                          style: AppTextStyles.bodyS.copyWith(
+                            color: AppColors.textTertiary,
+                            fontSize: 11,
+                          ),
+                        ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            if (hasLocation) ...[
+              const SizedBox(height: AppDimensions.sm),
+              Text(
+                'Joylashuv: ${lat.toStringAsFixed(5)}, '
+                '${lng.toStringAsFixed(5)}',
+                style: AppTextStyles.bodyS.copyWith(
+                  color: AppColors.textSecondary,
                 ),
               ),
             ],
-          ),
-          if (hasLocation) ...[
-            const SizedBox(height: AppDimensions.sm),
-            Text(
-              'Joylashuv: ${lat.toStringAsFixed(5)}, '
-              '${lng.toStringAsFixed(5)}',
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textSecondary,
-              ),
+            const SizedBox(height: AppDimensions.md),
+            Row(
+              children: [
+                if (hasLocation)
+                  Expanded(
+                    child: OutlinedButton.icon(
+                      onPressed: onShowMap,
+                      style: OutlinedButton.styleFrom(
+                        foregroundColor: AppColors.textPrimary,
+                        side: BorderSide(color: AppColors.border),
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      icon: const Icon(Icons.map_rounded, size: 18),
+                      label: Text('Xaritada', style: AppTextStyles.bodyM),
+                    ),
+                  ),
+                if (hasLocation && showResolveButton)
+                  const SizedBox(width: AppDimensions.sm),
+                if (showResolveButton)
+                  Expanded(
+                    child: TextButton.icon(
+                      onPressed: onResolve,
+                      style: TextButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        foregroundColor: AppColors.onPrimary,
+                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      icon: const Icon(Icons.check_rounded, size: 18),
+                      label: Text(
+                        'Hal qilish',
+                        style: AppTextStyles.bodyM.copyWith(
+                          fontWeight: FontWeight.w600,
+                          color: AppColors.onPrimary,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ],
-          const SizedBox(height: AppDimensions.md),
-          Row(
-            children: [
-              if (hasLocation)
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: onShowMap,
-                    style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.textPrimary,
-                      side: BorderSide(color: AppColors.border),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                    icon: const Icon(Icons.map_rounded, size: 18),
-                    label: Text(
-                      'Xaritada',
-                      style: AppTextStyles.bodyM,
-                    ),
-                  ),
-                ),
-              if (hasLocation && showResolveButton)
-                const SizedBox(width: AppDimensions.sm),
-              if (showResolveButton)
-                Expanded(
-                  child: TextButton.icon(
-                    onPressed: onResolve,
-                    style: TextButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: AppColors.onPrimary,
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
-                    icon: const Icon(Icons.check_rounded, size: 18),
-                    label: Text(
-                      'Hal qilish',
-                      style: AppTextStyles.bodyM.copyWith(
-                        fontWeight: FontWeight.w600,
-                        color: AppColors.onPrimary,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ],
+        ),
       ),
     );
   }
@@ -482,9 +465,7 @@ class _LocationMapDialog extends StatelessWidget {
     return Dialog(
       backgroundColor: AppColors.surface,
       insetPadding: const EdgeInsets.all(AppDimensions.md),
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -492,10 +473,7 @@ class _LocationMapDialog extends StatelessWidget {
             padding: const EdgeInsets.all(AppDimensions.md),
             child: Row(
               children: [
-                Icon(
-                  Icons.location_on_rounded,
-                  color: AppColors.error,
-                ),
+                Icon(Icons.location_on_rounded, color: AppColors.error),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

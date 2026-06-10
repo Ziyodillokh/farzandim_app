@@ -16,6 +16,7 @@ import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_ch
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
@@ -881,11 +882,7 @@ class _TimeCard extends ConsumerWidget {
                     style: AppTextStyles.bodyS,
                   ),
                 ),
-                Switch.adaptive(
-                  value: blockAll,
-                  onChanged: onBlockChanged,
-                  activeTrackColor: AppColors.primary,
-                ),
+                AppSwitch(value: blockAll, onChanged: onBlockChanged),
               ],
             ),
           ),

@@ -12,6 +12,7 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/feedback/data/repositories/backend_feedback_repository.dart';
 import 'package:farzandim/features/feedback/presentation/providers/feedback_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -40,13 +41,9 @@ class FeedbackInboxScreen extends ConsumerWidget {
               Expanded(
                 child: feedbackAsync.when(
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
-                  error: (e, _) => Center(
-                    child: Text('Yuklanmadi: $e'),
-                  ),
+                  error: (e, _) => Center(child: Text('Yuklanmadi: $e')),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
@@ -60,10 +57,8 @@ class FeedbackInboxScreen extends ConsumerWidget {
                           vertical: AppDimensions.md,
                         ),
                         itemCount: list.length,
-                        itemBuilder: (_, i) => _FeedbackTile(
-                          feedback: list[i],
-                          childId: childId,
-                        ),
+                        itemBuilder: (_, i) =>
+                            _FeedbackTile(feedback: list[i], childId: childId),
                       ),
                     );
                   },
@@ -114,10 +109,7 @@ class _Header extends StatelessWidget {
 }
 
 class _FeedbackTile extends ConsumerWidget {
-  const _FeedbackTile({
-    required this.feedback,
-    required this.childId,
-  });
+  const _FeedbackTile({required this.feedback, required this.childId});
 
   final Map<String, dynamic> feedback;
   final String childId;
@@ -147,8 +139,7 @@ class _FeedbackTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final emojiKey =
-        (feedback['emoji'] as String? ?? 'HAPPY').toUpperCase();
+    final emojiKey = (feedback['emoji'] as String? ?? 'HAPPY').toUpperCase();
     final emoji = _emojiMap[emojiKey] ?? '💭';
     final label = _labelMap[emojiKey] ?? emojiKey;
     final message = (feedback['message'] as String?) ?? '';
@@ -158,91 +149,77 @@ class _FeedbackTile extends ConsumerWidget {
         ? DateTime.tryParse(createdAt)?.toLocal()
         : null;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isRead
-              ? AppColors.border
-              : AppColors.accent,
-          width: isRead ? 1 : 1.5,
-        ),
-      ),
-      child: InkWell(
-        borderRadius: BorderRadius.circular(16),
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.md),
+      child: SettingsCard(
+        accent: AppColors.warning,
+        rail: false,
+        padding: const EdgeInsets.all(AppDimensions.md),
         onTap: () => _onTap(context, ref),
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.md),
-          child: Row(
-            children: [
-              Container(
-                width: 56,
-                height: 56,
-                decoration: BoxDecoration(
-                  color: AppColors.surfaceVariant,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  emoji,
-                  style: const TextStyle(fontSize: 32),
-                ),
+        child: Row(
+          children: [
+            Container(
+              width: 56,
+              height: 56,
+              decoration: BoxDecoration(
+                color: AppColors.surfaceVariant,
+                shape: BoxShape.circle,
               ),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          label,
-                          style: AppTextStyles.bodyM.copyWith(
-                            fontWeight: isRead
-                                ? FontWeight.w500
-                                : FontWeight.w700,
+              alignment: Alignment.center,
+              child: Text(emoji, style: const TextStyle(fontSize: 32)),
+            ),
+            const SizedBox(width: AppDimensions.md),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Text(
+                        label,
+                        style: AppTextStyles.bodyM.copyWith(
+                          fontWeight: isRead
+                              ? FontWeight.w500
+                              : FontWeight.w700,
+                        ),
+                      ),
+                      const Spacer(),
+                      if (!isRead)
+                        Container(
+                          width: 8,
+                          height: 8,
+                          decoration: BoxDecoration(
+                            color: AppColors.primary,
+                            shape: BoxShape.circle,
                           ),
                         ),
-                        const Spacer(),
-                        if (!isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: AppColors.primary,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
+                    ],
+                  ),
+                  if (message.isNotEmpty) ...[
+                    const SizedBox(height: 2),
+                    Text(
+                      message,
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: AppColors.textSecondary,
+                      ),
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
                     ),
-                    if (message.isNotEmpty) ...[
-                      const SizedBox(height: 2),
-                      Text(
-                        message,
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textSecondary,
-                        ),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                    if (time != null) ...[
-                      const SizedBox(height: 4),
-                      Text(
-                        _formatTime(time),
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textTertiary,
-                          fontSize: 11,
-                        ),
-                      ),
-                    ],
                   ],
-                ),
+                  if (time != null) ...[
+                    const SizedBox(height: 4),
+                    Text(
+                      _formatTime(time),
+                      style: AppTextStyles.bodyS.copyWith(
+                        color: AppColors.textTertiary,
+                        fontSize: 11,
+                      ),
+                    ),
+                  ],
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -253,9 +230,7 @@ class _FeedbackTile extends ConsumerWidget {
     final isRead = feedback['isRead'] as bool? ?? false;
     if (id == null || isRead) return;
 
-    await ref
-        .read(backendFeedbackRepositoryProvider)
-        .markAsRead(id);
+    await ref.read(backendFeedbackRepositoryProvider).markAsRead(id);
     ref.invalidate(childFeedbackProvider(childId));
   }
 

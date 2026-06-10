@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
@@ -37,9 +38,7 @@ class AboutScreen extends StatelessWidget {
                       const SizedBox(height: AppDimensions.md),
                       Text(
                         'about.appName'.tr(),
-                        style: AppTextStyles.headlineXL.copyWith(
-                          fontSize: 24,
-                        ),
+                        style: AppTextStyles.headlineXL.copyWith(fontSize: 24),
                       ),
                       const SizedBox(height: AppDimensions.xs),
                       Text(
@@ -49,23 +48,15 @@ class AboutScreen extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: AppDimensions.xl),
-                      Container(
-                        decoration: BoxDecoration(
-                          color: AppColors.surface,
-                          borderRadius: BorderRadius.circular(
-                            AppDimensions.radiusM,
-                          ),
-                          border: Border.all(color: AppColors.border),
-                        ),
+                      SettingsCard(
+                        accent: AppColors.accent,
                         padding: const EdgeInsets.all(AppDimensions.md),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
                             Text(
                               'about.description1'.tr(),
-                              style: AppTextStyles.bodyS.copyWith(
-                                height: 1.5,
-                              ),
+                              style: AppTextStyles.bodyS.copyWith(height: 1.5),
                             ),
                             const SizedBox(height: 12),
                             Text(
@@ -81,17 +72,16 @@ class AboutScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppDimensions.lg),
                       _LinkTile(
+                        icon: Icons.description_outlined,
                         title: 'about.termsLink'.tr(),
-                        onTap: () => context.push(
-                          AppRoutes.legalTermsOfService,
-                        ),
+                        onTap: () =>
+                            context.push(AppRoutes.legalTermsOfService),
                       ),
                       const SizedBox(height: AppDimensions.sm),
                       _LinkTile(
+                        icon: Icons.privacy_tip_outlined,
                         title: 'about.privacyLink'.tr(),
-                        onTap: () => context.push(
-                          AppRoutes.legalPrivacyPolicy,
-                        ),
+                        onTap: () => context.push(AppRoutes.legalPrivacyPolicy),
                       ),
                       const SizedBox(height: AppDimensions.xl),
                       Text(
@@ -129,10 +119,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),
@@ -152,45 +139,33 @@ class _Header extends StatelessWidget {
 }
 
 class _LinkTile extends StatelessWidget {
-  const _LinkTile({required this.title, required this.onTap});
+  const _LinkTile({
+    required this.icon,
+    required this.title,
+    required this.onTap,
+  });
 
+  final IconData icon;
   final String title;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: BorderSide(color: AppColors.border),
+    return SettingsCard(
+      accent: AppColors.accent,
+      onTap: onTap,
+      rail: false,
+      padding: const EdgeInsets.symmetric(
+        horizontal: AppDimensions.md,
+        vertical: 14,
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: borderRadius,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: AppDimensions.md,
-            vertical: 14,
-          ),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text(
-                  title,
-                  style: AppTextStyles.bodyM,
-                ),
-              ),
-              Icon(
-                Icons.chevron_right,
-                size: 22,
-                color: AppColors.textSecondary,
-              ),
-            ],
-          ),
-        ),
+      child: Row(
+        children: [
+          SettingsIconChip(icon: icon, accent: AppColors.accent),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(child: Text(title, style: AppTextStyles.bodyM)),
+          Icon(Icons.chevron_right, size: 22, color: AppColors.textSecondary),
+        ],
       ),
     );
   }

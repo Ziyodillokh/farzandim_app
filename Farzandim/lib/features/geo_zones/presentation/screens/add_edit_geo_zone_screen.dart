@@ -6,10 +6,12 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/widgets/expandable_map.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,11 +34,7 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 /// list ekran yangi zonani ko'radi.
 class AddEditGeoZoneScreen extends ConsumerStatefulWidget {
   /// `AddEditGeoZoneScreen` konstruktor.
-  const AddEditGeoZoneScreen({
-    required this.childId,
-    super.key,
-    this.zoneId,
-  });
+  const AddEditGeoZoneScreen({required this.childId, super.key, this.zoneId});
 
   /// Qaysi bola uchun zona (per-child).
   final String childId;
@@ -49,8 +47,7 @@ class AddEditGeoZoneScreen extends ConsumerStatefulWidget {
       _AddEditGeoZoneScreenState();
 }
 
-class _AddEditGeoZoneScreenState
-    extends ConsumerState<AddEditGeoZoneScreen> {
+class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
   // Toshkent markazi — default boshlang'ich joylashuv.
   static const _defaultCenter = LatLng(41.2995, 69.2401);
 
@@ -80,9 +77,7 @@ class _AddEditGeoZoneScreenState
 
   void _initFromExistingZone() {
     final zone = ref.read(
-      geoZoneByIdProvider(
-        (childId: widget.childId, zoneId: widget.zoneId!),
-      ),
+      geoZoneByIdProvider((childId: widget.childId, zoneId: widget.zoneId!)),
     );
     if (zone != null) {
       _nameController.text = zone.name;
@@ -98,9 +93,10 @@ class _AddEditGeoZoneScreenState
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final z = ref.read(
-          geoZoneByIdProvider(
-            (childId: widget.childId, zoneId: widget.zoneId!),
-          ),
+          geoZoneByIdProvider((
+            childId: widget.childId,
+            zoneId: widget.zoneId!,
+          )),
         );
         if (z != null) {
           setState(() {
@@ -131,10 +127,7 @@ class _AddEditGeoZoneScreenState
         child: SafeArea(
           child: Column(
             children: [
-              _Header(
-                isEditMode: _isEditMode,
-                onDelete: _confirmDelete,
-              ),
+              _Header(isEditMode: _isEditMode, onDelete: _confirmDelete),
               const SizedBox(height: AppDimensions.sm),
               ExpandableMap(
                 center: _center,
@@ -188,8 +181,7 @@ class _AddEditGeoZoneScreenState
                         notifyOnExit: _notifyOnExit,
                         onEnterChanged: (v) =>
                             setState(() => _notifyOnEnter = v),
-                        onExitChanged: (v) =>
-                            setState(() => _notifyOnExit = v),
+                        onExitChanged: (v) => setState(() => _notifyOnExit = v),
                       ),
                       const SizedBox(height: AppDimensions.xl),
                     ],
@@ -221,9 +213,10 @@ class _AddEditGeoZoneScreenState
 
     final current = _isEditMode
         ? ref.read(
-            geoZoneByIdProvider(
-              (childId: widget.childId, zoneId: widget.zoneId!),
-            ),
+            geoZoneByIdProvider((
+              childId: widget.childId,
+              zoneId: widget.zoneId!,
+            )),
           )
         : null;
 
@@ -268,9 +261,7 @@ class _AddEditGeoZoneScreenState
 
   Future<void> _confirmDelete() async {
     final zone = ref.read(
-      geoZoneByIdProvider(
-        (childId: widget.childId, zoneId: widget.zoneId!),
-      ),
+      geoZoneByIdProvider((childId: widget.childId, zoneId: widget.zoneId!)),
     );
     if (zone == null) return;
 
@@ -283,21 +274,15 @@ class _AddEditGeoZoneScreenState
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          'geoZoneEdit.deleteDialog.content'.tr(
-            namedArgs: {'name': zone.name},
-          ),
-          style: AppTextStyles.bodyS.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          'geoZoneEdit.deleteDialog.content'.tr(namedArgs: {'name': zone.name}),
+          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
             child: Text(
               'geoZoneEdit.deleteDialog.cancel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textPrimary,
-              ),
+              style: AppTextStyles.bodyM.copyWith(color: AppColors.textPrimary),
             ),
           ),
           TextButton(
@@ -316,10 +301,9 @@ class _AddEditGeoZoneScreenState
 
     if (!(confirmed ?? false) || !mounted) return;
 
-    final result = await ref.read(geoZoneActionsProvider.notifier).deleteZone(
-          childId: widget.childId,
-          zoneId: widget.zoneId!,
-        );
+    final result = await ref
+        .read(geoZoneActionsProvider.notifier)
+        .deleteZone(childId: widget.childId, zoneId: widget.zoneId!);
     if (!mounted) return;
     if (result.isSuccess) {
       context.pop();
@@ -355,10 +339,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),
@@ -378,10 +359,7 @@ class _Header extends StatelessWidget {
               width: 48,
               height: 48,
               child: IconButton(
-                icon: Icon(
-                  Icons.delete_outline,
-                  color: AppColors.textPrimary,
-                ),
+                icon: Icon(Icons.delete_outline, color: AppColors.textPrimary),
                 onPressed: onDelete,
               ),
             )
@@ -456,21 +434,17 @@ class _IconPicker extends StatelessWidget {
                   : null,
               color: isSelected ? null : AppColors.surface,
               border: Border.all(
-                color:
-                    isSelected ? AppColors.primary : AppColors.border,
+                color: isSelected ? AppColors.primary : AppColors.border,
                 width: isSelected ? 1.5 : 1,
               ),
               borderRadius: BorderRadius.circular(16),
-              boxShadow:
-                  isSelected ? AppShadows.glow(AppColors.primary) : null,
+              boxShadow: isSelected ? AppShadows.glow(AppColors.primary) : null,
             ),
             alignment: Alignment.center,
             child: Icon(
               GeoZone.iconFromString(iconName),
               size: 25,
-              color: isSelected
-                  ? AppColors.onPrimary
-                  : AppColors.textSecondary,
+              color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
             ),
           ),
         );
@@ -505,17 +479,12 @@ class _RadiusSlider extends StatelessWidget {
             const SizedBox(width: 8),
             Text(
               'geoZoneEdit.radiusLabel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                fontWeight: FontWeight.w700,
-              ),
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
             ),
             const Spacer(),
             // Radius qiymati — accent pill.
             Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 10,
-                vertical: 4,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
               decoration: BoxDecoration(
                 color: AppColors.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
@@ -540,9 +509,7 @@ class _RadiusSlider extends StatelessWidget {
             inactiveTrackColor: AppColors.border,
             thumbColor: AppColors.primary,
             overlayColor: AppColors.primary.withValues(alpha: 0.2),
-            thumbShape: const RoundSliderThumbShape(
-              enabledThumbRadius: 10,
-            ),
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
             trackShape: const RoundedRectSliderTrackShape(),
           ),
           child: Slider(
@@ -575,13 +542,8 @@ class _NotificationToggles extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.card,
-      ),
+    return SettingsCard(
+      accent: AppColors.info,
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,
         vertical: 4,
@@ -650,15 +612,7 @@ class _ToggleRow extends StatelessWidget {
               ),
             ),
           ),
-          Switch(
-            value: value,
-            onChanged: onChanged,
-            activeThumbColor: AppColors.onPrimary,
-            activeTrackColor: AppColors.primary,
-            inactiveThumbColor: AppColors.textSecondary,
-            inactiveTrackColor: AppColors.border,
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-          ),
+          AppSwitch(value: value, onChanged: onChanged),
         ],
       ),
     );
