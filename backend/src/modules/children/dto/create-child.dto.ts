@@ -39,4 +39,10 @@ export class CreateChildDto {
   @IsString()
   @MaxLength(100)
   region?: string;
+
+  @ApiPropertyOptional({ example: '+998901234567', maxLength: 20 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(20)
+  phoneNumber?: string;
 }

@@ -26,6 +26,7 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/game_report_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
@@ -50,6 +51,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
   LocationService? _locationService;
   UsageSyncService? _usageSyncService;
   RestrictionsSyncService? _restrictionsSyncService;
+  GameReportService? _gameReportService;
 
   String? _parentUid;
   String? _childId;
@@ -120,6 +122,11 @@ class ChildBackgroundTaskHandler extends TaskHandler {
       ),
     )..start(childId: _childId!);
 
+    // O'yin (CATEGORY_GAME) ochilganini kuzatish — onRepeatEvent har ~60s
+    // check() chaqiradi → yangi o'yin ochilsa ota-onaga push ("o'ynayapti"
+    // + Bloklash). Native faqat o'yinlarni filtrlaydi.
+    _gameReportService = GameReportService(childId: _childId!);
+
     // FCM token'ni backend'ga QAYTA ro'yxatdan o'tkazamiz. Birinchi pair'da
     // UI isolate init() JWT'dan oldin ishlab token yetmagan bo'lishi mumkin
     // (register 401 -> backend'da token yo'q -> "Baland ovoz" ring sent:0
@@ -137,6 +144,9 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // Ichki 20s timer ishlamay qolsa ham qurilma online qoladi va batareya/
     // zaryadlanish yangilanadi (token avtomatik refresh bo'ladi).
     unawaited(_deviceInfoService?.ping() ?? Future<void>.value());
+
+    // O'yin ochilganini tekshirish (faqat o'yinlar → ota-onaga push).
+    unawaited(_gameReportService?.check() ?? Future<void>.value());
 
     // Notification matnini yangilash — foydalanuvchi service ishlayotganini
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.

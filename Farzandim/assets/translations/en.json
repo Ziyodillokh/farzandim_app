@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Choose your language",
+    "selectSubtitle": "Which language do you want to use the app in?",
+    "continueButton": "Continue"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Cancel",
@@ -108,6 +113,9 @@
   },
   "notifications": {
     "title": "Notifications",
+    "blockApp": "Block",
+    "blockedSnack": "{app} blocked",
+    "blockError": "Could not block",
     "markAllRead": "Mark all read",
     "review": "Review",
     "reject": "Reject",
@@ -650,6 +658,8 @@
       "photoLabel": "Photo",
       "nameLabel": "Name",
       "nameHint": "Enter name",
+      "phoneLabel": "Phone number (optional)",
+      "phoneHint": "+998 90 123 45 67",
       "ageLabel": "Age",
       "ageHint": "Select age",
       "ageItem": "{age} years",

@@ -5,7 +5,9 @@ import {
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
+import { FcmService } from '../../common/fcm/fcm.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
+import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 
 // O'zbekiston (Toshkent) UTC+5 — DST yo'q. Kun chegarasi shu vaqt bilan.
@@ -53,7 +55,40 @@ export class AppUsageService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
+    private readonly fcm: FcmService,
   ) {}
+
+  /**
+   * Bola o'yin (CATEGORY_GAME) ochganini xabar qiladi — ota-onaga push.
+   * Native (UsageStats) faqat o'yinlarni filtrlaydi; bu yerda push +
+   * actionable data (Bloklash uchun packageName) yuboriladi.
+   */
+  async gameOpen(childId: string, userId: string, dto: GameOpenDto) {
+    const child = await this.validateChildAccess(childId, userId);
+    void this.notifyGamePlay(child, dto.packageName, dto.appName);
+    return { ok: true };
+  }
+
+  private async notifyGamePlay(
+    child: { id: string; name: string; parentId: string },
+    packageName: string,
+    appName: string,
+  ): Promise<void> {
+    try {
+      await this.fcm.sendPushToUser(child.parentId, {
+        title: `${child.name} — ${appName}`,
+        body: "O'yin o'ynayapti",
+        data: {
+          type: 'game',
+          childId: child.id,
+          packageName,
+          appName,
+        },
+      });
+    } catch {
+      // push xatosi muhim emas — xabar bermaslik o'yinni to'xtatmaydi
+    }
+  }
 
   private async validateChildAccess(childId: string, userId: string) {
     const child = await this.prisma.child.findUnique({

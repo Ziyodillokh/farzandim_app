@@ -17,6 +17,7 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { AppUsageService } from './app-usage.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { BatchUpsertStepsDto } from './dto/batch-upsert-steps.dto';
+import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 import { Request } from 'express';
 
@@ -71,6 +72,18 @@ export class AppUsageController {
     @Body() dto: BatchUpsertStepsDto,
   ) {
     return this.service.upsertSteps(childId, user.userId, dto.entries);
+  }
+
+  // ─── O'yin ochilganda (faqat CATEGORY_GAME) — ota-onaga push ───
+  @Post('children/:childId/game-open')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({ summary: 'Child reports a game came to foreground' })
+  gameOpen(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: GameOpenDto,
+  ) {
+    return this.service.gameOpen(childId, user.userId, dto);
   }
 
   @Get('children/:childId/weekly-report')

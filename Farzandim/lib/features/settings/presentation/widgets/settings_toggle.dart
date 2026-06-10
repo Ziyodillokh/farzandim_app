@@ -1,5 +1,6 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:flutter/material.dart';
 
 /// Sozlamalar ichidagi toggle (Switch) — `SettingsTile` o'rniga
@@ -47,10 +48,7 @@ class SettingsToggle extends StatelessWidget {
         splashColor: accent.withValues(alpha: 0.08),
         highlightColor: accent.withValues(alpha: 0.04),
         child: Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 16,
-            vertical: 8,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
           child: Row(
             children: [
               // Rounded square (iOS-style) — gradient + nozik border
@@ -67,9 +65,7 @@ class SettingsToggle extends StatelessWidget {
                     ],
                   ),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.20),
-                  ),
+                  border: Border.all(color: accent.withValues(alpha: 0.20)),
                 ),
                 alignment: Alignment.center,
                 child: Icon(icon, color: fg, size: 20),
@@ -99,14 +95,10 @@ class SettingsToggle extends StatelessWidget {
                   ],
                 ),
               ),
-              Switch(
+              AppSwitch(
                 value: value,
                 onChanged: onChanged,
-                activeThumbColor: AppColors.onPrimary,
-                activeTrackColor: AppColors.primary,
-                inactiveThumbColor: AppColors.textSecondary,
-                inactiveTrackColor: AppColors.border,
-                materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                activeColor: accent,
               ),
             ],
           ),

@@ -156,7 +156,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
             return _NoLocationState(child: child);
           }
           final screenH = MediaQuery.of(context).size.height;
-          const sheetInitial = 0.5;
+          const sheetInitial = 0.42;
           return Stack(
             children: [
               _MapLayer(
@@ -527,8 +527,6 @@ class _LocationSheet extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final address = ref.watch(childAddressProvider(child.id)).valueOrNull;
-    final zoneCount =
-        ref.watch(geoZonesProvider(child.id)).valueOrNull?.length ?? 0;
     final battery = child.deviceInfo?.batteryLevel;
     final isCharging = child.deviceInfo?.isCharging ?? false;
     final isMoving = location.isMoving;
@@ -676,26 +674,34 @@ class _LocationSheet extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: AppDimensions.lg),
+            const SizedBox(height: AppDimensions.md),
 
-            // Amal tugmalari: 1-si to'liq-rang CTA, 2-si outline.
-            _ActionButton(
-              icon: Icons.fence_rounded,
-              label: 'location.geoZonesButton'.tr(),
-              trailing: zoneCount > 0
-                  ? 'location.command.zonesCount'
-                      .tr(namedArgs: {'count': '$zoneCount'})
-                  : null,
-              filled: true,
-              onTap: () => context.push(AppRoutes.geoZonesPath(child.id)),
-            ),
-            const SizedBox(height: 12),
-            _ActionButton(
-              icon: Icons.route_rounded,
-              label: 'location.command.historyButton'.tr(),
-              filled: false,
-              onTap: () =>
-                  context.push(AppRoutes.locationHistoryPath(child.id)),
+            // Amal tugmalari — bitta qatorda, kompakt: chapda Geo-zonalar
+            // (to'liq-rang CTA), o'ngda Tarixni ko'rish (outline).
+            Row(
+              children: [
+                Expanded(
+                  child: _ActionButton(
+                    icon: Icons.fence_rounded,
+                    label: 'location.geoZonesButton'.tr(),
+                    filled: true,
+                    compact: true,
+                    onTap: () =>
+                        context.push(AppRoutes.geoZonesPath(child.id)),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: _ActionButton(
+                    icon: Icons.route_rounded,
+                    label: 'location.command.historyButton'.tr(),
+                    compact: true,
+                    onTap: () => context.push(
+                      AppRoutes.locationHistoryPath(child.id),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ],
         ),
@@ -928,15 +934,16 @@ class _ActionButton extends StatelessWidget {
     required this.icon,
     required this.label,
     required this.onTap,
-    this.trailing,
     this.filled = false,
+    this.compact = false,
   });
 
   final IconData icon;
   final String label;
   final VoidCallback onTap;
-  final String? trailing;
   final bool filled;
+  /// Kompakt rejim — bitta qatorda yonma-yon (icon+matn markazda, chevronsiz).
+  final bool compact;
 
   @override
   Widget build(BuildContext context) {
@@ -963,68 +970,78 @@ class _ActionButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: radius,
           child: SizedBox(
-            height: 56,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 18),
-              child: Row(
-                children: [
-                  Icon(
-                    icon,
-                    size: 20,
-                    color: filled ? AppColors.onPrimary : AppColors.accent,
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: Row(
-                      children: [
-                        Flexible(
-                          child: Text(
-                            label,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: AppTextStyles.bodyM.copyWith(
-                              color: filled
-                                  ? AppColors.onPrimary
-                                  : AppColors.textPrimary,
-                              fontWeight:
-                                  filled ? FontWeight.w700 : FontWeight.w600,
-                            ),
+            height: compact ? 50 : 56,
+            child: compact
+                ? Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Icon(
+                        icon,
+                        size: 19,
+                        color:
+                            filled ? AppColors.onPrimary : AppColors.accent,
+                      ),
+                      const SizedBox(width: 8),
+                      Flexible(
+                        child: Text(
+                          label,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodyM.copyWith(
+                            color: filled
+                                ? AppColors.onPrimary
+                                : AppColors.textPrimary,
+                            fontWeight:
+                                filled ? FontWeight.w700 : FontWeight.w600,
+                            fontSize: 14,
                           ),
                         ),
-                        if (trailing != null) ...[
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 7,
-                              vertical: 2,
-                            ),
-                            decoration: BoxDecoration(
-                              color:
-                                  AppColors.onPrimary.withValues(alpha: 0.18),
-                              borderRadius: BorderRadius.circular(6),
-                            ),
-                            child: Text(
-                              trailing!,
-                              style: AppTextStyles.label.copyWith(
-                                color: AppColors.onPrimary,
-                                fontWeight: FontWeight.w700,
+                      ),
+                    ],
+                  )
+                : Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    child: Row(
+                      children: [
+                        Icon(
+                          icon,
+                          size: 20,
+                          color: filled
+                              ? AppColors.onPrimary
+                              : AppColors.accent,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Row(
+                            children: [
+                              Flexible(
+                                child: Text(
+                                  label,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: AppTextStyles.bodyM.copyWith(
+                                    color: filled
+                                        ? AppColors.onPrimary
+                                        : AppColors.textPrimary,
+                                    fontWeight: filled
+                                        ? FontWeight.w700
+                                        : FontWeight.w600,
+                                  ),
+                                ),
                               ),
-                            ),
+                            ],
                           ),
-                        ],
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 20,
+                          color: filled
+                              ? AppColors.onPrimary.withValues(alpha: 0.75)
+                              : AppColors.textTertiary,
+                        ),
                       ],
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: filled
-                        ? AppColors.onPrimary.withValues(alpha: 0.75)
-                        : AppColors.textTertiary,
-                  ),
-                ],
-              ),
-            ),
           ),
         ),
       ),

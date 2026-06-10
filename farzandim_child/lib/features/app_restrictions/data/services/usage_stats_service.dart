@@ -113,6 +113,34 @@ class UsageStatsService {
     }
   }
 
+  /// `sinceMs` dan beri foreground'ga chiqqan O'YINLAR (native CATEGORY_GAME
+  /// filtri). Har paket uchun oxirgi foreground vaqti. Background isolate
+  /// har siklda chaqiradi → yangi o'yin ochilsa ota-onaga push yuboriladi.
+  Future<List<({String packageName, String appName, int timestamp})>>
+      getRecentGameForegrounds({required int sinceMs}) async {
+    try {
+      final result = await _channel.invokeMethod<List<dynamic>>(
+        'getRecentGameForegrounds',
+        {'sinceMs': sinceMs},
+      );
+      if (result == null) return const [];
+      return result
+          .map((e) {
+            final m = e as Map<dynamic, dynamic>;
+            return (
+              packageName: (m['packageName'] as String?) ?? '',
+              appName: (m['appName'] as String?) ?? '',
+              timestamp: (m['timestamp'] as num?)?.toInt() ?? 0,
+            );
+          })
+          .where((g) => g.packageName.isNotEmpty)
+          .toList(growable: false);
+    } catch (e) {
+      debugPrint('UsageStats getRecentGameForegrounds xato: $e');
+      return const [];
+    }
+  }
+
   /// SYSTEM_ALERT_WINDOW ruxsati bormi?
   Future<bool> hasOverlayPermission() async {
     try {

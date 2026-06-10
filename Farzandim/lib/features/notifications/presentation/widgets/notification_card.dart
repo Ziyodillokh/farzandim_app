@@ -20,6 +20,7 @@ class NotificationCard extends StatelessWidget {
     required this.onTap,
     this.onReview,
     this.onReject,
+    this.onBlock,
     super.key,
   });
 
@@ -35,8 +36,13 @@ class NotificationCard extends StatelessWidget {
   /// "Rad etish" tugmasi (faqat aksiyali xabarlar uchun).
   final VoidCallback? onReject;
 
+  /// "Bloklash" tugmasi (faqat o'yin xabarlari uchun).
+  final VoidCallback? onBlock;
+
   bool get _actionable =>
       notification.isActionable && onReview != null && onReject != null;
+
+  bool get _blockable => notification.isGame && onBlock != null;
 
   @override
   Widget build(BuildContext context) {
@@ -146,6 +152,11 @@ class NotificationCard extends StatelessWidget {
                   ],
                 ),
               ],
+              // O'yin xabari — bitta "Bloklash" tugmasi (o'yinni to'liq bloklaydi).
+              if (_blockable) ...[
+                const SizedBox(height: AppDimensions.md),
+                _BlockButton(onTap: onBlock!),
+              ],
             ],
           ),
         ),
@@ -205,6 +216,50 @@ class _UnreadDot extends StatelessWidget {
       decoration: BoxDecoration(
         color: AppColors.error,
         shape: BoxShape.circle,
+      ),
+    );
+  }
+}
+
+// ════════════════════════ BLOCK BUTTON ════════════════════════
+
+/// "Bloklash" — o'yin xabari ostidagi to'liq-kenglik tugma (qizil tus).
+/// Bosilganda o'yin to'liq bloklanadi (app-limit dailyLimitMs=0).
+class _BlockButton extends StatelessWidget {
+  const _BlockButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: AppColors.error.withValues(alpha: 0.12),
+      shape: StadiumBorder(
+        side: BorderSide(
+          color: AppColors.error.withValues(alpha: 0.5),
+          width: 1.4,
+        ),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        customBorder: const StadiumBorder(),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+              const SizedBox(width: 8),
+              Text(
+                'notifications.blockApp'.tr(),
+                style: AppTextStyles.bodyM.copyWith(
+                  color: AppColors.error,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

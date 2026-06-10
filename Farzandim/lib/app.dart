@@ -13,8 +13,27 @@ import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_pr
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+
+/// Premium silliq scroll — iOS uslubidagi bouncing fizika (ham web, ham
+/// native). Sichqoncha/trackpad bilan ham drag (web'da test qulay).
+class _AppScrollBehavior extends MaterialScrollBehavior {
+  const _AppScrollBehavior();
+
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+    PointerDeviceKind.touch,
+    PointerDeviceKind.mouse,
+    PointerDeviceKind.trackpad,
+    PointerDeviceKind.stylus,
+  };
+
+  @override
+  ScrollPhysics getScrollPhysics(BuildContext context) =>
+      const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+}
 
 /// Farzandim ilovasining ildiz widget'i.
 ///
@@ -58,8 +77,10 @@ class FarzandimApp extends ConsumerWidget {
     });
 
     // Sprint 4.4.7: SOS WS event'i — eng yuqori prioritet, qizil banner.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(sosReceivedAlertProvider,
-        (_, next) {
+    ref.listen<AsyncValue<Map<String, dynamic>>>(sosReceivedAlertProvider, (
+      _,
+      next,
+    ) {
       final payload = next.valueOrNull;
       if (payload == null || payload.isEmpty) return;
       final messenger = _scaffoldMessengerKey.currentState;
@@ -73,10 +94,7 @@ class FarzandimApp extends ConsumerWidget {
               Expanded(
                 child: Text(
                   '🚨 SOS! Bola yordam so\'ramoqda',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
-                  ),
+                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
                 ),
               ),
             ],
@@ -89,13 +107,16 @@ class FarzandimApp extends ConsumerWidget {
     });
 
     // Sprint 4.4.25: Pair request created WS event — Parent App banner.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider,
-        (_, next) {
+    ref.listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider, (
+      _,
+      next,
+    ) {
       final payload = next.valueOrNull;
       if (payload == null || payload.isEmpty) return;
       final messenger = _scaffoldMessengerKey.currentState;
       if (messenger == null) return;
-      final childName = (payload['child'] as Map?)?['name'] as String? ??
+      final childName =
+          (payload['child'] as Map?)?['name'] as String? ??
           payload['childName'] as String? ??
           'Bola';
       final childId = payload['childId'] as String?;
@@ -103,10 +124,7 @@ class FarzandimApp extends ConsumerWidget {
         SnackBar(
           content: Text(
             '📱 $childName yangi qurilmadan ulanmoqchi. Tasdiqlang.',
-            style: const TextStyle(
-              fontWeight: FontWeight.w600,
-              fontSize: 14,
-            ),
+            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
           ),
           backgroundColor: const Color(0xFFFBBF24),
           duration: const Duration(seconds: 10),
@@ -127,8 +145,10 @@ class FarzandimApp extends ConsumerWidget {
 
     // Sprint 4.4.3: Geo zone alert WS event'i — har joydan ko'rinadigan
     // SnackBar (Foreground). Background'da Backend FCM push yuboradi.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(geoZoneAlertProvider,
-        (_, next) {
+    ref.listen<AsyncValue<Map<String, dynamic>>>(geoZoneAlertProvider, (
+      _,
+      next,
+    ) {
       final payload = next.valueOrNull;
       if (payload == null || payload.isEmpty) return;
       final messengerKey = _scaffoldMessengerKey;
@@ -163,24 +183,26 @@ class FarzandimApp extends ConsumerWidget {
         }
       });
     }
-    ref.listen<AsyncValue<AppUpdateStatus>>(
-      appUpdateProvider,
-      (previous, next) {
-        final status = next.valueOrNull;
-        if (status == null) return;
-        if (status.state != UpdateState.forceUpdateRequired) return;
-        final router = ref.read(routerProvider);
-        final navContext = router.routerDelegate.navigatorKey.currentContext;
-        if (navContext == null) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ForceUpdateDialog.show(navContext, status);
-        });
-      },
-    );
+    ref.listen<AsyncValue<AppUpdateStatus>>(appUpdateProvider, (
+      previous,
+      next,
+    ) {
+      final status = next.valueOrNull;
+      if (status == null) return;
+      if (status.state != UpdateState.forceUpdateRequired) return;
+      final router = ref.read(routerProvider);
+      final navContext = router.routerDelegate.navigatorKey.currentContext;
+      if (navContext == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ForceUpdateDialog.show(navContext, status);
+      });
+    });
 
     return MaterialApp.router(
       title: 'Farzandim',
       debugShowCheckedModeBanner: false,
+      // ⚡ Premium silliq scroll — iOS uslubidagi bouncing fizika (web+native).
+      scrollBehavior: const _AppScrollBehavior(),
       theme: AppTheme.build(),
       // Light/dark almashishda Theme.of() asoslangan widget'lar 200ms
       // crossfade qiladi, AppColors getter'lari esa darhol flip qiladi —
@@ -192,7 +214,14 @@ class FarzandimApp extends ConsumerWidget {
       // ko'rinmaydi (bitta joyda hal — har ekranni o'zgartirish shart emas).
       builder: (context, child) => ColoredBox(
         color: AppColors.background,
-        child: child ?? const SizedBox.shrink(),
+        // ⚡ THEME REAKTIVLIK: light↔dark toggle'da sahifa subtree'sini QAYTA
+        // quramiz (key o'zgaradi → remount). AppColors static getter'lari yangi
+        // rangni o'qiydi — aks holda kartalar eski fonida qolardi (yangilash
+        // shart edi). go_router route stack saqlanadi.
+        child: KeyedSubtree(
+          key: ValueKey(themeMode),
+          child: child ?? const SizedBox.shrink(),
+        ),
       ),
       routerConfig: ref.watch(routerProvider),
       scaffoldMessengerKey: _scaffoldMessengerKey,

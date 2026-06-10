@@ -3,6 +3,7 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_card.dart';
@@ -130,6 +131,7 @@ class _NotificationsList extends ConsumerWidget {
             onTap: () => _onTap(context, ref, n),
             onReview: n.isActionable ? () => _review(context, ref, n) : null,
             onReject: n.isActionable ? () => _reject(context, ref, n) : null,
+            onBlock: n.isGame ? () => _block(context, ref, n) : null,
           ),
         ).animate().fadeIn(
               duration: 220.ms,
@@ -151,10 +153,17 @@ class _NotificationsList extends ConsumerWidget {
       case NotificationType.exitZone:
         context.push(AppRoutes.locationPath(n.childId));
       case NotificationType.lowBattery:
+        // Past batareya — bola qayerdaligini ko'rsatish muhim (quvvat tugashidan
+        // oldin joyni bilish): jonli xarita ekraniga olib boramiz.
         if (n.childId.isNotEmpty) {
-          context.push(AppRoutes.qaDevicePath(n.childId));
+          context.push(AppRoutes.locationPath(n.childId));
         }
       case NotificationType.appLimit:
+        if (n.childId.isNotEmpty) {
+          context.push(AppRoutes.appRestrictionsPath(n.childId));
+        }
+      case NotificationType.game:
+        // Tap → cheklovlar ekrani; asosiy amal pastdagi "Bloklash" tugmasida.
         if (n.childId.isNotEmpty) {
           context.push(AppRoutes.appRestrictionsPath(n.childId));
         }
@@ -207,6 +216,48 @@ class _NotificationsList extends ConsumerWidget {
             backgroundColor: AppColors.surfaceVariant,
           ),
         );
+    }
+  }
+
+  // ─── "Bloklash" — o'yinni to'liq bloklash (app-limit dailyLimitMs=0) ───
+
+  Future<void> _block(
+    BuildContext context,
+    WidgetRef ref,
+    AppNotification n,
+  ) async {
+    final pkg = n.packageName;
+    if (pkg == null || pkg.isEmpty || n.childId.isEmpty) return;
+    final appName = n.appName ?? n.childName;
+    try {
+      await ref.read(appRestrictionRepositoryProvider).blockApp(
+            childId: n.childId,
+            packageName: pkg,
+            appName: appName,
+          );
+      ref.read(notificationsProvider.notifier).markAsRead(n.id);
+      if (context.mounted) {
+        ScaffoldMessenger.of(context)
+          ..hideCurrentSnackBar()
+          ..showSnackBar(
+            SnackBar(
+              content: Text(
+                'notifications.blockedSnack'.tr(namedArgs: {'app': appName}),
+              ),
+              behavior: SnackBarBehavior.floating,
+              backgroundColor: AppColors.surfaceVariant,
+            ),
+          );
+      }
+    } catch (_) {
+      if (context.mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('notifications.blockError'.tr()),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 }

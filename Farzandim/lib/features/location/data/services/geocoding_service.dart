@@ -15,6 +15,7 @@ import 'package:dio/dio.dart';
 import 'package:farzandim/core/constants/api_keys.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:geocoding/geocoding.dart' as geo;
 
 final geocodingServiceProvider = Provider<GeocodingService>((ref) {
   return GeocodingService();
@@ -37,6 +38,25 @@ class GeocodingService {
     final cacheKey =
         '${latitude.toStringAsFixed(4)},${longitude.toStringAsFixed(4)}';
     if (_cache.containsKey(cacheKey)) return _cache[cacheKey];
+
+    // 1) MOBIL — platforma (OS) geocoder'i: kalitsiz, lokal, tez. Google
+    //    Geocoding HTTP cheklov/sekinligini chetlab o'tadi. Web qo'llamaydi.
+    if (!kIsWeb) {
+      try {
+        final placemarks =
+            await geo.placemarkFromCoordinates(latitude, longitude);
+        if (placemarks.isNotEmpty) {
+          final addr = _fromPlacemark(placemarks.first);
+          if (addr != null) {
+            _cache[cacheKey] = addr;
+            return addr;
+          }
+        }
+      } catch (e) {
+        // OS geocoder ishlamadi — pastdagi HTTP fallback'ga o'tamiz.
+        debugPrint('GeocodingService: platform geocoder fallback ($e)');
+      }
+    }
 
     final apiKey = ApiKeys.googleMapsKey;
     if (apiKey.isEmpty) {
@@ -78,6 +98,22 @@ class GeocodingService {
       _cache[cacheKey] = null;
       return null;
     }
+  }
+
+  /// Platforma Placemark'idan qisqa manzil: "Ko'cha, Shahar".
+  String? _fromPlacemark(geo.Placemark p) {
+    final street = p.street?.trim();
+    final city = (p.locality?.trim().isNotEmpty ?? false)
+        ? p.locality!.trim()
+        : (p.subAdministrativeArea?.trim().isNotEmpty ?? false)
+            ? p.subAdministrativeArea!.trim()
+            : p.administrativeArea?.trim();
+    final parts = <String>[
+      if (street != null && street.isNotEmpty) street,
+      if (city != null && city.isNotEmpty && city != street) city,
+    ];
+    if (parts.isEmpty) return null;
+    return parts.join(', ');
   }
 
   /// To'liq manzildan birinchi 2 qismni oladi: "Ko'cha, Shahar".

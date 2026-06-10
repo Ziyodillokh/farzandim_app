@@ -25,8 +25,10 @@ import 'package:farzandim/features/app_restrictions/data/repositories/backend_ap
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:farzandim/shared/widgets/tab_switcher.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -80,10 +82,7 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
                   AppDimensions.sm,
                 ),
                 child: TabSwitcher(
-                  tabs: [
-                    'appLimits.tabAll'.tr(),
-                    'appLimits.tabLimited'.tr(),
-                  ],
+                  tabs: ['appLimits.tabAll'.tr(), 'appLimits.tabLimited'.tr()],
                   activeIndex: _tab,
                   onChanged: (i) => setState(() => _tab = i),
                 ),
@@ -120,22 +119,19 @@ class _AppLimitsScreenState extends ConsumerState<AppLimitsScreen> {
     );
   }
 
-  Widget _loading() => Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
-      );
+  Widget _loading() =>
+      Center(child: CircularProgressIndicator(color: AppColors.primary));
 
   Widget _error(Object e, StackTrace _) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.lg),
-          child: Text(
-            '$e',
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(AppDimensions.lg),
+      child: Text(
+        '$e',
+        textAlign: TextAlign.center,
+        style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+      ),
+    ),
+  );
 }
 
 // ════════════════════════ HEADER ════════════════════════
@@ -158,10 +154,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: AppColors.textPrimary,
-            ),
+            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
           Expanded(
             child: Text(
@@ -208,9 +201,7 @@ class _ChildChips extends ConsumerWidget {
           return GestureDetector(
             onTap: () => onSelect(id),
             child: Container(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.md,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.md),
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surfaceVariant,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
@@ -256,9 +247,7 @@ class _AppList extends StatelessWidget {
           child: Text(
             'appLimits.noApps'.tr(),
             textAlign: TextAlign.center,
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
         ),
       );
@@ -271,12 +260,8 @@ class _AppList extends StatelessWidget {
         AppDimensions.xl,
       ),
       children: [
-        Container(
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-            border: Border.all(color: AppColors.border),
-          ),
+        SettingsCard(
+          accent: AppColors.error,
           padding: const EdgeInsets.symmetric(vertical: AppDimensions.xs),
           child: Column(
             children: [
@@ -385,9 +370,7 @@ class _RightStatus extends StatelessWidget {
         children: [
           Text(
             'appLimits.blocked'.tr(),
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(width: 6),
           Icon(Icons.block_rounded, size: 18, color: AppColors.error),
@@ -525,14 +508,16 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                       ],
                     ),
                   ),
-                  Switch.adaptive(
+                  AppSwitch(
                     value: _mode == _LimitMode.block,
-                    activeThumbColor: Colors.white,
-                    activeTrackColor: AppColors.error,
+                    activeColor: AppColors.error,
                     onChanged: _saving
                         ? null
-                        : (v) => setState(() => _mode =
-                            v ? _LimitMode.block : _LimitMode.unlimited),
+                        : (v) => setState(
+                            () => _mode = v
+                                ? _LimitMode.block
+                                : _LimitMode.unlimited,
+                          ),
                   ),
                 ],
               ),
@@ -612,8 +597,9 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed:
-                        _saving ? null : () => Navigator.of(context).pop(),
+                    onPressed: _saving
+                        ? null
+                        : () => Navigator.of(context).pop(),
                     style: OutlinedButton.styleFrom(
                       foregroundColor: AppColors.textPrimary,
                       side: BorderSide(color: AppColors.border),
@@ -621,8 +607,9 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                         vertical: AppDimensions.md,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusPill),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusPill,
+                        ),
                       ),
                     ),
                     child: Text('appLimits.cancel'.tr()),
@@ -639,8 +626,9 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                         vertical: AppDimensions.md,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusPill),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusPill,
+                        ),
                       ),
                     ),
                     child: _saving
@@ -709,8 +697,9 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                         vertical: AppDimensions.md,
                       ),
                       shape: RoundedRectangleBorder(
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusPill),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusPill,
+                        ),
                       ),
                     ),
                     child: Text('appLimits.apply'.tr()),
@@ -749,10 +738,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
             limitMinutes: _limitMinutes,
           );
         case _LimitMode.unlimited:
-          await facade.removeLimit(
-            childId: widget.childId,
-            packageName: pkg,
-          );
+          await facade.removeLimit(childId: widget.childId, packageName: pkg);
       }
       if (mounted) {
         Navigator.of(context).pop();

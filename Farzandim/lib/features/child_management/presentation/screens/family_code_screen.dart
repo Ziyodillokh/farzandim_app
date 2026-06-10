@@ -8,6 +8,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,11 +34,7 @@ import 'package:share_plus/share_plus.dart';
 /// Firestore yangilangach yangi kodni avtomatik refresh qiladi.
 class FamilyCodeScreen extends ConsumerStatefulWidget {
   /// `FamilyCodeScreen` konstruktor.
-  const FamilyCodeScreen({
-    required this.childId,
-    this.initialChild,
-    super.key,
-  });
+  const FamilyCodeScreen({required this.childId, this.initialChild, super.key});
 
   /// Qaysi bolaning kodi ko'rsatilishi kerak (URL'dan).
   final String childId;
@@ -59,7 +56,8 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
     final children = ref.watch(childrenListProvider);
     // Initial — `state.extra` orqali AddChildScreen'dan kelgan bola.
     // Keyin (regenerate yoki refresh paytida) Riverpod ro'yxatidan.
-    final child = children.firstWhereOrNull((c) => c.id == widget.childId) ??
+    final child =
+        children.firstWhereOrNull((c) => c.id == widget.childId) ??
         widget.initialChild;
 
     if (child == null) {
@@ -83,9 +81,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
               _Header(),
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.only(
-                    bottom: AppDimensions.md,
-                  ),
+                  padding: const EdgeInsets.only(bottom: AppDimensions.md),
                   child: Column(
                     children: [
                       const SizedBox(height: AppDimensions.lg),
@@ -159,10 +155,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            Icon(
-              Icons.smartphone,
-              color: AppColors.accent,
-            ),
+            Icon(Icons.smartphone, color: AppColors.accent),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
               child: Text(
@@ -190,9 +183,8 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             _DialogInfoCard(
               icon: Icons.warning_amber_rounded,
               iconColor: AppColors.warning,
-              title:
-                  'childManagement.familyCode.regenerateConfirm.warningTitle'
-                      .tr(),
+              title: 'childManagement.familyCode.regenerateConfirm.warningTitle'
+                  .tr(),
               titleColor: AppColors.warning,
               bullets: [
                 'childManagement.familyCode.regenerateConfirm.warningBullet1'
@@ -232,15 +224,12 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.radiusPill),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
               ),
             ),
             child: Text(
               'childManagement.familyCode.regenerateConfirm.continue'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
             ),
           ),
         ],
@@ -250,10 +239,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
   }
 
   /// Yangi familyCode dialog — monospace katta matn + nusxalash + Yopish.
-  Future<void> _showNewFamilyCodeDialog(
-    String code,
-    String childName,
-  ) async {
+  Future<void> _showNewFamilyCodeDialog(String code, String childName) async {
     await showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -263,10 +249,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            Icon(
-              Icons.check_circle,
-              color: AppColors.accent,
-            ),
+            Icon(Icons.check_circle, color: AppColors.accent),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
               child: Text(
@@ -284,19 +267,15 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
               'childManagement.familyCode.newCodeDialog.instruction'.tr(
                 namedArgs: {'name': childName},
               ),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textPrimary,
-              ),
+              style: AppTextStyles.bodyM.copyWith(color: AppColors.textPrimary),
             ),
             const SizedBox(height: AppDimensions.md),
             Container(
               width: double.infinity,
-              padding:
-                  const EdgeInsets.all(AppDimensions.lg - 4),
+              padding: const EdgeInsets.all(AppDimensions.lg - 4),
               decoration: BoxDecoration(
                 color: AppColors.primary.withValues(alpha: 0.15),
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.radiusM),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusM),
               ),
               child: Center(
                 child: Text(
@@ -330,23 +309,16 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
               ScaffoldMessenger.of(ctx).showSnackBar(
                 SnackBar(
                   content: Text(
-                    'childManagement.familyCode.newCodeDialog.copiedSnack'
-                        .tr(),
+                    'childManagement.familyCode.newCodeDialog.copiedSnack'.tr(),
                   ),
                   duration: const Duration(seconds: 1),
                 ),
               );
             },
-            icon: Icon(
-              Icons.copy,
-              color: AppColors.accent,
-              size: 18,
-            ),
+            icon: Icon(Icons.copy, color: AppColors.accent, size: 18),
             label: Text(
               'childManagement.familyCode.newCodeDialog.copy'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.accent,
-              ),
+              style: AppTextStyles.bodyM.copyWith(color: AppColors.accent),
             ),
           ),
           ElevatedButton(
@@ -355,13 +327,10 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
               shape: RoundedRectangleBorder(
-                borderRadius:
-                    BorderRadius.circular(AppDimensions.radiusPill),
+                borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
               ),
             ),
-            child: Text(
-              'childManagement.familyCode.newCodeDialog.close'.tr(),
-            ),
+            child: Text('childManagement.familyCode.newCodeDialog.close'.tr()),
           ),
         ],
       ),
@@ -543,9 +512,7 @@ class _TitleBlock extends StatelessWidget {
         const SizedBox(height: AppDimensions.sm),
         Text(
           'childManagement.familyCode.subtitle'.tr(),
-          style: AppTextStyles.bodyS.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           textAlign: TextAlign.center,
         ),
       ],
@@ -564,16 +531,11 @@ class _CodeDisplay extends StatelessWidget {
   Widget build(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 48),
-      child: Container(
+      child: SettingsCard(
+        accent: AppColors.primary,
         padding: const EdgeInsets.symmetric(
           vertical: 20,
           horizontal: AppDimensions.xl,
-        ),
-        decoration: BoxDecoration(
-          color: AppColors.surface,
-          borderRadius:
-              BorderRadius.circular(AppDimensions.radiusPill),
-          border: Border.all(color: AppColors.border),
         ),
         child: Center(
           child: Text(
@@ -609,18 +571,14 @@ class _RegenerateCodeButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-      ),
+      padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
       child: SizedBox(
         width: double.infinity,
         height: AppDimensions.buttonHeight,
         child: Material(
           color: Colors.transparent,
           shape: RoundedRectangleBorder(
-            side: BorderSide(
-              color: AppColors.accent.withValues(alpha: 0.5),
-            ),
+            side: BorderSide(color: AppColors.accent.withValues(alpha: 0.5)),
             borderRadius: borderRadius,
           ),
           child: InkWell(
@@ -640,11 +598,7 @@ class _RegenerateCodeButton extends StatelessWidget {
                       ),
                     )
                   else
-                    Icon(
-                      Icons.smartphone,
-                      size: 18,
-                      color: AppColors.accent,
-                    ),
+                    Icon(Icons.smartphone, size: 18, color: AppColors.accent),
                   const SizedBox(width: AppDimensions.sm),
                   Text(
                     isLoading

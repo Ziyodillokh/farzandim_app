@@ -1,5 +1,3 @@
-import 'dart:ui';
-
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -115,14 +113,9 @@ class CustomTextField extends StatelessWidget {
       ),
     );
 
-    // Light: tekis solid field. Dark: shisha — clip + frost (BackdropFilter).
-    if (!isDark) return field;
-    return ClipRRect(
-      borderRadius: borderRadius,
-      child: BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
-        child: field,
-      ),
-    );
+    // ⚡ PERF: BackdropFilter YO'Q. Dark'da yarim-shaffof fillColor (teal@45%)
+    // o'zi shisha hissini beradi — blur input'larda (ayniqsa klaviatura ochiq
+    // paytda) jank berardi.
+    return field;
   }
 }

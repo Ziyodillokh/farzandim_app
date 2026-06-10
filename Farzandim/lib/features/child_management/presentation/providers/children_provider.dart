@@ -82,6 +82,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
     required String region,
     Uint8List? photoBytes,
     String? deviceModel,
+    String? phoneNumber,
   }) async {
     state = const AsyncValue.loading();
     try {
@@ -90,6 +91,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
         age: age,
         gender: gender,
         region: region,
+        phoneNumber: phoneNumber,
       );
       if (photoBytes != null) {
         try {

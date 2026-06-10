@@ -11,6 +11,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/weekly_report/data/weekly_report_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -43,9 +44,8 @@ class WeeklyReportScreen extends ConsumerWidget {
                   child: async.when(
                     data: (r) => _Body(report: r),
                     loading: () => const _Loading(),
-                    error: (e, _) => _ErrorView(
-                      message: 'weeklyReport.error'.tr(),
-                    ),
+                    error: (e, _) =>
+                        _ErrorView(message: 'weeklyReport.error'.tr()),
                   ),
                 ),
               ),
@@ -141,7 +141,6 @@ class _StepsCard extends StatelessWidget {
     );
     return _Card(
       icon: Icons.directions_walk_rounded,
-      accent: AppColors.primary,
       title: 'weeklyReport.steps'.tr(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -189,7 +188,6 @@ class _ScreenTimeCard extends StatelessWidget {
     final avgMin = (report.screenWeekMinutes / 7).round();
     return _Card(
       icon: Icons.timer_outlined,
-      accent: AppColors.featurePurple,
       title: 'weeklyReport.screenTime'.tr(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -209,8 +207,9 @@ class _ScreenTimeCard extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.md),
           _BarChart(
-            values:
-                report.screenDays.map((d) => d.totalMinutes.toDouble()).toList(),
+            values: report.screenDays
+                .map((d) => d.totalMinutes.toDouble())
+                .toList(),
             labels: report.screenDays.map((d) => _weekday(d.date)).toList(),
             maxValue: maxMin.toDouble(),
             barColor: AppColors.featurePurple,
@@ -231,10 +230,12 @@ class _TopAppsCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxMin = apps.fold<int>(1, (m, a) => a.totalMinutes > m ? a.totalMinutes : m);
+    final maxMin = apps.fold<int>(
+      1,
+      (m, a) => a.totalMinutes > m ? a.totalMinutes : m,
+    );
     return _Card(
       icon: Icons.apps_rounded,
-      accent: AppColors.info,
       title: 'weeklyReport.topApps'.tr(),
       child: apps.isEmpty
           ? Padding(
@@ -284,10 +285,9 @@ class _TopAppsCard extends StatelessWidget {
                           child: LinearProgressIndicator(
                             value: (a.totalMinutes / maxMin).clamp(0.04, 1.0),
                             minHeight: 7,
-                            backgroundColor:
-                                AppColors.surfaceVariant.withValues(alpha: 0.6),
-                            valueColor:
-                                AlwaysStoppedAnimation(AppColors.info),
+                            backgroundColor: AppColors.surfaceVariant
+                                .withValues(alpha: 0.6),
+                            valueColor: AlwaysStoppedAnimation(AppColors.info),
                           ),
                         ),
                       ],
@@ -301,55 +301,39 @@ class _TopAppsCard extends StatelessWidget {
 
 // ─── Umumiy karta ────────────────────────────────────────────────────
 class _Card extends StatelessWidget {
-  const _Card({
-    required this.icon,
-    required this.accent,
-    required this.title,
-    required this.child,
-  });
+  const _Card({required this.icon, required this.title, required this.child});
 
   final IconData icon;
-  final Color accent;
   final String title;
   final Widget child;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return SizedBox(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 38,
-                height: 38,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(10),
+      child: SettingsCard(
+        accent: AppColors.info,
+        padding: const EdgeInsets.all(AppDimensions.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SettingsIconChip(icon: icon, accent: AppColors.info, size: 38),
+                const SizedBox(width: 10),
+                Text(
+                  title,
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
-                child: Icon(icon, color: accent, size: 20),
-              ),
-              const SizedBox(width: 10),
-              Text(
-                title,
-                style: AppTextStyles.bodyM.copyWith(
-                  fontWeight: FontWeight.w700,
-                  fontSize: 16,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.md),
-          child,
-        ],
+              ],
+            ),
+            const SizedBox(height: AppDimensions.md),
+            child,
+          ],
+        ),
       ),
     );
   }
@@ -433,10 +417,7 @@ class _BarChart extends StatelessWidget {
                       gradient: LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [
-                          barColor,
-                          barColor.withValues(alpha: 0.55),
-                        ],
+                        colors: [barColor, barColor.withValues(alpha: 0.55)],
                       ),
                       borderRadius: BorderRadius.circular(6),
                     ),
@@ -463,9 +444,7 @@ class _Loading extends StatelessWidget {
   const _Loading();
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
-    );
+    return Center(child: CircularProgressIndicator(color: AppColors.primary));
   }
 }
 

@@ -9,6 +9,7 @@ import 'package:farzandim/features/child_management/presentation/widgets/repair_
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -43,9 +44,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                       ? const _EmptyState()
                       : _ChildrenList(children: children),
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (e, _) => _ErrorState(
                     error: e,
@@ -94,10 +93,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),
@@ -190,61 +186,47 @@ class _ChildCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return Material(
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: borderRadius,
-        side: BorderSide(color: AppColors.border),
-      ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: () => context.push(AppRoutes.editChildPath(child.id)),
-        borderRadius: borderRadius,
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.md),
-          child: Row(
-            children: [
-              ChildAvatar(child: child, size: 56),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      child.name,
-                      style: AppTextStyles.bodyM.copyWith(
-                        fontSize: 17,
-                        fontWeight: FontWeight.w700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'childManagement.list.ageAndRegion'.tr(
-                        namedArgs: {
-                          'age': '${child.age}',
-                          'region': child.region,
-                        },
-                      ),
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.textSecondary,
-                        fontSize: 13,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                    const SizedBox(height: 8),
-                    _ConnectionBadge(isConnected: child.isConnected),
-                    const SizedBox(height: 8),
-                    _FamilyCodePill(code: child.familyCode),
-                  ],
+    return SettingsCard(
+      accent: AppColors.accent,
+      rail: false,
+      onTap: () => context.push(AppRoutes.editChildPath(child.id)),
+      child: Row(
+        children: [
+          ChildAvatar(child: child, size: 56),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  child.name,
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  overflow: TextOverflow.ellipsis,
                 ),
-              ),
-              _ActionMenu(child: child),
-            ],
+                const SizedBox(height: 4),
+                Text(
+                  'childManagement.list.ageAndRegion'.tr(
+                    namedArgs: {'age': '${child.age}', 'region': child.region},
+                  ),
+                  style: AppTextStyles.bodyS.copyWith(
+                    color: AppColors.textSecondary,
+                    fontSize: 13,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                const SizedBox(height: 8),
+                _ConnectionBadge(isConnected: child.isConnected),
+                const SizedBox(height: 8),
+                _FamilyCodePill(code: child.familyCode),
+              ],
+            ),
           ),
-        ),
+          _ActionMenu(child: child),
+        ],
       ),
     );
   }
@@ -285,9 +267,7 @@ class _ConnectionBadge extends StatelessWidget {
               : 'childManagement.list.disconnected'.tr(),
           style: AppTextStyles.bodyS.copyWith(
             fontSize: 13,
-            color: isConnected
-                ? AppColors.success
-                : AppColors.textSecondary,
+            color: isConnected ? AppColors.success : AppColors.textSecondary,
             fontWeight: FontWeight.w500,
           ),
         ),
@@ -335,10 +315,7 @@ class _ActionMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: Icon(
-        Icons.more_vert,
-        color: AppColors.textPrimary,
-      ),
+      icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
       color: AppColors.surfaceVariant,
       onSelected: (action) async {
         switch (action) {
@@ -359,11 +336,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'edit',
           child: Row(
             children: [
-              Icon(
-                Icons.edit_outlined,
-                size: 20,
-                color: AppColors.textPrimary,
-              ),
+              Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
               const SizedBox(width: 12),
               Text(
                 'childManagement.list.editAction'.tr(),
@@ -380,11 +353,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'repair',
           child: Row(
             children: [
-              Icon(
-                Icons.qr_code_2_rounded,
-                size: 20,
-                color: AppColors.primary,
-              ),
+              Icon(Icons.qr_code_2_rounded, size: 20, color: AppColors.primary),
               const SizedBox(width: 12),
               Text(
                 'Qayta ulash (QR)',
@@ -400,17 +369,11 @@ class _ActionMenu extends ConsumerWidget {
           value: 'delete',
           child: Row(
             children: [
-              Icon(
-                Icons.delete_outline,
-                size: 20,
-                color: AppColors.error,
-              ),
+              Icon(Icons.delete_outline, size: 20, color: AppColors.error),
               const SizedBox(width: 12),
               Text(
                 'childManagement.list.deleteAction'.tr(),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.error,
-                ),
+                style: AppTextStyles.bodyS.copyWith(color: AppColors.error),
               ),
             ],
           ),
@@ -466,8 +429,9 @@ class _ActionMenu extends ConsumerWidget {
     );
 
     if (!(confirmed ?? false)) return;
-    final result =
-        await ref.read(childActionsProvider.notifier).deleteChild(child.id);
+    final result = await ref
+        .read(childActionsProvider.notifier)
+        .deleteChild(child.id);
     if (!context.mounted) return;
 
     if (result.isSuccess) {
@@ -510,17 +474,11 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              Icons.error_outline,
-              size: 56,
-              color: AppColors.error,
-            ),
+            Icon(Icons.error_outline, size: 56, color: AppColors.error),
             const SizedBox(height: AppDimensions.md),
             Text(
               'childManagement.list.errorTitle'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),

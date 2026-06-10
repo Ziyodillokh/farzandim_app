@@ -35,6 +35,9 @@ enum NotificationType {
   /// Bola yangi qurilmadan ulanmoqchi — parent tasdiqi kerak
   /// (Backend 0.6.0 — Sprint 4.4.25).
   pairRequest,
+
+  /// Bola o'yin (CATEGORY_GAME) ochdi — pastda "Bloklash" tugmasi bilan.
+  game,
 }
 
 /// `NotificationType` uchun UI helper'lar (ikona, rang, label).
@@ -62,6 +65,8 @@ extension NotificationTypeX on NotificationType {
         return Icons.cloud_done;
       case NotificationType.pairRequest:
         return Icons.phone_iphone_rounded;
+      case NotificationType.game:
+        return Icons.sports_esports_rounded;
     }
   }
 
@@ -88,6 +93,8 @@ extension NotificationTypeX on NotificationType {
         return const Color(0xFF3DBFB4); // turkuaz
       case NotificationType.pairRequest:
         return const Color(0xFFFBBF24); // sariq — diqqat
+      case NotificationType.game:
+        return const Color(0xFF7C6FE0); // binafsha — o'yin
     }
   }
 
@@ -114,6 +121,8 @@ extension NotificationTypeX on NotificationType {
         return 'Online';
       case NotificationType.pairRequest:
         return 'Pair so\'rov';
+      case NotificationType.game:
+        return 'O\'yin';
     }
   }
 }
@@ -218,6 +227,15 @@ class AppNotification {
   /// pairRequest uchun — `data['pairRequestId']` (rad etish API'siga kerak).
   String? get pairRequestId => data?['pairRequestId'] as String?;
 
+  /// O'yin xabari — pastda "Bloklash" tugmasi ko'rsatiladi.
+  bool get isGame => type == NotificationType.game;
+
+  /// O'yin (yoki ilova) paket nomi — "Bloklash" uchun (`app-limits`).
+  String? get packageName => data?['packageName'] as String?;
+
+  /// O'yin/ilova nomi (push data'sidan) — Bloklash xabarida ko'rsatish uchun.
+  String? get appName => data?['appName'] as String?;
+
   /// Yangi `AppNotification` — `markAsRead` uchun ishlatamiz.
   AppNotification copyWith({bool? isRead}) {
     return AppNotification(
@@ -266,6 +284,8 @@ class AppNotification {
         return NotificationType.scheduleStart;
       case 'schedule_reminder':
         return NotificationType.scheduleReminder;
+      case 'game':
+        return NotificationType.game;
       default:
         return null;
     }

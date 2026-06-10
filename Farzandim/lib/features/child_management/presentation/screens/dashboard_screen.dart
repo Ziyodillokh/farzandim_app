@@ -16,6 +16,7 @@ import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_ch
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
@@ -857,49 +858,10 @@ class _TimeCard extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.md),
 
-          // Ilova ikonkalari — ekran kengligiga moslab nechta sig'sa shuncha
-          // (qolganlari "+N" badge). Qat'iy 6 ta tor telefonlarda overflow
-          // berardi ("qisilib qolyapti" muammosi).
-          if (apps.isNotEmpty)
-            LayoutBuilder(
-              builder: (context, constraints) {
-                const iconSlot = 36.0 + AppDimensions.sm; // ikonka + oraliq
-                final fit = (constraints.maxWidth / iconSlot).floor().clamp(
-                  1,
-                  apps.length,
-                );
-                // Hammasi sig'masa, oxirgi slotni "+N" badge uchun qoldiramiz.
-                final iconCount = fit < apps.length
-                    ? (fit - 1).clamp(1, apps.length)
-                    : fit;
-                final shown = apps.take(iconCount).toList();
-                final remaining = apps.length - shown.length;
-                return Row(
-                  children: [
-                    for (final app in shown) ...[
-                      _AppIcon(iconUrl: app.iconUrl, name: app.name),
-                      const SizedBox(width: AppDimensions.sm),
-                    ],
-                    if (remaining > 0)
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.surfaceVariant,
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Text(
-                          '+$remaining',
-                          style: AppTextStyles.label.copyWith(
-                            color: AppColors.textSecondary,
-                          ),
-                        ),
-                      ),
-                  ],
-                );
-              },
-            ),
+          // Eng ko'p ishlatilgan ilovalar — bir-biriga KIRISHGAN (overlapping
+          // facepile, rasmdagidek): 5 tagacha ilova + qolgani "+N". Ixcham,
+          // tor telefonda ham overflow bermaydi.
+          if (apps.isNotEmpty) _AppFacepile(apps: apps),
           const SizedBox(height: AppDimensions.md),
 
           // Bloklash toggle.
@@ -920,11 +882,7 @@ class _TimeCard extends ConsumerWidget {
                     style: AppTextStyles.bodyS,
                   ),
                 ),
-                Switch.adaptive(
-                  value: blockAll,
-                  onChanged: onBlockChanged,
-                  activeTrackColor: AppColors.primary,
-                ),
+                AppSwitch(value: blockAll, onChanged: onBlockChanged),
               ],
             ),
           ),
@@ -947,33 +905,91 @@ class _AppBrief {
   final String? iconUrl;
 }
 
+/// Overlapping facepile — eng ko'p ishlatilgan ilovalar bir-biriga KIRISHGAN
+/// (rasmdagidek), oxirida qolganlari "+N". Chap ikonka eng ustda turadi.
+class _AppFacepile extends StatelessWidget {
+  const _AppFacepile({required this.apps});
+
+  final List<_AppBrief> apps;
+
+  static const double _size = 40; // ikonka (ring bilan)
+  static const double _step = 26; // qadam — kirishuv ~35%
+  static const int _maxShown = 5; // eng ko'p ishlatilgan 5 ta
+
+  @override
+  Widget build(BuildContext context) {
+    final shown = apps.take(_maxShown).toList();
+    final remaining = apps.length - shown.length;
+    final slots = shown.length + (remaining > 0 ? 1 : 0);
+    final width = (slots - 1) * _step + _size;
+
+    final layers = <Widget>[
+      // Ilovalar TESKARI tartibda (o'ngdagisi pastda) — chap ikonka ustda.
+      for (var i = shown.length - 1; i >= 0; i--)
+        Positioned(
+          left: i * _step,
+          child: _AppIcon(
+            iconUrl: shown[i].iconUrl,
+            name: shown[i].name,
+            size: _size,
+          ),
+        ),
+      // "+N" — eng o'ngda, eng ustda (to'liq ko'rinadi).
+      if (remaining > 0)
+        Positioned(
+          left: shown.length * _step,
+          child: _PlusBadge(remaining: remaining, size: _size),
+        ),
+    ];
+
+    return SizedBox(
+      height: _size,
+      width: width,
+      child: Stack(clipBehavior: Clip.none, children: layers),
+    );
+  }
+}
+
+/// Bitta ilova ikonkasi — nozik ring (karta-tusli gap) bilan facepile uchun.
 class _AppIcon extends StatelessWidget {
-  const _AppIcon({required this.iconUrl, required this.name});
+  const _AppIcon({required this.iconUrl, required this.name, this.size = 40});
 
   final String? iconUrl;
   final String name;
+  final double size;
 
   @override
   Widget build(BuildContext context) {
     final letter = name.isNotEmpty ? name[0].toUpperCase() : '?';
+    final inner = size - 5; // 2.5px ring har tomondan
     return Container(
-      width: 36,
-      height: 36,
+      width: size,
+      height: size,
+      // Ring — karta foni tusida: overlapping ikonkalar toza ajraladi.
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: AppColors.surface,
         shape: BoxShape.circle,
       ),
-      clipBehavior: Clip.antiAlias,
       alignment: Alignment.center,
-      child: iconUrl != null && iconUrl!.isNotEmpty
-          ? Image.network(
-              iconUrl!,
-              width: 36,
-              height: 36,
-              fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => _fallback(letter),
-            )
-          : _fallback(letter),
+      child: Container(
+        width: inner,
+        height: inner,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          shape: BoxShape.circle,
+        ),
+        clipBehavior: Clip.antiAlias,
+        alignment: Alignment.center,
+        child: iconUrl != null && iconUrl!.isNotEmpty
+            ? Image.network(
+                iconUrl!,
+                width: inner,
+                height: inner,
+                fit: BoxFit.cover,
+                errorBuilder: (_, __, ___) => _fallback(letter),
+              )
+            : _fallback(letter),
+      ),
     );
   }
 
@@ -983,6 +999,45 @@ class _AppIcon extends StatelessWidget {
       style: AppTextStyles.bodyS.copyWith(
         color: AppColors.textPrimary,
         fontWeight: FontWeight.w700,
+      ),
+    );
+  }
+}
+
+/// "+N" badge — facepile oxiri (qolgan ilovalar soni), ikonkalar bilan bir xil
+/// ring + o'lcham.
+class _PlusBadge extends StatelessWidget {
+  const _PlusBadge({required this.remaining, this.size = 40});
+
+  final int remaining;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    final inner = size - 5;
+    return Container(
+      width: size,
+      height: size,
+      decoration: BoxDecoration(
+        color: AppColors.surface,
+        shape: BoxShape.circle,
+      ),
+      alignment: Alignment.center,
+      child: Container(
+        width: inner,
+        height: inner,
+        decoration: BoxDecoration(
+          color: AppColors.surfaceVariant,
+          shape: BoxShape.circle,
+        ),
+        alignment: Alignment.center,
+        child: Text(
+          '+$remaining',
+          style: AppTextStyles.label.copyWith(
+            color: AppColors.textSecondary,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
       ),
     );
   }

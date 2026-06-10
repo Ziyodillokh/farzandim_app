@@ -99,6 +99,15 @@ class AppColors {
   static Color get border => _c(0xFF294B53, 0xFFD4E0DD);
   static Color get divider => _c(0xFF122F37, 0xFFE0EAE7);
 
+  // ────────────── SWITCH (toggle on/off) ──────────────
+  // OFF holat ikkala mode'da ham ANIQ ko'rinishi shart (eski Switch.adaptive
+  // dark'da fonga singib ketardi). ON holatni `activeColor` (default primary).
+  /// Toggle OFF track — light/night ikkalasida ham aniq ko'rinadi.
+  static Color get switchOffTrack => _c(0xFF3A4F56, 0xFFCBD7D3);
+
+  /// Toggle OFF thumb — OFF track ustida aniq ko'rinadi.
+  static Color get switchOffThumb => _c(0xFFC0CBC8, 0xFFFFFFFF);
+
   // ────────────── REBRAND qo'shimcha tokenlari ──────────────
   /// Grafik o'tgan-kun bar'i (muted teal — dark fonga mos).
   static Color get chartBarMuted => _c(0xFF294A52, 0xFFB8D4CC);

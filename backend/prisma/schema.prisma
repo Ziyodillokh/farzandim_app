@@ -80,6 +80,8 @@ model Child {
   age          Int?
   gender       String?
   region       String?
+  // SOS "Qo'ng'iroq" uchun bola telefon raqami (ota-ona kiritadi).
+  phoneNumber  String?  @map("phone_number")
   photoPath    String?  @map("photo_path")
   familyCode   String   @unique @map("family_code")
   pairedAt     DateTime? @map("paired_at")

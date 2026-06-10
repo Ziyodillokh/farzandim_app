@@ -19,6 +19,11 @@ dependencies:
   # iOS uslubidagi ikonkalar (Cupertino)
   cupertino_icons: ^1.0.8
 
+  # Yuqori refresh rate (120Hz) — ba'zi Android (Samsung) ilovani 60Hz'da
+  # cheklaydi; bu paket Display.Mode orqali eng yuqori rejimni so'raydi →
+  # 120fps silliq scroll/animatsiya. main.dart startup'da chaqiriladi.
+  flutter_displaymode: ^0.6.0
+
   # ─── Sprint 4.4: Backend REST migration ─────────────────────────
   # Dio — HTTP client (Firestore SDK o'rniga). Interceptor'lar bilan
   # JWT Bearer header + 401 refresh + logging.
@@ -104,6 +109,11 @@ dependencies:
   # Android: API kalit AndroidManifest'ga (build.gradle.kts orqali
   # local.properties'dan in'ektsiya qilinadi — git'ga tushmaydi).
   google_maps_flutter: ^2.6.0
+
+  # Koordinata → manzil (reverse geocoding) — MOBILDA platforma geocoder'i
+  # (OS, kalitsiz, tez/lokal). Google HTTP Geocoding cheklov/sekinligini
+  # chetlab o'tadi. Web qo'llamaydi → u yerda HTTP fallback (GeocodingService).
+  geocoding: ^3.0.0
 
   # Places API autocomplete — manzilni qidirish uchun (Bosqich 4.2.2).
   # API kalit Dart'ga `--dart-define-from-file=env.json` orqali

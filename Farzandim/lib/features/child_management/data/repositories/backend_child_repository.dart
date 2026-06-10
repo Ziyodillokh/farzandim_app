@@ -71,6 +71,7 @@ class BackendChildRepository {
     required int age,
     required Gender gender,
     String? region,
+    String? phoneNumber,
   }) async {
     final response = await _dio.post<Map<String, dynamic>>(
       '/children',
@@ -79,6 +80,8 @@ class BackendChildRepository {
         if (age > 0) 'age': age,
         'gender': gender == Gender.male ? 'male' : 'female',
         if (region != null && region.isNotEmpty) 'region': region,
+        if (phoneNumber != null && phoneNumber.isNotEmpty)
+          'phoneNumber': phoneNumber,
       },
     );
     final data = response.data;

@@ -36,6 +36,8 @@ import 'package:farzandim/features/legal/presentation/screens/terms_of_service_s
 import 'package:farzandim/features/location/presentation/screens/location_history_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_map_screen.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_screen.dart';
+import 'package:farzandim/features/onboarding/presentation/providers/language_picked_provider.dart';
+import 'package:farzandim/features/onboarding/presentation/screens/language_select_screen.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/app_permissions_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/device_settings_screen.dart';
@@ -120,6 +122,9 @@ class _AuthRefreshNotifier extends ChangeNotifier {
     // joriy ekran (ayniqsa const DashboardScreen) AppColors o'zgarganini
     // sezmay, eski temada qolib ketardi (faqat refresh/navigatsiyada o'zgarardi).
     ref.listen(themeModeProvider, (_, __) => notifyListeners());
+    // Til tanlangach (yoki prefs'dan yuklangach) redirect qayta hisoblanadi —
+    // til ekranidan welcome'ga avtomatik o'tish uchun.
+    ref.listen(languagePickedProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -168,13 +173,26 @@ final routerProvider = Provider<GoRouter>((ref) {
     // Sprint 4.4.22 cleanup: Firebase auth olib tashlandi, faqat Backend.
     redirect: (context, state) {
       final backendAuth = ref.read(backendAuthProvider);
+      final languagePicked = ref.read(languagePickedProvider);
 
-      // Birinchi marta yuklanyapti — hech qanday redirect qilmaymiz.
-      if (backendAuth is AuthUnknown) return null;
+      // Birinchi marta yuklanyapti (auth state yoki til flagi) — redirect yo'q.
+      if (backendAuth is AuthUnknown || languagePicked == null) return null;
 
       // Ommaviy hujjatlar (Maxfiylik/Shartlar) — har doim ochiladi, redirect
       // qilmaymiz (ro'yxatdan o'tishda rozilik havolasi ishlashi uchun).
       if (_publicRoutes.contains(state.matchedLocation)) return null;
+
+      // Birinchi ochilish: til tanlanmagan → til tanlash ekraniga (faqat shu
+      // sahifaga ruxsat). Tanlangach welcome'ga avtomatik o'tadi.
+      if (!languagePicked) {
+        return state.matchedLocation == AppRoutes.languageSelect
+            ? null
+            : AppRoutes.languageSelect;
+      }
+      // Til tanlangan, lekin hali til ekranida → welcome.
+      if (state.matchedLocation == AppRoutes.languageSelect) {
+        return AppRoutes.welcome;
+      }
 
       final isLoggedIn = backendAuth is AuthAuthenticated;
       final isAuthRoute = _authRoutes.contains(state.matchedLocation);
@@ -200,6 +218,13 @@ final routerProvider = Provider<GoRouter>((ref) {
 /// sabab preview'da ham barcha ekranlar ochiladi (page-not-found bo'lmaydi).
 List<RouteBase> buildAppRoutes() {
   return <RouteBase>[
+    // Til tanlash — birinchi ochilish (3 til). const EMAS: tanlanganda
+    // (locale o'zgarganda) qayta qurilishi uchun.
+    GoRoute(
+      path: AppRoutes.languageSelect,
+      builder: (context, state) => const LanguageSelectScreen(),
+    ),
+
     // Welcome ekran — auth qilmagan foydalanuvchilar uchun bosh sahifa.
     GoRoute(
       path: AppRoutes.welcome,

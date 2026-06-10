@@ -20,6 +20,10 @@ class AppRoutes {
   /// foydalanuvchilar darhol `dashboard`'ga yo'naltiriladi.
   static const String welcome = '/';
 
+  /// Birinchi ochilish — til tanlash ekrani (3 til). Til tanlanmaguncha
+  /// boshqa sahifaga o'tib bo'lmaydi; tanlangach saqlanadi va qayta chiqmaydi.
+  static const String languageSelect = '/language';
+
   /// Telegram Login WebView — Backend bilan auth (Sprint 4.4).
   /// Firebase phone OTP'dan migrate qilingan yangi auth.
   static const String telegramLogin = '/login-telegram';
@@ -102,8 +106,7 @@ class AppRoutes {
 
   /// Bola harakat tarixi (Sprint 4) — Polyline xaritada.
   /// `:childId` — qaysi bolaning tarixi ko'rsatiladi.
-  static const String locationHistoryPattern =
-      '/location/:childId/history';
+  static const String locationHistoryPattern = '/location/:childId/history';
 
   /// Berilgan bola id'si uchun harakat tarixi path.
   static String locationHistoryPath(String childId) =>
@@ -117,18 +120,15 @@ class AppRoutes {
   static String geoZonesPath(String childId) => '/geo-zones/$childId';
 
   /// Bola uchun yangi geo-zona qo'shish formi.
-  static const String geoZonesAddPattern =
-      '/geo-zones/:childId/add';
+  static const String geoZonesAddPattern = '/geo-zones/:childId/add';
 
   /// Berilgan bola id'si uchun yangi zona qo'shish path.
-  static String geoZonesAddPath(String childId) =>
-      '/geo-zones/$childId/add';
+  static String geoZonesAddPath(String childId) => '/geo-zones/$childId/add';
 
   /// Geo-zonani tahrirlash.
   /// `:childId` — qaysi bolaning zonasi.
   /// `:id` — qaysi zona tahrirlanadi.
-  static const String geoZonesEditPattern =
-      '/geo-zones/:childId/edit/:id';
+  static const String geoZonesEditPattern = '/geo-zones/:childId/edit/:id';
 
   /// Berilgan bola va zona id uchun haqiqiy edit path qaytaradi.
   static String geoZonesEditPath(String childId, String id) =>
@@ -137,8 +137,7 @@ class AppRoutes {
   // ─── Quick Actions (Bosqich 5) ──────────────────────────────────
 
   /// Qurilma sozlamalari.
-  static const String qaDevicePattern =
-      '/quick-actions/device/:childId';
+  static const String qaDevicePattern = '/quick-actions/device/:childId';
 
   /// Berilgan bola id'si uchun qurilma sozlamalari path.
   static String qaDevicePath(String childId) =>
@@ -164,12 +163,10 @@ class AppRoutes {
   ///
   /// Dashboard'dagi bola karta'sidagi "Ovoz xabarlari" tugmasi shu
   /// route'ga olib boradi — to'g'ridan-to'g'ri o'sha bola chatiga.
-  static const String qaVoicePattern =
-      '/quick-actions/voice/:childId';
+  static const String qaVoicePattern = '/quick-actions/voice/:childId';
 
   /// Berilgan bola id'si uchun chat path.
-  static String qaVoicePath(String childId) =>
-      '/quick-actions/voice/$childId';
+  static String qaVoicePath(String childId) => '/quick-actions/voice/$childId';
 
   /// Barcha bolalar bilan ovozli xabarlar list ekrani (global,
   /// childId yo'q). Telegram chat list uslubida — har bola
@@ -178,8 +175,7 @@ class AppRoutes {
 
   /// Bola ilovalari foydalanish statistikasi (App Restrictions feature).
   /// `:childId` — qaysi bolaning statistikasi (per-child).
-  static const String appRestrictionsPattern =
-      '/app-restrictions/:childId';
+  static const String appRestrictionsPattern = '/app-restrictions/:childId';
 
   /// Berilgan bola id'si uchun App Restrictions path.
   static String appRestrictionsPath(String childId) =>
@@ -206,8 +202,7 @@ class AppRoutes {
   static String weeklyReportPath(String childId) => '/weekly-report/$childId';
 
   /// Bola yutuqlari (Gamification — Sprint 4.4.6).
-  static const String childAchievementsPattern =
-      '/achievements/:childId';
+  static const String childAchievementsPattern = '/achievements/:childId';
   static String childAchievementsPath(String childId) =>
       '/achievements/$childId';
 
@@ -216,19 +211,16 @@ class AppRoutes {
 
   /// Photo requests list per child (Sprint 4.4.16).
   static const String photoRequestsPattern = '/photo-requests/:childId';
-  static String photoRequestsPath(String childId) =>
-      '/photo-requests/$childId';
+  static String photoRequestsPath(String childId) => '/photo-requests/$childId';
 
   /// Feedback inbox per child (Sprint 4.4.17).
   static const String feedbackInboxPattern = '/feedback/:childId';
-  static String feedbackInboxPath(String childId) =>
-      '/feedback/$childId';
+  static String feedbackInboxPath(String childId) => '/feedback/$childId';
 
   // Sprint 4.4.34: alohida /video-chat ekran olib tashlandi.
   // Video xabarlar voice chat ichida Telegram-style yumaloq bubble.
 
   /// Pair requests per child (Sprint 4.4.25).
   static const String pairRequestsPattern = '/pair-requests/:childId';
-  static String pairRequestsPath(String childId) =>
-      '/pair-requests/$childId';
+  static String pairRequestsPath(String childId) => '/pair-requests/$childId';
 }

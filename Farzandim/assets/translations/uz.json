@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Tilni tanlang",
+    "selectSubtitle": "Ilovani qaysi tilda ishlatasiz?",
+    "continueButton": "Davom etish"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Bekor qilish",
@@ -108,6 +113,9 @@
   },
   "notifications": {
     "title": "Bildirishnoma",
+    "blockApp": "Bloklash",
+    "blockedSnack": "{app} bloklandi",
+    "blockError": "Bloklab bo'lmadi",
     "markAllRead": "O'qildi qil",
     "review": "Tekshirish",
     "reject": "Rad etish",
@@ -650,6 +658,8 @@
       "photoLabel": "Fotosurat",
       "nameLabel": "Ism",
       "nameHint": "Ismini kiriting",
+      "phoneLabel": "Telefon raqami (ixtiyoriy)",
+      "phoneHint": "+998 90 123 45 67",
       "ageLabel": "Yoshi",
       "ageHint": "Yoshini tanlang",
       "ageItem": "{age} yosh",

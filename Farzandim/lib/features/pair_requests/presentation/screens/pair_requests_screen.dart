@@ -12,6 +12,7 @@ import 'package:farzandim/features/pair_requests/data/models/pair_request.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -36,9 +37,7 @@ class PairRequestsScreen extends ConsumerWidget {
               Expanded(
                 child: requestsAsync.when(
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (e, _) => Center(child: Text('Xato: $e')),
                   data: (list) {
@@ -46,9 +45,7 @@ class PairRequestsScreen extends ConsumerWidget {
                     return RefreshIndicator(
                       color: AppColors.accent,
                       onRefresh: () async {
-                        ref.invalidate(
-                          pendingPairRequestsProvider(childId),
-                        );
+                        ref.invalidate(pendingPairRequestsProvider(childId));
                       },
                       child: ListView.builder(
                         padding: const EdgeInsets.symmetric(
@@ -56,10 +53,8 @@ class PairRequestsScreen extends ConsumerWidget {
                           vertical: AppDimensions.md,
                         ),
                         itemCount: list.length,
-                        itemBuilder: (_, i) => _RequestTile(
-                          request: list[i],
-                          childId: childId,
-                        ),
+                        itemBuilder: (_, i) =>
+                            _RequestTile(request: list[i], childId: childId),
                       ),
                     );
                   },
@@ -166,9 +161,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
         ),
         content: Text(
           'Bola yangi qurilmadan ulana olmaydi. Ishonchingiz komilmi?',
-          style: AppTextStyles.bodyM.copyWith(
-            color: AppColors.textSecondary,
-          ),
+          style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
@@ -219,133 +212,119 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   @override
   Widget build(BuildContext context) {
     final isExpired = _left <= Duration.zero;
-    final accent = isExpired ? AppColors.error : AppColors.warning;
 
-    return Container(
-      margin: const EdgeInsets.only(bottom: AppDimensions.md),
-      padding: const EdgeInsets.all(AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.3),
-          width: 1.5,
-        ),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppDimensions.md),
+      child: SettingsCard(
+        accent: AppColors.secondary,
+        rail: false,
+        padding: const EdgeInsets.all(AppDimensions.md),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                SettingsIconChip(
+                  icon: Icons.phone_iphone_rounded,
+                  accent: AppColors.secondary,
+                  size: 44,
                 ),
-                alignment: Alignment.center,
-                child: Icon(
-                  Icons.phone_iphone_rounded,
-                  color: accent,
-                  size: 24,
+                const SizedBox(width: AppDimensions.md),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Yangi qurilma',
+                        style: AppTextStyles.bodyM.copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      Text(
+                        widget.request.deviceLabel,
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.textSecondary,
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.sm),
+            if (widget.request.appVersion != null)
+              _InfoRow(
+                icon: Icons.app_settings_alt,
+                label: 'Ilova',
+                value: widget.request.appVersion!,
               ),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Yangi qurilma',
+            if (widget.request.ipAddress != null)
+              _InfoRow(
+                icon: Icons.public,
+                label: 'IP',
+                value: widget.request.ipAddress!,
+              ),
+            _InfoRow(
+              icon: Icons.timer_outlined,
+              label: 'Muddat',
+              value: _formatLeft(_left),
+              valueColor: isExpired ? AppColors.error : AppColors.accent,
+            ),
+            const SizedBox(height: AppDimensions.md),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: _busy || isExpired ? null : _reject,
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: AppColors.error,
+                      side: BorderSide(
+                        color: AppColors.error.withValues(alpha: 0.6),
+                      ),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    icon: const Icon(Icons.close_rounded, size: 18),
+                    label: const Text('Rad etish'),
+                  ),
+                ),
+                const SizedBox(width: AppDimensions.sm),
+                Expanded(
+                  child: TextButton.icon(
+                    onPressed: _busy || isExpired ? null : _approve,
+                    style: TextButton.styleFrom(
+                      backgroundColor: AppColors.primary,
+                      foregroundColor: AppColors.onPrimary,
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(999),
+                      ),
+                    ),
+                    icon: _busy
+                        ? SizedBox(
+                            width: 16,
+                            height: 16,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2,
+                              color: AppColors.onPrimary,
+                            ),
+                          )
+                        : const Icon(Icons.check_rounded, size: 18),
+                    label: Text(
+                      'Tasdiqlash',
                       style: AppTextStyles.bodyM.copyWith(
-                        fontWeight: FontWeight.w700,
+                        fontWeight: FontWeight.w600,
+                        color: AppColors.onPrimary,
                       ),
                     ),
-                    Text(
-                      widget.request.deviceLabel,
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: AppColors.textSecondary,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: AppDimensions.sm),
-          if (widget.request.appVersion != null)
-            _InfoRow(
-              icon: Icons.app_settings_alt,
-              label: 'Ilova',
-              value: widget.request.appVersion!,
+              ],
             ),
-          if (widget.request.ipAddress != null)
-            _InfoRow(
-              icon: Icons.public,
-              label: 'IP',
-              value: widget.request.ipAddress!,
-            ),
-          _InfoRow(
-            icon: Icons.timer_outlined,
-            label: 'Muddat',
-            value: _formatLeft(_left),
-            valueColor: isExpired ? AppColors.error : AppColors.accent,
-          ),
-          const SizedBox(height: AppDimensions.md),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _busy || isExpired ? null : _reject,
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.error,
-                    side: BorderSide(
-                      color: AppColors.error.withValues(alpha: 0.6),
-                    ),
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  icon: const Icon(Icons.close_rounded, size: 18),
-                  label: const Text('Rad etish'),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.sm),
-              Expanded(
-                child: TextButton.icon(
-                  onPressed: _busy || isExpired ? null : _approve,
-                  style: TextButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: AppColors.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 12),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  icon: _busy
-                      ? SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.onPrimary,
-                          ),
-                        )
-                      : const Icon(Icons.check_rounded, size: 18),
-                  label: Text(
-                    'Tasdiqlash',
-                    style: AppTextStyles.bodyM.copyWith(
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.onPrimary,
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -374,9 +353,7 @@ class _InfoRow extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$label: ',
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           Expanded(
             child: Text(

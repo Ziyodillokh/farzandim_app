@@ -2,7 +2,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
@@ -11,6 +10,7 @@ import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_pr
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zone_events_screen.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:farzandim/shared/widgets/skeleton_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -38,10 +38,8 @@ class GeoZonesListScreen extends ConsumerWidget {
     Navigator.push(
       context,
       MaterialPageRoute<void>(
-        builder: (_) => GeoZoneEventsScreen(
-          childId: childId,
-          childName: childName,
-        ),
+        builder: (_) =>
+            GeoZoneEventsScreen(childId: childId, childName: childName),
       ),
     );
   }
@@ -78,9 +76,7 @@ class GeoZonesListScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(AppDimensions.lg),
                       child: Text(
-                        'geoZones.errorPrefix'.tr(
-                          namedArgs: {'error': '$e'},
-                        ),
+                        'geoZones.errorPrefix'.tr(namedArgs: {'error': '$e'}),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodyS.copyWith(
                           color: AppColors.textSecondary,
@@ -138,10 +134,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(
-                Icons.arrow_back,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
               onPressed: () => context.pop(),
             ),
           ),
@@ -158,10 +151,7 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(
-                Icons.history,
-                color: AppColors.textPrimary,
-              ),
+              icon: Icon(Icons.history, color: AppColors.textPrimary),
               onPressed: onHistoryTap,
               tooltip: 'geoZones.historyTooltip'.tr(),
             ),
@@ -182,84 +172,56 @@ class _Last24HoursCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final countAsync =
-        ref.watch(geoZoneEventsCountProvider(childId));
+    final countAsync = ref.watch(geoZoneEventsCountProvider(childId));
 
     return countAsync.when(
       data: (count) {
         if (count == 0) return const SizedBox.shrink();
-        final radius = BorderRadius.circular(AppDimensions.radiusM);
         return Padding(
           padding: const EdgeInsets.symmetric(
             horizontal: AppDimensions.lg,
             vertical: AppDimensions.sm,
           ),
-          child: DecoratedBox(
-            decoration: BoxDecoration(
-              borderRadius: radius,
-              boxShadow: AppShadows.card,
-            ),
-            child: Material(
-              color: AppColors.surface,
-              shape: RoundedRectangleBorder(
-                borderRadius: radius,
-                side: BorderSide(
-                  color: AppColors.accent.withValues(alpha: 0.25),
+          child: SettingsCard(
+            accent: AppColors.info,
+            onTap: onTap,
+            padding: const EdgeInsets.all(AppDimensions.md - 2),
+            child: Row(
+              children: [
+                // Accent-tinted ikonka doirasi.
+                SettingsIconChip(
+                  icon: Icons.history_rounded,
+                  accent: AppColors.info,
+                  size: 38,
                 ),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: onTap,
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.md - 2),
-                  child: Row(
-                    children: [
-                      // Accent-tinted ikonka doirasi.
-                      Container(
-                        width: 38,
-                        height: 38,
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.14),
-                          shape: BoxShape.circle,
-                        ),
-                        alignment: Alignment.center,
-                        child: Icon(
-                          Icons.history_rounded,
-                          color: AppColors.accent,
-                          size: 20,
-                        ),
-                      ),
-                      const SizedBox(width: AppDimensions.sm + 4),
-                      Expanded(
-                        child: Text(
-                          'geoZones.last24h.eventCount'.tr(
-                            namedArgs: {'count': '$count'},
-                          ),
-                          style: AppTextStyles.bodyS.copyWith(
-                            color: AppColors.textPrimary,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                      Text(
-                        'geoZones.last24h.viewLink'.tr(),
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.accent,
-                          fontWeight: FontWeight.w700,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(width: 2),
-                      Icon(
-                        Icons.chevron_right_rounded,
-                        size: 18,
-                        color: AppColors.accent,
-                      ),
-                    ],
+                const SizedBox(width: AppDimensions.sm + 4),
+                Expanded(
+                  child: Text(
+                    'geoZones.last24h.eventCount'.tr(
+                      namedArgs: {'count': '$count'},
+                    ),
+                    style: AppTextStyles.bodyS.copyWith(
+                      color: AppColors.textPrimary,
+                      fontSize: 13,
+                      fontWeight: FontWeight.w600,
+                    ),
                   ),
                 ),
-              ),
+                Text(
+                  'geoZones.last24h.viewLink'.tr(),
+                  style: AppTextStyles.bodyS.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(width: 2),
+                Icon(
+                  Icons.chevron_right_rounded,
+                  size: 18,
+                  color: AppColors.accent,
+                ),
+              ],
             ),
           ),
         );
@@ -328,8 +290,7 @@ class _EmptyState extends StatelessWidget {
               label: 'geoZones.empty.addButton'.tr(),
               icon: Icons.add,
               expanded: false,
-              onPressed: () =>
-                  context.push(AppRoutes.geoZonesAddPath(childId)),
+              onPressed: () => context.push(AppRoutes.geoZonesAddPath(childId)),
             ),
           ],
         ),
@@ -363,10 +324,7 @@ class _ZonesList extends StatelessWidget {
         return _ZoneCard(zone: zone, childId: childId)
             // Stagger: har zona kartochkasi 50ms kechikish bilan
             .animate()
-            .fadeIn(
-              duration: 300.ms,
-              delay: (50 * index).ms,
-            )
+            .fadeIn(duration: 300.ms, delay: (50 * index).ms)
             .slideY(
               begin: 0.1,
               end: 0,
@@ -387,127 +345,88 @@ class _ZoneCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final borderRadius = BorderRadius.circular(AppDimensions.radiusM);
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: borderRadius,
-        boxShadow: AppShadows.card,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: borderRadius,
-          side: BorderSide(color: AppColors.border),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: () => context
-              .push(AppRoutes.geoZonesEditPath(childId, zone.id)),
-          borderRadius: borderRadius,
-          child: Padding(
-            padding: const EdgeInsets.all(AppDimensions.md),
-            child: Row(
+    return SettingsCard(
+      accent: AppColors.info,
+      rail: false,
+      onTap: () => context.push(AppRoutes.geoZonesEditPath(childId, zone.id)),
+      padding: const EdgeInsets.all(AppDimensions.md),
+      child: Row(
+        children: [
+          // Lime gradient badge + ikonka.
+          SettingsIconChip(
+            icon: GeoZone.iconFromString(
+              zone.icon ?? zone.type.defaultIconName,
+            ),
+            accent: AppColors.info,
+            size: 52,
+          ),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                // Lime gradient badge + ikonka.
-                Container(
-                  width: 52,
-                  height: 52,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary.withValues(alpha: 0.28),
-                        AppColors.primary.withValues(alpha: 0.12),
-                      ],
-                    ),
-                    borderRadius: BorderRadius.circular(16),
-                    border: Border.all(
-                      color: AppColors.accent.withValues(alpha: 0.18),
-                    ),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    GeoZone.iconFromString(
-                      zone.icon ?? zone.type.defaultIconName,
-                    ),
-                    size: 25,
-                    color: AppColors.accent,
+                Text(
+                  zone.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
                   ),
                 ),
-                const SizedBox(width: AppDimensions.md),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                const SizedBox(height: 6),
+                // Radius pill — premium chip.
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
+                  decoration: BoxDecoration(
+                    color: AppColors.accent.withValues(alpha: 0.10),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(
-                        zone.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyM.copyWith(
-                          fontWeight: FontWeight.w700,
-                        ),
+                      Icon(
+                        Icons.adjust_rounded,
+                        size: 13,
+                        color: AppColors.accent,
                       ),
-                      const SizedBox(height: 6),
-                      // Radius pill — premium chip.
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
+                      const SizedBox(width: 4),
+                      Text(
+                        'geoZones.card.radius'.tr(
+                          namedArgs: {'meters': '${zone.radiusMeters.round()}'},
                         ),
-                        decoration: BoxDecoration(
-                          color: AppColors.accent.withValues(alpha: 0.10),
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(
-                              Icons.adjust_rounded,
-                              size: 13,
-                              color: AppColors.accent,
-                            ),
-                            const SizedBox(width: 4),
-                            Text(
-                              'geoZones.card.radius'.tr(
-                                namedArgs: {
-                                  'meters':
-                                      '${zone.radiusMeters.round()}',
-                                },
-                              ),
-                              style: AppTextStyles.bodyS.copyWith(
-                                color: AppColors.accent,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: AppColors.accent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w600,
                         ),
                       ),
                     ],
                   ),
                 ),
-                const SizedBox(width: AppDimensions.sm),
-                // Chevron — nozik doira ichida.
-                Container(
-                  width: 30,
-                  height: 30,
-                  decoration: BoxDecoration(
-                    color: AppColors.textPrimary.withValues(alpha: 0.05),
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.chevron_right_rounded,
-                    size: 20,
-                    color: AppColors.textSecondary,
-                  ),
-                ),
               ],
             ),
           ),
-        ),
+          const SizedBox(width: AppDimensions.sm),
+          // Chevron — nozik doira ichida.
+          Container(
+            width: 30,
+            height: 30,
+            decoration: BoxDecoration(
+              color: AppColors.textPrimary.withValues(alpha: 0.05),
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.chevron_right_rounded,
+              size: 20,
+              color: AppColors.textSecondary,
+            ),
+          ),
+        ],
       ),
     );
   }

@@ -232,12 +232,18 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
         router.go(AppRoutes.locationPath(notif.childId));
       }
     case NotificationType.lowBattery:
+      // Past batareya — bola qayerdaligi muhim → jonli xarita.
       if (notif.childId.isNotEmpty) {
-        router.go(AppRoutes.qaDevicePath(notif.childId));
+        router.go(AppRoutes.locationPath(notif.childId));
+      } else {
+        router.go(AppRoutes.notifications);
       }
     case NotificationType.appLimit:
+    case NotificationType.game:
       if (notif.childId.isNotEmpty) {
         router.go(AppRoutes.appRestrictionsPath(notif.childId));
+      } else {
+        router.go(AppRoutes.notifications);
       }
     case NotificationType.scheduleStart:
     case NotificationType.scheduleReminder:

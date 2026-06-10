@@ -7,7 +7,9 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_tile_skeleton.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -46,7 +48,9 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
   }
 
   Future<void> _toggle(String packageName, bool allowed) async {
-    await ref.read(backendAppPermissionRepositoryProvider).setPolicy(
+    await ref
+        .read(backendAppPermissionRepositoryProvider)
+        .setPolicy(
           childId: _childId,
           packageName: packageName,
           permission: widget.permission,
@@ -187,12 +191,9 @@ class _AppPermissionRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(color: AppColors.border),
-      ),
+    return SettingsCard(
+      accent: AppColors.secondary,
+      rail: false,
       padding: const EdgeInsets.symmetric(
         horizontal: AppDimensions.md,
         vertical: AppDimensions.sm + 2,
@@ -214,11 +215,7 @@ class _AppPermissionRow extends StatelessWidget {
               overflow: TextOverflow.ellipsis,
             ),
           ),
-          Switch.adaptive(
-            value: allowed,
-            activeThumbColor: AppColors.primary,
-            onChanged: onChanged,
-          ),
+          AppSwitch(value: allowed, onChanged: onChanged),
         ],
       ),
     );

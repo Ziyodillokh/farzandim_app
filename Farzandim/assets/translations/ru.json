@@ -1,4 +1,9 @@
 {
+  "language": {
+    "selectTitle": "Выберите язык",
+    "selectSubtitle": "На каком языке использовать приложение?",
+    "continueButton": "Продолжить"
+  },
   "common": {
     "ok": "OK",
     "cancel": "Отмена",
@@ -108,6 +113,9 @@
   },
   "notifications": {
     "title": "Уведомления",
+    "blockApp": "Блокировать",
+    "blockedSnack": "{app} заблокирован",
+    "blockError": "Не удалось заблокировать",
     "markAllRead": "Прочитать всё",
     "review": "Проверить",
     "reject": "Отклонить",
@@ -650,6 +658,8 @@
       "photoLabel": "Фото",
       "nameLabel": "Имя",
       "nameHint": "Введите имя",
+      "phoneLabel": "Номер телефона (необязательно)",
+      "phoneHint": "+998 90 123 45 67",
       "ageLabel": "Возраст",
       "ageHint": "Выберите возраст",
       "ageItem": "{age} лет",

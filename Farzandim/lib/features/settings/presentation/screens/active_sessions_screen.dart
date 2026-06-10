@@ -15,6 +15,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/settings/data/models/user_session.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -37,9 +38,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
               Expanded(
                 child: sessionsAsync.when(
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (_, __) => _ErrorState(
                     onRetry: () =>
@@ -195,13 +194,10 @@ class _SessionCard extends StatelessWidget {
         session.locationLabel ?? 'settings.sessions.unknownLocation'.tr();
     final meta = _metaLine();
 
-    return Container(
+    return SettingsCard(
+      accent: AppColors.secondary,
+      rail: false,
       padding: const EdgeInsets.all(AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(color: AppColors.border),
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -251,8 +247,9 @@ class _SessionCard extends StatelessWidget {
 
   /// "1.2.3.4 · 13.09.2024, 15:40" — IP bo'lmasa faqat sana.
   String? _metaLine() {
-    final date =
-        session.lastSeenAt != null ? _formatDate(session.lastSeenAt!) : null;
+    final date = session.lastSeenAt != null
+        ? _formatDate(session.lastSeenAt!)
+        : null;
     final ip = session.ipAddress;
     if (ip != null && ip.isNotEmpty && date != null) return '$ip · $date';
     return ip?.isNotEmpty == true ? ip : date;
@@ -338,8 +335,7 @@ class _EndAllOthersButton extends StatelessWidget {
     return Center(
       child: TextButton.icon(
         onPressed: () => _confirm(context),
-        icon: Icon(Icons.back_hand_rounded,
-            color: AppColors.error, size: 18),
+        icon: Icon(Icons.back_hand_rounded, color: AppColors.error, size: 18),
         label: Text(
           'settings.sessions.endAllOthers'.tr(),
           style: AppTextStyles.bodyM.copyWith(
@@ -390,8 +386,11 @@ class _AddAccountBar extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.qr_code_rounded,
-                      color: AppColors.background, size: 22),
+                  Icon(
+                    Icons.qr_code_rounded,
+                    color: AppColors.background,
+                    size: 22,
+                  ),
                   const SizedBox(width: AppDimensions.sm),
                   Text(
                     'settings.sessions.addAccount'.tr(),
@@ -426,14 +425,18 @@ class _EmptyState extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: MediaQuery.of(context).size.height * 0.28),
-          Icon(Icons.devices_other_rounded,
-              color: AppColors.textTertiary, size: 56),
+          Icon(
+            Icons.devices_other_rounded,
+            color: AppColors.textTertiary,
+            size: 56,
+          ),
           const SizedBox(height: AppDimensions.md),
           Center(
             child: Text(
               'settings.sessions.empty'.tr(),
-              style: AppTextStyles.bodyM
-                  .copyWith(color: AppColors.textSecondary),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
               textAlign: TextAlign.center,
             ),
           ),
@@ -453,8 +456,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.cloud_off_rounded,
-              color: AppColors.textTertiary, size: 48),
+          Icon(
+            Icons.cloud_off_rounded,
+            color: AppColors.textTertiary,
+            size: 48,
+          ),
           const SizedBox(height: AppDimensions.md),
           Text(
             'settings.sessions.loadError'.tr(),

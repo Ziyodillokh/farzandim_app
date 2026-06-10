@@ -23,7 +23,9 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
+import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -116,10 +118,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: Icon(
-              Icons.arrow_back_rounded,
-              color: AppColors.textPrimary,
-            ),
+            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
           ),
           Expanded(
             child: Text(
@@ -214,27 +213,14 @@ class _ScheduleCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final accent = type.color;
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
-      padding: const EdgeInsets.all(AppDimensions.md),
+    return SettingsCard(
+      accent: accent,
       child: Column(
         children: [
           // ─── Sarlavha + toggle ───
           Row(
             children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.18),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(type.icon, color: accent, size: 20),
-              ),
+              SettingsIconChip(icon: type.icon, accent: accent, size: 40),
               const SizedBox(width: AppDimensions.md),
               Expanded(
                 child: Text(
@@ -244,9 +230,9 @@ class _ScheduleCard extends ConsumerWidget {
                   ),
                 ),
               ),
-              Switch.adaptive(
+              AppSwitch(
                 value: _isOn,
-                activeTrackColor: AppColors.success,
+                activeColor: AppColors.success,
                 onChanged: (v) => _onToggle(ref, v),
               ),
             ],
@@ -300,7 +286,9 @@ class _ScheduleCard extends ConsumerWidget {
       helpText: 'Tugash vaqti',
     );
     if (end == null) return;
-    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+    await ref
+        .read(scheduleActionsProvider.notifier)
+        .updateSchedule(
           childId: childId,
           scheduleId: s.id,
           current: s,
@@ -329,7 +317,9 @@ class _ScheduleCard extends ConsumerWidget {
       builder: (_) => _DaysSheet(initial: s.weekdays),
     );
     if (result == null || result.isEmpty) return;
-    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+    await ref
+        .read(scheduleActionsProvider.notifier)
+        .updateSchedule(
           childId: childId,
           scheduleId: s.id,
           current: s,
@@ -352,13 +342,12 @@ class _ScheduleCard extends ConsumerWidget {
           top: Radius.circular(AppDimensions.radiusL),
         ),
       ),
-      builder: (_) => _AppPickerSheet(
-        childId: childId,
-        initial: s.blockedApps,
-      ),
+      builder: (_) => _AppPickerSheet(childId: childId, initial: s.blockedApps),
     );
     if (result == null) return;
-    await ref.read(scheduleActionsProvider.notifier).updateSchedule(
+    await ref
+        .read(scheduleActionsProvider.notifier)
+        .updateSchedule(
           childId: childId,
           scheduleId: s.id,
           current: s,
@@ -540,12 +529,9 @@ class _DaysSheetState extends State<_DaysSheet> {
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.primary,
                 foregroundColor: AppColors.onPrimary,
-                padding: const EdgeInsets.symmetric(
-                  vertical: AppDimensions.md,
-                ),
+                padding: const EdgeInsets.symmetric(vertical: AppDimensions.md),
                 shape: RoundedRectangleBorder(
-                  borderRadius:
-                      BorderRadius.circular(AppDimensions.radiusPill),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
                 ),
               ),
               child: const Text(
@@ -659,9 +645,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
             Expanded(
               child: installedAsync.when(
                 data: (apps) {
-                  final list = apps
-                      .where((a) => a.appName.isNotEmpty)
-                      .toList()
+                  final list = apps.where((a) => a.appName.isNotEmpty).toList()
                     ..sort((a, b) => a.appName.compareTo(b.appName));
                   if (list.isEmpty) {
                     return Center(
