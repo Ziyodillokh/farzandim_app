@@ -100,7 +100,20 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
         decoration: BoxDecoration(
           color: AppColors.surface,
           borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-          border: Border.all(color: AppColors.error, width: 2),
+          border: Border.all(color: AppColors.error, width: 2.5),
+          boxShadow: [
+            // Favqulodda his — qizil yog'du (glow).
+            BoxShadow(
+              color: AppColors.error.withValues(alpha: 0.30),
+              blurRadius: 32,
+              spreadRadius: -4,
+            ),
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -109,7 +122,7 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
             AnimatedBuilder(
               animation: _pulseController,
               builder: (context, _) {
-                final scale = 1 + (_pulseController.value * 0.2);
+                final scale = 1 + (_pulseController.value * 0.3);
                 return Container(
                   width: 100 * scale,
                   height: 100 * scale,
@@ -118,6 +131,15 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
                       alpha: 0.15 + _pulseController.value * 0.15,
                     ),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.error.withValues(
+                          alpha: 0.25 * (1 - _pulseController.value),
+                        ),
+                        blurRadius: 24,
+                        spreadRadius: 4 * _pulseController.value,
+                      ),
+                    ],
                   ),
                   alignment: Alignment.center,
                   child: Container(
@@ -142,7 +164,9 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
               'notifications.sos.title'.tr(),
               style: AppTextStyles.headlineXL.copyWith(
                 color: AppColors.error,
-                fontSize: 28,
+                fontSize: 34,
+                fontWeight: FontWeight.w800,
+                letterSpacing: 1,
               ),
             ),
             const SizedBox(height: AppDimensions.sm),
@@ -150,7 +174,9 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
               'notifications.sos.subtitle'.tr(
                 namedArgs: {'name': notif.childName},
               ),
-              style: AppTextStyles.bodyM,
+              style: AppTextStyles.bodyM.copyWith(
+                fontWeight: FontWeight.w600,
+              ),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),

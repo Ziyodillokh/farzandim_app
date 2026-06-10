@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -10,9 +11,11 @@ import 'package:farzandim/shared/widgets/password_text_field.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:farzandim/shared/widgets/social_button.dart';
 import 'package:farzandim/shared/widgets/tab_switcher.dart';
+import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 /// Ro'yxatdan o'tish — telefon yoki email + parol.
 ///
@@ -38,10 +41,29 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   bool _loading = false;
   String? _error;
 
+  /// Ommaviy offerta (Maxfiylik siyosati + Foydalanish shartlari) qabul
+  /// qilindimi — SHU belgilanmaguncha ro'yxatdan o'tish (telefon/email/social)
+  /// O'CHIQ (global tizimlardagidek yuridik rozilik).
+  bool _consent = false;
+
+  late final TapGestureRecognizer _privacyTap;
+  late final TapGestureRecognizer _termsTap;
+
   bool get _isPhone => _activeTab == 0;
 
   @override
+  void initState() {
+    super.initState();
+    _privacyTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalPrivacyPolicy);
+    _termsTap = TapGestureRecognizer()
+      ..onTap = () => context.push(AppRoutes.legalTermsOfService);
+  }
+
+  @override
   void dispose() {
+    _privacyTap.dispose();
+    _termsTap.dispose();
     _firstName.dispose();
     _lastName.dispose();
     _phone.dispose();
@@ -51,6 +73,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 
   bool get _canSubmit {
+    if (!_consent) return false; // Ommaviy offerta qabul qilinishi shart.
     if (_firstName.text.trim().isEmpty || _lastName.text.trim().isEmpty) {
       return false;
     }
@@ -227,6 +250,67 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                   onChanged: (_) => setState(() {}),
                 ),
 
+                const SizedBox(height: AppDimensions.lg),
+
+                // ─── Ommaviy offerta roziligi (qabul qilinmaguncha pastdagi
+                //     tugmalar o'chiq) — Maxfiylik + Shartlar bosiladigan havola.
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 24,
+                      height: 24,
+                      child: Checkbox(
+                        value: _consent,
+                        onChanged: (v) => setState(() => _consent = v ?? false),
+                        activeColor: AppColors.primary,
+                        checkColor: AppColors.onPrimary,
+                        side: BorderSide(color: AppColors.border, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                        visualDensity: VisualDensity.compact,
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.sm),
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.only(top: 2),
+                        child: Text.rich(
+                          TextSpan(
+                            style: AppTextStyles.bodyS.copyWith(
+                              color: AppColors.textSecondary,
+                              height: 1.4,
+                            ),
+                            children: [
+                              TextSpan(text: 'auth.signUp.consent.prefix'.tr()),
+                              TextSpan(
+                                text: 'auth.signUp.consent.privacy'.tr(),
+                                style: const TextStyle(
+                                  color: kAuthLinkColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: _privacyTap,
+                              ),
+                              TextSpan(text: 'auth.signUp.consent.and'.tr()),
+                              TextSpan(
+                                text: 'auth.signUp.consent.terms'.tr(),
+                                style: const TextStyle(
+                                  color: kAuthLinkColor,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                                recognizer: _termsTap,
+                              ),
+                              TextSpan(text: 'auth.signUp.consent.suffix'.tr()),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+
                 if (_error != null) ...[
                   const SizedBox(height: AppDimensions.md),
                   AuthErrorText(_error!),
@@ -249,7 +333,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       child: SocialButton(
                         iconAsset: 'assets/icons/ic_apple.svg',
                         semanticsLabel: 'auth.social.apple'.tr(),
-                        onPressed: _loading ? null : () => _signInWithApple(),
+                        onPressed: (_loading || !_consent)
+                            ? null
+                            : () => _signInWithApple(),
                       ),
                     ),
                     const SizedBox(width: AppDimensions.md),
@@ -257,7 +343,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                       child: SocialButton(
                         iconAsset: 'assets/icons/ic_google.svg',
                         semanticsLabel: 'auth.social.google'.tr(),
-                        onPressed: _loading ? null : () => _signInWithGoogle(),
+                        onPressed: (_loading || !_consent)
+                            ? null
+                            : () => _signInWithGoogle(),
                       ),
                     ),
                   ],

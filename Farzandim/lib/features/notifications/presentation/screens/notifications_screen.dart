@@ -92,6 +92,13 @@ class _NotificationsList extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // SOS xabarlar doim tepada (eng muhim), keyin vaqt bo'yicha yangi→eski.
+    final items = [...notifications]..sort((a, b) {
+      final aSos = a.type == NotificationType.sos ? 0 : 1;
+      final bSos = b.type == NotificationType.sos ? 0 : 1;
+      if (aSos != bSos) return aSos - bSos;
+      return b.timestamp.compareTo(a.timestamp);
+    });
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.md,
@@ -99,10 +106,10 @@ class _NotificationsList extends ConsumerWidget {
         AppDimensions.md,
         AppDimensions.lg,
       ),
-      itemCount: notifications.length,
+      itemCount: items.length,
       separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.md),
       itemBuilder: (context, i) {
-        final n = notifications[i];
+        final n = items[i];
         return Dismissible(
           key: ValueKey(n.id),
           direction: DismissDirection.endToStart,
