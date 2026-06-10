@@ -250,8 +250,14 @@ export class LocationService {
 
         try {
           await this.fcm.sendPushToUser(child.parentId, {
-            title: `${child.name} ${isEntry ? 'zonaga kirdi' : 'zonadan chiqdi'}`,
-            body: `${event.zoneName}${isEntry ? 'ga kirdi' : 'dan chiqdi'}`,
+            // Professional sarlavha: "{ism} {zona}ga kirdi / {zona}dan chiqdi".
+            // Zona nomi sarlavhada (ota-ona darhol qaysi joy ekanini ko'radi).
+            title: `${child.name} ${event.zoneName}${
+              isEntry ? 'ga kirdi' : 'dan chiqdi'
+            }`,
+            body: isEntry
+              ? 'Belgilangan hududga yetib keldi'
+              : 'Belgilangan hududni tark etdi',
             data: {
               type: 'geofence',
               event: event.type,
