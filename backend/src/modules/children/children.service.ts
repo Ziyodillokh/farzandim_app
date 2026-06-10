@@ -16,6 +16,7 @@ import { BUCKETS } from '../../common/storage/storage.constants';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
+import { UpdateInterestsDto } from './dto/update-interests.dto';
 
 const ALLOWED_AVATAR_MIMES = [
   'image/jpeg',
@@ -259,6 +260,61 @@ export class ChildrenService {
     });
 
     await this.audit.log(userId, 'child', 'UPDATE', id, dto, reqMeta);
+
+    return updated;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  PUT /children/me/interests — bola onboarding'da tanlagan tag'lar    */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Bola onboarding ekranida tanlagan qiziqishlarni saqlaydi (PATCH-like
+   * semantika — to'liq array'ni almashtiradi). `userId` joriy bola User
+   * `id`'si (CHILD JWT) — undan `childUserId` orqali Child topiladi.
+   *
+   * Tavsiya tizimi shu yerdan o'qiydi (Books/Videos/Audiobooks/Contests
+   * feed'lari `interests` overlap orqali sort/filter qiladi).
+   */
+  async updateMyInterests(
+    userId: string,
+    dto: UpdateInterestsDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+      select: { id: true },
+    });
+    if (!child) {
+      throw new NotFoundException('Bola yozuvi topilmadi');
+    }
+
+    // Tag'larni normalize: trim + lowercase + bo'sh'larni olib tashlash.
+    const normalized = Array.from(
+      new Set(
+        dto.interests
+          .map((t) => t.trim().toLowerCase())
+          .filter((t) => t.length > 0),
+      ),
+    );
+
+    // Prisma client `interests` String[]'ni avtomatik tanigach `as any` olib
+    // tashlanadi. Migratsiya `20260611150000_add_child_interests` ko'chiriladi
+    // → `prisma generate` ishga tushadi → type to'g'rilanadi.
+    const updated = await this.prisma.child.update({
+      where: { id: child.id },
+      data: { interests: normalized } as any,
+      select: { id: true, interests: true } as any,
+    });
+
+    await this.audit.log(
+      userId,
+      'child',
+      'UPDATE',
+      child.id,
+      { interests: normalized },
+      reqMeta,
+    );
 
     return updated;
   }

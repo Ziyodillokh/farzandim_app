@@ -22,6 +22,7 @@ import 'package:farzandim_child/features/auth/presentation/providers/child_recov
 import 'package:farzandim_child/features/background/presentation/providers/background_service_provider.dart';
 import 'package:farzandim_child/features/device_info/presentation/providers/device_info_provider.dart';
 import 'package:farzandim_child/features/location/presentation/providers/location_provider.dart';
+import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
 import 'package:farzandim_child/features/sim_info/presentation/providers/sim_info_provider.dart';
@@ -418,6 +419,12 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       // 9. RestrictionService — agar oldin sozlamalarda yoqilgan bo'lsa.
       await safe('RestrictionService', _startRestrictionServiceIfReady);
 
+      // 10. Onboarding'da tanlangan qiziqishlarni backend'ga yuborish
+      // (pending bo'lsa). Xato bo'lsa keyingi pair/restart'da qayta urinadi.
+      await safe('InterestsSync', () async {
+        await _ref.read(interestsSyncServiceProvider).syncPendingInterests();
+      });
+
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -479,6 +486,13 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
 
       await _ref.read(backgroundServiceProvider).start();
       await _startRestrictionServiceIfReady();
+
+      // Onboarding qiziqishlarini backend'ga yuborish (pending bo'lsa).
+      try {
+        await _ref.read(interestsSyncServiceProvider).syncPendingInterests();
+      } catch (e) {
+        debugPrint('[DEV] InterestsSync skipped: $e');
+      }
 
       return true;
     } catch (e) {

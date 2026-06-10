@@ -1,14 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// OnboardingScreen — bola ilovasini birinchi marta ochganida 3 ta slayd
+// OnboardingScreen — bola ilovasini birinchi marta ochganida 4 ta slayd
 // ─────────────────────────────────────────────────────────────────────
 //
-// 3 ta slayd:
+// 4 ta slayd:
 //   1) "Ota-onangiz bilan birga"  — pairing tushuntiruvi
 //   2) "Joylashuv ulashasiz"      — nima uchun joylashuv
 //   3) "SOS — yordam tugmasi"     — favqulodda yordam tugmasi
+//   4) "Sevimli mavzularingiz?"  — qiziqishlar (chip grid, kamida 1 ta)
 //
-// Har slaydda: Faro maskot + sarlavha + 1 satr matn + page indicator
-// (•••) + "Keyingi" tugma. Oxirgi slaydda "Boshlash" → /pairing.
+// 1-3 slaydlarda: Faro maskot + sarlavha + 1 satr matn + page indicator
+// + "Keyingi" tugma.
+// 4-slaydda: sarlavha + 12 ta chip + page indicator + "Boshlash" tugma
+// (kamida 1 ta tanlanmaguncha disable). Tanlangan tag'lar SharedPreferences
+// `child_interests_pending_v1` ga yoziladi → pairing tugagach backend'ga
+// PUT /children/me/interests bilan yuboriladi (InterestsSyncService).
 //
 // SharedPreferences `onboarding_seen_v1` bilan bir martalik —
 // SplashScreen flag tekshiradi va qayta ko'rsatmaydi.
@@ -16,6 +21,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/onboarding/data/interest_options.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:farzandim_child/shared/widgets/primary_button.dart';
@@ -29,6 +35,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// foydalanuvchilarga qayta ko'rsatish mumkin.
 const String kOnboardingSeenKey = 'onboarding_seen_v1';
 
+const int _totalSlides = 4; // 3 ta info + 1 ta qiziqishlar
+
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
 
@@ -40,20 +48,23 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _controller = PageController();
   int _page = 0;
 
-  static const _slides = <_SlideData>[
-    _SlideData(
+  /// 4-chi slaydda tanlangan qiziqishlar (ID'lar).
+  final Set<String> _selectedInterests = {};
+
+  static const _infoSlides = <_InfoSlideData>[
+    _InfoSlideData(
       title: 'Ota-onangiz bilan birga',
-      body: 'Oilangiz sizning xavfsizligingizdan xabardor bo\'ladi.',
+      body: "Oilangiz sizning xavfsizligingizdan xabardor bo'ladi.",
       variant: FaroVariant.body,
     ),
-    _SlideData(
+    _InfoSlideData(
       title: 'Joylashuv ulashasiz',
-      body: 'Joylashuvingiz faqat ota-onangizga ko\'rinadi.',
+      body: "Joylashuvingiz faqat ota-onangizga ko'rinadi.",
       variant: FaroVariant.body,
     ),
-    _SlideData(
+    _InfoSlideData(
       title: 'SOS — yordam tugmasi',
-      body: 'Yordam kerak bo\'lsa, oilangizga bir tugma bilan xabar bering.',
+      body: "Yordam kerak bo'lsa, oilangizga bir tugma bilan xabar bering.",
       variant: FaroVariant.body,
     ),
   ];
@@ -64,7 +75,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     super.dispose();
   }
 
-  bool get _isLast => _page == _slides.length - 1;
+  bool get _isLast => _page == _totalSlides - 1;
+  bool get _isInterestsPage => _page == _totalSlides - 1;
+  bool get _canFinish => _selectedInterests.isNotEmpty;
 
   Future<void> _onPrimary() async {
     if (!_isLast) {
@@ -74,14 +87,33 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       );
       return;
     }
-    await _finishOnboarding();
+    if (!_canFinish) return; // tugma disable bo'lgan, lekin ehtiyot uchun
+    await _finishOnboarding(saveInterests: true);
   }
 
-  Future<void> _finishOnboarding() async {
+  Future<void> _finishOnboarding({required bool saveInterests}) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setBool(kOnboardingSeenKey, true);
+    if (saveInterests && _selectedInterests.isNotEmpty) {
+      // Bola pair bo'lmagan — JWT yo'q. Pending'da saqlaymiz.
+      // PairingNotifier pair tugagach InterestsSyncService chaqiradi.
+      await prefs.setStringList(
+        kPendingInterestsKey,
+        _selectedInterests.toList(),
+      );
+    }
     if (!mounted) return;
     context.go('/pairing');
+  }
+
+  void _toggleInterest(String id) {
+    setState(() {
+      if (_selectedInterests.contains(id)) {
+        _selectedInterests.remove(id);
+      } else {
+        _selectedInterests.add(id);
+      }
+    });
   }
 
   @override
@@ -93,12 +125,14 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           child: Column(
             children: [
               // Yuqori o'ng burchakda "O'tkazib yuborish" — onboarding'ni
-              // tezda yopish istasa (ayniqsa qayta o'rnatishda). Oxirgi
-              // slaydda yashiramiz — u yer "Boshlash" tugmasi.
+              // tezda yopish. Oxirgi slaydda (qiziqishlar) yashiramiz —
+              // u yer "Boshlash" tugmasi va minimum 1 ta tag majburiy.
               Align(
                 alignment: Alignment.centerRight,
                 child: TextButton(
-                  onPressed: _isLast ? null : _finishOnboarding,
+                  onPressed: _isLast
+                      ? null
+                      : () => _finishOnboarding(saveInterests: false),
                   child: Text(
                     _isLast ? '' : "O'tkazib yuborish",
                     style: const TextStyle(
@@ -113,18 +147,26 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Expanded(
                 child: PageView.builder(
                   controller: _controller,
-                  itemCount: _slides.length,
+                  itemCount: _totalSlides,
                   onPageChanged: (i) => setState(() => _page = i),
-                  itemBuilder: (_, i) => _SlideView(data: _slides[i]),
+                  itemBuilder: (_, i) {
+                    if (i < _infoSlides.length) {
+                      return _InfoSlideView(data: _infoSlides[i]);
+                    }
+                    return _InterestsSlideView(
+                      selected: _selectedInterests,
+                      onToggle: _toggleInterest,
+                    );
+                  },
                 ),
               ),
 
-              // Page indicator (• • •) — joriy slayd kattaroq.
+              // Page indicator (• • • •) — joriy slayd kattaroq.
               Padding(
                 padding: const EdgeInsets.only(bottom: 24, top: 8),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: List.generate(_slides.length, (i) {
+                  children: List.generate(_totalSlides, (i) {
                     final active = i == _page;
                     return AnimatedContainer(
                       duration: const Duration(milliseconds: 240),
@@ -148,7 +190,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 padding: const EdgeInsets.fromLTRB(24, 0, 24, 24),
                 child: PrimaryButton(
                   text: _isLast ? 'Boshlash' : 'Keyingi',
-                  onPressed: _onPrimary,
+                  onPressed: (_isInterestsPage && !_canFinish)
+                      ? null
+                      : _onPrimary,
                 ),
               ),
             ],
@@ -159,8 +203,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 }
 
-class _SlideData {
-  const _SlideData({
+// ───────────────────────────────────────────────────────────────────
+// Info slide (1-3) — Faro maskot + sarlavha + 1 satr
+// ───────────────────────────────────────────────────────────────────
+
+class _InfoSlideData {
+  const _InfoSlideData({
     required this.title,
     required this.body,
     required this.variant,
@@ -171,10 +219,10 @@ class _SlideData {
   final FaroVariant variant;
 }
 
-class _SlideView extends StatelessWidget {
-  const _SlideView({required this.data});
+class _InfoSlideView extends StatelessWidget {
+  const _InfoSlideView({required this.data});
 
-  final _SlideData data;
+  final _InfoSlideData data;
 
   @override
   Widget build(BuildContext context) {
@@ -221,6 +269,153 @@ class _SlideView extends StatelessWidget {
               .moveY(begin: 8, end: 0),
           const Spacer(),
         ],
+      ),
+    );
+  }
+}
+
+// ───────────────────────────────────────────────────────────────────
+// Interests slide (4) — chip grid bilan tanlash
+// ───────────────────────────────────────────────────────────────────
+
+class _InterestsSlideView extends StatelessWidget {
+  const _InterestsSlideView({
+    required this.selected,
+    required this.onToggle,
+  });
+
+  final Set<String> selected;
+  final void Function(String id) onToggle;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const SizedBox(height: 16),
+          // Kichik Faro yuqori — fokusni chip'larga qoldiramiz.
+          Center(
+            child: const FaroMascot(
+              variant: FaroVariant.faceExcited,
+              size: 96,
+            )
+                .animate()
+                .fadeIn(duration: 400.ms)
+                .scale(
+                  begin: const Offset(0.8, 0.8),
+                  end: const Offset(1, 1),
+                  curve: Curves.easeOutBack,
+                ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            'Sevimli mavzularingiz?',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 22,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+              height: 1.25,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            "Tanlovingizga qarab kitob, video va konkurs tavsiya qilamiz.",
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 14,
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          const SizedBox(height: 20),
+          Expanded(
+            child: SingleChildScrollView(
+              child: Wrap(
+                alignment: WrapAlignment.center,
+                spacing: 10,
+                runSpacing: 10,
+                children: [
+                  for (final opt in kInterestOptions)
+                    _InterestChip(
+                      option: opt,
+                      selected: selected.contains(opt.id),
+                      onTap: () => onToggle(opt.id),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(height: 8),
+        ],
+      ),
+    );
+  }
+}
+
+class _InterestChip extends StatelessWidget {
+  const _InterestChip({
+    required this.option,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final InterestOption option;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final bg = selected ? AppColors.primary : AppColors.bgSurface;
+    final fg = selected ? Colors.white : AppColors.textPrimary;
+    final border =
+        // ignore: deprecated_member_use
+        selected ? AppColors.primary : AppColors.primary.withOpacity(0.18);
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: border, width: 1.5),
+        boxShadow: selected
+            ? [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  color: AppColors.primaryShadow.withOpacity(0.35),
+                  blurRadius: 8,
+                  offset: const Offset(0, 3),
+                ),
+              ]
+            : const [],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(999),
+          child: Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(option.icon, size: 18, color: fg),
+                const SizedBox(width: 6),
+                Text(
+                  option.label,
+                  style: TextStyle(
+                    color: fg,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
       ),
     );
   }

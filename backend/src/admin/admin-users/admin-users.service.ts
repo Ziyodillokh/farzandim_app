@@ -231,6 +231,11 @@ export class AdminUsersService {
       },
       phone: child.childUser?.phone ?? null,
       parent: child.parent,
+      // Bola onboarding'da tanlagan qiziqishlar (chip'lar bilan ko'rsatiladi).
+      // `as any` — Prisma client `interests` qatorini regen qilmaguncha
+      // (`npx prisma generate`) TypeScript ko'rmaydi. Migratsiyadan keyin
+      // tabiiy ravishda type to'g'ri tushadi.
+      interests: ((child as any).interests as string[]) ?? [],
       profile: child.profile
         ? {
             xp: child.profile.xp,

@@ -29,6 +29,7 @@ import { ChildrenService } from './children.service';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
+import { UpdateInterestsDto } from './dto/update-interests.dto';
 import { CurrentUser, Roles, Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -132,6 +133,28 @@ export class ChildrenController {
     @Req() req: Request,
   ) {
     return this.childrenService.ring(id, user.userId, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  // Diqqat: `/me/interests` `:id` dan OLDIN — static route param'ga tushib
+  // qolmasin (`me` UUID emas, lekin `:id` bilan moslashadi).
+  @Put('me/interests')
+  @Roles('CHILD')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Joriy bola qiziqishlarini yangilash (onboarding'dan keladi)",
+  })
+  @ApiResponse({ status: 200, description: 'Qiziqishlar saqlandi' })
+  @ApiResponse({ status: 403, description: 'Faqat bola o\'zini yangilay oladi' })
+  @ApiResponse({ status: 404, description: 'Bola yozuvi topilmadi' })
+  async updateMyInterests(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateInterestsDto,
+    @Req() req: Request,
+  ) {
+    return this.childrenService.updateMyInterests(user.userId, dto, {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });

@@ -11,6 +11,7 @@ import '../../core/theme/app_text_styles.dart';
 import '../../core/widgets/common.dart';
 import '../../core/widgets/error_state_view.dart';
 import '../../core/widgets/skeletons.dart';
+import 'interest_labels.dart';
 
 class UsersPage extends StatefulWidget {
   const UsersPage({super.key});
@@ -111,14 +112,58 @@ class _UsersPageState extends State<UsersPage> {
           ? await _api.getChildProfile(u.id)
           : await _api.getUserById(u.id);
       if (!mounted) return;
+      // Bola bo'lsa onboarding qiziqishlarini chip'lar bilan ajratamiz —
+      // qolgani JSON'da ko'rinadi (backend `interests` qaytaradi).
+      final interests = u.kind == 'child'
+          ? (raw['interests'] as List?)?.cast<String>() ?? const <String>[]
+          : const <String>[];
       await showDialog<void>(
         context: context,
         builder: (ctx) => AlertDialog(
           title: Text(u.name),
-          content: SingleChildScrollView(
-            child: SelectableText(
-              JsonEncoder.withIndent('  ').convert(raw),
-              style: const TextStyle(fontSize: 12, fontFamily: 'monospace'),
+          content: SizedBox(
+            width: 520,
+            child: SingleChildScrollView(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (u.kind == 'child') ...[
+                    Text(
+                      'Qiziqishlar',
+                      style: AppTextStyles.sectionTitle,
+                    ),
+                    const SizedBox(height: 8),
+                    if (interests.isEmpty)
+                      Text(
+                        "Onboarding'da tanlanmagan",
+                        style: AppTextStyles.body.copyWith(
+                          color: AppColors.textSecondary,
+                          fontStyle: FontStyle.italic,
+                        ),
+                      )
+                    else
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: [
+                          for (final id in interests)
+                            _InterestChipReadOnly(id: id),
+                        ],
+                      ),
+                    const SizedBox(height: 16),
+                    const Divider(),
+                    const SizedBox(height: 8),
+                  ],
+                  SelectableText(
+                    JsonEncoder.withIndent('  ').convert(raw),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontFamily: 'monospace',
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           actions: [
@@ -472,6 +517,45 @@ class _UserVm {
       statusLabel: statusLabel,
       planLabel: planLabel,
       lastActivityAt: json['lastActivityAt']?.toString(),
+    );
+  }
+}
+
+/// Bola profil dialog'ida onboarding qiziqishlarini ko'rsatuvchi chip.
+/// Read-only — admin tomondan tahrirlash hozircha qo'llab-quvvatlanmaydi
+/// (kelajakda PATCH endpoint qo'shilsa, bu widget'ni interactiv qilamiz).
+class _InterestChipReadOnly extends StatelessWidget {
+  const _InterestChipReadOnly({required this.id});
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    final meta = labelFor(id);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+      decoration: BoxDecoration(
+        color: AppColors.primary.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: AppColors.primary.withValues(alpha: 0.35),
+          width: 1,
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(meta.icon, size: 16, color: AppColors.primary),
+          const SizedBox(width: 6),
+          Text(
+            meta.label,
+            style: AppTextStyles.body.copyWith(
+              color: AppColors.primary,
+              fontWeight: FontWeight.w600,
+              fontSize: 13,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

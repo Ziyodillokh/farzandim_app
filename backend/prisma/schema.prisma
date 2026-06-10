@@ -100,6 +100,13 @@ model Child {
   // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.
   blockUnknownSources Boolean @default(false) @map("block_unknown_sources")
 
+  // Bola qiziqishlari — onboarding'da tanlangan tag'lar (kitob, sport,
+  // multfilm, kosmos, ...). Tavsiya tizimi (Books/Videos/Audiobooks/Konkurs)
+  // shu tag'larga qarab kontent saralaydi. Admin paneldagi profilda ham
+  // ko'rinadi. ID format: ContentCategory.slug bilan moslashadi (kitob →
+  // book.school, multfilm → video.cartoon va h.k. interest_options.dart'da).
+  interests String[] @default([])
+
   // Stop-detection state machine (incremental — har location yozuvida yangilanadi)
   // anchor = joriy klaster boshlangan nuqta; openStop = ochiq to'xtash (agar bor).
   stopAnchorLat  Float?    @map("stop_anchor_lat")
