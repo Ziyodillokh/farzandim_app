@@ -2,17 +2,15 @@
 // GlassCard — "Teal Frosted" premium shisha karta (light + dark)
 // ─────────────────────────────────────────────────────────────────────
 //
-// SHAFFOF frosted shisha: orqa teal gradient fon BackdropFilter blur orqali
-// ko'rinib refraksiya qiladi (kartalar "tirik"). Qatlamlar (clip ichida,
-// past→tepa): BackdropFilter(blur) → yo'naltirilgan fill gradient (tepa
-// yorug') → teal tint → [sheen + specular glass highlight + glowing rim +
-// kontent]. Boy teal fon shaffof shishani premium qiladi (opaque asos
-// kerak emas).
+// Yarim-shaffof teal shisha: yarim-shaffof asos + yo'naltirilgan fill gradient
+// (tepa yorug') → teal tint → [sheen + specular highlight + glowing rim +
+// kontent]. Boy teal gradient fon ostidan ko'rinib premium his beradi.
 //
-// ⚠️ `BackdropFilter` GPU'ga og'ir — uzun grid'da `blur: false` (soxta shisha:
-// blur yo'q, biroz solidroq fill — deyarli bir xil, tez).
-import 'dart:ui';
-
+// ⚡ PERF: `BackdropFilter` (frost) ATAYIN ISHLATILMAYDI — u scrollda har kadrda
+// butun fonni qayta sampling qilib jank berardi. Silliq gradient fon ustida
+// frost deyarli sezilmaydi, shuning uchun yarim-shaffof asos bilan almashtirildi
+// (bir xil ko'rinish, lekin silliq 60fps). `blur`/`blurSigma` parametrlari
+// saqlangan (API mosligi) — ammo endi e'tiborga olinmaydi (no-op).
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
@@ -164,36 +162,18 @@ class GlassCard extends StatelessWidget {
       ),
     );
 
-    if (blur) {
-      // 3a) DARK: blur ICHIDA yarim-shaffof teal asos — scroll'da BackdropFilter
-      //     fon (gradient/yog'du)ning turli qismini tutib kartani "miltillatishi"
-      //     ni BARQARORLASHTIRADI (kartalar scrollda qoraymaydi). Shisha hissi
-      //     qoladi (asos yarim-shaffof, blur ham ko'rinadi).
-      if (isDark) {
-        surface = DecoratedBox(
-          decoration: BoxDecoration(
-            color: AppColors.surface.withValues(alpha: 0.45),
-          ),
-          child: surface,
-        );
-      }
-      // 3b) Haqiqiy frost (BackdropFilter) — orqa teal gradient shisha orqali
-      //     ko'rinib refraksiya qiladi (dark: teal frosted; light: oq frosted).
-      surface = BackdropFilter(
-        filter: ImageFilter.blur(sigmaX: blurSigma, sigmaY: blurSigma),
-        child: surface,
-      );
-    } else {
-      // Frost'siz (grid/tile) — biroz solidroq fill (deyarli bir xil, tez).
-      surface = DecoratedBox(
-        decoration: BoxDecoration(
-          color: isDark
-              ? AppColors.surface.withValues(alpha: 0.5)
-              : Colors.white.withValues(alpha: 0.10),
-        ),
-        child: surface,
-      );
-    }
+    // 3) ⚡ PERF: BackdropFilter YO'Q. Frost scrollda har kadrda butun fonni
+    //    qayta sampling qilib JANK berardi. Silliq teal gradient fon ustida
+    //    frost deyarli sezilmaydi — o'rniga yarim-shaffof asos + fill gradient +
+    //    rim BIR XIL premium ko'rinish beradi, lekin SILLIQ va TEZ scroll.
+    surface = DecoratedBox(
+      decoration: BoxDecoration(
+        color: isDark
+            ? AppColors.surface.withValues(alpha: 0.5)
+            : Colors.white.withValues(alpha: 0.10),
+      ),
+      child: surface,
+    );
 
     // 1) Soya (clip TASHQARIDA) + 2) clip.
     final shadows = elevation == GlassElevation.flat
