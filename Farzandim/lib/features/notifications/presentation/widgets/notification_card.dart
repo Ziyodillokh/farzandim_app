@@ -44,12 +44,21 @@ class NotificationCard extends StatelessWidget {
     final title = notification.title.trim().isNotEmpty
         ? notification.title
         : notification.message;
+    // SOS — eng muhim: qizil tusli fon + qizil chegara bilan ajralib turadi.
+    final isSos = notification.type == NotificationType.sos;
 
     return Material(
-      color: AppColors.surface,
+      color: isSos
+          ? AppColors.error.withValues(alpha: 0.12)
+          : AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: radius,
-        side: BorderSide(color: AppColors.border),
+        side: BorderSide(
+          color: isSos
+              ? AppColors.error.withValues(alpha: 0.55)
+              : AppColors.border,
+          width: isSos ? 1.5 : 1,
+        ),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
