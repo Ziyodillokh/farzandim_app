@@ -14,16 +14,26 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'dart:developer' as developer;
+
 import 'package:dio/dio.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 import 'package:permission_handler/permission_handler.dart';
+
+void _qrLog(String msg) {
+  // Browser console + IDE devlog'da ko'rinadi.
+  // ignore: avoid_print
+  print('[QR] $msg');
+  developer.log(msg, name: 'QR');
+}
 
 class QrScannerScreen extends ConsumerStatefulWidget {
   const QrScannerScreen({super.key});
@@ -33,9 +43,11 @@ class QrScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
+  // Mobile qurilmalar uchun back kamera (QR uzoqroqdan ko'rinadi); desktop/web
+  // brauzerda ko'pincha faqat front kamera bo'ladi → kIsWeb'da front tanlanadi.
   final MobileScannerController _controller = MobileScannerController(
     detectionSpeed: DetectionSpeed.noDuplicates,
-    facing: CameraFacing.back,
+    facing: kIsWeb ? CameraFacing.front : CameraFacing.back,
   );
 
   bool _processing = false;
@@ -50,6 +62,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   @override
   void initState() {
     super.initState();
+    _qrLog('initState: kIsWeb=$kIsWeb, controller created');
     _ensureCameraPermission();
   }
 
@@ -61,41 +74,62 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   Future<void> _ensureCameraPermission() async {
     if (kIsWeb) {
-      // Web: brauzer prompt'i mobile_scanner ichida ishlaydi.
+      _qrLog(
+        'ensureCameraPermission: kIsWeb=true → kamera ruxsati o\'tkazib '
+        'yuboriladi (Web paste UI ishlatiladi)',
+      );
       setState(() => _cameraGranted = true);
       return;
     }
     var status = await Permission.camera.status;
+    _qrLog('ensureCameraPermission: initial status=$status');
     if (status.isDenied || status.isRestricted || status.isLimited) {
       status = await Permission.camera.request();
+      _qrLog('ensureCameraPermission: after request status=$status');
     }
     if (!mounted) return;
     setState(() => _cameraGranted = status.isGranted);
     if (status.isGranted) {
-      // Ruxsat olingach kamera'ni qo'lda boshlaymiz — ba'zi
-      // qurilmalarda mobile_scanner mount paytida ruxsat yo'q
-      // bo'lsa keyin avtomatik qayta urinmaydi.
       try {
         await _controller.start();
-      } catch (_) {/* ignore — UI o'zi qayta urinishi mumkin */}
+        _qrLog('ensureCameraPermission: controller.start() OK');
+      } catch (e) {
+        _qrLog('ensureCameraPermission: controller.start() ERROR: $e');
+      }
     }
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
-    if (_processing) return;
-
     final raw = capture.barcodes.firstOrNull?.rawValue;
     if (raw == null || raw.isEmpty) return;
+    await _processRawToken(raw);
+  }
 
-    // Format: `farzandim:repair:{token}` yoki to'g'ridan-to'g'ri token
+  /// QR'dan kelgan yoki qo'lda kiritilgan matnni token sifatida tekshirib
+  /// `/auth/repair-redeem` chaqiradi. `farzandim:repair:` prefiksli to'liq
+  /// QR matni ham, to'g'ridan-to'g'ri token ham qabul qilinadi.
+  Future<void> _processRawToken(String raw) async {
+    _qrLog('processRawToken: raw="${raw.length > 50 ? '${raw.substring(0, 50)}...' : raw}" '
+        '(len=${raw.length}), processing=$_processing');
+    if (_processing) {
+      _qrLog('processRawToken: SKIP — already processing');
+      return;
+    }
+
+    final trimmed = raw.trim();
     String? token;
-    if (raw.startsWith('farzandim:repair:')) {
-      token = raw.substring('farzandim:repair:'.length);
-    } else if (raw.length >= 16 && raw.length <= 64) {
-      token = raw;
+    if (trimmed.startsWith('farzandim:repair:')) {
+      token = trimmed.substring('farzandim:repair:'.length);
+      _qrLog('processRawToken: format=farzandim:repair:, token len=${token.length}');
+    } else if (trimmed.length >= 16 && trimmed.length <= 64) {
+      token = trimmed;
+      _qrLog('processRawToken: format=plain, token len=${token.length}');
+    } else {
+      _qrLog('processRawToken: format=UNKNOWN — len=${trimmed.length}');
     }
 
     if (token == null || token.isEmpty) {
+      _qrLog('processRawToken: token NULL or empty — show error');
       setState(() => _status = 'QR kod tanilmadi. To\'g\'ri kodni skanerlang.');
       return;
     }
@@ -104,6 +138,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       _processing = true;
       _status = 'Ulanmoqda...';
     });
+    _qrLog('processRawToken: → POST /auth/repair-redeem');
 
     try {
       final dio = ref.read(dioClientProvider);
@@ -114,6 +149,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           'platform': kIsWeb ? 'web' : 'mobile',
         },
       );
+      _qrLog('processRawToken: ← backend statusCode=${res.statusCode}');
 
       final data = res.data;
       if (data == null) throw Exception('Backend bo\'sh javob qaytardi');
@@ -159,13 +195,17 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       );
       context.go('/dashboard');
     } on DioException catch (e) {
+      _qrLog('processRawToken: DioException — '
+          'status=${e.response?.statusCode}, body=${e.response?.data}, '
+          'message=${e.message}');
       final msg = _friendlyError(e);
       if (!mounted) return;
       setState(() {
         _processing = false;
         _status = msg;
       });
-    } catch (e) {
+    } catch (e, st) {
+      _qrLog('processRawToken: unexpected error: $e\n$st');
       if (!mounted) return;
       setState(() {
         _processing = false;
@@ -185,6 +225,34 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
+    _qrLog('build: kIsWeb=$kIsWeb, cameraGranted=$_cameraGranted, '
+        'processing=$_processing, status=$_status');
+    // Desktop/Web brauzerlarda `BarcodeDetector` qo'llab-quvvatlanmaydi yoki
+    // laptop kamerasi qulay emas — manual paste UI ko'rsatamiz.
+    if (kIsWeb) {
+      _qrLog('build: → Web paste UI');
+      return Scaffold(
+        backgroundColor: Colors.black,
+        appBar: AppBar(
+          backgroundColor: Colors.transparent,
+          elevation: 0,
+          leading: IconButton(
+            icon: const Icon(Icons.close, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          title: const Text(
+            "QR token'ni kiriting",
+            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+          ),
+        ),
+        body: _WebPasteTokenView(
+          processing: _processing,
+          status: _status,
+          onSubmit: _processRawToken,
+        ),
+      );
+    }
+
     return Scaffold(
       backgroundColor: Colors.black,
       appBar: AppBar(
@@ -392,6 +460,153 @@ class _PermissionDeniedView extends StatelessWidget {
                 child: const Text('Sozlamalarni ochish'),
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Web fallback: kamera o'rniga QR token'ni qo'lda kiritish.
+/// Parent app'da QR generatsiya qilingach, "Nusxa olish" tugmasi orqali
+/// token'ni clipboard'ga olish va shu yerga joylash mumkin.
+class _WebPasteTokenView extends StatefulWidget {
+  const _WebPasteTokenView({
+    required this.processing,
+    required this.status,
+    required this.onSubmit,
+  });
+
+  final bool processing;
+  final String? status;
+  final Future<void> Function(String) onSubmit;
+
+  @override
+  State<_WebPasteTokenView> createState() => _WebPasteTokenViewState();
+}
+
+class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
+  final _controller = TextEditingController();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.all(24),
+        child: Column(
+          children: [
+            const Icon(Icons.qr_code_2, color: Colors.white70, size: 88),
+            const SizedBox(height: 16),
+            const Text(
+              "Brauzerda kamera QR scanner mavjud emas.\n"
+              "Parent ilovasidagi QR matnini shu yerga joylang.",
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
+            ),
+            const SizedBox(height: 24),
+            // Clipboard'dan tezkor paste — bola parent ilovasidan
+            // "Token nusxa olish" tugmasini bosgach shu yerga avtomatik
+            // joylaydi (web/desktop, mobile uchun ham qulay).
+            Align(
+              alignment: Alignment.centerRight,
+              child: TextButton.icon(
+                onPressed: () async {
+                  final data =
+                      await Clipboard.getData(Clipboard.kTextPlain);
+                  final txt = data?.text?.trim();
+                  if (txt == null || txt.isEmpty) return;
+                  _controller.text = txt;
+                  _controller.selection = TextSelection.collapsed(
+                    offset: _controller.text.length,
+                  );
+                },
+                icon: const Icon(
+                  Icons.content_paste_rounded,
+                  size: 16,
+                  color: Colors.white70,
+                ),
+                label: const Text(
+                  'Clipboard',
+                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                ),
+              ),
+            ),
+            const SizedBox(height: 4),
+            TextField(
+              controller: _controller,
+              maxLines: 3,
+              autofocus: true,
+              style: const TextStyle(color: Colors.white, fontSize: 14),
+              decoration: InputDecoration(
+                hintText: 'farzandim:repair:... yoki to\'g\'ridan-to\'g\'ri token',
+                hintStyle: const TextStyle(color: Colors.white38),
+                filled: true,
+                // ignore: deprecated_member_use
+                fillColor: Colors.white.withOpacity(0.05),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(color: Colors.white24),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: const BorderSide(
+                    color: Color(0xFF14B8A6),
+                    width: 2,
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 20),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton(
+                onPressed: widget.processing
+                    ? null
+                    : () => widget.onSubmit(_controller.text),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF14B8A6),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+                child: widget.processing
+                    ? const SizedBox(
+                        height: 20,
+                        width: 20,
+                        child: CircularProgressIndicator(
+                          color: Colors.white,
+                          strokeWidth: 2,
+                        ),
+                      )
+                    : const Text(
+                        'Ulanish',
+                        style: TextStyle(
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+              ),
+            ),
+            if (widget.status != null) ...[
+              const SizedBox(height: 16),
+              Text(
+                widget.status!,
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: Colors.amber, fontSize: 13),
+              ),
+            ],
           ],
         ),
       ),

@@ -25,6 +25,7 @@ import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 
@@ -185,6 +186,11 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
               _buildQrArea(),
               const SizedBox(height: 20),
               _buildCountdown(),
+              const SizedBox(height: 12),
+              // Token nusxa olish — bola web/desktop ilovasida kamerasiz
+              // ulanish (QR scanner o'rniga matn joylash uchun). Mobil
+              // qurilmada ham foydali — yondagi qurilmaga jo'natish uchun.
+              _buildCopyTokenButton(),
               const SizedBox(height: 24),
               _buildHints(),
               const SizedBox(height: 24),
@@ -250,6 +256,36 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           // ignore: deprecated_member_use
           foregroundColor: Colors.black,
           errorCorrectionLevel: QrErrorCorrectLevel.M,
+        ),
+      ),
+    );
+  }
+
+  Widget _buildCopyTokenButton() {
+    if (_token == null) return const SizedBox.shrink();
+    return Center(
+      child: TextButton.icon(
+        onPressed: () async {
+          await Clipboard.setData(
+            ClipboardData(text: 'farzandim:repair:$_token'),
+          );
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: const Text(
+                'Token nusxa olindi — bola ilovasiga joylang',
+              ),
+              backgroundColor: AppColors.primary,
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 2),
+            ),
+          );
+        },
+        icon: const Icon(Icons.content_copy_rounded, size: 18),
+        label: const Text("Token'ni nusxa olish"),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.primary,
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         ),
       ),
     );
