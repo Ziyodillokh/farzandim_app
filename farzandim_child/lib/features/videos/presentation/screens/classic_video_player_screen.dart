@@ -11,6 +11,7 @@ import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:async';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/videos/data/video_controller_factory.dart';
 import 'package:farzandim_child/features/videos/data/models/player_settings.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/player_providers.dart';
@@ -135,9 +136,7 @@ class _ClassicVideoPlayerScreenState
         await old.dispose();
       }
 
-      _controller = VideoPlayerController.networkUrl(
-        Uri.parse(widget.video.videoUrl),
-      );
+      _controller = videoControllerFor(widget.video.videoUrl);
       _hasController = true;
       await _controller.initialize().timeout(const Duration(seconds: 20));
       if (!mounted) {

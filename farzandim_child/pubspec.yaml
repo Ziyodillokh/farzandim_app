@@ -151,6 +151,7 @@ flutter:
     - assets/icons/         # child_logo_icon.png, child_app_logo.png
     - assets/mascot/        # FARO maskot (PNG + SVG) — 2026-05-14
     - assets/translations/  # uz.json, ru.json, en.json — easy_localization
+    - assets/videos/        # sample.mp4 — mock video placeholder (offline)
 
 # Launcher icon konfiguratsiyasi (flutter_launcher_icons)
 flutter_launcher_icons:

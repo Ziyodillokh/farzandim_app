@@ -18,16 +18,18 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 class MockVideos {
   MockVideos._();
 
-  // Google ochiq sample CDN — uzun klassik videolar.
-  static const String _cdn =
-      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample';
-  static const String _sintel = '$_cdn/Sintel.mp4';
-  static const String _bunny = '$_cdn/BigBuckBunny.mp4';
-  static const String _movie300 = '$_cdn/ElephantsDream.mp4';
-
-  // Qisqa klassik/reels samplelar (~15-60s) — bir xil ishonchli CDN.
-  static const String _bunnyReel = '$_cdn/ForBiggerBlazes.mp4';
-  static const String _jellyfishReel = '$_cdn/ForBiggerJoyrides.mp4';
+  // Namuna (placeholder) video — APK ichiga BUNDLE qilingan, OFFLINE ham
+  // o'ynaydi. Sabab: tashqi CDN'lar (media.w3.org, googleapis, ...) UZ
+  // tarmoqlaridan ishonchli yetib bormaydi (sekin yoki 403) → har video
+  // yiqilardi. Asset esa har doim ishlaydi. Real videolar kelajakda admin
+  // panel orqali network URL bilan keladi — player `http(s)` URL'ni
+  // avtomatik tarmoqdan o'qiydi (videoControllerFor()).
+  static const String _sample = 'assets/videos/sample.mp4';
+  static const String _sintel = _sample;
+  static const String _bunny = _sample;
+  static const String _movie300 = _sample;
+  static const String _bunnyReel = _sample;
+  static const String _jellyfishReel = _sample;
 
   static final List<VideoModel> all = [
     const VideoModel(
