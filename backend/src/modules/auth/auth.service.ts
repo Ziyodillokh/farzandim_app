@@ -4,12 +4,15 @@ import {
   ConflictException,
   NotFoundException,
   BadRequestException,
+  BadGatewayException,
+  ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
+import { SmsService } from '../../common/sms/sms.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -56,7 +59,105 @@ export class AuthService {
     private readonly realtime: RealtimeGateway,
     private readonly telegramService: TelegramService,
     private readonly socialAuth: SocialAuthService,
+    private readonly sms: SmsService,
   ) {}
+
+  /* ------------------------------------------------------------------ */
+  /*  Register OTP (public — auth bo'lmasligi mumkin)                    */
+  /* ------------------------------------------------------------------ */
+  // Frontend ko'p bosqichli sign-up UI uchun: telefon → SMS kod →
+  // (verify) → profil (parol, ism). users.service.ts:200 esa
+  // allaqachon login bo'lgan user uchun telefonni biriktirish flow'i.
+
+  private static readonly REGISTER_OTP_TTL_MS = 5 * 60 * 1000;
+  private static readonly REGISTER_OTP_RESEND_COOLDOWN_MS = 60 * 1000;
+  private static readonly REGISTER_OTP_MAX_ATTEMPTS = 5;
+
+  /// Verify'dan keyin `verifiedAt` yozilgan kod necha vaqt ichida `register()`
+  /// chaqiruvini ochib turishi mumkin. 10 daqiqa — foydalanuvchi parol terish
+  /// + ism kiritish uchun yetarli, lekin keyin qayta SMS so'rab tasdiqlatadi.
+  private static readonly REGISTER_OTP_VERIFIED_VALIDITY_MS = 10 * 60 * 1000;
+
+  async sendRegisterOtp(phone: string): Promise<{ ok: true }> {
+    if (!this.sms.isSmsConfigured()) {
+      throw new ServiceUnavailableException('SMS xizmati hozircha mavjud emas');
+    }
+
+    const existing = await this.prisma.user.findUnique({ where: { phone } });
+    if (existing) {
+      throw new ConflictException("Bu telefon raqami allaqachon ro'yxatdan o'tgan");
+    }
+
+    const recent = await this.prisma.otpCode.findFirst({
+      where: {
+        phone,
+        createdAt: {
+          gt: new Date(Date.now() - AuthService.REGISTER_OTP_RESEND_COOLDOWN_MS),
+        },
+      },
+    });
+    if (recent) {
+      throw new BadRequestException('Kod yaqinda yuborildi. Biroz kuting.');
+    }
+
+    const code = String(Math.floor(10_000 + Math.random() * 90_000));
+
+    await this.prisma.otpCode.create({
+      data: {
+        phone,
+        code,
+        expiresAt: new Date(Date.now() + AuthService.REGISTER_OTP_TTL_MS),
+      },
+    });
+
+    const smsResult = await this.sms.sendRegisterCode(phone, code);
+    if (!smsResult.sent) {
+      this.logger.error(
+        { phone, err: smsResult.error },
+        'Register OTP SMS yuborilmadi',
+      );
+      throw new BadGatewayException("SMS yuborib bo'lmadi");
+    }
+
+    return { ok: true };
+  }
+
+  async verifyRegisterOtp(
+    phone: string,
+    code: string,
+  ): Promise<{ ok: true }> {
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        phone,
+        verifiedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otp) {
+      throw new BadRequestException('Kod topilmadi yoki muddati tugagan');
+    }
+    if (otp.attempts >= AuthService.REGISTER_OTP_MAX_ATTEMPTS) {
+      throw new BadRequestException(
+        "Juda ko'p urinish. Yangi kod so'rang.",
+      );
+    }
+    if (otp.code !== code) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Noto'g'ri kod");
+    }
+
+    await this.prisma.otpCode.update({
+      where: { id: otp.id },
+      data: { verifiedAt: new Date() },
+    });
+
+    return { ok: true };
+  }
 
   // ── Device-link (QR orqali 2-qurilma ulash) ──
   // Qisqa muddatli kodlar in-memory saqlanadi (DB kerak emas — backend bitta
@@ -405,6 +506,29 @@ export class AuthService {
           "Bu telefon raqam allaqachon ro'yxatdan o'tgan",
         );
       }
+
+      // ── SMS OTP tasdiqlanganligi MAJBURIY ──
+      // Avval `POST /auth/verify-register-otp` to'g'ri kod bilan chaqirilgan
+      // bo'lishi shart — DB'da `verifiedAt`'i to'lgan, 10 daqiqada eskirmagan
+      // yozuv bor. Bu yo'q bo'lsa, foydalanuvchi `/register`'ga to'g'ridan
+      // murojaat qilib SMS verification'ni chetlab o'tishga harakat qilyapti.
+      const verifiedOtp = await this.prisma.otpCode.findFirst({
+        where: {
+          phone,
+          verifiedAt: {
+            not: null,
+            gt: new Date(
+              Date.now() - AuthService.REGISTER_OTP_VERIFIED_VALIDITY_MS,
+            ),
+          },
+        },
+        orderBy: { verifiedAt: 'desc' },
+      });
+      if (!verifiedOtp) {
+        throw new UnauthorizedException(
+          "Telefon raqam SMS orqali tasdiqlanmagan. Iltimos, kodni qayta tasdiqlang.",
+        );
+      }
     }
 
     const passwordHash = await hashPassword(dto.password);
@@ -418,6 +542,15 @@ export class AuthService {
         name: dto.name?.trim() || null,
       },
     });
+
+    // OTP'ni ishlatib bo'ldik — DB'dan tozalab qo'yamiz (replay attack
+    // himoyasi: bir tasdiqlash bilan bir necha akkaunt yaratish mumkin
+    // bo'lmasligi uchun). Phone'siz registration uchun no-op.
+    if (phone) {
+      await this.prisma.otpCode
+        .deleteMany({ where: { phone } })
+        .catch(() => undefined);
+    }
 
     await this.audit.log(
       user.id,
