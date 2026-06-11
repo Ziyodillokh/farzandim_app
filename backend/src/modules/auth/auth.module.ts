@@ -4,6 +4,7 @@ import { PassportModule } from '@nestjs/passport';
 import { ConfigService } from '@nestjs/config';
 import { FcmModule } from '../../common/fcm/fcm.module';
 import { RealtimeModule } from '../../common/realtime/realtime.module';
+import { SmsModule } from '../../common/sms/sms.module';
 import { EnvConfig } from '../../common/config/env.schema';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
@@ -26,6 +27,11 @@ import { SocialAuthService } from './strategies/social-auth.service';
     }),
     FcmModule,
     RealtimeModule,
+    // SmsService — register OTP majburiyligi uchun AuthService injektsiyada
+    // chaqiriladi (sendRegisterOtp/sms.isSmsConfigured). Import qilinmasa
+    // Nest DI startup'da "Nest can't resolve dependencies" xato beradi va
+    // backend service systemd "activating" loop'ga tushadi → deploy fail.
+    SmsModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, ConsumerJwtStrategy, TelegramService, SocialAuthService],
