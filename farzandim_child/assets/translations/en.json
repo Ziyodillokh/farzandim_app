@@ -28,6 +28,56 @@
     "startButton": "Get started",
     "codeHint": "Get the code from your parents"
   },
+  "onboarding": {
+    "skip": "Skip",
+    "next": "Next",
+    "start": "Get started",
+    "startWithCount": "Get started ({count})",
+    "minSelect": "Pick at least 1",
+    "selectedCount": "{count} selected",
+    "slide1": {
+      "tag": "FAMILY",
+      "title": "Together with your family",
+      "body": "Your family will know you are safe."
+    },
+    "slide2": {
+      "tag": "LOCATION",
+      "title": "Share your location",
+      "body": "Only your parents can see your location."
+    },
+    "slide3": {
+      "tag": "SOS",
+      "title": "SOS — help button",
+      "body": "Reach your family with one tap if you need help."
+    },
+    "interests": {
+      "title": "What do you love?",
+      "subtitle": "We'll recommend books, videos and contests for you.",
+      "sectionTitle": "Your interests",
+      "editTitle": "Edit interests",
+      "saved": "Interests saved",
+      "saveFailed": "Failed to save"
+    }
+  },
+  "interests": {
+    "book": "Books",
+    "cartoon": "Cartoons",
+    "sport": "Sport",
+    "music": "Music",
+    "animals": "Animals",
+    "space": "Space",
+    "tech": "Technology",
+    "art": "Art",
+    "science": "Science",
+    "games": "Games",
+    "travel": "Travel",
+    "food": "Food"
+  },
+  "recommend": {
+    "forYou": "Recommended for you",
+    "basedOnInterests": "Based on your interests",
+    "empty": "No recommendations yet"
+  },
   "pairing": {
     "appName": "Parvoz",
     "subtitle": "Enter the code from your parent's app",

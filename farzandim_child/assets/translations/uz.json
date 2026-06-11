@@ -28,6 +28,56 @@
     "startButton": "Boshlash",
     "codeHint": "Ota-onangizdan kod oling"
   },
+  "onboarding": {
+    "skip": "O'tkazib yuborish",
+    "next": "Keyingi",
+    "start": "Boshlash",
+    "startWithCount": "Boshlash ({count})",
+    "minSelect": "Kamida 1 ta tanlang",
+    "selectedCount": "{count} ta tanlandi",
+    "slide1": {
+      "tag": "OILA",
+      "title": "Ota-onangiz bilan birga",
+      "body": "Oilangiz sizning xavfsizligingizdan xabardor bo'ladi."
+    },
+    "slide2": {
+      "tag": "JOYLASHUV",
+      "title": "Joylashuv ulashasiz",
+      "body": "Joylashuvingiz faqat ota-onangizga ko'rinadi."
+    },
+    "slide3": {
+      "tag": "SOS",
+      "title": "SOS — yordam tugmasi",
+      "body": "Yordam kerak bo'lsa, oilangizga bir tugma bilan xabar bering."
+    },
+    "interests": {
+      "title": "Sevimli mavzularingiz?",
+      "subtitle": "Tanlovingizga qarab kitob, video va konkurs tavsiya qilamiz.",
+      "sectionTitle": "Qiziqishlaringiz",
+      "editTitle": "Qiziqishlarni o'zgartirish",
+      "saved": "Qiziqishlar saqlandi",
+      "saveFailed": "Saqlash xatosi"
+    }
+  },
+  "interests": {
+    "book": "Kitoblar",
+    "cartoon": "Multfilmlar",
+    "sport": "Sport",
+    "music": "Musiqa",
+    "animals": "Hayvonlar",
+    "space": "Kosmos",
+    "tech": "Texnologiya",
+    "art": "San'at",
+    "science": "Fan",
+    "games": "O'yinlar",
+    "travel": "Sayohat",
+    "food": "Ovqat"
+  },
+  "recommend": {
+    "forYou": "Siz uchun tavsiya",
+    "basedOnInterests": "Qiziqishlaringizga asoslangan",
+    "empty": "Hozircha tavsiya yo'q"
+  },
   "pairing": {
     "appName": "Parvoz:",
     "subtitle": "Ota-ona nazorati ilovasida olingan kodni kiriting",

@@ -14,6 +14,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/theme_mode_provider.dart';
+import 'package:farzandim_child/features/onboarding/presentation/widgets/interests_edit_sheet.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -125,6 +126,13 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     iconColor: AppColors.secondary,
                     title: 'settings.editProfile'.tr(),
                     onTap: () => context.push('/account-edit'),
+                  ),
+                  const _Divider(),
+                  _NavTile(
+                    icon: Icons.interests_rounded,
+                    iconColor: AppColors.primary,
+                    title: 'onboarding.interests.editTitle'.tr(),
+                    onTap: () => InterestsEditSheet.show(context),
                   ),
                 ],
               ),

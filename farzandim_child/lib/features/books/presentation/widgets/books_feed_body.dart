@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +28,10 @@ class BooksFeedBody extends ConsumerWidget {
       ),
       data: (books) {
         if (books.isEmpty) return const _EmptyView();
+        // Onboarding qiziqishlariga asoslangan tavsiya — bo'sh bo'lsa eng
+        // mashhur kitoblar (`reads desc`) chiqadi → har doim biror narsa
+        // ko'rsatadi. `recommendedBooksProvider` overlap'ni hisoblaydi.
+        final recommended = ref.watch(recommendedBooksProvider);
         final school = books.where((b) => b.category == 'school').toList();
         final adabiyot = books.where((b) => b.category == 'adabiyot').toList();
         final other = books
@@ -40,6 +45,14 @@ class BooksFeedBody extends ConsumerWidget {
           child: ListView(
             padding: contentPadding ?? const EdgeInsets.only(bottom: 180, top: 8),
             children: [
+              if (recommended.isNotEmpty) ...[
+                BookSection(
+                  title: 'recommend.forYou'.tr(),
+                  books: recommended,
+                  onTap: (b) => _openPdf(context, b),
+                ),
+                const SizedBox(height: 20),
+              ],
               BookSection(
                 title: 'Hammasi',
                 books: books,

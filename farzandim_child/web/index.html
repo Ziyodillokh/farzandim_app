@@ -18,6 +18,16 @@
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">
 
+  <!-- Dev cache busting: brauzerga eski main.dart.js/flutter_service_worker.js
+       saqlamasligini ayttiramiz. Build hash o'zgarganida darhol yangi
+       versiya yuklanadi (eski build artifact'lar bilan eskirgan UI ko'rinish
+       muammosini oldini oladi). Prod'da CDN va ETag bilan moslashtirish
+       mumkin, lekin Flutter web allaqachon `?v=hash` query parameter
+       qo'shadi → bu tag amaliyotni faqat tezlashtiradi. -->
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+
   <!-- iOS meta tags & icons -->
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black">
@@ -105,6 +115,18 @@
       <img class="center" aria-hidden="true" src="splash/img/light-1x.png" alt="">
   </picture>
   
+  <!-- mobile_scanner Web polyfill: BarcodeDetector API faqat Chrome
+       Android'da default ishlaydi — desktop brauzerlarda zbar-wasm polyfill -->
+  <script src="https://fastly.jsdelivr.net/npm/@undecaf/zbar-wasm@0.10.1/dist/index.js"></script>
+  <script src="https://fastly.jsdelivr.net/npm/@undecaf/barcode-detector-polyfill@0.9.21/dist/index.js"></script>
+  <script type="application/javascript">
+    try {
+      window["BarcodeDetector"].getSupportedFormats();
+    } catch {
+      window["BarcodeDetector"] = barcodeDetectorPolyfill.BarcodeDetectorPolyfill;
+    }
+  </script>
+
   <!--
     You can customize the "flutter_bootstrap.js" script.
     This is useful to provide a custom configuration to the Flutter loader

@@ -4,7 +4,7 @@
 //
 // 12 ta umumiy qiziqish. Har biri:
 //   - `id`           — backend'ga yuboriladi (interests array element)
-//   - `label`        — UI'da ko'rinadigan o'zbekcha nomi
+//   - `labelKey`     — easy_localization kaliti (`interests.book` ...)
 //   - `icon`         — Material icon (chip ichida ko'rsatiladi)
 //   - `contentTags`  — tavsiya tizimi shu tag'larga qarab kontent saralaydi
 //                       (Books/Videos/Audiobooks/Olimpiada `category` slug'i)
@@ -14,23 +14,29 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 class InterestOption {
   const InterestOption({
     required this.id,
-    required this.label,
+    required this.labelKey,
     required this.icon,
     required this.contentTags,
   });
 
   final String id;
-  final String label;
+
+  /// easy_localization kaliti — runtime'da `.tr()` bilan o'zgaradi.
+  final String labelKey;
   final IconData icon;
 
   /// ContentCategory.slug'lar — `id` `interests` array'ida bo'lsa shu
   /// kategoriyalardagi kontent tavsiya etiladi (overlap-based sort).
   final List<String> contentTags;
+
+  /// UI'da chiqadigan tarjima qilingan nom.
+  String label() => labelKey.tr();
 }
 
 /// Onboarding chip grid'da chiqadigan qat'iy ro'yxat.
@@ -38,73 +44,73 @@ class InterestOption {
 const List<InterestOption> kInterestOptions = [
   InterestOption(
     id: 'book',
-    label: 'Kitoblar',
+    labelKey: 'interests.book',
     icon: Icons.menu_book_rounded,
-    contentTags: ['book', 'adabiyot', 'tarjima'],
+    contentTags: ['book', 'adabiyot', 'tarjima', 'school'],
   ),
   InterestOption(
     id: 'cartoon',
-    label: 'Multfilmlar',
+    labelKey: 'interests.cartoon',
     icon: Icons.movie_filter_rounded,
     contentTags: ['cartoon', 'animation'],
   ),
   InterestOption(
     id: 'sport',
-    label: 'Sport',
+    labelKey: 'interests.sport',
     icon: Icons.sports_soccer_rounded,
     contentTags: ['sport'],
   ),
   InterestOption(
     id: 'music',
-    label: 'Musiqa',
+    labelKey: 'interests.music',
     icon: Icons.music_note_rounded,
     contentTags: ['music'],
   ),
   InterestOption(
     id: 'animals',
-    label: 'Hayvonlar',
+    labelKey: 'interests.animals',
     icon: Icons.pets_rounded,
     contentTags: ['animals', 'nature'],
   ),
   InterestOption(
     id: 'space',
-    label: 'Kosmos',
+    labelKey: 'interests.space',
     icon: Icons.rocket_launch_rounded,
     contentTags: ['space', 'science'],
   ),
   InterestOption(
     id: 'tech',
-    label: 'Texnologiya',
+    labelKey: 'interests.tech',
     icon: Icons.memory_rounded,
     contentTags: ['tech', 'it', 'science'],
   ),
   InterestOption(
     id: 'art',
-    label: "San'at",
+    labelKey: 'interests.art',
     icon: Icons.palette_rounded,
     contentTags: ['art', 'culture'],
   ),
   InterestOption(
     id: 'science',
-    label: 'Fan',
+    labelKey: 'interests.science',
     icon: Icons.science_rounded,
     contentTags: ['science', 'fan', 'school'],
   ),
   InterestOption(
     id: 'games',
-    label: "O'yinlar",
+    labelKey: 'interests.games',
     icon: Icons.sports_esports_rounded,
     contentTags: ['game', 'games'],
   ),
   InterestOption(
     id: 'travel',
-    label: 'Sayohat',
+    labelKey: 'interests.travel',
     icon: Icons.map_rounded,
     contentTags: ['travel', 'geography'],
   ),
   InterestOption(
     id: 'food',
-    label: 'Ovqat',
+    labelKey: 'interests.food',
     icon: Icons.restaurant_rounded,
     contentTags: ['food', 'cooking'],
   ),
