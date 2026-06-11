@@ -46,7 +46,14 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   LatLng? _lastAnimatedTo;
   BitmapDescriptor? _avatarMarker;
   String? _avatarCacheKey;
+  // Hozir yuklanayotgan avatar key — parallel network fetch + canvas render
+  // bo'lmasligi uchun (SCR-05: har build postFrameCallback chaqirardi).
+  String? _avatarLoadingKey;
   bool _userMovedCamera = false;
+  // Dasturiy kamera harakati — onCameraMoveStarted'da user harakati bilan
+  // adashtirmaslik uchun (SCR-02: birinchi avtomatik kameradan keyin
+  // auto-follow o'zini o'chirib qo'yardi).
+  bool _programmaticMove = false;
   Timer? _recenterDebounce;
 
   @override
@@ -59,15 +66,23 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   Future<void> _loadAvatarMarker(Child child, String? avatarUrl) async {
     final key = '${child.id}_${avatarUrl ?? "null"}';
     if (_avatarCacheKey == key && _avatarMarker != null) return;
-    final marker = await AvatarMarkerBuilder.build(
-      avatarUrl: avatarUrl,
-      fallbackKey: child.name,
-    );
-    if (mounted) {
-      setState(() {
-        _avatarMarker = marker;
-        _avatarCacheKey = key;
-      });
+    // In-flight guard (SCR-05) — shu key allaqachon yuklanmoqda bo'lsa
+    // parallel fetch/render boshlamaymiz.
+    if (_avatarLoadingKey == key) return;
+    _avatarLoadingKey = key;
+    try {
+      final marker = await AvatarMarkerBuilder.build(
+        avatarUrl: avatarUrl,
+        fallbackKey: child.name,
+      );
+      if (mounted) {
+        setState(() {
+          _avatarMarker = marker;
+          _avatarCacheKey = key;
+        });
+      }
+    } finally {
+      _avatarLoadingKey = null;
     }
   }
 
@@ -85,11 +100,18 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
       return;
     }
     _lastAnimatedTo = target;
-    ctrl.animateCamera(CameraUpdate.newLatLng(target));
+    _programmaticMove = true;
+    ctrl
+        .animateCamera(CameraUpdate.newLatLng(target))
+        .whenComplete(() => _programmaticMove = false);
   }
 
   void _onCameraMoveStarted() {
     _recenterDebounce?.cancel();
+    // Dasturiy animatsiya ham bu callback'ni chaqiradi — uni user harakati
+    // deb hisoblamaymiz (SCR-02), aks holda auto-follow birinchi avtomatik
+    // kameradan keyin o'zini o'chirib qo'yardi.
+    if (_programmaticMove) return;
     if (!_userMovedCamera) {
       setState(() => _userMovedCamera = true);
     }
@@ -101,9 +123,14 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     setState(() => _userMovedCamera = false);
     final ctrl = _mapController;
     if (ctrl == null) return;
-    ctrl.animateCamera(
-      CameraUpdate.newCameraPosition(CameraPosition(target: loc, zoom: 16)),
-    );
+    _programmaticMove = true;
+    ctrl
+        .animateCamera(
+          CameraUpdate.newCameraPosition(
+            CameraPosition(target: loc, zoom: 16),
+          ),
+        )
+        .whenComplete(() => _programmaticMove = false);
   }
 
   @override

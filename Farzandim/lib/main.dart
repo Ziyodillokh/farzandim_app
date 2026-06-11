@@ -78,77 +78,77 @@ Future<void> main() async {
       // ⚡ Yuqori refresh rate (120Hz) — Android'da eng yuqori display rejimini
       // so'raydi (Samsung va b. ilovani 60Hz'da cheklaydi). Web/iOS'da no-op
       // (iOS allaqachon avtomatik). Xato bo'lsa app baribir ishlaydi.
-      if (!kIsWeb) {
-        try {
-          await FlutterDisplayMode.setHighRefreshRate();
-        } catch (_) {
-          // best-effort — qurilma qo'llab-quvvatlamasa 60Hz qoladi
-        }
-      }
-
-      // API kalitlarni runtime'da assets/env.json'dan yuklash —
-      // --dart-define-from-file flag'siz ham ishlaydi.
-      await ApiKeys.init();
-
-      // easy_localization init.
-      await EasyLocalization.ensureInitialized();
-
-      // DEV: Firebase setup yo'q paytda ham app ishga tushsin.
-      // Try/catch ichida — agar Firebase config to'g'ri bo'lmasa, app baribir
-      // ishlaydi (Crashlytics/Analytics/AppCheck no-op).
-      try {
-        await Firebase.initializeApp(
+      // MUHIM (ST-02): mustaqil init'lar PARALLEL — avval 4 ta ketma-ket
+      // await edi (displayMode → ApiKeys → EasyLocalization → Firebase),
+      // cold start shuncha sekkinlashardi. Har biri o'z try/catch'ida —
+      // bittasi yiqilsa qolganlari davom etadi.
+      await Future.wait<void>([
+        // ⚡ 120Hz — best-effort (qurilma qo'llamasa 60Hz qoladi).
+        if (!kIsWeb)
+          FlutterDisplayMode.setHighRefreshRate().catchError((Object _) {}),
+        // API kalitlar (assets/env.json) — dart-define'siz ham ishlaydi.
+        ApiKeys.init(),
+        // easy_localization (SharedPreferences'dan til).
+        EasyLocalization.ensureInitialized(),
+        // Firebase core. DEV: config yo'q bo'lsa ham app ishga tushadi.
+        Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
+        ).then<void>((_) {
+          // Fonda kelgan push'larni "Bildirishnoma" ro'yxatiga saqlash uchun
+          // background handler (web'da service worker — qo'llanmaydi).
+          if (!kIsWeb) {
+            FirebaseMessaging.onBackgroundMessage(
+              firebaseMessagingBackgroundHandler,
+            );
+          }
+        }).catchError((Object e) {
+          debugPrint('[DEV] Firebase init skipped: $e');
+        }),
+      ]);
+
+      // App Check / Crashlytics / Analytics — faqat mobil (Android/iOS),
+      // va faqat Firebase core muvaffaqiyatli bo'lganda. Web'da:
+      //   • Analytics [400] "API key not valid" spam beradi,
+      //   • Crashlytics web'ni qo'llamaydi, AppCheck reCAPTCHA talab qiladi.
+      // Error-handler'lar SINXRON o'rnatiladi (erta xatolar tutilsin);
+      // qolgan aktivatsiyalar birinchi frame'ni kechiktirmasligi uchun
+      // AWAIT QILINMAYDI (plugin'lar chaqiriqlarni o'zi navbatga oladi).
+      if (!kIsWeb && Firebase.apps.isNotEmpty) {
+        FlutterError.onError =
+            FirebaseCrashlytics.instance.recordFlutterFatalError;
+        PlatformDispatcher.instance.onError = (error, stack) {
+          // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
+          // .catchError bilan yutib yuboramiz.
+          FirebaseCrashlytics.instance
+              .recordError(error, stack, fatal: true)
+              .catchError((Object _) {
+                debugPrint(
+                  '[DEV] Crashlytics failed; uncaught: $error\n$stack',
+                );
+              });
+          return true;
+        };
+        unawaited(
+          Future.wait<void>([
+            FirebaseAppCheck.instance.activate(
+              androidProvider: kDebugMode
+                  ? AndroidProvider.debug
+                  : AndroidProvider.playIntegrity,
+              appleProvider: kDebugMode
+                  ? AppleProvider.debug
+                  : AppleProvider.deviceCheck,
+            ),
+            FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
+              !kDebugMode,
+            ),
+            FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
+              !kDebugMode,
+            ),
+          ]).catchError((Object e) {
+            debugPrint('[DEV] Firebase services init xato: $e');
+            return <void>[];
+          }),
         );
-
-        // Fonda kelgan push'larni "Bildirishnoma" ro'yxatiga saqlash uchun
-        // background handler (web'da service worker — qo'llanmaydi).
-        if (!kIsWeb) {
-          FirebaseMessaging.onBackgroundMessage(
-            firebaseMessagingBackgroundHandler,
-          );
-        }
-
-        // App Check / Crashlytics / Analytics — faqat mobil (Android/iOS).
-        // Web preview build'da ular kerak emas va konsolni xato bilan
-        // to'ldiradi:
-        //   • Analytics web API kalit bilan dynamic-config fetch qiladi →
-        //     [400] "API key not valid" (har screen_view'da takrorlanadi).
-        //   • Crashlytics web platformani umuman qo'llab-quvvatlamaydi.
-        //   • App Check web uchun reCAPTCHA provider talab qiladi.
-        // Shu sababli web'da Firebase faqat core init bo'ladi.
-        if (!kIsWeb) {
-          await FirebaseAppCheck.instance.activate(
-            androidProvider: kDebugMode
-                ? AndroidProvider.debug
-                : AndroidProvider.playIntegrity,
-            appleProvider: kDebugMode
-                ? AppleProvider.debug
-                : AppleProvider.deviceCheck,
-          );
-          await FirebaseCrashlytics.instance.setCrashlyticsCollectionEnabled(
-            !kDebugMode,
-          );
-          FlutterError.onError =
-              FirebaseCrashlytics.instance.recordFlutterFatalError;
-          PlatformDispatcher.instance.onError = (error, stack) {
-            // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
-            // .catchError bilan yutib yuboramiz.
-            FirebaseCrashlytics.instance
-                .recordError(error, stack, fatal: true)
-                .catchError((Object _) {
-                  debugPrint(
-                    '[DEV] Crashlytics failed; uncaught: $error\n$stack',
-                  );
-                });
-            return true;
-          };
-          await FirebaseAnalytics.instance.setAnalyticsCollectionEnabled(
-            !kDebugMode,
-          );
-        }
-      } catch (e) {
-        debugPrint('[DEV] Firebase init skipped: $e');
       }
 
       if (!kDebugMode) {
