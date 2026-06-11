@@ -91,6 +91,9 @@ class RestrictionsSyncService {
       final limits = results[1] as List<AppLimit>;
       final routines = results[2] as List<Schedule>;
 
+      // Qurilma siyosati (blockUnknownSources + blockAllApps) — bitta so'rov.
+      final policy = await _devicePolicyRepo.getDevicePolicy(_childId!);
+
       // 1. Schedule window'da BLOCK bormi?
       final isWindowBlock = _isCurrentlyBlockedByWindow(policies);
 
@@ -114,6 +117,13 @@ class RestrictionsSyncService {
         blockedPkgs.add(_wildcardAll);
       }
 
+      // 3a. "Barcha ilovalarni bloklash" (ota-ona dashboard toggle'i) — barcha
+      //     foreground ilovani bloklaydi (`*` wildcard, window BLOCK bilan bir
+      //     xil mexanizm). Tarmoq xatosida `null` → o'zgartirmaymiz.
+      if (policy.blockAllApps ?? false) {
+        blockedPkgs.add(_wildcardAll);
+      }
+
       // 3b. Jadval (Routine) "Ilova cheklovlar" — hozir aktiv oynadagi har
       //     routine'ning tanlangan ilovalarini bloklaymiz (per-app). Native
       //     RestrictionService blocked_packages'ni o'qib enforce qiladi.
@@ -127,10 +137,8 @@ class RestrictionsSyncService {
       // 5. "Notanish manbalardan ilovalar" siyosati — native
       //    RestrictionService shu flag'ni o'qib Play'dan boshqa manbadagi
       //    ilovalarni bloklaydi. Xato bo'lsa eski qiymat saqlanadi.
-      final blockUnknown =
-          await _devicePolicyRepo.getBlockUnknownSources(_childId!);
-      if (blockUnknown != null) {
-        await prefs.setBool(_prefsKeyBlockUnknown, blockUnknown);
+      if (policy.blockUnknownSources != null) {
+        await prefs.setBool(_prefsKeyBlockUnknown, policy.blockUnknownSources!);
       }
 
       debugPrint(
