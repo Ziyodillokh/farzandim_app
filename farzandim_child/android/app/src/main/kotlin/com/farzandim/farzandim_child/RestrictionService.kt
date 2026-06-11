@@ -430,7 +430,16 @@ class RestrictionService : Service() {
 
     // ───────────────────────── O'YIN ANIQLASH ─────────────────────────
 
-    /** Ilova O'YIN'mi: CATEGORY_GAME (O+) YOKI FLAG_IS_GAME (eski/qo'shimcha). */
+    /**
+     * Ilova O'YIN'mi — 3 signal (birortasi yetarli):
+     *   1. CATEGORY_GAME (O+) — manifest `android:appCategory="game"`.
+     *   2. FLAG_IS_GAME — eski `android:isGame` atributi.
+     *   3. O'yin engine native lib'lari — KO'P o'yinlar (ayniqsa klon/
+     *      kichik studiya, masalan "Counter Strike 2" mobil klonlari)
+     *      manifest'da kategoriya QO'YMAYDI → 1-2 signal o'tkazib yuboradi.
+     *      Deyarli barcha mobil o'yinlar Unity/Unreal/Cocos/Godot/libGDX
+     *      engine'ida — lib papkasida izi qoladi.
+     */
     private fun isGame(ai: ApplicationInfo): Boolean {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
             ai.category == ApplicationInfo.CATEGORY_GAME
@@ -438,7 +447,26 @@ class RestrictionService : Service() {
             return true
         }
         @Suppress("DEPRECATION")
-        return (ai.flags and ApplicationInfo.FLAG_IS_GAME) != 0
+        if ((ai.flags and ApplicationInfo.FLAG_IS_GAME) != 0) return true
+        return hasGameEngineLibs(ai)
+    }
+
+    /** O'yin engine native kutubxonalari bormi (Unity/UE/Cocos/Godot/libGDX). */
+    private fun hasGameEngineLibs(ai: ApplicationInfo): Boolean {
+        return try {
+            val dir = ai.nativeLibraryDir ?: return false
+            val libs = java.io.File(dir).list() ?: return false
+            libs.any { name ->
+                name == "libunity.so" ||        // Unity (mono/IL2CPP'da ham bor)
+                    name == "libil2cpp.so" ||   // Unity IL2CPP
+                    name.startsWith("libUE") || // Unreal (libUE4.so / libUE5.so)
+                    name.startsWith("libcocos") || // Cocos2d-x / Creator
+                    name.startsWith("libgodot") || // Godot
+                    name == "libgdx.so"            // libGDX
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun isGamePkg(pkg: String): Boolean = gameCache.getOrPut(pkg) {
@@ -457,6 +485,11 @@ class RestrictionService : Service() {
     private fun detectAndQueueGame(foreground: String) {
         if (foreground == packageName) return
         if (!isGamePkg(foreground)) {
+            // Diagnostika: yangi ochilgan ilova o'yin deb TOPILMADI — logcat'da
+            // ko'rinadi (qaysi o'yin signal bermayotganini aniqlash uchun).
+            if (lastForegroundForGame != foreground) {
+                Log.d(TAG, "not-game: $foreground")
+            }
             lastForegroundForGame = foreground
             return
         }

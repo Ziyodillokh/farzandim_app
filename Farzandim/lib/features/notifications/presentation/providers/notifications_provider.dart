@@ -9,37 +9,96 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _prefsKey = 'notifications_history_v1';
 const _maxStored = 100;
 
+/// Fonda kelgan FCM push'lar (bg isolate, `main.dart` background handler)
+/// yoziladigan "pending" navbat kaliti — `syncPending()` shu yerdan o'qiydi.
+const kPendingNotificationsPrefsKey = 'notifications_pending_v1';
+
 /// Bildirishnomalar ro'yxatini boshqaruvchi notifier.
 ///
-/// - FCM payload orqali `addFromFcm` chaqiriladi
+/// - FCM payload orqali `addFromFcm` chaqiriladi (foreground)
+/// - Fonda kelgan push'lar bg isolate "pending" navbatiga yoziladi —
+///   startup va har app-resume'da `syncPending()` ularni qo'shib oladi
 /// - Har mutation SharedPreferences'ga saqlanadi
 /// - App startup'da `_load()` orqali tiklanadi
-class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
+class NotificationsNotifier extends StateNotifier<List<AppNotification>>
+    with WidgetsBindingObserver {
   /// `NotificationsNotifier` konstruktor — yuklash boshlanadi darhol.
   NotificationsNotifier() : super(const []) {
     _load();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Foydalanuvchi ilovaga qaytdi — fonda kelgan push'larni ro'yxatga olamiz.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(syncPending());
+    }
   }
 
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_prefsKey);
-      if (raw == null) return;
-      final list = (jsonDecode(raw) as List<dynamic>)
+      if (raw != null) {
+        final list = (jsonDecode(raw) as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map(AppNotification.fromJson)
+            .whereType<AppNotification>()
+            .toList();
+        if (list.isNotEmpty) state = list;
+      }
+    } catch (e) {
+      debugPrint('NotificationsNotifier._load: $e');
+    }
+    await syncPending();
+  }
+
+  /// Fonda (bg isolate) kelgan push'larni pending navbatdan ro'yxatga
+  /// ko'chirish. Dedup `id` (FCM messageId) bo'yicha — tap orqali allaqachon
+  /// qo'shilgan xabar takrorlanmaydi.
+  Future<void> syncPending() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Bg isolate yozganini ko'rish uchun reload shart.
+      await prefs.reload();
+      final raw = prefs.getString(kPendingNotificationsPrefsKey);
+      if (raw == null || raw.isEmpty) return;
+      await prefs.remove(kPendingNotificationsPrefsKey);
+
+      final items = (jsonDecode(raw) as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .map(AppNotification.fromJson)
           .whereType<AppNotification>()
           .toList();
-      if (list.isNotEmpty) state = list;
+      if (items.isEmpty) return;
+
+      final existing = state.map((n) => n.id).toSet();
+      final fresh =
+          items.where((n) => !existing.contains(n.id)).toList();
+      if (fresh.isEmpty) return;
+
+      // Pending eski→yangi tartibda — yangilari ro'yxat tepasiga chiqsin.
+      state = [...fresh.reversed, ...state];
+      if (state.length > _maxStored) {
+        state = state.sublist(0, _maxStored);
+      }
+      unawaited(_persist());
     } catch (e) {
-      debugPrint('NotificationsNotifier._load: $e');
+      debugPrint('NotificationsNotifier.syncPending: $e');
     }
   }
 
