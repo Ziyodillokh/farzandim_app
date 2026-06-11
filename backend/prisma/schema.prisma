@@ -96,9 +96,19 @@ model Child {
   appVersion     String?  @map("app_version")
   wifiName       String?  @map("wifi_name")
 
+  // OS-ruxsat holatlari (Child App device-info heartbeat bilan yuboradi).
+  // null = noma'lum (hali yuborilmagan). true = berilgan, false = rad etilgan.
+  locationPermission     Boolean? @map("location_permission")
+  notificationPermission Boolean? @map("notification_permission")
+  backgroundAllowed      Boolean? @map("background_allowed")
+  accessibilityEnabled   Boolean? @map("accessibility_enabled")
+
   // Qurilma siyosati — "Notanish manbalardan ilovalar" (Play'dan boshqa
   // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.
   blockUnknownSources Boolean @default(false) @map("block_unknown_sources")
+  // "Barcha ilovalarni bloklash" — ota-ona dashboard toggle'i. true = bola
+  // qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi.
+  blockAllApps        Boolean @default(false) @map("block_all_apps")
 
   // Stop-detection state machine (incremental — har location yozuvida yangilanadi)
   // anchor = joriy klaster boshlangan nuqta; openStop = ochiq to'xtash (agar bor).

@@ -134,6 +134,7 @@ export class ChildrenService {
         parentId: true,
         childUserId: true,
         blockUnknownSources: true,
+        blockAllApps: true,
       },
     });
     if (!child) {
@@ -142,7 +143,10 @@ export class ChildrenService {
     if (child.parentId !== userId && child.childUserId !== userId) {
       throw new ForbiddenException('Forbidden');
     }
-    return { blockUnknownSources: child.blockUnknownSources };
+    return {
+      blockUnknownSources: child.blockUnknownSources,
+      blockAllApps: child.blockAllApps,
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -177,6 +181,19 @@ export class ChildrenService {
     }
     if (dto.appVersion !== undefined) data.appVersion = dto.appVersion;
     if (dto.wifiName !== undefined) data.wifiName = dto.wifiName;
+    // OS-ruxsat holatlari (Block 4) — kelgan maydonlarni saqlaymiz.
+    if (dto.locationPermission !== undefined) {
+      data.locationPermission = dto.locationPermission;
+    }
+    if (dto.notificationPermission !== undefined) {
+      data.notificationPermission = dto.notificationPermission;
+    }
+    if (dto.backgroundAllowed !== undefined) {
+      data.backgroundAllowed = dto.backgroundAllowed;
+    }
+    if (dto.accessibilityEnabled !== undefined) {
+      data.accessibilityEnabled = dto.accessibilityEnabled;
+    }
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
 
