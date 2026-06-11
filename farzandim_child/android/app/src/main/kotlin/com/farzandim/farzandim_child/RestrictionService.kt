@@ -451,22 +451,60 @@ class RestrictionService : Service() {
         return hasGameEngineLibs(ai)
     }
 
-    /** O'yin engine native kutubxonalari bormi (Unity/UE/Cocos/Godot/libGDX). */
+    /** Fayl nomi o'yin engine native kutubxonasimi. */
+    private fun isEngineLibName(name: String): Boolean =
+        name == "libunity.so" ||         // Unity (mono/IL2CPP'da ham bor)
+            name == "libil2cpp.so" ||    // Unity IL2CPP
+            name.startsWith("libUE") ||  // Unreal UE4 (libUE4.so)
+            name == "libUnreal.so" ||    // Unreal UE5
+            name.startsWith("libcocos") || // Cocos2d-x / Creator
+            name.startsWith("libgodot") || // Godot
+            name == "libgdx.so"            // libGDX
+
+    /**
+     * O'yin engine native kutubxonalari bormi (Unity/UE/Cocos/Godot/libGDX).
+     *
+     * 2 yo'l: (1) extractNativeLibs=true (eski/sideload APK) — .so'lar diskda
+     * `nativeLibraryDir`da. (2) extractNativeLibs=false (Play/AAB DEFAULT,
+     * 2021'dan beri yangi Play ilovalari) — .so'lar APK ichida (ko'pincha
+     * split_config.<abi>.apk'da), `nativeLibraryDir` BO'SH. Shu sababli APK
+     * zip entry'larini ham skan qilamiz — aks holda Play'dan o'rnatilgan
+     * Unity "CS2 klon" kabi o'yinlar aniqlanmasdi. ZipFile faqat markaziy
+     * katalogni o'qiydi (arzon); natija gameCache bilan paketga bir marta.
+     */
     private fun hasGameEngineLibs(ai: ApplicationInfo): Boolean {
-        return try {
-            val dir = ai.nativeLibraryDir ?: return false
-            val libs = java.io.File(dir).list() ?: return false
-            libs.any { name ->
-                name == "libunity.so" ||        // Unity (mono/IL2CPP'da ham bor)
-                    name == "libil2cpp.so" ||   // Unity IL2CPP
-                    name.startsWith("libUE") || // Unreal (libUE4.so / libUE5.so)
-                    name.startsWith("libcocos") || // Cocos2d-x / Creator
-                    name.startsWith("libgodot") || // Godot
-                    name == "libgdx.so"            // libGDX
+        // 1) Tez yo'l — diskka chiqarilgan .so'lar.
+        try {
+            val dir = ai.nativeLibraryDir
+            if (dir != null) {
+                val libs = java.io.File(dir).list()
+                if (libs != null && libs.any(::isEngineLibName)) return true
             }
-        } catch (e: Exception) {
-            false
+        } catch (_: Exception) {
+            // APK skaniga o'tamiz
         }
+        // 2) Fallback — APK(lar) ichidagi lib/<abi>/*.so entry'lari.
+        val apks = ArrayList<String>()
+        ai.sourceDir?.let { apks.add(it) }
+        ai.splitSourceDirs?.let { apks.addAll(it) }
+        for (path in apks) {
+            try {
+                java.util.zip.ZipFile(path).use { zip ->
+                    val entries = zip.entries()
+                    while (entries.hasMoreElements()) {
+                        val name = entries.nextElement().name
+                        if (name.startsWith("lib/") &&
+                            isEngineLibName(name.substringAfterLast('/'))
+                        ) {
+                            return true
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // bu APK'ni tashlab keyingisiga o'tamiz
+            }
+        }
+        return false
     }
 
     private fun isGamePkg(pkg: String): Boolean = gameCache.getOrPut(pkg) {

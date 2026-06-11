@@ -68,30 +68,76 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
   }
 
   /// Fonda (bg isolate) kelgan push'larni pending navbatdan ro'yxatga
-  /// ko'chirish. Dedup `id` (FCM messageId) bo'yicha — tap orqali allaqachon
-  /// qo'shilgan xabar takrorlanmaydi.
+  /// ko'chirish.
+  ///
+  /// MUHIM: bg handler har xabarni O'Z noyob kalitiga yozadi
+  /// (`<prefix>:<micros>_<id>`). Bu yerda faqat O'ZIMIZ o'qigan kalitlarni
+  /// o'chiramiz — shu sababli bg isolate shu orada qo'shgan YANGI kalit
+  /// o'chib ketmaydi (massiv RMW poyga yo'q). Dedup `id` bo'yicha — tap
+  /// orqali allaqachon qo'shilgan xabar takrorlanmaydi.
   Future<void> syncPending() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       // Bg isolate yozganini ko'rish uchun reload shart.
       await prefs.reload();
-      final raw = prefs.getString(kPendingNotificationsPrefsKey);
-      if (raw == null || raw.isEmpty) return;
-      await prefs.remove(kPendingNotificationsPrefsKey);
 
-      final items = (jsonDecode(raw) as List<dynamic>)
-          .cast<Map<String, dynamic>>()
-          .map(AppNotification.fromJson)
-          .whereType<AppNotification>()
-          .toList();
-      if (items.isEmpty) return;
+      const prefix = '$kPendingNotificationsPrefsKey:';
+      final pendingKeys =
+          prefs.getKeys().where((k) => k.startsWith(prefix)).toList();
 
-      final existing = state.map((n) => n.id).toSet();
-      final fresh =
-          items.where((n) => !existing.contains(n.id)).toList();
+      // Legacy: oldingi build umumiy massiv kalitiga yozgan bo'lishi mumkin —
+      // bir martalik drenaj (yangilanishdan keyin yo'qolib qolmasin).
+      final legacyRaw = prefs.getString(kPendingNotificationsPrefsKey);
+
+      if (pendingKeys.isEmpty &&
+          (legacyRaw == null || legacyRaw.isEmpty)) {
+        return;
+      }
+
+      final parsed = <AppNotification>[];
+      for (final k in pendingKeys) {
+        final raw = prefs.getString(k);
+        if (raw != null && raw.isNotEmpty) {
+          try {
+            final n = AppNotification.fromJson(
+              jsonDecode(raw) as Map<String, dynamic>,
+            );
+            if (n != null) parsed.add(n);
+          } catch (_) {
+            // buzuq yozuv — tashlab yuboramiz
+          }
+        }
+        // Faqat o'zimiz o'qigan kalitni o'chiramiz (concurrent append xavfsiz).
+        await prefs.remove(k);
+      }
+
+      if (legacyRaw != null && legacyRaw.isNotEmpty) {
+        try {
+          parsed.addAll(
+            (jsonDecode(legacyRaw) as List<dynamic>)
+                .cast<Map<String, dynamic>>()
+                .map(AppNotification.fromJson)
+                .whereType<AppNotification>(),
+          );
+        } catch (_) {
+          // buzuq legacy — tashlab yuboramiz
+        }
+        await prefs.remove(kPendingNotificationsPrefsKey);
+      }
+
+      if (parsed.isEmpty) return;
+
+      // Vaqt bo'yicha eski→yangi — yangilari ro'yxat tepasiga chiqsin.
+      parsed.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+      // Dedup: state'dagi VA pending ichidagi takror id'lar (FCM redelivery).
+      final seen = state.map((n) => n.id).toSet();
+      final fresh = <AppNotification>[];
+      for (final n in parsed) {
+        if (seen.add(n.id)) fresh.add(n);
+      }
       if (fresh.isEmpty) return;
 
-      // Pending eski→yangi tartibda — yangilari ro'yxat tepasiga chiqsin.
       state = [...fresh.reversed, ...state];
       if (state.length > _maxStored) {
         state = state.sublist(0, _maxStored);

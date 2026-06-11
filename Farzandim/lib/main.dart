@@ -56,14 +56,15 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     final notif = AppNotification.fromRemoteMessage(message);
     final prefs = await SharedPreferences.getInstance();
-    // Boshqa isolate yozganini ko'rish uchun (bir nechta push ketma-ket).
-    await prefs.reload();
-    final raw = prefs.getString(kPendingNotificationsPrefsKey);
-    final list = (raw != null && raw.isNotEmpty)
-        ? (jsonDecode(raw) as List<dynamic>)
-        : <dynamic>[];
-    list.add(notif.toJson());
-    await prefs.setString(kPendingNotificationsPrefsKey, jsonEncode(list));
+    // MUHIM: har xabar O'Z noyob kalitiga yoziladi (atomik bitta write) —
+    // umumiy massiv kalitida read-modify-write QILMAYMIZ. Aks holda main
+    // isolate'ning syncPending'i (reload→read→remove) bilan poyga bo'lib,
+    // shu orada bg isolate qo'shgan xabar (hatto SOS) jimgina yo'qolishi
+    // mumkin edi. Kalit microsecond bilan noyob; mantiqiy dedup syncPending'da
+    // notif.id bo'yicha bo'ladi.
+    final key = '$kPendingNotificationsPrefsKey:'
+        '${DateTime.now().microsecondsSinceEpoch}_${notif.id}';
+    await prefs.setString(key, jsonEncode(notif.toJson()));
   } catch (e) {
     debugPrint('FCM bg handler xato: $e');
   }
