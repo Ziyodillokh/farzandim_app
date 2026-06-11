@@ -17,7 +17,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 
 ## P0 — DARHOL (masshtab blockerlari + xavfli buglar)
 
-### [ ] P0-1. Polling provayderlar ABADIY ishlaydi (eng katta tizimli muammo) — effort: M/L
+### [x] P0-1. Polling provayderlar ABADIY ishlaydi (eng katta tizimli muammo) — effort: M/L
 8 yo'nalishdan 6 tasi mustaqil topdi (PERF-01, NET-01/02, ARCH-01, BUG-01, ST-01, MEM-1, SCR-01).
 - **Fayllar:**
   - `lib/features/app_restrictions/presentation/providers/app_usage_providers.dart:21-60` — todayUsage (30s), installedApps (60s)
@@ -35,7 +35,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
      60 soniyalik butun-ekran rebuild'lar yo'qoladi.
   4. Uzoq muddat: usage/status uchun WS push (socket allaqachon bor) — pollingni butunlay olib tashlash.
 
-### [ ] P0-2. PARENT'da ham refresh-token "har xatoda clear" bug'i — effort: S
+### [x] P0-2. PARENT'da ham refresh-token "har xatoda clear" bug'i — effort: S
 (EH-01 + NET-04 + BUG-03 + EH-02) — child'da tuzatganimizning aynan o'zi parent'da ham bor!
 - **Fayl:** `lib/core/network/dio_client.dart:186-193`
 - **Muammo:** Refresh chaqiruvi timeout/5xx/tarmoq xatosida ham `tokenStorage.clear()` qiladi —
@@ -45,14 +45,14 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - **Fix:** child'dagi kabi faqat aniq 401/403'da clear + clear bo'lganda `backendAuthProvider`ni
   logout holatiga o'tkazish (router login'ga olib boradi, "Sessiya tugadi" xabari).
 
-### [ ] P0-3. SOS xatosi yutiladi — favqulodda holatda yolg'on "Hammasi tinch" — effort: S
+### [x] P0-3. SOS xatosi yutiladi — favqulodda holatda yolg'on "Hammasi tinch" — effort: S
 (EH-03)
 - **Fayl:** `lib/features/sos/data/repositories/backend_sos_repository.dart:52-55` + sos_alerts_screen
 - **Muammo:** `getAlerts` xatoda `[]` qaytaradi → ota-ona favqulodda vaziyatda offline bo'lsa
   ekranda "SOS signallari yo'q — hammasi tinch" ko'radi. Bu xavfsizlik ilovasida eng yomon yolg'on.
 - **Fix:** Repository xatoni throw qilsin; ekranda aniq xato holati + retry tugmasi.
 
-### [ ] P0-4. Voice/video xabarlar: pagination yo'q + har 60s TO'LIQ tarix qayta yuklanadi — effort: M
+### [x] P0-4. Voice/video xabarlar: pagination yo'q + har 60s TO'LIQ tarix qayta yuklanadi — effort: M
 (ARCH-02 + BUG-10 + NET-03)
 - **Fayllar:** `lib/features/voice_message/presentation/providers/voice_message_providers.dart:48-83`,
   `backend_voice_message_repository.dart:49-58`
@@ -62,7 +62,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - **Fix:** (1) `childrenListProvider` o'rniga faqat kerakli childId'larni `select` bilan olish,
   (2) backend'dan limit/cursor pagination so'rash, (3) yangi xabarlar WS orqali qo'shilsin (socket bor).
 
-### [ ] P0-5. UTC vaqtlar .toLocal()'siz — joylashuv tarixi 5 soat noto'g'ri — effort: S
+### [x] P0-5. UTC vaqtlar .toLocal()'siz — joylashuv tarixi 5 soat noto'g'ri — effort: S
 (BUG-04)
 - **Fayllar:** `lib/features/location/data/models/child_location.dart:46`,
   `lib/features/location/data/models/geo_zone_event.dart:78`
@@ -75,20 +75,20 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ## P1 — MUHIM (keyingi navbat)
 
 ### Xato handling / UX
-- [ ] **EH-04** (S): Limit/blok O'CHIRISH offline'da yolg'on "saqlandi" qaytaradi (blok aslida qoladi) —
+- [x] **EH-04** (S): Limit/blok O'CHIRISH offline'da yolg'on "saqlandi" qaytaradi (blok aslida qoladi) —
   `backend_app_limit_repository.dart:39-54,93-107` — xatoni throw + UI feedback.
 - [ ] **EH-09** (M): Umumiy pattern — usage/installed-apps/permissions/pair-requests repolari xatoni
   yutib bo'sh/0/"hammasi ruxsat" qaytaradi. Repository qatlamini throw'ga o'tkazish + ekranlarda error holat.
-- [ ] **EH-05** (S): Dashboard birinchi yuklanish xatosida abadiy spinner (offline'da xabar/retry yo'q) —
+- [x] **EH-05** (S): Dashboard birinchi yuklanish xatosida abadiy spinner (offline'da xabar/retry yo'q) —
   `dashboard_screen.dart:55-64`.
-- [ ] **EH-07** (S): Ilova-ruxsat toggle xatoda jim yiqiladi (unawaited, catch yo'q) —
+- [x] **EH-07** (S): Ilova-ruxsat toggle xatoda jim yiqiladi (unawaited, catch yo'q) —
   `permission_apps_screen.dart:50-62,159`.
 - [ ] **EH-06** (S): Repair-QR dialog avto-yopilmaydi — hujjatdagi `child:repaired` WS listener
   implementatsiya qilinmagan — `repair_qr_dialog.dart:15-17,64-132`.
 - [ ] **EH-08** (S, minor): Child CRUD xatolarida xom inglizcha `e.toString()` ko'rsatiladi — o'zbekcha xabar.
 
 ### Startup (ochilish tezligi)
-- [ ] **ST-02** (S): `main.dart:81-148` — 8 ta ketma-ket await; parallellashtirilsa cold start sezilarli tezlashadi
+- [x] **ST-02** (S): `main.dart:81-148` — 8 ta ketma-ket await; parallellashtirilsa cold start sezilarli tezlashadi
   (ApiKeys+EasyLocalization+displayMode parallel; Crashlytics/Analytics/AppCheck birinchi frame'dan keyinga).
 - [ ] **ST-03** (M): Login bo'lgan userga har cold start'da Welcome ekran "flash" + 325KB jpg dekod —
   splash/redirect route kerak — `app_router.dart:164,179`.
@@ -102,17 +102,17 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ### Performance (UI)
 - [ ] **PERF-03 + SCR-03** (M): AppLimits ro'yxati builder'siz (hamma qator birdan) + har 30s poll'da
   sort/merge qayta — `app_limits_screen.dart:95-106,255-285` — ListView.builder + memoize.
-- [ ] **PERF-04 + MEM-7** (S): AppIconWidget har rebuild'da base64Decode → yangi Uint8List → image kesh
+- [x] **PERF-04 + MEM-7** (S): AppIconWidget har rebuild'da base64Decode → yangi Uint8List → image kesh
   har safar sog'inadi — `app_icon_widget.dart:90-109` — bytes'ni memoize (initState/cache).
 - [ ] **PERF-05** (M): Voice chat yozish paytida amplitude 10Hz BUTUN ekranni rebuild qiladi —
   `voice_chat_screen.dart:188-207` — amplitude'ni faqat indikator widget'iga izolyatsiya qilish.
 - [ ] **PERF-06 + SCR-04** (M): LocationHistory har rebuild'da haversine×2 + dwell-detection qayta —
   `location_history_screen.dart:148-150,235,456-466` — hisoblarni data o'zgarganda bir marta (memoize).
-- [ ] **PERF-07 + NET-05 + ARCH-03** (S): DeviceSettings har 10s `ref.invalidate(childrenProvider)` —
+- [x] **PERF-07 + NET-05 + ARCH-03** (S): DeviceSettings har 10s `ref.invalidate(childrenProvider)` —
   ilova bo'ylab hamma watcher'ni qayta fetch'ga majburlaydi — tick-pattern'ga o'tkazish (60s yetarli).
-- [ ] **SCR-05** (S): Xarita avatar-marker builder'da in-flight guard yo'q — parallel network fetch +
+- [x] **SCR-05** (S): Xarita avatar-marker builder'da in-flight guard yo'q — parallel network fetch +
   canvas render har build'da — `location_map_screen.dart:59-72,131-133`.
-- [ ] **SCR-02** (S): Xaritada auto-follow birinchi programmatik kameradan keyin o'zini o'chiradi
+- [x] **SCR-02** (S): Xaritada auto-follow birinchi programmatik kameradan keyin o'zini o'chiradi
   (onCameraMoveStarted programmatik harakatni user harakati deb biladi) — `location_map_screen.dart:88-107`.
 
 ### Xotira
@@ -129,11 +129,11 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - [ ] **NET-10** (S, minor): Retry/backoff yo'q — backend tiklanayotganda hamma klient bir vaqtda uradi
   (thundering herd) — jitter'li backoff.
 - [ ] **ARCH-05** (S): UI'da to'g'ridan-to'g'ri Dio (repair QR POST, xom Dio().download) — repository'ga ko'chirish.
-- [ ] **ARCH-06** (S): ~740 qator o'lik kod — 7 ta hech qayerdan import qilinmaydigan fayl (child_page_view.dart
+- [x] **ARCH-06** (S): ~740 qator o'lik kod — 7 ta hech qayerdan import qilinmaydigan fayl (child_page_view.dart
   va b.) — o'chirish.
 - [ ] **ARCH-07** (M): Vaqt formatlash 6+ joyda hardcoded dublikat — markaziy formatter'ga yig'ish.
-- [ ] **ARCH-10** (S): Force-update dialog rebuild'da qayta-qayta ochiladi — dedup guard — `app.dart:185-195`.
-- [ ] **BUG-02** (S): FCM push tap `router.go()` — stack bo'shab "orqaga" GoError — `fcm_service.dart:230-270` —
+- [x] **ARCH-10** (S): Force-update dialog rebuild'da qayta-qayta ochiladi — dedup guard — `app.dart:185-195`.
+- [x] **BUG-02** (S): FCM push tap `router.go()` — stack bo'shab "orqaga" GoError — `fcm_service.dart:230-270` —
   `push` yoki to'g'ri stack qurish.
 
 ---
