@@ -202,12 +202,14 @@ class _DashboardBody extends ConsumerStatefulWidget {
   ConsumerState<_DashboardBody> createState() => _DashboardBodyState();
 }
 
-class _DashboardBodyState extends ConsumerState<_DashboardBody> {
+class _DashboardBodyState extends ConsumerState<_DashboardBody>
+    with WidgetsBindingObserver {
   late final PageController _pageController;
 
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     final initial = ref
         .read(selectedChildIndexProvider)
         .clamp(0, widget.children.length - 1);
@@ -215,7 +217,18 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
   }
 
   @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Foydalanuvchi ilovaga QAYTGANDA bolalar ro'yxatini darhol yangilaymiz —
+    // aks holda eski snapshot'dagi lastSeenAt/isConnected bilan bola noto'g'ri
+    // "Aloqa uzildi"/"Ulanmagan" ko'rinardi (asosiy shikoyat shu edi).
+    if (state == AppLifecycleState.resumed && mounted) {
+      ref.read(childrenRefreshTickProvider.notifier).state++;
+    }
+  }
+
+  @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _pageController.dispose();
     super.dispose();
   }
@@ -539,9 +552,15 @@ class _ChildInfoHeader extends StatelessWidget {
               ),
               const SizedBox(height: 2),
               Text(
+                // deviceModel bo'sh bo'lsa holatga BOG'LIQ matn: ulangan bo'lsa
+                // "model aniqlanmagan" (keyingi heartbeat ~20s'da to'ldiradi),
+                // ulanmagan bo'lsagina "Qurilma ulanmagan". Avval har doim
+                // "ulanmagan" chiqib, bola ONLINE bo'lsa ham chalg'itardi.
                 child.deviceModel?.isNotEmpty ?? false
                     ? child.deviceModel!
-                    : 'dashboard.noDevice'.tr(),
+                    : (child.isConnected
+                        ? 'dashboard.deviceModelUnknown'.tr()
+                        : 'dashboard.noDevice'.tr()),
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -598,13 +617,17 @@ class _ChildCountIndicator extends StatelessWidget {
 /// Bola header'idagi JONLI HOLAT qatori — online / aloqa uzildi / ulanmagan
 /// indikatori + batareya. Heartbeat-aware (`Child.isLiveOnline`), shu sababli
 /// aloqa uzilsa darhol "Aloqa uzildi" (sariq) ko'rinadi — avval "yashil" edi.
-class _StatusLine extends StatelessWidget {
+class _StatusLine extends ConsumerWidget {
   const _StatusLine({required this.child});
 
   final Child child;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Har 30s rebuild — isLiveOnline (DateTime.now() asosli) qayta hisoblanadi
+    // va har 60s ro'yxat refetch bo'ladi (statusTickProvider ichida). Busiz
+    // status ekranda "muzlab" qolardi.
+    ref.watch(statusTickProvider);
     final Color statusColor;
     final String statusKey;
     if (child.isLiveOnline) {

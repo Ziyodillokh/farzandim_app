@@ -146,8 +146,21 @@ class _RefreshInterceptor extends Interceptor {
       }
       completer.complete(newAccess);
       return newAccess;
+    } on DioException catch (e) {
+      // MUHIM: tokenlarni FAQAT refresh endpoint'i ANIQ 401/403 qaytarganda
+      // o'chiramiz (refresh token haqiqatan bekor/eskirgan). Timeout, DNS,
+      // backend deploy paytidagi 502/503 kabi VAQTINCHA xatolarda clear
+      // qilinsa — 30-kunlik refresh token abadiy yo'qoladi, barcha POST'lar
+      // (lokatsiya/heartbeat) doimiy 401 bo'ladi va ota-onada bola
+      // "Ulanmagan/Aloqa uzildi" bo'lib qoladi. Keyingi 401'da refresh
+      // avtomatik qayta uriniladi (finally _refreshCompleter=null).
+      final code = e.response?.statusCode;
+      if (code == 401 || code == 403) {
+        await tokenStorage.clear();
+      }
+      completer.complete(null);
+      return null;
     } catch (_) {
-      await tokenStorage.clear();
       completer.complete(null);
       return null;
     } finally {

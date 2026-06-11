@@ -189,7 +189,8 @@
       "blockAll": "Barcha ilovalarni bloklash"
     },
     "usageTime": "Foydalanish vaqti",
-    "noDevice": "Qurilma ulanmagan"
+    "noDevice": "Qurilma ulanmagan",
+    "deviceModelUnknown": "Telefon modeli aniqlanmagan"
   },
   "schedules": {
     "headerTitle": "Jadvallar",

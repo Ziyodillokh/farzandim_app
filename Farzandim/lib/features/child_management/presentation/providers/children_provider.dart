@@ -23,6 +23,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// (`copyWithPrevious`), shuning uchun ekran bo'shab ketmaydi.
 final childrenRefreshTickProvider = StateProvider<int>((_) => 0);
 
+/// Jonli holat "puls"i — har 30s emit. Buni watch qilgan widget (masalan
+/// dashboard `_StatusLine`) qayta build bo'lib `isLiveOnline`ni qayta
+/// hisoblaydi (DateTime.now() asosli getter timer'siz "muzlab" qolardi:
+/// bola offline bo'lsa ham status yashilligicha turardi). Har 2-tick'da
+/// (60s) bolalar ro'yxati ham qayta fetch qilinadi — backend'dan yangi
+/// `lastSeenAt`/`isConnected` keladi va offline→online tiklanish ham
+/// ko'rinadi. Recompute (invalidate EMAS) → copyWithPrevious, flash yo'q.
+final statusTickProvider = StreamProvider<int>((ref) {
+  return Stream<int>.periodic(const Duration(seconds: 30), (i) {
+    if (i.isOdd) {
+      ref.read(childrenRefreshTickProvider.notifier).state++;
+    }
+    return i;
+  });
+});
+
 /// Bolalar ro'yxati — Backend REST orqali.
 ///
 /// Auth bo'lmasa bo'sh ro'yxat qaytaradi.

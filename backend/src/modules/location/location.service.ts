@@ -103,6 +103,13 @@ export class LocationService {
     if (androidVersion !== undefined) childDeviceUpdate.androidVersion = androidVersion;
     if (appVersion !== undefined) childDeviceUpdate.appVersion = appVersion;
     if (wifiName !== undefined) childDeviceUpdate.wifiName = wifiName;
+    // Heartbeat kelgani — qurilma ulangan deb belgilaymiz (device-info
+    // endpoint bilan bir xil mantiq). Aks holda device-info ishlamay qolsa
+    // faqat GPS yuborayotgan bola DB'da isConnected=false bo'lib ota-onada
+    // abadiy kulrang "Ulanmagan" ko'rinardi. Auth-guard'dan o'tgan (childUserId
+    // yoki parentId mos) so'rovlardagina ishlaydi — regenerate qilingan eski
+    // qurilma (403) buni soxta true qila olmaydi.
+    if (!child.isConnected) childDeviceUpdate.isConnected = true;
 
     // ── Past batareya (<10%) push — umumiy BatteryAlertService orqali (bir
     //    marta — crossing). child.batteryLevel hali ESKI qiymat (update
@@ -121,6 +128,32 @@ export class LocationService {
     const acc = rest.accuracy ?? null;
     const spd = rest.speed ?? null;
 
+    // Oxirgi yozilgan nuqta — dedup VA filtr-branch heartbeat emit uchun
+    // (low_accuracy tekshiruvidan OLDIN olinadi: o'sha branch ham emit qilsin).
+    const lastLocation = await this.prisma.location.findFirst({
+      where: { childId },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    // Filtr branch'lari uchun yengil realtime heartbeat — nuqta history'ga
+    // YOZILMASA ham parent xaritasi "jonli" qoladi (vaqt/batareya yangilanadi).
+    // Aks holda bola statsionar bo'lsa (har doim too_close) parent'da oxirgi
+    // yangilanish vaqti soatlab "qotib" turardi.
+    const emitHeartbeat = () => {
+      if (!lastLocation) return;
+      const payload = {
+        childId,
+        location: {
+          ...lastLocation,
+          batteryLevel: rest.batteryLevel ?? lastLocation.batteryLevel,
+          isCharging: rest.isCharging ?? lastLocation.isCharging,
+          createdAt: new Date(),
+        },
+      };
+      this.realtime.emitToUser(child.parentId, 'location:updated', payload);
+      this.realtime.emitToChild(childId, 'location:updated', payload);
+    };
+
     // (1) Aniqligi juda yomon (cell-tower) fix — history'ga yozmaymiz, lekin
     //     qurilma ma'lumotini (batareya/last-seen) baribir yangilaymiz.
     if (acc !== null && acc > MAX_ACCURACY_M) {
@@ -128,14 +161,9 @@ export class LocationService {
         where: { id: childId },
         data: childDeviceUpdate,
       });
+      emitHeartbeat();
       return { ok: true, written: false, reason: 'low_accuracy', accuracy: acc };
     }
-
-    // Adaptiv deduplikatsiya — oxirgi yozilgan nuqtaga nisbatan.
-    const lastLocation = await this.prisma.location.findFirst({
-      where: { childId },
-      orderBy: { createdAt: 'desc' },
-    });
 
     if (lastLocation) {
       const distance = distanceMeters(
@@ -154,6 +182,7 @@ export class LocationService {
           where: { id: childId },
           data: childDeviceUpdate,
         });
+        emitHeartbeat();
         return {
           ok: true,
           written: false,

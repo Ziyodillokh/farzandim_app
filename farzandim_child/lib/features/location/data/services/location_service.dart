@@ -55,6 +55,9 @@ class LocationService {
 
   StreamSubscription<Position>? _positionSub;
   Timer? _heartbeatTimer;
+  // Ruxsat/GPS yo'qligida start()ni davriy qayta urinish (60s) — bola GPS'ni
+  // keyin yoqsa joylashuv o'z-o'zidan tiklanadi (servis restart kutmaydi).
+  Timer? _startRetryTimer;
   Position? _lastPosition;
   String? _parentUid;
   String? _childId;
@@ -125,20 +128,41 @@ class LocationService {
     // jim chiqamiz, real Android/iOS qurilmalarda ishlatiladi.
     if (kIsWeb) return;
 
-    // 1. Permission tekshirish
+    // 1. Permission tekshirish. MUHIM: ruxsat yo'q bo'lsa JIM O'LIB QOLMAYMIZ
+    // — retry timer qo'yamiz. Boot'dan start bo'lganda GPS hali o'chiq
+    // bo'lishi yoki bola GPS'ni keyin yoqishi tabiiy; avval bu yerda quruq
+    // `return` edi → joylashuv servis restart'igacha umuman o'lik qolardi
+    // (bola "online" ko'rinib joylashuvi soatlab eskirardi).
     final status = await Permission.locationWhenInUse.status;
     if (!status.isGranted) {
       debugPrint(
-          'LocationService: ruxsat yo\'q ($status) — start to\'xtatildi');
+          'LocationService: ruxsat yo\'q ($status) — 60s\'da qayta urinamiz');
+      _scheduleStartRetry();
       return;
     }
 
     // 2. Service yoqilganligini tekshirish (GPS o'chiq bo'lishi mumkin)
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      debugPrint('LocationService: GPS service o\'chiq');
+      debugPrint('LocationService: GPS o\'chiq — 60s\'da qayta urinamiz');
+      _scheduleStartRetry();
       return;
     }
+
+    // Diagnostika: Android 11+ background fix uchun locationAlways kerak.
+    // While-in-use bilan foreground-service location type bor — ishlaydi,
+    // lekin OEM cheklovlarida fix kelmasligi mumkin; log foydali signal.
+    final always = await Permission.locationAlways.isGranted;
+    if (!always) {
+      debugPrint(
+        "LocationService: faqat while-in-use ruxsat — background fix "
+        'kelmasligi mumkin (Android 11+)',
+      );
+    }
+
+    // Muvaffaqiyatli start — retry endi kerak emas.
+    _startRetryTimer?.cancel();
+    _startRetryTimer = null;
 
     // 2b. Geo zone watcher Sprint 4.4'da olib tashlandi — Backend
     // POST /location'da geofence avtomatik aniqlanadi va parent'ga
@@ -205,11 +229,25 @@ class LocationService {
     }
   }
 
+  /// Ruxsat/GPS yo'qligida start()ni 60s'dan keyin qayta urinish.
+  /// start() muvaffaqiyatli o'tsa timer o'zi bekor qilinadi.
+  void _scheduleStartRetry() {
+    _startRetryTimer?.cancel();
+    _startRetryTimer = Timer(const Duration(seconds: 60), () {
+      final p = _parentUid;
+      final c = _childId;
+      if (p == null || c == null) return;
+      unawaited(start(parentUid: p, childId: c, childName: ''));
+    });
+  }
+
   void stop() {
     _positionSub?.cancel();
     _positionSub = null;
     _heartbeatTimer?.cancel();
     _heartbeatTimer = null;
+    _startRetryTimer?.cancel();
+    _startRetryTimer = null;
     _lastPosition = null;
   }
 

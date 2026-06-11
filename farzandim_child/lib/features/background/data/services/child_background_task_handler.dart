@@ -21,6 +21,7 @@ import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
+import 'package:farzandim_child/core/offline/offline_buffer.dart';
 import 'package:farzandim_child/core/utils/tashkent_time.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
@@ -52,6 +53,11 @@ class ChildBackgroundTaskHandler extends TaskHandler {
   UsageSyncService? _usageSyncService;
   RestrictionsSyncService? _restrictionsSyncService;
   GameReportService? _gameReportService;
+  // Offline buffer flush — ASOSIY enqueue shu bg isolate'da bo'ladi
+  // (LocationService). UI isolate'dagi flusher bg yozganini ko'rmasdi;
+  // endi flush shu yerda ham har 60s ishlaydi (start() chaqirmaymiz —
+  // ikkinchi Connectivity stream ochilmasin).
+  OfflineBuffer? _offlineBuffer;
 
   String? _parentUid;
   String? _childId;
@@ -127,6 +133,9 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // + Bloklash). Native faqat o'yinlarni filtrlaydi.
     _gameReportService = GameReportService(childId: _childId!);
 
+    // Offline buffer — bg isolate'da ham flush (asosiy enqueue shu yerda).
+    _offlineBuffer = OfflineBuffer();
+
     // FCM token'ni backend'ga QAYTA ro'yxatdan o'tkazamiz. Birinchi pair'da
     // UI isolate init() JWT'dan oldin ishlab token yetmagan bo'lishi mumkin
     // (register 401 -> backend'da token yo'q -> "Baland ovoz" ring sent:0
@@ -147,6 +156,10 @@ class ChildBackgroundTaskHandler extends TaskHandler {
 
     // O'yin ochilganini tekshirish (faqat o'yinlar → ota-onaga push).
     unawaited(_gameReportService?.check() ?? Future<void>.value());
+
+    // Offline buffer flush — net qaytgan bo'lsa yig'ilganlarni yuborish
+    // (flush o'zi connectivity tekshiradi, bo'sh bufferda tez no-op).
+    unawaited(_offlineBuffer?.flush() ?? Future<void>.value());
 
     // Notification matnini yangilash — foydalanuvchi service ishlayotganini
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.

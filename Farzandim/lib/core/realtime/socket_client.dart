@@ -119,8 +119,17 @@ class SocketClient {
       io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
-          .setAuth({'token': token})
-          .setReconnectionAttempts(10)
+          // HAR ulanish/reconnect'da YANGI token o'qiladi — `setAuth` bilan
+          // birinchi handshake'dagi token muzlatilib qolardi: access token
+          // 15 daqiqada eskiradi, auto-reconnect eski token bilan kelib
+          // backend tomonidan rad etilardi → real-time butunlay o'lardi.
+          .setAuthFn((cb) {
+            _tokenStorage
+                .readAccessToken()
+                .then((t) => cb({'token': t ?? ''}));
+          })
+          // Reconnect cheksiz (default) — avval 10 urinish bilan to'xtardi:
+          // ~1-2 daqiqalik tarmoq uzilishi real-time'ni abadiy o'chirardi.
           .setReconnectionDelay(2000)
           .setReconnectionDelayMax(10000)
           .build(),
@@ -133,9 +142,22 @@ class SocketClient {
         // Yangi socket — eventStream'lar uchun listener'larni qayta ulash.
         _reattachAllListeners();
       })
-      ..onDisconnect((_) {
+      ..onDisconnect((reason) {
         _setState(SocketConnectionState.disconnected);
-        debugPrint('SocketClient: uzildi');
+        debugPrint('SocketClient: uzildi ($reason)');
+        // Server tomonidan uzilganda ("io server disconnect" — masalan
+        // eskirgan token rad etilganda) socket.io O'ZI QAYTA ULANMAYDI.
+        // Socket'ni qayta qurib (yangi handshake = yangi token) o'zimiz
+        // tiklaymiz — kichik kechikish bilan (tight-loop bo'lmasin).
+        if ('$reason' == 'io server disconnect') {
+          Future<void>.delayed(const Duration(seconds: 3), () {
+            if (_state == SocketConnectionState.connected) return;
+            _socket?.dispose();
+            _socket = null;
+            _attachedEvents.clear();
+            unawaited(connect());
+          });
+        }
       })
       ..onConnectError((err) {
         _setState(SocketConnectionState.error);

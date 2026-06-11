@@ -186,7 +186,11 @@ class DeviceInfoService {
     }
 
     return (
-      location: await safe(() => Permission.locationWhenInUse.isGranted),
+      // Background kuzatuv uchun tizim ASLIDA talab qiladigan ruxsat —
+      // locationAlways ("Har doim"). whenInUse hisobotda "to'liq" ko'rinib
+      // ota-onani chalg'itardi (Android 11+ da background fix kelmaydi).
+      // Android <10'da permission_handler buni fine-location'ga map qiladi.
+      location: await safe(() => Permission.locationAlways.isGranted),
       notification: await safe(() => Permission.notification.isGranted),
       background: await safe(
         () => Permission.ignoreBatteryOptimizations.isGranted,

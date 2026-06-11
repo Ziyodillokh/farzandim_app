@@ -189,7 +189,8 @@
       "blockAll": "Block all apps"
     },
     "usageTime": "Usage time",
-    "noDevice": "Device not connected"
+    "noDevice": "Device not connected",
+    "deviceModelUnknown": "Phone model unknown"
   },
   "schedules": {
     "headerTitle": "Schedules",

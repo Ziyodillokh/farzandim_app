@@ -30,7 +30,7 @@ import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
-import 'package:farzandim_child/core/config/env_config.dart';
+import 'package:farzandim_child/core/network/dio_client.dart';
 
 const _prefsKey = 'offline_buffer_v1';
 const _maxItems = 1000;
@@ -73,39 +73,17 @@ class _BufferedRequest {
 class OfflineBuffer {
   OfflineBuffer({Dio? dio, TokenStorage? tokenStorage})
       : _tokenStorage = tokenStorage ?? TokenStorage() {
-    _dio = dio ?? _buildDio();
+    // MUHIM: refresh interceptor'li UMUMIY dio (createBackendDio) —
+    // avval bu yerda yalang'och dio bor edi (faqat access token header).
+    // Access token 15 daqiqada eskiradi: offline'da yig'ilgan butun buffer
+    // flush'da 401 olib TO'LIQ DROP bo'lardi (4xx=discard tarmog'i).
+    _dio = dio ?? createBackendDio(_tokenStorage);
   }
 
   late final Dio _dio;
   final TokenStorage _tokenStorage;
   StreamSubscription<List<ConnectivityResult>>? _connSub;
   bool _flushing = false;
-
-  Dio _buildDio() {
-    final dio = Dio(
-      BaseOptions(
-        baseUrl: EnvConfig.apiUrl,
-        connectTimeout: const Duration(seconds: 10),
-        sendTimeout: const Duration(seconds: 15),
-        receiveTimeout: const Duration(seconds: 15),
-        headers: {
-          'Accept': 'application/json',
-          'Content-Type': 'application/json',
-        },
-      ),
-    )..interceptors.add(
-        InterceptorsWrapper(
-          onRequest: (options, handler) async {
-            final token = await _tokenStorage.readAccessToken();
-            if (token != null && token.isNotEmpty) {
-              options.headers['Authorization'] = 'Bearer $token';
-            }
-            handler.next(options);
-          },
-        ),
-      );
-    return dio;
-  }
 
   /// Connectivity listener — internet qaytganda flush boshlanadi.
   void start() {
@@ -183,7 +161,8 @@ class OfflineBuffer {
       }
 
       final remaining = <_BufferedRequest>[];
-      for (final req in items) {
+      for (var i = 0; i < items.length; i++) {
+        final req = items[i];
         try {
           await _dio.request<void>(
             req.endpoint,
@@ -192,9 +171,22 @@ class OfflineBuffer {
           );
           // OK — discard
         } on DioException catch (e) {
-          // 4xx — server rejected, no point retry → discard
           final code = e.response?.statusCode ?? 0;
+          if (code == 401) {
+            // Dio'da refresh interceptor bor — 401 bu yerga yetib kelgani
+            // refresh'ning O'ZI yiqilganini bildiradi (tarmoq/refresh-token).
+            // Bu TRANSIENT: butun qolgan bufferni saqlab, siklni to'xtatamiz
+            // (yuzlab mahkum so'rov otmaslik uchun). Keyingi flush'da qayta.
+            remaining
+              ..add(req)
+              ..addAll(items.skip(i + 1));
+            debugPrint(
+              'OfflineBuffer.flush: 401 (refresh yiqildi) — saqlab to\'xtatildi',
+            );
+            break;
+          }
           if (code >= 400 && code < 500) {
+            // Haqiqiy validation reject — retry foydasiz → discard.
             debugPrint(
               'OfflineBuffer.flush: ${req.endpoint} $code — drop',
             );
@@ -237,6 +229,11 @@ class OfflineBuffer {
   }
 
   Future<List<_BufferedRequest>> _readItems(SharedPreferences prefs) async {
+    // MUHIM: bg isolate enqueue qiladi, flush boshqa isolate'da bo'lishi
+    // mumkin — har isolate'ning SharedPreferences keshi ALOHIDA. reload'siz
+    // eski (bo'sh) kesh o'qilib, flush'dagi prefs.remove() boshqa isolate
+    // yozgan itemlarni o'chirib yuborardi.
+    await prefs.reload();
     final raw = prefs.getString(_prefsKey);
     if (raw == null) return [];
     try {
