@@ -1,8 +1,10 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/config/env_config.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/formatters.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
 
@@ -189,6 +191,24 @@ class _Avatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // O'yin / ilova-limiti xabari — haqiqiy ilova ikonkasini ko'rsatamiz
+    // (masalan CS2 o'ynalsa CS2 ikonkasi). Ikonka backend proxy'dan keladi:
+    // bola installed-apps sync'i orqali MinIO'ga yuklagan PNG. @Public —
+    // auth header kerak emas. AppIconWidget yetib bo'lmasa type/paket
+    // fallback'iga tushadi (ikonka hali sinxronlanmagan bo'lsa).
+    final pkg = notification.packageName;
+    if (pkg != null &&
+        pkg.isNotEmpty &&
+        notification.childId.isNotEmpty) {
+      final iconUrl = '${EnvConfig.apiUrl}/children/${notification.childId}'
+          '/installed-apps/${Uri.encodeComponent(pkg)}/icon';
+      return AppIconWidget(
+        packageName: pkg,
+        iconUrl: iconUrl,
+        size: 46,
+      );
+    }
+
     final color = notification.type.color;
     return Container(
       width: 46,
