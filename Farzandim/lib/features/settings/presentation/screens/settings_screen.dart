@@ -88,10 +88,16 @@ class SettingsScreen extends ConsumerWidget {
                               ],
                             ),
                             const SizedBox(height: AppDimensions.md),
-                            // ── Karta 2: sessiyalar / til / yordam ──
+                            // ── Karta 2: SOS / sessiyalar / til / yordam ──
                             _MenuCard(
                               accent: AppColors.accent,
                               items: [
+                                _MenuItem(
+                                  icon: Icons.sos_rounded,
+                                  title: 'settings.menu.sosAlerts'.tr(),
+                                  onTap: () =>
+                                      context.push(AppRoutes.sosAlerts),
+                                ),
                                 _MenuItem(
                                   icon: Icons.devices_rounded,
                                   title: 'settings.menu.sessions'.tr(),
@@ -209,7 +215,8 @@ class SettingsScreen extends ConsumerWidget {
     final String body;
     if (res == null) {
       title = '❌ So‘rov bormadi';
-      body = 'Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.';
+      body =
+          'Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.';
     } else {
       final tokens = (res['tokens'] as num?)?.toInt() ?? 0;
       final sent = (res['sent'] as num?)?.toInt() ?? 0;
@@ -238,7 +245,10 @@ class SettingsScreen extends ConsumerWidget {
       context: context,
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
-        title: Text(title, style: AppTextStyles.headlineL.copyWith(fontSize: 18)),
+        title: Text(
+          title,
+          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
+        ),
         content: Text(body, style: AppTextStyles.bodyM),
         actions: [
           TextButton(

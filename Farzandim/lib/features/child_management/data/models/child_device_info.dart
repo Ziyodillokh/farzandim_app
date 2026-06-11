@@ -19,6 +19,10 @@ class ChildDeviceInfo {
     this.wifiName,
     this.isOnline = false,
     this.lastSeen,
+    this.locationPermission,
+    this.notificationPermission,
+    this.backgroundAllowed,
+    this.accessibilityEnabled,
   });
 
   /// Qurilma modeli (`samsung SM-N950F`, `Redmi Note 12`, va h.k.).
@@ -44,6 +48,21 @@ class ChildDeviceInfo {
 
   /// So'nggi heartbeat vaqti (Child App'dan Firestore'ga yozilgan).
   final DateTime? lastSeen;
+
+  // ─── OS-ruxsat holatlari (Block 4 / M12) ───
+  // `null` = noma'lum (Child App hali yubormagan). `true` = berilgan,
+  // `false` = rad etilgan.
+  /// Lokatsiya ruxsati berilganmi.
+  final bool? locationPermission;
+
+  /// Bildirishnoma ruxsati berilganmi.
+  final bool? notificationPermission;
+
+  /// Fon faolligi (batareya optimizatsiyadan istisno) ruxsati.
+  final bool? backgroundAllowed;
+
+  /// Accessibility xizmati (ilovani bloklash uchun) yoqilganmi.
+  final bool? accessibilityEnabled;
 
   // ═══════════════════════ DISPLAY HELPERS ═══════════════════════
 
@@ -89,18 +108,26 @@ class ChildDeviceInfo {
         other.isCharging == isCharging &&
         other.wifiName == wifiName &&
         other.isOnline == isOnline &&
-        other.lastSeen == lastSeen;
+        other.lastSeen == lastSeen &&
+        other.locationPermission == locationPermission &&
+        other.notificationPermission == notificationPermission &&
+        other.backgroundAllowed == backgroundAllowed &&
+        other.accessibilityEnabled == accessibilityEnabled;
   }
 
   @override
   int get hashCode => Object.hash(
-        deviceModel,
-        androidVersion,
-        appVersion,
-        batteryLevel,
-        isCharging,
-        wifiName,
-        isOnline,
-        lastSeen,
-      );
+    deviceModel,
+    androidVersion,
+    appVersion,
+    batteryLevel,
+    isCharging,
+    wifiName,
+    isOnline,
+    lastSeen,
+    locationPermission,
+    notificationPermission,
+    backgroundAllowed,
+    accessibilityEnabled,
+  );
 }

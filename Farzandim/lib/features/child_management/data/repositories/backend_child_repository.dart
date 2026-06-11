@@ -44,17 +44,15 @@ class BackendChildRepository {
     if (data == null) return const [];
     final list = data['children'];
     if (list is! List) return const [];
-    return list
-        .whereType<Map<String, dynamic>>()
-        .map(Child.fromJson)
-        .toList();
+    return list.whereType<Map<String, dynamic>>().map(Child.fromJson).toList();
   }
 
   /// Bitta bola — id bo'yicha.
   Future<Child?> getChild(String childId) async {
     try {
-      final response =
-          await _dio.get<Map<String, dynamic>>('/children/$childId');
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/children/$childId',
+      );
       final data = response.data;
       if (data == null) return null;
       return Child.fromJson(data);
@@ -175,6 +173,17 @@ class BackendChildRepository {
     final response = await _dio.put<Map<String, dynamic>>(
       '/children/$childId',
       data: <String, dynamic>{'blockUnknownSources': value},
+    );
+    return Child.fromJson(response.data ?? <String, dynamic>{});
+  }
+
+  /// "Barcha ilovalarni bloklash" toggle (dashboard) — `PUT /children/:id`.
+  /// `true` bo'lsa bola qurilmasidagi barcha ilovalar bloklanadi (Child App
+  /// device-policy'ni o'qib enforce qiladi). Yangilangan `Child` qaytadi.
+  Future<Child> setBlockAllApps(String childId, bool value) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/children/$childId',
+      data: <String, dynamic>{'blockAllApps': value},
     );
     return Child.fromJson(response.data ?? <String, dynamic>{});
   }

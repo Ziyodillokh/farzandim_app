@@ -1,4 +1,8 @@
 {
+  "sos": {
+    "wsBanner": "SOS! Bola yordam so'ramoqda",
+    "viewAction": "Ko'rish"
+  },
   "language": {
     "selectTitle": "Tilni tanlang",
     "selectSubtitle": "Ilovani qaysi tilda ishlatasiz?",
@@ -145,6 +149,11 @@
     }
   },
   "dashboard": {
+    "status": {
+      "online": "Onlayn",
+      "connectionLost": "Aloqa uzildi",
+      "offline": "Ulanmagan"
+    },
     "emptyState": {
       "message": "Farzandingizni dastur orqali kuzatib borish uchun uni qo'shing",
       "addButton": "Yangi bola qo'shish",
@@ -173,6 +182,9 @@
       "details": "Batafsil"
     },
     "screenTime": {
+      "blockAllOnSnack": "Barcha ilovalar bloklandi",
+      "blockAllOffSnack": "Bloklash o'chirildi",
+      "blockAllErrorSnack": "Xatolik — qayta urinib ko'ring",
       "todayTitle": "Bugun sarflangan vaqt",
       "blockAll": "Barcha ilovalarni bloklash"
     },
@@ -389,6 +401,16 @@
     "noChildren": "Bola qo'shilmagan. Avval Dashboard'da bola yarating."
   },
   "deviceSettings": {
+    "permissions": {
+      "title": "Ruxsatlar holati",
+      "location": "Lokatsiya",
+      "notification": "Bildirishnoma",
+      "background": "Fon faolligi",
+      "accessibility": "Maxsus imkoniyatlar",
+      "granted": "Berilgan",
+      "denied": "Rad etilgan",
+      "unknown": "Noma'lum"
+    },
     "headerTitle": "Qurilma sozlamalari",
     "sectionDevice": "QURILMA",
     "sectionStatus": "HOLAT",
@@ -592,6 +614,7 @@
     "comingSoon": "Tez kunda",
     "shareText": "Farzandim — farzandingiz joylashuvi, ekran vaqti va xotirjamligingiz uchun oilaviy ilova. Yuklab oling: https://farzandimedu.uz",
     "menu": {
+      "sosAlerts": "SOS alertlar",
       "addChild": "Bola qo'shish",
       "editChild": "Bolaning ma'lumotlarini tahrirlash",
       "sessions": "Faol sessiyalar",
