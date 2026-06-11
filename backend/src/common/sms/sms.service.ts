@@ -123,11 +123,46 @@ export class SmsService {
         res = await attempt(await this.getToken());
       }
 
+      // Eskiz javobini tahlil qilamiz — 200 status'da ham `status: error`
+      // bo'lishi mumkin (template approved emas, balans yo'q, va h.k.).
+      // Bularni o'tkazib yubormaslik uchun body'ni o'qiymiz.
+      const text = await res.text();
+      let body: { status?: string; message?: string; id?: string } = {};
+      try {
+        body = JSON.parse(text) as typeof body;
+      } catch {/* JSON emas — text qoldiramiz */}
+
       if (!res.ok) {
-        return { sent: false, error: `Eskiz send failed: ${res.status}` };
+        this.logger.error(
+          { phone: mobilePhone, status: res.status, body: text },
+          'Eskiz SMS HTTP xato',
+        );
+        return {
+          sent: false,
+          error: `Eskiz HTTP ${res.status}: ${body.message ?? text}`,
+        };
       }
+
+      // 200 javob, lekin Eskiz "status:error" qaytarishi mumkin.
+      // Yoki sms ID yo'q bo'lsa — yuborilmagan.
+      if (body.status === 'error' || (!body.id && body.status !== 'waiting')) {
+        this.logger.error(
+          { phone: mobilePhone, body: text },
+          'Eskiz SMS muvaffaqiyatsiz (200 lekin error)',
+        );
+        return {
+          sent: false,
+          error: `Eskiz: ${body.message ?? 'unknown error'} (templates approved'mi?)`,
+        };
+      }
+
+      this.logger.log(
+        { phone: mobilePhone, smsId: body.id, status: body.status },
+        'Eskiz SMS yuborildi',
+      );
       return { sent: true };
     } catch (err) {
+      this.logger.error({ err }, 'SMS sending exception');
       return {
         sent: false,
         error: err instanceof Error ? err.message : 'SMS sending error',
