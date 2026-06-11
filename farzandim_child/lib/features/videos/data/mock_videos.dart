@@ -2,10 +2,10 @@
 // MockVideos — 8 ta mock video ro'yxati
 // ─────────────────────────────────────────────────────────────────────
 //
-// 6 ta klassik (>90 sek) + 2 ta reels (≤90 sek). videoUrl'lar
-// W3C va test-videos.co.uk ochiq sample videolaridan — kelajakda
-// admin panel orqali Firestore'ga joylanadigan real videolar bilan
-// almashtiriladi.
+// 6 ta klassik (>90 sek) + 2 ta reels (≤90 sek). videoUrl'lar Google'ning
+// ochiq sample CDN'idan (commondatastorage.googleapis.com/gtv-videos-bucket)
+// — global, ishonchli va UZ tarmoqlaridan ham ochiladi. Kelajakda admin
+// panel orqali Firestore'ga joylanadigan real videolar bilan almashtiriladi.
 //
 // thumbnailUrl — Unsplash bepul rasmlardan, har mavzuga mos qilib
 // tanlangan. Real videolar yuklangach admin tomondan o'zgartiriladi.
@@ -18,19 +18,16 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 class MockVideos {
   MockVideos._();
 
-  // W3C — uzun sample videolar (~60s trailerlar)
-  static const String _sintel =
-      'https://media.w3.org/2010/05/sintel/trailer.mp4';
-  static const String _bunny =
-      'https://media.w3.org/2010/05/bunny/trailer.mp4';
-  static const String _movie300 =
-      'https://media.w3.org/2010/05/video/movie_300.mp4';
+  // Google ochiq sample CDN — uzun klassik videolar.
+  static const String _cdn =
+      'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample';
+  static const String _sintel = '$_cdn/Sintel.mp4';
+  static const String _bunny = '$_cdn/BigBuckBunny.mp4';
+  static const String _movie300 = '$_cdn/ElephantsDream.mp4';
 
-  // test-videos.co.uk — qisqa reels (~10s)
-  static const String _bunnyReel =
-      'https://test-videos.co.uk/vids/bigbuckbunny/mp4/h264/360/Big_Buck_Bunny_360_10s_1MB.mp4';
-  static const String _jellyfishReel =
-      'https://test-videos.co.uk/vids/jellyfish/mp4/h264/360/Jellyfish_360_10s_1MB.mp4';
+  // Qisqa klassik/reels samplelar (~15-60s) — bir xil ishonchli CDN.
+  static const String _bunnyReel = '$_cdn/ForBiggerBlazes.mp4';
+  static const String _jellyfishReel = '$_cdn/ForBiggerJoyrides.mp4';
 
   static final List<VideoModel> all = [
     const VideoModel(

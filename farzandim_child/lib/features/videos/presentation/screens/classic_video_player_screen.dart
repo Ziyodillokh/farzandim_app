@@ -33,7 +33,9 @@ class ClassicVideoPlayerScreen extends ConsumerStatefulWidget {
 class _ClassicVideoPlayerScreenState
     extends ConsumerState<ClassicVideoPlayerScreen> {
   late VideoPlayerController _controller;
-  bool _isPlaying = false;
+  bool _hasController = false;
+  bool _initInFlight = false;
+  bool _initializing = true;
   bool _showControls = true;
   Timer? _hideControlsTimer;
   Timer? _sleepTimer;
@@ -90,7 +92,10 @@ class _ClassicVideoPlayerScreenState
   void dispose() {
     _hideControlsTimer?.cancel();
     _sleepTimer?.cancel();
-    _controller.dispose();
+    if (_hasController) {
+      _controller.removeListener(_onControllerUpdate);
+      _controller.dispose();
+    }
 
     SystemChrome.setPreferredOrientations(
         [DeviceOrientation.portraitUp]);
@@ -101,28 +106,77 @@ class _ClassicVideoPlayerScreenState
 
   /// Video controller yaratish + init + xato handling. Retry uchun ham
   /// chaqiriladi — eski controller dispose qilinadi.
+  ///
+  /// MUHIM: `initialize()` ga 20s timeout — URL sekin/ulanmasa abadiy
+  /// spinner o'rniga xato + "Qaytadan" tugmasi chiqadi (foydalanuvchi
+  /// qotib qolmaydi).
   Future<void> _initController() async {
+    // Re-entrancy guard — "Qaytadan" tugmasi ikki marta bosilsa, bir xil
+    // controller ikki marta dispose bo'lib (ChangeNotifier-after-dispose
+    // crash + native player leak) qolmasligi uchun.
+    if (_initInFlight) return;
+    _initInFlight = true;
     try {
+      // Retry holati — eski controller'ni tozalab, UI'ni spinnerga qaytaramiz.
+      // Eski instance'ni LOKALGA olamiz va bookkeeping'ni await'dan OLDIN
+      // yangilaymiz — shu orada build() uni ishlatib qolmaydi (showCenter
+      // _initializing bilan o'chadi). Birinchi chaqiruvda _hasController false
+      // → bu blok o'tkazib yuboriladi (initState ichida setState yo'q).
+      if (_hasController) {
+        final old = _controller;
+        _hasController = false;
+        old.removeListener(_onControllerUpdate);
+        if (mounted) {
+          setState(() {
+            _initError = null;
+            _initializing = true;
+          });
+        }
+        await old.dispose();
+      }
+
       _controller = VideoPlayerController.networkUrl(
         Uri.parse(widget.video.videoUrl),
       );
-      await _controller.initialize();
-      if (!mounted) return;
+      _hasController = true;
+      await _controller.initialize().timeout(const Duration(seconds: 20));
+      if (!mounted) {
+        await _controller.dispose();
+        _hasController = false;
+        return;
+      }
+      // Video tugaganini aniqlash uchun (replay tugmasi + controls ko'rsatish).
+      _controller.addListener(_onControllerUpdate);
       // Initial settings'ni darhol qo'llash.
       final s = ref.read(playerSettingsProvider);
       await _controller.setPlaybackSpeed(s.speed);
       await _controller.setLooping(s.repeat);
-      setState(() {
-        _initError = null;
-      });
+      if (!mounted) return;
+      setState(() => _initializing = false);
       await _controller.play();
-      _isPlaying = true;
       _startHideControlsTimer();
     } catch (e) {
       if (!mounted) return;
       setState(() {
+        _initializing = false;
         _initError = "Videoni yuklab bo'lmadi. Internet aloqasini tekshiring.";
       });
+    } finally {
+      _initInFlight = false;
+    }
+  }
+
+  /// Controller har yangilanganda — video tugasa controls'ni ko'rsatamiz
+  /// (replay tugmasi ko'rinsin, qotib qolgan kadr ustida emas).
+  void _onControllerUpdate() {
+    if (!mounted) return;
+    final v = _controller.value;
+    final ended = v.duration > Duration.zero &&
+        v.position >= v.duration &&
+        !v.isPlaying;
+    if (ended && !_showControls) {
+      _hideControlsTimer?.cancel();
+      setState(() => _showControls = true);
     }
   }
 
@@ -149,12 +203,19 @@ class _ClassicVideoPlayerScreenState
   }
 
   void _togglePlay() {
-    if (_isPlaying) {
+    if (!_controller.value.isInitialized) return;
+    final v = _controller.value;
+    final ended = v.duration > Duration.zero && v.position >= v.duration;
+    if (ended) {
+      // Video tugagan — boshidan qayta o'ynaymiz.
+      _controller.seekTo(Duration.zero);
+      _controller.play();
+    } else if (v.isPlaying) {
       _controller.pause();
     } else {
       _controller.play();
     }
-    setState(() => _isPlaying = !_isPlaying);
+    setState(() {});
     _startHideControlsTimer();
   }
 
@@ -265,7 +326,7 @@ class _ClassicVideoPlayerScreenState
         ),
       );
     }
-    if (!_controller.value.isInitialized) {
+    if (_initializing || !_controller.value.isInitialized) {
       return const Center(
         child: CircularProgressIndicator(color: AppColors.primary),
       );
@@ -287,129 +348,184 @@ class _ClassicVideoPlayerScreenState
     );
   }
 
+  /// Controls overlay — 3 mustaqil qatlam (Stack):
+  ///   1. Yuqori/past qoraytirish gradienti (butun ekran).
+  ///   2. MARKAZIY play/pause/replay tugmasi — TO'LIQ EKRAN markazida
+  ///      (`Center`), panellar balandligidan VA notch'dan QAT'I NAZAR. Avval
+  ///      Column flex ichida edi → past panel balandroq bo'lgani uchun tugma
+  ///      markazdan tepada, landscape SafeArea esa o'ngga surardi.
+  ///   3. Tepa (back/title/settings) + past (slider/vaqt/lock) panellar —
+  ///      SafeArea ichida, Spacer bilan tepaga va pastga taqaladi.
   Widget _buildControls() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            // ignore: deprecated_member_use
-            Colors.black.withOpacity(0.5),
-            Colors.transparent,
-            // ignore: deprecated_member_use
-            Colors.black.withOpacity(0.7),
-          ],
+    final showCenter = !_initializing &&
+        _controller.value.isInitialized &&
+        _initError == null;
+
+    return Stack(
+      fit: StackFit.expand,
+      children: [
+        // 1. Gradient scrim — taplarni o'tkazadi (controls toggle uchun).
+        IgnorePointer(
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.black.withValues(alpha: 0.55),
+                  Colors.transparent,
+                  Colors.black.withValues(alpha: 0.7),
+                ],
+                stops: const [0.0, 0.45, 1.0],
+              ),
+            ),
+          ),
         ),
+        // 2. Markaziy tugma — ekran markazida.
+        if (showCenter) Center(child: _buildCenterButton()),
+        // 3. Panellar.
+        SafeArea(
+          child: Column(
+            children: [
+              _buildTopBar(),
+              const Spacer(),
+              if (showCenter) _buildBottomBar(),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  /// Tepa panel — orqaga, sarlavha, sozlamalar.
+  Widget _buildTopBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      child: Row(
+        children: [
+          IconButton(
+            icon: const Icon(AppIcons.back, color: Colors.white),
+            onPressed: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: Text(
+              widget.video.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+              ),
+            ),
+          ),
+          IconButton(
+            icon: const Icon(AppIcons.settings, color: Colors.white),
+            onPressed: _openSettings,
+          ),
+        ],
       ),
-      child: SafeArea(
-        child: Column(
-          children: [
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Row(
-                children: [
-                  IconButton(
-                    icon: const Icon(AppIcons.back,
-                        color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
+    );
+  }
+
+  /// Markaziy doira tugma — play / pause / replay (controller holatidan).
+  /// Buffering paytida yashirinadi (build()'dagi spinner ko'rinadi).
+  Widget _buildCenterButton() {
+    return ValueListenableBuilder<VideoPlayerValue>(
+      valueListenable: _controller,
+      builder: (_, v, __) {
+        if (v.isBuffering) return const SizedBox.shrink();
+        final ended = v.duration > Duration.zero && v.position >= v.duration;
+        final IconData icon = ended
+            ? Icons.replay_rounded
+            : (v.isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded);
+        return GestureDetector(
+          onTap: _togglePlay,
+          child: Container(
+            width: 76,
+            height: 76,
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.45),
+              shape: BoxShape.circle,
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.85),
+                width: 2,
+              ),
+            ),
+            child: Icon(icon, color: Colors.white, size: 44),
+          ),
+        );
+      },
+    );
+  }
+
+  /// Past panel — progress slider + vaqt + lock.
+  Widget _buildBottomBar() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          ValueListenableBuilder<VideoPlayerValue>(
+            valueListenable: _controller,
+            builder: (_, value, __) {
+              final maxSec = value.duration.inSeconds == 0
+                  ? 1.0
+                  : value.duration.inSeconds.toDouble();
+              return SliderTheme(
+                data: SliderTheme.of(context).copyWith(
+                  trackHeight: 3,
+                  thumbShape: const RoundSliderThumbShape(
+                    enabledThumbRadius: 7,
                   ),
-                  Expanded(
-                    child: Text(
-                      widget.video.title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
+                  overlayShape: const RoundSliderOverlayShape(
+                    overlayRadius: 14,
+                  ),
+                ),
+                child: Slider(
+                  value: value.position.inSeconds
+                      .toDouble()
+                      .clamp(0.0, maxSec),
+                  max: maxSec,
+                  activeColor: AppColors.primary,
+                  inactiveColor: Colors.white.withValues(alpha: 0.3),
+                  onChanged: (val) {
+                    _controller.seekTo(Duration(seconds: val.toInt()));
+                  },
+                ),
+              );
+            },
+          ),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                ValueListenableBuilder<VideoPlayerValue>(
+                  valueListenable: _controller,
+                  builder: (_, value, __) {
+                    return Text(
+                      '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
                       style: const TextStyle(
                         color: Colors.white,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w500,
+                        fontSize: 14,
                       ),
-                    ),
-                  ),
-                  IconButton(
-                    icon:
-                        const Icon(AppIcons.settings, color: Colors.white),
-                    onPressed: _openSettings,
-                  ),
-                ],
-              ),
+                    );
+                  },
+                ),
+                IconButton(
+                  icon: const Icon(Icons.lock_outline, color: Colors.white),
+                  onPressed: () {
+                    ref.read(playerSettingsProvider.notifier).state = ref
+                        .read(playerSettingsProvider)
+                        .copyWith(screenLocked: true);
+                    setState(() => _showControls = false);
+                  },
+                ),
+              ],
             ),
-            const Spacer(),
-            IconButton(
-              icon: Icon(
-                _isPlaying ? AppIcons.pause : Icons.play_circle,
-                color: Colors.white,
-                size: 64,
-              ),
-              onPressed: _togglePlay,
-            ),
-            const Spacer(),
-            Padding(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-              child: Column(
-                children: [
-                  ValueListenableBuilder<VideoPlayerValue>(
-                    valueListenable: _controller,
-                    builder: (_, value, __) {
-                      final maxSec = value.duration.inSeconds == 0
-                          ? 1.0
-                          : value.duration.inSeconds.toDouble();
-                      return Slider(
-                        value: value.position.inSeconds
-                            .toDouble()
-                            .clamp(0.0, maxSec),
-                        max: maxSec,
-                        activeColor: AppColors.primary,
-                        // ignore: deprecated_member_use
-                        inactiveColor: Colors.white.withOpacity(0.3),
-                        onChanged: (val) {
-                          _controller.seekTo(
-                              Duration(seconds: val.toInt()));
-                        },
-                      );
-                    },
-                  ),
-                  Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 16),
-                    child: Row(
-                      mainAxisAlignment:
-                          MainAxisAlignment.spaceBetween,
-                      children: [
-                        ValueListenableBuilder<VideoPlayerValue>(
-                          valueListenable: _controller,
-                          builder: (_, value, __) {
-                            return Text(
-                              '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
-                              style: const TextStyle(
-                                color: Colors.white,
-                                fontSize: 14,
-                              ),
-                            );
-                          },
-                        ),
-                        IconButton(
-                          icon: const Icon(Icons.lock_outline,
-                              color: Colors.white),
-                          onPressed: () {
-                            ref
-                                .read(playerSettingsProvider.notifier)
-                                .state = ref
-                                .read(playerSettingsProvider)
-                                .copyWith(screenLocked: true);
-                            setState(() => _showControls = false);
-                          },
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
