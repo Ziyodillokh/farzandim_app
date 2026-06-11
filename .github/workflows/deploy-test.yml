@@ -279,6 +279,19 @@ jobs:
           channel: stable
           cache: true
 
+      # Gradle dependency keshi — Maven Central ba'zan runner'larga 403
+      # (rate-limit) qaytaradi va build yiqiladi. Kesh bo'lsa artefaktlar
+      # tarmoqdan qayta yuklanmaydi → 403'ga chidamli + build tezroq.
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches
+            ~/.gradle/wrapper
+          key: gradle-${{ runner.os }}-${{ hashFiles('Farzandim/android/**/*.gradle*', 'farzandim_child/android/**/*.gradle*', '**/gradle-wrapper.properties', 'Farzandim/pubspec.lock', 'farzandim_child/pubspec.lock') }}
+          restore-keys: |
+            gradle-${{ runner.os }}-
+
       # Runner'da 7GB RAM bor — Gradle/lint xotirasini oshiramiz (lokal 4GB sozlamasi kam edi).
       # Bu "LintClassLoaderBuildService failed to stop" (metaspace/heap OOM) xatosini hal qiladi.
       - name: Tune Gradle memory for CI
@@ -306,20 +319,28 @@ jobs:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink \
-            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
-            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          build() {
+            flutter build apk --release --no-shrink \
+              --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
+              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          }
+          # Maven Central vaqtinchalik 403 (rate-limit) berishi mumkin —
+          # 60s kutib bir marta qayta urinamiz.
+          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
 
       - name: Build child APK
         working-directory: farzandim_child
         continue-on-error: true
         run: |
           flutter pub get
-          flutter build apk --release --no-shrink \
-            --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
-            --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          build() {
+            flutter build apk --release --no-shrink \
+              --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
+              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          }
+          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
 
       - name: Install transfer tools
         run: sudo apt-get update && sudo apt-get install -y sshpass rsync
