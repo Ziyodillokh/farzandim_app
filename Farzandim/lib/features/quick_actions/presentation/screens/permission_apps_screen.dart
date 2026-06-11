@@ -48,14 +48,28 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
   }
 
   Future<void> _toggle(String packageName, bool allowed) async {
-    await ref
-        .read(backendAppPermissionRepositoryProvider)
-        .setPolicy(
-          childId: _childId,
-          packageName: packageName,
-          permission: widget.permission,
-          allowed: allowed,
+    try {
+      await ref
+          .read(backendAppPermissionRepositoryProvider)
+          .setPolicy(
+            childId: _childId,
+            packageName: packageName,
+            permission: widget.permission,
+            allowed: allowed,
+          );
+    } catch (_) {
+      // Saqlash yiqildi (offline/server) — foydalanuvchiga aniq xabar,
+      // jim yutilmaydi (EH-07). Quyidagi invalidate haqiqiy holatni qaytaradi
+      // (optimistik toggle orqaga "sakraydi").
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content:
+                Text("Saqlab bo'lmadi. Internet aloqasini tekshiring."),
+          ),
         );
+      }
+    }
     ref.invalidate(
       appPermissionPoliciesProvider((_childId, widget.permission)),
     );

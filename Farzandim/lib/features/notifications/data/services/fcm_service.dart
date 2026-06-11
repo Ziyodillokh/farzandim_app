@@ -227,45 +227,56 @@ class FcmService {
 
 /// FCM tap-event'ni `GoRouter` orqali tegishli ekranga navigatsiya
 /// qilish.
+///
+/// MUHIM (BUG-02): `go()` flat route'ga stack'ni BO'SHATIB qo'yardi —
+/// foydalanuvchi "orqaga" bossa GoError ("There is nothing to pop") yoki
+/// ilovadan chiqib ketardi. Endi dashboard asos qilinib ustiga `push` —
+/// "orqaga" har doim dashboard'ga qaytadi.
 void handleFcmTap(AppNotification notif, GoRouter router) {
+  void open(String path) {
+    router
+      ..go(AppRoutes.dashboard)
+      ..push(path);
+  }
+
   switch (notif.type) {
     case NotificationType.sos:
     case NotificationType.enterZone:
     case NotificationType.exitZone:
       if (notif.childId.isEmpty) {
-        router.go(AppRoutes.notifications);
+        open(AppRoutes.notifications);
       } else {
-        router.go(AppRoutes.locationPath(notif.childId));
+        open(AppRoutes.locationPath(notif.childId));
       }
     case NotificationType.lowBattery:
       // Past batareya — bola qayerdaligi muhim → jonli xarita.
       if (notif.childId.isNotEmpty) {
-        router.go(AppRoutes.locationPath(notif.childId));
+        open(AppRoutes.locationPath(notif.childId));
       } else {
-        router.go(AppRoutes.notifications);
+        open(AppRoutes.notifications);
       }
     case NotificationType.appLimit:
     case NotificationType.game:
       if (notif.childId.isNotEmpty) {
-        router.go(AppRoutes.appRestrictionsPath(notif.childId));
+        open(AppRoutes.appRestrictionsPath(notif.childId));
       } else {
-        router.go(AppRoutes.notifications);
+        open(AppRoutes.notifications);
       }
     case NotificationType.scheduleStart:
     case NotificationType.scheduleReminder:
       if (notif.childId.isNotEmpty) {
-        router.go(AppRoutes.schedulesPath(notif.childId));
+        open(AppRoutes.schedulesPath(notif.childId));
       } else {
-        router.go(AppRoutes.notifications);
+        open(AppRoutes.notifications);
       }
     case NotificationType.pairRequest:
       if (notif.childId.isNotEmpty) {
-        router.go(AppRoutes.pairRequestsPath(notif.childId));
+        open(AppRoutes.pairRequestsPath(notif.childId));
       } else {
-        router.go(AppRoutes.notifications);
+        open(AppRoutes.notifications);
       }
     case NotificationType.offline:
     case NotificationType.online:
-      router.go(AppRoutes.notifications);
+      open(AppRoutes.notifications);
   }
 }

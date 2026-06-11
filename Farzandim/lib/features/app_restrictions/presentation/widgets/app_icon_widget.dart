@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -8,7 +9,7 @@ import 'package:flutter/material.dart';
 ///
 /// Hech qaysisi mavjud bo'lmasa, paket nomidan taxminiy `IconData`
 /// ko'rsatiladi (Instagram=camera, TikTok=music, va h.k.).
-class AppIconWidget extends StatelessWidget {
+class AppIconWidget extends StatefulWidget {
   /// `AppIconWidget` konstruktor.
   const AppIconWidget({
     required this.packageName,
@@ -30,6 +31,37 @@ class AppIconWidget extends StatelessWidget {
 
   /// Widget o'lchami (kvadrat, default 48dp).
   final double size;
+
+  @override
+  State<AppIconWidget> createState() => _AppIconWidgetState();
+}
+
+class _AppIconWidgetState extends State<AppIconWidget> {
+  // Decode natijasi MEMOIZE qilinadi (PERF-04): avval StatelessWidget har
+  // rebuild'da base64Decode + YANGI Uint8List yaratardi — Image.memory
+  // keshini doim sog'inib (yangi obyekt = yangi kesh kaliti), ro'yxat
+  // scroll'ida qayta-qayta dekod bo'lardi.
+  Uint8List? _decodedBytes;
+  String? _decodedFrom;
+
+  Uint8List? get _bytes {
+    final code = widget.iconBase64;
+    if (code == null || code.isEmpty) return null;
+    if (identical(code, _decodedFrom) || code == _decodedFrom) {
+      return _decodedBytes;
+    }
+    try {
+      _decodedBytes = base64Decode(code);
+    } catch (_) {
+      _decodedBytes = null;
+    }
+    _decodedFrom = code;
+    return _decodedBytes;
+  }
+
+  double get size => widget.size;
+  String? get iconUrl => widget.iconUrl;
+  String get packageName => widget.packageName;
 
   /// Paket nomidan tipik IconData taxmin qilamiz.
   IconData _fallbackIcon(String pkg) {
@@ -88,24 +120,19 @@ class AppIconWidget extends StatelessWidget {
   }
 
   Widget _buildBase64OrFallback(BorderRadius radius) {
-    final code = iconBase64;
-    if (code != null && code.isNotEmpty) {
-      try {
-        final bytes = base64Decode(code);
-        return ClipRRect(
-          borderRadius: radius,
-          child: Image.memory(
-            bytes,
-            width: size,
-            height: size,
-            fit: BoxFit.cover,
-            gaplessPlayback: true,
-            errorBuilder: (_, __, ___) => _buildFallback(radius),
-          ),
-        );
-      } catch (_) {
-        return _buildFallback(radius);
-      }
+    final bytes = _bytes;
+    if (bytes != null) {
+      return ClipRRect(
+        borderRadius: radius,
+        child: Image.memory(
+          bytes,
+          width: size,
+          height: size,
+          fit: BoxFit.cover,
+          gaplessPlayback: true,
+          errorBuilder: (_, __, ___) => _buildFallback(radius),
+        ),
+      );
     }
     return _buildFallback(radius);
   }

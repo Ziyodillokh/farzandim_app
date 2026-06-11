@@ -53,8 +53,17 @@ class DashboardScreen extends ConsumerWidget {
     // "Bola qo'shing" ko'rsatiladi. Qayta-fetch paytida oxirgi ro'yxat
     // (valueOrNull, copyWithPrevious) saqlanib turadi.
     final Widget body;
-    if (!isAuthed || children == null) {
+    if (!isAuthed) {
       body = const _DashboardLoading();
+    } else if (children == null) {
+      // Birinchi yuklash XATO bo'lsa (offline ochilish) — abadiy spinner
+      // o'rniga aniq xabar + retry (EH-05). Hali yuklanmoqda bo'lsa spinner.
+      body = childrenAsync.hasError
+          ? _DashboardError(
+              onRetry: () =>
+                  ref.read(childrenRefreshTickProvider.notifier).state++,
+            )
+          : const _DashboardLoading();
     } else if (children.isEmpty) {
       body = childrenAsync.isLoading
           ? const _DashboardLoading()
@@ -82,6 +91,51 @@ class _DashboardLoading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(child: CircularProgressIndicator(color: AppColors.accent));
+  }
+}
+
+/// Birinchi yuklash xatosi (offline ochilish) — aniq xabar + qayta urinish.
+/// Avval abadiy spinner ko'rinardi (EH-05).
+class _DashboardError extends StatelessWidget {
+  const _DashboardError({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.wifi_off_rounded,
+              size: 48, color: AppColors.textSecondary),
+          const SizedBox(height: AppDimensions.md),
+          Padding(
+            padding:
+                const EdgeInsets.symmetric(horizontal: AppDimensions.xl),
+            child: Text(
+              "Ma'lumotlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring.",
+              textAlign: TextAlign.center,
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+          TextButton.icon(
+            onPressed: onRetry,
+            icon: Icon(Icons.refresh_rounded, color: AppColors.accent),
+            label: Text(
+              'Qayta urinish',
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.accent,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
   }
 }
 

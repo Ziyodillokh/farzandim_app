@@ -8,6 +8,7 @@
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
@@ -23,7 +24,17 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// davomida davom etardi.
 final weeklyChildUsageProvider = StreamProvider.autoDispose
     .family<List<DailyUsageTotal>, String>((ref, childId) async* {
+  // Auth guard — logout'dan keyin 401 polling qilmaslik uchun.
+  final isAuthed =
+      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  if (!isAuthed) {
+    yield const <DailyUsageTotal>[];
+    return;
+  }
   keepAliveFor(ref, const Duration(minutes: 2));
+  // Zombi-guard: bekor qilingan generator faqat keyingi yield'da to'xtaydi.
+  var alive = true;
+  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
   // Birinchi yuklash. Xato bo'lsa AsyncLoading qoladi (_TimeCard "—" ko'rsatadi),
   // polling keyin qayta urinadi.
@@ -37,6 +48,7 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
   // "0 daqiqa"ga tushib qolmaydi (avvalgi regressiya).
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
+    if (!alive) return;
     if (!isAppResumed(ref)) continue;
     try {
       yield await repo.getWeeklyTotals(
@@ -56,7 +68,10 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
 /// shu provider'dan o'qiydi — shuning uchun ikki ekranda qiymat DOIM bir xil
 /// va realtime bo'ladi (avval dashboard per-app yig'indini alohida hisoblardi,
 /// shu sababli 1h7m ↔ 1h22m kabi farq chiqardi).
-final todayScreenTimeMsProvider = Provider.family<int, String>((ref, childId) {
+/// `autoDispose` (REG-2): busiz bu non-autoDispose provider weekly poller'ni
+/// ABADIY ushlab turardi — weekly'ning autoDispose'i jim ishlamay qolardi.
+final todayScreenTimeMsProvider =
+    Provider.autoDispose.family<int, String>((ref, childId) {
   final weekly =
       ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
   if (weekly.isEmpty) return 0;

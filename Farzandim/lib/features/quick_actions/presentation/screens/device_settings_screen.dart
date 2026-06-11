@@ -42,12 +42,20 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
   void initState() {
     super.initState();
     // Ekran ochilganda eng so'nggi qurilma ma'lumotini ko'rsatish uchun
-    // bolalar ro'yxatini yangilaymiz (child heartbeat backend'ni yangilaydi).
-    Future.microtask(() => ref.invalidate(childrenProvider));
-    // Ekran ochiq turganda har 10s yangilab turamiz — batareya/zaryadlanish/
-    // online holat deyarli real-time ko'rinadi (child 20s heartbeat).
-    _refreshTimer = Timer.periodic(const Duration(seconds: 10), (_) {
-      if (mounted) ref.invalidate(childrenProvider);
+    // bolalar ro'yxatini yangilaymiz. MUHIM (PERF-07): `invalidate` EMAS —
+    // u provider'ni DISPOSE qilib ILOVA BO'YLAB barcha watcher'larni
+    // (dashboard, xarita, limits) loading→data siklidan o'tkazardi.
+    // Tick-bump recompute qiladi (copyWithPrevious, flash yo'q).
+    Future.microtask(
+      () => ref.read(childrenRefreshTickProvider.notifier).state++,
+    );
+    // Ekran ochiq turganda har 30s yangilab turamiz (childrenProvider'ning
+    // o'z ichki 60s poll'iga qo'shimcha tezlik shu ekran uchun; avval 10s
+    // edi — bola heartbeat'i 20-60s bo'lgani uchun 10s ortiqcha yuk edi).
+    _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
+      if (mounted) {
+        ref.read(childrenRefreshTickProvider.notifier).state++;
+      }
     });
   }
 

@@ -23,13 +23,13 @@ class VoiceMessagesScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final childrenAsync = ref.watch(childrenProvider);
-    // Stream'lar real-time — invalidate qilsa qayta subscribe bo'ladi
-    // (pull-to-refresh UX uchun foydalanuvchi tasdiq oladi).
+    // MUHIM (REG-3): MANBA family'ni invalidate qilamiz — derived
+    // provider'lar (latest/unread/sorted) o'zlari recompute bo'ladi.
+    // Avval faqat derived'lar invalidate qilinardi: manba qayta fetch
+    // qilinmagani uchun pull-to-refresh yangi xabar OLMASDI (WS event
+    // o'tkazib yuborilgan bo'lsa cheksiz eskirgan ko'rinardi).
     Future<void> onRefresh() async {
-      ref
-        ..invalidate(latestVoiceMessageProvider)
-        ..invalidate(unreadVoiceMessagesProvider)
-        ..invalidate(sortedChildrenForVoiceProvider);
+      ref.invalidate(voiceMessagesProvider);
       await Future<void>.delayed(const Duration(milliseconds: 500));
     }
 

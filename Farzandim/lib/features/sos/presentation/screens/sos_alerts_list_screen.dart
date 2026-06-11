@@ -161,9 +161,28 @@ class _AlertsList extends ConsumerWidget {
       error: (e, _) => Center(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.lg),
-          child: Text(
-            'Yuklanmadi: $e',
-            style: AppTextStyles.bodyM.copyWith(color: AppColors.error),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                "SOS ro'yxatini yuklab bo'lmadi.\n"
+                'Internet aloqasini tekshiring.',
+                textAlign: TextAlign.center,
+                style: AppTextStyles.bodyM.copyWith(color: AppColors.error),
+              ),
+              const SizedBox(height: AppDimensions.md),
+              TextButton.icon(
+                onPressed: () => ref.invalidate(sosAlertsByStatusProvider),
+                icon: Icon(Icons.refresh_rounded, color: AppColors.accent),
+                label: Text(
+                  'Qayta urinish',
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ),
+            ],
           ),
         ),
       ),

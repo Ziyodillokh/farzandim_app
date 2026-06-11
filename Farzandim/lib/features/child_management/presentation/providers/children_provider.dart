@@ -32,10 +32,17 @@ final childrenRefreshTickProvider = StateProvider<int>((_) => 0);
 /// o'zi ichki 60s poll bilan yangilaydi). `autoDispose`: dashboard yopilsa
 /// puls to'xtaydi; fonda ham emit qilmaydi (lifecycle skip — bekorga ish yo'q).
 final statusTickProvider = StreamProvider.autoDispose<int>((ref) async* {
+  // MUHIM (zombi-guard): bekor qilingan async* generator faqat KEYINGI
+  // yield'da to'xtaydi — `continue` yo'lida yield yo'q, shuning uchun
+  // dispose/recompute'dan keyin generator abadiy yashab qolardi. onDispose
+  // har rebuild'da ham chaqiriladi (riverpod 2.6) → flag ishonchli.
+  var alive = true;
+  ref.onDispose(() => alive = false);
   var i = 0;
   yield i;
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (t) => t)) {
+    if (!alive) return;
     if (!isAppResumed(ref)) continue;
     yield ++i;
   }
@@ -71,16 +78,27 @@ final childrenProvider = StreamProvider<List<Child>>((ref) {
 /// xatosi YUTILMAYDI (StreamProvider error → copyWithPrevious, dashboard
 /// bo'sh "flash" bermaydi); poll xatolari skip (oxirgi qiymat saqlanadi).
 Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
+  // MUHIM (zombi-guard): bekor qilingan async* generator faqat KEYINGI
+  // yield'da to'xtaydi. Bu loop'da `continue`/dedup/catch yo'llari yield
+  // QILMAYDI — guard'siz har recompute (resume tick, CRUD, pull-to-refresh)
+  // eski generatorni YETIM qoldirib, u o'z Stream.periodic'i bilan abadiy
+  // poll qilaverardi (logout'dan keyin — cheksiz 401). onDispose har
+  // rebuild'da ham chaqiriladi → flag recompute'da ham ishonchli.
+  var alive = true;
+  ref.onDispose(() => alive = false);
+
   final repo = ref.watch(backendChildRepositoryProvider);
   var current = await repo.getChildren();
   yield current;
 
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (t) => t)) {
+    if (!alive) return;
     // Ilova fonda — so'rov yubormaymiz (batareya + backend yuki).
     if (!isAppResumed(ref)) continue;
     try {
       final fresh = await repo.getChildren();
+      if (!alive) return;
       // O'zgarmagan bo'lsa yield YO'Q — eski List identity qoladi,
       // watcher'lar rebuild bo'lmaydi (Child'da value-based == bor).
       if (!listEquals(fresh, current)) {

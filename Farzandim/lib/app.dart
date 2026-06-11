@@ -184,7 +184,9 @@ class FarzandimApp extends ConsumerWidget {
     // Birinchi qiymat — ref.watch (initial), keyingilari — ref.listen.
     final initialUpdateStatus = ref.watch(appUpdateProvider).valueOrNull;
     if (initialUpdateStatus != null &&
-        initialUpdateStatus.state == UpdateState.forceUpdateRequired) {
+        initialUpdateStatus.state == UpdateState.forceUpdateRequired &&
+        !_forceUpdateDialogShown) {
+      _forceUpdateDialogShown = true;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         final router = ref.read(routerProvider);
         final navContext = router.routerDelegate.navigatorKey.currentContext;
@@ -200,6 +202,8 @@ class FarzandimApp extends ConsumerWidget {
       final status = next.valueOrNull;
       if (status == null) return;
       if (status.state != UpdateState.forceUpdateRequired) return;
+      if (_forceUpdateDialogShown) return;
+      _forceUpdateDialogShown = true;
       final router = ref.read(routerProvider);
       final navContext = router.routerDelegate.navigatorKey.currentContext;
       if (navContext == null) return;
@@ -248,3 +252,8 @@ class FarzandimApp extends ConsumerWidget {
 /// Global ScaffoldMessenger key — geo zone alert SnackBar har joydan
 /// ko'rinishi uchun (router shape'idan tashqarida ham). Sprint 4.4.3.
 final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
+
+/// Force-update dialogi BIR MARTA ochilsin — busiz har rebuild'da
+/// (`ref.watch(appUpdateProvider)` build ichida) dialog ustma-ust qayta
+/// ochilardi (ARCH-10).
+bool _forceUpdateDialogShown = false;

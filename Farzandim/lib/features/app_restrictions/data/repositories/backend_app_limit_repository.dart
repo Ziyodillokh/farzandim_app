@@ -36,7 +36,14 @@ class BackendAppLimitRepository {
     return wires.map((w) => w.toRestriction()).toList();
   }
 
-  Future<List<_AppLimitWire>> _getLimits(String childId) async {
+  /// `throwOnError`: `remove()` kabi YOZUV oqimlarida true — xato yutilsa
+  /// "limit topilmadi → allaqachon yo'q → muvaffaqiyat" degan YOLG'ON natija
+  /// chiqardi (EH-04): offline'da foydalanuvchi "o'chirildi" deb o'ylaydi,
+  /// blok esa bola qurilmasida aktiv qoladi.
+  Future<List<_AppLimitWire>> _getLimits(
+    String childId, {
+    bool throwOnError = false,
+  }) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/app-limits',
@@ -49,6 +56,7 @@ class BackendAppLimitRepository {
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendAppLimitRepository._getLimits: $e');
+      if (throwOnError) rethrow;
       return const [];
     }
   }
@@ -96,7 +104,8 @@ class BackendAppLimitRepository {
   }) async {
     final _AppLimitWire? match;
     try {
-      final existing = await _getLimits(childId);
+      // throwOnError: GET yiqilsa yolg'on "allaqachon yo'q" emas — aniq xato.
+      final existing = await _getLimits(childId, throwOnError: true);
       match = existing
           .where((l) => l.packageName == packageName)
           .cast<_AppLimitWire?>()

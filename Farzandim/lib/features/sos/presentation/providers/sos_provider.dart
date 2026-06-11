@@ -21,18 +21,25 @@ final sosAlertsByStatusProvider =
   }
 
   final repo = ref.watch(backendSosRepositoryProvider);
-  yield await repo.getAlerts(status: status);
 
+  // MUHIM (P0-3 + P0-REG-2): controller va WS obunalar BIRINCHI fetch'dan
+  // OLDIN o'rnatiladi. Avval birinchi fetch xato bo'lsa generator O'LARDI —
+  // WS obunalar hech o'rnatilmay, provider doimiy AsyncError'da tiqilib
+  // qolardi. Endi: birinchi xato addError orqali ekranga chiqadi (aniq
+  // xato + retry), lekin stream OCHIQ qoladi — keyingi WS event yoki
+  // retry AsyncData'ni tiklaydi.
   final controller = StreamController<List<Map<String, dynamic>>>();
-  Future<void> refresh() async {
+  Future<void> refresh({bool surfaceError = false}) async {
     if (controller.isClosed) return;
     try {
       final list = await repo.getAlerts(status: status);
       if (!controller.isClosed) controller.add(list);
-    } catch (_) {
-      // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi. (Birinchi
-      // yuklash xatosi esa yuqoridagi yield'da throw bo'lib ekranda aniq
-      // ko'rsatiladi — P0-3.)
+    } catch (e, st) {
+      if (surfaceError && !controller.isClosed) {
+        controller.addError(e, st);
+      }
+      // WS-triggered refresh xatosi (surfaceError=false) — oxirgi ro'yxat
+      // saqlanadi.
     }
   }
 
@@ -44,6 +51,9 @@ final sosAlertsByStatusProvider =
     resolvedSub.cancel();
     controller.close();
   });
+
+  // Birinchi yuklash — xatosi ekranga chiqadi (yolg'on "tinch" emas).
+  unawaited(refresh(surfaceError: true));
   yield* controller.stream;
 });
 

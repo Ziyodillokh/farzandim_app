@@ -43,6 +43,11 @@ final todayUsageProvider = StreamProvider.autoDispose
     return;
   }
   keepAliveFor(ref, const Duration(minutes: 2));
+  // Zombi-guard: bekor qilingan generator faqat keyingi yield'da to'xtaydi —
+  // `continue`/catch yo'llarida yield yo'q, guard'siz yetim generator fonda/
+  // xato davrida abadiy poll qilaverardi.
+  var alive = true;
+  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
 
   // Birinchi fetch
@@ -51,6 +56,7 @@ final todayUsageProvider = StreamProvider.autoDispose
   // Polling — har 30 sek, faqat provider hayot VA ilova ko'rinib turganda.
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
+    if (!alive) return;
     if (!isAppResumed(ref)) continue;
     try {
       yield await repo.getTodayUsage(childId);
@@ -71,6 +77,9 @@ final installedAppsProvider = StreamProvider.autoDispose
     return;
   }
   keepAliveFor(ref, const Duration(minutes: 2));
+  // Zombi-guard (todayUsage'dagi kabi).
+  var alive = true;
+  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
   yield await repo.getInstalledApps(childId: childId);
 
@@ -78,6 +87,7 @@ final installedAppsProvider = StreamProvider.autoDispose
   // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (i) => i)) {
+    if (!alive) return;
     if (!isAppResumed(ref)) continue;
     try {
       yield await repo.getInstalledApps(childId: childId);
