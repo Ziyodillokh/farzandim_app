@@ -238,7 +238,6 @@ class _RequestTile extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: AppDimensions.md),
         child: SettingsCard(
           accent: AppColors.featurePurple,
-          rail: false,
           padding: const EdgeInsets.all(AppDimensions.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,

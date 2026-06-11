@@ -153,7 +153,6 @@ class _FeedbackTile extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: AppColors.warning,
-        rail: false,
         padding: const EdgeInsets.all(AppDimensions.md),
         onTap: () => _onTap(context, ref),
         child: Row(

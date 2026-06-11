@@ -87,14 +87,17 @@ class FarzandimApp extends ConsumerWidget {
       if (messenger == null) return;
       messenger.showSnackBar(
         SnackBar(
-          content: const Row(
+          content: Row(
             children: [
-              Icon(Icons.warning_amber_rounded, color: Colors.white),
-              SizedBox(width: 8),
+              const Icon(Icons.warning_amber_rounded, color: Colors.white),
+              const SizedBox(width: 8),
               Expanded(
                 child: Text(
-                  '🚨 SOS! Bola yordam so\'ramoqda',
-                  style: TextStyle(fontWeight: FontWeight.w700, fontSize: 16),
+                  '🚨 ${'sos.wsBanner'.tr()}',
+                  style: const TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                  ),
                 ),
               ),
             ],
@@ -102,6 +105,13 @@ class FarzandimApp extends ConsumerWidget {
           backgroundColor: const Color(0xFFEF4444),
           duration: const Duration(seconds: 10),
           behavior: SnackBarBehavior.floating,
+          // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
+          // "hal qilindi"). Pair-request banner bilan bir xil pattern.
+          action: SnackBarAction(
+            label: 'sos.viewAction'.tr(),
+            textColor: Colors.white,
+            onPressed: () => ref.read(routerProvider).push(AppRoutes.sosAlerts),
+          ),
         ),
       );
     });

@@ -51,6 +51,19 @@ export class FcmTokensController {
     return this.fcmTokensService.findAllByUser(user.userId);
   }
 
+  @Post('test')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Send a test push to self (diagnostics — returns token/sent/failed)',
+  })
+  @ApiResponse({
+    status: 200,
+    description: '{ tokens, sent, failed, invalid }',
+  })
+  async test(@CurrentUser() user: JwtPayload) {
+    return this.fcmTokensService.sendTestPush(user.userId);
+  }
+
   @Delete('tokens/:id')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Unregister a single FCM token by ID' })

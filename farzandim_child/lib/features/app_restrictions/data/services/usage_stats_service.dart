@@ -71,6 +71,18 @@ class UsageStatsService {
     }
   }
 
+  /// Accessibility xizmati (RestrictionService) yoqilganmi — ota-onaga
+  /// qurilma "Accessibility holati"ni ko'rsatish uchun (Block 4 / M12).
+  Future<bool> isAccessibilityEnabled() async {
+    try {
+      return await _channel.invokeMethod<bool>('isAccessibilityEnabled') ??
+          false;
+    } catch (e) {
+      debugPrint('UsageStats isAccessibilityEnabled xato: $e');
+      return false;
+    }
+  }
+
   /// Sistema sozlamalari ochish (foydalanuvchi qo'lda yoqadi).
   Future<void> openSettings() async {
     try {

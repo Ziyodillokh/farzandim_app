@@ -1,4 +1,8 @@
 {
+  "sos": {
+    "wsBanner": "SOS! Your child needs help",
+    "viewAction": "View"
+  },
   "language": {
     "selectTitle": "Choose your language",
     "selectSubtitle": "Which language do you want to use the app in?",
@@ -145,6 +149,11 @@
     }
   },
   "dashboard": {
+    "status": {
+      "online": "Online",
+      "connectionLost": "Connection lost",
+      "offline": "Not connected"
+    },
     "emptyState": {
       "message": "Add your child to start monitoring through the app",
       "addButton": "Add new child",
@@ -173,6 +182,9 @@
       "details": "Details"
     },
     "screenTime": {
+      "blockAllOnSnack": "All apps blocked",
+      "blockAllOffSnack": "Blocking turned off",
+      "blockAllErrorSnack": "Error — please try again",
       "todayTitle": "Time spent today",
       "blockAll": "Block all apps"
     },
@@ -389,6 +401,16 @@
     "noChildren": "No children added. First create a child in Dashboard."
   },
   "deviceSettings": {
+    "permissions": {
+      "title": "Permissions status",
+      "location": "Location",
+      "notification": "Notifications",
+      "background": "Background activity",
+      "accessibility": "Accessibility",
+      "granted": "Granted",
+      "denied": "Denied",
+      "unknown": "Unknown"
+    },
     "headerTitle": "Device settings",
     "sectionDevice": "DEVICE",
     "sectionStatus": "STATUS",
@@ -426,7 +448,7 @@
     "activity": "Activity",
     "appPermissionsRow": "App permissions",
     "unknownSources": {
-      "title": "Apps from unknown sources",
+      "title": "Unknown sources",
       "desc": "{name} will be restricted from using apps from sources other than Play Market",
       "enabledSnack": "Apps from unknown sources are now blocked",
       "disabledSnack": "Apps from unknown sources are now allowed",
@@ -592,6 +614,7 @@
     "comingSoon": "Coming soon",
     "shareText": "Farzandim — a safe family app for your child's location, screen time and peace of mind. Download: https://farzandimedu.uz",
     "menu": {
+      "sosAlerts": "SOS alerts",
       "addChild": "Add child",
       "editChild": "Edit child details",
       "sessions": "Active sessions",

@@ -72,6 +72,14 @@ class RestrictionService : Service() {
         private const val PREFS_KEY_BLOCKED = "flutter.restriction.blocked_packages"
         private const val PREFS_KEY_LIMITS = "flutter.restriction.limits"
 
+        // O'yin (CATEGORY_GAME) foreground'ga chiqqanda shu prefs queue'ga
+        // JSON string sifatida yoziladi. Dart bg isolate (~60s) o'qib, tozalab,
+        // backend'ga POST qiladi → ota-onaga "o'ynayapti" push. (MethodChannel
+        // bg isolate'da ishlamaydi, shuning uchun aniqlash NATIVE shu yerda.)
+        private const val PREFS_KEY_GAME_PENDING = "flutter.game.pending"
+        // Bir o'yin shu muddat ichida queue'ga faqat bir marta (takror push yo'q).
+        private const val GAME_DEDUP_MS = 5 * 60 * 1000L
+
         // "Notanish manbalardan ilovalar" — Play'dan boshqa manbadagi
         // ilovalarni bloklash flag'i (Dart device-policy sync yozadi).
         private const val PREFS_KEY_BLOCK_UNKNOWN =
@@ -102,6 +110,18 @@ class RestrictionService : Service() {
     // o'zgarmaydi, shuning uchun bir marta hisoblab keshlaymiz (har 3s
     // PackageManager chaqirmaslik uchun).
     private val unknownSourceCache = HashMap<String, Boolean>()
+
+    // O'yin aniqlash keshlari: paket → o'yinmi; paket → oxirgi queue vaqti;
+    // oxirgi foreground paket (edge-trigger — faqat YANGI ochilganda queue).
+    private val gameCache = HashMap<String, Boolean>()
+    private val lastGameQueued = HashMap<String, Long>()
+    private var lastForegroundForGame: String? = null
+
+    // getForegroundPackage() "sticky" qiymati — uzoq turgan o'yin/ilovada
+    // queryEvents oynasida yangi ACTIVITY_RESUMED bo'lmasa, oxirgi ma'lum
+    // foreground'ni qaytaramiz (null o'rniga). Aks holda o'yin aniqlash oynasi
+    // juda tor bo'lib qoladi va uzoq o'ynalgan o'yin queue'ga tushmaydi.
+    private var lastForegroundSticky: String? = null
 
     private val pollRunnable = object : Runnable {
         override fun run() {
@@ -184,6 +204,14 @@ class RestrictionService : Service() {
      *      oshgan bo'lsa overlay
      */
     private fun checkRestrictions() {
+        // O'YIN aniqlash — cheklovlardan QAT'IY NAZAR har poll'da ishlaydi
+        // (foreground o'yin bo'lsa prefs queue'ga qo'shiladi). Cheklov yo'q
+        // bo'lsa ham ishlashi shart — shuning uchun early-return'dan OLDINDA.
+        val foreground = getForegroundPackage()
+        if (foreground != null && foreground != packageName) {
+            detectAndQueueGame(foreground)
+        }
+
         val blocked = readBlockedPackages()
         val limits = readLimits() // Map<String, Int> minutes
         val blockUnknown = readBlockUnknown()
@@ -193,7 +221,7 @@ class RestrictionService : Service() {
             return
         }
 
-        val foreground = getForegroundPackage() ?: return
+        if (foreground == null) return
 
         // O'zining app'ini block qilmaslik (overlay loop'dan saqlash).
         if (foreground == packageName) {
@@ -400,16 +428,186 @@ class RestrictionService : Service() {
         }
     }
 
+    // ───────────────────────── O'YIN ANIQLASH ─────────────────────────
+
     /**
-     * Oxirgi 5 sek ichida foreground bo'lgan paket nomi. UsageStatsManager
-     * MOVE_TO_FOREGROUND event'larini scan qiladi.
+     * Ilova O'YIN'mi — 3 signal (birortasi yetarli):
+     *   1. CATEGORY_GAME (O+) — manifest `android:appCategory="game"`.
+     *   2. FLAG_IS_GAME — eski `android:isGame` atributi.
+     *   3. O'yin engine native lib'lari — KO'P o'yinlar (ayniqsa klon/
+     *      kichik studiya, masalan "Counter Strike 2" mobil klonlari)
+     *      manifest'da kategoriya QO'YMAYDI → 1-2 signal o'tkazib yuboradi.
+     *      Deyarli barcha mobil o'yinlar Unity/Unreal/Cocos/Godot/libGDX
+     *      engine'ida — lib papkasida izi qoladi.
+     */
+    private fun isGame(ai: ApplicationInfo): Boolean {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O &&
+            ai.category == ApplicationInfo.CATEGORY_GAME
+        ) {
+            return true
+        }
+        @Suppress("DEPRECATION")
+        if ((ai.flags and ApplicationInfo.FLAG_IS_GAME) != 0) return true
+        return hasGameEngineLibs(ai)
+    }
+
+    /** Fayl nomi o'yin engine native kutubxonasimi. */
+    private fun isEngineLibName(name: String): Boolean =
+        name == "libunity.so" ||         // Unity (mono/IL2CPP'da ham bor)
+            name == "libil2cpp.so" ||    // Unity IL2CPP
+            name.startsWith("libUE") ||  // Unreal UE4 (libUE4.so)
+            name == "libUnreal.so" ||    // Unreal UE5
+            name.startsWith("libcocos") || // Cocos2d-x / Creator
+            name.startsWith("libgodot") || // Godot
+            name == "libgdx.so"            // libGDX
+
+    /**
+     * O'yin engine native kutubxonalari bormi (Unity/UE/Cocos/Godot/libGDX).
+     *
+     * 2 yo'l: (1) extractNativeLibs=true (eski/sideload APK) — .so'lar diskda
+     * `nativeLibraryDir`da. (2) extractNativeLibs=false (Play/AAB DEFAULT,
+     * 2021'dan beri yangi Play ilovalari) — .so'lar APK ichida (ko'pincha
+     * split_config.<abi>.apk'da), `nativeLibraryDir` BO'SH. Shu sababli APK
+     * zip entry'larini ham skan qilamiz — aks holda Play'dan o'rnatilgan
+     * Unity "CS2 klon" kabi o'yinlar aniqlanmasdi. ZipFile faqat markaziy
+     * katalogni o'qiydi (arzon); natija gameCache bilan paketga bir marta.
+     */
+    private fun hasGameEngineLibs(ai: ApplicationInfo): Boolean {
+        // 1) Tez yo'l — diskka chiqarilgan .so'lar.
+        try {
+            val dir = ai.nativeLibraryDir
+            if (dir != null) {
+                val libs = java.io.File(dir).list()
+                if (libs != null && libs.any(::isEngineLibName)) return true
+            }
+        } catch (_: Exception) {
+            // APK skaniga o'tamiz
+        }
+        // 2) Fallback — APK(lar) ichidagi lib/<abi>/*.so entry'lari.
+        val apks = ArrayList<String>()
+        ai.sourceDir?.let { apks.add(it) }
+        ai.splitSourceDirs?.let { apks.addAll(it) }
+        for (path in apks) {
+            try {
+                java.util.zip.ZipFile(path).use { zip ->
+                    val entries = zip.entries()
+                    while (entries.hasMoreElements()) {
+                        val name = entries.nextElement().name
+                        if (name.startsWith("lib/") &&
+                            isEngineLibName(name.substringAfterLast('/'))
+                        ) {
+                            return true
+                        }
+                    }
+                }
+            } catch (_: Exception) {
+                // bu APK'ni tashlab keyingisiga o'tamiz
+            }
+        }
+        return false
+    }
+
+    private fun isGamePkg(pkg: String): Boolean = gameCache.getOrPut(pkg) {
+        try {
+            isGame(packageManager.getApplicationInfo(pkg, 0))
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * Foreground paket o'yin bo'lsa, u YANGI ochilgan bo'lsa (edge-trigger) va
+     * dedup oynasidan tashqarida bo'lsa — prefs queue'ga qo'shadi. Bola o'yinda
+     * uzoq tursa ham (har poll'da bir xil foreground) faqat bir marta qo'shiladi.
+     */
+    private fun detectAndQueueGame(foreground: String) {
+        if (foreground == packageName) return
+        if (!isGamePkg(foreground)) {
+            // Diagnostika: yangi ochilgan ilova o'yin deb TOPILMADI — logcat'da
+            // ko'rinadi (qaysi o'yin signal bermayotganini aniqlash uchun).
+            if (lastForegroundForGame != foreground) {
+                Log.d(TAG, "not-game: $foreground")
+            }
+            lastForegroundForGame = foreground
+            return
+        }
+        val now = System.currentTimeMillis()
+        val isNewForeground = lastForegroundForGame != foreground
+        lastForegroundForGame = foreground
+        val last = lastGameQueued[foreground] ?: 0L
+        // Faqat yangi ochilganda VA dedup oynasidan tashqarida.
+        if (!isNewForeground) return
+        if (now - last < GAME_DEDUP_MS) return
+        lastGameQueued[foreground] = now
+        appendGameToQueue(foreground, now)
+    }
+
+    /** O'yinni prefs JSON queue'ga qo'shadi (Dart bg isolate o'qiydi). */
+    private fun appendGameToQueue(pkg: String, ts: Long) {
+        try {
+            val prefs = getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+            val raw = prefs.getString(PREFS_KEY_GAME_PENDING, null)
+            val arr = if (raw.isNullOrBlank()) {
+                org.json.JSONArray()
+            } else {
+                org.json.JSONArray(raw)
+            }
+            // Bir xil paketning eski (dedup oynasidagi) yozuvini olib tashlaymiz.
+            val out = org.json.JSONArray()
+            for (i in 0 until arr.length()) {
+                val o = arr.optJSONObject(i) ?: continue
+                if (o.optString("pkg") == pkg &&
+                    ts - o.optLong("ts") < GAME_DEDUP_MS
+                ) {
+                    continue
+                }
+                out.put(o)
+            }
+            val name = try {
+                packageManager
+                    .getApplicationLabel(packageManager.getApplicationInfo(pkg, 0))
+                    .toString()
+            } catch (e: Exception) {
+                pkg
+            }
+            out.put(
+                org.json.JSONObject()
+                    .put("pkg", pkg)
+                    .put("name", name)
+                    .put("ts", ts),
+            )
+            // Cheksiz o'smaslik uchun oxirgi 50 ta.
+            val capped = if (out.length() > 50) {
+                org.json.JSONArray().also {
+                    for (i in out.length() - 50 until out.length()) it.put(out.get(i))
+                }
+            } else {
+                out
+            }
+            prefs.edit().putString(PREFS_KEY_GAME_PENDING, capped.toString()).apply()
+            Log.d(TAG, "Game queued: $pkg ($name)")
+        } catch (e: Exception) {
+            Log.e(TAG, "appendGameToQueue error", e)
+        }
+    }
+
+    /**
+     * Hozirgi foreground paket nomi. UsageStatsManager ACTIVITY_RESUMED
+     * event'larini scan qiladi.
+     *
+     * MUHIM: queryEvents FAQAT oyna ICHIDAGI event'larni qaytaradi (holat
+     * emas — hodisa). O'yin/ilova ochilib uzoq tursa, yangi RESUMED chiqmaydi
+     * → tor oyna (avval 5s) ~5s'dan keyin null qaytarardi va uzoq o'ynalgan
+     * o'yin aniqlanmasdi. Yechim: (1) oynani 60s ga kengaytirdik, (2) RESUMED
+     * topilmasa oxirgi ma'lum foreground'ni ("sticky") qaytaramiz. Edge-trigger
+     * buzilmaydi — sticky ham bir xil paket, isNewForeground=false bo'ladi.
      */
     private fun getForegroundPackage(): String? {
         return try {
             val usm = getSystemService(Context.USAGE_STATS_SERVICE)
                 as UsageStatsManager
             val end = System.currentTimeMillis()
-            val begin = end - 5000
+            val begin = end - 60_000L
 
             val events = usm.queryEvents(begin, end)
             val event = UsageEvents.Event()
@@ -421,7 +619,15 @@ class RestrictionService : Service() {
                     lastForeground = event.packageName
                 }
             }
-            lastForeground
+
+            if (lastForeground != null) {
+                lastForegroundSticky = lastForeground
+                lastForeground
+            } else {
+                // 60s ichida ham RESUMED yo'q (juda uzoq turgan o'yin / OEM
+                // usage throttling): oxirgi ma'lum foreground'ni qaytaramiz.
+                lastForegroundSticky
+            }
         } catch (e: Exception) {
             Log.e(TAG, "getForegroundPackage error", e)
             null

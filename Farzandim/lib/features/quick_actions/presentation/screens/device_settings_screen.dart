@@ -161,6 +161,126 @@ class _Content extends ConsumerWidget {
 
           // ─── Notanish manbalardan ilovalar (toggle) ───
           _UnknownSourcesCard(child: child),
+          const SizedBox(height: AppDimensions.lg),
+
+          // ─── Ruxsatlar holati (Block 4 / M12) ───
+          _PermissionsCard(info: child.deviceInfo),
+        ],
+      ),
+    );
+  }
+}
+
+// ════════════════════════ PERMISSIONS STATUS ════════════════════════
+
+/// Bola qurilmasidagi OS-ruxsatlar holati (lokatsiya / bildirishnoma / fon /
+/// accessibility). Data Child App device-info heartbeat'idan keladi; `null`
+/// (hali yubormagan) → "Noma'lum". On-design: SettingsCard + status ikonalar.
+class _PermissionsCard extends StatelessWidget {
+  const _PermissionsCard({required this.info});
+
+  final ChildDeviceInfo? info;
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsCard(
+      accent: AppColors.secondary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SettingsIconChip(
+                icon: Icons.verified_user_outlined,
+                accent: AppColors.secondary,
+              ),
+              const SizedBox(width: AppDimensions.md),
+              Expanded(
+                child: Text(
+                  'deviceSettings.permissions.title'.tr(),
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.sm),
+          _PermRow(
+            icon: Icons.location_on_rounded,
+            label: 'deviceSettings.permissions.location'.tr(),
+            status: info?.locationPermission,
+          ),
+          _PermRow(
+            icon: Icons.notifications_rounded,
+            label: 'deviceSettings.permissions.notification'.tr(),
+            status: info?.notificationPermission,
+          ),
+          _PermRow(
+            icon: Icons.battery_saver_rounded,
+            label: 'deviceSettings.permissions.background'.tr(),
+            status: info?.backgroundAllowed,
+          ),
+          _PermRow(
+            icon: Icons.accessibility_new_rounded,
+            label: 'deviceSettings.permissions.accessibility'.tr(),
+            status: info?.accessibilityEnabled,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bitta ruxsat qatori — ikona + nom + holat (berilgan/rad/noma'lum).
+class _PermRow extends StatelessWidget {
+  const _PermRow({
+    required this.icon,
+    required this.label,
+    required this.status,
+  });
+
+  final IconData icon;
+  final String label;
+
+  /// `true` = berilgan, `false` = rad etilgan, `null` = noma'lum.
+  final bool? status;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color color;
+    final IconData statusIcon;
+    final String statusKey;
+    if (status == true) {
+      color = AppColors.success;
+      statusIcon = Icons.check_circle_rounded;
+      statusKey = 'deviceSettings.permissions.granted';
+    } else if (status == false) {
+      color = AppColors.error;
+      statusIcon = Icons.cancel_rounded;
+      statusKey = 'deviceSettings.permissions.denied';
+    } else {
+      color = AppColors.textTertiary;
+      statusIcon = Icons.help_outline_rounded;
+      statusKey = 'deviceSettings.permissions.unknown';
+    }
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: AppDimensions.sm),
+      child: Row(
+        children: [
+          Icon(icon, size: 20, color: AppColors.textSecondary),
+          const SizedBox(width: AppDimensions.md),
+          Expanded(child: Text(label, style: AppTextStyles.bodyM)),
+          Icon(statusIcon, size: 16, color: color),
+          const SizedBox(width: 4),
+          Text(
+            statusKey.tr(),
+            style: AppTextStyles.bodyS.copyWith(
+              color: color,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
         ],
       ),
     );
@@ -177,14 +297,10 @@ class _DeviceCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Online — `lastSeenAt` yangiligiga qarab (heartbeat oxirgi 5 daqiqada
-    // kelganmi). Avval faqat `isConnected` edi va hech qachon offline
-    // bo'lmasdi; endi heartbeat to'xtasa qurilma offline ko'rinadi.
-    final lastSeen = child.lastSeenAt;
-    final isOnline =
-        child.isConnected &&
-        lastSeen != null &&
-        DateTime.now().difference(lastSeen) < const Duration(minutes: 5);
+    // Online holati — YAGONA heartbeat-aware mantiq (Child.isLiveOnline):
+    // ulangan VA oxirgi heartbeat 5 daqiqa ichida. Dashboard/bolalar ro'yxati
+    // ham aynan shu getter'dan foydalanadi (avval har joyda har xil edi).
+    final isOnline = child.isLiveOnline;
     final battery = info?.batteryLevel;
 
     return SettingsCard(
@@ -295,7 +411,6 @@ class _ActionTile extends StatelessWidget {
   Widget build(BuildContext context) {
     return SettingsCard(
       accent: AppColors.secondary,
-      rail: false,
       onTap: onTap,
       padding: const EdgeInsets.symmetric(vertical: AppDimensions.lg),
       child: Column(
@@ -431,7 +546,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
                   ),
                 ),
               ),
-              const SizedBox(width: AppDimensions.sm),
+              const SizedBox(width: AppDimensions.md),
               AppSwitch(
                 value: _blocked,
                 onChanged: _saving ? null : _onChanged,

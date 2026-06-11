@@ -238,11 +238,12 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   Future<void> _startRestrictionServiceIfReady() async {
     final usage = UsageStatsService();
     final hasUsage = await usage.hasPermission();
-    final hasOverlay = await usage.hasOverlayPermission();
-    if (hasUsage && hasOverlay) {
-      await usage.startRestrictionService();
-    }
     if (hasUsage) {
+      // RestrictionService faqat USAGE ruxsati bilan ham ishga tushadi:
+      // o'yin aniqlash (game queue) overlay talab qilmaydi. Bloklash overlay'i
+      // ruxsat bo'lmasa o'zi no-op qiladi (showOverlay canDrawOverlays'ni
+      // tekshiradi). Shunday qilib overlay rad etilsa ham o'yin push'i ishlaydi.
+      await usage.startRestrictionService();
       _ref.read(usageSyncServiceProvider)?.start();
       _ref.read(stepCounterServiceProvider)?.start();
 

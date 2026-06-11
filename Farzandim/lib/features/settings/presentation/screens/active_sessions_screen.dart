@@ -196,7 +196,6 @@ class _SessionCard extends StatelessWidget {
 
     return SettingsCard(
       accent: AppColors.secondary,
-      rail: false,
       padding: const EdgeInsets.all(AppDimensions.md),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,

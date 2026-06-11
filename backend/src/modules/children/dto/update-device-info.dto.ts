@@ -51,4 +51,25 @@ export class UpdateDeviceInfoDto {
   @IsString()
   @MaxLength(120)
   wifiName?: string;
+
+  // ─── OS-ruxsat holatlari (Block 4) — bola qurilmasining ruxsatlari ───
+  @ApiPropertyOptional({ example: true, description: 'Lokatsiya ruxsati berilganmi' })
+  @IsOptional()
+  @IsBoolean()
+  locationPermission?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Bildirishnoma ruxsati berilganmi' })
+  @IsOptional()
+  @IsBoolean()
+  notificationPermission?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Fon faolligi (batareya istisno) ruxsati' })
+  @IsOptional()
+  @IsBoolean()
+  backgroundAllowed?: boolean;
+
+  @ApiPropertyOptional({ example: true, description: 'Accessibility xizmati yoqilganmi' })
+  @IsOptional()
+  @IsBoolean()
+  accessibilityEnabled?: boolean;
 }

@@ -5,7 +5,6 @@
 // Dashboard'dagi `GlassCard` (RANGSIZ frost shisha — translucent, neytral
 // sheen) dan ATAYIN farqli. Bu:
 //   • SOLID surface asos ("yerga qo'ngan", suzmaydigan) — boshqa his.
-//   • Chap chetda nozik ACCENT "rail" — sahifa identifikatsiyasi.
 //   • Yuqori-chapdan diagonal RANGLI jilo (glass rangsiz edi).
 //   • Accent hairline chegara (glass'ning oq rim'i emas).
 //
@@ -26,7 +25,6 @@ class SettingsCard extends StatelessWidget {
     this.padding = const EdgeInsets.all(AppDimensions.md),
     this.radius = AppDimensions.radiusL,
     this.onTap,
-    this.rail = true,
     super.key,
   });
 
@@ -45,17 +43,19 @@ class SettingsCard extends StatelessWidget {
   /// Bosilsa — Material + InkWell.
   final VoidCallback? onTap;
 
-  /// Chap chetdagi accent "rail" (identifikatsiya chizig'i). Yonma-yon
-  /// kichik tile'larda `false` (toza, simmetrik ko'rinish uchun).
-  final bool rail;
-
   @override
   Widget build(BuildContext context) {
     final a = accent ?? AppColors.accent;
     final isDark = AppColors.isDark;
     final br = BorderRadius.circular(radius);
 
-    Widget content = Padding(padding: padding, child: child);
+    // Kontent kartaning TO'LIQ enini egallaydi — aks holda ichidagi Column
+    // (masalan action tile'dagi ikon + yozuv) chapga yopishib qoladi.
+    // To'liq en + Column'ning default markazlashi → ikon/yozuv markazda.
+    Widget content = SizedBox(
+      width: double.infinity,
+      child: Padding(padding: padding, child: child),
+    );
     if (onTap != null) {
       content = Material(
         color: Colors.transparent,
@@ -109,28 +109,6 @@ class SettingsCard extends StatelessWidget {
                   ),
                 ),
               ),
-              // c) Chap accent "rail" — sahifa identifikatsiyasi.
-              if (rail)
-                Positioned(
-                  top: 0,
-                  bottom: 0,
-                  left: 0,
-                  child: IgnorePointer(
-                    child: Container(
-                      width: 3,
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.topCenter,
-                          end: Alignment.bottomCenter,
-                          colors: [
-                            a.withValues(alpha: isDark ? 0.90 : 0.80),
-                            a.withValues(alpha: isDark ? 0.35 : 0.30),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ),
-                ),
               content,
             ],
           ),

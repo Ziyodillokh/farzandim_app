@@ -31,6 +31,11 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
     }
     ..onMessageTap = (notif) {
+      // Tray'dan bosilgan push ham ro'yxatda saqlansin (faqat navigatsiya
+      // emas) — aks holda fonda kelgan xabar Bildirishnoma sahifasida
+      // ko'rinmasdi. Dedup id (messageId) bo'yicha — bg handler pending'i
+      // bilan takrorlanmaydi.
+      ref.read(notificationsProvider.notifier).addFromFcm(notif);
       final router = ref.read(routerProvider);
       handleFcmTap(notif, router);
     };

@@ -1,4 +1,8 @@
 {
+  "sos": {
+    "wsBanner": "SOS! Ребёнок просит помощи",
+    "viewAction": "Открыть"
+  },
   "language": {
     "selectTitle": "Выберите язык",
     "selectSubtitle": "На каком языке использовать приложение?",
@@ -145,6 +149,11 @@
     }
   },
   "dashboard": {
+    "status": {
+      "online": "Онлайн",
+      "connectionLost": "Связь прервана",
+      "offline": "Не подключен"
+    },
     "emptyState": {
       "message": "Добавьте ребёнка, чтобы следить за ним через приложение",
       "addButton": "Добавить ребёнка",
@@ -173,6 +182,9 @@
       "details": "Подробнее"
     },
     "screenTime": {
+      "blockAllOnSnack": "Все приложения заблокированы",
+      "blockAllOffSnack": "Блокировка отключена",
+      "blockAllErrorSnack": "Ошибка — попробуйте снова",
       "todayTitle": "Время за сегодня",
       "blockAll": "Заблокировать все приложения"
     },
@@ -389,6 +401,16 @@
     "noChildren": "Дети не добавлены. Сначала создайте ребёнка в Dashboard."
   },
   "deviceSettings": {
+    "permissions": {
+      "title": "Статус разрешений",
+      "location": "Локация",
+      "notification": "Уведомления",
+      "background": "Фоновая активность",
+      "accessibility": "Спец. возможности",
+      "granted": "Разрешено",
+      "denied": "Запрещено",
+      "unknown": "Неизвестно"
+    },
     "headerTitle": "Настройки устройства",
     "sectionDevice": "УСТРОЙСТВО",
     "sectionStatus": "СТАТУС",
@@ -426,7 +448,7 @@
     "activity": "Активность",
     "appPermissionsRow": "Разрешения приложения",
     "unknownSources": {
-      "title": "Приложения из неизвестных источников",
+      "title": "Неизвестные источники",
       "desc": "{name} не сможет использовать приложения из источников, кроме Play Market",
       "enabledSnack": "Приложения из неизвестных источников заблокированы",
       "disabledSnack": "Приложения из неизвестных источников разрешены",
@@ -592,6 +614,7 @@
     "comingSoon": "Скоро",
     "shareText": "Farzandim — семейное приложение для безопасности ребёнка: геолокация, экранное время и спокойствие. Скачать: https://farzandimedu.uz",
     "menu": {
+      "sosAlerts": "SOS-сигналы",
       "addChild": "Добавить ребёнка",
       "editChild": "Редактировать данные ребёнка",
       "sessions": "Активные сессии",

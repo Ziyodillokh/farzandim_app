@@ -8,6 +8,7 @@
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/videos/data/video_controller_factory.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:flutter/material.dart';
@@ -111,9 +112,7 @@ class _ReelItemState extends State<_ReelItem> {
   @override
   void initState() {
     super.initState();
-    _controller = VideoPlayerController.networkUrl(
-      Uri.parse(widget.video.videoUrl),
-    );
+    _controller = videoControllerFor(widget.video.videoUrl);
     _controller.initialize().then((_) {
       if (!mounted) return;
       _controller.setLooping(true);

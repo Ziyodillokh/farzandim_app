@@ -4,11 +4,36 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
+import { FcmService } from '../../common/fcm/fcm.service';
 import { RegisterTokenDto } from './dto/register-token.dto';
 
 @Injectable()
 export class FcmTokensService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly fcm: FcmService,
+  ) {}
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /fcm/test — o'ziga test push yuborish (diagnostika)           */
+  /*  Natija: nechta token ro'yxatda + nechtasi yuborildi/yiqildi.       */
+  /*  PII yo'q — faqat sonlar qaytadi.                                   */
+  /* ------------------------------------------------------------------ */
+
+  async sendTestPush(userId: string) {
+    const tokens = await this.prisma.fcmToken.count({ where: { userId } });
+    const result = await this.fcm.sendPushToUser(userId, {
+      title: '✅ Test push',
+      body: 'Bu test bildirishnomasi — push tizimi ishlayapti.',
+      data: { type: 'test' },
+    });
+    return {
+      tokens,
+      sent: result.sent,
+      failed: result.failed,
+      invalid: result.invalidTokens.length,
+    };
+  }
 
   /* ------------------------------------------------------------------ */
   /*  POST /fcm/tokens — register (upsert)                              */

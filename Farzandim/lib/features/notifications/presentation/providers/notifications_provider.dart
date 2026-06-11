@@ -9,37 +9,142 @@ import 'dart:async';
 import 'dart:convert';
 
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _prefsKey = 'notifications_history_v1';
 const _maxStored = 100;
 
+/// Fonda kelgan FCM push'lar (bg isolate, `main.dart` background handler)
+/// yoziladigan "pending" navbat kaliti — `syncPending()` shu yerdan o'qiydi.
+const kPendingNotificationsPrefsKey = 'notifications_pending_v1';
+
 /// Bildirishnomalar ro'yxatini boshqaruvchi notifier.
 ///
-/// - FCM payload orqali `addFromFcm` chaqiriladi
+/// - FCM payload orqali `addFromFcm` chaqiriladi (foreground)
+/// - Fonda kelgan push'lar bg isolate "pending" navbatiga yoziladi —
+///   startup va har app-resume'da `syncPending()` ularni qo'shib oladi
 /// - Har mutation SharedPreferences'ga saqlanadi
 /// - App startup'da `_load()` orqali tiklanadi
-class NotificationsNotifier extends StateNotifier<List<AppNotification>> {
+class NotificationsNotifier extends StateNotifier<List<AppNotification>>
+    with WidgetsBindingObserver {
   /// `NotificationsNotifier` konstruktor — yuklash boshlanadi darhol.
   NotificationsNotifier() : super(const []) {
     _load();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Foydalanuvchi ilovaga qaytdi — fonda kelgan push'larni ro'yxatga olamiz.
+    if (state == AppLifecycleState.resumed) {
+      unawaited(syncPending());
+    }
   }
 
   Future<void> _load() async {
     try {
       final prefs = await SharedPreferences.getInstance();
       final raw = prefs.getString(_prefsKey);
-      if (raw == null) return;
-      final list = (jsonDecode(raw) as List<dynamic>)
-          .cast<Map<String, dynamic>>()
-          .map(AppNotification.fromJson)
-          .whereType<AppNotification>()
-          .toList();
-      if (list.isNotEmpty) state = list;
+      if (raw != null) {
+        final list = (jsonDecode(raw) as List<dynamic>)
+            .cast<Map<String, dynamic>>()
+            .map(AppNotification.fromJson)
+            .whereType<AppNotification>()
+            .toList();
+        if (list.isNotEmpty) state = list;
+      }
     } catch (e) {
       debugPrint('NotificationsNotifier._load: $e');
+    }
+    await syncPending();
+  }
+
+  /// Fonda (bg isolate) kelgan push'larni pending navbatdan ro'yxatga
+  /// ko'chirish.
+  ///
+  /// MUHIM: bg handler har xabarni O'Z noyob kalitiga yozadi
+  /// (`<prefix>:<micros>_<id>`). Bu yerda faqat O'ZIMIZ o'qigan kalitlarni
+  /// o'chiramiz — shu sababli bg isolate shu orada qo'shgan YANGI kalit
+  /// o'chib ketmaydi (massiv RMW poyga yo'q). Dedup `id` bo'yicha — tap
+  /// orqali allaqachon qo'shilgan xabar takrorlanmaydi.
+  Future<void> syncPending() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Bg isolate yozganini ko'rish uchun reload shart.
+      await prefs.reload();
+
+      const prefix = '$kPendingNotificationsPrefsKey:';
+      final pendingKeys =
+          prefs.getKeys().where((k) => k.startsWith(prefix)).toList();
+
+      // Legacy: oldingi build umumiy massiv kalitiga yozgan bo'lishi mumkin —
+      // bir martalik drenaj (yangilanishdan keyin yo'qolib qolmasin).
+      final legacyRaw = prefs.getString(kPendingNotificationsPrefsKey);
+
+      if (pendingKeys.isEmpty &&
+          (legacyRaw == null || legacyRaw.isEmpty)) {
+        return;
+      }
+
+      final parsed = <AppNotification>[];
+      for (final k in pendingKeys) {
+        final raw = prefs.getString(k);
+        if (raw != null && raw.isNotEmpty) {
+          try {
+            final n = AppNotification.fromJson(
+              jsonDecode(raw) as Map<String, dynamic>,
+            );
+            if (n != null) parsed.add(n);
+          } catch (_) {
+            // buzuq yozuv — tashlab yuboramiz
+          }
+        }
+        // Faqat o'zimiz o'qigan kalitni o'chiramiz (concurrent append xavfsiz).
+        await prefs.remove(k);
+      }
+
+      if (legacyRaw != null && legacyRaw.isNotEmpty) {
+        try {
+          parsed.addAll(
+            (jsonDecode(legacyRaw) as List<dynamic>)
+                .cast<Map<String, dynamic>>()
+                .map(AppNotification.fromJson)
+                .whereType<AppNotification>(),
+          );
+        } catch (_) {
+          // buzuq legacy — tashlab yuboramiz
+        }
+        await prefs.remove(kPendingNotificationsPrefsKey);
+      }
+
+      if (parsed.isEmpty) return;
+
+      // Vaqt bo'yicha eski→yangi — yangilari ro'yxat tepasiga chiqsin.
+      parsed.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+      // Dedup: state'dagi VA pending ichidagi takror id'lar (FCM redelivery).
+      final seen = state.map((n) => n.id).toSet();
+      final fresh = <AppNotification>[];
+      for (final n in parsed) {
+        if (seen.add(n.id)) fresh.add(n);
+      }
+      if (fresh.isEmpty) return;
+
+      state = [...fresh.reversed, ...state];
+      if (state.length > _maxStored) {
+        state = state.sublist(0, _maxStored);
+      }
+      unawaited(_persist());
+    } catch (e) {
+      debugPrint('NotificationsNotifier.syncPending: $e');
     }
   }
 

@@ -16,20 +16,59 @@
 // debugging xato Firebase Console'ga oqib ketmaydi.
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/app.dart';
 import 'package:farzandim/core/constants/api_keys.dart';
+import 'package:farzandim/features/notifications/data/models/app_notification.dart';
+import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart'
+    show kPendingNotificationsPrefsKey;
 import 'package:farzandim/firebase_options.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_app_check/firebase_app_check.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+
+/// FCM xabari ILOVA FONDA/YOPIQ bo'lganda keladigan handler (alohida isolate).
+///
+/// FCM o'zi tray'da notification ko'rsatadi, lekin ilova ichidagi
+/// "Bildirishnoma" ro'yxatiga tushmasdi (ro'yxat faqat foreground
+/// xabarlarini olardi). Bu handler xabarni SharedPreferences "pending"
+/// navbatiga yozadi — ilova ochilganda/resume bo'lganda
+/// `NotificationsNotifier.syncPending()` uni ro'yxatga qo'shadi.
+@pragma('vm:entry-point')
+Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (_) {
+    // allaqachon init bo'lgan bo'lishi mumkin
+  }
+  try {
+    final notif = AppNotification.fromRemoteMessage(message);
+    final prefs = await SharedPreferences.getInstance();
+    // MUHIM: har xabar O'Z noyob kalitiga yoziladi (atomik bitta write) —
+    // umumiy massiv kalitida read-modify-write QILMAYMIZ. Aks holda main
+    // isolate'ning syncPending'i (reload→read→remove) bilan poyga bo'lib,
+    // shu orada bg isolate qo'shgan xabar (hatto SOS) jimgina yo'qolishi
+    // mumkin edi. Kalit microsecond bilan noyob; mantiqiy dedup syncPending'da
+    // notif.id bo'yicha bo'ladi.
+    final key = '$kPendingNotificationsPrefsKey:'
+        '${DateTime.now().microsecondsSinceEpoch}_${notif.id}';
+    await prefs.setString(key, jsonEncode(notif.toJson()));
+  } catch (e) {
+    debugPrint('FCM bg handler xato: $e');
+  }
+}
 
 Future<void> main() async {
   await runZonedGuarded<Future<void>>(
@@ -61,6 +100,14 @@ Future<void> main() async {
         await Firebase.initializeApp(
           options: DefaultFirebaseOptions.currentPlatform,
         );
+
+        // Fonda kelgan push'larni "Bildirishnoma" ro'yxatiga saqlash uchun
+        // background handler (web'da service worker — qo'llanmaydi).
+        if (!kIsWeb) {
+          FirebaseMessaging.onBackgroundMessage(
+            firebaseMessagingBackgroundHandler,
+          );
+        }
 
         // App Check / Crashlytics / Analytics — faqat mobil (Android/iOS).
         // Web preview build'da ular kerak emas va konsolni xato bilan

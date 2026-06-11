@@ -21,9 +21,11 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/device_info/data/models/child_device_info.dart';
 
 class DeviceInfoService {
@@ -31,6 +33,7 @@ class DeviceInfoService {
   final Battery _battery = Battery();
   final NetworkInfo _networkInfo = NetworkInfo();
   final TokenStorage _tokenStorage = TokenStorage();
+  final UsageStatsService _usageStats = UsageStatsService();
 
   Timer? _updateTimer;
   Dio? _dio;
@@ -81,6 +84,7 @@ class DeviceInfoService {
     if (childId == null || dio == null) return;
     try {
       final info = await _collectDeviceInfo();
+      final perms = await _collectPermissions();
       final body = <String, dynamic>{
         if (info.batteryLevel != null) 'batteryLevel': info.batteryLevel,
         if (info.isCharging != null) 'isCharging': info.isCharging,
@@ -88,6 +92,13 @@ class DeviceInfoService {
         if (info.androidVersion != null) 'androidVersion': info.androidVersion,
         if (info.appVersion != null) 'appVersion': info.appVersion,
         if (info.wifiName != null) 'wifiName': info.wifiName,
+        // OS-ruxsat holatlari (Block 4 / M12) — ota-onaga ko'rsatish uchun.
+        if (perms.location != null) 'locationPermission': perms.location,
+        if (perms.notification != null)
+          'notificationPermission': perms.notification,
+        if (perms.background != null) 'backgroundAllowed': perms.background,
+        if (perms.accessibility != null)
+          'accessibilityEnabled': perms.accessibility,
       };
       await dio.post<void>('/children/$childId/device-info', data: body);
     } catch (e) {
@@ -152,6 +163,35 @@ class DeviceInfoService {
       isCharging: isCharging,
       wifiName: wifiName,
       isOnline: true,
+    );
+  }
+
+  /// OS-ruxsat holatlarini yig'adi (Block 4 / M12). Har biri mustaqil —
+  /// biri xato bersa boshqalari baribir yuboriladi. `null` = aniqlanmadi.
+  Future<
+    ({
+      bool? location,
+      bool? notification,
+      bool? background,
+      bool? accessibility,
+    })
+  >
+  _collectPermissions() async {
+    Future<bool?> safe(Future<bool> Function() check) async {
+      try {
+        return await check();
+      } catch (_) {
+        return null;
+      }
+    }
+
+    return (
+      location: await safe(() => Permission.locationWhenInUse.isGranted),
+      notification: await safe(() => Permission.notification.isGranted),
+      background: await safe(
+        () => Permission.ignoreBatteryOptimizations.isGranted,
+      ),
+      accessibility: await safe(_usageStats.isAccessibilityEnabled),
     );
   }
 

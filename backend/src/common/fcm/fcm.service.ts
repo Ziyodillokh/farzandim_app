@@ -134,6 +134,16 @@ export class FcmService {
 
     const result = await this.sendPush(tokens, payload);
 
+    // Diagnostika (PII YO'Q — userId/ism/token qiymati log qilinmaydi).
+    // `tokens=0`  → foydalanuvchida ro'yxatdan o'tgan token yo'q (registratsiya muammosi).
+    // `sent=0,failed>0` → Firebase yubora olmadi (init xato yoki token yaroqsiz).
+    // `sent>0`    → FCM'ga yetkazildi (telefon tomonda ko'rsatish/permission muammosi).
+    this.logger.log(
+      `push type=${payload.data?.type ?? (payload.dataOnly ? 'data' : 'notif')} ` +
+        `tokens=${tokens.length} sent=${result.sent} ` +
+        `failed=${result.failed} invalid=${result.invalidTokens.length}`,
+    );
+
     if (result.invalidTokens.length > 0) {
       await this.prisma.fcmToken.deleteMany({
         where: { token: { in: result.invalidTokens } },

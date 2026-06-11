@@ -57,4 +57,14 @@ export class UpdateChildDto {
   @IsOptional()
   @IsBoolean()
   blockUnknownSources?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      'Barcha ilovalarni bloklash — ota-ona dashboard toggle\'i ' +
+      '(true = bola qurilmasidagi barcha ilovalar bloklanadi).',
+  })
+  @IsOptional()
+  @IsBoolean()
+  blockAllApps?: boolean;
 }

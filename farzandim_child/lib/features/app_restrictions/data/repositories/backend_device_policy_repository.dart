@@ -3,11 +3,13 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Backend kontrakt:
-//   GET /api/children/:childId/device-policy → { blockUnknownSources }
+//   GET /api/children/:childId/device-policy
+//     → { blockUnknownSources, blockAllApps }
 //
-// Ota-ona "Notanish manbalardan ilovalar" toggle'ini yoqsa, bola qurilmasi
-// shu siyosatni o'qib SharedPreferences'ga yozadi; native RestrictionService
-// Play'dan boshqa manbadagi ilovalarni bloklaydi.
+// Ota-ona "Notanish manbalardan ilovalar" yoki "Barcha ilovalarni bloklash"
+// toggle'ini yoqsa, bola qurilmasi shu siyosatni o'qib enforce qiladi:
+//   blockUnknownSources → Play'dan boshqa manbadagi ilovalar bloklanadi
+//   blockAllApps        → barcha foreground ilovalar bloklanadi ('*' wildcard)
 
 // ignore_for_file: public_member_api_docs
 
@@ -26,17 +28,23 @@ class BackendDevicePolicyRepository {
 
   final Dio _dio;
 
-  /// `blockUnknownSources` qiymatini oladi. Xato bo'lsa `null` — sync
-  /// eski qiymatni saqlab qoladi (tarmoq uzilishida bloklash o'chmasin).
-  Future<bool?> getBlockUnknownSources(String childId) async {
+  /// Qurilma siyosatini BITTA so'rovda oladi: `blockUnknownSources` va
+  /// `blockAllApps`. Xato bo'lsa ikkala maydon `null` — sync eski qiymatni
+  /// saqlaydi (tarmoq uzilishida bloklash o'chib qolmasin).
+  Future<({bool? blockUnknownSources, bool? blockAllApps})> getDevicePolicy(
+    String childId,
+  ) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/device-policy',
       );
-      return res.data?['blockUnknownSources'] as bool?;
+      return (
+        blockUnknownSources: res.data?['blockUnknownSources'] as bool?,
+        blockAllApps: res.data?['blockAllApps'] as bool?,
+      );
     } on DioException catch (e) {
       debugPrint('BackendDevicePolicyRepository: $e');
-      return null;
+      return (blockUnknownSources: null, blockAllApps: null);
     }
   }
 }

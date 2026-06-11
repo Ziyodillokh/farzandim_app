@@ -325,7 +325,6 @@ class _AlertTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: accent,
-        rail: false,
         padding: const EdgeInsets.all(AppDimensions.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,

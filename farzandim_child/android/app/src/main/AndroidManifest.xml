@@ -131,6 +131,21 @@
                 tools:targetApi="34"/>
         </service>
 
+        <!-- Telefon yoqilganda / ilova yangilanganda RestrictionService'ni
+             avtomatik tiklash (o'yin aniqlash reboot/update'dan keyin ham
+             ishlasin). flutter_foreground_task o'zini autoRunOnBoot bilan
+             tiklaydi; bu receiver FAQAT native RestrictionService uchun. -->
+        <receiver
+            android:name=".BootReceiver"
+            android:exported="true"
+            android:enabled="true">
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED"/>
+                <action android:name="android.intent.action.MY_PACKAGE_REPLACED"/>
+                <action android:name="android.intent.action.QUICKBOOT_POWERON"/>
+            </intent-filter>
+        </receiver>
+
         <!-- "Baland ovoz" — ring native FCM ushlovchisi. Plugin'ning standart
              messaging service'ini olib tashlab, uni KENGAYTIRGAN subclass bilan
              almashtiramiz: "ring" data push'ni native ushlaydi (ilova yopiq

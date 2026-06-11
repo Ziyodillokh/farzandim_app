@@ -56,6 +56,7 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                 result.success(getRecentGameForegrounds(sinceMs))
             }
             "hasOverlayPermission" -> result.success(hasOverlayPermission())
+            "isAccessibilityEnabled" -> result.success(isAccessibilityEnabled())
             "openOverlaySettings" -> {
                 openOverlaySettings()
                 result.success(null)
@@ -77,6 +78,24 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             Settings.canDrawOverlays(context)
         } else {
             true
+        }
+    }
+
+    /**
+     * RestrictionService (Accessibility Service) yoqilganmi — ota-onaga
+     * "Accessibility holati"ni ko'rsatish uchun (Block 4 / M12). Tizimning
+     * yoqilgan accessibility xizmatlari ro'yxatida bizning servismiz bormi.
+     */
+    private fun isAccessibilityEnabled(): Boolean {
+        return try {
+            val expected = "${context.packageName}/${RestrictionService::class.java.name}"
+            val enabled = Settings.Secure.getString(
+                context.contentResolver,
+                Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
+            ) ?: return false
+            enabled.split(':').any { it.equals(expected, ignoreCase = true) }
+        } catch (_: Exception) {
+            false
         }
     }
 

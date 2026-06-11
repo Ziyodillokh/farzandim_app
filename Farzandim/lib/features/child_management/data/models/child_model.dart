@@ -31,6 +31,7 @@ class Child {
     this.lastSeenAt,
     this.phoneNumber,
     this.blockUnknownSources = false,
+    this.blockAllApps = false,
   });
 
   /// Backend REST JSON'dan `Child` yaratish (Sprint 4.4 Bosqich 3).
@@ -70,13 +71,23 @@ class Child {
     final androidVersion = json['androidVersion'] as String?;
     final appVersion = json['appVersion'] as String?;
     final wifiName = json['wifiName'] as String?;
+    // OS-ruxsat holatlari (Block 4 / M12) — top-level, deviceInfo'ga o'raladi.
+    final locationPermission = json['locationPermission'] as bool?;
+    final notificationPermission = json['notificationPermission'] as bool?;
+    final backgroundAllowed = json['backgroundAllowed'] as bool?;
+    final accessibilityEnabled = json['accessibilityEnabled'] as bool?;
     // Backend top-level fields'dan deviceInfo wrapper yaratamiz.
-    final hasDeviceData = batteryLevel != null ||
+    final hasDeviceData =
+        batteryLevel != null ||
         isCharging != null ||
         deviceModel != null ||
         androidVersion != null ||
         appVersion != null ||
-        wifiName != null;
+        wifiName != null ||
+        locationPermission != null ||
+        notificationPermission != null ||
+        backgroundAllowed != null ||
+        accessibilityEnabled != null;
     return Child(
       id: json['id'] as String,
       name: (json['name'] as String?) ?? '',
@@ -88,8 +99,7 @@ class Child {
       // `childAvatarUrlProvider` tomonidan quriladi
       // (`/children/:id/avatar/image`). Storage key'ni to'g'ridan-to'g'ri
       // network URL sifatida ishlatib bo'lmaydi.
-      photoUrl:
-          (json['photoPath'] as String?) ?? (json['photoUrl'] as String?),
+      photoUrl: (json['photoPath'] as String?) ?? (json['photoUrl'] as String?),
       deviceModel: deviceModel,
       familyCode: (json['familyCode'] as String?) ?? '',
       isConnected: (json['isConnected'] as bool?) ?? false,
@@ -105,11 +115,16 @@ class Child {
               isCharging: isCharging,
               isOnline: json['isConnected'] as bool? ?? false,
               lastSeen: _parseIso8601(json['lastSeenAt']),
+              locationPermission: locationPermission,
+              notificationPermission: notificationPermission,
+              backgroundAllowed: backgroundAllowed,
+              accessibilityEnabled: accessibilityEnabled,
             )
           : null,
       lastSeenAt: _parseIso8601(json['lastSeenAt']),
       createdAt: _parseIso8601(json['createdAt']) ?? DateTime.now(),
       blockUnknownSources: (json['blockUnknownSources'] as bool?) ?? false,
+      blockAllApps: (json['blockAllApps'] as bool?) ?? false,
       // SOS "Qo'ng'iroq" uchun — backend endi phoneNumber qaytaradi
       // (ota-ona bola qo'shganda/tahrirlaganda kiritadi).
       phoneNumber: json['phoneNumber'] as String?,
@@ -199,6 +214,11 @@ class Child {
   /// bo'lsa bola qurilmasi sideload ilovalarni ishlatishni bloklaydi.
   final bool blockUnknownSources;
 
+  /// "Barcha ilovalarni bloklash" — dashboard toggle'i. `true` bo'lsa bola
+  /// qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi (Child App
+  /// device-policy'ni o'qib enforce qiladi).
+  final bool blockAllApps;
+
   /// Default avatar sticker yo'li — `assets/stickers/`'dan, jinsi va
   /// yosh guruhiga qarab.
   ///
@@ -223,6 +243,26 @@ class Child {
   ///
   /// `false` bo'lsa — `defaultStickerPath` SVG sticker ko'rsatiladi.
   bool get hasCustomPhoto => photoBytes != null || photoUrl != null;
+
+  // ─── Jonli holat (heartbeat-aware) ──────────────────────────────────
+  // Avval status har joyda har xil edi: dashboard/ro'yxat faqat `isConnected`
+  // (pairing bayrog'i) ga qarardi → aloqa uzilsa ham "yashil" ko'rinardi.
+  // Endi YAGONA mantiq: "online" = ulangan VA oxirgi heartbeat 5 daqiqa ichida.
+
+  /// Bola qurilmasi HOZIR jonli onlaynmi — `isConnected` (pairing) VA oxirgi
+  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 5 daqiqa ichida bo'lishi
+  /// shart. Heartbeat to'xtasa `false`.
+  bool get isLiveOnline {
+    final seen = lastSeenAt ?? deviceInfo?.lastSeen;
+    return isConnected &&
+        seen != null &&
+        DateTime.now().difference(seen) < const Duration(minutes: 5);
+  }
+
+  /// Ulangan, lekin heartbeat 5 daqiqadan beri jim — "Aloqa uzildi" holati
+  /// (oddiy "Ulanmagan"dan farqli; PDF M11). `false` bo'lsa: yo jonli onlayn,
+  /// yo umuman ulanmagan.
+  bool get isConnectionLost => isConnected && !isLiveOnline;
 
   /// Backend REST POST/PUT uchun JSON (Sprint 4.4).
   ///
@@ -283,6 +323,7 @@ class Child {
     DateTime? lastSeenAt,
     String? phoneNumber,
     bool? blockUnknownSources,
+    bool? blockAllApps,
   }) {
     return Child(
       id: id ?? this.id,
@@ -302,6 +343,7 @@ class Child {
       lastSeenAt: lastSeenAt ?? this.lastSeenAt,
       phoneNumber: phoneNumber ?? this.phoneNumber,
       blockUnknownSources: blockUnknownSources ?? this.blockUnknownSources,
+      blockAllApps: blockAllApps ?? this.blockAllApps,
     );
   }
 
@@ -328,28 +370,30 @@ class Child {
         other.deviceInfo == deviceInfo &&
         other.lastSeenAt == lastSeenAt &&
         other.phoneNumber == phoneNumber &&
-        other.blockUnknownSources == blockUnknownSources;
+        other.blockUnknownSources == blockUnknownSources &&
+        other.blockAllApps == blockAllApps;
   }
 
   @override
   int get hashCode => Object.hash(
-        id,
-        name,
-        age,
-        gender,
-        region,
-        photoUrl,
-        deviceModel,
-        createdAt,
-        familyCode,
-        isConnected,
-        linkedDeviceUid,
-        pairedAt,
-        deviceInfo,
-        lastSeenAt,
-        phoneNumber,
-        blockUnknownSources,
-      );
+    id,
+    name,
+    age,
+    gender,
+    region,
+    photoUrl,
+    deviceModel,
+    createdAt,
+    familyCode,
+    isConnected,
+    linkedDeviceUid,
+    pairedAt,
+    deviceInfo,
+    lastSeenAt,
+    phoneNumber,
+    blockUnknownSources,
+    blockAllApps,
+  );
 
   @override
   String toString() =>

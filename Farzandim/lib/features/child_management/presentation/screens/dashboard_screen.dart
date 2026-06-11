@@ -9,6 +9,7 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
@@ -202,7 +203,6 @@ class _DashboardBody extends ConsumerStatefulWidget {
 }
 
 class _DashboardBodyState extends ConsumerState<_DashboardBody> {
-  bool _blockAll = false;
   late final PageController _pageController;
 
   @override
@@ -218,10 +218,6 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
   void dispose() {
     _pageController.dispose();
     super.dispose();
-  }
-
-  void _comingSoon() {
-    AppToast.info(context, 'auth.social.comingSoon'.tr());
   }
 
   /// Tepadan pastga tortilganda — tanlangan bolaning BARCHA dashboard
@@ -334,11 +330,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody> {
                             const SizedBox(height: AppDimensions.lg),
                             _TimeCard(
                               childId: c.id,
-                              blockAll: _blockAll,
-                              onBlockChanged: (v) {
-                                setState(() => _blockAll = v);
-                                _comingSoon();
-                              },
+                              blockAllInitial: c.blockAllApps,
                             ),
                             const SizedBox(height: AppDimensions.lg),
                             _QuickActionsGrid(childId: c.id),
@@ -557,6 +549,9 @@ class _ChildInfoHeader extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
               ),
               const SizedBox(height: AppDimensions.sm),
+              // Jonli holat: online / aloqa uzildi / ulanmagan + batareya.
+              _StatusLine(child: child),
+              const SizedBox(height: AppDimensions.sm),
               // Yashil segmentlar = bola SONI + qaysi biri ko'rsatilayapti.
               _ChildCountIndicator(count: childCount, selected: selectedIndex),
             ],
@@ -597,6 +592,72 @@ class _ChildCountIndicator extends StatelessWidget {
           ),
       ],
     );
+  }
+}
+
+/// Bola header'idagi JONLI HOLAT qatori — online / aloqa uzildi / ulanmagan
+/// indikatori + batareya. Heartbeat-aware (`Child.isLiveOnline`), shu sababli
+/// aloqa uzilsa darhol "Aloqa uzildi" (sariq) ko'rinadi — avval "yashil" edi.
+class _StatusLine extends StatelessWidget {
+  const _StatusLine({required this.child});
+
+  final Child child;
+
+  @override
+  Widget build(BuildContext context) {
+    final Color statusColor;
+    final String statusKey;
+    if (child.isLiveOnline) {
+      statusColor = AppColors.success;
+      statusKey = 'dashboard.status.online';
+    } else if (child.isConnectionLost) {
+      statusColor = AppColors.warning;
+      statusKey = 'dashboard.status.connectionLost';
+    } else {
+      statusColor = AppColors.textTertiary;
+      statusKey = 'dashboard.status.offline';
+    }
+    final battery = child.deviceInfo?.batteryLevel;
+
+    return Row(
+      children: [
+        Container(
+          width: 8,
+          height: 8,
+          decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
+        ),
+        const SizedBox(width: 6),
+        Text(
+          statusKey.tr(),
+          style: AppTextStyles.bodyS.copyWith(
+            color: statusColor,
+            fontWeight: FontWeight.w600,
+          ),
+        ),
+        if (battery != null) ...[
+          const SizedBox(width: 12),
+          Icon(
+            Icons.battery_std_rounded,
+            size: 14,
+            color: _batteryColor(battery),
+          ),
+          const SizedBox(width: 4),
+          Text(
+            '$battery%',
+            style: AppTextStyles.bodyS.copyWith(
+              color: _batteryColor(battery),
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+
+  Color _batteryColor(int level) {
+    if (level >= 50) return AppColors.success;
+    if (level >= 20) return AppColors.warning;
+    return AppColors.error;
   }
 }
 
@@ -810,19 +871,67 @@ class _RatingSection extends ConsumerWidget {
 
 // ════════════════════════ TIME CARD ════════════════════════
 
-class _TimeCard extends ConsumerWidget {
-  const _TimeCard({
-    required this.childId,
-    required this.blockAll,
-    required this.onBlockChanged,
-  });
+class _TimeCard extends ConsumerStatefulWidget {
+  const _TimeCard({required this.childId, required this.blockAllInitial});
 
   final String childId;
-  final bool blockAll;
-  final ValueChanged<bool> onBlockChanged;
+
+  /// Backend'dagi joriy "barcha ilovalarni bloklash" holati (child.blockAllApps).
+  final bool blockAllInitial;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<_TimeCard> createState() => _TimeCardState();
+}
+
+class _TimeCardState extends ConsumerState<_TimeCard> {
+  late bool _blocked = widget.blockAllInitial;
+  bool _saving = false;
+
+  @override
+  void didUpdateWidget(_TimeCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Backend yangilangach (children refetch) sinxronlash — saqlash jarayonida
+    // foydalanuvchi tanlovini ustun qo'yamiz.
+    if (!_saving && oldWidget.blockAllInitial != widget.blockAllInitial) {
+      _blocked = widget.blockAllInitial;
+    }
+  }
+
+  /// Toggle — optimistik + backend (`setBlockAllApps`) + xatoda qaytarish.
+  /// Bola qurilmasi device-policy'ni o'qib barcha ilovani bloklaydi.
+  Future<void> _onToggle(bool value) async {
+    if (_saving) return;
+    final previous = _blocked;
+    setState(() {
+      _blocked = value;
+      _saving = true;
+    });
+    try {
+      await ref
+          .read(backendChildRepositoryProvider)
+          .setBlockAllApps(widget.childId, value);
+      ref.invalidate(childrenProvider);
+      if (mounted) {
+        AppToast.success(
+          context,
+          value
+              ? 'dashboard.screenTime.blockAllOnSnack'.tr()
+              : 'dashboard.screenTime.blockAllOffSnack'.tr(),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        setState(() => _blocked = previous);
+        AppToast.error(context, 'dashboard.screenTime.blockAllErrorSnack'.tr());
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final childId = widget.childId;
     final day = ref.watch(todayUsageProvider(childId)).valueOrNull;
     // FAQAT foydalanuvchi ilovalari (system/launcher/orqa-fon emas) — ikonka
     // qatori uchun. `filteredApps` system prefixlarni chiqarib tashlaydi.
@@ -882,7 +991,10 @@ class _TimeCard extends ConsumerWidget {
                     style: AppTextStyles.bodyS,
                   ),
                 ),
-                AppSwitch(value: blockAll, onChanged: onBlockChanged),
+                AppSwitch(
+                  value: _blocked,
+                  onChanged: _saving ? null : _onToggle,
+                ),
               ],
             ),
           ),
