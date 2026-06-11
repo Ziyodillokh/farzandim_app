@@ -26,8 +26,14 @@ final sosAlertsByStatusProvider =
   final controller = StreamController<List<Map<String, dynamic>>>();
   Future<void> refresh() async {
     if (controller.isClosed) return;
-    final list = await repo.getAlerts(status: status);
-    if (!controller.isClosed) controller.add(list);
+    try {
+      final list = await repo.getAlerts(status: status);
+      if (!controller.isClosed) controller.add(list);
+    } catch (_) {
+      // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi. (Birinchi
+      // yuklash xatosi esa yuqoridagi yield'da throw bo'lib ekranda aniq
+      // ko'rsatiladi — P0-3.)
+    }
   }
 
   final receivedSub = repo.receivedStream().listen((_) => refresh());

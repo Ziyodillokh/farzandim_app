@@ -5,6 +5,9 @@
 // Backend `0.5.1` LIVE — per-app limit endpoint mavjud. Stub olib
 // tashlandi, real Backend repository ulandi.
 
+import 'dart:async';
+
+import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
@@ -12,42 +15,62 @@ import 'package:farzandim/features/app_restrictions/data/repositories/backend_ap
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+/// Polling provayder uchun qisqa keep-alive (P0-1).
+///
+/// `autoDispose` watcher ketishi bilan provider'ni darhol o'ldiradi —
+/// foydalanuvchi tez orqaga qaytsa loading "flash" bo'lardi. 2 daqiqalik
+/// keep-alive: tez qaytishda kesh turadi, uzoq ketilsa polling BUTUNLAY
+/// to'xtaydi (avval `autoDispose`siz ekran bir marta ochilgach polling
+/// ILOVA UMRI DAVOMIDA davom etardi — 100k user'da minglab keraksiz RPS).
+void keepAliveFor(AutoDisposeRef<dynamic> ref, Duration duration) {
+  final link = ref.keepAlive();
+  final timer = Timer(duration, link.close);
+  ref.onDispose(timer.cancel);
+}
+
 /// Bola uchun bugungi foydalanish — Backend fetch + 30 sek polling.
 ///
 /// Backend hozir `app_usage:updated` WS event emit qilmaydi —
-/// vaqtinchalik polling bilan ushlaymiz. Ekran ochiq paytda har 30 sek
-/// yangi usage Backend'dan keladi (Child sync interval o'zgargach
-/// foydalanuvchi 30 sek ichida ko'radi).
-final todayUsageProvider =
-    StreamProvider.family<AppUsageDay?, String>((ref, childId) async* {
+/// vaqtinchalik polling bilan ushlaymiz. `autoDispose` + lifecycle skip:
+/// ekran yopilgach (2 daq keshdan keyin) va ilova fonda bo'lsa polling
+/// TO'XTAYDI. Poll xatosi yutiladi — oxirgi qiymat saqlanadi.
+final todayUsageProvider = StreamProvider.autoDispose
+    .family<AppUsageDay?, String>((ref, childId) async* {
   final isAuthed =
       ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
   if (!isAuthed) {
     yield null;
     return;
   }
+  keepAliveFor(ref, const Duration(minutes: 2));
   final repo = ref.watch(backendAppUsageRepositoryProvider);
 
   // Birinchi fetch
   yield await repo.getTodayUsage(childId);
 
-  // Polling — har 30 sek, faqat ekran ochiq ekan (provider hayot)
+  // Polling — har 30 sek, faqat provider hayot VA ilova ko'rinib turganda.
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
-    yield await repo.getTodayUsage(childId);
+    if (!isAppResumed(ref)) continue;
+    try {
+      yield await repo.getTodayUsage(childId);
+    } catch (_) {
+      // tarmoq blip — oxirgi qiymat saqlanadi, keyingi tick qayta uradi
+    }
   }
 });
 
-/// Bola qurilmasidagi o'rnatilgan ilovalar — Backend fetch + 5 daq polling.
-final installedAppsProvider =
-    StreamProvider.family<List<AppUsageEntry>, String>(
-        (ref, childId) async* {
+/// Bola qurilmasidagi o'rnatilgan ilovalar — Backend fetch + 60s polling.
+/// `autoDispose` + lifecycle skip (P0-1, yuqoridagi kabi).
+final installedAppsProvider = StreamProvider.autoDispose
+    .family<List<AppUsageEntry>, String>((ref, childId) async* {
   final isAuthed =
       ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
   if (!isAuthed) {
     yield const <AppUsageEntry>[];
     return;
   }
+  keepAliveFor(ref, const Duration(minutes: 2));
   final repo = ref.watch(backendAppUsageRepositoryProvider);
   yield await repo.getInstalledApps(childId: childId);
 
@@ -55,7 +78,12 @@ final installedAppsProvider =
   // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (i) => i)) {
-    yield await repo.getInstalledApps(childId: childId);
+    if (!isAppResumed(ref)) continue;
+    try {
+      yield await repo.getInstalledApps(childId: childId);
+    } catch (_) {
+      // skip — oxirgi qiymat saqlanadi
+    }
   }
 });
 

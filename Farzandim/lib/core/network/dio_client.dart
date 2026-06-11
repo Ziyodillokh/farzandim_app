@@ -183,9 +183,25 @@ class _RefreshInterceptor extends Interceptor {
 
       completer.complete(newAccess);
       return newAccess;
+    } on DioException catch (e) {
+      // MUHIM (P0-2): tokenlarni FAQAT refresh endpoint'i ANIQ 401/403
+      // qaytarganda o'chiramiz (refresh token haqiqatan bekor). Timeout,
+      // DNS, backend deploy paytidagi 502/503 kabi VAQTINCHA xatolarda
+      // clear qilinsa — 30-kunlik sessiya yo'qolib OMMAVIY JIM LOGOUT
+      // bo'lardi (deploy oynasida minglab user birdan chiqib ketadi).
+      // Transient xatoda tokenlar saqlanadi — keyingi 401'da refresh
+      // avtomatik qayta uriniladi (finally _refreshCompleter=null).
+      final code = e.response?.statusCode;
+      if (code == 401 || code == 403) {
+        await tokenStorage.clear();
+        // Zombi holatdan chiqish: auth state'ni darhol xabardor qilamiz —
+        // router login'ga olib boradi (avval foydalanuvchi ekranlarda
+        // qolib hamma so'rov jim 401 bo'laverardi).
+        onSessionExpired?.call();
+      }
+      completer.complete(null);
+      return null;
     } catch (_) {
-      // Refresh ham fail — logout
-      await tokenStorage.clear();
       completer.complete(null);
       return null;
     } finally {
@@ -193,6 +209,13 @@ class _RefreshInterceptor extends Interceptor {
     }
   }
 }
+
+/// Sessiya tugaganda (refresh token bekor — 401/403) chaqiriladigan global
+/// callback. `BackendAuthNotifier` konstruktorda o'rnatadi: state'ni
+/// `AuthAnonymous`ga o'tkazadi → router login ekraniga redirect qiladi.
+/// Callback'siz foydalanuvchi "zombi" holatda qolardi (UI ochiq, barcha
+/// so'rovlar jim 401, hech qanday xabar yo'q).
+void Function()? onSessionExpired;
 
 // ─── 3. LoggingInterceptor ─────────────────────────────────────────────
 // Debug build'da request/response log qiladi. Production'da o'chiriladi

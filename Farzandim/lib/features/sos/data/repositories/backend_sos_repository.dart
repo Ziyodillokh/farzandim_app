@@ -36,6 +36,12 @@ class BackendSosRepository {
 
   /// SOS alert ro'yxati (Parent monitoring).
   /// `status`: 'ACTIVE' (default) | 'RESOLVED'.
+  ///
+  /// MUHIM (P0-3): xato YUTILMAYDI — rethrow. Avval xatoda `[]` qaytarilardi
+  /// va ota-ona FAVQULODDA vaziyatda offline bo'lsa ekranda yolg'on
+  /// "SOS signallari yo'q — hammasi tinch" ko'rardi. Endi provider
+  /// AsyncValue.error'ga tushadi va ekran aniq xato + retry ko'rsatadi
+  /// (sos_alerts_list_screen'da error branch allaqachon bor).
   Future<List<Map<String, dynamic>>> getAlerts({
     String status = 'ACTIVE',
     int limit = 100,
@@ -51,7 +57,7 @@ class BackendSosRepository {
       return list.cast<Map<String, dynamic>>();
     } on DioException catch (e) {
       debugPrint('BackendSosRepository.getAlerts: $e');
-      return const [];
+      rethrow;
     }
   }
 

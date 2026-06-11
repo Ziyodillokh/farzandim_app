@@ -7,6 +7,7 @@
 
 import 'dart:async';
 
+import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
@@ -25,24 +26,32 @@ final childrenRefreshTickProvider = StateProvider<int>((_) => 0);
 
 /// Jonli holat "puls"i — har 30s emit. Buni watch qilgan widget (masalan
 /// dashboard `_StatusLine`) qayta build bo'lib `isLiveOnline`ni qayta
-/// hisoblaydi (DateTime.now() asosli getter timer'siz "muzlab" qolardi:
-/// bola offline bo'lsa ham status yashilligicha turardi). Har 2-tick'da
-/// (60s) bolalar ro'yxati ham qayta fetch qilinadi — backend'dan yangi
-/// `lastSeenAt`/`isConnected` keladi va offline→online tiklanish ham
-/// ko'rinadi. Recompute (invalidate EMAS) → copyWithPrevious, flash yo'q.
-final statusTickProvider = StreamProvider<int>((ref) {
-  return Stream<int>.periodic(const Duration(seconds: 30), (i) {
-    if (i.isOdd) {
-      ref.read(childrenRefreshTickProvider.notifier).state++;
-    }
-    return i;
-  });
+/// hisoblaydi (DateTime.now() asosli getter timer'siz "muzlab" qolardi).
+///
+/// FAQAT rebuild pulse — refetch QILMAYDI (ro'yxatni `childrenProvider`ning
+/// o'zi ichki 60s poll bilan yangilaydi). `autoDispose`: dashboard yopilsa
+/// puls to'xtaydi; fonda ham emit qilmaydi (lifecycle skip — bekorga ish yo'q).
+final statusTickProvider = StreamProvider.autoDispose<int>((ref) async* {
+  var i = 0;
+  yield i;
+  await for (final _
+      in Stream<int>.periodic(const Duration(seconds: 30), (t) => t)) {
+    if (!isAppResumed(ref)) continue;
+    yield ++i;
+  }
 });
 
-/// Bolalar ro'yxati — Backend REST orqali.
+/// Bolalar ro'yxati — Backend REST + ichki 60s polling.
 ///
 /// Auth bo'lmasa bo'sh ro'yxat qaytaradi.
 /// CRUD operatsiyadan keyin `ref.invalidate(childrenProvider)` chaqiriladi.
+///
+/// MASSHTAB (P0-1): polling shu generator ICHIDA — tashqi tick-recompute
+/// emas. Afzalliklari: (1) ilova FONDA bo'lsa so'rov yuborilmaydi
+/// (lifecycle skip); (2) natija o'zgarmagan bo'lsa yield qilinmaydi —
+/// AsyncData identity saqlanib BARCHA watcher'lar (dashboard, xarita,
+/// limits) 60s'lik behuda rebuild'lardan qutuladi; (3) loading→data
+/// transition'lar ham yo'q (recompute bo'lmagani uchun).
 final childrenProvider = StreamProvider<List<Child>>((ref) {
   // FAQAT "authenticated" holati o'zgarsa qayta ishga tushadi. Optimistik
   // startup'da auth ikki marta emit qiladi (cached → fresh user) — `.select`
@@ -51,17 +60,37 @@ final childrenProvider = StreamProvider<List<Child>>((ref) {
   // yangilanishi endi qayta-fetch QILMAYDI.
   final isAuthed =
       ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
-  ref.watch(childrenRefreshTickProvider); // manual refresh trigger
+  // Manual refresh trigger (pull-to-refresh, resume, CRUD'dan keyin) —
+  // recompute darhol yangi fetch boshlaydi.
+  ref.watch(childrenRefreshTickProvider);
   if (!isAuthed) return Stream.value(const <Child>[]);
   return _backendChildrenStream(ref);
 });
 
-/// Backend REST'dan bolalarni o'qiydi. Xato YUTILMAYDI (`yield []` qilmaymiz) —
-/// StreamProvider xato holatida oldingi qiymatni saqlaydi (copyWithPrevious),
-/// shuning uchun qayta-fetch xato bersa dashboard bo'sh "flash" bermaydi.
+/// Backend REST'dan bolalarni o'qiydi + har 60s ichki poll. Birinchi fetch
+/// xatosi YUTILMAYDI (StreamProvider error → copyWithPrevious, dashboard
+/// bo'sh "flash" bermaydi); poll xatolari skip (oxirgi qiymat saqlanadi).
 Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
   final repo = ref.watch(backendChildRepositoryProvider);
-  yield await repo.getChildren();
+  var current = await repo.getChildren();
+  yield current;
+
+  await for (final _
+      in Stream<int>.periodic(const Duration(seconds: 60), (t) => t)) {
+    // Ilova fonda — so'rov yubormaymiz (batareya + backend yuki).
+    if (!isAppResumed(ref)) continue;
+    try {
+      final fresh = await repo.getChildren();
+      // O'zgarmagan bo'lsa yield YO'Q — eski List identity qoladi,
+      // watcher'lar rebuild bo'lmaydi (Child'da value-based == bor).
+      if (!listEquals(fresh, current)) {
+        current = fresh;
+        yield fresh;
+      }
+    } catch (_) {
+      // tarmoq blip — oxirgi qiymat saqlanadi, keyingi tick qayta uradi
+    }
+  }
 }
 
 /// Bolalar ro'yxati — sinxron access.

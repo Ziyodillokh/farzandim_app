@@ -45,12 +45,18 @@ final voiceMessagesProvider =
     return;
   }
 
-  final children = ref.watch(childrenListProvider);
-  final child = children
-      .where((c) => c.id == childId)
-      .cast<Child?>()
-      .firstWhere((_) => true, orElse: () => null);
-  final childUserId = child?.linkedDeviceUid;
+  // MUHIM (P0-4): butun ro'yxatni emas, FAQAT shu bolaning linkedDeviceUid'ini
+  // watch qilamiz (`select`). Avval childrenListProvider'ning har yangilanishi
+  // (60s polling) yangi List identity berib bu provider'ni QAYTA ISHGA
+  // tushirardi → butun xabar tarixi har 60s qayta yuklanardi. select bilan
+  // provider faqat linkedDeviceUid HAQIQATAN o'zgarganda (pair/unpair)
+  // recompute bo'ladi; yangi xabarlar esa quyidagi WS orqali keladi.
+  final childUserId = ref.watch(childrenListProvider.select((children) {
+    for (final c in children) {
+      if (c.id == childId) return c.linkedDeviceUid;
+    }
+    return null;
+  }));
   if (childUserId == null) {
     // Bola hali Child App'da pair qilmagan — suhbat yo'q.
     yield const <VoiceMessage>[];

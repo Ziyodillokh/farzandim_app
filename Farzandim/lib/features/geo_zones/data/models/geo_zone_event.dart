@@ -75,8 +75,11 @@ class GeoZoneEvent {
           typeStr == 'exit' ? GeoZoneEventType.exit : GeoZoneEventType.enter,
       latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
       longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
-      timestamp: DateTime.tryParse(json['createdAt'] as String? ?? '') ??
-          DateTime.now(),
+      // Backend UTC ("Z") — .toLocal()'siz voqea vaqtlari Toshkentda 5 soat
+      // orqada ko'rinardi (P0-5).
+      timestamp: (DateTime.tryParse(json['createdAt'] as String? ?? '') ??
+              DateTime.now())
+          .toLocal(),
     );
   }
 

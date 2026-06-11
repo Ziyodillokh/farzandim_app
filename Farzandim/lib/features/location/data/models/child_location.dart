@@ -43,7 +43,9 @@ class ChildLocation {
       longitude: (json['longitude'] as num).toDouble(),
       accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0,
       speed: (json['speed'] as num?)?.toDouble(),
-      updatedAt: DateTime.parse(json['createdAt'] as String),
+      // Backend UTC ("Z") qaytaradi — .toLocal()'siz tarix vaqtlari
+      // Toshkentda 5 soat orqada ko'rinardi (P0-5).
+      updatedAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     );
   }
 

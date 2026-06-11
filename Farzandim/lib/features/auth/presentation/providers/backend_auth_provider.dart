@@ -18,6 +18,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:dio/dio.dart';
+import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
@@ -60,6 +61,14 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
   })  : _repo = repository,
         _social = socialSignIn,
         super(const AuthUnknown()) {
+    // Sessiya tugashi (refresh token 401/403 — tokenlar o'chirilgan) —
+    // dio_client xabar beradi, biz darhol login holatiga o'tamiz (router
+    // login ekraniga olib boradi). Busiz foydalanuvchi "zombi" qolardi.
+    onSessionExpired = () {
+      if (mounted && state is! AuthAnonymous) {
+        state = const AuthAnonymous();
+      }
+    };
     // Auto-bootstrap: app ochilganda saqlangan token tekshiriladi.
     // AuthUnknown → AuthAuthenticated yoki AuthAnonymous'ga o'tadi.
     bootstrap();

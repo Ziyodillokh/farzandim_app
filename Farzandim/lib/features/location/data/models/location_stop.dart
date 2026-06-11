@@ -59,10 +59,13 @@ class LocationStop {
       id: json['id'] as String? ?? '',
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
-      arrivedAt: DateTime.tryParse(json['arrivedAt'] as String? ?? '') ??
-          DateTime.fromMillisecondsSinceEpoch(0),
+      // Backend UTC ("Z") — .toLocal()'siz to'xtash vaqtlari 5 soat orqada
+      // ko'rinardi (P0-5).
+      arrivedAt: (DateTime.tryParse(json['arrivedAt'] as String? ?? '') ??
+              DateTime.fromMillisecondsSinceEpoch(0))
+          .toLocal(),
       leftAt: json['leftAt'] != null
-          ? DateTime.tryParse(json['leftAt'] as String)
+          ? DateTime.tryParse(json['leftAt'] as String)?.toLocal()
           : null,
       durationSec: (json['durationSec'] as num?)?.toInt() ?? 0,
       pointCount: (json['pointCount'] as num?)?.toInt() ?? 1,

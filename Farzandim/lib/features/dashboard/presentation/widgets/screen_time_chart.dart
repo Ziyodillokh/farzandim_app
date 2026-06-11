@@ -7,18 +7,23 @@
 // Bugungi kun lime green bar, qolganlar slate.
 
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
+    show keepAliveFor;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// 7 kunlik usage provider — selectedChildId family.
 ///
-/// Realtime: ekran ochiq ekan har 30 sek backend'dan qayta o'qiydi. Bola
-/// qurilmasi usage sync qilgach ota-ona 30 sek ichida yangi qiymatni ko'radi
-/// (avval `FutureProvider` edi — faqat ekran qayta ochilganda yangilanardi).
-final weeklyChildUsageProvider =
-    StreamProvider.family<List<DailyUsageTotal>, String>((ref, childId) async* {
+/// Realtime: ekran ochiq ekan har 30 sek backend'dan qayta o'qiydi.
+/// `autoDispose` + lifecycle skip (P0-1): ekran yopilgach (2 daq keshdan
+/// keyin) va ilova fonda bo'lsa polling to'xtaydi — avval ilova umri
+/// davomida davom etardi.
+final weeklyChildUsageProvider = StreamProvider.autoDispose
+    .family<List<DailyUsageTotal>, String>((ref, childId) async* {
+  keepAliveFor(ref, const Duration(minutes: 2));
   final repo = ref.watch(backendAppUsageRepositoryProvider);
   // Birinchi yuklash. Xato bo'lsa AsyncLoading qoladi (_TimeCard "—" ko'rsatadi),
   // polling keyin qayta urinadi.
@@ -32,6 +37,7 @@ final weeklyChildUsageProvider =
   // "0 daqiqa"ga tushib qolmaydi (avvalgi regressiya).
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
+    if (!isAppResumed(ref)) continue;
     try {
       yield await repo.getWeeklyTotals(
         childId: childId,
