@@ -270,6 +270,10 @@ flutter:
     - assets/translations/ # uz.json, ru.json, en.json — easy_localization
     - assets/map_styles/   # Google Maps custom JSON style (dark premium)
     - assets/env.json      # API kalitlar (git-ignored, har dev o'zi)
+    # Inter shrifti BUNDLE (ST-04): google_fonts package shu papkani
+    # avtomatik tekshiradi — topilsa internetdan YUKLAMAYDI. Busiz birinchi
+    # o'rnatishda sekin tarmoqda matn default shriftda "sakrab" chiqardi.
+    - assets/google_fonts/
 
   # To add custom fonts to your application, add a fonts section here,
   # in this "flutter" section. Each entry in this list should have a

@@ -63,6 +63,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   Timer? _elapsedTimer;
   StreamSubscription<Amplitude>? _amplitudeSub;
   final List<double> _amplitudes = [];
+  // PERF-05: amplitude yangilanishi BUTUN ekranni emas, faqat input bar
+  // waveform'ini qayta chizadi (ChatInputBar.amplitudeTick).
+  final ValueNotifier<int> _ampTick = ValueNotifier<int>(0);
   DateTime? _recordingStartedAt;
   bool _isCanceled = false;
 
@@ -189,12 +192,13 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         // dB qiymati -60..0 → 0..1 normallashtirish.
         final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0);
         if (!mounted) return;
-        setState(() {
-          _amplitudes.add(normalized);
-          if (_amplitudes.length > _maxAmplitudes) {
-            _amplitudes.removeAt(0);
-          }
-        });
+        // PERF-05: setState EMAS — 10Hz'da butun ekran (xabarlar ListView +
+        // header) rebuild bo'lardi. Tick faqat waveform'ni qayta chizadi.
+        _amplitudes.add(normalized);
+        if (_amplitudes.length > _maxAmplitudes) {
+          _amplitudes.removeAt(0);
+        }
+        _ampTick.value++;
       });
 
       _elapsedSeconds = 0;
@@ -502,6 +506,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     WidgetsBinding.instance.removeObserver(this);
     _elapsedTimer?.cancel();
     _amplitudeSub?.cancel();
+    _ampTick.dispose();
     _recorderService.dispose();
     AudioPlayerManager.instance.stop();
     _scrollController.dispose();
@@ -609,6 +614,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                 isMediaUploading: _isMediaUploading,
                 elapsedSeconds: _elapsedSeconds,
                 amplitudes: _amplitudes,
+                amplitudeTick: _ampTick,
                 onLongPressStart: () => unawaited(_onLongPressStart()),
                 onLongPressEnd: () => unawaited(_onLongPressEnd()),
                 onCancel: () => unawaited(_abortRecording()),

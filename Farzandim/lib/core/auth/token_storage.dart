@@ -98,11 +98,20 @@ class TokenStorage {
   static const _kAccessToken = 'jwt_access_token';
   static const _kRefreshToken = 'jwt_refresh_token';
 
+  // Access token memory keshi (ST-07): HAR HTTP so'rovda secure-storage
+  // platform-channel o'qishini tejaydi. STATIC — barcha TokenStorage
+  // instance'lari bitta keshni ko'radi (yozish/o'chirish izchil).
+  // Refresh token keshlanmaydi (kam o'qiladi, xavfsizroq).
+  static String? _cachedAccess;
+  static bool _accessCached = false;
+
   /// Login muvaffaqiyatli bo'lganda chaqiriladi.
   Future<void> saveTokens({
     required String accessToken,
     required String refreshToken,
   }) async {
+    _cachedAccess = accessToken;
+    _accessCached = true;
     await Future.wait([
       _backend.write(_kAccessToken, accessToken),
       _backend.write(_kRefreshToken, refreshToken),
@@ -110,15 +119,24 @@ class TokenStorage {
   }
 
   /// Har request'da Bearer header uchun chaqiriladi.
-  Future<String?> readAccessToken() => _backend.read(_kAccessToken);
+  Future<String?> readAccessToken() async {
+    if (_accessCached) return _cachedAccess;
+    final v = await _backend.read(_kAccessToken);
+    _cachedAccess = v;
+    _accessCached = true;
+    return v;
+  }
 
   /// 401 javob kelganda /api/auth/refresh uchun.
   Future<String?> readRefreshToken() => _backend.read(_kRefreshToken);
 
   /// Access token expire bo'lib refresh muvaffaqiyatli bo'lgach,
   /// yangi access token saqlanadi (refresh ham kelishi mumkin).
-  Future<void> updateAccessToken(String newAccessToken) =>
-      _backend.write(_kAccessToken, newAccessToken);
+  Future<void> updateAccessToken(String newAccessToken) {
+    _cachedAccess = newAccessToken;
+    _accessCached = true;
+    return _backend.write(_kAccessToken, newAccessToken);
+  }
 
   /// Refresh response ikkala token yangi qiymatini berishi mumkin.
   Future<void> updateRefreshToken(String newRefreshToken) =>
@@ -126,6 +144,9 @@ class TokenStorage {
 
   /// Logout — barcha tokenlarni o'chirish.
   Future<void> clear() async {
+    // "Yo'q" holati ham kesh — keyingi o'qish storage'ga qaytmaydi.
+    _cachedAccess = null;
+    _accessCached = true;
     await Future.wait([
       _backend.delete(_kAccessToken),
       _backend.delete(_kRefreshToken),

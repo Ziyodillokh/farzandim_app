@@ -40,6 +40,7 @@ class ChatInputBar extends StatefulWidget {
     required this.onPickGallery,
     required this.onPickCamera,
     required this.onPickFile,
+    this.amplitudeTick,
     super.key,
   });
 
@@ -49,6 +50,11 @@ class ChatInputBar extends StatefulWidget {
   final bool isMediaUploading;
   final int elapsedSeconds;
   final List<double> amplitudes;
+
+  /// Amplitude yangilanish signali (PERF-05): berilsa jonli waveform FAQAT
+  /// shu Listenable orqali qayta chiziladi — ota-ekran setState'siz (10Hz
+  /// butun-ekran rebuild o'rniga faqat waveform subtree rebuild bo'ladi).
+  final Listenable? amplitudeTick;
 
   /// Ovoz yozishni boshlash (HOLD start, voice rejimi).
   final VoidCallback onLongPressStart;
@@ -244,6 +250,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                       child: _RecordingIndicator(
                         elapsedSeconds: widget.elapsedSeconds,
                         amplitudes: widget.amplitudes,
+                        amplitudeTick: widget.amplitudeTick,
                       ),
                     )
                   else
@@ -565,10 +572,12 @@ class _RecordingIndicator extends StatelessWidget {
   const _RecordingIndicator({
     required this.elapsedSeconds,
     required this.amplitudes,
+    this.amplitudeTick,
   });
 
   final int elapsedSeconds;
   final List<double> amplitudes;
+  final Listenable? amplitudeTick;
 
   @override
   Widget build(BuildContext context) {
@@ -606,32 +615,40 @@ class _RecordingIndicator extends StatelessWidget {
           Expanded(
             child: SizedBox(
               height: 26,
-              child: amplitudes.isEmpty
-                  ? const SizedBox.shrink()
-                  : ListView.builder(
-                      scrollDirection: Axis.horizontal,
-                      reverse: true,
-                      physics: const NeverScrollableScrollPhysics(),
-                      itemCount: amplitudes.length,
-                      itemBuilder: (_, i) {
-                        final amp = amplitudes[amplitudes.length - 1 - i];
-                        final h = (amp * 26).clamp(2.0, 26.0);
-                        return Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 1),
-                          child: Center(
-                            child: Container(
-                              width: 2.5,
-                              height: h,
-                              decoration: BoxDecoration(
-                                color: AppColors.primary,
-                                borderRadius: BorderRadius.circular(2),
+              // PERF-05: waveform amplitudeTick orqali O'ZI qayta chiziladi
+              // (10Hz) — ota-ekran setState'siz. Tick berilmasa eski xulq
+              // (parent rebuild'ida chiziladi).
+              child: AnimatedBuilder(
+                animation:
+                    amplitudeTick ?? const AlwaysStoppedAnimation<int>(0),
+                builder: (_, __) => amplitudes.isEmpty
+                    ? const SizedBox.shrink()
+                    : ListView.builder(
+                        scrollDirection: Axis.horizontal,
+                        reverse: true,
+                        physics: const NeverScrollableScrollPhysics(),
+                        itemCount: amplitudes.length,
+                        itemBuilder: (_, i) {
+                          final amp =
+                              amplitudes[amplitudes.length - 1 - i];
+                          final h = (amp * 26).clamp(2.0, 26.0);
+                          return Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 1),
+                            child: Center(
+                              child: Container(
+                                width: 2.5,
+                                height: h,
+                                decoration: BoxDecoration(
+                                  color: AppColors.primary,
+                                  borderRadius: BorderRadius.circular(2),
+                                ),
                               ),
                             ),
-                          ),
-                        );
-                      },
-                    ),
+                          );
+                        },
+                      ),
+              ),
             ),
           ),
         ],
