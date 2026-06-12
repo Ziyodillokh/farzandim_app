@@ -85,26 +85,26 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   `permission_apps_screen.dart:50-62,159`.
 - [ ] **EH-06** (S): Repair-QR dialog avto-yopilmaydi — hujjatdagi `child:repaired` WS listener
   implementatsiya qilinmagan — `repair_qr_dialog.dart:15-17,64-132`.
-- [ ] **EH-08** (S, minor): Child CRUD xatolarida xom inglizcha `e.toString()` ko'rsatiladi — o'zbekcha xabar.
+- [x] **EH-08** (S, minor): Child CRUD xatolarida xom inglizcha `e.toString()` ko'rsatiladi — o'zbekcha xabar.
 
 ### Startup (ochilish tezligi)
 - [x] **ST-02** (S): `main.dart:81-148` — 8 ta ketma-ket await; parallellashtirilsa cold start sezilarli tezlashadi
   (ApiKeys+EasyLocalization+displayMode parallel; Crashlytics/Analytics/AppCheck birinchi frame'dan keyinga).
 - [ ] **ST-03** (M): Login bo'lgan userga har cold start'da Welcome ekran "flash" + 325KB jpg dekod —
   splash/redirect route kerak — `app_router.dart:164,179`.
-- [ ] **ST-04** (S): GoogleFonts Inter runtime'da internetdan yuklanadi — shriftni assets'ga bundle qilish
+- [x] **ST-04** (S): GoogleFonts Inter runtime'da internetdan yuklanadi — shriftni assets'ga bundle qilish
   (birinchi o'rnatishda sekin tarmoqda matn kechikadi).
 - [ ] **ST-05** (M): Dashboard ikki ketma-ket to'lqin (/children tugamaguncha profil/usage boshlanmaydi) —
   `dashboard_screen.dart:47-64,793,958-968`.
 - [ ] **ST-06** (S, minor): FCM token cold start'da 2 marta POST; anonim holatda kafolatlangan 401 so'rov.
-- [ ] **ST-07** (S, minor): Har so'rovda access token secure-storage'dan qayta o'qiladi — memory kesh.
+- [x] **ST-07** (S, minor): Har so'rovda access token secure-storage'dan qayta o'qiladi — memory kesh.
 
 ### Performance (UI)
 - [ ] **PERF-03 + SCR-03** (M): AppLimits ro'yxati builder'siz (hamma qator birdan) + har 30s poll'da
   sort/merge qayta — `app_limits_screen.dart:95-106,255-285` — ListView.builder + memoize.
 - [x] **PERF-04 + MEM-7** (S): AppIconWidget har rebuild'da base64Decode → yangi Uint8List → image kesh
   har safar sog'inadi — `app_icon_widget.dart:90-109` — bytes'ni memoize (initState/cache).
-- [ ] **PERF-05** (M): Voice chat yozish paytida amplitude 10Hz BUTUN ekranni rebuild qiladi —
+- [x] **PERF-05** (M): Voice chat yozish paytida amplitude 10Hz BUTUN ekranni rebuild qiladi —
   `voice_chat_screen.dart:188-207` — amplitude'ni faqat indikator widget'iga izolyatsiya qilish.
 - [ ] **PERF-06 + SCR-04** (M): LocationHistory har rebuild'da haversine×2 + dwell-detection qayta —
   `location_history_screen.dart:148-150,235,456-466` — hisoblarni data o'zgarganda bir marta (memoize).
