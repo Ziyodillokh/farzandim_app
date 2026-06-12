@@ -120,6 +120,12 @@ class _AppList extends StatelessWidget {
         ),
       );
     }
+    // ONGLI QAROR (PERF vs dizayn): barcha qatorlar BITTA SettingsCard
+    // ichida — karta balandligi kontentga qarab o'sadi, shuning uchun
+    // lazy builder ishlatib bo'lmaydi (DecoratedSliver bilan kartani
+    // qayta chizish vizual regressiya xavfi). Qatorlar yengil (ikonka
+    // keshi AppIconWidget'da memoizatsiyalangan), ro'yxat qurilma
+    // ilovalari bilan chegaralangan — bir martalik build qabul qilingan.
     return ListView(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.lg,

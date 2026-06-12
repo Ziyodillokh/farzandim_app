@@ -83,19 +83,33 @@ class _AppRestrictionsScreenState
                         installedApps: installed,
                       );
 
-                      return ListView(
+                      // PERF: 100-300 ilova bo'lishi mumkin — builder
+                      // faqat ko'ringan tile'larni quradi (avval hammasi
+                      // birdan qurilardi). Index 0 — grafik header.
+                      final itemCount =
+                          1 + (allApps.isEmpty ? 1 : allApps.length);
+                      return ListView.builder(
                         padding: const EdgeInsets.fromLTRB(
                           AppDimensions.lg,
                           AppDimensions.md,
                           AppDimensions.lg,
                           AppDimensions.lg,
                         ),
-                        children: [
-                          // Bugungi jami + haftalik grafik (reuse).
-                          ScreenTimeChart(childId: _childId),
-                          const SizedBox(height: AppDimensions.lg),
-                          if (allApps.isEmpty)
-                            Padding(
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) {
+                          if (index == 0) {
+                            // Bugungi jami + haftalik grafik (reuse).
+                            return Column(
+                              crossAxisAlignment:
+                                  CrossAxisAlignment.stretch,
+                              children: [
+                                ScreenTimeChart(childId: _childId),
+                                const SizedBox(height: AppDimensions.lg),
+                              ],
+                            );
+                          }
+                          if (allApps.isEmpty) {
+                            return Padding(
                               padding: const EdgeInsets.symmetric(
                                 vertical: AppDimensions.xl,
                               ),
@@ -109,19 +123,19 @@ class _AppRestrictionsScreenState
                                   height: 1.4,
                                 ),
                               ),
-                            )
-                          else
-                            for (final app in allApps)
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  bottom: AppDimensions.sm,
-                                ),
-                                child: AppCombinedTile(
-                                  app: app,
-                                  onTap: () => _showLimitSheet(app),
-                                ),
-                              ),
-                        ],
+                            );
+                          }
+                          final app = allApps[index - 1];
+                          return Padding(
+                            padding: const EdgeInsets.only(
+                              bottom: AppDimensions.sm,
+                            ),
+                            child: AppCombinedTile(
+                              app: app,
+                              onTap: () => _showLimitSheet(app),
+                            ),
+                          );
+                        },
                       );
                     },
                     loading: _loading,

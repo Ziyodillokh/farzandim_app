@@ -143,16 +143,16 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (state == AppLifecycleState.resumed) {
       ref
         ..invalidate(rawVoiceMessagesProvider)
-        ..invalidate(videoMessagesProvider(widget.childId));
+        ..invalidate(rawVideoMessagesProvider);
     }
   }
 
   Future<void> _onRefresh() async {
+    // latest/unread hosila providerlar — raw yangilanganda o'zlari
+    // qayta hisoblanadi, alohida invalidate kerak emas.
     ref
       ..invalidate(rawVoiceMessagesProvider)
-      ..invalidate(latestVoiceMessageProvider(widget.childId))
-      ..invalidate(unreadVoiceMessagesProvider(widget.childId))
-      ..invalidate(videoMessagesProvider(widget.childId));
+      ..invalidate(rawVideoMessagesProvider);
     await Future<void>.delayed(const Duration(milliseconds: 500));
   }
 
