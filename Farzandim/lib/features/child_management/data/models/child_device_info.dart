@@ -1,3 +1,4 @@
+import 'package:farzandim/core/utils/formatters.dart';
 import 'package:flutter/foundation.dart';
 
 /// Bola qurilmasi haqida real-time ma'lumot — Child App tomonidan
@@ -85,16 +86,12 @@ class ChildDeviceInfo {
   /// Wi-Fi nomi — yo'q bo'lsa fallback.
   String get displayWifi => wifiName ?? "Wi-Fi yo'q";
 
-  /// So'nggi faollik vaqtini insonga tushunarli matn qilib qaytaradi
-  /// ("Hozir", "5 daq oldin", "2 soat oldin", "3 kun oldin").
+  /// So'nggi faollik vaqtini insonga tushunarli matn qilib qaytaradi.
+  /// ARCH-07: markaziy `formatRelativeTime` — 3 tilda, bitta format.
   String get displayLastSeen {
     final ts = lastSeen;
     if (ts == null) return 'Hech qachon';
-    final diff = DateTime.now().difference(ts);
-    if (diff.inSeconds < 60) return 'Hozir';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-    if (diff.inHours < 24) return '${diff.inHours} soat oldin';
-    return '${diff.inDays} kun oldin';
+    return formatRelativeTime(ts);
   }
 
   @override

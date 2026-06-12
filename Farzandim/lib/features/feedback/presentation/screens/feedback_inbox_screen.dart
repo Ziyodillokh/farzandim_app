@@ -8,6 +8,7 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/feedback/data/repositories/backend_feedback_repository.dart';
 import 'package:farzandim/features/feedback/presentation/providers/feedback_provider.dart';
@@ -233,14 +234,8 @@ class _FeedbackTile extends ConsumerWidget {
     ref.invalidate(childFeedbackProvider(childId));
   }
 
-  String _formatTime(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'hozir';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-    if (diff.inHours < 24) return '${diff.inHours} soat oldin';
-    return '${dt.day}.${dt.month}.${dt.year}';
-  }
+  // ARCH-07: markaziy formatter — dublikat mantiq olib tashlandi.
+  String _formatTime(DateTime dt) => formatRelativeTime(dt);
 }
 
 class _EmptyState extends StatelessWidget {

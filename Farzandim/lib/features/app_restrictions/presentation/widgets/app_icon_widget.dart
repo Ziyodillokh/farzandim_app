@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
@@ -97,20 +98,23 @@ class _AppIconWidgetState extends State<AppIconWidget> {
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(size * 0.25);
 
-    // 1. Priority: iconUrl (Backend MinIO signed URL).
+    // 1. Priority: iconUrl (Backend proxy URL).
+    // MEM-4: disk-keshli — ikonkalar har cold-start'da qayta yuklanmaydi
+    // (bola qurilmasida 100+ ilova bo'lishi mumkin — har ochilishda 100+
+    // so'rov ketardi). memCacheWidth — kichik ikonka to'liq o'lchamda
+    // dekod qilinmasin (xotira).
     final url = iconUrl;
     if (url != null && url.isNotEmpty) {
       return ClipRRect(
         borderRadius: radius,
-        child: Image.network(
-          url,
+        child: CachedNetworkImage(
+          imageUrl: url,
           width: size,
           height: size,
           fit: BoxFit.cover,
-          gaplessPlayback: true,
-          loadingBuilder: (_, child, progress) =>
-              progress == null ? child : _buildFallback(radius),
-          errorBuilder: (_, __, ___) => _buildBase64OrFallback(radius),
+          memCacheWidth: 128,
+          placeholder: (_, __) => _buildFallback(radius),
+          errorWidget: (_, __, ___) => _buildBase64OrFallback(radius),
         ),
       );
     }

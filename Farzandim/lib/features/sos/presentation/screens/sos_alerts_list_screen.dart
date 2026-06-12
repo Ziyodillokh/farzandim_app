@@ -8,6 +8,7 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/sos/data/repositories/backend_sos_repository.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
@@ -455,12 +456,13 @@ class _AlertTile extends StatelessWidget {
     return DateTime.tryParse(iso)?.toLocal();
   }
 
+  // ARCH-07: <24h markaziy formatter (locale-aware). 24h+ esa TO'LIQ
+  // sana-vaqt — SOS favqulodda hodisa, soat:daqiqa aniqligi muhim
+  // (markaziy "DD.MM" formati bu yerda yetarli emas).
   String _formatTime(DateTime dt) {
-    final now = DateTime.now();
-    final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'hozirgina';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-    if (diff.inHours < 24) return '${diff.inHours} soat oldin';
+    if (DateTime.now().difference(dt).inHours < 24) {
+      return formatRelativeTime(dt);
+    }
     return '${dt.day}.${dt.month}.${dt.year} ${dt.hour}:'
         '${dt.minute.toString().padLeft(2, '0')}';
   }

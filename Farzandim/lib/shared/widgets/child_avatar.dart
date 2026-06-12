@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -95,10 +96,15 @@ class ChildAvatar extends ConsumerWidget {
         ? directUrl
         : backendUrl;
     if (url != null) {
-      return Image.network(
-        url,
+      // MEM-4: disk-keshli rasm — avatar har cold-start'da backend'dan
+      // qayta yuklanmaydi (100k user'da katta tarmoq tejovi + tez UI).
+      return CachedNetworkImage(
+        imageUrl: url,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _defaultSticker(),
+        // Avatar kichik doira — to'liq o'lchamda dekod qilmaslik.
+        memCacheWidth: 200,
+        errorWidget: (_, __, ___) => _defaultSticker(),
+        placeholder: (_, __) => _defaultSticker(),
       );
     }
     return _defaultSticker();

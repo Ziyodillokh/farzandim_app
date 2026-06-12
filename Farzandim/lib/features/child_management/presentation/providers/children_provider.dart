@@ -7,6 +7,7 @@
 
 import 'dart:async';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
@@ -135,8 +136,15 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
   void _invalidateList() => _ref.invalidate(childrenProvider);
 
-  void _invalidateAvatar(String childId) =>
-      _ref.invalidate(childAvatarUrlProvider(childId));
+  void _invalidateAvatar(String childId) {
+    _ref.invalidate(childAvatarUrlProvider(childId));
+    // MEM-4 muhim: avatar proxy URL BARQAROR (childId-based, backend key
+    // ham `child-avatars/<id>.<ext>`) — CachedNetworkImage disk-keshi
+    // yangi rasm yuklangach ham ESKISINI ko'rsataverardi. Evict shart.
+    unawaited(
+      CachedNetworkImage.evictFromCache(_repo.avatarProxyUrl(childId)),
+    );
+  }
 
   /// Xatodan foydalanuvchiga ko'rsatish mumkin bo'lgan O'ZBEKCHA xabar
   /// (EH-08 — avval xom inglizcha `DioException ...` matni chiqardi).
