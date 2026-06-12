@@ -1,11 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────
-// SupportChatScreen — Qo'llab-quvvatlash chati (Figma 1:1, Sprint 7)
+// SupportChatScreen — Qo'llab-quvvatlash chati (messenger-style)
 // ─────────────────────────────────────────────────────────────────────
 //
 // Operator bilan chat: matn + rasm/video/hujjat biriktirmalar. Hozircha
 // statik avto-javoblar (keyinroq AI). Brand: Farzandim.
-
-import 'dart:typed_data';
+//
+// Messenger UI: ketma-ket xabarlar guruhlanadi (avatar/dum faqat guruh
+// oxirida), yuborilish tick'lari (soat/✓/xato+retry), operator "yozmoqda…"
+// indikatori, pastga tushish FAB, pill input (📎 ichkarida).
+// CHEGARA: fon rasmi YO'Q; videoxabar/ovozli xabar YO'Q (faqat matn,
+// rasm, video, hujjat).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -23,6 +27,9 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
 
+/// Ketma-ket xabarlar shu oraliqda bo'lsa bitta guruh hisoblanadi.
+const Duration _kGroupWindow = Duration(minutes: 3);
+
 class SupportChatScreen extends ConsumerStatefulWidget {
   const SupportChatScreen({super.key});
 
@@ -34,6 +41,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
   final TextEditingController _textController = TextEditingController();
   final ScrollController _scrollController = ScrollController();
   bool _hasText = false;
+  bool _showScrollFab = false;
 
   @override
   void initState() {
@@ -42,6 +50,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       final has = _textController.text.trim().isNotEmpty;
       if (has != _hasText) setState(() => _hasText = has);
     });
+    _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
@@ -50,6 +59,22 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (!_scrollController.hasClients) return;
+    final away =
+        _scrollController.position.maxScrollExtent -
+        _scrollController.position.pixels;
+    final show = away > 300;
+    if (show != _showScrollFab) setState(() => _showScrollFab = show);
+  }
+
+  bool get _isNearBottom {
+    if (!_scrollController.hasClients) return true;
+    return _scrollController.position.maxScrollExtent -
+            _scrollController.position.pixels <
+        300;
   }
 
   void _scrollToBottom({bool animate = false}) {
@@ -83,15 +108,49 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     _textController.clear();
   }
 
+  /// Oxirgi ko'rilgan klaviatura inset'i — ochilganda pastga yopishish uchun.
+  double _lastBottomInset = 0;
+
   @override
   Widget build(BuildContext context) {
-    final messages = ref.watch(supportChatProvider);
+    final chat = ref.watch(supportChatProvider);
+    final messages = chat.messages;
+    // Typing indikator ro'yxat oxirida qo'shimcha element sifatida.
+    final itemCount = messages.length + (chat.operatorTyping ? 1 : 0);
 
-    // Yangi xabar kelganda pastga scroll.
-    ref.listen<List<SupportMessage>>(supportChatProvider, (prev, next) {
-      if (prev != null && next.length != prev.length) {
-        WidgetsBinding.instance
-            .addPostFrameCallback((_) => _scrollToBottom(animate: true));
+    // Klaviatura ochilganda ro'yxat "pastga yopishadi" (messenger xulqi):
+    // viewport qisqarganda foydalanuvchi pastda bo'lgan bo'lsa, oxirgi
+    // xabarlar ko'rinishda qoladi. Inset o'zgarishi MediaQuery orqali
+    // rebuild'ni o'zi keltiradi.
+    final bottomInset = MediaQuery.viewInsetsOf(context).bottom;
+    if (bottomInset != _lastBottomInset) {
+      final delta = bottomInset - _lastBottomInset;
+      _lastBottomInset = bottomInset;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted || !_scrollController.hasClients) return;
+        if (delta > 0) {
+          final away =
+              _scrollController.position.maxScrollExtent -
+              _scrollController.position.pixels;
+          // Klaviaturadan oldin pastda bo'lgan (away ≤ delta + threshold).
+          if (away <= delta + 300) _scrollToBottom(animate: true);
+        }
+        _onScroll(); // FAB holatini yangilash (pixels o'zgarmagan bo'lsa ham).
+      });
+    }
+
+    // Yangi xabar/typing — pastga scroll (messenger xulqi: foydalanuvchi
+    // tepada o'qiyotgan bo'lsa majburlamaymiz; o'z xabari doim tushiradi).
+    ref.listen<SupportChatState>(supportChatProvider, (prev, next) {
+      if (prev == null) return;
+      final grew = next.messages.length != prev.messages.length;
+      final typingChanged = next.operatorTyping != prev.operatorTyping;
+      if (!grew && !typingChanged) return;
+      final lastIsMine = next.messages.isNotEmpty && next.messages.last.isUser;
+      if (_isNearBottom || (grew && lastIsMine)) {
+        WidgetsBinding.instance.addPostFrameCallback(
+          (_) => _scrollToBottom(animate: true),
+        );
       }
     });
 
@@ -104,26 +163,89 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
             children: [
               const _Header(),
               Expanded(
-                child: ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.fromLTRB(
-                    AppDimensions.lg,
-                    AppDimensions.md,
-                    AppDimensions.lg,
-                    AppDimensions.md,
-                  ),
-                  itemCount: messages.length,
-                  itemBuilder: (context, index) {
-                    final msg = messages[index];
-                    final showDate = index == 0 ||
-                        !_sameDay(messages[index - 1].createdAt, msg.createdAt);
-                    return Column(
-                      children: [
-                        if (showDate) _DateSeparator(date: msg.createdAt),
-                        _MessageRow(message: msg),
-                      ],
-                    );
-                  },
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: ListView.builder(
+                        controller: _scrollController,
+                        padding: const EdgeInsets.fromLTRB(
+                          AppDimensions.md,
+                          AppDimensions.md,
+                          AppDimensions.md,
+                          AppDimensions.md,
+                        ),
+                        itemCount: itemCount,
+                        itemBuilder: (context, index) {
+                          if (index >= messages.length) {
+                            return const _TypingRow();
+                          }
+                          final msg = messages[index];
+                          final prev = index > 0 ? messages[index - 1] : null;
+                          final next = index < messages.length - 1
+                              ? messages[index + 1]
+                              : null;
+                          final showDate =
+                              prev == null ||
+                              !_sameDay(prev.createdAt, msg.createdAt);
+                          // Guruhlash: bir xil yuboruvchi + 3 daqiqa ichida +
+                          // bitta kun. Avatar/dum faqat guruh OXIRIDA.
+                          // `showDate` allaqachon prev==null holatini qamraydi
+                          // (yangi kun = yangi guruh).
+                          final isFirst =
+                              showDate ||
+                              prev.sender != msg.sender ||
+                              msg.createdAt.difference(prev.createdAt) >
+                                  _kGroupWindow;
+                          final isLast =
+                              next == null ||
+                              next.sender != msg.sender ||
+                              !_sameDay(next.createdAt, msg.createdAt) ||
+                              next.createdAt.difference(msg.createdAt) >
+                                  _kGroupWindow;
+                          return Column(
+                            children: [
+                              if (showDate) _DateSeparator(date: msg.createdAt),
+                              _MessageRow(
+                                message: msg,
+                                isFirstInGroup: isFirst,
+                                isLastInGroup: isLast,
+                              ),
+                            ],
+                          );
+                        },
+                      ),
+                    ),
+                    // Pastga tushish FAB — tepaga scroll qilinganda chiqadi.
+                    Positioned(
+                      right: AppDimensions.md,
+                      bottom: AppDimensions.md,
+                      child: AnimatedScale(
+                        scale: _showScrollFab ? 1 : 0,
+                        duration: const Duration(milliseconds: 180),
+                        curve: Curves.easeOut,
+                        child: Material(
+                          color: AppColors.surface,
+                          shape: CircleBorder(
+                            side: BorderSide(color: AppColors.border),
+                          ),
+                          elevation: 4,
+                          clipBehavior: Clip.antiAlias,
+                          child: InkWell(
+                            onTap: () => _scrollToBottom(animate: true),
+                            child: SizedBox(
+                              width: 42,
+                              height: 42,
+                              child: Icon(
+                                Icons.keyboard_arrow_down_rounded,
+                                color: AppColors.textPrimary,
+                                size: 26,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
               _InputBar(
@@ -171,7 +293,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       );
       if (picked == null) return;
       final bytes = await picked.readAsBytes();
-      await ref.read(supportChatProvider.notifier).sendAttachment(
+      await ref
+          .read(supportChatProvider.notifier)
+          .sendAttachment(
             type: SupportAttachmentType.image,
             fileName: picked.name,
             fileSize: bytes.length,
@@ -191,7 +315,9 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       // Web'da filePath yo'q → upload uchun bytes shart. Mobil'da filePath
       // yetarli (katta videoni xotiraga yuklamaymiz — fromFile stream qiladi).
       final bytes = kIsWeb ? await picked.readAsBytes() : null;
-      await ref.read(supportChatProvider.notifier).sendAttachment(
+      await ref
+          .read(supportChatProvider.notifier)
+          .sendAttachment(
             type: SupportAttachmentType.video,
             fileName: picked.name,
             fileSize: size,
@@ -207,13 +333,12 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     try {
       // Web'da filePath yo'q → withData: true bilan bytes o'qiymiz. Mobil'da
       // filePath yetarli (xotira tejaladi).
-      final result = await FilePicker.platform.pickFiles(
-        type: FileType.any,
-        withData: kIsWeb,
-      );
+      final result = await FilePicker.platform.pickFiles(withData: kIsWeb);
       if (result == null || result.files.isEmpty) return;
       final f = result.files.first;
-      await ref.read(supportChatProvider.notifier).sendAttachment(
+      await ref
+          .read(supportChatProvider.notifier)
+          .sendAttachment(
             type: SupportAttachmentType.document,
             fileName: f.name,
             fileSize: f.size,
@@ -231,16 +356,19 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       ..hideCurrentSnackBar()
       ..showSnackBar(
         SnackBar(
-          content: Text('support.attachError'.tr()),
+          content: Text(
+            'support.attachError'.tr(),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textPrimary),
+          ),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.surfaceVariant,
         ),
       );
   }
-
-  static bool _sameDay(DateTime a, DateTime b) =>
-      a.year == b.year && a.month == b.month && a.day == b.day;
 }
+
+bool _sameDay(DateTime a, DateTime b) =>
+    a.year == b.year && a.month == b.month && a.day == b.day;
 
 // ════════════════════════ HEADER ════════════════════════
 
@@ -249,22 +377,28 @@ class _Header extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
+    return Container(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.sm,
         AppDimensions.sm,
         AppDimensions.md,
         AppDimensions.sm,
       ),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.divider)),
+      ),
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back_ios_new_rounded,
-                size: 20, color: AppColors.textPrimary),
+            icon: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              size: 20,
+              color: AppColors.textPrimary,
+            ),
             onPressed: () => context.pop(),
           ),
-          const _OperatorAvatar(size: 40),
-          const SizedBox(width: AppDimensions.sm),
+          const _OperatorAvatar(size: 42, showOnlineDot: true),
+          const SizedBox(width: AppDimensions.sm + 2),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -277,6 +411,7 @@ class _Header extends StatelessWidget {
                     fontSize: 16,
                   ),
                 ),
+                const SizedBox(height: 1),
                 Text(
                   'support.online'.tr(),
                   style: AppTextStyles.label.copyWith(color: AppColors.success),
@@ -291,25 +426,51 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// Operator avatari — brand gradient doira + support ikona. Header'da
+/// online nuqta bilan, bubble yonida nuqtasiz.
 class _OperatorAvatar extends StatelessWidget {
-  const _OperatorAvatar({required this.size});
+  const _OperatorAvatar({required this.size, this.showOnlineDot = false});
   final double size;
+  final bool showOnlineDot;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final avatar = Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: AppColors.primary,
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.primaryLight, AppColors.primaryDark],
+        ),
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
       child: Icon(
-        Icons.favorite_rounded,
+        Icons.support_agent_rounded,
         color: AppColors.onPrimary,
-        size: size * 0.5,
+        size: size * 0.55,
       ),
+    );
+    if (!showOnlineDot) return avatar;
+    return Stack(
+      children: [
+        avatar,
+        Positioned(
+          right: 0,
+          bottom: 0,
+          child: Container(
+            width: size * 0.28,
+            height: size * 0.28,
+            decoration: BoxDecoration(
+              color: AppColors.success,
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.background, width: 2),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
@@ -327,7 +488,12 @@ class _CallButton extends StatelessWidget {
             ..hideCurrentSnackBar()
             ..showSnackBar(
               SnackBar(
-                content: Text('settings.comingSoon'.tr()),
+                content: Text(
+                  'settings.comingSoon'.tr(),
+                  style: AppTextStyles.bodyS.copyWith(
+                    color: AppColors.textPrimary,
+                  ),
+                ),
                 behavior: SnackBarBehavior.floating,
                 backgroundColor: AppColors.surfaceVariant,
               ),
@@ -336,8 +502,11 @@ class _CallButton extends StatelessWidget {
         child: SizedBox(
           width: 44,
           height: 44,
-          child: Icon(Icons.call_outlined,
-              color: AppColors.textPrimary, size: 20),
+          child: Icon(
+            Icons.call_outlined,
+            color: AppColors.textPrimary,
+            size: 20,
+          ),
         ),
       ),
     );
@@ -364,7 +533,8 @@ class _DateSeparator extends StatelessWidget {
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 5),
         decoration: BoxDecoration(
-          color: AppColors.surfaceVariant,
+          color: AppColors.surface.withValues(alpha: 0.9),
+          border: Border.all(color: AppColors.border),
           borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
         ),
         child: Text(
@@ -376,24 +546,128 @@ class _DateSeparator extends StatelessWidget {
   }
 }
 
+// ════════════════════════ TYPING INDIKATOR ════════════════════════
+
+/// Operator "yozmoqda…" qatori — avatar + 3 nuqtali animatsiyali bubble.
+class _TypingRow extends StatelessWidget {
+  const _TypingRow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          const _OperatorAvatar(size: 28),
+          const SizedBox(width: AppDimensions.sm),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            decoration: BoxDecoration(
+              color: AppColors.surface,
+              border: Border.all(color: AppColors.border),
+              borderRadius: const BorderRadius.only(
+                topLeft: Radius.circular(18),
+                topRight: Radius.circular(18),
+                bottomLeft: Radius.circular(4),
+                bottomRight: Radius.circular(18),
+              ),
+            ),
+            child: const _TypingDots(),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _TypingDots extends StatefulWidget {
+  const _TypingDots();
+
+  @override
+  State<_TypingDots> createState() => _TypingDotsState();
+}
+
+class _TypingDotsState extends State<_TypingDots>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat();
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            for (var i = 0; i < 3; i++) ...[
+              if (i > 0) const SizedBox(width: 4),
+              _dot(i),
+            ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _dot(int index) {
+    // Har nuqta 0.2 siljish bilan ko'tarilib-tushadi (silliq to'lqin).
+    final t = (_controller.value + index * 0.2) % 1.0;
+    final wave = (t < 0.5 ? t : 1 - t) * 2; // 0→1→0
+    return Transform.translate(
+      offset: Offset(0, -3 * wave),
+      child: Container(
+        width: 7,
+        height: 7,
+        decoration: BoxDecoration(
+          color: AppColors.textSecondary.withValues(alpha: 0.5 + 0.5 * wave),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
+
 // ════════════════════════ MESSAGE ROW ════════════════════════
 
 class _MessageRow extends StatelessWidget {
-  const _MessageRow({required this.message});
+  const _MessageRow({
+    required this.message,
+    required this.isFirstInGroup,
+    required this.isLastInGroup,
+  });
+
   final SupportMessage message;
+  final bool isFirstInGroup;
+  final bool isLastInGroup;
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
+      // Guruh ichida zich (2), guruhlar orasida kengroq (8).
+      padding: EdgeInsets.only(top: isFirstInGroup ? 8 : 2),
       child: Row(
-        mainAxisAlignment:
-            isUser ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isUser
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (!isUser) ...[
-            const _OperatorAvatar(size: 28),
+            // Avatar faqat guruh oxirida; o'rtada joy saqlanadi (hizalama).
+            if (isLastInGroup)
+              const _OperatorAvatar(size: 28)
+            else
+              const SizedBox(width: 28),
             const SizedBox(width: AppDimensions.sm),
           ],
           Flexible(
@@ -401,7 +675,11 @@ class _MessageRow extends StatelessWidget {
               constraints: BoxConstraints(
                 maxWidth: MediaQuery.of(context).size.width * 0.72,
               ),
-              child: _Bubble(message: message),
+              child: _Bubble(
+                message: message,
+                isFirstInGroup: isFirstInGroup,
+                isLastInGroup: isLastInGroup,
+              ),
             ),
           ),
         ],
@@ -410,52 +688,152 @@ class _MessageRow extends StatelessWidget {
   }
 }
 
-class _Bubble extends StatelessWidget {
-  const _Bubble({required this.message});
+class _Bubble extends ConsumerWidget {
+  const _Bubble({
+    required this.message,
+    required this.isFirstInGroup,
+    required this.isLastInGroup,
+  });
+
   final SupportMessage message;
+  final bool isFirstInGroup;
+  final bool isLastInGroup;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final radius = _groupBubbleRadius(
+      isUser: message.isUser,
+      isFirst: isFirstInGroup,
+      isLast: isLastInGroup,
+    );
+    final Widget bubble;
+    if (message.isImage) {
+      bubble = _ImageBubble(message: message, radius: radius);
+    } else if (message.isDocument) {
+      bubble = _DocumentBubble(message: message, radius: radius);
+    } else if (message.isVideo) {
+      bubble = _VideoBubble(message: message, radius: radius);
+    } else {
+      bubble = _TextBubble(message: message, radius: radius);
+    }
+
+    // Failed biriktirma: retry qatori (bytes/filePath sessiyada bo'lsa).
+    final canRetry =
+        message.status == SupportSendStatus.failed &&
+        message.hasAttachment &&
+        (message.bytes != null || message.filePath != null);
+    if (!canRetry) return bubble;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        bubble,
+        const SizedBox(height: 2),
+        GestureDetector(
+          // Opaque + keng padding — qulay teginish maydoni (review: ~16px edi).
+          behavior: HitTestBehavior.opaque,
+          onTap: () => ref
+              .read(supportChatProvider.notifier)
+              .retryAttachment(message.id),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.refresh_rounded, size: 14, color: AppColors.error),
+                const SizedBox(width: 4),
+                Text(
+                  'support.retry'.tr(),
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.error,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// Vaqt + yuborilish tick'i (faqat foydalanuvchi xabarida tick).
+class _TimeStatus extends StatelessWidget {
+  const _TimeStatus({required this.message, required this.color});
+  final SupportMessage message;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
-    if (message.isImage) return _ImageBubble(message: message);
-    if (message.isDocument) return _DocumentBubble(message: message);
-    if (message.isVideo) return _VideoBubble(message: message);
-    return _TextBubble(message: message);
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          message.timeLabel,
+          style: AppTextStyles.label.copyWith(color: color, fontSize: 11),
+        ),
+        if (message.isUser) ...[const SizedBox(width: 3), _statusIcon(color)],
+      ],
+    );
+  }
+
+  Widget _statusIcon(Color color) {
+    switch (message.status) {
+      case SupportSendStatus.sending:
+        return Icon(Icons.schedule_rounded, size: 12, color: color);
+      case SupportSendStatus.sent:
+        return Icon(Icons.done_all_rounded, size: 14, color: color);
+      case SupportSendStatus.failed:
+        return Icon(
+          Icons.error_outline_rounded,
+          size: 13,
+          color: AppColors.error,
+        );
+    }
   }
 }
 
 // ─── Matn ───
 
 class _TextBubble extends StatelessWidget {
-  const _TextBubble({required this.message});
+  const _TextBubble({required this.message, required this.radius});
   final SupportMessage message;
+  final BorderRadius radius;
 
   @override
   Widget build(BuildContext context) {
     final isUser = message.isUser;
-    final bg = isUser ? AppColors.primary : AppColors.surfaceVariant;
     final fg = isUser ? AppColors.onPrimary : AppColors.textPrimary;
     final timeColor = isUser
-        ? AppColors.onPrimary.withValues(alpha: 0.6)
+        ? AppColors.onPrimary.withValues(alpha: 0.65)
         : AppColors.textTertiary;
     return Container(
-      padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+      padding: const EdgeInsets.fromLTRB(14, 9, 10, 7),
       decoration: BoxDecoration(
-        color: bg,
-        borderRadius: _bubbleRadius(isUser),
+        // Foydalanuvchi: brand gradient (premium); operator: surface + border
+        // (light mode'da surfaceVariant fonga singib ketardi — review).
+        gradient: isUser
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primaryLight, AppColors.primary],
+              )
+            : null,
+        color: isUser ? null : AppColors.surface,
+        border: isUser ? null : Border.all(color: AppColors.border),
+        borderRadius: radius,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        mainAxisSize: MainAxisSize.min,
+      child: Wrap(
+        alignment: WrapAlignment.end,
+        crossAxisAlignment: WrapCrossAlignment.end,
+        spacing: 8,
         children: [
           Text(
-            message.text ?? '',
+            message.displayText,
             style: AppTextStyles.bodyM.copyWith(color: fg, height: 1.3),
           ),
-          const SizedBox(height: 2),
-          Text(
-            message.timeLabel,
-            style: AppTextStyles.label.copyWith(color: timeColor, fontSize: 11),
-          ),
+          _TimeStatus(message: message, color: timeColor),
         ],
       ),
     );
@@ -465,28 +843,27 @@ class _TextBubble extends StatelessWidget {
 // ─── Rasm ───
 
 class _ImageBubble extends ConsumerWidget {
-  const _ImageBubble({required this.message});
+  const _ImageBubble({required this.message, required this.radius});
   final SupportMessage message;
+  final BorderRadius radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final bytes = message.bytes;
-    // Sessiya: bytes; qayta yuklashdan keyin: backend proxy URL (attachmentKey).
+    // Sessiya: bytes; qayta yuklashdan keyin: backend proxy (attachmentKey).
     final url = message.hasRemote
         ? ref
-            .read(supportAttachmentRepositoryProvider)
-            .urlForKey(message.attachmentKey!)
+              .read(supportAttachmentRepositoryProvider)
+              .urlForKey(message.attachmentKey!)
         : null;
     final hasImage = bytes != null || url != null;
+    final sending = message.status == SupportSendStatus.sending;
     return GestureDetector(
-      onTap: hasImage ? () => _openFullImage(context, bytes, url) : null,
-      child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: _bubbleRadius(message.isUser),
-          border: Border.all(color: AppColors.primary, width: 3),
-        ),
-        clipBehavior: Clip.antiAlias,
+      onTap: hasImage && !sending
+          ? () => _openFullImage(context, bytes, url)
+          : null,
+      child: ClipRRect(
+        borderRadius: radius,
         child: Stack(
           children: [
             if (bytes != null)
@@ -504,8 +881,7 @@ class _ImageBubble extends ConsumerWidget {
                 width: 240,
                 fit: BoxFit.cover,
                 cacheWidth: 720, // SCR-07
-                errorBuilder: (_, __, ___) =>
-                    _ImagePlaceholder(name: message.fileName),
+                errorBuilder: (_, __, ___) => const _ImagePlaceholder(),
                 loadingBuilder: (context, child, progress) {
                   if (progress == null) return child;
                   return SizedBox(
@@ -513,7 +889,7 @@ class _ImageBubble extends ConsumerWidget {
                     height: 160,
                     child: Center(
                       child: CircularProgressIndicator(
-                        color: AppColors.onPrimary,
+                        color: AppColors.accent,
                         strokeWidth: 2,
                       ),
                     ),
@@ -521,11 +897,28 @@ class _ImageBubble extends ConsumerWidget {
                 },
               )
             else
-              _ImagePlaceholder(name: message.fileName),
+              const _ImagePlaceholder(),
+            // Yuklanish overlay'i.
+            if (sending)
+              Positioned.fill(
+                child: ColoredBox(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  child: const Center(
+                    child: SizedBox(
+                      width: 28,
+                      height: 28,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.5,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
             Positioned(
-              right: 8,
-              bottom: 8,
-              child: _TimeChip(time: message.timeLabel),
+              right: 6,
+              bottom: 6,
+              child: _MediaTimeChip(message: message),
             ),
           ],
         ),
@@ -560,8 +953,7 @@ class _ImageBubble extends ConsumerWidget {
 }
 
 class _ImagePlaceholder extends StatelessWidget {
-  const _ImagePlaceholder({this.name});
-  final String? name;
+  const _ImagePlaceholder();
 
   @override
   Widget build(BuildContext context) {
@@ -570,8 +962,25 @@ class _ImagePlaceholder extends StatelessWidget {
       height: 160,
       color: AppColors.surfaceVariant,
       alignment: Alignment.center,
-      child: Icon(Icons.image_rounded,
-          color: AppColors.textTertiary, size: 40),
+      child: Icon(Icons.image_rounded, color: AppColors.textTertiary, size: 40),
+    );
+  }
+}
+
+/// Media (rasm/video) ustidagi vaqt + tick chip'i.
+class _MediaTimeChip extends StatelessWidget {
+  const _MediaTimeChip({required this.message});
+  final SupportMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.55),
+        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+      ),
+      child: _TimeStatus(message: message, color: Colors.white),
     );
   }
 }
@@ -596,7 +1005,10 @@ Future<void> _openSupportFile(
     ..hideCurrentSnackBar()
     ..showSnackBar(
       SnackBar(
-        content: Text('support.fileUnavailable'.tr()),
+        content: Text(
+          'support.fileUnavailable'.tr(),
+          style: AppTextStyles.bodyS.copyWith(color: AppColors.textPrimary),
+        ),
         behavior: SnackBarBehavior.floating,
         backgroundColor: AppColors.surfaceVariant,
       ),
@@ -622,47 +1034,92 @@ Future<void> _openSupportFile(
 // ─── Video ───
 
 class _VideoBubble extends ConsumerWidget {
-  const _VideoBubble({required this.message});
+  const _VideoBubble({required this.message, required this.radius});
   final SupportMessage message;
+  final BorderRadius radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final sending = message.status == SupportSendStatus.sending;
     return GestureDetector(
-      onTap: () => _openSupportFile(context, ref, message),
-      child: Container(
-        width: 240,
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: _bubbleRadius(message.isUser),
-          border: Border.all(color: AppColors.primary, width: 3),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Stack(
-          alignment: Alignment.center,
-          children: [
-            Container(
-              height: 150,
-              width: double.infinity,
-              color: Colors.black,
-            ),
-            const Icon(Icons.play_circle_fill_rounded,
-                color: Colors.white, size: 48),
-            Positioned(
-              left: 8,
-              bottom: 8,
-              child: Text(
-                message.fileName ?? 'video',
-                style: AppTextStyles.label.copyWith(color: Colors.white),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+      onTap: sending ? null : () => _openSupportFile(context, ref, message),
+      child: ClipRRect(
+        borderRadius: radius,
+        child: SizedBox(
+          width: 240,
+          child: Stack(
+            alignment: Alignment.center,
+            children: [
+              Container(
+                height: 150,
+                width: double.infinity,
+                decoration: const BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0xFF1A2E35), Color(0xFF0D1A1F)],
+                  ),
+                ),
               ),
-            ),
-            Positioned(
-              right: 8,
-              bottom: 8,
-              child: _TimeChip(time: message.timeLabel),
-            ),
-          ],
+              if (sending)
+                const SizedBox(
+                  width: 34,
+                  height: 34,
+                  child: CircularProgressIndicator(
+                    color: Colors.white,
+                    strokeWidth: 2.5,
+                  ),
+                )
+              else
+                Container(
+                  width: 52,
+                  height: 52,
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    shape: BoxShape.circle,
+                  ),
+                  child: const Icon(
+                    Icons.play_arrow_rounded,
+                    color: Colors.white,
+                    size: 34,
+                  ),
+                ),
+              Positioned(
+                left: 8,
+                bottom: 6,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SizedBox(
+                      width: 150,
+                      child: Text(
+                        message.fileName ?? 'video',
+                        style: AppTextStyles.label.copyWith(
+                          color: Colors.white,
+                          fontSize: 11,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ),
+                    if (message.fileSizeLabel != null)
+                      Text(
+                        message.fileSizeLabel!,
+                        style: AppTextStyles.label.copyWith(
+                          color: Colors.white.withValues(alpha: 0.7),
+                          fontSize: 10,
+                        ),
+                      ),
+                  ],
+                ),
+              ),
+              Positioned(
+                right: 6,
+                bottom: 6,
+                child: _MediaTimeChip(message: message),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -672,23 +1129,33 @@ class _VideoBubble extends ConsumerWidget {
 // ─── Hujjat ───
 
 class _DocumentBubble extends ConsumerWidget {
-  const _DocumentBubble({required this.message});
+  const _DocumentBubble({required this.message, required this.radius});
   final SupportMessage message;
+  final BorderRadius radius;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final isUser = message.isUser;
+    final sending = message.status == SupportSendStatus.sending;
     final fg = isUser ? AppColors.onPrimary : AppColors.textPrimary;
     final subColor = isUser
-        ? AppColors.onPrimary.withValues(alpha: 0.6)
+        ? AppColors.onPrimary.withValues(alpha: 0.65)
         : AppColors.textSecondary;
     return GestureDetector(
-      onTap: () => _openSupportFile(context, ref, message),
+      onTap: sending ? null : () => _openSupportFile(context, ref, message),
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          color: isUser ? AppColors.primary : AppColors.surfaceVariant,
-          borderRadius: _bubbleRadius(isUser),
+          gradient: isUser
+              ? LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [AppColors.primaryLight, AppColors.primary],
+                )
+              : null,
+          color: isUser ? null : AppColors.surface,
+          border: isUser ? null : Border.all(color: AppColors.border),
+          borderRadius: radius,
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -703,9 +1170,20 @@ class _DocumentBubble extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(10),
               ),
               alignment: Alignment.center,
-              child: Icon(Icons.insert_drive_file_rounded,
-                  color: isUser ? AppColors.onPrimary : AppColors.accent,
-                  size: 22),
+              child: sending
+                  ? SizedBox(
+                      width: 18,
+                      height: 18,
+                      child: CircularProgressIndicator(
+                        color: isUser ? AppColors.onPrimary : AppColors.accent,
+                        strokeWidth: 2,
+                      ),
+                    )
+                  : Icon(
+                      Icons.insert_drive_file_rounded,
+                      color: isUser ? AppColors.onPrimary : AppColors.accent,
+                      size: 22,
+                    ),
             ),
             const SizedBox(width: 10),
             Flexible(
@@ -726,17 +1204,14 @@ class _DocumentBubble extends ConsumerWidget {
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      if (message.fileSizeLabel != null)
+                      if (message.fileSizeLabel != null) ...[
                         Text(
                           message.fileSizeLabel!,
                           style: AppTextStyles.label.copyWith(color: subColor),
                         ),
-                      const SizedBox(width: 8),
-                      Text(
-                        message.timeLabel,
-                        style:
-                            AppTextStyles.label.copyWith(color: subColor),
-                      ),
+                        const SizedBox(width: 8),
+                      ],
+                      _TimeStatus(message: message, color: subColor),
                     ],
                   ),
                 ],
@@ -747,37 +1222,31 @@ class _DocumentBubble extends ConsumerWidget {
       ),
     );
   }
-
 }
 
-class _TimeChip extends StatelessWidget {
-  const _TimeChip({required this.time});
-  final String time;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.55),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Text(
-        time,
-        style: AppTextStyles.label.copyWith(color: Colors.white, fontSize: 11),
-      ),
+/// Telegram uslubidagi guruh radiusi: yuboruvchi tomonidagi burchaklar guruh
+/// ichida kichik (6), guruh boshida tepa katta, oxirida past "dum" (4).
+BorderRadius _groupBubbleRadius({
+  required bool isUser,
+  required bool isFirst,
+  required bool isLast,
+}) {
+  const big = Radius.circular(18);
+  const mid = Radius.circular(6);
+  const tail = Radius.circular(4);
+  if (isUser) {
+    return BorderRadius.only(
+      topLeft: big,
+      bottomLeft: big,
+      topRight: isFirst ? big : mid,
+      bottomRight: isLast ? tail : mid,
     );
   }
-}
-
-BorderRadius _bubbleRadius(bool isUser) {
-  const r = Radius.circular(18);
-  const small = Radius.circular(6);
   return BorderRadius.only(
-    topLeft: r,
-    topRight: r,
-    bottomLeft: isUser ? r : small,
-    bottomRight: isUser ? small : r,
+    topRight: big,
+    bottomRight: big,
+    topLeft: isFirst ? big : mid,
+    bottomLeft: isLast ? tail : mid,
   );
 }
 
@@ -799,76 +1268,95 @@ class _InputBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: EdgeInsets.fromLTRB(
+      padding: const EdgeInsets.fromLTRB(
         AppDimensions.md,
         AppDimensions.sm,
         AppDimensions.md,
-        AppDimensions.sm + MediaQuery.of(context).viewInsets.bottom * 0,
+        AppDimensions.sm,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Biriktirma tugmasi.
-          Material(
-            color: AppColors.surface,
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(14),
-              side: BorderSide(color: AppColors.border),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onAttach,
-              child: SizedBox(
-                width: 48,
-                height: 48,
-                child: Icon(Icons.attach_file_rounded,
-                    color: AppColors.textPrimary, size: 22),
-              ),
-            ),
-          ),
-          const SizedBox(width: AppDimensions.sm),
-          // Matn maydoni.
+          // Pill maydon: 📎 ichkarida + matn (messenger-style).
           Expanded(
             child: Container(
               constraints: const BoxConstraints(minHeight: 48),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
+                borderRadius: BorderRadius.circular(24),
                 border: Border.all(color: AppColors.border),
               ),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              alignment: Alignment.center,
-              child: TextField(
-                controller: controller,
-                style: AppTextStyles.bodyM,
-                minLines: 1,
-                maxLines: 4,
-                textInputAction: TextInputAction.send,
-                onSubmitted: (_) => onSend(),
-                decoration: InputDecoration(
-                  isCollapsed: true,
-                  border: InputBorder.none,
-                  hintText: 'support.inputHint'.tr(),
-                  hintStyle: AppTextStyles.bodyM
-                      .copyWith(color: AppColors.textTertiary),
-                ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  // Biriktirma — maydon ichida (Telegram'dagidek).
+                  SizedBox(
+                    width: 44,
+                    height: 48,
+                    child: IconButton(
+                      onPressed: onAttach,
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        Icons.attach_file_rounded,
+                        color: AppColors.textSecondary,
+                        size: 22,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.only(
+                        right: AppDimensions.md,
+                        top: 13,
+                        bottom: 13,
+                      ),
+                      child: TextField(
+                        controller: controller,
+                        style: AppTextStyles.bodyM,
+                        minLines: 1,
+                        maxLines: 4,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => onSend(),
+                        decoration: InputDecoration(
+                          isCollapsed: true,
+                          border: InputBorder.none,
+                          hintText: 'support.inputHint'.tr(),
+                          hintStyle: AppTextStyles.bodyM.copyWith(
+                            color: AppColors.textTertiary,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
           const SizedBox(width: AppDimensions.sm),
-          // Yuborish tugmasi.
+          // Yuborish tugmasi — matn borligida brand gradient bilan jonlanadi.
           AnimatedScale(
-            scale: hasText ? 1 : 0.85,
+            scale: hasText ? 1 : 0.9,
             duration: const Duration(milliseconds: 150),
-            child: Material(
-              color: hasText ? AppColors.primary : AppColors.surface,
-              shape: const CircleBorder(),
+            child: Container(
+              width: 48,
+              height: 48,
+              decoration: BoxDecoration(
+                gradient: hasText
+                    ? LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [AppColors.primaryLight, AppColors.primary],
+                      )
+                    : null,
+                color: hasText ? null : AppColors.surface,
+                shape: BoxShape.circle,
+                border: hasText ? null : Border.all(color: AppColors.border),
+              ),
               clipBehavior: Clip.antiAlias,
-              child: InkWell(
-                onTap: hasText ? onSend : null,
-                child: SizedBox(
-                  width: 48,
-                  height: 48,
+              child: Material(
+                color: Colors.transparent,
+                child: InkWell(
+                  onTap: hasText ? onSend : null,
                   child: Icon(
                     Icons.send_rounded,
                     color: hasText

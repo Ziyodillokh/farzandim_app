@@ -648,6 +648,7 @@
     }
   },
   "support": {
+    "retry": "Retry",
     "operator": "Operator",
     "online": "Online",
     "today": "Today",

@@ -648,6 +648,7 @@
     }
   },
   "support": {
+    "retry": "Qayta urinish",
     "operator": "Operator",
     "online": "Onlayn",
     "today": "Bugun",

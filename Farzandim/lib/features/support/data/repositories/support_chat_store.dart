@@ -38,8 +38,9 @@ class SupportChatStore {
 
   Future<void> save(List<SupportMessage> messages) async {
     final prefs = await SharedPreferences.getInstance();
-    final encoded =
-        jsonEncode(messages.map((m) => m.toJson()).toList(growable: false));
+    final encoded = jsonEncode(
+      messages.map((m) => m.toJson()).toList(growable: false),
+    );
     await prefs.setString(_key, encoded);
   }
 

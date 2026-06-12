@@ -7,11 +7,16 @@
 // orqali ko'rsatiladi (qayta ishga tushganda kartochka holida qoladi).
 // Keyinroq sun'iy intellekt / backend ulanganda repository almashtiriladi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 
 enum SupportSender { user, operator }
 
 enum SupportAttachmentType { image, video, document }
+
+/// Xabar yuborilish holati (messenger tick'lari uchun).
+/// Matn — darhol `sent`. Biriktirma — `sending` → `sent`/`failed`.
+enum SupportSendStatus { sending, sent, failed }
 
 class SupportMessage {
   const SupportMessage({
@@ -19,6 +24,7 @@ class SupportMessage {
     required this.sender,
     required this.createdAt,
     this.text,
+    this.textKey,
     this.attachmentType,
     this.fileName,
     this.fileSize,
@@ -26,6 +32,7 @@ class SupportMessage {
     this.bytes,
     this.attachmentKey,
     this.mimeType,
+    this.status = SupportSendStatus.sent,
   });
 
   final String id;
@@ -34,6 +41,15 @@ class SupportMessage {
 
   /// Matn xabar (biriktirma bo'lmasa).
   final String? text;
+
+  /// Operator template xabarining i18n KALITI (masalan `support.welcome`).
+  /// Saqlanadi va RENDER paytida tarjima qilinadi — til almashtirilganda
+  /// tarix ham yangi tilda ko'rinadi (resolve qilingan matn emas).
+  final String? textKey;
+
+  /// UI'da ko'rsatiladigan matn: kalit bo'lsa joriy tilda tarjima, aks holda
+  /// foydalanuvchi kiritgan matn.
+  String get displayText => textKey != null ? textKey!.tr() : (text ?? '');
 
   /// Biriktirma turi — `null` bo'lsa oddiy matn.
   final SupportAttachmentType? attachmentType;
@@ -54,6 +70,9 @@ class SupportMessage {
 
   /// MIME turi (masalan `image/png`, `video/mp4`) — backend'dan keladi.
   final String? mimeType;
+
+  /// Yuborilish holati — UI tick'lari (soat/✓/xato) va retry uchun.
+  final SupportSendStatus status;
 
   /// Biriktirma backend'ga yuklanganmi (qayta ishga tushganda ham mavjud).
   bool get hasRemote => attachmentKey != null && attachmentKey!.isNotEmpty;
@@ -88,12 +107,14 @@ class SupportMessage {
     String? filePath,
     String? attachmentKey,
     String? mimeType,
+    SupportSendStatus? status,
   }) {
     return SupportMessage(
       id: id,
       sender: sender,
       createdAt: createdAt,
       text: text,
+      textKey: textKey,
       attachmentType: attachmentType,
       fileName: fileName,
       fileSize: fileSize,
@@ -101,22 +122,24 @@ class SupportMessage {
       bytes: bytes ?? this.bytes,
       attachmentKey: attachmentKey ?? this.attachmentKey,
       mimeType: mimeType ?? this.mimeType,
+      status: status ?? this.status,
     );
   }
 
   /// SharedPreferences uchun — transient (`bytes`/`filePath`) saqlanmaydi,
   /// lekin `attachmentKey` SAQLANADI (qayta yuklashda proxy orqali ko'rsatish).
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'sender': sender.name,
-        'createdAt': createdAt.toIso8601String(),
-        if (text != null) 'text': text,
-        if (attachmentType != null) 'attachmentType': attachmentType!.name,
-        if (fileName != null) 'fileName': fileName,
-        if (fileSize != null) 'fileSize': fileSize,
-        if (attachmentKey != null) 'attachmentKey': attachmentKey,
-        if (mimeType != null) 'mimeType': mimeType,
-      };
+    'id': id,
+    'sender': sender.name,
+    'createdAt': createdAt.toIso8601String(),
+    if (text != null) 'text': text,
+    if (textKey != null) 'textKey': textKey,
+    if (attachmentType != null) 'attachmentType': attachmentType!.name,
+    if (fileName != null) 'fileName': fileName,
+    if (fileSize != null) 'fileSize': fileSize,
+    if (attachmentKey != null) 'attachmentKey': attachmentKey,
+    if (mimeType != null) 'mimeType': mimeType,
+  };
 
   factory SupportMessage.fromJson(Map<String, dynamic> j) {
     SupportAttachmentType? type;
@@ -127,20 +150,26 @@ class SupportMessage {
         orElse: () => SupportAttachmentType.document,
       );
     }
+    final key = j['attachmentKey'] as String?;
     return SupportMessage(
       id: j['id'] as String? ?? '',
       sender: SupportSender.values.firstWhere(
         (s) => s.name == j['sender'],
         orElse: () => SupportSender.operator,
       ),
-      createdAt:
-          DateTime.tryParse(j['createdAt'] as String? ?? '') ?? _epoch,
+      createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? _epoch,
       text: j['text'] as String?,
+      textKey: j['textKey'] as String?,
       attachmentType: type,
       fileName: j['fileName'] as String?,
       fileSize: (j['fileSize'] as num?)?.toInt(),
-      attachmentKey: j['attachmentKey'] as String?,
+      attachmentKey: key,
       mimeType: j['mimeType'] as String?,
+      // Qayta ishga tushganda: key bor = yuborilgan; biriktirma key'siz =
+      // yuborilmagan (bytes/filePath transient — retry ham imkonsiz, failed).
+      status: (type != null && (key == null || key.isEmpty))
+          ? SupportSendStatus.failed
+          : SupportSendStatus.sent,
     );
   }
 

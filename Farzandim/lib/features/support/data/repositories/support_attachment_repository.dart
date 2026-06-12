@@ -17,8 +17,8 @@ import 'package:path_provider/path_provider.dart';
 
 final supportAttachmentRepositoryProvider =
     Provider<SupportAttachmentRepository>((ref) {
-  return SupportAttachmentRepository(ref.watch(dioClientProvider));
-});
+      return SupportAttachmentRepository(ref.watch(dioClientProvider));
+    });
 
 class SupportAttachmentUpload {
   const SupportAttachmentUpload({
