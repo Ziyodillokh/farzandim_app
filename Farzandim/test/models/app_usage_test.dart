@@ -43,10 +43,14 @@ void main() {
   });
 
   group('filteredApps (ko`rinish qoidalari)', () {
-    test('Chrome 40 soniya — KO`RINADI (eski 60s threshold bug`i)', () {
+    test('1 daqiqadan KAM (40s) — ko`rinmaydi (ro`yxat shishmasin)', () {
       final day = _day([_entry('com.android.chrome', 40000)]);
-      expect(day.filteredApps.map((e) => e.packageName),
-          contains('com.android.chrome'));
+      expect(day.filteredApps, isEmpty);
+    });
+
+    test('roppa-rosa 1 daqiqa — KO`RINADI (chegara inclusive)', () {
+      final day = _day([_entry('com.android.chrome', 60000)]);
+      expect(day.filteredApps, hasLength(1));
     });
 
     test('Parvoz (com.farzandim.*) — KO`RINADI (eski filtr bug`i)', () {

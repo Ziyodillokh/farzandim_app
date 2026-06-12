@@ -127,7 +127,9 @@ class AppUsageDay {
   /// Juda qisqa (tasodifiy ochib-yopish) foydalanishlar yashiriladi (ms).
   /// 10 soniya qilib qo'yilgan: 60s bo'lganda 1 daqiqadan kam ishlatilgan
   /// ilova (masalan Chrome 40 soniya) umuman ko'rinmasdi.
-  static const int _minVisibleMs = 10000;
+  // 1 daqiqadan kam ishlatilgan ilova ro'yxatni shishirib yuboradi
+  // (tasodifiy ochilishlar) — ko'rsatmaymiz.
+  static const int _minVisibleMs = 60000;
 
   /// Faqat launcher, systemUI, klaviatura va pure-fon servislarni chiqaramiz.
   ///
