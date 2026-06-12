@@ -147,6 +147,44 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
                         ),
                       );
                     }
+                    // EH-09: policies yuklanmasa YOLG'ON "hammasi ruxsat"
+                    // ko'rsatmaymiz — aniq xato + retry.
+                    if (policiesAsync.hasError) {
+                      return Center(
+                        child: Column(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              "Ruxsatlarni yuklab bo'lmadi.\n"
+                              'Internet aloqasini tekshiring.',
+                              textAlign: TextAlign.center,
+                              style: AppTextStyles.bodyS.copyWith(
+                                color: AppColors.textSecondary,
+                              ),
+                            ),
+                            const SizedBox(height: AppDimensions.md),
+                            TextButton.icon(
+                              onPressed: () => ref.invalidate(
+                                appPermissionPoliciesProvider(
+                                  (_childId, widget.permission),
+                                ),
+                              ),
+                              icon: Icon(
+                                Icons.refresh_rounded,
+                                color: AppColors.accent,
+                              ),
+                              label: Text(
+                                'Qayta urinish',
+                                style: AppTextStyles.bodyM.copyWith(
+                                  color: AppColors.accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    }
                     final policies =
                         policiesAsync.valueOrNull ?? const <String, bool>{};
                     return ListView.separated(

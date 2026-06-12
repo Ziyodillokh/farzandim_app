@@ -54,8 +54,9 @@ class BackendPairRequestRepository {
               PairRequest.fromBackendJson(m as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "so'rov yo'q" ko'rinardi.
       debugPrint('BackendPairRequestRepository.getPending: $e');
-      return const [];
+      rethrow;
     }
   }
 

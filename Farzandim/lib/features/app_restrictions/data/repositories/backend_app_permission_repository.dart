@@ -42,8 +42,9 @@ class BackendAppPermissionRepository {
       }
       return map;
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "hammasi ruxsat" ko'rinardi.
       debugPrint('BackendAppPermissionRepository.getPolicies: $e');
-      return const {};
+      rethrow;
     }
   }
 

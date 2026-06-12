@@ -20,7 +20,13 @@ final geoZoneEventsProvider =
 /// Oxirgi 24 soatdagi hodisalar soni — geo-zonalar ro'yxati ekranida badge.
 final geoZoneEventsCountProvider =
     FutureProvider.family<int, String>((ref, childId) async {
-  final events = await ref.watch(geoZoneEventsProvider(childId).future);
-  final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
-  return events.where((e) => e.timestamp.isAfter(dayAgo)).length;
+  // EH-09: events provider error bo'lsa badge 0 ko'rsatadi (yiqilmaydi) —
+  // badge dekorativ, asosiy ekran o'z error holatini ko'rsatadi.
+  try {
+    final events = await ref.watch(geoZoneEventsProvider(childId).future);
+    final dayAgo = DateTime.now().subtract(const Duration(hours: 24));
+    return events.where((e) => e.timestamp.isAfter(dayAgo)).length;
+  } catch (_) {
+    return 0;
+  }
 });

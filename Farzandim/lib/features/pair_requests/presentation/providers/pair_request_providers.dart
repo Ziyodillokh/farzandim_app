@@ -28,7 +28,13 @@ final pendingPairRequestsProvider =
   final controller = StreamController<List<PairRequest>>();
   Future<void> refresh(dynamic data) async {
     if (data is Map && data['childId'] != childId) return;
-    if (!controller.isClosed) controller.add(await fetch());
+    try {
+      final list = await fetch();
+      if (!controller.isClosed) controller.add(list);
+    } catch (_) {
+      // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi (EH-09:
+      // repo endi throw qiladi; listener callback'da unhandled bo'lmasin).
+    }
   }
 
   final c = repo.createdStream().listen(refresh);

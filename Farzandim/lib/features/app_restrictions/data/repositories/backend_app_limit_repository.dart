@@ -32,7 +32,9 @@ class BackendAppLimitRepository {
 
   /// Bola uchun barcha app limit'lar — domain model.
   Future<List<AppRestriction>> getRestrictions(String childId) async {
-    final wires = await _getLimits(childId);
+    // EH-09: o'qish ham throw qiladi — offline'da yolg'on "limit yo'q"
+    // ko'rinmasin (ekranda error branch bor).
+    final wires = await _getLimits(childId, throwOnError: true);
     return wires.map((w) => w.toRestriction()).toList();
   }
 

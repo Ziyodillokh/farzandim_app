@@ -41,8 +41,13 @@ final geoZonesProvider =
 
   Future<void> refresh() async {
     if (controller.isClosed) return;
-    final zones = await repo.getZones(childId);
-    if (!controller.isClosed) controller.add(zones);
+    try {
+      final zones = await repo.getZones(childId);
+      if (!controller.isClosed) controller.add(zones);
+    } catch (_) {
+      // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi (EH-09:
+      // repo endi throw qiladi; listener callback'da unhandled bo'lmasin).
+    }
   }
 
   final createdSub = repo.zoneEventsStream().listen((data) {

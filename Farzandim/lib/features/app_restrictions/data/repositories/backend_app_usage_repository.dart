@@ -56,8 +56,9 @@ class BackendAppUsageRepository {
         });
       }).toList();
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "ilovalar yo'q" ko'rinardi.
       debugPrint('BackendAppUsageRepository.getInstalledApps: $e');
-      return const [];
+      rethrow;
     }
   }
 
@@ -134,8 +135,9 @@ class BackendAppUsageRepository {
         apps: apps,
       );
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "0 daqiqa" ko'rinardi.
       debugPrint('BackendAppUsageRepository.getTodayUsage: $e');
-      return null;
+      rethrow;
     }
   }
 }

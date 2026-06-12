@@ -67,8 +67,9 @@ class BackendGeoZoneRepository {
           )
           .toList();
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "zona yo'q" ko'rinardi.
       debugPrint('BackendGeoZoneRepository.getZones: $e');
-      return const [];
+      rethrow;
     }
   }
 
@@ -90,8 +91,9 @@ class BackendGeoZoneRepository {
           )
           .toList();
     } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "voqea yo'q" ko'rinardi.
       debugPrint('BackendGeoZoneRepository.getEvents: $e');
-      return const [];
+      rethrow;
     }
   }
 
