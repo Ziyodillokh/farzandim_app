@@ -116,7 +116,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   (onCameraMoveStarted programmatik harakatni user harakati deb biladi) — `location_map_screen.dart:88-107`.
 
 ### Xotira
-- [ ] **MEM-3** (M): RoundVideoBubble — har bubble thumbnail uchun JONLI VideoPlayerController (ExoPlayer)
+- [x] **MEM-3** (M): RoundVideoBubble — har bubble thumbnail uchun JONLI VideoPlayerController (ExoPlayer)
   ochadi — uzun chatda o'nlab native player — `round_video_bubble.dart:68-70` — thumbnail PNG yaratish/kesh.
 - [x] **MEM-4 + NET-06 + ARCH-11** (M): Disk rasm-keshi umuman yo'q — barcha avatar/ikonka har cold-start'da
   qayta yuklanadi + to'liq o'lchamda dekod — `cached_network_image` + `cacheWidth` hammasiga.
