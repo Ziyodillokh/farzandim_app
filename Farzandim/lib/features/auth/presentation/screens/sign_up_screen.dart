@@ -1,6 +1,8 @@
 import 'dart:async';
 
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -131,54 +133,133 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return e.contains('@') && e.contains('.') && e.length >= 5;
   }
 
-  /// MOCK: backend SMS/email yo'q — to'g'ridan-to'g'ri kod bosqichiga o'tamiz
-  /// va demo eslatma ko'rsatamiz.
-  void _sendCode() {
+  /// Phone: POST /auth/send-register-otp orqali Eskiz SMS yuboriladi.
+  /// Email: backend endpoint hozircha yo'q → to'g'ridan-to'g'ri profil
+  /// bosqichiga o'tamiz (email registratsiyasi profilda parol bilan
+  /// to'liq verify qilinadi — POST /auth/register).
+  Future<void> _sendCode() async {
     FocusScope.of(context).unfocus();
-    _startResendTimer();
+
+    // Email holatida OTP yo'q — kod bosqichini o'tkazib yuboramiz.
+    if (!_isPhone) {
+      _timer?.cancel();
+      setState(() {
+        _step = 2;
+        _error = null;
+      });
+      return;
+    }
+
     setState(() {
-      _step = 1;
+      _loading = true;
       _error = null;
-      _code = '';
     });
-    _showDemoHint();
+    final dio = ref.read(dioClientProvider);
+    try {
+      await dio.post<Map<String, dynamic>>(
+        '/auth/send-register-otp',
+        data: {'phone': '+998${_phone.text.trim()}'},
+      );
+      if (!mounted) return;
+      _startResendTimer();
+      setState(() {
+        _loading = false;
+        _step = 1;
+        _code = '';
+      });
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi");
+      });
+    }
   }
 
-  void _resendCode() {
+  Future<void> _resendCode() async {
     if (_resendLeft > 0) return;
-    _startResendTimer();
-    _showDemoHint(resent: true);
-  }
+    if (!_isPhone) {
+      _startResendTimer();
+      return;
+    }
 
-  void _showDemoHint({bool resent = false}) {
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
+    setState(() => _error = null);
+    final dio = ref.read(dioClientProvider);
+    try {
+      await dio.post<Map<String, dynamic>>(
+        '/auth/send-register-otp',
+        data: {'phone': '+998${_phone.text.trim()}'},
+      );
+      if (!mounted) return;
+      _startResendTimer();
+      ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text(
-            resent
-                ? 'auth.signUp.resentSnack'.tr()
-                : 'auth.signUp.demoHint'.tr(),
-          ),
+          content: Text('auth.signUp.resentSnack'.tr()),
           behavior: SnackBarBehavior.floating,
           backgroundColor: AppColors.surface,
         ),
       );
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() => _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi"));
+    }
+  }
+
+  /// Backend xato javobini foydalanuvchiga ko'rsatish uchun matnga aylantiradi.
+  String _readDioError(DioException e, {required String fallback}) {
+    final data = e.response?.data;
+    if (data is Map && data['message'] is String) {
+      return data['message'] as String;
+    }
+    return fallback;
   }
 
   // ──────────────────────── 2-BOSQICH: KOD ────────────────────────
 
   bool get _codeValid => _code.length == 5;
 
-  /// MOCK: backend tasdiqlash yo'q — istalgan 5 xonali kod qabul qilinadi.
-  void _verifyCode() {
+  /// Phone: POST /auth/verify-register-otp — backend Eskiz'dan kelgan
+  /// haqiqiy kod bilan solishtiradi. Noto'g'ri bo'lsa 400 qaytariladi.
+  /// Email holatida OTP yo'q (allaqachon o'tkazib yuborilgan).
+  Future<void> _verifyCode() async {
     if (!_codeValid) return;
     FocusScope.of(context).unfocus();
-    _timer?.cancel();
+
+    if (!_isPhone) {
+      _timer?.cancel();
+      setState(() {
+        _step = 2;
+        _error = null;
+      });
+      return;
+    }
+
     setState(() {
-      _step = 2;
+      _loading = true;
       _error = null;
     });
+    final dio = ref.read(dioClientProvider);
+    try {
+      await dio.post<Map<String, dynamic>>(
+        '/auth/verify-register-otp',
+        data: {
+          'phone': '+998${_phone.text.trim()}',
+          'code': _code,
+        },
+      );
+      if (!mounted) return;
+      _timer?.cancel();
+      setState(() {
+        _loading = false;
+        _step = 2;
+      });
+    } on DioException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _error = _readDioError(e, fallback: "Noto'g'ri kod");
+      });
+    }
   }
 
   // ─────────────────────── 3-BOSQICH: PROFIL ──────────────────────

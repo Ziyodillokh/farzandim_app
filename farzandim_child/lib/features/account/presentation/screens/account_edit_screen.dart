@@ -7,7 +7,7 @@
 // almashtirilgan bo'lsa.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -34,7 +34,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
 
   int? _selectedAge;
   String? _selectedRegion;
-  File? _selectedPhoto;
+  // Tanlangan foto baytlari — web/mobile bir xil ishlaydi. Avval File
+  // ishlatilardi (Image.file), lekin u web'da `!kIsWeb` assertion bilan
+  // crash beradi. Uint8List + Image.memory hamma platformada ishlaydi.
+  Uint8List? _selectedPhotoBytes;
   String? _existingPhotoUrl;
 
   bool _isLoading = false;
@@ -68,8 +71,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     );
 
     if (pickedFile != null) {
+      // readAsBytes() — web va mobile'da bir xil ishlaydi. File(path)
+      // konstruktori web'da `dart:io` mavjud emasligi sababli crash beradi.
+      final bytes = await pickedFile.readAsBytes();
+      if (!mounted) return;
       setState(() {
-        _selectedPhoto = File(pickedFile.path);
+        _selectedPhotoBytes = bytes;
       });
     }
   }
@@ -119,11 +126,11 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       final repo = ref.read(childRepositoryProvider);
       String? photoUrl = _existingPhotoUrl;
 
-      if (_selectedPhoto != null) {
+      if (_selectedPhotoBytes != null) {
         photoUrl = await repo.uploadChildPhoto(
           parentUid: pairing.parentUid!,
           childId: pairing.childId!,
-          photoFile: _selectedPhoto!,
+          bytes: _selectedPhotoBytes!,
         );
       }
 
@@ -424,10 +431,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   }
 
   Widget _buildPhoto() {
-    if (_selectedPhoto != null) {
+    if (_selectedPhotoBytes != null) {
       return ClipRRect(
         borderRadius: BorderRadius.circular(20),
-        child: Image.file(_selectedPhoto!, fit: BoxFit.cover),
+        // Image.memory — web va mobile'da bir xil. Image.file web'da
+        // `Image.file is not supported on Flutter Web` assertion beradi.
+        child: Image.memory(_selectedPhotoBytes!, fit: BoxFit.cover),
       );
     }
     if (_existingPhotoUrl != null && _existingPhotoUrl!.isNotEmpty) {
