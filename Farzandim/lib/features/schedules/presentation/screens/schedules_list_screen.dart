@@ -12,6 +12,7 @@
 // Ma'lumot mavjud Routine model + schedulesProvider/scheduleActionsProvider
 // (Backend CRUD) bilan — dublikat kod yo'q.
 
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -80,7 +81,7 @@ class SchedulesListScreen extends ConsumerWidget {
                     child: Padding(
                       padding: const EdgeInsets.all(AppDimensions.lg),
                       child: Text(
-                        'Xato: $e',
+                        friendlyError(e),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodyS.copyWith(
                           color: AppColors.textSecondary,
@@ -677,7 +678,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                 ),
                 error: (e, _) => Center(
                   child: Text(
-                    'Xato: $e',
+                    friendlyError(e),
                     style: TextStyle(color: AppColors.textSecondary),
                   ),
                 ),

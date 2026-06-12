@@ -11,6 +11,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -77,15 +78,15 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
     }
   }
 
+  /// QR-kontekstga xos xabarlar; qolgan hamma holat markaziy
+  /// `friendlyError`ga (EH-08) o'tadi — status-kod mantig'i takrorlanmaydi.
   String _friendly(Object e) {
-    if (e is DioException) {
-      final code = e.response?.statusCode;
-      if (code == 401) return 'QR kod yaroqsiz yoki muddati tugagan';
-      if (code == null) return "Internet aloqasi yo'q. Qayta urinib ko'ring";
-      return 'Xatolik yuz berdi ($code)';
+    if (e is FormatException) return 'auth.scan.invalidQr'.tr();
+    if (e is DioException && e.response?.statusCode == 401) {
+      // Anonim user skanerlayapti — "sessiya tugadi" emas, QR muddati.
+      return 'auth.scan.expiredQr'.tr();
     }
-    if (e is FormatException) return "QR kod noto'g'ri";
-    return 'Skanerlashda xatolik';
+    return friendlyError(e, fallback: 'auth.scan.scanError'.tr());
   }
 
   @override

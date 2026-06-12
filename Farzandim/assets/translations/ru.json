@@ -5,7 +5,12 @@
     "forbidden": "У вас нет прав на это действие.",
     "generic": "Не удалось выполнить действие. Попробуйте ещё раз.",
     "loadFailed": "Не удалось загрузить данные. Попробуйте ещё раз.",
-    "loadFailedNetwork": "Не удалось загрузить данные.\nПроверьте подключение к интернету."
+    "loadFailedNetwork": "Не удалось загрузить данные.\nПроверьте подключение к интернету.",
+    "appLimit": {
+      "childNotLinked": "Этот ребёнок не привязан к вашему аккаунту.",
+      "childNotFound": "Ребёнок не найден.",
+      "saveFailed": "Ошибка при сохранении."
+    }
   },
   "sos": {
     "wsBanner": "SOS! Ребёнок просит помощи",
@@ -140,6 +145,11 @@
       "googleFailedDetail": "Не удалось войти через Google: {error}",
       "appleFailed": "Ошибка входа через Apple.",
       "appleFailedDetail": "Не удалось войти через Apple: {error}"
+    },
+    "scan": {
+      "invalidQr": "Неверный QR-код",
+      "expiredQr": "QR-код недействителен или истёк",
+      "scanError": "Ошибка при сканировании"
     }
   },
   "formatters": {
@@ -192,11 +202,10 @@
       "voice": "Голосовые сообщения",
       "appRestrictions": "Ограничения приложений",
       "appLimits": "Ограничения устройства",
-      "location": "Местоположение",
+      "location": "Локация",
       "schedules": "Расписания",
       "callHistory": "История звонков",
       "ambientSound": "Окружающий звук",
-      "location": "Локация",
       "messenger": "Messenger",
       "weeklyReport": "Еженедельный отчёт"
     },

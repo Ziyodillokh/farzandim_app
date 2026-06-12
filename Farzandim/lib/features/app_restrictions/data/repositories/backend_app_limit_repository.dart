@@ -14,7 +14,9 @@
 //   Remove      → DELETE /app-limits/:id
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -126,27 +128,14 @@ class BackendAppLimitRepository {
     }
   }
 
-  /// DioException'dan foydalanuvchiga ko'rsatish uchun aniq o'zbekcha xabar.
+  /// Domain-ga xos 403/404 xabarlari; qolgan hamma holat (backend message,
+  /// internet yo'q, 401-sessiya) markaziy `friendlyError`da (EH-08) —
+  /// status-kod mantig'i takrorlanmaydi.
   String _messageForDioError(DioException e) {
     final code = e.response?.statusCode;
-    final data = e.response?.data;
-    String? serverMsg;
-    if (data is Map) {
-      final m = data['message'];
-      if (m is String) {
-        serverMsg = m;
-      } else if (m is List && m.isNotEmpty) {
-        serverMsg = m.map((x) => '$x').join(', ');
-      }
-    }
-    if (code == null) {
-      return "Internet aloqasi yo'q yoki server javob bermadi. "
-          "Qayta urinib ko'ring.";
-    }
-    if (code == 401) return 'Sessiya muddati tugagan — qaytadan kiring.';
-    if (code == 403) return 'Bu bola sizning akkauntingizga ulanmagan.';
-    if (code == 404) return 'Bola topilmadi.';
-    return serverMsg ?? 'Saqlashda xatolik (server $code).';
+    if (code == 403) return 'errors.appLimit.childNotLinked'.tr();
+    if (code == 404) return 'errors.appLimit.childNotFound'.tr();
+    return friendlyError(e, fallback: 'errors.appLimit.saveFailed'.tr());
   }
 }
 

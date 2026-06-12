@@ -5,7 +5,12 @@
     "forbidden": "You don't have permission for this action.",
     "generic": "Couldn't complete the action. Please try again.",
     "loadFailed": "Couldn't load data. Please try again.",
-    "loadFailedNetwork": "Couldn't load data.\nCheck your internet connection."
+    "loadFailedNetwork": "Couldn't load data.\nCheck your internet connection.",
+    "appLimit": {
+      "childNotLinked": "This child is not linked to your account.",
+      "childNotFound": "Child not found.",
+      "saveFailed": "Failed to save."
+    }
   },
   "sos": {
     "wsBanner": "SOS! Your child needs help",
@@ -140,6 +145,11 @@
       "googleFailedDetail": "Couldn't sign in with Google: {error}",
       "appleFailed": "Apple sign-in failed.",
       "appleFailedDetail": "Couldn't sign in with Apple: {error}"
+    },
+    "scan": {
+      "invalidQr": "Invalid QR code",
+      "expiredQr": "QR code is invalid or expired",
+      "scanError": "Scanning error"
     }
   },
   "formatters": {
@@ -196,7 +206,6 @@
       "schedules": "Schedules",
       "callHistory": "Call history",
       "ambientSound": "Ambient sound",
-      "location": "Location",
       "messenger": "Messenger",
       "weeklyReport": "Weekly report"
     },

@@ -5,7 +5,12 @@
     "forbidden": "Bu amalga ruxsatingiz yo'q.",
     "generic": "Amalni bajarib bo'lmadi. Qayta urinib ko'ring.",
     "loadFailed": "Ma'lumotlarni yuklab bo'lmadi. Qayta urinib ko'ring.",
-    "loadFailedNetwork": "Ma'lumotlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring."
+    "loadFailedNetwork": "Ma'lumotlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring.",
+    "appLimit": {
+      "childNotLinked": "Bu bola sizning akkauntingizga ulanmagan.",
+      "childNotFound": "Bola topilmadi.",
+      "saveFailed": "Saqlashda xatolik."
+    }
   },
   "sos": {
     "wsBanner": "SOS! Bola yordam so'ramoqda",
@@ -140,6 +145,11 @@
       "googleFailedDetail": "Google bilan kirib bo'lmadi: {error}",
       "appleFailed": "Apple bilan kirishda xatolik.",
       "appleFailedDetail": "Apple bilan kirib bo'lmadi: {error}"
+    },
+    "scan": {
+      "invalidQr": "QR kod noto'g'ri",
+      "expiredQr": "QR kod yaroqsiz yoki muddati tugagan",
+      "scanError": "Skanerlashda xatolik"
     }
   },
   "formatters": {
@@ -196,7 +206,6 @@
       "schedules": "Jadvallar",
       "callHistory": "Qo'ng'iroqlar tarixi",
       "ambientSound": "Atrofdagi ovoz",
-      "location": "Joylashuv",
       "messenger": "Messenger",
       "weeklyReport": "Haftalik hisobot"
     },

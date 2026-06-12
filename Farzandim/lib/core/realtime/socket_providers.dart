@@ -24,7 +24,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// connection.when(
 ///   data: (state) => Text(state.label),
 ///   loading: () => CircularProgressIndicator(),
-///   error: (e, _) => Text('Xato: $e'),
+///   error: (e, _) => Text(friendlyError(e)),
 /// );
 /// ```
 final socketConnectionProvider =

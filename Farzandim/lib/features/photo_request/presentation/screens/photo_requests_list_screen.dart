@@ -8,6 +8,7 @@
 // Delete: long-press → confirmation dialog → DELETE /photo-requests/:id.
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -47,7 +48,8 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                     loading: () => Center(
                       child: CircularProgressIndicator(color: AppColors.accent),
                     ),
-                    error: (e, _) => Center(child: Text('Yuklanmadi: $e')),
+                    error: (e, _) =>
+                        Center(child: Text(friendlyError(e))),
                     data: (requests) => TabBarView(
                       children: [
                         _RequestsView(childId: childId, requests: requests),
