@@ -1,0 +1,217 @@
+// ARCH-13 davomi: monolit fayl `part` fayllarga bo'lindi — private
+// nomlar va xulq o'zgarmagan, faqat fayl tashkiloti.
+part of 'voice_chat_bubble.dart';
+
+// ─────────────────────────────────────────────────────────────────────
+// Hujjat (file) bubble — tap → yuklab olib native ilovada ochish
+// ─────────────────────────────────────────────────────────────────────
+
+class _FileBubble extends ConsumerStatefulWidget {
+  const _FileBubble({required this.message, required this.isOwn});
+
+  final VoiceMessage message;
+  final bool isOwn;
+
+  @override
+  ConsumerState<_FileBubble> createState() => _FileBubbleState();
+}
+
+class _FileBubbleState extends ConsumerState<_FileBubble> {
+  bool _busy = false;
+
+  String _formatSize(int? bytes) {
+    if (bytes == null || bytes <= 0) return '';
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) {
+      return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    }
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
+  IconData _iconFor(String? mime, String? name) {
+    final m = mime ?? '';
+    final n = (name ?? '').toLowerCase();
+    if (m.contains('pdf') || n.endsWith('.pdf')) {
+      return Icons.picture_as_pdf_rounded;
+    }
+    if (m.startsWith('video/')) return Icons.movie_outlined;
+    if (m.startsWith('audio/')) return Icons.audiotrack_rounded;
+    if (m.contains('word') || n.endsWith('.doc') || n.endsWith('.docx')) {
+      return Icons.description_rounded;
+    }
+    if (m.contains('sheet') ||
+        m.contains('excel') ||
+        n.endsWith('.xls') ||
+        n.endsWith('.xlsx')) {
+      return Icons.table_chart_rounded;
+    }
+    if (m.contains('zip') || m.contains('rar') || m.contains('compressed')) {
+      return Icons.folder_zip_rounded;
+    }
+    return Icons.insert_drive_file_rounded;
+  }
+
+  Future<void> _openFile() async {
+    if (_busy) return;
+    setState(() => _busy = true);
+    try {
+      final repo = ref.read(backendVoiceMessageRepositoryProvider);
+      final url = repo.mediaUrl(widget.message.mediaKey!);
+      final dir = await getTemporaryDirectory();
+      final safeName = (widget.message.fileName ?? 'fayl')
+          .replaceAll(RegExp(r'[^\w\-. ]'), '_');
+      final savePath = '${dir.path}/${widget.message.id}_$safeName';
+      final file = File(savePath);
+      if (!file.existsSync() || file.lengthSync() == 0) {
+        // ARCH-05: yalang'och Dio() emas — umumiy klient (timeout'lar bor,
+        // cheksiz osilish yo'q; URL absolute bo'lgani uchun baseUrl bezarar).
+        await ref.read(dioClientProvider).download(url, savePath);
+      }
+      final result = await OpenFilex.open(savePath);
+      if (result.type != ResultType.done && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('voiceChat.fileOpenFailed'.tr()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } catch (_) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('voiceChat.fileOpenFailed'.tr()),
+            backgroundColor: Colors.red,
+            duration: const Duration(seconds: 2),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isOwn = widget.isOwn;
+    final message = widget.message;
+    final fg = isOwn ? Colors.black : AppColors.textPrimary;
+    final subColor = isOwn
+        ? Colors.black.withValues(alpha: 0.55)
+        : AppColors.textSecondary;
+    final iconBg =
+        isOwn ? Colors.black.withValues(alpha: 0.12) : AppColors.primary;
+    final iconFg = isOwn ? Colors.black : Colors.black;
+    final caption = message.text;
+    final hasCaption = caption != null && caption.isNotEmpty;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment:
+            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(),
+          Flexible(
+            flex: 5,
+            child: GestureDetector(
+              onTap: _openFile,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(10, 10, 12, 8),
+                decoration: BoxDecoration(
+                  color: isOwn ? AppColors.primary : AppColors.surface,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                    bottomRight: Radius.circular(isOwn ? 4 : 18),
+                  ),
+                  boxShadow: _bubbleShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Container(
+                          width: 44,
+                          height: 44,
+                          decoration: BoxDecoration(
+                            color: iconBg,
+                            shape: BoxShape.circle,
+                          ),
+                          child: _busy
+                              ? Padding(
+                                  padding: const EdgeInsets.all(11),
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: iconFg,
+                                  ),
+                                )
+                              : Icon(
+                                  _iconFor(message.mimeType, message.fileName),
+                                  color: iconFg,
+                                  size: 24,
+                                ),
+                        ),
+                        const SizedBox(width: 10),
+                        Flexible(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                message.fileName ??
+                                    'voiceChat.fileGeneric'.tr(),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: fg,
+                                  fontSize: 14,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                _formatSize(message.fileSize),
+                                style: TextStyle(
+                                  color: subColor,
+                                  fontSize: 12,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    if (hasCaption) ...[
+                      const SizedBox(height: 8),
+                      Text(
+                        caption,
+                        style: TextStyle(
+                          color: fg,
+                          fontSize: 15,
+                          height: 1.35,
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 2),
+                    _BubbleMeta(
+                      message: message,
+                      isOwn: isOwn,
+                      color: subColor,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(),
+        ],
+      ),
+    );
+  }
+}
