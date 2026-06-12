@@ -5,10 +5,7 @@
 // Backend `0.5.1` LIVE — per-app limit endpoint mavjud. Stub olib
 // tashlandi, real Backend repository ulandi.
 
-import 'dart:async';
-
-import 'package:farzandim/core/utils/app_lifecycle.dart';
-import 'package:farzandim/core/utils/poll_backoff.dart';
+import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
@@ -16,25 +13,12 @@ import 'package:farzandim/features/app_restrictions/data/repositories/backend_ap
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Polling provayder uchun qisqa keep-alive (P0-1).
-///
-/// `autoDispose` watcher ketishi bilan provider'ni darhol o'ldiradi —
-/// foydalanuvchi tez orqaga qaytsa loading "flash" bo'lardi. 2 daqiqalik
-/// keep-alive: tez qaytishda kesh turadi, uzoq ketilsa polling BUTUNLAY
-/// to'xtaydi (avval `autoDispose`siz ekran bir marta ochilgach polling
-/// ILOVA UMRI DAVOMIDA davom etardi — 100k user'da minglab keraksiz RPS).
-void keepAliveFor(Ref<dynamic> ref, Duration duration) {
-  final link = ref.keepAlive();
-  final timer = Timer(duration, link.close);
-  ref.onDispose(timer.cancel);
-}
-
 /// Bola uchun bugungi foydalanish — Backend fetch + 30 sek polling.
 ///
 /// Backend hozir `app_usage:updated` WS event emit qilmaydi —
-/// vaqtinchalik polling bilan ushlaymiz. `autoDispose` + lifecycle skip:
-/// ekran yopilgach (2 daq keshdan keyin) va ilova fonda bo'lsa polling
-/// TO'XTAYDI. Poll xatosi yutiladi — oxirgi qiymat saqlanadi.
+/// vaqtinchalik polling bilan ushlaymiz (`pollFetchStream` skaffoldi).
+/// `autoDispose` + 2 daq keep-alive (P0-1): ekran yopilgach polling
+/// TO'XTAYDI, tez qaytishda loading "flash" yo'q.
 final todayUsageProvider = StreamProvider.autoDispose
     .family<AppUsageDay?, String>((ref, childId) async* {
   final isAuthed =
@@ -44,35 +28,17 @@ final todayUsageProvider = StreamProvider.autoDispose
     return;
   }
   keepAliveFor(ref, const Duration(minutes: 2));
-  // Zombi-guard: bekor qilingan generator faqat keyingi yield'da to'xtaydi —
-  // `continue`/catch yo'llarida yield yo'q, guard'siz yetim generator fonda/
-  // xato davrida abadiy poll qilaverardi.
-  var alive = true;
-  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-
-  // Birinchi fetch
-  yield await repo.getTodayUsage(childId);
-
-  // Polling — har 30 sek, faqat provider hayot VA ilova ko'rinib turganda.
-  final backoff = PollBackoff();
-  await for (final _
-      in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
-    if (!alive) return;
-    if (!isAppResumed(ref)) continue;
-    if (backoff.shouldSkipTick) continue;
-    try {
-      yield await repo.getTodayUsage(childId);
-      backoff.onSuccess();
-    } catch (_) {
-      // tarmoq blip — backoff: ketma-ket xatolarda siyraklashadi
-      backoff.onFailure();
-    }
-  }
+  yield* pollFetchStream<AppUsageDay?>(
+    ref,
+    interval: const Duration(seconds: 30),
+    fetch: () => repo.getTodayUsage(childId),
+  );
 });
 
-/// Bola qurilmasidagi o'rnatilgan ilovalar — Backend fetch + 60s polling.
-/// `autoDispose` + lifecycle skip (P0-1, yuqoridagi kabi).
+/// Bola qurilmasidagi o'rnatilgan ilovalar — Backend fetch + 60s polling
+/// (yangi pair qilingan qurilmada nomlar/ikonalar tez kelishi uchun).
+/// `autoDispose` + 2 daq keep-alive (P0-1, yuqoridagi kabi).
 final installedAppsProvider = StreamProvider.autoDispose
     .family<List<AppUsageEntry>, String>((ref, childId) async* {
   final isAuthed =
@@ -82,40 +48,17 @@ final installedAppsProvider = StreamProvider.autoDispose
     return;
   }
   keepAliveFor(ref, const Duration(minutes: 2));
-  // Zombi-guard (todayUsage'dagi kabi).
-  var alive = true;
-  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-
-  // NET-07 (SWR): keshdagi ro'yxat DARHOL — ekran spinner'da turmaydi.
-  final cachedApps = await repo.getCachedInstalledApps(childId);
-  if (cachedApps != null && cachedApps.isNotEmpty) {
-    yield cachedApps;
-  }
-
-  try {
-    yield await repo.getInstalledApps(childId: childId);
-  } catch (_) {
-    // Kesh ko'rsatilgan bo'lsa saqlanadi (offline UX), bo'lmasa error.
-    if (cachedApps == null || cachedApps.isEmpty) rethrow;
-  }
-
-  // 60 sekundda bir refresh — yangi pair qilingan qurilmada nomlar/ikonalar
-  // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).
-  final backoff = PollBackoff();
-  await for (final _
-      in Stream<int>.periodic(const Duration(seconds: 60), (i) => i)) {
-    if (!alive) return;
-    if (!isAppResumed(ref)) continue;
-    if (backoff.shouldSkipTick) continue;
-    try {
-      yield await repo.getInstalledApps(childId: childId);
-      backoff.onSuccess();
-    } catch (_) {
-      // skip — backoff: ketma-ket xatolarda siyraklashadi
-      backoff.onFailure();
-    }
-  }
+  yield* pollFetchStream<List<AppUsageEntry>>(
+    ref,
+    interval: const Duration(seconds: 60),
+    fetch: () => repo.getInstalledApps(childId: childId),
+    // NET-07 (SWR): keshdagi ro'yxat DARHOL — ekran spinner'da turmaydi.
+    readCache: () async {
+      final cached = await repo.getCachedInstalledApps(childId);
+      return (cached != null && cached.isNotEmpty) ? cached : null;
+    },
+  );
 });
 
 /// Bola uchun cheklovlar — Backend `/app-limits` orqali (0.5.1).

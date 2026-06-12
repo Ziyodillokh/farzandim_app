@@ -9,9 +9,8 @@ import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
-import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
-import 'package:farzandim/core/utils/poll_backoff.dart';
+import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
@@ -34,22 +33,9 @@ final childrenRefreshTickProvider = StateProvider<int>((_) => 0);
 /// FAQAT rebuild pulse — refetch QILMAYDI (ro'yxatni `childrenProvider`ning
 /// o'zi ichki 60s poll bilan yangilaydi). `autoDispose`: dashboard yopilsa
 /// puls to'xtaydi; fonda ham emit qilmaydi (lifecycle skip — bekorga ish yo'q).
-final statusTickProvider = StreamProvider.autoDispose<int>((ref) async* {
-  // MUHIM (zombi-guard): bekor qilingan async* generator faqat KEYINGI
-  // yield'da to'xtaydi — `continue` yo'lida yield yo'q, shuning uchun
-  // dispose/recompute'dan keyin generator abadiy yashab qolardi. onDispose
-  // har rebuild'da ham chaqiriladi (riverpod 2.6) → flag ishonchli.
-  var alive = true;
-  ref.onDispose(() => alive = false);
-  var i = 0;
-  yield i;
-  await for (final _
-      in Stream<int>.periodic(const Duration(seconds: 30), (t) => t)) {
-    if (!alive) return;
-    if (!isAppResumed(ref)) continue;
-    yield ++i;
-  }
-});
+final statusTickProvider = StreamProvider.autoDispose<int>(
+  (ref) => pollTickStream(ref, const Duration(seconds: 30)),
+);
 
 /// Bolalar ro'yxati — Backend REST + ichki 60s polling.
 ///
@@ -77,65 +63,24 @@ final childrenProvider = StreamProvider<List<Child>>((ref) {
   return _backendChildrenStream(ref);
 });
 
-/// Backend REST'dan bolalarni o'qiydi + har 60s ichki poll. Birinchi fetch
-/// xatosi YUTILMAYDI (StreamProvider error → copyWithPrevious, dashboard
-/// bo'sh "flash" bermaydi); poll xatolari skip (oxirgi qiymat saqlanadi).
-Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
-  // MUHIM (zombi-guard): bekor qilingan async* generator faqat KEYINGI
-  // yield'da to'xtaydi. Bu loop'da `continue`/dedup/catch yo'llari yield
-  // QILMAYDI — guard'siz har recompute (resume tick, CRUD, pull-to-refresh)
-  // eski generatorni YETIM qoldirib, u o'z Stream.periodic'i bilan abadiy
-  // poll qilaverardi (logout'dan keyin — cheksiz 401). onDispose har
-  // rebuild'da ham chaqiriladi → flag recompute'da ham ishonchli.
-  var alive = true;
-  ref.onDispose(() => alive = false);
-
+/// Backend REST'dan bolalarni o'qiydi + har 60s ichki poll
+/// (skaffold: `pollFetchStream` — SWR kesh-birinchi, birinchi fetch
+/// xatosi faqat kesh yo'q bo'lsa yuqoriga, `listEquals` dedup bilan
+/// AsyncData identity saqlanadi — Child'da value-based `==` bor).
+Stream<List<Child>> _backendChildrenStream(Ref ref) {
   final repo = ref.watch(backendChildRepositoryProvider);
-
-  // NET-07 (SWR): keshdagi oxirgi ro'yxat DARHOL ko'rsatiladi — cold
-  // start'da dashboard server javobini kutib spinner'da turmaydi. Yangi
-  // ma'lumot pastdagi fetch bilan keladi (farq bo'lsa UI yangilanadi).
-  var current = const <Child>[];
-  final cached = await repo.getCachedChildren();
-  if (cached != null && cached.isNotEmpty) {
-    current = cached;
-    yield current;
-  }
-
-  try {
-    final fresh = await repo.getChildren();
-    if (current.isEmpty || !listEquals(fresh, current)) {
-      current = fresh;
-      yield fresh;
-    }
-  } catch (_) {
-    // Kesh ko'rsatilgan bo'lsa — saqlanadi (offline UX); kesh ham yo'q
-    // bo'lsa error'ni yuqoriga otamiz (dashboard error+retry ko'rsatadi).
-    if (current.isEmpty) rethrow;
-  }
-
-  final backoff = PollBackoff();
-  await for (final _
-      in Stream<int>.periodic(const Duration(seconds: 60), (t) => t)) {
-    if (!alive) return;
-    // Ilova fonda — so'rov yubormaymiz (batareya + backend yuki).
-    if (!isAppResumed(ref)) continue;
-    if (backoff.shouldSkipTick) continue;
-    try {
-      final fresh = await repo.getChildren();
-      if (!alive) return;
-      backoff.onSuccess();
-      // O'zgarmagan bo'lsa yield YO'Q — eski List identity qoladi,
-      // watcher'lar rebuild bo'lmaydi (Child'da value-based == bor).
-      if (!listEquals(fresh, current)) {
-        current = fresh;
-        yield fresh;
-      }
-    } catch (_) {
-      // tarmoq blip — backoff: ketma-ket xatolarda siyraklashadi
-      backoff.onFailure();
-    }
-  }
+  return pollFetchStream<List<Child>>(
+    ref,
+    interval: const Duration(seconds: 60),
+    fetch: repo.getChildren,
+    // NET-07 (SWR): keshdagi oxirgi ro'yxat DARHOL ko'rsatiladi — cold
+    // start'da dashboard server javobini kutib spinner'da turmaydi.
+    readCache: () async {
+      final cached = await repo.getCachedChildren();
+      return (cached != null && cached.isNotEmpty) ? cached : null;
+    },
+    isSame: listEquals,
+  );
 }
 
 /// Bolalar ro'yxati — sinxron access.

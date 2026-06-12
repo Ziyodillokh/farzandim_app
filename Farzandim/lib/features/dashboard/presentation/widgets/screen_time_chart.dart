@@ -7,12 +7,9 @@
 // Bugungi kun lime green bar, qolganlar slate.
 
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/utils/app_lifecycle.dart';
-import 'package:farzandim/core/utils/poll_backoff.dart';
+import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
-import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
-    show keepAliveFor;
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
@@ -34,43 +31,23 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
     return;
   }
   keepAliveFor(ref, const Duration(minutes: 2));
-  // Zombi-guard: bekor qilingan generator faqat keyingi yield'da to'xtaydi.
-  var alive = true;
-  ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-  // NET-07 (SWR): keshdagi haftalik DARHOL — chart "—" o'rniga oxirgi
-  // ma'lumotni ko'rsatadi, yangisi fonda keladi.
-  final cachedWeekly = await repo.getCachedWeeklyTotals(childId);
-  if (cachedWeekly != null && cachedWeekly.isNotEmpty) {
-    yield cachedWeekly;
-  }
-  // Birinchi yuklash. Xato bo'lsa kesh/AsyncLoading qoladi,
-  // polling keyin qayta urinadi.
-  try {
-    yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
-  } catch (_) {
-    // birinchi fetch xato — pastdagi polling retry qiladi
-  }
-  // Har 30 sek realtime poll. Xato (tarmoq blip) bo'lsa YIELD QILMAYMIZ —
-  // StreamProvider oxirgi qiymatni saqlaydi, shuning uchun ekran vaqti
-  // "0 daqiqa"ga tushib qolmaydi (avvalgi regressiya).
-  final backoff = PollBackoff();
-  await for (final _
-      in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
-    if (!alive) return;
-    if (!isAppResumed(ref)) continue;
-    if (backoff.shouldSkipTick) continue;
-    try {
-      yield await repo.getWeeklyTotals(
-        childId: childId,
-        endDate: DateTime.now(),
-      );
-      backoff.onSuccess();
-    } catch (_) {
-      // skip — backoff: ketma-ket xatolarda siyraklashadi
-      backoff.onFailure();
-    }
-  }
+  // swallowFirstError: birinchi fetch xatosi ham yutiladi — kesh yoki
+  // AsyncLoading qoladi, polling keyin qayta urinadi (ekran vaqti
+  // "0 daqiqa"ga tushib qolmaydi — avvalgi regressiya).
+  yield* pollFetchStream<List<DailyUsageTotal>>(
+    ref,
+    interval: const Duration(seconds: 30),
+    fetch: () =>
+        repo.getWeeklyTotals(childId: childId, endDate: DateTime.now()),
+    // NET-07 (SWR): keshdagi haftalik DARHOL — chart "—" o'rniga oxirgi
+    // ma'lumotni ko'rsatadi, yangisi fonda keladi.
+    readCache: () async {
+      final cached = await repo.getCachedWeeklyTotals(childId);
+      return (cached != null && cached.isNotEmpty) ? cached : null;
+    },
+    swallowFirstError: true,
+  );
 });
 
 /// Bugungi ekran vaqti (ms) — server `/weekly` (system filtrlangan +

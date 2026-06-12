@@ -5,8 +5,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
-import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
-    show keepAliveFor;
+import 'package:farzandim/core/utils/polling.dart' show keepAliveFor;
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';

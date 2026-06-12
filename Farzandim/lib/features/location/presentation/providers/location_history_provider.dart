@@ -5,8 +5,7 @@
 // `childLocationProvider` yangilanadi, history alohida polling/refresh).
 // Demak StreamProvider o'rniga FutureProvider.
 
-import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
-    show keepAliveFor;
+import 'package:farzandim/core/utils/polling.dart' show keepAliveFor;
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
