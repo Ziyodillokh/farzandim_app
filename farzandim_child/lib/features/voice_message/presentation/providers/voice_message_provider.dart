@@ -63,10 +63,15 @@ final voiceMessagesProvider =
     return;
   }
   final currentUserId = pairing.currentUserId ?? '';
+  final parentUid = pairing.parentUid;
   final repo = ref.watch(backendVoiceMessageRepositoryProvider);
 
-  Future<List<VoiceMessage>> fetch() =>
-      repo.getMessages(currentUserId: currentUserId);
+  // faqat ota-ona bilan oxirgi 100 ta xabar — to'liq tarix tortilmaydi
+  Future<List<VoiceMessage>> fetch() => repo.getMessages(
+        currentUserId: currentUserId,
+        peerId: parentUid,
+        limit: 100,
+      );
 
   yield await fetch();
 

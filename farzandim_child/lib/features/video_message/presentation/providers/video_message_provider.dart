@@ -83,8 +83,12 @@ final videoMessagesProvider =
   }
   final repo = ref.watch(backendVideoMessageRepositoryProvider);
 
+  // faqat ota-ona bilan oxirgi 100 ta xabar — to'liq tarix tortilmaydi
   Future<List<VideoMessage>> fetch() async {
-    final raw = await repo.getMessages();
+    final raw = await repo.getMessages(
+      peerId: pairing.parentUid,
+      limit: 100,
+    );
     return raw
         .map(
           (m) => VideoMessage.fromBackendJson(

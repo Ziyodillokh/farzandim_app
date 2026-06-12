@@ -55,14 +55,27 @@ class BackendVoiceMessageRepository {
   /// (chap='child o'zining'/o'ng='parent kelgan') aniqlashda kerak.
   ///
   /// `role`: null → barcha; `'sent'`/`'received'` → filter.
+  ///
+  /// Paginatsiya: `peerId` — faqat shu user bilan yozishmalar,
+  /// `before` — shu vaqtdan eski sahifa (cursor), `limit` — sahifa hajmi.
+  /// Hech biri berilmasa server eng oxirgi 100 tani qaytaradi.
   Future<List<VoiceMessage>> getMessages({
     required String currentUserId,
     String? role,
+    String? peerId,
+    DateTime? before,
+    int? limit,
   }) async {
     try {
+      final query = <String, dynamic>{
+        if (role != null) 'role': role,
+        if (peerId != null) 'peerId': peerId,
+        if (before != null) 'before': before.toUtc().toIso8601String(),
+        if (limit != null) 'limit': limit,
+      };
       final response = await _dio.get<Map<String, dynamic>>(
         '/voice-messages',
-        queryParameters: role != null ? {'role': role} : null,
+        queryParameters: query.isEmpty ? null : query,
       );
       final data = response.data;
       if (data == null) return const [];
@@ -77,6 +90,9 @@ class BackendVoiceMessageRepository {
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendVoiceMessageRepository.getMessages: $e');
+      // eski sahifa so'rovi xatosini chaqiruvchi bilishi kerak —
+      // bo'sh ro'yxat "tarix tugadi" degani emas
+      if (before != null) rethrow;
       return const [];
     }
   }

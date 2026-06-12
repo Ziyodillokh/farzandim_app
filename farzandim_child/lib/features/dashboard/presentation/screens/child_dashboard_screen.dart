@@ -92,11 +92,12 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
 
   void _refreshAnalytics() {
     if (!mounted) return;
+    // installedAppsMap bu yerda invalidate qilinmaydi — ikonkalar
+    // o'zgarmaydi, har 30s'da base64-ikonli og'ir ro'yxat tortilardi
     ref
       ..invalidate(dailyUsageProvider)
       ..invalidate(weeklyUsageProvider)
-      ..invalidate(childAppLimitsProvider)
-      ..invalidate(installedAppsMapProvider);
+      ..invalidate(childAppLimitsProvider);
     final pairing = ref.read(pairingStateProvider);
     final childId = pairing.childId;
     if (childId != null) {

@@ -30,6 +30,12 @@ class BackendAnalyticsRepository {
   BackendAnalyticsRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;
 
+  // installed-apps in-memory kesh — base64-ikonli ro'yxat og'ir,
+  // ikonkalar tez-tez o'zgarmaydi (dailyUsage har 30s'da qayta
+  // tortmasligi uchun)
+  static final Map<String, _InstalledCacheEntry> _installedCache = {};
+  static const _installedTtl = Duration(hours: 6);
+
   /// Installed apps map (packageName → meta). Public — UI'da AppLimit
   /// uchun nom va icon olishda kerak.
   ///
@@ -40,6 +46,11 @@ class BackendAnalyticsRepository {
   Future<Map<String, InstalledAppMeta>> getInstalledApps(
     String childId,
   ) async {
+    final cached = _installedCache[childId];
+    if (cached != null &&
+        DateTime.now().difference(cached.fetchedAt) < _installedTtl) {
+      return cached.apps;
+    }
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/installed-apps',
@@ -57,6 +68,13 @@ class BackendAnalyticsRepository {
           appName: m['appName'] as String? ?? pkg,
           iconBase64: m['iconBase64'] as String?,
           iconUrl: hasIcon ? _iconProxyUrl(childId, pkg) : null,
+        );
+      }
+      // bo'sh natija keshlanmaydi — agent hali sync qilmagan bo'lishi mumkin
+      if (map.isNotEmpty) {
+        _installedCache[childId] = _InstalledCacheEntry(
+          fetchedAt: DateTime.now(),
+          apps: map,
         );
       }
       return map;
@@ -167,6 +185,13 @@ class BackendAnalyticsRepository {
     final day = d.day.toString().padLeft(2, '0');
     return '${d.year}-$m-$day';
   }
+}
+
+// kesh yozuvi — fetch vaqti + ro'yxat
+class _InstalledCacheEntry {
+  const _InstalledCacheEntry({required this.fetchedAt, required this.apps});
+  final DateTime fetchedAt;
+  final Map<String, InstalledAppMeta> apps;
 }
 
 class InstalledAppMeta {

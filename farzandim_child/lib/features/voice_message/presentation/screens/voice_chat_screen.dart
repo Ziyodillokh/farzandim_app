@@ -62,6 +62,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   /// Media (rasm/hujjat) yuklanmoqda — attach tugmasi spinner.
   bool _isMediaUploading = false;
 
+  // oxirgi pastki xabar id — auto-scroll faqat yangi xabar kelganda
+  String? _lastBottomItemId;
+
   @override
   void initState() {
     super.initState();
@@ -556,9 +559,15 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               data: (messages) {
                 if (messages.isEmpty) return const _EmptyState();
 
-                WidgetsBinding.instance.addPostFrameCallback((_) {
-                  _scrollToBottom();
-                });
+                // auto-scroll faqat ro'yxat oxiriga yangi xabar
+                // qo'shilganda — har rebuild'da pastga tortmaymiz
+                final bottomId = messages.last.id;
+                if (bottomId != _lastBottomItemId) {
+                  _lastBottomItemId = bottomId;
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _scrollToBottom();
+                  });
+                }
 
                 return ListView.builder(
                   controller: _scrollController,
