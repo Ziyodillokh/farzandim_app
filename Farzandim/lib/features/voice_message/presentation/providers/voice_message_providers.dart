@@ -11,6 +11,7 @@
 
 import 'dart:async';
 
+import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -67,23 +68,22 @@ final voiceMessagesProvider =
 
   Future<List<VoiceMessage>> fetch() async {
     final raw = await repo.getMessagesRaw();
-    return raw
-        .where(
-          (m) =>
-              m['senderId'] == childUserId ||
-              m['receiverId'] == childUserId,
-        )
-        .map(
-          (m) => VoiceMessage.fromBackendJson(
-            m,
-            currentUserId: currentUserId,
-            childId: childId,
-          ),
-        )
-        // Backend DESC keladi — chat ekrani uchun ASC (chronological).
-        .toList()
-        .reversed
-        .toList();
+    final mine = raw.where(
+      (m) =>
+          m['senderId'] == childUserId || m['receiverId'] == childUserId,
+    );
+    // ARCH-12: bitta buzuq xabar butun tarixni yiqitmasin.
+    final parsed = parseListSafely(
+      mine,
+      (m) => VoiceMessage.fromBackendJson(
+        m,
+        currentUserId: currentUserId,
+        childId: childId,
+      ),
+      tag: 'voiceMessages',
+    );
+    // Backend DESC keladi — chat ekrani uchun ASC (chronological).
+    return parsed.reversed.toList();
   }
 
   yield await fetch();

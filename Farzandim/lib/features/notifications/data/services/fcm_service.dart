@@ -55,7 +55,10 @@ class FcmService {
     if (_initialized) return;
     _initialized = true;
 
-    await _messaging.requestPermission();
+    // ST-08: bu yerda requestPermission CHAQIRMAYMIZ — init startup'da
+    // ishlaydi va ruxsat dialogi TIL TANLASH ekrani ustida chiqardi
+    // (foydalanuvchi ilova nimaligini bilmay turib rad etardi). Ruxsat
+    // endi login muvaffaqiyatli bo'lgach so'raladi (reRegisterToken).
     await _setupLocalNotifications();
 
     // ST-06: bu yerda darhol POST QILMAYMIZ. Avval har cold start'da
@@ -109,6 +112,10 @@ class FcmService {
   /// shu metod chaqiriladi va token qayta yoziladi.
   Future<void> reRegisterToken() async {
     try {
+      // ST-08: ruxsat endi SHU yerda so'raladi — login muvaffaqiyatli
+      // bo'lgach (dashboard ochilish payti), til-tanlash ustida emas.
+      // Allaqachon berilgan/rad etilgan bo'lsa OS dialog ko'rsatmaydi.
+      await _messaging.requestPermission();
       final token = await _messaging.getToken();
       if (token != null) {
         await saveTokenForCurrentUser(token);

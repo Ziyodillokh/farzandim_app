@@ -26,6 +26,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,7 +51,8 @@ class BackendChildRepository {
     // NET-07: xom javob disk-keshga — keyingi cold start'da dashboard
     // serverni kutmasdan DARHOL oxirgi ro'yxatni ko'rsatadi.
     unawaited(SwrCache.write('children', list));
-    return list.whereType<Map<String, dynamic>>().map(Child.fromJson).toList();
+    // ARCH-12: bitta buzuq element butun ro'yxatni yiqitmasin.
+    return parseListSafely(list, Child.fromJson, tag: 'children');
   }
 
   /// NET-07: disk-keshdagi oxirgi bolalar ro'yxati (stale) — cold start'da
@@ -60,14 +62,8 @@ class BackendChildRepository {
     if (cached == null) return null;
     final (data, _) = cached;
     if (data is! List) return null;
-    try {
-      return data
-          .whereType<Map<String, dynamic>>()
-          .map(Child.fromJson)
-          .toList();
-    } catch (_) {
-      return null; // eski/buzuq format — kesh yo'q deb qaraymiz
-    }
+    final parsed = parseListSafely(data, Child.fromJson, tag: 'childrenCache');
+    return parsed.isEmpty ? null : parsed;
   }
 
   /// Bitta bola — id bo'yicha.

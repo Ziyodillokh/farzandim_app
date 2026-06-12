@@ -963,13 +963,24 @@ class _TimeCard extends ConsumerStatefulWidget {
 class _TimeCardState extends ConsumerState<_TimeCard> {
   late bool _blocked = widget.blockAllInitial;
   bool _saving = false;
+  // BUG-05: oxirgi muvaffaqiyatli saqlash vaqti — saqlashdan KEYIN ham
+  // qisqa oynada eski in-flight poll-javobi (60s sikl) optimistik holatni
+  // qaytarib yubormasligi uchun.
+  DateTime? _lastSavedAt;
 
   @override
   void didUpdateWidget(_TimeCard oldWidget) {
     super.didUpdateWidget(oldWidget);
-    // Backend yangilangach (children refetch) sinxronlash — saqlash jarayonida
-    // foydalanuvchi tanlovini ustun qo'yamiz.
-    if (!_saving && oldWidget.blockAllInitial != widget.blockAllInitial) {
+    // Backend yangilangach (children refetch) sinxronlash — saqlash
+    // jarayonida VA undan keyingi 70s ichida (poll davri + margin)
+    // foydalanuvchi tanlovini ustun qo'yamiz: eski snapshot bilan kelgan
+    // javob toggle'ni "o'zi qaytarib" qo'ymasin (BUG-05).
+    final recentlySaved = _lastSavedAt != null &&
+        DateTime.now().difference(_lastSavedAt!) <
+            const Duration(seconds: 70);
+    if (!_saving &&
+        !recentlySaved &&
+        oldWidget.blockAllInitial != widget.blockAllInitial) {
       _blocked = widget.blockAllInitial;
     }
   }
@@ -987,6 +998,7 @@ class _TimeCardState extends ConsumerState<_TimeCard> {
       await ref
           .read(backendChildRepositoryProvider)
           .setBlockAllApps(widget.childId, value);
+      _lastSavedAt = DateTime.now();
       ref.invalidate(childrenProvider);
       if (mounted) {
         AppToast.success(

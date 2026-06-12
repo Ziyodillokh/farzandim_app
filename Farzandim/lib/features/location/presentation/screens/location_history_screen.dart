@@ -15,11 +15,16 @@ import 'package:farzandim/features/location/presentation/utils/avatar_marker_bui
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
+    show keepAliveFor;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// To'xtagan joy manzili (reverse geocoding) — "lat,lng" kalit, keshli.
 final _placeAddressProvider =
-    FutureProvider.family<String?, String>((ref, latLng) async {
+    FutureProvider.autoDispose.family<String?, String>((ref, latLng) async {
+  // SCR-09: autoDispose + qisqa kesh — har koordinata abadiy keshda
+  // qolib xotira cheksiz o'sardi; ekran ochiq ekan kesh yetarli.
+  keepAliveFor(ref, const Duration(minutes: 2));
   final parts = latLng.split(',');
   if (parts.length != 2) return null;
   final lat = double.tryParse(parts[0]);

@@ -18,6 +18,7 @@
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
@@ -58,14 +59,12 @@ class BackendGeoZoneRepository {
       final data = response.data;
       if (data == null) return const [];
       final list = data['zones'] as List<dynamic>? ?? const [];
-      return list
-          .map(
-            (e) => GeoZone.fromBackendJson(
-              e as Map<String, dynamic>,
-              parentUid: _currentUserId,
-            ),
-          )
-          .toList();
+      // ARCH-12: bitta buzuq element butun ro'yxatni yiqitmasin.
+      return parseListSafely(
+        list,
+        (m) => GeoZone.fromBackendJson(m, parentUid: _currentUserId),
+        tag: 'geoZones',
+      );
     } on DioException catch (e) {
       // EH-09: yutmaymiz — offline'da yolg'on "zona yo'q" ko'rinardi.
       debugPrint('BackendGeoZoneRepository.getZones: $e');

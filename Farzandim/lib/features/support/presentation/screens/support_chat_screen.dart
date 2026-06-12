@@ -63,6 +63,16 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
       );
     } else {
       _scrollController.jumpTo(target);
+      // SCR-08: builder-list'da maxScrollExtent TAXMINIY — jump'dan keyin
+      // itemlar o'lchanib extent o'sishi mumkin (uzun tarixda oxiriga yetib
+      // bormasdi). Keyingi frame'da bir marta to'g'rilaymiz.
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!_scrollController.hasClients) return;
+        final newMax = _scrollController.position.maxScrollExtent;
+        if ((_scrollController.position.pixels - newMax).abs() > 1) {
+          _scrollController.jumpTo(newMax);
+        }
+      });
     }
   }
 
@@ -484,12 +494,16 @@ class _ImageBubble extends ConsumerWidget {
                 bytes,
                 width: 240,
                 fit: BoxFit.cover,
+                // SCR-07: 240pt bubble uchun to'liq o'lchamda dekod
+                // qilinmasin (xotira isrofi).
+                cacheWidth: 720,
               )
             else if (url != null)
               Image.network(
                 url,
                 width: 240,
                 fit: BoxFit.cover,
+                cacheWidth: 720, // SCR-07
                 errorBuilder: (_, __, ___) =>
                     _ImagePlaceholder(name: message.fileName),
                 loadingBuilder: (context, child, progress) {
