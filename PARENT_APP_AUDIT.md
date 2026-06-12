@@ -124,7 +124,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - [ ] **MEM-6** (S, minor): Marker bitmap static keshlar cheksiz o'sadi — cap qo'yish.
 
 ### Tarmoq / Arxitektura
-- [ ] **NET-07** (L): Stale-while-revalidate kesh qatlami yo'q — har ekran ochilish og'ir endpointlarni
+- [x] **NET-07** (L): Stale-while-revalidate kesh qatlami yo'q — har ekran ochilish og'ir endpointlarni
   qayta uradi. Yagona yengil kesh qatlami (memory + vaqt) — backend yukini 30-50% kamaytiradi.
 - [ ] **NET-10** (S, minor): Retry/backoff yo'q — backend tiklanayotganda hamma klient bir vaqtda uradi
   (thundering herd) — jitter'li backoff.
