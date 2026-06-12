@@ -1,22 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// AuthModels — Backend Auth API DTO'lar (Sprint 4.4)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt:
-//   POST /api/auth/telegram
-//     body:     { id, first_name, last_name?, username?, photo_url?,
-//                 auth_date, hash }
-//     response: { accessToken, refreshToken, user: AuthUser }
-//
-//   POST /api/auth/refresh
-//     body:     { refreshToken }
-//     response: { accessToken, refreshToken }
-//
-// Flutter side login.html'dan JSON oladi (FlutterAuth JavascriptChannel):
-//   { accessToken, refreshToken, user: { id, role, ... } }
-//
-// Bu fayl DTO'lar (data transfer objects) — backend JSON ↔ Dart object.
-// Freezed/json_serializable ishlatmaymiz (oddiy va aniq), qo'lda parse.
+// Backend auth API DTO'lari. Freezed/json_serializable ishlatmaymiz —
+// JSON qo'lda parse qilinadi, oddiy va aniq.
 
 class AuthTokens {
   const AuthTokens({
@@ -37,23 +20,9 @@ class AuthTokens {
   final String refreshToken;
 }
 
-/// User profile minimal — login.html callback'dagi `user` obyekti.
-///
-/// Backend kontrakt (POST /api/auth/telegram response.user):
-/// ```json
-/// {
-///   "id": "uuid",
-///   "name": "Ahmad",
-///   "role": "PARENT" | "CHILD",
-///   "avatarUrl": "https://...",
-///   "telegramId": "123456",
-///   "language": "uz" | "ru" | "en"
-/// }
-/// ```
-///
-/// Flutter ichida `role` lowercase saqlanadi (case-fold), backend nom
-/// mapping ham factory'da bajariladi (`name` → `displayName`,
-/// `avatarUrl` → `photoUrl`).
+/// Auth javoblaridagi `user` obyekti. Backend nomlari factory'da moslanadi
+/// (`name` → `displayName`, `avatarUrl` → `photoUrl`), `role` esa Flutter
+/// ichida har doim lowercase saqlanadi.
 class AuthUser {
   const AuthUser({
     required this.id,

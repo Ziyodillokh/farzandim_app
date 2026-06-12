@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// LeaderboardRepository — XP reyting (GET /api/leaderboard) + avatar URL
-// ─────────────────────────────────────────────────────────────────────
+// XP reyting API (GET /api/leaderboard) + bola avatar URL'i.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';

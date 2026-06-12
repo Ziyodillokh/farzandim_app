@@ -10,7 +10,6 @@ import 'package:go_router/go_router.dart';
 
 /// Ilova haqida ekrani — logo, versiya, qisqa tavsif, linklar.
 class AboutScreen extends StatelessWidget {
-  /// `AboutScreen` konstruktor.
   const AboutScreen({super.key});
 
   @override

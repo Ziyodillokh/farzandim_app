@@ -1,4 +1,4 @@
-// parseListSafely (ARCH-12) — bitta buzuq element ro'yxatni yiqitmasligi.
+// parseListSafely — bitta buzuq element ro'yxatni yiqitmasligi kerak.
 
 import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,19 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendAuthProvider — Riverpod auth state (Sprint 4.4)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Eski `authProvider` (Firebase) o'zicha qoladi — yangi Backend auth
-// alohida. Migration tugagach eski olib tashlanadi.
-//
-// State machine:
-//   unknown    → startup splash holati (token bor-yo'qligi tekshirilmoqda)
-//   anonymous  → token yo'q / refresh fail
-//   authenticated → tokens + user obyekti mavjud
-//
-// Loyihaning router'i shu state'ni ko'rib redirect qiladi:
-//   anonymous  → /welcome
-//   authenticated → /dashboard
-//   unknown    → /splash (ko'rinish saqlash)
+// Riverpod auth holati: unknown (startup, token tekshirilmoqda) → anonymous
+// yoki authenticated. Router shu holatga qarab welcome/dashboard'ga
+// yo'naltiradi.
 
 import 'dart:async';
 
@@ -70,7 +57,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     onSessionExpired = () {
       if (mounted && state is! AuthAnonymous) {
         state = const AuthAnonymous();
-        // NET-07 xavfsizlik: sessiya tugadi — disk-kesh ham tozalanadi.
+        // Sessiya tugadi — xavfsizlik uchun disk-kesh ham tozalanadi.
         unawaited(SwrCache.clearAll());
       }
     };
@@ -83,7 +70,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
   final SocialSignInService _social;
 
   /// Startup'da chaqiriladi. Tokens bor-yo'qligini tekshiradi va saqlangan
-  /// user bo'lsa OPTIMISTIK ravishda darhol "kirgan" holatga o'tadi.
+  /// user bo'lsa optimistik ravishda darhol "kirgan" holatga o'tadi.
   Future<void> bootstrap() async {
     final has = await _repo.hasSession();
     if (!has) {
@@ -91,9 +78,9 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       return;
     }
 
-    // OPTIMISTIK RESTORE: saqlangan user bo'lsa `/users/me` tarmoq javobini
-    // KUTMASDAN darhol AuthAuthenticated'ga o'tamiz. Router darhol dashboard'ga
-    // boradi — avvalgi ~2s "login sahifa ko'rinib turib keyin kiradi" flash'i
+    // Saqlangan user bo'lsa `/users/me` tarmoq javobini kutmasdan darhol
+    // AuthAuthenticated'ga o'tamiz. Router darhol dashboard'ga boradi —
+    // avvalgi ~2s "login sahifa ko'rinib turib keyin kiradi" flash'i
     // yo'qoladi. Profil fonda tasdiqlanadi/yangilanadi.
     final cached = await _repo.cachedUser();
     if (cached != null) {
@@ -111,7 +98,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       if (e.response?.statusCode == 401) {
         // Token o'lik (refresh ham muvaffaqiyatsiz) — chiqamiz.
         await _repo.logout();
-        // NET-07 xavfsizlik: bu chiqish yo'lida ham kesh tozalanadi.
+        // Bu chiqish yo'lida ham kesh tozalanadi.
         await SwrCache.clearAll();
         state = const AuthAnonymous();
       } else if (cached == null) {
@@ -243,8 +230,8 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
 
   Future<void> logout() async {
     await _repo.logout();
-    // NET-07 xavfsizlik: SWR disk-keshi tozalanadi — keyingi akkaunt
-    // oldingisining bolalari/ma'lumotini KO'RMAYDI.
+    // SWR disk-keshi tozalanadi — keyingi akkaunt oldingisining
+    // bolalari/ma'lumotini ko'rmasligi kerak.
     await SwrCache.clearAll();
     state = const AuthAnonymous();
   }

@@ -12,7 +12,6 @@ import 'package:go_router/go_router.dart';
 /// Sarlavha, sanaviy izoh, bo'limlar ro'yxati va pastdagi yuridik
 /// disclaimer'ni bir xil ko'rinishda render qiladi.
 class LegalTextScaffold extends StatelessWidget {
-  /// `LegalTextScaffold` konstruktor.
   const LegalTextScaffold({
     required this.title,
     required this.sections,

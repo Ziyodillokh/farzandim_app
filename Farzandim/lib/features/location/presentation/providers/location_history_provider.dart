@@ -1,9 +1,5 @@
-// Sprint 4.4.2: Firestore stream → Backend REST
-// Sprint 4.4.30: range Duration → custom DateTimeRange (from/to).
-//
-// History past data — real-time'sizdir (yangi point WS bilan kelganda
-// `childLocationProvider` yangilanadi, history alohida polling/refresh).
-// Demak StreamProvider o'rniga FutureProvider.
+// Harakat tarixi provider'lari. Tarix real-time emas (yangi nuqta
+// childLocationProvider orqali keladi), shuning uchun FutureProvider.
 
 import 'package:farzandim/core/utils/polling.dart' show keepAliveFor;
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -12,11 +8,9 @@ import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// `LocationHistoryQuery` — `locationHistoryProvider.family` argumenti.
-///
-/// Record tip: `(childId, fromMs, toMs)`. Riverpod family bitta argument
-/// qabul qiladi, vaqtni epoch ms bilan o'rab uzatamiz (DateTime record
-/// equality'ni bo'zadi — har build yangi instance, family cache miss).
+/// `locationHistoryProvider.family` argumenti — `(childId, fromMs, toMs)`
+/// record. Vaqt epoch ms sifatida: int'lar bilan record equality
+/// barqaror, family keshi to'g'ri ishlaydi.
 typedef LocationHistoryQuery = ({String childId, int fromMs, int toMs});
 
 /// Bola harakat tarixini Backend'dan oladi.
@@ -24,8 +18,8 @@ final locationHistoryProvider = FutureProvider.autoDispose
     .family<List<ChildLocation>, LocationHistoryQuery>((ref, query) async {
       final auth = ref.watch(backendAuthProvider);
       if (auth is! AuthAuthenticated) return const [];
-      // SCR-09: autoDispose + qisqa kesh — har sana-oralig'i kaliti avval
-      // ABADIY keshda qolardi (cheksiz xotira o'sishi).
+      // autoDispose + qisqa kesh — aks holda har sana-oralig'i kaliti
+      // abadiy keshda qolib xotira cheksiz o'sadi.
       keepAliveFor(ref, const Duration(minutes: 2));
 
       final repo = ref.watch(backendLocationRepositoryProvider);
@@ -45,7 +39,7 @@ final locationStopsProvider = FutureProvider.autoDispose
     .family<List<LocationStop>, LocationHistoryQuery>((ref, query) async {
       final auth = ref.watch(backendAuthProvider);
       if (auth is! AuthAuthenticated) return const [];
-      keepAliveFor(ref, const Duration(minutes: 2)); // SCR-09
+      keepAliveFor(ref, const Duration(minutes: 2)); // qisqa kesh
 
       final repo = ref.watch(backendLocationRepositoryProvider);
       return repo.getStops(

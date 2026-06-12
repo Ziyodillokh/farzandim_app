@@ -1,18 +1,10 @@
-// ─────────────────────────────────────────────────────────────────────
-// chat_wallpaper_provider — chat orqa foni (Telegram uslubi)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Tanlov SharedPreferences'da saqlanadi (global, barcha chatlar uchun).
-// Format (raw string):
-//   'default'   → ilovaning gradient foni (GradientBackground)
-//   'preset:N'  → `chatWallpaperPresets[N]` gradienti
-//   'file:/...' → galereyadan tanlangan rasm (app docs'ga ko'chirilgan)
+// Chat orqa foni tanlovi (Telegram uslubidagi wallpaper).
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Tayyor gradient fonlar — premium, chiroyli (Telegram'cha).
+/// Tayyor gradient fonlar.
 const List<List<Color>> chatWallpaperPresets = [
   [Color(0xFF0F2027), Color(0xFF203A43), Color(0xFF2C5364)], // Tungi ko'k
   [Color(0xFF232526), Color(0xFF414345)], // Grafit
@@ -27,6 +19,8 @@ const List<List<Color>> chatWallpaperPresets = [
 /// Default fon kaliti.
 const String kChatWallpaperDefault = 'default';
 
+/// Tanlov SharedPreferences'da saqlanadi (barcha chatlar uchun bitta).
+/// Qiymat: 'default', 'preset:N' yoki 'file:<yo'l>'.
 class ChatWallpaperNotifier extends StateNotifier<String> {
   ChatWallpaperNotifier() : super(kChatWallpaperDefault) {
     _load();

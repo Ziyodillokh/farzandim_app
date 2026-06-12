@@ -17,7 +17,6 @@ import 'package:qr_flutter/qr_flutter.dart';
 /// kirish sahifasida "Akkauntga qo'shilish" → kamera bilan shu QR'ni
 /// skanerlab, ikkinchi qurilma sifatida kiradi.
 class AddAccountScreen extends ConsumerStatefulWidget {
-  /// `AddAccountScreen` konstruktor.
   const AddAccountScreen({super.key});
 
   @override

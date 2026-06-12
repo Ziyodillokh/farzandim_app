@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// UserSession — "Faol sessiyalar" modeli (Backend GET /api/auth/sessions)
-// ─────────────────────────────────────────────────────────────────────
+// GET /auth/sessions javobidagi qurilma sessiyasi modeli.
 
 import 'package:easy_localization/easy_localization.dart';
 

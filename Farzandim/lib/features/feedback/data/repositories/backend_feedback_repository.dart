@@ -1,16 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendFeedbackRepository — Backend Feedback API (Sprint 4.4.6)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt:
-//   GET /api/children/:childId/feedback  → {feedback, count}
-//   POST /api/children/:childId/feedback body: {emoji, message?, context?}
-//   PUT /api/feedback/:id/read
-//   WS feedback:received → parent user room
-//   WS feedback:created → child room
-//
-// Bola emoji feedback yuboradi (parent ko'radi). 8 emoji:
-// HAPPY, EXCITED, THINKING, WINKING, SAD, ANGRY, TIRED, LOVE.
+// Backend feedback API — bola emoji + matn yuboradi, parent o'qiydi.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
@@ -60,7 +48,7 @@ class BackendFeedbackRepository {
     }
   }
 
-  /// Mark feedback as read (parent).
+  /// Feedback'ni o'qilgan deb belgilaydi.
   Future<bool> markAsRead(String feedbackId) async {
     try {
       await _dio.put<void>('/feedback/$feedbackId/read');

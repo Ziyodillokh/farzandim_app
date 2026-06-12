@@ -1,4 +1,4 @@
-// tashkent_time (ARCH-08) — UTC+5 hisoblari.
+// tashkent_time — UTC+5 hisoblari.
 
 import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:flutter_test/flutter_test.dart';

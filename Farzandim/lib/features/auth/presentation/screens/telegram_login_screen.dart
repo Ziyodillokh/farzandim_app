@@ -1,26 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// TelegramLoginScreen — WebView Telegram Login Widget (Sprint 4.4)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Flow:
-//   1. WebView ochiladi → https://farzandimedu.uz/login.html
-//   2. Foydalanuvchi Telegram Login Widget orqali kirib chiqadi
-//      (Telegram'da "Log In" tugmasi)
-//   3. Backend cookie/session yaratadi, /api/auth/telegram chaqirib
-//      JWT tokens oladi
-//   4. login.html quyidagini bajaradi:
-//        if (window.FlutterAuth) {
-//          window.FlutterAuth.postMessage(JSON.stringify({
-//            accessToken: "...", refreshToken: "...",
-//            user: { id, role, ... }
-//          }));
-//        }
-//   5. Flutter JavascriptChannel 'FlutterAuth' qabul qiladi → JSON parse →
-//      BackendAuthNotifier.handleCallback() → state = AuthAuthenticated
-//   6. AuthGuard / router redirect → /dashboard
-//
-// Eslatma: login.html bridge hozircha yo'q (Backend Claude yangilaydi).
-// Bu fayl bridge tayyor bo'lganda darhol ishlashga tayyor.
+// Telegram Login Widget'li WebView — login.html FlutterAuth kanali orqali
+// token/user JSON yuboradi, biz uni parse qilib auth holatiga o'tkazamiz.
 
 import 'dart:convert';
 

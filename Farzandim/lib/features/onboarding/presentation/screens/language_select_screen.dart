@@ -15,11 +15,10 @@ import 'package:go_router/go_router.dart';
 /// Birinchi ochilish — til tanlash ekrani.
 ///
 /// Shisha karta ichida logo + 3 til (O'zbekcha / Русский / English). Tilni
-/// bossangiz ilova DARHOL o'sha tilga o'tadi (jonli ko'rinish), "Davom etish"
-/// bilan saqlanib welcome'ga o'tiladi. Keyingi ochilishlarda QAYTA chiqmaydi
-/// (`languagePickedProvider`). Faqat ota-ona ilovasi.
+/// bossangiz ilova darhol o'sha tilga o'tadi (jonli ko'rinish), "Davom etish"
+/// bilan saqlanib welcome'ga o'tiladi. Keyingi ochilishlarda qayta chiqmaydi
+/// (`languagePickedProvider`).
 class LanguageSelectScreen extends ConsumerWidget {
-  /// `LanguageSelectScreen` konstruktor.
   const LanguageSelectScreen({super.key});
 
   @override

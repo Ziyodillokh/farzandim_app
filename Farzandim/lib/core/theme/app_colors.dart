@@ -1,25 +1,11 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — RANG TIZIMI (Color System) — Light + Dark
-// ─────────────────────────────────────────────────────────────────────
-//
-// Loyihaning BARCHA ranglari shu fayldagina yashaydi. Widget'larda
-// `AppColors.background`, `AppColors.surface`, ... ishlatiladi.
-//
-// **Theme-aware (kam-churn arxitektura):** har rang `static const` emas,
-// balki GETTER. Getter joriy `brightness` qiymatiga qarab dark yoki light
-// rangni qaytaradi. Shu sababli 800+ murojaatni o'zgartirmasdan light mode
-// qo'shildi — `app.dart` har build'da `AppColors.brightness` ni theme
-// provider'dan o'rnatadi.
-//
-// Eslatma: getter `const` emas — shuning uchun `const Container(color:
-// AppColors.background)` ishlamaydi. Bunday joylardan `const` olib tashlandi.
-// `onPrimary` esa haqiqiy `const` (qiymati o'zgarmaydi) — uning const
-// ishlatilishi buzilmaydi.
+// Loyihaning barcha ranglari shu yerda. Har rang const emas, getter —
+// joriy brightness'ga qarab dark/light qiymat qaytaradi, shu tufayli
+// 800+ murojaatni o'zgartirmasdan light mode qo'shilgan. Getter const
+// bo'lmagani uchun `const Container(color: ...)` ishlamaydi; faqat
+// `onPrimary` haqiqiy const (qiymati o'zgarmaydi).
 
 import 'package:flutter/material.dart';
 
-/// Farzandim rang palitrasi (light + dark). Obyekt yaratilmaydi — faqat
-/// static getterlar: `AppColors.primary`, `AppColors.background`, ...
 class AppColors {
   AppColors._();
 
@@ -33,10 +19,10 @@ class AppColors {
   static Color _c(int dark, int light) => Color(isDark ? dark : light);
 
   // ────────────── FON (Backgrounds) ──────────────
-  // Dark (Teal Glass — "Deep Sea" referens promt ranglari #0F2027 / #203A43 /
-  // #2C5364): boy, TO'YINGAN teal-petrol xona, tepada yorug' petrol, pastda
-  // chuqur teal. Fon LUMINOUS — shaffof frosted shisha kartalar shu teal'ni
-  // refraksiya qiladi. Light: yumshoq oq-kulrang fon, oq kartalar ajraladi.
+  // Dark: "Deep Sea" referens ranglari (#0F2027 / #203A43 / #2C5364) —
+  // to'yingan teal-petrol, tepada yorug' petrol, pastda chuqur teal.
+  // Frosted shisha kartalar shu teal fonni refraksiya qiladi.
+  // Light: yumshoq oq-kulrang fon, oq kartalar undan ajralib turadi.
 
   /// Solid fon — chuqur teal #0F2027 (dark), yumshoq oq-kulrang (light).
   static Color get background => _c(0xFF0F2027, 0xFFF4F7F6);
@@ -56,21 +42,20 @@ class AppColors {
   static Color get surfaceVariant => _c(0xFF2A4A55, 0xFFE8F0ED);
 
   // ────────────── ASOSIY AKSENT (Primary) — brand yashil ──────────────
-  // Brand yashil FAQAT shu yerda (CTA fill). Dark'da biroz YORUG'ROQ
-  // (#2F6B5C) — neytral fon ustida tugma aniq ajralishi uchun.
+  // Brand yashil faqat shu yerda (CTA fill). Dark'da biroz yorug'roq
+  // (#2F6B5C) — neytral fon ustida tugma aniq ajralsin.
 
   static Color get primary => _c(0xFF2F6B5C, 0xFF235347);
   static Color get primaryDark => _c(0xFF235347, 0xFF1A4339);
   static Color get primaryLight => _c(0xFF3A8570, 0xFF2F6B5C);
 
-  /// Yashil AKSENT — FOREGROUND (ikona/matn/aksent chiziq) uchun. `primary`
-  /// FILL uchun. `accent` light'da TO'Q yashil (oq fonda o'qiladi), dark'da
-  /// yorqin yalpiz (#6ECFAA — neytral fon ustida porlaydi). ⚠️ FILL'ga
-  /// TEGMAYDI — faqat foreground.
+  /// Yashil aksent — faqat foreground (ikona/matn/aksent chiziq) uchun,
+  /// fill'ga ishlatilmaydi (fill — `primary`). Light'da to'q yashil
+  /// (oq fonda o'qiladi), dark'da yorqin yalpiz #6ECFAA.
   static Color get accent => _c(0xFF6ECFAA, 0xFF0B2B26);
 
-  /// `primary` (brand yashil) USTIDAGI matn/ikon rangi — ikkala rejimda ham
-  /// DOIM oq (to'q yashil ustida aniq o'qiladi). Bu HAQIQIY `const` — uning
+  /// `primary` ustidagi matn/ikon rangi — ikkala rejimda ham oq (to'q
+  /// yashil ustida aniq o'qiladi). Haqiqiy `const`, shuning uchun uning
   /// ustidagi `const` widget'lar buzilmaydi.
   static const Color onPrimary = Color(0xFFFFFFFF);
 
@@ -101,8 +86,8 @@ class AppColors {
   static Color get divider => _c(0xFF122F37, 0xFFE0EAE7);
 
   // ────────────── SWITCH (toggle on/off) ──────────────
-  // OFF holat ikkala mode'da ham ANIQ ko'rinishi shart (eski Switch.adaptive
-  // dark'da fonga singib ketardi). ON holatni `activeColor` (default primary).
+  // OFF holat ikkala mode'da ham aniq ko'rinsin — eski Switch.adaptive
+  // dark'da fonga singib ketardi. ON holat `activeColor` (default primary).
   /// Toggle OFF track — light/night ikkalasida ham aniq ko'rinadi.
   static Color get switchOffTrack => _c(0xFF3A4F56, 0xFFCBD7D3);
 
@@ -120,31 +105,30 @@ class AppColors {
   static Color get featureAmber => _c(0xFFD4A017, 0xFFC49210);
 
   // ────────────── GLASS (Glassmorphism — Teal Frosted) ──────────────
-  // Dark: SHAFFOF frosted shisha (BackdropFilter blur) — orqa teal fon shisha
-  // orqali ko'rinadi va refraksiya qiladi. Opaque emas. "translucent dark
-  // surface + thin glowing border + soft teal reflection + glass highlight".
+  // Dark: shaffof frosted shisha (BackdropFilter blur) — orqa teal fon
+  // shisha orqali ko'rinadi va refraksiya qiladi, opaque emas.
   /// Shisha yuzasi — tekis fallback fill (light 75% oq; dark gradient
   /// zaxirasi).
   static Color get glassFill => _c(0x24FFFFFF, 0xBFFFFFFF);
 
-  /// Yo'naltirilgan fill gradient — TEPA (yorug'roq, frost). Faqat dark.
+  /// Fill gradient tepasi (yorug'roq, frost). Faqat dark.
   static Color get glassFillTop => _c(0x30FFFFFF, 0xBFFFFFFF);
 
-  /// Yo'naltirilgan fill gradient — PAST (to'qroq → konveks chuqurlik). Dark.
+  /// Fill gradient pasti (to'qroq — konveks chuqurlik beradi). Dark.
   static Color get glassFillBottom => _c(0x17FFFFFF, 0xBFFFFFFF);
 
-  /// Specular TEPA chizig'i (~1.5px) — realistik glass highlight: yuqoridan
-  /// tushgan yorqin salqin yorug'lik. Faqat dark.
+  /// Specular tepa chizig'i (~1.5px) — yuqoridan tushgan yorug'lik
+  /// effekti. Faqat dark.
   static Color get glassTopHighlight => _c(0x99CFEFEA, 0x00000000);
 
-  /// Shisha chekka — YORQIN "glowing" rim (thin glowing border).
+  /// Shisha chekka — yorqin "glowing" rim.
   static Color get glassRim => _c(0x4DFFFFFF, 0xE6FFFFFF);
 
   /// Shisha pastki chekka — nozik (asimmetrik border zaxirasi).
   static Color get glassRimBottom => _c(0x1AFFFFFF, 0x66FFFFFF);
 
-  /// Shisha ichidagi tint — dark'da nozik TEAL reflektsiya (~9% #2C5364 →
-  /// "soft teal reflection"), light'da nozik yashil.
+  /// Shisha ichidagi tint — dark'da nozik teal reflektsiya (~9% #2C5364),
+  /// light'da nozik yashil.
   static Color get glassTint => _c(0x182C5364, 0x0D235347);
 
   /// Aurora fon dog'lari (GradientBackground uchun).
@@ -153,9 +137,9 @@ class AppColors {
   static Color get auroraAccent => accent;
 
   // ────────────── QUICK ACTION TILE (toza shisha — referens) ──────────
-  // Blur'siz, lekin TOZA SHISHA: deyarli shaffof fill (fon ko'rinadi) + YORQIN
-  // crisp rim (ajralish chekkadan, oq fill emas) + sheen + specular. Badge ham
-  // toza shisha doira (oq glyph). 6 ta BackdropFilter'siz, lekin "sutli" emas.
+  // Blur'siz, lekin toza shisha effekti: deyarli shaffof fill (fon
+  // ko'rinadi), ajralishni oq fill emas, yorqin crisp rim beradi. Badge
+  // ham toza shisha doira. 6 ta BackdropFilter'dan qochish uchun shunday.
 
   /// Tile tanasi — yuqori (juda nozik frost, fon ko'rinadi). Dark/light.
   static Color get qaTileFillTop => _c(0x14FFFFFF, 0xF0FFFFFF);
@@ -166,7 +150,7 @@ class AppColors {
   /// Tile ichki teal tint (dark) — nozik reflektsiya.
   static Color get qaTileTint => _c(0x142C5364, 0x08235447);
 
-  /// Tile rim — YORQIN crisp chekka (asosiy ajralish belgisi).
+  /// Tile rim — yorqin crisp chekka (asosiy ajralish belgisi).
   static Color get qaTileRim => _c(0x66FFFFFF, 0xD9FFFFFF);
 
   /// Tile label matni (dark'da yorug', xira emas).

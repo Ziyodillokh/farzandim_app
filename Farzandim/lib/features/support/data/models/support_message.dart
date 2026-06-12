@@ -67,6 +67,37 @@ class SupportMessage {
     );
   }
 
+  /// Backend (`GET/POST /support/messages`) javobidan xabar.
+  /// `isAutoAck` server bayrog'i → klient o'z tilida `support.waitReply`
+  /// matnini ko'rsatadi (server matn saqlamaydi).
+  factory SupportMessage.fromServer(Map<String, dynamic> j) {
+    SupportAttachmentType? type;
+    final rawType = j['attachmentType'] as String?;
+    if (rawType != null) {
+      type = SupportAttachmentType.values.firstWhere(
+        (t) => t.name == rawType,
+        orElse: () => SupportAttachmentType.document,
+      );
+    }
+    final isAck = j['isAutoAck'] == true;
+    return SupportMessage(
+      id: j['id'] as String? ?? '',
+      sender: j['sender'] == 'user'
+          ? SupportSender.user
+          : SupportSender.operator,
+      createdAt:
+          DateTime.tryParse(j['createdAt'] as String? ?? '')?.toLocal() ??
+              _epoch,
+      text: isAck ? null : j['text'] as String?,
+      textKey: isAck ? 'support.waitReply' : null,
+      attachmentType: type,
+      fileName: j['fileName'] as String?,
+      fileSize: (j['fileSize'] as num?)?.toInt(),
+      attachmentKey: j['attachmentKey'] as String?,
+      mimeType: j['mimeType'] as String?,
+    );
+  }
+
   final String id;
   final SupportSender sender;
   final DateTime createdAt;

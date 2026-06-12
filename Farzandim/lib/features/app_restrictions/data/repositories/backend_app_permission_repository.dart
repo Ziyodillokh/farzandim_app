@@ -1,11 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendAppPermissionRepository — per-app ruxsat siyosati (Parent)
-// ─────────────────────────────────────────────────────────────────────
-//
-//   GET /api/children/:childId/app-permissions?permission=camera
-//   PUT /api/children/:childId/app-permissions  { packageName, permission, allowed }
-//
-// Ro'yxatda yo'q ilova default ruxsat berilgan (allowed=true) hisoblanadi.
+// Per-app ruxsat siyosati API'si; ro'yxatda yo'q ilova default ruxsatli.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
@@ -40,7 +33,7 @@ class BackendAppPermissionRepository {
       }
       return map;
     } on DioException catch (e) {
-      // EH-09: yutmaymiz — offline'da yolg'on "hammasi ruxsat" ko'rinardi.
+      // Xatoni yutmaymiz — offline'da yolg'on "hammasi ruxsat" ko'rinardi.
       debugPrint('BackendAppPermissionRepository.getPolicies: $e');
       rethrow;
     }

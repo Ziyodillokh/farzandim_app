@@ -34,17 +34,14 @@ part 'voice_chat_screen_widgets.dart';
 
 /// Bola bilan ovozli xabar chati (Telegram/WhatsApp uslubida).
 ///
-/// Ekran ochilganda bola yuborgan barcha sent xabarlar avtomatik
-/// `seen` ga o'tadi (`markAllAsSeenByParent`). Stream xabarlar real-time
-/// keladi, yangi xabar kelganda auto-scroll pastga.
+/// Ekran ochilganda bola yuborgan o'qilmagan xabarlar bulk o'qilgan deb
+/// belgilanadi. Xabarlar real-time keladi, yangisi kelganda pastga
+/// auto-scroll bo'ladi.
 ///
-/// **Inline recording** (Bosqich 12'da soddalashtirilgan):
-/// pastdagi mic tugmani **bosib turing** — yozish darhol boshlanadi
-/// (alohida ekran yo'q). Qo'yib yuborsangiz darhol upload bo'ladi.
-/// Bekor qilish uchun chap tomondagi delete tugma (recording paytida
-/// faqat ko'rinadi).
+/// Yozish inline: pastdagi mic tugmasi bosib turilsa yozish boshlanadi,
+/// qo'yib yuborilsa darhol upload. Bekor qilish — recording paytida
+/// chiqadigan delete tugma.
 class VoiceChatScreen extends ConsumerStatefulWidget {
-  /// `VoiceChatScreen` konstruktor.
   const VoiceChatScreen({required this.childId, super.key});
 
   /// Qaysi bola bilan chat.
@@ -66,7 +63,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   Timer? _elapsedTimer;
   StreamSubscription<Amplitude>? _amplitudeSub;
   final List<double> _amplitudes = [];
-  // PERF-05: amplitude yangilanishi BUTUN ekranni emas, faqat input bar
+  // Amplitude yangilanishi butun ekranni emas, faqat input bar
   // waveform'ini qayta chizadi (ChatInputBar.amplitudeTick).
   final ValueNotifier<int> _ampTick = ValueNotifier<int>(0);
   DateTime? _recordingStartedAt;
@@ -82,7 +79,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   /// Live waveform max bar count (sliding window).
   static const int _maxAmplitudes = 80;
 
-  /// Oxirgi ko'ringan eng pastki xabar id'si — auto-scroll faqat YANGI
+  /// Oxirgi ko'ringan eng pastki xabar id'si — auto-scroll faqat yangi
   /// xabar kelganda ishlashi uchun (eski sahifa yuklanganda yoki read
   /// status yangilanganda pastga tortib yubormaslik).
   String? _lastBottomItemId;
@@ -101,13 +98,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       }
     });
 
-    // Sprint 4.4.5: voice chat ekrani ochilganda Parent App bola
-    // pair'lashganini Backend'dan refresh qiladi (child.linkedDeviceUid
-    // yangilanadi). Bu siz voice yuborganda receiverId mavjud bo'lishi
-    // uchun kerak.
-    //
-    // Sprint 4.4.31: shu paytda bola yuborgan barcha unread voice'larni
-    // bulk Backend'ga mark qilamiz — UI'da darhol ✓✓ bo'ladi.
+    // Ekran ochilganda children ro'yxati backend'dan yangilanadi —
+    // voice yuborishda receiverId (child.linkedDeviceUid) mavjud bo'lishi
+    // uchun. Shu bilan birga bola yuborgan barcha unread xabarlar bulk
+    // belgilanadi — UI'da darhol ✓✓ ko'rinadi.
     WidgetsBinding.instance.addPostFrameCallback((_) async {
       ref.invalidate(childrenProvider);
 
@@ -209,8 +203,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         // dB qiymati -60..0 → 0..1 normallashtirish.
         final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0);
         if (!mounted) return;
-        // PERF-05: setState EMAS — 10Hz'da butun ekran (xabarlar ListView +
-        // header) rebuild bo'lardi. Tick faqat waveform'ni qayta chizadi.
+        // setState ishlatmaymiz — 10Hz'da butun ekran rebuild bo'lardi.
+        // Tick faqat waveform'ni qayta chizadi.
         _amplitudes.add(normalized);
         if (_amplitudes.length > _maxAmplitudes) {
           _amplitudes.removeAt(0);
@@ -281,7 +275,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       return;
     }
 
-    // ─── DARHOL UPLOAD ───
+    // Qo'yib yuborilgach darhol upload qilamiz.
     final waveform = List<double>.from(_amplitudes);
     final durationSeconds = (elapsed / 1000).round();
 
@@ -335,7 +329,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   // ─── Round video recorder (Telegram uslubidagi) ──────────────────
 
   /// Yumaloq video modalini ochadi, tugagach client-side compress qilib
-  /// upload qiladi (Backend 413 oldini olish — Sprint 4.4.34).
+  /// upload qiladi (katta fayl backend'da 413 bermasligi uchun).
   Future<void> _onVideoRecordPressed() async {
     // Voice recording davom etayotgan bo'lsa avval to'xtatamiz.
     if (_isRecording) {
@@ -543,7 +537,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
     // Eski sahifa tepaga qo'shilganda scroll pozitsiyasini saqlaymiz:
     // aks holda kontent pastga "sakrab" foydalanuvchi o'qiyotgan joyini
-    // yo'qotadi. Eski maxScrollExtent'ni rebuild'dan OLDIN olib, yangi
+    // yo'qotadi. Eski maxScrollExtent'ni rebuild'dan oldin olib, yangi
     // layout'dan keyin farqqa siljitamiz.
     ref.listen(
       chatHistoryProvider(widget.childId).select((s) => s.older.length),
@@ -593,11 +587,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                       );
                     }
 
-                    // Auto-scroll bottom — faqat ro'yxat OXIRIGA yangi
-                    // xabar qo'shilganda. Avval har rebuild'da pastga
-                    // tortardi: eski sahifa yuklanganda yoki read-status
-                    // refetch'ida foydalanuvchini o'qiyotgan joyidan
-                    // uzib yuborardi.
+                    // Auto-scroll faqat ro'yxat oxiriga yangi xabar
+                    // qo'shilganda. Avval har rebuild'da pastga tortardi:
+                    // eski sahifa yuklanganda yoki read-status refetch'ida
+                    // foydalanuvchi o'qiyotgan joyidan uzilib qolardi.
                     final bottomId = messages.last.id;
                     if (bottomId != _lastBottomItemId) {
                       _lastBottomItemId = bottomId;

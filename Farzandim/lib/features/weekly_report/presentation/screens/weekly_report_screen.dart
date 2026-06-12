@@ -1,9 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// WeeklyReportScreen — bola haftalik hisoboti
-// ─────────────────────────────────────────────────────────────────────
-//
-// Qadam (Parvoz pedometer) + ekran vaqti + eng ko'p ishlatilgan ilovalar.
-// Backend: GET /children/:childId/weekly-report (oxirgi 7 kun, Toshkent).
+// Bola haftalik hisoboti: qadam, ekran vaqti va eng ko'p ishlatilgan
+// ilovalar (oxirgi 7 kun, Toshkent vaqti bo'yicha).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';

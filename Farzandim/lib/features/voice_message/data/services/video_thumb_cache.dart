@@ -1,16 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// VideoThumbCache — dumaloq video xabarlar uchun disk thumbnail keshi
-// ─────────────────────────────────────────────────────────────────────
-//
-// MEM-3: avval HAR video-bubble thumbnail ko'rsatish uchun JONLI
-// VideoPlayerController (native ExoPlayer/AVPlayer) ochib USHLAB TURARDI —
-// 30 xabarli chatda 30 ta parallel native pleyer (xotira + dekoder
-// resurslari, zaif telefonlarda chat sekinlashadi/o'ladi).
-//
-// Endi: video BIR MARTA yuklab olinadi → birinchi kadrdan BITTA JPG
-// yaratiladi (mavjud video_compress paketi — YANGI dependency yo'q) →
-// doimiy kesh papkaga saqlanadi. Keyingi ochilishlarda 0 tarmoq, 0 pleyer
-// — oddiy Image.file. Pleyer FAQAT foydalanuvchi o'ynatganda ochiladi.
+// Dumaloq video xabarlar uchun disk thumbnail keshi.
 
 import 'dart:async';
 import 'dart:io';
@@ -21,6 +9,11 @@ import 'package:path_provider/path_provider.dart';
 import 'package:video_compress/video_compress.dart';
 
 /// Video xabar thumbnail'larini diskda keshlovchi statik servis.
+///
+/// Har bubble uchun jonli VideoPlayerController ushlab turish zaif
+/// telefonlarda chatni o'ldirardi. Buning o'rniga video bir marta yuklab
+/// olinadi, birinchi kadrdan jpg yasalib keshda saqlanadi — pleyer faqat
+/// foydalanuvchi o'ynatganda ochiladi.
 class VideoThumbCache {
   VideoThumbCache._();
 
@@ -75,8 +68,7 @@ class VideoThumbCache {
     await thumbDir.create(recursive: true);
 
     // 2. Videoni vaqtinchaga yuklab olish (round videolar client-side
-    //    compress qilingan, ~1MB) — bu BIR MARTALIK xarajat; avval har
-    //    chat ochilishda har video uchun ExoPlayer stream bufferlanardi.
+    //    compress qilingan, ~1MB) — bir martalik xarajat, keyin keshdan.
     final tmpVideo = File('${thumbDir.path}/$safeId.tmp.mp4');
     try {
       await dio.download(videoUrl, tmpVideo.path);
@@ -94,8 +86,8 @@ class VideoThumbCache {
         } catch (e) {
           completer.complete(null);
         } finally {
-          // Kafolat: completer HAR DOIM yakunlanadi — aks holda kutilmagan
-          // xato turida await abadiy osilib, navbat zanjiri buzilardi.
+          // completer yakunlanmay qolsa await abadiy osilib,
+          // navbat zanjiri buziladi — shu yerda kafolatlaymiz.
           if (!completer.isCompleted) completer.complete(null);
         }
       });

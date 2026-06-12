@@ -17,8 +17,8 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Premium silliq scroll — iOS uslubidagi bouncing fizika (ham web, ham
-/// native). Sichqoncha/trackpad bilan ham drag (web'da test qulay).
+/// iOS uslubidagi bouncing scroll fizika (web va native).
+/// Sichqoncha/trackpad bilan ham drag ishlaydi — web'da test qulay.
 class _AppScrollBehavior extends MaterialScrollBehavior {
   const _AppScrollBehavior();
 
@@ -35,17 +35,9 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
 }
 
-/// Farzandim ilovasining ildiz widget'i.
-///
-/// `ConsumerWidget` — quyidagi provider'larga obuna:
-/// - `routerProvider`: auth state o'zgarganda router redirect'ni
-///   qayta hisoblaydi.
-/// - `fcmInitializerProvider`: FCM tizimini lazy ishga tushiradi
-///   (FutureProvider — bir marta init).
-/// - `socketLifecycleProvider`: Backend auth state'ga reaksiya bilan
-///   Socket.io connect/disconnect (Sprint 4.4.1 Day 2).
+/// Ildiz widget — router, FCM init va socket lifecycle provider'lariga
+/// obuna bo'lib, WS event'lar uchun global banner'larni ko'rsatadi.
 class FarzandimApp extends ConsumerWidget {
-  /// `FarzandimApp` konstruktor.
   const FarzandimApp({super.key});
 
   @override
@@ -59,9 +51,9 @@ class FarzandimApp extends ConsumerWidget {
       // connect/disconnect qiladi. Side-effect, value qaytarmaydi.
       ..watch(socketLifecycleProvider);
 
-    // Theme (light/dark) — toggle'ga qarab AppColors.brightness o'rnatiladi.
-    // Root build descendant'lardan OLDIN ishlaydi → keyin barcha widget'lar
-    // to'g'ri rangni o'qiydi.
+    // Toggle'ga qarab AppColors.brightness o'rnatiladi. Root build
+    // descendant'lardan oldin ishlaydi, shuning uchun keyin barcha
+    // widget'lar to'g'ri rangni o'qiydi.
     final themeMode = ref.watch(themeModeProvider);
     AppColors.brightness = themeMode.brightness;
 
@@ -76,7 +68,7 @@ class FarzandimApp extends ConsumerWidget {
           ref.read(fcmServiceProvider).reRegisterToken();
         }
       })
-      // Sprint 4.4.7: SOS WS event'i — eng yuqori prioritet, qizil banner.
+      // SOS WS event'i — eng yuqori prioritet, qizil banner.
       ..listen<AsyncValue<Map<String, dynamic>>>(sosReceivedAlertProvider, (
         _,
         next,
@@ -116,7 +108,7 @@ class FarzandimApp extends ConsumerWidget {
           ),
         );
       })
-      // Sprint 4.4.25: Pair request created WS event — Parent App banner.
+      // Pair request yaratildi WS event'i — sariq banner.
       ..listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider, (
         _,
         next,
@@ -156,8 +148,8 @@ class FarzandimApp extends ConsumerWidget {
           ),
         );
       })
-      // Sprint 4.4.3: Geo zone alert WS event'i — har joydan ko'rinadigan
-      // SnackBar (Foreground). Background'da Backend FCM push yuboradi.
+      // Geo zone alert WS event'i — foreground'da har joydan ko'rinadigan
+      // SnackBar. Background'da backend FCM push yuboradi.
       ..listen<AsyncValue<Map<String, dynamic>>>(geoZoneAlertProvider, (
         _,
         next,
@@ -186,10 +178,10 @@ class FarzandimApp extends ConsumerWidget {
         );
       });
 
-    // Sprint 4.4.28: app startup'da Backend'dan version tekshirish.
-    // Force update kerak bo'lsa modal dialog (eski versiya bilan ishlatish
-    // ta'qiqlangan). Soft update — Dashboard top banner'da ko'rinadi.
-    // Birinchi qiymat — ref.watch (initial), keyingilari — ref.listen.
+    // Startup'da backend'dan versiya tekshiruvi. Force update bo'lsa modal
+    // dialog (eski versiya bilan ishlash taqiqlanadi), soft update Dashboard
+    // banner'ida ko'rinadi. Birinchi qiymat ref.watch'dan, keyingilari
+    // ref.listen orqali.
     final initialUpdateStatus = ref.watch(appUpdateProvider).valueOrNull;
     if (initialUpdateStatus != null &&
         initialUpdateStatus.state == UpdateState.forceUpdateRequired &&
@@ -223,24 +215,23 @@ class FarzandimApp extends ConsumerWidget {
     return MaterialApp.router(
       title: 'Farzandim',
       debugShowCheckedModeBanner: false,
-      // ⚡ Premium silliq scroll — iOS uslubidagi bouncing fizika (web+native).
       scrollBehavior: const _AppScrollBehavior(),
       theme: AppTheme.build(),
-      // Light/dark almashishda Theme.of() asoslangan widget'lar 200ms
-      // crossfade qiladi, AppColors getter'lari esa darhol flip qiladi —
-      // bu "yarim-animatsiya" nomuvofiqligi jank beradi. Zero qilib bir
-      // kadrda BIRGA, aniq va tez almashtiramiz (professional).
+      // Light/dark almashishda Theme.of() widget'lari 200ms crossfade
+      // qiladi, AppColors getter'lari esa darhol flip qiladi — bu
+      // nomuvofiqlik jank beradi. Zero qilib hammasini bir kadrda
+      // almashtiramiz.
       themeAnimationDuration: Duration.zero,
-      // Global baza fon — BARCHA route'lar ortida theme rangi turadi.
-      // Transparent scaffold'larda overscroll/pull-to-refresh paytida oq OS
-      // oyna foni ko'rinmaydi (bitta joyda hal — har ekranni o'zgartirish
-      // shart emas).
+      // Global baza fon — barcha route'lar ortida theme rangi turadi.
+      // Transparent scaffold'larda overscroll paytida oq OS oyna foni
+      // ko'rinib qolmasin; bitta joyda hal qilingani uchun har ekranni
+      // alohida o'zgartirish shart emas.
       builder: (context, child) => ColoredBox(
         color: AppColors.background,
-        // ⚡ THEME REAKTIVLIK: light↔dark toggle'da sahifa subtree'sini QAYTA
-        // quramiz (key o'zgaradi → remount). AppColors static getter'lari yangi
-        // rangni o'qiydi — aks holda kartalar eski fonida qolardi (yangilash
-        // shart edi). go_router route stack saqlanadi.
+        // Light/dark toggle'da sahifa subtree'sini qayta quramiz (key
+        // o'zgaradi, remount bo'ladi) — shunda AppColors static getter'lari
+        // yangi rangni o'qiydi, aks holda kartalar eski fonida qolardi.
+        // go_router route stack saqlanadi.
         child: KeyedSubtree(
           key: ValueKey(themeMode),
           child: child ?? const SizedBox.shrink(),
@@ -258,11 +249,11 @@ class FarzandimApp extends ConsumerWidget {
   }
 }
 
-/// Global ScaffoldMessenger key — geo zone alert SnackBar har joydan
-/// ko'rinishi uchun (router shape'idan tashqarida ham). Sprint 4.4.3.
+/// Global ScaffoldMessenger key — WS banner'lar har qanday ekranda
+/// ko'rinishi uchun (router shape'idan tashqarida ham).
 final _scaffoldMessengerKey = GlobalKey<ScaffoldMessengerState>();
 
-/// Force-update dialogi BIR MARTA ochilsin — busiz har rebuild'da
-/// (`ref.watch(appUpdateProvider)` build ichida) dialog ustma-ust qayta
-/// ochilardi (ARCH-10).
+/// Force-update dialogi bir marta ochilsin — busiz build ichidagi
+/// `ref.watch(appUpdateProvider)` tufayli har rebuild'da dialog ustma-ust
+/// qayta ochilardi.
 bool _forceUpdateDialogShown = false;

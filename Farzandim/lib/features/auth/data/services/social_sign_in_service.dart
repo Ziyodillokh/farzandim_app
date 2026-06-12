@@ -1,13 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// SocialSignInService — Google va Apple native flow wrapper
-// ─────────────────────────────────────────────────────────────────────
-//
-// Bu service faqat **platforma SDK** bilan ishlaydi:
-//   - Google: `google_sign_in` (Android/iOS/web)
-//   - Apple:  `sign_in_with_apple` (iOS/macOS nativ, Android/web OAuth)
-//
-// Vazifa: ID token + (Apple uchun) ism olib qaytarish.
-// Token'ni backend'ga yuborish — BackendAuthRepository'da.
+// Google/Apple native sign-in wrapper — faqat ID token (Apple'da ism ham)
+// olib qaytaradi; token'ni backend'ga yuborish BackendAuthRepository ishi.
 
 import 'dart:io' show Platform;
 

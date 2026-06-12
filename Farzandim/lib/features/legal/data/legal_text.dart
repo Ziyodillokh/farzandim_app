@@ -1,17 +1,12 @@
 // ignore_for_file: avoid_escaping_inner_quotes
 // O'zbek tilidagi matnda ko'p apostroflar ('') bor — har birini
 // `"..."` bilan yozish o'qish qiyinligi va xato xavfini oshiradi.
-// ─────────────────────────────────────────────────────────────────────
-// Legal matn — Maxfiylik siyosati va Foydalanish shartlari (Uzbek).
-// ─────────────────────────────────────────────────────────────────────
+// Maxfiylik siyosati va Foydalanish shartlari matni (o'zbekcha).
 //
-// HUQUQIY ESLATMA: Bu matn template — Play Market talabini bajarish
-// uchun yetarli darajada to'liq, lekin production launch oldidan
-// litsenziyalangan yurist tomonidan ko'rib chiqilishi shart.
-//
-// Ushbu fayldagi sanalar va kontakt ma'lumotlari `_signatureDate` va
-// `_contactEmail` orqali markaziy. Yangilash kerak bo'lsa shu yerdan
-// o'zgartiring — barcha ekranlarda avtomatik yangilanadi.
+// Bu matn template: Play Market talabi uchun yetarli, lekin production
+// launch oldidan yurist ko'rib chiqishi kerak. Sana va kontakt
+// `_signatureDate` / `_contactEmail` orqali markazlashtirilgan — shu
+// yerdan o'zgartirilsa barcha ekranlarda yangilanadi.
 
 const String _signatureDate = '2026-05-12';
 const String _contactEmail = 'shahlomansurovat@gmail.com';
@@ -20,7 +15,6 @@ const String _legalEntity = 'Farzandim jamoasi (O\'zbekiston, Toshkent)';
 
 /// Maxfiylik siyosati / Foydalanish shartlari ekranlari uchun bo'lim.
 class LegalSection {
-  /// `LegalSection` konstruktor.
   const LegalSection(this.title, this.body);
 
   /// Bo'lim sarlavhasi (raqamlangan: "1. Kirish").

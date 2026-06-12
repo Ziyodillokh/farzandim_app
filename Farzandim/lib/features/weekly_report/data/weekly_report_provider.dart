@@ -1,12 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// weekly_report — Haftalik hisobot (qadam + ekran vaqti + top ilovalar)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend: GET /api/children/:childId/weekly-report
-//   { screenTime: { days:[{date,totalMs,totalMinutes}], weekTotalMs,
-//                   weekTotalMinutes },
-//     steps: { days:[{date,steps}], weekTotal, dailyAvg },
-//     topApps: [{ packageName, appName, totalMs, totalMinutes }] }
+// Haftalik hisobot modellari va provider'lari: qadam, ekran vaqti,
+// top ilovalar (GET /api/children/:childId/weekly-report).
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
@@ -127,8 +120,8 @@ final weeklyReportRepositoryProvider = Provider<WeeklyReportRepository>((ref) {
   return WeeklyReportRepository(ref.watch(dioClientProvider));
 });
 
-/// Refresh-counter — pull-to-refresh uchun invalidate o'rniga (blank
-/// oldini olish).
+/// Pull-to-refresh uchun hisoblagich — invalidate ekranni blank qilib
+/// yuborardi, counter bilan eski data ko'rinib turadi.
 final weeklyReportRefreshProvider =
     StateProvider.family<int, String>((ref, childId) => 0);
 

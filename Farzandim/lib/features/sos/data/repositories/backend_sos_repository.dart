@@ -1,13 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendSosRepository — Backend SOS Alerts API (Sprint 4.4.7)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt:
-//   POST /api/children/:childId/sos-alerts → SosAlert (Child trigger)
-//   GET /api/sos-alerts?status=ACTIVE → {alerts, count}
-//   PUT /api/sos-alerts/:id/resolve → status: RESOLVED
-//   WS sos:received → parent user + child room (HIGH priority push)
-//   WS sos:resolved → child user + child room
+// Backend SOS alert API: ro'yxat, resolve va WS sos:received/sos:resolved.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
@@ -32,14 +23,11 @@ class BackendSosRepository {
   final Dio _dio;
   final SocketClient _socketClient;
 
-  /// SOS alert ro'yxati (Parent monitoring).
-  /// `status`: 'ACTIVE' (default) | 'RESOLVED'.
+  /// SOS alert ro'yxati. `status`: 'ACTIVE' (default) | 'RESOLVED'.
   ///
-  /// MUHIM (P0-3): xato YUTILMAYDI — rethrow. Avval xatoda `[]` qaytarilardi
-  /// va ota-ona FAVQULODDA vaziyatda offline bo'lsa ekranda yolg'on
-  /// "SOS signallari yo'q — hammasi tinch" ko'rardi. Endi provider
-  /// AsyncValue.error'ga tushadi va ekran aniq xato + retry ko'rsatadi
-  /// (sos_alerts_list_screen'da error branch allaqachon bor).
+  /// Xato yutilmaydi — rethrow. Xatoda `[]` qaytarilsa, offline ota-ona
+  /// favqulodda vaziyatda yolg'on "hammasi tinch" ekranini ko'rardi;
+  /// rethrow bilan ekran aniq xato + retry ko'rsatadi.
   Future<List<Map<String, dynamic>>> getAlerts({
     String status = 'ACTIVE',
     int limit = 100,
@@ -69,7 +57,6 @@ class BackendSosRepository {
     }
   }
 
-  /// WS streams.
   Stream<dynamic> receivedStream() =>
       _socketClient.eventStream('sos:received');
   Stream<dynamic> resolvedStream() =>

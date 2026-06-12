@@ -6,9 +6,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// `null` = hali SharedPreferences'dan yuklanmoqda (router redirect kutadi),
 /// `false` = tanlanmagan (til tanlash ekrani ko'rsatiladi),
 /// `true` = tanlangan (oddiy oqim — welcome/dashboard). Tanlov saqlanadi,
-/// keyingi ochilishlarda til ekrani QAYTA chiqmaydi.
+/// keyingi ochilishlarda til ekrani qayta chiqmaydi.
 class LanguagePickedNotifier extends StateNotifier<bool?> {
-  /// Konstruktor — darhol SharedPreferences'dan yuklaydi.
+  /// Konstruktor darhol SharedPreferences'dan yuklashni boshlaydi.
   LanguagePickedNotifier() : super(null) {
     _load();
   }

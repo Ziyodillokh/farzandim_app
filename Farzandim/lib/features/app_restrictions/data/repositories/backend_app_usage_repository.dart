@@ -1,11 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendAppUsageRepository — Parent read-only (Sprint 4.4.23)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Child App'da yozadigan `BackendInstalledAppsRepository` bilan parallel.
-// Backend endpoint'lar:
-//   GET /api/children/:childId/installed-apps?includeSystem=true
-//   GET /api/children/:childId/app-usage?from=&to=&packageName=&limit=
+// Bola qurilmasidagi o'rnatilgan ilovalar va foydalanish statistikasi
+// (parent tomonda read-only).
 
 import 'dart:async';
 
@@ -39,18 +33,18 @@ class BackendAppUsageRepository {
       final data = response.data;
       if (data == null) return const [];
       final list = data['apps'] as List<dynamic>? ?? const [];
-      // NET-07: xom javob disk-keshga (per-child) — ekran keyingi safar
-      // serverni kutmasdan darhol ko'rsatadi.
+      // Xom javob disk-keshga — keyingi ochilishda serverni kutmasdan
+      // darhol ko'rsatish uchun.
       unawaited(SwrCache.write('installed_apps:$childId', list));
       return _mapInstalledApps(childId, list);
     } on DioException catch (e) {
-      // EH-09: yutmaymiz — offline'da yolg'on "ilovalar yo'q" ko'rinardi.
+      // Xatoni yutmaymiz — offline'da yolg'on "ilovalar yo'q" ko'rinardi.
       debugPrint('BackendAppUsageRepository.getInstalledApps: $e');
       rethrow;
     }
   }
 
-  /// NET-07: keshdagi oxirgi ro'yxat (stale). Yo'q/buzuq → null.
+  /// Keshdagi oxirgi ro'yxat (stale). Yo'q yoki buzuq bo'lsa null.
   Future<List<AppUsageEntry>?> getCachedInstalledApps(String childId) async {
     final cached = await SwrCache.read('installed_apps:$childId');
     if (cached == null) return null;
@@ -92,10 +86,9 @@ class BackendAppUsageRepository {
   /// 7 kunlik kunlik totals — backend `/weekly` (system filtrlangan + UTC+5).
   /// `endDate` API mosligi uchun saqlanadi (server o'zi hisoblaydi).
   ///
-  /// **Xato YUTILMAYDI:** avval xatoda 7 kun "0" qaytarardi — bu polling
-  /// so'rovi tarmoq blip'ida ekran vaqtini "0 daqiqa"ga tushirib yuborardi
-  /// (regressiya). Endi rethrow qilamiz → StreamProvider oldingi qiymatni
-  /// saqlaydi (yoki polling halqasi shu siklni o'tkazib yuboradi).
+  /// Xato bu yerda yutilmaydi: avval xatoda 7 kun "0" qaytarilib, tarmoq
+  /// blip'ida ekran vaqti "0 daqiqa"ga tushib qolardi. Rethrow bilan
+  /// StreamProvider oldingi qiymatni saqlab turadi.
   Future<List<DailyUsageTotal>> getWeeklyTotals({
     required String childId,
     required DateTime endDate,
@@ -104,12 +97,12 @@ class BackendAppUsageRepository {
       '/children/$childId/app-usage/weekly',
     );
     final days = response.data?['days'] as List<dynamic>? ?? const [];
-    // NET-07: xom javob disk-keshga (per-child).
+    // Xom javob disk-keshga (per-child).
     unawaited(SwrCache.write('weekly_usage:$childId', days));
     return _mapWeekly(days);
   }
 
-  /// NET-07: keshdagi oxirgi haftalik totals (stale). Yo'q/buzuq → null.
+  /// Keshdagi oxirgi haftalik totals (stale). Yo'q yoki buzuq bo'lsa null.
   Future<List<DailyUsageTotal>?> getCachedWeeklyTotals(
     String childId,
   ) async {
@@ -178,14 +171,14 @@ class BackendAppUsageRepository {
         apps: apps,
       );
     } on DioException catch (e) {
-      // EH-09: yutmaymiz — offline'da yolg'on "0 daqiqa" ko'rinardi.
+      // Xatoni yutmaymiz — offline'da yolg'on "0 daqiqa" ko'rinardi.
       debugPrint('BackendAppUsageRepository.getTodayUsage: $e');
       rethrow;
     }
   }
 }
 
-/// Sprint 5.x — Parent dashboard ScreenTimeChart uchun kunlik aggregat.
+/// Dashboard ScreenTimeChart uchun kunlik aggregat.
 class DailyUsageTotal {
   const DailyUsageTotal({required this.date, required this.totalMs});
   final DateTime date;

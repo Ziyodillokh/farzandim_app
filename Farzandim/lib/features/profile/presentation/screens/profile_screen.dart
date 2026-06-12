@@ -13,15 +13,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// Ota-ona profilini tahrirlash ekrani.
+/// Ota-ona profilini tahrirlash ekrani — ism va avatar.
 ///
-/// **Sprint 4.4.1 (Backend migration):**
-/// - Avatar Telegram'dan keladi (read-only). Backend'da Parent avatar
-///   upload endpoint yo'q — keyinroq qo'shilganda image picker yana ulanadi.
-/// - Ism (`name`) tahrirlanadi va `PUT /api/users/me`'ga yuboriladi.
-/// - Telefon/email Backend'da hali alohida — disabled holatda ko'rsatiladi.
+/// Ism `PUT /users/me` bilan saqlanadi, avatar galereyadan tanlanib
+/// backend'ga yuklanadi.
 class ProfileScreen extends ConsumerStatefulWidget {
-  /// `ProfileScreen` konstruktor.
   const ProfileScreen({super.key});
 
   @override
@@ -212,7 +208,8 @@ class _EditableAvatar extends StatelessWidget {
                         color: AppColors.textSecondary,
                         size: 48,
                       )
-                    // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+                    // memCacheWidth — to'liq o'lchamda dekod qilmay xotira
+                    // tejaymiz.
                     : CachedNetworkImage(
                         imageUrl: photoUrl!,
                         fit: BoxFit.cover,

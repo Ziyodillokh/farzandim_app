@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 /// Maxfiylik siyosati ekrani.
 class PrivacyPolicyScreen extends StatelessWidget {
-  /// `PrivacyPolicyScreen` konstruktor.
   const PrivacyPolicyScreen({super.key});
 
   @override

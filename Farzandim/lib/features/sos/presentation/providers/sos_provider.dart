@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// sos_provider — SOS alerts state (Sprint 4.4.7)
-// ─────────────────────────────────────────────────────────────────────
+// SOS alert'lar holati — backend fetch + WS orqali real-time yangilash.
 
 import 'dart:async';
 
@@ -22,12 +20,10 @@ final sosAlertsByStatusProvider =
 
   final repo = ref.watch(backendSosRepositoryProvider);
 
-  // MUHIM (P0-3 + P0-REG-2): controller va WS obunalar BIRINCHI fetch'dan
-  // OLDIN o'rnatiladi. Avval birinchi fetch xato bo'lsa generator O'LARDI —
-  // WS obunalar hech o'rnatilmay, provider doimiy AsyncError'da tiqilib
-  // qolardi. Endi: birinchi xato addError orqali ekranga chiqadi (aniq
-  // xato + retry), lekin stream OCHIQ qoladi — keyingi WS event yoki
-  // retry AsyncData'ni tiklaydi.
+  // Controller va WS obunalar birinchi fetch'dan oldin o'rnatiladi —
+  // aks holda birinchi fetch xato bo'lsa generator o'lib, WS obunalar
+  // umuman ulanmay qolardi. Birinchi xato addError bilan ekranga chiqadi,
+  // stream esa ochiq qoladi: keyingi WS event yoki retry holatni tiklaydi.
   final controller = StreamController<List<Map<String, dynamic>>>();
   Future<void> refresh({bool surfaceError = false}) async {
     if (controller.isClosed) return;
@@ -38,8 +34,7 @@ final sosAlertsByStatusProvider =
       if (surfaceError && !controller.isClosed) {
         controller.addError(e, st);
       }
-      // WS-triggered refresh xatosi (surfaceError=false) — oxirgi ro'yxat
-      // saqlanadi.
+      // WS sabab bo'lgan refresh xatosida oxirgi ro'yxat o'z joyida qoladi.
     }
   }
 
@@ -52,7 +47,7 @@ final sosAlertsByStatusProvider =
     controller.close();
   });
 
-  // Birinchi yuklash — xatosi ekranga chiqadi (yolg'on "tinch" emas).
+  // Birinchi yuklash — xatosi ekranga chiqsin, yolg'on "tinch" ko'rinmasin.
   unawaited(refresh(surfaceError: true));
   yield* controller.stream;
 });

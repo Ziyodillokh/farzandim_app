@@ -1,4 +1,4 @@
-// PollBackoff — ketma-ket xatolarda polling siyraklashishi (PERF).
+// PollBackoff — ketma-ket xatolarda polling siyraklashishi.
 
 import 'package:farzandim/core/utils/poll_backoff.dart';
 import 'package:flutter_test/flutter_test.dart';

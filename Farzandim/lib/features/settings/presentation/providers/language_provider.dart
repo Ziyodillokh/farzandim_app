@@ -2,10 +2,9 @@ import 'package:flutter/widgets.dart';
 
 /// Til kodlari (`uz`, `ru`, `en`) bilan ishlash uchun enum.
 ///
-/// **Sprint 3.3**: lokalizatsiya `easy_localization` orqali ishlaydi.
-/// Joriy tilni `context.locale.languageCode` orqali olish va
-/// `context.setLocale(...)` orqali o'zgartirish kerak. Bu yerda
-/// faqat ko'rsatish uchun label va flag saqlanadi.
+/// Lokalizatsiya `easy_localization` orqali ishlaydi: joriy til
+/// `context.locale`, o'zgartirish `context.setLocale(...)`. Bu yerda
+/// faqat ko'rsatish uchun label va bayroq saqlanadi.
 enum AppLanguage {
   /// O'zbek — default.
   uz('uz', "O'zbekcha", '🇺🇿'),

@@ -5,7 +5,6 @@ import 'package:flutter/material.dart';
 
 /// Foydalanish shartlari ekrani.
 class TermsOfServiceScreen extends StatelessWidget {
-  /// `TermsOfServiceScreen` konstruktor.
   const TermsOfServiceScreen({super.key});
 
   @override

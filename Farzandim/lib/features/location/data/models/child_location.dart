@@ -3,13 +3,10 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 /// Bola joriy joylashuvi.
 ///
-/// Child App `users/{parentUid}/children/{childId}` doc'iga `location`
-/// field sifatida yozadi (schema: latitude, longitude, accuracy, heading,
-/// speed, updatedAt). Parent App shu maydonni snapshot stream orqali
-/// kuzatadi va xaritada real-vaqt pin ko'rsatadi.
+/// Backend'dan REST/WS orqali keladi, xaritada real-vaqt pin
+/// ko'rsatish uchun ishlatiladi.
 @immutable
 class ChildLocation {
-  /// `ChildLocation` konstruktor.
   const ChildLocation({
     required this.latitude,
     required this.longitude,
@@ -19,32 +16,18 @@ class ChildLocation {
     this.speed,
   });
 
-  /// Backend REST `Location` JSON'idan o'qish (Sprint 4.4.2).
+  /// Backend `Location` JSON'idan o'qish.
   ///
-  /// Backend kontrakt (Prisma `Location` model):
-  /// ```json
-  /// {
-  ///   "id": "uuid",
-  ///   "childId": "uuid",
-  ///   "latitude": 41.36,
-  ///   "longitude": 69.29,
-  ///   "accuracy": 5.2,         // optional
-  ///   "speed": 1.2,             // optional
-  ///   "batteryLevel": 78,       // optional, this model ignoradi
-  ///   "isCharging": false,      // optional, this model ignoradi
-  ///   "createdAt": "ISO 8601"
-  /// }
-  /// ```
-  ///
-  /// Backend'da `heading` field yo'q — `null` qoldiriladi.
+  /// `accuracy`/`speed` ixtiyoriy; `batteryLevel`/`isCharging` bu modelga
+  /// kerak emas. Backend'da `heading` yo'q — `null` qoladi.
   factory ChildLocation.fromBackendJson(Map<String, dynamic> json) {
     return ChildLocation(
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
       accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0,
       speed: (json['speed'] as num?)?.toDouble(),
-      // Backend UTC ("Z") qaytaradi — .toLocal()'siz tarix vaqtlari
-      // Toshkentda 5 soat orqada ko'rinardi (P0-5).
+      // Backend UTC ("Z") qaytaradi — .toLocal() qilmasak vaqtlar
+      // Toshkentda 5 soat orqada ko'rinadi.
       updatedAt: DateTime.parse(json['createdAt'] as String).toLocal(),
     );
   }

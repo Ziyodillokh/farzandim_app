@@ -9,12 +9,9 @@ import 'package:just_audio/just_audio.dart';
 /// Yangi xabar play bosilsa, oldingi avtomatik to'xtaydi. Tugaganda
 /// position 0'ga qaytariladi va keyingi tap'da yangidan boshlanadi.
 ///
-/// **Audio session (Bosqich 11):**
-/// `speech` rejimida konfiguratsiya qilingan — telefon zvonok yoki
-/// boshqa audio kelganda interruption event keladi va player
-/// avtomatik pause bo'ladi. Tugagach foydalanuvchi qo'lda resume
-/// qiladi (auto-resume berilmaydi — bola ovozi to'satdan ochiq joyda
-/// o'ynamasligi uchun).
+/// Audio session `speech` rejimida sozlangan — zvonok yoki boshqa audio
+/// kelganda player avtomatik pause bo'ladi. Auto-resume bermaymiz:
+/// bola ovozi ochiq joyda to'satdan o'ynab ketmasin.
 class AudioPlayerManager {
   AudioPlayerManager._() {
     unawaited(_initSession());
@@ -29,12 +26,9 @@ class AudioPlayerManager {
     });
   }
 
-  /// Yagona instance.
   static final AudioPlayerManager instance = AudioPlayerManager._();
 
-  /// AVAudioSession (iOS) / AudioFocus (Android) sozlash +
-  /// interruption listener. Telefon zvonok / boshqa audio kelganda
-  /// `_player.pause()` chaqiriladi.
+  /// Audio session sozlash: zvonok yoki boshqa audio kelganda pause.
   Future<void> _initSession() async {
     try {
       final session = await AudioSession.instance;
@@ -44,8 +38,8 @@ class AudioPlayerManager {
         if (event.begin && _player.playing) {
           _player.pause();
         }
-        // Tugagach auto-resume berilmaydi — foydalanuvchi qo'lda davom
-        // ettiradi (maxfiylik: bola ovozi to'satdan boshlanmasligi uchun).
+        // Auto-resume yo'q — foydalanuvchi qo'lda davom ettiradi
+        // (bola ovozi to'satdan boshlanmasligi uchun).
       });
     } catch (e) {
       // Session konfiguratsiyasi xato bersa player baribir ishlaydi —

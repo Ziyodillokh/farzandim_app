@@ -1,19 +1,9 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — SOYA (Elevation) TIZIMI
-// ─────────────────────────────────────────────────────────────────────
-//
-// Premium chuqurlik uchun yumshoq, ko'p-qatlamli soyalar. Kartalar tekis
-// ko'rinmasdan "qalqib turgan" hissi beradi. Theme-aware: light'da yumshoq
-// salqin-tusli soya, dark'da chuqurroq qora. Layout O'ZGARMAYDI — faqat soya.
-//
-// Foydalanish:
-// ```dart
-// BoxDecoration(color: AppColors.surface, boxShadow: AppShadows.card, ...)
-// ```
+// Soya tokenlari — kartalarga "qalqib turgan" chuqurlik beradi.
+// Theme-aware: light'da yumshoq salqin-tusli soya, dark'da chuqurroq qora.
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
-/// Premium soya tokenlari (theme-aware getterlar — toggle'da yangilanadi).
+/// Soya tokenlari — theme-aware getterlar, toggle'da yangilanadi.
 class AppShadows {
   AppShadows._();
 
@@ -27,7 +17,7 @@ class AppShadows {
           ),
         ]
       : const [
-          // Salqin navy-tusli yumshoq soya — premium, sof qora emas.
+          // Salqin navy-tusli yumshoq soya — sof qora emas, yumshoqroq.
           BoxShadow(
             color: Color(0x140B2B26),
             blurRadius: 22,
@@ -64,7 +54,7 @@ class AppShadows {
           ),
         ];
 
-  /// Brand glow — lime tugma ostidagi nozik yog'du (premium CTA).
+  /// Brand glow — CTA tugma ostidagi nozik yog'du.
   static List<BoxShadow> glow(Color color) => [
     BoxShadow(
       color: color.withValues(alpha: AppColors.isDark ? 0.28 : 0.25),
@@ -74,31 +64,31 @@ class AppShadows {
     ),
   ];
 
-  /// Shisha karta uchun ko'p-qatlamli "floating" soya (Samsung One UI 8).
+  /// Shisha karta uchun ko'p-qatlamli "floating" soya.
   static List<BoxShadow> get glass => AppColors.isDark
       ? [
-          // a) Chuqur qora float — karta fon ustidan baland "suzadi".
+          // Chuqur qora float — karta fon ustidan baland "suzadi".
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.55),
             blurRadius: 40,
             offset: const Offset(0, 16),
             spreadRadius: -6,
           ),
-          // b) Teal "neon" halo — shisha kartani teal yorug'lik bilan o'raydi.
+          // Teal "neon" halo — shisha kartani teal yorug'lik bilan o'raydi.
           BoxShadow(
             color: const Color(0xFF3DBFB4).withValues(alpha: 0.09),
             blurRadius: 28,
             offset: const Offset(0, 8),
             spreadRadius: -8,
           ),
-          // c) Mint whisper — salqin chekka jilosi (juda nozik).
+          // Mint chekka jilosi — juda nozik.
           BoxShadow(
             color: const Color(0xFF6ECFAA).withValues(alpha: 0.05),
             blurRadius: 16,
             offset: const Offset(0, 4),
             spreadRadius: -10,
           ),
-          // d) Kontakt soyasi — yer bilan ulanish.
+          // Kontakt soyasi — yer bilan ulanish.
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.32),
             blurRadius: 8,
@@ -119,8 +109,8 @@ class AppShadows {
           ),
         ];
 
-  /// Quick action tile — TOZA neytral float + nozik rim shadow. Rangli halo
-  /// YO'Q (shisha ortida rang bo'lmaydi — referens uslubi).
+  /// Quick action tile — toza neytral float va nozik rim shadow.
+  /// Rangli halo yo'q: shisha ortida rang bo'lmaydi (referens uslubi).
   static List<BoxShadow> get qaTile => AppColors.isDark
       ? [
           BoxShadow(

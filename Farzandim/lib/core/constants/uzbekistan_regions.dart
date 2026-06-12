@@ -1,29 +1,8 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — O'ZBEKISTON HUDUDLARI (Regions)
-// ─────────────────────────────────────────────────────────────────────
-//
-// "Bola qo'shish" formasidagi "Hudud" dropdown'i shu ro'yxatdan
-// foydalanadi. Firestore'da `children/{id}.region` maydoni shu
-// string'lardan biri bo'ladi.
-//
-// Tartib: Toshkent shahri va viloyati birinchi (eng ko'p foydalanuvchi
-// — UX qulaylik), keyin qolgani alfavit bo'yicha.
-//
-// Kelajakda kengaytirsak (tumanlar): yangi struktura kerak bo'ladi —
-// `Map<String, List<String>>` (viloyat → tumanlar). Hozir Slice MVP
-// uchun faqat viloyat darajasi yetarli.
+// O'zbekiston hududlari ro'yxati — "Bola qo'shish" formasidagi dropdown
+// shu ro'yxatdan foydalanadi, `children/{id}.region` ham shu string'lardan.
 
-/// O'zbekiston Respublikasi viloyatlari va Toshkent shahri ro'yxati.
-///
-/// Foydalanish:
-/// ```dart
-/// CustomDropdown<String>(
-///   items: UzbekistanRegions.regions
-///       .map((r) => DropdownMenuItem(value: r, child: Text(r)))
-///       .toList(),
-///   ...
-/// )
-/// ```
+/// Viloyatlar va Toshkent shahri. Toshkent birinchi (eng ko'p
+/// foydalanuvchi), qolgani alfavit bo'yicha.
 class UzbekistanRegions {
   UzbekistanRegions._();
 

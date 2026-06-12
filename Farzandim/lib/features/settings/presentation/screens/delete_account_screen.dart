@@ -10,25 +10,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-// _confirmWord endi locale'ga bog'liq — `deleteAccount.confirmWord.tr()`
-// orqali har til uchun mos so'z olinadi (uz: O'CHIRISH, ru: УДАЛИТЬ,
-// en: DELETE). Build paytida `widget.build` ichida o'qiymiz.
+// Tasdiq so'zi locale'ga bog'liq: 'deleteAccount.confirmWord'.tr() har
+// til uchun mos so'zni beradi (uz: O'CHIRISH, ru: УДАЛИТЬ, en: DELETE).
 
-/// Hisobni butunlay o'chirish ekrani.
+/// Hisobni butunlay o'chirish ekrani (Play Market in-app deletion talabi).
 ///
-/// Play Market policy (2024+) talabi: in-app account deletion. GDPR /
-/// ZRU-547 compliance.
-///
-/// Oqim:
-///   1. Foydalanuvchi `_confirmWord` ni harf-harf yozadi.
-///   2. Tugma yoqiladi.
-///   3. `deleteAccount` Cloud Function chaqiriladi:
-///      - Firestore (users/{uid} + subcoll, top-level filterlar)
-///      - Storage (avatars, voice/video/photo prefixes)
-///      - Auth.deleteUser (eng oxiri)
-///   4. signOut + Welcome'ga redirect.
+/// Foydalanuvchi tasdiq so'zini to'liq yozgach hisob backend'da cascade
+/// o'chiriladi, so'ng logout qilinib Welcome'ga qaytariladi.
 class DeleteAccountScreen extends ConsumerStatefulWidget {
-  /// `DeleteAccountScreen` konstruktor.
   const DeleteAccountScreen({super.key});
 
   @override
@@ -59,8 +48,8 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
     setState(() => _isDeleting = true);
 
     try {
-      // Backend `DELETE /api/users/me` — cascade o'chirish (bola(lar),
-      // lokatsiya, xabarlar, obuna). So'ng logout + Welcome'ga qaytish.
+      // Backend cascade o'chiradi: bola(lar), lokatsiya, xabarlar, obuna.
+      // So'ng logout va Welcome'ga qaytamiz.
       await ref.read(backendUserRepositoryProvider).deleteAccount();
       await ref.read(backendAuthProvider.notifier).logout();
       if (!mounted) return;

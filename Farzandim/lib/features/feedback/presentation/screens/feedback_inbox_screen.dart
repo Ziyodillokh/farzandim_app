@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// FeedbackInboxScreen — Parent emoji feedback inbox (Sprint 4.4.17)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Bola yuborgan emoji + message ko'rsatadi. WS `feedback:received`
-// orqali real-time keladi. Tap → markAsRead.
+// Bola yuborgan emoji + matn inbox ekrani; tap o'qilgan deb belgilaydi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
@@ -22,10 +17,8 @@ import 'package:go_router/go_router.dart';
 
 /// Bola feedback inbox ekrani.
 class FeedbackInboxScreen extends ConsumerWidget {
-  /// `FeedbackInboxScreen` konstruktor.
   const FeedbackInboxScreen({required this.childId, super.key});
 
-  /// Qaysi bola'ning feedback'lari.
   final String childId;
 
   @override
@@ -237,7 +230,6 @@ class _FeedbackTile extends ConsumerWidget {
     ref.invalidate(childFeedbackProvider(childId));
   }
 
-  // ARCH-07: markaziy formatter — dublikat mantiq olib tashlandi.
   String _formatTime(DateTime dt) => formatRelativeTime(dt);
 }
 

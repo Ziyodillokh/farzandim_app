@@ -1,17 +1,9 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — FORMATTERS (Sana/vaqt/raqam formatlash)
-// ─────────────────────────────────────────────────────────────────────
-//
-// UI'da ko'rsatish uchun ma'lumotni hozirgi locale'ga moslashtirib
-// formatlaydi (Sprint 3.3). `.tr()` extension global EasyLocalization
-// controller'dan o'qiydi — context kerak emas.
+// Sana/vaqt formatlash helper'lari — hozirgi locale'ga moslab matn beradi.
+// `.tr()` global EasyLocalization controller'dan o'qiydi, context kerak emas.
 
 import 'package:easy_localization/easy_localization.dart';
 
-/// `Duration`'ni hozirgi locale uchun "X st Y daq" / "X ч Y мин" /
-/// "X h Y min" formatiga o'tkazadi.
-///
-/// Misol (uz): `Duration(hours: 5, minutes: 2)` → `"5 st 2 daq"`
+/// `Duration`'ni locale'ga mos "X st Y daq" ko'rinishiga o'tkazadi.
 String formatDuration(Duration duration) {
   final hours = duration.inHours;
   final minutes = duration.inMinutes % 60;
@@ -20,13 +12,8 @@ String formatDuration(Duration duration) {
   );
 }
 
-/// `DateTime`'ni hozirgi vaqtga nisbatan hozirgi locale matniga
-/// o'tkazadi.
-///
-/// - <1 daq → "hozir" / "сейчас" / "now"
-/// - <60 daq → "5 daq oldin" / "5 мин назад" / "5 min ago"
-/// - <24 soat → "3 soat oldin" / "3 ч назад" / "3 h ago"
-/// - aks holda → "DD.MM" (sana — barcha tilda bir xil)
+/// Nisbiy vaqt matni: "hozir", "5 daq oldin", "3 soat oldin",
+/// kechagisi "kecha", undan eskisi "DD.MM".
 String formatRelativeTime(DateTime time) {
   final now = DateTime.now();
   final diff = now.difference(time);

@@ -10,10 +10,8 @@ const Color kAuthLinkColor = Color(0xFF7C7CF5);
 
 /// Forma maydoni ustidagi yorliq matni (masalan, "Parol").
 class AuthFieldLabel extends StatelessWidget {
-  /// `AuthFieldLabel` konstruktor.
   const AuthFieldLabel(this.text, {super.key});
 
-  /// Yorliq matni.
   final String text;
 
   @override
@@ -30,10 +28,8 @@ class AuthFieldLabel extends StatelessWidget {
 
 /// Inline xato matni (qizil ikonka + matn).
 class AuthErrorText extends StatelessWidget {
-  /// `AuthErrorText` konstruktor.
   const AuthErrorText(this.message, {super.key});
 
-  /// Ko'rsatiladigan xato xabari.
   final String message;
 
   @override
@@ -59,7 +55,6 @@ class AuthErrorText extends StatelessWidget {
 
 /// Orqaga qaytish tugmasi — `pop` bo'lmasa Welcome ekraniga o'tadi.
 class AuthBackButton extends StatelessWidget {
-  /// `AuthBackButton` konstruktor.
   const AuthBackButton({super.key});
 
   @override

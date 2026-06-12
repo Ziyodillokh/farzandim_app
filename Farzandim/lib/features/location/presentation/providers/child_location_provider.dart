@@ -1,10 +1,4 @@
-// Sprint 4.4.2: Firestore stream → Backend REST + WS real-time
-//
-// Eski Firebase auth + Firestore listener olib tashlandi.
-// Yangi: BackendLocationRepository.watchLocation (initial GET + WS).
-//
-// `childLocationProvider` family signature o'zgarmaydi — UI tomonida
-// hech narsa o'zgartirish kerak emas.
+// Bola joriy joylashuvi va manzili provider'lari.
 
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
@@ -12,11 +6,8 @@ import 'package:farzandim/features/location/data/repositories/backend_location_r
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Bola joriy joylashuvi — Backend `/api/children/:childId/location` +
-/// WS `location:updated` real-time push.
-///
-/// `backendAuthProvider`'ga bog'langan: foydalanuvchi `AuthAuthenticated`
-/// bo'lmasa stream bo'sh qaytariladi.
+/// Bola joriy joylashuvi — backend'dan boshlang'ich fetch + WS real-time.
+/// Foydalanuvchi autentifikatsiyadan o'tmagan bo'lsa bo'sh stream.
 final childLocationProvider = StreamProvider.family<ChildLocation?, String>((
   ref,
   childId,

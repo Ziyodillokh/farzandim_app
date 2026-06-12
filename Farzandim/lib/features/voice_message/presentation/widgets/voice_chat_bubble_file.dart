@@ -1,10 +1,5 @@
-// ARCH-13 davomi: monolit fayl `part` fayllarga bo'lindi — private
-// nomlar va xulq o'zgarmagan, faqat fayl tashkiloti.
+// Hujjat (file) bubble — tap qilinganda yuklab olib native ilovada ochadi.
 part of 'voice_chat_bubble.dart';
-
-// ─────────────────────────────────────────────────────────────────────
-// Hujjat (file) bubble — tap → yuklab olib native ilovada ochish
-// ─────────────────────────────────────────────────────────────────────
 
 class _FileBubble extends ConsumerStatefulWidget {
   const _FileBubble({required this.message, required this.isOwn});
@@ -63,8 +58,8 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
       final savePath = '${dir.path}/${widget.message.id}_$safeName';
       final file = File(savePath);
       if (!file.existsSync() || file.lengthSync() == 0) {
-        // ARCH-05: yalang'och Dio() emas — umumiy klient (timeout'lar bor,
-        // cheksiz osilish yo'q; URL absolute bo'lgani uchun baseUrl bezarar).
+        // Yalang'och Dio() o'rniga umumiy klient — timeout'lar bor,
+        // cheksiz osilmaydi; URL absolute bo'lgani uchun baseUrl bezarar.
         await ref.read(dioClientProvider).download(url, savePath);
       }
       final result = await OpenFilex.open(savePath);

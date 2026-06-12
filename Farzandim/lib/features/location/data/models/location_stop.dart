@@ -1,10 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────
-// LocationStop — backend stop-detection topgan to'xtagan joy (Sprint 7)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend GET /api/children/:childId/location/stops qaytaradi. Bola bir
-// joyda ≥2.5 daqiqa turganda bitta yozuv. Xaritada marker sifatida
-// ko'rsatiladi (harakat esa alohida `locations` polyline — yupqa chiziq).
+// Backend stop-detection topgan to'xtagan joy: bola bir joyda bir necha
+// daqiqa turganda bitta yozuv. Xaritada marker sifatida ko'rsatiladi,
+// harakat esa alohida polyline bilan chiziladi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -25,8 +21,8 @@ class LocationStop {
       id: json['id'] as String? ?? '',
       latitude: (json['latitude'] as num).toDouble(),
       longitude: (json['longitude'] as num).toDouble(),
-      // Backend UTC ("Z") — .toLocal()'siz to'xtash vaqtlari 5 soat orqada
-      // ko'rinardi (P0-5).
+      // Backend UTC ("Z") qaytaradi — .toLocal() qilmasak to'xtash
+      // vaqtlari 5 soat orqada ko'rinadi.
       arrivedAt:
           (DateTime.tryParse(json['arrivedAt'] as String? ?? '') ??
                   DateTime.fromMillisecondsSinceEpoch(0))
@@ -49,7 +45,7 @@ class LocationStop {
 
   LatLng get latLng => LatLng(latitude, longitude);
 
-  /// Hali shu yerdami (leftAt yo'q yoki juda yaqin).
+  /// Hali shu yerda (leftAt hali kelmagan).
   bool get isOngoing => leftAt == null;
 
   static String _hhmm(DateTime d) {

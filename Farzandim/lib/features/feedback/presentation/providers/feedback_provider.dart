@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// feedback_provider — Parent feedback inbox (Sprint 4.4.6)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend `/api/children/:childId/feedback` + WS `feedback:received`.
-// Parent inbox — bola yuborgan emoji + matn.
+// Parent feedback inbox holati — bola yuborgan emoji + matn.
 
 import 'dart:async';
 

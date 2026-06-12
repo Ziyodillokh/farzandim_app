@@ -1,11 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────
-// ScanAccountScreen — kirish sahifasida "Akkauntga qo'shilish" → QR skaner
-// ─────────────────────────────────────────────────────────────────────
-//
-// Yangi qurilma mas'ul qurilmaning QR kodini skanerlaydi → device-link
-// redeem → parent tokenlari → onLoggedIn → router dashboard'ga o'tadi.
-// Maks 2 qurilma (backend hal qiladi). Kamera ruxsati mobile_scanner
-// tomonidan so'raladi (AndroidManifest'da CAMERA bor).
+// Kirish sahifasidagi QR skaner — yangi qurilma mas'ul qurilmaning QR kodini
+// skanerlab, device-link redeem orqali ikkinchi qurilma sifatida kiradi.
+// Qurilmalar limitini backend tekshiradi, kamera ruxsatini mobile_scanner
+// o'zi so'raydi.
 
 import 'dart:async';
 
@@ -24,7 +20,6 @@ import 'package:mobile_scanner/mobile_scanner.dart';
 
 /// QR skaner orqali ikkinchi qurilma sifatida kirish.
 class ScanAccountScreen extends ConsumerStatefulWidget {
-  /// `ScanAccountScreen` konstruktor.
   const ScanAccountScreen({super.key});
 
   @override
@@ -78,8 +73,8 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
     }
   }
 
-  /// QR-kontekstga xos xabarlar; qolgan hamma holat markaziy
-  /// `friendlyError`ga (EH-08) o'tadi — status-kod mantig'i takrorlanmaydi.
+  /// QR-kontekstga xos xabarlar; qolgan hamma holat markaziy `friendlyError`ga
+  /// o'tadi — status-kod mantig'i takrorlanmaydi.
   String _friendly(Object e) {
     if (e is FormatException) return 'auth.scan.invalidQr'.tr();
     if (e is DioException && e.response?.statusCode == 401) {

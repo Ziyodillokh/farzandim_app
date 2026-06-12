@@ -5,9 +5,7 @@ import 'package:farzandim/features/notifications/presentation/providers/notifica
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// `FcmService` singleton — `ProviderScope` davomida bir instance.
-///
-/// Sprint 4.4.8: `BackendFcmRepository` uzatiladi — Backend voice/video
-/// push uchun token register qiladi (`POST /api/fcm/tokens`).
+/// Token backend'ga `BackendFcmRepository` orqali registratsiya qilinadi.
 final fcmServiceProvider = Provider<FcmService>((ref) {
   final service = FcmService(
     backendRepo: ref.watch(backendFcmRepositoryProvider),
@@ -16,25 +14,19 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
   return service;
 });
 
-/// FCM tizimini ishga tushirish — callback'larni ulash + service.init().
-///
-/// `app.dart` `ConsumerWidget` build'da `ref.watch(fcmInitializerProvider)`
-/// bir marta chaqiriladi (FutureProvider lazy + cached).
-///
-/// **Foreground**: kelgan xabar `notificationsProvider`'ga qo'shiladi
-/// → bell badge yangilanadi.
-/// **Tap (background/cold)**: `handleFcmTap` orqali tegishli ekranga
-/// navigatsiya.
+/// FCM tizimini ishga tushirish — callback'larni ulab `service.init()`
+/// chaqiradi. `app.dart` build'ida bir marta watch qilinadi
+/// (FutureProvider lazy + cached). Foreground xabar ro'yxatga qo'shiladi,
+/// tap esa `handleFcmTap` orqali tegishli ekranga olib boradi.
 final fcmInitializerProvider = FutureProvider<void>((ref) async {
   final service = ref.read(fcmServiceProvider)
     ..onForegroundMessage = (notif) {
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
     }
     ..onMessageTap = (notif) {
-      // Tray'dan bosilgan push ham ro'yxatda saqlansin (faqat navigatsiya
-      // emas) — aks holda fonda kelgan xabar Bildirishnoma sahifasida
-      // ko'rinmasdi. Dedup id (messageId) bo'yicha — bg handler pending'i
-      // bilan takrorlanmaydi.
+      // Tray'dan bosilgan push ham ro'yxatga tushsin — aks holda fonda
+      // kelgan xabar Bildirishnomalar sahifasida ko'rinmaydi. messageId
+      // bo'yicha dedup bor, bg handler pending'i bilan takrorlanmaydi.
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
       final router = ref.read(routerProvider);
       handleFcmTap(notif, router);

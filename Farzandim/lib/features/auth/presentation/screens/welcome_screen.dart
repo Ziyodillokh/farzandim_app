@@ -13,22 +13,16 @@ import 'package:go_router/go_router.dart';
 
 /// Welcome ekran — ilova birinchi ochilganda ko'rinadi.
 ///
-/// Figma dizayniga 1:1 moslangan. Layout: 3 qatlamli `Stack`:
-///   1. Fon rasmi (`welcome_bg.jpg`, BoxFit.cover) — to'liq ekran
-///   2. Pastga qarab to'qlashuvchi gradient overlay (tugma + matn kontrasti)
-///   3. Mazmun (yurak logo, sarlavhalar, 2 ta tugma) `SafeArea` ichida
-///
-/// Brand mark — Figma'da kulrang, biroz egilgan, yarim shaffof **yurak**.
-/// Ko'k qalqon logo (app icon) bu ekranda ishlatilmaydi.
+/// Figma'ga mos layout: to'liq ekran fon rasmi, ustida pastga to'qlashuvchi
+/// gradient va mazmun (yurak logo, sarlavhalar, ikkita tugma).
 class WelcomeScreen extends ConsumerWidget {
-  /// `WelcomeScreen` konstruktor.
   const WelcomeScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // ST-03: auth hali ANIQLANMAGAN (cold start, bootstrap ketmoqda) —
-    // og'ir welcome_bg.jpg (325KB) dekod qilmasdan yengil splash. Login
-    // bo'lgan user welcome UI'ni umuman KO'RMAYDI ("flash" yo'qoladi):
+    // Auth hali aniqlanmagan bo'lsa (cold start, bootstrap ketmoqda) og'ir
+    // welcome_bg.jpg (325KB) dekod qilinmasin deb yengil splash ko'rsatamiz.
+    // Login bo'lgan user shu tufayli welcome "flash"ini ko'rmaydi —
     // bootstrap tugashi bilan router dashboard'ga redirect qiladi.
     final auth = ref.watch(backendAuthProvider);
     if (auth is AuthUnknown) {
@@ -161,10 +155,8 @@ class WelcomeScreen extends ConsumerWidget {
   }
 }
 
-/// Welcome ekrandagi brand mark — kulrang, egilgan, yarim shaffof yurak.
-///
-/// Figma'dagi silver yurakka mos: yengil yuqori-chap → pastki-o'ng
-/// gradient (och kulrang → to'qroq kulrang), ~8° egilish va yumshoq soya.
+/// Welcome ekrandagi brand mark — Figma'dagi silver yurak: kulrang gradient,
+/// ~8° egilish va yumshoq soya.
 class _HeartLogo extends StatelessWidget {
   const _HeartLogo();
 

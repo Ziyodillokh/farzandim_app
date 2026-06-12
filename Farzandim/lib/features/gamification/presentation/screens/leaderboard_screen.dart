@@ -1,12 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// LeaderboardScreen — "Reyting" (Figma 1:1)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Dashboard "Batafsil" tugmasidan ochiladi (avval ChildAchievementsScreen
-// edi). Yashil header + 3 davr tab (Haftalik/Oylik/Butun davr) + viloyat
-// filtri (bottom-sheet) + top-3 podium + paginated ro'yxat (15/sahifa,
-// skrol bilan) + pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi
-// (test/olympiad yechilganda XP beriladi).
+// "Reyting" ekrani: davr tablari, viloyat filtri, top-3 podium, paginated
+// ro'yxat va pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi.
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -30,7 +23,6 @@ const _kBronze = Color(0xFFE8893B);
 
 /// Reyting ekrani.
 class LeaderboardScreen extends ConsumerStatefulWidget {
-  /// `LeaderboardScreen` konstruktor.
   const LeaderboardScreen({required this.childId, super.key});
 
   /// Qaysi bola uchun ("Siz" reytingi).
@@ -157,9 +149,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
 
           // ─── Sticky "Siz" ───
-          // Faqat top-3'dan tashqarida ko'rsatamiz (top-3 podium'da ko'rinadi
-          // — dublikat bo'lmasin). rank 0 = bu davrda XP yo'q → baribir
-          // ko'rsatamiz.
+          // Top-3 podium'da ko'rinadi, shu yerda takrorlamaymiz.
+          // rank 0 — bu davrda XP yo'q, lekin baribir ko'rsatamiz.
           if (st.currentChild != null &&
               (st.currentChild!.rank == 0 || st.currentChild!.rank > 3))
             _CurrentChildRow(entry: st.currentChild!),
@@ -565,7 +556,7 @@ class _Avatar extends ConsumerWidget {
     final url = ref.read(leaderboardRepositoryProvider).avatarUrl(childId);
     final letter = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     return ClipOval(
-      // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+      // Disk kesh + memCacheWidth — katta rasm xotirani yemasin.
       child: CachedNetworkImage(
         imageUrl: url,
         width: size,

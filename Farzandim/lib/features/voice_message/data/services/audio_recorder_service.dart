@@ -7,18 +7,9 @@ import 'package:record/record.dart';
 
 /// Mikrofon yozish servisi — `record` paketi ustida ingichka qatlam.
 ///
-/// **Lifecycle:**
-/// 1. `startRecording()` — yozish boshlash (mikrofon ruxsati avval
-///    [AudioRecorderService.hasPermission] orqali tekshirilishi kerak).
-/// 2. Yozish davomida `amplitudeStream` orqali real-time amplitudalar
-///    keladi (live waveform uchun).
-/// 3. `stopRecording()` — yozish to'xtatish, fayl yo'lini qaytaradi.
-/// 4. `cancelRecording()` — yozish to'xtatib, fayl o'chirish.
-/// 5. `dispose()` — recorder resurslarini bo'shatish.
-///
-/// **60 sek max** — `Timer` orqali avtomatik chaqiriladi
-/// `onMaxDurationReached` callback (ekran tomon `_stopRecording`
-/// chaqiradi).
+/// Yozish davomida `amplitudeStream` live waveform uchun amplitudalar
+/// beradi. 60 sekund to'lganda timer `onMaxDurationReached` callback'ini
+/// chaqiradi — yozishni tugatish ekran zimmasida.
 class AudioRecorderService {
   final AudioRecorder _recorder = AudioRecorder();
   bool _isRecording = false;
@@ -34,20 +25,14 @@ class AudioRecorderService {
   /// Mikrofon ruxsati bormi (runtime so'rashdan oldin tekshirish uchun).
   Future<bool> hasPermission() => _recorder.hasPermission();
 
-  /// Real-time amplitude stream'i — har 100ms da yangi qiymat.
-  ///
-  /// `Amplitude.current` — dB qiymati (-60..0). Live waveform widget
-  /// `(current + 60) / 60` formulasi bilan 0..1 ga normallashtiradi.
+  /// Amplitude stream'i — har 100ms da dB qiymat (-60..0).
+  /// Waveform widget buni 0..1 oralig'iga normallashtiradi.
   Stream<Amplitude> get amplitudeStream => _recorder
       .onAmplitudeChanged(const Duration(milliseconds: 100))
       .asBroadcastStream();
 
-  /// Yozishni boshlash.
-  ///
-  /// `onMaxDurationReached` — 60 sek o'tgach chaqiriladi (timer orqali).
-  /// Ekran tomonidan `_stopRecording()` chaqirib yozishni tugatadi.
-  ///
-  /// Throws: ruxsat yo'q bo'lsa `Exception`.
+  /// Yozishni boshlaydi; ruxsat yo'q bo'lsa `Exception` otadi.
+  /// `onMaxDurationReached` 60 sek o'tgach timer orqali chaqiriladi.
   Future<void> startRecording({
     required VoidCallback onMaxDurationReached,
   }) async {

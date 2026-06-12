@@ -24,8 +24,8 @@ part 'location_history_widgets.dart';
 /// To'xtagan joy manzili (reverse geocoding) — "lat,lng" kalit, keshli.
 final _placeAddressProvider = FutureProvider.autoDispose
     .family<String?, String>((ref, latLng) async {
-      // SCR-09: autoDispose + qisqa kesh — har koordinata abadiy keshda
-      // qolib xotira cheksiz o'sardi; ekran ochiq ekan kesh yetarli.
+      // autoDispose + qisqa kesh — har koordinata abadiy keshda qolib
+      // xotira o'sib ketmasin; ekran ochiq turganda kesh yetarli.
       keepAliveFor(ref, const Duration(minutes: 2));
       final parts = latLng.split(',');
       if (parts.length != 2) return null;
@@ -37,15 +37,10 @@ final _placeAddressProvider = FutureProvider.autoDispose
 
 /// Bola harakat tarixini xaritada polyline sifatida ko'rsatuvchi ekran.
 ///
-/// Stream Firestore `users/{parentUid}/children/{childId}/location_history`
-/// subcollection'idan keladi. Range chips (24h / 7d / 30d) bilan filtrlash.
-///
-/// **UX:**
-/// - Yuqori: header (Back, sarlavha + bola ismi)
-/// - O'rta: GoogleMap with Polyline + start/end markers (camera auto-fit)
-/// - Past: range chips va statistika karta (nuqtalar, masofa)
+/// Tarix backend'dan tanlangan sana oralig'i bo'yicha yuklanadi.
+/// Yuqorida header, o'rtada xarita (polyline + start/end markerlar,
+/// kamera avtomatik moslanadi), pastda sana tanlash va statistika.
 class LocationHistoryScreen extends ConsumerStatefulWidget {
-  /// `LocationHistoryScreen` konstruktor.
   const LocationHistoryScreen({required this.childId, super.key});
 
   /// Qaysi bolaning tarixi ko'rsatiladi.
@@ -63,12 +58,12 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
 
   GoogleMapController? _mapController;
   BitmapDescriptor? _avatarMarker;
-  int? _openDwellIndex; // tap-to-toggle: -1 = barchasi yopiq
+  int? _openDwellIndex; // tap-to-toggle: null = barchasi yopiq
 
-  // PERF-06: _cleanTrack (O(n) haversine) va masofa HAR setState'da (dwell
-  // tap, avatar, sana) qayta hisoblanardi. Provider qiymati o'zgarmasa List
-  // identity bir xil — memoize. Barqaror identity _MapLayer'dagi dwell
-  // keshiga ham asos bo'ladi.
+  // _cleanTrack va masofa hisobini memoize qilamiz — aks holda har
+  // setState'da (dwell tap, avatar, sana) qayta hisoblanardi. Provider
+  // qiymati o'zgarmasa List identity bir xil; barqaror identity
+  // _MapLayer'dagi dwell keshiga ham asos bo'ladi.
   List<ChildLocation>? _trackMemoInput;
   List<ChildLocation> _trackMemo = const <ChildLocation>[];
   double _distanceKmMemo = 0;
@@ -170,7 +165,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
       historyAsync.valueOrNull ?? const <ChildLocation>[],
     );
 
-    // Avatar marker for end pin
+    // Oxirgi nuqta pin'i uchun avatar marker.
     if (child != null && _avatarMarker == null) {
       final avatarUrl = ref.watch(childAvatarUrlProvider(child.id)).valueOrNull;
       WidgetsBinding.instance.addPostFrameCallback((_) async {
@@ -187,7 +182,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
       body: SafeArea(
         child: Stack(
           children: [
-            // Map layer (full screen).
+            // Xarita qatlami (to'liq ekran).
             historyAsync.when(
               loading: () => Center(
                 child: CircularProgressIndicator(color: AppColors.accent),
@@ -233,7 +228,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
               },
             ),
 
-            // Top bar (back + title).
+            // Yuqori panel (orqaga + sarlavha).
             Padding(
               padding: const EdgeInsets.all(AppDimensions.md),
               child: _TopBar(childName: childName),
@@ -284,12 +279,10 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
   }
 
-  /// Tarix nuqtalarini tozalaydi (professional joylashuv mantig'i):
-  ///  - aniqligi yomon (>100m) fix'lar tashlanadi (cell-tower/garbage);
-  ///  - oxirgi saqlangan nuqtadan <25m masofadagi nuqtalar yutiladi
-  ///    (statsionar GPS jitter — soxta "borib-kelish" zigzag va shishgan
-  ///    masofani oldini oladi).
-  /// Backend ham yangi data'ni filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
+  /// Tarix nuqtalarini tozalaydi: aniqligi yomon (>100m) fix'lar
+  /// tashlanadi, oxirgi nuqtadan <25m masofadagilar yutiladi (statsionar
+  /// GPS jitter — soxta zigzag va shishgan masofa oldini oladi). Backend
+  /// yangi data'ni o'zi filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
   List<ChildLocation> _cleanTrack(List<ChildLocation> points) {
     const maxAccuracyM = 100.0;
     const minGapM = 25.0;

@@ -24,7 +24,6 @@ part 'voice_chat_bubble_file.dart';
 ///
 /// Audio: tap → `AudioPlayerManager` orqali play/pause toggle.
 class VoiceChatBubble extends ConsumerWidget {
-  /// `VoiceChatBubble` konstruktor.
   const VoiceChatBubble({
     required this.message,
     required this.isOwn,
@@ -50,7 +49,7 @@ class VoiceChatBubble extends ConsumerWidget {
     var x = hash;
     for (var i = 0; i < barCount; i++) {
       x = (x * 1103515245 + 12345) & 0x7FFFFFFF;
-      // 0.25-1.0 range — chiroyli amplitudalar, juda past bo'lmagan
+      // 0.25-1.0 oralig'i — barlar juda past ko'rinmasligi uchun
       final normalized = 0.25 + ((x % 1000) / 1000) * 0.75;
       result.add(normalized);
     }
@@ -93,9 +92,9 @@ class VoiceChatBubble extends ConsumerWidget {
         ? position.inMilliseconds / duration.inMilliseconds
         : 0.0;
 
-    // PERF-09: playerState/speed faqat IJRODAGI bubble'da watch qilinadi —
-    // avval shartsiz edi: ijro paytida har holat o'zgarishi BARCHA
-    // bubble'larni (uzun chatda o'nlab) rebuild qildirardi.
+    // playerState/speed faqat ijrodagi bubble'da watch qilinadi —
+    // shartsiz watch ijro paytida har holat o'zgarishida barcha
+    // bubble'larni rebuild qildirardi.
     final playerState =
         isCurrent ? ref.watch(audioPlayerStateProvider).value : null;
     final isPlaying = isCurrent && (playerState?.playing ?? false);
@@ -140,8 +139,8 @@ class VoiceChatBubble extends ConsumerWidget {
                         messageId: message.id,
                         audioUrl: url,
                       );
-                  // Sprint 4.4.5: read receipt — bola yuborgan xabarni
-                  // parent tinglagan paytda Backend'ga belgi yuboramiz.
+                  // Read receipt — bola yuborgan xabarni parent
+                  // tinglaganda backend'ga belgi yuboramiz.
                   if (!isOwn &&
                       message.status == VoiceMessageStatus.sent) {
                     await ref
@@ -225,8 +224,8 @@ class VoiceChatBubble extends ConsumerWidget {
                                   final amp = amps[i];
                                   final barIdx = i / visibleCount;
                                   final isPlayed = progress > barIdx;
-                                  // Premium: rounded pill bars, 1px gap,
-                                  // played qism solid, unplayed shaffof
+                                  // Yumaloq pill barlar: played qism
+                                  // solid, unplayed shaffof
                                   return Expanded(
                                     child: Padding(
                                       padding: const EdgeInsets.symmetric(
@@ -341,7 +340,7 @@ String _formatTimeShort(DateTime dt) =>
     '${dt.hour.toString().padLeft(2, '0')}:'
     '${dt.minute.toString().padLeft(2, '0')}';
 
-/// Premium bubble soyasi — wallpaper ustida bubble bo'rtib turadi.
+/// Bubble soyasi — wallpaper ustida bo'rtib ko'rinishi uchun.
 const List<BoxShadow> _bubbleShadow = [
   BoxShadow(color: Color(0x1A000000), blurRadius: 4, offset: Offset(0, 1)),
 ];

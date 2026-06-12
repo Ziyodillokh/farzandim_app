@@ -1,17 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendAppLimitRepository — Per-app limits (Backend 0.5.1)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt (`/api/children/:childId/app-limits`):
-//   GET    /api/children/:childId/app-limits → {limits: [...], count}
-//   POST   /api/children/:childId/app-limits body: {packageName, dailyLimitMs}
-//   PUT    /api/app-limits/:id body: {dailyLimitMs}
-//   DELETE /api/app-limits/:id
-//
-// Mapping:
-//   Block       → POST { packageName, dailyLimitMs: 0 }
-//   Limit 30min → POST { packageName, dailyLimitMs: 1800000 }
-//   Remove      → DELETE /app-limits/:id
+// Per-app limitlar API'si. Blok = dailyLimitMs 0, limit = daqiqa * 60000.
 
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -32,16 +19,16 @@ class BackendAppLimitRepository {
 
   /// Bola uchun barcha app limit'lar — domain model.
   Future<List<AppRestriction>> getRestrictions(String childId) async {
-    // EH-09: o'qish ham throw qiladi — offline'da yolg'on "limit yo'q"
+    // O'qish ham throw qiladi — offline'da yolg'on "limit yo'q"
     // ko'rinmasin (ekranda error branch bor).
     final wires = await _getLimits(childId, throwOnError: true);
     return wires.map((w) => w.toRestriction()).toList();
   }
 
-  /// `throwOnError`: `remove()` kabi YOZUV oqimlarida true — xato yutilsa
-  /// "limit topilmadi → allaqachon yo'q → muvaffaqiyat" degan YOLG'ON natija
-  /// chiqardi (EH-04): offline'da foydalanuvchi "o'chirildi" deb o'ylaydi,
-  /// blok esa bola qurilmasida aktiv qoladi.
+  /// `throwOnError`: `remove()` kabi yozuv oqimlarida true — xato yutilsa
+  /// "limit topilmadi → allaqachon yo'q → muvaffaqiyat" degan yolg'on
+  /// natija chiqadi: foydalanuvchi "o'chirildi" deb o'ylaydi, blok esa
+  /// bola qurilmasida aktiv qolaveradi.
   Future<List<_AppLimitWire>> _getLimits(
     String childId, {
     bool throwOnError = false,
@@ -65,15 +52,12 @@ class BackendAppLimitRepository {
 
   /// Cheklov o'rnatish/yangilash.
   ///
-  /// Backend POST endi **idempotent upsert** (`(childId, packageName)` unique):
-  /// mavjud bo'lsa yangilaydi, aks holda yaratadi. Shuning uchun GET-then-PUT
-  /// kerak emas — DOIM POST qilamiz. (Avval GET muvaffaqiyatsiz bo'lsa
-  /// `_getLimits` jim `[]` qaytarib, noto'g'ri yo'l tanlanardi va 409/xato
-  /// "saqlashda xatolik" sifatida ko'rinardi.)
+  /// Backend POST idempotent upsert (`(childId, packageName)` unique):
+  /// mavjud bo'lsa yangilaydi, yo'q bo'lsa yaratadi. Shuning uchun
+  /// GET-then-PUT kerak emas — har doim POST qilamiz.
   ///
-  /// `appName` yuborilmaydi (backend modelida yo'q; backend eski klientlar
-  /// uchun qabul qilsa-da, e'tiborsiz qoldiradi). Xato bo'lsa aniq sababli
-  /// [AppLimitException] tashlaydi.
+  /// `appName` yuborilmaydi (backend modelida yo'q). Xato bo'lsa aniq
+  /// sababli [AppLimitException] tashlaydi.
   Future<bool> upsert({
     required String childId,
     required String packageName,
@@ -128,14 +112,14 @@ class BackendAppLimitRepository {
     }
   }
 
-  /// Domain-ga xos 401/403/404 xabarlari; qolgan hamma holat (backend
-  /// message, internet yo'q) markaziy `friendlyError`da (EH-08) —
-  /// status-kod mantig'i takrorlanmaydi.
+  /// Domain'ga xos 401/403/404 xabarlari; qolgan hamma holat (backend
+  /// message, internet yo'q) markaziy `friendlyError`da — status-kod
+  /// mantig'i takrorlanmaydi.
   String _messageForDioError(DioException e) {
     final code = e.response?.statusCode;
-    // 401 friendlyError'dan OLDIN (review topilmasi): auth-guard'ning
-    // backend xabari INGLIZCHA ("Invalid or expired access token") —
-    // friendlyError uni ko'rsatib yuborardi. Lokal sessiya xabari aniqroq.
+    // 401 friendlyError'dan oldin tekshiriladi: backend auth xabari
+    // inglizcha, friendlyError uni shundayligicha ko'rsatib yuborardi.
+    // Lokal sessiya xabari aniqroq.
     if (code == 401) return 'errors.sessionExpired'.tr();
     if (code == 403) return 'errors.appLimit.childNotLinked'.tr();
     if (code == 404) return 'errors.appLimit.childNotFound'.tr();
@@ -148,7 +132,7 @@ class BackendAppLimitRepository {
 class AppLimitException implements Exception {
   AppLimitException(this.message);
 
-  /// Foydalanuvchiga ko'rsatiladigan o'zbekcha xabar.
+  /// Foydalanuvchiga ko'rsatiladigan xabar.
   final String message;
 
   @override
@@ -183,7 +167,6 @@ class _AppLimitWire {
   final int dailyLimitMs;
   final DateTime updatedAt;
 
-  /// Domain modelga konvertatsiya.
   AppRestriction toRestriction() {
     return AppRestriction(
       packageName: packageName,

@@ -9,14 +9,10 @@ enum VoiceMessageStatus {
   seen,
 }
 
-/// Bola va ota-ona o'rtasidagi ovozli xabar.
-///
-/// Firestore: `voice_messages/{auto-id}` top-level collection.
-/// `parentUid` + `childId` indekslangan — ota-ona faqat o'z bolalarining
-/// xabarlarini ko'radi. `sender` — `'parent'` yoki `'child'`.
+/// Bola va ota-ona o'rtasidagi ovozli/matnli/media xabar.
+/// `sender` — `'parent'` yoki `'child'`.
 @immutable
 class VoiceMessage {
-  /// `VoiceMessage` konstruktor.
   const VoiceMessage({
     required this.id,
     required this.parentUid,
@@ -37,29 +33,13 @@ class VoiceMessage {
     this.fileSize,
   });
 
-  /// Backend REST `VoiceMessage` JSON'idan (Sprint 4.4.5).
+  /// Backend REST JSON'idan model yasaydi.
   ///
-  /// Backend Prisma kontract:
-  /// ```json
-  /// {
-  ///   "id": "uuid",
-  ///   "senderId": "uuid",
-  ///   "receiverId": "uuid",
-  ///   "storagePath": "senderId/messageId.m4a",
-  ///   "durationSeconds": 3,
-  ///   "isRead": false,
-  ///   "createdAt": "ISO 8601"
-  /// }
-  /// ```
-  ///
-  /// Mapping:
-  /// - `senderId == currentUserId (parent)` → sender = 'parent'
-  /// - boshqa holda → sender = 'child'
-  /// - `audioUrl` bo'sh — signed URL lazy fetch (`/voice-messages/:id/file`)
-  /// - `waveform` Backend'da yo'q — bo'sh list
-  ///
-  /// `childId` UI tarafi tracking uchun — Backend xabarlari child-grouped emas
-  /// (sender/receiver based). Caller `childId`'ni dispatch'da to'ldiradi.
+  /// `senderId` joriy user'ga teng bo'lsa sender 'parent', aks holda
+  /// 'child'. `audioUrl` bo'sh qoladi — URL keyin lazy olinadi.
+  /// Backend waveform saqlamaydi, shuning uchun bo'sh list. Backend
+  /// xabarlari sender/receiver asosida (child-grouped emas) —
+  /// `childId`'ni chaqiruvchi o'zi beradi.
   factory VoiceMessage.fromBackendJson(
     Map<String, dynamic> json, {
     required String currentUserId,
@@ -78,9 +58,7 @@ class VoiceMessage {
       status: (json['isRead'] as bool? ?? false)
           ? VoiceMessageStatus.seen
           : VoiceMessageStatus.sent,
-      // Backend ISO 8601 UTC → local (Tashkent UTC+5).
-      // Agar `Z`/`+` marker yo'q bo'lsa Dart parse local time deb tushunadi —
-      // Z'ni majburlab qo'shamiz.
+      // Backend ISO 8601 (UTC) qaytaradi — local vaqtga o'giramiz.
       createdAt: _parseBackendIso(json['createdAt'] as String?) ??
           DateTime.now(),
       text: json['text'] as String?,
@@ -95,20 +73,18 @@ class VoiceMessage {
   static DateTime? _parseBackendIso(String? iso) {
     if (iso == null || iso.isEmpty) return null;
     try {
-      // Backend Z marker bilan UTC qaytaradi — Dart parse UTC deb tushunadi
-      // va toLocal() Tashkent +5'ga aylantiradi.
-      // Agar marker yo'q (Backend local time) — toLocal hech narsa
-      // o'zgartirmaydi va Backend vaqtini ko'rsatamiz.
+      // Z marker bilan kelsa UTC deb parse bo'lib local'ga o'giriladi;
+      // marker bo'lmasa parse local deb oladi va toLocal o'zgartirmaydi.
       return DateTime.parse(iso).toLocal();
     } catch (_) {
       return null;
     }
   }
 
-  /// Firestore document ID.
+  /// Xabar ID'si (backend UUID).
   final String id;
 
-  /// Ota-ona Firebase UID — query filter uchun.
+  /// Ota-ona user ID'si.
   final String parentUid;
 
   /// Qaysi bola bilan suhbat.

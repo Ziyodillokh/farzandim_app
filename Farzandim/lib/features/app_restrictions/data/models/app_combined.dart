@@ -8,10 +8,10 @@ enum UsageStatus {
   /// Cheklov ichida, < 50% ishlatilgan (yashil).
   healthy,
 
-  /// Cheklov 50-90% ishlatilgan (sariq).
+  /// Cheklovning 50-100% qismi ishlatilgan (sariq).
   warning,
 
-  /// Cheklov > 100% ishlatilgan (qizil).
+  /// Cheklov to'liq ishlatilgan yoki oshib ketgan (qizil).
   exceeded,
 
   /// Butunlay bloklangan (qizil rang, lekin alohida holat).
@@ -28,7 +28,6 @@ enum UsageStatus {
 /// bo'lsa ilova cheklanmagan.
 @immutable
 class AppCombined {
-  /// `AppCombined` konstruktor.
   const AppCombined({
     required this.packageName,
     required this.appName,
@@ -52,7 +51,7 @@ class AppCombined {
   /// ilova (bugun ishlatilmagan) uchun `null`.
   final String? iconBase64;
 
-  /// Backend MinIO signed URL — Sprint 4.4.29 (priority iconUrl > base64).
+  /// Backend ikon URL — base64'dan ustun.
   final String? iconUrl;
 
   /// Cheklov (limit yoki block). `null` bo'lsa cheklanmagan.
@@ -100,12 +99,8 @@ class AppCombined {
     return ratio.clamp(0.0, 1.5);
   }
 
-  /// Foydalanish holati — `UsageStatus` enum:
-  /// - `blocked`: butunlay bloklangan.
-  /// - `noLimit`: cheklov yo'q.
-  /// - `exceeded`: progress >= 100%.
-  /// - `warning`: progress 50-100%.
-  /// - `healthy`: progress < 50%.
+  /// Foydalanish holati: blocked/noLimit, aks holda progress bo'yicha
+  /// exceeded (>=100%), warning (>=50%) yoki healthy.
   UsageStatus get status {
     if (isBlocked) return UsageStatus.blocked;
     if (!hasLimit) return UsageStatus.noLimit;
@@ -116,15 +111,9 @@ class AppCombined {
   }
 }
 
-/// Usage + restrictions ro'yxatlarini tile uchun birlashtiradi va
-/// status bo'yicha sort qiladi:
-/// - exceeded (qizil) → eng yuqorida
-/// - blocked → keyin
-/// - warning (sariq)
-/// - healthy (yashil)
-/// - noLimit (kulrang) → eng pastda
-///
-/// Bir status ichida usage desc, keyin appName asc.
+/// Usage + restrictions ro'yxatlarini tile uchun birlashtiradi.
+/// Sort: avval status (exceeded, blocked, warning, healthy, noLimit),
+/// bir status ichida usage kamayish tartibida, keyin nom bo'yicha.
 List<AppCombined> combineAppData({
   required AppUsageDay? usage,
   required List<AppRestriction> restrictions,
@@ -142,7 +131,7 @@ List<AppCombined> combineAppData({
   final seenPackages = <String>{};
 
   if (usage != null) {
-    // <1 daqiqa va system ilovalar `filteredApps`da chiqarib tashlangan,
+    // Juda qisqa va system ilovalar `filteredApps`da chiqarib tashlangan,
     // lekin ularni "seen" deb belgilaymiz — pastdagi cheklov ro'yxatida
     // 0-usage bo'lib qayta paydo bo'lib qolmasin.
     for (final app in usage.aggregatedApps) {
@@ -191,9 +180,8 @@ List<AppCombined> combineAppData({
     }
   }
 
-  // Eslatma: ilgari bu yerda BARCHA o'rnatilgan ilovalar (0 usage) ham
-  // qo'shilardi. Endi foydalanuvchi talabiga ko'ra faqat haqiqatda ekran
-  // yoqib ishlatilgan (≥1 daqiqa) va cheklangan ilovalar ko'rsatiladi.
+  // 0-usage o'rnatilgan ilovalar ataylab qo'shilmaydi — faqat real
+  // ishlatilgan va cheklangan ilovalar ko'rsatiladi.
 
   const statusOrder = [
     UsageStatus.exceeded,

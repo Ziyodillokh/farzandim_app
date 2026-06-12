@@ -1,23 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendAuthRepository — Backend REST auth (Sprint 4.4)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Eski Firebase auth_repository.dart o'zicha qoladi (Firebase Auth phone OTP)
-// — yangi Backend Telegram auth alohida implementatsiya. Migration tugagach
-// eski olib tashlanadi.
-//
-// 3 ta operatsiya:
-//   1. saveSession(session)  — login.html callback'idan kelgan AuthSession
-//                              tokens'ni storage'ga yozadi, user qaytaradi
-//   2. refresh()             — accessToken expire bo'lganda; Dio refresh
-//                              interceptor allaqachon bu chaqiradi
-//   3. logout()              — tokens'ni o'chiradi
-//   4. me()                  — joriy user profile'i (GET /api/users/me)
-//
-// Login flow:
-//   TelegramLoginScreen WebView → login.html → FlutterAuth.postMessage(JSON)
-//     → AuthProvider.handleSession(json) → repo.saveSession(session)
-//     → router redirect '/dashboard'
+// Backend REST auth repository — login/register, token saqlash, sessiya
+// tekshiruvi va logout.
 
 import 'dart:convert';
 
@@ -176,13 +158,9 @@ class BackendAuthRepository {
 
   /// Joriy user profilini Backend'dan oladi va lokal cache'ga yozadi.
   ///
-  /// **Xatoni YUTMAYDI** (bootstrap tarmoq xatosi va auth xatosini ajrata
-  /// olishi uchun):
-  ///   - Muvaffaqiyat → AuthUser (token amal qiladi, cache yangilanadi).
-  ///   - 401 (DioClient interceptor refresh ham fail) → DioException(401)
-  ///     tashlaydi → token o'lik → logout.
-  ///   - Tarmoq xatosi (offline) → DioException(connectionError) tashlaydi →
-  ///     caller optimistik holatni saqlashi mumkin.
+  /// Xatoni ataylab yutmaydi — bootstrap tarmoq xatosi bilan auth xatosini
+  /// ajrata olishi kerak: 401 kelsa token o'lik (caller logout qiladi),
+  /// tarmoq xatosi bo'lsa caller optimistik holatni saqlab qolishi mumkin.
   Future<AuthUser?> verifySession() async {
     final response = await _dio.get<Map<String, dynamic>>('/users/me');
     final data = response.data;

@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// SosAlertsListScreen — Parent SOS alerts (Sprint 4.4.15 + 4.4.19 enh.)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Faol va Tarix tabi. Har bir alert ustida xaritada ko'rish + resolve.
-// Backend: GET /api/sos-alerts?status=ACTIVE|RESOLVED + WS sos:* refresh.
+// SOS alert'lar ro'yxati: Faol va Tarix tabi, xaritada ko'rish, resolve.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -19,9 +14,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// Parent App'da bola yuborgan SOS alert'lar ro'yxati (Tabs + Map).
+/// Parent App'da bola yuborgan SOS alert'lar ro'yxati.
 class SosAlertsListScreen extends ConsumerWidget {
-  /// `SosAlertsListScreen` konstruktor.
   const SosAlertsListScreen({super.key});
 
   @override
@@ -187,8 +181,8 @@ class _AlertsList extends ConsumerWidget {
       ),
       data: (alerts) {
         if (alerts.isEmpty) {
-          // EH-10: bo'sh holatda ham pull-to-refresh ishlasin (avval faqat
-          // ro'yxat bor holatda bor edi — bo'sh ekranni yangilab bo'lmasdi).
+          // Bo'sh holatda ham pull-to-refresh ishlashi kerak, shuning
+          // uchun scrollable ichiga o'raymiz.
           return RefreshIndicator(
             color: AppColors.accent,
             onRefresh: () async {
@@ -483,9 +477,8 @@ class _AlertTile extends StatelessWidget {
     return DateTime.tryParse(iso)?.toLocal();
   }
 
-  // ARCH-07: <24h markaziy formatter (locale-aware). 24h+ esa TO'LIQ
-  // sana-vaqt — SOS favqulodda hodisa, soat:daqiqa aniqligi muhim
-  // (markaziy "DD.MM" formati bu yerda yetarli emas).
+  // 24 soatgacha nisbiy vaqt, undan eskisi to'liq sana-vaqt — SOS
+  // favqulodda hodisa, soat:daqiqa aniqligi kerak.
   String _formatTime(DateTime dt) {
     if (DateTime.now().difference(dt).inHours < 24) {
       return formatRelativeTime(dt);

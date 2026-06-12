@@ -3,14 +3,11 @@ import 'package:flutter/foundation.dart';
 
 /// Bola qurilmasidagi bitta ilova uchun ota-ona belgilagan cheklov.
 ///
-/// **Firestore:**
-/// `users/{parentUid}/children/{childId}/app_restrictions/{packageName}`
-/// — document ID `packageName` (`com.tiktok`). Bola App real-time
-/// stream qiladi va `isBlocked` yoki `limitMinutes` bo'yicha overlay
-/// ko'rsatadi (Bosqich 4).
+/// Backend `/app-limits` yozuvidan map qilinadi; bola ilovasi shu
+/// ma'lumot asosida `isBlocked` yoki `limitMinutes` bo'yicha overlay
+/// ko'rsatadi.
 @immutable
 class AppRestriction {
-  /// `AppRestriction` konstruktor.
   const AppRestriction({
     required this.packageName,
     required this.appName,
@@ -19,7 +16,7 @@ class AppRestriction {
     this.isBlocked = false,
   });
 
-  /// Android paket nomi (document ID).
+  /// Android paket nomi.
   final String packageName;
 
   /// Foydalanuvchi-friendly nom (denormalized — usage va
@@ -38,12 +35,8 @@ class AppRestriction {
   /// Cheklov mavjudmi (block yoki limit > 0).
   bool get hasLimit => isBlocked || limitMinutes > 0;
 
-  /// Foydalanuvchi-friendly format:
-  /// - Bloklangan → "Bloklangan"
-  /// - 0 → ""
-  /// - 30 → "30 daq"
-  /// - 60 → "1 soat"
-  /// - 90 → "1 st 30 daq"
+  /// Ko'rsatish matni: "Bloklangan" / "30 daq" / "1 soat" / "1 st 30 daq";
+  /// limit 0 bo'lsa bo'sh satr.
   String get limitFormatted {
     if (isBlocked) return 'appLimits.blocked'.tr();
     if (limitMinutes <= 0) return '';

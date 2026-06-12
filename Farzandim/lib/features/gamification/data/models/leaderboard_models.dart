@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// Leaderboard (Reyting) modellari — backend GET /api/leaderboard javobi
-// ─────────────────────────────────────────────────────────────────────
+// Reyting modellari — GET /api/leaderboard javobining typed ko'rinishi.
 
 import 'package:flutter/foundation.dart';
 

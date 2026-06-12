@@ -1,10 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// ActiveSessionsScreen — Sozlamalar > Faol sessiyalar (Figma 1:1)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend GET /api/auth/sessions — login qilingan qurilmalar. Foydalanuvchi
-// boshqa qurilmalarni uzoqdan tugata oladi (DELETE /sessions/:id) yoki
-// barchasini birato'la (DELETE /sessions/others).
+// Faol sessiyalar ekrani — login qilingan qurilmalarni ko'rish va
+// boshqa qurilmalarni uzoqdan tugatish.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -494,8 +489,7 @@ void _snack(BuildContext context, String message) {
   AppToast.success(context, message);
 }
 
-/// Figma 1:1 — iOS uslubidagi tasdiq alert'i: "Ha" (ko'k) / "Yo'q" (qizil).
-/// `true` → "Ha" (yakunlash), `false` → "Yo'q"/bekor.
+/// iOS uslubidagi tasdiq dialogi. `true` — "Ha" (tugatish), `false` — bekor.
 Future<bool> _showEndSessionConfirm(
   BuildContext context, {
   required String title,

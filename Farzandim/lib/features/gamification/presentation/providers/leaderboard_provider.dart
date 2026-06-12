@@ -1,10 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// leaderboard_provider — paginated reyting holati (period + viloyat)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Family kaliti = (childId, period, region). Period yoki viloyat o'zgarsa
-// yangi instance (toza ro'yxat). Bir instance ichida `loadMore()` keyingi
-// sahifani qo'shadi (~15 tadan).
+// Paginated reyting holati. Family kaliti (childId, period, region) —
+// period yoki viloyat o'zgarsa toza instance, loadMore() sahifa qo'shadi.
 
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
@@ -100,8 +95,8 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         region: _args.region,
         page: next,
       );
-      // currentChild'ni qayta yozmaymiz — u birinchi sahifada o'rnatilgan va
-      // har sahifada bir xil (backend qayta hisoblaydi). Stale bo'lmaydi.
+      // currentChild birinchi sahifada o'rnatilgan va har sahifada bir xil
+      // keladi — qayta yozish shart emas.
       state = state.copyWith(
         entries: [...state.entries, ...pageData.entries],
         hasMore: pageData.hasMore,

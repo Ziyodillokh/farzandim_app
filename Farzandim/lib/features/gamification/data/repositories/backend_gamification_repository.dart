@@ -1,19 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendGamificationRepository — Backend Gamification API (Sprint 4.4.6)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt:
-//   GET /api/children/:childId/profile     → ChildProfile
-//   POST /api/children/:childId/xp-events  → {event, profile}
-//   GET /api/children/:childId/xp-events   → history
-//   GET /api/children/:childId/achievements
-//   WS profile:updated → child room (XP/Level o'zgarsa)
-//
-// ChildProfile: xp, donBalance, level, status, streakDays, achievements[]
-// Status mapping (Backend):
-//   < 300 → Boshlovchi, < 900 → Izlanuvchi, < 2000 → Bilimdon,
-//   < 5000 → Lider, >= 5000 → Mentor
-// Level formula: floor(sqrt(xp) / 5) + 1
+// Backend gamification API: bola profili, XP eventlar va WS profile:updated.
+// Level va status backend'da hisoblanadi — bu yerda faqat o'qiymiz.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';

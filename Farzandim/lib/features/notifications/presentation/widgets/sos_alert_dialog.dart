@@ -17,10 +17,8 @@ import 'package:url_launcher/url_launcher.dart';
 /// Tashqaridan yopilmaydi (`barrierDismissible: false`) — foydalanuvchi
 /// "Joylashuv", "Qo'ng'iroq" yoki "Yopish" tugmalaridan birini tanlaydi.
 class SosAlertDialog extends ConsumerStatefulWidget {
-  /// `SosAlertDialog` konstruktor.
   const SosAlertDialog({required this.notification, super.key});
 
-  /// SOS xabari ma'lumoti.
   final AppNotification notification;
 
   /// Dialog'ni ochish.
@@ -58,10 +56,8 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
     super.dispose();
   }
 
-  /// "Qo'ng'iroq" tugmasi bosilganda:
-  ///   1. childByIdProvider'dan bola obyektini olamiz (phoneNumber bilan)
-  ///   2. phoneNumber bor bo'lsa → `tel:` URI bilan native dialer ochish
-  ///   3. Yo'q bo'lsa → SnackBar bilan ogohlantirish
+  /// "Qo'ng'iroq" bosilganda bolaning raqamiga native dialer ochamiz;
+  /// raqam bo'lmasa SnackBar bilan ogohlantiramiz.
   Future<void> _onCallPressed(AppNotification notif) async {
     final child = ref.read(childByIdProvider(notif.childId));
     final phone = child?.phoneNumber;

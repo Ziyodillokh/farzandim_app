@@ -1,19 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — Asosiy kirish nuqtasi (entry point)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Flutter dasturi `main()` funksiyasidan boshlanadi. Bu funksiya:
-//   1) Flutter binding'larni ishga tushiradi (WidgetsFlutterBinding).
-//   2) Firebase'ni inicializatsiya qiladi.
-//   3) App Check faollashtiradi (Sprint 2.3 — Play Integrity/DeviceCheck).
-//      Boshqa Firebase API'lardan oldin chaqirish kerak — Firestore/Auth
-//      so'rovlari App Check tokenini olib yuboradi.
-//   4) Crashlytics + Analytics hook'larini o'rnatadi (Sprint 1.5).
-//   5) `runZonedGuarded` ichida `runApp(...)` chaqiradi — zone'dagi
-//      uncaught xato'lar Crashlytics'ga yuboriladi.
-//
-// Debug build'da Crashlytics o'chirilgan (kDebugMode) — har kichik
-// debugging xato Firebase Console'ga oqib ketmaydi.
+// Ilova kirish nuqtasi: Firebase/App Check/Crashlytics init va runApp.
+// Debug build'da Crashlytics o'chirilgan — har mayda xato Console'ga oqmasin.
 
 import 'dart:async';
 import 'dart:convert';
@@ -37,13 +23,11 @@ import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// FCM xabari ILOVA FONDA/YOPIQ bo'lganda keladigan handler (alohida isolate).
+/// Ilova fonda yoki yopiq bo'lganda keladigan FCM xabarlari (alohida isolate).
 ///
-/// FCM o'zi tray'da notification ko'rsatadi, lekin ilova ichidagi
-/// "Bildirishnoma" ro'yxatiga tushmasdi (ro'yxat faqat foreground
-/// xabarlarini olardi). Bu handler xabarni SharedPreferences "pending"
-/// navbatiga yozadi — ilova ochilganda/resume bo'lganda
-/// `NotificationsNotifier.syncPending()` uni ro'yxatga qo'shadi.
+/// FCM tray'da notification ko'rsatadi-yu, ilova ichidagi "Bildirishnoma"
+/// ro'yxatiga tushmay qolardi. Shu uchun xabarni SharedPreferences "pending"
+/// navbatiga yozamiz — ilova ochilganda `syncPending()` ro'yxatga qo'shadi.
 @pragma('vm:entry-point')
 Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
@@ -56,12 +40,11 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
   try {
     final notif = AppNotification.fromRemoteMessage(message);
     final prefs = await SharedPreferences.getInstance();
-    // MUHIM: har xabar O'Z noyob kalitiga yoziladi (atomik bitta write) —
-    // umumiy massiv kalitida read-modify-write QILMAYMIZ. Aks holda main
-    // isolate'ning syncPending'i (reload→read→remove) bilan poyga bo'lib,
-    // shu orada bg isolate qo'shgan xabar (hatto SOS) jimgina yo'qolishi
-    // mumkin edi. Kalit microsecond bilan noyob; mantiqiy dedup syncPending'da
-    // notif.id bo'yicha bo'ladi.
+    // Har xabar o'z noyob kalitiga yoziladi (bitta atomik write). Umumiy
+    // massiv kalitida read-modify-write qilsak, main isolate'ning syncPending'i
+    // bilan poyga chiqib, bg isolate qo'shgan xabar (hatto SOS) jim yo'qolishi
+    // mumkin edi. Kalit microsecond bilan noyob; dedup syncPending'da
+    // notif.id bo'yicha.
     final key = '$kPendingNotificationsPrefsKey:'
         '${DateTime.now().microsecondsSinceEpoch}_${notif.id}';
     await prefs.setString(key, jsonEncode(notif.toJson()));
@@ -75,15 +58,12 @@ Future<void> main() async {
     () async {
       WidgetsFlutterBinding.ensureInitialized();
 
-      // ⚡ Yuqori refresh rate (120Hz) — Android'da eng yuqori display rejimini
-      // so'raydi (Samsung va b. ilovani 60Hz'da cheklaydi). Web/iOS'da no-op
-      // (iOS allaqachon avtomatik). Xato bo'lsa app baribir ishlaydi.
-      // MUHIM (ST-02): mustaqil init'lar PARALLEL — avval 4 ta ketma-ket
-      // await edi (displayMode → ApiKeys → EasyLocalization → Firebase),
-      // cold start shuncha sekkinlashardi. Har biri o'z try/catch'ida —
-      // bittasi yiqilsa qolganlari davom etadi.
+      // Mustaqil init'lar parallel ketadi — avval 4 ta ketma-ket await edi
+      // va cold start shunga cho'zilardi. Har biri o'z catch'ida: bittasi
+      // yiqilsa qolganlari davom etadi.
       await Future.wait<void>([
-        // ⚡ 120Hz — best-effort (qurilma qo'llamasa 60Hz qoladi).
+        // 120Hz so'rov — best-effort (Samsung va b. 60Hz'da cheklaydi,
+        // qurilma qo'llamasa 60Hz qoladi). Web/iOS'da no-op.
         if (!kIsWeb)
           FlutterDisplayMode.setHighRefreshRate().catchError((Object _) {}),
         // API kalitlar (assets/env.json) — dart-define'siz ham ishlaydi.
@@ -106,13 +86,11 @@ Future<void> main() async {
         }),
       ]);
 
-      // App Check / Crashlytics / Analytics — faqat mobil (Android/iOS),
-      // va faqat Firebase core muvaffaqiyatli bo'lganda. Web'da:
-      //   • Analytics [400] "API key not valid" spam beradi,
-      //   • Crashlytics web'ni qo'llamaydi, AppCheck reCAPTCHA talab qiladi.
-      // Error-handler'lar SINXRON o'rnatiladi (erta xatolar tutilsin);
-      // qolgan aktivatsiyalar birinchi frame'ni kechiktirmasligi uchun
-      // AWAIT QILINMAYDI (plugin'lar chaqiriqlarni o'zi navbatga oladi).
+      // App Check / Crashlytics / Analytics — faqat mobil va faqat Firebase
+      // core muvaffaqiyatli bo'lganda (web'da Analytics 400 spam beradi,
+      // Crashlytics web'ni qo'llamaydi). Error-handler'lar sinxron o'rnatiladi,
+      // erta xatolar ham tutilsin; qolgan aktivatsiyalarni await qilmaymiz —
+      // birinchi frame kechikmasin (plugin'lar chaqiriqlarni o'zi navbatlaydi).
       if (!kIsWeb && Firebase.apps.isNotEmpty) {
         FlutterError.onError =
             FirebaseCrashlytics.instance.recordFlutterFatalError;
@@ -204,10 +182,10 @@ class _ErrorFallback extends StatelessWidget {
           child: Padding(
             padding: EdgeInsets.all(24),
             child: Text(
-              // ATAYLAB .tr() EMAS (review topilmasi): ErrorWidget.builder
-              // EasyLocalization yuklanishidan OLDIN ham ishlashi mumkin —
-              // erta-fatal holatda .tr() tarjima o'rniga xom kalit nomini
-              // ko'rsatib qo'yardi.
+              // Ataylab .tr() ishlatilmagan: ErrorWidget.builder
+              // EasyLocalization yuklanishidan oldin ham ishlashi mumkin,
+              // u holda .tr() tarjima o'rniga xom kalit nomini ko'rsatib
+              // qo'yardi.
               'Nimadir xato ketdi. Iltimos, ilovani qayta oching.',
               textAlign: TextAlign.center,
               style: TextStyle(color: Color(0xFFB0B0B8), fontSize: 15),

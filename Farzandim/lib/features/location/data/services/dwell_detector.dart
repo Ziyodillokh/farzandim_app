@@ -1,13 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────
-// DwellDetector — Bola 20+ daqiqa to'xtagan joylar
-// ─────────────────────────────────────────────────────────────────────
-//
-// Algoritm (2 qadam):
-//   1. `detect()` — consecutive nuqtalarni cluster qilib `DwellPoint`
-//      ro'yxati (har visit alohida).
-//   2. `aggregateByLocation()` — bir xil joyga bir necha marta tashrif
-//      tushgan bo'lsa (masala: maktab 08-13 + 16-18) → bitta
-//      `AggregatedDwell` (jami vaqt + visit'lar ro'yxati).
+// Bola uzoq to'xtagan joylarni topadi: `detect()` ketma-ket nuqtalarni
+// klasterlab har tashrifni alohida beradi, `aggregateByLocation()` bir
+// joyga bir necha tashrifni bitta yozuvga yig'adi (masalan maktab:
+// 08-13 va 16-18).
 
 import 'dart:math' as math;
 
@@ -39,7 +33,7 @@ class AggregatedDwell {
   const AggregatedDwell({required this.center, required this.visits});
 
   final LatLng center;
-  final List<DwellPoint> visits; // chronological
+  final List<DwellPoint> visits; // xronologik tartibda
 
   Duration get totalDuration {
     var total = Duration.zero;
@@ -49,10 +43,8 @@ class AggregatedDwell {
     return total;
   }
 
-  /// Multi-line label:
-  ///   08:00–13:00 (5h)
-  ///   16:00–18:00 (2h)
-  ///   Jami: 7h
+  /// Ko'p qatorli label: har tashrif "08:00–13:00 (5 s)" ko'rinishida,
+  /// bir nechta bo'lsa oxirida jami vaqt qatori.
   String get label {
     final lines = <String>[];
     for (final v in visits) {
@@ -173,7 +165,7 @@ class DwellDetector {
     }
 
     return groups.map((visits) {
-      // Aggregated center — barcha visit centers o'rtachasi
+      // Markaz — barcha tashriflar markazlarining o'rtachasi.
       var sumLat = 0.0;
       var sumLng = 0.0;
       for (final v in visits) {

@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// gamification_provider — Bola gamification state (Sprint 4.4.6)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend `/api/children/:childId/profile` + WS `profile:updated`.
-// Parent App "Bola yutuqlari" ekrani uchun.
+// Bola gamification holati — "Bola yutuqlari" ekrani uchun profil va XP tarixi.
 
 import 'dart:async';
 

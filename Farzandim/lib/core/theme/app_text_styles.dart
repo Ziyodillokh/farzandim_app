@@ -1,54 +1,27 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — SHRIFT STILLARI (Typography)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Loyihada 5 ta asosiy matn stili ishlatamiz. Hech bir widget'da
-// `TextStyle(fontSize: 16, ...)` to'g'ridan-to'g'ri yozilmaydi —
-// faqat shu yerdan olib ishlatamiz:
-//
-//   Text('Salom', style: AppTextStyles.headlineXL)
-//
-// Rangni boshqacha qilish kerak bo'lsa, `.copyWith()` ishlatamiz:
-//
-//   Text('hint', style: AppTextStyles.bodyS.copyWith(
-//     color: AppColors.textSecondary,
-//   ))
-//
-// Shrift: Inter (Google Fonts). Internet'dan birinchi ishga tushishda
-// avtomatik yuklanadi va keshlanadi (`google_fonts` paketi qiladi).
+// Loyihaning 5 ta asosiy matn stili — widget'larda TextStyle qo'lda
+// yozilmaydi, rang kerak bo'lsa `.copyWith()` qilinadi. Shrift: Inter
+// (google_fonts birinchi ishga tushishda yuklab keshlaydi).
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Farzandim ilovasining shrift stillari.
-///
-/// Bu klassdan obyekt yaratilmaydi — faqat static maydonlardan
-/// foydalaniladi: `AppTextStyles.headlineXL`, `AppTextStyles.bodyM`, ...
 class AppTextStyles {
   AppTextStyles._();
 
-  /// **Headline XL** — 28sp, Bold (w700).
-  ///
-  /// Ekrandagi eng katta matn. Bir ekranda 1-2 marta ishlatiladi.
-  ///
-  /// Qayerda: Welcome ekranidagi "Farzandim" sarlavhasi,
-  /// dashboard'dagi "Salom, Aliyev!" salomlashish.
+  /// Eng katta sarlavha — 32sp, w700. Ekranda 1-2 marta ishlatiladi
+  /// (Welcome sarlavhasi, dashboard salomlashuvi).
   static TextStyle get headlineXL => GoogleFonts.inter(
         fontSize: 32,
         fontWeight: FontWeight.w700,
         color: AppColors.textPrimary,
-        // Premium: katta sarlavhada zich tracking + zich line-height.
+        // Katta sarlavhada zich tracking va line-height chiroyli turadi.
         letterSpacing: -0.6,
         height: 1.12,
       );
 
-  /// **Headline L** — 22sp, Semibold (w600).
-  ///
-  /// Bo'lim sarlavhalari — ekran ichidagi bo'limlarni ajratuvchi.
-  ///
-  /// Qayerda: "Mening farzandlarim", "Bugungi statistika",
-  /// Dialog va BottomSheet sarlavhalari, AppBar title.
+  /// Bo'lim sarlavhalari — 24sp, w600 (AppBar title, dialog
+  /// va bottom sheet sarlavhalari).
   static TextStyle get headlineL => GoogleFonts.inter(
         fontSize: 24,
         fontWeight: FontWeight.w600,
@@ -57,13 +30,8 @@ class AppTextStyles {
         height: 1.18,
       );
 
-  /// **Body M** — 16sp, Regular (w400).
-  ///
-  /// Asosiy matn — eng ko'p ishlatiladigan stil.
-  ///
-  /// Qayerda: paragrafalar, ListTile asosiy matni, tugma matni
-  /// (PrimaryButton ichida — `label` o'rniga `bodyM` ham bo'ladi),
-  /// TextField ichidagi terilayotgan matn.
+  /// Asosiy matn — 17sp, w400. Eng ko'p ishlatiladigan stil
+  /// (paragraflar, ListTile matni, TextField).
   static TextStyle get bodyM => GoogleFonts.inter(
         fontSize: 17,
         fontWeight: FontWeight.w400,
@@ -72,15 +40,8 @@ class AppTextStyles {
         letterSpacing: -0.1,
       );
 
-  /// **Body S** — 14sp, Regular (w400).
-  ///
-  /// Kichik tafsilotlar — asosiy matnga qo'shimcha.
-  ///
-  /// Qayerda: ListTile `subtitle`, "5 daqiqa oldin" vaqt yorlig'i,
-  /// description matni, hint va helper text TextField ostida.
-  ///
-  /// Eslatma: bu joyda odatda `textSecondary` rangi qo'llaniladi —
-  /// `.copyWith(color: AppColors.textSecondary)` qiling.
+  /// Kichik tafsilotlar — 15sp, w400 (subtitle, vaqt yorlig'i, hint).
+  /// Odatda `.copyWith(color: AppColors.textSecondary)` bilan ishlatiladi.
   static TextStyle get bodyS => GoogleFonts.inter(
         fontSize: 15,
         fontWeight: FontWeight.w400,
@@ -88,17 +49,12 @@ class AppTextStyles {
         height: 1.4,
       );
 
-  /// **Label** — 12sp, Medium (w500).
-  ///
-  /// Eng kichik matn — yorliqlar, tag'lar, status yozuvlari.
-  ///
-  /// Qayerda: chip ichidagi yorliq ("Online"), badge raqamlari,
-  /// kichik tugma matni, kategoriya nomlari.
+  /// Eng kichik matn — 12sp, w500 (chip yorlig'i, badge, status yozuvi).
   static TextStyle get label => GoogleFonts.inter(
         fontSize: 12,
         fontWeight: FontWeight.w500,
         color: AppColors.textPrimary,
-        // Kichik yorliqlar yengil ochilgan tracking bilan toza o'qiladi.
+        // Kichik yorliq yengil ochiq tracking bilan tozaroq o'qiladi.
         letterSpacing: 0.2,
         height: 1.2,
       );

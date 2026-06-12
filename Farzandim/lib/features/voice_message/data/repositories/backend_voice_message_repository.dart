@@ -1,18 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendVoiceMessageRepository — Parent App Backend Voice (Sprint 4.4.5)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt (Child App'dagi versiya bilan parallel — bir xil API):
-//   POST /api/voice-messages           multipart audio + receiverId
-//   GET  /api/voice-messages?role=     {messages: [...]}
-//   GET  /api/voice-messages/:id/file  {url, expiresIn: 3600}
-//   PUT  /api/voice-messages/:id/read
-//   DELETE /api/voice-messages/:id
-//   WS   voice:received → user:<receiverId> room
-//
-// Backend Claude security:
-// - sender ↔ receiver family check
-// - senderId === receiverId → 400
+// Ovozli/matnli/media chat uchun backend REST + WS repository.
 
 import 'dart:io';
 
@@ -199,9 +185,8 @@ class BackendVoiceMessageRepository {
 
   /// Hozirgi user'ga kelgan barcha o'qilmagan xabarlarni bulk mark.
   /// `fromUserId` berilsa — faqat shu sender'dan kelganlar.
-  ///
-  /// Sprint 4.4.31: chat ekran ochilganda 1 ta chaqiruv bilan
-  /// barcha unread'larni belgilash (tap-by-tap o'rniga).
+  /// Chat ochilganda bitta chaqiruv kifoya — har xabarni alohida
+  /// belgilashga hojat yo'q.
   Future<bool> markAllRead({String? fromUserId}) async {
     try {
       await _dio.post<void>(
@@ -222,9 +207,9 @@ class BackendVoiceMessageRepository {
 
   /// Xabarni ko'rilgan deb belgilash.
   ///
-  /// **Eslatma:** body sifatida bo'sh `{}` yuboriladi. Dio default
-  /// `Content-Type: application/json` yuboradi va Fastify 5 JSON parser
-  /// bo'sh body'ni qabul qilmaydi (`FST_ERR_CTP_INVALID_JSON_BODY` 400).
+  /// Body sifatida ataylab bo'sh `{}` yuboriladi: Dio default JSON
+  /// Content-Type qo'yadi, Fastify esa butunlay bo'sh JSON body'ni
+  /// 400 bilan qaytaradi.
   Future<bool> markAsRead(String messageId) async {
     try {
       await _dio.put<void>(

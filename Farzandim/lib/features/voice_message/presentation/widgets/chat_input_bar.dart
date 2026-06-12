@@ -1,20 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────
-// ChatInputBar — Telegram uslubidagi chat input (parent)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Layout (idle):
-//   [emoji] [ matn maydoni ] [📎 attach]   [mic/video | send]
-// Recording:
-//   [🗑 delete] [ jonli waveform + timer ] [⏹ stop]
-//
-// Mic/video tugma (Telegram):
-//   • TAP    → rejimni almashtiradi (ovoz ↔ video), icon o'zgaradi.
-//   • HOLD   → ovoz rejimida ovoz yozadi (qo'yib yuborsa yuboradi),
-//              video rejimida yumaloq video recorder modalini ochadi.
-//   • text bo'lsa → send tugma chiqadi (mic o'rniga).
-//
-// Mic GestureDetector DOIMO oxirgi child + `ValueKey` — recording
-// boshlanganda long-press subscription yo'qolmaydi (onLongPressEnd ishlaydi).
+// Telegram uslubidagi chat input: matn, emoji, attach va mic/video tugma.
+// Mic tugmada tap rejimni almashtiradi (ovoz/video), hold yozishni
+// boshlaydi; matn terilganda mic o'rniga send tugma chiqadi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -53,15 +39,15 @@ class ChatInputBar extends StatefulWidget {
   final int elapsedSeconds;
   final List<double> amplitudes;
 
-  /// Amplitude yangilanish signali (PERF-05): berilsa jonli waveform FAQAT
-  /// shu Listenable orqali qayta chiziladi — ota-ekran setState'siz (10Hz
-  /// butun-ekran rebuild o'rniga faqat waveform subtree rebuild bo'ladi).
+  /// Amplitude yangilanish signali: berilsa jonli waveform faqat shu
+  /// Listenable orqali qayta chiziladi — ota-ekran setState qilmaydi,
+  /// 10Hz'da butun ekran o'rniga faqat waveform subtree rebuild bo'ladi.
   final Listenable? amplitudeTick;
 
-  /// Ovoz yozishni boshlash (HOLD start, voice rejimi).
+  /// Ovoz yozishni boshlash (hold start, voice rejimi).
   final VoidCallback onLongPressStart;
 
-  /// Ovoz yozishni tugatish + yuborish (HOLD end, voice rejimi).
+  /// Ovoz yozishni tugatish + yuborish (hold end, voice rejimi).
   final VoidCallback onLongPressEnd;
 
   /// Recording'ni bekor qilish (delete tugma).
@@ -217,7 +203,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   Widget build(BuildContext context) {
     final hasText = _draft.trim().isNotEmpty;
-    // Orqa fon YO'Q — input wallpaper ustida suzib turadi (iPhone/Telegram).
+    // Orqa fon yo'q — input wallpaper ustida suzib turadi (iPhone/Telegram).
     // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
     return ColoredBox(
       color: _showEmoji && !widget.isRecording
@@ -378,7 +364,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
     );
   }
 
-  /// Mic/video toggle tugma — gesture stabil (ValueKey + oxirgi child).
+  /// Mic/video toggle tugma. ValueKey bilan doim oxirgi child bo'lib
+  /// turishi kerak — aks holda recording boshlanganda long-press
+  /// subscription yo'qolib, onLongPressEnd kelmay qoladi.
   Widget _buildActionButton() {
     final isRecording = widget.isRecording;
     final isVideoMode = _mode == ChatRecordMode.video;
@@ -393,7 +381,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               if (isRecording) {
                 widget.onLongPressEnd();
               } else {
-                // TAP → rejim almashadi (Telegram).
+                // Tap rejimni almashtiradi (Telegram'dagidek).
                 _toggleMode();
               }
             },

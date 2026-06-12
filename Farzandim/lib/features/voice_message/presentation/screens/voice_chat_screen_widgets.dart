@@ -1,5 +1,4 @@
-// ARCH-13 davomi: monolit fayl `part` fayllarga bo'lindi — private
-// nomlar va xulq o'zgarmagan, faqat fayl tashkiloti.
+// Voice chat ekranining yordamchi widget'lari (header, empty, skeleton).
 part of 'voice_chat_screen.dart';
 
 class _ChatHeader extends StatelessWidget {

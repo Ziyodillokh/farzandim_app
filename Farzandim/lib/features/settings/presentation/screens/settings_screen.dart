@@ -1,13 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// SettingsScreen — Sozlamalar (Figma 1:1, Sprint 7)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Tepada profil (avatar + ism + telefon/email pill + 3-nuqta menyu),
-// keyin 2 ta guruhlangan karta:
-//   1) Bola qo'shish · Bolaning ma'lumotlarini tahrirlash
-//   2) Faol sessiyalar (badge) · Til · Qo'llab-quvvatlash · Dastur haqida ·
-//      Ulashish
-// Pastda Foydalanish vaqti ↔ Sozlamalar navigatsiyasi (AppBottomNav, Hero).
+// Sozlamalar ekrani — profil header, guruhlangan menyu kartalari va
+// suzuvchi pastki navigatsiya.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -51,9 +43,8 @@ class SettingsScreen extends ConsumerWidget {
           child: Column(
             children: [
               _ProfileHeader(profile: profile),
-              // ─── Scroll + SUZUVCHI nav (Stack) ───
               // Menyu scroll'i butun bo'shliqni egallaydi; AppBottomNav uning
-              // USTIDA suzadi (orqa gradient + aurora uzluksiz ko'rinadi).
+              // ustida suzadi — orqa gradient uzluksiz ko'rinadi.
               Expanded(
                 child: Stack(
                   clipBehavior: Clip.none,
@@ -141,8 +132,8 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    // Fade scrim — nav ortidagi kontent yumshoq so'nadi (qattiq
-                    // blok EMAS; pastga qarab shaffofdan fon rangiga o'tadi).
+                    // Fade scrim — nav ortidagi kontent yumshoq so'nadi:
+                    // pastga qarab shaffofdan fon rangiga o'tadi.
                     Positioned(
                       left: 0,
                       right: 0,
@@ -165,8 +156,8 @@ class SettingsScreen extends ConsumerWidget {
                         ),
                       ),
                     ),
-                    // SUZUVCHI nav — orqa fon yo'q (shaffof): gradient ustida
-                    // qalqaydi, glass kartalar bilan bir xil til.
+                    // Suzuvchi nav — fonsiz (shaffof), gradient ustida
+                    // qalqaydi va glass kartalar bilan bir uslubda.
                     Positioned(
                       left: AppDimensions.lg,
                       right: AppDimensions.lg,
@@ -197,12 +188,9 @@ class SettingsScreen extends ConsumerWidget {
 
   // ─── Push diagnostikasi ───
   //
-  // Backend o'ziga test push yuboradi va natijani qaytaradi. Bu o'yin/batareya
-  // push'i nega kelmasligini aniqlaydi:
-  //   tokens=0           → qurilma ro'yxatdan o'tmagan (chiqib qayta kiring)
-  //   sent>0 + push keldi → hammasi ishlaydi
-  //   sent>0 + push yo'q  → bildirishnoma ruxsati/telefon ko'rsatish muammosi
-  //   sent=0, failed>0   → server Firebase muammosi
+  // Backend o'ziga test push yuborib natijani qaytaradi. tokens=0 bo'lsa
+  // qurilma ro'yxatdan o'tmagan; sent>0 lekin push kelmasa bildirishnoma
+  // ruxsati muammosi; failed>0 bo'lsa server tomonda Firebase xatosi.
   Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('settings.pushTest.sending'.tr())),
@@ -503,7 +491,7 @@ class _OverflowMenu extends ConsumerWidget {
               try {
                 await ref.read(fcmServiceProvider).removeTokenForCurrentUser();
               } catch (_) {
-                // FCM Firestore mode'da bo'lmasa xato bo'lishi mumkin.
+                // token o'chirish xatosi logout'ni to'xtatmasin.
               }
               await ref.read(backendAuthProvider.notifier).logout();
             },

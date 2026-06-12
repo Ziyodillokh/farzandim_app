@@ -1,21 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendLocationRepository — Backend Location API (Sprint 4.4.2)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend kontrakt:
-//   GET  /api/children/:childId/location          — eng so'nggi
-//   GET  /api/children/:childId/location/history  — tarix (from/to/limit)
-//   WS   location:updated { childId, location }   — real-time push
-//
-// Real-time pipeline:
-//   1. `watchLocation(childId)` chaqirilganda — Backend'dan initial
-//      latest fetch + WS listener qo'shiladi
-//   2. WS event keladi (`location:updated`) — childId filter qo'yiladi
-//      va shu bola uchun yangi `ChildLocation` emit qilinadi
-//   3. Stream listener cancel bo'lganda — WS listener olib tashlanadi
-//
-// Eslatma: Backend `emitToUser(parentId, ...)` ham qiladi, demak
-// `join:child` chaqirilmasa ham parent eshitadi (auto-join user room).
+// Bola joylashuvi uchun Backend REST + WS klienti: eng so'nggi nuqta,
+// tarix, to'xtashlar va `location:updated` real-time stream.
+// Backend `emitToUser` ham qiladi, shuning uchun `join:child`siz ham
+// parent user room orqali event'larni eshitadi.
 
 import 'dart:async';
 
@@ -71,11 +57,9 @@ class BackendLocationRepository {
 
   /// Bola harakat tarixini Backend'dan oladi.
   ///
-  /// `from`/`to` ISO 8601 vaqt (UTC). `null` bo'lsa Backend default
-  /// ishlatadi (cheklov yo'q). `limit` 1..500, default 100.
-  ///
-  /// Response chronologic order DESC (Backend `orderBy createdAt desc`).
-  /// Polyline chizish uchun caller `.reversed.toList()` qilishi mumkin.
+  /// `from`/`to` ISO 8601 (UTC), `null` bo'lsa backend default ishlatadi.
+  /// `limit` 1..500. Javob DESC tartibda — polyline uchun caller
+  /// `.reversed.toList()` qilishi mumkin.
   Future<List<ChildLocation>> getHistory({
     required String childId,
     DateTime? from,
@@ -128,12 +112,10 @@ class BackendLocationRepository {
     }
   }
 
-  /// Bola joriy joylashuvi stream'i — initial Backend fetch + WS
-  /// `location:updated` real-time updates.
-  ///
-  /// SocketClient'ning broadcast `eventStream`'idan foydalanadi —
-  /// bir nechta child uchun bir paytda subscribe bo'lib boshqasiga
-  /// tegmaslik (childId filter).
+  /// Bola joriy joylashuvi stream'i — boshlang'ich Backend fetch + WS
+  /// `location:updated` real-time yangilanishlar. Broadcast
+  /// `eventStream`'dan childId bo'yicha filtrlanadi, shunda bir nechta
+  /// bolaga parallel obuna bo'lsa ham bir-biriga tegmaydi.
   Stream<ChildLocation?> watchLocation(String childId) {
     late StreamController<ChildLocation?> controller;
     StreamSubscription<dynamic>? subscription;
@@ -141,7 +123,7 @@ class BackendLocationRepository {
     controller = StreamController<ChildLocation?>(
       onListen: () async {
         debugPrint('LocRepo[$childId]: watchLocation onListen — subscribed');
-        // 1. Initial Backend fetch.
+        // Avval backend'dan joriy nuqtani olamiz.
         final initial = await getLatest(childId);
         if (controller.isClosed) return;
         final initialStr = initial == null
@@ -150,14 +132,14 @@ class BackendLocationRepository {
         debugPrint('LocRepo[$childId]: initial fetch — $initialStr');
         controller.add(initial);
 
-        // 2. WS broadcast stream'iga obuna — har 'location:updated'
-        // event filter qilinib bola moslashsagina emit qilinadi.
+        // Keyin WS stream'iga obuna — faqat shu bolaning
+        // 'location:updated' event'lari emit qilinadi.
         subscription = _socketClient.eventStream('location:updated').listen((
           data,
         ) {
           if (controller.isClosed) return;
-          // MEM-9: to'liq payload print qilinmaydi — har WS event'da katta
-          // string yaratish/log IO isrof edi (release'da ham ishlardi).
+          // To'liq payload'ni print qilmaymiz — har WS event'da katta
+          // string yasash bekorga xotira va log IO sarflaydi.
           if (data is! Map) {
             debugPrint('LocRepo[$childId]: WS payload not Map — skip');
             return;
@@ -171,10 +153,10 @@ class BackendLocationRepository {
           }
 
           final locJson = data['location'];
-          // socket_io payload'ni ko'pincha Map<dynamic,dynamic> sifatida
-          // yetkazadi — qattiq Map<String,dynamic> cast real-time update'ni
-          // jimgina o'chirib qo'yardi. Yumshoq tekshirish + .from() bilan
-          // normalizatsiya qilamiz (marker real-vaqtda yangilanadi).
+          // socket_io payload'ni ko'pincha Map<dynamic,dynamic> qilib
+          // beradi — qattiq Map<String,dynamic> cast real-time update'ni
+          // jimgina o'ldirardi. Yumshoq tekshirib .from() bilan
+          // normalizatsiya qilamiz.
           if (locJson is! Map) {
             debugPrint('LocRepo[$childId]: WS location field not Map — skip');
             return;

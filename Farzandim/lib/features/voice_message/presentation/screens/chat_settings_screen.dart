@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// ChatSettingsScreen — chat orqa foni + mavzu (light/night)
-// ─────────────────────────────────────────────────────────────────────
+// Chat sozlamalari ekrani: orqa fon va mavzu (light/dark) tanlash.
 
 import 'dart:io';
 

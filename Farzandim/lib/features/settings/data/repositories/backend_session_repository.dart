@@ -1,10 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendSessionRepository — "Faol sessiyalar" REST (Sprint 7)
-// ─────────────────────────────────────────────────────────────────────
-//
-//   GET    /api/auth/sessions          → faol sessiyalar ro'yxati
-//   DELETE /api/auth/sessions/:id       → bitta sessiyani tugatish
-//   DELETE /api/auth/sessions/others    → joriydan boshqa barchasini tugatish
+// Faol sessiyalar REST API — ro'yxat olish va sessiyalarni tugatish.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
@@ -36,7 +30,7 @@ class BackendSessionRepository {
     await _dio.delete<void>('/auth/sessions/$sessionId');
   }
 
-  /// Joriydan boshqa BARCHA sessiyalarni tugatish.
+  /// Joriydan boshqa barcha sessiyalarni tugatish.
   Future<void> revokeOthers() async {
     await _dio.delete<void>('/auth/sessions/others');
   }

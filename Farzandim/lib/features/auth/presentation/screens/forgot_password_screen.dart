@@ -15,7 +15,6 @@ import 'package:go_router/go_router.dart';
 /// Tiklash oqimi (SMS/email orqali kod yuborish) keyinroq backendga ulanadi.
 /// Hozir tugma bosilganda "tez orada" xabari ko'rsatiladi.
 class ForgotPasswordScreen extends StatefulWidget {
-  /// `ForgotPasswordScreen` konstruktor.
   const ForgotPasswordScreen({super.key});
 
   @override

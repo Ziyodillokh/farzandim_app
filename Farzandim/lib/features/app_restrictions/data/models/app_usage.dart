@@ -2,12 +2,11 @@ import 'package:flutter/foundation.dart';
 
 /// Bola qurilmasidagi bitta ilova ustida foydalanish ma'lumoti.
 ///
-/// Bola App `UsageStatsManager` orqali olib `app_usage/{day}` hujjatga
-/// yozadi. Multiple entries bo'lishi mumkin (Android API'sida `INTERVAL_DAILY`
-/// 2 kunga qaytadi) — UI'da [AppUsageDay.aggregatedApps] bilan birlashtiriladi.
+/// Bola ilovasi `UsageStatsManager` orqali yig'ib serverga yuboradi.
+/// Bir paket uchun bir nechta yozuv kelishi mumkin (Android `INTERVAL_DAILY`
+/// 2 kunga qaytadi) — UI'da [AppUsageDay.aggregatedApps] birlashtiradi.
 @immutable
 class AppUsageEntry {
-  /// `AppUsageEntry` konstruktor.
   const AppUsageEntry({
     required this.packageName,
     required this.appName,
@@ -57,8 +56,8 @@ class AppUsageEntry {
   /// fallback `IconData` ko'rsatadi.
   final String? iconBase64;
 
-  /// Backend MinIO signed URL (1 soat amal qiladi) — Sprint 4.4.29.
-  /// Priority `iconUrl > iconBase64 > Material fallback`.
+  /// Backend MinIO signed URL (1 soat amal qiladi).
+  /// Ustuvorlik: `iconUrl > iconBase64 > Material fallback`.
   final String? iconUrl;
 
   /// `Duration` ko'rinishida foydalanish vaqti.
@@ -75,14 +74,10 @@ class AppUsageEntry {
   }
 }
 
-/// Bir kunlik foydalanish ma'lumotlari (Firestore doc).
-///
-/// **Firestore:**
-/// `users/{parentUid}/children/{childId}/app_usage/{YYYY-MM-DD}`
-/// — bola App har 15 daqiqada yangilanib turadi (background sync).
+/// Bir kunlik foydalanish ma'lumotlari — bola ilovasi fonda davriy
+/// sync qilib turadi, parent backend'dan kunlik aggregat sifatida oladi.
 @immutable
 class AppUsageDay {
-  /// `AppUsageDay` konstruktor.
   const AppUsageDay({
     required this.date,
     required this.updatedAt,
@@ -92,7 +87,7 @@ class AppUsageDay {
   /// `YYYY-MM-DD` format (document ID).
   final String date;
 
-  /// Bola App oxirgi sync vaqti (server timestamp).
+  /// Bola ilovasining oxirgi sync vaqti (server timestamp).
   final DateTime updatedAt;
 
   /// Xom apps ro'yxati — `aggregatedApps` orqali tartibga solinadi.
@@ -130,18 +125,17 @@ class AppUsageDay {
   }
 
   /// Juda qisqa (tasodifiy ochib-yopish) foydalanishlar yashiriladi (ms).
-  /// 10s: avval 60s edi — 1 daqiqadan kam ishlatilgan ilova (masalan Chrome
-  /// 40 soniya) UMUMAN ko'rinmasdi; foydalanuvchi talabi — ekran yoqib
-  /// ishlatilgan hamma narsa ko'rinsin.
+  /// 10 soniya qilib qo'yilgan: 60s bo'lganda 1 daqiqadan kam ishlatilgan
+  /// ilova (masalan Chrome 40 soniya) umuman ko'rinmasdi.
   static const int _minVisibleMs = 10000;
 
   /// Faqat launcher, systemUI, klaviatura va pure-fon servislarni chiqaramiz.
   ///
-  /// MUHIM: ilgari `com.android.*` butunlay filtrlanardi va shu sababli SOAT
-  /// (com.android.deskclock), kamera, kalkulyator kabi foydalanuvchi haqiqatan
-  /// ishlatadigan ilovalar yo'qolardi. Endi faqat aniq tizimiy/fon paketlar
-  /// chiqariladi — "Raqamli Salomatlik" kabi. (Event-based hisob fon
-  /// servislarni allaqachon 0 qiladi, shuning uchun keng filtr shart emas.)
+  /// Ilgari `com.android.*` butunlay filtrlanardi — soat, kamera,
+  /// kalkulyator kabi foydalanuvchi haqiqatan ishlatadigan ilovalar ham
+  /// yo'qolardi. Endi faqat aniq tizimiy/fon paketlar chiqariladi;
+  /// event-based hisob fon servislarni baribir 0 qiladi, shuning uchun
+  /// keng filtr shart emas.
   List<AppUsageEntry> get filteredApps {
     const systemPrefixes = [
       // Launcher'lar (uy ekrani) — foreground'da ko'rinadi, lekin "ilova" emas.
@@ -158,9 +152,8 @@ class AppUsageDay {
       'com.google.android.inputmethod',
       'com.sec.android.inputmethod',
       'com.samsung.android.honeyboard',
-      // ESLATMA: 'com.farzandim.' (Parvoz) endi FILTRLANMAYDI — bola Parvoz
-      // ichida video/audiokitob ko'radi, bu ham haqiqiy ekran vaqti
-      // (foydalanuvchi talabi: ekran yoqilgan hamma foydalanish ko'rinsin).
+      // 'com.farzandim.' (Parvoz) ataylab filtrlanmaydi — bola Parvoz
+      // ichida video/audiokitob ko'radi, bu ham haqiqiy ekran vaqti.
     ];
 
     return aggregatedApps.where((app) {
@@ -171,8 +164,8 @@ class AppUsageDay {
     }).toList();
   }
 
-  /// UI'da ko'rsatiladigan ilovalar — faqat haqiqatda ekran yoqib ishlatilgan
-  /// (≥1 daqiqa, system emas) ilovalar. Ilgari bo'sh bo'lsa system ilovalarga
-  /// fallback bo'lardi; endi foydalanuvchi talabiga ko'ra faqat real ilovalar.
+  /// UI'da ko'rsatiladigan ilovalar — faqat real ishlatilgan (system emas,
+  /// ≥10 soniya) ilovalar. Avvalgi "bo'sh bo'lsa system ilovalarni ko'rsat"
+  /// fallback ataylab olib tashlangan.
   List<AppUsageEntry> get displayApps => filteredApps;
 }

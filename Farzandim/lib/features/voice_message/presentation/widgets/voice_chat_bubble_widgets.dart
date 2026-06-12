@@ -1,5 +1,4 @@
-// ARCH-13 davomi: monolit fayl `part` fayllarga bo'lindi — private
-// nomlar va xulq o'zgarmagan, faqat fayl tashkiloti.
+// Matn va rasm bubble'lari + meta (vaqt, o'qildi belgisi) widget'lari.
 part of 'voice_chat_bubble.dart';
 
 class _TextBubble extends StatelessWidget {
@@ -137,7 +136,7 @@ class _ImageBubble extends ConsumerWidget {
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
-        // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+        // Disk kesh + memCacheWidth bilan cheklangan dekod.
         child: CachedNetworkImage(
           imageUrl: url,
           fit: BoxFit.cover,
@@ -297,7 +296,7 @@ class _FullScreenImage extends StatelessWidget {
       body: Center(
         child: InteractiveViewer(
           maxScale: 4,
-          // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+          // Disk kesh + memCacheWidth bilan cheklangan dekod.
           child: CachedNetworkImage(
             imageUrl: url,
             fit: BoxFit.contain,

@@ -1,15 +1,7 @@
-// ─────────────────────────────────────────────────────────────────────
-// GeocodingService — koordinata → manzil (reverse geocoding)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Google Geocoding HTTP API ishlatadi (barcha platformalarda bir xil —
-// mobil/web). `geocoding` paketi web'ni qo'llamaydi, shuning uchun HTTP.
-// Kalit `ApiKeys.googleMapsKey` (env.json). Natija keshlanadi (bir xil
-// koordinatani qayta so'ramaslik uchun). Kalit yo'q / API o'chiq / tarmoq
-// xatosi bo'lsa `null` qaytadi — UI koordinata yoki "Noma'lum" ko'rsatadi.
-//
-// Eslatma: kalit Google Cloud'da "Geocoding API" yoqilgan bo'lishi kerak
-// (Maps SDK bilan bir xil loyihada, bir tugma).
+// Koordinatani manzilga aylantiradi (reverse geocoding): avval platforma
+// geocoder'i, bo'lmasa Google Geocoding HTTP API (kalit Cloud'da
+// "Geocoding API" yoqilgan bo'lishi kerak). Natija keshlanadi, xato
+// bo'lsa null qaytadi — UI koordinata yoki "Noma'lum" ko'rsatadi.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/constants/api_keys.dart';
@@ -39,8 +31,8 @@ class GeocodingService {
         '${latitude.toStringAsFixed(4)},${longitude.toStringAsFixed(4)}';
     if (_cache.containsKey(cacheKey)) return _cache[cacheKey];
 
-    // 1) MOBIL — platforma (OS) geocoder'i: kalitsiz, lokal, tez. Google
-    //    Geocoding HTTP cheklov/sekinligini chetlab o'tadi. Web qo'llamaydi.
+    // Mobilda avval OS geocoder'i — kalitsiz va tez, HTTP API
+    // cheklovlarini chetlab o'tadi. Web bu paketni qo'llamaydi.
     if (!kIsWeb) {
       try {
         final placemarks = await geo.placemarkFromCoordinates(

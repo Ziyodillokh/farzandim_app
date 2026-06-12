@@ -1,9 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// notifications_provider — Local persistence + filter (Sprint 4.4.21)
-// ─────────────────────────────────────────────────────────────────────
-//
-// FCM dan kelgan xabarlar SharedPreferences'ga saqlanadi va app restart
-// bo'lganda tiklanadi. Max 100 ta xabar saqlanadi (eng yangilari).
+// Bildirishnomalar ro'yxati: SharedPreferences'da saqlanadi, restart'da
+// tiklanadi, eng yangi 100 tasi qoladi.
 
 import 'dart:async';
 import 'dart:convert';
@@ -22,14 +18,12 @@ const kPendingNotificationsPrefsKey = 'notifications_pending_v1';
 
 /// Bildirishnomalar ro'yxatini boshqaruvchi notifier.
 ///
-/// - FCM payload orqali `addFromFcm` chaqiriladi (foreground)
-/// - Fonda kelgan push'lar bg isolate "pending" navbatiga yoziladi —
-///   startup va har app-resume'da `syncPending()` ularni qo'shib oladi
-/// - Har mutation SharedPreferences'ga saqlanadi
-/// - App startup'da `_load()` orqali tiklanadi
+/// Foreground push `addFromFcm` orqali keladi; fonda kelganlari bg isolate
+/// "pending" navbatiga yoziladi va startup hamda har resume'da
+/// `syncPending()` qo'shib oladi. Har o'zgarish SharedPreferences'ga
+/// saqlanadi.
 class NotificationsNotifier extends StateNotifier<List<AppNotification>>
     with WidgetsBindingObserver {
-  /// `NotificationsNotifier` konstruktor — yuklash boshlanadi darhol.
   NotificationsNotifier() : super(const []) {
     _load();
     WidgetsBinding.instance.addObserver(this);
@@ -60,10 +54,9 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
             .whereType<AppNotification>()
             .toList();
         if (list.isNotEmpty) {
-          // BUG-09: ALMASHTIRMAYMIZ — _load tugashidan oldin addFromFcm
-          // kelgan bo'lishi mumkin (state'da yangi xabar bor); `state = list`
-          // uni o'chirib yuborardi. Merge: yangi kelganlar tepada, keshdagi
-          // keyin (id dedup).
+          // To'g'ridan almashtirmaymiz: _load tugaguncha addFromFcm kelgan
+          // bo'lishi mumkin va `state = list` o'sha yangi xabarni o'chirib
+          // yuborardi. Shu uchun id bo'yicha merge — yangilar tepada.
           final liveIds = state.map((n) => n.id).toSet();
           state = [
             ...state,
@@ -80,11 +73,10 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
   /// Fonda (bg isolate) kelgan push'larni pending navbatdan ro'yxatga
   /// ko'chirish.
   ///
-  /// MUHIM: bg handler har xabarni O'Z noyob kalitiga yozadi
-  /// (`<prefix>:<micros>_<id>`). Bu yerda faqat O'ZIMIZ o'qigan kalitlarni
-  /// o'chiramiz — shu sababli bg isolate shu orada qo'shgan YANGI kalit
-  /// o'chib ketmaydi (massiv RMW poyga yo'q). Dedup `id` bo'yicha — tap
-  /// orqali allaqachon qo'shilgan xabar takrorlanmaydi.
+  /// Bg handler har xabarni o'z noyob kalitiga yozadi; bu yerda faqat
+  /// o'zimiz o'qigan kalitlarni o'chiramiz — shu orada bg isolate qo'shgan
+  /// yangi kalit yo'qolmaydi (massiv ustida read-modify-write poygasi yo'q).
+  /// Dedup `id` bo'yicha — tap orqali qo'shilgan xabar takrorlanmaydi.
   Future<void> syncPending() async {
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -95,8 +87,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
       final pendingKeys =
           prefs.getKeys().where((k) => k.startsWith(prefix)).toList();
 
-      // Legacy: oldingi build umumiy massiv kalitiga yozgan bo'lishi mumkin —
-      // bir martalik drenaj (yangilanishdan keyin yo'qolib qolmasin).
+      // Eski build umumiy massiv kalitiga yozgan bo'lishi mumkin — bir
+      // martalik drenaj, yangilanishdan keyin xabarlar yo'qolib qolmasin.
       final legacyRaw = prefs.getString(kPendingNotificationsPrefsKey);
 
       if (pendingKeys.isEmpty &&
@@ -140,7 +132,7 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
       // Vaqt bo'yicha eski→yangi — yangilari ro'yxat tepasiga chiqsin.
       parsed.sort((a, b) => a.timestamp.compareTo(b.timestamp));
 
-      // Dedup: state'dagi VA pending ichidagi takror id'lar (FCM redelivery).
+      // Dedup: state'dagi va pending ichidagi takror id'lar (FCM redelivery).
       final seen = state.map((n) => n.id).toSet();
       final fresh = <AppNotification>[];
       for (final n in parsed) {

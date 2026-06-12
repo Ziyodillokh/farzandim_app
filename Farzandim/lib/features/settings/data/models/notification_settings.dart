@@ -6,8 +6,7 @@ import 'package:flutter/foundation.dart';
 /// Cloud Function FCM yuborishdan oldin shu sozlamalarni tekshiradi.
 @immutable
 class NotificationSettings {
-  /// `NotificationSettings` konstruktor — barcha turlari default
-  /// yoqilgan.
+  /// Default holatda barcha turlar yoqilgan.
   const NotificationSettings({
     this.pushEnabled = true,
     this.locationAlerts = true,
@@ -16,10 +15,8 @@ class NotificationSettings {
     this.screenTimeAlerts = true,
   });
 
-  /// Firestore map'idan parse — `users/{uid}.notificationSettings`.
-  ///
-  /// Mavjud bo'lmagan maydonlar default `true` qiymatini oladi (yangi
-  /// turdagi xabar qo'shilganda eski foydalanuvchilar uchun safe default).
+  /// Firestore map'idan parse. Mavjud bo'lmagan maydonlar `true` oladi —
+  /// yangi tur qo'shilganda eski foydalanuvchilarda ham yoqilgan bo'lsin.
   factory NotificationSettings.fromFirestore(Map<String, dynamic>? data) {
     if (data == null) return const NotificationSettings();
     return NotificationSettings(
@@ -58,8 +55,6 @@ class NotificationSettings {
     };
   }
 
-  /// Yangi `NotificationSettings` yaratish — bitta yoki bir nechta
-  /// maydonni o'zgartiradi.
   NotificationSettings copyWith({
     bool? pushEnabled,
     bool? locationAlerts,

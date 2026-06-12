@@ -19,7 +19,6 @@ import 'package:go_router/go_router.dart';
 /// Backend: POST /api/auth/login. Muvaffaqiyatda auth state Authenticated'ga
 /// o'tadi va router avtomatik dashboard'ga yo'naltiradi.
 class SignInScreen extends ConsumerStatefulWidget {
-  /// `SignInScreen` konstruktor.
   const SignInScreen({super.key});
 
   @override
@@ -58,7 +57,6 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
 
     if (!mounted) return;
     if (err != null) {
-      // Xato — loading'ni o'chiramiz va xabarni ko'rsatamiz.
       setState(() {
         _loading = false;
         _error = err;

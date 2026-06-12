@@ -1,17 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// BackendUserRepository — Backend Users API (Sprint 4.4.1)
-// ─────────────────────────────────────────────────────────────────────
-//
-// User profil CRUD (auth flow'dan alohida — login/refresh
-// BackendAuthRepository'da qoladi).
-//
-// Backend kontrakt:
-//   GET  /api/users/me              → AuthUser obyekti
-//   PUT  /api/users/me  body {...}  → yangilangan AuthUser
-//     body: { name?, avatarUrl?, language? }
-//
-// Telefon raqami alohida endpoint orqali (POST /api/users/me/phone,
-// keyingi sub-sprint'da ulanadi).
+// Backend Users API — user profil CRUD. Login/refresh esa
+// BackendAuthRepository'da, bu fayl auth flow'ga aralashmaydi.
 
 import 'dart:typed_data';
 

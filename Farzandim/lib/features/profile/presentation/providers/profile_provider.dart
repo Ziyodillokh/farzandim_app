@@ -1,16 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// ProfileProvider — Parent profil state (Sprint 4.4.1 — Backend)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Eski versiya: Firestore `users/{uid}` real-time listen + Firebase
-// Storage avatar upload. Sprint 4.4.1'da Backend REST'ga ko'chirildi:
-//
-//   GET /api/users/me     — startup'da va auth state o'zgarganda fetch
-//   PUT /api/users/me     — updateProfile() chaqirilganda PUT yuboriladi
-//
-// Backend'da hozir parent avatar upload endpoint YO'Q. Telegram'dan
-// kelgan `avatarUrl` ko'rsatiladi. Foydalanuvchi rasmni o'zgartirib bo'lmaydi
-// (UI tomonida disabled). Backend endpoint qo'shilganda Yana ulanadi.
+// Ota-ona profili holati — backend /users/me bilan sinxron.
 
 import 'dart:typed_data';
 
@@ -19,22 +7,17 @@ import 'package:farzandim/features/auth/presentation/providers/backend_auth_prov
 import 'package:farzandim/features/profile/data/models/parent_profile.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Ota-ona profili — Backend `/api/users/me` bilan sinxronlanadi.
+/// Ota-ona profili — backend `/users/me` bilan sinxronlanadi.
 ///
-/// Lifecycle:
-/// 1. App boshlanganda `BackendAuthState` `AuthAuthenticated` bo'lsa,
-///    notifier konstruktor'da Backend'dan profil oladi (`_load`)
-/// 2. Auth state'i o'zgarsa (login/logout) — `ref.listen` orqali yangilanish
-/// 3. `updateProfile(...)` PUT /users/me yuboradi va state'ni yangilaydi
+/// Auth holati o'zgarganda profil qayta yuklanadi; `updateProfile`
+/// PUT yuborib state'ni yangilaydi.
 class ProfileNotifier extends StateNotifier<ParentProfile> {
-  /// `ProfileNotifier` konstruktor.
   ProfileNotifier({
     required BackendUserRepository repository,
     required BackendAuthState initialAuthState,
   })  : _repository = repository,
         super(_initialState(initialAuthState)) {
-    // Agar auth allaqachon Authenticated bo'lsa darhol Backend'dan fetch
-    // (AuthUser obyektida `language` bo'lmasligi mumkin — toza versiya).
+    // Auth allaqachon tayyor bo'lsa darhol to'liq profilni olib kelamiz.
     if (initialAuthState is AuthAuthenticated) {
       _load();
     }
@@ -44,8 +27,8 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
 
   static ParentProfile _initialState(BackendAuthState authState) {
     if (authState is AuthAuthenticated) {
-      // Auth javobidagi user'dan boshlang'ich profil yaratamiz, keyin
-      // `_load()` Backend'dan to'liq versiyani oladi.
+      // Auth javobidagi user — boshlang'ich profil; to'liq versiyani
+      // keyin `_load()` olib keladi.
       return ParentProfile.fromAuthUser(authState.user);
     }
     return ParentProfile.empty;
@@ -68,14 +51,8 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
     }
   }
 
-  /// Profil tahrirlash — Backend'ga PUT yuboradi, response state'ga yoziladi.
-  ///
-  /// Backend'da `email`/`phoneNumber` field YO'Q — bu metodda `name` (va
-  /// kelajakda `language`) qabul qilinadi. `photoBytes` parametri Sprint
-  /// 4.4.1'da hech qanday joyga yuborilmaydi (avatar upload backend
-  /// endpoint kelguncha disabled).
-  ///
-  /// Xato bo'lsa `Exception` qayta otiladi — caller SnackBar ko'rsatadi.
+  /// Profil tahrirlash — backend'ga PUT yuboradi, javob state'ga yoziladi.
+  /// Xato bo'lsa exception otiladi — caller xabar ko'rsatadi.
   Future<void> updateProfile({
     required String name,
     String? language,
@@ -94,13 +71,7 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
   }
 }
 
-/// Profil provider'i. `BackendAuthState`'ga listen qiladi.
-///
-/// Foydalanish:
-/// ```dart
-/// final profile = ref.watch(profileProvider);
-/// await ref.read(profileProvider.notifier).updateProfile(name: 'Ali');
-/// ```
+/// Profil provider'i — auth state o'zgarishiga listen qiladi.
 final profileProvider =
     StateNotifierProvider<ProfileNotifier, ParentProfile>((ref) {
   final notifier = ProfileNotifier(

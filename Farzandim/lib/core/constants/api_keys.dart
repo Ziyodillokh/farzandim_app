@@ -1,13 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — API KALITLARI
-// ─────────────────────────────────────────────────────────────────────
-//
-// Kalitlar `env.json` faylida saqlanadi (git'ga tushmaydi —
-// `.gitignore`'da). Runtime'da `main.dart`'da `ApiKeys.init()` chaqirilib
-// `assets/env.json`'dan yuklanadi. Flag kerak emas.
-//
-// Compile-time fallback ham bor (`--dart-define-from-file=env.json`
-// hali ishlaydi). Runtime asset ustun.
+// API kalitlari: assets/env.json'dan (git'da yo'q) runtime'da yuklanadi;
+// --dart-define compile-time fallback ham ishlaydi, runtime asset ustun.
 
 import 'dart:convert';
 

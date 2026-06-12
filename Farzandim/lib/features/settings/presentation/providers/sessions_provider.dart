@@ -1,6 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// sessionsProvider — "Faol sessiyalar" holati (Sprint 7)
-// ─────────────────────────────────────────────────────────────────────
+// "Faol sessiyalar" ekrani uchun holat boshqaruvi.
 
 import 'package:farzandim/features/settings/data/models/user_session.dart';
 import 'package:farzandim/features/settings/data/repositories/backend_session_repository.dart';

@@ -29,13 +29,13 @@ class _InputBar extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Pill maydon: 📎 ichkarida + matn (messenger-style).
+          // Pill maydon: 📎 ichkarida + matn (messenger-style, IXCHAM).
           Expanded(
             child: Container(
-              constraints: const BoxConstraints(minHeight: 48),
+              constraints: const BoxConstraints(minHeight: 44),
               decoration: BoxDecoration(
                 color: AppColors.surface,
-                borderRadius: BorderRadius.circular(24),
+                borderRadius: BorderRadius.circular(22),
                 border: Border.all(color: AppColors.border),
               ),
               child: Row(
@@ -43,15 +43,15 @@ class _InputBar extends StatelessWidget {
                 children: [
                   // Biriktirma — maydon ichida (Telegram'dagidek).
                   SizedBox(
-                    width: 44,
-                    height: 48,
+                    width: 40,
+                    height: 44,
                     child: IconButton(
                       onPressed: onAttach,
                       padding: EdgeInsets.zero,
                       icon: Icon(
                         Icons.attach_file_rounded,
                         color: AppColors.textSecondary,
-                        size: 22,
+                        size: 21,
                       ),
                     ),
                   ),
@@ -59,8 +59,8 @@ class _InputBar extends StatelessWidget {
                     child: Padding(
                       padding: const EdgeInsets.only(
                         right: AppDimensions.md,
-                        top: 13,
-                        bottom: 13,
+                        top: 11,
+                        bottom: 11,
                       ),
                       child: TextField(
                         controller: controller,
@@ -71,6 +71,9 @@ class _InputBar extends StatelessWidget {
                         onSubmitted: (_) => onSend(),
                         decoration: InputDecoration(
                           isCollapsed: true,
+                          // Global theme `filled:true` ICHKI QUTI chizardi
+                          // (qo'sh-quti ko'rinish) — shu yerda o'chiramiz.
+                          filled: false,
                           border: InputBorder.none,
                           hintText: 'support.inputHint'.tr(),
                           hintStyle: AppTextStyles.bodyM.copyWith(
@@ -90,8 +93,8 @@ class _InputBar extends StatelessWidget {
             scale: hasText ? 1 : 0.9,
             duration: const Duration(milliseconds: 150),
             child: Container(
-              width: 48,
-              height: 48,
+              width: 44,
+              height: 44,
               decoration: BoxDecoration(
                 gradient: hasText
                     ? LinearGradient(

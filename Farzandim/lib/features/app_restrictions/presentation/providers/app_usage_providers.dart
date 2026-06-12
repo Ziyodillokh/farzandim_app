@@ -1,9 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// app_usage_providers — Backend (Sprint 4.4.24)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Backend `0.5.1` LIVE — per-app limit endpoint mavjud. Stub olib
-// tashlandi, real Backend repository ulandi.
+// Ilova foydalanish va cheklov ma'lumotlari uchun provayderlar.
 
 import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
@@ -13,12 +8,11 @@ import 'package:farzandim/features/app_restrictions/data/repositories/backend_ap
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Bola uchun bugungi foydalanish — Backend fetch + 30 sek polling.
+/// Bola uchun bugungi foydalanish — backend fetch + 30 sek polling.
 ///
-/// Backend hozir `app_usage:updated` WS event emit qilmaydi —
-/// vaqtinchalik polling bilan ushlaymiz (`pollFetchStream` skaffoldi).
-/// `autoDispose` + 2 daq keep-alive (P0-1): ekran yopilgach polling
-/// TO'XTAYDI, tez qaytishda loading "flash" yo'q.
+/// Backend hozircha `app_usage:updated` WS event yubormaydi, shuning
+/// uchun polling. `autoDispose` + 2 daqiqa keep-alive: ekran yopilgach
+/// polling to'xtaydi, tez qaytishda esa loading "flash" bo'lmaydi.
 final todayUsageProvider = StreamProvider.autoDispose
     .family<AppUsageDay?, String>((ref, childId) async* {
   final isAuthed =
@@ -36,9 +30,9 @@ final todayUsageProvider = StreamProvider.autoDispose
   );
 });
 
-/// Bola qurilmasidagi o'rnatilgan ilovalar — Backend fetch + 60s polling
+/// Bola qurilmasidagi o'rnatilgan ilovalar — backend fetch + 60s polling
 /// (yangi pair qilingan qurilmada nomlar/ikonalar tez kelishi uchun).
-/// `autoDispose` + 2 daq keep-alive (P0-1, yuqoridagi kabi).
+/// `autoDispose` + 2 daqiqa keep-alive (yuqoridagi kabi).
 final installedAppsProvider = StreamProvider.autoDispose
     .family<List<AppUsageEntry>, String>((ref, childId) async* {
   final isAuthed =
@@ -53,7 +47,7 @@ final installedAppsProvider = StreamProvider.autoDispose
     ref,
     interval: const Duration(seconds: 60),
     fetch: () => repo.getInstalledApps(childId: childId),
-    // NET-07 (SWR): keshdagi ro'yxat DARHOL — ekran spinner'da turmaydi.
+    // Keshdagi ro'yxat darhol beriladi — ekran spinner'da turmaydi.
     readCache: () async {
       final cached = await repo.getCachedInstalledApps(childId);
       return (cached != null && cached.isNotEmpty) ? cached : null;
@@ -61,7 +55,7 @@ final installedAppsProvider = StreamProvider.autoDispose
   );
 });
 
-/// Bola uchun cheklovlar — Backend `/app-limits` orqali (0.5.1).
+/// Bola uchun cheklovlar — backend `/app-limits` orqali.
 final restrictionsProvider =
     StreamProvider.family<List<AppRestriction>, String>(
         (ref, childId) async* {
@@ -75,12 +69,8 @@ final restrictionsProvider =
   yield await repo.getRestrictions(childId);
 });
 
-/// AppLimit Backend repository — UI'da chaqirilgan stub o'rniga.
-///
-/// Mapping (UI semantikasi → Backend):
-///   - Block       → upsert(dailyLimitMs: 0)
-///   - Limit X min → upsert(dailyLimitMs: X * 60000)
-///   - Remove      → DELETE /app-limits/:id
+/// UI semantikasini backend'ga moslaydigan facade: blok = dailyLimitMs 0,
+/// limit X daqiqa = X * 60000, olib tashlash = DELETE.
 class _AppLimitFacade {
   _AppLimitFacade(this._ref);
   final Ref _ref;

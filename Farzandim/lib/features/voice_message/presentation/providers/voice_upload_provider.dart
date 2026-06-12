@@ -1,8 +1,4 @@
-// ─────────────────────────────────────────────────────────────────────
-// voice_upload_provider — Backend voice upload (Sprint 4.4.5)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Eski Firebase Storage upload → Backend multipart POST.
+// Ovozli xabarni backend'ga multipart orqali yuborish holati.
 
 import 'dart:io';
 
@@ -51,15 +47,11 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
 
   final Ref _ref;
 
-  /// Audio fayl yuboradi (Backend multipart).
+  /// Audio faylni backend'ga multipart qilib yuboradi.
   ///
-  /// `childId` — Parent App'da tanlangan bola UI uchun (model'da saqlanadi).
-  /// Backend chaqirishida `receiverId` = `child.linkedDeviceUid` (paired
-  /// Child User ID). Bola hali pair qilmagan bo'lsa xato qaytariladi.
-  ///
-  /// Backend Claude security: senderId === receiverId → 400 (bola o'ziga
-  /// yubora olmaydi). Parent App tomondan parent JWT bilan child userga
-  /// yuboradi — security check OK.
+  /// `childId` — UI'da tanlangan bola; backend'ga `receiverId` sifatida
+  /// `child.linkedDeviceUid` ketadi. Bola hali pair qilinmagan bo'lsa
+  /// xato qaytariladi.
   Future<String?> send({
     required String childId,
     required String childName,

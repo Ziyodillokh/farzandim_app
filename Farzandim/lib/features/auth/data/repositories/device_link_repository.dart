@@ -1,11 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// DeviceLinkRepository — QR orqali 2-qurilma ulash (device-link)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Mas'ul qurilma (Faol seanslar → "Boshqa hisob qo'shish"):
-//   create() → qisqa muddatli kod → QR ko'rsatiladi.
-// Yangi qurilma (Kirish → "Akkauntga qo'shilish" → kamera skaner):
-//   redeem(code) → parent tokenlari (AuthSession) → onLoggedIn → dashboard.
+// QR orqali ikkinchi qurilmani ulash: mas'ul qurilma `create` bilan qisqa
+// muddatli kod oladi, yangi qurilma uni skanerlab `redeem` bilan kiradi.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/device/device_meta.dart';

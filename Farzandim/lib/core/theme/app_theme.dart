@@ -1,20 +1,6 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — TEMA (ThemeData)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Bu fayl 3 ta xom faylni (`app_colors`, `app_text_styles`,
-// `app_dimensions`) bir joyga yig'ib, Flutter'ga **`ThemeData`** sifatida
-// uzatadi.
-//
-// `MaterialApp(theme: AppTheme.dark)` deganimizdan keyin:
-//   - Scaffold avtomatik qora fonda
-//   - Text avtomatik Inter shrifti, oq rangda
-//   - ElevatedButton avtomatik lime green pill
-//   - TextField avtomatik bizning input dizaynda
-//   - va h.k.
-//
-// Ya'ni har widget'da uslubni qaytadan yozish kerak emas — global
-// "default" sozlamalar shu yerda.
+// app_colors/app_text_styles/app_dimensions'ni bitta ThemeData'ga yig'adi —
+// global default'lar shu yerda, har widget'da uslubni qaytadan yozish
+// kerak emas.
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -23,16 +9,13 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Farzandim ilovasining theme'i — **light va dark** (theme-aware).
-///
-/// `AppColors.brightness` ni `app.dart` theme provider'dan o'rnatadi, keyin
-/// `AppTheme.build()` joriy yorqinlikka mos `ThemeData` quradi. Bitta
-/// build — `AppColors` getterlari rangni o'zi tanlaydi (light/dark).
+/// Ilova theme'i (light va dark). `app.dart` avval `AppColors.brightness`
+/// ni o'rnatadi, keyin `build()` shunga mos `ThemeData` quradi —
+/// `AppColors` getterlari rangni o'zi tanlaydi.
 class AppTheme {
   AppTheme._();
 
-  /// Joriy `AppColors.brightness` ga mos ThemeData. `app.dart` brightness'ni
-  /// o'rnatgandan keyin chaqiriladi.
+  /// Joriy `AppColors.brightness` ga mos ThemeData quradi.
   static ThemeData build() {
     final isDark = AppColors.isDark;
     return ThemeData(
@@ -44,7 +27,7 @@ class AppTheme {
               .copyWith(
                 primary:
                     AppColors.primary, // brand yashil (#235347 / dark #2F6B5C)
-                onPrimary: AppColors.onPrimary, // primary ustida DOIM oq matn
+                onPrimary: AppColors.onPrimary, // primary ustida doim oq matn
                 secondary: AppColors.secondary,
                 onSecondary: AppColors.onPrimary,
                 surface: AppColors.surface,
@@ -55,25 +38,20 @@ class AppTheme {
                 outline: AppColors.border,
               ),
 
-      // Scaffold fon — solid theme baza rangi (AVVAL transparent edi).
-      // GradientBackground ustidan chiziladi, shuning uchun ko'rinish
-      // o'zgarmaydi; ammo overscroll/pull-to-refresh paytida content
-      // ortidan OQ oyna foni ko'rinib qolmaydi (theme rangi ko'rinadi).
+      // Scaffold fon — solid theme baza rangi (avval transparent edi).
+      // GradientBackground ustidan chiziladi, ko'rinish o'zgarmaydi; ammo
+      // overscroll paytida content ortidan oq oyna foni ko'rinib qolmaydi.
       scaffoldBackgroundColor: AppColors.background,
 
-      // Premium soya rangi — Material elevation'lar uchun. Light'da sof qora
-      // emas, salqin navy-tus (yumshoq, qimmatbaho); dark'da chuqur qora.
+      // Material elevation soyalari uchun rang. Light'da sof qora emas,
+      // salqin navy-tus; dark'da chuqur qora.
       shadowColor: isDark ? Colors.black : const Color(0xFF0B2B26),
 
       // ────── 2. SHRIFT TIZIMI (TextTheme) ──────
       //
-      // 1) `GoogleFonts.interTextTheme()` — barcha 13 ta TextTheme
-      //    yo'liga Inter shriftini qo'yadi.
-      // 2) `.apply()` — ularning hammasiga oq matn rangini qo'shadi.
-      // 3) `.copyWith()` — eng muhim role'larni o'zimizning aniq
-      //    AppTextStyles bilan almashtiradi.
-      //
-      // Natija: `Text('hello')` deb yozsangiz — Inter, oq, 16sp.
+      // interTextTheme barcha yo'llarga Inter qo'yadi, .apply() matn
+      // rangini beradi, .copyWith() asosiy role'larni AppTextStyles bilan
+      // almashtiradi. Natijada oddiy Text() ham to'g'ri stil oladi.
       textTheme: GoogleFonts.interTextTheme()
           .apply(
             bodyColor: AppColors.textPrimary,
@@ -92,12 +70,10 @@ class AppTheme {
           ),
 
       // ────── 3. APPBAR ──────
-      //
-      // Sarlavha bar'ning sukut bo'yicha ko'rinishi.
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.background,
         foregroundColor: AppColors.textPrimary,
-        elevation: 0, // tag'imdagi soya yo'q (flat dizayn)
+        elevation: 0, // flat dizayn — ostida soya yo'q
         centerTitle: false,
         titleTextStyle: AppTextStyles.headlineL,
         // Status bar ikonlari: dark mode'da oq, light mode'da qora.
@@ -108,17 +84,13 @@ class AppTheme {
 
       // ────── 4. ELEVATEDBUTTON (PrimaryButton stilining bazasi) ──────
       //
-      // Lime green pill, qora matn, 56dp baland.
-      // Keyinchalik `PrimaryButton` widget'i `ElevatedButton`'ni
-      // o'rab oladi va bu stilni meros qilib oladi.
-      // Eslatma: bu solid lime green ElevatedButton. Loyihada asosan
-      // `PrimaryButton` widget'idan foydalanamiz
-      // (`lib/shared/widgets/primary_button.dart`) — u bir xil ko'rinishda
-      // lekin to'liq kenglikda va aniq disabled state bilan.
+      // Brand yashil pill, oq matn. Loyihada asosan `PrimaryButton`
+      // widget'idan foydalanamiz — u shu stilni meros qiladi, lekin
+      // to'liq kenglikda va aniq disabled state bilan.
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: AppColors.primary,
-          foregroundColor: AppColors.onPrimary, // lime green ustida DOIM to'q
+          foregroundColor: AppColors.onPrimary, // yashil ustida doim oq
           disabledBackgroundColor: AppColors.surfaceVariant,
           disabledForegroundColor: AppColors.textTertiary,
           minimumSize: const Size.fromHeight(AppDimensions.buttonHeight),
@@ -134,7 +106,7 @@ class AppTheme {
 
       // ────── 5. OUTLINEDBUTTON (SecondaryButton bazasi) ──────
       //
-      // Shaffof fon, oq border, oq matn, 56dp baland.
+      // Shaffof fon, matn rangidagi border va matn.
       outlinedButtonTheme: OutlinedButtonThemeData(
         style: OutlinedButton.styleFrom(
           foregroundColor: AppColors.textPrimary,
@@ -151,9 +123,8 @@ class AppTheme {
 
       // ────── 6. TEXTFIELD ──────
       //
-      // To'ldirilgan (filled) input field, yumshoq burchakli, fokuslanganda
-      // lime green chegarali. Yangi widget yozish kerak emas — `TextField`
-      // o'zi shu stilni avtomatik oladi.
+      // Filled input, yumshoq burchakli, fokusda brand yashil chegara.
+      // `TextField` o'zi shu stilni avtomatik oladi.
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: AppColors.surfaceVariant,

@@ -1,31 +1,20 @@
-// ─────────────────────────────────────────────────────────────────────
-// FARZANDIM — ROUTE NOMLARI (Route name constants)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Hech bir joyda string sifatida `'/sign-in'` yozilmaydi. Faqat shu yerdan:
-//
-//   context.go(AppRoutes.signIn);
-//   GoRoute(path: AppRoutes.signIn, builder: ...);
-//
-// Nega? Tipo'larning oldini olish (`'/sing-in'` bilan ish bilmay qoladi),
-// rename qilish oson (faqat shu joyda o'zgartirish), IDE autocomplete.
+// Route nomlari konstantalari — path string'lar faqat shu yerda yoziladi,
+// tipo'lar va rename muammolarining oldini oladi.
 
-/// Farzandim ilovasidagi barcha route'lar.
+/// Ilovadagi barcha route'lar.
 class AppRoutes {
   AppRoutes._();
 
-  /// Bosh sahifa — Welcome ekran (auth qilmagan foydalanuvchilar uchun).
-  ///
-  /// Auth state'ga qarab redirect Bosqich 1.5'da qo'shiladi: kirgan
-  /// foydalanuvchilar darhol `dashboard`'ga yo'naltiriladi.
+  /// Bosh sahifa — Welcome ekran (auth qilmaganlar uchun); kirgan
+  /// foydalanuvchi router redirect bilan dashboard'ga yo'naltiriladi.
   static const String welcome = '/';
 
   /// Birinchi ochilish — til tanlash ekrani (3 til). Til tanlanmaguncha
   /// boshqa sahifaga o'tib bo'lmaydi; tanlangach saqlanadi va qayta chiqmaydi.
   static const String languageSelect = '/language';
 
-  /// Telegram Login WebView — Backend bilan auth (Sprint 4.4).
-  /// Firebase phone OTP'dan migrate qilingan yangi auth.
+  /// Telegram Login WebView — backend bilan auth
+  /// (Firebase phone OTP o'rnini bosgan).
   static const String telegramLogin = '/login-telegram';
 
   /// Akkauntga kirish — email/telefon + parol.
@@ -46,16 +35,10 @@ class AppRoutes {
   /// Yangi bola qo'shish formi.
   static const String addChild = '/add-child';
 
-  /// Oila kodi ekrani — Bola qo'shilgandan keyin shu ekranga o'tiladi.
-  /// `:childId` — qaysi bolaning kodi ko'rsatilishi kerak.
-  ///
-  /// Path navigatsiyasi uchun [familyCodePath]'dan foydalaning
-  /// (string interpolation o'rniga).
+  /// Oila kodi ekrani — bola qo'shilgandan keyin ochiladi.
+  /// Navigatsiya uchun [familyCodePath]'dan foydalaning.
   static const String familyCodePattern = '/family-code/:childId';
 
-  /// Berilgan `childId` uchun haqiqiy path qaytaradi.
-  ///
-  /// Misol: `familyCodePath('abc123')` → `/family-code/abc123`.
   static String familyCodePath(String childId) => '/family-code/$childId';
 
   /// Bildirishnomalar ekrani.
@@ -67,70 +50,56 @@ class AppRoutes {
   /// Ilova haqida.
   static const String settingsAbout = '/settings/about';
 
-  /// Profil tahrirlash (Bosqich 7.3).
+  /// Profil tahrirlash.
   static const String settingsProfile = '/settings/profile';
 
-  /// Faol sessiyalar — login qilingan qurilmalar (Sprint 7).
+  /// Faol sessiyalar — login qilingan qurilmalar.
   static const String settingsSessions = '/settings/sessions';
 
-  /// Qo'llab-quvvatlash chati (Sprint 7).
+  /// Qo'llab-quvvatlash chati.
   static const String support = '/support';
 
-  /// Bolalarni boshqarish ro'yxati (Bosqich 7.2).
+  /// Bolalarni boshqarish ro'yxati.
   static const String settingsChildren = '/settings/children';
 
-  /// Hisobni butunlay o'chirish (Sprint 2.2 — Play Market mandatory).
+  /// Hisobni butunlay o'chirish (Play Market talabi).
   static const String settingsDeleteAccount = '/settings/delete-account';
 
-  /// Maxfiylik siyosati (Sprint 2.5 — Play Market / COPPA / ZRU-547).
+  /// Maxfiylik siyosati (Play Market / COPPA / ZRU-547 talabi).
   static const String legalPrivacyPolicy = '/legal/privacy-policy';
 
-  /// Foydalanish shartlari (Sprint 2.5).
+  /// Foydalanish shartlari.
   static const String legalTermsOfService = '/legal/terms-of-service';
 
-  /// Bola ma'lumotlarini tahrirlash (Bosqich 7.2).
+  /// Bola ma'lumotlarini tahrirlash.
   static const String editChildPattern = '/edit-child/:id';
 
-  /// Berilgan bola id'si uchun edit path qaytaradi.
   static String editChildPath(String id) => '/edit-child/$id';
 
   /// Bola joylashuvini xaritada ko'rsatish.
-  /// `:childId` — qaysi bola tanlanadi (ixtiyoriy — yo'q bo'lsa
-  /// birinchi bola).
   static const String locationPattern = '/location/:childId';
 
-  /// Berilgan `childId` uchun haqiqiy path qaytaradi.
-  ///
-  /// Misol: `locationPath('abc123')` → `/location/abc123`.
   static String locationPath(String childId) => '/location/$childId';
 
-  /// Bola harakat tarixi (Sprint 4) — Polyline xaritada.
-  /// `:childId` — qaysi bolaning tarixi ko'rsatiladi.
+  /// Bola harakat tarixi — Polyline xaritada.
   static const String locationHistoryPattern = '/location/:childId/history';
 
-  /// Berilgan bola id'si uchun harakat tarixi path.
   static String locationHistoryPath(String childId) =>
       '/location/$childId/history';
 
-  /// Bola uchun geo-zonalar ro'yxati.
-  /// `:childId` — qaysi bolaning zonalari (per-child).
+  /// Bola uchun geo-zonalar ro'yxati (per-child).
   static const String geoZonesPattern = '/geo-zones/:childId';
 
-  /// Berilgan bola id'si uchun zonalar ro'yxati path.
   static String geoZonesPath(String childId) => '/geo-zones/$childId';
 
   /// Bola uchun yangi geo-zona qo'shish formi.
   static const String geoZonesAddPattern = '/geo-zones/:childId/add';
 
-  /// Berilgan bola id'si uchun yangi zona qo'shish path.
   static String geoZonesAddPath(String childId) => '/geo-zones/$childId/add';
 
-  /// Geo-zonani tahrirlash.
-  /// `:childId` — qaysi bolaning zonasi.
-  /// `:id` — qaysi zona tahrirlanadi.
+  /// Geo-zonani tahrirlash (`:id` — tahrirlanadigan zona).
   static const String geoZonesEditPattern = '/geo-zones/:childId/edit/:id';
 
-  /// Berilgan bola va zona id uchun haqiqiy edit path qaytaradi.
   static String geoZonesEditPath(String childId, String id) =>
       '/geo-zones/$childId/edit/$id';
 

@@ -1,5 +1,5 @@
-// SwrCache (NET-07) — disk SWR keshi: yozish/o'qish, buzuq format,
-// XAVFSIZLIK (clearAll logout'da boshqa akkaunt ma'lumotini tozalaydi).
+// SwrCache — disk SWR keshi: yozish/o'qish, buzuq format va clearAll
+// (logout'da boshqa akkaunt ma'lumoti diskda qolib ketmasligi uchun).
 
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:flutter_test/flutter_test.dart';

@@ -1,13 +1,5 @@
-// ─────────────────────────────────────────────────────────────────────
-// voice_message_providers — Backend voice (Sprint 4.4.5)
-// ─────────────────────────────────────────────────────────────────────
-//
-// Eski: Firestore stream + Firebase Auth (currentUser)
-// Yangi: Backend REST + WS `voice:received` real-time.
-//
-// Parent App tomondan filter: child.linkedDeviceUid (paired Child User ID)
-// bilan match qiladigan xabarlar (sender yoki receiver) — har bola uchun
-// alohida ro'yxat.
+// Voice xabarlar provider'lari (backend REST + WS real-time); har bola
+// ro'yxati child.linkedDeviceUid bo'yicha filtrlanadi.
 
 import 'dart:async';
 
@@ -32,14 +24,12 @@ String? _currentUserId(Ref ref) {
   return auth is AuthAuthenticated ? auth.user.id : null;
 }
 
-/// Joriy parent'ning BARCHA ovozli xabarlari — xom backend JSON.
+/// Joriy parent'ning barcha ovozli xabarlari — xom backend JSON.
 ///
-/// MASSHTAB (PERF): backend `/api/voice-messages` baribir parent'ning
-/// to'liq ro'yxatini qaytaradi — avval har bola-instance shu endpointni
-/// O'ZI chaqirardi (N bola = N ta bir xil to'liq fetch, list ekranida
-/// parallel). Endi fetch BITTA joyda; per-bola providerlar faqat filtr.
-/// WS `voice:received` ham bitta refetch qiladi (avval ochiq instance
-/// soni qancha bo'lsa shuncha edi).
+/// Fetch ataylab bitta joyda: backend baribir parent'ning to'liq
+/// ro'yxatini qaytaradi, avval esa har bola-instance endpointni o'zi
+/// chaqirib N ta bir xil so'rov ketardi. Per-bola providerlar faqat
+/// filtr qiladi, WS eventda ham bitta refetch bo'ladi.
 ///
 /// Yuborish/retry'dan keyin yangilash: `ref.invalidate(rawVoiceMessagesProvider)`.
 final rawVoiceMessagesProvider =
@@ -84,9 +74,9 @@ final voiceMessagesProvider =
     return const AsyncValue.data(<VoiceMessage>[]);
   }
 
-  // MUHIM (P0-4): butun ro'yxatni emas, FAQAT shu bolaning linkedDeviceUid'ini
-  // watch qilamiz (`select`) — 60s children-polling yangi List identity
-  // berganda bu provider recompute BO'LMAYDI (pair/unpair'dan tashqari).
+  // Butun ro'yxat emas, faqat shu bolaning linkedDeviceUid'ini watch
+  // qilamiz (`select`) — children-polling har 60s yangi List identity
+  // bersa ham pair/unpair bo'lmaguncha bu provider qayta hisoblanmaydi.
   final childUserId = ref.watch(childrenListProvider.select((children) {
     for (final c in children) {
       if (c.id == childId) return c.linkedDeviceUid;
@@ -102,7 +92,7 @@ final voiceMessagesProvider =
       (m) =>
           m['senderId'] == childUserId || m['receiverId'] == childUserId,
     );
-    // ARCH-12: bitta buzuq xabar butun tarixni yiqitmasin.
+    // Bitta buzuq xabar butun tarixni yiqitmasin.
     final parsed = parseListSafely(
       mine,
       (m) => VoiceMessage.fromBackendJson(
@@ -117,10 +107,9 @@ final voiceMessagesProvider =
   }
 
   final rawAsync = ref.watch(rawVoiceMessagesProvider);
-  // MUHIM (flash-guard): invalidate(raw) refetch paytida AsyncLoading
-  // OLDINGI qiymatni ko'tarib keladi, lekin `whenData` uni YO'QOTADI —
-  // chat bir lahza bo'shab qolardi (xabar yuborilgan har safar). hasValue
-  // bo'lsa oldingi/joriy ro'yxatni ko'rsatib turamiz.
+  // Refetch paytida AsyncLoading oldingi qiymatni ichida olib yuradi,
+  // lekin `whenData` uni tashlab yuboradi — har xabar yuborilganda chat
+  // bir lahza bo'shab qolardi. hasValue bo'lsa mavjud ro'yxat ko'rinaveradi.
   if (rawAsync.hasValue) {
     return AsyncValue.data(parse(rawAsync.requireValue));
   }
@@ -199,7 +188,7 @@ class VideoItem extends ChatItem {
 // ─────────────────────────────────────────────────────────────────────
 
 /// Yuklangan eski sahifalar holati. Jonli oyna (oxirgi ~100 xabar)
-/// raw provider'larda turadi; bu yerda faqat undan ESKI xabarlar.
+/// raw provider'larda turadi; bu yerda faqat undan eski xabarlar.
 @immutable
 class ChatHistoryState {
   const ChatHistoryState({
@@ -394,8 +383,8 @@ final chatMessagesProvider =
   if (voiceAsync.isLoading && videoAsync.isLoading) {
     return const AsyncValue.loading();
   }
-  // Xato — faqat boshqa manba ham ma'lumotsiz bo'lsa propagate qilamiz.
-  // Bittasi xato, bittasi data → datani ko'rsatamiz (grace degradation).
+  // Xato faqat boshqa manba ham ma'lumotsiz bo'lsa propagate qilinadi;
+  // bittasi xato, bittasi data bo'lsa — datani ko'rsataveramiz.
   if (voiceAsync.hasError && videoAsync.valueOrNull == null) {
     return AsyncValue.error(
       voiceAsync.error!,
