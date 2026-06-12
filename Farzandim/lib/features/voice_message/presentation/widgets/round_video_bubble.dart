@@ -5,17 +5,22 @@
 // Voice bubble bilan parallel:
 //   - chap/o'ng align (isOwn)
 //   - lazy signed URL fetch (Backend `getFileUrl`)
-//   - thumbnail = videoning birinchi kadri (paused VideoPlayer)
-//   - tap → fullscreen autoplay dialog
+//   - thumbnail = DISK-keshlangan JPG (MEM-3: avval har bubble jonli
+//     VideoPlayerController ushlab turardi — 30 xabarda 30 native pleyer!)
+//   - tap → fullscreen autoplay dialog (pleyer FAQAT shu yerda ochiladi)
 //   - vaqt + ✓/✓✓ ko'rsatkichi yumaloq disk ostida
 //
-// Yumaloq aspect-ratio uchun ClipOval ichida `FittedBox(cover)` —
+// Yumaloq aspect-ratio uchun ClipOval ichida `Image.file(cover)` —
 // video portret yoki landshaft bo'lsa ham doiraning to'liq markazidan
 // kesib olinadi (Telegram standartiga mos).
 
+import 'dart:io';
+
+import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/video_message/data/models/video_message.dart';
 import 'package:farzandim/features/video_message/data/repositories/backend_video_message_repository.dart';
+import 'package:farzandim/features/voice_message/data/services/video_thumb_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:video_player/video_player.dart';
@@ -42,7 +47,7 @@ class RoundVideoBubble extends ConsumerStatefulWidget {
 }
 
 class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
-  VideoPlayerController? _thumbController;
+  File? _thumbFile;
   String? _signedUrl;
   bool _loadingThumb = true;
   bool _failed = false;
@@ -50,8 +55,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
   @override
   void initState() {
     super.initState();
-    // Build paytida controller initialize qilmaymiz — lifecycle/ref
-    // tayyor bo'lgach.
+    // Build paytida ishlamaymiz — lifecycle/ref tayyor bo'lgach.
     WidgetsBinding.instance.addPostFrameCallback((_) => _loadThumbnail());
   }
 
@@ -59,25 +63,24 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
     if (!mounted) return;
     try {
       // Proxy stream URL — signed URL telefondan yetib bo'lmaydi (ichki
-      // MinIO manzili). Bu @Public URL video_player bilan to'g'ridan
-      // ochiladi va birinchi kadr thumbnail bo'ladi.
+      // MinIO manzili).
       final url = ref
           .read(backendVideoMessageRepositoryProvider)
           .videoStreamUrl(widget.message.id);
       _signedUrl = url;
-      final controller =
-          VideoPlayerController.networkUrl(Uri.parse(url));
-      await controller.initialize();
-      // Birinchi kadrni ko'rsatish uchun pause holatida 0.0 ga seek.
-      await controller.seekTo(Duration.zero);
-      await controller.setVolume(0);
-      if (!mounted) {
-        await controller.dispose();
-        return;
-      }
+      // MEM-3: jonli VideoPlayerController O'RNIGA disk-keshlangan JPG.
+      // Birinchi marta: video yuklab olinib bitta kadr JPG qilinadi;
+      // keyin abadiy keshdan (0 tarmoq, 0 native pleyer).
+      final thumb = await VideoThumbCache.getThumb(
+        messageId: widget.message.id,
+        videoUrl: url,
+        dio: ref.read(dioClientProvider),
+      );
+      if (!mounted) return;
       setState(() {
-        _thumbController = controller;
+        _thumbFile = thumb;
         _loadingThumb = false;
+        _failed = thumb == null;
       });
     } catch (_) {
       if (!mounted) return;
@@ -86,12 +89,6 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
         _failed = true;
       });
     }
-  }
-
-  @override
-  void dispose() {
-    _thumbController?.dispose();
-    super.dispose();
   }
 
   String _formatTime(DateTime dt) {
@@ -151,17 +148,18 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
-                            // Thumbnail (birinchi kadr) yoki placeholder.
-                            if (_thumbController != null &&
-                                _thumbController!.value.isInitialized)
-                              FittedBox(
+                            // Thumbnail (keshlangan birinchi kadr JPG).
+                            if (_thumbFile != null)
+                              Image.file(
+                                _thumbFile!,
                                 fit: BoxFit.cover,
-                                child: SizedBox(
-                                  width:
-                                      _thumbController!.value.size.width,
-                                  height:
-                                      _thumbController!.value.size.height,
-                                  child: VideoPlayer(_thumbController!),
+                                gaplessPlayback: true,
+                                errorBuilder: (_, __, ___) => Center(
+                                  child: Icon(
+                                    Icons.videocam_off_outlined,
+                                    color: AppColors.textTertiary,
+                                    size: 36,
+                                  ),
                                 ),
                               )
                             else if (_loadingThumb)
