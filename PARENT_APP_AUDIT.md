@@ -140,17 +140,17 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 
 ## P2 — YAXSHILASH (vaqt bo'lganda)
 
-- [ ] **ARCH-12**: fromJson'larda qattiq `as int` cast'lar — bitta buzuq element ro'yxatni yiqitadi (defensive parse).
+- [x] **ARCH-12**: fromJson'larda qattiq `as int` cast'lar — bitta buzuq element ro'yxatni yiqitadi (defensive parse).
 - [ ] **ARCH-13**: 1000+ qatorli monolit ekranlar bo'lish (dashboard 1252, location_map 1181, history 994).
 - [ ] **ARCH-14**: 43K qator uchun jami 1 ta test — kamida critical-path testlar (auth, status hisoblash, parse).
 - [x] **ARCH-08**: Toshkent UTC+5 hack 4 joyda dublikat — bitta util.
-- [ ] **BUG-05**: blockAllApps toggle race — eskirgan 60s refetch optimistik holatni qaytaradi.
+- [x] **BUG-05**: blockAllApps toggle race — eskirgan 60s refetch optimistik holatni qaytaradi.
 - [x] **BUG-07**: `voiceChat.cameraPermissionSnack` tarjima kaliti 3 tilda ham yo'q (xom kalit ko'rinadi).
 - [x] **BUG-08**: todayScreenTime topilmasa weekly.last (boshqa kun!) ko'rsatiladi.
 - [x] **BUG-09**: NotificationsNotifier._load() poygasi — load tugashidan oldin kelgan FCM yo'qolishi mumkin.
-- [ ] **ST-08**: Notification ruxsat dialogi til tanlash ustida chiqadi — onboarding'dan keyinga.
-- [ ] **SCR-07/08**: Support chat rasm cacheWidth + scroll jumpTo aniqligi.
-- [ ] **SCR-09**: _placeAddressProvider/locationHistoryProvider family keshlari cheksiz o'sadi.
+- [x] **ST-08**: Notification ruxsat dialogi til tanlash ustida chiqadi — onboarding'dan keyinga.
+- [x] **SCR-07/08**: Support chat rasm cacheWidth + scroll jumpTo aniqligi.
+- [x] **SCR-09**: _placeAddressProvider/locationHistoryProvider family keshlari cheksiz o'sadi.
 - [x] **PERF-09/10**: VoiceChatBubble shartsiz watch; auto-scroll har rebuild'da.
 - [x] **MEM-9**: watchLocation har WS event'da to'liq payload debugPrint (release'da ham).
 - [x] **NET-08**: geo-zone-events limit'siz so'rov.
