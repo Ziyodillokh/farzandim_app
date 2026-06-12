@@ -143,19 +143,19 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - [ ] **ARCH-12**: fromJson'larda qattiq `as int` cast'lar — bitta buzuq element ro'yxatni yiqitadi (defensive parse).
 - [ ] **ARCH-13**: 1000+ qatorli monolit ekranlar bo'lish (dashboard 1252, location_map 1181, history 994).
 - [ ] **ARCH-14**: 43K qator uchun jami 1 ta test — kamida critical-path testlar (auth, status hisoblash, parse).
-- [ ] **ARCH-08**: Toshkent UTC+5 hack 4 joyda dublikat — bitta util.
+- [x] **ARCH-08**: Toshkent UTC+5 hack 4 joyda dublikat — bitta util.
 - [ ] **BUG-05**: blockAllApps toggle race — eskirgan 60s refetch optimistik holatni qaytaradi.
-- [ ] **BUG-07**: `voiceChat.cameraPermissionSnack` tarjima kaliti 3 tilda ham yo'q (xom kalit ko'rinadi).
-- [ ] **BUG-08**: todayScreenTime topilmasa weekly.last (boshqa kun!) ko'rsatiladi.
-- [ ] **BUG-09**: NotificationsNotifier._load() poygasi — load tugashidan oldin kelgan FCM yo'qolishi mumkin.
+- [x] **BUG-07**: `voiceChat.cameraPermissionSnack` tarjima kaliti 3 tilda ham yo'q (xom kalit ko'rinadi).
+- [x] **BUG-08**: todayScreenTime topilmasa weekly.last (boshqa kun!) ko'rsatiladi.
+- [x] **BUG-09**: NotificationsNotifier._load() poygasi — load tugashidan oldin kelgan FCM yo'qolishi mumkin.
 - [ ] **ST-08**: Notification ruxsat dialogi til tanlash ustida chiqadi — onboarding'dan keyinga.
 - [ ] **SCR-07/08**: Support chat rasm cacheWidth + scroll jumpTo aniqligi.
 - [ ] **SCR-09**: _placeAddressProvider/locationHistoryProvider family keshlari cheksiz o'sadi.
-- [ ] **PERF-09/10**: VoiceChatBubble shartsiz watch; auto-scroll har rebuild'da.
-- [ ] **MEM-9**: watchLocation har WS event'da to'liq payload debugPrint (release'da ham).
-- [ ] **NET-08**: geo-zone-events limit'siz so'rov.
-- [ ] **EH-10**: SOS pull-to-refresh bo'sh holatda yo'q.
-- [ ] **SCR-10**: O'lik kod qoldiqlari (_recenterDebounce, viewInsets*0).
+- [x] **PERF-09/10**: VoiceChatBubble shartsiz watch; auto-scroll har rebuild'da.
+- [x] **MEM-9**: watchLocation har WS event'da to'liq payload debugPrint (release'da ham).
+- [x] **NET-08**: geo-zone-events limit'siz so'rov.
+- [x] **EH-10**: SOS pull-to-refresh bo'sh holatda yo'q.
+- [x] **SCR-10**: O'lik kod qoldiqlari (_recenterDebounce, viewInsets*0).
 
 ---
 
