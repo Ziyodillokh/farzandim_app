@@ -129,8 +129,11 @@ class AppUsageDay {
     return list;
   }
 
-  /// 1 daqiqadan kam ishlatilgan ilovalar yashiriladi (ms).
-  static const int _minVisibleMs = 60000;
+  /// Juda qisqa (tasodifiy ochib-yopish) foydalanishlar yashiriladi (ms).
+  /// 10s: avval 60s edi — 1 daqiqadan kam ishlatilgan ilova (masalan Chrome
+  /// 40 soniya) UMUMAN ko'rinmasdi; foydalanuvchi talabi — ekran yoqib
+  /// ishlatilgan hamma narsa ko'rinsin.
+  static const int _minVisibleMs = 10000;
 
   /// Faqat launcher, systemUI, klaviatura va pure-fon servislarni chiqaramiz.
   ///
@@ -155,13 +158,13 @@ class AppUsageDay {
       'com.google.android.inputmethod',
       'com.sec.android.inputmethod',
       'com.samsung.android.honeyboard',
-      // O'zimizning ilovalar.
-      'com.farzandim.',
+      // ESLATMA: 'com.farzandim.' (Parvoz) endi FILTRLANMAYDI — bola Parvoz
+      // ichida video/audiokitob ko'radi, bu ham haqiqiy ekran vaqti
+      // (foydalanuvchi talabi: ekran yoqilgan hamma foydalanish ko'rinsin).
     ];
 
     return aggregatedApps.where((app) {
-      // 1 daqiqadan kam ishlatilgan ilovalar ko'rsatilmaydi (foydalanuvchi
-      // talabi — faqat haqiqatda ochilgan ilovalar).
+      // Juda qisqa (tasodifiy) ochilishlar ko'rsatilmaydi.
       if (app.totalTimeMs < _minVisibleMs) return false;
       return !systemPrefixes
           .any((prefix) => app.packageName.startsWith(prefix));

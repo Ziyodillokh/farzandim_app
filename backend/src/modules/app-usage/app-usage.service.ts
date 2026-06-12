@@ -35,8 +35,9 @@ const SYSTEM_PREFIXES = [
   'com.google.android.inputmethod',
   'com.sec.android.inputmethod',
   'com.samsung.android.honeyboard',
-  // O'zimizning ilovalar.
-  'com.farzandim.',
+  // ESLATMA: 'com.farzandim.' (Parvoz) endi FILTRLANMAYDI — bola Parvoz
+  // ichida video/audiokitob ko'radi, bu ham haqiqiy ekran vaqti. Parent
+  // filteredApps (app_usage.dart) bilan BIR XIL ro'yxat saqlanishi shart.
 ];
 
 function isSystemPackage(pkg: string): boolean {
