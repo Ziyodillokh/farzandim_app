@@ -27,8 +27,11 @@ class ChildLocation {
       accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0,
       speed: (json['speed'] as num?)?.toDouble(),
       // Backend UTC ("Z") qaytaradi — .toLocal() qilmasak vaqtlar
-      // Toshkentda 5 soat orqada ko'rinadi.
-      updatedAt: DateTime.parse(json['createdAt'] as String).toLocal(),
+      // Toshkentda 5 soat orqada ko'rinadi. capturedAt — nuqtaning haqiqiy
+      // fix vaqti (offline flush'da createdAt server vaqti bo'lib qoladi).
+      updatedAt: DateTime.parse(
+        (json['capturedAt'] ?? json['createdAt']) as String,
+      ).toLocal(),
     );
   }
 

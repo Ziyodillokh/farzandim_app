@@ -478,6 +478,9 @@
     },
     "dwell": {
       "total": "Total: {duration}"
+    },
+    "streets": {
+      "title": "Streets visited ({count})"
     }
   },
   "location": {
@@ -497,7 +500,9 @@
       "accuracyValue": "~{meters} m",
       "addressLoading": "Locating address…",
       "historyButton": "View history",
-      "zonesCount": "{count}"
+      "zonesCount": "{count}",
+      "stale": "DELAYED",
+      "permissionWarning": "The child device does not have the \"Always\" location permission - background tracking may not work. Update the permission in the Parvoz app."
     },
     "picker": {
       "title": "Select child"

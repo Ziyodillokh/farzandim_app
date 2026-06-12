@@ -478,6 +478,9 @@
     },
     "dwell": {
       "total": "Итого: {duration}"
+    },
+    "streets": {
+      "title": "Пройденные улицы ({count})"
     }
   },
   "location": {
@@ -497,7 +500,9 @@
       "accuracyValue": "~{meters} м",
       "addressLoading": "Определение адреса…",
       "historyButton": "История",
-      "zonesCount": "{count}"
+      "zonesCount": "{count}",
+      "stale": "С ЗАДЕРЖКОЙ",
+      "permissionWarning": "На устройстве ребёнка не выдано разрешение \"Всегда\" для геолокации - фоновое отслеживание может не работать. Обновите разрешение в приложении Parvoz."
     },
     "picker": {
       "title": "Выберите ребёнка"

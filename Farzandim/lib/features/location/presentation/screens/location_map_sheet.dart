@@ -97,7 +97,7 @@ class _LocationSheet extends ConsumerWidget {
                             ),
                           ),
                           const SizedBox(width: 8),
-                          const _LivePill(),
+                          _LivePill(live: _isLive(ref, location.updatedAt)),
                         ],
                       ),
                       const SizedBox(height: 2),
@@ -116,6 +116,46 @@ class _LocationSheet extends ConsumerWidget {
             ),
 
             const SizedBox(height: AppDimensions.sm + 2),
+
+            // Bola qurilmasida "Har doim" lokatsiya ruxsati yo'q —
+            // fon kuzatuv ishlamasligining eng keng tarqalgan sababi.
+            if (child.deviceInfo?.locationPermission == false) ...[
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: AppColors.warning.withValues(alpha: 0.14),
+                  borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+                  border: Border.all(
+                    color: AppColors.warning.withValues(alpha: 0.4),
+                  ),
+                ),
+                child: Row(
+                  children: [
+                    Icon(
+                      Icons.location_disabled_rounded,
+                      size: 18,
+                      color: AppColors.warning,
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        'location.command.permissionWarning'.tr(),
+                        style: AppTextStyles.bodyS.copyWith(
+                          fontSize: 12,
+                          color: AppColors.textPrimary,
+                          height: 1.3,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppDimensions.sm),
+            ],
 
             // ── MANZIL kartasi ("qayerda" — eng muhim ma'lumot) ──
             _AddressCard(address: address),
@@ -207,26 +247,53 @@ class _LocationSheet extends ConsumerWidget {
 
 // ─── Jonli puls indikatori (real-vaqt signali) ───
 
+/// Haqiqatan jonlimi: socket ulangan VA nuqta 2 daqiqadan yangi.
+/// Avval pill shartsiz "JONLI" deb yonib turardi — ma'lumot soatlab eski
+/// bo'lsa ham, bu testchini chalg'itgan.
+bool _isLive(WidgetRef ref, DateTime updatedAt) {
+  // 30s puls — vaqt o'tishi bilan qayta hisoblanib tursin.
+  ref.watch(statusTickProvider);
+  final socketState = ref.watch(socketConnectionProvider).valueOrNull;
+  return socketState == SocketConnectionState.connected &&
+      DateTime.now().difference(updatedAt) < const Duration(minutes: 2);
+}
+
 class _LivePill extends StatelessWidget {
-  const _LivePill();
+  const _LivePill({required this.live});
+
+  /// false — kulrang "kechikkan" rejim (puls yo'q).
+  final bool live;
 
   @override
   Widget build(BuildContext context) {
+    final tint = live ? AppColors.accent : AppColors.textSecondary;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
       decoration: BoxDecoration(
-        color: AppColors.accent.withValues(alpha: 0.16),
+        color: tint.withValues(alpha: 0.16),
         borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _PulseDot(color: AppColors.accent, size: 7),
+          if (live)
+            _PulseDot(color: tint, size: 7)
+          else
+            Container(
+              width: 7,
+              height: 7,
+              decoration: BoxDecoration(
+                color: tint,
+                shape: BoxShape.circle,
+              ),
+            ),
           const SizedBox(width: 6),
           Text(
-            'location.command.live'.tr(),
+            live
+                ? 'location.command.live'.tr()
+                : 'location.command.stale'.tr(),
             style: AppTextStyles.label.copyWith(
-              color: AppColors.accent,
+              color: tint,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.5,
               fontSize: 11,

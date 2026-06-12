@@ -1,6 +1,8 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/realtime/socket_client.dart';
+import 'package:farzandim/core/realtime/socket_providers.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -13,6 +15,7 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
+import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/utils/avatar_marker_builder.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
@@ -56,6 +59,8 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   // adashtirmaslik uchun (SCR-02: birinchi avtomatik kameradan keyin
   // auto-follow o'zini o'chirib qo'yardi).
   bool _programmaticMove = false;
+  // Qaysi bola uchun wake-push yuborilgan (har bola uchun bir marta).
+  String? _wokeChildId;
 
   @override
   void dispose() {
@@ -142,6 +147,18 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
         ? children.first
         : children.firstWhereOrNull((c) => c.id == widget.childId) ??
               children.first;
+
+    // Xarita ochildi/bola almashdi — boladan darhol yangi GPS fix so'raymiz
+    // (backend data-only FCM yuboradi, javob WS orqali bir necha soniyada
+    // keladi). Har bola uchun bir marta.
+    if (_wokeChildId != child.id) {
+      _wokeChildId = child.id;
+      unawaited(
+        ref
+            .read(backendLocationRepositoryProvider)
+            .requestLocationUpdate(child.id),
+      );
+    }
 
     final zones =
         ref.watch(geoZonesProvider(child.id)).valueOrNull ?? const <GeoZone>[];

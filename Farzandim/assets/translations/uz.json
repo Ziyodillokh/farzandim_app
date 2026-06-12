@@ -478,6 +478,9 @@
     },
     "dwell": {
       "total": "Jami: {duration}"
+    },
+    "streets": {
+      "title": "Kirgan ko'chalar ({count})"
     }
   },
   "location": {
@@ -497,7 +500,9 @@
       "accuracyValue": "~{meters} m",
       "addressLoading": "Manzil aniqlanmoqda…",
       "historyButton": "Tarixni ko'rish",
-      "zonesCount": "{count} ta"
+      "zonesCount": "{count} ta",
+      "stale": "KECHIKKAN",
+      "permissionWarning": "Bola qurilmasida \"Har doim\" lokatsiya ruxsati berilmagan - fonda kuzatuv ishlamasligi mumkin. Parvoz ilovasida ruxsatni yangilang."
     },
     "picker": {
       "title": "Bolani tanlang"

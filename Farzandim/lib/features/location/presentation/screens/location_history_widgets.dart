@@ -91,6 +91,7 @@ class _BottomPanel extends StatelessWidget {
     required this.toDt,
     required this.onCustomDateTap,
     required this.stops,
+    required this.streets,
     required this.onPlaceTap,
     required this.distanceKm,
   });
@@ -99,6 +100,9 @@ class _BottomPanel extends StatelessWidget {
   final DateTime toDt;
   final VoidCallback onCustomDateTap;
   final List<LocationStop> stops;
+
+  /// Trek bo'ylab kirilgan ko'cha nomlari (birinchi kirish tartibida).
+  final List<String> streets;
   final void Function(LatLng target) onPlaceTap;
   final double distanceKm;
 
@@ -184,6 +188,56 @@ class _BottomPanel extends StatelessWidget {
                   onTap: () => onPlaceTap(stops[i].latLng),
                 ),
               ),
+            ),
+            const SizedBox(height: AppDimensions.md),
+          ],
+
+          // ── Kirgan ko'chalar — trek bo'ylab geocode qilingan nomlar ──
+          if (streets.isNotEmpty) ...[
+            Row(
+              children: [
+                Container(
+                  width: 3,
+                  height: 16,
+                  decoration: BoxDecoration(
+                    color: AppColors.info,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'locationHistory.streets.title'.tr(
+                    namedArgs: {'count': '${streets.length}'},
+                  ),
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: AppDimensions.sm),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final street in streets)
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 6,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.surfaceVariant,
+                      borderRadius:
+                          BorderRadius.circular(AppDimensions.radiusPill),
+                      border: Border.all(color: AppColors.border),
+                    ),
+                    child: Text(
+                      street,
+                      style: AppTextStyles.bodyS.copyWith(fontSize: 12),
+                    ),
+                  ),
+              ],
             ),
             const SizedBox(height: AppDimensions.md),
           ],

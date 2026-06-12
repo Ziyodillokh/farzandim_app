@@ -244,6 +244,9 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
                 toDt: _toDt,
                 onCustomDateTap: _pickDateRange,
                 stops: stops,
+                streets:
+                    ref.watch(traversedStreetsProvider(query)).valueOrNull ??
+                        const [],
                 onPlaceTap: _goToStop,
                 distanceKm: _distanceKmMemo,
               ),
@@ -285,7 +288,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   /// yangi data'ni o'zi filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
   List<ChildLocation> _cleanTrack(List<ChildLocation> points) {
     const maxAccuracyM = 100.0;
-    const minGapM = 25.0;
+    const minGapM = 8.0;
     final cleaned = <ChildLocation>[];
     for (final p in points) {
       // accuracy == 0 → noma'lum (backend bermagan) → o'tkazamiz.

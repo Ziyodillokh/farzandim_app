@@ -34,9 +34,10 @@ class BackendLocationRepository {
 
   /// Bola eng so'nggi joylashuvini Backend'dan oladi.
   ///
-  /// `null` qaytadi:
-  /// - 404: bola hech qachon location yubormagan (yangi pair'lashgan)
-  /// - boshqa xato: log + null
+  /// 404 — bola hech qachon location yubormagan (yangi pair'lashgan) →
+  /// `null`. Boshqa xatolar yuqoriga otiladi: avval hammasi null'ga
+  /// yutilardi va vaqtinchalik tarmoq xatosi ekranda "Lokatsiya yo'q"
+  /// (retry'siz) bo'lib ko'rinardi.
   Future<ChildLocation?> getLatest(String childId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
@@ -48,10 +49,22 @@ class BackendLocationRepository {
       if (locJson == null) return null;
       return ChildLocation.fromBackendJson(locJson);
     } on DioException catch (e) {
-      // 404 — yangi bola, location yo'q. Bu xato emas — null qaytaramiz.
       if (e.response?.statusCode == 404) return null;
       debugPrint('BackendLocationRepository.getLatest: $e');
-      return null;
+      rethrow;
+    }
+  }
+
+  /// Bola qurilmasidan darhol yangi GPS fix so'raydi (backend data-only
+  /// FCM yuboradi). Best-effort — xato yutiladi, javob WS orqali keladi.
+  Future<void> requestLocationUpdate(String childId) async {
+    try {
+      await _dio.post<void>(
+        '/children/$childId/location/request-update',
+        data: const <String, dynamic>{},
+      );
+    } on DioException catch (e) {
+      debugPrint('BackendLocationRepository.requestLocationUpdate: $e');
     }
   }
 
@@ -64,6 +77,7 @@ class BackendLocationRepository {
     required String childId,
     DateTime? from,
     DateTime? to,
+    DateTime? before,
     int limit = 100,
   }) async {
     try {
@@ -72,6 +86,8 @@ class BackendLocationRepository {
         queryParameters: {
           if (from != null) 'from': from.toUtc().toIso8601String(),
           if (to != null) 'to': to.toUtc().toIso8601String(),
+          // Cursor — to'liq kunni 500 talik sahifalar bilan olish uchun.
+          if (before != null) 'before': before.toUtc().toIso8601String(),
           'limit': limit,
         },
       );
@@ -112,75 +128,26 @@ class BackendLocationRepository {
     }
   }
 
-  /// Bola joriy joylashuvi stream'i — boshlang'ich Backend fetch + WS
-  /// `location:updated` real-time yangilanishlar. Broadcast
-  /// `eventStream`'dan childId bo'yicha filtrlanadi, shunda bir nechta
-  /// bolaga parallel obuna bo'lsa ham bir-biriga tegmaydi.
-  Stream<ChildLocation?> watchLocation(String childId) {
-    late StreamController<ChildLocation?> controller;
-    StreamSubscription<dynamic>? subscription;
-
-    controller = StreamController<ChildLocation?>(
-      onListen: () async {
-        debugPrint('LocRepo[$childId]: watchLocation onListen — subscribed');
-        // Avval backend'dan joriy nuqtani olamiz.
-        final initial = await getLatest(childId);
-        if (controller.isClosed) return;
-        final initialStr = initial == null
-            ? 'null'
-            : '${initial.latitude},${initial.longitude}';
-        debugPrint('LocRepo[$childId]: initial fetch — $initialStr');
-        controller.add(initial);
-
-        // Keyin WS stream'iga obuna — faqat shu bolaning
-        // 'location:updated' event'lari emit qilinadi.
-        subscription = _socketClient.eventStream('location:updated').listen((
-          data,
-        ) {
-          if (controller.isClosed) return;
-          // To'liq payload'ni print qilmaymiz — har WS event'da katta
-          // string yasash bekorga xotira va log IO sarflaydi.
-          if (data is! Map) {
-            debugPrint('LocRepo[$childId]: WS payload not Map — skip');
-            return;
-          }
-          final eventChildId = data['childId'] as String?;
-          if (eventChildId != childId) {
-            debugPrint(
-              'LocRepo[$childId]: WS childId mismatch ($eventChildId) — skip',
-            );
-            return;
-          }
-
-          final locJson = data['location'];
-          // socket_io payload'ni ko'pincha Map<dynamic,dynamic> qilib
-          // beradi — qattiq Map<String,dynamic> cast real-time update'ni
-          // jimgina o'ldirardi. Yumshoq tekshirib .from() bilan
-          // normalizatsiya qilamiz.
-          if (locJson is! Map) {
-            debugPrint('LocRepo[$childId]: WS location field not Map — skip');
-            return;
-          }
-          try {
-            final loc = ChildLocation.fromBackendJson(
-              Map<String, dynamic>.from(locJson),
-            );
-            debugPrint(
-              'LocRepo[$childId]: WS yangi joylashuv '
-              '${loc.latitude},${loc.longitude}',
-            );
-            controller.add(loc);
-          } catch (e) {
-            debugPrint('LocRepo[$childId]: WS parse xato — $e');
-          }
-        });
-      },
-      onCancel: () async {
-        debugPrint('LocRepo[$childId]: watchLocation onCancel');
-        await subscription?.cancel();
-      },
-    );
-
-    return controller.stream;
+  /// WS `location:updated` event'laridan shu bolaning joylashuvlari.
+  /// Broadcast `eventStream`'dan childId bo'yicha filtrlanadi, shunda
+  /// bir nechta bolaga parallel obuna bo'lsa ham bir-biriga tegmaydi.
+  /// Boshlang'ich fetch/resync/polling provider tomonida.
+  Stream<ChildLocation> locationEvents(String childId) async* {
+    await for (final data
+        in _socketClient.eventStream('location:updated')) {
+      if (data is! Map) continue;
+      if ((data['childId'] as String?) != childId) continue;
+      final locJson = data['location'];
+      // socket_io payload'ni ko'pincha Map<dynamic,dynamic> qilib beradi —
+      // qattiq cast update'ni jim o'ldirardi, .from() bilan normalizatsiya.
+      if (locJson is! Map) continue;
+      try {
+        yield ChildLocation.fromBackendJson(
+          Map<String, dynamic>.from(locJson),
+        );
+      } catch (e) {
+        debugPrint('LocRepo[$childId]: WS parse xato — $e');
+      }
+    }
   }
 }
