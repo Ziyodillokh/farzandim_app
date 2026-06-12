@@ -5,6 +5,7 @@
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -29,7 +30,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     if (_picking) return;
     setState(() => _picking = true);
     try {
-      final x = await ImagePicker().pickImage(
+      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
         source: ImageSource.gallery,
         imageQuality: 90,
         maxWidth: 1440,

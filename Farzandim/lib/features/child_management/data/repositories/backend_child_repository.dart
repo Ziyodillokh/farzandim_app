@@ -10,14 +10,9 @@
 //   DELETE /api/children/:id              → { "ok": true }
 //   POST   /api/children/:id/pair-code    → { "familyCode": "73921" }
 //
-// Avatar upload (deploy bo'lgach):
-//   POST   /api/children/:id/avatar       (multipart)
-//   GET    /api/children/:id/avatar       → { url, expiresAt }
-//   DELETE /api/children/:id/avatar
-//
-// Eski `ChildRepository` (Firestore) parallel ishlaydi — migration
-// tugagach olib tashlanadi. `children_provider.dart` auth state'ga
-// qarab birini tanlaydi.
+// Avatar:
+//   POST   /api/children/:id/avatar        (multipart upload)
+//   GET    /api/children/:id/avatar/image  (proxy stream — pastda)
 
 import 'dart:async';
 
@@ -216,27 +211,4 @@ class BackendChildRepository {
   String avatarProxyUrl(String childId) =>
       '${_dio.options.baseUrl}/children/$childId/avatar/image';
 
-  /// Avatar ko'rish uchun signed URL — `GET /api/children/:id/avatar`.
-  /// URL 1 soat amal qiladi (expiresIn: 3600). Photo yo'q bo'lsa null.
-  Future<String?> getAvatarUrl(String childId) async {
-    try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/children/$childId/avatar',
-      );
-      return response.data?['url'] as String?;
-    } on DioException catch (e) {
-      // 404 — photo yo'q (avatar yuklamagan)
-      if (e.response?.statusCode == 404) return null;
-      rethrow;
-    }
-  }
-
-  /// Avatar o'chirish — `DELETE /api/children/:id/avatar`.
-  /// Fastify body-less DELETE — Content-Type null.
-  Future<void> deleteAvatar(String childId) async {
-    await _dio.delete<Map<String, dynamic>>(
-      '/children/$childId/avatar',
-      data: const <String, dynamic>{},
-    );
-  }
 }

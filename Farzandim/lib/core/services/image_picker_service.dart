@@ -1,6 +1,14 @@
 import 'dart:typed_data';
 
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
+
+/// Bitta umumiy [ImagePickerService] nusxasi — ekranlar `ImagePicker()`ni
+/// to'g'ridan-to'g'ri yaratmasdan shu provider orqali oladi (testlarda
+/// override qilish ham oson).
+final imagePickerServiceProvider = Provider<ImagePickerService>(
+  (ref) => ImagePickerService(),
+);
 
 /// Galereya yoki kameradan rasm tanlash xizmati.
 ///
@@ -31,6 +39,22 @@ class ImagePickerService {
   /// Kameradan rasm olish. Foydalanuvchi bekor qilsa yoki kamera yo'q
   /// bo'lsa `null` (web'da har doim `null`).
   Future<Uint8List?> pickFromCamera() => _pick(ImageSource.camera);
+
+  /// Fayl sifatida rasm tanlash (chat media, fon rasmi) — chaqiruvchi
+  /// o'z sifat/o'lcham parametrlarini beradi, default'lar avatar
+  /// siqilishidan FARQLI ravishda transformatsiyasiz.
+  /// Bekor qilinsa `null`.
+  Future<XFile?> pickImageFile({
+    required ImageSource source,
+    int? imageQuality,
+    double? maxWidth,
+  }) {
+    return _picker.pickImage(
+      source: source,
+      imageQuality: imageQuality,
+      maxWidth: maxWidth,
+    );
+  }
 
   /// Umumiy ichki metod — ikki manba uchun bir xil mantiq.
   ///

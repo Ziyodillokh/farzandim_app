@@ -19,7 +19,9 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -130,7 +132,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
     } on DioException catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = _friendlyError(e);
+        _error = friendlyError(e, fallback: 'errors.generic'.tr());
       });
     } catch (e) {
       if (!mounted) return;
@@ -153,15 +155,6 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         setState(() => _remainingSec--);
       }
     });
-  }
-
-  String _friendlyError(DioException e) {
-    final data = e.response?.data;
-    if (data is Map<String, dynamic>) {
-      final msg = data['message'];
-      if (msg is String && msg.isNotEmpty) return msg;
-    }
-    return "Tarmoq xatosi — qaytadan urinib ko'ring.";
   }
 
   @override

@@ -109,12 +109,6 @@ final installedAppsProvider = StreamProvider.autoDispose
   }
 });
 
-/// Oxirgi 7 kun foydalanish — Backend endpoint hozircha yo'q.
-final last7DaysUsageProvider =
-    StreamProvider.family<List<AppUsageDay>, String>((ref, childId) {
-  return Stream.value(const <AppUsageDay>[]);
-});
-
 /// Bola uchun cheklovlar — Backend `/app-limits` orqali (0.5.1).
 final restrictionsProvider =
     StreamProvider.family<List<AppRestriction>, String>(

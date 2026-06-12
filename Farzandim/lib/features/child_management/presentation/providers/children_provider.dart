@@ -8,7 +8,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:dio/dio.dart';
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -166,26 +166,6 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
     );
   }
 
-  /// Xatodan foydalanuvchiga ko'rsatish mumkin bo'lgan O'ZBEKCHA xabar
-  /// (EH-08 — avval xom inglizcha `DioException ...` matni chiqardi).
-  String _friendlyError(Object e) {
-    if (e is DioException) {
-      final data = e.response?.data;
-      if (data is Map<String, dynamic>) {
-        final msg = data['message'];
-        if (msg is String && msg.isNotEmpty) return msg;
-        if (msg is List && msg.isNotEmpty) return msg.first.toString();
-      }
-      final code = e.response?.statusCode;
-      if (code == null) {
-        return "Internet aloqasi yo'q. Ulanishni tekshirib qayta urining.";
-      }
-      if (code == 401) return 'Sessiya muddati tugagan — qaytadan kiring.';
-      if (code == 403) return "Bu amalga ruxsatingiz yo'q.";
-    }
-    return "Amalni bajarib bo'lmadi. Qayta urinib ko'ring.";
-  }
-
   /// Yangi bola qo'shish.
   Future<Result<Child>> addChild({
     required String name,
@@ -219,7 +199,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
       return Result.success(child);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return Result.failure(_friendlyError(e));
+      return Result.failure(friendlyError(e));
     }
   }
 
@@ -246,7 +226,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
       return const Result<void>.success();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return Result.failure(_friendlyError(e));
+      return Result.failure(friendlyError(e));
     }
   }
 
@@ -260,7 +240,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
       return Result.success(newCode);
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return Result.failure(_friendlyError(e));
+      return Result.failure(friendlyError(e));
     }
   }
 
@@ -274,7 +254,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
       return const Result<void>.success();
     } catch (e, st) {
       state = AsyncValue.error(e, st);
-      return Result.failure(_friendlyError(e));
+      return Result.failure(friendlyError(e));
     }
   }
 }

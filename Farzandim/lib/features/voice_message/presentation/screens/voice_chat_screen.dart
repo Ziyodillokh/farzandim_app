@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -429,7 +430,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   // ─── Media (rasm / hujjat) tanlash + yuborish ────────────────────
   Future<void> _pickGallery() async {
     try {
-      final x = await ImagePicker().pickImage(
+      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
         source: ImageSource.gallery,
         imageQuality: 85,
         maxWidth: 1920,
@@ -442,7 +443,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   Future<void> _pickCamera() async {
     try {
-      final x = await ImagePicker().pickImage(
+      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
         source: ImageSource.camera,
         imageQuality: 85,
         maxWidth: 1920,

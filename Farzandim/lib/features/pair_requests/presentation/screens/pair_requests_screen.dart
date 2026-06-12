@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -39,7 +40,8 @@ class PairRequestsScreen extends ConsumerWidget {
                   loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.accent),
                   ),
-                  error: (e, _) => Center(child: Text('Xato: $e')),
+                  error: (e, _) =>
+                      Center(child: Text(friendlyError(e))),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(

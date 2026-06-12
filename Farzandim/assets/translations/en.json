@@ -1,4 +1,11 @@
 {
+  "errors": {
+    "noInternet": "No internet connection. Check your connection and retry.",
+    "sessionExpired": "Session expired — please sign in again.",
+    "forbidden": "You don't have permission for this action.",
+    "generic": "Couldn't complete the action. Please try again.",
+    "loadFailed": "Couldn't load data. Please try again."
+  },
   "sos": {
     "wsBanner": "SOS! Your child needs help",
     "viewAction": "View"

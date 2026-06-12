@@ -20,6 +20,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
@@ -150,7 +151,10 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       state = AuthAuthenticated(session.user);
       return null;
     } on DioException catch (e) {
-      return _friendlyError(e, "Kirishda xatolik. Qaytadan urinib ko'ring.");
+      return friendlyError(
+        e,
+        fallback: "Kirishda xatolik. Qaytadan urinib ko'ring.",
+      );
     } catch (_) {
       return 'Kutilmagan xatolik yuz berdi.';
     }
@@ -175,9 +179,9 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       state = AuthAuthenticated(session.user);
       return null;
     } on DioException catch (e) {
-      return _friendlyError(
+      return friendlyError(
         e,
-        "Ro'yxatdan o'tishda xatolik. Qaytadan urinib ko'ring.",
+        fallback: "Ro'yxatdan o'tishda xatolik. Qaytadan urinib ko'ring.",
       );
     } catch (_) {
       return 'Kutilmagan xatolik yuz berdi.';
@@ -198,7 +202,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null; // jim — foydalanuvchi o'zi yopdi
     } on DioException catch (e) {
-      return _friendlyError(e, 'Google bilan kirishda xatolik.');
+      return friendlyError(e, fallback: 'Google bilan kirishda xatolik.');
     } catch (e) {
       return "Google bilan kirib bo'lmadi: $e";
     }
@@ -226,7 +230,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null;
     } on DioException catch (e) {
-      return _friendlyError(e, 'Apple bilan kirishda xatolik.');
+      return friendlyError(e, fallback: 'Apple bilan kirishda xatolik.');
     } catch (e) {
       return "Apple bilan kirib bo'lmadi: $e";
     }
@@ -240,20 +244,4 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     state = const AuthAnonymous();
   }
 
-  /// Backend xato javobidan o'zbekcha xabar ajratib oladi.
-  /// NestJS exception filter `{ message: string | string[] }` qaytaradi.
-  String _friendlyError(DioException e, String fallback) {
-    final data = e.response?.data;
-    if (data is Map<String, dynamic>) {
-      final msg = data['message'];
-      if (msg is String && msg.isNotEmpty) return msg;
-      if (msg is List && msg.isNotEmpty) return msg.first.toString();
-    }
-    if (e.type == DioExceptionType.connectionError ||
-        e.type == DioExceptionType.connectionTimeout ||
-        e.type == DioExceptionType.receiveTimeout) {
-      return "Internet aloqasi yo'q. Ulanishni tekshiring.";
-    }
-    return fallback;
-  }
 }

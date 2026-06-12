@@ -1,4 +1,11 @@
 {
+  "errors": {
+    "noInternet": "Internet aloqasi yo'q. Ulanishni tekshirib qayta urining.",
+    "sessionExpired": "Sessiya muddati tugagan — qaytadan kiring.",
+    "forbidden": "Bu amalga ruxsatingiz yo'q.",
+    "generic": "Amalni bajarib bo'lmadi. Qayta urinib ko'ring.",
+    "loadFailed": "Ma'lumotlarni yuklab bo'lmadi. Qayta urinib ko'ring."
+  },
   "sos": {
     "wsBanner": "SOS! Bola yordam so'ramoqda",
     "viewAction": "Ko'rish"

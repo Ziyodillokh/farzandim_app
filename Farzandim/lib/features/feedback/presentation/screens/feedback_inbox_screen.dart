@@ -5,6 +5,7 @@
 // Bola yuborgan emoji + message ko'rsatadi. WS `feedback:received`
 // orqali real-time keladi. Tap → markAsRead.
 
+import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -44,7 +45,8 @@ class FeedbackInboxScreen extends ConsumerWidget {
                   loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.accent),
                   ),
-                  error: (e, _) => Center(child: Text('Yuklanmadi: $e')),
+                  error: (e, _) =>
+                      Center(child: Text(friendlyError(e))),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
