@@ -5,6 +5,7 @@
 // Faol va Tarix tabi. Har bir alert ustida xaritada ko'rish + resolve.
 // Backend: GET /api/sos-alerts?status=ACTIVE|RESOLVED + WS sos:* refresh.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -41,18 +42,16 @@ class SosAlertsListScreen extends ConsumerWidget {
                       _AlertsList(
                         provider: activeSosAlertsProvider,
                         showResolveButton: true,
-                        emptyTitle: "Faol SOS alert yo'q",
-                        emptySubtitle:
-                            'Hammasi tinch. Bola SOS bossa, push xabar keladi.',
+                        emptyTitle: 'sos.emptyActiveTitle'.tr(),
+                        emptySubtitle: 'sos.emptyActiveSubtitle'.tr(),
                         emptyIcon: Icons.check_circle_outline_rounded,
                         emptyIconColor: AppColors.success,
                       ),
                       _AlertsList(
                         provider: resolvedSosAlertsProvider,
                         showResolveButton: false,
-                        emptyTitle: "Tarix bo'sh",
-                        emptySubtitle:
-                            "Hal qilingan SOS alertlar bu yerda ko'rinadi.",
+                        emptyTitle: 'sos.emptyHistoryTitle'.tr(),
+                        emptySubtitle: 'sos.emptyHistorySubtitle'.tr(),
                         emptyIcon: Icons.history_rounded,
                         emptyIconColor: AppColors.textSecondary,
                       ),
@@ -90,7 +89,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'SOS Alertlar',
+                'sos.headerTitle'.tr(),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -127,9 +126,9 @@ class _Tabs extends StatelessWidget {
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: AppTextStyles.bodyM,
-        tabs: const [
-          Tab(text: 'Faol'),
-          Tab(text: 'Tarix'),
+        tabs: [
+          Tab(text: 'sos.tabActive'.tr()),
+          Tab(text: 'sos.tabHistory'.tr()),
         ],
       ),
     );
@@ -166,8 +165,7 @@ class _AlertsList extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               Text(
-                "SOS ro'yxatini yuklab bo'lmadi.\n"
-                'Internet aloqasini tekshiring.',
+                'sos.loadFailed'.tr(),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyM.copyWith(color: AppColors.error),
               ),
@@ -176,7 +174,7 @@ class _AlertsList extends ConsumerWidget {
                 onPressed: () => ref.invalidate(sosAlertsByStatusProvider),
                 icon: Icon(Icons.refresh_rounded, color: AppColors.accent),
                 label: Text(
-                  'Qayta urinish',
+                  'common.retry'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
                     color: AppColors.accent,
                     fontWeight: FontWeight.w600,
@@ -246,7 +244,7 @@ class _AlertsList extends ConsumerWidget {
     if (lat == null || lng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Joylashuv yo'q"),
+          content: Text('sos.noLocationSnack'.tr()),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -259,7 +257,7 @@ class _AlertsList extends ConsumerWidget {
         lng: lng,
         title:
             (alert['child'] as Map<String, dynamic>?)?['name'] as String? ??
-            'Bola',
+            'sos.fallbackChildName'.tr(),
       ),
     );
   }
@@ -274,18 +272,18 @@ class _AlertsList extends ConsumerWidget {
       builder: (dialogContext) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          'SOS alert hal qilinsinmi?',
+          'sos.resolveDialogTitle'.tr(),
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          "Alert ACTIVE → RESOLVED holatiga o'tadi.",
+          'sos.resolveDialogContent'.tr(),
           style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(false),
             child: Text(
-              'Bekor qilish',
+              'common.cancel'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -294,7 +292,7 @@ class _AlertsList extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(true),
             child: Text(
-              'Hal qilish',
+              'sos.resolveAction'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.accent,
                 fontWeight: FontWeight.w600,
@@ -315,14 +313,14 @@ class _AlertsList extends ConsumerWidget {
       ref.invalidate(sosAlertsByStatusProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('SOS hal qilindi'),
+          content: Text('sos.resolvedSnack'.tr()),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text('Resolve xato'),
+          content: Text('sos.resolveErrorSnack'.tr()),
           backgroundColor: AppColors.error,
         ),
       );
@@ -346,7 +344,8 @@ class _AlertTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final child = alert['child'] as Map<String, dynamic>?;
-    final childName = (child?['name'] as String?) ?? 'Bola';
+    final childName =
+        (child?['name'] as String?) ?? 'sos.fallbackChildName'.tr();
     final lat = (alert['latitude'] as num?)?.toDouble();
     final lng = (alert['longitude'] as num?)?.toDouble();
     final createdAt = alert['createdAt'] as String?;
@@ -379,7 +378,11 @@ class _AlertTile extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        showResolveButton ? '$childName — SOS!' : childName,
+                        showResolveButton
+                            ? 'sos.alertTitle'.tr(
+                                namedArgs: {'name': childName},
+                              )
+                            : childName,
                         style: AppTextStyles.bodyM.copyWith(
                           fontWeight: FontWeight.w700,
                           color: accent,
@@ -394,7 +397,9 @@ class _AlertTile extends StatelessWidget {
                         ),
                       if (!showResolveButton && resolvedTime != null)
                         Text(
-                          'Hal qilingan: ${_formatTime(resolvedTime)}',
+                          'sos.resolvedAt'.tr(
+                            namedArgs: {'time': _formatTime(resolvedTime)},
+                          ),
                           style: AppTextStyles.bodyS.copyWith(
                             color: AppColors.textTertiary,
                             fontSize: 11,
@@ -408,8 +413,12 @@ class _AlertTile extends StatelessWidget {
             if (hasLocation) ...[
               const SizedBox(height: AppDimensions.sm),
               Text(
-                'Joylashuv: ${lat.toStringAsFixed(5)}, '
-                '${lng.toStringAsFixed(5)}',
+                'sos.locationLine'.tr(
+                  namedArgs: {
+                    'lat': lat.toStringAsFixed(5),
+                    'lng': lng.toStringAsFixed(5),
+                  },
+                ),
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -431,7 +440,10 @@ class _AlertTile extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.map_rounded, size: 18),
-                      label: Text('Xaritada', style: AppTextStyles.bodyM),
+                      label: Text(
+                        'sos.mapButton'.tr(),
+                        style: AppTextStyles.bodyM,
+                      ),
                     ),
                   ),
                 if (hasLocation && showResolveButton)
@@ -450,7 +462,7 @@ class _AlertTile extends StatelessWidget {
                       ),
                       icon: const Icon(Icons.check_rounded, size: 18),
                       label: Text(
-                        'Hal qilish',
+                        'sos.resolveAction'.tr(),
                         style: AppTextStyles.bodyM.copyWith(
                           fontWeight: FontWeight.w600,
                           color: AppColors.onPrimary,
@@ -512,7 +524,7 @@ class _LocationMapDialog extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    '$title — SOS joylashuv',
+                    'sos.mapDialogTitle'.tr(namedArgs: {'name': title}),
                     style: AppTextStyles.headlineL.copyWith(fontSize: 16),
                   ),
                 ),

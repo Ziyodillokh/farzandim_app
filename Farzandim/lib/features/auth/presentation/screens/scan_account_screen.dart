@@ -158,7 +158,7 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
                       ),
                     ),
                   Text(
-                    'Asosiy qurilmadagi QR kodni ramka ichiga joylang',
+                    'auth.scan.frameHint'.tr(),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyM.copyWith(
                       color: Colors.white,
@@ -167,7 +167,7 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
                   ),
                   const SizedBox(height: AppDimensions.xs),
                   Text(
-                    "Faol seanslar → Boshqa hisob qo'shish orqali ko'rsatiladi",
+                    'auth.scan.whereHint'.tr(),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyS.copyWith(
                       color: Colors.white70,
@@ -214,7 +214,7 @@ class _CameraError extends StatelessWidget {
               ),
               const SizedBox(height: AppDimensions.md),
               Text(
-                'Kamera ochilmadi. Sozlamalardan kamera ruxsatini bering.',
+                'auth.scan.cameraError'.tr(),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyM.copyWith(color: Colors.white),
               ),

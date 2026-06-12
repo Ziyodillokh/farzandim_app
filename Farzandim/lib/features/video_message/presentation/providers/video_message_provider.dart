@@ -8,6 +8,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -156,7 +157,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
     if (receiverId == null || receiverId.isEmpty) {
       state = state.copyWith(
         status: VideoUploadStatus.error,
-        errorMessage: 'Bola hali pair qilmagan',
+        errorMessage: 'videoMessages.notPaired'.tr(),
       );
       return false;
     }

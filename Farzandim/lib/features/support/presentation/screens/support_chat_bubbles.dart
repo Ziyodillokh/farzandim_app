@@ -461,7 +461,7 @@ class _VideoBubble extends ConsumerWidget {
                     SizedBox(
                       width: 150,
                       child: Text(
-                        message.fileName ?? 'video',
+                        message.fileName ?? 'support.fallbackVideoName'.tr(),
                         style: AppTextStyles.label.copyWith(
                           color: Colors.white,
                           fontSize: 11,
@@ -560,7 +560,7 @@ class _DocumentBubble extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    message.fileName ?? 'document',
+                    message.fileName ?? 'support.fallbackDocumentName'.tr(),
                     style: AppTextStyles.bodyS.copyWith(
                       color: fg,
                       fontWeight: FontWeight.w600,

@@ -6,6 +6,7 @@
 // ochiladi. Message (ixtiyoriy) kiritib, Backend'ga POST yuboradi.
 // Bola Child App'da WS push xabar oladi (sos kabi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -27,8 +28,7 @@ class PhotoRequestDialog extends ConsumerStatefulWidget {
   final String childId;
 
   /// Dialog ochish helper'i.
-  static Future<void> show(BuildContext context,
-      {required String childId}) {
+  static Future<void> show(BuildContext context, {required String childId}) {
     return showDialog<void>(
       context: context,
       builder: (_) => PhotoRequestDialog(childId: childId),
@@ -36,8 +36,7 @@ class PhotoRequestDialog extends ConsumerStatefulWidget {
   }
 
   @override
-  ConsumerState<PhotoRequestDialog> createState() =>
-      _PhotoRequestDialogState();
+  ConsumerState<PhotoRequestDialog> createState() => _PhotoRequestDialogState();
 }
 
 class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
@@ -67,14 +66,14 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Rasm so'rovi yuborildi"),
+          content: Text('photoRequests.sentSnack'.tr()),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: const Text("Yuborilmadi, qaytadan urinib ko'ring"),
+          content: Text('photoRequests.sendErrorSnack'.tr()),
           backgroundColor: AppColors.error,
         ),
       );
@@ -87,14 +86,11 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
       backgroundColor: AppColors.surface,
       title: Row(
         children: [
-          Icon(
-            Icons.photo_camera_rounded,
-            color: AppColors.accent,
-          ),
+          Icon(Icons.photo_camera_rounded, color: AppColors.accent),
           const SizedBox(width: AppDimensions.sm),
           Expanded(
             child: Text(
-              "Bola'dan rasm so'rash",
+              'photoRequests.dialogTitle'.tr(),
               style: AppTextStyles.headlineL.copyWith(fontSize: 18),
             ),
           ),
@@ -105,10 +101,8 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Bolaga xabar (ixtiyoriy):',
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            'photoRequests.messageLabel'.tr(),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.sm),
           TextField(
@@ -116,7 +110,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
             maxLength: 120,
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: "Bog'da nima qilyapsan?",
+              hintText: 'photoRequests.messageHint'.tr(),
               hintStyle: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textTertiary,
               ),
@@ -131,10 +125,8 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
           ),
           const SizedBox(height: AppDimensions.sm),
           Text(
-            "Bola Child App'da push xabar oladi va rasm yuboradi.",
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textTertiary,
-            ),
+            'photoRequests.dialogNote'.tr(),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textTertiary),
           ),
         ],
       ),
@@ -142,10 +134,8 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
         TextButton(
           onPressed: _isSending ? null : () => Navigator.of(context).pop(),
           child: Text(
-            'Bekor qilish',
-            style: AppTextStyles.bodyM.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            'common.cancel'.tr(),
+            style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
           ),
         ),
         TextButton(
@@ -160,7 +150,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
                   ),
                 )
               : Text(
-                  "So'rash",
+                  'photoRequests.sendButton'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
                     color: AppColors.accent,
                     fontWeight: FontWeight.w600,

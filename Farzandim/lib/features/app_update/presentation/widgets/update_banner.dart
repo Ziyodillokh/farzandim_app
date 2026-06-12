@@ -3,6 +3,7 @@
 // (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim/features/app_update/presentation/providers/app_update_provider.dart';
@@ -61,7 +62,9 @@ class UpdateBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Yangi versiya mavjud (${platformInfo.latest})',
+                      'appUpdate.banner.title'.tr(
+                        namedArgs: {'version': platformInfo.latest},
+                      ),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontSize: 14,
@@ -97,16 +100,16 @@ class UpdateBanner extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Yangilash',
-                  style: TextStyle(
+                child: Text(
+                  'appUpdate.banner.updateButton'.tr(),
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
               ),
               IconButton(
-                tooltip: 'Yopish (24 soat)',
+                tooltip: 'appUpdate.banner.dismissTooltip'.tr(),
                 icon: Icon(
                   Icons.close_rounded,
                   size: 18,

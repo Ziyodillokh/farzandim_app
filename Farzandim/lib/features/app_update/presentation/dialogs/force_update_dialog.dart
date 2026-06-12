@@ -2,6 +2,7 @@
 // ForceUpdateDialog — Parent App majburiy yangilash (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:flutter/material.dart';
@@ -58,7 +59,7 @@ class ForceUpdateDialog extends StatelessWidget {
               ),
               const SizedBox(height: 20),
               Text(
-                'Ilovani yangilang',
+                'appUpdate.force.title'.tr(),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
@@ -67,7 +68,7 @@ class ForceUpdateDialog extends StatelessWidget {
               ),
               const SizedBox(height: 8),
               Text(
-                'Yangi versiya zarur. Eski versiya bilan davom etib bo‘lmaydi.',
+                'appUpdate.force.subtitle'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -102,8 +103,8 @@ class ForceUpdateDialog extends StatelessWidget {
               const SizedBox(height: 24),
               _PrimaryButton(
                 label: platform == TargetPlatform.iOS
-                    ? 'App Store ochish'
-                    : 'Play Market ochish',
+                    ? 'appUpdate.force.openAppStore'.tr()
+                    : 'appUpdate.force.openPlayStore'.tr(),
                 icon: platform == TargetPlatform.iOS
                     ? Icons.apple_rounded
                     : Icons.shop_rounded,
@@ -115,7 +116,7 @@ class ForceUpdateDialog extends StatelessWidget {
                   platform != TargetPlatform.iOS) ...[
                 const SizedBox(height: 10),
                 _SecondaryButton(
-                  label: 'Veb-saytdan yuklash (APK)',
+                  label: 'appUpdate.force.downloadApk'.tr(),
                   icon: Icons.download_rounded,
                   onPressed: () => _launch(platformInfo!.directApkUrl),
                 ),
@@ -145,13 +146,21 @@ class _VersionRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _versionChip('Joriy', current, AppColors.textSecondary),
+        _versionChip(
+          'appUpdate.force.currentLabel'.tr(),
+          current,
+          AppColors.textSecondary,
+        ),
         Icon(
           Icons.arrow_forward_rounded,
           color: AppColors.textTertiary,
           size: 20,
         ),
-        _versionChip('Yangi', latest, AppColors.accent),
+        _versionChip(
+          'appUpdate.force.latestLabel'.tr(),
+          latest,
+          AppColors.accent,
+        ),
       ],
     );
   }

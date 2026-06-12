@@ -329,7 +329,7 @@ class _DeviceCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  info?.displayModel ?? "Noma'lum qurilma",
+                  info?.displayModel ?? 'settings.sessions.unknownDevice'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
                     fontSize: 18,
                     fontWeight: FontWeight.w700,

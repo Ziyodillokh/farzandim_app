@@ -10,11 +10,32 @@
       "childNotLinked": "This child is not linked to your account.",
       "childNotFound": "Child not found.",
       "saveFailed": "Failed to save."
-    }
+    },
+    "fatalFallback": "Something went wrong. Please reopen the app."
   },
   "sos": {
     "wsBanner": "SOS! Your child needs help",
-    "viewAction": "View"
+    "viewAction": "View",
+    "headerTitle": "SOS Alerts",
+    "tabActive": "Active",
+    "tabHistory": "History",
+    "emptyActiveTitle": "No active SOS alerts",
+    "emptyActiveSubtitle": "All is calm. If your child presses SOS, you'll get a push notification.",
+    "emptyHistoryTitle": "History is empty",
+    "emptyHistorySubtitle": "Resolved SOS alerts will appear here.",
+    "loadFailed": "Couldn't load the SOS list.\nCheck your internet connection.",
+    "noLocationSnack": "No location data",
+    "fallbackChildName": "Child",
+    "resolveDialogTitle": "Resolve this SOS alert?",
+    "resolveDialogContent": "The alert will move from ACTIVE to RESOLVED.",
+    "resolveAction": "Resolve",
+    "resolvedSnack": "SOS resolved",
+    "resolveErrorSnack": "Resolve failed",
+    "alertTitle": "{name} — SOS!",
+    "resolvedAt": "Resolved: {time}",
+    "locationLine": "Location: {lat}, {lng}",
+    "mapButton": "On map",
+    "mapDialogTitle": "{name} — SOS location"
   },
   "language": {
     "selectTitle": "Choose your language",
@@ -129,7 +150,8 @@
       "step1": "Open the app on your main device",
       "step2": "Go to the Active sessions section",
       "step3": "Tap the Add account button",
-      "step4": "Scan this QR code"
+      "step4": "Scan this QR code",
+      "createFailed": "Couldn't create the code. Please try again."
     },
     "telegramLogin": {
       "title": "Sign in with Telegram",
@@ -149,7 +171,10 @@
     "scan": {
       "invalidQr": "Invalid QR code",
       "expiredQr": "QR code is invalid or expired",
-      "scanError": "Scanning error"
+      "scanError": "Scanning error",
+      "frameHint": "Place the QR code from your main device inside the frame",
+      "whereHint": "Shown via Active sessions → Add another account",
+      "cameraError": "Camera couldn't be opened. Grant camera permission in settings."
     }
   },
   "formatters": {
@@ -222,7 +247,27 @@
     },
     "usageTime": "Usage time",
     "noDevice": "Device not connected",
-    "deviceModelUnknown": "Phone model unknown"
+    "deviceModelUnknown": "Phone model unknown",
+    "geoZoneAlert": {
+      "zoneFallback": "Zone",
+      "enter": "🚨 Child entered the \"{zone}\" zone",
+      "exit": "🚨 Child left the \"{zone}\" zone"
+    },
+    "chart": {
+      "loadError": "Couldn't load statistics",
+      "noData": "No data yet",
+      "hoursShort": "{value}h",
+      "minutesShort": "{value}m",
+      "weekdays": {
+        "1": "Mo",
+        "2": "Tu",
+        "3": "We",
+        "4": "Th",
+        "5": "Fr",
+        "6": "Sa",
+        "7": "Su"
+      }
+    }
   },
   "schedules": {
     "headerTitle": "Schedules",
@@ -255,6 +300,25 @@
       "updateButton": "Update",
       "saveErrorPrefix": "Save error: {error}",
       "deleteErrorPrefix": "Delete error: {error}"
+    },
+    "singleTitle": "Schedule",
+    "sleepBlockTitle": "Block during sleep time",
+    "schoolTimeTitle": "School time",
+    "todayLabel": "Today",
+    "weeklySchedule": "Weekly schedule",
+    "appRestrictionsLabel": "App restrictions",
+    "notSet": "Not set",
+    "startTimeHelp": "Start time",
+    "endTimeHelp": "End time",
+    "appsNotLoaded": "App list not loaded yet",
+    "weekdayShort": {
+      "monday": "Mo",
+      "tuesday": "Tu",
+      "wednesday": "We",
+      "thursday": "Th",
+      "friday": "Fr",
+      "saturday": "Sa",
+      "sunday": "Su"
     }
   },
   "fullScreenMap": {
@@ -338,7 +402,12 @@
     "apply": "Apply",
     "saved": "Saved",
     "saveError": "Could not save",
-    "pickDuration": "Pick limit duration"
+    "pickDuration": "Pick limit duration",
+    "durationLessThanMinute": "< 1 min",
+    "durationMinutes": "{minutes} min",
+    "durationHours": "{hours} h",
+    "durationMinutesFull": "{minutes} min",
+    "durationHoursMinutesFull": "{hours} h {minutes} min"
   },
   "appRestrictions": {
     "headerTitle": "App restrictions",
@@ -400,7 +469,16 @@
       "subtitle": "Once your child starts moving,\ntheir path will appear here"
     },
     "errorPrefix": "Error: {error}",
-    "viewButton": "View history"
+    "viewButton": "View history",
+    "markerStart": "Start",
+    "duration": {
+      "minutes": "{m} min",
+      "hours": "{h} h",
+      "hoursMinutes": "{h} h {m} min"
+    },
+    "dwell": {
+      "total": "Total: {duration}"
+    }
   },
   "location": {
     "updatedSuffix": "updated {time}",
@@ -497,7 +575,21 @@
     "weekTotal": "Week total",
     "dailyAvg": "Daily average",
     "noApps": "No data",
-    "error": "Could not load report"
+    "error": "Could not load report",
+    "duration": {
+      "minutes": "{m}m",
+      "hours": "{h}h",
+      "hoursMinutes": "{h}h {m}m"
+    },
+    "weekdays": {
+      "1": "Mo",
+      "2": "Tu",
+      "3": "We",
+      "4": "Th",
+      "5": "Fr",
+      "6": "Sa",
+      "7": "Su"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Personal chat",
@@ -519,7 +611,15 @@
     "fileOpenFailed": "Could not open file",
     "cameraPermissionSnack": "Camera permission needed — allow it in settings",
     "fileGeneric": "File",
-    "mediaSendError": "File not sent"
+    "mediaSendError": "File not sent",
+    "videoPreparing": "Preparing video...",
+    "cameraNotFound": "Camera not found",
+    "recordFailed": "Recording failed: {error}",
+    "lockHint": "Lock",
+    "tapToFinish": "Tap to finish",
+    "holdToRecord": "Hold to record",
+    "childNotFound": "Child not found",
+    "notPaired": "The child hasn't paired the Child App yet — you can't send voice messages"
   },
   "chatSettings": {
     "title": "Chat settings",
@@ -676,7 +776,22 @@
       "endedSnack": "Session ended",
       "endedAllSnack": "Other sessions ended",
       "loadError": "Failed to load sessions",
-      "retry": "Retry"
+      "retry": "Retry",
+      "androidDevice": "Android device",
+      "browser": "Browser",
+      "unknownDevice": "Unknown device"
+    },
+    "pushTest": {
+      "menuTitle": "Push check (test)",
+      "sending": "Sending test push…",
+      "requestFailedTitle": "❌ Request failed",
+      "requestFailedBody": "Network or login issue. Check your internet connection and try again.",
+      "noTokenTitle": "⚠️ Device not registered",
+      "noTokenBody": "This phone has no push token (tokens=0), so no notifications will arrive.\n\nSolution: log out and log in again — the token will be registered automatically.",
+      "sentTitle": "✅ Sent",
+      "sentBody": "Server sent the push (tokens={tokens}, sent={sent}).\n\nThe notification should arrive within a few seconds. If it DOESN'T — check the phone's notification permission.",
+      "serverFailedTitle": "❌ Server could not send",
+      "serverFailedBody": "tokens={tokens}, sent={sent}, failed={failed}.\n\nServer-side Firebase issue — report these numbers to the developer."
     }
   },
   "support": {
@@ -698,7 +813,9 @@
       "image": "Photo",
       "video": "Video",
       "document": "Document"
-    }
+    },
+    "fallbackVideoName": "video",
+    "fallbackDocumentName": "document"
   },
   "childManagement": {
     "list": {
@@ -719,7 +836,8 @@
       },
       "deletedSnack": "{name} deleted",
       "errorTitle": "Error loading data",
-      "errorPrefix": "Error: {error}"
+      "errorPrefix": "Error: {error}",
+      "repairAction": "Reconnect (QR)"
     },
     "addEdit": {
       "addTitle": "Add new child",
@@ -738,7 +856,10 @@
       "backButton": "Back",
       "saveButton": "Save",
       "updateButton": "Update",
-      "errorPrefix": "Error: {error}"
+      "errorPrefix": "Error: {error}",
+      "genderMale": "Boy",
+      "genderFemale": "Girl",
+      "photoSourceTitle": "Choose photo source"
     },
     "familyCode": {
       "headerTitle": "Add child",
@@ -770,6 +891,16 @@
         "close": "Close"
       },
       "supportLink": "Get technical support"
+    },
+    "pairBanner": {
+      "message": "📱 {name} wants to connect from a new device. Please confirm."
+    },
+    "deviceInfo": {
+      "unknownDevice": "Unknown device",
+      "unknownSystem": "Unknown system",
+      "charging": "{level}% (charging)",
+      "noWifi": "No Wi-Fi",
+      "never": "Never"
     }
   },
   "appPermissions": {
@@ -786,7 +917,9 @@
     },
     "detailNote": "Permission status appears once the child's device reports data.",
     "appsTitle": "{name} permissions",
-    "saved": "Saved"
+    "saved": "Saved",
+    "saveFailed": "Couldn't save. Check your internet connection.",
+    "loadFailed": "Couldn't load permissions.\nCheck your internet connection."
   },
   "leaderboard": {
     "title": "Leaderboard",
@@ -842,7 +975,8 @@
     "rejectButton": "Reject",
     "approveButton": "Approve",
     "emptyTitle": "No pairing requests",
-    "emptySubtitle": "When your child tries to connect from a new device, the request will appear here."
+    "emptySubtitle": "When your child tries to connect from a new device, the request will appear here.",
+    "deviceUnknown": "Unknown device"
   },
   "repairQr": {
     "title": "Reconnect",
@@ -860,5 +994,69 @@
     "hint3": "Got a new phone / replaced the phone",
     "hint4": "The old pairing is broken",
     "retryButton": "Retry"
+  },
+  "photoRequests": {
+    "fallbackChildName": "Child",
+    "headerTitle": "{name} — Photos",
+    "tabAll": "All",
+    "tabPending": "Pending",
+    "tabCompleted": "Completed",
+    "tabDeclined": "Declined",
+    "emptyPending": "No pending requests",
+    "emptyCompleted": "No completed photos",
+    "emptyDeclined": "No declined requests",
+    "requestButton": "Request photo",
+    "statusCompleted": "Child sent a photo",
+    "statusDeclined": "Child declined",
+    "statusPending": "Pending",
+    "deleteDialogTitle": "Delete this request?",
+    "deleteDialogContent": "This request and its photo will be deleted.",
+    "deletedSnack": "Deleted",
+    "deleteErrorSnack": "Delete failed",
+    "minutesShort": "{minutes}m",
+    "hoursShort": "{hours}h",
+    "photoLoadFailed": "Photo failed to load",
+    "emptyDefault": "No photo requests yet",
+    "emptySubtitle": "Tap the button below to send a request to your child.",
+    "sentSnack": "Photo request sent",
+    "sendErrorSnack": "Not sent, please try again",
+    "dialogTitle": "Request a photo from your child",
+    "messageLabel": "Message to your child (optional):",
+    "messageHint": "What are you doing at the park?",
+    "dialogNote": "Your child will get a push notification in the Child App and send a photo.",
+    "sendButton": "Request"
+  },
+  "videoMessages": {
+    "notPaired": "The child isn't paired yet"
+  },
+  "feedback": {
+    "fallbackChildName": "Child",
+    "headerTitle": "{name} — Feedback",
+    "moodHappy": "Happy",
+    "moodExcited": "Excited",
+    "moodThinking": "Thinking",
+    "moodWinking": "Joking",
+    "moodSad": "Sad",
+    "moodAngry": "Angry",
+    "moodTired": "Tired",
+    "moodLove": "Love",
+    "emptyTitle": "Your child hasn't sent any feedback yet",
+    "emptySubtitle": "Your child shares their mood with emoji in the Child App."
+  },
+  "appUpdate": {
+    "force": {
+      "title": "Update the app",
+      "subtitle": "A new version is required. You can't continue with the old version.",
+      "openAppStore": "Open App Store",
+      "openPlayStore": "Open Play Store",
+      "downloadApk": "Download from website (APK)",
+      "currentLabel": "Current",
+      "latestLabel": "New"
+    },
+    "banner": {
+      "title": "New version available ({version})",
+      "updateButton": "Update",
+      "dismissTooltip": "Dismiss (24 hours)"
+    }
   }
 }

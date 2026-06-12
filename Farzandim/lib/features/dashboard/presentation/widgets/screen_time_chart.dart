@@ -6,6 +6,7 @@
 // Tanlangan bola uchun oxirgi 7 kunlik app-usage aggregati.
 // Bugungi kun lime green bar, qolganlar slate.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart';
@@ -79,9 +80,6 @@ class ScreenTimeChart extends ConsumerWidget {
 
   final String childId;
 
-  static const List<String> _shortDays = [
-    'Du', 'Se', 'Ch', 'Pa', 'Ju', 'Sh', 'Ya',
-  ];
   // Getter — theme almashganda rang yangilanishi uchun (cached field emas).
   // Bugun — to'q/boy yashil (accent: dark=lime, light=to'q yashil) — bo'rtib turadi.
   static Color get _todayBar => AppColors.accent;
@@ -99,9 +97,15 @@ class ScreenTimeChart extends ConsumerWidget {
     if (ms <= 0) return '';
     final hoursF = ms / 3600000;
     if (hoursF >= 1) {
-      return '${hoursF.toStringAsFixed(hoursF >= 10 ? 0 : 1)}s';
+      return 'dashboard.chart.hoursShort'.tr(
+        namedArgs: {
+          'value': hoursF.toStringAsFixed(hoursF >= 10 ? 0 : 1),
+        },
+      );
     }
-    return '${ms ~/ 60000}d';
+    return 'dashboard.chart.minutesShort'.tr(
+      namedArgs: {'value': '${ms ~/ 60000}'},
+    );
   }
 
   @override
@@ -126,14 +130,14 @@ class ScreenTimeChart extends ConsumerWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  'Statistika yuklanmadi',
+                  'dashboard.chart.loadError'.tr(),
                   style: TextStyle(color: AppColors.textSecondary),
                 ),
                 const SizedBox(height: 8),
                 TextButton(
                   onPressed: () =>
                       ref.invalidate(weeklyChildUsageProvider(childId)),
-                  child: const Text('Qayta urinish'),
+                  child: Text('common.retry'.tr()),
                 ),
               ],
             ),
@@ -150,7 +154,7 @@ class ScreenTimeChart extends ConsumerWidget {
         height: 220,
         child: Center(
           child: Text(
-            "Hech qanday ma'lumot yo'q",
+            'dashboard.chart.noData'.tr(),
             style: TextStyle(color: AppColors.textSecondary),
           ),
         ),
@@ -168,13 +172,17 @@ class ScreenTimeChart extends ConsumerWidget {
     // (`todayScreenTimeMsProvider`), shuning uchun ikki ekranda bir xil.
     final hours = todayMs ~/ 3600000;
     final minutes = (todayMs % 3600000) ~/ 60000;
-    final title = hours == 0 ? '$minutes daq' : '$hours st $minutes daq';
+    final title = hours == 0
+        ? 'appLimits.durationMinutes'.tr(namedArgs: {'minutes': '$minutes'})
+        : 'formatters.duration'.tr(
+            namedArgs: {'hours': '$hours', 'minutes': '$minutes'},
+          );
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Ekran vaqti',
+          'weeklyReport.screenTime'.tr(),
           style: TextStyle(
             fontSize: 13,
             color: AppColors.textSecondary,
@@ -205,8 +213,17 @@ class ScreenTimeChart extends ConsumerWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
-                    Text('${maxHours}s', style: _yAxisStyle),
-                    Text('${(maxHours / 2).round()}s', style: _yAxisStyle),
+                    Text(
+                      'dashboard.chart.hoursShort'
+                          .tr(namedArgs: {'value': '$maxHours'}),
+                      style: _yAxisStyle,
+                    ),
+                    Text(
+                      'dashboard.chart.hoursShort'.tr(
+                        namedArgs: {'value': '${(maxHours / 2).round()}'},
+                      ),
+                      style: _yAxisStyle,
+                    ),
                     Text('0', style: _yAxisStyle),
                   ],
                 ),
@@ -266,7 +283,7 @@ class ScreenTimeChart extends ConsumerWidget {
                 child: Column(
                   children: [
                     Text(
-                      _shortDays[(daily.date.weekday - 1) % 7],
+                      'dashboard.chart.weekdays.${daily.date.weekday}'.tr(),
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 12,

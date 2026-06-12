@@ -12,6 +12,7 @@
 // Ma'lumot mavjud Routine model + schedulesProvider/scheduleActionsProvider
 // (Backend CRUD) bilan — dublikat kod yo'q.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -58,7 +59,7 @@ class SchedulesListScreen extends ConsumerWidget {
                       _ScheduleCard(
                         childId: childId,
                         type: ScheduleType.sleep,
-                        title: 'Uyqu vaqtida bloklash',
+                        title: 'schedules.sleepBlockTitle'.tr(),
                         schedule: all.firstWhereOrNull(
                           (s) => s.type == ScheduleType.sleep,
                         ),
@@ -67,7 +68,7 @@ class SchedulesListScreen extends ConsumerWidget {
                       _ScheduleCard(
                         childId: childId,
                         type: ScheduleType.school,
-                        title: 'Dars vaqti',
+                        title: 'schedules.schoolTimeTitle'.tr(),
                         schedule: all.firstWhereOrNull(
                           (s) => s.type == ScheduleType.school,
                         ),
@@ -121,7 +122,7 @@ class _Header extends StatelessWidget {
           ),
           Expanded(
             child: Text(
-              'Jadval',
+              'schedules.singleTitle'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(
                 color: AppColors.textPrimary,
@@ -242,19 +243,19 @@ class _ScheduleCard extends ConsumerWidget {
             const SizedBox(height: AppDimensions.sm),
             Divider(height: 1, color: AppColors.divider),
             _SubRow(
-              label: 'Bugun',
+              label: 'schedules.todayLabel'.tr(),
               value: schedule!.timeRangeFormatted,
               onTap: () => _editTime(context, ref, schedule!),
             ),
             Divider(height: 1, color: AppColors.divider),
             _SubRow(
-              label: 'Haftalik jadval',
+              label: 'schedules.weeklySchedule'.tr(),
               value: schedule!.weekdaysFormatted,
               onTap: () => _editDays(context, ref, schedule!),
             ),
             Divider(height: 1, color: AppColors.divider),
             _SubRow(
-              label: 'Ilova cheklovlar',
+              label: 'schedules.appRestrictionsLabel'.tr(),
               trailing: _AppsTrailing(
                 childId: childId,
                 packages: schedule!.blockedApps,
@@ -276,13 +277,13 @@ class _ScheduleCard extends ConsumerWidget {
     final start = await showTimePicker(
       context: context,
       initialTime: s.startTime,
-      helpText: 'Boshlanish vaqti',
+      helpText: 'schedules.startTimeHelp'.tr(),
     );
     if (start == null || !context.mounted) return;
     final end = await showTimePicker(
       context: context,
       initialTime: s.endTime,
-      helpText: 'Tugash vaqti',
+      helpText: 'schedules.endTimeHelp'.tr(),
     );
     if (end == null) return;
     await ref
@@ -416,7 +417,7 @@ class _AppsTrailing extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     if (packages.isEmpty) {
       return Text(
-        'Kiritilmagan',
+        'schedules.notSet'.tr(),
         style: AppTextStyles.bodyM.copyWith(color: AppColors.textTertiary),
       );
     }
@@ -490,7 +491,7 @@ class _DaysSheetState extends State<_DaysSheet> {
           ),
           const SizedBox(height: AppDimensions.lg),
           Text(
-            'Haftalik jadval',
+            'schedules.weeklySchedule'.tr(),
             style: AppTextStyles.headlineL.copyWith(
               fontWeight: FontWeight.bold,
             ),
@@ -533,9 +534,9 @@ class _DaysSheetState extends State<_DaysSheet> {
                   borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
                 ),
               ),
-              child: const Text(
-                'Saqlash',
-                style: TextStyle(fontWeight: FontWeight.w700),
+              child: Text(
+                'common.save'.tr(),
+                style: const TextStyle(fontWeight: FontWeight.w700),
               ),
             ),
           ),
@@ -631,7 +632,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                     onPressed: () =>
                         Navigator.of(context).pop(_selected.toList()),
                     child: Text(
-                      'Saqlash',
+                      'common.save'.tr(),
                       style: AppTextStyles.bodyM.copyWith(
                         color: AppColors.accent,
                         fontWeight: FontWeight.w700,
@@ -651,7 +652,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                       child: Padding(
                         padding: const EdgeInsets.all(AppDimensions.xl),
                         child: Text(
-                          "Ilovalar ro'yxati hali yuklanmadi",
+                          'schedules.appsNotLoaded'.tr(),
                           style: TextStyle(color: AppColors.textSecondary),
                         ),
                       ),

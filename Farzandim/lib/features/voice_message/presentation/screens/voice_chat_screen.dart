@@ -337,10 +337,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
     // Compress UI feedback
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
+      SnackBar(
         content: Row(
           children: [
-            SizedBox(
+            const SizedBox(
               width: 16,
               height: 16,
               child: CircularProgressIndicator(
@@ -348,11 +348,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                 color: Colors.white,
               ),
             ),
-            SizedBox(width: 12),
-            Text('Video tayyorlanmoqda...'),
+            const SizedBox(width: 12),
+            Text('voiceChat.videoPreparing'.tr()),
           ],
         ),
-        duration: Duration(seconds: 30),
+        duration: const Duration(seconds: 30),
       ),
     );
 

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
@@ -74,10 +75,16 @@ class AppCombined {
   String get usageFormatted {
     final h = usageTime.inHours;
     final m = usageTime.inMinutes % 60;
-    if (h == 0 && m == 0) return '< 1 daq';
-    if (h == 0) return '$m daqiqa';
-    if (m == 0) return '$h soat';
-    return '$h soat $m daqiqa';
+    if (h == 0 && m == 0) return 'appLimits.durationLessThanMinute'.tr();
+    if (h == 0) {
+      return 'appLimits.durationMinutesFull'.tr(namedArgs: {'minutes': '$m'});
+    }
+    if (m == 0) {
+      return 'appLimits.durationHours'.tr(namedArgs: {'hours': '$h'});
+    }
+    return 'appLimits.durationHoursMinutesFull'.tr(
+      namedArgs: {'hours': '$h', 'minutes': '$m'},
+    );
   }
 
   /// Cheklov matni (`AppRestriction.limitFormatted`'ga delegate).

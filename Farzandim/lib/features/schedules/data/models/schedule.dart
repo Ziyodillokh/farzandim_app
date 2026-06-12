@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 /// Jadval kategoriyasi — ikona, rang va default label aniqlaydi.
@@ -100,19 +101,19 @@ extension WeekdayX on Weekday {
   String get label {
     switch (this) {
       case Weekday.monday:
-        return 'Du';
+        return 'schedules.weekdayShort.monday'.tr();
       case Weekday.tuesday:
-        return 'Se';
+        return 'schedules.weekdayShort.tuesday'.tr();
       case Weekday.wednesday:
-        return 'Ch';
+        return 'schedules.weekdayShort.wednesday'.tr();
       case Weekday.thursday:
-        return 'Pa';
+        return 'schedules.weekdayShort.thursday'.tr();
       case Weekday.friday:
-        return 'Ju';
+        return 'schedules.weekdayShort.friday'.tr();
       case Weekday.saturday:
-        return 'Sh';
+        return 'schedules.weekdayShort.saturday'.tr();
       case Weekday.sunday:
-        return 'Ya';
+        return 'schedules.weekdayShort.sunday'.tr();
     }
   }
 
@@ -365,7 +366,7 @@ class Schedule {
   /// - aks holda — "Du, Pa, Ju" (qisqa label'lar)
   String get weekdaysFormatted {
     final set = weekdays.toSet();
-    if (set.length == 7) return 'Har kuni';
+    if (set.length == 7) return 'schedules.edit.shortcutAll'.tr();
     const weekdayDays = {
       Weekday.monday,
       Weekday.tuesday,
@@ -374,11 +375,11 @@ class Schedule {
       Weekday.friday,
     };
     if (set.length == 5 && weekdayDays.every(set.contains)) {
-      return 'Hafta ichi';
+      return 'schedules.edit.shortcutWeekdays'.tr();
     }
     const weekendDays = {Weekday.saturday, Weekday.sunday};
     if (set.length == 2 && weekendDays.every(set.contains)) {
-      return 'Hafta oxiri';
+      return 'schedules.edit.shortcutWeekend'.tr();
     }
     // ISO tartibida tartiblab ko'rsatamiz.
     final sorted = weekdays.toList()

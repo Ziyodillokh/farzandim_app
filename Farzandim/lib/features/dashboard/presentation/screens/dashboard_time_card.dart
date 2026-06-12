@@ -150,8 +150,12 @@ class _TimeCardState extends ConsumerState<_TimeCard> {
   static String _formatDuration(int ms) {
     final h = ms ~/ 3600000;
     final m = (ms % 3600000) ~/ 60000;
-    if (h == 0) return '$m daq';
-    return '$h st $m daq';
+    if (h == 0) {
+      return 'appLimits.durationMinutes'.tr(namedArgs: {'minutes': '$m'});
+    }
+    return 'formatters.duration'.tr(
+      namedArgs: {'hours': '$h', 'minutes': '$m'},
+    );
   }
 }
 

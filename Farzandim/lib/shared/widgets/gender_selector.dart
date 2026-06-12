@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -41,7 +42,7 @@ class GenderSelector extends StatelessWidget {
       children: [
         Expanded(
           child: _buildOption(
-            label: "O'g'il",
+            label: 'childManagement.addEdit.genderMale'.tr(),
             icon: Icons.male,
             isSelected: selected == Gender.male,
             onTap: () => onChanged(Gender.male),
@@ -50,7 +51,7 @@ class GenderSelector extends StatelessWidget {
         const SizedBox(width: 12),
         Expanded(
           child: _buildOption(
-            label: 'Qiz',
+            label: 'childManagement.addEdit.genderFemale'.tr(),
             icon: Icons.female,
             isSelected: selected == Gender.female,
             onTap: () => onChanged(Gender.female),

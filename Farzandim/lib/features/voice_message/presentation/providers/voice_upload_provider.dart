@@ -6,6 +6,7 @@
 
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
@@ -71,7 +72,7 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
     if (child == null) {
       state = state.copyWith(
         status: UploadStatus.error,
-        errorMessage: 'Bola topilmadi',
+        errorMessage: 'voiceChat.childNotFound'.tr(),
       );
       return null;
     }
@@ -79,8 +80,7 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
     if (receiverId == null || receiverId.isEmpty) {
       state = state.copyWith(
         status: UploadStatus.error,
-        errorMessage:
-            "Bola hali Child App'da pair qilmagan — voice yubora olmaysiz",
+        errorMessage: 'voiceChat.notPaired'.tr(),
       );
       return null;
     }

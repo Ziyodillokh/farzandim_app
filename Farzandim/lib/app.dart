@@ -128,12 +128,14 @@ class FarzandimApp extends ConsumerWidget {
         final childName =
             (payload['child'] as Map?)?['name'] as String? ??
             payload['childName'] as String? ??
-            'Bola';
+            'pairRequests.fallbackChildName'.tr();
         final childId = payload['childId'] as String?;
         messenger.showSnackBar(
           SnackBar(
             content: Text(
-              '📱 $childName yangi qurilmadan ulanmoqchi. Tasdiqlang.',
+              'childManagement.pairBanner.message'.tr(
+                namedArgs: {'name': childName},
+              ),
               style: const TextStyle(
                 fontWeight: FontWeight.w600,
                 fontSize: 14,
@@ -144,7 +146,7 @@ class FarzandimApp extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
             action: childId != null
                 ? SnackBarAction(
-                    label: "Ko'rish",
+                    label: 'sos.viewAction'.tr(),
                     textColor: Colors.black,
                     onPressed: () => ref
                         .read(routerProvider)
@@ -165,12 +167,18 @@ class FarzandimApp extends ConsumerWidget {
         final messengerKey = _scaffoldMessengerKey;
         final messenger = messengerKey.currentState;
         if (messenger == null) return;
-        final zoneName = payload['zoneName'] as String? ?? 'Zona';
+        final zoneName =
+            payload['zoneName'] as String? ??
+            'dashboard.geoZoneAlert.zoneFallback'.tr();
         final isEnter = payload['event'] == 'enter';
-        final action = isEnter ? 'kirdi' : 'chiqdi';
         messenger.showSnackBar(
           SnackBar(
-            content: Text('🚨 Bola "$zoneName" zonasiga $action'),
+            content: Text(
+              (isEnter
+                      ? 'dashboard.geoZoneAlert.enter'
+                      : 'dashboard.geoZoneAlert.exit')
+                  .tr(namedArgs: {'zone': zoneName}),
+            ),
             backgroundColor: isEnter
                 ? const Color(0xFF4ADE80)
                 : const Color(0xFFFBBF24),

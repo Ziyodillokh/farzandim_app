@@ -196,17 +196,17 @@ class _ErrorFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Directionality(
+    return Directionality(
       textDirection: ui.TextDirection.ltr,
       child: ColoredBox(
-        color: Color(0xFF0A0A12),
+        color: const Color(0xFF0A0A12),
         child: Center(
           child: Padding(
-            padding: EdgeInsets.all(24),
+            padding: const EdgeInsets.all(24),
             child: Text(
-              'Nimadir xato ketdi. Iltimos, ilovani qayta oching.',
+              'errors.fatalFallback'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Color(0xFFB0B0B8), fontSize: 15),
+              style: const TextStyle(color: Color(0xFFB0B0B8), fontSize: 15),
             ),
           ),
         ),

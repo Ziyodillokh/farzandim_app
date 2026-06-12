@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -147,7 +148,7 @@ class _UsageRow extends StatelessWidget {
           ),
           const SizedBox(width: 4),
           Text(
-            'Bloklangan',
+            'appLimits.blocked'.tr(),
             style: AppTextStyles.label.copyWith(
               color: AppColors.error,
               fontSize: 12,

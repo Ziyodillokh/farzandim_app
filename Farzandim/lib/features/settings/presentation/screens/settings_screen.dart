@@ -132,7 +132,7 @@ class SettingsScreen extends ConsumerWidget {
                                 ),
                                 _MenuItem(
                                   icon: Icons.notifications_active_rounded,
-                                  title: 'Push tekshirish (test)',
+                                  title: 'settings.pushTest.menuTitle'.tr(),
                                   onTap: () => _sendTestPush(context, ref),
                                 ),
                               ],
@@ -205,7 +205,7 @@ class SettingsScreen extends ConsumerWidget {
   //   sent=0, failed>0   → server Firebase muammosi
   Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Test push yuborilmoqda…')),
+      SnackBar(content: Text('settings.pushTest.sending'.tr())),
     );
 
     final res = await ref.read(fcmServiceProvider).sendTestPush();
@@ -214,30 +214,29 @@ class SettingsScreen extends ConsumerWidget {
     final String title;
     final String body;
     if (res == null) {
-      title = '❌ So‘rov bormadi';
-      body =
-          'Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.';
+      title = 'settings.pushTest.requestFailedTitle'.tr();
+      body = 'settings.pushTest.requestFailedBody'.tr();
     } else {
       final tokens = (res['tokens'] as num?)?.toInt() ?? 0;
       final sent = (res['sent'] as num?)?.toInt() ?? 0;
       final failed = (res['failed'] as num?)?.toInt() ?? 0;
       if (tokens == 0) {
-        title = '⚠️ Qurilma ro‘yxatdan o‘tmagan';
-        body =
-            'Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech '
-            'qanday bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, '
-            'qayta kiring (login) — token avtomatik ro‘yxatdan o‘tadi.';
+        title = 'settings.pushTest.noTokenTitle'.tr();
+        body = 'settings.pushTest.noTokenBody'.tr();
       } else if (sent > 0) {
-        title = '✅ Yuborildi';
-        body =
-            'Server push yubordi (tokens=$tokens, sent=$sent).\n\n'
-            'Bir necha soniyada bildirishnoma kelishi kerak. Agar KELMASA — '
-            'telefon bildirishnoma ruxsatini tekshiring.';
+        title = 'settings.pushTest.sentTitle'.tr();
+        body = 'settings.pushTest.sentBody'.tr(
+          namedArgs: {'tokens': '$tokens', 'sent': '$sent'},
+        );
       } else {
-        title = '❌ Server yubora olmadi';
-        body =
-            'tokens=$tokens, sent=$sent, failed=$failed.\n\nServer Firebase '
-            'muammosi — ishlab chiquvchiga shu sonlarni ayting.';
+        title = 'settings.pushTest.serverFailedTitle'.tr();
+        body = 'settings.pushTest.serverFailedBody'.tr(
+          namedArgs: {
+            'tokens': '$tokens',
+            'sent': '$sent',
+            'failed': '$failed',
+          },
+        );
       }
     }
 
@@ -253,7 +252,7 @@ class SettingsScreen extends ConsumerWidget {
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('OK'),
+            child: Text('common.ok'.tr()),
           ),
         ],
       ),

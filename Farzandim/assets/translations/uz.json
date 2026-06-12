@@ -10,11 +10,32 @@
       "childNotLinked": "Bu bola sizning akkauntingizga ulanmagan.",
       "childNotFound": "Bola topilmadi.",
       "saveFailed": "Saqlashda xatolik."
-    }
+    },
+    "fatalFallback": "Nimadir xato ketdi. Iltimos, ilovani qayta oching."
   },
   "sos": {
     "wsBanner": "SOS! Bola yordam so'ramoqda",
-    "viewAction": "Ko'rish"
+    "viewAction": "Ko'rish",
+    "headerTitle": "SOS Alertlar",
+    "tabActive": "Faol",
+    "tabHistory": "Tarix",
+    "emptyActiveTitle": "Faol SOS alert yo'q",
+    "emptyActiveSubtitle": "Hammasi tinch. Bola SOS bossa, push xabar keladi.",
+    "emptyHistoryTitle": "Tarix bo'sh",
+    "emptyHistorySubtitle": "Hal qilingan SOS alertlar bu yerda ko'rinadi.",
+    "loadFailed": "SOS ro'yxatini yuklab bo'lmadi.\nInternet aloqasini tekshiring.",
+    "noLocationSnack": "Joylashuv yo'q",
+    "fallbackChildName": "Bola",
+    "resolveDialogTitle": "SOS alert hal qilinsinmi?",
+    "resolveDialogContent": "Alert ACTIVE → RESOLVED holatiga o'tadi.",
+    "resolveAction": "Hal qilish",
+    "resolvedSnack": "SOS hal qilindi",
+    "resolveErrorSnack": "Resolve xato",
+    "alertTitle": "{name} — SOS!",
+    "resolvedAt": "Hal qilingan: {time}",
+    "locationLine": "Joylashuv: {lat}, {lng}",
+    "mapButton": "Xaritada",
+    "mapDialogTitle": "{name} — SOS joylashuv"
   },
   "language": {
     "selectTitle": "Tilni tanlang",
@@ -129,7 +150,8 @@
       "step1": "Ilovani asosiy qurilmangizda oching",
       "step2": "Faol sessiyalar bo'limiga kiring",
       "step3": "Boshqa hisob qo'shish tugmasini bosing",
-      "step4": "Ushbu QR kodni skanerlang"
+      "step4": "Ushbu QR kodni skanerlang",
+      "createFailed": "Kod yaratib bo'lmadi. Qayta urinib ko'ring."
     },
     "telegramLogin": {
       "title": "Telegram bilan kirish",
@@ -149,7 +171,10 @@
     "scan": {
       "invalidQr": "QR kod noto'g'ri",
       "expiredQr": "QR kod yaroqsiz yoki muddati tugagan",
-      "scanError": "Skanerlashda xatolik"
+      "scanError": "Skanerlashda xatolik",
+      "frameHint": "Asosiy qurilmadagi QR kodni ramka ichiga joylang",
+      "whereHint": "Faol seanslar → Boshqa hisob qo'shish orqali ko'rsatiladi",
+      "cameraError": "Kamera ochilmadi. Sozlamalardan kamera ruxsatini bering."
     }
   },
   "formatters": {
@@ -222,7 +247,27 @@
     },
     "usageTime": "Foydalanish vaqti",
     "noDevice": "Qurilma ulanmagan",
-    "deviceModelUnknown": "Telefon modeli aniqlanmagan"
+    "deviceModelUnknown": "Telefon modeli aniqlanmagan",
+    "geoZoneAlert": {
+      "zoneFallback": "Zona",
+      "enter": "🚨 Bola \"{zone}\" zonasiga kirdi",
+      "exit": "🚨 Bola \"{zone}\" zonasiga chiqdi"
+    },
+    "chart": {
+      "loadError": "Statistika yuklanmadi",
+      "noData": "Hech qanday ma'lumot yo'q",
+      "hoursShort": "{value}s",
+      "minutesShort": "{value}d",
+      "weekdays": {
+        "1": "Du",
+        "2": "Se",
+        "3": "Ch",
+        "4": "Pa",
+        "5": "Ju",
+        "6": "Sh",
+        "7": "Ya"
+      }
+    }
   },
   "schedules": {
     "headerTitle": "Jadvallar",
@@ -255,6 +300,25 @@
       "updateButton": "Yangilash",
       "saveErrorPrefix": "Saqlashda xato: {error}",
       "deleteErrorPrefix": "O'chirishda xato: {error}"
+    },
+    "singleTitle": "Jadval",
+    "sleepBlockTitle": "Uyqu vaqtida bloklash",
+    "schoolTimeTitle": "Dars vaqti",
+    "todayLabel": "Bugun",
+    "weeklySchedule": "Haftalik jadval",
+    "appRestrictionsLabel": "Ilova cheklovlar",
+    "notSet": "Kiritilmagan",
+    "startTimeHelp": "Boshlanish vaqti",
+    "endTimeHelp": "Tugash vaqti",
+    "appsNotLoaded": "Ilovalar ro'yxati hali yuklanmadi",
+    "weekdayShort": {
+      "monday": "Du",
+      "tuesday": "Se",
+      "wednesday": "Ch",
+      "thursday": "Pa",
+      "friday": "Ju",
+      "saturday": "Sh",
+      "sunday": "Ya"
     }
   },
   "fullScreenMap": {
@@ -338,7 +402,12 @@
     "apply": "Qo'llash",
     "saved": "Saqlandi",
     "saveError": "Saqlab bo'lmadi",
-    "pickDuration": "Limit vaqtini tanlang"
+    "pickDuration": "Limit vaqtini tanlang",
+    "durationLessThanMinute": "< 1 daq",
+    "durationMinutes": "{minutes} daq",
+    "durationHours": "{hours} soat",
+    "durationMinutesFull": "{minutes} daqiqa",
+    "durationHoursMinutesFull": "{hours} soat {minutes} daqiqa"
   },
   "appRestrictions": {
     "headerTitle": "Ilova cheklovlari",
@@ -400,7 +469,16 @@
       "subtitle": "Bola harakat qila boshlagach,\nyo'l shu yerda ko'rinadi"
     },
     "errorPrefix": "Xato: {error}",
-    "viewButton": "Tarixni ko'rish"
+    "viewButton": "Tarixni ko'rish",
+    "markerStart": "Boshlandi",
+    "duration": {
+      "minutes": "{m} daq",
+      "hours": "{h} s",
+      "hoursMinutes": "{h} s {m} daq"
+    },
+    "dwell": {
+      "total": "Jami: {duration}"
+    }
   },
   "location": {
     "updatedSuffix": "{time} yangilangan",
@@ -497,7 +575,21 @@
     "weekTotal": "Hafta jami",
     "dailyAvg": "Kunlik o'rtacha",
     "noApps": "Ma'lumot yo'q",
-    "error": "Hisobotni yuklab bo'lmadi"
+    "error": "Hisobotni yuklab bo'lmadi",
+    "duration": {
+      "minutes": "{m}m",
+      "hours": "{h}s",
+      "hoursMinutes": "{h}s {m}m"
+    },
+    "weekdays": {
+      "1": "Du",
+      "2": "Se",
+      "3": "Cho",
+      "4": "Pa",
+      "5": "Ju",
+      "6": "Sha",
+      "7": "Ya"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Shaxsiy yozishmalar",
@@ -519,7 +611,15 @@
     "fileOpenFailed": "Faylni ochib bo'lmadi",
     "cameraPermissionSnack": "Kamera ruxsati kerak — sozlamalardan ruxsat bering",
     "fileGeneric": "Fayl",
-    "mediaSendError": "Fayl yuborilmadi"
+    "mediaSendError": "Fayl yuborilmadi",
+    "videoPreparing": "Video tayyorlanmoqda...",
+    "cameraNotFound": "Kamera topilmadi",
+    "recordFailed": "Yozib bo'lmadi: {error}",
+    "lockHint": "Lock",
+    "tapToFinish": "Tugatish uchun bosing",
+    "holdToRecord": "Bosib turib yozing",
+    "childNotFound": "Bola topilmadi",
+    "notPaired": "Bola hali Child App'da pair qilmagan — voice yubora olmaysiz"
   },
   "chatSettings": {
     "title": "Chat sozlamalari",
@@ -676,7 +776,22 @@
       "endedSnack": "Sessiya tugatildi",
       "endedAllSnack": "Boshqa sessiyalar tugatildi",
       "loadError": "Sessiyalarni yuklab bo'lmadi",
-      "retry": "Qayta urinish"
+      "retry": "Qayta urinish",
+      "androidDevice": "Android qurilma",
+      "browser": "Brauzer",
+      "unknownDevice": "Noma'lum qurilma"
+    },
+    "pushTest": {
+      "menuTitle": "Push tekshirish (test)",
+      "sending": "Test push yuborilmoqda…",
+      "requestFailedTitle": "❌ So‘rov bormadi",
+      "requestFailedBody": "Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.",
+      "noTokenTitle": "⚠️ Qurilma ro‘yxatdan o‘tmagan",
+      "noTokenBody": "Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech qanday bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, qayta kiring (login) — token avtomatik ro‘yxatdan o‘tadi.",
+      "sentTitle": "✅ Yuborildi",
+      "sentBody": "Server push yubordi (tokens={tokens}, sent={sent}).\n\nBir necha soniyada bildirishnoma kelishi kerak. Agar KELMASA — telefon bildirishnoma ruxsatini tekshiring.",
+      "serverFailedTitle": "❌ Server yubora olmadi",
+      "serverFailedBody": "tokens={tokens}, sent={sent}, failed={failed}.\n\nServer Firebase muammosi — ishlab chiquvchiga shu sonlarni ayting."
     }
   },
   "support": {
@@ -698,7 +813,9 @@
       "image": "Rasm",
       "video": "Video",
       "document": "Hujjat"
-    }
+    },
+    "fallbackVideoName": "video",
+    "fallbackDocumentName": "document"
   },
   "childManagement": {
     "list": {
@@ -719,7 +836,8 @@
       },
       "deletedSnack": "{name} o'chirildi",
       "errorTitle": "Ma'lumotlarni olishda xato",
-      "errorPrefix": "Xatolik: {error}"
+      "errorPrefix": "Xatolik: {error}",
+      "repairAction": "Qayta ulash (QR)"
     },
     "addEdit": {
       "addTitle": "Yangi bola qo'shish",
@@ -738,7 +856,10 @@
       "backButton": "Orqaga",
       "saveButton": "Saqlash",
       "updateButton": "Yangilash",
-      "errorPrefix": "Xatolik: {error}"
+      "errorPrefix": "Xatolik: {error}",
+      "genderMale": "O'g'il",
+      "genderFemale": "Qiz",
+      "photoSourceTitle": "Foto manbasini tanlang"
     },
     "familyCode": {
       "headerTitle": "Bola qo'shish",
@@ -770,6 +891,16 @@
         "close": "Yopish"
       },
       "supportLink": "Texnik yordam olish"
+    },
+    "pairBanner": {
+      "message": "📱 {name} yangi qurilmadan ulanmoqchi. Tasdiqlang."
+    },
+    "deviceInfo": {
+      "unknownDevice": "Noma'lum qurilma",
+      "unknownSystem": "Noma'lum tizim",
+      "charging": "{level}% (zaryadlanmoqda)",
+      "noWifi": "Wi-Fi yo'q",
+      "never": "Hech qachon"
     }
   },
   "appPermissions": {
@@ -786,7 +917,9 @@
     },
     "detailNote": "Bu ruxsatning holati bola qurilmasi ma'lumot yuborgach aniq ko'rinadi.",
     "appsTitle": "{name} uchun ruxsatlar",
-    "saved": "Saqlandi"
+    "saved": "Saqlandi",
+    "saveFailed": "Saqlab bo'lmadi. Internet aloqasini tekshiring.",
+    "loadFailed": "Ruxsatlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring."
   },
   "leaderboard": {
     "title": "Reyting",
@@ -842,7 +975,8 @@
     "rejectButton": "Rad etish",
     "approveButton": "Tasdiqlash",
     "emptyTitle": "Pair so'rovlar yo'q",
-    "emptySubtitle": "Bola yangi qurilmadan ulanmoqchi bo'lganda shu yerda paydo bo'ladi."
+    "emptySubtitle": "Bola yangi qurilmadan ulanmoqchi bo'lganda shu yerda paydo bo'ladi.",
+    "deviceUnknown": "Qurilma noma'lum"
   },
   "repairQr": {
     "title": "Qayta ulash",
@@ -860,5 +994,69 @@
     "hint3": "Yangi telefon olgan / almashtirgan",
     "hint4": "Eski pairing buzilgan",
     "retryButton": "Qaytadan"
+  },
+  "photoRequests": {
+    "fallbackChildName": "Bola",
+    "headerTitle": "{name} — Rasmlar",
+    "tabAll": "Hammasi",
+    "tabPending": "Kutilmoqda",
+    "tabCompleted": "Bajarilgan",
+    "tabDeclined": "Rad",
+    "emptyPending": "Kutilayotgan so'rov yo'q",
+    "emptyCompleted": "Bajarilgan rasm yo'q",
+    "emptyDeclined": "Rad etilgan so'rov yo'q",
+    "requestButton": "Rasm so'rash",
+    "statusCompleted": "Bola rasm yubordi",
+    "statusDeclined": "Bola rad etdi",
+    "statusPending": "Kutilmoqda",
+    "deleteDialogTitle": "So'rovni o'chirish?",
+    "deleteDialogContent": "Bu so'rov va u bilan bog'liq rasm o'chiriladi.",
+    "deletedSnack": "O'chirildi",
+    "deleteErrorSnack": "O'chirish xato",
+    "minutesShort": "{minutes}m",
+    "hoursShort": "{hours}s",
+    "photoLoadFailed": "Rasm yuklanmadi",
+    "emptyDefault": "Hali rasm so'rovi yo'q",
+    "emptySubtitle": "Pastdagi tugmani bossib bolaga so'rov yuboring.",
+    "sentSnack": "Rasm so'rovi yuborildi",
+    "sendErrorSnack": "Yuborilmadi, qaytadan urinib ko'ring",
+    "dialogTitle": "Bola'dan rasm so'rash",
+    "messageLabel": "Bolaga xabar (ixtiyoriy):",
+    "messageHint": "Bog'da nima qilyapsan?",
+    "dialogNote": "Bola Child App'da push xabar oladi va rasm yuboradi.",
+    "sendButton": "So'rash"
+  },
+  "videoMessages": {
+    "notPaired": "Bola hali pair qilmagan"
+  },
+  "feedback": {
+    "fallbackChildName": "Bola",
+    "headerTitle": "{name} — Feedback",
+    "moodHappy": "Xursand",
+    "moodExcited": "Hayajonli",
+    "moodThinking": "O'ylanmoqda",
+    "moodWinking": "Hazil",
+    "moodSad": "Xafa",
+    "moodAngry": "Achchiqlangan",
+    "moodTired": "Charchagan",
+    "moodLove": "Sevgi",
+    "emptyTitle": "Bola hali feedback yubormagan",
+    "emptySubtitle": "Bola Child App'da emoji bilan kayfiyatini yuboradi."
+  },
+  "appUpdate": {
+    "force": {
+      "title": "Ilovani yangilang",
+      "subtitle": "Yangi versiya zarur. Eski versiya bilan davom etib bo‘lmaydi.",
+      "openAppStore": "App Store ochish",
+      "openPlayStore": "Play Market ochish",
+      "downloadApk": "Veb-saytdan yuklash (APK)",
+      "currentLabel": "Joriy",
+      "latestLabel": "Yangi"
+    },
+    "banner": {
+      "title": "Yangi versiya mavjud ({version})",
+      "updateButton": "Yangilash",
+      "dismissTooltip": "Yopish (24 soat)"
+    }
   }
 }

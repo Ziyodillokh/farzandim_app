@@ -76,7 +76,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = "Kod yaratib bo'lmadi. Qayta urinib ko'ring.";
+        _error = 'auth.addAccount.createFailed'.tr();
       });
     }
   }

@@ -2,6 +2,7 @@
 // PairRequest — Bola re-pair so'rovi (Backend 0.6.0)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 
 enum PairRequestStatus { pending, approved, rejected, expired, unknown }
@@ -83,6 +84,8 @@ class PairRequest {
       if (androidVersion != null && androidVersion!.isNotEmpty)
         androidVersion!,
     ];
-    return parts.isEmpty ? "Qurilma noma'lum" : parts.join(' • ');
+    return parts.isEmpty
+        ? 'pairRequests.deviceUnknown'.tr()
+        : parts.join(' • ');
   }
 }

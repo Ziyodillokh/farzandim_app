@@ -1,0 +1,57 @@
+{
+  "voiceChat.videoPreparing": {
+    "uz": "Video tayyorlanmoqda...",
+    "ru": "Видео готовится...",
+    "en": "Preparing video..."
+  },
+  "voiceChat.cameraNotFound": {
+    "uz": "Kamera topilmadi",
+    "ru": "Камера не найдена",
+    "en": "Camera not found"
+  },
+  "voiceChat.recordFailed": {
+    "uz": "Yozib bo'lmadi: {error}",
+    "ru": "Не удалось записать: {error}",
+    "en": "Recording failed: {error}"
+  },
+  "voiceChat.lockHint": {
+    "uz": "Lock",
+    "ru": "Закрепить",
+    "en": "Lock"
+  },
+  "voiceChat.tapToFinish": {
+    "uz": "Tugatish uchun bosing",
+    "ru": "Нажмите, чтобы завершить",
+    "en": "Tap to finish"
+  },
+  "voiceChat.holdToRecord": {
+    "uz": "Bosib turib yozing",
+    "ru": "Удерживайте для записи",
+    "en": "Hold to record"
+  },
+  "voiceChat.childNotFound": {
+    "uz": "Bola topilmadi",
+    "ru": "Ребёнок не найден",
+    "en": "Child not found"
+  },
+  "voiceChat.notPaired": {
+    "uz": "Bola hali Child App'da pair qilmagan — voice yubora olmaysiz",
+    "ru": "Ребёнок ещё не подключил Child App — голосовое сообщение отправить нельзя",
+    "en": "The child hasn't paired the Child App yet — you can't send voice messages"
+  },
+  "videoMessages.notPaired": {
+    "uz": "Bola hali pair qilmagan",
+    "ru": "Ребёнок ещё не подключён",
+    "en": "The child isn't paired yet"
+  },
+  "support.fallbackVideoName": {
+    "uz": "video",
+    "ru": "видео",
+    "en": "video"
+  },
+  "support.fallbackDocumentName": {
+    "uz": "document",
+    "ru": "документ",
+    "en": "document"
+  }
+}

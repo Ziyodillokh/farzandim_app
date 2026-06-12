@@ -10,11 +10,32 @@
       "childNotLinked": "Этот ребёнок не привязан к вашему аккаунту.",
       "childNotFound": "Ребёнок не найден.",
       "saveFailed": "Ошибка при сохранении."
-    }
+    },
+    "fatalFallback": "Что-то пошло не так. Пожалуйста, перезапустите приложение."
   },
   "sos": {
     "wsBanner": "SOS! Ребёнок просит помощи",
-    "viewAction": "Открыть"
+    "viewAction": "Открыть",
+    "headerTitle": "SOS-оповещения",
+    "tabActive": "Активные",
+    "tabHistory": "История",
+    "emptyActiveTitle": "Активных SOS-оповещений нет",
+    "emptyActiveSubtitle": "Всё спокойно. Если ребёнок нажмёт SOS, придёт push-уведомление.",
+    "emptyHistoryTitle": "История пуста",
+    "emptyHistorySubtitle": "Решённые SOS-оповещения появятся здесь.",
+    "loadFailed": "Не удалось загрузить список SOS.\nПроверьте подключение к интернету.",
+    "noLocationSnack": "Нет данных о местоположении",
+    "fallbackChildName": "Ребёнок",
+    "resolveDialogTitle": "Закрыть SOS-оповещение?",
+    "resolveDialogContent": "Оповещение перейдёт из статуса ACTIVE в RESOLVED.",
+    "resolveAction": "Решить",
+    "resolvedSnack": "SOS решён",
+    "resolveErrorSnack": "Ошибка при решении",
+    "alertTitle": "{name} — SOS!",
+    "resolvedAt": "Решено: {time}",
+    "locationLine": "Местоположение: {lat}, {lng}",
+    "mapButton": "На карте",
+    "mapDialogTitle": "{name} — SOS-местоположение"
   },
   "language": {
     "selectTitle": "Выберите язык",
@@ -129,7 +150,8 @@
       "step1": "Откройте приложение на основном устройстве",
       "step2": "Перейдите в раздел Активные сессии",
       "step3": "Нажмите кнопку «Добавить аккаунт»",
-      "step4": "Отсканируйте этот QR-код"
+      "step4": "Отсканируйте этот QR-код",
+      "createFailed": "Не удалось создать код. Попробуйте ещё раз."
     },
     "telegramLogin": {
       "title": "Вход через Telegram",
@@ -149,7 +171,10 @@
     "scan": {
       "invalidQr": "Неверный QR-код",
       "expiredQr": "QR-код недействителен или истёк",
-      "scanError": "Ошибка при сканировании"
+      "scanError": "Ошибка при сканировании",
+      "frameHint": "Поместите QR-код с основного устройства в рамку",
+      "whereHint": "Отображается в «Активные сеансы» → «Добавить другой аккаунт»",
+      "cameraError": "Не удалось открыть камеру. Разрешите доступ к камере в настройках."
     }
   },
   "formatters": {
@@ -222,7 +247,27 @@
     },
     "usageTime": "Время использования",
     "noDevice": "Устройство не подключено",
-    "deviceModelUnknown": "Модель телефона не определена"
+    "deviceModelUnknown": "Модель телефона не определена",
+    "geoZoneAlert": {
+      "zoneFallback": "Зона",
+      "enter": "🚨 Ребёнок вошёл в зону «{zone}»",
+      "exit": "🚨 Ребёнок вышел из зоны «{zone}»"
+    },
+    "chart": {
+      "loadError": "Не удалось загрузить статистику",
+      "noData": "Данных пока нет",
+      "hoursShort": "{value}ч",
+      "minutesShort": "{value}м",
+      "weekdays": {
+        "1": "Пн",
+        "2": "Вт",
+        "3": "Ср",
+        "4": "Чт",
+        "5": "Пт",
+        "6": "Сб",
+        "7": "Вс"
+      }
+    }
   },
   "schedules": {
     "headerTitle": "Расписания",
@@ -255,6 +300,25 @@
       "updateButton": "Обновить",
       "saveErrorPrefix": "Ошибка сохранения: {error}",
       "deleteErrorPrefix": "Ошибка удаления: {error}"
+    },
+    "singleTitle": "Расписание",
+    "sleepBlockTitle": "Блокировка во время сна",
+    "schoolTimeTitle": "Время уроков",
+    "todayLabel": "Сегодня",
+    "weeklySchedule": "Недельное расписание",
+    "appRestrictionsLabel": "Ограничения приложений",
+    "notSet": "Не задано",
+    "startTimeHelp": "Время начала",
+    "endTimeHelp": "Время окончания",
+    "appsNotLoaded": "Список приложений ещё не загружен",
+    "weekdayShort": {
+      "monday": "Пн",
+      "tuesday": "Вт",
+      "wednesday": "Ср",
+      "thursday": "Чт",
+      "friday": "Пт",
+      "saturday": "Сб",
+      "sunday": "Вс"
     }
   },
   "fullScreenMap": {
@@ -338,7 +402,12 @@
     "apply": "Применить",
     "saved": "Сохранено",
     "saveError": "Не удалось сохранить",
-    "pickDuration": "Выберите время лимита"
+    "pickDuration": "Выберите время лимита",
+    "durationLessThanMinute": "< 1 мин",
+    "durationMinutes": "{minutes} мин",
+    "durationHours": "{hours} ч",
+    "durationMinutesFull": "{minutes} мин",
+    "durationHoursMinutesFull": "{hours} ч {minutes} мин"
   },
   "appRestrictions": {
     "headerTitle": "Ограничения приложений",
@@ -400,7 +469,16 @@
       "subtitle": "Как только ребёнок начнёт двигаться,\nмаршрут появится здесь"
     },
     "errorPrefix": "Ошибка: {error}",
-    "viewButton": "Посмотреть историю"
+    "viewButton": "Посмотреть историю",
+    "markerStart": "Начало",
+    "duration": {
+      "minutes": "{m} мин",
+      "hours": "{h} ч",
+      "hoursMinutes": "{h} ч {m} мин"
+    },
+    "dwell": {
+      "total": "Итого: {duration}"
+    }
   },
   "location": {
     "updatedSuffix": "обновлено {time}",
@@ -497,7 +575,21 @@
     "weekTotal": "Всего за неделю",
     "dailyAvg": "В среднем в день",
     "noApps": "Нет данных",
-    "error": "Не удалось загрузить отчёт"
+    "error": "Не удалось загрузить отчёт",
+    "duration": {
+      "minutes": "{m}м",
+      "hours": "{h}ч",
+      "hoursMinutes": "{h}ч {m}м"
+    },
+    "weekdays": {
+      "1": "Пн",
+      "2": "Вт",
+      "3": "Ср",
+      "4": "Чт",
+      "5": "Пт",
+      "6": "Сб",
+      "7": "Вс"
+    }
   },
   "voiceChat": {
     "headerSubtitle": "Личные сообщения",
@@ -519,7 +611,15 @@
     "fileOpenFailed": "Не удалось открыть файл",
     "cameraPermissionSnack": "Нужен доступ к камере — разрешите в настройках",
     "fileGeneric": "Файл",
-    "mediaSendError": "Файл не отправлен"
+    "mediaSendError": "Файл не отправлен",
+    "videoPreparing": "Видео готовится...",
+    "cameraNotFound": "Камера не найдена",
+    "recordFailed": "Не удалось записать: {error}",
+    "lockHint": "Закрепить",
+    "tapToFinish": "Нажмите, чтобы завершить",
+    "holdToRecord": "Удерживайте для записи",
+    "childNotFound": "Ребёнок не найден",
+    "notPaired": "Ребёнок ещё не подключил Child App — голосовое сообщение отправить нельзя"
   },
   "chatSettings": {
     "title": "Настройки чата",
@@ -676,7 +776,22 @@
       "endedSnack": "Сессия завершена",
       "endedAllSnack": "Другие сессии завершены",
       "loadError": "Не удалось загрузить сессии",
-      "retry": "Повторить"
+      "retry": "Повторить",
+      "androidDevice": "Android-устройство",
+      "browser": "Браузер",
+      "unknownDevice": "Неизвестное устройство"
+    },
+    "pushTest": {
+      "menuTitle": "Проверка push (тест)",
+      "sending": "Отправка тестового push…",
+      "requestFailedTitle": "❌ Запрос не отправлен",
+      "requestFailedBody": "Проблема с сетью или входом. Проверьте интернет и попробуйте снова.",
+      "noTokenTitle": "⚠️ Устройство не зарегистрировано",
+      "noTokenBody": "На этом телефоне нет push-токена (tokens=0), поэтому уведомления не приходят.\n\nРешение: выйдите из аккаунта и войдите снова (login) — токен зарегистрируется автоматически.",
+      "sentTitle": "✅ Отправлено",
+      "sentBody": "Сервер отправил push (tokens={tokens}, sent={sent}).\n\nУведомление должно прийти через несколько секунд. Если НЕ ПРИШЛО — проверьте разрешение на уведомления в телефоне.",
+      "serverFailedTitle": "❌ Сервер не смог отправить",
+      "serverFailedBody": "tokens={tokens}, sent={sent}, failed={failed}.\n\nПроблема Firebase на сервере — сообщите эти числа разработчику."
     }
   },
   "support": {
@@ -698,7 +813,9 @@
       "image": "Фото",
       "video": "Видео",
       "document": "Документ"
-    }
+    },
+    "fallbackVideoName": "видео",
+    "fallbackDocumentName": "документ"
   },
   "childManagement": {
     "list": {
@@ -719,7 +836,8 @@
       },
       "deletedSnack": "{name} удалён",
       "errorTitle": "Ошибка при загрузке данных",
-      "errorPrefix": "Ошибка: {error}"
+      "errorPrefix": "Ошибка: {error}",
+      "repairAction": "Переподключить (QR)"
     },
     "addEdit": {
       "addTitle": "Новый ребёнок",
@@ -738,7 +856,10 @@
       "backButton": "Назад",
       "saveButton": "Сохранить",
       "updateButton": "Обновить",
-      "errorPrefix": "Ошибка: {error}"
+      "errorPrefix": "Ошибка: {error}",
+      "genderMale": "Мальчик",
+      "genderFemale": "Девочка",
+      "photoSourceTitle": "Выберите источник фото"
     },
     "familyCode": {
       "headerTitle": "Добавить ребёнка",
@@ -770,6 +891,16 @@
         "close": "Закрыть"
       },
       "supportLink": "Техподдержка"
+    },
+    "pairBanner": {
+      "message": "📱 {name} хочет подключиться с нового устройства. Подтвердите."
+    },
+    "deviceInfo": {
+      "unknownDevice": "Неизвестное устройство",
+      "unknownSystem": "Неизвестная система",
+      "charging": "{level}% (заряжается)",
+      "noWifi": "Нет Wi-Fi",
+      "never": "Никогда"
     }
   },
   "appPermissions": {
@@ -786,7 +917,9 @@
     },
     "detailNote": "Статус разрешения появится после данных с устройства ребёнка.",
     "appsTitle": "Разрешения для «{name}»",
-    "saved": "Сохранено"
+    "saved": "Сохранено",
+    "saveFailed": "Не удалось сохранить. Проверьте подключение к интернету.",
+    "loadFailed": "Не удалось загрузить разрешения.\nПроверьте подключение к интернету."
   },
   "leaderboard": {
     "title": "Рейтинг",
@@ -842,7 +975,8 @@
     "rejectButton": "Отклонить",
     "approveButton": "Подтвердить",
     "emptyTitle": "Запросов на подключение нет",
-    "emptySubtitle": "Когда ребёнок попытается подключиться с нового устройства, запрос появится здесь."
+    "emptySubtitle": "Когда ребёнок попытается подключиться с нового устройства, запрос появится здесь.",
+    "deviceUnknown": "Неизвестное устройство"
   },
   "repairQr": {
     "title": "Переподключение",
@@ -860,5 +994,69 @@
     "hint3": "Куплен новый телефон / телефон заменён",
     "hint4": "Старое сопряжение нарушено",
     "retryButton": "Повторить"
+  },
+  "photoRequests": {
+    "fallbackChildName": "Ребёнок",
+    "headerTitle": "{name} — Фото",
+    "tabAll": "Все",
+    "tabPending": "Ожидание",
+    "tabCompleted": "Выполнено",
+    "tabDeclined": "Отказ",
+    "emptyPending": "Нет ожидающих запросов",
+    "emptyCompleted": "Нет выполненных фото",
+    "emptyDeclined": "Нет отклонённых запросов",
+    "requestButton": "Запросить фото",
+    "statusCompleted": "Ребёнок отправил фото",
+    "statusDeclined": "Ребёнок отклонил",
+    "statusPending": "Ожидается",
+    "deleteDialogTitle": "Удалить запрос?",
+    "deleteDialogContent": "Этот запрос и связанное с ним фото будут удалены.",
+    "deletedSnack": "Удалено",
+    "deleteErrorSnack": "Ошибка удаления",
+    "minutesShort": "{minutes}м",
+    "hoursShort": "{hours}ч",
+    "photoLoadFailed": "Фото не загрузилось",
+    "emptyDefault": "Запросов фото пока нет",
+    "emptySubtitle": "Нажмите кнопку внизу, чтобы отправить запрос ребёнку.",
+    "sentSnack": "Запрос фото отправлен",
+    "sendErrorSnack": "Не отправлено, попробуйте ещё раз",
+    "dialogTitle": "Запросить фото у ребёнка",
+    "messageLabel": "Сообщение ребёнку (необязательно):",
+    "messageHint": "Что ты делаешь в парке?",
+    "dialogNote": "Ребёнок получит push-уведомление в Child App и отправит фото.",
+    "sendButton": "Запросить"
+  },
+  "videoMessages": {
+    "notPaired": "Ребёнок ещё не подключён"
+  },
+  "feedback": {
+    "fallbackChildName": "Ребёнок",
+    "headerTitle": "{name} — Фидбек",
+    "moodHappy": "Радостный",
+    "moodExcited": "В восторге",
+    "moodThinking": "Задумался",
+    "moodWinking": "Шутит",
+    "moodSad": "Грустный",
+    "moodAngry": "Сердитый",
+    "moodTired": "Уставший",
+    "moodLove": "Любовь",
+    "emptyTitle": "Ребёнок ещё не отправлял фидбек",
+    "emptySubtitle": "Ребёнок отправляет своё настроение с помощью эмодзи в Child App."
+  },
+  "appUpdate": {
+    "force": {
+      "title": "Обновите приложение",
+      "subtitle": "Требуется новая версия. Продолжить со старой версией невозможно.",
+      "openAppStore": "Открыть App Store",
+      "openPlayStore": "Открыть Play Market",
+      "downloadApk": "Скачать с сайта (APK)",
+      "currentLabel": "Текущая",
+      "latestLabel": "Новая"
+    },
+    "banner": {
+      "title": "Доступна новая версия ({version})",
+      "updateButton": "Обновить",
+      "dismissTooltip": "Закрыть (на 24 часа)"
+    }
   }
 }

@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -64,7 +65,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
 
             // Sarlavha — 18sp Semibold (custom o'lcham, headlineL'dan kichik).
             Text(
-              'Foto manbasini tanlang',
+              'childManagement.addEdit.photoSourceTitle'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 fontSize: 18,
                 fontWeight: FontWeight.w600,
@@ -76,7 +77,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
             // Galereya tugmasi — pop qilib `ImageSource.gallery` qaytaradi.
             _buildOption(
               icon: Icons.photo_library_outlined,
-              label: 'Galereya',
+              label: 'voiceChat.attachGallery'.tr(),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
             const SizedBox(height: 12),
@@ -91,7 +92,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
             if (!kIsWeb) ...[
               _buildOption(
                 icon: Icons.camera_alt_outlined,
-                label: 'Kamera',
+                label: 'voiceChat.attachCamera'.tr(),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),
               const SizedBox(height: 12),
@@ -101,7 +102,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
             TextButton(
               onPressed: () => Navigator.pop(context),
               child: Text(
-                'Bekor qilish',
+                'common.cancel'.tr(),
                 style: AppTextStyles.bodyM.copyWith(
                   color: AppColors.textSecondary,
                 ),

@@ -6,6 +6,7 @@
 // joyda ≥2.5 daqiqa turganda bitta yozuv. Xaritada marker sifatida
 // ko'rsatiladi (harakat esa alohida `locations` polyline — yupqa chiziq).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class LocationStop {
@@ -68,8 +69,14 @@ class LocationStop {
   String get durationLabel {
     final h = durationSec ~/ 3600;
     final m = (durationSec % 3600) ~/ 60;
-    if (h == 0) return '$m daq';
-    if (m == 0) return '$h s';
-    return '$h s $m daq';
+    if (h == 0) {
+      return 'locationHistory.duration.minutes'.tr(namedArgs: {'m': '$m'});
+    }
+    if (m == 0) {
+      return 'locationHistory.duration.hours'.tr(namedArgs: {'h': '$h'});
+    }
+    return 'locationHistory.duration.hoursMinutes'.tr(
+      namedArgs: {'h': '$h', 'm': '$m'},
+    );
   }
 }

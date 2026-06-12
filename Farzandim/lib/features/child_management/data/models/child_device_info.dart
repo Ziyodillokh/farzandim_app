@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/utils/formatters.dart';
 import 'package:flutter/foundation.dart';
 
@@ -68,29 +69,36 @@ class ChildDeviceInfo {
   // ═══════════════════════ DISPLAY HELPERS ═══════════════════════
 
   /// UI'ga ko'rsatish uchun model — `null` bo'lsa fallback matn.
-  String get displayModel => deviceModel ?? "Noma'lum qurilma";
+  String get displayModel =>
+      deviceModel ?? 'childManagement.deviceInfo.unknownDevice'.tr();
 
   /// UI'ga OS — `null` bo'lsa fallback.
-  String get displayOS => androidVersion ?? "Noma'lum tizim";
+  String get displayOS =>
+      androidVersion ?? 'childManagement.deviceInfo.unknownSystem'.tr();
 
   /// UI'ga ilova versiyasi.
   String get displayAppVersion => appVersion ?? '—';
 
   /// Batareya matni — foiz + zaryadlanish belgisi.
   String get displayBattery {
-    if (batteryLevel == null) return "Noma'lum";
-    if (isCharging ?? false) return '$batteryLevel% (zaryadlanmoqda)';
+    if (batteryLevel == null) return 'deviceSettings.permissions.unknown'.tr();
+    if (isCharging ?? false) {
+      return 'childManagement.deviceInfo.charging'.tr(
+        namedArgs: {'level': '$batteryLevel'},
+      );
+    }
     return '$batteryLevel%';
   }
 
   /// Wi-Fi nomi — yo'q bo'lsa fallback.
-  String get displayWifi => wifiName ?? "Wi-Fi yo'q";
+  String get displayWifi =>
+      wifiName ?? 'childManagement.deviceInfo.noWifi'.tr();
 
   /// So'nggi faollik vaqtini insonga tushunarli matn qilib qaytaradi.
   /// ARCH-07: markaziy `formatRelativeTime` — 3 tilda, bitta format.
   String get displayLastSeen {
     final ts = lastSeen;
-    if (ts == null) return 'Hech qachon';
+    if (ts == null) return 'childManagement.deviceInfo.never'.tr();
     return formatRelativeTime(ts);
   }
 

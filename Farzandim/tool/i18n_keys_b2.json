@@ -1,0 +1,162 @@
+{
+  "schedules.singleTitle": {
+    "uz": "Jadval",
+    "ru": "Расписание",
+    "en": "Schedule"
+  },
+  "schedules.sleepBlockTitle": {
+    "uz": "Uyqu vaqtida bloklash",
+    "ru": "Блокировка во время сна",
+    "en": "Block during sleep time"
+  },
+  "schedules.schoolTimeTitle": {
+    "uz": "Dars vaqti",
+    "ru": "Время уроков",
+    "en": "School time"
+  },
+  "schedules.todayLabel": {
+    "uz": "Bugun",
+    "ru": "Сегодня",
+    "en": "Today"
+  },
+  "schedules.weeklySchedule": {
+    "uz": "Haftalik jadval",
+    "ru": "Недельное расписание",
+    "en": "Weekly schedule"
+  },
+  "schedules.appRestrictionsLabel": {
+    "uz": "Ilova cheklovlar",
+    "ru": "Ограничения приложений",
+    "en": "App restrictions"
+  },
+  "schedules.notSet": {
+    "uz": "Kiritilmagan",
+    "ru": "Не задано",
+    "en": "Not set"
+  },
+  "schedules.startTimeHelp": {
+    "uz": "Boshlanish vaqti",
+    "ru": "Время начала",
+    "en": "Start time"
+  },
+  "schedules.endTimeHelp": {
+    "uz": "Tugash vaqti",
+    "ru": "Время окончания",
+    "en": "End time"
+  },
+  "schedules.appsNotLoaded": {
+    "uz": "Ilovalar ro'yxati hali yuklanmadi",
+    "ru": "Список приложений ещё не загружен",
+    "en": "App list not loaded yet"
+  },
+  "schedules.weekdayShort.monday": {
+    "uz": "Du",
+    "ru": "Пн",
+    "en": "Mo"
+  },
+  "schedules.weekdayShort.tuesday": {
+    "uz": "Se",
+    "ru": "Вт",
+    "en": "Tu"
+  },
+  "schedules.weekdayShort.wednesday": {
+    "uz": "Ch",
+    "ru": "Ср",
+    "en": "We"
+  },
+  "schedules.weekdayShort.thursday": {
+    "uz": "Pa",
+    "ru": "Чт",
+    "en": "Th"
+  },
+  "schedules.weekdayShort.friday": {
+    "uz": "Ju",
+    "ru": "Пт",
+    "en": "Fr"
+  },
+  "schedules.weekdayShort.saturday": {
+    "uz": "Sh",
+    "ru": "Сб",
+    "en": "Sa"
+  },
+  "schedules.weekdayShort.sunday": {
+    "uz": "Ya",
+    "ru": "Вс",
+    "en": "Su"
+  },
+  "settings.pushTest.menuTitle": {
+    "uz": "Push tekshirish (test)",
+    "ru": "Проверка push (тест)",
+    "en": "Push check (test)"
+  },
+  "settings.pushTest.sending": {
+    "uz": "Test push yuborilmoqda…",
+    "ru": "Отправка тестового push…",
+    "en": "Sending test push…"
+  },
+  "settings.pushTest.requestFailedTitle": {
+    "uz": "❌ So‘rov bormadi",
+    "ru": "❌ Запрос не отправлен",
+    "en": "❌ Request failed"
+  },
+  "settings.pushTest.requestFailedBody": {
+    "uz": "Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining.",
+    "ru": "Проблема с сетью или входом. Проверьте интернет и попробуйте снова.",
+    "en": "Network or login issue. Check your internet connection and try again."
+  },
+  "settings.pushTest.noTokenTitle": {
+    "uz": "⚠️ Qurilma ro‘yxatdan o‘tmagan",
+    "ru": "⚠️ Устройство не зарегистрировано",
+    "en": "⚠️ Device not registered"
+  },
+  "settings.pushTest.noTokenBody": {
+    "uz": "Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech qanday bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, qayta kiring (login) — token avtomatik ro‘yxatdan o‘tadi.",
+    "ru": "На этом телефоне нет push-токена (tokens=0), поэтому уведомления не приходят.\n\nРешение: выйдите из аккаунта и войдите снова (login) — токен зарегистрируется автоматически.",
+    "en": "This phone has no push token (tokens=0), so no notifications will arrive.\n\nSolution: log out and log in again — the token will be registered automatically."
+  },
+  "settings.pushTest.sentTitle": {
+    "uz": "✅ Yuborildi",
+    "ru": "✅ Отправлено",
+    "en": "✅ Sent"
+  },
+  "settings.pushTest.sentBody": {
+    "uz": "Server push yubordi (tokens={tokens}, sent={sent}).\n\nBir necha soniyada bildirishnoma kelishi kerak. Agar KELMASA — telefon bildirishnoma ruxsatini tekshiring.",
+    "ru": "Сервер отправил push (tokens={tokens}, sent={sent}).\n\nУведомление должно прийти через несколько секунд. Если НЕ ПРИШЛО — проверьте разрешение на уведомления в телефоне.",
+    "en": "Server sent the push (tokens={tokens}, sent={sent}).\n\nThe notification should arrive within a few seconds. If it DOESN'T — check the phone's notification permission."
+  },
+  "settings.pushTest.serverFailedTitle": {
+    "uz": "❌ Server yubora olmadi",
+    "ru": "❌ Сервер не смог отправить",
+    "en": "❌ Server could not send"
+  },
+  "settings.pushTest.serverFailedBody": {
+    "uz": "tokens={tokens}, sent={sent}, failed={failed}.\n\nServer Firebase muammosi — ishlab chiquvchiga shu sonlarni ayting.",
+    "ru": "tokens={tokens}, sent={sent}, failed={failed}.\n\nПроблема Firebase на сервере — сообщите эти числа разработчику.",
+    "en": "tokens={tokens}, sent={sent}, failed={failed}.\n\nServer-side Firebase issue — report these numbers to the developer."
+  },
+  "settings.sessions.androidDevice": {
+    "uz": "Android qurilma",
+    "ru": "Android-устройство",
+    "en": "Android device"
+  },
+  "settings.sessions.browser": {
+    "uz": "Brauzer",
+    "ru": "Браузер",
+    "en": "Browser"
+  },
+  "settings.sessions.unknownDevice": {
+    "uz": "Noma'lum qurilma",
+    "ru": "Неизвестное устройство",
+    "en": "Unknown device"
+  },
+  "appPermissions.saveFailed": {
+    "uz": "Saqlab bo'lmadi. Internet aloqasini tekshiring.",
+    "ru": "Не удалось сохранить. Проверьте подключение к интернету.",
+    "en": "Couldn't save. Check your internet connection."
+  },
+  "appPermissions.loadFailed": {
+    "uz": "Ruxsatlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring.",
+    "ru": "Не удалось загрузить разрешения.\nПроверьте подключение к интернету.",
+    "en": "Couldn't load permissions.\nCheck your internet connection."
+  }
+}

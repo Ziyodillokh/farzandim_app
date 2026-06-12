@@ -214,8 +214,14 @@ class _ScreenTimeCard extends StatelessWidget {
             maxValue: maxMin.toDouble(),
             barColor: AppColors.featurePurple,
             valueText: (v) => v >= 60
-                ? '${(v / 60).toStringAsFixed(v >= 600 ? 0 : 1)}s'
-                : '${v.toStringAsFixed(0)}m',
+                ? 'weeklyReport.duration.hours'.tr(
+                    namedArgs: {
+                      'h': (v / 60).toStringAsFixed(v >= 600 ? 0 : 1),
+                    },
+                  )
+                : 'weeklyReport.duration.minutes'.tr(
+                    namedArgs: {'m': v.toStringAsFixed(0)},
+                  ),
           ),
         ],
       ),
@@ -478,18 +484,23 @@ String _fmtInt(int v) {
 }
 
 String _fmtDuration(int minutes) {
-  if (minutes < 60) return '${minutes}m';
+  if (minutes < 60) {
+    return 'weeklyReport.duration.minutes'.tr(namedArgs: {'m': '$minutes'});
+  }
   final h = minutes ~/ 60;
   final m = minutes % 60;
-  return m == 0 ? '${h}s' : '${h}s ${m}m';
+  return m == 0
+      ? 'weeklyReport.duration.hours'.tr(namedArgs: {'h': '$h'})
+      : 'weeklyReport.duration.hoursMinutes'.tr(
+          namedArgs: {'h': '$h', 'm': '$m'},
+        );
 }
-
-const _uzWeekdays = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
 
 String _weekday(String date) {
   try {
     final d = DateTime.parse(date);
-    return _uzWeekdays[(d.weekday - 1) % 7];
+    // ISO weekday: 1 = dushanba ... 7 = yakshanba.
+    return 'weeklyReport.weekdays.${d.weekday}'.tr();
   } catch (_) {
     return '';
   }

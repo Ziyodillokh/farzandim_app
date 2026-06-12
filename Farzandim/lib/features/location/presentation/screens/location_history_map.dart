@@ -95,7 +95,7 @@ class _MapLayerState extends State<_MapLayer> {
         position: start.latLng,
         icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         infoWindow: InfoWindow(
-          title: 'Boshlandi',
+          title: 'locationHistory.markerStart'.tr(),
           snippet: _hhmmDate(start.updatedAt),
         ),
       ),
@@ -107,7 +107,7 @@ class _MapLayerState extends State<_MapLayer> {
             widget.avatarMarker ??
             BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         infoWindow: InfoWindow(
-          title: 'Hozir',
+          title: 'location.command.now'.tr(),
           snippet: _hhmmDate(end.updatedAt),
         ),
       ),

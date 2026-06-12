@@ -356,9 +356,15 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
   String _formatMinutes(int minutes) {
     final h = minutes ~/ 60;
     final m = minutes % 60;
-    if (h == 0) return '$m daq';
-    if (m == 0) return '$h soat';
-    return '$h st $m daq';
+    if (h == 0) {
+      return 'appLimits.durationMinutes'.tr(namedArgs: {'minutes': '$m'});
+    }
+    if (m == 0) {
+      return 'appLimits.durationHours'.tr(namedArgs: {'hours': '$h'});
+    }
+    return 'formatters.duration'.tr(
+      namedArgs: {'hours': '$h', 'minutes': '$m'},
+    );
   }
 }
 

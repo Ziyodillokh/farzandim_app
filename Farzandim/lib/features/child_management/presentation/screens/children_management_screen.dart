@@ -355,7 +355,7 @@ class _ActionMenu extends ConsumerWidget {
               Icon(Icons.qr_code_2_rounded, size: 20, color: AppColors.primary),
               const SizedBox(width: 12),
               Text(
-                'Qayta ulash (QR)',
+                'childManagement.list.repairAction'.tr(),
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.primary,
                   fontWeight: FontWeight.w600,

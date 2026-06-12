@@ -8,6 +8,7 @@
 // Delete: long-press → confirmation dialog → DELETE /photo-requests/:id.
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -30,7 +31,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final child = ref.watch(childByIdProvider(childId));
-    final childName = child?.name ?? 'Bola';
+    final childName = child?.name ?? 'photoRequests.fallbackChildName'.tr();
     final requestsAsync = ref.watch(photoRequestsProvider(childId));
 
     return DefaultTabController(
@@ -48,8 +49,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                     loading: () => Center(
                       child: CircularProgressIndicator(color: AppColors.accent),
                     ),
-                    error: (e, _) =>
-                        Center(child: Text(friendlyError(e))),
+                    error: (e, _) => Center(child: Text(friendlyError(e))),
                     data: (requests) => TabBarView(
                       children: [
                         _RequestsView(childId: childId, requests: requests),
@@ -58,21 +58,21 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                           requests: requests
                               .where((r) => r['status'] == 'PENDING')
                               .toList(),
-                          emptyHint: "Kutilayotgan so'rov yo'q",
+                          emptyHint: 'photoRequests.emptyPending'.tr(),
                         ),
                         _RequestsView(
                           childId: childId,
                           requests: requests
                               .where((r) => r['status'] == 'COMPLETED')
                               .toList(),
-                          emptyHint: "Bajarilgan rasm yo'q",
+                          emptyHint: 'photoRequests.emptyCompleted'.tr(),
                         ),
                         _RequestsView(
                           childId: childId,
                           requests: requests
                               .where((r) => r['status'] == 'DECLINED')
                               .toList(),
-                          emptyHint: "Rad etilgan so'rov yo'q",
+                          emptyHint: 'photoRequests.emptyDeclined'.tr(),
                         ),
                       ],
                     ),
@@ -88,7 +88,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
           foregroundColor: AppColors.onPrimary,
           icon: const Icon(Icons.photo_camera_rounded),
           label: Text(
-            "Rasm so'rash",
+            'photoRequests.requestButton'.tr(),
             style: AppTextStyles.bodyM.copyWith(
               color: AppColors.onPrimary,
               fontWeight: FontWeight.w600,
@@ -124,7 +124,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                '$childName — Rasmlar',
+                'photoRequests.headerTitle'.tr(namedArgs: {'name': childName}),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -163,11 +163,11 @@ class _FilterTabs extends StatelessWidget {
         unselectedLabelColor: AppColors.textSecondary,
         labelStyle: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
         unselectedLabelStyle: AppTextStyles.bodyM,
-        tabs: const [
-          Tab(text: 'Hammasi'),
-          Tab(text: 'Kutilmoqda'),
-          Tab(text: 'Bajarilgan'),
-          Tab(text: 'Rad'),
+        tabs: [
+          Tab(text: 'photoRequests.tabAll'.tr()),
+          Tab(text: 'photoRequests.tabPending'.tr()),
+          Tab(text: 'photoRequests.tabCompleted'.tr()),
+          Tab(text: 'photoRequests.tabDeclined'.tr()),
         ],
       ),
     );
@@ -229,10 +229,18 @@ class _RequestTile extends ConsumerWidget {
       'COMPLETED' => (
         Icons.check_circle_rounded,
         AppColors.success,
-        'Bola rasm yubordi',
+        'photoRequests.statusCompleted'.tr(),
       ),
-      'DECLINED' => (Icons.cancel_rounded, AppColors.error, 'Bola rad etdi'),
-      _ => (Icons.schedule_rounded, AppColors.warning, 'Kutilmoqda'),
+      'DECLINED' => (
+        Icons.cancel_rounded,
+        AppColors.error,
+        'photoRequests.statusDeclined'.tr(),
+      ),
+      _ => (
+        Icons.schedule_rounded,
+        AppColors.warning,
+        'photoRequests.statusPending'.tr(),
+      ),
     };
 
     return GestureDetector(
@@ -297,18 +305,18 @@ class _RequestTile extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          "So'rovni o'chirish?",
+          'photoRequests.deleteDialogTitle'.tr(),
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          "Bu so'rov va u bilan bog'liq rasm o'chiriladi.",
+          'photoRequests.deleteDialogContent'.tr(),
           style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Bekor qilish',
+              'common.cancel'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -317,7 +325,7 @@ class _RequestTile extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              "O'chirish",
+              'common.delete'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
@@ -335,7 +343,11 @@ class _RequestTile extends ConsumerWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? "O'chirildi" : "O'chirish xato"),
+        content: Text(
+          ok
+              ? 'photoRequests.deletedSnack'.tr()
+              : 'photoRequests.deleteErrorSnack'.tr(),
+        ),
         backgroundColor: ok ? AppColors.success : AppColors.error,
       ),
     );
@@ -344,9 +356,17 @@ class _RequestTile extends ConsumerWidget {
   String _formatTime(DateTime dt) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-    if (diff.inMinutes < 1) return 'hozir';
-    if (diff.inMinutes < 60) return '${diff.inMinutes}m';
-    if (diff.inHours < 24) return '${diff.inHours}s';
+    if (diff.inMinutes < 1) return 'formatters.now'.tr();
+    if (diff.inMinutes < 60) {
+      return 'photoRequests.minutesShort'.tr(
+        namedArgs: {'minutes': '${diff.inMinutes}'},
+      );
+    }
+    if (diff.inHours < 24) {
+      return 'photoRequests.hoursShort'.tr(
+        namedArgs: {'hours': '${diff.inHours}'},
+      );
+    }
     return '${dt.day}.${dt.month}';
   }
 }
@@ -400,7 +420,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
           borderRadius: BorderRadius.circular(12),
         ),
         child: Text(
-          'Rasm yuklanmadi',
+          'photoRequests.photoLoadFailed'.tr(),
           style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
         ),
       );
@@ -511,7 +531,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.md),
             Text(
-              hint ?? "Hali rasm so'rovi yo'q",
+              hint ?? 'photoRequests.emptyDefault'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -519,7 +539,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              "Pastdagi tugmani bossib bolaga so'rov yuboring.",
+              'photoRequests.emptySubtitle'.tr(),
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textTertiary,
               ),

@@ -11,6 +11,7 @@
 
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:flutter/foundation.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -60,7 +61,11 @@ class AggregatedDwell {
       lines.add('$s–$e (${_formatHm(v.duration)})');
     }
     if (visits.length > 1) {
-      lines.add('Jami: ${_formatHm(totalDuration)}');
+      lines.add(
+        'locationHistory.dwell.total'.tr(
+          namedArgs: {'duration': _formatHm(totalDuration)},
+        ),
+      );
     }
     return lines.join('\n');
   }
@@ -81,9 +86,15 @@ class AggregatedDwell {
   static String _formatHm(Duration d) {
     final h = d.inHours;
     final m = d.inMinutes % 60;
-    if (h == 0) return '$m daq';
-    if (m == 0) return '$h s';
-    return '$h s $m daq';
+    if (h == 0) {
+      return 'locationHistory.duration.minutes'.tr(namedArgs: {'m': '$m'});
+    }
+    if (m == 0) {
+      return 'locationHistory.duration.hours'.tr(namedArgs: {'h': '$h'});
+    }
+    return 'locationHistory.duration.hoursMinutes'.tr(
+      namedArgs: {'h': '$h', 'm': '$m'},
+    );
   }
 }
 

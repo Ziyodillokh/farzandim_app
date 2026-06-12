@@ -1,0 +1,660 @@
+{
+ "lib/app.dart": [
+  {
+   "line": 147,
+   "text": "Ko'rish"
+  }
+ ],
+ "lib/main.dart": [
+  {
+   "line": 207,
+   "text": "Nimadir xato ketdi. Iltimos, ilovani qayta oching."
+  }
+ ],
+ "lib/core/constants/uzbekistan_regions.dart": [
+  {
+   "line": 37,
+   "text": "Farg'ona"
+  },
+  {
+   "line": 46,
+   "text": "Qoraqalpog'iston"
+  }
+ ],
+ "lib/features/app_restrictions/data/models/app_combined.dart": [
+  {
+   "line": 78,
+   "text": "$m daqiqa"
+  },
+  {
+   "line": 80,
+   "text": "$h soat $m daqiqa"
+  }
+ ],
+ "lib/features/app_restrictions/data/repositories/backend_app_limit_repository.dart": [
+  {
+   "line": 94,
+   "text": "BackendAppLimitRepository.upsert xato "
+  },
+  {
+   "line": 124,
+   "text": "BackendAppLimitRepository.remove xato "
+  }
+ ],
+ "lib/features/app_update/data/repositories/backend_app_version_repository.dart": [
+  {
+   "line": 34,
+   "text": "BackendAppVersionRepository.fetch xato "
+  }
+ ],
+ "lib/features/app_update/presentation/dialogs/force_update_dialog.dart": [
+  {
+   "line": 70,
+   "text": "Yangi versiya zarur. Eski versiya bilan davom etib bo‘lmaydi."
+  }
+ ],
+ "lib/features/app_update/presentation/widgets/update_banner.dart": [
+  {
+   "line": 109,
+   "text": "Yopish (24 soat)"
+  }
+ ],
+ "lib/features/auth/data/models/auth_models.dart": [
+  {
+   "line": 31,
+   "text": "AuthTokens: accessToken/refreshToken yo'q"
+  },
+  {
+   "line": 73,
+   "text": "AuthUser: id/role yo'q"
+  },
+  {
+   "line": 146,
+   "text": "AuthSession: user obyekti yo'q"
+  }
+ ],
+ "lib/features/auth/data/repositories/backend_user_repository.dart": [
+  {
+   "line": 67,
+   "text": "updateMe: hech qanday o'zgartirish yo'q"
+  },
+  {
+   "line": 76,
+   "text": "PUT /users/me: bo'sh response"
+  }
+ ],
+ "lib/features/auth/data/services/social_sign_in_service.dart": [
+  {
+   "line": 61,
+   "text": "Google idToken bo'sh — client ID sozlamasi yo'q?"
+  },
+  {
+   "line": 94,
+   "text": "Apple identityToken bo'sh"
+  }
+ ],
+ "lib/features/auth/presentation/screens/add_account_screen.dart": [
+  {
+   "line": 79,
+   "text": "Kod yaratib bo'lmadi. Qayta urinib ko'ring."
+  }
+ ],
+ "lib/features/auth/presentation/screens/scan_account_screen.dart": [
+  {
+   "line": 170,
+   "text": "Faol seanslar → Boshqa hisob qo'shish orqali ko'rsatiladi"
+  }
+ ],
+ "lib/features/child_management/data/models/child_device_info.dart": [
+  {
+   "line": 87,
+   "text": "Wi-Fi yo'q"
+  }
+ ],
+ "lib/features/child_management/data/models/gender.dart": [
+  {
+   "line": 40,
+   "text": "O'g'il"
+  }
+ ],
+ "lib/features/child_management/data/repositories/backend_child_repository.dart": [
+  {
+   "line": 99,
+   "text": "POST /children: bo'sh javob"
+  },
+  {
+   "line": 114,
+   "text": "PUT /children/:id: bo'sh javob"
+  },
+  {
+   "line": 144,
+   "text": "POST /children/:id/pair-code: bo'sh"
+  },
+  {
+   "line": 148,
+   "text": "familyCode yo'q"
+  },
+  {
+   "line": 169,
+   "text": "POST /avatar: bo'sh javob"
+  }
+ ],
+ "lib/features/child_management/presentation/screens/children_management_screen.dart": [
+  {
+   "line": 358,
+   "text": "Qayta ulash (QR)"
+  }
+ ],
+ "lib/features/dashboard/presentation/widgets/screen_time_chart.dart": [
+  {
+   "line": 136,
+   "text": "Qayta urinish"
+  },
+  {
+   "line": 153,
+   "text": "Hech qanday ma'lumot yo'q"
+  }
+ ],
+ "lib/features/feedback/presentation/screens/feedback_inbox_screen.dart": [
+  {
+   "line": 263,
+   "text": "Bola Child App'da emoji bilan kayfiyatini yuboradi."
+  }
+ ],
+ "lib/features/legal/data/legal_text.dart": [
+  {
+   "line": 51,
+   "text": "$_appName — ota-onalar va vasiylar uchun mo\\'ljallangan oilaviy "
+  },
+  {
+   "line": 65,
+   "text": "   • Telefon raqami (Phone OTP autentifikatsiyasi uchun)\\n"
+  },
+  {
+   "line": 66,
+   "text": "   • Email manzili (ixtiyoriy, parol tiklash uchun)\\n"
+  },
+  {
+   "line": 68,
+   "text": "   • Qurilma identifikatori (FCM token push xabarlar uchun)\\n"
+  },
+  {
+   "line": 70,
+   "text": "aniqlash uchun)\\n\\n"
+  },
+  {
+   "line": 74,
+   "text": "   • Joriy GPS joylashuv (bola qurilmasi ruxsati bilan)\\n"
+  },
+  {
+   "line": 75,
+   "text": "   • Wi-Fi tarmoq nomi (joylashuv aniqligini oshirish uchun)\\n"
+  },
+  {
+   "line": 77,
+   "text": "sozlamalarini ta\\'minlash uchun)\\n"
+  },
+  {
+   "line": 80,
+   "text": "sotish uchun ishlatilmaydi."
+  },
+  {
+   "line": 84,
+   "text": "Ma\\'lumotlar quyidagi maqsadlarda qayta ishlanadi:\\n\\n"
+  },
+  {
+   "line": 87,
+   "text": "   • Ota-ona nazorati (ilova cheklovlari, jadval)\\n"
+  },
+  {
+   "line": 88,
+   "text": "   • Ovozli va video xabarlar (oila aloqasi)\\n"
+  },
+  {
+   "line": 94,
+   "text": "(voyaga yetmagan shaxslarga oid ma\\'lumotlarni qayta ishlash "
+  },
+  {
+   "line": 98,
+   "text": "   • GDPR (Yevropa hududidagi foydalanuvchilar uchun, agar "
+  },
+  {
+   "line": 100,
+   "text": "ma\\'lumotlar uchun ota-ona roziligi (Art. 8)"
+  },
+  {
+   "line": 128,
+   "text": "   • Tizim loglari: maksimum 1 yil (xavfsizlik va xato "
+  },
+  {
+   "line": 129,
+   "text": "tahlili uchun)\\n"
+  },
+  {
+   "line": 138,
+   "text": "13 yoshdan kichik bolalar uchun maxsus himoya choralari "
+  },
+  {
+   "line": 145,
+   "text": "       - reklama uchun ishlatilmaydi\\n"
+  },
+  {
+   "line": 147,
+   "text": "       - profiling yoki targeting uchun ishlatilmaydi\\n"
+  },
+  {
+   "line": 148,
+   "text": "       - texnik xizmatdan tashqari uchinchi tomon bilan "
+  },
+  {
+   "line": 150,
+   "text": "Ota-ona istalgan vaqtda bola ma\\'lumotlarini ko\\'rishi, "
+  },
+  {
+   "line": 151,
+   "text": "tahrirlashi yoki o\\'chirishi mumkin (Sozlamalar → Bolalar "
+  },
+  {
+   "line": 154,
+   "text": "Bola foydalanuvchi emas — vasiy mahsulot foydalanuvchisi. "
+  },
+  {
+   "line": 156,
+   "text": "sozlashi mumkin."
+  },
+  {
+   "line": 162,
+   "text": "(o\\'zingiz) va Sozlamalar → Bolalar boshqaruvi (bola "
+  },
+  {
+   "line": 164,
+   "text": "   • Tahrirlash: barcha kiritilgan maydonlar (ism, telefon, "
+  },
+  {
+   "line": 165,
+   "text": "email, profil rasmi, bola ma\\'lumotlari) tahrirlanadi\\n"
+  },
+  {
+   "line": 169,
+   "text": "   • E\\'tiroz bildirish: agar qayta ishlashga qarshi "
+  },
+  {
+   "line": 178,
+   "text": "Ma\\'lumotlar quyidagi texnik vositalar bilan himoyalangan:\\n\\n"
+  },
+  {
+   "line": 185,
+   "text": "reverse-engineered klientlarni bloklash\\n"
+  },
+  {
+   "line": 194,
+   "text": "Ushbu maxfiylik siyosati vaqti-vaqti bilan yangilanishi mumkin. "
+  },
+  {
+   "line": 204,
+   "text": "Maxfiylik bilan bog\\'liq savol yoki shikoyatlaringiz uchun:\\n\\n"
+  },
+  {
+   "line": 207,
+   "text": "O\\'zbekiston Respublikasida ma\\'lumotlarni qayta ishlash "
+  },
+  {
+   "line": 231,
+   "text": "vasiy) tomonidan o\\'rnatilishi va foydalanilishi mumkin. "
+  },
+  {
+   "line": 236,
+   "text": "$_appName — bola xavfsizligi va ota-ona nazoratiga "
+  },
+  {
+   "line": 242,
+   "text": "   • Ovozli va video xabarlar (oila aloqasi)\\n"
+  },
+  {
+   "line": 243,
+   "text": "   • Ilova foydalanish vaqtini cheklash (jadval)\\n"
+  },
+  {
+   "line": 244,
+   "text": "   • Jadval bo\\'yicha eslatmalar\\n"
+  },
+  {
+   "line": 260,
+   "text": "   • APK\\'ni qayta tarqatish\\n\\n"
+  },
+  {
+   "line": 268,
+   "text": "   • Bola bilan ochiq muloqot — kuzatuv haqida xabardor "
+  },
+  {
+   "line": 273,
+   "text": "Tavsiya: bola yoshi va etukligiga qarab kuzatuv mavjudligi "
+  },
+  {
+   "line": 281,
+   "text": "mumkin:\\n\\n"
+  },
+  {
+   "line": 293,
+   "text": "tegishli ma\\'lumotlarni butunlay o\\'chirib tashlashi mumkin:\\n\\n"
+  },
+  {
+   "line": 297,
+   "text": "   • Profil, bola hisoblari, xabarlar, geo-zonalar, "
+  },
+  {
+   "line": 309,
+   "text": "$_legalEntity quyidagi holatlarga javobgar emas:\\n\\n"
+  },
+  {
+   "line": 310,
+   "text": "   • Internet aloqasi yo\\'qligi yoki sekinligi\\n"
+  },
+  {
+   "line": 317,
+   "text": "Ilova bola xavfsizligini ta\\'minlovchi yagona vosita "
+  },
+  {
+   "line": 318,
+   "text": "emas — uni boshqa xavfsizlik choralari (suhbat, "
+  },
+  {
+   "line": 319,
+   "text": "tarbiya, jismoniy nazorat) bilan birga qo\\'llang."
+  },
+  {
+   "line": 325,
+   "text": "mualliflik huquqi bilan himoyalangan.\\n\\n"
+  },
+  {
+   "line": 329,
+   "text": "   • APK\\'ni qayta paketlash va boshqa nom bilan tarqatish\\n"
+  },
+  {
+   "line": 337,
+   "text": "$_legalEntity ushbu Shartlarni vaqti-vaqti bilan yangilash "
+  },
+  {
+   "line": 341,
+   "text": "   • Profil bilan bog\\'langan email orqali (mavjud bo\\'lsa)\\n\\n"
+  },
+  {
+   "line": 352,
+   "text": "mumkin bo\\'lgan nizolar avval do\\'stona muzokara orqali hal "
+  },
+  {
+   "line": 359,
+   "text": "Savol yoki murojaatlar uchun:\\n\\n"
+  }
+ ],
+ "lib/features/notifications/data/models/app_notification.dart": [
+  {
+   "line": 123,
+   "text": "Pair so'rov"
+  }
+ ],
+ "lib/features/notifications/data/repositories/backend_fcm_repository.dart": [
+  {
+   "line": 54,
+   "text": "BackendFcm.registerToken xato ${e.response?.statusCode} "
+  },
+  {
+   "line": 84,
+   "text": "BackendFcm.sendTestPush xato ${e.response?.statusCode} — ${e.message}"
+  }
+ ],
+ "lib/features/pair_requests/data/repositories/backend_pair_request_repository.dart": [
+  {
+   "line": 73,
+   "text": "BackendPairRequestRepository.approve xato "
+  }
+ ],
+ "lib/features/photo_request/presentation/screens/photo_requests_list_screen.dart": [
+  {
+   "line": 61,
+   "text": "Kutilayotgan so'rov yo'q"
+  },
+  {
+   "line": 68,
+   "text": "Bajarilgan rasm yo'q"
+  },
+  {
+   "line": 75,
+   "text": "Rad etilgan so'rov yo'q"
+  },
+  {
+   "line": 91,
+   "text": "Rasm so'rash"
+  },
+  {
+   "line": 300,
+   "text": "So'rovni o'chirish?"
+  },
+  {
+   "line": 304,
+   "text": "Bu so'rov va u bilan bog'liq rasm o'chiriladi."
+  },
+  {
+   "line": 311,
+   "text": "Bekor qilish"
+  },
+  {
+   "line": 338,
+   "text": "O'chirish xato"
+  },
+  {
+   "line": 514,
+   "text": "Hali rasm so'rovi yo'q"
+  },
+  {
+   "line": 522,
+   "text": "Pastdagi tugmani bossib bolaga so'rov yuboring."
+  }
+ ],
+ "lib/features/photo_request/presentation/widgets/photo_request_dialog.dart": [
+  {
+   "line": 70,
+   "text": "Rasm so'rovi yuborildi"
+  },
+  {
+   "line": 77,
+   "text": "Yuborilmadi, qaytadan urinib ko'ring"
+  },
+  {
+   "line": 97,
+   "text": "Bola'dan rasm so'rash"
+  },
+  {
+   "line": 119,
+   "text": "Bog'da nima qilyapsan?"
+  },
+  {
+   "line": 145,
+   "text": "Bekor qilish"
+  },
+  {
+   "line": 163,
+   "text": "So'rash"
+  }
+ ],
+ "lib/features/quick_actions/presentation/screens/permission_apps_screen.dart": [
+  {
+   "line": 68,
+   "text": "Saqlab bo'lmadi. Internet aloqasini tekshiring."
+  },
+  {
+   "line": 158,
+   "text": "Ruxsatlarni yuklab bo'lmadi.\\n"
+  },
+  {
+   "line": 159,
+   "text": "Internet aloqasini tekshiring."
+  },
+  {
+   "line": 177,
+   "text": "Qayta urinish"
+  }
+ ],
+ "lib/features/schedules/presentation/screens/schedules_list_screen.dart": [
+  {
+   "line": 61,
+   "text": "Uyqu vaqtida bloklash"
+  },
+  {
+   "line": 70,
+   "text": "Dars vaqti"
+  },
+  {
+   "line": 251,
+   "text": "Haftalik jadval"
+  },
+  {
+   "line": 493,
+   "text": "Haftalik jadval"
+  },
+  {
+   "line": 654,
+   "text": "Ilovalar ro'yxati hali yuklanmadi"
+  }
+ ],
+ "lib/features/settings/presentation/screens/settings_screen.dart": [
+  {
+   "line": 219,
+   "text": "Tarmoq yoki login muammosi. Internetni tekshiring va qayta urining."
+  },
+  {
+   "line": 227,
+   "text": "Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech "
+  },
+  {
+   "line": 229,
+   "text": "qayta kiring (login) — token avtomatik ro‘yxatdan o‘tadi."
+  },
+  {
+   "line": 234,
+   "text": "Bir necha soniyada bildirishnoma kelishi kerak. Agar KELMASA — "
+  },
+  {
+   "line": 235,
+   "text": "telefon bildirishnoma ruxsatini tekshiring."
+  }
+ ],
+ "lib/features/sos/presentation/screens/sos_alerts_list_screen.dart": [
+  {
+   "line": 44,
+   "text": "Faol SOS alert yo'q"
+  },
+  {
+   "line": 46,
+   "text": "Hammasi tinch. Bola SOS bossa, push xabar keladi."
+  },
+  {
+   "line": 53,
+   "text": "Tarix bo'sh"
+  },
+  {
+   "line": 55,
+   "text": "Hal qilingan SOS alertlar bu yerda ko'rinadi."
+  },
+  {
+   "line": 169,
+   "text": "SOS ro'yxatini yuklab bo'lmadi.\\n"
+  },
+  {
+   "line": 170,
+   "text": "Internet aloqasini tekshiring."
+  },
+  {
+   "line": 179,
+   "text": "Qayta urinish"
+  },
+  {
+   "line": 249,
+   "text": "Joylashuv yo'q"
+  },
+  {
+   "line": 281,
+   "text": "Alert ACTIVE → RESOLVED holatiga o'tadi."
+  },
+  {
+   "line": 288,
+   "text": "Bekor qilish"
+  },
+  {
+   "line": 325,
+   "text": "Resolve xato"
+  },
+  {
+   "line": 397,
+   "text": "Hal qilingan: ${_formatTime(resolvedTime)}"
+  }
+ ],
+ "lib/features/video_message/data/repositories/backend_video_message_repository.dart": [
+  {
+   "line": 86,
+   "text": "BackendVideoMessageRepository.sendMessage xato "
+  }
+ ],
+ "lib/features/voice_message/data/repositories/backend_voice_message_repository.dart": [
+  {
+   "line": 89,
+   "text": "BackendVoiceMessageRepository.sendMessage xato "
+  },
+  {
+   "line": 116,
+   "text": "BackendVoiceMessageRepository.sendText xato "
+  },
+  {
+   "line": 151,
+   "text": "BackendVoiceMessageRepository.sendMedia xato "
+  },
+  {
+   "line": 198,
+   "text": "BackendVoiceMessageRepository.markAllRead xato "
+  },
+  {
+   "line": 219,
+   "text": "BackendVoiceMessageRepository.markAsRead xato "
+  }
+ ],
+ "lib/features/voice_message/presentation/providers/voice_upload_provider.dart": [
+  {
+   "line": 74,
+   "text": "Bola topilmadi"
+  }
+ ],
+ "lib/features/voice_message/presentation/widgets/round_video_recorder.dart": [
+  {
+   "line": 124,
+   "text": "Kamera topilmadi"
+  },
+  {
+   "line": 213,
+   "text": "Yozib bo'lmadi: $e"
+  },
+  {
+   "line": 533,
+   "text": "Bekor qilish"
+  },
+  {
+   "line": 594,
+   "text": "Tugatish uchun bosing"
+  },
+  {
+   "line": 604,
+   "text": "Bekor qilish"
+  }
+ ],
+ "lib/shared/widgets/gender_selector.dart": [
+  {
+   "line": 44,
+   "text": "O'g'il"
+  }
+ ],
+ "lib/shared/widgets/photo_source_bottom_sheet.dart": [
+  {
+   "line": 104,
+   "text": "Bekor qilish"
+  }
+ ]
+}

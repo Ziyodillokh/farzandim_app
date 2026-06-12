@@ -63,9 +63,8 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
       // (optimistik toggle orqaga "sakraydi").
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content:
-                Text("Saqlab bo'lmadi. Internet aloqasini tekshiring."),
+          SnackBar(
+            content: Text('appPermissions.saveFailed'.tr()),
           ),
         );
       }
@@ -155,8 +154,7 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
                           mainAxisSize: MainAxisSize.min,
                           children: [
                             Text(
-                              "Ruxsatlarni yuklab bo'lmadi.\n"
-                              'Internet aloqasini tekshiring.',
+                              'appPermissions.loadFailed'.tr(),
                               textAlign: TextAlign.center,
                               style: AppTextStyles.bodyS.copyWith(
                                 color: AppColors.textSecondary,
@@ -174,7 +172,7 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
                                 color: AppColors.accent,
                               ),
                               label: Text(
-                                'Qayta urinish',
+                                'common.retry'.tr(),
                                 style: AppTextStyles.bodyM.copyWith(
                                   color: AppColors.accent,
                                   fontWeight: FontWeight.w600,

@@ -2,6 +2,8 @@
 // UserSession — "Faol sessiyalar" modeli (Backend GET /api/auth/sessions)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
+
 /// Login qilingan bitta qurilma sessiyasi.
 class UserSession {
   const UserSession({
@@ -53,13 +55,13 @@ class UserSession {
     if (deviceModel != null && deviceModel!.isNotEmpty) return deviceModel!;
     switch (platform) {
       case 'android':
-        return 'Android qurilma';
+        return 'settings.sessions.androidDevice'.tr();
       case 'ios':
         return 'iPhone / iPad';
       case 'web':
-        return 'Brauzer';
+        return 'settings.sessions.browser'.tr();
       default:
-        return "Noma'lum qurilma";
+        return 'settings.sessions.unknownDevice'.tr();
     }
   }
 

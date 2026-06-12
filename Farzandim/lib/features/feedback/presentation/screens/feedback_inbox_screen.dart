@@ -5,6 +5,7 @@
 // Bola yuborgan emoji + message ko'rsatadi. WS `feedback:received`
 // orqali real-time keladi. Tap → markAsRead.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -30,7 +31,7 @@ class FeedbackInboxScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final child = ref.watch(childByIdProvider(childId));
-    final childName = child?.name ?? 'Bola';
+    final childName = child?.name ?? 'feedback.fallbackChildName'.tr();
     final feedbackAsync = ref.watch(childFeedbackProvider(childId));
 
     return Scaffold(
@@ -99,7 +100,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                '$childName — Feedback',
+                'feedback.headerTitle'.tr(namedArgs: {'name': childName}),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -129,22 +130,23 @@ class _FeedbackTile extends ConsumerWidget {
     'LOVE': '❤️',
   };
 
-  static const _labelMap = <String, String>{
-    'HAPPY': 'Xursand',
-    'EXCITED': 'Hayajonli',
-    'THINKING': "O'ylanmoqda",
-    'WINKING': 'Hazil',
-    'SAD': 'Xafa',
-    'ANGRY': 'Achchiqlangan',
-    'TIRED': 'Charchagan',
-    'LOVE': 'Sevgi',
+  /// Backend emoji enum → i18n kalit (render paytida .tr() qilinadi).
+  static const _labelKeyMap = <String, String>{
+    'HAPPY': 'feedback.moodHappy',
+    'EXCITED': 'feedback.moodExcited',
+    'THINKING': 'feedback.moodThinking',
+    'WINKING': 'feedback.moodWinking',
+    'SAD': 'feedback.moodSad',
+    'ANGRY': 'feedback.moodAngry',
+    'TIRED': 'feedback.moodTired',
+    'LOVE': 'feedback.moodLove',
   };
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final emojiKey = (feedback['emoji'] as String? ?? 'HAPPY').toUpperCase();
     final emoji = _emojiMap[emojiKey] ?? '💭';
-    final label = _labelMap[emojiKey] ?? emojiKey;
+    final label = _labelKeyMap[emojiKey]?.tr() ?? emojiKey;
     final message = (feedback['message'] as String?) ?? '';
     final isRead = feedback['isRead'] as bool? ?? false;
     final createdAt = feedback['createdAt'] as String?;
@@ -252,7 +254,7 @@ class _EmptyState extends StatelessWidget {
             const Text('💭', style: TextStyle(fontSize: 64)),
             const SizedBox(height: AppDimensions.md),
             Text(
-              'Bola hali feedback yubormagan',
+              'feedback.emptyTitle'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -260,7 +262,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              "Bola Child App'da emoji bilan kayfiyatini yuboradi.",
+              'feedback.emptySubtitle'.tr(),
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textTertiary,
               ),
