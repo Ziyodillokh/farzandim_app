@@ -43,27 +43,58 @@ class QrScannerScreen extends ConsumerStatefulWidget {
 }
 
 class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
-  // Mobile qurilmalar uchun back kamera (QR uzoqroqdan ko'rinadi); desktop/web
-  // brauzerda ko'pincha faqat front kamera bo'ladi → kIsWeb'da front tanlanadi.
-  final MobileScannerController _controller = MobileScannerController(
-    detectionSpeed: DetectionSpeed.noDuplicates,
-    facing: kIsWeb ? CameraFacing.front : CameraFacing.back,
-  );
+  // Mobile qurilmalar uchun back kamera (QR uzoqroqdan ko'rinadi).
+  // Web'da ham back camera urinib ko'ramiz: brauzer mos topa olmasa o'zi
+  // istalgan kameraga fallback qiladi (mobile_scanner: facingMode "non-exact"
+  // constraint sifatida yuboradi). Mobile emulation/desktop'da bu webcam'ga
+  // tushadi. Front fallback _tryStartCamera'da qayta urinishda.
+  // Faqat QR formati — boshqa barcode'lar (EAN/UPC) tezligini sustlashtirmasin.
+  MobileScannerController _controller = _makeController(CameraFacing.back);
+
+  static MobileScannerController _makeController(CameraFacing facing) {
+    return MobileScannerController(
+      detectionSpeed: DetectionSpeed.noDuplicates,
+      facing: facing,
+      formats: const [BarcodeFormat.qrCode],
+      autoStart: false,
+    );
+  }
 
   bool _processing = false;
   String? _status;
 
-  // Kamera ruxsati holati: null — hali so'ralmagan, true — berildi,
-  // false — rad etildi (foydalanuvchiga Sozlamalar tugmasi ko'rsatiladi).
-  // Ba'zi Android OEM (Xiaomi/Realme/HONOR) qurilmalarida mobile_scanner
-  // avtomatik so'ramaydi — shu sababli avval qo'lda so'raymiz.
-  bool? _cameraGranted;
+  // Kamera holati:
+  //   null — boshlanmoqda (initState)
+  //   _CamState.granted — start() OK, MobileScanner ko'rsatiladi
+  //   _CamState.denied — ruxsat berilmadi
+  //   _CamState.error — boshqa xato (no camera, NotReadable, polyfill, ...)
+  _CamState _camState = _CamState.starting;
+
+  /// Kamera xato berganda foydalanuvchiga ko'rsatiladigan inline xabar.
+  /// Token'ni qo'lda kiritish rejimiga o'tish tugmasi shu yerda chiqadi.
+  String? _camError;
+
+  /// Foydalanuvchi qo'lda paste rejimiga o'tgan bo'lsa true.
+  ///
+  /// **Web default — `true`.** Brauzer (ayniqsa Chrome DevTools mobile
+  /// emulyatsiyasi)da `mobile_scanner` ZXing'ini back kamera constraint'i
+  /// bilan ishga tushirish ishonchsiz: `NotReadableError` / `OverconstrainedError`
+  /// odatiy. Web rejimda parent'dagi "Token nusxa olish" → child'da paste
+  /// flow eng tez va aniq. Foydalanuvchi appbar'dagi qr_scanner icon bilan
+  /// xohlasa kameraga o'tib bo'ladi.
+  bool _manualPasteMode = kIsWeb;
+
+  /// Front camera bilan qayta urinib ko'rdikmi (back fail bo'lganda).
+  bool _triedFrontFallback = false;
 
   @override
   void initState() {
     super.initState();
-    _qrLog('initState: kIsWeb=$kIsWeb, controller created');
-    _ensureCameraPermission();
+    _qrLog('initState: kIsWeb=$kIsWeb, manualPaste=$_manualPasteMode');
+    // Web'da default paste rejimi — kamera ishga tushirilmaydi.
+    if (!_manualPasteMode) {
+      _ensureCameraPermission();
+    }
   }
 
   @override
@@ -74,11 +105,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   Future<void> _ensureCameraPermission() async {
     if (kIsWeb) {
-      _qrLog(
-        'ensureCameraPermission: kIsWeb=true → kamera ruxsati o\'tkazib '
-        'yuboriladi (Web paste UI ishlatiladi)',
-      );
-      setState(() => _cameraGranted = true);
+      // Web: brauzer kamera promptini mobile_scanner ichida ishga tushiramiz.
+      // permission_handler web'da har doim "denied" qaytaradi — shuning uchun
+      // to'g'ridan-to'g'ri controller.start() chaqiramiz. Brauzer kamera
+      // ruxsati pop-up'ni getUserMedia ichida o'zi ko'rsatadi.
+      await _tryStartCamera();
       return;
     }
     var status = await Permission.camera.status;
@@ -88,15 +119,72 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       _qrLog('ensureCameraPermission: after request status=$status');
     }
     if (!mounted) return;
-    setState(() => _cameraGranted = status.isGranted);
-    if (status.isGranted) {
-      try {
-        await _controller.start();
-        _qrLog('ensureCameraPermission: controller.start() OK');
-      } catch (e) {
-        _qrLog('ensureCameraPermission: controller.start() ERROR: $e');
-      }
+    if (!status.isGranted) {
+      setState(() => _camState = _CamState.denied);
+      return;
     }
+    await _tryStartCamera();
+  }
+
+  /// Controller'ni ishga tushirib ko'radi. Web'da back→front fallback'i bor
+  /// (desktop webcam ko'pincha "user"/front bo'ladi). Mobil'da bir urinish.
+  Future<void> _tryStartCamera() async {
+    if (mounted) {
+      setState(() {
+        _camState = _CamState.starting;
+        _camError = null;
+      });
+    }
+    _qrLog('tryStartCamera: facing=${_controller.facing}, '
+        'triedFront=$_triedFrontFallback');
+    try {
+      await _controller.start();
+      _qrLog('tryStartCamera: start() OK');
+      if (!mounted) return;
+      setState(() => _camState = _CamState.granted);
+    } catch (e) {
+      _qrLog('tryStartCamera: ERROR: $e');
+      // Web'da back fail bo'lsa front bilan qayta urinib ko'ramiz.
+      if (kIsWeb && !_triedFrontFallback) {
+        _triedFrontFallback = true;
+        _qrLog('tryStartCamera: retrying with front camera');
+        await _controller.dispose();
+        _controller = _makeController(CameraFacing.front);
+        await _tryStartCamera();
+        return;
+      }
+      if (!mounted) return;
+      setState(() {
+        _camState = _CamState.error;
+        _camError = _humanizeCameraError(e);
+      });
+    }
+  }
+
+  /// Brauzer/OS xatolarini foydalanuvchi tushunadigan O'zbek tilidagi
+  /// xabarga aylantiradi.
+  String _humanizeCameraError(Object error) {
+    final s = error.toString();
+    if (s.contains('NotAllowedError') || s.contains('permissionDenied')) {
+      return 'Kameraga ruxsat berilmadi. Brauzer manzil panelidagi qulf '
+          'belgisini bosib, kamera ruxsatini yoqing.';
+    }
+    if (s.contains('NotFoundError') || s.contains('unsupported')) {
+      return 'Qurilmangizda kamera topilmadi. QR kodni qo\'lda kiritishingiz mumkin.';
+    }
+    if (s.contains('NotReadableError') || s.contains('TrackStartError')) {
+      return 'Kamera boshqa dastur tomonidan band. Boshqa dastur (Zoom, '
+          'Meet, Camera app)'
+          'ni yopib qaytadan urinib ko\'ring.';
+    }
+    if (s.contains('OverconstrainedError')) {
+      return 'Mos kamera topilmadi. Qo\'lda kiritish rejimiga o\'ting.';
+    }
+    if (s.contains('SecurityError')) {
+      return 'Xavfsiz ulanish kerak (HTTPS yoki localhost).';
+    }
+    return 'Kamerani ochib bo\'lmadi. Qaytadan urining yoki QR kodni '
+        'qo\'lda kiriting.';
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -193,7 +281,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           backgroundColor: Color(0xFF22C55E),
         ),
       );
-      context.go('/dashboard');
+      // /splash markaziy router — onboarding qiziqishlari yoki permission
+      // setup'ga o'tkazadi (qaysisi keyingi). To'g'ridan-to'g'ri /dashboard
+      // qilsak qiziqishlar onboarding'i o'tkazib yuborilardi.
+      context.go('/splash');
     } on DioException catch (e) {
       _qrLog('processRawToken: DioException — '
           'status=${e.response?.statusCode}, body=${e.response?.data}, '
@@ -225,12 +316,12 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   @override
   Widget build(BuildContext context) {
-    _qrLog('build: kIsWeb=$kIsWeb, cameraGranted=$_cameraGranted, '
-        'processing=$_processing, status=$_status');
-    // Desktop/Web brauzerlarda `BarcodeDetector` qo'llab-quvvatlanmaydi yoki
-    // laptop kamerasi qulay emas — manual paste UI ko'rsatamiz.
-    if (kIsWeb) {
-      _qrLog('build: → Web paste UI');
+    _qrLog('build: kIsWeb=$kIsWeb, camState=$_camState, '
+        'processing=$_processing, status=$_status, manualPaste=$_manualPasteMode');
+
+    // Foydalanuvchi qo'lda paste rejimini tanlagan bo'lsa — to'g'ridan-to'g'ri
+    // paste UI'ni ko'rsatamiz (kamera ishga tushirilmaydi, batareya tejaladi).
+    if (_manualPasteMode) {
       return Scaffold(
         backgroundColor: Colors.black,
         appBar: AppBar(
@@ -241,9 +332,24 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
-            "QR token'ni kiriting",
+            "Token'ni qo'lda kiriting",
             style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
           ),
+          actions: [
+            IconButton(
+              tooltip: 'Kamerada skanerlash',
+              icon: const Icon(Icons.qr_code_scanner_rounded,
+                  color: Colors.white),
+              onPressed: () {
+                setState(() => _manualPasteMode = false);
+                // Kameraga qaytsak qaytadan boshlash kerak (controller stop
+                // bo'lib qolgan bo'lishi mumkin).
+                if (_camState != _CamState.granted) {
+                  _tryStartCamera();
+                }
+              },
+            ),
+          ],
         ),
         body: _WebPasteTokenView(
           processing: _processing,
@@ -267,30 +373,47 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         actions: [
+          // Paste rejimi — kamera ishlamasa yoki token tayyor bo'lsa.
           IconButton(
-            icon: ValueListenableBuilder<MobileScannerState>(
-              valueListenable: _controller,
-              builder: (_, state, __) => Icon(
-                state.torchState == TorchState.on
-                    ? Icons.flash_on
-                    : Icons.flash_off,
-                color: Colors.white,
-              ),
-            ),
-            onPressed: () => _controller.toggleTorch(),
+            tooltip: "Token'ni qo'lda kiritish",
+            icon: const Icon(Icons.keyboard_alt_rounded, color: Colors.white),
+            onPressed: () => setState(() => _manualPasteMode = true),
           ),
+          // Mobil'da torch (web'da effekt bermaydi, lekin tugma bezarar).
+          if (!kIsWeb)
+            IconButton(
+              icon: ValueListenableBuilder<MobileScannerState>(
+                valueListenable: _controller,
+                builder: (_, state, __) => Icon(
+                  state.torchState == TorchState.on
+                      ? Icons.flash_on
+                      : Icons.flash_off,
+                  color: Colors.white,
+                ),
+              ),
+              onPressed: () => _controller.toggleTorch(),
+            ),
         ],
       ),
-      body: _cameraGranted == false
-          ? _PermissionDeniedView(
-              onRetry: _ensureCameraPermission,
-              onOpenSettings: openAppSettings,
-            )
-          : _cameraGranted == null
-              ? const Center(
-                  child: CircularProgressIndicator(color: Colors.white),
-                )
-              : _buildScannerBody(context),
+      body: switch (_camState) {
+        _CamState.starting => const _CameraStartingView(),
+        _CamState.denied => _PermissionDeniedView(
+            onRetry: _ensureCameraPermission,
+            onOpenSettings: openAppSettings,
+          ),
+        _CamState.error => _CameraErrorView(
+            message: _camError ?? 'Kamera ochilmadi',
+            onRetry: () {
+              _triedFrontFallback = false;
+              // Yangi controller — back camera bilan boshlaymiz.
+              _controller.dispose();
+              _controller = _makeController(CameraFacing.back);
+              _tryStartCamera();
+            },
+            onManualPaste: () => setState(() => _manualPasteMode = true),
+          ),
+        _CamState.granted => _buildScannerBody(context),
+      },
     );
   }
 
@@ -386,6 +509,113 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           ),
         ),
       ],
+    );
+  }
+}
+
+enum _CamState { starting, granted, denied, error }
+
+class _CameraStartingView extends StatelessWidget {
+  const _CameraStartingView();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          CircularProgressIndicator(color: Colors.white),
+          SizedBox(height: 16),
+          Text(
+            'Kamera ochilmoqda...',
+            style: TextStyle(color: Colors.white70, fontSize: 14),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _CameraErrorView extends StatelessWidget {
+  const _CameraErrorView({
+    required this.message,
+    required this.onRetry,
+    required this.onManualPaste,
+  });
+
+  final String message;
+  final VoidCallback onRetry;
+  final VoidCallback onManualPaste;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(28),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              Icons.videocam_off_rounded,
+              color: Colors.white,
+              size: 64,
+            ),
+            const SizedBox(height: 16),
+            const Text(
+              'Kamera ochilmadi',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              message,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white70,
+                fontSize: 14,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: onRetry,
+                icon: const Icon(Icons.refresh_rounded),
+                label: const Text('Qaytadan urinish'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF7C5CFF),
+                  foregroundColor: Colors.white,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 10),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: onManualPaste,
+                icon: const Icon(Icons.keyboard_alt_rounded),
+                label: const Text("Token'ni qo'lda kiritish"),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.white,
+                  side: const BorderSide(color: Colors.white54),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

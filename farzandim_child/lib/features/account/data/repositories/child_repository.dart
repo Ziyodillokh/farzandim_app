@@ -6,7 +6,7 @@
 //   - updateChildProfile() — name/age/region/photoUrl yangilash
 //   - uploadChildPhoto()   — foto Storage'ga yuklab URL qaytarish
 
-import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -43,17 +43,21 @@ class ChildRepository {
 
   /// Foto Firebase Storage'ga yuklanadi va download URL qaytariladi.
   /// Path: users/{parentUid}/children/{childId}/profile.jpg
+  ///
+  /// `bytes` ishlatiladi (File emas) — bu web va mobile'da bir xil
+  /// ishlaydi. ImagePicker.readAsBytes() ikkala platformada xfile'dan
+  /// Uint8List qaytaradi. putData() web/mobile uchun universal.
   Future<String> uploadChildPhoto({
     required String parentUid,
     required String childId,
-    required File photoFile,
+    required Uint8List bytes,
   }) async {
     final ref = _storage
         .ref()
         .child('users/$parentUid/children/$childId/profile.jpg');
 
-    final uploadTask = ref.putFile(
-      photoFile,
+    final uploadTask = ref.putData(
+      bytes,
       SettableMetadata(contentType: 'image/jpeg'),
     );
 
