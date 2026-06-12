@@ -54,11 +54,9 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   // adashtirmaslik uchun (SCR-02: birinchi avtomatik kameradan keyin
   // auto-follow o'zini o'chirib qo'yardi).
   bool _programmaticMove = false;
-  Timer? _recenterDebounce;
 
   @override
   void dispose() {
-    _recenterDebounce?.cancel();
     _mapController?.dispose();
     super.dispose();
   }
@@ -107,7 +105,6 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   }
 
   void _onCameraMoveStarted() {
-    _recenterDebounce?.cancel();
     // Dasturiy animatsiya ham bu callback'ni chaqiradi — uni user harakati
     // deb hisoblamaymiz (SCR-02), aks holda auto-follow birinchi avtomatik
     // kameradan keyin o'zini o'chirib qo'yardi.

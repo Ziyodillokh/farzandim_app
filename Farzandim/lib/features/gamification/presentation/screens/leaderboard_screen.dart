@@ -8,6 +8,7 @@
 // skrol bilan) + pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi
 // (test/olympiad yechilganda XP beriladi).
 
+import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -77,7 +78,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       case 'weekly':
         return 'Shu hafta';
       case 'monthly':
-        final t = DateTime.now().toUtc().add(const Duration(hours: 5));
+        final t = tashkentNow();
         return '${_months[t.month - 1]} oyi';
       default:
         return 'Butun davr';

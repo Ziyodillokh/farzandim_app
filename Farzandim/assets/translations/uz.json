@@ -485,6 +485,7 @@
     "videoMode": "Video rejimi — yozish uchun bosib turing",
     "voiceMode": "Ovoz rejimi — yozish uchun bosib turing",
     "fileOpenFailed": "Faylni ochib bo'lmadi",
+    "cameraPermissionSnack": "Kamera ruxsati kerak — sozlamalardan ruxsat bering",
     "fileGeneric": "Fayl",
     "mediaSendError": "Fayl yuborilmadi"
   },

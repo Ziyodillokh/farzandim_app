@@ -8,6 +8,7 @@
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
+import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
@@ -82,9 +83,12 @@ final todayScreenTimeMsProvider =
       ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
   if (weekly.isEmpty) return 0;
   String key(DateTime d) => '${d.year}-${d.month}-${d.day}';
-  final todayKey = key(DateTime.now().toUtc().add(const Duration(hours: 5)));
+  final todayKey = key(tashkentNow());
   final match = weekly.where((x) => key(x.date) == todayKey);
-  final ms = match.isNotEmpty ? match.first.totalMs : weekly.last.totalMs;
+  // BUG-08: bugungi yozuv topilmasa 0 — avval weekly.last (BOSHQA kunning
+  // vaqti!) ko'rsatilardi: yarim kechada kechagi katta raqam "bugun" deb
+  // chiqardi.
+  final ms = match.isNotEmpty ? match.first.totalMs : 0;
   return ms.clamp(0, 24 * 60 * 60 * 1000);
 });
 
@@ -172,7 +176,7 @@ class ScreenTimeChart extends ConsumerWidget {
     }
 
     // Toshkent (UTC+5) bugungi kuni — bar shu vaqt bilan belgilanadi.
-    final todayKey = _key(DateTime.now().toUtc().add(const Duration(hours: 5)));
+    final todayKey = _key(tashkentNow());
     final maxMs = totals
         .map((t) => t.totalMs)
         .fold<int>(0, (a, b) => a > b ? a : b);

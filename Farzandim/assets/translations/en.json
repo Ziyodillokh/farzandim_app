@@ -485,6 +485,7 @@
     "videoMode": "Video mode — hold to record",
     "voiceMode": "Voice mode — hold to record",
     "fileOpenFailed": "Could not open file",
+    "cameraPermissionSnack": "Camera permission needed — allow it in settings",
     "fileGeneric": "File",
     "mediaSendError": "File not sent"
   },

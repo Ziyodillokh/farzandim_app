@@ -157,7 +157,8 @@ class BackendLocationRepository {
         subscription =
             _socketClient.eventStream('location:updated').listen((data) {
           if (controller.isClosed) return;
-          debugPrint('LocRepo[$childId]: WS location:updated raw — $data');
+          // MEM-9: to'liq payload print qilinmaydi — har WS event'da katta
+          // string yaratish/log IO isrof edi (release'da ham ishlardi).
           if (data is! Map) {
             debugPrint('LocRepo[$childId]: WS payload not Map — skip');
             return;

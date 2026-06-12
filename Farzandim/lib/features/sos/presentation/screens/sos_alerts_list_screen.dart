@@ -189,11 +189,27 @@ class _AlertsList extends ConsumerWidget {
       ),
       data: (alerts) {
         if (alerts.isEmpty) {
-          return _EmptyState(
-            title: emptyTitle,
-            subtitle: emptySubtitle,
-            icon: emptyIcon,
-            iconColor: emptyIconColor,
+          // EH-10: bo'sh holatda ham pull-to-refresh ishlasin (avval faqat
+          // ro'yxat bor holatda bor edi — bo'sh ekranni yangilab bo'lmasdi).
+          return RefreshIndicator(
+            color: AppColors.accent,
+            onRefresh: () async {
+              ref.invalidate(sosAlertsByStatusProvider);
+            },
+            child: LayoutBuilder(
+              builder: (context, constraints) => SingleChildScrollView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                child: SizedBox(
+                  height: constraints.maxHeight,
+                  child: _EmptyState(
+                    title: emptyTitle,
+                    subtitle: emptySubtitle,
+                    icon: emptyIcon,
+                    iconColor: emptyIconColor,
+                  ),
+                ),
+              ),
+            ),
           );
         }
         return RefreshIndicator(

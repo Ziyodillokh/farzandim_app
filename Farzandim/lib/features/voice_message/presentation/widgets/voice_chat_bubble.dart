@@ -90,14 +90,19 @@ class VoiceChatBubble extends ConsumerWidget {
         ? position.inMilliseconds / duration.inMilliseconds
         : 0.0;
 
-    final playerState = ref.watch(audioPlayerStateProvider).value;
+    // PERF-09: playerState/speed faqat IJRODAGI bubble'da watch qilinadi —
+    // avval shartsiz edi: ijro paytida har holat o'zgarishi BARCHA
+    // bubble'larni (uzun chatda o'nlab) rebuild qildirardi.
+    final playerState =
+        isCurrent ? ref.watch(audioPlayerStateProvider).value : null;
     final isPlaying = isCurrent && (playerState?.playing ?? false);
     final processingState = playerState?.processingState;
     final isLoading = isCurrent &&
         (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering);
 
-    final speed = ref.watch(audioSpeedProvider).value ?? 1.0;
+    final speed =
+        isCurrent ? (ref.watch(audioSpeedProvider).value ?? 1.0) : 1.0;
 
     final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
     final textColor = isOwn ? Colors.black : AppColors.textPrimary;

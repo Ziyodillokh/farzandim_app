@@ -59,7 +59,17 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
             .map(AppNotification.fromJson)
             .whereType<AppNotification>()
             .toList();
-        if (list.isNotEmpty) state = list;
+        if (list.isNotEmpty) {
+          // BUG-09: ALMASHTIRMAYMIZ — _load tugashidan oldin addFromFcm
+          // kelgan bo'lishi mumkin (state'da yangi xabar bor); `state = list`
+          // uni o'chirib yuborardi. Merge: yangi kelganlar tepada, keshdagi
+          // keyin (id dedup).
+          final liveIds = state.map((n) => n.id).toSet();
+          state = [
+            ...state,
+            ...list.where((n) => !liveIds.contains(n.id)),
+          ];
+        }
       }
     } catch (e) {
       debugPrint('NotificationsNotifier._load: $e');

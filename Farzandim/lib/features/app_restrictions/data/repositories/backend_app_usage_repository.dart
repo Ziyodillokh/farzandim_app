@@ -13,6 +13,7 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
+import 'package:farzandim/core/utils/tashkent_time.dart' as tz;
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
@@ -138,7 +139,7 @@ class BackendAppUsageRepository {
 
   /// Toshkent (UTC+5) bugungi sanasi "YYYY-MM-DD".
   static String tashkentTodayStr() {
-    final t = DateTime.now().toUtc().add(const Duration(hours: 5));
+    final t = tz.tashkentNow();
     return '${t.year.toString().padLeft(4, '0')}-'
         '${t.month.toString().padLeft(2, '0')}-'
         '${t.day.toString().padLeft(2, '0')}';
