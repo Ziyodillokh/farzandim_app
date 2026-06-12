@@ -203,7 +203,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       );
     } on DioException catch (e) {
       if (!mounted) return;
-      setState(() => _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi"));
+      setState(
+        () => _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi"),
+      );
     }
   }
 
