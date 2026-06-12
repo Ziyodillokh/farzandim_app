@@ -13,6 +13,15 @@ const envSchema = z.object({
   TELEGRAM_BOT_TOKEN: z.string().min(40),
   TELEGRAM_BOT_USERNAME: z.string().min(3),
 
+  // Support chat → Telegram guruh ko'prigi (ixtiyoriy — yo'q bo'lsa bot
+  // o'chiq, chat faqat saqlanadi). SUPPORT_CHAT_ID — operatorlar guruhi.
+  TELEGRAM_BOT_TOKEN_SUPPORT: z.string().min(40).optional(),
+  TELEGRAM_BOT_USERNAME_SUPPORT: z.string().min(3).optional(),
+  SUPPORT_CHAT_ID: z.string().min(1).optional(),
+  // Tashqaridan ochiladigan API bazasi (masalan https://test.farzandimedu.uz/api)
+  // — Telegram'dagi biriktirma havolalari uchun. Yo'q bo'lsa havola qo'yilmaydi.
+  PUBLIC_API_URL: z.string().url().optional(),
+
   JWT_ACCESS_SECRET: z.string().min(32),
   JWT_REFRESH_SECRET: z.string().min(32),
   JWT_ACCESS_EXPIRES: z.string().default('15m'),

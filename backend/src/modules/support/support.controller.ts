@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Param,
+  Body,
   Req,
   UseGuards,
   HttpCode,
@@ -24,6 +25,7 @@ import { ConsumerJwtAuthGuard } from '../../common/guards';
 import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { SupportService } from './support.service';
+import { CreateSupportMessageDto } from './dto/create-support-message.dto';
 
 @ApiTags('Support')
 @ApiBearerAuth()
@@ -31,6 +33,26 @@ import { SupportService } from './support.service';
 @Controller('support')
 export class SupportController {
   constructor(private readonly support: SupportService) {}
+
+  @Get('messages')
+  @ApiOperation({ summary: 'Support chat tarixi (oxirgi 200, eskidan yangiga)' })
+  async listMessages(@CurrentUser() user: JwtPayload) {
+    return this.support.listMessages(user.userId);
+  }
+
+  @Post('messages')
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary:
+      "Xabar yuborish — operator guruhiga Telegram orqali yetkaziladi; " +
+      'javobida avto-ack (isAutoAck) ham kelishi mumkin',
+  })
+  async createMessage(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: CreateSupportMessageDto,
+  ) {
+    return this.support.createMessage(user.userId, dto);
+  }
 
   @Post('attachments')
   @HttpCode(HttpStatus.CREATED)

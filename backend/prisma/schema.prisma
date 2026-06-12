@@ -1110,3 +1110,48 @@ model AdminSecuritySettings {
 
   @@map("admin_security_settings")
 }
+
+// ─────────────────────────────────────────────────────────────────
+// SUPPORT CHAT — Telegram ko'prigi (ota-ona ⇄ operator guruhda)
+// ─────────────────────────────────────────────────────────────────
+
+// Qo'llab-quvvatlash chati xabari. FK ATAYIN yo'q (userId oddiy string) —
+// User modeliga tegmaslik uchun; userId indekslangan.
+model SupportMessage {
+  id             String   @id @default(uuid())
+  userId         String   @map("user_id")
+  sender         String // 'user' | 'operator'
+  text           String?
+  // Server tomonidagi avto-javob ("tez orada javob beramiz") — klient buni
+  // o'z tilida ko'rsatadi (matn emas, bayroq saqlanadi).
+  isAutoAck      Boolean  @default(false) @map("is_auto_ack")
+  attachmentKey  String?  @map("attachment_key")
+  attachmentType String?  @map("attachment_type") // image | video | document
+  fileName       String?  @map("file_name")
+  fileSize       Int?     @map("file_size")
+  mimeType       String?  @map("mime_type")
+  // Guruhga yuborilgan TG xabar id'si — operator swipe-reply qilsa routing.
+  tgMessageId    Int?     @map("tg_message_id")
+  createdAt      DateTime @default(now()) @map("created_at")
+
+  @@index([userId, createdAt])
+  @@index([tgMessageId])
+  @@map("support_messages")
+}
+
+// "✍️ Javob berish" bosilganda yuborilgan ForceReply prompt → qaysi user'ga.
+model SupportTgPrompt {
+  promptMessageId Int      @id @map("prompt_message_id")
+  userId          String   @map("user_id")
+  createdAt       DateTime @default(now()) @map("created_at")
+
+  @@map("support_tg_prompts")
+}
+
+// Telegram getUpdates offset'i — restart'da yo'qolmasin.
+model SupportTgState {
+  id     Int @id @default(1)
+  offset Int @default(0)
+
+  @@map("support_tg_state")
+}
