@@ -77,7 +77,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ### Xato handling / UX
 - [x] **EH-04** (S): Limit/blok O'CHIRISH offline'da yolg'on "saqlandi" qaytaradi (blok aslida qoladi) —
   `backend_app_limit_repository.dart:39-54,93-107` — xatoni throw + UI feedback.
-- [ ] **EH-09** (M): Umumiy pattern — usage/installed-apps/permissions/pair-requests repolari xatoni
+- [x] **EH-09** (M): Umumiy pattern — usage/installed-apps/permissions/pair-requests repolari xatoni
   yutib bo'sh/0/"hammasi ruxsat" qaytaradi. Repository qatlamini throw'ga o'tkazish + ekranlarda error holat.
 - [x] **EH-05** (S): Dashboard birinchi yuklanish xatosida abadiy spinner (offline'da xabar/retry yo'q) —
   `dashboard_screen.dart:55-64`.
