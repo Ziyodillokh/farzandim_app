@@ -208,7 +208,14 @@ export class LocationService {
       }
       const isMoving = effSpeed !== null && effSpeed >= MOVING_SPEED_MS;
       const minMove = isMoving ? MOVE_MIN_M : JITTER_MIN_M;
-      if (distance < minMove) {
+      // Statsionar jitter ba'zan 25m'dan ham oshib yoziladi va xaritada
+      // zigzag "chiziqlar to'pi" hosil qiladi — harakatsiz holatda 60m'gacha
+      // siljishlarni eng ko'pi 2 daqiqada bittagina yozamiz.
+      const lastAt = lastLocation.capturedAt ?? lastLocation.createdAt;
+      const dtMs = capturedAt.getTime() - lastAt.getTime();
+      const isStationaryJitter =
+        !isMoving && distance < 60 && dtMs < 120_000;
+      if (distance < minMove || isStationaryJitter) {
         await this.prisma.child.update({
           where: { id: childId },
           data: childDeviceUpdate,

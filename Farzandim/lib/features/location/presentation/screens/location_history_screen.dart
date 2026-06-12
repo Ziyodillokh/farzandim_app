@@ -287,7 +287,9 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   /// GPS jitter — soxta zigzag va shishgan masofa oldini oladi). Backend
   /// yangi data'ni o'zi filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
   List<ChildLocation> _cleanTrack(List<ChildLocation> points) {
-    const maxAccuracyM = 100.0;
+    // Trek chizig'i uchun aniqlik talabi qattiqroq (60m) — past aniqlikdagi
+    // nuqtalar chiziqni yon-veriga "sochib" yuboradi.
+    const maxAccuracyM = 60.0;
     const minGapM = 8.0;
     final cleaned = <ChildLocation>[];
     for (final p in points) {
@@ -301,7 +303,18 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
         cleaned.add(p);
       }
     }
-    return cleaned;
+    // GPS "spike" (A→B→A sakrash) chiziqlarni ko'paytirib ko'rsatadi:
+    // o'rtadagi nuqta chetga otilib qaytgan bo'lsa olib tashlaymiz.
+    if (cleaned.length < 3) return cleaned;
+    final smoothed = <ChildLocation>[cleaned.first];
+    for (var i = 1; i < cleaned.length - 1; i++) {
+      final outM = _haversineKm(smoothed.last, cleaned[i]) * 1000;
+      final backM = _haversineKm(smoothed.last, cleaned[i + 1]) * 1000;
+      final isSpike = outM > 40 && backM < 15;
+      if (!isSpike) smoothed.add(cleaned[i]);
+    }
+    smoothed.add(cleaned.last);
+    return smoothed;
   }
 
   /// Polyline bo'ylab jami masofani km'da hisoblash (haversine).
