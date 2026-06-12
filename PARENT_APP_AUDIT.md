@@ -141,8 +141,8 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ## P2 — YAXSHILASH (vaqt bo'lganda)
 
 - [x] **ARCH-12**: fromJson'larda qattiq `as int` cast'lar — bitta buzuq element ro'yxatni yiqitadi (defensive parse).
-- [ ] **ARCH-13**: 1000+ qatorli monolit ekranlar bo'lish (dashboard 1252, location_map 1181, history 994).
-- [ ] **ARCH-14**: 43K qator uchun jami 1 ta test — kamida critical-path testlar (auth, status hisoblash, parse).
+- [x] **ARCH-13**: 1000+ qatorli monolit ekranlar bo'lish (dashboard 1252, location_map 1181, history 994). → har biri 3 ta `part` faylga bo'lindi (private nomlar saqlangan, qayta-yig'ish diff'i bayt-identik), eng katta fayl endi 548 qator.
+- [x] **ARCH-14**: 43K qator uchun jami 1 ta test — kamida critical-path testlar (auth, status hisoblash, parse). → 34 unit test (6 fayl): Child.isLiveOnline statuslari, parseListSafely, SwrCache (clearAll xavfsizligi), filteredApps (Parvoz/Chrome regressiyalari), AppNotification roundtrip, Toshkent vaqti. Eski yiqiladigan widget_test skip (sabab hujjatlangan).
 - [x] **ARCH-08**: Toshkent UTC+5 hack 4 joyda dublikat — bitta util.
 - [x] **BUG-05**: blockAllApps toggle race — eskirgan 60s refetch optimistik holatni qaytaradi.
 - [x] **BUG-07**: `voiceChat.cameraPermissionSnack` tarjima kaliti 3 tilda ham yo'q (xom kalit ko'rinadi).

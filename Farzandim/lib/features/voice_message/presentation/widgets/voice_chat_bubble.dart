@@ -1,6 +1,5 @@
 import 'dart:io';
 
-import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
