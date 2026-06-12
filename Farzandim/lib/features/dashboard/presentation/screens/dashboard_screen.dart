@@ -119,7 +119,7 @@ class _DashboardError extends StatelessWidget {
             padding:
                 const EdgeInsets.symmetric(horizontal: AppDimensions.xl),
             child: Text(
-              "Ma'lumotlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring.",
+              'errors.loadFailedNetwork'.tr(),
               textAlign: TextAlign.center,
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
@@ -131,7 +131,7 @@ class _DashboardError extends StatelessWidget {
             onPressed: onRetry,
             icon: Icon(Icons.refresh_rounded, color: AppColors.accent),
             label: Text(
-              'Qayta urinish',
+              'common.retry'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.accent,
                 fontWeight: FontWeight.w600,

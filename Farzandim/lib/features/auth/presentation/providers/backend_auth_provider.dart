@@ -18,6 +18,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
 import 'package:farzandim/core/network/friendly_error.dart';
@@ -131,7 +132,9 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       await _repo.saveSession(AuthSession(tokens: tokens, user: user));
       state = AuthAuthenticated(user);
     } catch (e) {
-      state = AuthError('Login saqlashda xato: $e');
+      state = AuthError(
+        'auth.errors.saveSessionFailed'.tr(namedArgs: {'error': '$e'}),
+      );
     }
   }
 
@@ -153,10 +156,10 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on DioException catch (e) {
       return friendlyError(
         e,
-        fallback: "Kirishda xatolik. Qaytadan urinib ko'ring.",
+        fallback: 'auth.errors.signInFailed'.tr(),
       );
     } catch (_) {
-      return 'Kutilmagan xatolik yuz berdi.';
+      return 'auth.errors.unexpected'.tr();
     }
   }
 
@@ -181,10 +184,10 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on DioException catch (e) {
       return friendlyError(
         e,
-        fallback: "Ro'yxatdan o'tishda xatolik. Qaytadan urinib ko'ring.",
+        fallback: 'auth.errors.signUpFailed'.tr(),
       );
     } catch (_) {
-      return 'Kutilmagan xatolik yuz berdi.';
+      return 'auth.errors.unexpected'.tr();
     }
   }
 
@@ -202,9 +205,10 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null; // jim — foydalanuvchi o'zi yopdi
     } on DioException catch (e) {
-      return friendlyError(e, fallback: 'Google bilan kirishda xatolik.');
+      return friendlyError(e, fallback: 'auth.errors.googleFailed'.tr());
     } catch (e) {
-      return "Google bilan kirib bo'lmadi: $e";
+      return 'auth.errors.googleFailedDetail'
+          .tr(namedArgs: {'error': '$e'});
     }
   }
 
@@ -230,9 +234,10 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null;
     } on DioException catch (e) {
-      return friendlyError(e, fallback: 'Apple bilan kirishda xatolik.');
+      return friendlyError(e, fallback: 'auth.errors.appleFailed'.tr());
     } catch (e) {
-      return "Apple bilan kirib bo'lmadi: $e";
+      return 'auth.errors.appleFailedDetail'
+          .tr(namedArgs: {'error': '$e'});
     }
   }
 

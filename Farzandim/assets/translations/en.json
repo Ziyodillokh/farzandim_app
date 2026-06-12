@@ -4,7 +4,8 @@
     "sessionExpired": "Session expired — please sign in again.",
     "forbidden": "You don't have permission for this action.",
     "generic": "Couldn't complete the action. Please try again.",
-    "loadFailed": "Couldn't load data. Please try again."
+    "loadFailed": "Couldn't load data. Please try again.",
+    "loadFailedNetwork": "Couldn't load data.\nCheck your internet connection."
   },
   "sos": {
     "wsBanner": "SOS! Your child needs help",
@@ -124,6 +125,21 @@
       "step2": "Go to the Active sessions section",
       "step3": "Tap the Add account button",
       "step4": "Scan this QR code"
+    },
+    "telegramLogin": {
+      "title": "Sign in with Telegram",
+      "unknownError": "Login failed (unknown error)",
+      "parseError": "Couldn't read the login response: {error}"
+    },
+    "errors": {
+      "saveSessionFailed": "Failed to save login: {error}",
+      "signInFailed": "Sign-in failed. Please try again.",
+      "signUpFailed": "Sign-up failed. Please try again.",
+      "unexpected": "An unexpected error occurred.",
+      "googleFailed": "Google sign-in failed.",
+      "googleFailedDetail": "Couldn't sign in with Google: {error}",
+      "appleFailed": "Apple sign-in failed.",
+      "appleFailedDetail": "Couldn't sign in with Apple: {error}"
     }
   },
   "formatters": {
@@ -762,5 +778,78 @@
     "detailNote": "Permission status appears once the child's device reports data.",
     "appsTitle": "{name} permissions",
     "saved": "Saved"
+  },
+  "leaderboard": {
+    "title": "Leaderboard",
+    "periods": {
+      "weekly": "Weekly",
+      "monthly": "Monthly",
+      "all": "All time"
+    },
+    "subtitle": {
+      "weekly": "This week",
+      "monthly": "{month}",
+      "all": "All time"
+    },
+    "byRegions": "By region",
+    "noRatingYet": "No ranking yet",
+    "loadFailed": "Couldn't load the leaderboard",
+    "you": "You",
+    "pickRegion": "Choose a region",
+    "allRegions": "All",
+    "months": {
+      "1": "January",
+      "2": "February",
+      "3": "March",
+      "4": "April",
+      "5": "May",
+      "6": "June",
+      "7": "July",
+      "8": "August",
+      "9": "September",
+      "10": "October",
+      "11": "November",
+      "12": "December"
+    }
+  },
+  "pairRequests": {
+    "fallbackChildName": "Child",
+    "headerTitle": "{name} — Pairing requests",
+    "approvedSnack": "Approved",
+    "approveErrorSnack": "Approval failed",
+    "rejectDialog": {
+      "title": "Reject?",
+      "content": "The child won't be able to connect from the new device. Are you sure?",
+      "cancel": "Cancel",
+      "confirm": "Reject"
+    },
+    "rejectedSnack": "Rejected",
+    "rejectErrorSnack": "Rejection failed",
+    "expired": "Expired",
+    "newDevice": "New device",
+    "appLabel": "App",
+    "ipLabel": "IP",
+    "timeLeftLabel": "Time left",
+    "rejectButton": "Reject",
+    "approveButton": "Approve",
+    "emptyTitle": "No pairing requests",
+    "emptySubtitle": "When your child tries to connect from a new device, the request will appear here."
+  },
+  "repairQr": {
+    "title": "Reconnect",
+    "reconnectedSnack": "{name} reconnected successfully ✅",
+    "emptyTokenError": "Backend returned an empty token",
+    "unexpectedError": "Unexpected error: {error}",
+    "scanHint": "Scan the QR code on your child's phone",
+    "closeButton": "Close",
+    "copyButton": "Copy token",
+    "copiedSnack": "Token copied — paste it into the child app",
+    "timeLeft": "Time left: {seconds}s",
+    "hintsTitle": "When to use this:",
+    "hint1": "The child uninstalled and reinstalled the app",
+    "hint2": "The phone was factory reset",
+    "hint3": "Got a new phone / replaced the phone",
+    "hint4": "The old pairing is broken",
+    "retryButton": "Retry"
   }
 }

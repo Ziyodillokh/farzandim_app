@@ -9,6 +9,7 @@
 // (test/olympiad yechilganda XP beriladi).
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -46,11 +47,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   final ScrollController _scroll = ScrollController();
 
   static const _periods = ['weekly', 'monthly', 'all'];
-  static const _periodLabels = ['Haftalik', 'Oylik', 'Butun davr'];
-  static const _months = [
-    'Yanvar', 'Fevral', 'Mart', 'Aprel', 'May', 'Iyun',
-    'Iyul', 'Avgust', 'Sentyabr', 'Oktyabr', 'Noyabr', 'Dekabr',
-  ];
+  List<String> get _periodLabels => [
+        'leaderboard.periods.weekly'.tr(),
+        'leaderboard.periods.monthly'.tr(),
+        'leaderboard.periods.all'.tr(),
+      ];
 
   LeaderboardArgs get _args =>
       (childId: widget.childId, period: _period, region: _region);
@@ -77,12 +78,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   String get _periodSubtitle {
     switch (_period) {
       case 'weekly':
-        return 'Shu hafta';
+        return 'leaderboard.subtitle.weekly'.tr();
       case 'monthly':
         final t = tashkentNow();
-        return '${_months[t.month - 1]} oyi';
+        return 'leaderboard.subtitle.monthly'.tr(
+          namedArgs: {'month': 'leaderboard.months.${t.month}'.tr()},
+        );
       default:
-        return 'Butun davr';
+        return 'leaderboard.subtitle.all'.tr();
     }
   }
 
@@ -179,9 +182,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         Expanded(
           child: Column(
             children: [
-              const Text(
-                'Reyting',
-                style: TextStyle(
+              Text(
+                'leaderboard.title'.tr(),
+                style: const TextStyle(
                   color: Colors.white,
                   fontSize: 20,
                   fontWeight: FontWeight.w800,
@@ -258,7 +261,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 color: Colors.white, size: 18),
             const SizedBox(width: 6),
             Text(
-              _region ?? "Viloyatlar bo'yicha",
+              _region ?? 'leaderboard.byRegions'.tr(),
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -283,12 +286,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
     if (top3.isEmpty) {
-      return const SizedBox(
+      return SizedBox(
         height: 120,
         child: Center(
           child: Text(
-            "Hali reyting yo'q",
-            style: TextStyle(color: Colors.white, fontSize: 15),
+            'leaderboard.noRatingYet'.tr(),
+            style: const TextStyle(color: Colors.white, fontSize: 15),
           ),
         ),
       );
@@ -382,14 +385,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('Reyting yuklanmadi',
+            Text('leaderboard.loadFailed'.tr(),
                 style: AppTextStyles.bodyM
                     .copyWith(color: AppColors.textSecondary)),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () =>
                   ref.read(leaderboardProvider(_args).notifier).refresh(),
-              child: const Text('Qayta urinish'),
+              child: Text('common.retry'.tr()),
             ),
           ],
         ),
@@ -491,7 +494,7 @@ class _LeaderboardRow extends StatelessWidget {
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
-                          'Siz',
+                          'leaderboard.you'.tr(),
                           style: AppTextStyles.label.copyWith(
                             color: AppColors.onPrimary,
                             fontWeight: FontWeight.w700,
@@ -656,7 +659,7 @@ class _RegionPickerSheet extends StatelessWidget {
             child: Row(
               children: [
                 Text(
-                  'Hududni tanlang',
+                  'leaderboard.pickRegion'.tr(),
                   style: AppTextStyles.headlineL.copyWith(fontSize: 18),
                 ),
                 const Spacer(),
@@ -672,7 +675,7 @@ class _RegionPickerSheet extends StatelessWidget {
             child: ListView(
               shrinkWrap: true,
               children: [
-                _tile(context, label: 'Hammasi', value: '',
+                _tile(context, label: 'leaderboard.allRegions'.tr(), value: '',
                     isSelected: selected == null),
                 for (final r in regions)
                   _tile(context, label: r, value: r, isSelected: r == selected),

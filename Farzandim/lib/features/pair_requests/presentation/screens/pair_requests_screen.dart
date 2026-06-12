@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -25,7 +26,7 @@ class PairRequestsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final child = ref.watch(childByIdProvider(childId));
-    final childName = child?.name ?? 'Bola';
+    final childName = child?.name ?? 'pairRequests.fallbackChildName'.tr();
     final requestsAsync = ref.watch(pendingPairRequestsProvider(childId));
 
     return Scaffold(
@@ -94,7 +95,8 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                "$childName — Pair so'rovlar",
+                'pairRequests.headerTitle'
+                    .tr(namedArgs: {'name': childName}),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -145,7 +147,11 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
     ref.invalidate(pendingPairRequestsProvider(widget.childId));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Tasdiqlandi' : 'Tasdiqlash xato'),
+        content: Text(
+          ok
+              ? 'pairRequests.approvedSnack'.tr()
+              : 'pairRequests.approveErrorSnack'.tr(),
+        ),
         backgroundColor: ok ? AppColors.success : AppColors.error,
       ),
     );
@@ -158,18 +164,18 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          'Rad etilsinmi?',
+          'pairRequests.rejectDialog.title'.tr(),
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          'Bola yangi qurilmadan ulana olmaydi. Ishonchingiz komilmi?',
+          'pairRequests.rejectDialog.content'.tr(),
           style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
-              'Bekor qilish',
+              'pairRequests.rejectDialog.cancel'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -178,7 +184,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'Rad etish',
+              'pairRequests.rejectDialog.confirm'.tr(),
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
@@ -197,7 +203,11 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
     ref.invalidate(pendingPairRequestsProvider(widget.childId));
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'Rad etildi' : 'Rad etish xato'),
+        content: Text(
+          ok
+              ? 'pairRequests.rejectedSnack'.tr()
+              : 'pairRequests.rejectErrorSnack'.tr(),
+        ),
         backgroundColor: ok ? AppColors.warning : AppColors.error,
       ),
     );
@@ -205,7 +215,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   }
 
   String _formatLeft(Duration d) {
-    if (d <= Duration.zero) return "Muddati o'tdi";
+    if (d <= Duration.zero) return 'pairRequests.expired'.tr();
     final m = d.inMinutes;
     final s = d.inSeconds % 60;
     return '$m:${s.toString().padLeft(2, '0')}';
@@ -235,7 +245,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Yangi qurilma',
+                        'pairRequests.newDevice'.tr(),
                         style: AppTextStyles.bodyM.copyWith(
                           fontWeight: FontWeight.w700,
                         ),
@@ -255,18 +265,18 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
             if (widget.request.appVersion != null)
               _InfoRow(
                 icon: Icons.app_settings_alt,
-                label: 'Ilova',
+                label: 'pairRequests.appLabel'.tr(),
                 value: widget.request.appVersion!,
               ),
             if (widget.request.ipAddress != null)
               _InfoRow(
                 icon: Icons.public,
-                label: 'IP',
+                label: 'pairRequests.ipLabel'.tr(),
                 value: widget.request.ipAddress!,
               ),
             _InfoRow(
               icon: Icons.timer_outlined,
-              label: 'Muddat',
+              label: 'pairRequests.timeLeftLabel'.tr(),
               value: _formatLeft(_left),
               valueColor: isExpired ? AppColors.error : AppColors.accent,
             ),
@@ -287,7 +297,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                       ),
                     ),
                     icon: const Icon(Icons.close_rounded, size: 18),
-                    label: const Text('Rad etish'),
+                    label: Text('pairRequests.rejectButton'.tr()),
                   ),
                 ),
                 const SizedBox(width: AppDimensions.sm),
@@ -313,7 +323,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                           )
                         : const Icon(Icons.check_rounded, size: 18),
                     label: Text(
-                      'Tasdiqlash',
+                      'pairRequests.approveButton'.tr(),
                       style: AppTextStyles.bodyM.copyWith(
                         fontWeight: FontWeight.w600,
                         color: AppColors.onPrimary,
@@ -396,14 +406,13 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.lg),
             Text(
-              "Pair so'rovlar yo'q",
+              'pairRequests.emptyTitle'.tr(),
               style: AppTextStyles.headlineL.copyWith(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              "Bola yangi qurilmadan ulanmoqchi bo'lganda shu yerda "
-              "paydo bo'ladi.",
+              'pairRequests.emptySubtitle'.tr(),
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textSecondary,
               ),

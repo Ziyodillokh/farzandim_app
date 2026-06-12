@@ -4,7 +4,8 @@
     "sessionExpired": "Sessiya muddati tugagan — qaytadan kiring.",
     "forbidden": "Bu amalga ruxsatingiz yo'q.",
     "generic": "Amalni bajarib bo'lmadi. Qayta urinib ko'ring.",
-    "loadFailed": "Ma'lumotlarni yuklab bo'lmadi. Qayta urinib ko'ring."
+    "loadFailed": "Ma'lumotlarni yuklab bo'lmadi. Qayta urinib ko'ring.",
+    "loadFailedNetwork": "Ma'lumotlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring."
   },
   "sos": {
     "wsBanner": "SOS! Bola yordam so'ramoqda",
@@ -124,6 +125,21 @@
       "step2": "Faol sessiyalar bo'limiga kiring",
       "step3": "Boshqa hisob qo'shish tugmasini bosing",
       "step4": "Ushbu QR kodni skanerlang"
+    },
+    "telegramLogin": {
+      "title": "Telegram bilan kirish",
+      "unknownError": "Login xato (noma'lum)",
+      "parseError": "Login javobini o'qib bo'lmadi: {error}"
+    },
+    "errors": {
+      "saveSessionFailed": "Login saqlashda xato: {error}",
+      "signInFailed": "Kirishda xatolik. Qaytadan urinib ko'ring.",
+      "signUpFailed": "Ro'yxatdan o'tishda xatolik. Qaytadan urinib ko'ring.",
+      "unexpected": "Kutilmagan xatolik yuz berdi.",
+      "googleFailed": "Google bilan kirishda xatolik.",
+      "googleFailedDetail": "Google bilan kirib bo'lmadi: {error}",
+      "appleFailed": "Apple bilan kirishda xatolik.",
+      "appleFailedDetail": "Apple bilan kirib bo'lmadi: {error}"
     }
   },
   "formatters": {
@@ -762,5 +778,78 @@
     "detailNote": "Bu ruxsatning holati bola qurilmasi ma'lumot yuborgach aniq ko'rinadi.",
     "appsTitle": "{name} uchun ruxsatlar",
     "saved": "Saqlandi"
+  },
+  "leaderboard": {
+    "title": "Reyting",
+    "periods": {
+      "weekly": "Haftalik",
+      "monthly": "Oylik",
+      "all": "Butun davr"
+    },
+    "subtitle": {
+      "weekly": "Shu hafta",
+      "monthly": "{month} oyi",
+      "all": "Butun davr"
+    },
+    "byRegions": "Viloyatlar bo'yicha",
+    "noRatingYet": "Hali reyting yo'q",
+    "loadFailed": "Reyting yuklanmadi",
+    "you": "Siz",
+    "pickRegion": "Hududni tanlang",
+    "allRegions": "Hammasi",
+    "months": {
+      "1": "Yanvar",
+      "2": "Fevral",
+      "3": "Mart",
+      "4": "Aprel",
+      "5": "May",
+      "6": "Iyun",
+      "7": "Iyul",
+      "8": "Avgust",
+      "9": "Sentyabr",
+      "10": "Oktyabr",
+      "11": "Noyabr",
+      "12": "Dekabr"
+    }
+  },
+  "pairRequests": {
+    "fallbackChildName": "Bola",
+    "headerTitle": "{name} — Pair so'rovlar",
+    "approvedSnack": "Tasdiqlandi",
+    "approveErrorSnack": "Tasdiqlash xato",
+    "rejectDialog": {
+      "title": "Rad etilsinmi?",
+      "content": "Bola yangi qurilmadan ulana olmaydi. Ishonchingiz komilmi?",
+      "cancel": "Bekor qilish",
+      "confirm": "Rad etish"
+    },
+    "rejectedSnack": "Rad etildi",
+    "rejectErrorSnack": "Rad etish xato",
+    "expired": "Muddati o'tdi",
+    "newDevice": "Yangi qurilma",
+    "appLabel": "Ilova",
+    "ipLabel": "IP",
+    "timeLeftLabel": "Muddat",
+    "rejectButton": "Rad etish",
+    "approveButton": "Tasdiqlash",
+    "emptyTitle": "Pair so'rovlar yo'q",
+    "emptySubtitle": "Bola yangi qurilmadan ulanmoqchi bo'lganda shu yerda paydo bo'ladi."
+  },
+  "repairQr": {
+    "title": "Qayta ulash",
+    "reconnectedSnack": "{name} muvaffaqiyatli qayta ulandi ✅",
+    "emptyTokenError": "Backend bo'sh token qaytardi",
+    "unexpectedError": "Kutilmagan xato: {error}",
+    "scanHint": "QR kodni bolaning telefonida skanerlang",
+    "closeButton": "Yopish",
+    "copyButton": "Token'ni nusxa olish",
+    "copiedSnack": "Token nusxa olindi — bola ilovasiga joylang",
+    "timeLeft": "Qolgan vaqt: {seconds}s",
+    "hintsTitle": "Qaysi holatlarda ishlatiladi:",
+    "hint1": "Bola ilovani o'chirib qayta o'rnatgan",
+    "hint2": "Telefon zavod sozlamalariga qaytarilgan",
+    "hint3": "Yangi telefon olgan / almashtirgan",
+    "hint4": "Eski pairing buzilgan",
+    "retryButton": "Qaytadan"
   }
 }

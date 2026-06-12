@@ -89,8 +89,10 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       ref.read(childrenRefreshTickProvider.notifier).state++;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content:
-              Text('${widget.childName} muvaffaqiyatli qayta ulandi ✅'),
+          content: Text(
+            'repairQr.reconnectedSnack'
+                .tr(namedArgs: {'name': widget.childName}),
+          ),
           backgroundColor: AppColors.success,
         ),
       );
@@ -121,7 +123,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       final token = data['token'] as String?;
       final expiresIn = (data['expiresInSec'] as num?)?.toInt() ?? 45;
       if (token == null || token.isEmpty) {
-        throw Exception("Backend bo'sh token qaytardi");
+        throw Exception('repairQr.emptyTokenError'.tr());
       }
       if (!mounted) return;
       setState(() {
@@ -136,7 +138,10 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = 'Kutilmagan xato: $e');
+      setState(() {
+        _error =
+            'repairQr.unexpectedError'.tr(namedArgs: {'error': '$e'});
+      });
     }
   }
 
@@ -169,7 +174,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           onPressed: () => Navigator.pop(context, false),
         ),
         title: Text(
-          'Qayta ulash',
+          'repairQr.title'.tr(),
           style: TextStyle(
             color: AppColors.textPrimary,
             fontWeight: FontWeight.w800,
@@ -193,7 +198,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
               ),
               const SizedBox(height: 6),
               Text(
-                'QR kodni bolaning telefonida skanerlang',
+                'repairQr.scanHint'.tr(),
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textSecondary,
@@ -221,7 +226,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
                   side: BorderSide(color: AppColors.border),
                 ),
                 child: Text(
-                  'Yopish',
+                  'repairQr.closeButton'.tr(),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
@@ -288,9 +293,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           if (!mounted) return;
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-              content: const Text(
-                'Token nusxa olindi — bola ilovasiga joylang',
-              ),
+              content: Text('repairQr.copiedSnack'.tr()),
               backgroundColor: AppColors.primary,
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 2),
@@ -298,7 +301,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           );
         },
         icon: const Icon(Icons.content_copy_rounded, size: 18),
-        label: const Text("Token'ni nusxa olish"),
+        label: Text('repairQr.copyButton'.tr()),
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
@@ -315,7 +318,8 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         Icon(Icons.timer_outlined, size: 16, color: color),
         const SizedBox(width: 6),
         Text(
-          'Qolgan vaqt: ${_remainingSec}s',
+          'repairQr.timeLeft'
+              .tr(namedArgs: {'seconds': '$_remainingSec'}),
           style: AppTextStyles.bodyS.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
@@ -336,17 +340,17 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
-            'Qaysi holatlarda ishlatiladi:',
+            'repairQr.hintsTitle'.tr(),
             style: AppTextStyles.label.copyWith(
               color: AppColors.textSecondary,
               fontWeight: FontWeight.w600,
             ),
           ),
           const SizedBox(height: 6),
-          _hintLine("Bola ilovani o'chirib qayta o'rnatgan"),
-          _hintLine('Telefon zavod sozlamalariga qaytarilgan'),
-          _hintLine('Yangi telefon olgan / almashtirgan'),
-          _hintLine('Eski pairing buzilgan'),
+          _hintLine('repairQr.hint1'.tr()),
+          _hintLine('repairQr.hint2'.tr()),
+          _hintLine('repairQr.hint3'.tr()),
+          _hintLine('repairQr.hint4'.tr()),
         ],
       ),
     );
@@ -394,7 +398,7 @@ class _ErrorBox extends StatelessWidget {
             onPressed: onRetry,
             icon: Icon(Icons.refresh, color: AppColors.primary),
             label: Text(
-              'Qaytadan',
+              'repairQr.retryButton'.tr(),
               style: TextStyle(color: AppColors.primary),
             ),
           ),

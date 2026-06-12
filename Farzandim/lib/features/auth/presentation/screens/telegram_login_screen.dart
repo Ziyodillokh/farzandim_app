@@ -24,6 +24,7 @@
 
 import 'dart:convert';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/config/env_config.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
@@ -91,7 +92,8 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
       if (raw['ok'] != true) {
         if (!mounted) return;
         setState(() {
-          _error = (raw['error'] as String?) ?? "Login xato (noma'lum)";
+          _error = (raw['error'] as String?) ??
+              'auth.telegramLogin.unknownError'.tr();
         });
         return;
       }
@@ -118,7 +120,8 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = "Login javobini o'qib bo'lmadi: $e";
+        _error = 'auth.telegramLogin.parseError'
+            .tr(namedArgs: {'error': '$e'});
       });
     }
   }
@@ -127,7 +130,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Telegram bilan kirish'),
+        title: Text('auth.telegramLogin.title'.tr()),
         backgroundColor: AppColors.surface,
       ),
       backgroundColor: AppColors.background,

@@ -7,7 +7,7 @@ name: Deploy → test.farzandimedu.uz
 # Kerakli repo secretlari (Settings → Secrets and variables → Actions):
 #   SSH_HOST              – server IP/host (masalan 95.182.118.39)
 #   SSH_USER              – SSH foydalanuvchi (masalan farzandim)
-#   SSH_PASSWORD          – SSH paroli (masalan Adgjmptw1@111) — TO'G'RI kiritilishi shart!
+#   SSH_PASSWORD          – SSH paroli — TO'G'RI kiritilishi shart!
 #   FIREBASE_CONFIGS_B64  – base64( tar.gz ): firebase_options.dart + google-services.json (4 fayl)
 #   MAPS_API_KEY          – (ixtiyoriy) Google Maps kaliti; bo'sh bo'lsa xarita ishlamaydi
 #   ANDROID_SIGNING_B64   – base64( tar.gz ): release keystore + key.properties (parent+child).
@@ -73,6 +73,37 @@ jobs:
             flutter:
               - 'Farzandim/**'
               - 'farzandim_child/**'
+
+  # ─────────────────────────── SIFAT DARVOZASI (parent app) ───────────────────────────
+  # Regressiya to'sig'i: parent analyze (info ham fail) + unit testlar.
+  # Yiqilsa flutter/apk job'lar ISHGA TUSHMAYDI — buzuq build serverga chiqmaydi.
+  parent-quality:
+    needs: changes
+    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Restore Firebase config
+        env:
+          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
+        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: flutter analyze (0 issue talab — info ham xato)
+        working-directory: Farzandim
+        run: |
+          flutter pub get
+          flutter analyze --fatal-infos
+
+      - name: flutter test (unit testlar)
+        working-directory: Farzandim
+        run: flutter test
 
   # ─────────────────────────── BACKEND (NestJS) ───────────────────────────
   backend:
@@ -179,7 +210,8 @@ jobs:
 
   # ─────────────────────────── FLUTTER (parent + child → web) ───────────────────────────
   flutter:
-    needs: changes
+    # parent-quality o'tmasa deploy YO'Q (sifat darvozasi).
+    needs: [changes, parent-quality]
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
     env:
@@ -247,7 +279,8 @@ jobs:
   # ─────────────────────────── APK (parent + child → release .apk) ───────────────────────────
   # --no-shrink: R8 minify o'chiq (CI'da R8 "Compilation failed" bermasin). Test uchun yetarli.
   apk:
-    needs: changes
+    # parent-quality o'tmasa APK build YO'Q (sifat darvozasi).
+    needs: [changes, parent-quality]
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
     env:
