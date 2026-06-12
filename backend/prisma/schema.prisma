@@ -172,11 +172,15 @@ model Location {
   batteryLevel Int?    @map("battery_level")
   isCharging  Boolean? @map("is_charging")
   createdAt   DateTime @default(now()) @map("created_at")
+  // Kliyent GPS fix vaqti — offline flush'da createdAt (server vaqti)
+  // noto'g'ri bo'ladi, tarix shu ustun bo'yicha filtrlanadi/saralanadi.
+  capturedAt  DateTime? @map("captured_at")
   
   child       Child    @relation(fields: [childId], references: [id], onDelete: Cascade)
 
   @@map("locations")
   @@index([childId, createdAt(sort: Desc)])
+  @@index([childId, capturedAt(sort: Desc)])
 }
 
 // ============================================

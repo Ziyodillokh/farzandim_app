@@ -19,6 +19,15 @@ export class LocationHistoryQueryDto {
   @IsDateString()
   to?: string;
 
+  // Cursor: shu vaqtdan ESKI nuqtalar qaytadi — to'liq kunni sahifalab
+  // olish uchun (limit bilan birga).
+  @ApiPropertyOptional({
+    description: 'Cursor: captured before this ISO date',
+  })
+  @IsOptional()
+  @IsDateString()
+  before?: string;
+
   @ApiPropertyOptional({
     description: 'Max number of records (1-500, default 100)',
     example: 100,

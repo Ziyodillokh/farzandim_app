@@ -19,6 +19,7 @@ import {
 } from '@nestjs/swagger';
 import { LocationService } from './location.service';
 import { WriteLocationDto } from './dto/write-location.dto';
+import { WriteLocationBatchDto } from './dto/write-location-batch.dto';
 import { LocationHistoryQueryDto } from './dto/location-history-query.dto';
 import { CurrentUser } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
@@ -48,6 +49,33 @@ export class LocationController {
     @Body() dto: WriteLocationDto,
   ) {
     return this.locationService.writeLocation(user.userId, dto);
+  }
+
+  @Post('location/batch')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Write a batch of GPS points (offline buffer flush)',
+  })
+  @ApiResponse({ status: 200, description: 'Points processed' })
+  async writeLocationBatch(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: WriteLocationBatchDto,
+  ) {
+    return this.locationService.writeLocationBatch(user.userId, dto.points);
+  }
+
+  @Post('children/:childId/location/request-update')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Ask child device for a fresh GPS fix (data-only FCM wake)',
+  })
+  @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Wake push sent (best-effort)' })
+  async requestLocationUpdate(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationService.requestLocationUpdate(childId, user.userId);
   }
 
   @Get('children/:childId/location')

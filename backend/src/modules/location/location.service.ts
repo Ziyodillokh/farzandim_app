@@ -30,12 +30,16 @@ const MIN_STOP_SEC = 180; // 3 daqiqa
 //    "borib-kelish" zigzag + shishgan masofa (masalan 356 km). ──
 /** Aniqligi shundan yomon (kattaroq, m) fix history'ga yozilmaydi (cell-tower/garbage). */
 const MAX_ACCURACY_M = 100;
-/** Harakat chegarasi (m/s) — shundan tez bo'lsa "harakatda" deb hisoblanadi. */
-const MOVING_SPEED_MS = 1.3;
+/** Harakat chegarasi (m/s) — shundan tez bo'lsa "harakatda" deb hisoblanadi.
+ *  1.0 m/s: sekin yurish ham harakat sanaladi (bola yurishi ~1.0-1.4 m/s),
+ *  aks holda piyoda yo'l "statsionar" filtrga tushib chizilmay qolardi. */
+const MOVING_SPEED_MS = 1.0;
 /** Harakatda: yo'l chizig'i shu qadamda yoziladi (m) — nozik, ko'cha bo'ylab. */
 const MOVE_MIN_M = 12;
-/** Statsionar/noma'lum: jitter'ni yutish uchun shundan kam siljish yozilmaydi (m). */
-const JITTER_MIN_M = 35;
+/** Statsionar/noma'lum: jitter'ni yutish uchun shundan kam siljish yozilmaydi (m).
+ *  25m — uy ichidagi GPS sakrashini hali ham yutadi, lekin sekin siljishni
+ *  avvalgi 35m kabi uzoq yutib yubormaydi. */
+const JITTER_MIN_M = 25;
 
 /** detectStop uchun kerakli minimal Child maydonlari. */
 interface StopState {
@@ -127,27 +131,37 @@ export class LocationService {
     // ── Kirish filtri: jitter/garbage nuqtalar history'ga yozilmaydi ──
     const acc = rest.accuracy ?? null;
     const spd = rest.speed ?? null;
+    const capturedAt = this.parseAt(dto.capturedAt);
 
-    // Oxirgi yozilgan nuqta — dedup VA filtr-branch heartbeat emit uchun
-    // (low_accuracy tekshiruvidan OLDIN olinadi: o'sha branch ham emit qilsin).
+    // Oxirgi yozilgan nuqta — dedup va filtr-branch emit uchun
+    // (low_accuracy tekshiruvidan oldin olinadi: o'sha branch ham emit qilsin).
     const lastLocation = await this.prisma.location.findFirst({
       where: { childId },
       orderBy: { createdAt: 'desc' },
     });
 
-    // Filtr branch'lari uchun yengil realtime heartbeat — nuqta history'ga
-    // YOZILMASA ham parent xaritasi "jonli" qoladi (vaqt/batareya yangilanadi).
-    // Aks holda bola statsionar bo'lsa (har doim too_close) parent'da oxirgi
-    // yangilanish vaqti soatlab "qotib" turardi.
-    const emitHeartbeat = () => {
-      if (!lastLocation) return;
+    // Jonli kanal uchun emit. Muhim: too_close nuqta ham HAQIQIY joriy
+    // pozitsiya — history'ga yozilmasa ham xaritaga real koordinata bilan
+    // yuboramiz. Avval bu yerda eski nuqta yangi vaqt bilan ketardi —
+    // ota-ona xaritasi "yangilangan" ko'rinib, joy esa qotib qolardi.
+    const emitLive = (
+      lat: number,
+      lng: number,
+      at: Date,
+      extra: Record<string, unknown> = {},
+    ) => {
       const payload = {
         childId,
         location: {
-          ...lastLocation,
-          batteryLevel: rest.batteryLevel ?? lastLocation.batteryLevel,
-          isCharging: rest.isCharging ?? lastLocation.isCharging,
-          createdAt: new Date(),
+          latitude: lat,
+          longitude: lng,
+          accuracy: acc,
+          speed: spd,
+          batteryLevel: rest.batteryLevel ?? child.batteryLevel,
+          isCharging: rest.isCharging ?? child.isCharging,
+          createdAt: at,
+          capturedAt: at,
+          ...extra,
         },
       };
       this.realtime.emitToUser(child.parentId, 'location:updated', payload);
@@ -156,12 +170,21 @@ export class LocationService {
 
     // (1) Aniqligi juda yomon (cell-tower) fix — history'ga yozmaymiz, lekin
     //     qurilma ma'lumotini (batareya/last-seen) baribir yangilaymiz.
+    //     Emit'da oxirgi ISHONCHLI nuqta o'zining haqiqiy vaqti bilan ketadi
+    //     (soxta "hozir" emas) — klient eskirganlikni ko'rsata oladi.
     if (acc !== null && acc > MAX_ACCURACY_M) {
       await this.prisma.child.update({
         where: { id: childId },
         data: childDeviceUpdate,
       });
-      emitHeartbeat();
+      if (lastLocation) {
+        emitLive(
+          lastLocation.latitude,
+          lastLocation.longitude,
+          lastLocation.capturedAt ?? lastLocation.createdAt,
+          { accuracy: lastLocation.accuracy, stale: true },
+        );
+      }
       return { ok: true, written: false, reason: 'low_accuracy', accuracy: acc };
     }
 
@@ -172,17 +195,26 @@ export class LocationService {
         latitude,
         longitude,
       );
-      // (2) Harakatda bo'lsa nozik (12m), statsionar/noma'lum bo'lsa katta
-      //     (35m) chegara — bu uydagi GPS jitter'ini "yutadi" (zigzag/soxta
-      //     borib-kelish yo'qoladi), lekin haqiqiy harakatni saqlaydi.
-      const isMoving = spd !== null && spd >= MOVING_SPEED_MS;
+      // (2) Harakatda bo'lsa nozik (12m), statsionar/noma'lum bo'lsa kattaroq
+      //     (25m) chegara — uydagi GPS jitter'ini yutadi, haqiqiy harakatni
+      //     saqlaydi. Kliyent speed bermasa (ko'p qurilmada 0/null keladi)
+      //     tezlikni oldingi nuqtadan o'zimiz hisoblaymiz — busiz piyoda
+      //     yurish doim "statsionar" sanalib yo'l chizilmay qolardi.
+      let effSpeed = spd;
+      if ((effSpeed === null || effSpeed === 0) && lastLocation) {
+        const lastAt = lastLocation.capturedAt ?? lastLocation.createdAt;
+        const dtSec = Math.max(1, (capturedAt.getTime() - lastAt.getTime()) / 1000);
+        effSpeed = distance / dtSec;
+      }
+      const isMoving = effSpeed !== null && effSpeed >= MOVING_SPEED_MS;
       const minMove = isMoving ? MOVE_MIN_M : JITTER_MIN_M;
       if (distance < minMove) {
         await this.prisma.child.update({
           where: { id: childId },
           data: childDeviceUpdate,
         });
-        emitHeartbeat();
+        // Haqiqiy joriy koordinata jonli kanalga ketadi (yozilmasa ham).
+        emitLive(latitude, longitude, capturedAt);
         return {
           ok: true,
           written: false,
@@ -203,6 +235,7 @@ export class LocationService {
         speed: rest.speed,
         batteryLevel: rest.batteryLevel,
         isCharging: rest.isCharging,
+        capturedAt,
       },
     });
 
@@ -353,6 +386,8 @@ export class LocationService {
         batteryLevel: child.batteryLevel,
         isCharging: child.isCharging,
         lastSeenAt: child.lastSeenAt,
+        // Ota-ona xaritasi "fon kuzatuv cheklangan" ogohlantirishi uchun.
+        locationPermission: child.locationPermission,
       },
     };
   }
@@ -376,24 +411,35 @@ export class LocationService {
       throw new ForbiddenException('Forbidden');
     }
 
-    const { from, to, limit } = query;
+    const { from, to, before, limit } = query;
 
-    const createdAtFilter: Record<string, Date> = {};
-    if (from) createdAtFilter.gte = new Date(from);
-    if (to) createdAtFilter.lte = new Date(to);
+    // capturedAt bo'yicha filtrlaymiz — offline flush qilingan nuqtalar
+    // o'zining haqiqiy fix vaqti bilan to'g'ri kunga tushadi (createdAt
+    // server qabul vaqti bo'lib safarni noto'g'ri kunga olib ketardi).
+    // Eski yozuvlarda capturedAt migratsiyada createdAt bilan to'ldirilgan.
+    const atFilter: Record<string, Date> = {};
+    if (from) atFilter.gte = new Date(from);
+    if (to) atFilter.lte = new Date(to);
+    // Cursor: to'liq kunni 500 talik sahifalar bilan olish uchun.
+    if (before) atFilter.lt = new Date(before);
 
+    const take = limit ?? 100;
     const locations = await this.prisma.location.findMany({
       where: {
         childId,
-        ...(Object.keys(createdAtFilter).length > 0 && {
-          createdAt: createdAtFilter,
-        }),
+        ...(Object.keys(atFilter).length > 0 && { capturedAt: atFilter }),
       },
-      orderBy: { createdAt: 'desc' },
-      take: limit ?? 100,
+      orderBy: { capturedAt: 'desc' },
+      take,
     });
 
-    return { locations, count: locations.length };
+    return {
+      locations,
+      count: locations.length,
+      // To'liq sahifa qaytdi = ehtimol yana bor; klient oxirgi nuqtaning
+      // capturedAt'i bilan keyingi sahifani so'raydi.
+      hasMore: locations.length === take,
+    };
   }
 
   /* ------------------------------------------------------------------ */
@@ -542,5 +588,61 @@ export class LocationService {
       if (!Number.isNaN(d.getTime())) return d;
     }
     return new Date();
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /location/batch — offline buferdan yig'ilgan nuqtalar          */
+  /* ------------------------------------------------------------------ */
+
+  /** Nuqtalarni eski→yangi tartibda yozadi (dedup/stop-detection oxirgi
+   *  nuqtaga tayanadi). Bitta nuqta xatosi qolganlarini to'xtatmaydi. */
+  async writeLocationBatch(userId: string, points: WriteLocationDto[]) {
+    const sorted = [...points].sort((a, b) => {
+      const ta = a.capturedAt ? new Date(a.capturedAt).getTime() : 0;
+      const tb = b.capturedAt ? new Date(b.capturedAt).getTime() : 0;
+      return ta - tb;
+    });
+    let written = 0;
+    let skipped = 0;
+    for (const point of sorted) {
+      try {
+        const res = await this.writeLocation(userId, point);
+        if (res.written) written++;
+        else skipped++;
+      } catch (err) {
+        skipped++;
+        this.logger.warn({ err }, 'batch point failed');
+      }
+    }
+    return { ok: true, written, skipped, total: points.length };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /children/:childId/location/request-update — wake push        */
+  /* ------------------------------------------------------------------ */
+
+  /** Ota-ona xaritani ochganda bola qurilmasiga data-only FCM yuboradi —
+   *  bola ilovasi yangi GPS fix olib darhol POST qiladi. Servis o'lik
+   *  bo'lsa ham FCM ilovani qisqa uyg'otadi (best-effort). */
+  async requestLocationUpdate(childId: string, userId: string) {
+    const child = await this.prisma.child.findUnique({
+      where: { id: childId },
+    });
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+    if (child.parentId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    if (!child.childUserId) {
+      return { ok: false, reason: 'not_paired' };
+    }
+    const result = await this.fcm.sendPushToUser(child.childUserId, {
+      title: '',
+      body: '',
+      dataOnly: true,
+      data: { type: 'location_wake', childId },
+    });
+    return { ok: true, sent: result.sent };
   }
 }
