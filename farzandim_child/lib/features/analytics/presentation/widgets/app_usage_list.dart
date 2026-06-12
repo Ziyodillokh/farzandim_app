@@ -100,8 +100,18 @@ class AppUsageList extends ConsumerWidget {
   }) {
     final seen = <String>{};
     final result = <AppUsageEntry>[];
+    final limitedPkgs = {
+      for (final lim in limits)
+        if (lim.isActive) lim.packageName,
+    };
 
     for (final entry in usage) {
+      // 1 daqiqadan kam ishlatilganlar ro'yxatni shishiradi — ko'rsatmaymiz.
+      // Limiti borlar istisno: progress ko'rinib turishi kerak.
+      if (entry.totalTimeMs < 60000 &&
+          !limitedPkgs.contains(entry.packageName)) {
+        continue;
+      }
       seen.add(entry.packageName);
       // Real nomni installed-apps'dan ustun ko'ramiz — usage endpoint
       // bazan packageName qaytaradi.
