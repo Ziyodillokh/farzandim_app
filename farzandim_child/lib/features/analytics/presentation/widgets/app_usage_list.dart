@@ -13,6 +13,7 @@ import 'dart:convert';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
+import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:flutter/material.dart';
@@ -28,6 +29,7 @@ class AppUsageList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final usageAsync = ref.watch(dailyUsageProvider);
     final limitsAsync = ref.watch(childAppLimitsProvider);
+    final installedAsync = ref.watch(installedAppsMapProvider);
 
     return Container(
       decoration: BoxDecoration(
@@ -39,13 +41,26 @@ class AppUsageList extends ConsumerWidget {
         loading: () => const _LoadingBox(),
         error: (_, __) => const _EmptyBox(text: "Ma'lumot yuklanmadi"),
         data: (day) {
-          if (day.apps.isEmpty) {
+          final limits = limitsAsync.valueOrNull ?? const <AppLimit>[];
+          final installed = installedAsync.valueOrNull ??
+              const <String, InstalledAppMeta>{};
+
+          // Parent panel bilan bir xil semantika: bugun ishlatilgan ilovalar
+          // + ota-ona qo'ygan cheklov bor (lekin bugun ochilmagan) ilovalar.
+          // Cheklovsiz va ochilmagan ilovalar chiqarib tashlanadi.
+          final merged = _mergeUsageWithLimits(
+            usage: day.apps,
+            limits: limits,
+            installed: installed,
+          );
+
+          if (merged.isEmpty) {
             return const _EmptyBox(text: "Bugun ilova ishlatilmagan");
           }
-          final visible = limit != null && limit! < day.apps.length
-              ? day.apps.take(limit!).toList()
-              : day.apps;
-          final limits = limitsAsync.valueOrNull ?? const <AppLimit>[];
+
+          final visible = limit != null && limit! < merged.length
+              ? merged.take(limit!).toList()
+              : merged;
           final limitMap = <String, AppLimit>{
             for (final l in limits) l.packageName: l,
           };
@@ -70,6 +85,66 @@ class AppUsageList extends ConsumerWidget {
         },
       ),
     );
+  }
+
+  /// Usage + cheklov ro'yxatlarini birlashtiradi.
+  ///
+  /// 1. Usage'dagi har bir ilova (bugun ≥ 0 ms) ro'yxatga kiradi.
+  /// 2. Cheklov bor, lekin usage'da yo'q ilovalar 0 ms bilan qo'shiladi —
+  ///    parent app `combineAppData()` semantikasi bilan moslashadi.
+  /// 3. Sort: foydalanish vaqti DESC, keyin ilova nomi.
+  List<AppUsageEntry> _mergeUsageWithLimits({
+    required List<AppUsageEntry> usage,
+    required List<AppLimit> limits,
+    required Map<String, InstalledAppMeta> installed,
+  }) {
+    final seen = <String>{};
+    final result = <AppUsageEntry>[];
+
+    for (final entry in usage) {
+      seen.add(entry.packageName);
+      // Real nomni installed-apps'dan ustun ko'ramiz — usage endpoint
+      // bazan packageName qaytaradi.
+      final meta = installed[entry.packageName];
+      final realName =
+          (meta?.appName.isNotEmpty ?? false) ? meta!.appName : entry.appName;
+      result.add(
+        AppUsageEntry(
+          packageName: entry.packageName,
+          appName: realName.isEmpty ? entry.packageName : realName,
+          totalTimeMs: entry.totalTimeMs,
+          lastTimeUsed: entry.lastTimeUsed,
+          iconBase64: entry.iconBase64 ?? meta?.iconBase64,
+          iconUrl: entry.iconUrl ?? meta?.iconUrl,
+        ),
+      );
+    }
+
+    for (final lim in limits) {
+      if (!lim.isActive) continue;
+      if (seen.contains(lim.packageName)) continue;
+      seen.add(lim.packageName);
+      final meta = installed[lim.packageName];
+      result.add(
+        AppUsageEntry(
+          packageName: lim.packageName,
+          appName: meta?.appName.isNotEmpty == true
+              ? meta!.appName
+              : lim.packageName,
+          totalTimeMs: 0,
+          lastTimeUsed: DateTime.fromMillisecondsSinceEpoch(0),
+          iconBase64: meta?.iconBase64,
+          iconUrl: meta?.iconUrl,
+        ),
+      );
+    }
+
+    result.sort((a, b) {
+      final byUsage = b.totalTimeMs.compareTo(a.totalTimeMs);
+      if (byUsage != 0) return byUsage;
+      return a.appName.toLowerCase().compareTo(b.appName.toLowerCase());
+    });
+    return result;
   }
 }
 

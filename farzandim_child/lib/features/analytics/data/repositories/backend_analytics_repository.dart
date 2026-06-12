@@ -32,6 +32,11 @@ class BackendAnalyticsRepository {
 
   /// Installed apps map (packageName → meta). Public — UI'da AppLimit
   /// uchun nom va icon olishda kerak.
+  ///
+  /// Backend ikonani signed MinIO URL bilan qaytaradi, ammo bu URL telefon
+  /// tarmog'idan ochilmaydi (`MINIO_PUBLIC_URL` — ichki manzil). Shuning
+  /// uchun parent app'dagi kabi backend ichidan proxy qiluvchi URL quramiz:
+  /// `${baseUrl}/children/:childId/installed-apps/:pkg/icon` (`@Public`).
   Future<Map<String, InstalledAppMeta>> getInstalledApps(
     String childId,
   ) async {
@@ -47,10 +52,11 @@ class BackendAnalyticsRepository {
         final m = item as Map<String, dynamic>;
         final pkg = m['packageName'] as String?;
         if (pkg == null) continue;
+        final hasIcon = m['iconUrl'] != null || m['iconPath'] != null;
         map[pkg] = InstalledAppMeta(
           appName: m['appName'] as String? ?? pkg,
           iconBase64: m['iconBase64'] as String?,
-          iconUrl: m['iconUrl'] as String?,
+          iconUrl: hasIcon ? _iconProxyUrl(childId, pkg) : null,
         );
       }
       return map;
@@ -59,6 +65,11 @@ class BackendAnalyticsRepository {
       return const {};
     }
   }
+
+  /// Ilova ikonasi backend proxy URL — telefon → backend → MinIO.
+  String _iconProxyUrl(String childId, String packageName) =>
+      '${_dio.options.baseUrl}/children/$childId/installed-apps/'
+      '${Uri.encodeComponent(packageName)}/icon';
 
   /// `date` (YYYY-MM-DD) uchun bola usage.
   /// installed-apps merge bilan appName + icon to'liq.
@@ -81,11 +92,16 @@ class BackendAnalyticsRepository {
         final installedInfo = installed[pkg];
         return AppUsageEntry.fromMap({
           'packageName': pkg,
-          'appName': installedInfo?.appName ?? pkg,
+          'appName': installedInfo?.appName ??
+              (json['appName'] as String?) ??
+              pkg,
           'totalTimeMs': (json['foregroundMs'] as num?)?.toInt() ?? 0,
           'lastTimeUsed': json['lastUsedAt'],
           'iconBase64': installedInfo?.iconBase64,
-          'iconUrl': installedInfo?.iconUrl,
+          // Har doim backend proxy URL — installed-apps batch'i hali kelmagan
+          // bo'lsa ham backend rasmni saqlagan bo'lsa stream qiladi, aks holda
+          // 404 → harf fallback (`_AppIcon.errorBuilder`).
+          'iconUrl': installedInfo?.iconUrl ?? _iconProxyUrl(childId, pkg),
         });
       }).toList()
         ..sort((a, b) => b.totalTimeMs.compareTo(a.totalTimeMs));
