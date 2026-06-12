@@ -90,7 +90,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ### Startup (ochilish tezligi)
 - [x] **ST-02** (S): `main.dart:81-148` — 8 ta ketma-ket await; parallellashtirilsa cold start sezilarli tezlashadi
   (ApiKeys+EasyLocalization+displayMode parallel; Crashlytics/Analytics/AppCheck birinchi frame'dan keyinga).
-- [ ] **ST-03** (M): Login bo'lgan userga har cold start'da Welcome ekran "flash" + 325KB jpg dekod —
+- [x] **ST-03** (M): Login bo'lgan userga har cold start'da Welcome ekran "flash" + 325KB jpg dekod —
   splash/redirect route kerak — `app_router.dart:164,179`.
 - [x] **ST-04** (S): GoogleFonts Inter runtime'da internetdan yuklanadi — shriftni assets'ga bundle qilish
   (birinchi o'rnatishda sekin tarmoqda matn kechikadi).
@@ -118,7 +118,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 ### Xotira
 - [ ] **MEM-3** (M): RoundVideoBubble — har bubble thumbnail uchun JONLI VideoPlayerController (ExoPlayer)
   ochadi — uzun chatda o'nlab native player — `round_video_bubble.dart:68-70` — thumbnail PNG yaratish/kesh.
-- [ ] **MEM-4 + NET-06 + ARCH-11** (M): Disk rasm-keshi umuman yo'q — barcha avatar/ikonka har cold-start'da
+- [x] **MEM-4 + NET-06 + ARCH-11** (M): Disk rasm-keshi umuman yo'q — barcha avatar/ikonka har cold-start'da
   qayta yuklanadi + to'liq o'lchamda dekod — `cached_network_image` + `cacheWidth` hammasiga.
 - [ ] **MEM-5** (S, minor): Support chat biriktirma bytes'lari (MB'lab) state'da abadiy qoladi.
 - [ ] **MEM-6** (S, minor): Marker bitmap static keshlar cheksiz o'sadi — cap qo'yish.
@@ -131,7 +131,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
 - [x] **ARCH-05** (S): UI'da to'g'ridan-to'g'ri Dio (repair QR POST, xom Dio().download) — repository'ga ko'chirish.
 - [x] **ARCH-06** (S): ~740 qator o'lik kod — 7 ta hech qayerdan import qilinmaydigan fayl (child_page_view.dart
   va b.) — o'chirish.
-- [ ] **ARCH-07** (M): Vaqt formatlash 6+ joyda hardcoded dublikat — markaziy formatter'ga yig'ish.
+- [x] **ARCH-07** (M): Vaqt formatlash 6+ joyda hardcoded dublikat — markaziy formatter'ga yig'ish.
 - [x] **ARCH-10** (S): Force-update dialog rebuild'da qayta-qayta ochiladi — dedup guard — `app.dart:185-195`.
 - [x] **BUG-02** (S): FCM push tap `router.go()` — stack bo'shab "orqaga" GoError — `fcm_service.dart:230-270` —
   `push` yoki to'g'ri stack qurish.
