@@ -41,11 +41,25 @@ class BackendVideoMessageRepository {
   final SocketClient _socketClient;
 
   /// Video messages ro'yxati (raw JSON, model alohida feature qo'shsa).
-  Future<List<Map<String, dynamic>>> getMessages({String? role}) async {
+  ///
+  /// Paginatsiya: `peerId` — faqat shu user bilan yozishmalar,
+  /// `before` — shu vaqtdan eski sahifa (cursor), `limit` — sahifa hajmi.
+  Future<List<Map<String, dynamic>>> getMessages({
+    String? role,
+    String? peerId,
+    DateTime? before,
+    int? limit,
+  }) async {
     try {
+      final query = <String, dynamic>{
+        if (role != null) 'role': role,
+        if (peerId != null) 'peerId': peerId,
+        if (before != null) 'before': before.toUtc().toIso8601String(),
+        if (limit != null) 'limit': limit,
+      };
       final response = await _dio.get<Map<String, dynamic>>(
         '/video-messages',
-        queryParameters: role != null ? {'role': role} : null,
+        queryParameters: query.isEmpty ? null : query,
       );
       final data = response.data;
       if (data == null) return const [];
@@ -53,6 +67,8 @@ class BackendVideoMessageRepository {
       return list.cast<Map<String, dynamic>>();
     } on DioException catch (e) {
       debugPrint('BackendVideoMessageRepository.getMessages: $e');
+      // Eski sahifa so'rovi xatosini chaqiruvchi bilishi kerak.
+      if (before != null) rethrow;
       return const [];
     }
   }

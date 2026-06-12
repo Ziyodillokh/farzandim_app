@@ -5,6 +5,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
+import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/video_message/presentation/providers/video_message_provider.dart';
@@ -81,10 +82,24 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   /// Live waveform max bar count (sliding window).
   static const int _maxAmplitudes = 80;
 
+  /// Oxirgi ko'ringan eng pastki xabar id'si — auto-scroll faqat YANGI
+  /// xabar kelganda ishlashi uchun (eski sahifa yuklanganda yoki read
+  /// status yangilanganda pastga tortib yubormaslik).
+  String? _lastBottomItemId;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Tepaga yetganda eski sahifani yuklaymiz (notifier o'zi loading va
+    // tarix-tugadi holatlarini tekshiradi, shuning uchun har scroll'da
+    // chaqiraversa bo'ladi).
+    _scrollController.addListener(() {
+      if (_scrollController.hasClients &&
+          _scrollController.position.pixels <= 80) {
+        ref.read(chatHistoryProvider(widget.childId).notifier).loadOlder();
+      }
+    });
 
     // Sprint 4.4.5: voice chat ekrani ochilganda Parent App bola
     // pair'lashganini Backend'dan refresh qiladi (child.linkedDeviceUid
@@ -522,6 +537,29 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     // Voice + video birlashtirilgan lenta (ASC).
     final messagesAsync =
         ref.watch(chatMessagesProvider(widget.childId));
+    final historyLoading = ref.watch(
+      chatHistoryProvider(widget.childId).select((s) => s.loading),
+    );
+
+    // Eski sahifa tepaga qo'shilganda scroll pozitsiyasini saqlaymiz:
+    // aks holda kontent pastga "sakrab" foydalanuvchi o'qiyotgan joyini
+    // yo'qotadi. Eski maxScrollExtent'ni rebuild'dan OLDIN olib, yangi
+    // layout'dan keyin farqqa siljitamiz.
+    ref.listen(
+      chatHistoryProvider(widget.childId).select((s) => s.older.length),
+      (prev, next) {
+        if ((prev ?? 0) >= next || !_scrollController.hasClients) return;
+        final oldMax = _scrollController.position.maxScrollExtent;
+        final oldOffset = _scrollController.position.pixels;
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!_scrollController.hasClients) return;
+          final newMax = _scrollController.position.maxScrollExtent;
+          if (newMax > oldMax) {
+            _scrollController.jumpTo(oldOffset + (newMax - oldMax));
+          }
+        });
+      },
+    );
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -555,38 +593,80 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                       );
                     }
 
-                    // Yangi xabar kelganda auto-scroll bottom.
-                    WidgetsBinding.instance.addPostFrameCallback((_) {
-                      _scrollToBottom();
-                    });
+                    // Auto-scroll bottom — faqat ro'yxat OXIRIGA yangi
+                    // xabar qo'shilganda. Avval har rebuild'da pastga
+                    // tortardi: eski sahifa yuklanganda yoki read-status
+                    // refetch'ida foydalanuvchini o'qiyotgan joyidan
+                    // uzib yuborardi.
+                    final bottomId = messages.last.id;
+                    if (bottomId != _lastBottomItemId) {
+                      _lastBottomItemId = bottomId;
+                      WidgetsBinding.instance.addPostFrameCallback((_) {
+                        _scrollToBottom();
+                      });
+                    }
 
                     return RefreshIndicator(
                       color: AppColors.primary,
                       backgroundColor: AppColors.surface,
                       onRefresh: _onRefresh,
-                      child: ListView.builder(
-                        controller: _scrollController,
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding:
-                            const EdgeInsets.symmetric(vertical: 12),
-                        itemCount: messages.length,
-                        itemBuilder: (_, i) {
-                          final item = messages[i];
-                          // Sealed switch — yangi tip qo'shilsa
-                          // exhaustive xato beradi.
-                          return switch (item) {
-                            VoiceItem(:final message) => VoiceChatBubble(
-                                key: ValueKey(item.id),
-                                message: message,
-                                isOwn: message.sender == 'parent',
+                      child: Stack(
+                        children: [
+                          ListView.builder(
+                            controller: _scrollController,
+                            physics:
+                                const AlwaysScrollableScrollPhysics(),
+                            padding:
+                                const EdgeInsets.symmetric(vertical: 12),
+                            itemCount: messages.length,
+                            itemBuilder: (_, i) {
+                              final item = messages[i];
+                              // Sealed switch — yangi tip qo'shilsa
+                              // exhaustive xato beradi.
+                              return switch (item) {
+                                VoiceItem(:final message) =>
+                                  VoiceChatBubble(
+                                    key: ValueKey(item.id),
+                                    message: message,
+                                    isOwn: message.sender == 'parent',
+                                  ),
+                                VideoItem(:final message) =>
+                                  RoundVideoBubble(
+                                    key: ValueKey(item.id),
+                                    message: message,
+                                    isOwn: message.sender == 'parent',
+                                  ),
+                              };
+                            },
+                          ),
+                          // Eski sahifa yuklanmoqda — tepada kichik
+                          // indikator (ro'yxatga aralashmaydi, scroll
+                          // pozitsiyasini buzmaydi).
+                          if (historyLoading)
+                            Positioned(
+                              top: 8,
+                              left: 0,
+                              right: 0,
+                              child: Center(
+                                child: Container(
+                                  padding: const EdgeInsets.all(6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.surface,
+                                    shape: BoxShape.circle,
+                                    boxShadow: AppShadows.card,
+                                  ),
+                                  child: SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      color: AppColors.accent,
+                                    ),
+                                  ),
+                                ),
                               ),
-                            VideoItem(:final message) => RoundVideoBubble(
-                                key: ValueKey(item.id),
-                                message: message,
-                                isOwn: message.sender == 'parent',
-                              ),
-                          };
-                        },
+                            ),
+                        ],
                       ),
                     );
                   },

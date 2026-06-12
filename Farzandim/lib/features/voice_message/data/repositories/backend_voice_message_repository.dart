@@ -44,11 +44,26 @@ class BackendVoiceMessageRepository {
   /// - `null` → barchasi (sent + received)
   /// - `'received'` → faqat olganlar
   /// - `'sent'` → faqat yuborganlar
-  Future<List<Map<String, dynamic>>> getMessagesRaw({String? role}) async {
+  ///
+  /// Paginatsiya: `peerId` — faqat shu user bilan yozishmalar,
+  /// `before` — shu vaqtdan eski sahifa (cursor), `limit` — sahifa hajmi.
+  /// Hech biri berilmasa server eng oxirgi 100 tani qaytaradi.
+  Future<List<Map<String, dynamic>>> getMessagesRaw({
+    String? role,
+    String? peerId,
+    DateTime? before,
+    int? limit,
+  }) async {
     try {
+      final query = <String, dynamic>{
+        if (role != null) 'role': role,
+        if (peerId != null) 'peerId': peerId,
+        if (before != null) 'before': before.toUtc().toIso8601String(),
+        if (limit != null) 'limit': limit,
+      };
       final response = await _dio.get<Map<String, dynamic>>(
         '/voice-messages',
-        queryParameters: role != null ? {'role': role} : null,
+        queryParameters: query.isEmpty ? null : query,
       );
       final data = response.data;
       if (data == null) return const [];
@@ -56,6 +71,9 @@ class BackendVoiceMessageRepository {
       return list.cast<Map<String, dynamic>>();
     } on DioException catch (e) {
       debugPrint('BackendVoiceMessageRepository.getMessages: $e');
+      // Eski sahifa so'rovi xatosini chaqiruvchi bilishi kerak (cursor
+      // siljimasligi uchun) — bo'sh ro'yxat "tarix tugadi" degani emas.
+      if (before != null) rethrow;
       return const [];
     }
   }
