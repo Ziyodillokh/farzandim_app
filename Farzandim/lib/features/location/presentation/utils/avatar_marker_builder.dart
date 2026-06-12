@@ -20,18 +20,19 @@ class AvatarMarkerBuilder {
 
   /// Yandex pin stilidagi marker yaratish.
   ///
-  /// `pinWidth` — pin (kvadrat) eni, default 72 px.
-  /// `pinHeight` — quyruq bilan birga balandlik, default 92 px.
+  /// `pinWidth` — pin (kvadrat) eni, default 64 logical px (3x'da chiziladi).
+  /// `pinHeight` — quyruq bilan birga balandlik, default 82.
   /// `accent` — pin fon va border rangi.
   static Future<BitmapDescriptor> build({
     required String? avatarUrl,
     required String fallbackKey,
-    double pinWidth = 72,
-    double pinHeight = 92,
+    double pinWidth = 64,
+    double pinHeight = 82,
     // Marker xaritada — fixed lime (default param const bo'lishi shart).
     Color accent = const Color(0xFF235347),
   }) async {
-    final cacheKey = '${avatarUrl ?? "null"}_$fallbackKey'
+    final cacheKey =
+        '${avatarUrl ?? "null"}_$fallbackKey'
         '_${accent.toARGB32().toRadixString(16)}_${pinWidth.toInt()}';
     if (_cache.containsKey(cacheKey)) return _cache[cacheKey]!;
 
@@ -46,6 +47,13 @@ class AvatarMarkerBuilder {
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
+
+    // SIFAT: hamma narsa 3x piksel zichlikda chiziladi (canvas.scale) va
+    // descriptor'ga imagePixelRatio=3 beriladi — xaritada pin ayni shu
+    // logical o'lchamda, lekin KESKIN ko'rinadi. Avval 72px xom bitmap
+    // bo'lib, zamonaviy ekranlarda xira (pikselli) chiqardi.
+    const scale = 3.0;
+    canvas.scale(scale);
 
     // Geometry — pin shape (rounded rect + downward triangle tail)
     final cornerRadius = pinWidth * 0.20;
@@ -78,18 +86,20 @@ class AvatarMarkerBuilder {
     // Pin fon (rounded rect bosh + uchburchak quyruq)
     final pinPath = Path()
       ..addRRect(
-        RRect.fromRectAndRadius(
-          headRect,
-          Radius.circular(cornerRadius),
-        ),
+        RRect.fromRectAndRadius(headRect, Radius.circular(cornerRadius)),
       )
       ..moveTo(centerX - tailHalfWidth, headHeight - 1)
       ..lineTo(centerX, pinHeight)
       ..lineTo(centerX + tailHalfWidth, headHeight - 1)
       ..close();
+    canvas.drawPath(pinPath, Paint()..color = accent);
+    // Oq tashqi kontur — xarita fonidan aniq ajralib turadi (premium pin).
     canvas.drawPath(
       pinPath,
-      Paint()..color = accent,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5,
     );
 
     // Inner avatar slot — pin ichida 5 px padding (kichikroq pin uchun)
@@ -114,16 +124,13 @@ class AvatarMarkerBuilder {
         rect: avatarRect,
         image: avatarImage,
         fit: BoxFit.cover,
-        alignment: Alignment.center,
       );
     } else {
       // Fallback — bg + harf
-      canvas.drawRect(
-        avatarRect,
-        Paint()..color = AppColors.surfaceVariant,
-      );
-      final initial =
-          fallbackKey.isNotEmpty ? fallbackKey[0].toUpperCase() : '?';
+      canvas.drawRect(avatarRect, Paint()..color = AppColors.surfaceVariant);
+      final initial = fallbackKey.isNotEmpty
+          ? fallbackKey[0].toUpperCase()
+          : '?';
       final tp = TextPainter(
         text: TextSpan(
           text: initial,
@@ -156,15 +163,19 @@ class AvatarMarkerBuilder {
     );
 
     final picture = recorder.endRecording();
+    // 3x piksel o'lchamda rasterlash (scale yuqorida qo'llangan).
     final image = await picture.toImage(
-      pinWidth.toInt(),
-      pinHeight.toInt(),
+      (pinWidth * scale).toInt(),
+      (pinHeight * scale).toInt(),
     );
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes == null) return BitmapDescriptor.defaultMarker;
 
+    // imagePixelRatio — bitmap 3x ekanini bildiradi: xaritada logical
+    // o'lchamda, lekin keskin (retina) ko'rinadi.
     final descriptor = BitmapDescriptor.bytes(
       bytes.buffer.asUint8List(),
+      imagePixelRatio: scale,
     );
     _cache[cacheKey] = descriptor;
     return descriptor;
@@ -172,7 +183,7 @@ class AvatarMarkerBuilder {
 
   static Future<ui.Image> _loadNetworkImage(String url) async {
     final completer = Completer<ui.Image>();
-    final config = ImageConfiguration.empty;
+    const config = ImageConfiguration.empty;
     final provider = NetworkImage(url);
     final stream = provider.resolve(config);
     late ImageStreamListener listener;
@@ -234,18 +245,20 @@ class DwellLabelMarker {
 
     final lines = label.split('\n');
     final linePainters = lines
-        .map((l) => TextPainter(
-              text: TextSpan(
-                text: l,
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                  fontFamily: 'Inter',
-                ),
+        .map(
+          (l) => TextPainter(
+            text: TextSpan(
+              text: l,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                fontFamily: 'Inter',
               ),
-              textDirection: TextDirection.ltr,
-            )..layout())
+            ),
+            textDirection: TextDirection.ltr,
+          )..layout(),
+        )
         .toList();
 
     final subTp = TextPainter(
@@ -274,22 +287,17 @@ class DwellLabelMarker {
     totalLinesHeight -= lineSpacing; // oxirgi line uchun spacing kerak emas
 
     final pillWidth = maxLineWidth + padding * 2;
-    final pillHeight = padding * 2 +
-        totalLinesHeight +
-        4 +
-        subTp.height +
-        dotSize +
-        6;
+    final pillHeight =
+        padding * 2 + totalLinesHeight + 4 + subTp.height + dotSize + 6;
 
     final recorder = ui.PictureRecorder();
     final canvas = Canvas(recorder);
 
-    final pillRect = Rect.fromLTWH(
-      0,
-      0,
-      pillWidth,
-      pillHeight - dotSize - 6,
-    );
+    // SIFAT: 3x renderlash (AvatarMarkerBuilder bilan bir xil sabab).
+    const scale = 3.0;
+    canvas.scale(scale);
+
+    final pillRect = Rect.fromLTWH(0, 0, pillWidth, pillHeight - dotSize - 6);
     final pillRRect = RRect.fromRectAndRadius(
       pillRect,
       const Radius.circular(14),
@@ -329,13 +337,16 @@ class DwellLabelMarker {
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(
-      pillWidth.toInt(),
-      pillHeight.toInt(),
+      (pillWidth * scale).toInt(),
+      (pillHeight * scale).toInt(),
     );
     final bytes = await image.toByteData(format: ui.ImageByteFormat.png);
     if (bytes == null) return BitmapDescriptor.defaultMarker;
 
-    final descriptor = BitmapDescriptor.bytes(bytes.buffer.asUint8List());
+    final descriptor = BitmapDescriptor.bytes(
+      bytes.buffer.asUint8List(),
+      imagePixelRatio: scale,
+    );
     _cache[cacheKey] = descriptor;
     return descriptor;
   }

@@ -173,7 +173,7 @@
       "schedules": "Расписания",
       "callHistory": "История звонков",
       "ambientSound": "Окружающий звук",
-      "locationHistory": "История перемещений",
+      "location": "Локация",
       "messenger": "Messenger",
       "weeklyReport": "Еженедельный отчёт"
     },

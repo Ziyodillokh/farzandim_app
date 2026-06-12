@@ -27,7 +27,7 @@ class _LocationSheet extends ConsumerWidget {
     final battery = child.deviceInfo?.batteryLevel;
     final isCharging = child.deviceInfo?.isCharging ?? false;
     final isMoving = location.isMoving;
-    final topRadius = BorderRadius.vertical(
+    const topRadius = BorderRadius.vertical(
       top: Radius.circular(AppDimensions.radiusL),
     );
 
@@ -43,10 +43,10 @@ class _LocationSheet extends ConsumerWidget {
         child: ListView(
           controller: scrollController,
           padding: EdgeInsets.fromLTRB(
-            AppDimensions.lg,
+            AppDimensions.md,
             AppDimensions.sm,
-            AppDimensions.lg,
-            MediaQuery.of(context).padding.bottom + AppDimensions.lg,
+            AppDimensions.md,
+            MediaQuery.of(context).padding.bottom + AppDimensions.md,
           ),
           children: [
             // Drag handle.
@@ -54,7 +54,7 @@ class _LocationSheet extends ConsumerWidget {
               child: Container(
                 width: 44,
                 height: 4,
-                margin: const EdgeInsets.only(bottom: AppDimensions.md),
+                margin: const EdgeInsets.only(bottom: AppDimensions.sm),
                 decoration: BoxDecoration(
                   color: AppColors.textTertiary.withValues(alpha: 0.45),
                   borderRadius: BorderRadius.circular(2),
@@ -62,22 +62,21 @@ class _LocationSheet extends ConsumerWidget {
               ),
             ),
 
-            // ── HERO: avatar (mint halqa) + ism + JONLI puls ──
+            // ── HERO: avatar (mint halqa) + ism + JONLI puls (ixcham) ──
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(3),
+                  padding: const EdgeInsets.all(2),
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     border: Border.all(
                       color: AppColors.accent.withValues(alpha: 0.55),
-                      width: 2,
+                      width: 1.5,
                     ),
                   ),
-                  child:
-                      ChildAvatar(child: child, size: 54, showBorder: false),
+                  child: ChildAvatar(child: child, size: 42, showBorder: false),
                 ),
-                const SizedBox(width: AppDimensions.md),
+                const SizedBox(width: AppDimensions.sm + 2),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -91,7 +90,7 @@ class _LocationSheet extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: AppTextStyles.headlineL.copyWith(
-                                fontSize: 20,
+                                fontSize: 17,
                                 fontWeight: FontWeight.w700,
                                 letterSpacing: -0.3,
                               ),
@@ -101,12 +100,13 @@ class _LocationSheet extends ConsumerWidget {
                           const _LivePill(),
                         ],
                       ),
-                      const SizedBox(height: 3),
+                      const SizedBox(height: 2),
                       Text(
                         '${'location.command.now'.tr()} · '
                         '${formatRelativeTime(location.updatedAt)}',
                         style: AppTextStyles.bodyS.copyWith(
                           color: AppColors.textSecondary,
+                          fontSize: 12,
                         ),
                       ),
                     ],
@@ -115,12 +115,12 @@ class _LocationSheet extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.sm + 2),
 
             // ── MANZIL kartasi ("qayerda" — eng muhim ma'lumot) ──
             _AddressCard(address: address),
 
-            const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.sm + 2),
 
             // ── 3 metrika: holat / batareya / aniqlik ──
             Row(
@@ -147,10 +147,10 @@ class _LocationSheet extends ConsumerWidget {
                     tint: battery == null
                         ? AppColors.textTertiary
                         : battery >= 50
-                            ? AppColors.success
-                            : battery >= 20
-                                ? AppColors.warning
-                                : AppColors.error,
+                        ? AppColors.success
+                        : battery >= 20
+                        ? AppColors.warning
+                        : AppColors.error,
                     value: battery == null ? '—' : '$battery%',
                     label: 'location.command.batteryLabel'.tr(),
                     valueColored: true,
@@ -171,7 +171,7 @@ class _LocationSheet extends ConsumerWidget {
               ],
             ),
 
-            const SizedBox(height: AppDimensions.md),
+            const SizedBox(height: AppDimensions.sm + 2),
 
             // Amal tugmalari — bitta qatorda, kompakt: chapda Geo-zonalar
             // (to'liq-rang CTA), o'ngda Tarixni ko'rish (outline).
@@ -183,8 +183,7 @@ class _LocationSheet extends ConsumerWidget {
                     label: 'location.geoZonesButton'.tr(),
                     filled: true,
                     compact: true,
-                    onTap: () =>
-                        context.push(AppRoutes.geoZonesPath(child.id)),
+                    onTap: () => context.push(AppRoutes.geoZonesPath(child.id)),
                   ),
                 ),
                 const SizedBox(width: 12),
@@ -193,9 +192,8 @@ class _LocationSheet extends ConsumerWidget {
                     icon: Icons.route_rounded,
                     label: 'location.command.historyButton'.tr(),
                     compact: true,
-                    onTap: () => context.push(
-                      AppRoutes.locationHistoryPath(child.id),
-                    ),
+                    onTap: () =>
+                        context.push(AppRoutes.locationHistoryPath(child.id)),
                   ),
                 ),
               ],
@@ -307,8 +305,9 @@ class _AddressCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final hasAddress = address != null && address!.isNotEmpty;
+    // Ixcham qator — kichik ikon + bitta-ikki qatorli matn.
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -317,24 +316,23 @@ class _AddressCard extends StatelessWidget {
       child: Row(
         children: [
           Container(
-            width: 38,
-            height: 38,
+            width: 28,
+            height: 28,
             decoration: BoxDecoration(
               color: AppColors.accent.withValues(alpha: 0.14),
-              borderRadius: BorderRadius.circular(11),
+              borderRadius: BorderRadius.circular(8),
             ),
             alignment: Alignment.center,
-            child:
-                Icon(Icons.place_rounded, size: 19, color: AppColors.accent),
+            child: Icon(Icons.place_rounded, size: 15, color: AppColors.accent),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
             child: hasAddress
                 ? Text(
                     address!,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.bodyM.copyWith(
+                    style: AppTextStyles.bodyS.copyWith(
                       color: AppColors.textPrimary,
                       fontWeight: FontWeight.w600,
                       height: 1.25,
@@ -344,6 +342,7 @@ class _AddressCard extends StatelessWidget {
                     'location.command.addressLoading'.tr(),
                     style: AppTextStyles.bodyS.copyWith(
                       color: AppColors.textSecondary,
+                      fontSize: 12.5,
                     ),
                   ),
           ),
@@ -372,29 +371,29 @@ class _StatTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ixcham plitka — kichik ikon, zich oraliqlar (avval ancha baland edi).
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
         color: AppColors.surfaceVariant,
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
         border: Border.all(color: AppColors.border),
-        boxShadow: AppShadows.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            width: 30,
-            height: 30,
+            width: 24,
+            height: 24,
             decoration: BoxDecoration(
               color: tint.withValues(alpha: 0.16),
-              borderRadius: BorderRadius.circular(9),
+              borderRadius: BorderRadius.circular(7),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 16, color: tint),
+            child: Icon(icon, size: 14, color: tint),
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 6),
           FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerLeft,
@@ -402,20 +401,20 @@ class _StatTile extends StatelessWidget {
               value,
               maxLines: 1,
               style: AppTextStyles.headlineL.copyWith(
-                fontSize: 16,
+                fontSize: 14,
                 fontWeight: FontWeight.w700,
                 color: valueColored ? tint : AppColors.textPrimary,
               ),
             ),
           ),
-          const SizedBox(height: 2),
+          const SizedBox(height: 1),
           Text(
             label,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: AppTextStyles.bodyS.copyWith(
               color: AppColors.textSecondary,
-              fontSize: 11.5,
+              fontSize: 10.5,
             ),
           ),
         ],
@@ -439,6 +438,7 @@ class _ActionButton extends StatelessWidget {
   final String label;
   final VoidCallback onTap;
   final bool filled;
+
   /// Kompakt rejim — bitta qatorda yonma-yon (icon+matn markazda, chevronsiz).
   final bool compact;
 
@@ -467,16 +467,15 @@ class _ActionButton extends StatelessWidget {
           onTap: onTap,
           borderRadius: radius,
           child: SizedBox(
-            height: compact ? 50 : 56,
+            height: compact ? 44 : 56,
             child: compact
                 ? Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(
                         icon,
-                        size: 19,
-                        color:
-                            filled ? AppColors.onPrimary : AppColors.accent,
+                        size: 17,
+                        color: filled ? AppColors.onPrimary : AppColors.accent,
                       ),
                       const SizedBox(width: 8),
                       Flexible(
@@ -488,9 +487,10 @@ class _ActionButton extends StatelessWidget {
                             color: filled
                                 ? AppColors.onPrimary
                                 : AppColors.textPrimary,
-                            fontWeight:
-                                filled ? FontWeight.w700 : FontWeight.w600,
-                            fontSize: 14,
+                            fontWeight: filled
+                                ? FontWeight.w700
+                                : FontWeight.w600,
+                            fontSize: 13.5,
                           ),
                         ),
                       ),
@@ -545,4 +545,3 @@ class _ActionButton extends StatelessWidget {
     );
   }
 }
-

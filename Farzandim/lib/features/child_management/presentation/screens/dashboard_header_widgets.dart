@@ -16,7 +16,6 @@ class _Header extends StatelessWidget {
           expandWidth: false,
           width: 52,
           radius: 26,
-          blurSigma: 20,
           padding: const EdgeInsets.all(7),
           child: ClipOval(
             child: Image.asset(
@@ -48,8 +47,6 @@ class _ThemeToggle extends ConsumerWidget {
     return GlassCard(
       expandWidth: false,
       width: 48,
-      radius: 24,
-      blurSigma: 20,
       padding: EdgeInsets.zero,
       onTap: () => ref.read(themeModeProvider.notifier).toggle(),
       child: SizedBox(
@@ -78,8 +75,6 @@ class _NotificationBell extends ConsumerWidget {
     return GlassCard(
       expandWidth: false,
       width: 48,
-      radius: 24,
-      blurSigma: 20,
       padding: EdgeInsets.zero,
       onTap: () => context.push(AppRoutes.notifications),
       child: SizedBox(
@@ -156,8 +151,8 @@ class _ChildInfoHeader extends StatelessWidget {
                 child.deviceModel?.isNotEmpty ?? false
                     ? child.deviceModel!
                     : (child.isConnected
-                        ? 'dashboard.deviceModelUnknown'.tr()
-                        : 'dashboard.noDevice'.tr()),
+                          ? 'dashboard.deviceModelUnknown'.tr()
+                          : 'dashboard.noDevice'.tr()),
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textSecondary,
                 ),
@@ -174,7 +169,11 @@ class _ChildInfoHeader extends StatelessWidget {
           ),
         ),
         const SizedBox(width: AppDimensions.md),
-        ChildAvatar(child: child),
+        // Avatar bosilsa — bola ma'lumotlarini tahrirlash sahifasi.
+        GestureDetector(
+          onTap: () => context.push(AppRoutes.editChildPath(child.id)),
+          child: ChildAvatar(child: child),
+        ),
       ],
     );
   }
@@ -298,7 +297,6 @@ class _AddChildPage extends StatelessWidget {
       child: Center(
         child: GlassCard(
           padding: const EdgeInsets.all(AppDimensions.xl),
-          radius: AppDimensions.radiusL,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -429,7 +427,6 @@ class _RatingSection extends ConsumerWidget {
             horizontal: AppDimensions.lg,
             vertical: AppDimensions.md,
           ),
-          radius: AppDimensions.radiusL,
           child: Row(
             children: [
               Text(
@@ -488,4 +485,3 @@ class _RatingSection extends ConsumerWidget {
     );
   }
 }
-

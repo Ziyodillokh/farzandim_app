@@ -40,8 +40,7 @@ class LocationMapScreen extends ConsumerStatefulWidget {
   final String? childId;
 
   @override
-  ConsumerState<LocationMapScreen> createState() =>
-      _LocationMapScreenState();
+  ConsumerState<LocationMapScreen> createState() => _LocationMapScreenState();
 }
 
 class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
@@ -126,9 +125,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     _programmaticMove = true;
     ctrl
         .animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(target: loc, zoom: 16),
-          ),
+          CameraUpdate.newCameraPosition(CameraPosition(target: loc, zoom: 16)),
         )
         .whenComplete(() => _programmaticMove = false);
   }
@@ -144,11 +141,10 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     final child = widget.childId == null
         ? children.first
         : children.firstWhereOrNull((c) => c.id == widget.childId) ??
-            children.first;
+              children.first;
 
     final zones =
-        ref.watch(geoZonesProvider(child.id)).valueOrNull ??
-            const <GeoZone>[];
+        ref.watch(geoZonesProvider(child.id)).valueOrNull ?? const <GeoZone>[];
 
     final locationAsync = ref.watch(childLocationProvider(child.id));
     final avatarAsync = ref.watch(childAvatarUrlProvider(child.id));
@@ -161,17 +157,17 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
 
     // Yangi location kelganda kamera markerga harakatlanadi
     // (user qo'lda harakatlantirmagan bo'lsa).
-    ref.listen<AsyncValue<ChildLocation?>>(
-      childLocationProvider(child.id),
-      (_, next) {
-        final loc = next.valueOrNull;
-        if (loc != null) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            _maybeAnimateCamera(loc.latLng);
-          });
-        }
-      },
-    );
+    ref.listen<AsyncValue<ChildLocation?>>(childLocationProvider(child.id), (
+      _,
+      next,
+    ) {
+      final loc = next.valueOrNull;
+      if (loc != null) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          _maybeAnimateCamera(loc.latLng);
+        });
+      }
+    });
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -183,7 +179,8 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
             return _NoLocationState(child: child);
           }
           final screenH = MediaQuery.of(context).size.height;
-          const sheetInitial = 0.42;
+          // Ixcham sheet — xarita ko'proq ko'rinadi (avval 0.42 edi).
+          const sheetInitial = 0.36;
           return Stack(
             children: [
               _MapLayer(
@@ -202,10 +199,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                 Positioned(
                   right: AppDimensions.md,
                   bottom: screenH * sheetInitial + AppDimensions.md,
-                  child: _RecenterFab(
-                    childName: child.name,
-                    onTap: _recenter,
-                  ),
+                  child: _RecenterFab(childName: child.name, onTap: _recenter),
                 ),
               SafeArea(
                 child: Padding(
@@ -215,7 +209,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
               ),
               DraggableScrollableSheet(
                 initialChildSize: sheetInitial,
-                minChildSize: 0.32,
+                minChildSize: 0.26,
                 maxChildSize: 0.9,
                 snap: true,
                 snapSizes: const [sheetInitial, 0.9],
@@ -257,18 +251,13 @@ class _MapLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: location.latLng,
-        zoom: 16,
-      ),
+      initialCameraPosition: CameraPosition(target: location.latLng, zoom: 16),
       // Default Google Maps style (user dark premium juda qorong'i dedi).
       markers: {
         Marker(
           markerId: MarkerId(child.id),
           position: location.latLng,
           icon: avatarMarker ?? BitmapDescriptor.defaultMarker,
-          // Pin uchburchak quyruq aniq joyga to'g'rilanadi.
-          anchor: const Offset(0.5, 1.0),
           infoWindow: InfoWindow(
             title: child.name,
             snippet: 'location.updatedSuffix'.tr(
@@ -300,7 +289,6 @@ class _MapLayer extends StatelessWidget {
       zoomControlsEnabled: false,
       mapToolbarEnabled: false,
       myLocationButtonEnabled: false,
-      compassEnabled: true,
       onMapCreated: onMapCreated,
       onCameraMoveStarted: onCameraMoveStarted,
       padding: EdgeInsets.only(bottom: bottomPadding),
@@ -323,10 +311,7 @@ class _RecenterFab extends StatelessWidget {
         onTap: onTap,
         borderRadius: BorderRadius.circular(999),
         child: Container(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 18,
-            vertical: 14,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
           decoration: BoxDecoration(
             gradient: LinearGradient(
               colors: [AppColors.primary, AppColors.primaryDark],
@@ -346,14 +331,12 @@ class _RecenterFab extends StatelessWidget {
                 offset: const Offset(0, 2),
               ),
             ],
-            border: Border.all(
-              color: Colors.white.withValues(alpha: 0.2),
-            ),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(
+              const Icon(
                 Icons.gps_fixed_rounded,
                 color: AppColors.onPrimary,
                 size: 18,
@@ -361,7 +344,7 @@ class _RecenterFab extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 childName,
-                style: TextStyle(
+                style: const TextStyle(
                   color: AppColors.onPrimary,
                   fontSize: 14,
                   fontWeight: FontWeight.w700,
@@ -374,4 +357,3 @@ class _RecenterFab extends StatelessWidget {
     );
   }
 }
-

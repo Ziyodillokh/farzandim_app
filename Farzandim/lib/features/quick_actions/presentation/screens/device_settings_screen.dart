@@ -108,8 +108,9 @@ Future<void> _ringDevice(
     await ref.read(backendChildRepositoryProvider).ringDevice(childId);
     if (context.mounted) _snack(context, 'deviceSettings.ringSent'.tr());
   } catch (_) {
-    if (context.mounted)
+    if (context.mounted) {
       _snack(context, 'deviceSettings.ringError'.tr(), error: true);
+    }
   }
 }
 
@@ -159,13 +160,8 @@ class _Content extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.lg),
 
-          // ─── Ilova uchun ruxsatlar ───
-          _NavRow(
-            icon: Icons.smartphone_rounded,
-            label: 'deviceSettings.appPermissionsRow'.tr(),
-            onTap: () => context.push(AppRoutes.appPermissionsPath(child.id)),
-          ),
-          const SizedBox(height: AppDimensions.lg),
+          // "Ilova uchun ruxsatlar" qatori OLIB TASHLANDI — funksiya hozircha
+          // to'g'ri ishlamaydi; keyinroq qaytarilishi mumkin (route saqlangan).
 
           // ─── Notanish manbalardan ilovalar (toggle) ───
           _UnknownSourcesCard(child: child),
@@ -259,7 +255,7 @@ class _PermRow extends StatelessWidget {
     final Color color;
     final IconData statusIcon;
     final String statusKey;
-    if (status == true) {
+    if (status ?? false) {
       color = AppColors.success;
       statusIcon = Icons.check_circle_rounded;
       statusKey = 'deviceSettings.permissions.granted';
@@ -428,41 +424,6 @@ class _ActionTile extends StatelessWidget {
           Text(
             label,
             style: AppTextStyles.bodyS.copyWith(fontWeight: FontWeight.w600),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════ NAV ROW ════════════════════════
-
-class _NavRow extends StatelessWidget {
-  const _NavRow({required this.icon, required this.label, required this.onTap});
-
-  final IconData icon;
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return SettingsCard(
-      accent: AppColors.secondary,
-      onTap: onTap,
-      child: Row(
-        children: [
-          SettingsIconChip(icon: icon, accent: AppColors.secondary),
-          const SizedBox(width: AppDimensions.md),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
-            ),
-          ),
-          Icon(
-            Icons.chevron_right_rounded,
-            size: 22,
-            color: AppColors.textTertiary,
           ),
         ],
       ),

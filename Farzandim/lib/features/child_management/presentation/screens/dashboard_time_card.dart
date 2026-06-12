@@ -31,9 +31,9 @@ class _TimeCardState extends ConsumerState<_TimeCard> {
     // jarayonida VA undan keyingi 70s ichida (poll davri + margin)
     // foydalanuvchi tanlovini ustun qo'yamiz: eski snapshot bilan kelgan
     // javob toggle'ni "o'zi qaytarib" qo'ymasin (BUG-05).
-    final recentlySaved = _lastSavedAt != null &&
-        DateTime.now().difference(_lastSavedAt!) <
-            const Duration(seconds: 70);
+    final recentlySaved =
+        _lastSavedAt != null &&
+        DateTime.now().difference(_lastSavedAt!) < const Duration(seconds: 70);
     if (!_saving &&
         !recentlySaved &&
         oldWidget.blockAllInitial != widget.blockAllInitial) {
@@ -94,8 +94,6 @@ class _TimeCardState extends ConsumerState<_TimeCard> {
     final isFirstLoad = weeklyAsync.isLoading && !weeklyAsync.hasValue;
 
     return GlassCard(
-      padding: const EdgeInsets.all(AppDimensions.lg),
-      radius: AppDimensions.radiusL,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -188,14 +186,13 @@ class _AppFacepile extends StatelessWidget {
           child: _AppIcon(
             iconUrl: shown[i].iconUrl,
             name: shown[i].name,
-            size: _size,
           ),
         ),
       // "+N" — eng o'ngda, eng ustda (to'liq ko'rinadi).
       if (remaining > 0)
         Positioned(
           left: shown.length * _step,
-          child: _PlusBadge(remaining: remaining, size: _size),
+          child: _PlusBadge(remaining: remaining),
         ),
     ];
 
@@ -209,7 +206,7 @@ class _AppFacepile extends StatelessWidget {
 
 /// Bitta ilova ikonkasi — nozik ring (karta-tusli gap) bilan facepile uchun.
 class _AppIcon extends StatelessWidget {
-  const _AppIcon({required this.iconUrl, required this.name, this.size = 40});
+  const _AppIcon({required this.iconUrl, required this.name}) : size = 40;
 
   final String? iconUrl;
   final String name;
@@ -264,7 +261,7 @@ class _AppIcon extends StatelessWidget {
 /// "+N" badge — facepile oxiri (qolgan ilovalar soni), ikonkalar bilan bir xil
 /// ring + o'lcham.
 class _PlusBadge extends StatelessWidget {
-  const _PlusBadge({required this.remaining, this.size = 40});
+  const _PlusBadge({required this.remaining}) : size = 40;
 
   final int remaining;
   final double size;
@@ -335,10 +332,10 @@ class _QuickActionsGrid extends StatelessWidget {
       ),
       QuickActionTile(
         icon: Icons.location_on_outlined,
-        label: 'dashboard.quickActions.locationHistory'.tr(),
+        // Nomi "Joylashuv" — jonli xarita ochiladi (tarix EMAS, shuning
+        // uchun eski "Harakatlanish tarixi" nomi chalg'itardi).
+        label: 'dashboard.quickActions.location'.tr(),
         accentColor: AppColors.success,
-        // Jonli xarita (Command Deck) ochiladi; undan "Tarixni ko'rish" +
-        // "Geo-zonalar" tugmalari mavjud. (Avval to'g'ridan tarixga borardi.)
         onTap: () => context.push(AppRoutes.locationPath(childId)),
       ),
       QuickActionTile(

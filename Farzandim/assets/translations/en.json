@@ -173,7 +173,7 @@
       "schedules": "Schedules",
       "callHistory": "Call history",
       "ambientSound": "Ambient sound",
-      "locationHistory": "Movement history",
+      "location": "Location",
       "messenger": "Messenger",
       "weeklyReport": "Weekly report"
     },
