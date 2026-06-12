@@ -52,16 +52,16 @@ class SupportChatState {
 /// (autoDispose emas — boshqa ekranga o'tib qaytganda suhbat qoladi).
 final supportChatProvider =
     StateNotifierProvider<SupportChatNotifier, SupportChatState>((ref) {
-  return SupportChatNotifier(
-    ref.watch(supportChatStoreProvider),
-    ref.watch(supportAttachmentRepositoryProvider),
-    ref.watch(supportMessagesRepositoryProvider),
-  );
-});
+      return SupportChatNotifier(
+        ref.watch(supportChatStoreProvider),
+        ref.watch(supportAttachmentRepositoryProvider),
+        ref.watch(supportMessagesRepositoryProvider),
+      );
+    });
 
 class SupportChatNotifier extends StateNotifier<SupportChatState> {
   SupportChatNotifier(this._store, this._attachments, this._messagesRepo)
-      : super(const SupportChatState()) {
+    : super(const SupportChatState()) {
     _load();
   }
 
@@ -76,11 +76,11 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
   }
 
   SupportMessage get _welcome => SupportMessage(
-        id: 'welcome',
-        sender: SupportSender.operator,
-        createdAt: DateTime.now(),
-        textKey: 'support.welcome',
-      );
+    id: 'welcome',
+    sender: SupportSender.operator,
+    createdAt: DateTime.now(),
+    textKey: 'support.welcome',
+  );
 
   /* ───────────────────────── Yuklash / sync ───────────────────────── */
 
@@ -218,7 +218,7 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
         );
         if (!mounted) return;
         if (res.key.isEmpty) {
-          throw Exception('upload bo\'sh key qaytardi');
+          throw Exception("upload bo'sh key qaytardi");
         }
         _updateMessage(
           localId,

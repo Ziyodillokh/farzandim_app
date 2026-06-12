@@ -795,6 +795,7 @@
     }
   },
   "support": {
+    "waitReply": "We will reply soon, please wait.",
     "retry": "Retry",
     "operator": "Operator",
     "online": "Online",

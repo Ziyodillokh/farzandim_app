@@ -795,6 +795,7 @@
     }
   },
   "support": {
+    "waitReply": "Tez orada javob beramiz, iltimos kuting.",
     "retry": "Qayta urinish",
     "operator": "Operator",
     "online": "Onlayn",

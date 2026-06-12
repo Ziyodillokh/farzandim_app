@@ -11,6 +11,8 @@
 // CHEGARA: fon rasmi YO'Q; videoxabar/ovozli xabar YO'Q (faqat matn,
 // rasm, video, hujjat).
 
+import 'dart:async';
+
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -47,6 +49,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
   final ScrollController _scrollController = ScrollController();
   bool _hasText = false;
   bool _showScrollFab = false;
+  Timer? _pollTimer;
 
   @override
   void initState() {
@@ -57,10 +60,21 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
     });
     _scrollController.addListener(_onScroll);
     WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    // Operator (Telegram'dan) javobini olish — ekran ochiqligida 10s polling.
+    // Ochilishda darhol ham sinxronlaymiz (oxirgi javoblar ko'rinsin).
+    Future.microtask(
+      () => ref.read(supportChatProvider.notifier).syncFromServer(),
+    );
+    _pollTimer = Timer.periodic(const Duration(seconds: 10), (_) {
+      if (mounted) {
+        ref.read(supportChatProvider.notifier).syncFromServer();
+      }
+    });
   }
 
   @override
   void dispose() {
+    _pollTimer?.cancel();
     _textController.dispose();
     _scrollController.dispose();
     super.dispose();

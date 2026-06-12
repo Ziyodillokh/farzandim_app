@@ -87,7 +87,7 @@ class SupportMessage {
           : SupportSender.operator,
       createdAt:
           DateTime.tryParse(j['createdAt'] as String? ?? '')?.toLocal() ??
-              _epoch,
+          _epoch,
       text: isAck ? null : j['text'] as String?,
       textKey: isAck ? 'support.waitReply' : null,
       attachmentType: type,

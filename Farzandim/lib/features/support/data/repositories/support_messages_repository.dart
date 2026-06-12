@@ -20,8 +20,9 @@ import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/support/data/models/support_message.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final supportMessagesRepositoryProvider =
-    Provider<SupportMessagesRepository>((ref) {
+final supportMessagesRepositoryProvider = Provider<SupportMessagesRepository>((
+  ref,
+) {
   return SupportMessagesRepository(ref.watch(dioClientProvider));
 });
 
