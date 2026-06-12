@@ -137,23 +137,22 @@ class _ImageBubble extends ConsumerWidget {
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
-        child: Image.network(
-          url,
+        // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+        child: CachedNetworkImage(
+          imageUrl: url,
           fit: BoxFit.cover,
-          loadingBuilder: (context, child, progress) {
-            if (progress == null) return child;
-            return Container(
-              height: 200,
-              color: Colors.black.withValues(alpha: 0.08),
-              child: Center(
-                child: CircularProgressIndicator(
-                  strokeWidth: 2,
-                  color: AppColors.primary,
-                ),
+          memCacheWidth: 720,
+          placeholder: (_, __) => Container(
+            height: 200,
+            color: Colors.black.withValues(alpha: 0.08),
+            child: Center(
+              child: CircularProgressIndicator(
+                strokeWidth: 2,
+                color: AppColors.primary,
               ),
-            );
-          },
-          errorBuilder: (_, __, ___) => Container(
+            ),
+          ),
+          errorWidget: (_, __, ___) => Container(
             height: 160,
             color: Colors.black.withValues(alpha: 0.08),
             child: Icon(
@@ -298,10 +297,12 @@ class _FullScreenImage extends StatelessWidget {
       body: Center(
         child: InteractiveViewer(
           maxScale: 4,
-          child: Image.network(
-            url,
+          // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+          child: CachedNetworkImage(
+            imageUrl: url,
             fit: BoxFit.contain,
-            errorBuilder: (_, __, ___) => const Icon(
+            memCacheWidth: 1080,
+            errorWidget: (_, __, ___) => const Icon(
               Icons.broken_image_outlined,
               color: Colors.white54,
               size: 64,

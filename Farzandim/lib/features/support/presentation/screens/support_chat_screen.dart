@@ -11,6 +11,7 @@
 // CHEGARA: fon rasmi YO'Q; videoxabar/ovozli xabar YO'Q (faqat matn,
 // rasm, video, hujjat).
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';

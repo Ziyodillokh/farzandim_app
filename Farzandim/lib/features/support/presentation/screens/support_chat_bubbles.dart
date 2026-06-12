@@ -241,25 +241,23 @@ class _ImageBubble extends ConsumerWidget {
                 cacheWidth: 720,
               )
             else if (url != null)
-              Image.network(
-                url,
+              // MEM-4: disk kesh + cheklangan dekod (memCacheWidth, SCR-07)
+              CachedNetworkImage(
+                imageUrl: url,
                 width: 240,
                 fit: BoxFit.cover,
-                cacheWidth: 720, // SCR-07
-                errorBuilder: (_, __, ___) => const _ImagePlaceholder(),
-                loadingBuilder: (context, child, progress) {
-                  if (progress == null) return child;
-                  return SizedBox(
-                    width: 240,
-                    height: 160,
-                    child: Center(
-                      child: CircularProgressIndicator(
-                        color: AppColors.accent,
-                        strokeWidth: 2,
-                      ),
+                memCacheWidth: 720,
+                errorWidget: (_, __, ___) => const _ImagePlaceholder(),
+                placeholder: (_, __) => SizedBox(
+                  width: 240,
+                  height: 160,
+                  child: Center(
+                    child: CircularProgressIndicator(
+                      color: AppColors.accent,
+                      strokeWidth: 2,
                     ),
-                  );
-                },
+                  ),
+                ),
               )
             else
               const _ImagePlaceholder(),
@@ -304,7 +302,12 @@ class _ImageBubble extends ConsumerWidget {
             InteractiveViewer(
               child: bytes != null
                   ? Image.memory(bytes, fit: BoxFit.contain)
-                  : Image.network(url!, fit: BoxFit.contain),
+                  // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+                  : CachedNetworkImage(
+                      imageUrl: url!,
+                      fit: BoxFit.contain,
+                      memCacheWidth: 1080,
+                    ),
             ),
             IconButton(
               icon: const Icon(Icons.close_rounded, color: Colors.white),

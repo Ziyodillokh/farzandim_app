@@ -112,7 +112,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
             .read(backendVoiceMessageRepositoryProvider)
             .markAllRead(fromUserId: childUserId);
         if (ok) {
-          ref.invalidate(voiceMessagesProvider(widget.childId));
+          ref.invalidate(rawVoiceMessagesProvider);
         }
       } catch (_) {
         // Silent — bir xabar tap orqali markAsRead fallback bor.
@@ -142,14 +142,14 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     // Foreground'ga qaytganda read receipt yangilanishi uchun refetch.
     if (state == AppLifecycleState.resumed) {
       ref
-        ..invalidate(voiceMessagesProvider(widget.childId))
+        ..invalidate(rawVoiceMessagesProvider)
         ..invalidate(videoMessagesProvider(widget.childId));
     }
   }
 
   Future<void> _onRefresh() async {
     ref
-      ..invalidate(voiceMessagesProvider(widget.childId))
+      ..invalidate(rawVoiceMessagesProvider)
       ..invalidate(latestVoiceMessageProvider(widget.childId))
       ..invalidate(unreadVoiceMessagesProvider(widget.childId))
       ..invalidate(videoMessagesProvider(widget.childId));
@@ -421,7 +421,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       await ref
           .read(backendVoiceMessageRepositoryProvider)
           .sendText(receiverId: receiverId, text: text);
-      ref.invalidate(voiceMessagesProvider(widget.childId));
+      ref.invalidate(rawVoiceMessagesProvider);
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (_) {
@@ -478,7 +478,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
             receiverId: receiverId,
             file: file,
           );
-      ref.invalidate(voiceMessagesProvider(widget.childId));
+      ref.invalidate(rawVoiceMessagesProvider);
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (_) {

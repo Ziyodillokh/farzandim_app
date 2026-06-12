@@ -28,30 +28,61 @@ String? _currentUserId(Ref ref) {
   return auth is AuthAuthenticated ? auth.user.id : null;
 }
 
-/// Bola uchun barcha ovozli xabarlar — Backend + child filter.
+/// Joriy parent'ning BARCHA ovozli xabarlari — xom backend JSON.
 ///
-/// Backend `/api/voice-messages` joriy user (parent)'ga aloqador barcha
-/// xabarlarni qaytaradi. Bu yerda `child.linkedDeviceUid` bilan filter
-/// qilamiz — faqat shu bola bilan suhbat.
+/// MASSHTAB (PERF): backend `/api/voice-messages` baribir parent'ning
+/// to'liq ro'yxatini qaytaradi — avval har bola-instance shu endpointni
+/// O'ZI chaqirardi (N bola = N ta bir xil to'liq fetch, list ekranida
+/// parallel). Endi fetch BITTA joyda; per-bola providerlar faqat filtr.
+/// WS `voice:received` ham bitta refetch qiladi (avval ochiq instance
+/// soni qancha bo'lsa shuncha edi).
 ///
-/// Bola hali Child App'da pair qilmagan (`linkedDeviceUid == null`) →
-/// bo'sh ro'yxat.
-///
-/// Real-time refresh: WS `voice:received` event'ida invalidate.
-final voiceMessagesProvider =
-    StreamProvider.family<List<VoiceMessage>, String>((ref, childId) async* {
+/// Yuborish/retry'dan keyin yangilash: `ref.invalidate(rawVoiceMessagesProvider)`.
+final rawVoiceMessagesProvider =
+    StreamProvider<List<Map<String, dynamic>>>((ref) async* {
   final currentUserId = _currentUserId(ref);
   if (currentUserId == null) {
-    yield const <VoiceMessage>[];
+    yield const <Map<String, dynamic>>[];
     return;
   }
 
+  final repo = ref.watch(backendVoiceMessageRepositoryProvider);
+
+  yield await repo.getMessagesRaw();
+
+  // WS `voice:received` — yangi xabar keldi, bitta refetch (barcha
+  // bola-filtrlar shu natijadan oziqlanadi).
+  final controller = StreamController<List<Map<String, dynamic>>>();
+  final subscription = repo.voiceReceivedStream().listen((data) async {
+    if (data is! Map) return;
+    try {
+      final refreshed = await repo.getMessagesRaw();
+      if (!controller.isClosed) controller.add(refreshed);
+    } catch (_) {
+      // tarmoq blip — oxirgi ro'yxat saqlanadi, keyingi event qayta uradi
+    }
+  });
+  ref.onDispose(() {
+    subscription.cancel();
+    controller.close();
+  });
+  yield* controller.stream;
+});
+
+/// Bola uchun barcha ovozli xabarlar — umumiy xom ro'yxatdan filtr.
+///
+/// Bola hali Child App'da pair qilmagan (`linkedDeviceUid == null`) →
+/// bo'sh ro'yxat.
+final voiceMessagesProvider =
+    Provider.family<AsyncValue<List<VoiceMessage>>, String>((ref, childId) {
+  final currentUserId = _currentUserId(ref);
+  if (currentUserId == null) {
+    return const AsyncValue.data(<VoiceMessage>[]);
+  }
+
   // MUHIM (P0-4): butun ro'yxatni emas, FAQAT shu bolaning linkedDeviceUid'ini
-  // watch qilamiz (`select`). Avval childrenListProvider'ning har yangilanishi
-  // (60s polling) yangi List identity berib bu provider'ni QAYTA ISHGA
-  // tushirardi → butun xabar tarixi har 60s qayta yuklanardi. select bilan
-  // provider faqat linkedDeviceUid HAQIQATAN o'zgarganda (pair/unpair)
-  // recompute bo'ladi; yangi xabarlar esa quyidagi WS orqali keladi.
+  // watch qilamiz (`select`) — 60s children-polling yangi List identity
+  // berganda bu provider recompute BO'LMAYDI (pair/unpair'dan tashqari).
   final childUserId = ref.watch(childrenListProvider.select((children) {
     for (final c in children) {
       if (c.id == childId) return c.linkedDeviceUid;
@@ -59,15 +90,10 @@ final voiceMessagesProvider =
     return null;
   }));
   if (childUserId == null) {
-    // Bola hali Child App'da pair qilmagan — suhbat yo'q.
-    yield const <VoiceMessage>[];
-    return;
+    return const AsyncValue.data(<VoiceMessage>[]);
   }
 
-  final repo = ref.watch(backendVoiceMessageRepositoryProvider);
-
-  Future<List<VoiceMessage>> fetch() async {
-    final raw = await repo.getMessagesRaw();
+  return ref.watch(rawVoiceMessagesProvider).whenData((raw) {
     final mine = raw.where(
       (m) =>
           m['senderId'] == childUserId || m['receiverId'] == childUserId,
@@ -84,27 +110,7 @@ final voiceMessagesProvider =
     );
     // Backend DESC keladi — chat ekrani uchun ASC (chronological).
     return parsed.reversed.toList();
-  }
-
-  yield await fetch();
-
-  // WS `voice:received` — yangi xabar keldi, refetch.
-  final controller = StreamController<List<VoiceMessage>>();
-  final subscription = repo.voiceReceivedStream().listen((data) async {
-    if (data is! Map) return;
-    final senderId = data['senderId'] as String?;
-    final receiverId = data['receiverId'] as String?;
-    // Faqat shu bola bilan bog'liq xabar bo'lsa refetch.
-    if (senderId == childUserId || receiverId == childUserId) {
-      final refreshed = await fetch();
-      if (!controller.isClosed) controller.add(refreshed);
-    }
   });
-  ref.onDispose(() {
-    subscription.cancel();
-    controller.close();
-  });
-  yield* controller.stream;
 });
 
 /// Eng oxirgi ovozli xabar — list ekrani preview.

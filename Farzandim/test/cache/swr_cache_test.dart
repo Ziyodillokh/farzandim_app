@@ -39,6 +39,20 @@ void main() {
       expect(await SwrCache.read('buzuq'), isNull);
     });
 
+    test('o`zgarmagan data qayta YOZILMAYDI (write-amplifikatsiya)', () async {
+      await SwrCache.write('wa', ['a']);
+      final first = await SwrCache.read('wa');
+      await Future<void>.delayed(const Duration(milliseconds: 10));
+      // Ayni shu data — disk yozuvi skip, savedAt o`zgarmaydi.
+      await SwrCache.write('wa', ['a']);
+      final second = await SwrCache.read('wa');
+      expect(second!.$2, first!.$2);
+      // Boshqa data — yoziladi.
+      await SwrCache.write('wa', ['b']);
+      final third = await SwrCache.read('wa');
+      expect((third!.$1 as List?)!.first, 'b');
+    });
+
     test('evict bitta kalitni o`chiradi', () async {
       await SwrCache.write('k1', 'v1');
       await SwrCache.evict('k1');

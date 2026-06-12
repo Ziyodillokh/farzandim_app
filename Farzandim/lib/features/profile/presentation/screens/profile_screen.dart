@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -211,10 +212,12 @@ class _EditableAvatar extends StatelessWidget {
                         color: AppColors.textSecondary,
                         size: 48,
                       )
-                    : Image.network(
-                        photoUrl!,
+                    // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+                    : CachedNetworkImage(
+                        imageUrl: photoUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => Icon(
+                        memCacheWidth: 200,
+                        errorWidget: (_, __, ___) => Icon(
                           Icons.person_rounded,
                           color: AppColors.textSecondary,
                           size: 48,

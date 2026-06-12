@@ -1,5 +1,6 @@
 import 'dart:io';
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -147,7 +148,7 @@ class VoiceChatBubble extends ConsumerWidget {
                         .read(backendVoiceMessageRepositoryProvider)
                         .markAsRead(message.id);
                     // Provider refresh — bubble `seen` indicatorga o'tadi.
-                    ref.invalidate(voiceMessagesProvider(message.childId));
+                    ref.invalidate(rawVoiceMessagesProvider);
                   }
                 } catch (_) {
                   if (context.mounted) {

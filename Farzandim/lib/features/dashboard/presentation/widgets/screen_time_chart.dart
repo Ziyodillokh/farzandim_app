@@ -8,6 +8,7 @@
 
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
+import 'package:farzandim/core/utils/poll_backoff.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
@@ -53,17 +54,21 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
   // Har 30 sek realtime poll. Xato (tarmoq blip) bo'lsa YIELD QILMAYMIZ —
   // StreamProvider oxirgi qiymatni saqlaydi, shuning uchun ekran vaqti
   // "0 daqiqa"ga tushib qolmaydi (avvalgi regressiya).
+  final backoff = PollBackoff();
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
     if (!alive) return;
     if (!isAppResumed(ref)) continue;
+    if (backoff.shouldSkipTick) continue;
     try {
       yield await repo.getWeeklyTotals(
         childId: childId,
         endDate: DateTime.now(),
       );
+      backoff.onSuccess();
     } catch (_) {
-      // skip — oxirgi qiymat saqlanadi
+      // skip — backoff: ketma-ket xatolarda siyraklashadi
+      backoff.onFailure();
     }
   }
 });

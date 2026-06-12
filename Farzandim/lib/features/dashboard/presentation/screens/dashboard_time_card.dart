@@ -238,12 +238,14 @@ class _AppIcon extends StatelessWidget {
         clipBehavior: Clip.antiAlias,
         alignment: Alignment.center,
         child: iconUrl != null && iconUrl!.isNotEmpty
-            ? Image.network(
-                iconUrl!,
+            // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+            ? CachedNetworkImage(
+                imageUrl: iconUrl!,
                 width: inner,
                 height: inner,
                 fit: BoxFit.cover,
-                errorBuilder: (_, __, ___) => _fallback(letter),
+                memCacheWidth: 128,
+                errorWidget: (_, __, ___) => _fallback(letter),
               )
             : _fallback(letter),
       ),

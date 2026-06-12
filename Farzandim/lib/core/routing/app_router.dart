@@ -27,8 +27,8 @@ import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/screens/add_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
-import 'package:farzandim/features/child_management/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
+import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
 import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_zone_screen.dart';

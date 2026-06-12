@@ -8,6 +8,7 @@
 import 'dart:async';
 
 import 'package:farzandim/core/utils/app_lifecycle.dart';
+import 'package:farzandim/core/utils/poll_backoff.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
@@ -54,14 +55,18 @@ final todayUsageProvider = StreamProvider.autoDispose
   yield await repo.getTodayUsage(childId);
 
   // Polling — har 30 sek, faqat provider hayot VA ilova ko'rinib turganda.
+  final backoff = PollBackoff();
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 30), (i) => i)) {
     if (!alive) return;
     if (!isAppResumed(ref)) continue;
+    if (backoff.shouldSkipTick) continue;
     try {
       yield await repo.getTodayUsage(childId);
+      backoff.onSuccess();
     } catch (_) {
-      // tarmoq blip — oxirgi qiymat saqlanadi, keyingi tick qayta uradi
+      // tarmoq blip — backoff: ketma-ket xatolarda siyraklashadi
+      backoff.onFailure();
     }
   }
 });
@@ -97,14 +102,18 @@ final installedAppsProvider = StreamProvider.autoDispose
 
   // 60 sekundda bir refresh — yangi pair qilingan qurilmada nomlar/ikonalar
   // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).
+  final backoff = PollBackoff();
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (i) => i)) {
     if (!alive) return;
     if (!isAppResumed(ref)) continue;
+    if (backoff.shouldSkipTick) continue;
     try {
       yield await repo.getInstalledApps(childId: childId);
+      backoff.onSuccess();
     } catch (_) {
-      // skip — oxirgi qiymat saqlanadi
+      // skip — backoff: ketma-ket xatolarda siyraklashadi
+      backoff.onFailure();
     }
   }
 });

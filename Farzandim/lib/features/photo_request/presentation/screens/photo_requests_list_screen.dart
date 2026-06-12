@@ -7,6 +7,7 @@
 // Fullscreen: tap qilingan rasm InteractiveViewer bilan zoomable.
 // Delete: long-press → confirmation dialog → DELETE /photo-requests/:id.
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -408,12 +409,14 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
         tag: 'photo_${widget.requestId}',
         child: ClipRRect(
           borderRadius: BorderRadius.circular(12),
-          child: Image.network(
-            _signedUrl!,
+          // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+          child: CachedNetworkImage(
+            imageUrl: _signedUrl!,
             fit: BoxFit.cover,
             height: 240,
             width: double.infinity,
-            errorBuilder: (_, __, ___) => Container(
+            memCacheWidth: 720,
+            errorWidget: (_, __, ___) => Container(
               height: 100,
               alignment: Alignment.center,
               color: AppColors.surfaceVariant,
@@ -459,10 +462,12 @@ class _FullscreenPhoto extends StatelessWidget {
                 child: InteractiveViewer(
                   minScale: 1,
                   maxScale: 5,
-                  child: Image.network(
-                    url,
+                  // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+                  child: CachedNetworkImage(
+                    imageUrl: url,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => const Icon(
+                    memCacheWidth: 1080,
+                    errorWidget: (_, __, ___) => const Icon(
                       Icons.broken_image_rounded,
                       color: Colors.white,
                       size: 64,

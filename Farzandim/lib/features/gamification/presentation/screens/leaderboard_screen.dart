@@ -8,6 +8,7 @@
 // skrol bilan) + pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi
 // (test/olympiad yechilganda XP beriladi).
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -561,14 +562,15 @@ class _Avatar extends ConsumerWidget {
     final url = ref.read(leaderboardRepositoryProvider).avatarUrl(childId);
     final letter = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     return ClipOval(
-      child: Image.network(
-        url,
+      // MEM-4: disk kesh + cheklangan dekod (memCacheWidth)
+      child: CachedNetworkImage(
+        imageUrl: url,
         width: size,
         height: size,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _fallback(letter),
-        loadingBuilder: (context, child, progress) =>
-            progress == null ? child : _fallback(letter),
+        memCacheWidth: 200,
+        errorWidget: (_, __, ___) => _fallback(letter),
+        placeholder: (_, __) => _fallback(letter),
       ),
     );
   }

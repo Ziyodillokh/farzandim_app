@@ -23,9 +23,15 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// Barcha SWR kalitlari shu prefiks bilan — clearAll faqat shularni o'chiradi.
 const _kPrefix = 'swr_cache_v1:';
 
-/// Disk SWR keshi — statik util (holatsiz).
+/// Disk SWR keshi — statik util.
 class SwrCache {
   SwrCache._();
+
+  /// Oxirgi yozilgan data-JSON (kalit → encode natija) — yozuv-amplifikatsiya
+  /// oldini oladi: 60s poll natijasi o'zgarmagan bo'lsa SharedPreferences
+  /// butun backing-faylini qayta yozmaydi (har set butun faylni yozadi).
+  /// Faqat xotirada — restart'dan keyin birinchi yozuv baribir o'tadi.
+  static final Map<String, String> _lastWritten = {};
 
   /// Keshdan o'qish. Yo'q/buzuq bo'lsa `null`.
   /// Qaytadi: (xom JSON qiymat, saqlangan vaqt).
@@ -51,14 +57,17 @@ class SwrCache {
   /// (backend javobining xom List/Map'i).
   static Future<void> write(String key, Object? data) async {
     try {
+      final dataJson = jsonEncode(data);
+      // O'zgarmagan ma'lumotni qayta yozmaymiz (savedAt yangilanmaydi —
+      // SWR uchun bu muhim emas: kesh baribir "oxirgi ko'rilgan" qiymat).
+      if (_lastWritten[key] == dataJson) return;
       final prefs = await SharedPreferences.getInstance();
       await prefs.setString(
         '$_kPrefix$key',
-        jsonEncode({
-          'savedAt': DateTime.now().millisecondsSinceEpoch,
-          'data': data,
-        }),
+        '{"savedAt":${DateTime.now().millisecondsSinceEpoch},'
+            '"data":$dataJson}',
       );
+      _lastWritten[key] = dataJson;
     } catch (e) {
       debugPrint('SwrCache.write($key): $e');
     }
@@ -67,6 +76,7 @@ class SwrCache {
   /// Bitta kalitni o'chirish.
   static Future<void> evict(String key) async {
     try {
+      _lastWritten.remove(key);
       final prefs = await SharedPreferences.getInstance();
       await prefs.remove('$_kPrefix$key');
     } catch (_) {}
@@ -76,14 +86,14 @@ class SwrCache {
   /// (boshqa akkaunt ma'lumoti ko'rinib qolmasin).
   static Future<void> clearAll() async {
     try {
+      _lastWritten.clear();
       final prefs = await SharedPreferences.getInstance();
       final keys = prefs
           .getKeys()
           .where((k) => k.startsWith(_kPrefix))
           .toList();
-      for (final k in keys) {
-        await prefs.remove(k);
-      }
+      // Parallel remove — ketma-ket await'lardan tezroq (logout yo'li).
+      await Future.wait(keys.map(prefs.remove));
       debugPrint('SwrCache.clearAll: ${keys.length} kalit tozalandi');
     } catch (e) {
       debugPrint('SwrCache.clearAll: $e');

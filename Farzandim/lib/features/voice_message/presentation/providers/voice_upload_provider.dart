@@ -103,7 +103,7 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
           );
 
       // Backend POST tugadi — voice ro'yxatini refresh qilamiz.
-      _ref.invalidate(voiceMessagesProvider(childId));
+      _ref.invalidate(rawVoiceMessagesProvider);
 
       state = state.copyWith(status: UploadStatus.sent);
       return messageId;

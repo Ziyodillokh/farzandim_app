@@ -11,6 +11,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
+import 'package:farzandim/core/utils/poll_backoff.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
@@ -113,14 +114,17 @@ Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
     if (current.isEmpty) rethrow;
   }
 
+  final backoff = PollBackoff();
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (t) => t)) {
     if (!alive) return;
     // Ilova fonda — so'rov yubormaymiz (batareya + backend yuki).
     if (!isAppResumed(ref)) continue;
+    if (backoff.shouldSkipTick) continue;
     try {
       final fresh = await repo.getChildren();
       if (!alive) return;
+      backoff.onSuccess();
       // O'zgarmagan bo'lsa yield YO'Q — eski List identity qoladi,
       // watcher'lar rebuild bo'lmaydi (Child'da value-based == bor).
       if (!listEquals(fresh, current)) {
@@ -128,7 +132,8 @@ Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
         yield fresh;
       }
     } catch (_) {
-      // tarmoq blip — oxirgi qiymat saqlanadi, keyingi tick qayta uradi
+      // tarmoq blip — backoff: ketma-ket xatolarda siyraklashadi
+      backoff.onFailure();
     }
   }
 }

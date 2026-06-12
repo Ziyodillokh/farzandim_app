@@ -29,7 +29,7 @@ class VoiceMessagesScreen extends ConsumerWidget {
     // qilinmagani uchun pull-to-refresh yangi xabar OLMASDI (WS event
     // o'tkazib yuborilgan bo'lsa cheksiz eskirgan ko'rinardi).
     Future<void> onRefresh() async {
-      ref.invalidate(voiceMessagesProvider);
+      ref.invalidate(rawVoiceMessagesProvider);
       await Future<void>.delayed(const Duration(milliseconds: 500));
     }
 

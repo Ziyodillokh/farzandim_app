@@ -5,6 +5,7 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/child_management/data/models/child_device_info.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
@@ -52,8 +53,11 @@ class _DeviceSettingsScreenState extends ConsumerState<DeviceSettingsScreen> {
     // Ekran ochiq turganda har 30s yangilab turamiz (childrenProvider'ning
     // o'z ichki 60s poll'iga qo'shimcha tezlik shu ekran uchun; avval 10s
     // edi — bola heartbeat'i 20-60s bo'lgani uchun 10s ortiqcha yuk edi).
+    // Lifecycle guard: ekran ochiq qoldirilib ilova FONGA o'tsa tick-bump
+    // darhol fetch qildirardi (`mounted` fonda ham true) — endi yo'q.
     _refreshTimer = Timer.periodic(const Duration(seconds: 30), (_) {
-      if (mounted) {
+      if (mounted &&
+          ref.read(appLifecycleProvider) == AppLifecycleState.resumed) {
         ref.read(childrenRefreshTickProvider.notifier).state++;
       }
     });
