@@ -17,8 +17,6 @@
 // Eslatma: Backend `emitToUser(parentId, ...)` ham qiladi, demak
 // `join:child` chaqirilmasa ham parent eshitadi (auto-join user room).
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -29,8 +27,9 @@ import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendLocationRepositoryProvider =
-    Provider<BackendLocationRepository>((ref) {
+final backendLocationRepositoryProvider = Provider<BackendLocationRepository>((
+  ref,
+) {
   return BackendLocationRepository(
     dio: ref.watch(dioClientProvider),
     socketClient: ref.watch(socketClientProvider),
@@ -41,8 +40,8 @@ class BackendLocationRepository {
   BackendLocationRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -121,8 +120,7 @@ class BackendLocationRepository {
       );
       final list = response.data?['stops'] as List<dynamic>? ?? const [];
       return list
-          .map((e) =>
-              LocationStop.fromBackendJson(e as Map<String, dynamic>))
+          .map((e) => LocationStop.fromBackendJson(e as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendLocationRepository.getStops: $e');
@@ -146,16 +144,17 @@ class BackendLocationRepository {
         // 1. Initial Backend fetch.
         final initial = await getLatest(childId);
         if (controller.isClosed) return;
-        debugPrint(
-          'LocRepo[$childId]: initial fetch — '
-          '${initial == null ? "null" : "${initial.latitude},${initial.longitude}"}',
-        );
+        final initialStr = initial == null
+            ? 'null'
+            : '${initial.latitude},${initial.longitude}';
+        debugPrint('LocRepo[$childId]: initial fetch — $initialStr');
         controller.add(initial);
 
         // 2. WS broadcast stream'iga obuna — har 'location:updated'
         // event filter qilinib bola moslashsagina emit qilinadi.
-        subscription =
-            _socketClient.eventStream('location:updated').listen((data) {
+        subscription = _socketClient.eventStream('location:updated').listen((
+          data,
+        ) {
           if (controller.isClosed) return;
           // MEM-9: to'liq payload print qilinmaydi — har WS event'da katta
           // string yaratish/log IO isrof edi (release'da ham ishlardi).
@@ -185,13 +184,12 @@ class BackendLocationRepository {
               Map<String, dynamic>.from(locJson),
             );
             debugPrint(
-              'LocRepo[$childId]: WS yangi joylashuv ${loc.latitude},${loc.longitude}',
+              'LocRepo[$childId]: WS yangi joylashuv '
+              '${loc.latitude},${loc.longitude}',
             );
             controller.add(loc);
           } catch (e) {
-            debugPrint(
-              'LocRepo[$childId]: WS parse xato — $e',
-            );
+            debugPrint('LocRepo[$childId]: WS parse xato — $e');
           }
         });
       },

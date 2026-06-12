@@ -41,7 +41,7 @@ class SosAlertsListScreen extends ConsumerWidget {
                       _AlertsList(
                         provider: activeSosAlertsProvider,
                         showResolveButton: true,
-                        emptyTitle: 'Faol SOS alert yo\'q',
+                        emptyTitle: "Faol SOS alert yo'q",
                         emptySubtitle:
                             'Hammasi tinch. Bola SOS bossa, push xabar keladi.',
                         emptyIcon: Icons.check_circle_outline_rounded,
@@ -50,9 +50,9 @@ class SosAlertsListScreen extends ConsumerWidget {
                       _AlertsList(
                         provider: resolvedSosAlertsProvider,
                         showResolveButton: false,
-                        emptyTitle: 'Tarix bo\'sh',
+                        emptyTitle: "Tarix bo'sh",
                         emptySubtitle:
-                            'Hal qilingan SOS alertlar bu yerda ko\'rinadi.',
+                            "Hal qilingan SOS alertlar bu yerda ko'rinadi.",
                         emptyIcon: Icons.history_rounded,
                         emptyIconColor: AppColors.textSecondary,
                       ),
@@ -246,7 +246,7 @@ class _AlertsList extends ConsumerWidget {
     if (lat == null || lng == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Joylashuv yo\'q'),
+          content: const Text("Joylashuv yo'q"),
           backgroundColor: AppColors.warning,
         ),
       );
@@ -278,7 +278,7 @@ class _AlertsList extends ConsumerWidget {
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          'Alert ACTIVE → RESOLVED holatiga o\'tadi.',
+          "Alert ACTIVE → RESOLVED holatiga o'tadi.",
           style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
@@ -315,14 +315,14 @@ class _AlertsList extends ConsumerWidget {
       ref.invalidate(sosAlertsByStatusProvider);
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('SOS hal qilindi'),
+          content: const Text('SOS hal qilindi'),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Resolve xato'),
+          content: const Text('Resolve xato'),
           backgroundColor: AppColors.error,
         ),
       );
@@ -361,7 +361,6 @@ class _AlertTile extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: accent,
-        padding: const EdgeInsets.all(AppDimensions.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -543,7 +542,6 @@ class _LocationMapDialog extends StatelessWidget {
                     infoWindow: InfoWindow(title: title),
                   ),
                 },
-                zoomControlsEnabled: true,
                 myLocationButtonEnabled: false,
                 mapToolbarEnabled: false,
               ),

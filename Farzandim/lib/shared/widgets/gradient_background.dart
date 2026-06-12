@@ -55,10 +55,11 @@ class GradientBackground extends ConsumerWidget {
             child: ClipRect(
               child: Stack(
                 // Dark (Aurora Brand-Glow): BITTA tepadagi forest yorug'lik
-                //   (xona bitta manbadan yoritilgan) + yuqori-o'ngda mint kicker
-                //   + pastda juda nozik forest "pol". "Yashil maydon" emas —
-                //   yorug'lik kartalar atrofidagi bo'sh joyda yashaydi (opaque
-                //   karta uni o'zidan ortda to'sadi, shu sabab "soup" bo'lmaydi).
+                //   (xona bitta manbadan yoritilgan) + yuqori-o'ngda mint
+                //   kicker + pastda juda nozik forest "pol". "Yashil maydon"
+                //   emas — yorug'lik kartalar atrofidagi bo'sh joyda yashaydi
+                //   (opaque karta uni o'zidan ortda to'sadi, shu sabab "soup"
+                //   bo'lmaydi).
                 // Light: AVVALGI sxema — o'zgarmaydi.
                 children: isDark
                     ? [
@@ -79,7 +80,8 @@ class GradientBackground extends ConsumerWidget {
                           right: -120,
                           size: 380,
                         ),
-                        // Pastda juda nozik teal "pol" — bo'shliq o'lik bo'lmasin.
+                        // Pastda juda nozik teal "pol" — bo'shliq o'lik
+                        // bo'lmasin.
                         _blob(
                           AppColors.secondary,
                           0.05,

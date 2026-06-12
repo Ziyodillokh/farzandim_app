@@ -12,8 +12,6 @@
 // Bola emoji feedback yuboradi (parent ko'radi). 8 emoji:
 // HAPPY, EXCITED, THINKING, WINKING, SAD, ANGRY, TIRED, LOVE.
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';

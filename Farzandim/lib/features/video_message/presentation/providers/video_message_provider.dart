@@ -141,7 +141,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
       _ref.invalidate(videoMessagesProvider(childId));
       state = state.copyWith(
         status: VideoUploadStatus.sent,
-        progress: 1.0,
+        progress: 1,
       );
       return true;
     } catch (e) {

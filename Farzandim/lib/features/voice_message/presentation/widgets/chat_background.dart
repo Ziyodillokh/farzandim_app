@@ -37,7 +37,9 @@ class ChatBackground extends ConsumerWidget {
     }
 
     final filePath = chatWallpaperFilePath(wp);
-    if (filePath != null && filePath.isNotEmpty && File(filePath).existsSync()) {
+    if (filePath != null &&
+        filePath.isNotEmpty &&
+        File(filePath).existsSync()) {
       return Stack(
         fit: StackFit.expand,
         children: [

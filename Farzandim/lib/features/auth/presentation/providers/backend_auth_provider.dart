@@ -15,13 +15,11 @@
 //   authenticated → /dashboard
 //   unknown    → /splash (ko'rinish saqlash)
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:dio/dio.dart';
-import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
 import 'package:farzandim/core/cache/swr_cache.dart';
+import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';

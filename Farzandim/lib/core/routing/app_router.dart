@@ -29,6 +29,8 @@ import 'package:farzandim/features/child_management/presentation/screens/add_chi
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
+import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
+import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_zone_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zones_list_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/privacy_policy_screen.dart';
@@ -38,24 +40,22 @@ import 'package:farzandim/features/location/presentation/screens/location_map_sc
 import 'package:farzandim/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim/features/onboarding/presentation/providers/language_picked_provider.dart';
 import 'package:farzandim/features/onboarding/presentation/screens/language_select_screen.dart';
+import 'package:farzandim/features/pair_requests/presentation/screens/pair_requests_screen.dart';
+import 'package:farzandim/features/photo_request/presentation/screens/photo_requests_list_screen.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/app_permissions_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/device_settings_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/permission_apps_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/voice_messages_screen.dart';
-import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
-import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
-import 'package:farzandim/features/photo_request/presentation/screens/photo_requests_list_screen.dart';
 import 'package:farzandim/features/schedules/presentation/screens/schedules_list_screen.dart';
-import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
-import 'package:farzandim/features/weekly_report/presentation/screens/weekly_report_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
-import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
-import 'package:farzandim/features/pair_requests/presentation/screens/pair_requests_screen.dart';
+import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
+import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
+import 'package:farzandim/features/weekly_report/presentation/screens/weekly_report_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -117,14 +117,16 @@ const _publicRoutes = <String>[
 /// kuzatiladi — migration paytida ikkalasi parallel ishlaydi.
 class _AuthRefreshNotifier extends ChangeNotifier {
   _AuthRefreshNotifier(Ref ref) {
-    ref.listen(backendAuthProvider, (_, __) => notifyListeners());
-    // Light/dark almashganda router sahifalarni QAYTA QURADI — aks holda
-    // joriy ekran (ayniqsa const DashboardScreen) AppColors o'zgarganini
-    // sezmay, eski temada qolib ketardi (faqat refresh/navigatsiyada o'zgarardi).
-    ref.listen(themeModeProvider, (_, __) => notifyListeners());
-    // Til tanlangach (yoki prefs'dan yuklangach) redirect qayta hisoblanadi —
-    // til ekranidan welcome'ga avtomatik o'tish uchun.
-    ref.listen(languagePickedProvider, (_, __) => notifyListeners());
+    ref
+      ..listen(backendAuthProvider, (_, __) => notifyListeners())
+      // Light/dark almashganda router sahifalarni QAYTA QURADI — aks holda
+      // joriy ekran (ayniqsa const DashboardScreen) AppColors o'zgarganini
+      // sezmay, eski temada qolib ketardi (faqat refresh/navigatsiyada
+      // o'zgarardi).
+      ..listen(themeModeProvider, (_, __) => notifyListeners())
+      // Til tanlangach (yoki prefs'dan yuklangach) redirect qayta
+      // hisoblanadi — til ekranidan welcome'ga avtomatik o'tish uchun.
+      ..listen(languagePickedProvider, (_, __) => notifyListeners());
   }
 }
 
@@ -229,7 +231,7 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.welcome,
       // const EMAS — light/dark toggle'da qayta qurilishi uchun (router refresh).
-      builder: (context, state) => WelcomeScreen(),
+      builder: (context, state) => const WelcomeScreen(),
     ),
 
     // Telegram Login WebView (Sprint 4.4 — Backend auth migration).
@@ -267,7 +269,7 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.dashboard,
       // const EMAS — light/dark toggle'da qayta qurilishi uchun (router refresh).
-      builder: (context, state) => DashboardScreen(),
+      builder: (context, state) => const DashboardScreen(),
     ),
 
     // Yangi bola qo'shish formasi.

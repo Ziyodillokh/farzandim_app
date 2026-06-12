@@ -2,8 +2,6 @@
 // app_update_provider — Parent App version check (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim/features/app_update/data/repositories/backend_app_version_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -46,7 +44,8 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
     }
 
     // Web'da dart:io Platform UnsupportedError tashlaydi — kIsWeb bilan himoya.
-    // Web build Android APK'ni directApkUrl orqali tarqatadi → web'ni android deb olamiz.
+    // Web build Android APK'ni directApkUrl orqali tarqatadi → web'ni
+    // android deb olamiz.
     final isAndroid =
         kIsWeb || defaultTargetPlatform == TargetPlatform.android;
     final platform = isAndroid ? info.android : info.ios;

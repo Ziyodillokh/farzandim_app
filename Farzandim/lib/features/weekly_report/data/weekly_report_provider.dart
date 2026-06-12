@@ -15,7 +15,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 @immutable
 class DayMs {
-  const DayMs({required this.date, required this.totalMs, required this.totalMinutes});
+  const DayMs({
+    required this.date,
+    required this.totalMs,
+    required this.totalMinutes,
+  });
   final String date;
   final int totalMs;
   final int totalMinutes;
@@ -52,16 +56,6 @@ class WeeklyReport {
     required this.topApps,
   });
 
-  final List<DayMs> screenDays;
-  final int screenWeekMs;
-  final int screenWeekMinutes;
-  final List<DaySteps> stepDays;
-  final int stepsWeekTotal;
-  final int stepsDailyAvg;
-  final List<TopApp> topApps;
-
-  static int _int(dynamic v) => (v as num?)?.round() ?? 0;
-
   factory WeeklyReport.fromJson(Map<String, dynamic> json) {
     final screen = (json['screenTime'] as Map<String, dynamic>?) ?? const {};
     final steps = (json['steps'] as Map<String, dynamic>?) ?? const {};
@@ -88,7 +82,9 @@ class WeeklyReport {
         .map((e) => e as Map<String, dynamic>)
         .map((a) => TopApp(
               packageName: a['packageName'] as String? ?? '',
-              appName: a['appName'] as String? ?? (a['packageName'] as String? ?? ''),
+              appName:
+                  a['appName'] as String? ??
+                  (a['packageName'] as String? ?? ''),
               totalMinutes: _int(a['totalMinutes']),
             ))
         .toList();
@@ -103,6 +99,16 @@ class WeeklyReport {
       topApps: topApps,
     );
   }
+
+  final List<DayMs> screenDays;
+  final int screenWeekMs;
+  final int screenWeekMinutes;
+  final List<DaySteps> stepDays;
+  final int stepsWeekTotal;
+  final int stepsDailyAvg;
+  final List<TopApp> topApps;
+
+  static int _int(dynamic v) => (v as num?)?.round() ?? 0;
 }
 
 class WeeklyReportRepository {
@@ -121,7 +127,8 @@ final weeklyReportRepositoryProvider = Provider<WeeklyReportRepository>((ref) {
   return WeeklyReportRepository(ref.watch(dioClientProvider));
 });
 
-/// Refresh-counter — pull-to-refresh uchun invalidate o'rniga (blank oldini olish).
+/// Refresh-counter — pull-to-refresh uchun invalidate o'rniga (blank
+/// oldini olish).
 final weeklyReportRefreshProvider =
     StateProvider.family<int, String>((ref, childId) => 0);
 

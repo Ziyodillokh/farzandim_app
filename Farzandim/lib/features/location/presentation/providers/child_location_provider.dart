@@ -17,8 +17,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///
 /// `backendAuthProvider`'ga bog'langan: foydalanuvchi `AuthAuthenticated`
 /// bo'lmasa stream bo'sh qaytariladi.
-final childLocationProvider =
-    StreamProvider.family<ChildLocation?, String>((ref, childId) {
+final childLocationProvider = StreamProvider.family<ChildLocation?, String>((
+  ref,
+  childId,
+) {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     return Stream.value(null);
@@ -30,8 +32,10 @@ final childLocationProvider =
 /// Bola joriy joylashuvi manzili (reverse geocoding) — joylashuv
 /// o'zgarganda avtomatik qayta hisoblanadi. Kalit yo'q / xato bo'lsa
 /// `null` (UI koordinata yoki "Noma'lum joylashuv" ko'rsatadi).
-final childAddressProvider =
-    FutureProvider.family<String?, String>((ref, childId) async {
+final childAddressProvider = FutureProvider.family<String?, String>((
+  ref,
+  childId,
+) async {
   final loc = ref.watch(childLocationProvider(childId)).valueOrNull;
   if (loc == null) return null;
   return ref

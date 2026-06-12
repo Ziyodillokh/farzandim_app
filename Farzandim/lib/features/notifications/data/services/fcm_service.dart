@@ -135,9 +135,7 @@ class FcmService {
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      
     );
     const initSettings = InitializationSettings(
       android: androidInit,
@@ -157,11 +155,10 @@ class FcmService {
       _defaultChannelName,
       description: _defaultChannelDesc,
       importance: Importance.high,
-      playSound: true,
-      enableVibration: true,
     );
-    final androidPlugin = _localNotifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin>();
     await androidPlugin?.createNotificationChannel(androidChannel);
   }
 
@@ -178,8 +175,6 @@ class FcmService {
       channelDescription: _defaultChannelDesc,
       importance: Importance.high,
       priority: Priority.high,
-      playSound: true,
-      enableVibration: true,
       icon: '@mipmap/ic_launcher',
     );
     const iosDetails = DarwinNotificationDetails(

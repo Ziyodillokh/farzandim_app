@@ -9,11 +9,11 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/utils/app_lifecycle.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart';
-import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
-import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
     show keepAliveFor;
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -93,7 +93,7 @@ final todayScreenTimeMsProvider =
 });
 
 class ScreenTimeChart extends ConsumerWidget {
-  const ScreenTimeChart({super.key, required this.childId});
+  const ScreenTimeChart({required this.childId, super.key});
 
   final String childId;
 

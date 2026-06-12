@@ -2,8 +2,6 @@
 // AppVersionInfo — Backend /api/app/version domain model (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:flutter/foundation.dart';
 
 @immutable

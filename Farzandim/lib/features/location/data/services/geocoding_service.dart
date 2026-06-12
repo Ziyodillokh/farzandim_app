@@ -43,8 +43,10 @@ class GeocodingService {
     //    Geocoding HTTP cheklov/sekinligini chetlab o'tadi. Web qo'llamaydi.
     if (!kIsWeb) {
       try {
-        final placemarks =
-            await geo.placemarkFromCoordinates(latitude, longitude);
+        final placemarks = await geo.placemarkFromCoordinates(
+          latitude,
+          longitude,
+        );
         if (placemarks.isNotEmpty) {
           final addr = _fromPlacemark(placemarks.first);
           if (addr != null) {
@@ -106,8 +108,8 @@ class GeocodingService {
     final city = (p.locality?.trim().isNotEmpty ?? false)
         ? p.locality!.trim()
         : (p.subAdministrativeArea?.trim().isNotEmpty ?? false)
-            ? p.subAdministrativeArea!.trim()
-            : p.administrativeArea?.trim();
+        ? p.subAdministrativeArea!.trim()
+        : p.administrativeArea?.trim();
     final parts = <String>[
       if (street != null && street.isNotEmpty) street,
       if (city != null && city.isNotEmpty && city != street) city,

@@ -2,8 +2,6 @@
 // LeaderboardRepository — XP reyting (GET /api/leaderboard) + avatar URL
 // ─────────────────────────────────────────────────────────────────────
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
@@ -21,8 +19,7 @@ class LeaderboardRepository {
   Future<LeaderboardPage> fetch({
     required String childId,
     required String period,
-    String? region,
-    required int page,
+    required int page, String? region,
     int limit = 15,
   }) async {
     final res = await _dio.get<Map<String, dynamic>>(

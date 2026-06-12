@@ -13,8 +13,6 @@
 //   Limit 30min → POST { packageName, dailyLimitMs: 1800000 }
 //   Remove      → DELETE /app-limits/:id
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
@@ -142,7 +140,8 @@ class BackendAppLimitRepository {
       }
     }
     if (code == null) {
-      return 'Internet aloqasi yo\'q yoki server javob bermadi. Qayta urinib ko\'ring.';
+      return "Internet aloqasi yo'q yoki server javob bermadi. "
+          "Qayta urinib ko'ring.";
     }
     if (code == 401) return 'Sessiya muddati tugagan — qaytadan kiring.';
     if (code == 403) return 'Bu bola sizning akkauntingizga ulanmagan.';
@@ -202,5 +201,3 @@ class _AppLimitWire {
     );
   }
 }
-
-

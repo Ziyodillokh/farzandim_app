@@ -19,8 +19,6 @@
 // HTTP uchun Android'da `android:usesCleartextTraffic="true"` kerak
 // bo'lishi mumkin (Manifest).
 
-// ignore_for_file: public_member_api_docs
-
 class EnvConfig {
   EnvConfig._();
 

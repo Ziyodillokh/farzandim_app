@@ -92,7 +92,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                '$childName — Pair so\'rovlar',
+                "$childName — Pair so'rovlar",
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -203,7 +203,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
   }
 
   String _formatLeft(Duration d) {
-    if (d <= Duration.zero) return 'Muddati o\'tdi';
+    if (d <= Duration.zero) return "Muddati o'tdi";
     final m = d.inMinutes;
     final s = d.inSeconds % 60;
     return '$m:${s.toString().padLeft(2, '0')}';
@@ -217,7 +217,6 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: AppColors.secondary,
-        padding: const EdgeInsets.all(AppDimensions.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -302,7 +301,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                       ),
                     ),
                     icon: _busy
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 16,
                             height: 16,
                             child: CircularProgressIndicator(
@@ -395,14 +394,14 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.lg),
             Text(
-              'Pair so\'rovlar yo\'q',
+              "Pair so'rovlar yo'q",
               style: AppTextStyles.headlineL.copyWith(fontSize: 18),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              'Bola yangi qurilmadan ulanmoqchi bo\'lganda shu yerda '
-              'paydo bo\'ladi.',
+              "Bola yangi qurilmadan ulanmoqchi bo'lganda shu yerda "
+              "paydo bo'ladi.",
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textSecondary,
               ),

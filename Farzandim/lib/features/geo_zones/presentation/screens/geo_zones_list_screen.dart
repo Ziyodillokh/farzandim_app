@@ -348,7 +348,6 @@ class _ZoneCard extends StatelessWidget {
     return SettingsCard(
       accent: AppColors.info,
       onTap: () => context.push(AppRoutes.geoZonesEditPath(childId, zone.id)),
-      padding: const EdgeInsets.all(AppDimensions.md),
       child: Row(
         children: [
           // Lime gradient badge + ikonka.

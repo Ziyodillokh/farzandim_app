@@ -48,7 +48,10 @@ class VideoThumbCache {
         // Muvaffaqiyatda keyingi chaqiruv keshdagi fayldan oladi;
         // xatoda keyingi urinishga ruxsat.
         unawaited(
-          Future<void>.delayed(Duration.zero, () => _inFlight.remove(messageId)),
+          Future<void>.delayed(
+            Duration.zero,
+            () => _inFlight.remove(messageId),
+          ),
         );
       }
     });

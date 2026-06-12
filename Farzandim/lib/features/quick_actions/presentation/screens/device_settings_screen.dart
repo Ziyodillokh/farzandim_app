@@ -469,7 +469,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     try {
       await ref
           .read(backendChildRepositoryProvider)
-          .setBlockUnknownSources(widget.child.id, value);
+          .setBlockUnknownSources(widget.child.id, value: value);
       ref.invalidate(childrenProvider);
       if (mounted) {
         _snack(

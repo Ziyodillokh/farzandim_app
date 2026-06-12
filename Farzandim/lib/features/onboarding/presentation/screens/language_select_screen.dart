@@ -24,7 +24,8 @@ class LanguageSelectScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Tanlangan til = joriy locale (tap setLocale qiladi → ekran qayta quriladi).
+    // Tanlangan til = joriy locale (tap setLocale qiladi → ekran qayta
+    // quriladi).
     final current = AppLanguage.fromCode(context.locale.languageCode);
 
     return Scaffold(

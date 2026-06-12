@@ -5,7 +5,8 @@
 // Tepada profil (avatar + ism + telefon/email pill + 3-nuqta menyu),
 // keyin 2 ta guruhlangan karta:
 //   1) Bola qo'shish · Bolaning ma'lumotlarini tahrirlash
-//   2) Faol sessiyalar (badge) · Til · Qo'llab-quvvatlash · Dastur haqida · Ulashish
+//   2) Faol sessiyalar (badge) · Til · Qo'llab-quvvatlash · Dastur haqida ·
+//      Ulashish
 // Pastda Foydalanish vaqti ↔ Sozlamalar navigatsiyasi (AppBottomNav, Hero).
 
 import 'package:easy_localization/easy_localization.dart';
@@ -203,8 +204,7 @@ class SettingsScreen extends ConsumerWidget {
   //   sent>0 + push yo'q  → bildirishnoma ruxsati/telefon ko'rsatish muammosi
   //   sent=0, failed>0   → server Firebase muammosi
   Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
-    final messenger = ScaffoldMessenger.of(context);
-    messenger.showSnackBar(
+    ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Test push yuborilmoqda…')),
     );
 
@@ -224,15 +224,15 @@ class SettingsScreen extends ConsumerWidget {
       if (tokens == 0) {
         title = '⚠️ Qurilma ro‘yxatdan o‘tmagan';
         body =
-            'Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech qanday '
-            'bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, qayta kiring '
-            '(login) — token avtomatik ro‘yxatdan o‘tadi.';
+            'Bu telefonda push tokeni yo‘q (tokens=0). Shuning uchun hech '
+            'qanday bildirishnoma kelmaydi.\n\nYechim: Sozlamalardan chiqib, '
+            'qayta kiring (login) — token avtomatik ro‘yxatdan o‘tadi.';
       } else if (sent > 0) {
         title = '✅ Yuborildi';
         body =
-            'Server push yubordi (tokens=$tokens, sent=$sent).\n\nBir necha soniyada '
-            'bildirishnoma kelishi kerak. Agar KELMASA — telefon bildirishnoma '
-            'ruxsatini tekshiring.';
+            'Server push yubordi (tokens=$tokens, sent=$sent).\n\n'
+            'Bir necha soniyada bildirishnoma kelishi kerak. Agar KELMASA — '
+            'telefon bildirishnoma ruxsatini tekshiring.';
       } else {
         title = '❌ Server yubora olmadi';
         body =
@@ -314,7 +314,6 @@ class _ProfileHeader extends StatelessWidget {
         AppDimensions.sm,
       ),
       child: Row(
-        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           _Avatar(photoUrl: profile.photoUrl, name: profile.name),
           const SizedBox(width: AppDimensions.md),

@@ -6,8 +6,6 @@
 // yangi instance (toza ro'yxat). Bir instance ichida `loadMore()` keyingi
 // sahifani qo'shadi (~15 tadan).
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
 import 'package:flutter/foundation.dart';
@@ -64,7 +62,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
 
   final LeaderboardRepository _repo;
   final LeaderboardArgs _args;
-  static const int _limit = 15;
 
   Future<void> _loadFirst() async {
     state = const LeaderboardState();
@@ -74,7 +71,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         period: _args.period,
         region: _args.region,
         page: 1,
-        limit: _limit,
       );
       state = state.copyWith(
         entries: pageData.entries,
@@ -84,7 +80,11 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         page: 1,
       );
     } catch (_) {
-      state = state.copyWith(initialLoading: false, error: true, hasMore: false);
+      state = state.copyWith(
+        initialLoading: false,
+        error: true,
+        hasMore: false,
+      );
     }
   }
 
@@ -99,7 +99,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
         period: _args.period,
         region: _args.region,
         page: next,
-        limit: _limit,
       );
       // currentChild'ni qayta yozmaymiz — u birinchi sahifada o'rnatilgan va
       // har sahifada bir xil (backend qayta hisoblaydi). Stale bo'lmaydi.

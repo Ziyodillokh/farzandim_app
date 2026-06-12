@@ -154,7 +154,8 @@ class NotificationCard extends StatelessWidget {
                   ],
                 ),
               ],
-              // O'yin xabari — bitta "Bloklash" tugmasi (o'yinni to'liq bloklaydi).
+              // O'yin xabari — bitta "Bloklash" tugmasi (o'yinni to'liq
+              // bloklaydi).
               if (_blockable) ...[
                 const SizedBox(height: AppDimensions.md),
                 _BlockButton(onTap: onBlock!),

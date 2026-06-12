@@ -28,8 +28,6 @@
 // Eslatma: Socket.io path default `/socket.io/` — Nginx config'da shu
 // path uchun proxy bor (Sprint 4.2.10 Backend Claude tomonidan qo'yilgan).
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:farzandim/core/auth/token_storage.dart';
@@ -194,7 +192,7 @@ class SocketClient {
   Stream<dynamic> eventStream(String event) {
     final controller = _eventControllers.putIfAbsent(
       event,
-      () => StreamController<dynamic>.broadcast(),
+      StreamController<dynamic>.broadcast,
     );
     _attachListener(event);
     return controller.stream;

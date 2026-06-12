@@ -16,16 +16,6 @@ class UserSession {
     this.lastSeenAt,
   });
 
-  final String id;
-  final bool isCurrent;
-  final String? deviceModel;
-  final String? platform; // android | ios | web
-  final String? ipAddress;
-  final String? city;
-  final String? country;
-  final DateTime? createdAt;
-  final DateTime? lastSeenAt;
-
   factory UserSession.fromJson(Map<String, dynamic> json) {
     DateTime? parseDate(Object? v) =>
         v is String ? DateTime.tryParse(v)?.toLocal() : null;
@@ -43,6 +33,16 @@ class UserSession {
       lastSeenAt: parseDate(json['lastSeenAt']),
     );
   }
+
+  final String id;
+  final bool isCurrent;
+  final String? deviceModel;
+  final String? platform; // android | ios | web
+  final String? ipAddress;
+  final String? city;
+  final String? country;
+  final DateTime? createdAt;
+  final DateTime? lastSeenAt;
 
   bool get isAndroid => platform == 'android';
   bool get isIos => platform == 'ios';

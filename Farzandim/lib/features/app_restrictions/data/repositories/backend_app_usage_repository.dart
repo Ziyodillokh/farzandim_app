@@ -7,14 +7,12 @@
 //   GET /api/children/:childId/installed-apps?includeSystem=true
 //   GET /api/children/:childId/app-usage?from=&to=&packageName=&limit=
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
-import 'package:farzandim/core/utils/tashkent_time.dart' as tz;
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/utils/tashkent_time.dart' as tz;
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';

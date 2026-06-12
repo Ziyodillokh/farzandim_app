@@ -12,11 +12,8 @@
 // Ma'lumot mavjud provayderlardan (combineAppData): usage + restrictions +
 // installed apps. Hech qanday dublikat backend mantiq yo'q.
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_combined.dart';
@@ -26,6 +23,7 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
@@ -632,7 +630,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                       ),
                     ),
                     child: _saving
-                        ? SizedBox(
+                        ? const SizedBox(
                             width: 18,
                             height: 18,
                             child: CircularProgressIndicator(

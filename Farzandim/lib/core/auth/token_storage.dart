@@ -19,8 +19,6 @@
 // Riverpod orqali ham ishlatish mumkin:
 //   final tokenStorageProvider = Provider<TokenStorage>((_) => TokenStorage());
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
@@ -31,19 +29,25 @@ final tokenStorageProvider = Provider<TokenStorage>(
   (_) => TokenStorage(),
 );
 
+/// Token saqlash backend interfeysi — platformaga qarab tanlanadi.
+///
+/// PUBLIC tur — `TokenStorage` public konstruktori test/DI uchun shu
+/// turni qabul qiladi (private tur public API'da ko'rinishi mumkin
+/// emas). Implementatsiyalar fayl ichida private qoladi.
+///
 /// Web platformasi uchun `flutter_secure_storage_web` Web Crypto API
 /// (SubtleCrypto) orqali AES-GCM kalit derivatsiya qiladi. Chrome'da
 /// ba'zi holatlarda `OperationError` portlaydi (incognito, repeated
 /// AES key wrap). Lokal dev/preview uchun SharedPreferences yetadi —
 /// brauzer localStorage'iga oddiy matn saqlanadi (token allaqachon
 /// HTTPS orqali keladi, hozircha xavfsizlik darajasi yetarli).
-abstract class _Backend {
+abstract class TokenStorageBackend {
   Future<void> write(String key, String value);
   Future<String?> read(String key);
   Future<void> delete(String key);
 }
 
-class _SecureStorageBackend implements _Backend {
+class _SecureStorageBackend implements TokenStorageBackend {
   _SecureStorageBackend()
       : _storage = const FlutterSecureStorage(
           aOptions: AndroidOptions(encryptedSharedPreferences: true),
@@ -65,7 +69,7 @@ class _SecureStorageBackend implements _Backend {
   Future<void> delete(String key) => _storage.delete(key: key);
 }
 
-class _SharedPrefsBackend implements _Backend {
+class _SharedPrefsBackend implements TokenStorageBackend {
   Future<SharedPreferences> get _prefs => SharedPreferences.getInstance();
 
   @override
@@ -88,11 +92,11 @@ class _SharedPrefsBackend implements _Backend {
 }
 
 class TokenStorage {
-  TokenStorage({_Backend? backend})
+  TokenStorage({TokenStorageBackend? backend})
       : _backend = backend ??
             (kIsWeb ? _SharedPrefsBackend() : _SecureStorageBackend());
 
-  final _Backend _backend;
+  final TokenStorageBackend _backend;
 
   // Storage kalitlari — bitta joyda toza tutamiz.
   static const _kAccessToken = 'jwt_access_token';

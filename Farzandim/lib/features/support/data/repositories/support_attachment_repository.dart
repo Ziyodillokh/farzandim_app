@@ -7,8 +7,6 @@
 // olish proxy orqali bo'ladi (GET /api/support/attachments/:key — @Public,
 // signed-URL reachability muammosini chetlaydi, app-icon proxy bilan bir xil).
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:flutter/foundation.dart';
@@ -80,7 +78,7 @@ class SupportAttachmentRepository {
     required String fileName,
   }) async {
     final dir = await getTemporaryDirectory();
-    final safe = fileName.replaceAll(RegExp(r'[^A-Za-z0-9._-]'), '_');
+    final safe = fileName.replaceAll(RegExp('[^A-Za-z0-9._-]'), '_');
     final savePath = '${dir.path}/$safe';
     await _dio.download(urlForKey(key), savePath);
     return savePath;

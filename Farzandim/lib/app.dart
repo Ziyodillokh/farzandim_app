@@ -50,14 +50,14 @@ class FarzandimApp extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // FCM init triggeri — birinchi build'da ishga tushadi va keshlanadi.
-    // Natijaga (AsyncValue<void>) e'tibor bermaymiz — xato bo'lsa
-    // `fcm_service.dart` ichida `debugPrint` qiladi.
-    ref.watch(fcmInitializerProvider);
-
-    // Socket.io lifecycle — auth state'ga listen qilib avtomatik
-    // connect/disconnect qiladi. Side-effect, value qaytarmaydi.
-    ref.watch(socketLifecycleProvider);
+    ref
+      // FCM init triggeri — birinchi build'da ishga tushadi va keshlanadi.
+      // Natijaga (AsyncValue<void>) e'tibor bermaymiz — xato bo'lsa
+      // `fcm_service.dart` ichida `debugPrint` qiladi.
+      ..watch(fcmInitializerProvider)
+      // Socket.io lifecycle — auth state'ga listen qilib avtomatik
+      // connect/disconnect qiladi. Side-effect, value qaytarmaydi.
+      ..watch(socketLifecycleProvider);
 
     // Theme (light/dark) — toggle'ga qarab AppColors.brightness o'rnatiladi.
     // Root build descendant'lardan OLDIN ishlaydi → keyin barcha widget'lar
@@ -70,113 +70,113 @@ class FarzandimApp extends ConsumerWidget {
     // paytda JWT yo'q bo'lsa 401 olib registratsiya bo'lmaydi. Auth
     // state `AuthAuthenticated`'ga o'tganda token qayta yoziladi —
     // shu bilan admin panel push'lari Parent App'ga yetib boradi.
-    ref.listen<BackendAuthState>(backendAuthProvider, (previous, next) {
-      if (next is AuthAuthenticated && previous is! AuthAuthenticated) {
-        ref.read(fcmServiceProvider).reRegisterToken();
-      }
-    });
-
-    // Sprint 4.4.7: SOS WS event'i — eng yuqori prioritet, qizil banner.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(sosReceivedAlertProvider, (
-      _,
-      next,
-    ) {
-      final payload = next.valueOrNull;
-      if (payload == null || payload.isEmpty) return;
-      final messenger = _scaffoldMessengerKey.currentState;
-      if (messenger == null) return;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Row(
-            children: [
-              const Icon(Icons.warning_amber_rounded, color: Colors.white),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  '🚨 ${'sos.wsBanner'.tr()}',
-                  style: const TextStyle(
-                    fontWeight: FontWeight.w700,
-                    fontSize: 16,
+    ref
+      ..listen<BackendAuthState>(backendAuthProvider, (previous, next) {
+        if (next is AuthAuthenticated && previous is! AuthAuthenticated) {
+          ref.read(fcmServiceProvider).reRegisterToken();
+        }
+      })
+      // Sprint 4.4.7: SOS WS event'i — eng yuqori prioritet, qizil banner.
+      ..listen<AsyncValue<Map<String, dynamic>>>(sosReceivedAlertProvider, (
+        _,
+        next,
+      ) {
+        final payload = next.valueOrNull;
+        if (payload == null || payload.isEmpty) return;
+        final messenger = _scaffoldMessengerKey.currentState;
+        if (messenger == null) return;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Row(
+              children: [
+                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    '🚨 ${'sos.wsBanner'.tr()}',
+                    style: const TextStyle(
+                      fontWeight: FontWeight.w700,
+                      fontSize: 16,
+                    ),
                   ),
                 ),
+              ],
+            ),
+            backgroundColor: const Color(0xFFEF4444),
+            duration: const Duration(seconds: 10),
+            behavior: SnackBarBehavior.floating,
+            // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
+            // "hal qilindi"). Pair-request banner bilan bir xil pattern.
+            action: SnackBarAction(
+              label: 'sos.viewAction'.tr(),
+              textColor: Colors.white,
+              onPressed: () =>
+                  ref.read(routerProvider).push(AppRoutes.sosAlerts),
+            ),
+          ),
+        );
+      })
+      // Sprint 4.4.25: Pair request created WS event — Parent App banner.
+      ..listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider, (
+        _,
+        next,
+      ) {
+        final payload = next.valueOrNull;
+        if (payload == null || payload.isEmpty) return;
+        final messenger = _scaffoldMessengerKey.currentState;
+        if (messenger == null) return;
+        final childName =
+            (payload['child'] as Map?)?['name'] as String? ??
+            payload['childName'] as String? ??
+            'Bola';
+        final childId = payload['childId'] as String?;
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text(
+              '📱 $childName yangi qurilmadan ulanmoqchi. Tasdiqlang.',
+              style: const TextStyle(
+                fontWeight: FontWeight.w600,
+                fontSize: 14,
               ),
-            ],
+            ),
+            backgroundColor: const Color(0xFFFBBF24),
+            duration: const Duration(seconds: 10),
+            behavior: SnackBarBehavior.floating,
+            action: childId != null
+                ? SnackBarAction(
+                    label: "Ko'rish",
+                    textColor: Colors.black,
+                    onPressed: () => ref
+                        .read(routerProvider)
+                        .push(AppRoutes.pairRequestsPath(childId)),
+                  )
+                : null,
           ),
-          backgroundColor: const Color(0xFFEF4444),
-          duration: const Duration(seconds: 10),
-          behavior: SnackBarBehavior.floating,
-          // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
-          // "hal qilindi"). Pair-request banner bilan bir xil pattern.
-          action: SnackBarAction(
-            label: 'sos.viewAction'.tr(),
-            textColor: Colors.white,
-            onPressed: () => ref.read(routerProvider).push(AppRoutes.sosAlerts),
+        );
+      })
+      // Sprint 4.4.3: Geo zone alert WS event'i — har joydan ko'rinadigan
+      // SnackBar (Foreground). Background'da Backend FCM push yuboradi.
+      ..listen<AsyncValue<Map<String, dynamic>>>(geoZoneAlertProvider, (
+        _,
+        next,
+      ) {
+        final payload = next.valueOrNull;
+        if (payload == null || payload.isEmpty) return;
+        final messengerKey = _scaffoldMessengerKey;
+        final messenger = messengerKey.currentState;
+        if (messenger == null) return;
+        final zoneName = payload['zoneName'] as String? ?? 'Zona';
+        final isEnter = payload['event'] == 'enter';
+        final action = isEnter ? 'kirdi' : 'chiqdi';
+        messenger.showSnackBar(
+          SnackBar(
+            content: Text('🚨 Bola "$zoneName" zonasiga $action'),
+            backgroundColor: isEnter
+                ? const Color(0xFF4ADE80)
+                : const Color(0xFFFBBF24),
           ),
-        ),
-      );
-    });
-
-    // Sprint 4.4.25: Pair request created WS event — Parent App banner.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider, (
-      _,
-      next,
-    ) {
-      final payload = next.valueOrNull;
-      if (payload == null || payload.isEmpty) return;
-      final messenger = _scaffoldMessengerKey.currentState;
-      if (messenger == null) return;
-      final childName =
-          (payload['child'] as Map?)?['name'] as String? ??
-          payload['childName'] as String? ??
-          'Bola';
-      final childId = payload['childId'] as String?;
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text(
-            '📱 $childName yangi qurilmadan ulanmoqchi. Tasdiqlang.',
-            style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
-          ),
-          backgroundColor: const Color(0xFFFBBF24),
-          duration: const Duration(seconds: 10),
-          behavior: SnackBarBehavior.floating,
-          action: childId != null
-              ? SnackBarAction(
-                  label: 'Ko\'rish',
-                  textColor: Colors.black,
-                  onPressed: () {
-                    final router = ref.read(routerProvider);
-                    router.push(AppRoutes.pairRequestsPath(childId));
-                  },
-                )
-              : null,
-        ),
-      );
-    });
-
-    // Sprint 4.4.3: Geo zone alert WS event'i — har joydan ko'rinadigan
-    // SnackBar (Foreground). Background'da Backend FCM push yuboradi.
-    ref.listen<AsyncValue<Map<String, dynamic>>>(geoZoneAlertProvider, (
-      _,
-      next,
-    ) {
-      final payload = next.valueOrNull;
-      if (payload == null || payload.isEmpty) return;
-      final messengerKey = _scaffoldMessengerKey;
-      final messenger = messengerKey.currentState;
-      if (messenger == null) return;
-      final zoneName = payload['zoneName'] as String? ?? 'Zona';
-      final isEnter = payload['event'] == 'enter';
-      final action = isEnter ? 'kirdi' : 'chiqdi';
-      messenger.showSnackBar(
-        SnackBar(
-          content: Text('🚨 Bola "$zoneName" zonasiga $action'),
-          backgroundColor: isEnter
-              ? const Color(0xFF4ADE80)
-              : const Color(0xFFFBBF24),
-          duration: const Duration(seconds: 4),
-        ),
-      );
-    });
+        );
+      });
 
     // Sprint 4.4.28: app startup'da Backend'dan version tekshirish.
     // Force update kerak bo'lsa modal dialog (eski versiya bilan ishlatish
@@ -223,9 +223,10 @@ class FarzandimApp extends ConsumerWidget {
       // bu "yarim-animatsiya" nomuvofiqligi jank beradi. Zero qilib bir
       // kadrda BIRGA, aniq va tez almashtiramiz (professional).
       themeAnimationDuration: Duration.zero,
-      // Global baza fon — BARCHA route'lar ortida theme rangi turadi. Transparent
-      // scaffold'larda overscroll/pull-to-refresh paytida oq OS oyna foni
-      // ko'rinmaydi (bitta joyda hal — har ekranni o'zgartirish shart emas).
+      // Global baza fon — BARCHA route'lar ortida theme rangi turadi.
+      // Transparent scaffold'larda overscroll/pull-to-refresh paytida oq OS
+      // oyna foni ko'rinmaydi (bitta joyda hal — har ekranni o'zgartirish
+      // shart emas).
       builder: (context, child) => ColoredBox(
         color: AppColors.background,
         // ⚡ THEME REAKTIVLIK: light↔dark toggle'da sahifa subtree'sini QAYTA

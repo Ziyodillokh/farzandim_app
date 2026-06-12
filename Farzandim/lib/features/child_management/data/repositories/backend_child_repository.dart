@@ -19,8 +19,6 @@
 // tugagach olib tashlanadi. `children_provider.dart` auth state'ga
 // qarab birini tanlaydi.
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -188,7 +186,10 @@ class BackendChildRepository {
   /// "Notanish manbalardan ilovalar" toggle — `PUT /children/:id`.
   /// `true` bo'lsa bola qurilmasi Play'dan boshqa manbadagi ilovalarni
   /// bloklaydi (native enforce). Yangilangan `Child` qaytadi.
-  Future<Child> setBlockUnknownSources(String childId, bool value) async {
+  Future<Child> setBlockUnknownSources(
+    String childId, {
+    required bool value,
+  }) async {
     final response = await _dio.put<Map<String, dynamic>>(
       '/children/$childId',
       data: <String, dynamic>{'blockUnknownSources': value},
@@ -199,7 +200,7 @@ class BackendChildRepository {
   /// "Barcha ilovalarni bloklash" toggle (dashboard) — `PUT /children/:id`.
   /// `true` bo'lsa bola qurilmasidagi barcha ilovalar bloklanadi (Child App
   /// device-policy'ni o'qib enforce qiladi). Yangilangan `Child` qaytadi.
-  Future<Child> setBlockAllApps(String childId, bool value) async {
+  Future<Child> setBlockAllApps(String childId, {required bool value}) async {
     final response = await _dio.put<Map<String, dynamic>>(
       '/children/$childId',
       data: <String, dynamic>{'blockAllApps': value},

@@ -269,7 +269,9 @@ class _ThemeOption extends StatelessWidget {
             Text(
               label,
               style: AppTextStyles.bodyM.copyWith(
-                color: selected ? AppColors.textPrimary : AppColors.textSecondary,
+                color: selected
+                    ? AppColors.textPrimary
+                    : AppColors.textSecondary,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),

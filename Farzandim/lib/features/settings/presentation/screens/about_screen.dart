@@ -50,7 +50,6 @@ class AboutScreen extends StatelessWidget {
                       const SizedBox(height: AppDimensions.xl),
                       SettingsCard(
                         accent: AppColors.accent,
-                        padding: const EdgeInsets.all(AppDimensions.md),
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [

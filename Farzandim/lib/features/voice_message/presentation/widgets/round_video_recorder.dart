@@ -53,7 +53,6 @@ Future<XFile?> showRoundVideoRecorder(BuildContext context) {
   return showGeneralDialog<XFile?>(
     context: context,
     barrierColor: Colors.black.withValues(alpha: 0.85),
-    barrierDismissible: false,
     barrierLabel: 'Round video recorder',
     transitionDuration: const Duration(milliseconds: 220),
     pageBuilder: (ctx, _, __) => const _RoundVideoRecorderModal(),
@@ -137,7 +136,6 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
       final controller = CameraController(
         front,
         ResolutionPreset.low,
-        enableAudio: true,
         imageFormatGroup: ImageFormatGroup.jpeg,
       );
       await controller.initialize();
@@ -516,8 +514,9 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           )
         : Offset.zero;
 
-    final cancelIntensity =
-        isActive ? (-_horizontalDrag / _cancelDragThreshold).clamp(0.0, 1.0) : 0.0;
+    final cancelIntensity = isActive
+        ? (-_horizontalDrag / _cancelDragThreshold).clamp(0.0, 1.0)
+        : 0.0;
 
     return Column(
       mainAxisSize: MainAxisSize.min,

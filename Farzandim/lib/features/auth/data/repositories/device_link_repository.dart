@@ -7,8 +7,6 @@
 // Yangi qurilma (Kirish → "Akkauntga qo'shilish" → kamera skaner):
 //   redeem(code) → parent tokenlari (AuthSession) → onLoggedIn → dashboard.
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/device/device_meta.dart';
 import 'package:farzandim/core/network/dio_client.dart';

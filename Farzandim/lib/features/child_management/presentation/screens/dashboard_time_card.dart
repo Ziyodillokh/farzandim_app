@@ -9,7 +9,8 @@ class _TimeCard extends ConsumerStatefulWidget {
 
   final String childId;
 
-  /// Backend'dagi joriy "barcha ilovalarni bloklash" holati (child.blockAllApps).
+  /// Backend'dagi joriy "barcha ilovalarni bloklash" holati
+  /// (child.blockAllApps).
   final bool blockAllInitial;
 
   @override
@@ -53,7 +54,7 @@ class _TimeCardState extends ConsumerState<_TimeCard> {
     try {
       await ref
           .read(backendChildRepositoryProvider)
-          .setBlockAllApps(widget.childId, value);
+          .setBlockAllApps(widget.childId, value: value);
       _lastSavedAt = DateTime.now();
       ref.invalidate(childrenProvider);
       if (mounted) {
@@ -206,11 +207,13 @@ class _AppFacepile extends StatelessWidget {
 
 /// Bitta ilova ikonkasi — nozik ring (karta-tusli gap) bilan facepile uchun.
 class _AppIcon extends StatelessWidget {
-  const _AppIcon({required this.iconUrl, required this.name}) : size = 40;
+  const _AppIcon({required this.iconUrl, required this.name});
 
   final String? iconUrl;
   final String name;
-  final double size;
+
+  /// Ikonka diametri (ring bilan) — const klassda maydon emas, getter.
+  double get size => 40;
 
   @override
   Widget build(BuildContext context) {
@@ -261,10 +264,12 @@ class _AppIcon extends StatelessWidget {
 /// "+N" badge — facepile oxiri (qolgan ilovalar soni), ikonkalar bilan bir xil
 /// ring + o'lcham.
 class _PlusBadge extends StatelessWidget {
-  const _PlusBadge({required this.remaining}) : size = 40;
+  const _PlusBadge({required this.remaining});
 
   final int remaining;
-  final double size;
+
+  /// Badge diametri — ikonkalar bilan bir xil o'lcham.
+  double get size => 40;
 
   @override
   Widget build(BuildContext context) {

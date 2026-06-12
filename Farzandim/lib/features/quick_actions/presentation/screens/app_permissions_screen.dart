@@ -90,10 +90,6 @@ class _PermissionRow extends StatelessWidget {
     return SettingsCard(
       accent: AppColors.secondary,
       onTap: onTap,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: AppDimensions.md,
-      ),
       child: Row(
         children: [
           SettingsIconChip(icon: icon, accent: AppColors.secondary),

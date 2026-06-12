@@ -3,8 +3,6 @@
 // (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';

@@ -1,10 +1,9 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
-import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -18,6 +17,7 @@ import 'package:farzandim/features/gamification/presentation/providers/gamificat
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
@@ -87,7 +87,8 @@ class DashboardScreen extends ConsumerWidget {
 // ════════════════════════ LOADING ════════════════════════
 
 /// Dashboard yuklanish holati — auth tiklanmoqda yoki bolalar kelmoqda.
-/// `_EmptyState` (add-child) o'rniga ko'rsatiladi, shunda bo'sh "flash" bo'lmaydi.
+/// `_EmptyState` (add-child) o'rniga ko'rsatiladi, shunda bo'sh "flash"
+/// bo'lmaydi.
 class _DashboardLoading extends StatelessWidget {
   const _DashboardLoading();
 
@@ -209,7 +210,6 @@ class _EmptyState extends StatelessWidget {
           Expanded(
             child: GlassCard(
               padding: const EdgeInsets.all(AppDimensions.xl),
-              radius: AppDimensions.radiusL,
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
@@ -438,8 +438,8 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                 ),
               ),
 
-              // SUZUVCHI nav — orqa fon yo'q (shaffof): gradient + aurora ustida
-              // qalqaydi, glass kartalar bilan bir xil premium til.
+              // SUZUVCHI nav — orqa fon yo'q (shaffof): gradient + aurora
+              // ustida qalqaydi, glass kartalar bilan bir xil premium til.
               Positioned(
                 left: AppDimensions.lg,
                 right: AppDimensions.lg,
@@ -461,4 +461,3 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
     );
   }
 }
-

@@ -29,7 +29,7 @@ class AppToast {
 
   /// Tezkor yordamchilar.
   static void success(BuildContext context, String message) =>
-      show(context, message, type: AppToastType.success);
+      show(context, message);
   static void error(BuildContext context, String message) =>
       show(context, message, type: AppToastType.error);
   static void info(BuildContext context, String message) =>
@@ -128,9 +128,18 @@ class _ToastViewState extends State<_ToastView>
   }
 
   ({Color color, IconData icon}) get _style => switch (widget.type) {
-        AppToastType.success => (color: AppColors.success, icon: Icons.check_circle_rounded),
-        AppToastType.error => (color: AppColors.error, icon: Icons.error_rounded),
-        AppToastType.warning => (color: AppColors.warning, icon: Icons.warning_amber_rounded),
+        AppToastType.success => (
+            color: AppColors.success,
+            icon: Icons.check_circle_rounded,
+          ),
+        AppToastType.error => (
+            color: AppColors.error,
+            icon: Icons.error_rounded,
+          ),
+        AppToastType.warning => (
+            color: AppColors.warning,
+            icon: Icons.warning_amber_rounded,
+          ),
         AppToastType.info => (color: AppColors.info, icon: Icons.info_rounded),
       };
 

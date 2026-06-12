@@ -14,12 +14,10 @@
 // Geofence detection backend'da avtomatik (POST /api/location ichida).
 // Alert WS event'i Parent App'ga keladi.
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
-import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';
+import 'package:farzandim/core/utils/safe_parse.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone_event.dart';

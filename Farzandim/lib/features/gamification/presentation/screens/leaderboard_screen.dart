@@ -8,11 +8,11 @@
 // skrol bilan) + pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi
 // (test/olympiad yechilganda XP beriladi).
 
-import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
@@ -106,7 +106,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   Widget build(BuildContext context) {
     final st = ref.watch(leaderboardProvider(_args));
     final top3 = st.entries.take(3).toList();
-    final rest = st.entries.length > 3 ? st.entries.sublist(3) : <LeaderboardEntry>[];
+    final rest = st.entries.length > 3
+        ? st.entries.sublist(3)
+        : <LeaderboardEntry>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -152,7 +154,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
           // ─── Sticky "Siz" ───
           // Faqat top-3'dan tashqarida ko'rsatamiz (top-3 podium'da ko'rinadi
-          // — dublikat bo'lmasin). rank 0 = bu davrda XP yo'q → baribir ko'rsatamiz.
+          // — dublikat bo'lmasin). rank 0 = bu davrda XP yo'q → baribir
+          // ko'rsatamiz.
           if (st.currentChild != null &&
               (st.currentChild!.rank == 0 || st.currentChild!.rank > 3))
             _CurrentChildRow(entry: st.currentChild!),
@@ -254,7 +257,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 color: Colors.white, size: 18),
             const SizedBox(width: 6),
             Text(
-              _region ?? 'Viloyatlar bo\'yicha',
+              _region ?? "Viloyatlar bo'yicha",
               style: const TextStyle(
                 color: Colors.white,
                 fontWeight: FontWeight.w600,
@@ -283,7 +286,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         height: 120,
         child: Center(
           child: Text(
-            'Hali reyting yo\'q',
+            "Hali reyting yo'q",
             style: TextStyle(color: Colors.white, fontSize: 15),
           ),
         ),
@@ -543,7 +546,11 @@ class _CurrentChildRow extends StatelessWidget {
 // ════════════════════════ AVATAR ════════════════════════
 
 class _Avatar extends ConsumerWidget {
-  const _Avatar({required this.childId, required this.name, required this.size});
+  const _Avatar({
+    required this.childId,
+    required this.name,
+    required this.size,
+  });
 
   final String childId;
   final String name;
@@ -631,7 +638,7 @@ class _RegionPickerSheet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final regions = UzbekistanRegions.regions;
+    const regions = UzbekistanRegions.regions;
     return SafeArea(
       top: false,
       child: Column(

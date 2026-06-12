@@ -21,7 +21,7 @@ void main() {
       expect(got, isNotNull);
       final (data, savedAt) = got!;
       expect(data, isA<List<dynamic>>());
-      expect((data as List).first, {'id': 'a'});
+      expect((data! as List).first, {'id': 'a'});
       expect(
         DateTime.now().difference(savedAt).inSeconds.abs() < 5,
         isTrue,

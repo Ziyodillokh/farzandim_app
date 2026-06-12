@@ -8,9 +8,10 @@
 //
 // ⚡ PERF: `BackdropFilter` (frost) ATAYIN ISHLATILMAYDI — u scrollda har kadrda
 // butun fonni qayta sampling qilib jank berardi. Silliq gradient fon ustida
-// frost deyarli sezilmaydi, shuning uchun yarim-shaffof asos bilan almashtirildi
-// (bir xil ko'rinish, lekin silliq 60fps). `blur`/`blurSigma` parametrlari
-// saqlangan (API mosligi) — ammo endi e'tiborga olinmaydi (no-op).
+// frost deyarli sezilmaydi, shuning uchun yarim-shaffof asos bilan
+// almashtirildi (bir xil ko'rinish, lekin silliq 60fps). `blur`/`blurSigma`
+// parametrlari saqlangan (API mosligi) — ammo endi e'tiborga olinmaydi
+// (no-op).
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
@@ -85,7 +86,8 @@ class GlassCard extends StatelessWidget {
     final content = DecoratedBox(
       decoration: BoxDecoration(
         borderRadius: br,
-        // Nozik hairline rim — lit-edge ishini pastdagi specular chizig'i qiladi.
+        // Nozik hairline rim — lit-edge ishini pastdagi specular chizig'i
+        // qiladi.
         border: Border.all(
           color: AppColors.glassRim,
           width: isDark ? 1.0 : 1.2,
@@ -125,8 +127,6 @@ class GlassCard extends StatelessWidget {
                   height: 1.5,
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
-                      begin: Alignment.centerLeft,
-                      end: Alignment.centerRight,
                       colors: [
                         Colors.transparent,
                         AppColors.glassTopHighlight,
@@ -143,7 +143,8 @@ class GlassCard extends StatelessWidget {
     );
 
     // 4-5) Fill (dark: yo'naltirilgan gradient — tepa yorug', past to'q =
-    //      konveks chuqurlik; light: tekis glassFill) + tint (dark: forest jilo).
+    //      konveks chuqurlik; light: tekis glassFill) + tint (dark: forest
+    //      jilo).
     Widget surface = DecoratedBox(
       decoration: isDark
           ? BoxDecoration(
@@ -164,8 +165,9 @@ class GlassCard extends StatelessWidget {
 
     // 3) ⚡ PERF: BackdropFilter YO'Q. Frost scrollda har kadrda butun fonni
     //    qayta sampling qilib JANK berardi. Silliq teal gradient fon ustida
-    //    frost deyarli sezilmaydi — o'rniga yarim-shaffof asos + fill gradient +
-    //    rim BIR XIL premium ko'rinish beradi, lekin SILLIQ va TEZ scroll.
+    //    frost deyarli sezilmaydi — o'rniga yarim-shaffof asos + fill
+    //    gradient + rim BIR XIL premium ko'rinish beradi, lekin SILLIQ va
+    //    TEZ scroll.
     surface = DecoratedBox(
       decoration: BoxDecoration(
         color: isDark

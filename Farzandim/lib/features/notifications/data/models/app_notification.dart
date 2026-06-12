@@ -120,9 +120,9 @@ extension NotificationTypeX on NotificationType {
       case NotificationType.online:
         return 'Online';
       case NotificationType.pairRequest:
-        return 'Pair so\'rov';
+        return "Pair so'rov";
       case NotificationType.game:
-        return 'O\'yin';
+        return "O'yin";
     }
   }
 }

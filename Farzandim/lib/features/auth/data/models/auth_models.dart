@@ -18,8 +18,6 @@
 // Bu fayl DTO'lar (data transfer objects) — backend JSON ↔ Dart object.
 // Freezed/json_serializable ishlatmaymiz (oddiy va aniq), qo'lda parse.
 
-// ignore_for_file: public_member_api_docs
-
 class AuthTokens {
   const AuthTokens({
     required this.accessToken,

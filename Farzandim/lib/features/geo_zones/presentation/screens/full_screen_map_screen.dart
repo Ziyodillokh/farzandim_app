@@ -457,12 +457,12 @@ class _CenterPinOverlay extends StatelessWidget {
       alignment: Alignment.center,
       children: [
         Padding(
-          padding: EdgeInsets.only(bottom: 36),
+          padding: const EdgeInsets.only(bottom: 36),
           child: Icon(
             Icons.location_pin,
             size: 48,
             color: AppColors.primary,
-            shadows: [
+            shadows: const [
               Shadow(
                 color: Colors.black38,
                 blurRadius: 6,
@@ -498,7 +498,7 @@ class _BottomCard extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
         ),
       ),

@@ -41,7 +41,8 @@ class AppColors {
   /// Solid fon — chuqur teal #0F2027 (dark), yumshoq oq-kulrang (light).
   static Color get background => _c(0xFF0F2027, 0xFFF4F7F6);
 
-  /// Gradient fon — yuqori rang #2C5364 (yorug' petrol-teal, yog'duni ushlaydi).
+  /// Gradient fon — yuqori rang #2C5364 (yorug' petrol-teal, yog'duni
+  /// ushlaydi).
   static Color get backgroundTop => _c(0xFF2C5364, 0xFFEEF2F0);
 
   /// Gradient fon — pastki rang #0F2027 (chuqur teal pol).
@@ -122,7 +123,8 @@ class AppColors {
   // Dark: SHAFFOF frosted shisha (BackdropFilter blur) — orqa teal fon shisha
   // orqali ko'rinadi va refraksiya qiladi. Opaque emas. "translucent dark
   // surface + thin glowing border + soft teal reflection + glass highlight".
-  /// Shisha yuzasi — tekis fallback fill (light 75% oq; dark gradient zaxirasi).
+  /// Shisha yuzasi — tekis fallback fill (light 75% oq; dark gradient
+  /// zaxirasi).
   static Color get glassFill => _c(0x24FFFFFF, 0xBFFFFFFF);
 
   /// Yo'naltirilgan fill gradient — TEPA (yorug'roq, frost). Faqat dark.

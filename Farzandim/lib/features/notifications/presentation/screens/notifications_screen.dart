@@ -153,8 +153,8 @@ class _NotificationsList extends ConsumerWidget {
       case NotificationType.exitZone:
         context.push(AppRoutes.locationPath(n.childId));
       case NotificationType.lowBattery:
-        // Past batareya — bola qayerdaligini ko'rsatish muhim (quvvat tugashidan
-        // oldin joyni bilish): jonli xarita ekraniga olib boramiz.
+        // Past batareya — bola qayerdaligini ko'rsatish muhim (quvvat
+        // tugashidan oldin joyni bilish): jonli xarita ekraniga olib boramiz.
         if (n.childId.isNotEmpty) {
           context.push(AppRoutes.locationPath(n.childId));
         }

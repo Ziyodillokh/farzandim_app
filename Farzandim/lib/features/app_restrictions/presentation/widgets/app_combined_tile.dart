@@ -222,7 +222,12 @@ class _StatusBadge extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(left: 8),
       child: Container(
-        padding: EdgeInsets.fromLTRB(text == null ? 7 : 8, 4, text == null ? 7 : 9, 4),
+        padding: EdgeInsets.fromLTRB(
+          text == null ? 7 : 8,
+          4,
+          text == null ? 7 : 9,
+          4,
+        ),
         decoration: BoxDecoration(
           color: color.withValues(alpha: 0.13),
           borderRadius: BorderRadius.circular(AppDimensions.radiusPill),

@@ -92,15 +92,16 @@ class AvatarMarkerBuilder {
       ..lineTo(centerX, pinHeight)
       ..lineTo(centerX + tailHalfWidth, headHeight - 1)
       ..close();
-    canvas.drawPath(pinPath, Paint()..color = accent);
-    // Oq tashqi kontur — xarita fonidan aniq ajralib turadi (premium pin).
-    canvas.drawPath(
-      pinPath,
-      Paint()
-        ..color = Colors.white
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.5,
-    );
+    canvas
+      ..drawPath(pinPath, Paint()..color = accent)
+      // Oq tashqi kontur — xarita fonidan aniq ajralib turadi (premium pin).
+      ..drawPath(
+        pinPath,
+        Paint()
+          ..color = Colors.white
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2.5,
+      );
 
     // Inner avatar slot — pin ichida 5 px padding (kichikroq pin uchun)
     const padding = 5.0;
@@ -115,8 +116,9 @@ class AvatarMarkerBuilder {
       Radius.circular(cornerRadius - padding * 0.5),
     );
 
-    canvas.save();
-    canvas.clipRRect(avatarRRect);
+    canvas
+      ..save()
+      ..clipRRect(avatarRRect);
 
     if (avatarImage != null) {
       paintImage(
@@ -151,16 +153,16 @@ class AvatarMarkerBuilder {
         ),
       );
     }
-    canvas.restore();
-
-    // Highlight strip ichida — premium feel (Yandex pinning'ga o'xshash)
-    canvas.drawRRect(
-      avatarRRect,
-      Paint()
-        ..color = Colors.white.withValues(alpha: 0.25)
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2,
-    );
+    canvas
+      ..restore()
+      // Highlight strip ichida — premium feel (Yandex pinning'ga o'xshash)
+      ..drawRRect(
+        avatarRRect,
+        Paint()
+          ..color = Colors.white.withValues(alpha: 0.25)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
 
     final picture = recorder.endRecording();
     // 3x piksel o'lchamda rasterlash (scale yuqorida qo'llangan).
@@ -211,7 +213,8 @@ class AvatarMarkerBuilder {
   }
 }
 
-/// Premium map style — DEPRECATED (foydalanuvchi default'ga qaytarishni so'radi).
+/// Premium map style — DEPRECATED (foydalanuvchi default'ga qaytarishni
+/// so'radi).
 /// Hozircha API saqlab qolinyapti, lekin LocationMapScreen ishlatmaydi.
 class MapStyleLoader {
   MapStyleLoader._();
@@ -228,7 +231,7 @@ class DwellLabelMarker {
   static final Map<String, BitmapDescriptor> _cache = {};
 
   /// Multi-line label (`\n` bilan ajratiladi). Misol:
-  /// ```
+  /// ```text
   /// 08:00–13:00 (5 s)
   /// 16:00–18:00 (2 s)
   /// Jami: 7 s
@@ -303,13 +306,14 @@ class DwellLabelMarker {
       const Radius.circular(14),
     );
 
-    canvas.drawRRect(
-      pillRRect.shift(const Offset(0, 4)),
-      Paint()
-        ..color = Colors.black.withValues(alpha: 0.35)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
-    );
-    canvas.drawRRect(pillRRect, Paint()..color = accent);
+    canvas
+      ..drawRRect(
+        pillRRect.shift(const Offset(0, 4)),
+        Paint()
+          ..color = Colors.black.withValues(alpha: 0.35)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 6),
+      )
+      ..drawRRect(pillRRect, Paint()..color = accent);
 
     // Lines
     var y = padding;
@@ -324,16 +328,17 @@ class DwellLabelMarker {
     );
 
     // Bottom dot
-    canvas.drawCircle(
-      Offset(pillWidth / 2, pillHeight - dotSize / 2),
-      dotSize / 2,
-      Paint()..color = accent,
-    );
-    canvas.drawCircle(
-      Offset(pillWidth / 2, pillHeight - dotSize / 2),
-      dotSize / 2 - 4,
-      Paint()..color = Colors.white,
-    );
+    canvas
+      ..drawCircle(
+        Offset(pillWidth / 2, pillHeight - dotSize / 2),
+        dotSize / 2,
+        Paint()..color = accent,
+      )
+      ..drawCircle(
+        Offset(pillWidth / 2, pillHeight - dotSize / 2),
+        dotSize / 2 - 4,
+        Paint()..color = Colors.white,
+      );
 
     final picture = recorder.endRecording();
     final image = await picture.toImage(

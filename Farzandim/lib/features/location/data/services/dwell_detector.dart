@@ -35,10 +35,7 @@ class DwellPoint {
 /// Bir xil joyga bir necha marta tashrif tushgan dwell'lar yig'masi.
 @immutable
 class AggregatedDwell {
-  const AggregatedDwell({
-    required this.center,
-    required this.visits,
-  });
+  const AggregatedDwell({required this.center, required this.visits});
 
   final LatLng center;
   final List<DwellPoint> visits; // chronological
@@ -116,13 +113,7 @@ class DwellDetector {
         points[i].longitude,
       );
       if (dist > radiusMeters) {
-        _addIfQualifies(
-          dwells,
-          points,
-          clusterStart,
-          i - 1,
-          minDwellMinutes,
-        );
+        _addIfQualifies(dwells, points, clusterStart, i - 1, minDwellMinutes);
         clusterStart = i;
       }
     }
@@ -207,12 +198,14 @@ class DwellDetector {
       sumLng += points[i].longitude;
     }
     final n = endIdx - startIdx + 1;
-    out.add(DwellPoint(
-      center: LatLng(sumLat / n, sumLng / n),
-      startTime: start,
-      endTime: end,
-      pointCount: n,
-    ));
+    out.add(
+      DwellPoint(
+        center: LatLng(sumLat / n, sumLng / n),
+        startTime: start,
+        endTime: end,
+        pointCount: n,
+      ),
+    );
   }
 
   /// Haversine formula — ikki lat/lng orasidagi metrlardagi masofa.
@@ -225,7 +218,8 @@ class DwellDetector {
     const earthM = 6371000.0;
     final dLat = _toRad(lat2 - lat1);
     final dLng = _toRad(lng2 - lng1);
-    final a = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final a =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.cos(_toRad(lat1)) *
             math.cos(_toRad(lat2)) *
             math.sin(dLng / 2) *

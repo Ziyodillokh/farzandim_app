@@ -46,7 +46,7 @@ void main() {
       expect(c.isConnectionLost, isFalse);
     });
 
-    test("heartbeat 5 daqiqadan ESKI + ulangan → ALOQA UZILDI", () {
+    test('heartbeat 5 daqiqadan ESKI + ulangan → ALOQA UZILDI', () {
       final c = child(
         connected: true,
         seen: DateTime.now().subtract(const Duration(minutes: 10)),

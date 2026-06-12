@@ -217,7 +217,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final hasText = _draft.trim().isNotEmpty;
     // Orqa fon YO'Q — input wallpaper ustida suzib turadi (iPhone/Telegram).
     // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
-    return Container(
+    return ColoredBox(
       color: _showEmoji && !widget.isRecording
           ? AppColors.surface
           : Colors.transparent,

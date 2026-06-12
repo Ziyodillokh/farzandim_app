@@ -217,7 +217,6 @@ class VoiceChatBubble extends ConsumerWidget {
                               final visibleCount =
                                   amps.length.clamp(0, barCount);
                               return Row(
-                                crossAxisAlignment: CrossAxisAlignment.center,
                                 children: List.generate(visibleCount, (i) {
                                   final amp = amps[i];
                                   final barIdx = i / visibleCount;
@@ -363,7 +362,7 @@ class _TextBubble extends StatelessWidget {
         mainAxisAlignment:
             isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (isOwn) const Spacer(flex: 1),
+          if (isOwn) const Spacer(),
           Flexible(
             flex: 5,
             child: Container(
@@ -401,7 +400,7 @@ class _TextBubble extends StatelessWidget {
               ),
             ),
           ),
-          if (!isOwn) const Spacer(flex: 1),
+          if (!isOwn) const Spacer(),
         ],
       ),
     );
@@ -576,9 +575,9 @@ class _ImageBubble extends ConsumerWidget {
         mainAxisAlignment:
             isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (isOwn) const Spacer(flex: 1),
+          if (isOwn) const Spacer(),
           Flexible(flex: 5, child: content),
-          if (!isOwn) const Spacer(flex: 1),
+          if (!isOwn) const Spacer(),
         ],
       ),
     );
@@ -638,7 +637,6 @@ class _FullScreenImage extends StatelessWidget {
       ),
       body: Center(
         child: InteractiveViewer(
-          minScale: 0.8,
           maxScale: 4,
           child: Image.network(
             url,
@@ -765,7 +763,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
         mainAxisAlignment:
             isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
         children: [
-          if (isOwn) const Spacer(flex: 1),
+          if (isOwn) const Spacer(),
           Flexible(
             flex: 5,
             child: GestureDetector(
@@ -817,7 +815,8 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Text(
-                                message.fileName ?? 'voiceChat.fileGeneric'.tr(),
+                                message.fileName ??
+                                    'voiceChat.fileGeneric'.tr(),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
                                 style: TextStyle(
@@ -861,7 +860,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
               ),
             ),
           ),
-          if (!isOwn) const Spacer(flex: 1),
+          if (!isOwn) const Spacer(),
         ],
       ),
     );

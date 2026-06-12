@@ -290,7 +290,7 @@ class _FamilyCodePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.tag, size: 12, color: AppColors.onPrimary),
+          const Icon(Icons.tag, size: 12, color: AppColors.onPrimary),
           const SizedBox(width: 4),
           Text(
             code,

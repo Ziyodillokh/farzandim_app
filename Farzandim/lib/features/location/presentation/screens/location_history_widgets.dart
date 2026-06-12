@@ -13,10 +13,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _CircleIconButton(
-          icon: Icons.arrow_back,
-          onTap: () => context.pop(),
-        ),
+        _CircleIconButton(icon: Icons.arrow_back, onTap: () => context.pop()),
         const SizedBox(width: AppDimensions.sm),
         Expanded(
           child: Material(
@@ -78,11 +75,7 @@ class _CircleIconButton extends StatelessWidget {
           width: 48,
           height: 48,
           child: Center(
-            child: Icon(
-              icon,
-              size: 24,
-              color: AppColors.onPrimary,
-            ),
+            child: Icon(icon, size: 24, color: AppColors.onPrimary),
           ),
         ),
       ),
@@ -124,12 +117,10 @@ class _BottomPanel extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: AppColors.surface,
-        borderRadius: BorderRadius.vertical(
+        borderRadius: const BorderRadius.vertical(
           top: Radius.circular(AppDimensions.radiusL),
         ),
-        border: Border(
-          top: BorderSide(color: AppColors.border),
-        ),
+        border: Border(top: BorderSide(color: AppColors.border)),
         boxShadow: const [
           BoxShadow(
             color: Color(0x47000000),
@@ -213,7 +204,7 @@ class _BottomPanel extends StatelessWidget {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Icon(
+                    const Icon(
                       Icons.date_range_rounded,
                       size: 20,
                       color: AppColors.onPrimary,
@@ -223,7 +214,7 @@ class _BottomPanel extends StatelessWidget {
                       _isSameDay
                           ? _formatDate(fromDt)
                           : '${_formatDate(fromDt)}  —  ${_formatDate(toDt)}',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w700,
                         color: AppColors.onPrimary,
@@ -332,7 +323,8 @@ class _PlaceCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final key = '${stop.latitude.toStringAsFixed(5)},'
+    final key =
+        '${stop.latitude.toStringAsFixed(5)},'
         '${stop.longitude.toStringAsFixed(5)}';
     final address = ref.watch(_placeAddressProvider(key)).valueOrNull;
 

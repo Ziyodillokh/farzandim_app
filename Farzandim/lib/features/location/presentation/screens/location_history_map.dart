@@ -40,12 +40,12 @@ class _MapLayerState extends State<_MapLayer> {
     if (!identical(points, _dwellMemoInput)) {
       _dwellMemoInput = points;
       _dwellMemo = DwellDetector.aggregateByLocation(
-        DwellDetector.detect(points, minDwellMinutes: 20),
-        mergeRadiusMeters: 100,
+        DwellDetector.detect(points),
       );
     }
     return _dwellMemo;
   }
+
   String? _lastDwellSignature; // cache invalidation key
 
   Future<void> _ensureDwellLabels(List<AggregatedDwell> dwells) async {
@@ -93,9 +93,7 @@ class _MapLayerState extends State<_MapLayer> {
       Marker(
         markerId: const MarkerId('start'),
         position: start.latLng,
-        icon: BitmapDescriptor.defaultMarkerWithHue(
-          BitmapDescriptor.hueGreen,
-        ),
+        icon: BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueGreen),
         infoWindow: InfoWindow(
           title: 'Boshlandi',
           snippet: _hhmmDate(start.updatedAt),
@@ -105,11 +103,9 @@ class _MapLayerState extends State<_MapLayer> {
         markerId: const MarkerId('end'),
         position: end.latLng,
         // Avatar pin — live map bilan bir xil
-        icon: widget.avatarMarker ??
-            BitmapDescriptor.defaultMarkerWithHue(
-              BitmapDescriptor.hueRed,
-            ),
-        anchor: const Offset(0.5, 1.0),
+        icon:
+            widget.avatarMarker ??
+            BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueRed),
         infoWindow: InfoWindow(
           title: 'Hozir',
           snippet: _hhmmDate(end.updatedAt),
@@ -159,16 +155,13 @@ class _MapLayerState extends State<_MapLayer> {
         final isOpen = widget.openDwellIndex == i;
         final icon = isOpen
             ? _dwellLabels['dwell_$i']
-            : BitmapDescriptor.defaultMarkerWithHue(
-                BitmapDescriptor.hueAzure,
-              );
+            : BitmapDescriptor.defaultMarkerWithHue(BitmapDescriptor.hueAzure);
         markers.add(
           Marker(
             markerId: MarkerId('dwell_$i'),
             position: d.center,
             icon: icon ?? BitmapDescriptor.defaultMarker,
-            anchor:
-                isOpen ? const Offset(0.5, 1.0) : const Offset(0.5, 0.5),
+            anchor: isOpen ? const Offset(0.5, 1) : const Offset(0.5, 0.5),
             consumeTapEvents: true,
             onTap: () => widget.onDwellTap(i),
           ),
@@ -187,10 +180,7 @@ class _MapLayerState extends State<_MapLayer> {
     }
 
     return GoogleMap(
-      initialCameraPosition: CameraPosition(
-        target: end.latLng,
-        zoom: 14,
-      ),
+      initialCameraPosition: CameraPosition(target: end.latLng, zoom: 14),
       polylines: {polyline},
       markers: markers,
       circles: circles,
@@ -208,4 +198,3 @@ class _MapLayerState extends State<_MapLayer> {
       '${dt.day.toString().padLeft(2, '0')}.'
       '${dt.month.toString().padLeft(2, '0')}';
 }
-

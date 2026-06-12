@@ -71,7 +71,7 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
     if (child == null) {
       state = state.copyWith(
         status: UploadStatus.error,
-        errorMessage: "Bola topilmadi",
+        errorMessage: 'Bola topilmadi',
       );
       return null;
     }
@@ -123,5 +123,5 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
 
 final voiceUploadProvider =
     StateNotifierProvider<VoiceUploadNotifier, VoiceUploadState>(
-  (ref) => VoiceUploadNotifier(ref),
+  VoiceUploadNotifier.new,
 );

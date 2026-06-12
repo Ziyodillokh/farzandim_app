@@ -5,6 +5,8 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
+    show keepAliveFor;
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
@@ -15,26 +17,24 @@ import 'package:farzandim/features/location/presentation/utils/avatar_marker_bui
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart'
-    show keepAliveFor;
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 part 'location_history_map.dart';
 part 'location_history_widgets.dart';
 
 /// To'xtagan joy manzili (reverse geocoding) — "lat,lng" kalit, keshli.
-final _placeAddressProvider =
-    FutureProvider.autoDispose.family<String?, String>((ref, latLng) async {
-  // SCR-09: autoDispose + qisqa kesh — har koordinata abadiy keshda
-  // qolib xotira cheksiz o'sardi; ekran ochiq ekan kesh yetarli.
-  keepAliveFor(ref, const Duration(minutes: 2));
-  final parts = latLng.split(',');
-  if (parts.length != 2) return null;
-  final lat = double.tryParse(parts[0]);
-  final lng = double.tryParse(parts[1]);
-  if (lat == null || lng == null) return null;
-  return ref.watch(geocodingServiceProvider).reverse(lat, lng);
-});
+final _placeAddressProvider = FutureProvider.autoDispose
+    .family<String?, String>((ref, latLng) async {
+      // SCR-09: autoDispose + qisqa kesh — har koordinata abadiy keshda
+      // qolib xotira cheksiz o'sardi; ekran ochiq ekan kesh yetarli.
+      keepAliveFor(ref, const Duration(minutes: 2));
+      final parts = latLng.split(',');
+      if (parts.length != 2) return null;
+      final lat = double.tryParse(parts[0]);
+      final lng = double.tryParse(parts[1]);
+      if (lat == null || lng == null) return null;
+      return ref.watch(geocodingServiceProvider).reverse(lat, lng);
+    });
 
 /// Bola harakat tarixini xaritada polyline sifatida ko'rsatuvchi ekran.
 ///
@@ -57,8 +57,7 @@ class LocationHistoryScreen extends ConsumerStatefulWidget {
       _LocationHistoryScreenState();
 }
 
-class _LocationHistoryScreenState
-    extends ConsumerState<LocationHistoryScreen> {
+class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   /// Tanlangan vaqt oralig'i — default bugungi kun.
   late DateTime _fromDt;
   late DateTime _toDt;
@@ -105,15 +104,16 @@ class _LocationHistoryScreenState
       ),
       builder: (ctx, child) => Theme(
         data: Theme.of(ctx).copyWith(
-          colorScheme: (AppColors.isDark
-                  ? const ColorScheme.dark()
-                  : const ColorScheme.light())
-              .copyWith(
-            primary: AppColors.primary,
-            onPrimary: AppColors.onPrimary,
-            surface: AppColors.surface,
-            onSurface: AppColors.textPrimary,
-          ),
+          colorScheme:
+              (AppColors.isDark
+                      ? const ColorScheme.dark()
+                      : const ColorScheme.light())
+                  .copyWith(
+                    primary: AppColors.primary,
+                    onPrimary: AppColors.onPrimary,
+                    surface: AppColors.surface,
+                    onSurface: AppColors.textPrimary,
+                  ),
         ),
         child: child!,
       ),
@@ -143,17 +143,14 @@ class _LocationHistoryScreenState
   /// Joylar ro'yxatidan biror to'xtash bosilganda xaritani unga markazlash.
   void _goToStop(LatLng target) {
     _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(target: target, zoom: 16),
-      ),
+      CameraUpdate.newCameraPosition(CameraPosition(target: target, zoom: 16)),
     );
   }
 
   @override
   Widget build(BuildContext context) {
     final child = ref.watch(childByIdProvider(widget.childId));
-    final childName =
-        child?.name ?? 'locationHistory.fallbackChildName'.tr();
+    final childName = child?.name ?? 'locationHistory.fallbackChildName'.tr();
 
     final query = (
       childId: widget.childId,
@@ -164,7 +161,7 @@ class _LocationHistoryScreenState
     // Backend stop-detection topgan to'xtagan joylar (markerlar manbasi).
     final stops =
         ref.watch(locationStopsProvider(query)).valueOrNull ??
-            const <LocationStop>[];
+        const <LocationStop>[];
 
     // Tarix nuqtalarini tozalash — yomon-aniqlik fix va statsionar jitter
     // klasterlari olib tashlanadi (zigzag/soxta "borib-kelish" + shishgan
@@ -194,9 +191,7 @@ class _LocationHistoryScreenState
             // Map layer (full screen).
             historyAsync.when(
               loading: () => Center(
-                child: CircularProgressIndicator(
-                  color: AppColors.accent,
-                ),
+                child: CircularProgressIndicator(color: AppColors.accent),
               ),
               error: (e, _) => Center(
                 child: Padding(
@@ -223,8 +218,7 @@ class _LocationHistoryScreenState
                   openDwellIndex: _openDwellIndex,
                   onDwellTap: (idx) {
                     setState(() {
-                      _openDwellIndex =
-                          _openDwellIndex == idx ? null : idx;
+                      _openDwellIndex = _openDwellIndex == idx ? null : idx;
                     });
                   },
                   onMapTap: () {
@@ -288,9 +282,7 @@ class _LocationHistoryScreenState
     );
     // Padding 80px — bottom panel ostida nuqtalar yashirib qolmasligi
     // uchun.
-    _mapController!.animateCamera(
-      CameraUpdate.newLatLngBounds(bounds, 80),
-    );
+    _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
   }
 
   /// Tarix nuqtalarini tozalaydi (professional joylashuv mantig'i):
@@ -335,7 +327,8 @@ class _LocationHistoryScreenState
     final lat1 = _toRadians(a.latitude);
     final lat2 = _toRadians(b.latitude);
 
-    final h = math.sin(dLat / 2) * math.sin(dLat / 2) +
+    final h =
+        math.sin(dLat / 2) * math.sin(dLat / 2) +
         math.sin(dLng / 2) *
             math.sin(dLng / 2) *
             math.cos(lat1) *
@@ -346,4 +339,3 @@ class _LocationHistoryScreenState
 
   double _toRadians(double degrees) => degrees * math.pi / 180;
 }
-

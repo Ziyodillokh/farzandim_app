@@ -2,8 +2,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:video_compress/video_compress.dart';
-
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -28,6 +26,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:video_compress/video_compress.dart';
 
 /// Bola bilan ovozli xabar chati (Telegram/WhatsApp uslubida).
 ///
@@ -354,18 +353,18 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ),
     );
 
-    File fileToUpload = original;
+    var fileToUpload = original;
     try {
       final info = await VideoCompress.compressVideo(
         original.path,
         quality: VideoQuality.LowQuality,
-        deleteOrigin: false,
         includeAudio: true,
       );
       if (info != null && info.path != null) {
         fileToUpload = File(info.path!);
         debugPrint(
-          'VideoCompress: ${original.lengthSync()} → ${fileToUpload.lengthSync()} bytes',
+          'VideoCompress: ${original.lengthSync()} → '
+          '${fileToUpload.lengthSync()} bytes',
         );
       }
     } catch (e) {

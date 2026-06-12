@@ -5,10 +5,12 @@ import 'package:flutter_test/flutter_test.dart';
 
 class _Item {
   _Item(this.id);
-  final int id;
 
-  static _Item fromJson(Map<String, dynamic> json) =>
+  // JSON'dan yasovchi named constructor — tear-off sifatida uzatiladi.
+  factory _Item.fromJson(Map<String, dynamic> json) =>
       _Item(json['id'] as int);
+
+  final int id;
 }
 
 void main() {

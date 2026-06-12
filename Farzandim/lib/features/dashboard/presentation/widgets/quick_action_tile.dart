@@ -116,7 +116,8 @@ class _QuickActionTileState extends State<QuickActionTile> {
                     ),
                   ),
                 ),
-                // 5b) Specular tepa chizig'i (~1.5px) — "haqiqiy shisha" belgisi.
+                // 5b) Specular tepa chizig'i (~1.5px) — "haqiqiy shisha"
+                // belgisi.
                 Positioned(
                   top: 0,
                   left: 0,
@@ -126,8 +127,6 @@ class _QuickActionTileState extends State<QuickActionTile> {
                       height: 1.5,
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
-                          begin: Alignment.centerLeft,
-                          end: Alignment.centerRight,
                           colors: [
                             Colors.transparent,
                             Colors.white.withValues(

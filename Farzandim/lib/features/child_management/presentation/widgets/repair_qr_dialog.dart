@@ -16,8 +16,6 @@
 //      yuboradi → dialog avtomatik yopiladi va success snack chiqadi
 //   5) Vaqt tugasa — yangi token avtomatik so'raladi (rotation)
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:async';
 
 import 'package:dio/dio.dart';
@@ -121,7 +119,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       final token = data['token'] as String?;
       final expiresIn = (data['expiresInSec'] as num?)?.toInt() ?? 45;
       if (token == null || token.isEmpty) {
-        throw Exception('Backend bo\'sh token qaytardi');
+        throw Exception("Backend bo'sh token qaytardi");
       }
       if (!mounted) return;
       setState(() {
@@ -136,7 +134,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       });
     } catch (e) {
       if (!mounted) return;
-      setState(() => _error = "Kutilmagan xato: $e");
+      setState(() => _error = 'Kutilmagan xato: $e');
     }
   }
 
@@ -202,7 +200,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
               ),
               const SizedBox(height: 6),
               Text(
-                "QR kodni bolaning telefonida skanerlang",
+                'QR kodni bolaning telefonida skanerlang',
                 textAlign: TextAlign.center,
                 style: AppTextStyles.bodyS.copyWith(
                   color: AppColors.textSecondary,
@@ -276,7 +274,6 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         ),
         child: QrImageView(
           data: 'farzandim:repair:$_token',
-          version: QrVersions.auto,
           size: qrSide,
           backgroundColor: Colors.white,
           // ignore: deprecated_member_use
@@ -353,7 +350,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
             ),
           ),
           const SizedBox(height: 6),
-          _hintLine('Bola ilovani o\'chirib qayta o\'rnatgan'),
+          _hintLine("Bola ilovani o'chirib qayta o'rnatgan"),
           _hintLine('Telefon zavod sozlamalariga qaytarilgan'),
           _hintLine('Yangi telefon olgan / almashtirgan'),
           _hintLine('Eski pairing buzilgan'),

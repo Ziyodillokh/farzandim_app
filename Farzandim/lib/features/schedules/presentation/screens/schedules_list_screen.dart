@@ -12,8 +12,6 @@
 // Ma'lumot mavjud Routine model + schedulesProvider/scheduleActionsProvider
 // (Backend CRUD) bilan — dublikat kod yo'q.
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -650,7 +648,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                   if (list.isEmpty) {
                     return Center(
                       child: Padding(
-                        padding: EdgeInsets.all(AppDimensions.xl),
+                        padding: const EdgeInsets.all(AppDimensions.xl),
                         child: Text(
                           "Ilovalar ro'yxati hali yuklanmadi",
                           style: TextStyle(color: AppColors.textSecondary),

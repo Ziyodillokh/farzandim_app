@@ -346,7 +346,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
       insetPadding: EdgeInsets.zero,
       child: GestureDetector(
         onTap: () => Navigator.of(context).pop(),
-        child: Container(
+        child: ColoredBox(
           color: Colors.black.withValues(alpha: 0.95),
           child: SizedBox.expand(
             child: Stack(

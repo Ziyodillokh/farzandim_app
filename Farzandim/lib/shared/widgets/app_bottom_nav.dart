@@ -157,7 +157,6 @@ class _CircleButton extends StatelessWidget {
       expandWidth: false,
       width: AppBottomNav.kBarHeight,
       radius: AppBottomNav.kBarHeight / 2,
-      blurSigma: 20,
       padding: EdgeInsets.zero,
       onTap: onTap,
       child: SizedBox(

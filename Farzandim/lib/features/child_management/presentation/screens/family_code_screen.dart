@@ -454,7 +454,7 @@ class _Header extends StatelessWidget {
             onTap: () => context.go(AppRoutes.dashboard),
             borderRadius: BorderRadius.circular(AppDimensions.radiusM),
             child: Padding(
-              padding: EdgeInsets.all(AppDimensions.sm),
+              padding: const EdgeInsets.all(AppDimensions.sm),
               child: Icon(
                 Icons.arrow_back,
                 color: AppColors.textPrimary,

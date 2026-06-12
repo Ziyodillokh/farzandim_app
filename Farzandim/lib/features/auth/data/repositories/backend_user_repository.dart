@@ -13,8 +13,6 @@
 // Telefon raqami alohida endpoint orqali (POST /api/users/me/phone,
 // keyingi sub-sprint'da ulanadi).
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:typed_data';
 
 import 'package:dio/dio.dart';

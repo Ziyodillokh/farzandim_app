@@ -51,7 +51,13 @@ Future<DeviceMeta> currentDeviceMeta() async {
         // modelName — marketing nomi ("iPhone 14 Pro Max"); bo'lmasa model.
         final label = i.modelName.trim().isNotEmpty ? i.modelName : i.model;
         return DeviceMeta(deviceModel: label, platform: 'ios');
-      default:
+      // Desktop platformalar — qurilma modeli aniqlanmaydi, bo'sh meta
+      // (login baribir ishlaydi). `default` emas — yangi platforma
+      // qo'shilsa analyzer ogohlantiradi.
+      case TargetPlatform.fuchsia:
+      case TargetPlatform.linux:
+      case TargetPlatform.macOS:
+      case TargetPlatform.windows:
         return const DeviceMeta();
     }
   } catch (_) {
@@ -60,7 +66,8 @@ Future<DeviceMeta> currentDeviceMeta() async {
 }
 
 /// Brand + model — takror bo'lsa (`model` allaqachon brand bilan boshlansa)
-/// faqat `model`. Misol: brand=Redmi, model="Redmi Note 12S" → "Redmi Note 12S".
+/// faqat `model`. Misol: brand=Redmi, model="Redmi Note 12S" →
+/// "Redmi Note 12S".
 String _androidLabel(String brand, String model) {
   final b = brand.trim();
   final m = model.trim();

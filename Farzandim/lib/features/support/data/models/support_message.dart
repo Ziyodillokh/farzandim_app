@@ -35,6 +35,38 @@ class SupportMessage {
     this.status = SupportSendStatus.sent,
   });
 
+  factory SupportMessage.fromJson(Map<String, dynamic> j) {
+    SupportAttachmentType? type;
+    final rawType = j['attachmentType'] as String?;
+    if (rawType != null) {
+      type = SupportAttachmentType.values.firstWhere(
+        (t) => t.name == rawType,
+        orElse: () => SupportAttachmentType.document,
+      );
+    }
+    final key = j['attachmentKey'] as String?;
+    return SupportMessage(
+      id: j['id'] as String? ?? '',
+      sender: SupportSender.values.firstWhere(
+        (s) => s.name == j['sender'],
+        orElse: () => SupportSender.operator,
+      ),
+      createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? _epoch,
+      text: j['text'] as String?,
+      textKey: j['textKey'] as String?,
+      attachmentType: type,
+      fileName: j['fileName'] as String?,
+      fileSize: (j['fileSize'] as num?)?.toInt(),
+      attachmentKey: key,
+      mimeType: j['mimeType'] as String?,
+      // Qayta ishga tushganda: key bor = yuborilgan; biriktirma key'siz =
+      // yuborilmagan (bytes/filePath transient — retry ham imkonsiz, failed).
+      status: (type != null && (key == null || key.isEmpty))
+          ? SupportSendStatus.failed
+          : SupportSendStatus.sent,
+    );
+  }
+
   final String id;
   final SupportSender sender;
   final DateTime createdAt;
@@ -140,38 +172,6 @@ class SupportMessage {
     if (attachmentKey != null) 'attachmentKey': attachmentKey,
     if (mimeType != null) 'mimeType': mimeType,
   };
-
-  factory SupportMessage.fromJson(Map<String, dynamic> j) {
-    SupportAttachmentType? type;
-    final rawType = j['attachmentType'] as String?;
-    if (rawType != null) {
-      type = SupportAttachmentType.values.firstWhere(
-        (t) => t.name == rawType,
-        orElse: () => SupportAttachmentType.document,
-      );
-    }
-    final key = j['attachmentKey'] as String?;
-    return SupportMessage(
-      id: j['id'] as String? ?? '',
-      sender: SupportSender.values.firstWhere(
-        (s) => s.name == j['sender'],
-        orElse: () => SupportSender.operator,
-      ),
-      createdAt: DateTime.tryParse(j['createdAt'] as String? ?? '') ?? _epoch,
-      text: j['text'] as String?,
-      textKey: j['textKey'] as String?,
-      attachmentType: type,
-      fileName: j['fileName'] as String?,
-      fileSize: (j['fileSize'] as num?)?.toInt(),
-      attachmentKey: key,
-      mimeType: j['mimeType'] as String?,
-      // Qayta ishga tushganda: key bor = yuborilgan; biriktirma key'siz =
-      // yuborilmagan (bytes/filePath transient — retry ham imkonsiz, failed).
-      status: (type != null && (key == null || key.isEmpty))
-          ? SupportSendStatus.failed
-          : SupportSendStatus.sent,
-    );
-  }
 
   // Date.now() o'rniga barqaror fallback (parse xato bo'lsa eski sana).
   static final DateTime _epoch = DateTime.fromMillisecondsSinceEpoch(0);

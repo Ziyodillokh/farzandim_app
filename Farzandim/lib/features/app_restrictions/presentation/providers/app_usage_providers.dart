@@ -22,7 +22,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// keep-alive: tez qaytishda kesh turadi, uzoq ketilsa polling BUTUNLAY
 /// to'xtaydi (avval `autoDispose`siz ekran bir marta ochilgach polling
 /// ILOVA UMRI DAVOMIDA davom etardi — 100k user'da minglab keraksiz RPS).
-void keepAliveFor(AutoDisposeRef<dynamic> ref, Duration duration) {
+void keepAliveFor(Ref<dynamic> ref, Duration duration) {
   final link = ref.keepAlive();
   final timer = Timer(duration, link.close);
   ref.onDispose(timer.cancel);
@@ -182,4 +182,4 @@ class _AppLimitFacade {
 }
 
 final appRestrictionRepositoryProvider =
-    Provider<_AppLimitFacade>((ref) => _AppLimitFacade(ref));
+    Provider<_AppLimitFacade>(_AppLimitFacade.new);

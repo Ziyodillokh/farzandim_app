@@ -55,21 +55,21 @@ class PhotoRequestsListScreen extends ConsumerWidget {
                           requests: requests
                               .where((r) => r['status'] == 'PENDING')
                               .toList(),
-                          emptyHint: 'Kutilayotgan so\'rov yo\'q',
+                          emptyHint: "Kutilayotgan so'rov yo'q",
                         ),
                         _RequestsView(
                           childId: childId,
                           requests: requests
                               .where((r) => r['status'] == 'COMPLETED')
                               .toList(),
-                          emptyHint: 'Bajarilgan rasm yo\'q',
+                          emptyHint: "Bajarilgan rasm yo'q",
                         ),
                         _RequestsView(
                           childId: childId,
                           requests: requests
                               .where((r) => r['status'] == 'DECLINED')
                               .toList(),
-                          emptyHint: 'Rad etilgan so\'rov yo\'q',
+                          emptyHint: "Rad etilgan so'rov yo'q",
                         ),
                       ],
                     ),
@@ -85,7 +85,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
           foregroundColor: AppColors.onPrimary,
           icon: const Icon(Icons.photo_camera_rounded),
           label: Text(
-            'Rasm so\'rash',
+            "Rasm so'rash",
             style: AppTextStyles.bodyM.copyWith(
               color: AppColors.onPrimary,
               fontWeight: FontWeight.w600,
@@ -238,7 +238,6 @@ class _RequestTile extends ConsumerWidget {
         padding: const EdgeInsets.only(bottom: AppDimensions.md),
         child: SettingsCard(
           accent: AppColors.featurePurple,
-          padding: const EdgeInsets.all(AppDimensions.md),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
@@ -295,11 +294,11 @@ class _RequestTile extends ConsumerWidget {
       builder: (ctx) => AlertDialog(
         backgroundColor: AppColors.surface,
         title: Text(
-          'So\'rovni o\'chirish?',
+          "So'rovni o'chirish?",
           style: AppTextStyles.headlineL.copyWith(fontSize: 18),
         ),
         content: Text(
-          'Bu so\'rov va u bilan bog\'liq rasm o\'chiriladi.',
+          "Bu so'rov va u bilan bog'liq rasm o'chiriladi.",
           style: AppTextStyles.bodyM.copyWith(color: AppColors.textSecondary),
         ),
         actions: [
@@ -315,7 +314,7 @@ class _RequestTile extends ConsumerWidget {
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
-              'O\'chirish',
+              "O'chirish",
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.error,
                 fontWeight: FontWeight.w600,
@@ -333,7 +332,7 @@ class _RequestTile extends ConsumerWidget {
     if (!context.mounted) return;
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        content: Text(ok ? 'O\'chirildi' : 'O\'chirish xato'),
+        content: Text(ok ? "O'chirildi" : "O'chirish xato"),
         backgroundColor: ok ? AppColors.success : AppColors.error,
       ),
     );
@@ -505,7 +504,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.md),
             Text(
-              hint ?? 'Hali rasm so\'rovi yo\'q',
+              hint ?? "Hali rasm so'rovi yo'q",
               style: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -513,7 +512,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              'Pastdagi tugmani bossib bolaga so\'rov yuboring.',
+              "Pastdagi tugmani bossib bolaga so'rov yuboring.",
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textTertiary,
               ),

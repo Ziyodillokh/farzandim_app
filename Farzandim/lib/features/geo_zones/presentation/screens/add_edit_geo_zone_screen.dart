@@ -509,7 +509,7 @@ class _RadiusSlider extends StatelessWidget {
             inactiveTrackColor: AppColors.border,
             thumbColor: AppColors.primary,
             overlayColor: AppColors.primary.withValues(alpha: 0.2),
-            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 10),
+            thumbShape: const RoundSliderThumbShape(),
             trackShape: const RoundedRectSliderTrackShape(),
           ),
           child: Slider(

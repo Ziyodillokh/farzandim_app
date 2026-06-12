@@ -2,8 +2,6 @@
 // ForceUpdateDialog — Parent App majburiy yangilash (Sprint 4.4.28)
 // ─────────────────────────────────────────────────────────────────────
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:flutter/material.dart';

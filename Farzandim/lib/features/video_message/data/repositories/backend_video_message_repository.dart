@@ -14,8 +14,6 @@
 // Backend Claude security (sender ↔ receiver family check,
 // senderId !== receiverId 400).
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:io';
 
 import 'package:dio/dio.dart';

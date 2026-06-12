@@ -9,8 +9,6 @@
 // Vazifa: ID token + (Apple uchun) ism olib qaytarish.
 // Token'ni backend'ga yuborish — BackendAuthRepository'da.
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';

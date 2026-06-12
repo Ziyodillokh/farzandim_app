@@ -13,10 +13,7 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _CircleIconButton(
-          icon: Icons.arrow_back,
-          onTap: () => context.pop(),
-        ),
+        _CircleIconButton(icon: Icons.arrow_back, onTap: () => context.pop()),
         const Spacer(),
         _ChildSelectorChip(child: child),
       ],
@@ -39,9 +36,7 @@ class _CircleIconButton extends StatelessWidget {
       ),
       child: Material(
         color: AppColors.surface,
-        shape: CircleBorder(
-          side: BorderSide(color: AppColors.border),
-        ),
+        shape: CircleBorder(side: BorderSide(color: AppColors.border)),
         clipBehavior: Clip.antiAlias,
         child: InkWell(
           onTap: onTap,
@@ -49,11 +44,7 @@ class _CircleIconButton extends StatelessWidget {
             width: 48,
             height: 48,
             child: Center(
-              child: Icon(
-                icon,
-                size: 24,
-                color: AppColors.textPrimary,
-              ),
+              child: Icon(icon, size: 24, color: AppColors.textPrimary),
             ),
           ),
         ),
@@ -102,10 +93,7 @@ class _ChildSelectorChip extends ConsumerWidget {
                 ),
                 if (hasMultiple) ...[
                   const SizedBox(width: 2),
-                  Icon(
-                    Icons.arrow_drop_down,
-                    color: AppColors.textSecondary,
-                  ),
+                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
                 ],
               ],
             ),
@@ -115,10 +103,7 @@ class _ChildSelectorChip extends ConsumerWidget {
     );
   }
 
-  Future<void> _openPicker(
-    BuildContext context,
-    List<Child> children,
-  ) async {
+  Future<void> _openPicker(BuildContext context, List<Child> children) async {
     final selected = await showModalBottomSheet<Child>(
       context: context,
       backgroundColor: AppColors.surface,
@@ -235,11 +220,7 @@ class _ErrorState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(
-                    Icons.error_outline,
-                    size: 64,
-                    color: AppColors.error,
-                  ),
+                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
                   const SizedBox(height: AppDimensions.md),
                   Text(
                     'location.error.title'.tr(),
@@ -280,10 +261,7 @@ class _NoChildrenScreen extends StatelessWidget {
       body: Center(
         child: Padding(
           padding: const EdgeInsets.all(AppDimensions.lg),
-          child: Text(
-            'location.noChildren'.tr(),
-            textAlign: TextAlign.center,
-          ),
+          child: Text('location.noChildren'.tr(), textAlign: TextAlign.center),
         ),
       ),
     );

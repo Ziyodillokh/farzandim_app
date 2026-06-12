@@ -9,8 +9,6 @@
 //   WS sos:received → parent user + child room (HIGH priority push)
 //   WS sos:resolved → child user + child room
 
-// ignore_for_file: public_member_api_docs
-
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';

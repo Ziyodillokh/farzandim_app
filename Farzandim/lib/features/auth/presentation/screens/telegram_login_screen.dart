@@ -22,8 +22,6 @@
 // Eslatma: login.html bridge hozircha yo'q (Backend Claude yangilaydi).
 // Bu fayl bridge tayyor bo'lganda darhol ishlashga tayyor.
 
-// ignore_for_file: public_member_api_docs
-
 import 'dart:convert';
 
 import 'package:farzandim/core/config/env_config.dart';

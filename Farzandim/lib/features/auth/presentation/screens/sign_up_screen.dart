@@ -21,8 +21,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 /// Ro'yxatdan o'tish — 3 bosqichli "wizard":
-///   1) Aloqa: telefon YOKI email tanlanadi + maxfiylik roziligi → kod yuboriladi
-///   2) Kod: 5 xonali tasdiqlash kodi kiritiladi (2 daqiqa qayta-yuborish taymeri)
+///   1) Aloqa: telefon YOKI email tanlanadi + maxfiylik roziligi → kod
+///      yuboriladi
+///   2) Kod: 5 xonali tasdiqlash kodi kiritiladi (2 daqiqa qayta-yuborish
+///      taymeri)
 ///   3) Profil: ism, familiya, parol, parolni takrorlash → ro'yxatdan o'tadi
 ///
 /// ⚠️ HOZIRCHA UI PROTOTIP: kod yuborish va tasdiqlash MOCK qilingan

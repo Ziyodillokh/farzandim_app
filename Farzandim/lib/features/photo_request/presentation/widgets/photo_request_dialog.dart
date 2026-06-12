@@ -67,14 +67,14 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
       Navigator.of(context).pop();
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Rasm so\'rovi yuborildi'),
+          content: const Text("Rasm so'rovi yuborildi"),
           backgroundColor: AppColors.success,
         ),
       );
     } else {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Yuborilmadi, qaytadan urinib ko\'ring'),
+          content: const Text("Yuborilmadi, qaytadan urinib ko'ring"),
           backgroundColor: AppColors.error,
         ),
       );
@@ -94,7 +94,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
           const SizedBox(width: AppDimensions.sm),
           Expanded(
             child: Text(
-              'Bola\'dan rasm so\'rash',
+              "Bola'dan rasm so'rash",
               style: AppTextStyles.headlineL.copyWith(fontSize: 18),
             ),
           ),
@@ -116,7 +116,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
             maxLength: 120,
             maxLines: 2,
             decoration: InputDecoration(
-              hintText: 'Bog\'da nima qilyapsan?',
+              hintText: "Bog'da nima qilyapsan?",
               hintStyle: AppTextStyles.bodyM.copyWith(
                 color: AppColors.textTertiary,
               ),
@@ -131,7 +131,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
           ),
           const SizedBox(height: AppDimensions.sm),
           Text(
-            'Bola Child App\'da push xabar oladi va rasm yuboradi.',
+            "Bola Child App'da push xabar oladi va rasm yuboradi.",
             style: AppTextStyles.bodyS.copyWith(
               color: AppColors.textTertiary,
             ),
@@ -160,7 +160,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
                   ),
                 )
               : Text(
-                  'So\'rash',
+                  "So'rash",
                   style: AppTextStyles.bodyM.copyWith(
                     color: AppColors.accent,
                     fontWeight: FontWeight.w600,

@@ -83,6 +83,6 @@ class PairRequest {
       if (androidVersion != null && androidVersion!.isNotEmpty)
         androidVersion!,
     ];
-    return parts.isEmpty ? 'Qurilma noma\'lum' : parts.join(' • ');
+    return parts.isEmpty ? "Qurilma noma'lum" : parts.join(' • ');
   }
 }

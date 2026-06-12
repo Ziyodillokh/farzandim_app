@@ -16,15 +16,21 @@ dependencies:
   # ishlatiladi: AVAudioSession (iOS) / AudioFocus (Android) wrapper.
   audio_session: ^0.1.21
 
+  cached_network_image: ^3.4.1
+
+  # Native kamera — Telegram uslubidagi yumaloq video xabarlar uchun
+  # (Sprint 4.4.x). `image_picker.pickVideo` faqat OS kamera ekranini
+  # ochadi; bizga inline preview + long-press recording kerak, shuning
+  # uchun to'g'ridan-to'g'ri `CameraController` ishlatamiz.
+  camera: ^0.11.0+2
+
   # iOS uslubidagi ikonkalar (Cupertino)
   cupertino_icons: ^1.0.8
 
-  # Yuqori refresh rate (120Hz) — ba'zi Android (Samsung) ilovani 60Hz'da
-  # cheklaydi; bu paket Display.Mode orqali eng yuqori rejimni so'raydi →
-  # 120fps silliq scroll/animatsiya. main.dart startup'da chaqiriladi.
-  flutter_displaymode: ^0.6.0
+  # device_info_plus — "Faol sessiyalar" uchun qurilma modeli/platforma
+  # (login'da backendga yuboriladi: "Redmi Note 12S", "iPhone 14 Pro Max").
+  device_info_plus: ^11.2.0
 
-  # ─── Sprint 4.4: Backend REST migration ─────────────────────────
   # Dio — HTTP client (Firestore SDK o'rniga). Interceptor'lar bilan
   # JWT Bearer header + 401 refresh + logging.
   dio: ^5.7.0
@@ -33,6 +39,10 @@ dependencies:
   # `assets/translations/{lang}.json`'da. Tanlanган til
   # SharedPreferences'da avtomatik saqlanadi.
   easy_localization: ^3.0.7
+
+  # file_picker — qo'llab-quvvatlash chatida hujjat (PDF/DOCX/...) tanlash.
+  # Web'da bytes, mobilda path qaytaradi.
+  file_picker: ^8.1.4
 
   # Firebase Analytics — DAU/MAU, auto screen tracking (Sprint 1.5).
   # FirebaseAnalyticsObserver go_router observers ichida ishlatadi.
@@ -57,23 +67,14 @@ dependencies:
   flutter:
     sdk: flutter
 
-  # ─── Ijtimoiy login (Sprint 7) ──────────────────────────────────────
-  # Google Sign In — Android/iOS/web. Web uchun `web/index.html` ichida
-  # `<meta name="google-signin-client_id" ...>` qo'shish kerak.
-  # Native uchun: Android'da SHA-1, iOS'da REVERSED_CLIENT_ID Info.plist.
-  google_sign_in: ^6.2.1
-  # Web platform implementation (GIS — Google Identity Services).
-  # `google_sign_in` o'zicha web'da `MissingPluginException` beradi —
-  # bu paket o'sha implementation'ni ta'minlaydi.
-  google_sign_in_web: ^0.12.4+3
-
-  # Sign in with Apple — iOS/macOS nativ, Android/web OAuth redirect orqali.
-  # Backend Apple JWKS bilan ID token'ni tasdiqlaydi.
-  sign_in_with_apple: ^6.1.4
-
   # flutter_animate — deklarativ animatsiyalar (.fadeIn().slideY()...)
   # Stagger entrance va micro-interaction'lar uchun (Sprint 4.7).
   flutter_animate: ^4.5.0
+
+  # Yuqori refresh rate (120Hz) — ba'zi Android (Samsung) ilovani 60Hz'da
+  # cheklaydi; bu paket Display.Mode orqali eng yuqori rejimni so'raydi →
+  # 120fps silliq scroll/animatsiya. main.dart startup'da chaqiriladi.
+  flutter_displaymode: ^0.6.0
 
   # flutter_local_notifications — foreground'da kelgan FCM xabarini
   # tizim notification sifatida ko'rsatish (ovoz + vibratsiya). Backend
@@ -93,11 +94,10 @@ dependencies:
   # (Apple, Google, va h.k. — assets/icons/*.svg).
   flutter_svg: ^2.0.10
 
-  # QR kod generatsiya — "Akkauntga qo'shilish" (boshqa qurilmaga ulanish).
-  qr_flutter: ^4.1.0
-
-  # QR skaner (kamera) — kirish sahifasida "Akkauntga qo'shilish" → 2-qurilma.
-  mobile_scanner: ^6.0.7
+  # Koordinata → manzil (reverse geocoding) — MOBILDA platforma geocoder'i
+  # (OS, kalitsiz, tez/lokal). Google HTTP Geocoding cheklov/sekinligini
+  # chetlab o'tadi. Web qo'llamaydi → u yerda HTTP fallback (GeocodingService).
+  geocoding: ^3.0.0
 
   # Routing — Flutter rasmiy tavsiyasi
   go_router: ^14.6.2
@@ -110,15 +110,20 @@ dependencies:
   # local.properties'dan in'ektsiya qilinadi — git'ga tushmaydi).
   google_maps_flutter: ^2.6.0
 
-  # Koordinata → manzil (reverse geocoding) — MOBILDA platforma geocoder'i
-  # (OS, kalitsiz, tez/lokal). Google HTTP Geocoding cheklov/sekinligini
-  # chetlab o'tadi. Web qo'llamaydi → u yerda HTTP fallback (GeocodingService).
-  geocoding: ^3.0.0
-
   # Places API autocomplete — manzilni qidirish uchun (Bosqich 4.2.2).
   # API kalit Dart'ga `--dart-define-from-file=env.json` orqali
   # uzatiladi (`api_keys.dart` String.fromEnvironment'dan o'qiydi).
   google_places_flutter: ^2.0.8
+
+  # Google Sign In — Android/iOS/web. Web uchun `web/index.html` ichida
+  # `<meta name="google-signin-client_id" ...>` qo'shish kerak.
+  # Native uchun: Android'da SHA-1, iOS'da REVERSED_CLIENT_ID Info.plist.
+  google_sign_in: ^6.2.1
+
+  # Web platform implementation (GIS — Google Identity Services).
+  # `google_sign_in` o'zicha web'da `MissingPluginException` beradi —
+  # bu paket o'sha implementation'ni ta'minlaydi.
+  google_sign_in_web: ^0.12.4+3
 
   # Galeriya/kameradan rasm tanlash (bola fotosi uchun).
   # Web'da galeriya HTML file input orqali ishlaydi, kamera faqat
@@ -126,22 +131,19 @@ dependencies:
   # universal (web/iOS/Android'da bir xil ishlaydi).
   image_picker: ^1.0.7
 
-  # file_picker — qo'llab-quvvatlash chatida hujjat (PDF/DOCX/...) tanlash.
-  # Web'da bytes, mobilda path qaytaradi.
-  file_picker: ^8.1.4
+  # Audio player — ovozli xabarlarni tinglash uchun (Bosqich 8+9).
+  # URL'dan stream, speed control (1x/1.5x/2x), pozitsiya kuzatish.
+  just_audio: ^0.9.40
+
+  # QR skaner (kamera) — kirish sahifasida "Akkauntga qo'shilish" → 2-qurilma.
+  mobile_scanner: ^6.0.7
 
   # open_filex — chatdagi hujjatni native ilova bilan ochish (mobil).
   open_filex: ^4.5.0
 
-  # Native kamera — Telegram uslubidagi yumaloq video xabarlar uchun
-  # (Sprint 4.4.x). `image_picker.pickVideo` faqat OS kamera ekranini
-  # ochadi; bizga inline preview + long-press recording kerak, shuning
-  # uchun to'g'ridan-to'g'ri `CameraController` ishlatamiz.
-  camera: ^0.11.0+2
-
-  # Audio player — ovozli xabarlarni tinglash uchun (Bosqich 8+9).
-  # URL'dan stream, speed control (1x/1.5x/2x), pozitsiya kuzatish.
-  just_audio: ^0.9.40
+  # package_info_plus — joriy app versiya va build number (Sprint 4.4.28
+  # AppUpdate version check uchun).
+  package_info_plus: ^8.1.0
 
   # Vaqtinchalik fayllar uchun (Bosqich 10) — record paketi audio
   # yozadigan fayl yo'lini shu yerdan oladi (`getTemporaryDirectory()`).
@@ -149,6 +151,9 @@ dependencies:
 
   # Runtime ruxsatlar (joylashuv, kamera, mikrofon, va h.k.) so'rash.
   permission_handler: ^11.3.0
+
+  # QR kod generatsiya — "Akkauntga qo'shilish" (boshqa qurilmaga ulanish).
+  qr_flutter: ^4.1.0
 
   # Audio recording — Bosqich 10. Hold-to-record gesture, AAC LC encoder,
   # real-time amplitude stream (live waveform uchun).
@@ -163,22 +168,13 @@ dependencies:
   # ma'lumotlarni saqlash (Sprint 4.4.21).
   shared_preferences: ^2.3.2
 
-  # package_info_plus — joriy app versiya va build number (Sprint 4.4.28
-  # AppUpdate version check uchun).
-  package_info_plus: ^8.1.0
-
-  # device_info_plus — "Faol sessiyalar" uchun qurilma modeli/platforma
-  # (login'da backendga yuboriladi: "Redmi Note 12S", "iPhone 14 Pro Max").
-  device_info_plus: ^11.2.0
-
   # shimmer — loading skeleton (CircularProgressIndicator o'rniga).
   # Zamonaviy app standartining hissi (Sprint 4.7).
   shimmer: ^3.0.0
 
-  # video_compress — Telegram round video uchun client-side compression
-  # (Sprint 4.4.34). Backend bodyLimit oshmaganidan, ~10 MB → ~1 MB
-  # ga kamaytirib yuboramiz. Native API (FFmpeg binary'siz, kichik APK).
-  video_compress: ^3.1.4
+  # Sign in with Apple — iOS/macOS nativ, Android/web OAuth redirect orqali.
+  # Backend Apple JWKS bilan ID token'ni tasdiqlaydi.
+  sign_in_with_apple: ^6.1.4
 
   # socket_io_client — Backend Socket.io WebSocket'iga ulanish
   # (Sprint 4.4). 6 ta real-time event tipi: schedule/routine/
@@ -191,6 +187,11 @@ dependencies:
   # telefon dialer'ini ochadi (Sprint 4.1).
   url_launcher: ^6.3.1
 
+  # video_compress — Telegram round video uchun client-side compression
+  # (Sprint 4.4.34). Backend bodyLimit oshmaganidan, ~10 MB → ~1 MB
+  # ga kamaytirib yuboramiz. Native API (FFmpeg binary'siz, kichik APK).
+  video_compress: ^3.1.4
+
   video_player: ^2.11.1
 
   # webview_flutter — Telegram Login Widget'ni WebView'da ochish
@@ -198,7 +199,6 @@ dependencies:
   # auth tugagach FlutterAuth JavascriptChannel orqali JSON
   # token + user'ni qaytaradi.
   webview_flutter: ^4.10.0
-  cached_network_image: ^3.4.1
 
 # `record` paketi tranzitiv `record_linux 0.7.2` keltiradi, bu eski
 # implementatsiya `record_platform_interface 1.5.0` bilan nomos

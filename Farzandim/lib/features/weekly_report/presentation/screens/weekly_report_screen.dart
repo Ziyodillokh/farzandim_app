@@ -313,7 +313,6 @@ class _Card extends StatelessWidget {
       width: double.infinity,
       child: SettingsCard(
         accent: AppColors.info,
-        padding: const EdgeInsets.all(AppDimensions.md),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [

@@ -130,7 +130,7 @@ class _FeedbackTile extends ConsumerWidget {
   static const _labelMap = <String, String>{
     'HAPPY': 'Xursand',
     'EXCITED': 'Hayajonli',
-    'THINKING': 'O\'ylanmoqda',
+    'THINKING': "O'ylanmoqda",
     'WINKING': 'Hazil',
     'SAD': 'Xafa',
     'ANGRY': 'Achchiqlangan',
@@ -154,7 +154,6 @@ class _FeedbackTile extends ConsumerWidget {
       padding: const EdgeInsets.only(bottom: AppDimensions.md),
       child: SettingsCard(
         accent: AppColors.warning,
-        padding: const EdgeInsets.all(AppDimensions.md),
         onTap: () => _onTap(context, ref),
         child: Row(
           children: [
@@ -259,7 +258,7 @@ class _EmptyState extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.sm),
             Text(
-              'Bola Child App\'da emoji bilan kayfiyatini yuboradi.',
+              "Bola Child App'da emoji bilan kayfiyatini yuboradi.",
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textTertiary,
               ),
