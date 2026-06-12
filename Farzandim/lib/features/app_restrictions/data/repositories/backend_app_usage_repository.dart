@@ -9,7 +9,10 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
@@ -37,7 +40,32 @@ class BackendAppUsageRepository {
       final data = response.data;
       if (data == null) return const [];
       final list = data['apps'] as List<dynamic>? ?? const [];
-      return list.map((m) {
+      // NET-07: xom javob disk-keshga (per-child) — ekran keyingi safar
+      // serverni kutmasdan darhol ko'rsatadi.
+      unawaited(SwrCache.write('installed_apps:$childId', list));
+      return _mapInstalledApps(childId, list);
+    } on DioException catch (e) {
+      // EH-09: yutmaymiz — offline'da yolg'on "ilovalar yo'q" ko'rinardi.
+      debugPrint('BackendAppUsageRepository.getInstalledApps: $e');
+      rethrow;
+    }
+  }
+
+  /// NET-07: keshdagi oxirgi ro'yxat (stale). Yo'q/buzuq → null.
+  Future<List<AppUsageEntry>?> getCachedInstalledApps(String childId) async {
+    final cached = await SwrCache.read('installed_apps:$childId');
+    if (cached == null) return null;
+    final (data, _) = cached;
+    if (data is! List) return null;
+    try {
+      return _mapInstalledApps(childId, data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<AppUsageEntry> _mapInstalledApps(String childId, List<dynamic> list) {
+    return list.map((m) {
         final map = m as Map;
         final pkg = '${map['packageName']}';
         // Backend signed MinIO URL telefon uchun yetib bo'lmaydi
@@ -55,11 +83,6 @@ class BackendAppUsageRepository {
           'iconUrl': iconUrl,
         });
       }).toList();
-    } on DioException catch (e) {
-      // EH-09: yutmaymiz — offline'da yolg'on "ilovalar yo'q" ko'rinardi.
-      debugPrint('BackendAppUsageRepository.getInstalledApps: $e');
-      rethrow;
-    }
   }
 
   /// Ilova ikonasi proxy URL — backend MinIO'dan rasmni stream qiladi.
@@ -82,6 +105,27 @@ class BackendAppUsageRepository {
       '/children/$childId/app-usage/weekly',
     );
     final days = response.data?['days'] as List<dynamic>? ?? const [];
+    // NET-07: xom javob disk-keshga (per-child).
+    unawaited(SwrCache.write('weekly_usage:$childId', days));
+    return _mapWeekly(days);
+  }
+
+  /// NET-07: keshdagi oxirgi haftalik totals (stale). Yo'q/buzuq → null.
+  Future<List<DailyUsageTotal>?> getCachedWeeklyTotals(
+    String childId,
+  ) async {
+    final cached = await SwrCache.read('weekly_usage:$childId');
+    if (cached == null) return null;
+    final (data, _) = cached;
+    if (data is! List) return null;
+    try {
+      return _mapWeekly(data);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  List<DailyUsageTotal> _mapWeekly(List<dynamic> days) {
     return days.map((d) {
       final m = d as Map;
       final date = DateTime.tryParse('${m['date']}') ?? DateTime.now();

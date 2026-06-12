@@ -81,7 +81,19 @@ final installedAppsProvider = StreamProvider.autoDispose
   var alive = true;
   ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-  yield await repo.getInstalledApps(childId: childId);
+
+  // NET-07 (SWR): keshdagi ro'yxat DARHOL — ekran spinner'da turmaydi.
+  final cachedApps = await repo.getCachedInstalledApps(childId);
+  if (cachedApps != null && cachedApps.isNotEmpty) {
+    yield cachedApps;
+  }
+
+  try {
+    yield await repo.getInstalledApps(childId: childId);
+  } catch (_) {
+    // Kesh ko'rsatilgan bo'lsa saqlanadi (offline UX), bo'lmasa error.
+    if (cachedApps == null || cachedApps.isEmpty) rethrow;
+  }
 
   // 60 sekundda bir refresh — yangi pair qilingan qurilmada nomlar/ikonalar
   // tezroq kelishi uchun (avval 5 daqiqa edi, ekran ochilganda kech edi).

@@ -90,8 +90,28 @@ Stream<List<Child>> _backendChildrenStream(Ref ref) async* {
   ref.onDispose(() => alive = false);
 
   final repo = ref.watch(backendChildRepositoryProvider);
-  var current = await repo.getChildren();
-  yield current;
+
+  // NET-07 (SWR): keshdagi oxirgi ro'yxat DARHOL ko'rsatiladi — cold
+  // start'da dashboard server javobini kutib spinner'da turmaydi. Yangi
+  // ma'lumot pastdagi fetch bilan keladi (farq bo'lsa UI yangilanadi).
+  var current = const <Child>[];
+  final cached = await repo.getCachedChildren();
+  if (cached != null && cached.isNotEmpty) {
+    current = cached;
+    yield current;
+  }
+
+  try {
+    final fresh = await repo.getChildren();
+    if (current.isEmpty || !listEquals(fresh, current)) {
+      current = fresh;
+      yield fresh;
+    }
+  } catch (_) {
+    // Kesh ko'rsatilgan bo'lsa — saqlanadi (offline UX); kesh ham yo'q
+    // bo'lsa error'ni yuqoriga otamiz (dashboard error+retry ko'rsatadi).
+    if (current.isEmpty) rethrow;
+  }
 
   await for (final _
       in Stream<int>.periodic(const Duration(seconds: 60), (t) => t)) {

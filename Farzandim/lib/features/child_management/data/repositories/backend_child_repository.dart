@@ -21,7 +21,10 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
+import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
@@ -44,7 +47,27 @@ class BackendChildRepository {
     if (data == null) return const [];
     final list = data['children'];
     if (list is! List) return const [];
+    // NET-07: xom javob disk-keshga — keyingi cold start'da dashboard
+    // serverni kutmasdan DARHOL oxirgi ro'yxatni ko'rsatadi.
+    unawaited(SwrCache.write('children', list));
     return list.whereType<Map<String, dynamic>>().map(Child.fromJson).toList();
+  }
+
+  /// NET-07: disk-keshdagi oxirgi bolalar ro'yxati (stale) — cold start'da
+  /// server javobini kutmasdan ko'rsatish uchun. Kesh yo'q/buzuq → `null`.
+  Future<List<Child>?> getCachedChildren() async {
+    final cached = await SwrCache.read('children');
+    if (cached == null) return null;
+    final (data, _) = cached;
+    if (data is! List) return null;
+    try {
+      return data
+          .whereType<Map<String, dynamic>>()
+          .map(Child.fromJson)
+          .toList();
+    } catch (_) {
+      return null; // eski/buzuq format — kesh yo'q deb qaraymiz
+    }
   }
 
   /// Bitta bola — id bo'yicha.

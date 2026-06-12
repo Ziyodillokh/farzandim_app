@@ -17,8 +17,11 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'dart:async';
+
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
+import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
@@ -67,6 +70,8 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     onSessionExpired = () {
       if (mounted && state is! AuthAnonymous) {
         state = const AuthAnonymous();
+        // NET-07 xavfsizlik: sessiya tugadi — disk-kesh ham tozalanadi.
+        unawaited(SwrCache.clearAll());
       }
     };
     // Auto-bootstrap: app ochilganda saqlangan token tekshiriladi.
@@ -106,6 +111,8 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       if (e.response?.statusCode == 401) {
         // Token o'lik (refresh ham muvaffaqiyatsiz) — chiqamiz.
         await _repo.logout();
+        // NET-07 xavfsizlik: bu chiqish yo'lida ham kesh tozalanadi.
+        await SwrCache.clearAll();
         state = const AuthAnonymous();
       } else if (cached == null) {
         // Tarmoq xatosi + cache yo'q — kira olmaymiz.
@@ -229,6 +236,9 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
 
   Future<void> logout() async {
     await _repo.logout();
+    // NET-07 xavfsizlik: SWR disk-keshi tozalanadi — keyingi akkaunt
+    // oldingisining bolalari/ma'lumotini KO'RMAYDI.
+    await SwrCache.clearAll();
     state = const AuthAnonymous();
   }
 

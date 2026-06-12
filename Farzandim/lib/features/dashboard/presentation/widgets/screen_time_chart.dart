@@ -36,7 +36,13 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
   var alive = true;
   ref.onDispose(() => alive = false);
   final repo = ref.watch(backendAppUsageRepositoryProvider);
-  // Birinchi yuklash. Xato bo'lsa AsyncLoading qoladi (_TimeCard "—" ko'rsatadi),
+  // NET-07 (SWR): keshdagi haftalik DARHOL — chart "—" o'rniga oxirgi
+  // ma'lumotni ko'rsatadi, yangisi fonda keladi.
+  final cachedWeekly = await repo.getCachedWeeklyTotals(childId);
+  if (cachedWeekly != null && cachedWeekly.isNotEmpty) {
+    yield cachedWeekly;
+  }
+  // Birinchi yuklash. Xato bo'lsa kesh/AsyncLoading qoladi,
   // polling keyin qayta urinadi.
   try {
     yield await repo.getWeeklyTotals(childId: childId, endDate: DateTime.now());
