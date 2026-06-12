@@ -59,6 +59,23 @@ class _LocationHistoryScreenState
   BitmapDescriptor? _avatarMarker;
   int? _openDwellIndex; // tap-to-toggle: -1 = barchasi yopiq
 
+  // PERF-06: _cleanTrack (O(n) haversine) va masofa HAR setState'da (dwell
+  // tap, avatar, sana) qayta hisoblanardi. Provider qiymati o'zgarmasa List
+  // identity bir xil — memoize. Barqaror identity _MapLayer'dagi dwell
+  // keshiga ham asos bo'ladi.
+  List<ChildLocation>? _trackMemoInput;
+  List<ChildLocation> _trackMemo = const <ChildLocation>[];
+  double _distanceKmMemo = 0;
+
+  List<ChildLocation> _memoizedTrack(List<ChildLocation> raw) {
+    if (!identical(raw, _trackMemoInput)) {
+      _trackMemoInput = raw;
+      _trackMemo = _cleanTrack(raw);
+      _distanceKmMemo = _calculateDistanceKm(_trackMemo);
+    }
+    return _trackMemo;
+  }
+
   @override
   void initState() {
     super.initState();
@@ -145,7 +162,7 @@ class _LocationHistoryScreenState
     // klasterlari olib tashlanadi (zigzag/soxta "borib-kelish" + shishgan
     // masofa yo'qoladi). Backend yangi data'ni filtrlaydi; bu eski data'ni
     // ham toza ko'rsatadi.
-    final track = _cleanTrack(
+    final track = _memoizedTrack(
       historyAsync.valueOrNull ?? const <ChildLocation>[],
     );
 
@@ -232,7 +249,7 @@ class _LocationHistoryScreenState
                 onCustomDateTap: _pickDateRange,
                 stops: stops,
                 onPlaceTap: _goToStop,
-                distanceKm: _calculateDistanceKm(track),
+                distanceKm: _distanceKmMemo,
               ),
             ),
           ],
@@ -349,6 +366,23 @@ class _MapLayer extends StatefulWidget {
 
 class _MapLayerState extends State<_MapLayer> {
   final Map<String, BitmapDescriptor> _dwellLabels = {};
+
+  // PERF-06: fallback dwell-detection (O(n²) klasterlash) har rebuild'da
+  // (dwell tap, label kelishi) qayta ishlardi. points identity barqaror
+  // (parent memoize qiladi) — natijani keshlaymiz.
+  List<ChildLocation>? _dwellMemoInput;
+  List<AggregatedDwell> _dwellMemo = const <AggregatedDwell>[];
+
+  List<AggregatedDwell> _memoizedDwells(List<ChildLocation> points) {
+    if (!identical(points, _dwellMemoInput)) {
+      _dwellMemoInput = points;
+      _dwellMemo = DwellDetector.aggregateByLocation(
+        DwellDetector.detect(points, minDwellMinutes: 20),
+        mergeRadiusMeters: 100,
+      );
+    }
+    return _dwellMemo;
+  }
   String? _lastDwellSignature; // cache invalidation key
 
   Future<void> _ensureDwellLabels(List<AggregatedDwell> dwells) async {
@@ -451,16 +485,9 @@ class _MapLayerState extends State<_MapLayer> {
         );
       }
     } else {
-      // ── Fallback: client-side dwell detection ──
+      // ── Fallback: client-side dwell detection (memoized, PERF-06) ──
       // Backend stop hali yo'q (yangi feature) yoki eski data uchun.
-      final rawDwells = DwellDetector.detect(
-        chronological,
-        minDwellMinutes: 20,
-      );
-      final dwells = DwellDetector.aggregateByLocation(
-        rawDwells,
-        mergeRadiusMeters: 100,
-      );
+      final dwells = _memoizedDwells(chronological);
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _ensureDwellLabels(dwells);
       });

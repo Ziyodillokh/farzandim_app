@@ -58,11 +58,12 @@ class FcmService {
     await _messaging.requestPermission();
     await _setupLocalNotifications();
 
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await saveTokenForCurrentUser(token);
-    }
-
+    // ST-06: bu yerda darhol POST QILMAYMIZ. Avval har cold start'da
+    // 2 marta POST ketardi (bu yerda #1 + app.dart auth-transition
+    // reRegisterToken #2), login qilinmagan holatda esa kafolatlangan
+    // 401 so'rov. Registratsiya endi FAQAT: (a) auth-transition'da
+    // (app.dart — bootstrap'da har doim ishlaydi) va (b) token refresh
+    // bo'lganda (quyidagi listener).
     _onTokenRefreshSub =
         _messaging.onTokenRefresh.listen(saveTokenForCurrentUser);
 

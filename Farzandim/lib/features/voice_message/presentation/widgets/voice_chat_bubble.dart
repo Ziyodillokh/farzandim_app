@@ -2,6 +2,7 @@ import 'dart:io';
 
 import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
@@ -711,7 +712,9 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
       final savePath = '${dir.path}/${widget.message.id}_$safeName';
       final file = File(savePath);
       if (!file.existsSync() || file.lengthSync() == 0) {
-        await Dio().download(url, savePath);
+        // ARCH-05: yalang'och Dio() emas — umumiy klient (timeout'lar bor,
+        // cheksiz osilish yo'q; URL absolute bo'lgani uchun baseUrl bezarar).
+        await ref.read(dioClientProvider).download(url, savePath);
       }
       final result = await OpenFilex.open(savePath);
       if (result.type != ResultType.done && mounted) {

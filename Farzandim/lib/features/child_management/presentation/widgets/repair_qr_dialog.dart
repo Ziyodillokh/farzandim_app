@@ -22,8 +22,10 @@ import 'dart:async';
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -66,16 +68,40 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
   int _remainingSec = 0;
   String? _error;
   Timer? _ticker;
+  StreamSubscription<dynamic>? _repairedSub;
 
   @override
   void initState() {
     super.initState();
     _fetchNewToken();
+    // EH-06: bola QR'ni skanerlagach backend `child:repaired` WS event
+    // yuboradi (auth.service:873) — dialog AVTOMATIK yopiladi + success
+    // snack. Avval listener yo'q edi: ota-ona dialog yopilishini kutib
+    // o'tiraverardi (hujjatlangan xulq ishlamasdi).
+    _repairedSub = ref
+        .read(socketClientProvider)
+        .eventStream('child:repaired')
+        .listen((data) {
+      if (data is! Map) return;
+      if (data['childId'] != widget.childId) return;
+      if (!mounted) return;
+      // Ro'yxat yangilansin (isConnected=true keladi).
+      ref.read(childrenRefreshTickProvider.notifier).state++;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content:
+              Text('${widget.childName} muvaffaqiyatli qayta ulandi ✅'),
+          backgroundColor: AppColors.success,
+        ),
+      );
+      Navigator.of(context).pop(true);
+    });
   }
 
   @override
   void dispose() {
     _ticker?.cancel();
+    _repairedSub?.cancel();
     super.dispose();
   }
 
