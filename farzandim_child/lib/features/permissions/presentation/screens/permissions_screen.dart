@@ -92,6 +92,12 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
       if (!status.isGranted) {
         await permission.request();
       }
+      // whenInUse berilgach background ("har doim") ruxsatini ham so'raymiz —
+      // Android buni faqat shu tartibda qabul qiladi (background fix uchun).
+      if (permission == Permission.locationWhenInUse &&
+          await Permission.locationWhenInUse.isGranted) {
+        await _requestLocationAlways();
+      }
       // Qisqa pauza — UX uchun (dialog'lar bir-biriga yopishmasin)
       await Future<void>.delayed(const Duration(milliseconds: 400));
     }
@@ -103,6 +109,16 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
 
     if (_allGranted && mounted) {
       await _onContinue();
+    }
+  }
+
+  /// Background ("har doim") location ruxsati — whenInUse'dan KEYIN
+  /// so'raladi. Bersa bola fonda ham kuzatiladi; rad etsa best-effort,
+  /// oqim davom etadi (gating faqat whenInUse'ga qaraydi).
+  Future<void> _requestLocationAlways() async {
+    final always = await Permission.locationAlways.status;
+    if (!always.isGranted) {
+      await Permission.locationAlways.request();
     }
   }
 
@@ -169,6 +185,10 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                   onTap: () async {
                     final status =
                         await Permission.locationWhenInUse.request();
+                    // whenInUse berilgach "har doim" ruxsatini ham so'raymiz.
+                    if (status.isGranted) {
+                      await _requestLocationAlways();
+                    }
                     if (mounted) {
                       setState(() => _locationGranted = status.isGranted);
                     }

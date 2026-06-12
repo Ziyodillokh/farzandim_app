@@ -15,7 +15,10 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:farzandim_child/features/location/data/services/location_service.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
+import 'package:farzandim_child/firebase_options.dart';
+import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
@@ -26,6 +29,23 @@ const String _defaultChannelId = 'farzandim_child_default';
 const String _defaultChannelName = 'Parvoz xabarlari';
 const String _defaultChannelDesc =
     'Ota-onadan ovozli/video xabar, foto so\'rovi, va boshqalar';
+
+/// Data-only FCM background handler — app fon/yopiq holatda keladi.
+/// 'location_wake': ota-ona xaritani ochdi, bitta yangi fix yuboriladi.
+/// Alohida isolate'da ishlaydi — Firebase init majburiy. Best-effort:
+/// xato bo'lsa jim chiqadi, crash yo'q.
+@pragma('vm:entry-point')
+Future<void> fcmBackgroundHandler(RemoteMessage message) async {
+  if (message.data['type'] != 'location_wake') return;
+  try {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+  } catch (_) {
+    // allaqachon init bo'lgan yoki config yo'q — davom etamiz
+  }
+  await LocationService.sendWakeFix();
+}
 
 class FcmService {
   FcmService({
@@ -71,6 +91,12 @@ class FcmService {
     // 4. Foreground listener — UI ko'rsatish uchun manual local notification.
     _onMessageSub = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('FCM foreground: ${message.notification?.title}');
+      // location_wake — ota-ona xaritani ochdi, yangi fix yuboriladi.
+      // Data-only xabar — notification ko'rsatilmaydi.
+      if (message.data['type'] == 'location_wake') {
+        unawaited(LocationService.sendWakeFix());
+        return;
+      }
       onForegroundMessage?.call(message);
       unawaited(_showLocalNotification(message));
     });

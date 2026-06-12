@@ -16,9 +16,11 @@ import 'package:farzandim_child/features/app_update/data/models/app_version_info
 import 'package:farzandim_child/features/app_update/presentation/dialogs/force_update_dialog.dart';
 import 'package:farzandim_child/features/app_update/presentation/providers/app_update_provider.dart';
 import 'package:farzandim_child/features/background/data/services/background_service.dart';
+import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim_child/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -61,6 +63,16 @@ Future<void> main() async {
     );
   } catch (e) {
     debugPrint('[DEV] Firebase init skipped: $e');
+  }
+
+  // Data-only FCM background handler — 'location_wake' (ota-ona xaritani
+  // ochganda app fonda bo'lsa ham yangi fix yuboriladi). Web'da yo'q.
+  if (!kIsWeb) {
+    try {
+      FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+    } catch (e) {
+      debugPrint('[DEV] FCM background handler skipped: $e');
+    }
   }
 
   // Locale ma'lumotlarini yuklash — `DateFormat('d MMMM', 'uz')` kabi

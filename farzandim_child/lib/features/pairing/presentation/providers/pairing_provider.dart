@@ -28,6 +28,7 @@ import 'package:farzandim_child/features/pairing/data/repositories/pairing_repos
 import 'package:farzandim_child/features/sim_info/presentation/providers/sim_info_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -121,12 +122,16 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       );
 
       // Location stream'ni boshlash (ruxsat berilgan bo'lsa).
-      final locationService = _ref.read(locationServiceProvider);
-      await locationService.start(
-        parentUid: parentUid,
-        childId: childId,
-        childName: childName ?? 'Bola',
-      );
+      // Foreground service ishlayotgan bo'lsa bg isolate o'zi yuritadi —
+      // UI isolate'da ikkinchi GPS stream ochmaymiz (dublikat POST).
+      if (!await FlutterForegroundTask.isRunningService) {
+        final locationService = _ref.read(locationServiceProvider);
+        await locationService.start(
+          parentUid: parentUid,
+          childId: childId,
+          childName: childName ?? 'Bola',
+        );
+      }
 
       // SIM kartadan telefon raqamini olish + Firestore'ga yozish
       // (Sprint 4.1 — SOS dialog callButton uchun). Idempotent —
@@ -209,12 +214,15 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       childId: childId,
     );
 
-    final locationService = _ref.read(locationServiceProvider);
-    await locationService.start(
-      parentUid: parentUid,
-      childId: childId,
-      childName: childName,
-    );
+    // Bg isolate ishlayotgan bo'lsa location'ni o'zi yuritadi (dublikat yo'q).
+    if (!await FlutterForegroundTask.isRunningService) {
+      final locationService = _ref.read(locationServiceProvider);
+      await locationService.start(
+        parentUid: parentUid,
+        childId: childId,
+        childName: childName,
+      );
+    }
 
     // SIM phone number sync (Sprint 4.1). Idempotent.
     await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
@@ -378,7 +386,9 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
 
       // 7. Location stream'ni boshlash (Permission ekrani ruxsat olgach
       // ishlaydi — yo'q bo'lsa LocationService jim qaytadi).
+      // Bg isolate ishlayotgan bo'lsa o'zi yuritadi (dublikat yo'q).
       await safe('LocationService', () async {
+        if (await FlutterForegroundTask.isRunningService) return;
         await _ref.read(locationServiceProvider).start(
               parentUid: result.parentUid,
               childId: result.childId,
@@ -469,12 +479,15 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         childId: childId,
       );
 
-      final locationService = _ref.read(locationServiceProvider);
-      await locationService.start(
-        parentUid: parentUid,
-        childId: childId,
-        childName: childData?['name'] as String? ?? 'Bola',
-      );
+      // Bg isolate ishlayotgan bo'lsa location'ni o'zi yuritadi (dublikat yo'q).
+      if (!await FlutterForegroundTask.isRunningService) {
+        final locationService = _ref.read(locationServiceProvider);
+        await locationService.start(
+          parentUid: parentUid,
+          childId: childId,
+          childName: childData?['name'] as String? ?? 'Bola',
+        );
+      }
 
       await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
             parentUid: parentUid,

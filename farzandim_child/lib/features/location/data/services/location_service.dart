@@ -18,6 +18,7 @@
 // yangi fix), shuning uchun bitta source of truth — non-blocking.
 
 import 'dart:async';
+import 'dart:io' show Platform;
 
 import 'package:battery_plus/battery_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
@@ -27,6 +28,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:network_info_plus/network_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
@@ -45,12 +47,10 @@ class LocationService {
 
   // Firestore field olib tashlandi — Backend POST /location ishlatamiz.
 
-  /// Heartbeat oralig'i — bola harakatlanmagan paytda ham har shu vaqtda
-  /// backend'ga oxirgi pozitsiyani yuboradi. Backend stop-detection shu
-  /// statsionar nuqtalardan to'xtashni aniqlaydi (≥2.5 daqiqa). 60s tanlandi:
-  /// 2.5 daqiqalik to'xtash ~3 ta sample beradi → hech qaysi to'xtash
-  /// o'tkazib yuborilmaydi. Backend <10m dedup qiladi — bu nuqtalar yo'l
-  /// chizig'iga (locations) bloat qo'shmaydi, faqat stop-detection'ni quvvatlaydi.
+  /// Heartbeat oralig'i — har 60s lokatsiya holati tekshiriladi. Stream
+  /// jonli bo'lsa oxirgi nuqta yuboriladi, eskirgan bo'lsa yangi fix
+  /// so'raladi (_heartbeatTick). Backend stop-detection (≥2.5 daqiqa)
+  /// shu sample'larga tayanadi; <10m dedup bloat'ni oldini oladi.
   static const Duration _heartbeatInterval = Duration(seconds: 60);
 
   StreamSubscription<Position>? _positionSub;
@@ -171,9 +171,13 @@ class LocationService {
     // 3. Cached pozitsiya bo'lsa darhol yoz (sync, fast).
     // `getLastKnownPosition()` OS keshidan oxirgi ma'lum joylashuvni
     // qaytaradi — fix talab qilmaydi, shuning uchun osilmaydi.
+    // Faqat 10 daqiqadan yangi bo'lsa yuboramiz — soatlab eski kesh
+    // nuqta xaritada "hozirgi joy" bo'lib ko'rinib qolmasin.
     try {
       final lastKnown = await Geolocator.getLastKnownPosition();
-      if (lastKnown != null) {
+      if (lastKnown != null &&
+          DateTime.now().toUtc().difference(lastKnown.timestamp.toUtc()) <=
+              const Duration(minutes: 10)) {
         await _writeToFirestore(lastKnown);
       }
     } catch (e) {
@@ -181,12 +185,11 @@ class LocationService {
     }
 
     // 4. Stream'ga obuna — har 10m harakatda yangi pozitsiya.
+    // Android'da vaqt-asosli interval (5s) ham beriladi — mashinada tez
+    // yurganda nuqtalar siyraklashib qolmaydi.
     _positionSub?.cancel();
     _positionSub = Geolocator.getPositionStream(
-      locationSettings: const LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: 10,
-      ),
+      locationSettings: _streamSettings(),
     ).listen(
       _writeToFirestore,
       onError: (Object e) {
@@ -201,20 +204,68 @@ class LocationService {
     // so'raymiz, lekin asinx — UI/start() ni bloklamasligi uchun.
     unawaited(_forceFirstFix());
 
-    // 6. Heartbeat timer — har 10 daqiqada oxirgi pozitsiyani yana
-    // yozadi (bola statsionar bo'lsa ham tarix bo'sh qolmasin).
-    // `distanceFilter: 10` stream emit qilmaydi → bu yagona yo'l.
+    // 6. Heartbeat timer — har 60s lokatsiya holatini tekshiradi
+    // (bola statsionar bo'lsa ham tarix bo'sh qolmasin). Mantiq
+    // _heartbeatTick'da; xato heartbeat'ni yiqitmasin.
     _heartbeatTimer?.cancel();
     _heartbeatTimer = Timer.periodic(_heartbeatInterval, (_) async {
-      if (_lastPosition != null) {
-        debugPrint('LocationService: heartbeat tick');
-        await _writeToFirestore(_lastPosition!);
-      } else {
-        // Hali hech qanday pozitsiya yo'q — yangi fix so'rash.
-        debugPrint('LocationService: heartbeat — _lastPosition null, fresh fix');
-        unawaited(_forceFirstFix());
+      try {
+        await _heartbeatTick();
+      } catch (e) {
+        debugPrint('LocationService: heartbeat xato: $e');
       }
     });
+  }
+
+  /// Platformaga mos stream sozlamasi — Android'da intervalDuration bor.
+  LocationSettings _streamSettings() {
+    if (!kIsWeb && Platform.isAndroid) {
+      return AndroidSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+        intervalDuration: const Duration(seconds: 5),
+      );
+    }
+    return const LocationSettings(
+      accuracy: LocationAccuracy.high,
+      distanceFilter: 10,
+    );
+  }
+
+  /// Heartbeat mantiq — eski nuqtani "yangi" deb qayta yubormaslik:
+  /// - nuqta yoshi < 45s → stream jonli, o'shani yuboramiz;
+  /// - aks holda yangi fix so'raymiz (20s limit), kelsa o'shani yuboramiz;
+  /// - fix kelmasa va nuqta < 5 daqiqa → eskisini o'z vaqti bilan yuboramiz;
+  /// - undan eski bo'lsa lokatsiya yuborilmaydi (batareya/holat
+  ///   device-info heartbeat'da baribir ketadi).
+  Future<void> _heartbeatTick() async {
+    final last = _lastPosition;
+    final lastAge = last == null
+        ? null
+        : DateTime.now().toUtc().difference(last.timestamp.toUtc());
+
+    if (last != null && lastAge! < const Duration(seconds: 45)) {
+      await _writeToFirestore(last);
+      return;
+    }
+
+    try {
+      final fresh = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 20),
+      );
+      // _writeToFirestore _lastPosition'ni ham yangilaydi.
+      await _writeToFirestore(fresh);
+      return;
+    } catch (e) {
+      debugPrint('LocationService: heartbeat yangi fix olinmadi: $e');
+    }
+
+    if (last != null && lastAge! < const Duration(minutes: 5)) {
+      // capturedAt nuqtaning o'z vaqti bo'ladi (_postToBackend) —
+      // backend'da eski nuqta yangi vaqt bilan ko'rinmaydi.
+      await _writeToFirestore(last);
+    }
   }
 
   Future<void> _forceFirstFix() async {
@@ -297,9 +348,9 @@ class LocationService {
         'speed': position.speed,
         'heading': position.heading,
         'altitude': position.altitude,
-        // Client-side timestamp — Backend offline buffer flush paytida
-        // location qachon olinganini biladi (server timestamp emas).
-        'capturedAt': DateTime.now().toUtc().toIso8601String(),
+        // Nuqtaning O'Z vaqti (GPS fix vaqti) — heartbeat qayta yuborsa
+        // ham, offline flush bo'lsa ham backend to'g'ri vaqtni oladi.
+        'capturedAt': position.timestamp.toUtc().toIso8601String(),
         if (batteryLevel != null) 'batteryLevel': batteryLevel,
         if (isCharging != null) 'isCharging': isCharging,
         if (_cachedDeviceModel != null) 'deviceModel': _cachedDeviceModel,
@@ -339,7 +390,7 @@ class LocationService {
             'speed': position.speed,
             'heading': position.heading,
             'altitude': position.altitude,
-            'capturedAt': DateTime.now().toUtc().toIso8601String(),
+            'capturedAt': position.timestamp.toUtc().toIso8601String(),
           },
         );
         debugPrint('LocationService: offline buffer\'ga qo\'shildi (status=$code)');
@@ -358,9 +409,34 @@ class LocationService {
           'latitude': position.latitude,
           'longitude': position.longitude,
           'accuracy': position.accuracy,
-          'capturedAt': DateTime.now().toUtc().toIso8601String(),
+          'capturedAt': position.timestamp.toUtc().toIso8601String(),
         },
       );
+    }
+  }
+
+  /// FCM 'location_wake' push kelganda bitta yangi fix olib yuboradi
+  /// (ota-ona xaritani ochdi). Background isolate'da ham ishlaydi —
+  /// pairing prefs'dan, token TokenStorage'dan o'qiladi. Best-effort:
+  /// hech qachon throw qilmaydi.
+  static Future<void> sendWakeFix() async {
+    if (kIsWeb) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final parentUid = prefs.getString('parentUid');
+      final childId = prefs.getString('childId');
+      if (parentUid == null || childId == null) return;
+      if (!await Permission.locationWhenInUse.isGranted) return;
+      final position = await Geolocator.getCurrentPosition(
+        desiredAccuracy: LocationAccuracy.high,
+        timeLimit: const Duration(seconds: 25),
+      );
+      final service = LocationService()
+        .._parentUid = parentUid
+        .._childId = childId;
+      await service._postToBackend(position);
+    } catch (e) {
+      debugPrint('LocationService: wake fix yuborilmadi: $e');
     }
   }
 }
