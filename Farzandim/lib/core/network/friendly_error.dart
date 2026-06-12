@@ -7,7 +7,10 @@ import 'package:easy_localization/easy_localization.dart';
 ///
 /// Tartib:
 /// 1. Backend xabari — NestJS exception filter `{ message: string | [] }`
-///    qaytaradi; bo'lsa o'shani ko'rsatamiz (backend o'zbekcha yozadi).
+///    qaytaradi; bo'lsa o'shani ko'rsatamiz. DIQQAT: backend hamma joyda
+///    o'zbekcha yozmaydi (auth-guard/validation xabarlari inglizcha) —
+///    kontekst aniq xabar talab qilsa chaqiruvchi statusni O'ZI oldin
+///    tekshirsin (masalan app_limit repo 401'ni o'zi map qiladi).
 /// 2. Javob umuman kelmagan (`response == null`) — internet yo'q.
 /// 3. Chaqiruvchining `fallback`i — kontekstli xabar har doim status-kod
 ///    xabaridan ustun (login'dagi message'siz 401 "sessiya tugadi" emas,

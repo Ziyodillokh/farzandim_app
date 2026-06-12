@@ -128,11 +128,15 @@ class BackendAppLimitRepository {
     }
   }
 
-  /// Domain-ga xos 403/404 xabarlari; qolgan hamma holat (backend message,
-  /// internet yo'q, 401-sessiya) markaziy `friendlyError`da (EH-08) —
+  /// Domain-ga xos 401/403/404 xabarlari; qolgan hamma holat (backend
+  /// message, internet yo'q) markaziy `friendlyError`da (EH-08) —
   /// status-kod mantig'i takrorlanmaydi.
   String _messageForDioError(DioException e) {
     final code = e.response?.statusCode;
+    // 401 friendlyError'dan OLDIN (review topilmasi): auth-guard'ning
+    // backend xabari INGLIZCHA ("Invalid or expired access token") —
+    // friendlyError uni ko'rsatib yuborardi. Lokal sessiya xabari aniqroq.
+    if (code == 401) return 'errors.sessionExpired'.tr();
     if (code == 403) return 'errors.appLimit.childNotLinked'.tr();
     if (code == 404) return 'errors.appLimit.childNotFound'.tr();
     return friendlyError(e, fallback: 'errors.appLimit.saveFailed'.tr());

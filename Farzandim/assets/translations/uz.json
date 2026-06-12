@@ -10,8 +10,7 @@
       "childNotLinked": "Bu bola sizning akkauntingizga ulanmagan.",
       "childNotFound": "Bola topilmadi.",
       "saveFailed": "Saqlashda xatolik."
-    },
-    "fatalFallback": "Nimadir xato ketdi. Iltimos, ilovani qayta oching."
+    }
   },
   "sos": {
     "wsBanner": "SOS! Bola yordam so'ramoqda",

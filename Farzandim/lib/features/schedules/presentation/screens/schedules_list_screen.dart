@@ -175,6 +175,14 @@ class _ScheduleCard extends ConsumerWidget {
     );
   }
 
+  /// Backend'ga PERSIST qilinadigan KANONIK uz title (review topilmasi):
+  /// lokalizatsiyalangan `title` yozilsa ru/en user yaratgan jadval
+  /// tarjima holida saqlanib, boshqa iste'molchilar (Child App, admin)
+  /// aralash-tilli data olardi. UI'da baribir `title` (.tr) ko'rsatiladi.
+  String get _backendTitle => type == ScheduleType.sleep
+      ? 'Uyqu vaqtida bloklash'
+      : 'Dars vaqti';
+
   Future<void> _onToggle(WidgetRef ref, bool value) async {
     final actions = ref.read(scheduleActionsProvider.notifier);
     final current = schedule;
@@ -183,7 +191,7 @@ class _ScheduleCard extends ConsumerWidget {
         final d = _defaults;
         await actions.addSchedule(
           childId: childId,
-          title: title,
+          title: _backendTitle,
           type: type,
           weekdays: d.days,
           startHour: d.sh,

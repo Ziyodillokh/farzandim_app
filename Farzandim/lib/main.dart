@@ -196,17 +196,21 @@ class _ErrorFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Directionality(
+    return const Directionality(
       textDirection: ui.TextDirection.ltr,
       child: ColoredBox(
-        color: const Color(0xFF0A0A12),
+        color: Color(0xFF0A0A12),
         child: Center(
           child: Padding(
-            padding: const EdgeInsets.all(24),
+            padding: EdgeInsets.all(24),
             child: Text(
-              'errors.fatalFallback'.tr(),
+              // ATAYLAB .tr() EMAS (review topilmasi): ErrorWidget.builder
+              // EasyLocalization yuklanishidan OLDIN ham ishlashi mumkin —
+              // erta-fatal holatda .tr() tarjima o'rniga xom kalit nomini
+              // ko'rsatib qo'yardi.
+              'Nimadir xato ketdi. Iltimos, ilovani qayta oching.',
               textAlign: TextAlign.center,
-              style: const TextStyle(color: Color(0xFFB0B0B8), fontSize: 15),
+              style: TextStyle(color: Color(0xFFB0B0B8), fontSize: 15),
             ),
           ),
         ),

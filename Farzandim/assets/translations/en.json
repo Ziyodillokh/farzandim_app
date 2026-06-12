@@ -10,8 +10,7 @@
       "childNotLinked": "This child is not linked to your account.",
       "childNotFound": "Child not found.",
       "saveFailed": "Failed to save."
-    },
-    "fatalFallback": "Something went wrong. Please reopen the app."
+    }
   },
   "sos": {
     "wsBanner": "SOS! Your child needs help",
