@@ -9,8 +9,10 @@ import 'package:easy_localization/easy_localization.dart';
 /// 1. Backend xabari — NestJS exception filter `{ message: string | [] }`
 ///    qaytaradi; bo'lsa o'shani ko'rsatamiz (backend o'zbekcha yozadi).
 /// 2. Javob umuman kelmagan (`response == null`) — internet yo'q.
-/// 3. 401/403 — sessiya/ruxsat xabarlari.
-/// 4. Aks holda chaqiruvchining `fallback`i yoki umumiy xabar.
+/// 3. Chaqiruvchining `fallback`i — kontekstli xabar har doim status-kod
+///    xabaridan ustun (login'dagi message'siz 401 "sessiya tugadi" emas,
+///    "kirishda xatolik" deyilishi kerak — anonim user'da sessiya yo'q).
+/// 4. 401/403 — sessiya/ruxsat xabarlari; aks holda umumiy xabar.
 ///
 /// `.tr()` kalitlari `assets/translations/*.json` dagi `errors.*` guruhida.
 String friendlyError(Object error, {String? fallback}) {
@@ -23,8 +25,8 @@ String friendlyError(Object error, {String? fallback}) {
     }
     if (error.response == null) return 'errors.noInternet'.tr();
     final code = error.response?.statusCode;
-    if (code == 401) return 'errors.sessionExpired'.tr();
-    if (code == 403) return 'errors.forbidden'.tr();
+    if (code == 401) return fallback ?? 'errors.sessionExpired'.tr();
+    if (code == 403) return fallback ?? 'errors.forbidden'.tr();
   }
   return fallback ?? 'errors.generic'.tr();
 }

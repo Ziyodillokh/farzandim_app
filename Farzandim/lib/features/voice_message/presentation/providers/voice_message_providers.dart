@@ -93,7 +93,7 @@ final voiceMessagesProvider =
     return const AsyncValue.data(<VoiceMessage>[]);
   }
 
-  return ref.watch(rawVoiceMessagesProvider).whenData((raw) {
+  List<VoiceMessage> parse(List<Map<String, dynamic>> raw) {
     final mine = raw.where(
       (m) =>
           m['senderId'] == childUserId || m['receiverId'] == childUserId,
@@ -110,7 +110,17 @@ final voiceMessagesProvider =
     );
     // Backend DESC keladi — chat ekrani uchun ASC (chronological).
     return parsed.reversed.toList();
-  });
+  }
+
+  final rawAsync = ref.watch(rawVoiceMessagesProvider);
+  // MUHIM (flash-guard): invalidate(raw) refetch paytida AsyncLoading
+  // OLDINGI qiymatni ko'tarib keladi, lekin `whenData` uni YO'QOTADI —
+  // chat bir lahza bo'shab qolardi (xabar yuborilgan har safar). hasValue
+  // bo'lsa oldingi/joriy ro'yxatni ko'rsatib turamiz.
+  if (rawAsync.hasValue) {
+    return AsyncValue.data(parse(rawAsync.requireValue));
+  }
+  return rawAsync.whenData(parse);
 });
 
 /// Eng oxirgi ovozli xabar — list ekrani preview.

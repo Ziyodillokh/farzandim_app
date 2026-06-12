@@ -89,6 +89,15 @@ jobs:
           FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
         run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
 
+      # env.json gitignore'da (pubspec asset deb e'lon qilingan) — busiz
+      # flutter test asset-bundle bosqichida yiqiladi. Build joblardagi
+      # bilan bir xil shakl, faqat test uchun stub.
+      - name: Create env.json (asset bundle uchun stub)
+        run: |
+          mkdir -p Farzandim/assets
+          printf '{\n  "MAPS_API_KEY": "",\n  "API_BASE_URL": "https://%s",\n  "WS_BASE_URL": "wss://%s"\n}\n' \
+            "$TEST_DOMAIN" "$TEST_DOMAIN" > Farzandim/assets/env.json
+
       - uses: subosito/flutter-action@v2
         with:
           flutter-version: ${{ env.FLUTTER_VERSION }}
