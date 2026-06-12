@@ -83,7 +83,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   `dashboard_screen.dart:55-64`.
 - [x] **EH-07** (S): Ilova-ruxsat toggle xatoda jim yiqiladi (unawaited, catch yo'q) —
   `permission_apps_screen.dart:50-62,159`.
-- [ ] **EH-06** (S): Repair-QR dialog avto-yopilmaydi — hujjatdagi `child:repaired` WS listener
+- [x] **EH-06** (S): Repair-QR dialog avto-yopilmaydi — hujjatdagi `child:repaired` WS listener
   implementatsiya qilinmagan — `repair_qr_dialog.dart:15-17,64-132`.
 - [x] **EH-08** (S, minor): Child CRUD xatolarida xom inglizcha `e.toString()` ko'rsatiladi — o'zbekcha xabar.
 
@@ -96,7 +96,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   (birinchi o'rnatishda sekin tarmoqda matn kechikadi).
 - [ ] **ST-05** (M): Dashboard ikki ketma-ket to'lqin (/children tugamaguncha profil/usage boshlanmaydi) —
   `dashboard_screen.dart:47-64,793,958-968`.
-- [ ] **ST-06** (S, minor): FCM token cold start'da 2 marta POST; anonim holatda kafolatlangan 401 so'rov.
+- [x] **ST-06** (S, minor): FCM token cold start'da 2 marta POST; anonim holatda kafolatlangan 401 so'rov.
 - [x] **ST-07** (S, minor): Har so'rovda access token secure-storage'dan qayta o'qiladi — memory kesh.
 
 ### Performance (UI)
@@ -106,7 +106,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   har safar sog'inadi — `app_icon_widget.dart:90-109` — bytes'ni memoize (initState/cache).
 - [x] **PERF-05** (M): Voice chat yozish paytida amplitude 10Hz BUTUN ekranni rebuild qiladi —
   `voice_chat_screen.dart:188-207` — amplitude'ni faqat indikator widget'iga izolyatsiya qilish.
-- [ ] **PERF-06 + SCR-04** (M): LocationHistory har rebuild'da haversine×2 + dwell-detection qayta —
+- [x] **PERF-06 + SCR-04** (M): LocationHistory har rebuild'da haversine×2 + dwell-detection qayta —
   `location_history_screen.dart:148-150,235,456-466` — hisoblarni data o'zgarganda bir marta (memoize).
 - [x] **PERF-07 + NET-05 + ARCH-03** (S): DeviceSettings har 10s `ref.invalidate(childrenProvider)` —
   ilova bo'ylab hamma watcher'ni qayta fetch'ga majburlaydi — tick-pattern'ga o'tkazish (60s yetarli).
@@ -128,7 +128,7 @@ shikoyat qiladi. Quyidagi P0'lar tuzatilsa — arxitektura 100k'ga bemalol chida
   qayta uradi. Yagona yengil kesh qatlami (memory + vaqt) — backend yukini 30-50% kamaytiradi.
 - [ ] **NET-10** (S, minor): Retry/backoff yo'q — backend tiklanayotganda hamma klient bir vaqtda uradi
   (thundering herd) — jitter'li backoff.
-- [ ] **ARCH-05** (S): UI'da to'g'ridan-to'g'ri Dio (repair QR POST, xom Dio().download) — repository'ga ko'chirish.
+- [x] **ARCH-05** (S): UI'da to'g'ridan-to'g'ri Dio (repair QR POST, xom Dio().download) — repository'ga ko'chirish.
 - [x] **ARCH-06** (S): ~740 qator o'lik kod — 7 ta hech qayerdan import qilinmaydigan fayl (child_page_view.dart
   va b.) — o'chirish.
 - [ ] **ARCH-07** (M): Vaqt formatlash 6+ joyda hardcoded dublikat — markaziy formatter'ga yig'ish.
