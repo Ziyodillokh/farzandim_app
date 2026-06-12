@@ -14,6 +14,9 @@
 // Offlayn zaxira: tarix SharedPreferences'da keshlanaadi — server o'chsa
 // oxirgi suhbat baribir ko'rinadi; yuborilmagan xabar failed + retry.
 
+import 'dart:async';
+
+import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/features/support/data/models/support_message.dart';
 import 'package:farzandim/features/support/data/repositories/support_attachment_repository.dart';
 import 'package:farzandim/features/support/data/repositories/support_chat_store.dart';
@@ -56,19 +59,56 @@ final supportChatProvider =
         ref.watch(supportChatStoreProvider),
         ref.watch(supportAttachmentRepositoryProvider),
         ref.watch(supportMessagesRepositoryProvider),
+        ref.watch(socketClientProvider),
       );
     });
 
 class SupportChatNotifier extends StateNotifier<SupportChatState> {
-  SupportChatNotifier(this._store, this._attachments, this._messagesRepo)
-    : super(const SupportChatState()) {
+  SupportChatNotifier(
+    this._store,
+    this._attachments,
+    this._messagesRepo,
+    this._socket,
+  ) : super(const SupportChatState()) {
     _load();
+    // Operator javobi (Telegram'dan) DARHOL keladi — backend `support:message`
+    // WS event'ini `user:{id}` room'iga emit qiladi. Polling faqat zaxira.
+    _wsSub = _socket.eventStream('support:message').listen(_onWsMessage);
   }
 
   final SupportChatStore _store;
   final SupportAttachmentRepository _attachments;
   final SupportMessagesRepository _messagesRepo;
+  final SocketClient _socket;
+  StreamSubscription<dynamic>? _wsSub;
   int _seq = 0;
+
+  @override
+  void dispose() {
+    _wsSub?.cancel();
+    super.dispose();
+  }
+
+  /// WS orqali kelgan operator xabarini darhol qo'shadi (id bo'yicha dublikatni
+  /// chetlab). Keyingi sync server nusxasini tasdiqlaydi.
+  void _onWsMessage(dynamic data) {
+    if (!mounted || data is! Map) return;
+    final id = data['id'] as String?;
+    if (id == null || _find(id) != null) return;
+    _append(
+      SupportMessage(
+        id: id,
+        sender: data['sender'] == 'user'
+            ? SupportSender.user
+            : SupportSender.operator,
+        createdAt:
+            DateTime.tryParse(data['createdAt'] as String? ?? '')?.toLocal() ??
+            DateTime.now(),
+        text: data['text'] as String?,
+      ),
+    );
+    unawaited(_store.save(state.messages));
+  }
 
   String _newLocalId() {
     _seq++;

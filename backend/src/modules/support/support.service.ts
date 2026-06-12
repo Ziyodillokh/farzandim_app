@@ -40,9 +40,11 @@ export class SupportService {
    * User xabarini saqlaydi, operatorlar guruhiga yuboradi va kerak bo'lsa
    * avto-javob ("tez orada javob beramiz") yaratadi.
    *
-   * Avto-javob qoidasi: faqat suhbat "javoblangan" holatda bo'lsa (oxirgi
-   * xabar operatorniki yoki umuman birinchi xabar) — user ketma-ket yozsa
-   * har safar takrorlanmaydi.
+   * Avto-javob qoidasi: faqat suhbat "javoblangan/yangi" holatda bo'lsa.
+   * MUHIM — avto-ack'larni HISOBGA OLMAYMIZ: aks holda birinchi ack'dan keyin
+   * "previous = operator(ack)" bo'lib HAR xabarga takror ack chiqardi. Endi
+   * oxirgi HAQIQIY (isAutoAck=false) xabar tekshiriladi: u user'niki bo'lsa
+   * (javob kutilyapti) — qayta ack yo'q; operatorniki/yo'q bo'lsa — ack.
    */
   async createMessage(userId: string, dto: CreateSupportMessageDto) {
     const text = dto.text?.trim();
@@ -50,8 +52,8 @@ export class SupportService {
       throw new BadRequestException('Matn yoki biriktirma berilishi shart');
     }
 
-    const previous = await this.prisma.supportMessage.findFirst({
-      where: { userId },
+    const lastReal = await this.prisma.supportMessage.findFirst({
+      where: { userId, isAutoAck: false },
       orderBy: { createdAt: 'desc' },
       select: { sender: true },
     });
@@ -69,11 +71,24 @@ export class SupportService {
       },
     });
 
+    // Konkurent double-tap/ikki POST himoyasi: oxirgi 30s ichida ack bo'lsa
+    // qaytarmaymiz (idempotent oyna). lastReal qoidasi takror ack'ni allaqachon
+    // to'sadi; bu poyga (bir vaqtda ikki xabar) holatini ham yopadi.
     let ack: typeof message | null = null;
-    if (!previous || previous.sender === 'operator') {
-      ack = await this.prisma.supportMessage.create({
-        data: { userId, sender: 'operator', isAutoAck: true },
+    if (!lastReal || lastReal.sender === 'operator') {
+      const recentAck = await this.prisma.supportMessage.findFirst({
+        where: {
+          userId,
+          isAutoAck: true,
+          createdAt: { gte: new Date(Date.now() - 30_000) },
+        },
+        select: { id: true },
       });
+      if (!recentAck) {
+        ack = await this.prisma.supportMessage.create({
+          data: { userId, sender: 'operator', isAutoAck: true },
+        });
+      }
     }
 
     // Guruhga yuborish — fonda, xato chatni buzmaydi. message_id saqlanadi
