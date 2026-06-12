@@ -182,12 +182,15 @@ export class VoiceMessagesController {
   @Get()
   @ApiOperation({ summary: 'List voice messages for the current user' })
   @ApiQuery({ name: 'role', required: false, enum: ['sent', 'received'] })
+  @ApiQuery({ name: 'peerId', required: false, description: 'Only messages with this user' })
+  @ApiQuery({ name: 'before', required: false, description: 'Cursor: created before this ISO date' })
+  @ApiQuery({ name: 'limit', required: false, description: 'Page size (default 100, max 100)' })
   @ApiResponse({ status: 200, description: 'List of voice messages' })
   async list(
     @CurrentUser() user: JwtPayload,
     @Query() query: ListVoiceMessagesDto,
   ) {
-    return this.voiceMessagesService.list(user.userId, query.role);
+    return this.voiceMessagesService.list(user.userId, query);
   }
 
   @Get(':id/file')

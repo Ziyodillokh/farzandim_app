@@ -300,16 +300,38 @@ export class VoiceMessagesService {
     return this.storage.getObject(BUCKETS.voice, message.storagePath);
   }
 
-  async list(userId: string, role?: 'sent' | 'received') {
+  async list(
+    userId: string,
+    opts: {
+      role?: 'sent' | 'received';
+      peerId?: string;
+      before?: string;
+      limit?: number;
+    } = {},
+  ) {
+    const { role, peerId, before, limit } = opts;
     let where: any;
-    if (role === 'received') {
+    if (peerId) {
+      // Chat ekrani: faqat shu ikki user orasidagi yozishmalar.
+      where = {
+        OR: [
+          { senderId: userId, receiverId: peerId },
+          { senderId: peerId, receiverId: userId },
+        ],
+      };
+    } else if (role === 'received') {
       where = { receiverId: userId };
     } else if (role === 'sent') {
       where = { senderId: userId };
     } else {
       where = { OR: [{ senderId: userId }, { receiverId: userId }] };
     }
+    if (before) {
+      // Cursor: eski sahifa so'ralganda shu vaqtdan oldingilar.
+      where = { AND: [where, { createdAt: { lt: new Date(before) } }] };
+    }
 
+    const take = limit ?? 100;
     const messages = await this.prisma.voiceMessage.findMany({
       where,
       include: {
@@ -317,10 +339,12 @@ export class VoiceMessagesService {
         receiver: { select: USER_SELECT },
       },
       orderBy: { createdAt: 'desc' },
-      take: 100,
+      take,
     });
 
-    return { messages, count: messages.length };
+    // hasMore: to'liq sahifa qaytdi = ehtimol yana bor (klient keyingi
+    // before bilan tekshiradi). Eski klientlar bu maydonni o'qimaydi.
+    return { messages, count: messages.length, hasMore: messages.length === take };
   }
 
   async getFileUrl(userId: string, messageId: string) {
