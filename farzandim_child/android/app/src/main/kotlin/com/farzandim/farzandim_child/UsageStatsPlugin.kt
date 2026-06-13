@@ -38,38 +38,49 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     override fun onMethodCall(call: MethodCall, result: Result) {
-        when (call.method) {
-            "hasPermission" -> result.success(hasUsageStatsPermission())
-            "openSettings" -> {
-                openUsageAccessSettings()
-                result.success(null)
+        // MUHIM: butun handler try/catch bilan o'ralgan. Aks holda native
+        // metod (Settings.canDrawOverlays, startActivity, UsageStatsManager,
+        // PackageManager) ushlanmagan exception tashlasa — butun ilova
+        // crash bo'ladi (foydalanuvchi "ilovadan chiqib ketyapti" deydi).
+        // Endi xato Dart tomonga `result.error` orqali uzatiladi va u yerda
+        // try/catch bilan jim yutiladi (permission ekrani ochiq qoladi).
+        try {
+            when (call.method) {
+                "hasPermission" -> result.success(hasUsageStatsPermission())
+                "openSettings" -> {
+                    openUsageAccessSettings()
+                    result.success(null)
+                }
+                "getUsageStats" -> {
+                    val days = call.argument<Int>("days") ?: 1
+                    result.success(getUsageStats(days))
+                }
+                "getInstalledApps" -> {
+                    result.success(getInstalledApps())
+                }
+                "getRecentGameForegrounds" -> {
+                    val sinceMs = call.argument<Number>("sinceMs")?.toLong() ?: 0L
+                    result.success(getRecentGameForegrounds(sinceMs))
+                }
+                "hasOverlayPermission" -> result.success(hasOverlayPermission())
+                "isAccessibilityEnabled" -> result.success(isAccessibilityEnabled())
+                "openOverlaySettings" -> {
+                    openOverlaySettings()
+                    result.success(null)
+                }
+                "startRestrictionService" -> {
+                    startRestrictionService()
+                    result.success(null)
+                }
+                "stopRestrictionService" -> {
+                    stopRestrictionService()
+                    result.success(null)
+                }
+                else -> result.notImplemented()
             }
-            "getUsageStats" -> {
-                val days = call.argument<Int>("days") ?: 1
-                result.success(getUsageStats(days))
-            }
-            "getInstalledApps" -> {
-                result.success(getInstalledApps())
-            }
-            "getRecentGameForegrounds" -> {
-                val sinceMs = call.argument<Number>("sinceMs")?.toLong() ?: 0L
-                result.success(getRecentGameForegrounds(sinceMs))
-            }
-            "hasOverlayPermission" -> result.success(hasOverlayPermission())
-            "isAccessibilityEnabled" -> result.success(isAccessibilityEnabled())
-            "openOverlaySettings" -> {
-                openOverlaySettings()
-                result.success(null)
-            }
-            "startRestrictionService" -> {
-                startRestrictionService()
-                result.success(null)
-            }
-            "stopRestrictionService" -> {
-                stopRestrictionService()
-                result.success(null)
-            }
-            else -> result.notImplemented()
+        } catch (e: Throwable) {
+            android.util.Log.e("UsageStatsPlugin", "onMethodCall ${call.method} xato", e)
+            result.error("USAGE_STATS_ERROR", e.message, null)
         }
     }
 

@@ -63,11 +63,24 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
 
   /// Init paytida joriy holatni tekshiramiz — agar foydalanuvchi
   /// avval ruxsat bergan bo'lsa, qayta so'ramaymiz.
+  ///
+  /// Har bir chaqiruv try/catch bilan — permission_handler ba'zi OEM
+  /// qurilmalarida PlatformException tashlashi mumkin; ushlanmasa
+  /// ilova crash bo'ladi (foydalanuvchi "ilovadan chiqib ketyapti").
   Future<void> _checkPermissions() async {
-    _locationGranted = await Permission.location.isGranted;
-    _notificationGranted = await Permission.notification.isGranted;
-    _cameraGranted = await Permission.camera.isGranted;
+    _locationGranted = await _safeGranted(Permission.location);
+    _notificationGranted = await _safeGranted(Permission.notification);
+    _cameraGranted = await _safeGranted(Permission.camera);
     if (mounted) setState(() {});
+  }
+
+  /// `permission.isGranted` ni xavfsiz o'qiydi — xato bo'lsa `false`.
+  Future<bool> _safeGranted(Permission permission) async {
+    try {
+      return await permission.isGranted;
+    } catch (_) {
+      return false;
+    }
   }
 
   bool get _allGranted =>
@@ -88,15 +101,21 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
       setState(() => _currentRequestIndex = i);
 
       final permission = _autoPermissions[i];
-      final status = await permission.status;
-      if (!status.isGranted) {
-        await permission.request();
-      }
-      // whenInUse berilgach background ("har doim") ruxsatini ham so'raymiz —
-      // Android buni faqat shu tartibda qabul qiladi (background fix uchun).
-      if (permission == Permission.locationWhenInUse &&
-          await Permission.locationWhenInUse.isGranted) {
-        await _requestLocationAlways();
+      // Har bir so'rovni try/catch bilan — bitta permission xato bersa
+      // butun oqim (va ilova) yiqilmasin, keyingisiga o'tamiz.
+      try {
+        final status = await permission.status;
+        if (!status.isGranted) {
+          await permission.request();
+        }
+        // whenInUse berilgach background ("har doim") ruxsatini ham
+        // so'raymiz — Android buni faqat shu tartibda qabul qiladi.
+        if (permission == Permission.locationWhenInUse &&
+            await Permission.locationWhenInUse.isGranted) {
+          await _requestLocationAlways();
+        }
+      } catch (_) {
+        /* permission_handler xatosi — keyingi ruxsatga o'tamiz */
       }
       // Qisqa pauza — UX uchun (dialog'lar bir-biriga yopishmasin)
       await Future<void>.delayed(const Duration(milliseconds: 400));
@@ -116,9 +135,13 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   /// so'raladi. Bersa bola fonda ham kuzatiladi; rad etsa best-effort,
   /// oqim davom etadi (gating faqat whenInUse'ga qaraydi).
   Future<void> _requestLocationAlways() async {
-    final always = await Permission.locationAlways.status;
-    if (!always.isGranted) {
-      await Permission.locationAlways.request();
+    try {
+      final always = await Permission.locationAlways.status;
+      if (!always.isGranted) {
+        await Permission.locationAlways.request();
+      }
+    } catch (_) {
+      return;
     }
   }
 
