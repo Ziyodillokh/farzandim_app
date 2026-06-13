@@ -125,7 +125,10 @@ export class ConsumerContentController {
     const obj = await this.service.getMediaStream(segment, file, range);
     reply.header('Accept-Ranges', 'bytes');
     reply.header('Cache-Control', 'public, max-age=86400');
-    reply.type(obj.contentType);
+    // Content-Type'ni fayl kengaytmasidan ANIQLAYMIZ — admin audio'ni MIME'siz
+    // yuklagani uchun MinIO'da ko'pincha octet-stream/bo'sh saqlanadi va telefon
+    // player (just_audio/ExoPlayer/AVPlayer) octet-stream'da 0:00 da qotardi.
+    reply.type(this.contentTypeFor(file, obj.contentType));
     if (obj.contentRange) {
       reply.code(206);
       reply.header('Content-Range', obj.contentRange);
@@ -134,6 +137,37 @@ export class ConsumerContentController {
       reply.header('Content-Length', String(obj.contentLength));
     }
     return reply.send(obj.stream);
+  }
+
+  // Fayl kengaytmasidan to'g'ri MIME — saqlangan tur ishonchli (octet-stream
+  // emas) bo'lsa o'shani, aks holda kengaytmadan aniqlaymiz.
+  private static readonly MIME: Record<string, string> = {
+    m4a: 'audio/mp4',
+    aac: 'audio/mp4',
+    mp3: 'audio/mpeg',
+    wav: 'audio/wav',
+    ogg: 'audio/ogg',
+    opus: 'audio/ogg',
+    webm: 'audio/webm',
+    mp4: 'video/mp4',
+    m4v: 'video/mp4',
+    mov: 'video/quicktime',
+    jpg: 'image/jpeg',
+    jpeg: 'image/jpeg',
+    png: 'image/png',
+    webp: 'image/webp',
+    gif: 'image/gif',
+    pdf: 'application/pdf',
+  };
+
+  private contentTypeFor(file: string, stored?: string): string {
+    if (stored && stored !== 'application/octet-stream') return stored;
+    const ext = file.split('.').pop()?.toLowerCase() ?? '';
+    return (
+      ConsumerContentController.MIME[ext] ??
+      stored ??
+      'application/octet-stream'
+    );
   }
 
   // @Public YouTube embed sahifa — bola webview SHU sahifani yuklaydi.
@@ -147,6 +181,20 @@ export class ConsumerContentController {
       reply.code(400).send('Invalid video id');
       return;
     }
+    // `origin` — YouTube embed player ruxsatli embedder'ni shu orqali tekshiradi;
+    // bo'lmasa Android WebView'da "Xato 153" beradi. Sahifa xizmat qilingan
+    // haqiqiy host'ni olamiz. `youtube-nocookie` domeni embed-cheklovlarga
+    // bardoshliroq. `enablejsapi=1` ham embed-player'ni to'g'ri sozlaydi.
+    const reqHeaders = reply.request.headers;
+    const host =
+      (reqHeaders['x-forwarded-host'] as string | undefined) ??
+      reqHeaders.host ??
+      'farzandimedu.uz';
+    const origin = `https://${host}`;
+    const src =
+      `https://www.youtube-nocookie.com/embed/${id}` +
+      `?playsinline=1&rel=0&modestbranding=1&enablejsapi=1` +
+      `&origin=${encodeURIComponent(origin)}`;
     const html =
       '<!DOCTYPE html><html><head>' +
       '<meta name="viewport" content="width=device-width,initial-scale=1,' +
@@ -154,8 +202,7 @@ export class ConsumerContentController {
       '<style>html,body{margin:0;background:#000;height:100%;overflow:hidden}' +
       'iframe{position:fixed;top:0;left:0;width:100%;height:100%;border:0}' +
       '</style></head><body>' +
-      `<iframe src="https://www.youtube.com/embed/${id}` +
-      '?playsinline=1&rel=0&modestbranding=1" ' +
+      `<iframe src="${src}" ` +
       'allow="autoplay;encrypted-media;picture-in-picture" ' +
       'allowfullscreen></iframe></body></html>';
     reply.type('text/html').send(html);

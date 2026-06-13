@@ -45,6 +45,12 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final embedPage = Uri.parse('${EnvConfig.apiUrl}/content/yt/$id');
 
     _controller = WebViewController()
+      // Chrome UA — default Android WebView UA ('; wv') ni YouTube embed player
+      // ko'pincha bloklab "Xato 153" berardi; haqiqiy Chrome UA bilan ishlaydi.
+      ..setUserAgent(
+        'Mozilla/5.0 (Linux; Android 12) AppleWebKit/537.36 '
+        '(KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36',
+      )
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
       ..setBackgroundColor(Colors.black)
       ..setNavigationDelegate(
