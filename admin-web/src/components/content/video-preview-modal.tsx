@@ -8,6 +8,7 @@ import {
   DialogDescription,
 } from '@/components/ui/dialog';
 import { youtubeId } from '@/lib/youtube';
+import { contentMediaUrl } from '@/lib/media';
 import type { Video } from '@/types/api.types';
 
 // Admin o'zi qo'shgan videoni panelda ko'rib tekshirishi uchun preview.
@@ -51,7 +52,7 @@ export function VideoPreviewModal({
               <video
                 key={video.url}
                 className="h-full w-full"
-                src={video.url}
+                src={contentMediaUrl('video', video.storageKey) ?? video.url}
                 controls
                 autoPlay
               />

@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import {
-  BarChart3, TrendingUp, Users, Video, Headphones, BookOpen,
+  BarChart3, TrendingUp, Users, Video, Headphones, BookOpen, Eye, Play,
 } from 'lucide-react';
 import {
   Area, AreaChart, Bar, BarChart, CartesianGrid, ResponsiveContainer,
@@ -23,6 +23,8 @@ interface AnalyticsOverview {
   audiobooks?: number;
   books?: number;
   olympiads?: number;
+  totalViews?: number;
+  totalListens?: number;
   growth?: Array<{ label: string; value: number }>;
 }
 
@@ -53,6 +55,8 @@ export default function AnalyticsPage() {
         <StatTile icon={<Video />} label="Videolar" value={overview?.videos ?? 0} loading={isLoading} idx={1} />
         <StatTile icon={<Headphones />} label="Audiokitoblar" value={overview?.audiobooks ?? 0} loading={isLoading} idx={2} />
         <StatTile icon={<BookOpen />} label="Kitoblar" value={overview?.books ?? 0} loading={isLoading} idx={3} />
+        <StatTile icon={<Eye />} label="Video ko'rishlar" value={overview?.totalViews ?? 0} loading={isLoading} idx={0} />
+        <StatTile icon={<Play />} label="Audio tinglashlar" value={overview?.totalListens ?? 0} loading={isLoading} idx={1} />
       </div>
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">

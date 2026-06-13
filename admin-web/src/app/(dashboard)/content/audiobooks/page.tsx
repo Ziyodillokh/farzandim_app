@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Headphones, MoreHorizontal, Check, X, Trash2, Eye, Layers, Plus } from 'lucide-react';
+import { Headphones, MoreHorizontal, Check, X, Trash2, Eye, Layers, Plus, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,8 @@ import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
 import type { Audiobook } from '@/types/api.types';
+import { contentMediaUrl } from '@/lib/media';
+import { AudiobookPreviewModal } from '@/components/content/audiobook-preview-modal';
 
 const STATUS_TABS = [
   { value: '', label: 'Hammasi' },
@@ -153,23 +155,36 @@ function AudiobookCard({
   onReject: () => void;
   onRemove: () => void;
 }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
+  const cover = contentMediaUrl('thumb', book.thumbStorageKey) ?? book.thumbnail;
   return (
+    <>
     <Card className="card-glow group overflow-hidden">
-      <div className="relative aspect-[4/3] w-full overflow-hidden bg-muted">
-        {book.thumbnail ? (
+      <button
+        type="button"
+        onClick={() => setPreviewOpen(true)}
+        className="relative block aspect-[4/3] w-full overflow-hidden bg-muted"
+        aria-label="Audiokitobni eshitish"
+      >
+        {cover ? (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={book.thumbnail} alt={book.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
+          <img src={cover} alt={book.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
         ) : (
           <div className="flex h-full w-full items-center justify-center">
             <Headphones className="h-10 w-10 text-muted-foreground/40" />
           </div>
         )}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground/80 text-background opacity-0 transition-opacity group-hover:opacity-100">
+            <Play className="h-5 w-5 translate-x-0.5" />
+          </span>
+        </span>
         {book.partsCount > 0 && (
           <span className="absolute bottom-2 right-2 flex items-center gap-1 rounded-md bg-foreground/80 px-1.5 py-0.5 text-2xs font-semibold text-background">
             <Layers className="h-3 w-3" /> {book.partsCount} qism
           </span>
         )}
-      </div>
+      </button>
 
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-2">
@@ -185,7 +200,7 @@ function AudiobookCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-              <DropdownMenuItem><Eye /> Ko&apos;rish</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPreviewOpen(true)}><Eye /> Eshitish</DropdownMenuItem>
               {book.status !== 'approved' && (
                 <DropdownMenuItem onClick={onApprove} className="text-success focus:text-success">
                   <Check /> Tasdiqlash
@@ -215,5 +230,11 @@ function AudiobookCard({
         </div>
       </div>
     </Card>
+      <AudiobookPreviewModal
+        book={book}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
+    </>
   );
 }

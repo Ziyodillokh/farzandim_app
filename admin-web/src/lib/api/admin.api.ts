@@ -122,8 +122,8 @@ export const contentApi = {
       form.append('metadata', JSON.stringify(metadata));
       return api.postForm<Video>('/admin/videos/upload', form, onProgress);
     },
-    approve: (id: string) => api.patch(`/admin/videos/${id}/approve`),
-    reject: (id: string) => api.patch(`/admin/videos/${id}/reject`),
+    approve: (id: string) => api.post(`/admin/videos/${id}/approve`),
+    reject: (id: string) => api.post(`/admin/videos/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/videos/${id}`),
   },
   audiobooks: {
@@ -138,8 +138,8 @@ export const contentApi = {
       form.append('metadata', JSON.stringify(metadata));
       return api.postForm<Audiobook>('/admin/audiobooks/upload', form, onProgress);
     },
-    approve: (id: string) => api.patch(`/admin/audiobooks/${id}/approve`),
-    reject: (id: string) => api.patch(`/admin/audiobooks/${id}/reject`),
+    approve: (id: string) => api.post(`/admin/audiobooks/${id}/approve`),
+    reject: (id: string) => api.post(`/admin/audiobooks/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/audiobooks/${id}`),
   },
   books: {
@@ -154,8 +154,8 @@ export const contentApi = {
       form.append('metadata', JSON.stringify(metadata));
       return api.postForm<Book>('/admin/books/upload', form, onProgress);
     },
-    approve: (id: string) => api.patch(`/admin/books/${id}/approve`),
-    reject: (id: string) => api.patch(`/admin/books/${id}/reject`),
+    approve: (id: string) => api.post(`/admin/books/${id}/approve`),
+    reject: (id: string) => api.post(`/admin/books/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/books/${id}`),
   },
   categories: {

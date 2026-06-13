@@ -161,6 +161,8 @@ export interface Video {
   featured: boolean;
   views: number;
   likes: number;
+  storageKey?: string | null;
+  thumbStorageKey?: string | null;
   createdAt: string;
 }
 
@@ -178,6 +180,8 @@ export interface Audiobook {
   category: string | null;
   planRequired: string;
   status: ContentStatus;
+  storageKey?: string | null;
+  thumbStorageKey?: string | null;
   listens: number;
   createdAt: string;
 }
@@ -195,6 +199,8 @@ export interface Book {
   category: string;
   planRequired: string;
   status: ContentStatus;
+  storageKey?: string | null;
+  thumbStorageKey?: string | null;
   reads: number;
   createdAt: string;
 }
