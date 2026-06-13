@@ -434,9 +434,13 @@ class _AlertTile extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.map_rounded, size: 18),
-                      label: Text(
-                        'sos.mapButton'.tr(),
-                        style: AppTextStyles.bodyM,
+                      label: Flexible(
+                        child: Text(
+                          'sos.mapButton'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodyM,
+                        ),
                       ),
                     ),
                   ),
@@ -455,11 +459,15 @@ class _AlertTile extends StatelessWidget {
                         ),
                       ),
                       icon: const Icon(Icons.check_rounded, size: 18),
-                      label: Text(
-                        'sos.resolveAction'.tr(),
-                        style: AppTextStyles.bodyM.copyWith(
-                          fontWeight: FontWeight.w600,
-                          color: AppColors.onPrimary,
+                      label: Flexible(
+                        child: Text(
+                          'sos.resolveAction'.tr(),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: AppTextStyles.bodyM.copyWith(
+                            fontWeight: FontWeight.w600,
+                            color: AppColors.onPrimary,
+                          ),
                         ),
                       ),
                     ),

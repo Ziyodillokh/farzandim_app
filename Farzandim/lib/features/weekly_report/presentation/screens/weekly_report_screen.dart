@@ -143,14 +143,18 @@ class _StepsCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _Stat(
-                value: _fmtInt(report.stepsWeekTotal),
-                label: 'weeklyReport.weekTotal'.tr(),
+              Expanded(
+                child: _Stat(
+                  value: _fmtInt(report.stepsWeekTotal),
+                  label: 'weeklyReport.weekTotal'.tr(),
+                ),
               ),
               const SizedBox(width: AppDimensions.lg),
-              _Stat(
-                value: _fmtInt(report.stepsDailyAvg),
-                label: 'weeklyReport.dailyAvg'.tr(),
+              Expanded(
+                child: _Stat(
+                  value: _fmtInt(report.stepsDailyAvg),
+                  label: 'weeklyReport.dailyAvg'.tr(),
+                ),
               ),
             ],
           ),
@@ -190,14 +194,18 @@ class _ScreenTimeCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              _Stat(
-                value: _fmtDuration(report.screenWeekMinutes),
-                label: 'weeklyReport.weekTotal'.tr(),
+              Expanded(
+                child: _Stat(
+                  value: _fmtDuration(report.screenWeekMinutes),
+                  label: 'weeklyReport.weekTotal'.tr(),
+                ),
               ),
               const SizedBox(width: AppDimensions.lg),
-              _Stat(
-                value: _fmtDuration(avgMin),
-                label: 'weeklyReport.dailyAvg'.tr(),
+              Expanded(
+                child: _Stat(
+                  value: _fmtDuration(avgMin),
+                  label: 'weeklyReport.dailyAvg'.tr(),
+                ),
               ),
             ],
           ),
@@ -353,6 +361,8 @@ class _Stat extends StatelessWidget {
       children: [
         Text(
           value,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
           style: AppTextStyles.headlineL.copyWith(
             fontSize: 22,
             fontWeight: FontWeight.bold,

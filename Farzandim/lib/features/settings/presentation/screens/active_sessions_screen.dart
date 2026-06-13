@@ -329,11 +329,15 @@ class _EndAllOthersButton extends StatelessWidget {
       child: TextButton.icon(
         onPressed: () => _confirm(context),
         icon: Icon(Icons.back_hand_rounded, color: AppColors.error, size: 18),
-        label: Text(
-          'settings.sessions.endAllOthers'.tr(),
-          style: AppTextStyles.bodyM.copyWith(
-            color: AppColors.error,
-            fontWeight: FontWeight.w700,
+        label: Flexible(
+          child: Text(
+            'settings.sessions.endAllOthers'.tr(),
+            style: AppTextStyles.bodyM.copyWith(
+              color: AppColors.error,
+              fontWeight: FontWeight.w700,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
       ),
@@ -385,11 +389,15 @@ class _AddAccountBar extends StatelessWidget {
                     size: 22,
                   ),
                   const SizedBox(width: AppDimensions.sm),
-                  Text(
-                    'settings.sessions.addAccount'.tr(),
-                    style: AppTextStyles.bodyM.copyWith(
-                      color: AppColors.background,
-                      fontWeight: FontWeight.w700,
+                  Flexible(
+                    child: Text(
+                      'settings.sessions.addAccount'.tr(),
+                      style: AppTextStyles.bodyM.copyWith(
+                        color: AppColors.background,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ],

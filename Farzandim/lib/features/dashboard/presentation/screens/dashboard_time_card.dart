@@ -188,10 +188,7 @@ class _AppFacepile extends StatelessWidget {
       for (var i = shown.length - 1; i >= 0; i--)
         Positioned(
           left: i * _step,
-          child: _AppIcon(
-            iconUrl: shown[i].iconUrl,
-            name: shown[i].name,
-          ),
+          child: _AppIcon(iconUrl: shown[i].iconUrl, name: shown[i].name),
         ),
       // "+N" — eng o'ngda, eng ustda (to'liq ko'rinadi).
       if (remaining > 0)
@@ -373,7 +370,7 @@ class _QuickActionsGrid extends StatelessWidget {
         crossAxisCount: 2,
         crossAxisSpacing: 12,
         mainAxisSpacing: 12,
-        mainAxisExtent: 118,
+        mainAxisExtent: 128,
       ),
       itemCount: tiles.length,
       itemBuilder: (_, i) => tiles[i],

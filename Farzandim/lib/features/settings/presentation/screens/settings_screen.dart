@@ -192,9 +192,9 @@ class SettingsScreen extends ConsumerWidget {
   // qurilma ro'yxatdan o'tmagan; sent>0 lekin push kelmasa bildirishnoma
   // ruxsati muammosi; failed>0 bo'lsa server tomonda Firebase xatosi.
   Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('settings.pushTest.sending'.tr())),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text('settings.pushTest.sending'.tr())));
 
     final res = await ref.read(fcmServiceProvider).sendTestPush();
     if (!context.mounted) return;
@@ -398,6 +398,9 @@ class _IdentifierPill extends StatelessWidget {
       ),
       child: Text(
         text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        softWrap: false,
         style: AppTextStyles.bodyS.copyWith(
           color: AppColors.onPrimary,
           fontWeight: FontWeight.w700,

@@ -200,6 +200,8 @@ class _Last24HoursCard extends ConsumerWidget {
                     'geoZones.last24h.eventCount'.tr(
                       namedArgs: {'count': '$count'},
                     ),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
                     style: AppTextStyles.bodyS.copyWith(
                       color: AppColors.textPrimary,
                       fontSize: 13,
@@ -207,12 +209,16 @@ class _Last24HoursCard extends ConsumerWidget {
                     ),
                   ),
                 ),
-                Text(
-                  'geoZones.last24h.viewLink'.tr(),
-                  style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.accent,
-                    fontWeight: FontWeight.w700,
-                    fontSize: 13,
+                Flexible(
+                  child: Text(
+                    'geoZones.last24h.viewLink'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppTextStyles.bodyS.copyWith(
+                      color: AppColors.accent,
+                      fontWeight: FontWeight.w700,
+                      fontSize: 13,
+                    ),
                   ),
                 ),
                 const SizedBox(width: 2),

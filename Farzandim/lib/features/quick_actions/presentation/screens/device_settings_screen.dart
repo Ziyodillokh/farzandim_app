@@ -372,16 +372,20 @@ class _DeviceCard extends StatelessWidget {
                           : AppColors.textTertiary,
                     ),
                     const SizedBox(width: 4),
-                    Text(
-                      isOnline
-                          ? 'deviceSettings.status.online'.tr()
-                          : 'deviceSettings.status.offline'.tr(),
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: isOnline
-                            ? AppColors.success
-                            : AppColors.textSecondary,
-                        fontWeight: FontWeight.w600,
-                        fontSize: 13,
+                    Flexible(
+                      child: Text(
+                        isOnline
+                            ? 'deviceSettings.status.online'.tr()
+                            : 'deviceSettings.status.offline'.tr(),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: AppTextStyles.bodyS.copyWith(
+                          color: isOnline
+                              ? AppColors.success
+                              : AppColors.textSecondary,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
                       ),
                     ),
                   ],

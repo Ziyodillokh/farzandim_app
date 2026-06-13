@@ -40,10 +40,10 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   static const _periods = ['weekly', 'monthly', 'all'];
   List<String> get _periodLabels => [
-        'leaderboard.periods.weekly'.tr(),
-        'leaderboard.periods.monthly'.tr(),
-        'leaderboard.periods.all'.tr(),
-      ];
+    'leaderboard.periods.weekly'.tr(),
+    'leaderboard.periods.monthly'.tr(),
+    'leaderboard.periods.all'.tr(),
+  ];
 
   LeaderboardArgs get _args =>
       (childId: widget.childId, period: _period, region: _region);
@@ -61,8 +61,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   void _onScroll() {
-    if (_scroll.position.pixels >=
-        _scroll.position.maxScrollExtent - 320) {
+    if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 320) {
       ref.read(leaderboardProvider(_args).notifier).loadMore();
     }
   }
@@ -144,9 +143,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           ),
 
           // ─── Dark ro'yxat ───
-          Expanded(
-            child: _list(st, rest),
-          ),
+          Expanded(child: _list(st, rest)),
 
           // ─── Sticky "Siz" ───
           // Top-3 podium'da ko'rinadi, shu yerda takrorlamaymiz.
@@ -215,8 +212,9 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 10),
                   decoration: BoxDecoration(
                     color: i == active ? Colors.white : Colors.transparent,
-                    borderRadius:
-                        BorderRadius.circular(AppDimensions.radiusPill),
+                    borderRadius: BorderRadius.circular(
+                      AppDimensions.radiusPill,
+                    ),
                   ),
                   child: Text(
                     _periodLabels[i],
@@ -248,8 +246,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.location_on_outlined,
-                color: Colors.white, size: 18),
+            const Icon(
+              Icons.location_on_outlined,
+              color: Colors.white,
+              size: 18,
+            ),
             const SizedBox(width: 6),
             Text(
               _region ?? 'leaderboard.byRegions'.tr(),
@@ -259,8 +260,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
               ),
             ),
             const SizedBox(width: 4),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                color: Colors.white, size: 20),
+            const Icon(
+              Icons.keyboard_arrow_down_rounded,
+              color: Colors.white,
+              size: 20,
+            ),
           ],
         ),
       ),
@@ -271,9 +275,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (st.initialLoading) {
       return const SizedBox(
         height: 150,
-        child: Center(
-          child: CircularProgressIndicator(color: Colors.white),
-        ),
+        child: Center(child: CircularProgressIndicator(color: Colors.white)),
       );
     }
     if (top3.isEmpty) {
@@ -288,12 +290,14 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       );
     }
     LeaderboardEntry? at(int i) => i < top3.length ? top3[i] : null;
+    // Past (kichik balandlikdagi) ekranda avatarlar ro'yxatni siqmasin.
+    final short = MediaQuery.sizeOf(context).height < 700;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(child: _podiumItem(at(1), 2, 60)),
-        Expanded(child: _podiumItem(at(0), 1, 78)),
-        Expanded(child: _podiumItem(at(2), 3, 60)),
+        Expanded(child: _podiumItem(at(1), 2, short ? 48 : 60)),
+        Expanded(child: _podiumItem(at(0), 1, short ? 60 : 78)),
+        Expanded(child: _podiumItem(at(2), 3, short ? 48 : 60)),
       ],
     );
   }
@@ -303,8 +307,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     final color = place == 1
         ? _kGold
         : place == 2
-            ? _kSilver
-            : _kBronze;
+        ? _kSilver
+        : _kBronze;
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
@@ -321,11 +325,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(color: color, width: 3),
               ),
-              child: _Avatar(
-                childId: e.childId,
-                name: e.name,
-                size: size,
-              ),
+              child: _Avatar(childId: e.childId, name: e.name, size: size),
             ),
             Positioned(
               bottom: -10,
@@ -376,9 +376,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text('leaderboard.loadFailed'.tr(),
-                style: AppTextStyles.bodyM
-                    .copyWith(color: AppColors.textSecondary)),
+            Text(
+              'leaderboard.loadFailed'.tr(),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
             const SizedBox(height: 8),
             TextButton(
               onPressed: () =>
@@ -608,9 +611,11 @@ class _XpPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.star_rounded,
-              size: 15,
-              color: light ? Colors.white : AppColors.warning),
+          Icon(
+            Icons.star_rounded,
+            size: 15,
+            color: light ? Colors.white : AppColors.warning,
+          ),
           const SizedBox(width: 4),
           Text(
             '$xp',
@@ -655,8 +660,10 @@ class _RegionPickerSheet extends StatelessWidget {
                 ),
                 const Spacer(),
                 IconButton(
-                  icon: Icon(Icons.close_rounded,
-                      color: AppColors.textSecondary),
+                  icon: Icon(
+                    Icons.close_rounded,
+                    color: AppColors.textSecondary,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],
@@ -666,8 +673,12 @@ class _RegionPickerSheet extends StatelessWidget {
             child: ListView(
               shrinkWrap: true,
               children: [
-                _tile(context, label: 'leaderboard.allRegions'.tr(), value: '',
-                    isSelected: selected == null),
+                _tile(
+                  context,
+                  label: 'leaderboard.allRegions'.tr(),
+                  value: '',
+                  isSelected: selected == null,
+                ),
                 for (final r in regions)
                   _tile(context, label: r, value: r, isSelected: r == selected),
               ],

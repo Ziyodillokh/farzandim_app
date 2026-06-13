@@ -179,9 +179,8 @@ class _ScheduleCard extends ConsumerWidget {
   /// lokalizatsiyalangan `title` yozilsa ru/en user yaratgan jadval
   /// tarjima holida saqlanib, boshqa iste'molchilar (Child App, admin)
   /// aralash-tilli data olardi. UI'da baribir `title` (.tr) ko'rsatiladi.
-  String get _backendTitle => type == ScheduleType.sleep
-      ? 'Uyqu vaqtida bloklash'
-      : 'Dars vaqti';
+  String get _backendTitle =>
+      type == ScheduleType.sleep ? 'Uyqu vaqtida bloklash' : 'Dars vaqti';
 
   Future<void> _onToggle(WidgetRef ref, bool value) async {
     final actions = ref.read(scheduleActionsProvider.notifier);
@@ -394,10 +393,15 @@ class _SubRow extends StatelessWidget {
               ),
             ),
             if (value != null)
-              Text(
-                value!,
-                style: AppTextStyles.bodyM.copyWith(
-                  fontWeight: FontWeight.w700,
+              Flexible(
+                child: Text(
+                  value!,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.right,
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
               ),
             if (trailing != null) trailing!,

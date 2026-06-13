@@ -268,6 +268,7 @@ class _ImageBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mediaW = (MediaQuery.sizeOf(context).width * 0.6).clamp(180.0, 240.0);
     final bytes = message.bytes;
     // Sessiya: bytes; qayta yuklashdan keyin: backend proxy (attachmentKey).
     final url = message.hasRemote
@@ -288,7 +289,7 @@ class _ImageBubble extends ConsumerWidget {
             if (bytes != null)
               Image.memory(
                 bytes,
-                width: 240,
+                width: mediaW,
                 fit: BoxFit.cover,
                 // SCR-07: 240pt bubble uchun to'liq o'lchamda dekod
                 // qilinmasin (xotira isrofi).
@@ -298,12 +299,12 @@ class _ImageBubble extends ConsumerWidget {
               // MEM-4: disk kesh + cheklangan dekod (memCacheWidth, SCR-07)
               CachedNetworkImage(
                 imageUrl: url,
-                width: 240,
+                width: mediaW,
                 fit: BoxFit.cover,
                 memCacheWidth: 720,
                 errorWidget: (_, __, ___) => const _ImagePlaceholder(),
                 placeholder: (_, __) => SizedBox(
-                  width: 240,
+                  width: mediaW,
                   height: 160,
                   child: Center(
                     child: CircularProgressIndicator(
@@ -462,13 +463,14 @@ class _VideoBubble extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final mediaW = (MediaQuery.sizeOf(context).width * 0.6).clamp(180.0, 240.0);
     final sending = message.status == SupportSendStatus.sending;
     return GestureDetector(
       onTap: sending ? null : () => _openSupportFile(context, ref, message),
       child: ClipRRect(
         borderRadius: radius,
         child: SizedBox(
-          width: 240,
+          width: mediaW,
           child: Stack(
             alignment: Alignment.center,
             children: [
@@ -513,7 +515,7 @@ class _VideoBubble extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     SizedBox(
-                      width: 150,
+                      width: mediaW - 90,
                       child: Text(
                         message.fileName ?? 'support.fallbackVideoName'.tr(),
                         style: AppTextStyles.label.copyWith(

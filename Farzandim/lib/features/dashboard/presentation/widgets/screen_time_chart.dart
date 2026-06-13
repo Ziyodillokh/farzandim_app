@@ -24,32 +24,33 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// davomida davom etardi.
 final weeklyChildUsageProvider = StreamProvider.autoDispose
     .family<List<DailyUsageTotal>, String>((ref, childId) async* {
-  // Auth guard — logout'dan keyin 401 polling qilmaslik uchun.
-  final isAuthed =
-      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
-  if (!isAuthed) {
-    yield const <DailyUsageTotal>[];
-    return;
-  }
-  keepAliveFor(ref, const Duration(minutes: 2));
-  final repo = ref.watch(backendAppUsageRepositoryProvider);
-  // swallowFirstError: birinchi fetch xatosi ham yutiladi — kesh yoki
-  // AsyncLoading qoladi, polling keyin qayta urinadi (ekran vaqti
-  // "0 daqiqa"ga tushib qolmaydi — avvalgi regressiya).
-  yield* pollFetchStream<List<DailyUsageTotal>>(
-    ref,
-    interval: const Duration(seconds: 30),
-    fetch: () =>
-        repo.getWeeklyTotals(childId: childId, endDate: DateTime.now()),
-    // NET-07 (SWR): keshdagi haftalik DARHOL — chart "—" o'rniga oxirgi
-    // ma'lumotni ko'rsatadi, yangisi fonda keladi.
-    readCache: () async {
-      final cached = await repo.getCachedWeeklyTotals(childId);
-      return (cached != null && cached.isNotEmpty) ? cached : null;
-    },
-    swallowFirstError: true,
-  );
-});
+      // Auth guard — logout'dan keyin 401 polling qilmaslik uchun.
+      final isAuthed = ref.watch(
+        backendAuthProvider.select((s) => s is AuthAuthenticated),
+      );
+      if (!isAuthed) {
+        yield const <DailyUsageTotal>[];
+        return;
+      }
+      keepAliveFor(ref, const Duration(minutes: 2));
+      final repo = ref.watch(backendAppUsageRepositoryProvider);
+      // swallowFirstError: birinchi fetch xatosi ham yutiladi — kesh yoki
+      // AsyncLoading qoladi, polling keyin qayta urinadi (ekran vaqti
+      // "0 daqiqa"ga tushib qolmaydi — avvalgi regressiya).
+      yield* pollFetchStream<List<DailyUsageTotal>>(
+        ref,
+        interval: const Duration(seconds: 30),
+        fetch: () =>
+            repo.getWeeklyTotals(childId: childId, endDate: DateTime.now()),
+        // NET-07 (SWR): keshdagi haftalik DARHOL — chart "—" o'rniga oxirgi
+        // ma'lumotni ko'rsatadi, yangisi fonda keladi.
+        readCache: () async {
+          final cached = await repo.getCachedWeeklyTotals(childId);
+          return (cached != null && cached.isNotEmpty) ? cached : null;
+        },
+        swallowFirstError: true,
+      );
+    });
 
 /// Bugungi ekran vaqti (ms) — server `/weekly` (system filtrlangan +
 /// Toshkent UTC+5) avtoritar kunlik jamisidan olinadi.
@@ -60,8 +61,10 @@ final weeklyChildUsageProvider = StreamProvider.autoDispose
 /// shu sababli 1h7m ↔ 1h22m kabi farq chiqardi).
 /// `autoDispose` (REG-2): busiz bu non-autoDispose provider weekly poller'ni
 /// ABADIY ushlab turardi — weekly'ning autoDispose'i jim ishlamay qolardi.
-final todayScreenTimeMsProvider =
-    Provider.autoDispose.family<int, String>((ref, childId) {
+final todayScreenTimeMsProvider = Provider.autoDispose.family<int, String>((
+  ref,
+  childId,
+) {
   final weekly =
       ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
   if (weekly.isEmpty) return 0;
@@ -87,10 +90,10 @@ class ScreenTimeChart extends ConsumerWidget {
   // ko'rinmasdi). Endi ikkala temada ham aniq ko'rinadigan ochroq yashil.
   static Color get _otherBar => AppColors.chartBarMuted;
   static TextStyle get _yAxisStyle => TextStyle(
-        fontSize: 11,
-        color: AppColors.textSecondary,
-        fontWeight: FontWeight.w500,
-      );
+    fontSize: 11,
+    color: AppColors.textSecondary,
+    fontWeight: FontWeight.w500,
+  );
 
   /// Bar ustidagi "ishlatilgan vaqt" yorlig'i — ixcham (2.5s / 45d).
   static String _barLabel(int ms) {
@@ -98,9 +101,7 @@ class ScreenTimeChart extends ConsumerWidget {
     final hoursF = ms / 3600000;
     if (hoursF >= 1) {
       return 'dashboard.chart.hoursShort'.tr(
-        namedArgs: {
-          'value': hoursF.toStringAsFixed(hoursF >= 10 ? 0 : 1),
-        },
+        namedArgs: {'value': hoursF.toStringAsFixed(hoursF >= 10 ? 0 : 1)},
       );
     }
     return 'dashboard.chart.minutesShort'.tr(
@@ -214,8 +215,9 @@ class ScreenTimeChart extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text(
-                      'dashboard.chart.hoursShort'
-                          .tr(namedArgs: {'value': '$maxHours'}),
+                      'dashboard.chart.hoursShort'.tr(
+                        namedArgs: {'value': '$maxHours'},
+                      ),
                       style: _yAxisStyle,
                     ),
                     Text(
@@ -285,10 +287,11 @@ class ScreenTimeChart extends ConsumerWidget {
                     Text(
                       'dashboard.chart.weekdays.${daily.date.weekday}'.tr(),
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 12,
-                        fontWeight:
-                            isToday ? FontWeight.w700 : FontWeight.w400,
+                        fontWeight: isToday ? FontWeight.w700 : FontWeight.w400,
                         color: isToday
                             ? AppColors.textPrimary
                             : AppColors.textSecondary,
@@ -298,13 +301,12 @@ class ScreenTimeChart extends ConsumerWidget {
                     Text(
                       label.isEmpty ? '—' : label,
                       textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: TextStyle(
                         fontSize: 10,
-                        fontWeight:
-                            isToday ? FontWeight.w700 : FontWeight.w500,
-                        color: isToday
-                            ? _todayBar
-                            : AppColors.textTertiary,
+                        fontWeight: isToday ? FontWeight.w700 : FontWeight.w500,
+                        color: isToday ? _todayBar : AppColors.textTertiary,
                       ),
                     ),
                   ],

@@ -128,10 +128,7 @@ class FarzandimApp extends ConsumerWidget {
               'childManagement.pairBanner.message'.tr(
                 namedArgs: {'name': childName},
               ),
-              style: const TextStyle(
-                fontWeight: FontWeight.w600,
-                fontSize: 14,
-              ),
+              style: const TextStyle(fontWeight: FontWeight.w600, fontSize: 14),
             ),
             backgroundColor: const Color(0xFFFBBF24),
             duration: const Duration(seconds: 10),
@@ -226,15 +223,24 @@ class FarzandimApp extends ConsumerWidget {
       // Transparent scaffold'larda overscroll paytida oq OS oyna foni
       // ko'rinib qolmasin; bitta joyda hal qilingani uchun har ekranni
       // alohida o'zgartirish shart emas.
-      builder: (context, child) => ColoredBox(
-        color: AppColors.background,
-        // Light/dark toggle'da sahifa subtree'sini qayta quramiz (key
-        // o'zgaradi, remount bo'ladi) — shunda AppColors static getter'lari
-        // yangi rangni o'qiydi, aks holda kartalar eski fonida qolardi.
-        // go_router route stack saqlanadi.
-        child: KeyedSubtree(
-          key: ValueKey(themeMode),
-          child: child ?? const SizedBox.shrink(),
+      // Matn-masshtabni cheklaymiz (1.0–1.15): telefonning system "katta
+      // shrift" sozlamasi turlicha bo'lgani uchun ilova har xil ochilardi
+      // (matn kattalashib qattiq balandlikdagi kartalarni overflow qilardi).
+      // Endi barcha qurilmada matn bir xil o'lchamda — accessibility uchun
+      // ozgina (15%) joy qoldiriladi, lekin tartib buzilmaydi.
+      builder: (context, child) => MediaQuery.withClampedTextScaling(
+        minScaleFactor: 1,
+        maxScaleFactor: 1.15,
+        child: ColoredBox(
+          color: AppColors.background,
+          // Light/dark toggle'da sahifa subtree'sini qayta quramiz (key
+          // o'zgaradi, remount bo'ladi) — shunda AppColors static getter'lari
+          // yangi rangni o'qiydi, aks holda kartalar eski fonida qolardi.
+          // go_router route stack saqlanadi.
+          child: KeyedSubtree(
+            key: ValueKey(themeMode),
+            child: child ?? const SizedBox.shrink(),
+          ),
         ),
       ),
       routerConfig: ref.watch(routerProvider),

@@ -128,62 +128,75 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
           child: Column(
             children: [
               _Header(isEditMode: _isEditMode, onDelete: _confirmDelete),
-              const SizedBox(height: AppDimensions.sm),
-              ExpandableMap(
-                center: _center,
-                radius: _radius,
-                onCenterChanged: (newCenter) {
-                  setState(() => _center = newCenter);
-                },
-              ),
-              const SizedBox(height: AppDimensions.md),
+              // Xarita + forma BITTA scroll ichida — klaviatura ochilganda
+              // overflow bo'lmaydi, fokuslangan maydon avtomatik ko'rinadi
+              // (avval xarita qattiq edi → kichik ekranda BOTTOM OVERFLOWED).
               Expanded(
                 child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.lg,
-                  ),
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
                     children: [
-                      Text(
-                        'geoZoneEdit.mapHint'.tr(),
-                        style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textSecondary,
-                          fontSize: 13,
-                        ),
-                      ),
-                      const SizedBox(height: AppDimensions.lg - 4),
-                      _SectionTitle('geoZoneEdit.nameLabel'.tr()),
                       const SizedBox(height: AppDimensions.sm),
-                      CustomTextField(
-                        controller: _nameController,
-                        hint: 'geoZoneEdit.nameHint'.tr(),
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: AppDimensions.lg - 4),
-                      _SectionTitle('geoZoneEdit.iconLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      _IconPicker(
-                        selected: _selectedIcon,
-                        onSelect: (icon) =>
-                            setState(() => _selectedIcon = icon),
-                      ),
-                      const SizedBox(height: AppDimensions.lg),
-                      _RadiusSlider(
-                        value: _radius,
-                        onChanged: (v) => setState(() => _radius = v),
+                      ExpandableMap(
+                        center: _center,
+                        radius: _radius,
+                        onCenterChanged: (newCenter) {
+                          setState(() => _center = newCenter);
+                        },
                       ),
                       const SizedBox(height: AppDimensions.md),
-                      _SectionTitle('geoZoneEdit.notificationsLabel'.tr()),
-                      const SizedBox(height: 12),
-                      _NotificationToggles(
-                        notifyOnEnter: _notifyOnEnter,
-                        notifyOnExit: _notifyOnExit,
-                        onEnterChanged: (v) =>
-                            setState(() => _notifyOnEnter = v),
-                        onExitChanged: (v) => setState(() => _notifyOnExit = v),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: AppDimensions.lg,
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'geoZoneEdit.mapHint'.tr(),
+                              style: AppTextStyles.bodyS.copyWith(
+                                color: AppColors.textSecondary,
+                                fontSize: 13,
+                              ),
+                            ),
+                            const SizedBox(height: AppDimensions.lg - 4),
+                            _SectionTitle('geoZoneEdit.nameLabel'.tr()),
+                            const SizedBox(height: AppDimensions.sm),
+                            CustomTextField(
+                              controller: _nameController,
+                              hint: 'geoZoneEdit.nameHint'.tr(),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                            const SizedBox(height: AppDimensions.lg - 4),
+                            _SectionTitle('geoZoneEdit.iconLabel'.tr()),
+                            const SizedBox(height: AppDimensions.sm),
+                            _IconPicker(
+                              selected: _selectedIcon,
+                              onSelect: (icon) =>
+                                  setState(() => _selectedIcon = icon),
+                            ),
+                            const SizedBox(height: AppDimensions.lg),
+                            _RadiusSlider(
+                              value: _radius,
+                              onChanged: (v) => setState(() => _radius = v),
+                            ),
+                            const SizedBox(height: AppDimensions.md),
+                            _SectionTitle(
+                              'geoZoneEdit.notificationsLabel'.tr(),
+                            ),
+                            const SizedBox(height: 12),
+                            _NotificationToggles(
+                              notifyOnEnter: _notifyOnEnter,
+                              notifyOnExit: _notifyOnExit,
+                              onEnterChanged: (v) =>
+                                  setState(() => _notifyOnEnter = v),
+                              onExitChanged: (v) =>
+                                  setState(() => _notifyOnExit = v),
+                            ),
+                            const SizedBox(height: AppDimensions.xl),
+                          ],
+                        ),
                       ),
-                      const SizedBox(height: AppDimensions.xl),
                     ],
                   ),
                 ),

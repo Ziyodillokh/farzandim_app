@@ -246,11 +246,15 @@ class _StatusLine extends ConsumerWidget {
           decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
         ),
         const SizedBox(width: 6),
-        Text(
-          statusKey.tr(),
-          style: AppTextStyles.bodyS.copyWith(
-            color: statusColor,
-            fontWeight: FontWeight.w600,
+        Flexible(
+          child: Text(
+            statusKey.tr(),
+            style: AppTextStyles.bodyS.copyWith(
+              color: statusColor,
+              fontWeight: FontWeight.w600,
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
           ),
         ),
         if (battery != null) ...[
@@ -429,11 +433,15 @@ class _RatingSection extends ConsumerWidget {
           ),
           child: Row(
             children: [
-              Text(
-                '$donBalance',
-                style: AppTextStyles.headlineL.copyWith(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w800,
+              Flexible(
+                child: Text(
+                  '$donBalance',
+                  style: AppTextStyles.headlineL.copyWith(
+                    color: AppColors.accent,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: AppDimensions.md),
@@ -471,11 +479,15 @@ class _RatingSection extends ConsumerWidget {
                 color: AppColors.featurePurple,
               ),
               const SizedBox(width: 4),
-              Text(
-                '$xp',
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w800,
+              Flexible(
+                child: Text(
+                  '$xp',
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: AppColors.textPrimary,
+                    fontWeight: FontWeight.w800,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
               ),
             ],

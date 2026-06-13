@@ -85,7 +85,7 @@ class VoiceChatBubble extends ConsumerWidget {
         : Duration.zero;
     final duration = isCurrent
         ? ref.watch(audioDurationProvider).value ??
-            Duration(seconds: message.durationSeconds)
+              Duration(seconds: message.durationSeconds)
         : Duration(seconds: message.durationSeconds);
 
     final progress = duration.inMilliseconds > 0
@@ -95,21 +95,25 @@ class VoiceChatBubble extends ConsumerWidget {
     // playerState/speed faqat ijrodagi bubble'da watch qilinadi —
     // shartsiz watch ijro paytida har holat o'zgarishida barcha
     // bubble'larni rebuild qildirardi.
-    final playerState =
-        isCurrent ? ref.watch(audioPlayerStateProvider).value : null;
+    final playerState = isCurrent
+        ? ref.watch(audioPlayerStateProvider).value
+        : null;
     final isPlaying = isCurrent && (playerState?.playing ?? false);
     final processingState = playerState?.processingState;
-    final isLoading = isCurrent &&
+    final isLoading =
+        isCurrent &&
         (processingState == ProcessingState.loading ||
             processingState == ProcessingState.buffering);
 
-    final speed =
-        isCurrent ? (ref.watch(audioSpeedProvider).value ?? 1.0) : 1.0;
+    final speed = isCurrent
+        ? (ref.watch(audioSpeedProvider).value ?? 1.0)
+        : 1.0;
 
     final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
     final textColor = isOwn ? Colors.black : AppColors.textPrimary;
-    final waveformColor =
-        isOwn ? Colors.black.withValues(alpha: 0.6) : AppColors.accent;
+    final waveformColor = isOwn
+        ? Colors.black.withValues(alpha: 0.6)
+        : AppColors.accent;
 
     final displayDuration = isPlaying
         ? position
@@ -118,8 +122,9 @@ class VoiceChatBubble extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(
@@ -135,14 +140,10 @@ class VoiceChatBubble extends ConsumerWidget {
                 try {
                   await ref
                       .read(audioPlayerManagerProvider)
-                      .playOrToggle(
-                        messageId: message.id,
-                        audioUrl: url,
-                      );
+                      .playOrToggle(messageId: message.id, audioUrl: url);
                   // Read receipt — bola yuborgan xabarni parent
                   // tinglaganda backend'ga belgi yuboramiz.
-                  if (!isOwn &&
-                      message.status == VoiceMessageStatus.sent) {
+                  if (!isOwn && message.status == VoiceMessageStatus.sent) {
                     await ref
                         .read(backendVoiceMessageRepositoryProvider)
                         .markAsRead(message.id);
@@ -195,9 +196,7 @@ class VoiceChatBubble extends ConsumerWidget {
                               ),
                             )
                           : Icon(
-                              isPlaying
-                                  ? Icons.pause
-                                  : Icons.play_arrow,
+                              isPlaying ? Icons.pause : Icons.play_arrow,
                               color: textColor,
                               size: 22,
                             ),
@@ -208,7 +207,10 @@ class VoiceChatBubble extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         SizedBox(
-                          width: 160,
+                          width: (MediaQuery.sizeOf(context).width * 0.4).clamp(
+                            120.0,
+                            160.0,
+                          ),
                           height: 32,
                           child: Builder(
                             builder: (_) {
@@ -217,8 +219,10 @@ class VoiceChatBubble extends ConsumerWidget {
                               final amps = message.waveform.isNotEmpty
                                   ? message.waveform
                                   : _generateWaveform(message.id, barCount);
-                              final visibleCount =
-                                  amps.length.clamp(0, barCount);
+                              final visibleCount = amps.length.clamp(
+                                0,
+                                barCount,
+                              );
                               return Row(
                                 children: List.generate(visibleCount, (i) {
                                   final amp = amps[i];
@@ -236,10 +240,12 @@ class VoiceChatBubble extends ConsumerWidget {
                                         decoration: BoxDecoration(
                                           color: isPlayed
                                               ? waveformColor
-                                              : waveformColor
-                                                  .withValues(alpha: 0.32),
-                                          borderRadius:
-                                              BorderRadius.circular(3),
+                                              : waveformColor.withValues(
+                                                  alpha: 0.32,
+                                                ),
+                                          borderRadius: BorderRadius.circular(
+                                            3,
+                                          ),
                                         ),
                                       ),
                                     ),
@@ -253,30 +259,34 @@ class VoiceChatBubble extends ConsumerWidget {
                         Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            Text(
-                              _formatDuration(displayDuration.inSeconds),
-                              style: TextStyle(
-                                color: textColor.withValues(alpha: 0.7),
-                                fontSize: 11,
-                                fontFeatures: const [
-                                  FontFeature.tabularFigures(),
-                                ],
+                            Flexible(
+                              child: Text(
+                                _formatDuration(displayDuration.inSeconds),
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: textColor.withValues(alpha: 0.7),
+                                  fontSize: 11,
+                                  fontFeatures: const [
+                                    FontFeature.tabularFigures(),
+                                  ],
+                                ),
                               ),
                             ),
                             const SizedBox(width: 8),
-                            Text(
-                              _formatTime(message.createdAt),
-                              style: TextStyle(
-                                color: textColor.withValues(alpha: 0.6),
-                                fontSize: 11,
+                            Flexible(
+                              child: Text(
+                                _formatTime(message.createdAt),
+                                overflow: TextOverflow.ellipsis,
+                                style: TextStyle(
+                                  color: textColor.withValues(alpha: 0.6),
+                                  fontSize: 11,
+                                ),
                               ),
                             ),
                             if (isOwn) ...[
                               const SizedBox(width: 4),
                               Icon(
-                                message.isSeen
-                                    ? Icons.done_all
-                                    : Icons.done,
+                                message.isSeen ? Icons.done_all : Icons.done,
                                 size: 14,
                                 color: message.isSeen
                                     ? Colors.blue.shade400
@@ -298,15 +308,14 @@ class VoiceChatBubble extends ConsumerWidget {
                                   ),
                                   decoration: BoxDecoration(
                                     color: textColor.withValues(alpha: 0.15),
-                                    borderRadius:
-                                        BorderRadius.circular(999),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     speed == 1.0
                                         ? '1×'
                                         : speed == 1.5
-                                            ? '1.5×'
-                                            : '2×',
+                                        ? '1.5×'
+                                        : '2×',
                                     style: TextStyle(
                                       color: textColor,
                                       fontSize: 11,
