@@ -139,9 +139,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
       // /onboarding — qiziqishlar ekrani; endi faqat KOD kiritilgandan
       // (pair) keyin Splash yo'naltiradi, bir martalik.
+      // /qr-scan — pairing oqimining bir qismi: bola hali pair bo'lmagan
+      // holatda "QR kod orqali ulash" tugmasi shu ekranga olib boradi.
+      // Agar publicPaths'da bo'lmasa, router uni darhol /pairing ga
+      // qaytaradi va tugma "ishlamayotgandek" ko'rinadi (bug edi).
       const publicPaths = {
         '/splash',
         '/pairing',
+        '/qr-scan',
         '/consent',
         '/onboarding',
       };
