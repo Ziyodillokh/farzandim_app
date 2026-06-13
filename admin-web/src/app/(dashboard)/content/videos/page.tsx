@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus, Link as LinkIcon } from 'lucide-react';
+import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus, Link as LinkIcon, Play } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,6 +18,7 @@ import { DataPagination } from '@/components/common/data-pagination';
 import { EmptyState } from '@/components/common/empty-state';
 import { VideoUploadModal } from '@/components/content/video-upload-modal';
 import { VideoLinkModal } from '@/components/content/video-link-modal';
+import { VideoPreviewModal } from '@/components/content/video-preview-modal';
 import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatDuration, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
@@ -166,9 +167,15 @@ function VideoCard({
   onReject: () => void;
   onRemove: () => void;
 }) {
+  const [previewOpen, setPreviewOpen] = useState(false);
   return (
     <Card className="card-glow group overflow-hidden">
-      <div className="relative aspect-video w-full overflow-hidden bg-muted">
+      <button
+        type="button"
+        onClick={() => setPreviewOpen(true)}
+        className="relative block aspect-video w-full overflow-hidden bg-muted"
+        aria-label="Videoni ko'rish"
+      >
         {video.thumbnail ? (
           // eslint-disable-next-line @next/next/no-img-element
           <img src={video.thumbnail} alt={video.title} className="h-full w-full object-cover transition-transform group-hover:scale-105" />
@@ -187,7 +194,13 @@ function VideoCard({
             <Star className="h-3 w-3" /> TOP
           </span>
         )}
-      </div>
+        {/* Play overlay — bosilsa preview ochiladi */}
+        <span className="absolute inset-0 flex items-center justify-center bg-black/0 transition-colors group-hover:bg-black/30">
+          <span className="flex h-12 w-12 items-center justify-center rounded-full bg-foreground/80 text-background opacity-0 transition-opacity group-hover:opacity-100">
+            <Play className="h-5 w-5 translate-x-0.5" />
+          </span>
+        </span>
+      </button>
 
       <div className="p-4">
         <div className="mb-2 flex items-start justify-between gap-2">
@@ -200,7 +213,7 @@ function VideoCard({
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-              <DropdownMenuItem><Eye /> Ko&apos;rish</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setPreviewOpen(true)}><Eye /> Ko&apos;rish</DropdownMenuItem>
               {video.status !== 'approved' && (
                 <DropdownMenuItem onClick={onApprove} className="text-success focus:text-success">
                   <Check /> Tasdiqlash
@@ -232,6 +245,12 @@ function VideoCard({
           <span>{formatRelative(video.createdAt)}</span>
         </div>
       </div>
+
+      <VideoPreviewModal
+        video={video}
+        open={previewOpen}
+        onOpenChange={setPreviewOpen}
+      />
     </Card>
   );
 }

@@ -16,18 +16,9 @@ import {
 import { contentApi } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { AGE_OPTIONS, PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
+import { youtubeId } from '@/lib/youtube';
 
 const NO_CATEGORY = '__none__';
-
-// YouTube havolasidan video ID ajratadi. Bola ilovasidagi (video_model.dart)
-// mantiq bilan AYNAN bir xil: ID youtube domeni oldidan kelishi shart, shunda
-// .mp4?v=... kabi to'g'ridan-to'g'ri havolalar xato aniqlanmaydi.
-function youtubeId(url: string): string | null {
-  const m = url.match(
-    /(?:youtu\.be\/|youtube\.com\/(?:watch\?(?:[^ ]*&)?v=|embed\/|shorts\/|live\/))([\w-]{11})/,
-  );
-  return m ? m[1] : null;
-}
 
 export function VideoLinkModal({
   open,
