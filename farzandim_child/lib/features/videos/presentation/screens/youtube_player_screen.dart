@@ -1,8 +1,9 @@
 // YoutubePlayerScreen — admin "link orqali" qo'shgan YouTube videolari.
 //
-// To'g'ridan-to'g'ri `youtube.com/embed/ID` ni webview'da ochamiz (admin
-// paneldagi embed bilan bir xil — ishonchli). iframe-API paketi lokal
-// origin sababli barcha videolarni "unavailable" deb rad etardi.
+// Backend domenida xizmat qilinadigan embed sahifasini (/content/yt/:id)
+// webview'da ochamiz — sahifa haqiqiy https domende bo'lgani uchun iframe
+// referer'i to'g'ri va YouTube embed ishlaydi (admin paneldagidek). Avval
+// loadHtmlString xato 153, iframe-API paketi esa "unavailable" berardi.
 //
 // To'g'ridan-to'g'ri .mp4 havolalar esa ClassicVideoPlayerScreen'da.
 
@@ -11,6 +12,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
@@ -35,32 +37,12 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final id = widget.video.youtubeId;
     if (id == null) return;
 
-    // MUHIM: embed URL'ni TO'G'RIDAN-TO'G'RI ochsak (loadRequest) webview'da
-    // referer bo'lmaydi va YouTube "Xato 153" beradi. Shuning uchun iframe'ni
-    // HTML sifatida, baseUrl bilan yuklaymiz — shunda parent origin youtube.com
-    // bo'ladi va embed qabul qilinadi (admin paneldagi iframe bilan bir xil).
-    // playsinline=1 — ichida o'ynaydi; rel=0 — faqat shu kanal videolari.
-    final html = '''
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
-<style>
-  html,body{margin:0;padding:0;background:#000;height:100%;}
-  .wrap{position:fixed;top:0;left:0;right:0;bottom:0;}
-  iframe{width:100%;height:100%;border:0;}
-</style>
-</head>
-<body>
-<div class="wrap">
-<iframe
-  src="https://www.youtube.com/embed/$id?playsinline=1&rel=0&modestbranding=1"
-  allow="autoplay; encrypted-media; picture-in-picture"
-  allowfullscreen></iframe>
-</div>
-</body>
-</html>
-''';
+    // YouTube embed sahifasini BACKEND domenidan yuklaymiz (loadRequest).
+    // Sahifa haqiqiy https domende xizmat qilingani uchun iframe referer'i
+    // to'g'ri bo'ladi (admin paneldagidek) va xato 153 chiqmaydi. Avval
+    // loadHtmlString (loadDataWithBaseURL) Android'da iframe'ga referer
+    // bermay 153 berardi.
+    final embedPage = Uri.parse('${EnvConfig.apiUrl}/content/yt/$id');
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -72,7 +54,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           },
         ),
       )
-      ..loadHtmlString(html, baseUrl: 'https://www.youtube.com');
+      ..loadRequest(embedPage);
 
     // Ko'rishlar hisoblagichi (backend analitikasi) — bir marta.
     ref.read(videosBackendRepositoryProvider).markViewed(widget.video.id);
