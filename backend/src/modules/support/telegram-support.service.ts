@@ -71,6 +71,9 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
       create: { id: 1, offset: 0 },
     });
     this.offset = state.offset;
+    // Ishga tushganda chat ID hali ham to'g'rimi — tekshiramiz (guruh
+    // supergroup'ga ko'tarilgan bo'lsa avtomatik yangilanadi).
+    await this.healChatId();
     void this.pollLoop();
     this.logger.log('Support Telegram polling boshlandi');
   }
@@ -152,6 +155,36 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     return { ok: false };
   }
 
+  /**
+   * Guruh basic→supergroup'ga ko'tarilsa chat ID o'zgaradi va eski ID bilan
+   * BARCHA yuborish/javob buziladi. Telegram javobida `migrate_to_chat_id`
+   * keladi — uni ushlab chat ID'ni AVTOMATIK yangilaymiz (server .env'ga
+   * qo'l tegizish shart emas, kelajakda yana o'zgarsa ham o'zini tuzatadi).
+   */
+  private applyMigration(newId: number | string): void {
+    const s = String(newId);
+    if (s && s !== this.chatId) {
+      this.logger.warn(`Support guruh ID migratsiya: ${this.chatId} → ${s}`);
+      this.chatId = s;
+    }
+  }
+
+  /** Ishga tushganda ko'rinmas probe (sendChatAction) — migratsiyani aniqlaydi. */
+  private async healChatId(): Promise<void> {
+    if (!this.chatId) return;
+    try {
+      const r = await this.api('sendChatAction', {
+        chat_id: this.chatId,
+        action: 'typing',
+      }, 10_000);
+      if (!r.ok && r.parameters?.migrate_to_chat_id) {
+        this.applyMigration(r.parameters.migrate_to_chat_id);
+      }
+    } catch {
+      // tarmoq xato — runtime'da send/inbound heal qiladi.
+    }
+  }
+
   /** Navbatga qo'shadi (serial). Rad bo'lgan zanjir keyingilarni bloklamaydi. */
   private enqueue<T>(fn: () => Promise<T>): Promise<T> {
     const run = this.sendChain.then(fn, fn);
@@ -162,15 +195,23 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     return run;
   }
 
+  /**
+   * Guruhga JSON yuborish (matn) — SERIAL navbat (tartib + flood himoya) +
+   * supergroup migratsiyada chat ID'ni yangilab QAYTA uradi. body.chat_id
+   * this.chatId bo'lsa migratsiya qo'llanadi.
+   */
   private sendQueued<T = unknown>(
     method: string,
     body: Record<string, unknown>,
   ): Promise<TgResponse<T>> {
-    return this.enqueue(() =>
-      this.withRetry<T>(() => this.api<T>(method, body, 20_000)),
-    );
+    return this.enqueue(() => this.sendWithMigration<T>(method, body, false));
   }
 
+  /**
+   * Guruhga FAYL (multipart) yuborish — navbatdan TASHQARI (concurrent), shunda
+   * katta fayl yuklash matn xabarlarini bloklamaydi ("sekin" muammosi). Flood
+   * 429/migratsiya retry bilan qoplanadi.
+   */
   private sendFileQueued<T = unknown>(
     method: string,
     fields: Record<string, string>,
@@ -179,11 +220,55 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     fileName: string,
     mimeType: string,
   ): Promise<TgResponse<T>> {
-    return this.enqueue(() =>
-      this.withRetry<T>(() =>
-        this.apiMultipart<T>(method, fields, fileField, buffer, fileName, mimeType),
-      ),
-    );
+    return this.sendWithMigration<T>(method, { ...fields }, true, {
+      fileField,
+      buffer,
+      fileName,
+      mimeType,
+    });
+  }
+
+  /** Yuborish + 429/tarmoq retry + supergroup migratsiya heal (1 qayta urinish). */
+  private async sendWithMigration<T = unknown>(
+    method: string,
+    body: Record<string, unknown>,
+    isFile: boolean,
+    file?: {
+      fileField: string;
+      buffer: Buffer;
+      fileName: string;
+      mimeType: string;
+    },
+  ): Promise<TgResponse<T>> {
+    let payload = body;
+    for (let attempt = 0; attempt < 2; attempt++) {
+      const r = await this.withRetry<T>(() =>
+        isFile
+          ? this.apiMultipart<T>(
+              method,
+              payload as Record<string, string>,
+              file!.fileField,
+              file!.buffer,
+              file!.fileName,
+              file!.mimeType,
+            )
+          : this.api<T>(method, payload, 20_000),
+      );
+      if (r.ok) return r;
+      const mig = r.parameters?.migrate_to_chat_id;
+      // Faqat GURUHGA yuborishda (chat_id === this.chatId) migratsiya qo'llanadi.
+      if (
+        mig &&
+        attempt === 0 &&
+        String(payload.chat_id) === String(this.chatId)
+      ) {
+        this.applyMigration(mig);
+        payload = { ...payload, chat_id: this.chatId };
+        continue;
+      }
+      return r;
+    }
+    return { ok: false };
   }
 
   private escapeHtml(s: string): string {
@@ -399,6 +484,12 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     const m = u.message;
     if (!m) return;
 
+    // Guruh supergroup'ga ko'tarilgan service-xabari → chat ID'ni yangilaymiz.
+    if (m.migrate_to_chat_id) {
+      this.applyMigration(m.migrate_to_chat_id);
+      return;
+    }
+
     if (m.text?.trim().startsWith('/id')) {
       await this.sendQueued('sendMessage', {
         chat_id: m.chat.id,
@@ -408,7 +499,11 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
       return;
     }
 
-    // Operator javobi — faqat support guruhidan va faqat REPLY bo'lsa.
+    // Operator javobi — faqat support guruhidan va faqat REPLY bo'lsa. Chat ID
+    // boot-probe + send-heal + migrate-service-xabar orqali DOIM joriy
+    // (migratsiya self-heal), shuning uchun bu filtr xavfsiz va boshqa guruhdan
+    // noto'g'ri marshrutni (cross-group) to'sadi — migratsiyani FAQAT rasmiy
+    // Telegram signallari qiladi, message_id taxmini emas.
     if (!this.chatId || String(m.chat.id) !== String(this.chatId)) return;
     const replyTo = m.reply_to_message?.message_id;
     if (!replyTo) return;
@@ -613,7 +708,7 @@ interface TgResponse<T> {
   ok: boolean;
   result?: T;
   description?: string;
-  parameters?: { retry_after?: number };
+  parameters?: { retry_after?: number; migrate_to_chat_id?: number };
 }
 
 interface TgChat {
@@ -647,6 +742,8 @@ interface TgMessage {
   photo?: TgPhotoSize[];
   document?: TgDocument;
   video?: TgVideo;
+  // Guruh supergroup'ga ko'tarilganda keladi (yangi chat ID).
+  migrate_to_chat_id?: number;
 }
 
 interface TgUpdate {
