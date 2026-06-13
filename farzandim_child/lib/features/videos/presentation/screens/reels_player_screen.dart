@@ -38,7 +38,9 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
     // Agar effective list bo'sh bo'lsa, hech bo'lmasa boshlang'ich video'ni
     // o'zi ko'rsatamiz (player sinmasligi uchun).
     final effective = ref.read(effectiveVideosProvider);
-    _reels = effective.where((v) => v.isReels).toList();
+    // YouTube videolari bu yerda emas (alohida YouTube player'da) — vertikal
+    // VideoPlayerController ularni o'ynay olmaydi.
+    _reels = effective.where((v) => v.isReels && !v.isYouTube).toList();
     if (_reels.isEmpty) _reels = [widget.initialVideo];
     _currentIndex =
         _reels.indexWhere((v) => v.id == widget.initialVideo.id);

@@ -44,5 +44,27 @@ class VideoModel {
     required this.thumbnailColor,
   });
 
-  bool get isReels => durationSeconds <= 90;
+  // Reels = qisqa vertikal video. Duration noma'lum (0, masalan link orqali
+  // qo'shilgan) bo'lsa reels EMAS — klassik landscape player ochiladi.
+  bool get isReels => durationSeconds > 0 && durationSeconds <= 90;
+
+  /// YouTube havolasidan 11 belgili video ID. YouTube emas bo'lsa `null`.
+  ///
+  /// Host-scoped: faqat youtube domeni oldidan kelgan ID olinadi —
+  /// `.mp4?v=...` kabi to'g'ridan-to'g'ri havolalar (cache-buster `?v=`)
+  /// xato YouTube deb topilmasligi uchun (admin formasi bilan bir xil mantiq).
+  String? get youtubeId {
+    final m = _youtubeRe.firstMatch(videoUrl.trim());
+    return m?.group(1);
+  }
+
+  /// Havola YouTube videosimi (player tanlovi uchun).
+  bool get isYouTube => youtubeId != null;
 }
+
+// youtu.be, youtube.com/watch?...v=, /embed/, /shorts/, /live/ — har xil
+// subdomen (www/m/music) bilan. ID youtube domeni oldidan kelishi shart
+// (mp4?v=... kabi to'g'ridan-to'g'ri havola bilan adashmaslik uchun).
+final RegExp _youtubeRe = RegExp(
+  r'(?:youtu\.be/|youtube\.com/(?:watch\?(?:[^ ]*&)?v=|embed/|shorts/|live/))([\w-]{11})',
+);

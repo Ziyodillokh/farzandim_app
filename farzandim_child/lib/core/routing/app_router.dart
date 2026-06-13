@@ -52,6 +52,7 @@ import 'package:farzandim_child/features/permissions/presentation/screens/permis
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/classic_video_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/reels_player_screen.dart';
+import 'package:farzandim_child/features/videos/presentation/screens/youtube_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/videos_feed_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_recording_screen.dart';
@@ -261,6 +262,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/video-player',
         builder: (context, state) {
           final video = state.extra as VideoModel;
+          // YouTube havolasi -> YouTube player; qisqa (reels) -> vertikal;
+          // qolgani -> klassik landscape player.
+          if (video.isYouTube) {
+            return YoutubePlayerScreen(video: video);
+          }
           return video.isReels
               ? ReelsPlayerScreen(initialVideo: video)
               : ClassicVideoPlayerScreen(video: video);

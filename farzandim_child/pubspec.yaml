@@ -74,8 +74,10 @@ dependencies:
   # Background / Foreground Service
   flutter_foreground_task: ^8.17.0
 
-  # Video player
+  # Video player (to'g'ridan-to'g'ri .mp4/.m3u8 havolalar uchun)
   video_player: ^2.9.2
+  # YouTube player (admin link orqali qo'shgan YouTube videolari uchun)
+  youtube_player_iframe: ^5.2.0
 
   # Audio player
   just_audio: ^0.9.42
