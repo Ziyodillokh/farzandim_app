@@ -10,7 +10,6 @@
 // TabBarView swipe gesture qo'llab-quvvatlaydi.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'dart:convert';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
@@ -18,6 +17,7 @@ import 'package:farzandim_child/features/analytics/presentation/providers/analyt
 import 'package:farzandim_child/features/analytics/presentation/widgets/app_usage_list.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
+import 'package:farzandim_child/shared/widgets/app_icon_memory.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -490,18 +490,13 @@ class _Icon extends StatelessWidget {
       );
     }
     if (iconBase64 != null && iconBase64!.isNotEmpty) {
-      try {
-        final bytes = base64Decode(iconBase64!);
-        return ClipRRect(
-          borderRadius: radius,
-          child: Image.memory(
-            bytes,
-            width: _size,
-            height: _size,
-            fit: BoxFit.cover,
-          ),
-        );
-      } catch (_) {}
+      // Cache'langan dekod + cacheWidth (jank fix).
+      return AppIconMemory(
+        base64: iconBase64,
+        size: _size,
+        borderRadius: radius,
+        fallback: _fallback(),
+      );
     }
     return _fallback();
   }

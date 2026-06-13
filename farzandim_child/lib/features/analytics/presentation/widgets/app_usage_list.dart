@@ -9,13 +9,13 @@
 //     limit oshganligi belgisi.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'dart:convert';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/shared/widgets/app_icon_memory.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -357,20 +357,14 @@ class _AppIcon extends StatelessWidget {
       );
     }
 
-    // 2. iconBase64
+    // 2. iconBase64 — cache'langan dekod + cacheWidth (jank fix).
     if (app.iconBase64 != null && app.iconBase64!.isNotEmpty) {
-      try {
-        final bytes = base64Decode(app.iconBase64!);
-        return Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(borderRadius: radius),
-          clipBehavior: Clip.antiAlias,
-          child: Image.memory(bytes, fit: BoxFit.cover),
-        );
-      } catch (_) {
-        // base64 noto'g'ri → fallback
-      }
+      return AppIconMemory(
+        base64: app.iconBase64,
+        size: size,
+        borderRadius: radius,
+        fallback: _Fallback(app: app, size: size),
+      );
     }
 
     // 3. Fallback
