@@ -112,7 +112,7 @@ export const contentApi = {
     list: (params: ContentListParams = {}) =>
       api.get<RawPaginated<Video>>('/admin/videos', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Video>(`/admin/videos/${id}`),
-    create: (data: Partial<Video>) => api.post<Video>('/admin/videos/create', data),
+    create: (data: Partial<Video>) => api.post<Video>('/admin/videos', data),
     update: (id: string, data: Partial<Video>) => api.patch<Video>(`/admin/videos/${id}`, data),
     /** Multipart: videoFile + thumbnailFile? + metadata JSON */
     upload: (videoFile: File, metadata: Record<string, unknown>, thumbnailFile?: File | null, onProgress?: (p: number) => void) => {
@@ -130,6 +130,7 @@ export const contentApi = {
     list: (params: ContentListParams = {}) =>
       api.get<RawPaginated<Audiobook>>('/admin/audiobooks', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Audiobook>(`/admin/audiobooks/${id}`),
+    create: (data: Partial<Audiobook>) => api.post<Audiobook>('/admin/audiobooks', data),
     upload: (audioFile: File, metadata: Record<string, unknown>, thumbnailFile?: File | null, onProgress?: (p: number) => void) => {
       const form = new FormData();
       form.append('audioFile', audioFile);
@@ -145,7 +146,7 @@ export const contentApi = {
     list: (params: ContentListParams = {}) =>
       api.get<RawPaginated<Book>>('/admin/books', { params }).then(normalizePagination),
     detail: (id: string) => api.get<Book>(`/admin/books/${id}`),
-    create: (data: Partial<Book>) => api.post<Book>('/admin/books/create', data),
+    create: (data: Partial<Book>) => api.post<Book>('/admin/books', data),
     upload: (pdfFile: File, metadata: Record<string, unknown>, coverFile?: File | null, onProgress?: (p: number) => void) => {
       const form = new FormData();
       form.append('pdfFile', pdfFile);

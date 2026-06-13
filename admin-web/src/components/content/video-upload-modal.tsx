@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Video as VideoIcon } from 'lucide-react';
+import { Video as VideoIcon, Upload, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
@@ -18,6 +18,7 @@ import { FileDropzone } from '@/components/common/file-dropzone';
 import { contentApi } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { AGE_OPTIONS, PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
+import { cn } from '@/lib/utils';
 
 const VIDEO_ACCEPT = {
   'video/mp4': ['.mp4'],
@@ -33,6 +34,18 @@ const IMAGE_ACCEPT = {
 
 const NO_CATEGORY = '__none__';
 
+type Mode = 'file' | 'link';
+
+/** Oddiy URL validatsiyasi — http(s) bo'lishi shart. */
+function isValidUrl(value: string): boolean {
+  try {
+    const u = new URL(value.trim());
+    return u.protocol === 'http:' || u.protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 export function VideoUploadModal({
   open,
   onOpenChange,
@@ -42,10 +55,14 @@ export function VideoUploadModal({
   onOpenChange: (open: boolean) => void;
   onSuccess: () => void;
 }) {
+  const [mode, setMode] = useState<Mode>('file');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
   const [videoFile, setVideoFile] = useState<File | null>(null);
   const [thumbnailFile, setThumbnailFile] = useState<File | null>(null);
+  // Link rejimi maydonlari
+  const [videoUrl, setVideoUrl] = useState('');
+  const [thumbnailUrl, setThumbnailUrl] = useState('');
   const [ageFrom, setAgeFrom] = useState('0');
   const [ageTo, setAgeTo] = useState('18');
   const [planRequired, setPlanRequired] = useState('free');
@@ -59,10 +76,13 @@ export function VideoUploadModal({
   });
 
   const reset = () => {
+    setMode('file');
     setTitle('');
     setDescription('');
     setVideoFile(null);
     setThumbnailFile(null);
+    setVideoUrl('');
+    setThumbnailUrl('');
     setAgeFrom('0');
     setAgeTo('18');
     setPlanRequired('free');
@@ -70,23 +90,32 @@ export function VideoUploadModal({
     setProgress(0);
   };
 
-  const upload = useMutation({
+  const baseMeta = () => ({
+    title: title.trim(),
+    description: description.trim(),
+    ageFrom: Number(ageFrom),
+    ageTo: Number(ageTo),
+    planRequired,
+    categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
+    status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
+    featured: false,
+  });
+
+  const save = useMutation({
     mutationFn: () => {
+      if (mode === 'link') {
+        // URL orqali — fayl yuklamasdan to'g'ridan-to'g'ri yaratamiz.
+        return contentApi.videos.create({
+          ...baseMeta(),
+          url: videoUrl.trim(),
+          ...(thumbnailUrl.trim() ? { thumbnail: thumbnailUrl.trim() } : {}),
+        });
+      }
       if (!videoFile) throw new Error('Video fayli tanlanmagan');
-      const metadata = {
-        title: title.trim(),
-        description: description.trim(),
-        ageFrom: Number(ageFrom),
-        ageTo: Number(ageTo),
-        planRequired,
-        categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
-        status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
-        featured: false,
-      };
-      return contentApi.videos.upload(videoFile, metadata, thumbnailFile, setProgress);
+      return contentApi.videos.upload(videoFile, baseMeta(), thumbnailFile, setProgress);
     },
     onSuccess: () => {
-      toast.success('Video yuklandi');
+      toast.success(mode === 'link' ? "Video havola orqali qo'shildi" : 'Video yuklandi');
       reset();
       onSuccess();
       onOpenChange(false);
@@ -98,7 +127,7 @@ export function VideoUploadModal({
   });
 
   const handleOpenChange = (next: boolean) => {
-    if (upload.isPending) return;
+    if (save.isPending) return;
     if (!next) reset();
     onOpenChange(next);
   };
@@ -109,7 +138,20 @@ export function VideoUploadModal({
       toast.error('Sarlavha kiritilishi shart');
       return;
     }
-    if (!videoFile) {
+    if (mode === 'link') {
+      if (!videoUrl.trim()) {
+        toast.error('Video havolasi kiritilishi shart');
+        return;
+      }
+      if (!isValidUrl(videoUrl)) {
+        toast.error("Video havolasi noto'g'ri (http:// yoki https:// bilan boshlanishi kerak)");
+        return;
+      }
+      if (thumbnailUrl.trim() && !isValidUrl(thumbnailUrl)) {
+        toast.error("Muqova havolasi noto'g'ri");
+        return;
+      }
+    } else if (!videoFile) {
       toast.error('Video fayli tanlanishi shart');
       return;
     }
@@ -117,10 +159,10 @@ export function VideoUploadModal({
       toast.error("Yosh oralig'i noto'g'ri: 'gacha' qiymati 'dan' qiymatidan kichik bo'lmasligi kerak");
       return;
     }
-    upload.mutate();
+    save.mutate();
   };
 
-  const showProgress = upload.isPending && progress > 0;
+  const showProgress = mode === 'file' && save.isPending && progress > 0;
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
@@ -128,6 +170,38 @@ export function VideoUploadModal({
         <DialogHeader>
           <DialogTitle>Yangi video qo&apos;shish</DialogTitle>
         </DialogHeader>
+
+        {/* ── Rejim tanlovi: Fayl / Link ── */}
+        <div className="grid grid-cols-2 gap-2 rounded-lg bg-muted p-1">
+          <button
+            type="button"
+            onClick={() => setMode('file')}
+            disabled={save.isPending}
+            className={cn(
+              'flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-colors',
+              mode === 'file'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <Upload className="h-4 w-4" />
+            Fayl yuklash
+          </button>
+          <button
+            type="button"
+            onClick={() => setMode('link')}
+            disabled={save.isPending}
+            className={cn(
+              'flex items-center justify-center gap-2 rounded-md py-2 text-sm font-medium transition-colors',
+              mode === 'link'
+                ? 'bg-background text-foreground shadow-sm'
+                : 'text-muted-foreground hover:text-foreground',
+            )}
+          >
+            <LinkIcon className="h-4 w-4" />
+            Havola (URL)
+          </button>
+        </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1.5">
@@ -153,25 +227,56 @@ export function VideoUploadModal({
             />
           </div>
 
-          <FileDropzone
-            label="Video fayli *"
-            accept={VIDEO_ACCEPT}
-            maxSizeBytes={1073741824}
-            file={videoFile}
-            onFile={setVideoFile}
-            icon={<VideoIcon />}
-            hint="MP4/WebM/MOV, maks 1 GB"
-          />
-
-          <FileDropzone
-            label="Muqova rasmi"
-            accept={IMAGE_ACCEPT}
-            maxSizeBytes={8 * 1024 * 1024}
-            file={thumbnailFile}
-            onFile={setThumbnailFile}
-            preview
-            hint="JPG/PNG/WebP, maks 8 MB"
-          />
+          {mode === 'file' ? (
+            <>
+              <FileDropzone
+                label="Video fayli *"
+                accept={VIDEO_ACCEPT}
+                maxSizeBytes={1073741824}
+                file={videoFile}
+                onFile={setVideoFile}
+                icon={<VideoIcon />}
+                hint="MP4/WebM/MOV, maks 1 GB"
+              />
+              <FileDropzone
+                label="Muqova rasmi"
+                accept={IMAGE_ACCEPT}
+                maxSizeBytes={8 * 1024 * 1024}
+                file={thumbnailFile}
+                onFile={setThumbnailFile}
+                preview
+                hint="JPG/PNG/WebP, maks 8 MB"
+              />
+            </>
+          ) : (
+            <>
+              <div className="space-y-1.5">
+                <Label htmlFor="video-url">Video havolasi (URL) *</Label>
+                <Input
+                  id="video-url"
+                  type="url"
+                  inputMode="url"
+                  value={videoUrl}
+                  onChange={(e) => setVideoUrl(e.target.value)}
+                  placeholder="https://.../video.mp4"
+                />
+                <p className="text-xs text-muted-foreground">
+                  To&apos;g&apos;ridan-to&apos;g&apos;ri video havolasi (MP4/HLS) yoki tashqi CDN manzili.
+                </p>
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="thumb-url">Muqova havolasi (URL)</Label>
+                <Input
+                  id="thumb-url"
+                  type="url"
+                  inputMode="url"
+                  value={thumbnailUrl}
+                  onChange={(e) => setThumbnailUrl(e.target.value)}
+                  placeholder="https://.../cover.jpg (ixtiyoriy)"
+                />
+              </div>
+            </>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
@@ -252,12 +357,12 @@ export function VideoUploadModal({
               type="button"
               variant="outline"
               onClick={() => handleOpenChange(false)}
-              disabled={upload.isPending}
+              disabled={save.isPending}
             >
               Bekor qilish
             </Button>
-            <Button type="submit" loading={upload.isPending}>
-              Yuklash
+            <Button type="submit" loading={save.isPending}>
+              {mode === 'link' ? "Havola orqali qo'shish" : 'Yuklash'}
             </Button>
           </DialogFooter>
         </form>
