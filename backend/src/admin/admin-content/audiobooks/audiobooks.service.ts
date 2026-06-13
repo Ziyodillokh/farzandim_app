@@ -50,6 +50,8 @@ export class AudiobooksService {
       author: a.author,
       description: a.description,
       audioUrl: a.audioUrl,
+      storageKey: a.storageKey,
+      thumbStorageKey: a.thumbStorageKey,
       thumbnail: a.thumbnail,
       durationSec: a.durationSec,
       partsCount: a.partsCount,

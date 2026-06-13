@@ -81,8 +81,8 @@ export class AdminDashboardService {
       this.prisma.userSession.count({
         where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
       }),
-      this.prisma.videoMessage.count({ where: { createdAt: { gte: todayStart } } }),
-      this.prisma.videoMessage.count({
+      this.prisma.video.count({ where: { createdAt: { gte: todayStart } } }),
+      this.prisma.video.count({
         where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
       }),
       this.prisma.user.count({ where: { role: 'PARENT' } }),

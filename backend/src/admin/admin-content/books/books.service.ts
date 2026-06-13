@@ -39,6 +39,8 @@ export class BooksService {
       author: b.author,
       description: b.description,
       pdfUrl: b.pdfUrl,
+      storageKey: b.storageKey,
+      thumbStorageKey: b.thumbStorageKey,
       coverUrl: b.coverUrl,
       pages: b.pages,
       ageFrom: b.ageFrom,

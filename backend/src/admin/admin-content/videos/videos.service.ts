@@ -51,6 +51,8 @@ export class VideosService {
       title: v.title,
       description: v.description,
       url: v.url,
+      storageKey: v.storageKey,
+      thumbStorageKey: v.thumbStorageKey,
       thumbnail: v.thumbnail,
       durationSec: v.durationSec,
       ageFrom: v.ageFrom,

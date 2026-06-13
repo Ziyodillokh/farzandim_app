@@ -2,19 +2,24 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Post,
   Param,
   Query,
+  Req,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
+import { FastifyRequest } from 'fastify';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ConsumerContentService } from './consumer-content.service';
 import { PaginationDto } from './dto/pagination.dto';
 import { CategoriesQueryDto } from './dto/categories-query.dto';
 import { ReportDurationDto } from './dto/report-duration.dto';
+import { requestOrigin } from './media-proxy';
 
 @ApiTags('Consumer Content')
 @ApiBearerAuth()
@@ -34,9 +39,11 @@ export class ConsumerContentController {
   getVideos(
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.service.getVideos(
       user.userId,
+      requestOrigin(req),
       query.page ?? 1,
       query.limit ?? 20,
     );
@@ -47,9 +54,11 @@ export class ConsumerContentController {
   getAudiobooks(
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.service.getAudiobooks(
       user.userId,
+      requestOrigin(req),
       query.page ?? 1,
       query.limit ?? 20,
     );
@@ -60,9 +69,11 @@ export class ConsumerContentController {
   getBooks(
     @CurrentUser() user: JwtPayload,
     @Query() query: PaginationDto,
+    @Req() req: FastifyRequest,
   ) {
     return this.service.getBooks(
       user.userId,
+      requestOrigin(req),
       query.page ?? 1,
       query.limit ?? 20,
     );
@@ -87,6 +98,29 @@ export class ConsumerContentController {
     @Body() dto: ReportDurationDto,
   ) {
     return this.service.reportVideoDuration(id, dto.durationSec);
+  }
+
+  @Post('audiobooks/:id/duration')
+  @ApiOperation({ summary: 'Report real audiobook duration (if unknown)' })
+  reportAudiobookDuration(
+    @Param('id') id: string,
+    @Body() dto: ReportDurationDto,
+  ) {
+    return this.service.reportAudiobookDuration(id, dto.durationSec);
+  }
+
+  // @Public content media proxy (audio/thumb/video/pdf) — auth header'siz
+  // ishlaydi (player/Image.network/<img>). storageKey uuid = capability.
+  @Get('media/:segment/:file')
+  @Public()
+  @Header('Cache-Control', 'public, max-age=86400')
+  @ApiOperation({ summary: 'Stream content media (proxy)' })
+  async streamMedia(
+    @Param('segment') segment: string,
+    @Param('file') file: string,
+  ): Promise<StreamableFile> {
+    const obj = await this.service.streamContentMedia(segment, file);
+    return new StreamableFile(obj.body, { type: obj.contentType });
   }
 
   @Post('videos/:id/like')

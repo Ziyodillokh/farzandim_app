@@ -74,7 +74,7 @@ export class AdminAnalyticsService {
     const weekAgo = new Date(now.getTime() - 7 * 86_400_000);
     const monthAgo = new Date(now.getTime() - 30 * 86_400_000);
 
-    const [activeWeek, activeMonth, totalParents, totalChildren] =
+    const [activeWeek, activeMonth, totalParents, activeChildrenWeekCount] =
       await Promise.all([
         this.prisma.user.count({
           where: { role: 'PARENT', updatedAt: { gte: weekAgo } },
@@ -89,7 +89,7 @@ export class AdminAnalyticsService {
     return {
       activeParentsWeek: activeWeek,
       activeParentsMonth: activeMonth,
-      activeChildrenWeek: totalChildren,
+      activeChildrenWeek: activeChildrenWeekCount,
       weeklyRetentionRate: this.pct(activeWeek, totalParents),
       monthlyRetentionRate: this.pct(activeMonth, totalParents),
     };
@@ -99,19 +99,32 @@ export class AdminAnalyticsService {
    * GET /admin/analytics — general snapshot.
    */
   async getOverview() {
+    const now = new Date();
+    const months = this.lastNMonths(6, now);
     const [
       parents,
       children,
+      videos,
+      audiobooks,
+      books,
+      olympiads,
+      viewsAgg,
+      listensAgg,
+      readsAgg,
       moderators,
       plans,
       promocodes,
       paymentsAgg,
-      broadcastsCount,
-      olympiads,
-      attempts,
     ] = await Promise.all([
       this.prisma.user.count({ where: { role: 'PARENT' } }),
       this.prisma.child.count(),
+      this.prisma.video.count(),
+      this.prisma.audiobook.count(),
+      this.prisma.book.count(),
+      this.prisma.olympiad.count(),
+      this.prisma.video.aggregate({ _sum: { views: true } }),
+      this.prisma.audiobook.aggregate({ _sum: { listens: true } }),
+      this.prisma.book.aggregate({ _sum: { reads: true } }),
       this.prisma.moderator.count(),
       this.prisma.plan.count({ where: { isActive: true } }),
       this.prisma.promocode.count(),
@@ -120,13 +133,39 @@ export class AdminAnalyticsService {
         _sum: { amount: true },
         _count: { _all: true },
       }),
-      this.prisma.adminNotification.count(),
-      this.prisma.olympiad.count(),
-      this.prisma.olympiadAttempt.count(),
     ]);
 
+    // Oxirgi 6 oy ro'yxatdan o'tish (ota-ona + bola) — o'sish grafigi.
+    const growth = await Promise.all(
+      months.map(async (m) => {
+        const next = this.startOfNextMonth(m);
+        const [p, c] = await Promise.all([
+          this.prisma.user.count({
+            where: { role: 'PARENT', createdAt: { gte: m, lt: next } },
+          }),
+          this.prisma.child.count({
+            where: { createdAt: { gte: m, lt: next } },
+          }),
+        ]);
+        return { label: this.fmtMonth(m), value: p + c };
+      }),
+    );
+
     return {
-      users: { parents, children, total: parents + children },
+      // Sahifa kutadigan tekis maydonlar (REAL Prisma count'lar).
+      users: parents + children,
+      parents,
+      children,
+      videos,
+      audiobooks,
+      books,
+      olympiads,
+      growth,
+      // Admin <-> bola ulanish: bola yuborgan kontent faollik jamisi.
+      totalViews: viewsAgg._sum.views ?? 0,
+      totalListens: listensAgg._sum.listens ?? 0,
+      totalReads: readsAgg._sum.reads ?? 0,
+      // Qo'shimcha (boshqa joylar uchun).
       moderators,
       plans,
       promocodes,
@@ -134,8 +173,6 @@ export class AdminAnalyticsService {
         total: paymentsAgg._count._all,
         revenue: paymentsAgg._sum.amount ?? 0,
       },
-      notifications: { broadcasts: broadcastsCount },
-      olympiads: { total: olympiads, attempts },
     };
   }
 
