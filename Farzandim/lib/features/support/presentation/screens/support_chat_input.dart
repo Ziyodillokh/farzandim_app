@@ -17,115 +17,109 @@ class _InputBar extends StatelessWidget {
   final VoidCallback onSend;
   final VoidCallback onAttach;
 
+  // Pill balandligi — ingichka, Telegram uslubidagi yagona qator.
+  static const double _barHeight = 46;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
+    // Parent ekran allaqachon SafeArea bilan o'ralgan — bu yerda takror yo'q.
+    return Padding(
       padding: const EdgeInsets.fromLTRB(
-        AppDimensions.md,
         AppDimensions.sm,
-        AppDimensions.md,
+        AppDimensions.xs,
+        AppDimensions.sm,
         AppDimensions.sm,
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          // Pill maydon: 📎 ichkarida + matn (messenger-style, IXCHAM).
-          Expanded(
-            child: Container(
-              constraints: const BoxConstraints(minHeight: 44),
-              decoration: BoxDecoration(
-                color: AppColors.surface,
-                borderRadius: BorderRadius.circular(22),
-                border: Border.all(color: AppColors.border),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // Biriktirma — maydon ichida (Telegram'dagidek).
-                  SizedBox(
-                    width: 40,
-                    height: 44,
-                    child: IconButton(
-                      onPressed: onAttach,
-                      padding: EdgeInsets.zero,
-                      icon: Icon(
-                        Icons.attach_file_rounded,
-                        color: AppColors.textSecondary,
-                        size: 21,
-                      ),
-                    ),
-                  ),
-                  Expanded(
-                    child: Padding(
-                      padding: const EdgeInsets.only(
-                        right: AppDimensions.md,
-                        top: 11,
-                        bottom: 11,
-                      ),
-                      child: TextField(
-                        controller: controller,
-                        style: AppTextStyles.bodyM,
-                        minLines: 1,
-                        maxLines: 4,
-                        textInputAction: TextInputAction.send,
-                        onSubmitted: (_) => onSend(),
-                        decoration: InputDecoration(
-                          isCollapsed: true,
-                          // Global theme `filled:true` ICHKI QUTI chizardi
-                          // (qo'sh-quti ko'rinish) — shu yerda o'chiramiz.
-                          filled: false,
-                          border: InputBorder.none,
-                          hintText: 'support.inputHint'.tr(),
-                          hintStyle: AppTextStyles.bodyM.copyWith(
-                            color: AppColors.textTertiary,
+            // Yagona ingichka pill: matn + biriktirma (📎 o'ngda). Ichki
+            // "qo'sh-quti" yo'q — TextField to'ldirishi butunlay o'chirilgan.
+            Expanded(
+              child: Container(
+                constraints: const BoxConstraints(minHeight: _barHeight),
+                decoration: BoxDecoration(
+                  color: AppColors.surface,
+                  borderRadius: BorderRadius.circular(_barHeight / 2),
+                  border: Border.all(color: AppColors.border),
+                ),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Expanded(
+                      child: Padding(
+                        padding: const EdgeInsets.fromLTRB(18, 12, 4, 12),
+                        child: TextField(
+                          controller: controller,
+                          style: AppTextStyles.bodyM,
+                          minLines: 1,
+                          maxLines: 4,
+                          textInputAction: TextInputAction.send,
+                          onSubmitted: (_) => onSend(),
+                          decoration: InputDecoration(
+                            isCollapsed: true,
+                            isDense: true,
+                            // Global theme `filled:true` ichki quti chizardi —
+                            // bu yerda butunlay o'chiramiz (yagona pill).
+                            filled: false,
+                            fillColor: Colors.transparent,
+                            contentPadding: EdgeInsets.zero,
+                            border: InputBorder.none,
+                            enabledBorder: InputBorder.none,
+                            focusedBorder: InputBorder.none,
+                            hintText: 'support.inputHint'.tr(),
+                            hintStyle: AppTextStyles.bodyM.copyWith(
+                              color: AppColors.textTertiary,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          const SizedBox(width: AppDimensions.sm),
-          // Yuborish tugmasi — matn borligida brand gradient bilan jonlanadi.
-          AnimatedScale(
-            scale: hasText ? 1 : 0.9,
-            duration: const Duration(milliseconds: 150),
-            child: Container(
-              width: 44,
-              height: 44,
-              decoration: BoxDecoration(
-                gradient: hasText
-                    ? LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [AppColors.primaryLight, AppColors.primary],
-                      )
-                    : null,
-                color: hasText ? null : AppColors.surface,
-                shape: BoxShape.circle,
-                border: hasText ? null : Border.all(color: AppColors.border),
-              ),
-              clipBehavior: Clip.antiAlias,
-              child: Material(
-                color: Colors.transparent,
-                child: InkWell(
-                  onTap: hasText ? onSend : null,
-                  child: Icon(
-                    Icons.send_rounded,
-                    color: hasText
-                        ? AppColors.onPrimary
-                        : AppColors.textTertiary,
-                    size: 20,
-                  ),
+                    // Biriktirma — pill ichida o'ngda (Telegram'dagidek).
+                    SizedBox(
+                      width: 42,
+                      height: _barHeight,
+                      child: IconButton(
+                        onPressed: onAttach,
+                        padding: EdgeInsets.zero,
+                        icon: Icon(
+                          Icons.attach_file_rounded,
+                          color: AppColors.textSecondary,
+                          size: 20,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
+            const SizedBox(width: AppDimensions.xs + 2),
+            // Yuborish — alohida yumaloq tugma (matn borligida lime).
+            GestureDetector(
+              onTap: hasText ? onSend : null,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 150),
+                width: _barHeight,
+                height: _barHeight,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: hasText ? AppColors.primary : AppColors.surface,
+                  shape: BoxShape.circle,
+                  border:
+                      hasText ? null : Border.all(color: AppColors.border),
+                ),
+                child: Icon(
+                  Icons.send_rounded,
+                  size: 20,
+                  color: hasText
+                      ? AppColors.onPrimary
+                      : AppColors.textTertiary,
+                ),
+              ),
+            ),
+          ],
+        ),
+      );
   }
 }
 
