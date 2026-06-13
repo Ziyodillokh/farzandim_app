@@ -169,7 +169,10 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
     final hasReal = byId.length > 1 || !byId.containsKey('welcome');
     final merged =
         byId.values.where((m) => !(m.id == 'welcome' && hasReal)).toList()
-          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+          ..sort((a, b) {
+            final c = a.createdAt.compareTo(b.createdAt);
+            return c != 0 ? c : a.id.compareTo(b.id); // barqaror tiebreak
+          });
 
     if (merged.isEmpty) return; // welcome'ni o'chirib yubormaymiz
     state = state.copyWith(messages: merged);

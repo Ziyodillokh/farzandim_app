@@ -71,7 +71,7 @@ class _Bubble extends ConsumerWidget {
       isFirst: isFirstInGroup,
       isLast: isLastInGroup,
     );
-    final Widget bubble;
+    Widget bubble;
     if (message.isImage) {
       bubble = _ImageBubble(message: message, radius: radius);
     } else if (message.isDocument) {
@@ -80,6 +80,24 @@ class _Bubble extends ConsumerWidget {
       bubble = _VideoBubble(message: message, radius: radius);
     } else {
       bubble = _TextBubble(message: message, radius: radius);
+    }
+
+    // Media + caption: media bubble'lar matnni ko'rsatmaydi — operator (yoki
+    // user) rasm/fayl bilan izoh yozsa, izoh media ostida alohida ko'rinadi
+    // (aks holda matn butunlay yo'qolardi).
+    final caption = message.text?.trim() ?? '';
+    if (message.hasAttachment && caption.isNotEmpty) {
+      bubble = Column(
+        crossAxisAlignment: message.isUser
+            ? CrossAxisAlignment.end
+            : CrossAxisAlignment.start,
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          bubble,
+          const SizedBox(height: 3),
+          _MediaCaption(message: message),
+        ],
+      );
     }
 
     // Failed biriktirma: retry qatori (bytes/filePath sessiyada bo'lsa).
@@ -156,6 +174,42 @@ class _TimeStatus extends StatelessWidget {
           color: AppColors.error,
         );
     }
+  }
+}
+
+/// Media (rasm/video/hujjat) ostidagi izoh (caption) — operator yoki user
+/// biriktirma bilan yozgan matn. Media bubble'lar matnni ko'rsatmagani uchun
+/// alohida ixcham bubble.
+class _MediaCaption extends StatelessWidget {
+  const _MediaCaption({required this.message});
+  final SupportMessage message;
+
+  @override
+  Widget build(BuildContext context) {
+    final isUser = message.isUser;
+    return Container(
+      constraints: const BoxConstraints(maxWidth: 240),
+      padding: const EdgeInsets.fromLTRB(12, 7, 12, 7),
+      decoration: BoxDecoration(
+        gradient: isUser
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.primaryLight, AppColors.primary],
+              )
+            : null,
+        color: isUser ? null : AppColors.surface,
+        border: isUser ? null : Border.all(color: AppColors.border),
+        borderRadius: BorderRadius.circular(14),
+      ),
+      child: Text(
+        message.text ?? '',
+        style: AppTextStyles.bodyM.copyWith(
+          color: isUser ? AppColors.onPrimary : AppColors.textPrimary,
+          height: 1.3,
+        ),
+      ),
+    );
   }
 }
 
