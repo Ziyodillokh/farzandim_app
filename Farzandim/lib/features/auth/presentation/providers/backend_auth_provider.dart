@@ -84,12 +84,29 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     // yo'qoladi. Profil fonda tasdiqlanadi/yangilanadi.
     final cached = await _repo.cachedUser();
     if (cached != null) {
+      // Bu PARENT ilovasi — agar saqlangan token CHILD foydalanuvchiga tegishli
+      // bo'lsa (masalan dev'da portlar almashib, child ilova shu origin'da
+      // token qoldirgan bo'lsa), uni qabul qilmaymiz: barcha parent-only
+      // endpoint'lar 403 berib, foydalanuvchi "Forbidden" holatda qolardi.
+      if (!cached.isParent) {
+        await _repo.logout();
+        await SwrCache.clearAll();
+        state = const AuthAnonymous();
+        return;
+      }
       state = AuthAuthenticated(cached);
     }
 
     try {
       final user = await _repo.verifySession();
       if (user != null) {
+        // Server tasdiqlagan rol ham PARENT bo'lishi shart.
+        if (!user.isParent) {
+          await _repo.logout();
+          await SwrCache.clearAll();
+          state = const AuthAnonymous();
+          return;
+        }
         state = AuthAuthenticated(user);
       } else if (cached == null) {
         state = const AuthAnonymous();

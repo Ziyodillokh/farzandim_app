@@ -1,15 +1,17 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter } from 'next/font/google';
 import { Toaster } from 'sonner';
 import { QueryProvider } from '@/providers/query-provider';
 import { ThemeProvider } from '@/providers/theme-provider';
 import './globals.css';
 
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  variable: '--font-inter',
-  display: 'swap',
-});
+// Eslatma: ilgari `next/font/google` (Inter) ishlatilardi, lekin u build/dev
+// vaqtida shriftni Google CDN'dan (undici fetch) yuklab oladi — bu muhitda
+// `fonts.gstatic.com` bilan ulanish uzilib qoladi (ECONNRESET) va sahifa 500
+// beradi. Tarmoqqa bog'liqlikni olib tashlash uchun `--font-inter` o'zgaruvchisi
+// tizim UI shrift stack'iga o'rnatildi (vizual jihatdan Inter'ga juda yaqin).
+const interFontStack =
+  "'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, " +
+  "'Helvetica Neue', Arial, sans-serif";
 
 export const metadata: Metadata = {
   title: {
@@ -30,8 +32,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="uz" suppressHydrationWarning>
-      <body className={`${inter.variable} font-sans`}>
+    <html
+      lang="uz"
+      suppressHydrationWarning
+      style={{ ['--font-inter' as string]: interFontStack }}
+    >
+      <body className="font-sans">
         <ThemeProvider>
           <QueryProvider>
             {children}

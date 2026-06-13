@@ -19,25 +19,27 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/onboarding/data/interest_options.dart';
+import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:farzandim_child/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// SharedPreferences kaliti — onboarding qayta ko'rsatilmasligi uchun.
 const String kOnboardingSeenKey = 'onboarding_seen_v1';
 
-class OnboardingScreen extends StatefulWidget {
+class OnboardingScreen extends ConsumerStatefulWidget {
   const OnboardingScreen({super.key});
 
   @override
-  State<OnboardingScreen> createState() => _OnboardingScreenState();
+  ConsumerState<OnboardingScreen> createState() => _OnboardingScreenState();
 }
 
-class _OnboardingScreenState extends State<OnboardingScreen> {
+class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   final Set<String> _selectedInterests = {};
 
   bool get _canFinish => _selectedInterests.isNotEmpty;
@@ -61,6 +63,11 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         kPendingInterestsKey,
         _selectedInterests.toList(),
       );
+      // Onboarding endi pair tugagandan KEYIN ko'rsatiladi — CHILD JWT
+      // mavjud. Shuning uchun qiziqishlarni darhol backend'ga yuboramiz
+      // (pairing oxiridagi sync allaqachon o'tib ketgan). Xato bo'lsa
+      // pending qoladi, keyingi restart/repair'da qayta urinadi.
+      await ref.read(interestsSyncServiceProvider).syncPendingInterests();
     }
     if (!mounted) return;
     // /splash markaziy router: paired bo'lsa permission-setup yoki dashboard.

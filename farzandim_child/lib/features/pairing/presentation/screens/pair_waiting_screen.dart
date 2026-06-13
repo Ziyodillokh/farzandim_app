@@ -18,6 +18,7 @@ import 'package:farzandim_child/features/pairing/data/repositories/pairing_repos
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 
 class PairWaitingScreen extends ConsumerStatefulWidget {
   const PairWaitingScreen({super.key});
@@ -103,6 +104,10 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
               childId: childId,
               currentUserId: currentUserId,
             );
+        if (!mounted) return;
+        // Pair tasdiqlangach markaziy /splash router'ga — birinchi marta
+        // bo'lsa onboarding (qiziqishlar), keyin permission/dashboard.
+        context.go('/splash');
       case PairStatusRejected():
         _pollTimer?.cancel();
         _countdownTimer?.cancel();

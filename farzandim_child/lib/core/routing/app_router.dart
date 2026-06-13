@@ -137,7 +137,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Splash va pairing — har doim ruxsat (pairing oqimi).
       // Welcome ekran olib tashlandi — bola ilovasi to'g'ridan-to'g'ri kodni
       // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
-      // /onboarding — birinchi marta ochilganda 3 ta slayd (bir martalik).
+      // /onboarding — qiziqishlar ekrani; endi faqat KOD kiritilgandan
+      // (pair) keyin Splash yo'naltiradi, bir martalik.
       const publicPaths = {
         '/splash',
         '/pairing',

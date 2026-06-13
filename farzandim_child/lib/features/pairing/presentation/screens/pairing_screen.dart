@@ -16,6 +16,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
@@ -50,6 +51,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   /// 5-raqam to'lganda avtomatik chaqiriladi.
   Future<void> _onCodeComplete() async {
     if (!_isFull) return;
+    if (_isPairing) return; // ikki marta yuborishni oldini olamiz
 
     setState(() => _isPairing = true);
     FocusScope.of(context).unfocus();
@@ -62,9 +64,10 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     setState(() => _isPairing = false);
 
     if (success) {
-      // Pairing'dan keyin sistema ruxsatlari ekrani — Android'da haqiqiy
-      // permission'larni so'raydi, web'da mock toggle'lar (preview).
-      context.go('/permission-setup');
+      // Kod kiritilib pair tugagach — markaziy /splash router'ga.
+      // U birinchi marta bo'lsa onboarding (qiziqishlar), keyin sistema
+      // ruxsatlari ekrani yoki dashboard'ga yo'naltiradi.
+      context.go('/splash');
       return;
     }
 
@@ -256,12 +259,18 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
         focusNode: _focusNodes[index],
         keyboardType: TextInputType.number,
         textAlign: TextAlign.center,
+        // Raqamni katakcha o'rtasida (vertikal) joylash — aks holda
+        // matn yuqoriga yopishib qoladi.
+        textAlignVertical: TextAlignVertical.center,
+        // Faqat raqam — fizik klaviatura yoki paste orqali harf kirmasin.
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
         maxLength: 1,
         cursorColor: Colors.white,
         style: const TextStyle(
           fontSize: 28,
-          fontWeight: FontWeight.w600,
+          fontWeight: FontWeight.w700,
           color: Colors.white,
+          height: 1,
         ),
         decoration: const InputDecoration(
           counterText: '',
@@ -273,7 +282,6 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
           filled: true,
           fillColor: Colors.transparent,
           contentPadding: EdgeInsets.zero,
-          isCollapsed: true,
         ),
         onChanged: (value) {
           if (value.isNotEmpty && index < 4) {

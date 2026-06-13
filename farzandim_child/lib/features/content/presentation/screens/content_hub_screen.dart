@@ -98,9 +98,9 @@ class _TopTabs extends StatelessWidget {
         indicatorSize: TabBarIndicatorSize.label,
         labelColor: context.adaptive.textPrimary,
         unselectedLabelColor: context.adaptive.textTertiary,
-        labelStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
         unselectedLabelStyle:
-            const TextStyle(fontSize: 15, fontWeight: FontWeight.w600),
+            const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         dividerColor: Colors.transparent,
         labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
         tabAlignment: TabAlignment.start,

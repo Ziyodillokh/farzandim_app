@@ -4,9 +4,13 @@
 //
 // Router uchun initial route. 800ms shield+logo ko'rsatadi va
 // keyin quyidagicha yo'naltiradi:
-//   - Pairing yo'q                                  → /welcome
+//   - Pairing yo'q                                  → /pairing (kod kiritish)
+//   - Pairing bor + onboarding ko'rilmagan          → /onboarding (qiziqishlar)
 //   - Pairing bor + 4 sistema ruxsati yo'q          → /permission-setup
 //   - Pairing bor + barcha 4 ruxsat yoqilgan        → /dashboard
+//
+// MUHIM: onboarding (qiziqishlar) endi faqat KOD kiritilgandan keyin
+// ochiladi — pair bo'lmagan bola to'g'ridan-to'g'ri /pairing ga boradi.
 //
 // 4 ta sistema ruxsati: locationAlways, ignoreBatteryOptimizations,
 // PACKAGE_USAGE_STATS, SYSTEM_ALERT_WINDOW. Notification/camera —
@@ -63,9 +67,18 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final pairing = ref.read(pairingStateProvider);
     if (!pairing.isPaired) {
-      // Birinchi ochilish bo'lsa — 3 ta slaydli onboarding'ni ko'rsatamiz.
-      // Foydalanuvchi tugatgach `onboarding_seen_v1=true` saqlanadi va
-      // keyingi startup'larda to'g'ridan-to'g'ri /pairing ga o'tiladi.
+      // Pair bo'lmagan bola — to'g'ridan-to'g'ri kod kiritish ekraniga.
+      // Onboarding (qiziqishlar) endi faqat KOD kiritilgandan keyin
+      // ko'rsatiladi (pastdagi paired bloki).
+      context.go('/pairing');
+      return;
+    }
+
+    // ── Pair bo'lgan ──
+    // Onboarding (qiziqishlar) hali ko'rilmagan bo'lsa — avval shuni
+    // ko'rsatamiz. Bola tugatgach `onboarding_seen_v1=true` saqlanadi va
+    // keyingi startup'larda to'g'ridan-to'g'ri permission/dashboard'ga.
+    {
       final prefs = await SharedPreferences.getInstance();
       final onboardingSeen = prefs.getBool(kOnboardingSeenKey) ?? false;
       if (!mounted) return;
@@ -73,8 +86,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         context.go('/onboarding');
         return;
       }
-      context.go('/pairing');
-      return;
     }
 
     // Web preview'da permission_handler / UsageStats — UnimplementedError.

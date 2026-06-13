@@ -1,12 +1,61 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import * as https from 'node:https';
 import { EnvConfig } from '../config/env.schema';
 
-const ESKIZ_BASE = 'https://notify.eskiz.uz/api';
+const ESKIZ_HOST = 'notify.eskiz.uz';
+const ESKIZ_API_PREFIX = '/api';
 
 export interface SmsResult {
   sent: boolean;
   error?: string;
+}
+
+interface HttpReply {
+  status: number;
+  body: string;
+}
+
+/**
+ * Eskiz'ga `node:https` orqali POST — global `fetch` (undici) `notify.eskiz.uz`
+ * bilan `ECONNRESET` beradi (TLS handshake'ni server reset qiladi), `https`
+ * moduli esa tizim OpenSSL'idan foydalanadi va curl kabi muvaffaqiyatli
+ * ulanadi. Shuning uchun barcha Eskiz chaqiruvlari shu helper orqali ketadi.
+ */
+function eskizPost(
+  path: string,
+  form: URLSearchParams,
+  token?: string,
+): Promise<HttpReply> {
+  return new Promise<HttpReply>((resolve, reject) => {
+    const body = form.toString();
+    const req = https.request(
+      {
+        hostname: ESKIZ_HOST,
+        port: 443,
+        path: `${ESKIZ_API_PREFIX}${path}`,
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/x-www-form-urlencoded',
+          'Content-Length': Buffer.byteLength(body),
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+        },
+        timeout: 15_000,
+      },
+      (res) => {
+        let data = '';
+        res.setEncoding('utf8');
+        res.on('data', (chunk) => (data += chunk));
+        res.on('end', () =>
+          resolve({ status: res.statusCode ?? 0, body: data }),
+        );
+      },
+    );
+    req.on('error', reject);
+    req.on('timeout', () => req.destroy(new Error('Eskiz request timeout')));
+    req.write(body);
+    req.end();
+  });
 }
 
 @Injectable()
@@ -33,15 +82,13 @@ export class SmsService {
       this.config.get('ESKIZ_PASSWORD', { infer: true }) ?? '',
     );
 
-    const res = await fetch(`${ESKIZ_BASE}/auth/login`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: form.toString(),
-    });
+    const res = await eskizPost('/auth/login', form);
 
-    if (!res.ok) throw new Error(`Eskiz login failed: ${res.status}`);
+    if (res.status < 200 || res.status >= 300) {
+      throw new Error(`Eskiz login failed: ${res.status} ${res.body}`);
+    }
 
-    const json = (await res.json()) as { data?: { token?: string } };
+    const json = JSON.parse(res.body) as { data?: { token?: string } };
     const token = json.data?.token;
     if (!token) throw new Error('Eskiz login: token not returned');
     return token;
@@ -99,19 +146,12 @@ export class SmsService {
     const mobilePhone = phone.replace(/\D/g, '');
     const from = this.config.get('ESKIZ_FROM', { infer: true });
 
-    const attempt = async (token: string): Promise<Response> => {
+    const attempt = (token: string): Promise<HttpReply> => {
       const form = new URLSearchParams();
       form.set('mobile_phone', mobilePhone);
       form.set('message', message);
       form.set('from', from);
-      return fetch(`${ESKIZ_BASE}/message/sms/send`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/x-www-form-urlencoded',
-          Authorization: `Bearer ${token}`,
-        },
-        body: form.toString(),
-      });
+      return eskizPost('/message/sms/send', form, token);
     };
 
     try {
@@ -126,13 +166,14 @@ export class SmsService {
       // Eskiz javobini tahlil qilamiz — 200 status'da ham `status: error`
       // bo'lishi mumkin (template approved emas, balans yo'q, va h.k.).
       // Bularni o'tkazib yubormaslik uchun body'ni o'qiymiz.
-      const text = await res.text();
+      const text = res.body;
       let body: { status?: string; message?: string; id?: string } = {};
       try {
         body = JSON.parse(text) as typeof body;
       } catch {/* JSON emas — text qoldiramiz */}
 
-      if (!res.ok) {
+      const resOk = res.status >= 200 && res.status < 300;
+      if (!resOk) {
         this.logger.error(
           { phone: mobilePhone, status: res.status, body: text },
           'Eskiz SMS HTTP xato',

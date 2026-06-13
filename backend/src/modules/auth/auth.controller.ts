@@ -23,6 +23,10 @@ import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
 import { RegisterDto } from './dto/register.dto';
+import {
+  SendRegisterOtpDto,
+  VerifyRegisterOtpDto,
+} from './dto/register-otp.dto';
 import { LoginDto } from './dto/login.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
@@ -78,6 +82,28 @@ export class AuthController {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
+  }
+
+  @Post('send-register-otp')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send SMS OTP (Eskiz) to verify phone before register' })
+  @ApiResponse({ status: 200, description: 'OTP sent' })
+  @ApiResponse({ status: 400, description: 'Recent code already sent / cooldown' })
+  @ApiResponse({ status: 409, description: 'Phone already registered' })
+  @ApiResponse({ status: 503, description: 'SMS service not configured' })
+  async sendRegisterOtp(@Body() dto: SendRegisterOtpDto) {
+    return this.authService.sendRegisterOtp(dto.phone);
+  }
+
+  @Post('verify-register-otp')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify the SMS OTP code sent before register' })
+  @ApiResponse({ status: 200, description: 'Code verified' })
+  @ApiResponse({ status: 400, description: 'Wrong/expired code or too many attempts' })
+  async verifyRegisterOtp(@Body() dto: VerifyRegisterOtpDto) {
+    return this.authService.verifyRegisterOtp(dto.phone, dto.code);
   }
 
   @Post('register')

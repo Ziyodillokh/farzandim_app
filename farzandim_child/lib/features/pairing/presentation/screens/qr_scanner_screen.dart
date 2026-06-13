@@ -76,13 +76,13 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   /// Foydalanuvchi qo'lda paste rejimiga o'tgan bo'lsa true.
   ///
-  /// **Web default — `true`.** Brauzer (ayniqsa Chrome DevTools mobile
-  /// emulyatsiyasi)da `mobile_scanner` ZXing'ini back kamera constraint'i
-  /// bilan ishga tushirish ishonchsiz: `NotReadableError` / `OverconstrainedError`
-  /// odatiy. Web rejimda parent'dagi "Token nusxa olish" → child'da paste
-  /// flow eng tez va aniq. Foydalanuvchi appbar'dagi qr_scanner icon bilan
-  /// xohlasa kameraga o'tib bo'ladi.
-  bool _manualPasteMode = kIsWeb;
+  /// **Default — `false` (kamera birinchi).** Web va mobil'da ham avval
+  /// kamerani ishga tushiramiz. Web'da `mobile_scanner` ZXing back
+  /// kamera bilan ishlamasa, `_tryStartCamera` avtomatik front kameraga
+  /// o'tadi; u ham ishlamasa xato ekranida "Token'ni qo'lda kiritish"
+  /// tugmasi paste rejimiga o'tkazadi. Appbar'dagi klaviatura ikonkasi
+  /// orqali ham istalgan paytda paste rejimiga o'tish mumkin.
+  bool _manualPasteMode = false;
 
   /// Front camera bilan qayta urinib ko'rdikmi (back fail bo'lganda).
   bool _triedFrontFallback = false;
@@ -734,8 +734,8 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
             const Icon(Icons.qr_code_2, color: Colors.white70, size: 88),
             const SizedBox(height: 16),
             const Text(
-              "Brauzerda kamera QR scanner mavjud emas.\n"
-              "Parent ilovasidagi QR matnini shu yerga joylang.",
+              "Kamera ishlamasa, Parent ilovasidagi QR matnini\n"
+              "shu yerga joylab ulanishingiz mumkin.",
               textAlign: TextAlign.center,
               style: TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
             ),

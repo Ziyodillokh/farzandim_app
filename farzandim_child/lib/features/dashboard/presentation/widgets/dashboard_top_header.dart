@@ -88,11 +88,11 @@ class DashboardTopHeader extends ConsumerWidget {
             _SosPill(
               onTap: onSosTap ?? () => context.push('/dashboard'),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
           ],
           if (onSettingsTap != null) ...[
             _SettingsButton(onTap: onSettingsTap!),
-            const SizedBox(width: 12),
+            const SizedBox(width: 8),
           ],
           if (_useBell)
             _NotificationsButton(
