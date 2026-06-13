@@ -698,13 +698,24 @@ class RestrictionService : Service() {
     private fun buildOverlayView(appLabel: String): View {
         val ctx = this
         val container = FrameLayout(ctx).apply {
-            setBackgroundColor(Color.parseColor("#F00A0A12")) // dark, opaque
+            // Deyarli shaffof scrim — bloklangan ilova orqada xira ko'rinib
+            // turadi. Oyna baribir teginishni yutadi, shuning uchun ilova
+            // ishlatib bo'lmaydi (bloklash kuchda qoladi).
+            setBackgroundColor(Color.parseColor("#260A0A12"))
         }
 
+        // Markazdagi xabar o'qiladigan bo'lishi uchun alohida qoraroq karta —
+        // shaffof scrim ustida matn yo'qolmaydi.
         val column = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.CENTER
-            setPadding(dp(32), dp(32), dp(32), dp(32))
+            setPadding(dp(28), dp(36), dp(28), dp(36))
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(28).toFloat()
+                setColor(Color.parseColor("#F21C1C24")) // surface, ~95%
+                setStroke(dp(1), Color.parseColor("#2A2A35")) // nozik chegara
+            }
         }
 
         // Lock icon (Unicode emoji o'rniga TypedValue bilan boy icon).
@@ -771,7 +782,10 @@ class RestrictionService : Service() {
         val params = FrameLayout.LayoutParams(
             FrameLayout.LayoutParams.WRAP_CONTENT,
             FrameLayout.LayoutParams.WRAP_CONTENT,
-        ).apply { gravity = Gravity.CENTER }
+        ).apply {
+            gravity = Gravity.CENTER
+            setMargins(dp(32), 0, dp(32), 0)
+        }
         container.addView(column, params)
 
         return container
