@@ -5,30 +5,26 @@ import {
   OnModuleInit,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { randomUUID } from 'crypto';
+import { extname } from 'path';
 import { PrismaService } from '../../common/database/prisma.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { StorageService } from '../../common/storage/storage.service';
+import { BUCKETS } from '../../common/storage/storage.constants';
 import { EnvConfig } from '../../common/config/env.schema';
 
 /**
- * Support chat ⇄ Telegram guruh ko'prigi.
+ * Support chat ⇄ Telegram guruh ko'prigi (ikki tomonlama, media bilan).
  *
- * Oqim:
- *  1. Ota-ona ilovada yozadi → SupportService saqlaydi → bu servis xabarni
- *     operatorlar GURUHIGA yuboradi (rasm/video/hujjat HAQIQIY media bilan,
- *     "✍️ Javob berish" inline tugma).
- *  2. Operator tugmani bosadi → bot ForceReply prompt yuboradi → operator
- *     SHU promptga (yoki asl xabarga swipe-reply) javob yozadi.
- *  3. Bot javobni user'ga yetkazadi: DB + WS `support:message` (DARHOL) +
- *     FCM push (fonda). Guruhda "✅ Yetkazildi".
+ * User → guruh: matn yoki biriktirma (rasm/video/hujjat) — biriktirma MinIO'dan
+ *   o'qilib HAQIQIY BAYT (multipart) bilan yuboriladi (URL-reachability'ga
+ *   bog'liq emas → hujjat ham ishonchli yetadi).
+ * Guruh → user: operator "✍️ Javob berish" → matn YOKI rasm/fayl bilan reply
+ *   qiladi → bot faylni yuklab MinIO'ga saqlaydi → user'ga DB + WS + FCM.
  *
- * MUHIM ishonchlilik qoidalari:
- *  - Barcha GURUHGA yuborishlar BITTA NAVBAT orqali ketadi (serial) — Telegram
- *    per-chat flood-control'i parallel yuborishda xabarni tushirib yuborardi
- *    ("ikkitadan bittasi bormaydi" muammosi). Navbat + 429 retry buni yo'qotadi.
- *  - `getUpdates` (25s long-poll) navbatdan TASHQARI — aks holda yuborishni
- *    25s bloklardi.
- *  - Token/chat-id .env'da bo'lmasa servis jim o'chiq (chat baribir saqlanadi).
+ * Ishonchlilik: barcha guruhga yuborishlar BITTA NAVBAT (serial) orqali +
+ * 429/tarmoq retry. getUpdates (25s long-poll) navbatdan tashqari.
  */
 @Injectable()
 export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
@@ -43,11 +39,16 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
   // Guruhga yuborishlar navbati (serial) — flood-control'dan himoya.
   private sendChain: Promise<unknown> = Promise.resolve();
 
+  // Telegram media bot-API yuklab olish chegaralari (taxminiy, xavfsiz).
+  private static readonly MAX_PHOTO = 10 * 1024 * 1024;
+  private static readonly MAX_FILE = 50 * 1024 * 1024;
+
   constructor(
     private readonly config: ConfigService<EnvConfig, true>,
     private readonly prisma: PrismaService,
     private readonly realtime: RealtimeGateway,
     private readonly fcm: FcmService,
+    private readonly storage: StorageService,
   ) {}
 
   async onModuleInit() {
@@ -80,7 +81,7 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
 
   /* ───────────────────────── Telegram API ───────────────────────── */
 
-  /** Xom Telegram API chaqiruvi (getUpdates uchun — navbatsiz, retry'siz). */
+  /** Xom JSON API chaqiruvi (getUpdates/getFile uchun — navbatsiz). */
   private async api<T = unknown>(
     method: string,
     body?: Record<string, unknown>,
@@ -98,53 +99,91 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     return (await res.json()) as TgResponse<T>;
   }
 
-  /** API + 429 (flood) va tarmoq xatosida qayta urinish. */
-  private async callWithRetry<T = unknown>(
+  /** Multipart (fayl bayt) API chaqiruvi — sendPhoto/sendDocument/sendVideo. */
+  private async apiMultipart<T = unknown>(
     method: string,
-    body: Record<string, unknown>,
+    fields: Record<string, string>,
+    fileField: string,
+    buffer: Buffer,
+    fileName: string,
+    mimeType: string,
+    timeoutMs = 90_000,
+  ): Promise<TgResponse<T>> {
+    const form = new FormData();
+    for (const [k, v] of Object.entries(fields)) form.append(k, v);
+    // Buffer → Uint8Array (yangi ArrayBuffer) — Blob TS tipiga mos.
+    form.append(
+      fileField,
+      new Blob([new Uint8Array(buffer)], {
+        type: mimeType || 'application/octet-stream',
+      }),
+      fileName,
+    );
+    const res = await fetch(
+      `https://api.telegram.org/bot${this.token}/${method}`,
+      { method: 'POST', body: form, signal: AbortSignal.timeout(timeoutMs) },
+    );
+    return (await res.json()) as TgResponse<T>;
+  }
+
+  /** Berilgan yuborishni 429 (flood) + tarmoq xatosida qayta uradi. */
+  private async withRetry<T = unknown>(
+    fn: () => Promise<TgResponse<T>>,
     attempts = 3,
   ): Promise<TgResponse<T>> {
     for (let i = 0; i < attempts; i++) {
       try {
-        const r = await this.api<T>(method, body, 20_000);
+        const r = await fn();
         if (r.ok) return r;
         const retryAfter = r.parameters?.retry_after;
         if (retryAfter && i < attempts - 1) {
           await this.sleep(retryAfter * 1000 + 300);
           continue;
         }
-        // 429'dan boshqa xato (masalan media URL yetib bo'lmadi) — qaytaramiz.
         return r;
       } catch (e) {
         if (i < attempts - 1) {
           await this.sleep(800);
           continue;
         }
-        this.logger.warn(`${method} tarmoq xato: ${(e as Error).message}`);
         return { ok: false, description: (e as Error).message };
       }
     }
     return { ok: false };
   }
 
-  /**
-   * Guruhga yuborish — NAVBAT orqali (bittadan), retry bilan. Parallel
-   * yuborishlar bir-birini tushirib yubormasligi uchun ketma-ket ishlaydi.
-   */
-  private sendQueued<T = unknown>(
-    method: string,
-    body: Record<string, unknown>,
-  ): Promise<TgResponse<T>> {
-    const run = this.sendChain.then(
-      () => this.callWithRetry<T>(method, body),
-      () => this.callWithRetry<T>(method, body),
-    );
-    // Navbatni hech qachon "rejected"da qoldirmaymiz (keyingilar bloklanmasin).
+  /** Navbatga qo'shadi (serial). Rad bo'lgan zanjir keyingilarni bloklamaydi. */
+  private enqueue<T>(fn: () => Promise<T>): Promise<T> {
+    const run = this.sendChain.then(fn, fn);
     this.sendChain = run.then(
       () => undefined,
       () => undefined,
     );
     return run;
+  }
+
+  private sendQueued<T = unknown>(
+    method: string,
+    body: Record<string, unknown>,
+  ): Promise<TgResponse<T>> {
+    return this.enqueue(() =>
+      this.withRetry<T>(() => this.api<T>(method, body, 20_000)),
+    );
+  }
+
+  private sendFileQueued<T = unknown>(
+    method: string,
+    fields: Record<string, string>,
+    fileField: string,
+    buffer: Buffer,
+    fileName: string,
+    mimeType: string,
+  ): Promise<TgResponse<T>> {
+    return this.enqueue(() =>
+      this.withRetry<T>(() =>
+        this.apiMultipart<T>(method, fields, fileField, buffer, fileName, mimeType),
+      ),
+    );
   }
 
   private escapeHtml(s: string): string {
@@ -160,12 +199,6 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
 
   /* ─────────────────── User xabari → GURUHGA ─────────────────── */
 
-  /**
-   * Yangi user xabarini operatorlar guruhiga yuboradi. Rasm/video/hujjat —
-   * HAQIQIY media (sendPhoto/sendVideo/sendDocument), shu sababli operator
-   * guruhda darhol ko'radi. Media yetkazilmasa (katta fayl/URL) — matn+havola
-   * zaxira. Muvaffaqiyatda guruh message_id qaytadi (swipe-reply routing).
-   */
   async notifyNewUserMessage(params: {
     userId: string;
     text?: string | null;
@@ -190,41 +223,68 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
         ],
       };
 
-      // ── Biriktirma: haqiqiy media yuboramiz ──
+      // ── Biriktirma: MinIO'dan bayt o'qib MULTIPART yuboramiz (ishonchli) ──
       if (params.attachmentType && params.attachmentKey) {
+        const caption =
+          `${header}\n📎 ${this.escapeHtml(params.fileName ?? 'fayl')}` +
+          (params.text ? `\n\n${this.escapeHtml(params.text)}` : '');
+        const map: Record<
+          string,
+          { method: string; field: string; max: number }
+        > = {
+          image: {
+            method: 'sendPhoto',
+            field: 'photo',
+            max: TelegramSupportService.MAX_PHOTO,
+          },
+          video: {
+            method: 'sendVideo',
+            field: 'video',
+            max: TelegramSupportService.MAX_FILE,
+          },
+          document: {
+            method: 'sendDocument',
+            field: 'document',
+            max: TelegramSupportService.MAX_FILE,
+          },
+        };
+        const m = map[params.attachmentType] ?? map.document;
+        try {
+          const obj = await this.storage.getObject(
+            BUCKETS.support,
+            params.attachmentKey,
+          );
+          if (obj.body.length <= m.max) {
+            const r = await this.sendFileQueued<{ message_id: number }>(
+              m.method,
+              {
+                chat_id: this.chatId,
+                caption,
+                parse_mode: 'HTML',
+                reply_markup: JSON.stringify(keyboard),
+              },
+              m.field,
+              obj.body,
+              params.fileName ?? 'fayl',
+              obj.contentType,
+            );
+            if (r.ok) return r.result?.message_id ?? null;
+            this.logger.warn(`Media yuborilmadi (${m.method}): ${r.description}`);
+          }
+        } catch (e) {
+          this.logger.warn(`Media o'qib bo'lmadi: ${(e as Error).message}`);
+        }
+        // Zaxira: matn + havola (juda katta yoki xato bo'lsa).
         const base = this.config.get('PUBLIC_BASE_URL', { infer: true });
         const url = `${base}/api/support/attachments/${encodeURIComponent(
           params.attachmentKey,
         )}`;
-        const caption =
-          `${header}\n📎 ${this.escapeHtml(params.fileName ?? 'fayl')}` +
-          (params.text ? `\n\n${this.escapeHtml(params.text)}` : '');
-
-        const map: Record<string, { method: string; field: string }> = {
-          image: { method: 'sendPhoto', field: 'photo' },
-          video: { method: 'sendVideo', field: 'video' },
-          document: { method: 'sendDocument', field: 'document' },
-        };
-        const m = map[params.attachmentType] ?? map.document;
-        const r = await this.sendQueued<{ message_id: number }>(m.method, {
+        const fb = await this.sendQueued<{ message_id: number }>('sendMessage', {
           chat_id: this.chatId,
-          [m.field]: url,
-          caption,
+          text: `${caption}\n<a href="${url}">Faylni ochish</a>`,
           parse_mode: 'HTML',
           reply_markup: keyboard,
         });
-        if (r.ok) return r.result?.message_id ?? null;
-        // Media yetkazilmadi (katta/URL) → matn + havola zaxira.
-        this.logger.warn(`Media yuborilmadi (${m.method}): ${r.description}`);
-        const fb = await this.sendQueued<{ message_id: number }>(
-          'sendMessage',
-          {
-            chat_id: this.chatId,
-            text: `${caption}\n<a href="${url}">Faylni ochish</a>`,
-            parse_mode: 'HTML',
-            reply_markup: keyboard,
-          },
-        );
         return fb.ok ? (fb.result?.message_id ?? null) : null;
       }
 
@@ -290,7 +350,6 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     if (u.callback_query) {
       const cq = u.callback_query;
       const data = cq.data ?? '';
-      // answerCallbackQuery — xom (tezkor, navbatsiz).
       await this.api('answerCallbackQuery', { callback_query_id: cq.id }).catch(
         () => undefined,
       );
@@ -304,7 +363,7 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
         chat_id: this.chatId,
         text:
           `✍️ <b>${this.escapeHtml(user?.name ?? 'Foydalanuvchi')}</b> uchun ` +
-          'javobni SHU XABARGA <i>reply</i> qilib yozing.',
+          'javobni SHU XABARGA <i>reply</i> qilib yozing (matn yoki rasm/fayl).',
         parse_mode: 'HTML',
         reply_markup: { force_reply: true },
       });
@@ -340,7 +399,6 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     const m = u.message;
     if (!m) return;
 
-    // /id — har qanday chatda chat ID'ni qaytaradi (sozlash yordami).
     if (m.text?.trim().startsWith('/id')) {
       await this.sendQueued('sendMessage', {
         chat_id: m.chat.id,
@@ -355,8 +413,6 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     const replyTo = m.reply_to_message?.message_id;
     if (!replyTo) return;
 
-    // Routing: ForceReply prompt'imizga reply → prompt jadvalidan; aks holda
-    // asl murojaat xabariga (bot yuborgan) swipe-reply → tgMessageId.
     let userId: string | null = null;
     const prompt = await this.prisma.supportTgPrompt.findUnique({
       where: { promptMessageId: replyTo },
@@ -372,30 +428,137 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     }
     if (!userId) return; // bizning xabarlarga reply emas — e'tiborsiz
 
-    // Javob bizning xabarimizga, lekin matnsiz (operator rasm/fayl yubordi) —
-    // hozircha faqat MATN javob yetkaziladi; jim yo'qotmasdan operatorni
-    // ogohlantiramiz (media javob keyingi bosqichda qo'shiladi).
     const replyText = (m.text ?? m.caption ?? '').trim();
+    const media = this.extractMedia(m);
+
+    if (media) {
+      await this.deliverOperatorMedia(userId, replyText, media, m.message_id);
+      return;
+    }
     if (!replyText) {
+      // matnsiz, mediasiz reply — hech narsa yetkazmaymiz (e'tiborsiz).
+      return;
+    }
+    await this.deliverOperatorReply(userId, replyText, m.message_id);
+  }
+
+  /** Operator xabaridagi media'ni aniqlaydi (rasm/video/hujjat). */
+  private extractMedia(m: TgMessage): {
+    type: string;
+    fileId: string;
+    fileName: string;
+    mimeType: string;
+  } | null {
+    if (m.photo && m.photo.length > 0) {
+      const largest = m.photo[m.photo.length - 1];
+      return {
+        type: 'image',
+        fileId: largest.file_id,
+        fileName: 'rasm.jpg',
+        mimeType: 'image/jpeg',
+      };
+    }
+    if (m.document) {
+      const mt = m.document.mime_type ?? 'application/octet-stream';
+      const type = mt.startsWith('image/')
+        ? 'image'
+        : mt.startsWith('video/')
+          ? 'video'
+          : 'document';
+      return {
+        type,
+        fileId: m.document.file_id,
+        fileName: m.document.file_name ?? 'fayl',
+        mimeType: mt,
+      };
+    }
+    if (m.video) {
+      return {
+        type: 'video',
+        fileId: m.video.file_id,
+        fileName: m.video.file_name ?? 'video.mp4',
+        mimeType: m.video.mime_type ?? 'video/mp4',
+      };
+    }
+    return null;
+  }
+
+  /** Telegram faylini yuklab oladi (getFile → file_path → download). */
+  private async downloadTelegramFile(fileId: string): Promise<Buffer | null> {
+    const r = await this.api<{ file_path?: string }>(
+      'getFile',
+      { file_id: fileId },
+      20_000,
+    );
+    if (!r.ok || !r.result?.file_path) return null;
+    const fileUrl = `https://api.telegram.org/file/bot${this.token}/${r.result.file_path}`;
+    const res = await fetch(fileUrl, { signal: AbortSignal.timeout(90_000) });
+    if (!res.ok) return null;
+    return Buffer.from(await res.arrayBuffer());
+  }
+
+  /** Operator media javobini yuklab MinIO'ga saqlaydi va user'ga yetkazadi. */
+  private async deliverOperatorMedia(
+    userId: string,
+    text: string,
+    media: { type: string; fileId: string; fileName: string; mimeType: string },
+    operatorTgMessageId: number,
+  ) {
+    const buffer = await this.downloadTelegramFile(media.fileId);
+    if (!buffer) {
       await this.sendQueued('sendMessage', {
         chat_id: this.chatId,
-        text: '⚠️ Hozircha faqat MATN javob yetkaziladi. Iltimos matn yozing.',
-        reply_parameters: { message_id: m.message_id },
+        text: "⚠️ Faylni yuklab bo'lmadi (juda katta bo'lishi mumkin, ~20MB).",
+        reply_parameters: { message_id: operatorTgMessageId },
       });
       return;
     }
-
-    await this.deliverOperatorReply(userId, replyText, m.message_id);
+    const ext = extname(media.fileName) || '';
+    const key = `${userId}_${randomUUID()}${ext}`;
+    try {
+      await this.storage.upload(BUCKETS.support, key, buffer, media.mimeType);
+    } catch (e) {
+      this.logger.warn(`Operator media saqlash xato: ${(e as Error).message}`);
+      await this.sendQueued('sendMessage', {
+        chat_id: this.chatId,
+        text: '⚠️ Faylni saqlashda xatolik.',
+        reply_parameters: { message_id: operatorTgMessageId },
+      });
+      return;
+    }
+    await this.deliverOperatorReply(userId, text || null, operatorTgMessageId, {
+      attachmentKey: key,
+      attachmentType: media.type,
+      fileName: media.fileName,
+      fileSize: buffer.length,
+      mimeType: media.mimeType,
+    });
   }
 
   /** Operator javobini user'ga yetkazadi: DB + WS (DARHOL) + FCM (fonda). */
   private async deliverOperatorReply(
     userId: string,
-    text: string,
+    text: string | null,
     operatorTgMessageId: number,
+    attachment?: {
+      attachmentKey: string;
+      attachmentType: string;
+      fileName: string;
+      fileSize: number;
+      mimeType: string;
+    },
   ) {
     const saved = await this.prisma.supportMessage.create({
-      data: { userId, sender: 'operator', text },
+      data: {
+        userId,
+        sender: 'operator',
+        text: text || null,
+        attachmentKey: attachment?.attachmentKey ?? null,
+        attachmentType: attachment?.attachmentType ?? null,
+        fileName: attachment?.fileName ?? null,
+        fileSize: attachment?.fileSize ?? null,
+        mimeType: attachment?.mimeType ?? null,
+      },
     });
 
     // WS — ilova ochiq bo'lsa DARHOL ko'rinadi (asosiy tezkor yo'l).
@@ -403,14 +566,18 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
       id: saved.id,
       sender: 'operator',
       text: saved.text,
+      attachmentType: saved.attachmentType,
+      attachmentKey: saved.attachmentKey,
+      fileName: saved.fileName,
+      fileSize: saved.fileSize,
+      mimeType: saved.mimeType,
       createdAt: saved.createdAt.toISOString(),
     });
 
-    // FCM push — FONDA (await YO'Q): poll loop'ni bloklamasin, keyingi
-    // javoblar tez kelsin. Ilova yopiq bo'lsa bildirishnoma keladi.
-    void this.sendSupportPush(userId, text);
+    // FCM push — FONDA (poll loop'ni bloklamasin).
+    void this.sendSupportPush(userId, text ?? '📎 Fayl');
 
-    // Guruhda tasdiq — navbat orqali.
+    // Guruhda tasdiq.
     await this.sendQueued('sendMessage', {
       chat_id: this.chatId,
       text: '✅ Yetkazildi',
@@ -455,12 +622,31 @@ interface TgChat {
   title?: string;
 }
 
+interface TgPhotoSize {
+  file_id: string;
+}
+
+interface TgDocument {
+  file_id: string;
+  file_name?: string;
+  mime_type?: string;
+}
+
+interface TgVideo {
+  file_id: string;
+  file_name?: string;
+  mime_type?: string;
+}
+
 interface TgMessage {
   message_id: number;
   chat: TgChat;
   text?: string;
   caption?: string;
   reply_to_message?: { message_id: number };
+  photo?: TgPhotoSize[];
+  document?: TgDocument;
+  video?: TgVideo;
 }
 
 interface TgUpdate {

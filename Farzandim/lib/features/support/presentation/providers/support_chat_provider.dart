@@ -72,8 +72,13 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
   ) : super(const SupportChatState()) {
     _load();
     // Operator javobi (Telegram'dan) DARHOL keladi — backend `support:message`
-    // WS event'ini `user:{id}` room'iga emit qiladi. Polling faqat zaxira.
+    // WS event'ini `user:{id}` room'iga emit qiladi (matn yoki rasm/fayl).
     _wsSub = _socket.eventStream('support:message').listen(_onWsMessage);
+    // Socket qayta ulanganda (uzilishdan keyin) WS'da o'tkazib yuborilgan
+    // javoblar bo'lishi mumkin — darhol server bilan sinxronlaymiz.
+    _connSub = _socket.stateStream.listen((s) {
+      if (s == SocketConnectionState.connected) unawaited(syncFromServer());
+    });
   }
 
   final SupportChatStore _store;
@@ -81,32 +86,25 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
   final SupportMessagesRepository _messagesRepo;
   final SocketClient _socket;
   StreamSubscription<dynamic>? _wsSub;
+  StreamSubscription<SocketConnectionState>? _connSub;
   int _seq = 0;
 
   @override
   void dispose() {
     _wsSub?.cancel();
+    _connSub?.cancel();
     super.dispose();
   }
 
   /// WS orqali kelgan operator xabarini darhol qo'shadi (id bo'yicha dublikatni
-  /// chetlab). Keyingi sync server nusxasini tasdiqlaydi.
+  /// chetlab; rasm/fayl maydonlari ham `fromServer` orqali o'qiladi). Keyingi
+  /// sync server nusxasini tasdiqlaydi.
   void _onWsMessage(dynamic data) {
     if (!mounted || data is! Map) return;
-    final id = data['id'] as String?;
+    final map = Map<String, dynamic>.from(data);
+    final id = map['id'] as String?;
     if (id == null || _find(id) != null) return;
-    _append(
-      SupportMessage(
-        id: id,
-        sender: data['sender'] == 'user'
-            ? SupportSender.user
-            : SupportSender.operator,
-        createdAt:
-            DateTime.tryParse(data['createdAt'] as String? ?? '')?.toLocal() ??
-            DateTime.now(),
-        text: data['text'] as String?,
-      ),
-    );
+    _append(SupportMessage.fromServer(map));
     unawaited(_store.save(state.messages));
   }
 
@@ -138,8 +136,11 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
     }
   }
 
-  /// Server tarixini o'qib lokal holat bilan birlashtiradi.
-  /// Ekran ochiqligida har 10s chaqiriladi (operator javobi shu orqali keladi).
+  /// Server tarixini o'qib lokal holat bilan birlashtiradi (id bo'yicha
+  /// UNION-merge + createdAt bo'yicha tartib). Server haqiqat manbasi, lekin
+  /// hali serverga yetmagan lokal xabarlar (WS, sending, failed) SAQLANADI —
+  /// aks holda WS bilan kelgan javob poyga'da tushib qolardi ("ba'zida matn
+  /// kelmaydi" muammosi).
   Future<void> syncFromServer() async {
     final List<SupportMessage> server;
     try {
@@ -150,35 +151,27 @@ class SupportChatNotifier extends StateNotifier<SupportChatState> {
     }
     if (!mounted) return;
 
-    // Transient preview (bytes/filePath) joriy holatdan ko'chiriladi —
-    // server ularni saqlamaydi, sync rasm preview'ni o'chirib yubormasin.
-    final current = {for (final m in state.messages) m.id: m};
-    final merged = <SupportMessage>[
-      for (final s in server)
-        (current[s.id] != null &&
-                (current[s.id]!.bytes != null ||
-                    current[s.id]!.filePath != null))
-            ? s.copyWith(
-                bytes: current[s.id]!.bytes,
-                filePath: current[s.id]!.filePath,
-              )
-            : s,
-    ];
-    final serverIds = {for (final s in server) s.id};
-    // Hali serverga yetmagan lokal xabarlar (sending/failed) oxirida qoladi.
-    final pending = state.messages
-        .where(
-          (m) =>
-              !serverIds.contains(m.id) &&
-              m.status != SupportSendStatus.sent &&
-              m.id != 'welcome',
-        )
-        .toList();
-    merged.addAll(pending);
-    if (merged.isEmpty && state.messages.isNotEmpty) {
-      // Server bo'sh — lokal welcome saqlanadi.
-      return;
+    final byId = <String, SupportMessage>{};
+    // Avval lokal — WS/pending xabarlar va transient preview saqlanadi.
+    for (final m in state.messages) {
+      byId[m.id] = m;
     }
+    // Server ustun (haqiqat manbasi) — transient preview (bytes/filePath)
+    // ko'chiriladi (server ularni saqlamaydi).
+    for (final s in server) {
+      final local = byId[s.id];
+      byId[s.id] =
+          (local != null && (local.bytes != null || local.filePath != null))
+          ? s.copyWith(bytes: local.bytes, filePath: local.filePath)
+          : s;
+    }
+
+    final hasReal = byId.length > 1 || !byId.containsKey('welcome');
+    final merged =
+        byId.values.where((m) => !(m.id == 'welcome' && hasReal)).toList()
+          ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+
+    if (merged.isEmpty) return; // welcome'ni o'chirib yubormaymiz
     state = state.copyWith(messages: merged);
     await _store.save(state.messages);
   }
