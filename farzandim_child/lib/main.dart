@@ -31,6 +31,21 @@ import 'package:just_audio_background/just_audio_background.dart';
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
+  // ── Global xato tutqichlari (crash himoyasi) ──────────────────────
+  // Ba'zi qurilmalarda (ayniqsa Xiaomi/MIUI) ushlanmagan Flutter yoki
+  // async xato platformaga o'tib butun ilovani yopib qo'yardi
+  // ("ilovadan chiqib ketyapti"). Quyidagilar bunday xatolarni tutib,
+  // log qiladi va `true` qaytarib platformaga o'tkazmaydi — ilova
+  // ekranda qoladi (oq/qora crash o'rniga).
+  FlutterError.onError = (FlutterErrorDetails details) {
+    FlutterError.presentError(details);
+    debugPrint('[GLOBAL FlutterError] ${details.exceptionAsString()}');
+  };
+  WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+    debugPrint('[GLOBAL PlatformDispatcher] $error\n$stack');
+    return true; // xato "handled" — ilova crash bo'lmaydi
+  };
+
   // Google Fonts runtime fetching — web'da CORS/network bilan xato bersa
   // butun frame fail bo'ladi. Asset/bundled font yo'q bo'lsa system default
   // (Roboto) ishlatamiz. Mobil'da ham xavfsiz: offline holatda crash yo'q.
