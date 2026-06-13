@@ -123,7 +123,7 @@ export class VideosService {
         categoryId: dto.categoryId ?? null,
         planRequired: dto.planRequired ?? 'free',
         level: dto.level ?? null,
-        status: dto.status ?? 'hidden',
+        status: dto.status ?? 'approved',
         featured: dto.featured ?? false,
       },
     });
@@ -271,7 +271,7 @@ export class VideosService {
         categoryId: meta.categoryId ?? null,
         planRequired: meta.planRequired ?? 'free',
         level: meta.level ?? null,
-        status: meta.status ?? 'hidden',
+        status: meta.status ?? 'approved',
         featured: meta.featured ?? false,
       },
     });

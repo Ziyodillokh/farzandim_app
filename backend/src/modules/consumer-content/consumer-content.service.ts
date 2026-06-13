@@ -10,11 +10,14 @@ import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
+// Tarif darajalari (past -> baland). Obuna shu rankdan past yoki teng
+// kontentni ko'radi. Slug'lar entitlementTier va planRequired DTO bilan
+// bir xil: free/standard/premium/vip.
 const PLAN_RANK: Record<string, number> = {
   free: 0,
-  basic: 1,
-  standard: 2,
-  premium: 3,
+  standard: 1,
+  premium: 2,
+  vip: 3,
 };
 
 interface ChildContext {

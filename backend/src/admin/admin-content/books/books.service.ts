@@ -106,7 +106,7 @@ export class BooksService {
         ageTo: dto.ageTo ?? 18,
         category: dto.category ?? 'school',
         planRequired: dto.planRequired ?? 'free',
-        status: dto.status ?? 'hidden',
+        status: dto.status ?? 'approved',
       },
     });
     return this.rowOf(created);
@@ -253,7 +253,7 @@ export class BooksService {
         ageTo: meta.ageTo ?? 18,
         category: meta.category ?? 'school',
         planRequired: meta.planRequired ?? 'free',
-        status: meta.status ?? 'hidden',
+        status: meta.status ?? 'approved',
       },
     });
     return {

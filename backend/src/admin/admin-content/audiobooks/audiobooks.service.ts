@@ -119,7 +119,7 @@ export class AudiobooksService {
         ageTo: dto.ageTo ?? 18,
         categoryId: dto.categoryId ?? null,
         planRequired: dto.planRequired ?? 'free',
-        status: dto.status ?? 'hidden',
+        status: dto.status ?? 'approved',
       },
     });
     return this.rowOf(created);
@@ -269,7 +269,7 @@ export class AudiobooksService {
         ageTo: meta.ageTo ?? 18,
         categoryId: meta.categoryId ?? null,
         planRequired: meta.planRequired ?? 'free',
-        status: meta.status ?? 'hidden',
+        status: meta.status ?? 'approved',
       },
     });
     return {
