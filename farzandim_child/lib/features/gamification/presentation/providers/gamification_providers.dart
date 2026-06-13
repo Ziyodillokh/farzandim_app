@@ -6,11 +6,11 @@
 // `gamificationProfileProvider`    — bola profile (StreamProvider)
 // `recentXpEventsProvider`         — oxirgi 20 ta XP event (Stream)
 //
-// Sprint 5.x: Firestore → Backend REST migratsiya jarayoni. Hozircha
-// Firestore stream'lari `handleError` bilan o'ralgan — permission-denied
-// yoki tarmoq xatosida UI crash bo'lmaydi, default empty profile/event
-// qaytariladi. Keyingi commitda backend `GET /children/:id/gamification`
-// endpoint'iga ko'chirilishi rejalashtirilgan.
+// MUHIM: har ikkala stream DARHOL default qiymat (empty profile / bo'sh
+// ro'yxat) emit qiladi — shunda UI hech qachon "skeleton"da osilib qolmaydi.
+// Firestore (dev-stub) ishlamasa yoki permission-denied bersa ham ekran
+// default ma'lumot bilan ochiladi. Firestore javob bersa — ustiga yangilanadi.
+// Sprint 5.x: backend `GET /children/:id/gamification`ga ko'chirish rejada.
 
 import 'dart:async';
 
@@ -26,17 +26,26 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 final xpServiceProvider = Provider<XpService>((ref) => XpService());
 
 /// Bola gamifikatsiya profili — real-time stream.
-/// Pair bo'lmagan paytda hech narsa qaytarmaydi.
+/// Darhol `empty()` emit qiladi → UI bloklanmaydi. Firestore javobi kelsa
+/// ustiga yoziladi; xato (permission-denied) bo'lsa default saqlanadi.
 final gamificationProfileProvider =
     StreamProvider<GamificationProfile>((ref) {
   final pairing = ref.watch(pairingStateProvider);
   final parentUid = pairing.parentUid;
   final childId = pairing.childId;
+
+  final controller = StreamController<GamificationProfile>();
+  // 1) Darhol default — ekran shu zahoti ochiladi.
+  controller.add(GamificationProfile.empty());
+
   if (parentUid == null || childId == null) {
-    return Stream.value(GamificationProfile.empty());
+    ref.onDispose(controller.close);
+    return controller.stream;
   }
 
-  return FirebaseFirestore.instance
+  // 2) Firestore'dan real-time yangilanish (kelса). Xato → e'tiborsiz,
+  //    default qiymat saqlanadi.
+  final sub = FirebaseFirestore.instance
       .collection('users')
       .doc(parentUid)
       .collection('children')
@@ -44,31 +53,41 @@ final gamificationProfileProvider =
       .collection('profile')
       .doc('gamification')
       .snapshots()
-      .map((snap) {
-        if (!snap.exists) return GamificationProfile.empty();
-        return GamificationProfile.fromFirestore(snap);
-      })
-      // Firestore permission-denied yoki tarmoq xato → UI crash bo'lmasin.
-      // Empty profile sink'ga emit qilamiz → AsyncValue.data(empty) keladi.
-      .transform(StreamTransformer<GamificationProfile,
-              GamificationProfile>.fromHandlers(
-        handleError: (error, _, sink) {
-          debugPrint('gamificationProfile: Firestore error: $error → empty');
-          sink.add(GamificationProfile.empty());
-        },
-      ));
+      .listen(
+    (snap) {
+      if (controller.isClosed) return;
+      controller.add(snap.exists
+          ? GamificationProfile.fromFirestore(snap)
+          : GamificationProfile.empty());
+    },
+    onError: (Object error) {
+      debugPrint('gamificationProfile: Firestore error: $error (default saqlanadi)');
+    },
+  );
+
+  ref.onDispose(() {
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
 });
 
 /// Oxirgi 20 ta XP event — Profile ekrandagi tarix bo'limi uchun.
+/// Darhol bo'sh ro'yxat emit qiladi → UI bloklanmaydi.
 final recentXpEventsProvider = StreamProvider<List<XpEvent>>((ref) {
   final pairing = ref.watch(pairingStateProvider);
   final parentUid = pairing.parentUid;
   final childId = pairing.childId;
+
+  final controller = StreamController<List<XpEvent>>();
+  controller.add(const <XpEvent>[]);
+
   if (parentUid == null || childId == null) {
-    return Stream.value(const <XpEvent>[]);
+    ref.onDispose(controller.close);
+    return controller.stream;
   }
 
-  return FirebaseFirestore.instance
+  final sub = FirebaseFirestore.instance
       .collection('users')
       .doc(parentUid)
       .collection('children')
@@ -77,11 +96,19 @@ final recentXpEventsProvider = StreamProvider<List<XpEvent>>((ref) {
       .orderBy('createdAt', descending: true)
       .limit(20)
       .snapshots()
-      .map((snap) => snap.docs.map(XpEvent.fromFirestore).toList())
-      .transform(StreamTransformer<List<XpEvent>, List<XpEvent>>.fromHandlers(
-        handleError: (error, _, sink) {
-          debugPrint('recentXpEvents: Firestore error: $error → empty');
-          sink.add(const <XpEvent>[]);
-        },
-      ));
+      .listen(
+    (snap) {
+      if (controller.isClosed) return;
+      controller.add(snap.docs.map(XpEvent.fromFirestore).toList());
+    },
+    onError: (Object error) {
+      debugPrint('recentXpEvents: Firestore error: $error (bo\'sh saqlanadi)');
+    },
+  );
+
+  ref.onDispose(() {
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
 });

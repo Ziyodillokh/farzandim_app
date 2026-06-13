@@ -11,6 +11,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 
 typedef ChildKey = ({String parentUid, String childId});
@@ -46,21 +47,27 @@ final parentInfoProvider =
   return null;
 });
 
-/// Bola rasmi signed URL — Parent App'dan POST `/children/:id/avatar`
-/// bilan yuklangan. Backend `GET /:id/avatar` signed URL qaytaradi
-/// (1 soat amal qiladi). UI uchun cache provider — qaytadan chaqirish
-/// uchun `ref.invalidate(childAvatarUrlProvider(childId))`.
+/// Bola rasmi URL — Parent App yoki bola o'zi yuklagan
+/// (`POST /children/:id/avatar` yoki `/children/me/avatar`).
 ///
-/// Sprint 4.4.29: dashboard top header'da ko'rsatish uchun.
+/// Avval `GET /:id/avatar` orqali rasm BORLIGINI tekshiramiz (404 → yo'q).
+/// Rasm bo'lsa, MinIO signed URL o'rniga ICHKI PROXY URL'ni qaytaramiz:
+///   GET /children/:id/avatar/image  (ommaviy, backend MinIO'dan stream qiladi)
+/// Bu web va telefon'da bir xil ishlaydi — signed URL'ning MinIO host
+/// reachability muammosi (127.0.0.1:9000 telefon'dan ko'rinmaydi) bartaraf.
+///
+/// `?t=` cache-bust — rasm yangilangach `ref.invalidate` qilinsa, Image
+/// keshdan emas, yangi rasmni yuklaydi.
+///
 /// 404 (photo yo'q) → null → fallback Icon.person.
 final childAvatarUrlProvider =
     FutureProvider.family<String?, String>((ref, childId) async {
   final dio = ref.watch(dioClientProvider);
   try {
-    final response = await dio.get<Map<String, dynamic>>(
-      '/children/$childId/avatar',
-    );
-    return response.data?['url'] as String?;
+    // Rasm mavjudligini tekshirish (auth bilan). 404 → DioException → null.
+    await dio.get<Map<String, dynamic>>('/children/$childId/avatar');
+    final bust = DateTime.now().millisecondsSinceEpoch;
+    return '${EnvConfig.apiUrl}/children/$childId/avatar/image?t=$bust';
   } on DioException {
     return null;
   }

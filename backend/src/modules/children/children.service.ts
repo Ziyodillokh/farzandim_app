@@ -18,6 +18,7 @@ import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { UpdateInterestsDto } from './dto/update-interests.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 
 const ALLOWED_AVATAR_MIMES = [
   'image/jpeg',
@@ -350,6 +351,64 @@ export class ChildrenService {
   }
 
   /* ------------------------------------------------------------------ */
+  /*  PUT /children/me — bola O'ZINI tahrirlaydi (name/age/region)        */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Bola Account Edit ekranida o'z ism/yosh/hududini yangilaydi.
+   * `userId` — CHILD JWT'dagi User id; undan `childUserId` orqali Child
+   * topiladi. Ota-onaga tegishli sozlamalarga (blockAllApps, ...) tegmaydi.
+   */
+  async updateMe(
+    userId: string,
+    dto: UpdateMyProfileDto,
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+    });
+    if (!child) {
+      throw new NotFoundException('Bola yozuvi topilmadi');
+    }
+
+    const data: Record<string, unknown> = {};
+    if (dto.name !== undefined) data.name = dto.name;
+    if (dto.age !== undefined) data.age = dto.age;
+    if (dto.region !== undefined) data.region = dto.region;
+
+    const updated = await this.prisma.child.update({
+      where: { id: child.id },
+      data,
+    });
+
+    await this.audit.log(userId, 'child', 'UPDATE', child.id, data, reqMeta);
+
+    return updated;
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /children/me/avatar — bola O'Z rasmini yuklaydi                */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Bola o'z profil rasmini yuklaydi (CHILD JWT). `childUserId` orqali
+   * Child topiladi va umumiy `storeAvatar` helper bilan MinIO'ga saqlanadi.
+   */
+  async uploadMyAvatar(
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; originalname: string },
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const child = await this.prisma.child.findFirst({
+      where: { childUserId: userId },
+    });
+    if (!child) {
+      throw new NotFoundException('Bola yozuvi topilmadi');
+    }
+    return this.storeAvatar(child, userId, file, reqMeta);
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  DELETE /children/:id                                               */
   /* ------------------------------------------------------------------ */
 
@@ -444,7 +503,20 @@ export class ChildrenService {
     if (child.parentId !== userId) {
       throw new ForbiddenException('Only parent can update avatar');
     }
+    return this.storeAvatar(child, userId, file, reqMeta);
+  }
 
+  /**
+   * Avatarni MinIO'ga saqlab `photoPath`'ni yangilaydi. Egalik tekshiruvi
+   * chaqiruvchida bajariladi (ota-ona `uploadAvatar`, bola `uploadMyAvatar`).
+   * `child` — DB'dan olingan to'liq yozuv (id + eski photoPath kerak).
+   */
+  private async storeAvatar(
+    child: { id: string; photoPath: string | null },
+    userId: string,
+    file: { buffer: Buffer; mimetype: string; originalname: string },
+    reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
     if (!ALLOWED_AVATAR_MIMES.includes(file.mimetype)) {
       throw new UnsupportedMediaTypeException('Unsupported image format');
     }
@@ -454,7 +526,7 @@ export class ChildrenService {
     }
 
     const ext = file.originalname.split('.').pop() || 'jpg';
-    const storagePath = `child-avatars/${id}.${ext}`;
+    const storagePath = `child-avatars/${child.id}.${ext}`;
 
     await this.storage.upload(BUCKETS.avatars, storagePath, file.buffer, file.mimetype);
 
@@ -468,7 +540,7 @@ export class ChildrenService {
     }
 
     const updated = await this.prisma.child.update({
-      where: { id },
+      where: { id: child.id },
       data: { photoPath: storagePath },
     });
 
@@ -476,7 +548,7 @@ export class ChildrenService {
       userId,
       'child',
       'UPLOAD',
-      id,
+      child.id,
       { field: 'avatar', storagePath },
       reqMeta,
     );

@@ -10,6 +10,7 @@ import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/account/presentation/widgets/age_list_dialog.dart';
@@ -59,7 +60,14 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     _nameController.text = (childData['name'] as String?) ?? '';
     _selectedAge = childData['age'] as int?;
     _selectedRegion = childData['region'] as String?;
-    _existingPhotoUrl = childData['photoUrl'] as String?;
+    // Backend `photoPath` saqlaydi (URL emas). Mavjud rasmni ommaviy proxy
+    // orqali ko'rsatamiz: GET /children/:id/avatar/image.
+    final childId = childData['id'] as String?;
+    final photoPath = childData['photoPath'] as String?;
+    final bust = DateTime.now().millisecondsSinceEpoch;
+    _existingPhotoUrl = (childId != null && photoPath != null)
+        ? '${EnvConfig.apiUrl}/children/$childId/avatar/image?t=$bust'
+        : null;
   }
 
   Future<void> _pickPhoto() async {
@@ -124,24 +132,26 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
 
     try {
       final repo = ref.read(childRepositoryProvider);
-      String? photoUrl = _existingPhotoUrl;
 
+      // Avval rasm (tanlangan bo'lsa) — backend photoPath'ni yangilaydi.
       if (_selectedPhotoBytes != null) {
-        photoUrl = await repo.uploadChildPhoto(
-          parentUid: pairing.parentUid!,
-          childId: pairing.childId!,
-          bytes: _selectedPhotoBytes!,
-        );
+        await repo.uploadMyAvatar(bytes: _selectedPhotoBytes!);
       }
 
-      await repo.updateChildProfile(
-        parentUid: pairing.parentUid!,
-        childId: pairing.childId!,
+      // Keyin ism/yosh/hudud.
+      await repo.updateMyProfile(
         name: name,
         age: _selectedAge,
         region: _selectedRegion,
-        photoUrl: photoUrl,
       );
+
+      // Dashboard/header keshlarini yangilash — yangi ma'lumot va rasm
+      // darhol ko'rinsin.
+      ref.invalidate(childDataStreamProvider((
+        parentUid: pairing.parentUid!,
+        childId: pairing.childId!,
+      )));
+      ref.invalidate(childAvatarUrlProvider(pairing.childId!));
 
       if (!mounted) return;
       _showSnack('account.savedSnack'.tr(), AppColors.success);

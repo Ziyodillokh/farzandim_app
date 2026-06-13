@@ -30,6 +30,7 @@ import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
 import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { UpdateInterestsDto } from './dto/update-interests.dto';
+import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
 import { CurrentUser, Roles, Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -158,6 +159,64 @@ export class ChildrenController {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
+  }
+
+  // Diqqat: `me` `:id` dan OLDIN — bola o'z profilini (ism/yosh/hudud)
+  // tahrirlaydi. Account Edit ekrani shu endpoint'ni chaqiradi.
+  @Put('me')
+  @Roles('CHILD')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Joriy bola o\'z profilini yangilaydi (ism/yosh/hudud)' })
+  @ApiResponse({ status: 200, description: 'Yangilangan bola ma\'lumoti' })
+  @ApiResponse({ status: 404, description: 'Bola yozuvi topilmadi' })
+  async updateMe(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: UpdateMyProfileDto,
+    @Req() req: Request,
+  ) {
+    return this.childrenService.updateMe(user.userId, dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  // Bola o'z profil rasmini yuklaydi (MinIO). `me/avatar` `:id/avatar` dan oldin.
+  @Post('me/avatar')
+  @Roles('CHILD')
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: { type: 'string', format: 'binary' },
+      },
+    },
+  })
+  @ApiOperation({ summary: 'Joriy bola o\'z rasmini yuklaydi (max 5 MB)' })
+  @ApiResponse({ status: 200, description: 'Rasm yuklandi, photoPath yangilandi' })
+  @ApiResponse({ status: 413, description: 'Fayl juda katta' })
+  @ApiResponse({ status: 415, description: 'Qo\'llab-quvvatlanmaydigan format' })
+  async uploadMyAvatar(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    const data = await (req as unknown as MultipartRequest).file();
+    if (!data) {
+      throw new BadRequestException('No file uploaded');
+    }
+    const buffer = await data.toBuffer();
+    return this.childrenService.uploadMyAvatar(
+      user.userId,
+      {
+        buffer,
+        mimetype: data.mimetype,
+        originalname: data.filename,
+      },
+      {
+        ip: req.ip,
+        headers: req.headers as Record<string, string | string[] | undefined>,
+      },
+    );
   }
 
   @Put(':id')
