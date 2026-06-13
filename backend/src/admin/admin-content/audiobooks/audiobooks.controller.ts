@@ -1,20 +1,6 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UploadedFiles,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
+import { parseMultipart } from '../../../common/helpers/multipart';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBody,
   ApiConsumes,
@@ -75,12 +61,6 @@ export class AudiobooksController {
    */
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'audioFile', maxCount: 1 },
-      { name: 'thumbnailFile', maxCount: 1 },
-    ]),
-  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -92,18 +72,14 @@ export class AudiobooksController {
       },
     },
   })
-  @ApiOperation({ summary: 'Upload audio + optional thumbnail to MinIO' })
-  async upload(
-    @UploadedFiles()
-    files: {
-      audioFile?: Express.Multer.File[];
-      thumbnailFile?: Express.Multer.File[];
-    },
-    @Body('metadata') metadata?: string,
-  ) {
-    const audio = files?.audioFile?.[0];
-    const thumb = files?.thumbnailFile?.[0];
+  @ApiOperation({ summary: 'Upload to MinIO (Fastify multipart)' })
+  async upload(@Req() req: FastifyRequest) {
+    // Fastify multipart — Multer Fastify ostida ishlamaydi (helper'ga qara).
+    const { files, fields } = await parseMultipart(req);
+    const audio = files.audioFile;
+    const thumb = files.thumbnailFile ?? null;
     if (!audio) throw new BadRequestException('audioFile field required');
+    const metadata = fields.metadata;
     if (!metadata) throw new BadRequestException('metadata field required');
     let meta: any;
     try {
@@ -111,21 +87,7 @@ export class AudiobooksController {
     } catch {
       throw new BadRequestException('Invalid metadata JSON');
     }
-    return this.service.upload(
-      {
-        buffer: audio.buffer,
-        mimetype: audio.mimetype,
-        originalname: audio.originalname,
-      },
-      thumb
-        ? {
-            buffer: thumb.buffer,
-            mimetype: thumb.mimetype,
-            originalname: thumb.originalname,
-          }
-        : null,
-      meta,
-    );
+    return this.service.upload(audio, thumb, meta);
   }
 
   /**

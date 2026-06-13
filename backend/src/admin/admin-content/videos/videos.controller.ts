@@ -1,20 +1,6 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UploadedFiles,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
+import { parseMultipart } from '../../../common/helpers/multipart';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBody,
   ApiConsumes,
@@ -83,12 +69,6 @@ export class VideosController {
    */
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'videoFile', maxCount: 1 },
-      { name: 'thumbnailFile', maxCount: 1 },
-    ]),
-  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -100,18 +80,14 @@ export class VideosController {
       },
     },
   })
-  @ApiOperation({ summary: 'Upload a video + optional thumbnail to MinIO' })
-  async upload(
-    @UploadedFiles()
-    files: {
-      videoFile?: Express.Multer.File[];
-      thumbnailFile?: Express.Multer.File[];
-    },
-    @Body('metadata') metadata?: string,
-  ) {
-    const video = files?.videoFile?.[0];
-    const thumb = files?.thumbnailFile?.[0];
+  @ApiOperation({ summary: 'Upload to MinIO (Fastify multipart)' })
+  async upload(@Req() req: FastifyRequest) {
+    // Fastify multipart — Multer Fastify ostida ishlamaydi (helper'ga qara).
+    const { files, fields } = await parseMultipart(req);
+    const video = files.videoFile;
+    const thumb = files.thumbnailFile ?? null;
     if (!video) throw new BadRequestException('videoFile field required');
+    const metadata = fields.metadata;
     if (!metadata) throw new BadRequestException('metadata field required');
     let meta: any;
     try {
@@ -119,21 +95,7 @@ export class VideosController {
     } catch {
       throw new BadRequestException('Invalid metadata JSON');
     }
-    return this.service.upload(
-      {
-        buffer: video.buffer,
-        mimetype: video.mimetype,
-        originalname: video.originalname,
-      },
-      thumb
-        ? {
-            buffer: thumb.buffer,
-            mimetype: thumb.mimetype,
-            originalname: thumb.originalname,
-          }
-        : null,
-      meta,
-    );
+    return this.service.upload(video, thumb, meta);
   }
 
   /**

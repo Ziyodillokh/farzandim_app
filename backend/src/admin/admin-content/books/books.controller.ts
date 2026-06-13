@@ -1,20 +1,6 @@
-import {
-  BadRequestException,
-  Body,
-  Controller,
-  Delete,
-  Get,
-  HttpCode,
-  HttpStatus,
-  Param,
-  Patch,
-  Post,
-  Query,
-  UploadedFiles,
-  UseGuards,
-  UseInterceptors,
-} from '@nestjs/common';
-import { FileFieldsInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
+import { parseMultipart } from '../../../common/helpers/multipart';
+import { BadRequestException, Body, Controller, Delete, Get, HttpCode, HttpStatus, Param, Patch, Post, Query, Req, UseGuards } from '@nestjs/common';
 import {
   ApiBody,
   ApiConsumes,
@@ -75,12 +61,6 @@ export class BooksController {
    */
   @Post('upload')
   @HttpCode(HttpStatus.CREATED)
-  @UseInterceptors(
-    FileFieldsInterceptor([
-      { name: 'pdfFile', maxCount: 1 },
-      { name: 'coverFile', maxCount: 1 },
-    ]),
-  )
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -92,18 +72,14 @@ export class BooksController {
       },
     },
   })
-  @ApiOperation({ summary: 'Upload PDF + optional cover to MinIO' })
-  async upload(
-    @UploadedFiles()
-    files: {
-      pdfFile?: Express.Multer.File[];
-      coverFile?: Express.Multer.File[];
-    },
-    @Body('metadata') metadata?: string,
-  ) {
-    const pdf = files?.pdfFile?.[0];
-    const cover = files?.coverFile?.[0];
+  @ApiOperation({ summary: 'Upload to MinIO (Fastify multipart)' })
+  async upload(@Req() req: FastifyRequest) {
+    // Fastify multipart — Multer Fastify ostida ishlamaydi (helper'ga qara).
+    const { files, fields } = await parseMultipart(req);
+    const pdf = files.pdfFile;
+    const cover = files.coverFile ?? null;
     if (!pdf) throw new BadRequestException('pdfFile field required');
+    const metadata = fields.metadata;
     if (!metadata) throw new BadRequestException('metadata field required');
     let meta: any;
     try {
@@ -111,21 +87,7 @@ export class BooksController {
     } catch {
       throw new BadRequestException('Invalid metadata JSON');
     }
-    return this.service.upload(
-      {
-        buffer: pdf.buffer,
-        mimetype: pdf.mimetype,
-        originalname: pdf.originalname,
-      },
-      cover
-        ? {
-            buffer: cover.buffer,
-            mimetype: cover.mimetype,
-            originalname: cover.originalname,
-          }
-        : null,
-      meta,
-    );
+    return this.service.upload(pdf, cover, meta);
   }
 
   @Patch(':id')
