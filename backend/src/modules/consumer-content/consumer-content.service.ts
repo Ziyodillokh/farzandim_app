@@ -337,6 +337,21 @@ export class ConsumerContentService {
     }
   }
 
+  // Player aniqlagan haqiqiy davomiylikni yozadi — FAQAT hozir noma'lum
+  // (null yoki 0) bo'lsa. Link orqali qo'shilgan YouTube videolari uchun:
+  // admin duration kiritmaydi, bola ko'rganda player o'zi to'g'rilab beradi.
+  // updateMany shart bilan — admin kiritgan qiymatni hech qachon bosmaydi.
+  async reportVideoDuration(id: string, durationSec: number) {
+    const res = await this.prisma.video.updateMany({
+      where: {
+        id,
+        OR: [{ durationSec: null }, { durationSec: 0 }],
+      },
+      data: { durationSec: Math.round(durationSec) },
+    });
+    return { ok: true, updated: res.count };
+  }
+
   async recordVideoLike(id: string) {
     try {
       const updated = await this.prisma.video.update({

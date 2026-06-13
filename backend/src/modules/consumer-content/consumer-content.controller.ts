@@ -1,4 +1,5 @@
 import {
+  Body,
   Controller,
   Get,
   Post,
@@ -13,6 +14,7 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ConsumerContentService } from './consumer-content.service';
 import { PaginationDto } from './dto/pagination.dto';
 import { CategoriesQueryDto } from './dto/categories-query.dto';
+import { ReportDurationDto } from './dto/report-duration.dto';
 
 @ApiTags('Consumer Content')
 @ApiBearerAuth()
@@ -76,6 +78,15 @@ export class ConsumerContentController {
   @ApiOperation({ summary: 'Record a video view' })
   recordVideoView(@Param('id') id: string) {
     return this.service.recordVideoView(id);
+  }
+
+  @Post('videos/:id/duration')
+  @ApiOperation({ summary: 'Report real video duration (sets only if unknown)' })
+  reportVideoDuration(
+    @Param('id') id: string,
+    @Body() dto: ReportDurationDto,
+  ) {
+    return this.service.reportVideoDuration(id, dto.durationSec);
   }
 
   @Post('videos/:id/like')
