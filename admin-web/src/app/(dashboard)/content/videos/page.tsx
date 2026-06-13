@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus } from 'lucide-react';
+import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus, Link as LinkIcon } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +17,7 @@ import { ContentStatusBadge } from '@/components/common/status-badge';
 import { DataPagination } from '@/components/common/data-pagination';
 import { EmptyState } from '@/components/common/empty-state';
 import { VideoUploadModal } from '@/components/content/video-upload-modal';
+import { VideoLinkModal } from '@/components/content/video-link-modal';
 import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatDuration, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
@@ -34,6 +35,7 @@ export default function VideosPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [linkOpen, setLinkOpen] = useState(false);
   const limit = 12;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -67,15 +69,26 @@ export default function VideosPage() {
         title="Videolar"
         count={data?.total}
         actions={
-          <Button onClick={() => setUploadOpen(true)}>
-            <Plus className="h-4 w-4" /> Video qo&apos;shish
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setLinkOpen(true)}>
+              <LinkIcon className="h-4 w-4" /> Link orqali
+            </Button>
+            <Button onClick={() => setUploadOpen(true)}>
+              <Plus className="h-4 w-4" /> Fayl yuklash
+            </Button>
+          </div>
         }
       />
 
       <VideoUploadModal
         open={uploadOpen}
         onOpenChange={setUploadOpen}
+        onSuccess={invalidate}
+      />
+
+      <VideoLinkModal
+        open={linkOpen}
+        onOpenChange={setLinkOpen}
         onSuccess={invalidate}
       />
 
