@@ -80,7 +80,7 @@ export function VideoUploadModal({
         ageTo: Number(ageTo),
         planRequired,
         categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
-        status: 'pending' as const,
+        status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
         featured: false,
       };
       return contentApi.videos.upload(videoFile, metadata, thumbnailFile, setProgress);

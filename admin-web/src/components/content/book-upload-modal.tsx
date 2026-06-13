@@ -82,7 +82,7 @@ export function BookUploadModal({
         ageTo: Number(ageTo),
         category,
         planRequired,
-        status: 'pending' as const,
+        status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
       };
       return contentApi.books.upload(pdfFile, metadata, coverFile, setProgress);
     },

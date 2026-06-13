@@ -91,7 +91,7 @@ export function AudiobookUploadModal({
         categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
         partsCount: Number(partsCount) || 1,
         pointsReward: Number(pointsReward) || 0,
-        status: 'pending' as const,
+        status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
       };
       return contentApi.audiobooks.upload(audioFile, metadata, thumbnailFile, setProgress);
     },
