@@ -335,7 +335,10 @@ export class ConsumerContentService {
   // @Public content media proxy — xom signed MinIO URL telefonga yetmaydi,
   // shuning uchun baytlarni backend orqali stream qilamiz (voice/video media
   // bilan bir xil). `file` — storageKey'ning oxirgi qismi (uuid.ext).
-  async streamContentMedia(segment: string, file: string) {
+  private resolveMediaKey(
+    segment: string,
+    file: string,
+  ): { bucket: BucketName; key: string } {
     if (file.includes('/') || file.includes('..')) {
       throw new BadRequestException('Invalid media key');
     }
@@ -348,7 +351,13 @@ export class ConsumerContentService {
     };
     const m = map[segment as MediaSegment];
     if (!m) throw new NotFoundException('Media not found');
-    return this.storage.getObject(m.bucket, m.prefix + file);
+    return { bucket: m.bucket, key: m.prefix + file };
+  }
+
+  // Range-aware media stream (audio/video seek + M4A moov uchun shart).
+  async getMediaStream(segment: string, file: string, range?: string) {
+    const { bucket, key } = this.resolveMediaKey(segment, file);
+    return this.storage.getObjectStream(bucket, key, range);
   }
 
   async recordVideoLike(id: string) {

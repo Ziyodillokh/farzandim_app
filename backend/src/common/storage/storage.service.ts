@@ -108,6 +108,33 @@ export class StorageService implements OnModuleInit {
   }
 
   /**
+   * Obyektni STREAM sifatida qaytaradi, HTTP Range qo'llab-quvvatlaydi.
+   * Audio/video uchun zarur: ExoPlayer (just_audio) M4A/MP4 moov atom'ni
+   * o'qish va seek uchun Range so'rovlari yuboradi — Range bo'lmasa player
+   * 0:00 da qotadi. `range` berilsa MinIO 206 (ContentRange bilan) qaytaradi.
+   */
+  async getObjectStream(
+    bucket: BucketName,
+    key: string,
+    range?: string,
+  ): Promise<{
+    stream: NodeJS.ReadableStream;
+    contentType: string;
+    contentLength?: number;
+    contentRange?: string;
+  }> {
+    const res = await this.s3.send(
+      new GetObjectCommand({ Bucket: bucket, Key: key, Range: range }),
+    );
+    return {
+      stream: res.Body as unknown as NodeJS.ReadableStream,
+      contentType: res.ContentType ?? 'application/octet-stream',
+      contentLength: res.ContentLength,
+      contentRange: res.ContentRange,
+    };
+  }
+
+  /**
    * Ensure all required buckets exist. Idempotent.
    */
   async ensureBuckets(): Promise<void> {
