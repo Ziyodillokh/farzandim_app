@@ -129,10 +129,10 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     return (await res.json()) as TgResponse<T>;
   }
 
-  /** Berilgan yuborishni 429 (flood) + tarmoq xatosida qayta uradi. */
+  /** Berilgan yuborishni 429 (flood) + tarmoq xatosida qayta uradi (5 marta). */
   private async withRetry<T = unknown>(
     fn: () => Promise<TgResponse<T>>,
-    attempts = 3,
+    attempts = 5,
   ): Promise<TgResponse<T>> {
     for (let i = 0; i < attempts; i++) {
       try {
@@ -220,12 +220,18 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
     fileName: string,
     mimeType: string,
   ): Promise<TgResponse<T>> {
-    return this.sendWithMigration<T>(method, { ...fields }, true, {
-      fileField,
-      buffer,
-      fileName,
-      mimeType,
-    });
+    // MUHIM: media ham SERIAL navbatda (matn bilan bitta zanjir) — bitta
+    // supergroup'ga parallel yuborish Telegram flood-control'iga (429) tushib
+    // FAYL yoki keyingi MATNNI tushirib yuborardi. Fayl MinIO'dan oldin o'qilgan
+    // (getObject navbatdan tashqari), faqat Telegram'ga yuborish navbatda.
+    return this.enqueue(() =>
+      this.sendWithMigration<T>(method, { ...fields }, true, {
+        fileField,
+        buffer,
+        fileName,
+        mimeType,
+      }),
+    );
   }
 
   /** Yuborish + 429/tarmoq retry + supergroup migratsiya heal (1 qayta urinish). */
@@ -278,6 +284,19 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
       .replaceAll('>', '&gt;');
   }
 
+  /**
+   * Media caption'ni Telegram 1024-belgi limitiga keltiradi — oshsa sendDocument
+   * 400 ("caption is too long") beradi va FAYL umuman ketmaydi. Oxiridagi yarim
+   * HTML entity'ni (`&...`) olib tashlaydi (tag'lar faqat boshda — kesilmaydi).
+   */
+  private clampCaption(s: string): string {
+    if (s.length <= 1024) return s;
+    let cut = s.slice(0, 1020);
+    const amp = cut.lastIndexOf('&');
+    if (amp > cut.lastIndexOf(';')) cut = cut.slice(0, amp);
+    return `${cut}…`;
+  }
+
   private sleep(ms: number) {
     return new Promise((r) => setTimeout(r, ms));
   }
@@ -310,9 +329,10 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
 
       // ── Biriktirma: MinIO'dan bayt o'qib MULTIPART yuboramiz (ishonchli) ──
       if (params.attachmentType && params.attachmentKey) {
-        const caption =
+        const caption = this.clampCaption(
           `${header}\n📎 ${this.escapeHtml(params.fileName ?? 'fayl')}` +
-          (params.text ? `\n\n${this.escapeHtml(params.text)}` : '');
+            (params.text ? `\n\n${this.escapeHtml(params.text)}` : ''),
+        );
         const map: Record<
           string,
           { method: string; field: string; max: number }
@@ -585,11 +605,22 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
       { file_id: fileId },
       20_000,
     );
-    if (!r.ok || !r.result?.file_path) return null;
+    if (!r.ok || !r.result?.file_path) {
+      this.logger.warn(`getFile xato: ${r.description ?? "file_path yo'q"}`);
+      return null;
+    }
     const fileUrl = `https://api.telegram.org/file/bot${this.token}/${r.result.file_path}`;
-    const res = await fetch(fileUrl, { signal: AbortSignal.timeout(90_000) });
-    if (!res.ok) return null;
-    return Buffer.from(await res.arrayBuffer());
+    try {
+      const res = await fetch(fileUrl, { signal: AbortSignal.timeout(90_000) });
+      if (!res.ok) {
+        this.logger.warn(`Fayl download HTTP ${res.status}`);
+        return null;
+      }
+      return Buffer.from(await res.arrayBuffer());
+    } catch (e) {
+      this.logger.warn(`Fayl download xato: ${(e as Error).message}`);
+      return null;
+    }
   }
 
   /** Operator media javobini yuklab MinIO'ga saqlaydi va user'ga yetkazadi. */
@@ -601,11 +632,18 @@ export class TelegramSupportService implements OnModuleInit, OnModuleDestroy {
   ) {
     const buffer = await this.downloadTelegramFile(media.fileId);
     if (!buffer) {
+      // Operatorni limit haqida ogohlantiramiz; izoh (matn) bo'lsa hech
+      // bo'lmasa shuni user'ga yetkazamiz (butunlay quruq qolmasin).
       await this.sendQueued('sendMessage', {
         chat_id: this.chatId,
-        text: "⚠️ Faylni yuklab bo'lmadi (juda katta bo'lishi mumkin, ~20MB).",
+        text:
+          "⚠️ Faylni yetkazib bo'lmadi (Telegram bot limiti ~20MB). " +
+          'Kichikroq fayl yoki havola yuboring.',
         reply_parameters: { message_id: operatorTgMessageId },
       });
+      if (text) {
+        await this.deliverOperatorReply(userId, text, operatorTgMessageId);
+      }
       return;
     }
     const ext = extname(media.fileName) || '';

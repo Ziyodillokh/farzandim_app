@@ -350,9 +350,12 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
   Future<void> _pickDocument() async {
     try {
-      // Web'da filePath yo'q → withData: true bilan bytes o'qiymiz. Mobil'da
-      // filePath yetarli (xotira tejaladi).
-      final result = await FilePicker.platform.pickFiles(withData: kIsWeb);
+      // `withData: true` — hujjatni doim BYTES bilan o'qiymiz (web + mobil).
+      // Android'da FilePicker `path` (content/cache URI) `fromFile` bilan
+      // o'qilmasligi mumkin edi → upload jim fail bo'lib FAYL guruhga yetmasdi.
+      // Bytes (fromBytes) rasm kabi ishonchli. filePath mobil'da foydalanuvchi
+      // o'z faylini ochishi uchun saqlanadi.
+      final result = await FilePicker.platform.pickFiles(withData: true);
       if (result == null || result.files.isEmpty) return;
       final f = result.files.first;
       await ref
@@ -362,7 +365,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
             fileName: f.name,
             fileSize: f.size,
             filePath: kIsWeb ? null : f.path,
-            bytes: kIsWeb ? f.bytes : null,
+            bytes: f.bytes,
           );
     } catch (_) {
       _attachError();
