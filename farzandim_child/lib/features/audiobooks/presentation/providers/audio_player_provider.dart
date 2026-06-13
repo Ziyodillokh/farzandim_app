@@ -25,7 +25,20 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     });
 
     _durationSub = _player.durationStream.listen((dur) {
-      if (dur != null) state = state.copyWith(duration: dur);
+      if (dur == null) return;
+      state = state.copyWith(duration: dur);
+      // Haqiqiy davomiylikni backend'ga yuboramiz (faqat hozir noma'lum
+      // bo'lsa va bir marta) — ro'yxatda to'g'ri vaqt chiqsin.
+      final book = state.currentBook;
+      if (book != null &&
+          book.durationSeconds <= 0 &&
+          dur.inSeconds > 0 &&
+          _reportedDurationFor != book.id) {
+        _reportedDurationFor = book.id;
+        _ref
+            .read(audiobooksBackendRepositoryProvider)
+            .reportDuration(book.id, dur.inSeconds);
+      }
     });
 
     _playerStateSub = _player.playerStateStream.listen((s) {
@@ -39,6 +52,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   StreamSubscription<Duration?>? _durationSub;
   StreamSubscription<PlayerState>? _playerStateSub;
   Timer? _sleepTimer;
+  // Qaysi kitob uchun duration backend'ga yuborilgan (bir marta).
+  String? _reportedDurationFor;
 
   Future<void> play(AudiobookModel book) async {
     // Tinglashlar hisoblagichi (backend analitikasi) — yangi kitob qo'yilganda.

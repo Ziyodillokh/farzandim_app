@@ -58,6 +58,20 @@ class AudiobooksBackendRepository {
     }
   }
 
+  /// Player aniqlagan haqiqiy davomiylik (backend faqat 0/noma'lum bo'lsa
+  /// yozadi). Admin upload paytida duration kiritmaydi.
+  Future<void> reportDuration(String audiobookId, int durationSec) async {
+    if (durationSec <= 0) return;
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/content/audiobooks/$audiobookId/duration',
+        data: {'durationSec': durationSec},
+      );
+    } on DioException catch (e) {
+      debugPrint('AudiobooksBackend.reportDuration: ${e.message}');
+    }
+  }
+
   AudiobookModel _toAudiobookModel(Map<String, dynamic> raw) {
     final id = raw['id']?.toString() ?? '';
     final durationSec = (raw['durationSec'] as num?)?.toInt() ?? 0;

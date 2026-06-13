@@ -35,13 +35,32 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final id = widget.video.youtubeId;
     if (id == null) return;
 
-    // playsinline=1 — ichida o'ynaydi; fs=0 — fullscreen tugmasi yo'q
-    // (webview fullscreen'ni yaxshi boshqarmaydi); rel=0 — faqat shu kanal
-    // videolari; modestbranding — toza ko'rinish.
-    final embed = Uri.parse(
-      'https://www.youtube.com/embed/$id'
-      '?playsinline=1&fs=0&rel=0&modestbranding=1',
-    );
+    // MUHIM: embed URL'ni TO'G'RIDAN-TO'G'RI ochsak (loadRequest) webview'da
+    // referer bo'lmaydi va YouTube "Xato 153" beradi. Shuning uchun iframe'ni
+    // HTML sifatida, baseUrl bilan yuklaymiz — shunda parent origin youtube.com
+    // bo'ladi va embed qabul qilinadi (admin paneldagi iframe bilan bir xil).
+    // playsinline=1 — ichida o'ynaydi; rel=0 — faqat shu kanal videolari.
+    final html = '''
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<style>
+  html,body{margin:0;padding:0;background:#000;height:100%;}
+  .wrap{position:fixed;top:0;left:0;right:0;bottom:0;}
+  iframe{width:100%;height:100%;border:0;}
+</style>
+</head>
+<body>
+<div class="wrap">
+<iframe
+  src="https://www.youtube.com/embed/$id?playsinline=1&rel=0&modestbranding=1"
+  allow="autoplay; encrypted-media; picture-in-picture"
+  allowfullscreen></iframe>
+</div>
+</body>
+</html>
+''';
 
     _controller = WebViewController()
       ..setJavaScriptMode(JavaScriptMode.unrestricted)
@@ -53,7 +72,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           },
         ),
       )
-      ..loadRequest(embed);
+      ..loadHtmlString(html, baseUrl: 'https://www.youtube.com');
 
     // Ko'rishlar hisoblagichi (backend analitikasi) — bir marta.
     ref.read(videosBackendRepositoryProvider).markViewed(widget.video.id);
