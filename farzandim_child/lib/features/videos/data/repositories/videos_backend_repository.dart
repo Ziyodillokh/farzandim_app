@@ -64,6 +64,22 @@ class VideosBackendRepository {
     }
   }
 
+  /// Player aniqlagan haqiqiy davomiylikni backend'ga yuboradi (fire-and-
+  /// forget). Backend faqat duration hozir noma'lum (0) bo'lsa yozadi —
+  /// link orqali qo'shilgan YouTube videolari ro'yxatda to'g'ri vaqt bilan
+  /// ko'rinishi uchun.
+  Future<void> reportDuration(String videoId, int durationSec) async {
+    if (durationSec <= 0) return;
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/content/videos/$videoId/duration',
+        data: {'durationSec': durationSec},
+      );
+    } on DioException catch (e) {
+      debugPrint('VideosBackend.reportDuration: ${e.message}');
+    }
+  }
+
   /// Like tugmasi bosilganda likes counter++.
   Future<int?> like(String videoId) async {
     try {

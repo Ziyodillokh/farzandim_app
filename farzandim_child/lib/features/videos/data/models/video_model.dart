@@ -48,6 +48,10 @@ class VideoModel {
   // qo'shilgan) bo'lsa reels EMAS — klassik landscape player ochiladi.
   bool get isReels => durationSeconds > 0 && durationSeconds <= 90;
 
+  // Duration ma'lummi — link orqali qo'shilgan (YouTube) videolarda 0 bo'ladi,
+  // shunda "00:00" badge ko'rsatmaymiz (noto'g'ri ma'lumot chiqmasin).
+  bool get hasDuration => durationSeconds > 0;
+
   /// YouTube havolasidan 11 belgili video ID. YouTube emas bo'lsa `null`.
   ///
   /// Host-scoped: faqat youtube domeni oldidan kelgan ID olinadi —

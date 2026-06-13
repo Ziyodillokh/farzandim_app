@@ -150,6 +150,15 @@ class _ClassicVideoPlayerScreenState
       }
       // Video tugaganini aniqlash uchun (replay tugmasi + controls ko'rsatish).
       _controller.addListener(_onControllerUpdate);
+      // Link orqali qo'shilgan video duration'i noma'lum bo'lsa, player
+      // bilgan haqiqiy vaqtni backend'ga yuboramiz (ro'yxatda to'g'ri
+      // ko'rinsin). Backend faqat hozir noma'lum bo'lsa yozadi.
+      final realDur = _controller.value.duration.inSeconds;
+      if (widget.video.durationSeconds <= 0 && realDur > 0) {
+        ref
+            .read(videosBackendRepositoryProvider)
+            .reportDuration(widget.video.id, realDur);
+      }
       // Initial settings'ni darhol qo'llash.
       final s = ref.read(playerSettingsProvider);
       await _controller.setPlaybackSpeed(s.speed);

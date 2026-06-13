@@ -83,27 +83,29 @@ class VideoCard extends StatelessWidget {
                         ),
                       ),
                     ),
-                    Positioned(
-                      bottom: 6,
-                      right: 6,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
-                          color: Colors.black.withOpacity(0.75),
-                          borderRadius: BorderRadius.circular(4),
-                        ),
-                        child: Text(
-                          video.duration,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.w600,
+                    // Duration faqat ma'lum bo'lsa (YouTube linkda 0 bo'ladi).
+                    if (video.hasDuration)
+                      Positioned(
+                        bottom: 6,
+                        right: 6,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            // ignore: deprecated_member_use
+                            color: Colors.black.withOpacity(0.75),
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Text(
+                            video.duration,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
-                    ),
                   ],
                 ),
               ),

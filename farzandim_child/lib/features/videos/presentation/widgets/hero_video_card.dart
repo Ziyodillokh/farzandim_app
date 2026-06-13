@@ -64,6 +64,7 @@ class HeroVideoCard extends StatelessWidget {
                   ),
                 ),
               ),
+              if (video.hasDuration)
               Positioned(
                 top: 12,
                 right: 12,
