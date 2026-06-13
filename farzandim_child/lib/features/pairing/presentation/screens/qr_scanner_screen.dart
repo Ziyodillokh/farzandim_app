@@ -16,6 +16,7 @@
 
 import 'dart:developer' as developer;
 
+import 'package:confetti/confetti.dart';
 import 'package:dio/dio.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
@@ -23,6 +24,7 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
@@ -63,6 +65,14 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   bool _processing = false;
   String? _status;
 
+  /// Ulanish muvaffaqiyatli tugadi — chiroyli ✓ ekrani ko'rsatiladi.
+  bool _success = false;
+
+  /// Muvaffaqiyat paytida otiladigan konfetti.
+  late final ConfettiController _confetti = ConfettiController(
+    duration: const Duration(seconds: 2),
+  );
+
   // Kamera holati:
   //   null — boshlanmoqda (initState)
   //   _CamState.granted — start() OK, MobileScanner ko'rsatiladi
@@ -99,6 +109,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
   @override
   void dispose() {
+    _confetti.dispose();
     _controller.dispose();
     super.dispose();
   }
@@ -275,15 +286,16 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         return;
       }
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Muvaffaqiyatli ulandingiz!'),
-          backgroundColor: Color(0xFF22C55E),
-        ),
-      );
-      // /splash markaziy router — onboarding qiziqishlari yoki permission
-      // setup'ga o'tkazadi (qaysisi keyingi). To'g'ridan-to'g'ri /dashboard
-      // qilsak qiziqishlar onboarding'i o'tkazib yuborilardi.
+      // Chiroyli muvaffaqiyat ekrani — animatsiyali ✓ + konfetti, keyin
+      // /splash markaziy router'ga (onboarding/permission'ga yo'naltiradi).
+      HapticFeedback.mediumImpact();
+      setState(() {
+        _processing = false;
+        _success = true;
+      });
+      _confetti.play();
+      await Future<void>.delayed(const Duration(milliseconds: 2200));
+      if (!mounted) return;
       context.go('/splash');
     } on DioException catch (e) {
       _qrLog('processRawToken: DioException — '
@@ -318,6 +330,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   Widget build(BuildContext context) {
     _qrLog('build: kIsWeb=$kIsWeb, camState=$_camState, '
         'processing=$_processing, status=$_status, manualPaste=$_manualPasteMode');
+
+    // Muvaffaqiyatli ulanish — chiroyli to'liq ekran (boshqa hammasidan ustun).
+    if (_success) {
+      return _PairSuccessView(confetti: _confetti);
+    }
 
     // Foydalanuvchi qo'lda paste rejimini tanlagan bo'lsa — to'g'ridan-to'g'ri
     // paste UI'ni ko'rsatamiz (kamera ishga tushirilmaydi, batareya tejaladi).
@@ -837,6 +854,141 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                 style: const TextStyle(color: Colors.amber, fontSize: 13),
               ),
             ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Muvaffaqiyatli ulanish ekrani — animatsiyali ✓ + konfetti ──────────
+class _PairSuccessView extends StatelessWidget {
+  const _PairSuccessView({required this.confetti});
+
+  final ConfettiController confetti;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+            colors: [Color(0xFF16A34A), Color(0xFF12894B), Color(0xFF0B5E36)],
+          ),
+        ),
+        child: Stack(
+          children: [
+            // Konfetti — markazdan pastga otiladi.
+            Align(
+              alignment: Alignment.topCenter,
+              child: ConfettiWidget(
+                confettiController: confetti,
+                blastDirectionality: BlastDirectionality.explosive,
+                emissionFrequency: 0.06,
+                numberOfParticles: 22,
+                maxBlastForce: 22,
+                minBlastForce: 8,
+                gravity: 0.25,
+                shouldLoop: false,
+                colors: const [
+                  Colors.white,
+                  Color(0xFFFFE08A),
+                  Color(0xFF9CE6B4),
+                  Color(0xFF7AD0FF),
+                ],
+              ),
+            ),
+            SafeArea(
+              child: Center(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Animatsiyali ✓ — oq doira ichida, glow bilan.
+                    Container(
+                      width: 132,
+                      height: 132,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.16),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.4),
+                          width: 2,
+                        ),
+                      ),
+                      alignment: Alignment.center,
+                      child: Container(
+                        width: 92,
+                        height: 92,
+                        decoration: const BoxDecoration(
+                          color: Colors.white,
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: Color(0x55FFFFFF),
+                              blurRadius: 28,
+                              spreadRadius: 4,
+                            ),
+                          ],
+                        ),
+                        child: const Icon(
+                          Icons.check_rounded,
+                          color: Color(0xFF16A34A),
+                          size: 56,
+                        ),
+                      ),
+                    )
+                        .animate()
+                        .scale(
+                          duration: 500.ms,
+                          curve: Curves.elasticOut,
+                          begin: const Offset(0.3, 0.3),
+                          end: const Offset(1, 1),
+                        )
+                        .fadeIn(duration: 250.ms),
+                    const SizedBox(height: 28),
+                    Text(
+                      'Muvaffaqiyatli ulandingiz!',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontSize: 24,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.3,
+                      ),
+                    )
+                        .animate()
+                        .fadeIn(delay: 280.ms, duration: 350.ms)
+                        .slideY(begin: 0.25, end: 0, curve: Curves.easeOut),
+                    const SizedBox(height: 10),
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 40),
+                      child: Text(
+                        "Telefoningiz ota-onangiz hisobiga bog'landi.",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.9),
+                          fontSize: 15,
+                          height: 1.4,
+                        ),
+                      )
+                          .animate()
+                          .fadeIn(delay: 420.ms, duration: 350.ms),
+                    ),
+                    const SizedBox(height: 36),
+                    const SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: CircularProgressIndicator(
+                        color: Colors.white,
+                        strokeWidth: 2.4,
+                      ),
+                    ).animate().fadeIn(delay: 600.ms),
+                  ],
+                ),
+              ),
+            ),
           ],
         ),
       ),

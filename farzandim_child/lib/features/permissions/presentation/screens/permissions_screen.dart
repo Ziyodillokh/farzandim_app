@@ -103,16 +103,18 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
       final permission = _autoPermissions[i];
       // Har bir so'rovni try/catch bilan — bitta permission xato bersa
       // butun oqim (va ilova) yiqilmasin, keyingisiga o'tamiz.
+      //
+      // MUHIM: auto-oqimda FAQAT foreground ruxsatlar (whenInUse, bildirishnoma,
+      // kamera) so'raladi — ular ilova ichida oddiy dialog ko'rsatadi.
+      // `locationAlways` (orqa fon) bu yerda SO'RALMAYDI: Android 11+ da u
+      // majburan tizim Sozlamalariga olib chiqadi → foydalanuvchi "ilova o'zi
+      // yopilib ketdi" deb o'ylaydi. Orqa fon ruxsati keyinroq, foydalanuvchi
+      // location plitkasini o'zi bosganda (yoki permission-setup ekranida)
+      // so'raladi.
       try {
         final status = await permission.status;
         if (!status.isGranted) {
           await permission.request();
-        }
-        // whenInUse berilgach background ("har doim") ruxsatini ham
-        // so'raymiz — Android buni faqat shu tartibda qabul qiladi.
-        if (permission == Permission.locationWhenInUse &&
-            await Permission.locationWhenInUse.isGranted) {
-          await _requestLocationAlways();
         }
       } catch (_) {
         /* permission_handler xatosi — keyingi ruxsatga o'tamiz */
