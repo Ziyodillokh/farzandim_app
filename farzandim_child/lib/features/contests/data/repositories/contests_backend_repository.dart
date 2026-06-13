@@ -184,7 +184,6 @@ class ContestsBackendRepository {
       description: (raw['description'] as String?) ?? '',
       soha: subject,
       ishtirokchilarSoni: participants,
-      maxIshtirokchi: participants < 100 ? 100 : participants * 2,
       deadline: endTime,
       isActive: lifecycle == 'active',
       imageUrl: '',
@@ -193,8 +192,8 @@ class ContestsBackendRepository {
       bonus: (raw['xpReward'] as num?)?.toInt() ?? 50,
       savollarSoni: questions,
       vaqtChegarasiDaq: (raw['durationMin'] as num?)?.toInt() ?? 30,
-      winnerName: null,
-      winnerAge: null,
+      minAge: (raw['ageFrom'] as num?)?.toInt(),
+      maxAge: (raw['ageTo'] as num?)?.toInt(),
       finishedDate: lifecycle == 'finished' ? endTime : null,
     );
   }

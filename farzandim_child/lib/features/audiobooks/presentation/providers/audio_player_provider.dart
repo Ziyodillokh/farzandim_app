@@ -16,9 +16,10 @@ import 'package:just_audio_background/just_audio_background.dart';
 
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
-  AudioPlayerNotifier() : super(const AudioPlayerState()) {
+  AudioPlayerNotifier(this._ref) : super(const AudioPlayerState()) {
     _positionSub = _player.positionStream.listen((pos) {
       state = state.copyWith(position: pos);
     });
@@ -32,6 +33,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     });
   }
 
+  final Ref _ref;
   final AudioPlayer _player = AudioPlayer();
   StreamSubscription<Duration>? _positionSub;
   StreamSubscription<Duration?>? _durationSub;
@@ -39,6 +41,10 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   Timer? _sleepTimer;
 
   Future<void> play(AudiobookModel book) async {
+    // Tinglashlar hisoblagichi (backend analitikasi) — yangi kitob qo'yilganda.
+    if (state.currentBook?.id != book.id) {
+      _ref.read(audiobooksBackendRepositoryProvider).markPlayed(book.id);
+    }
     state = state.copyWith(currentBook: book);
     // MediaItem tag — lock screen va notification'da rasm + sarlavha
     // ko'rsatish uchun. just_audio_background buni o'qib system media
@@ -126,7 +132,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
 final audioPlayerProvider =
     StateNotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
-  (ref) => AudioPlayerNotifier(),
+  (ref) => AudioPlayerNotifier(ref),
 );
 
 /// Hozirgi tezlik (UI ko'rsatish uchun). `setSpeed` chaqirilganda

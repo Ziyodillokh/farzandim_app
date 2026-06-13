@@ -19,9 +19,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim_child/features/analytics/presentation/widgets/app_restrictions_list.dart';
-import 'package:farzandim_child/features/audiobooks/data/mock_audiobooks.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
-import 'package:farzandim_child/features/videos/data/mock_videos.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_section.dart';
 import 'package:farzandim_child/features/analytics/presentation/widgets/app_usage_list.dart';
@@ -337,10 +335,10 @@ class _DashboardVideosSection extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var videos = ref.watch(topVideosProvider);
-    if (videos.isEmpty) {
-      videos = MockVideos.all.take(5).toList();
-    }
+    final videos = ref.watch(topVideosProvider);
+    // Yoshga mos video yo'q bo'lsa seksiyani umuman ko'rsatmaymiz —
+    // soxta mock o'rniga (mock yosh filtridan o'tmaydi).
+    if (videos.isEmpty) return const SizedBox.shrink();
     return GestureDetector(
       onTap: () => context.push('/content'),
       behavior: HitTestBehavior.opaque,
@@ -364,10 +362,9 @@ class _DashboardAudiobookMiniPlayer extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    var books = ref.watch(forYouAudiobooksProvider);
-    if (books.isEmpty) {
-      books = MockAudiobooks.all.take(3).toList();
-    }
+    final books = ref.watch(forYouAudiobooksProvider);
+    // Yoshga mos audiokitob yo'q bo'lsa seksiyani ko'rsatmaymiz.
+    if (books.isEmpty) return const SizedBox.shrink();
     final featured = books.first;
 
     return Column(

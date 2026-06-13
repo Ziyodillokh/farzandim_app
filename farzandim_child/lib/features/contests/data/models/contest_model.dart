@@ -14,7 +14,6 @@ class ContestModel {
   final String description;
   final String soha;
   final int ishtirokchilarSoni;
-  final int maxIshtirokchi;
   final DateTime deadline;
   final bool isActive;
   final String imageUrl;
@@ -24,9 +23,12 @@ class ContestModel {
   final int savollarSoni;
   final int vaqtChegarasiDaq;
 
-  // Faqat yakunlangan uchun:
-  final String? winnerName;
-  final int? winnerAge;
+  // Admin qo'ygan yosh chegarasi (backend ageFrom/ageTo). Bola UI'da
+  // "N-M yosh uchun" deb ko'rsatiladi.
+  final int? minAge;
+  final int? maxAge;
+
+  // Faqat yakunlangan uchun.
   final DateTime? finishedDate;
 
   const ContestModel({
@@ -35,7 +37,6 @@ class ContestModel {
     required this.description,
     required this.soha,
     required this.ishtirokchilarSoni,
-    required this.maxIshtirokchi,
     required this.deadline,
     required this.isActive,
     this.imageUrl = '',
@@ -44,13 +45,14 @@ class ContestModel {
     required this.bonus,
     required this.savollarSoni,
     required this.vaqtChegarasiDaq,
-    this.winnerName,
-    this.winnerAge,
+    this.minAge,
+    this.maxAge,
     this.finishedDate,
   });
 
-  double get progress =>
-      maxIshtirokchi > 0 ? ishtirokchilarSoni / maxIshtirokchi : 0;
+  /// "7-12 yosh" ko'rinishidagi yorliq — ikkala chegara ham bo'lsa.
+  String? get ageLabel =>
+      (minAge != null && maxAge != null) ? '$minAge-$maxAge yosh' : null;
 
   Duration get remaining => deadline.difference(DateTime.now());
 

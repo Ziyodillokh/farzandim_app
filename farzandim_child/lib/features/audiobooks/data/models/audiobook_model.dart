@@ -2,9 +2,8 @@
 // AudiobookModel — bola audiokitobi
 // ─────────────────────────────────────────────────────────────────────
 //
-// Hozircha mock — `MockAudiobooks.all` ro'yxatda saqlanadi. Kelajakda
-// admin panel orqali Firestore'ga joylanadigan real audiokitoblar bilan
-// almashtiriladi.
+// Backend `/api/content/audiobooks` dan keladigan model. Admin panel
+// yuklaydi, backend bola yoshi bo'yicha filtrlaydi.
 
 import 'package:flutter/material.dart';
 

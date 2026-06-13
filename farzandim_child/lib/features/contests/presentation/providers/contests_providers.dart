@@ -4,7 +4,7 @@
 //
 // Sprint 5.7c: real backend `/api/content/olympiads` ulanishi.
 // `backendContestsProvider` fetch qiladi, muvaffaqiyatli bo'lsa shu
-// ro'yxat ishlatiladi, aks holda MockContests fallback.
+// ro'yxat ishlatiladi. Yosh filtri backend tomonida (child.age).
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

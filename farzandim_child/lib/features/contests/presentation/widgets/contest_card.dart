@@ -192,43 +192,39 @@ class _ActiveDetails extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
+    // Soxta "ishtirokchilar/maksimum" progress bari olib tashlandi —
+    // backend maksimum bermaydi. Faqat real ma'lumot: ishtirokchilar
+    // soni, yosh chegarasi va qolgan vaqt.
+    return Row(
       children: [
-        ClipRRect(
-          borderRadius: BorderRadius.circular(4),
-          child: LinearProgressIndicator(
-            value: contest.progress.clamp(0.0, 1.0),
-            minHeight: 6,
-            backgroundColor: AppColors.surfaceVariant,
-            valueColor:
-                const AlwaysStoppedAnimation<Color>(AppColors.primary),
-          ),
+        const Icon(Icons.people, size: 14, color: AppColors.textSecondary),
+        const SizedBox(width: 4),
+        Text(
+          '${contest.ishtirokchilarSoni} ishtirokchi',
+          style:
+              const TextStyle(fontSize: 12, color: AppColors.textSecondary),
         ),
-        const SizedBox(height: 8),
-        Row(
-          children: [
-            const Icon(Icons.people,
-                size: 14, color: AppColors.textSecondary),
-            const SizedBox(width: 4),
-            Text(
-              '${contest.ishtirokchilarSoni}/${contest.maxIshtirokchi}',
-              style: const TextStyle(
-                  fontSize: 12, color: AppColors.textSecondary),
-            ),
-            const Spacer(),
-            const Icon(AppIcons.schedule,
-                size: 14, color: AppColors.warning),
-            const SizedBox(width: 4),
-            Text(
-              contest.remainingFormatted,
-              style: const TextStyle(
-                fontSize: 12,
-                color: AppColors.warning,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        if (contest.ageLabel != null) ...[
+          const SizedBox(width: 10),
+          const Icon(Icons.cake_outlined,
+              size: 14, color: AppColors.textSecondary),
+          const SizedBox(width: 4),
+          Text(
+            contest.ageLabel!,
+            style: const TextStyle(
+                fontSize: 12, color: AppColors.textSecondary),
+          ),
+        ],
+        const Spacer(),
+        const Icon(AppIcons.schedule, size: 14, color: AppColors.warning),
+        const SizedBox(width: 4),
+        Text(
+          contest.remainingFormatted,
+          style: const TextStyle(
+            fontSize: 12,
+            color: AppColors.warning,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ],
     );
@@ -266,19 +262,21 @@ class _FinishedDetails extends StatelessWidget {
                 color: Colors.black, size: 22),
           ),
           const SizedBox(width: 12),
+          // Soxta "g'olib: —, — yosh" bloki olib tashlandi (backend g'olib
+          // ma'lumotini bermaydi). O'rniga real yakun ma'lumoti.
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 const Text(
-                  "G'olib",
+                  'Yakunlandi',
                   style: TextStyle(
                     fontSize: 11,
                     color: AppColors.textSecondary,
                   ),
                 ),
                 Text(
-                  '${contest.winnerName ?? "—"}, ${contest.winnerAge ?? "—"} yosh',
+                  '${contest.ishtirokchilarSoni} ishtirokchi qatnashdi',
                   style: const TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
@@ -288,14 +286,7 @@ class _FinishedDetails extends StatelessWidget {
               ],
             ),
           ),
-          Text(
-            '${contest.ishtirokchilarSoni}',
-            style: const TextStyle(
-                fontSize: 12, color: AppColors.textSecondary),
-          ),
-          const SizedBox(width: 4),
-          const Icon(Icons.people,
-              size: 12, color: AppColors.textSecondary),
+          const Icon(Icons.people, size: 16, color: AppColors.textSecondary),
         ],
       ),
     );

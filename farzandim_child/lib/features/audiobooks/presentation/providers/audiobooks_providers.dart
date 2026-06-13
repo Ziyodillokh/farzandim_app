@@ -2,13 +2,12 @@
 // audiobooks_providers — search, filter, computed sections
 // ─────────────────────────────────────────────────────────────────────
 //
-// Sprint 5.7b: real backend `/api/content/audiobooks` ulanishi qo'shildi.
-// `backendAudiobooksProvider` muvaffaqiyatli bo'lsa shu ro'yxat
-// ishlatiladi, aks holda MockAudiobooks fallback.
+// Audiokitoblar real backend `/api/content/audiobooks` dan keladi.
+// Backend bola yoshi bo'yicha filtrlaydi — mock yo'q, bo'sh kelsa
+// "kontent yo'q" ko'rsatamiz.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-import 'package:farzandim_child/features/audiobooks/data/mock_audiobooks.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
 
@@ -22,14 +21,10 @@ final backendAudiobooksProvider = FutureProvider<List<AudiobookModel>>((ref) asy
   return repo.fetchAudiobooks();
 });
 
-/// Backend bo'sh / loading / xato bersa MockAudiobooks fallback —
-/// foydalanuvchi har doim to'liq sahifa contentni ko'radi (UI sinmaydi).
+/// Backend qaytargan real ro'yxat. Mock fallback OLIB TASHLANDI: mock
+/// kontent yosh filtridan o'tmaydi — bo'sh bo'lsa bo'sh ko'rsatamiz.
 final effectiveAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {
-  final async = ref.watch(backendAudiobooksProvider);
-  return async.maybeWhen(
-    data: (list) => list.isEmpty ? MockAudiobooks.all : list,
-    orElse: () => MockAudiobooks.all,
-  );
+  return ref.watch(backendAudiobooksProvider).valueOrNull ?? const [];
 });
 
 final filteredAudiobooksProvider =

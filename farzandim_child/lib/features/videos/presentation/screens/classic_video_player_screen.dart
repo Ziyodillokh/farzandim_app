@@ -14,6 +14,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/video_controller_factory.dart';
 import 'package:farzandim_child/features/videos/data/models/player_settings.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
+import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/player_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/player_settings_bottom_sheet.dart';
 import 'package:flutter/material.dart';
@@ -59,6 +60,9 @@ class _ClassicVideoPlayerScreenState
       DeviceOrientation.landscapeRight,
     ]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersive);
+
+    // Ko'rishlar hisoblagichi (backend analitikasi) — ochilganda bir marta.
+    ref.read(videosBackendRepositoryProvider).markViewed(widget.video.id);
 
     _initController();
 

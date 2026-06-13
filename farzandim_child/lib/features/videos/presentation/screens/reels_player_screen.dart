@@ -13,6 +13,7 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
 import 'package:video_player/video_player.dart';
 
 class ReelsPlayerScreen extends ConsumerStatefulWidget {
@@ -43,6 +44,15 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
         _reels.indexWhere((v) => v.id == widget.initialVideo.id);
     if (_currentIndex < 0) _currentIndex = 0;
     _pageController = PageController(initialPage: _currentIndex);
+    // Birinchi reel ko'rildi.
+    _markViewed(_reels[_currentIndex].id);
+  }
+
+  // Ko'rishlar hisoblagichi — har reel bir marta sanaladi.
+  final _viewed = <String>{};
+  void _markViewed(String videoId) {
+    if (!_viewed.add(videoId)) return;
+    ref.read(videosBackendRepositoryProvider).markViewed(videoId);
   }
 
   @override
@@ -63,6 +73,7 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
             itemCount: _reels.length,
             onPageChanged: (i) {
               setState(() => _currentIndex = i);
+              _markViewed(_reels[i].id);
             },
             itemBuilder: (_, i) {
               return _ReelItem(

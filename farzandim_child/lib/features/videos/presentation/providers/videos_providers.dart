@@ -6,18 +6,15 @@
 // inputi. `filteredVideosProvider` ulardan computed; `topVideos`,
 // `recommendedVideos`, `heroVideo` esa filtered'dan derive bo'ladi.
 //
-// Sprint 5.7b: real backend `/api/content/videos` ulanishi qo'shildi.
-// `backendVideosProvider` FutureProvider sifatida fetch qiladi; agar
-// muvaffaqiyatli bo'lsa shu ro'yxat ishlatiladi, bo'lmasa MockVideos
-// fallback. Shu bilan offline / hali pair qilinmagan holatlarda ham
-// UI sinmaydi.
+// Videolar real backend `/api/content/videos` dan keladi. Backend bola
+// yoshi (child.age) bo'yicha filtrlaydi — bu yerda mock yo'q, bo'sh kelsa
+// "kontent yo'q" ko'rsatamiz.
 
 import 'dart:async';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/features/videos/data/models/filter_state.dart';
-import 'package:farzandim_child/features/videos/data/mock_videos.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
 
@@ -52,17 +49,12 @@ extension _RefCache on Ref {
   }
 }
 
-/// Real backend ma'lumotini ishlatadi, agar mavjud va bo'sh emas bo'lsa;
-/// aks holda mock. Offline va dev rejimida UI sinmaydi.
-///
-/// Mock fallback: backend bo'sh / yuklanmagan / xato bersa, foydalanuvchi
-/// "Hech narsa topilmadi" o'rniga to'liq sahifa contentni ko'radi.
+/// Backend qaytargan real ro'yxat. Mock fallback OLIB TASHLANDI: mock
+/// kontent yosh filtridan o'tmaydi (backend child.age bo'yicha filtrlaydi),
+/// shuning uchun bo'sh bo'lsa "Hech narsa yo'q" ko'rsatamiz — yoshga mos
+/// bo'lmagan soxta video emas. Loading/xato paytida ham bo'sh.
 final effectiveVideosProvider = Provider<List<VideoModel>>((ref) {
-  final async = ref.watch(backendVideosProvider);
-  return async.maybeWhen(
-    data: (list) => list.isEmpty ? MockVideos.all : list,
-    orElse: () => MockVideos.all,
-  );
+  return ref.watch(backendVideosProvider).valueOrNull ?? const [];
 });
 
 final filteredVideosProvider = Provider<List<VideoModel>>((ref) {

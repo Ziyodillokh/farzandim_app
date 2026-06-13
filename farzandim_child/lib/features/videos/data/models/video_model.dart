@@ -2,9 +2,8 @@
 // VideoModel — bola feed'idagi video ma'lumotlari
 // ─────────────────────────────────────────────────────────────────────
 //
-// Hozircha mock — `MockVideos.all` ro'yxatda saqlanadi. Kelajakda
-// admin panel orqali Firestore'ga joylanadigan real videolar bilan
-// almashtiriladi.
+// Backend `/api/content/videos` dan keladigan model. Admin panel yuklaydi,
+// backend bola yoshi (child.age) bo'yicha filtrlaydi.
 //
 // `isReels` — video 90 sekund yoki kamroq bo'lsa true. Reels player
 // (vertikal PageView) bilan ochiladi; aks holda klassik landscape
