@@ -121,7 +121,7 @@ class AppUsageList extends ConsumerWidget {
       result.add(
         AppUsageEntry(
           packageName: entry.packageName,
-          appName: realName.isEmpty ? entry.packageName : realName,
+          appName: _displayName(entry.packageName, realName),
           totalTimeMs: entry.totalTimeMs,
           lastTimeUsed: entry.lastTimeUsed,
           iconBase64: entry.iconBase64 ?? meta?.iconBase64,
@@ -138,9 +138,10 @@ class AppUsageList extends ConsumerWidget {
       result.add(
         AppUsageEntry(
           packageName: lim.packageName,
-          appName: meta?.appName.isNotEmpty == true
-              ? meta!.appName
-              : lim.packageName,
+          appName: _displayName(
+            lim.packageName,
+            meta?.appName ?? '',
+          ),
           totalTimeMs: 0,
           lastTimeUsed: DateTime.fromMillisecondsSinceEpoch(0),
           iconBase64: meta?.iconBase64,
@@ -156,6 +157,47 @@ class AppUsageList extends ConsumerWidget {
     });
     return result;
   }
+
+  /// Ko'rsatiladigan nom — system/texnik paketlar (`com.sec...launcher`,
+  /// `com.google.android.gms`...) o'rniga do'stona nom; noma'lum paket bo'lsa
+  /// oxirgi segmentdan toza nom (`com.foo.bar` → "Bar"). Real ilova nomi bor
+  /// bo'lsa o'sha qoladi.
+  static String _displayName(String pkg, String rawName) {
+    final clean = rawName.trim();
+    // 1) Real do'stona nom (paket emas) — o'shani.
+    if (clean.isNotEmpty && !clean.contains('.') && clean != pkg) {
+      return clean;
+    }
+    // 2) Tanilgan system paketlar.
+    final friendly = _systemNames[pkg.toLowerCase()];
+    if (friendly != null) return friendly;
+    // 3) Noma'lum paket — oxirgi segmentni tozalab, bosh harf katta.
+    final src = clean.isEmpty ? pkg : clean;
+    final seg = src.split('.').last.replaceAll('_', ' ').trim();
+    if (seg.isEmpty) return src;
+    return seg[0].toUpperCase() + seg.substring(1);
+  }
+
+  static const Map<String, String> _systemNames = {
+    'com.sec.android.app.launcher': 'Bosh ekran',
+    'com.android.launcher': 'Bosh ekran',
+    'com.miui.home': 'Bosh ekran',
+    'com.google.android.apps.nexuslauncher': 'Bosh ekran',
+    'com.google.android.gms': 'Google xizmatlari',
+    'com.google.android.gsf': 'Google xizmatlari',
+    'com.android.settings': 'Sozlamalar',
+    'com.android.systemui': 'Tizim',
+    'com.android.vending': 'Play Market',
+    'com.android.chrome': 'Chrome',
+    'com.google.android.youtube': 'YouTube',
+    'com.android.phone': 'Telefon',
+    'com.samsung.android.dialer': 'Telefon',
+    'com.google.android.dialer': 'Telefon',
+    'com.android.camera': 'Kamera',
+    'com.sec.android.app.camera': 'Kamera',
+    'com.android.gallery3d': 'Galereya',
+    'com.sec.android.gallery3d': 'Galereya',
+  };
 }
 
 class _UsageRow extends StatelessWidget {
@@ -380,15 +422,22 @@ class _Fallback extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final color = _colorForPackage(app.packageName);
+    final icon = _iconForApp(app.packageName, app.appName);
     return Container(
       width: size,
       height: size,
       decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(10),
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [color, Color.lerp(color, Colors.black, 0.18)!],
+        ),
+        borderRadius: BorderRadius.circular(12),
       ),
       alignment: Alignment.center,
-      child: Text(
+      child: icon != null
+          ? Icon(icon, color: Colors.white, size: size * 0.52)
+          : Text(
         _initialsForName(app.appName.isEmpty ? app.packageName : app.appName),
         style: const TextStyle(
           color: Colors.white,
@@ -403,6 +452,44 @@ class _Fallback extends StatelessWidget {
     final clean = name.split('.').last;
     if (clean.isEmpty) return '?';
     return clean.substring(0, clean.length >= 2 ? 2 : 1).toUpperCase();
+  }
+
+  /// Tanilgan ilova/paket uchun Material ikon — real ikon yetib kelmaganida
+  /// harf o'rniga taniqli belgi (zamonaviy ko'rinish).
+  static IconData? _iconForApp(String pkg, String name) {
+    final p = pkg.toLowerCase();
+    final n = name.toLowerCase();
+    bool has(String s) => p.contains(s) || n.contains(s);
+    if (has('launcher') || has('home') || has('bosh ekran')) {
+      return Icons.home_rounded;
+    }
+    if (has('settings') || has('sozlama') || has('parametr')) {
+      return Icons.settings_rounded;
+    }
+    if (has('gms') || has('gsf') || has('google xizmat')) {
+      return Icons.cloud_done_rounded;
+    }
+    if (has('systemui') || has('tizim')) return Icons.android_rounded;
+    if (has('telegram')) return Icons.send_rounded;
+    if (has('whatsapp')) return Icons.chat_rounded;
+    if (has('instagram')) return Icons.camera_alt_rounded;
+    if (has('youtube')) return Icons.play_circle_fill_rounded;
+    if (has('chrome') || has('browser') || has('internet')) {
+      return Icons.public_rounded;
+    }
+    if (has('vending') || has('play market') || has('market')) {
+      return Icons.shop_rounded;
+    }
+    if (has('camera') || has('kamera')) return Icons.photo_camera_rounded;
+    if (has('gallery') || has('galereya') || has('photos')) {
+      return Icons.photo_library_rounded;
+    }
+    if (has('dialer') || has('phone') || has('telefon')) {
+      return Icons.call_rounded;
+    }
+    if (has('music') || has('musiqa')) return Icons.music_note_rounded;
+    if (has('game') || has('parvoz')) return Icons.sports_esports_rounded;
+    return null;
   }
 
   /// Paket nomidan deterministik rang (hash → palette).
