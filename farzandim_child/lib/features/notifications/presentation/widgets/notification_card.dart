@@ -1,19 +1,20 @@
 // ─────────────────────────────────────────────────────────────────────
-// NotificationCard — bitta bildirishnoma (dark, rasm bilan — mockup 1:1)
+// NotificationCard — bitta bildirishnoma (yorug' dizayn, rasm bilan)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Layout (yuqoridan pastga):
+// Layout (yuqoridan pastga, toza tekislangan):
 //   ┌────────────────────────────────────┐
 //   │ Yangi o'yin qo'shildi          ●  │ ← kichik kulrang sarlavha + unread
-//   │ Asosiy matn (oq) ...               │
+//   │ Asosiy matn (qora) ...             │
 //   │ ┌────────────────────────────────┐ │
 //   │ │      rasm (ixtiyoriy)          │ │ ← thumbnailUrl bo'lsa
 //   │ └────────────────────────────────┘ │
-//   │ 2 mins ago                         │
+//   │ 2 daqiqa oldin                     │
 //   └────────────────────────────────────┘
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -30,12 +31,6 @@ class NotificationCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
-  // Dark palitra — mockup'ga qat'iy mos (theme'dan mustaqil).
-  static const Color _cardRead = Color(0xFF1E1E2A);
-  static const Color _cardUnread = Color(0xFF232333);
-  static const Color _titleGray = Color(0xFF9A9AB0);
-  static const Color _bodyWhite = Color(0xFFEDEDF5);
-  static const Color _timeGray = Color(0xFF6B6B80);
   static const Color _imgFallbackA = Color(0xFF5B6CFF);
   static const Color _imgFallbackB = Color(0xFF8E5BFF);
 
@@ -45,6 +40,9 @@ class NotificationCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final unread = !notification.isRead;
+    final accent = notification.type.color;
+
     return Dismissible(
       key: ValueKey(notification.id),
       direction: DismissDirection.endToStart,
@@ -53,7 +51,7 @@ class NotificationCard extends StatelessWidget {
         margin: const EdgeInsets.only(bottom: 12),
         padding: const EdgeInsets.only(right: 22),
         decoration: BoxDecoration(
-          color: const Color(0xFFE43A5C),
+          color: AppColors.error,
           borderRadius: BorderRadius.circular(18),
         ),
         child: const Icon(AppIcons.delete, color: Colors.white),
@@ -70,21 +68,24 @@ class NotificationCard extends StatelessWidget {
         behavior: HitTestBehavior.opaque,
         child: Container(
           margin: const EdgeInsets.only(bottom: 12),
-          padding: const EdgeInsets.all(14),
+          padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: notification.isRead ? _cardRead : _cardUnread,
+            color: unread
+                ? accent.withValues(alpha: 0.06)
+                : AppColors.surface,
             borderRadius: BorderRadius.circular(18),
-            border: notification.isRead
-                ? Border.all(color: Colors.white.withValues(alpha: 0.04))
-                : Border.all(
-                    color: notification.type.color.withValues(alpha: 0.35),
-                  ),
+            border: Border.all(
+              color: unread
+                  ? accent.withValues(alpha: 0.28)
+                  : AppColors.border,
+            ),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               // ── Sarlavha (kichik kulrang) + unread nuqta ──
               Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   Expanded(
                     child: Text(
@@ -92,20 +93,20 @@ class NotificationCard extends StatelessWidget {
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: _titleGray,
+                        color: AppColors.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         height: 1.2,
                       ),
                     ),
                   ),
-                  if (!notification.isRead)
+                  if (unread)
                     Container(
                       width: 8,
                       height: 8,
-                      margin: const EdgeInsets.only(left: 8, top: 2),
+                      margin: const EdgeInsets.only(left: 8),
                       decoration: BoxDecoration(
-                        color: notification.type.color,
+                        color: accent,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -113,13 +114,13 @@ class NotificationCard extends StatelessWidget {
               ),
               const SizedBox(height: 6),
 
-              // ── Asosiy matn (oq) ──
+              // ── Asosiy matn (qora) ──
               Text(
                 notification.body,
                 maxLines: _hasImage ? 3 : 4,
                 overflow: TextOverflow.ellipsis,
                 style: const TextStyle(
-                  color: _bodyWhite,
+                  color: AppColors.textPrimary,
                   fontSize: 14.5,
                   fontWeight: FontWeight.w500,
                   height: 1.4,
@@ -150,7 +151,7 @@ class NotificationCard extends StatelessWidget {
               Text(
                 _timeAgo(notification.createdAt),
                 style: const TextStyle(
-                  color: _timeGray,
+                  color: AppColors.textTertiary,
                   fontSize: 12,
                 ),
               ),

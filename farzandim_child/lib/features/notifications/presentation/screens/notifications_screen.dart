@@ -22,6 +22,7 @@ import 'package:farzandim_child/features/notifications/presentation/widgets/noti
 import 'package:farzandim_child/features/notifications/presentation/widgets/notification_tabs.dart';
 import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
+import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:farzandim_child/shared/widgets/skeleton_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -43,15 +44,7 @@ class NotificationsScreen extends ConsumerWidget {
     return Scaffold(
       backgroundColor: Colors.transparent,
       extendBody: true,
-      body: Container(
-        // Dark fon — mockup'ga mos (kartalar dark, fon ham dark).
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [Color(0xFF16161F), Color(0xFF0E0E16)],
-          ),
-        ),
+      body: GradientBackground(
         child: SafeArea(
           bottom: false,
           child: Column(
@@ -71,7 +64,7 @@ class NotificationsScreen extends ConsumerWidget {
                       child: Text(
                         'notifications.title'.tr(),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.textPrimary,
                           fontSize: 28,
                           fontWeight: FontWeight.bold,
                         ),
