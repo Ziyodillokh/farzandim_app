@@ -439,6 +439,9 @@ enum NotificationType {
   UNLOCK_REQUEST
   // Ota-ona unlock so'roviga qaror berdi: ruxsat berdi yoki rad etdi (parent→child).
   UNLOCK_DECISION
+  // Bola telefonida muhim ruxsat (joylashuv/bildirishnoma/fon/maxsus
+  // imkoniyatlar) granted→denied bo'ldi — ota-onaga holat ogohlantirishi.
+  PERMISSION_CHANGED
 }
 
 // ============================================

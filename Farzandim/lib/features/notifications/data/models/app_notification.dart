@@ -42,6 +42,10 @@ enum NotificationType {
   /// Bola bloklangan ilova/ekran-vaqt uchun qo'shimcha vaqt so'rayapti —
   /// "Vaqt ber" (5–60 daq) / "Rad et" tugmalari bilan.
   unlockRequest,
+
+  /// Bola telefonida muhim ruxsat (joylashuv/bildirishnoma/fon/maxsus
+  /// imkoniyatlar) o'chirildi — holat ogohlantirishi.
+  permissionChanged,
 }
 
 /// `NotificationType` uchun UI helper'lar (ikona, rang, label).
@@ -73,6 +77,8 @@ extension NotificationTypeX on NotificationType {
         return Icons.sports_esports_rounded;
       case NotificationType.unlockRequest:
         return Icons.lock_clock_rounded;
+      case NotificationType.permissionChanged:
+        return Icons.shield_outlined;
     }
   }
 
@@ -103,6 +109,8 @@ extension NotificationTypeX on NotificationType {
         return const Color(0xFF7C6FE0); // binafsha — o'yin
       case NotificationType.unlockRequest:
         return const Color(0xFFFBBF24); // sariq — diqqat (qaror kerak)
+      case NotificationType.permissionChanged:
+        return const Color(0xFFFB923C); // to'q sariq — ogohlantirish
     }
   }
 
@@ -133,6 +141,8 @@ extension NotificationTypeX on NotificationType {
         return "O'yin";
       case NotificationType.unlockRequest:
         return "Ruxsat so'rovi";
+      case NotificationType.permissionChanged:
+        return "Ruxsat o'zgardi";
     }
   }
 }
@@ -303,6 +313,8 @@ class AppNotification {
         return NotificationType.offline;
       case 'unlock_request':
         return NotificationType.unlockRequest;
+      case 'permission_changed':
+        return NotificationType.permissionChanged;
       case 'app_limit':
         return NotificationType.appLimit;
       case 'schedule_start':

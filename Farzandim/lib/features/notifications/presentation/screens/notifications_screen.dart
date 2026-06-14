@@ -190,6 +190,11 @@ class _NotificationsList extends ConsumerWidget {
       case NotificationType.unlockRequest:
         // Tap → qaror varag'ini ochamiz (asosiy amal tugmalarda ham bor).
         _decideUnlock(context, ref, n);
+      case NotificationType.permissionChanged:
+        // Ruxsat holati — cheklovlar/qurilma ekraniga.
+        if (n.childId.isNotEmpty) {
+          context.push(AppRoutes.appRestrictionsPath(n.childId));
+        }
       case NotificationType.offline:
       case NotificationType.online:
         break;

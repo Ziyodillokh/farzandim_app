@@ -13,6 +13,7 @@ import { StorageService } from '../../common/storage/storage.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { BatteryAlertService } from '../../common/battery/battery-alert.service';
+import { PermissionAlertService } from '../../common/permission-alert/permission-alert.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
@@ -39,6 +40,7 @@ export class ChildrenService {
     private readonly audit: AuditService,
     private readonly fcm: FcmService,
     private readonly batteryAlert: BatteryAlertService,
+    private readonly permissionAlert: PermissionAlertService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -214,6 +216,25 @@ export class ChildrenService {
       child.batteryLevel,
       dto.batteryLevel,
       dto.isCharging,
+    );
+
+    // Muhim ruxsat granted→denied — YANGILASHDAN OLDIN solishtiramiz (prev =
+    // child.*Permission, next = dto.*). true→false bo'lsa ota-onaga bir
+    // martalik holat ogohlantirishi (#43). Update'dan keyin prev=false → spam yo'q.
+    void this.permissionAlert.checkCrossings(
+      child,
+      {
+        locationPermission: child.locationPermission,
+        notificationPermission: child.notificationPermission,
+        backgroundAllowed: child.backgroundAllowed,
+        accessibilityEnabled: child.accessibilityEnabled,
+      },
+      {
+        locationPermission: dto.locationPermission,
+        notificationPermission: dto.notificationPermission,
+        backgroundAllowed: dto.backgroundAllowed,
+        accessibilityEnabled: dto.accessibilityEnabled,
+      },
     );
 
     await this.prisma.child.update({ where: { id }, data });

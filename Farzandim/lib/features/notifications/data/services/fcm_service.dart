@@ -281,6 +281,13 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
     case NotificationType.unlockRequest:
       // Qaror varag'i bildirishnomalar ekranidagi kartochkadan ochiladi.
       open(AppRoutes.notifications);
+    case NotificationType.permissionChanged:
+      // Ruxsat holati — cheklovlar/qurilma ekraniga (yo'q bo'lsa ro'yxat).
+      if (notif.childId.isNotEmpty) {
+        open(AppRoutes.appRestrictionsPath(notif.childId));
+      } else {
+        open(AppRoutes.notifications);
+      }
     case NotificationType.offline:
     case NotificationType.online:
       open(AppRoutes.notifications);
