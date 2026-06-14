@@ -12,6 +12,9 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/articles/data/models/article_model.dart';
+import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
+import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
@@ -39,7 +42,7 @@ class ContentHubScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return DefaultTabController(
-      length: 2,
+      length: 3,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
@@ -62,6 +65,7 @@ class ContentHubScreen extends ConsumerWidget {
                     children: const [
                       _VideosTab(),
                       _AudiobooksTab(),
+                      _ArticlesTab(),
                     ],
                   ),
                 ),
@@ -108,6 +112,7 @@ class _TopTabs extends StatelessWidget {
         tabs: const [
           Tab(text: 'Videolar'),
           Tab(text: 'Audiokitoblar'),
+          Tab(text: 'Maqolalar'),
         ],
       ),
     );
@@ -293,5 +298,79 @@ class _AudiobooksTab extends ConsumerWidget {
         ),
       );
     });
+  }
+}
+
+// ─── Maqolalar tab (#48) ──────────────────────────────────────────────
+class _ArticlesTab extends ConsumerWidget {
+  const _ArticlesTab();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final async = ref.watch(backendArticlesProvider);
+    return async.when(
+      loading: () => const Center(child: CircularProgressIndicator()),
+      error: (_, __) => _ArticlesMessage(
+        text: 'Maqolalarni yuklab bo\'lmadi.',
+        onRetry: () => ref.invalidate(backendArticlesProvider),
+      ),
+      data: (articles) {
+        if (articles.isEmpty) {
+          return const _ArticlesMessage(
+            text: 'Hozircha maqola yo\'q. Tez orada qo\'shiladi!',
+          );
+        }
+        return RefreshIndicator(
+          onRefresh: () async {
+            ref.invalidate(backendArticlesProvider);
+            await ref.read(backendArticlesProvider.future);
+          },
+          child: ListView.separated(
+            physics: const AlwaysScrollableScrollPhysics(),
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
+            itemCount: articles.length,
+            separatorBuilder: (_, __) => const SizedBox(height: 12),
+            itemBuilder: (_, i) {
+              final ArticleModel a = articles[i];
+              return ArticleCard(
+                article: a,
+                onTap: () => context.push('/articles/view', extra: a),
+              );
+            },
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ArticlesMessage extends StatelessWidget {
+  const _ArticlesMessage({required this.text, this.onRetry});
+  final String text;
+  final VoidCallback? onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.menu_book_rounded, size: 56, color: AppColors.textTertiary),
+          const SizedBox(height: 14),
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 32),
+            child: Text(
+              text,
+              textAlign: TextAlign.center,
+              style: const TextStyle(color: AppColors.textSecondary),
+            ),
+          ),
+          if (onRetry != null) ...[
+            const SizedBox(height: 12),
+            TextButton(onPressed: onRetry, child: const Text('Qayta urinish')),
+          ],
+        ],
+      ),
+    );
   }
 }

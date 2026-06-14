@@ -896,6 +896,30 @@ model Book {
   @@index([category])
 }
 
+// --- Articles (foydali maqolalar / bilimlar — #48) ---
+// Video/audio/kitobga o'xshash yoshga mos kontent: admin markdown maqola
+// yuklaydi, bola o'qiydi. Yosh (ageFrom..ageTo) + status(approved) bo'yicha
+// consumer endpoint filtrlaydi (videos/books patterni).
+model Article {
+  id        String   @id @default(uuid())
+  title     String
+  // Markdown matn (asosiy tana).
+  body      String
+  // Muqova rasm MinIO storage key (media proxy 'cover' orqali beriladi).
+  coverPath String?  @map("cover_path")
+  ageFrom   Int      @default(0) @map("age_from")
+  ageTo     Int      @default(18) @map("age_to")
+  category  String?
+  status    String   @default("approved") // pending | approved | rejected | hidden
+  views     Int      @default(0)
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("articles")
+  @@index([status])
+  @@index([category])
+}
+
 // ============================================
 // ADMIN PANEL — Konkurslar / Olimpiada (Sprint 5.4)
 // Konsept v2 markaziy g'oyasi. Admin yaratadi → bola Child App'da ishlaydi

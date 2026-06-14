@@ -78,6 +78,21 @@ export class ConsumerContentController {
     );
   }
 
+  @Get('articles')
+  @ApiOperation({ summary: 'List articles (age filtered, approved)' })
+  getArticles(
+    @CurrentUser() user: JwtPayload,
+    @Query() query: PaginationDto,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.service.getArticles(
+      user.userId,
+      requestOrigin(req),
+      query.page ?? 1,
+      query.limit ?? 20,
+    );
+  }
+
   @Get('categories')
   @ApiOperation({ summary: 'List content categories' })
   getCategories(@Query() query: CategoriesQueryDto) {
@@ -206,9 +221,20 @@ export class ConsumerContentController {
     // ("Videopleyerni sozlashda xatolik") beradi. Biz JS API (postMessage
     // player control) ishlatmaymiz, shuning uchun `enablejsapi`'ni OLIB
     // TASHLADIK → qat'iy tekshiruv yo'q, embed oddiy ishlaydi.
-    // `referrer` meta — WebView YouTube'ga to'g'ri referer yuborishi uchun.
+    //
+    // ASOSIY SABAB (nihoyat): butun ilova `@fastify/helmet` bilan o'raldi va
+    // uning STANDART sozlamasi har bir javobga `Referrer-Policy: no-referrer`
+    // header'ini qo'shadi. Android WebView iframe'dagi `referrerpolicy`
+    // atributini va `<meta name=referrer>` ni ko'pincha E'TIBORSIZ qoldirib,
+    // faqat HTTP `Referrer-Policy` header'iga amal qiladi → referer butunlay
+    // o'chiriladi → YouTube embed "Xato 153" beradi. Shuning uchun SHU route'da
+    // helmet header'ini OCHIQ ravishda bekor qilamiz: YouTube embedlovchi
+    // origin'ni (https://farzandimedu.uz) ko'rishi uchun referer yuboramiz.
+    reply.header('Referrer-Policy', 'strict-origin-when-cross-origin');
+    // youtube-nocookie.com — privacy-host, embed cheklovlariga yumshoqroq
+    // (153/150 kamroq chiqadi), aks holda www.youtube.com bilan bir xil.
     const src =
-      `https://www.youtube.com/embed/${id}` +
+      `https://www.youtube-nocookie.com/embed/${id}` +
       `?playsinline=1&rel=0&modestbranding=1&fs=1`;
     const html =
       '<!DOCTYPE html><html><head>' +
@@ -241,5 +267,11 @@ export class ConsumerContentController {
   @ApiOperation({ summary: 'Record a book read' })
   recordBookRead(@Param('id') id: string) {
     return this.service.recordBookRead(id);
+  }
+
+  @Post('articles/:id/read')
+  @ApiOperation({ summary: 'Record an article read (views++)' })
+  recordArticleRead(@Param('id') id: string) {
+    return this.service.recordArticleRead(id);
   }
 }

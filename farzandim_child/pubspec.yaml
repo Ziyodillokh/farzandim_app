@@ -126,6 +126,8 @@ dependencies:
   url_launcher: ^6.3.1
   flutter_pdfview: ^1.4.4
   phosphor_flutter: ^2.1.0
+  # Maqolalar (#48) — markdown render uchun.
+  flutter_markdown: ^0.7.4
 
 # `record_linux 0.7.2` + `record_platform_interface 1.5.0` orasida API
 # nomutanosibligi (RecordLinux.startStream signature). Eski stable

@@ -272,6 +272,55 @@ export class ConsumerContentService {
     };
   }
 
+  /** Maqolalar — bola yoshiga mos + approved (#48). Markdown `body` qaytadi. */
+  async getArticles(
+    userId: string,
+    origin: string,
+    page: number,
+    limit: number,
+  ) {
+    const ctx = await this.loadChildContext(userId);
+    const a = ctx.age ?? 8;
+
+    const where: Prisma.ArticleWhereInput = {
+      status: 'approved',
+      ageFrom: { lte: a },
+      ageTo: { gte: a },
+    };
+
+    const [total, rows] = await Promise.all([
+      this.prisma.article.count({ where }),
+      this.prisma.article.findMany({
+        where,
+        orderBy: [{ createdAt: 'desc' }],
+        skip: (page - 1) * limit,
+        take: limit,
+      }),
+    ]);
+
+    const items = rows.map((r) => ({
+      id: r.id,
+      title: r.title,
+      body: r.body,
+      coverUrl: mediaProxyUrl(origin, 'cover', r.coverPath),
+      ageFrom: r.ageFrom,
+      ageTo: r.ageTo,
+      category: r.category,
+      views: r.views,
+      createdAt: r.createdAt.toISOString(),
+    }));
+
+    return {
+      items,
+      pagination: {
+        page,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+        total,
+        limit,
+      },
+    };
+  }
+
   async getCategories(kind?: string) {
     const where: Prisma.ContentCategoryWhereInput = {};
     if (kind) where.kind = kind;
@@ -401,6 +450,21 @@ export class ConsumerContentService {
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2025') {
         throw new NotFoundException('Book not found');
+      }
+      throw err;
+    }
+  }
+
+  async recordArticleRead(id: string) {
+    try {
+      await this.prisma.article.update({
+        where: { id },
+        data: { views: { increment: 1 } },
+      });
+      return { ok: true };
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'P2025') {
+        throw new NotFoundException('Article not found');
       }
       throw err;
     }

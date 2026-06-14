@@ -8,6 +8,8 @@ import { AudiobooksController } from './audiobooks/audiobooks.controller';
 import { AudiobooksService } from './audiobooks/audiobooks.service';
 import { BooksController } from './books/books.controller';
 import { BooksService } from './books/books.service';
+import { ArticlesController } from './articles/articles.controller';
+import { ArticlesService } from './articles/articles.service';
 
 @Module({
   imports: [StorageModule],
@@ -16,12 +18,14 @@ import { BooksService } from './books/books.service';
     VideosController,
     AudiobooksController,
     BooksController,
+    ArticlesController,
   ],
   providers: [
     CategoriesService,
     VideosService,
     AudiobooksService,
     BooksService,
+    ArticlesService,
   ],
 })
 export class AdminContentModule {}

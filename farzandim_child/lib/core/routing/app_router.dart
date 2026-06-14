@@ -28,6 +28,9 @@ import 'package:farzandim_child/features/settings/presentation/screens/settings_
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audio_player_screen.dart';
+import 'package:farzandim_child/features/articles/data/models/article_model.dart';
+import 'package:farzandim_child/features/articles/presentation/screens/article_view_screen.dart';
+import 'package:farzandim_child/features/articles/presentation/screens/articles_feed_screen.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/presentation/screens/books_feed_screen.dart';
 import 'package:farzandim_child/features/books/presentation/screens/pdf_viewer_screen.dart';
@@ -147,6 +150,7 @@ final routerProvider = Provider<GoRouter>((ref) {
       const publicPaths = {
         '/splash',
         '/pairing',
+        '/pair-waiting',
         '/qr-scan',
         '/consent',
         '/onboarding',
@@ -297,6 +301,19 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final book = state.extra as BookModel;
           return PdfViewerScreen(book: book);
+        },
+      ),
+      // #48 — Maqolalar (foydali bilimlar)
+      GoRoute(
+        path: '/articles',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ArticlesFeedScreen()),
+      ),
+      GoRoute(
+        path: '/articles/view',
+        builder: (context, state) {
+          final article = state.extra as ArticleModel;
+          return ArticleViewScreen(article: article);
         },
       ),
       GoRoute(
