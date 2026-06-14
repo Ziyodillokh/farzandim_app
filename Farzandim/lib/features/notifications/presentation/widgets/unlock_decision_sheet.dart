@@ -2,9 +2,11 @@
 // UnlockDecisionSheet — ota-ona unlock so'roviga qaror beradi
 // ─────────────────────────────────────────────────────────────────────
 //
-// Bola "qo'shimcha vaqt" so'raganda ota-ona shu pastki varaqда qaror beradi:
-//   - "Rad etish" → deny (result: UnlockDecision.deny())
-//   - 5 / 15 / 30 / 60 daqiqa → grant (result: UnlockDecision.grant(min))
+// Bola "qo'shimcha vaqt" so'raganda (so'ralgan daqiqa + sabab bilan) ota-ona
+// shu pastki varaqda qaror beradi:
+//   - "Tasdiqlash ({N} daqiqa)" → bola so'ragan miqdorni o'shancha beradi
+//   - "Boshqa muddat" chiplari (5/15/30/60) → boshqa miqdor berish
+//   - "Rad etish" → deny
 //   - tashqariga bossa → null (bekor)
 
 import 'package:farzandim/core/theme/app_colors.dart';
@@ -27,6 +29,8 @@ class UnlockDecisionSheet extends StatelessWidget {
   const UnlockDecisionSheet({
     required this.childName,
     this.appName,
+    this.requestedMinutes,
+    this.reason,
     super.key,
   });
 
@@ -36,11 +40,19 @@ class UnlockDecisionSheet extends StatelessWidget {
   /// APP so'rovi bo'lsa ilova nomi (bo'lmasa ekran vaqti).
   final String? appName;
 
+  /// Bola so'ragan daqiqa (5..60). null bo'lsa eski oqim — faqat chiplar.
+  final int? requestedMinutes;
+
+  /// Bola yozgan sabab (ixtiyoriy).
+  final String? reason;
+
   /// Varaqni ochadi; tanlangan qaror (bekor bo'lsa null) qaytadi.
   static Future<UnlockDecision?> show(
     BuildContext context, {
     required String childName,
     String? appName,
+    int? requestedMinutes,
+    String? reason,
   }) {
     return showModalBottomSheet<UnlockDecision>(
       context: context,
@@ -51,8 +63,12 @@ class UnlockDecisionSheet extends StatelessWidget {
           top: Radius.circular(AppDimensions.radiusL),
         ),
       ),
-      builder: (_) =>
-          UnlockDecisionSheet(childName: childName, appName: appName),
+      builder: (_) => UnlockDecisionSheet(
+        childName: childName,
+        appName: appName,
+        requestedMinutes: requestedMinutes,
+        reason: reason,
+      ),
     );
   }
 
@@ -61,6 +77,13 @@ class UnlockDecisionSheet extends StatelessWidget {
     final subject = (appName != null && appName!.trim().isNotEmpty)
         ? appName!
         : 'ekran vaqti';
+    final req = requestedMinutes;
+    final reasonText = reason?.trim();
+    // So'ralgan miqdor bo'lsa, chiplar "boshqa muddat" sifatida shu qiymatni
+    // takrorlamasin (asosiy tugmada bor).
+    final chipMinutes =
+        const [5, 15, 30, 60].where((m) => m != req).toList(growable: false);
+
     return SafeArea(
       top: false,
       child: Padding(
@@ -92,23 +115,47 @@ class UnlockDecisionSheet extends StatelessWidget {
             ),
             const SizedBox(height: 6),
             Text(
-              '$childName — "$subject" uchun qo\'shimcha vaqt so\'rayapti. '
-              'Qancha vaqt berasiz?',
+              req != null
+                  ? '$childName — "$subject" uchun $req daqiqa '
+                      "qo'shimcha vaqt so'rayapti."
+                  : '$childName — "$subject" uchun qo\'shimcha vaqt '
+                      "so'rayapti. Qancha vaqt berasiz?",
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textSecondary,
               ),
             ),
+            // Sabab (bola yozgan bo'lsa).
+            if (reasonText != null && reasonText.isNotEmpty) ...[
+              const SizedBox(height: AppDimensions.md),
+              _ReasonBox(reason: reasonText),
+            ],
             const SizedBox(height: AppDimensions.lg),
-            // Daqiqa variantlari
+            // Asosiy amal — bola so'ragan miqdorni o'shancha tasdiqlash.
+            if (req != null) ...[
+              _ApproveRequestedButton(
+                minutes: req,
+                onTap: () =>
+                    Navigator.of(context).pop(UnlockDecision.grant(req)),
+              ),
+              const SizedBox(height: AppDimensions.md),
+              Text(
+                'Boshqa muddat berish:',
+                style: AppTextStyles.label.copyWith(
+                  color: AppColors.textTertiary,
+                ),
+              ),
+              const SizedBox(height: 10),
+            ],
+            // Daqiqa variantlari (so'ralgan miqdordan boshqa muddatlar).
             Wrap(
               spacing: 12,
               runSpacing: 12,
               children: [
-                for (final m in const [5, 15, 30, 60])
+                for (final m in chipMinutes)
                   _MinuteChip(
                     minutes: m,
-                    onTap: () => Navigator.of(context)
-                        .pop(UnlockDecision.grant(m)),
+                    onTap: () =>
+                        Navigator.of(context).pop(UnlockDecision.grant(m)),
                   ),
               ],
             ),
@@ -145,6 +192,89 @@ class UnlockDecisionSheet extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Bola yozgan sabab — yumshoq fon ichidagi quote.
+class _ReasonBox extends StatelessWidget {
+  const _ReasonBox({required this.reason});
+  final String reason;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(AppDimensions.md),
+      decoration: BoxDecoration(
+        color: AppColors.surfaceVariant,
+        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(
+            Icons.format_quote_rounded,
+            size: 18,
+            color: AppColors.textTertiary,
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Text(
+              reason,
+              style: AppTextStyles.bodyS.copyWith(
+                color: AppColors.textPrimary,
+                height: 1.4,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Tasdiqlash ({N} daqiqa)" — to'liq-kenglik asosiy lime tugma.
+class _ApproveRequestedButton extends StatelessWidget {
+  const _ApproveRequestedButton({required this.minutes, required this.onTap});
+  final int minutes;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: double.infinity,
+      child: Material(
+        color: AppColors.primary,
+        shape: const StadiumBorder(),
+        clipBehavior: Clip.antiAlias,
+        child: InkWell(
+          onTap: onTap,
+          customBorder: const StadiumBorder(),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(vertical: 15),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                const Icon(
+                  Icons.check_circle_rounded,
+                  size: 20,
+                  color: Colors.black,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Tasdiqlash ($minutes daqiqa)',
+                  style: AppTextStyles.bodyM.copyWith(
+                    color: Colors.black,
+                    fontWeight: FontWeight.w800,
+                  ),
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

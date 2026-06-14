@@ -255,6 +255,24 @@ class AppNotification {
   /// unlockRequest turi — 'APP' yoki 'SCREEN_TIME'.
   String? get unlockKind => data?['kind'] as String?;
 
+  /// unlockRequest uchun — bola so'ragan daqiqa (5..60). FCM string yuboradi,
+  /// WS esa int — ikkisini ham qo'llab-quvvatlaymiz.
+  int? get requestedMinutes {
+    final v = data?['requestedMinutes'];
+    if (v is int) return v;
+    if (v is num) return v.toInt();
+    if (v is String) return int.tryParse(v);
+    return null;
+  }
+
+  /// unlockRequest uchun — bola yozgan sabab (ixtiyoriy, bo'sh bo'lishi
+  /// mumkin).
+  String? get unlockReason {
+    final v = data?['reason'];
+    if (v is String && v.trim().isNotEmpty) return v.trim();
+    return null;
+  }
+
   /// Bu xabar bola unlock so'rovimi.
   bool get isUnlockRequest => type == NotificationType.unlockRequest;
 

@@ -497,6 +497,11 @@ model UnlockRequest {
   kind           String
   // 'PENDING' | 'APPROVED' | 'DENIED' | 'EXPIRED'
   status         String   @default("PENDING")
+  // Bola so'ragan qo'shimcha daqiqalar (5..60) — ota-onaga ko'rsatiladi va
+  // tasdiqlashda default sifatida ishlatiladi ("o'shancha miqdorda beriladi").
+  requestedMinutes Int?   @map("requested_minutes")
+  // Bola yozgan sabab (ixtiyoriy) — ota-ona qaror berishda o'qiydi.
+  reason         String?
   // Ota-ona bergan qo'shimcha daqiqalar (APPROVED bo'lsa 5..60).
   grantedMinutes Int?     @map("granted_minutes")
   requestedAt    DateTime @default(now()) @map("requested_at")

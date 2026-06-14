@@ -30,17 +30,26 @@ class BackendUnlockRequestRepository {
   /// Bloklangan ilova ('APP') yoki ekran-vaqt ('SCREEN_TIME') uchun
   /// qo'shimcha vaqt so'rovi. childId JWT'dan olinadi (path'da kerak emas).
   /// Backend dublikat (ochiq PENDING) bo'lsa o'shanini qaytaradi — spam yo'q.
+  ///
+  /// [requestedMinutes] (5..60) va [reason] bola modalda kiritadi — ota-onaga
+  /// ko'rsatiladi; tasdiqlanса o'shancha miqdorda limit qo'shiladi.
   Future<bool> createRequest({
     required String kind,
     String? packageName,
+    int? requestedMinutes,
+    String? reason,
   }) async {
     try {
+      final trimmedReason = reason?.trim();
       await _dio.post<Map<String, dynamic>>(
         '/unlock-requests',
         data: {
           'kind': kind,
           if (packageName != null && packageName.isNotEmpty)
             'packageName': packageName,
+          if (requestedMinutes != null) 'requestedMinutes': requestedMinutes,
+          if (trimmedReason != null && trimmedReason.isNotEmpty)
+            'reason': trimmedReason,
         },
       );
       return true;

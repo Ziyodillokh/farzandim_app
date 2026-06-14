@@ -3,6 +3,7 @@ package com.farzandim.farzandim_child
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
 import android.app.Service
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
@@ -31,6 +32,7 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
+import java.util.Calendar
 
 /**
  * App restriction foreground service — Sprint 4.2 implementation.
@@ -71,6 +73,16 @@ class RestrictionService : Service() {
         // vaqt tugadi.
         private const val REASON_BLOCKED = "blocked"
         private const val REASON_LIMIT = "limit"
+
+        // Limitga shu vaqt qolganda bolaga "vaqting tugayapti" ogohlantirish
+        // (kuniga bir marta/ilova) — bola qo'shimcha vaqt so'rashga ulgursin.
+        private const val PRE_WARNING_MS = 10 * 60 * 1000L
+        private const val WARN_CHANNEL_ID = "farzandim_limit_warning"
+        private const val WARN_NOTIFICATION_BASE = 5200
+        // SharedPreferences: "<prefix><paket>.<limit>.<sana>" → ogohlantirildi.
+        // Limit grant bilan oshsa kalit o'zgaradi → yangi ogohlantirish mumkin.
+        private const val PREFS_KEY_WARNED_PREFIX =
+            "flutter.restriction.limit_warned."
 
         // SharedPreferences key — Dart RestrictionsSyncService yozadi.
         // Schema: "com.app1,com.app2,..." (comma-separated)
@@ -266,6 +278,12 @@ class RestrictionService : Service() {
                     currentBlockedPackage = foreground
                 }
                 return
+            }
+            // Limitga PRE_WARNING_MS (10 daqiqa) yoki kamroq qoldi — bir marta
+            // ogohlantiramiz (bola qo'shimcha vaqt so'rashga ulgursin). Bosilsa
+            // unlock modal ochiladi (MainActivity unlock_request_package extra).
+            if (limitMs - usageMs <= PRE_WARNING_MS) {
+                maybeShowLimitWarning(foreground, limitMinutes)
             }
         }
 
@@ -863,6 +881,85 @@ class RestrictionService : Service() {
 
             val manager = getSystemService(NotificationManager::class.java)
             manager?.createNotificationChannel(channel)
+
+            // Limit ogohlantirish kanali — HIGH (heads-up + ovoz), bola
+            // "vaqting tugayapti" xabarini sezsin.
+            val warnChannel = NotificationChannel(
+                WARN_CHANNEL_ID,
+                "Vaqt tugashi ogohlantirishi",
+                NotificationManager.IMPORTANCE_HIGH,
+            ).apply {
+                description = "Ilova vaqti tugashidan oldin ogohlantirish"
+                setShowBadge(true)
+            }
+            manager?.createNotificationChannel(warnChannel)
+        }
+    }
+
+    /**
+     * Limitga ~10 daqiqa qolganda bir marta (paket+limit+sana bo'yicha)
+     * ogohlantirish notification ko'rsatadi. Limit grant bilan oshsa kalit
+     * o'zgaradi → yangi limitga yaqinlashganda yana ogohlantirish mumkin.
+     */
+    private fun maybeShowLimitWarning(packageName: String, limitMinutes: Int) {
+        val prefs: SharedPreferences =
+            getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+        val cal = Calendar.getInstance()
+        val dayKey = "${cal.get(Calendar.YEAR)}-${cal.get(Calendar.DAY_OF_YEAR)}"
+        val key = "$PREFS_KEY_WARNED_PREFIX$packageName.$limitMinutes.$dayKey"
+        if (prefs.getBoolean(key, false)) return
+        prefs.edit().putBoolean(key, true).apply()
+        showLimitWarningNotification(packageName)
+    }
+
+    /** "Vaqting tugayapti" notification — bosilsa unlock modal ochiladi. */
+    private fun showLimitWarningNotification(packageName: String) {
+        val label = appLabelFor(packageName)
+        // Bosilganda MainActivity ochilib, unlock so'rov modalini ko'rsatadi
+        // (overlay "Ruxsat so'rash" tugmasi bilan bir xil extra).
+        val tapIntent = Intent(this, MainActivity::class.java).apply {
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+            putExtra("unlock_request_package", packageName)
+        }
+        val piFlags =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+        val pi = PendingIntent.getActivity(
+            this,
+            packageName.hashCode(),
+            tapIntent,
+            piFlags,
+        )
+        val text = "$label uchun bugungi vaqtingga ~10 daqiqa qoldi. " +
+            "Ko'proq vaqt uchun bosib ota-onangdan so'ra."
+        val notif = NotificationCompat.Builder(this, WARN_CHANNEL_ID)
+            .setContentTitle("Vaqting tugayapti")
+            .setContentText(text)
+            .setStyle(NotificationCompat.BigTextStyle().bigText(text))
+            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setPriority(NotificationCompat.PRIORITY_HIGH)
+            .setAutoCancel(true)
+            .setContentIntent(pi)
+            .build()
+        val manager = getSystemService(NotificationManager::class.java)
+        manager?.notify(
+            WARN_NOTIFICATION_BASE + (packageName.hashCode() and 0xFFF),
+            notif,
+        )
+    }
+
+    /** Paket uchun foydalanuvchiga ko'rinadigan ilova nomi (yo'q bo'lsa paket). */
+    private fun appLabelFor(packageName: String): String {
+        return try {
+            val pm = packageManager
+            pm.getApplicationLabel(pm.getApplicationInfo(packageName, 0))
+                .toString()
+        } catch (e: Exception) {
+            packageName
         }
     }
 

@@ -51,6 +51,12 @@ class NotificationCard extends StatelessWidget {
 
   bool get _blockable => notification.isGame && onBlock != null;
 
+  /// Aksiyali kartochkaning ikkilamchi qatori — unlock so'rovida ilova+vaqt
+  /// matni (message), pair so'rovida bola ismi.
+  String get _actionSubtitle => notification.isUnlockRequest
+      ? notification.message.trim()
+      : notification.childName.trim();
+
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(AppDimensions.radiusL);
@@ -103,14 +109,30 @@ class NotificationCard extends StatelessWidget {
                           overflow: TextOverflow.ellipsis,
                         ),
                         if (_actionable) ...[
-                          if (notification.childName.trim().isNotEmpty) ...[
+                          // Unlock so'rovi: ilova + so'ralgan vaqt (message).
+                          // Pair so'rovi: bola ismi.
+                          if (_actionSubtitle.isNotEmpty) ...[
                             const SizedBox(height: 3),
                             Text(
-                              notification.childName,
+                              _actionSubtitle,
                               style: AppTextStyles.bodyS.copyWith(
                                 color: AppColors.textSecondary,
                               ),
-                              maxLines: 1,
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ],
+                          // Bola yozgan sabab (unlock so'rovi uchun).
+                          if (notification.isUnlockRequest &&
+                              notification.unlockReason != null) ...[
+                            const SizedBox(height: 4),
+                            Text(
+                              '"${notification.unlockReason}"',
+                              style: AppTextStyles.bodyS.copyWith(
+                                color: AppColors.textSecondary,
+                                fontStyle: FontStyle.italic,
+                              ),
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                             ),
                           ],

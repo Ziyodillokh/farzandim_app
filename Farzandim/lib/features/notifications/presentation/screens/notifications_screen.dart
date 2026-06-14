@@ -216,6 +216,8 @@ class _NotificationsList extends ConsumerWidget {
       context,
       childName: n.childName,
       appName: n.appName ?? n.packageName,
+      requestedMinutes: n.requestedMinutes,
+      reason: n.unlockReason,
     );
     if (decision == null || !context.mounted) return;
 

@@ -1,5 +1,15 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, MaxLength, MinLength } from 'class-validator';
+import { Type } from 'class-transformer';
+import {
+  IsIn,
+  IsInt,
+  IsOptional,
+  IsString,
+  Max,
+  MaxLength,
+  Min,
+  MinLength,
+} from 'class-validator';
 
 /** Bola yuboradigan "qo'shimcha vaqt" so'rovi. */
 export class CreateUnlockRequestDto {
@@ -17,4 +27,26 @@ export class CreateUnlockRequestDto {
   @MinLength(1)
   @MaxLength(255)
   packageName?: string;
+
+  @ApiPropertyOptional({
+    description: "Bola so'ragan qo'shimcha daqiqalar (5..60)",
+    example: 15,
+    minimum: 5,
+    maximum: 60,
+  })
+  @IsOptional()
+  @Type(() => Number)
+  @IsInt()
+  @Min(5)
+  @Max(60)
+  requestedMinutes?: number;
+
+  @ApiPropertyOptional({
+    description: 'Bola yozgan sabab (ixtiyoriy)',
+    example: 'Darsga tayyorlanishim kerak',
+  })
+  @IsOptional()
+  @IsString()
+  @MaxLength(300)
+  reason?: string;
 }

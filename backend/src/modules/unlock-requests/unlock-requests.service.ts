@@ -39,6 +39,8 @@ export class UnlockRequestsService {
       packageName: r.packageName,
       kind: r.kind,
       status: r.status,
+      requestedMinutes: r.requestedMinutes,
+      reason: r.reason,
       grantedMinutes: r.grantedMinutes,
       requestedAt: r.requestedAt.toISOString(),
       decidedAt: r.decidedAt ? r.decidedAt.toISOString() : null,
@@ -78,12 +80,18 @@ export class UnlockRequestsService {
     });
     if (existing) return this.serialize(existing);
 
+    // Bola so'ragan vaqt (5..60) va sabab — ota-onaga ko'rsatiladi.
+    const requestedMinutes = dto.requestedMinutes ?? null;
+    const reason = dto.reason?.trim() ? dto.reason.trim() : null;
+
     const request = await this.prisma.unlockRequest.create({
       data: {
         childId: child.id,
         kind: dto.kind,
         packageName,
         status: 'PENDING',
+        requestedMinutes,
+        reason,
         expiresAt: new Date(now.getTime() + REQUEST_TTL_MS),
       },
     });
@@ -97,10 +105,13 @@ export class UnlockRequestsService {
           })
         )?.appName ?? packageName
       : null;
+    // Spec: "{ilova} uchun {N} daqiqa limit so'rayapti" — so'ralgan vaqt
+    // bo'lsa matnga qo'shamiz (title = bola ismi).
+    const minutesPart = requestedMinutes ? ` ${requestedMinutes} daqiqa` : '';
     const body =
       dto.kind === 'APP'
-        ? `Farzandingiz ${appLabel} uchun qo'shimcha vaqt so'rayapti.`
-        : "Farzandingiz qo'shimcha ekran vaqti so'rayapti.";
+        ? `${appLabel} uchun${minutesPart} qo'shimcha vaqt so'rayapti.`
+        : `Qo'shimcha ekran vaqti${minutesPart} so'rayapti.`;
 
     void this.fcm
       .sendPushToUser(child.parentId, {
@@ -114,6 +125,10 @@ export class UnlockRequestsService {
           kind: dto.kind,
           ...(packageName ? { packageName } : {}),
           ...(appLabel ? { appName: appLabel } : {}),
+          ...(requestedMinutes
+            ? { requestedMinutes: String(requestedMinutes) }
+            : {}),
+          ...(reason ? { reason } : {}),
         },
       })
       .catch((err) => this.logger.warn({ err }, 'unlock_request push failed'));
@@ -130,12 +145,18 @@ export class UnlockRequestsService {
           kind: dto.kind,
           ...(packageName ? { packageName } : {}),
           ...(appLabel ? { appName: appLabel } : {}),
+          ...(requestedMinutes ? { requestedMinutes } : {}),
+          ...(reason ? { reason } : {}),
         },
       },
     });
 
-    this.realtime.emitToChild(child.id, 'unlock_request:created', this.serialize(request));
-    return this.serialize(request);
+    // Bola room'i (boshqa bola qurilmalari) + ota-ona user room'i (ekran
+    // ochiq turganda yangi PENDING jonli ko'rinsin).
+    const payload = this.serialize(request);
+    this.realtime.emitToChild(child.id, 'unlock_request:created', payload);
+    this.realtime.emitToUser(child.parentId, 'unlock_request:created', payload);
+    return payload;
   }
 
   /* ------------------------------------------------------------------ */
@@ -283,10 +304,14 @@ export class UnlockRequestsService {
 
     // Bolaning limit sync'i darhol yangilansin (WS) — grant kunlik limitga
     // qo'shiladi (app-limits.list augmentatsiyasi orqali).
-    this.realtime.emitToChild(request.child.id, 'unlock_request:decided', this.serialize(updated));
+    const decidedPayload = this.serialize(updated);
+    this.realtime.emitToChild(request.child.id, 'unlock_request:decided', decidedPayload);
     this.realtime.emitToChild(request.child.id, 'app_limit:updated', { reason: 'unlock' });
+    // Ota-onaning boshqa qurilmalari ham qaror natijasini ko'rsin (so'rov
+    // ro'yxatdan chiqsin / status yangilansin).
+    this.realtime.emitToUser(request.child.parentId, 'unlock_request:decided', decidedPayload);
 
-    return this.serialize(updated);
+    return decidedPayload;
   }
 
   /* ------------------------------------------------------------------ */
