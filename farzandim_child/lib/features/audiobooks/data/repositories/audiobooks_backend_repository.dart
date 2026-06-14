@@ -21,6 +21,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 
 final audiobooksBackendRepositoryProvider =
@@ -83,8 +84,8 @@ class AudiobooksBackendRepository {
       title: (raw['title'] as String?) ?? '—',
       author: (raw['author'] as String?) ?? 'Noma\'lum',
       description: (raw['description'] as String?) ?? '',
-      coverUrl: (raw['thumbnail'] as String?) ?? '',
-      audioUrl: (raw['audioUrl'] as String?) ?? '',
+      coverUrl: EnvConfig.resolveMediaUrl((raw['thumbnail'] as String?) ?? ''),
+      audioUrl: EnvConfig.resolveMediaUrl((raw['audioUrl'] as String?) ?? ''),
       durationSeconds: durationSec,
       duration: _formatDuration(durationSec),
       category: category?.isNotEmpty == true ? _humanCategory(category!) : 'Boshqa',

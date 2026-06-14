@@ -2,11 +2,13 @@ import {
   Body,
   Controller,
   Get,
+  Header,
   Post,
   Param,
   Query,
   Req,
   Res,
+  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -109,35 +111,27 @@ export class ConsumerContentController {
   }
 
   // @Public content media proxy (audio/thumb/cover/video/pdf) — auth
-  // header'siz ishlaydi. Range qo'llab-quvvatlaydi (audio/video seek va
-  // M4A moov uchun shart, aks holda telefon player 0:00 da qotadi).
-  // storageKey uuid = capability (taxmin qilib bo'lmaydi).
+  // header'siz ishlaydi. Xom signed MinIO URL telefonga yetib bo'lmaydi,
+  // shuning uchun backend orqali proxy. storageKey uuid = capability.
+  //
+  // Ovozli/video xabarlar bilan BIR XIL isbotlangan pattern: StreamableFile
+  // (200, to'liq buffer) — just_audio/ExoPlayer bola'da aynan shu bilan
+  // o'ynaydi (voice/video-messages shunday ishlaydi; Range @Res yo'li bola'da
+  // 0:00 da qotardi). Content-Type'ni fayl kengaytmasidan ANIQLAYMIZ: admin
+  // audio'ni ishonchsiz MIME bilan (octet-stream / audio/x-m4a) yuklagani
+  // uchun player formatni topolmasdi.
   @Get('media/:segment/:file')
   @Public()
-  @ApiOperation({ summary: 'Stream content media (Range-aware proxy)' })
+  @Header('Cache-Control', 'public, max-age=86400')
+  @ApiOperation({ summary: 'Stream content media (proxy)' })
   async streamMedia(
     @Param('segment') segment: string,
     @Param('file') file: string,
-    @Req() req: FastifyRequest,
-    @Res() reply: FastifyReply,
-  ) {
-    const range = req.headers.range;
-    const obj = await this.service.getMediaStream(segment, file, range);
-    reply.header('Accept-Ranges', 'bytes');
-    reply.header('Cache-Control', 'public, max-age=86400');
-    // Content-Type'ni fayl kengaytmasi/segment'dan ANIQLAYMIZ — admin audio'ni
-    // MIME'siz yuklagani uchun MinIO'da octet-stream YOKI noto'g'ri tur
-    // (audio/x-m4a kabi) saqlanadi va telefon player (just_audio/ExoPlayer/
-    // AVPlayer) buni o'qiy olmay 0:00 da qotardi.
-    reply.type(this.contentTypeFor(segment, file, obj.contentType));
-    if (obj.contentRange) {
-      reply.code(206);
-      reply.header('Content-Range', obj.contentRange);
-    }
-    if (obj.contentLength != null) {
-      reply.header('Content-Length', String(obj.contentLength));
-    }
-    return reply.send(obj.stream);
+  ): Promise<StreamableFile> {
+    const obj = await this.service.streamContentMedia(segment, file);
+    return new StreamableFile(obj.body, {
+      type: this.contentTypeFor(segment, file, obj.contentType),
+    });
   }
 
   // Fayl kengaytmasidan to'g'ri MIME — saqlangan tur ishonchli (octet-stream

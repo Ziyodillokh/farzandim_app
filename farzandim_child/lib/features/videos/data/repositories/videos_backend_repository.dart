@@ -28,6 +28,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 
 final videosBackendRepositoryProvider = Provider<VideosBackendRepository>((ref) {
@@ -103,10 +104,10 @@ class VideosBackendRepository {
       id: id,
       title: (raw['title'] as String?) ?? '—',
       description: (raw['description'] as String?) ?? '',
-      thumbnailUrl: (raw['thumbnail'] as String?) ?? '',
+      thumbnailUrl: EnvConfig.resolveMediaUrl((raw['thumbnail'] as String?) ?? ''),
       duration: _formatDuration(durationSec),
       durationSeconds: durationSec,
-      videoUrl: (raw['url'] as String?) ?? '',
+      videoUrl: EnvConfig.resolveMediaUrl((raw['url'] as String?) ?? ''),
       category: category?.isNotEmpty == true ? _humanCategory(category!) : 'Boshqa',
       soha: _sohaFor(category),
       yonalish: "Ta'lim",

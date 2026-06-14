@@ -18,6 +18,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 
 final booksBackendRepositoryProvider = Provider<BooksBackendRepository>((ref) {
@@ -62,8 +63,8 @@ class BooksBackendRepository {
       title: (raw['title'] as String?) ?? '—',
       author: (raw['author'] as String?) ?? 'Noma\'lum',
       description: (raw['description'] as String?) ?? '',
-      pdfUrl: (raw['pdfUrl'] as String?) ?? '',
-      coverUrl: (raw['coverUrl'] as String?) ?? '',
+      pdfUrl: EnvConfig.resolveMediaUrl((raw['pdfUrl'] as String?) ?? ''),
+      coverUrl: EnvConfig.resolveMediaUrl((raw['coverUrl'] as String?) ?? ''),
       coverColor: _coverColorFor(id),
       pages: (raw['pages'] as num?)?.toInt() ?? 0,
       category: (raw['category'] as String?) ?? 'school',

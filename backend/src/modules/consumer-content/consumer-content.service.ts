@@ -354,10 +354,13 @@ export class ConsumerContentService {
     return { bucket: m.bucket, key: m.prefix + file };
   }
 
-  // Range-aware media stream (audio/video seek + M4A moov uchun shart).
-  async getMediaStream(segment: string, file: string, range?: string) {
+  // Content media baytlarini backend orqali stream qiladi — voice/video
+  // xabarlar bilan BIR XIL isbotlangan pattern (getObject + StreamableFile).
+  // just_audio/ExoPlayer bola'da aynan shu bilan o'ynaydi; Range @Res yo'li
+  // (deployed bo'lsa-da) bola'da 0:00 da qotardi.
+  async streamContentMedia(segment: string, file: string) {
     const { bucket, key } = this.resolveMediaKey(segment, file);
-    return this.storage.getObjectStream(bucket, key, range);
+    return this.storage.getObject(bucket, key);
   }
 
   async recordVideoLike(id: string) {

@@ -20,4 +20,19 @@ class EnvConfig {
   static const String apiPath = '/api';
 
   static String get apiUrl => '$apiBaseUrl$apiPath';
+
+  /// Backend qaytargan media proxy URL'ini HAR DOIM shu ilovaning o'z
+  /// `apiUrl`'iga majburlaydi.
+  ///
+  /// Backend URL'ni so'rov Host'i (`requestOrigin`) asosida quradi. Agar u
+  /// noto'g'ri/boshqa domen bersa (masalan test vs prod, yoki nginx Host'ni
+  /// uzatmasa) telefon media'ga yeta olmaydi. Biz `/content/media/...` qismini
+  /// ajratib, ilova ishlatayotgan bazaga ulaymiz — domen-mustaqil, ishonchli.
+  /// Tashqi havolalar (YouTube / to'g'ridan .mp4) o'zgarmaydi.
+  static String resolveMediaUrl(String url) {
+    const marker = '/content/media/';
+    final i = url.indexOf(marker);
+    if (i < 0) return url;
+    return '$apiUrl${url.substring(i)}';
+  }
 }
