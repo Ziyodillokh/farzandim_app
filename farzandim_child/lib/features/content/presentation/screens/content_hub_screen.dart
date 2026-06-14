@@ -144,7 +144,7 @@ class _VideosTab extends ConsumerWidget {
                   },
                 )
               : SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 100),
+                  padding: const EdgeInsets.only(bottom: 140),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

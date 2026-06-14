@@ -164,8 +164,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     String childName,
   ) {
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 16).copyWith(
-        bottom: 100,
+      // extendBody:true + bottom nav (MiniAudioPlayer + 56px nav row) ustidan
+      // oxirgi blok ("Oxirgi faoliyat") kesilmasligi uchun yetarli pastki bo'sh
+      // joy: nav balandligi + qurilma gesture/nav-bar safe-area'si.
+      padding: EdgeInsets.fromLTRB(
+        16,
+        0,
+        16,
+        140 + MediaQuery.viewPaddingOf(context).bottom,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

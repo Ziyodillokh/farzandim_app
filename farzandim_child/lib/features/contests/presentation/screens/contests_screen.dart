@@ -129,7 +129,7 @@ class _List extends StatelessWidget {
     }
 
     return ListView.builder(
-      padding: const EdgeInsets.only(bottom: 100),
+      padding: const EdgeInsets.only(bottom: 140),
       itemCount: contests.length,
       itemBuilder: (_, i) => ContestCard(contest: contests[i]),
     );
