@@ -232,6 +232,13 @@ flutter_launcher_icons:
   image_path: "assets/icons/parent_logo_icon.png"
   min_sdk_android: 21
 
+  # Adaptive icon (Android 8+) — Samsung/launcher'lar "legacy" ikonkaga o'zi
+  # katta padding qo'shib qalqonni kichraytirardi (oq joy ko'p). To'g'ri
+  # adaptive icon berilsa launcher uni to'g'ridan-to'g'ri ishlatadi: oq fon +
+  # KATTA qalqon (foreground 0.76 — kam oq chet).
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/parent_adaptive_fg.png"
+
   # iOS app icon'da alpha (shaffoflik) ruxsat etilmaydi — shaffof
   # burchaklarni dark fon (#0A0A12) bilan to'ldiradi.
   remove_alpha_ios: true

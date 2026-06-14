@@ -165,13 +165,19 @@ flutter_launcher_icons:
   ios: true
   image_path: "assets/icons/child_logo_icon.png"
   min_sdk_android: 21
-  adaptive_icon_background: "#0A0A16"
-  adaptive_icon_foreground: "assets/icons/child_logo_icon.png"
+  # Yangi qalqon logo oq fonli — adaptive fon ham OQ (parent bilan izchil),
+  # foreground KATTA qalqon (0.76 — kam oq chet, Samsung'da to'liq ko'rinadi).
+  adaptive_icon_background: "#FFFFFF"
+  adaptive_icon_foreground: "assets/icons/child_adaptive_fg.png"
+  # iOS app icon'da alpha (shaffoflik) ruxsat etilmaydi — oq bilan to'ldiriladi.
+  remove_alpha_ios: true
+  background_color_ios: "#FFFFFF"
 
-# Splash screen (flutter_native_splash) — yangi LOGO/ICON konvensiya
+# Splash screen (flutter_native_splash) — yangi qalqon logo, OQ fon (logo
+# oq fonli + bola ilovasi light-theme; parent splash bilan izchil).
 flutter_native_splash:
-  color: "#0A0A16"
+  color: "#FBFBFB"
   image: assets/icons/child_app_icon_white.png
   android_12:
-    color: "#0A0A16"
+    color: "#FBFBFB"
     image: assets/icons/child_app_icon_white.png
