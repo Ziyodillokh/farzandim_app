@@ -3,7 +3,6 @@
 // ─────────────────────────────────────────────────────────────────────
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -19,7 +18,8 @@ class NotificationTabs extends ConsumerWidget {
     return Container(
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        // Dark pill — bildirishnoma ekrani dark (mockup'ga mos).
+        color: const Color(0xFF1E1E2A),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Row(
@@ -80,7 +80,7 @@ class _TabButton extends StatelessWidget {
         child: Text(
           label,
           style: TextStyle(
-            color: active ? Colors.black : AppColors.textSecondary,
+            color: active ? Colors.black : const Color(0xFF8E8EA3),
             fontWeight: FontWeight.w600,
             fontSize: 15,
           ),

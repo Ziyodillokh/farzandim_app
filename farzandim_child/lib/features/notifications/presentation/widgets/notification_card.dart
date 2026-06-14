@@ -1,17 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// NotificationCard — bitta bildirishnoma elementi
+// NotificationCard — bitta bildirishnoma (dark, rasm bilan — mockup 1:1)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Layout:
+// Layout (yuqoridan pastga):
 //   ┌────────────────────────────────────┐
-//   │ [icon] Title              ●     │   ← ● = o'qilmagan dot
-//   │        Body matn...               │
-//   │        N daq oldin                │
+//   │ Yangi o'yin qo'shildi          ●  │ ← kichik kulrang sarlavha + unread
+//   │ Asosiy matn (oq) ...               │
+//   │ ┌────────────────────────────────┐ │
+//   │ │      rasm (ixtiyoriy)          │ │ ← thumbnailUrl bo'lsa
+//   │ └────────────────────────────────┘ │
+//   │ 2 mins ago                         │
 //   └────────────────────────────────────┘
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -28,6 +30,19 @@ class NotificationCard extends StatelessWidget {
   final VoidCallback onTap;
   final VoidCallback onDismiss;
 
+  // Dark palitra — mockup'ga qat'iy mos (theme'dan mustaqil).
+  static const Color _cardRead = Color(0xFF1E1E2A);
+  static const Color _cardUnread = Color(0xFF232333);
+  static const Color _titleGray = Color(0xFF9A9AB0);
+  static const Color _bodyWhite = Color(0xFFEDEDF5);
+  static const Color _timeGray = Color(0xFF6B6B80);
+  static const Color _imgFallbackA = Color(0xFF5B6CFF);
+  static const Color _imgFallbackB = Color(0xFF8E5BFF);
+
+  bool get _hasImage =>
+      notification.thumbnailUrl != null &&
+      notification.thumbnailUrl!.isNotEmpty;
+
   @override
   Widget build(BuildContext context) {
     return Dismissible(
@@ -35,10 +50,11 @@ class NotificationCard extends StatelessWidget {
       direction: DismissDirection.endToStart,
       background: Container(
         alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 20),
+        margin: const EdgeInsets.only(bottom: 12),
+        padding: const EdgeInsets.only(right: 22),
         decoration: BoxDecoration(
-          color: AppColors.error,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0xFFE43A5C),
+          borderRadius: BorderRadius.circular(18),
         ),
         child: const Icon(AppIcons.delete, color: Colors.white),
       ),
@@ -53,94 +69,105 @@ class NotificationCard extends StatelessWidget {
         },
         behavior: HitTestBehavior.opaque,
         child: Container(
-          margin: const EdgeInsets.only(bottom: 8),
+          margin: const EdgeInsets.only(bottom: 12),
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: notification.isRead
-                ? AppColors.surface
-                // ignore: deprecated_member_use
-                : notification.type.color.withOpacity(0.08),
-            borderRadius: BorderRadius.circular(16),
+            color: notification.isRead ? _cardRead : _cardUnread,
+            borderRadius: BorderRadius.circular(18),
             border: notification.isRead
-                ? null
+                ? Border.all(color: Colors.white.withValues(alpha: 0.04))
                 : Border.all(
-                    // ignore: deprecated_member_use
-                    color: notification.type.color.withOpacity(0.3),
+                    color: notification.type.color.withValues(alpha: 0.35),
                   ),
           ),
-          child: Row(
+          child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Container(
-                width: 44,
-                height: 44,
-                decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
-                  color: notification.type.color.withOpacity(0.15),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Icon(
-                  notification.type.icon,
-                  color: notification.type.color,
-                  size: 24,
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Expanded(
-                          child: Text(
-                            notification.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: TextStyle(
-                              color: AppColors.textPrimary,
-                              fontSize: 15,
-                              fontWeight: notification.isRead
-                                  ? FontWeight.w500
-                                  : FontWeight.w700,
-                            ),
-                          ),
-                        ),
-                        if (!notification.isRead)
-                          Container(
-                            width: 8,
-                            height: 8,
-                            decoration: BoxDecoration(
-                              color: notification.type.color,
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      notification.body,
-                      maxLines: 2,
+              // ── Sarlavha (kichik kulrang) + unread nuqta ──
+              Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      notification.title,
+                      maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: _titleGray,
                         fontSize: 13,
-                        height: 1.3,
+                        fontWeight: FontWeight.w600,
+                        height: 1.2,
                       ),
                     ),
-                    const SizedBox(height: 6),
-                    Text(
-                      _timeAgo(notification.createdAt),
-                      style: const TextStyle(
-                        color: AppColors.textTertiary,
-                        fontSize: 11,
+                  ),
+                  if (!notification.isRead)
+                    Container(
+                      width: 8,
+                      height: 8,
+                      margin: const EdgeInsets.only(left: 8, top: 2),
+                      decoration: BoxDecoration(
+                        color: notification.type.color,
+                        shape: BoxShape.circle,
                       ),
                     ),
-                  ],
+                ],
+              ),
+              const SizedBox(height: 6),
+
+              // ── Asosiy matn (oq) ──
+              Text(
+                notification.body,
+                maxLines: _hasImage ? 3 : 4,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  color: _bodyWhite,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w500,
+                  height: 1.4,
+                ),
+              ),
+
+              // ── Rasm (ixtiyoriy) ──
+              if (_hasImage) ...[
+                const SizedBox(height: 12),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(14),
+                  child: AspectRatio(
+                    aspectRatio: 16 / 8.5,
+                    child: Image.network(
+                      notification.thumbnailUrl!,
+                      fit: BoxFit.cover,
+                      loadingBuilder: (_, child, progress) =>
+                          progress == null ? child : _imageFallback(),
+                      errorBuilder: (_, __, ___) => _imageFallback(),
+                    ),
+                  ),
+                ),
+              ],
+
+              const SizedBox(height: 10),
+
+              // ── Vaqt ──
+              Text(
+                _timeAgo(notification.createdAt),
+                style: const TextStyle(
+                  color: _timeGray,
+                  fontSize: 12,
                 ),
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  Widget _imageFallback() {
+    return const DecoratedBox(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [_imgFallbackA, _imgFallbackB],
         ),
       ),
     );
@@ -154,12 +181,10 @@ class NotificationCard extends StatelessWidget {
           .tr(namedArgs: {'min': '${diff.inMinutes}'});
     }
     if (diff.inHours < 24) {
-      return 'notifications.hoursAgo'
-          .tr(namedArgs: {'h': '${diff.inHours}'});
+      return 'notifications.hoursAgo'.tr(namedArgs: {'h': '${diff.inHours}'});
     }
     if (diff.inDays < 7) {
-      return 'notifications.daysAgo'
-          .tr(namedArgs: {'d': '${diff.inDays}'});
+      return 'notifications.daysAgo'.tr(namedArgs: {'d': '${diff.inDays}'});
     }
     return DateFormat.yMd().format(dt);
   }
