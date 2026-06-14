@@ -10,6 +10,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/password_text_field.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:farzandim/shared/widgets/secondary_button.dart';
+import 'package:farzandim/shared/widgets/social_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -63,6 +64,25 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       });
     }
     // Muvaffaqiyat: router redirect (Authenticated) dashboard'ga olib o'tadi.
+  }
+
+  /// Google/Apple bilan kirish. Backend "yangi bo'lsa yarat, bor bo'lsa kirgiz"
+  /// qiladi. MUHIM: Google orqali ro'yxatdan o'tgan foydalanuvchining paroli
+  /// yo'q — u FAQAT shu tugmalar orqali qaytib kira oladi.
+  Future<void> _social(Future<String?> Function() action) async {
+    if (_loading) return;
+    setState(() {
+      _loading = true;
+      _error = null;
+    });
+    final err = await action();
+    if (!mounted) return;
+    if (err != null) {
+      setState(() {
+        _loading = false;
+        _error = err;
+      });
+    }
   }
 
   @override
@@ -151,6 +171,42 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   label: 'auth.signIn.submitButton'.tr(),
                   isLoading: _loading,
                   onPressed: _canSubmit && !_loading ? _submit : null,
+                ),
+                const SizedBox(height: AppDimensions.md),
+
+                // ─── Google / Apple bilan kirish ───
+                // Google orqali ro'yxatdan o'tganlarning paroli yo'q — ular
+                // FAQAT shu tugmalar orqali qaytib kira oladi.
+                Row(
+                  children: [
+                    Expanded(
+                      child: SocialButton(
+                        iconAsset: 'assets/icons/ic_apple.svg',
+                        semanticsLabel: 'auth.social.apple'.tr(),
+                        onPressed: _loading
+                            ? null
+                            : () => _social(
+                                ref
+                                    .read(backendAuthProvider.notifier)
+                                    .signInWithApple,
+                              ),
+                      ),
+                    ),
+                    const SizedBox(width: AppDimensions.md),
+                    Expanded(
+                      child: SocialButton(
+                        iconAsset: 'assets/icons/ic_google.svg',
+                        semanticsLabel: 'auth.social.google'.tr(),
+                        onPressed: _loading
+                            ? null
+                            : () => _social(
+                                ref
+                                    .read(backendAuthProvider.notifier)
+                                    .signInWithGoogle,
+                              ),
+                      ),
+                    ),
+                  ],
                 ),
                 const SizedBox(height: AppDimensions.sm + AppDimensions.xs),
 
