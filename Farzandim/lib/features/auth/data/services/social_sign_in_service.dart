@@ -32,13 +32,29 @@ final socialSignInServiceProvider = Provider<SocialSignInService>((ref) {
   return SocialSignInService();
 });
 
+/// Google **Web Client ID** — Android/iOS'da `serverClientId` sifatida
+/// ishlatiladi. Google Sign-In idToken'ni SHU audience bilan qaytaradi va
+/// backend (`GOOGLE_CLIENT_IDS`) shuni tekshiradi. BUSIZ Android'da idToken
+/// `null` keladi ("idToken bo'sh" xatosi). Bu SIR EMAS — ommaviy OAuth
+/// identifikatori. Dart-define (`GOOGLE_SERVER_CLIENT_ID`) bilan almashtirsa
+/// bo'ladi. Web'da ishlatilmaydi (web/index.html meta tag orqali).
+const String _googleServerClientId = String.fromEnvironment(
+  'GOOGLE_SERVER_CLIENT_ID',
+  defaultValue: '883163096233-f4o6fk9lvl6srgj4al0lup2qci36hps3'
+      '.apps.googleusercontent.com',
+);
+
 class SocialSignInService {
-  /// Google paketi platforma'ga qarab REVERSED_CLIENT_ID/SHA-1 orqali
-  /// avtomatik client ID'ni topadi. Web uchun `web/index.html`'da
-  /// `<meta name="google-signin-client_id" content="...">` kerak.
+  /// Android: OAuth client (paket nomi + SHA-1) Play Services orqali avtomatik
+  /// topiladi; idToken esa `serverClientId` (Web Client ID) bilan keladi.
+  /// Web: `web/index.html`'dagi `<meta name="google-signin-client_id">` tag.
   /// Backend `aud`'ni shu client ID bo'yicha tekshiradi.
-  final GoogleSignIn _google =
-      GoogleSignIn(scopes: <String>['email', 'profile']);
+  final GoogleSignIn _google = GoogleSignIn(
+    scopes: const <String>['email', 'profile'],
+    // Web'da serverClientId qo'llanmaydi (google_sign_in_web meta tag'dan
+    // oladi) — shuning uchun faqat mobil platformalarda beramiz.
+    serverClientId: kIsWeb ? null : _googleServerClientId,
+  );
 
   /// Google sign-in dialog'ini ochadi.
   /// Bekor qilinsa — [SocialSignInCancelled] tashlaydi.
