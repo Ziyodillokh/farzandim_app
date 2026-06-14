@@ -11,6 +11,7 @@
 // long-press bilan yoziladi, qo'yib yuborilganda compress + upload.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
+import 'package:farzandim_child/shared/widgets/app_snackbar.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -26,6 +27,7 @@ import 'package:farzandim_child/features/voice_message/presentation/screens/chat
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_background.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_bubble.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_input_bar.dart';
+import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_top_toast.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/round_video_bubble.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/round_video_recorder.dart';
 import 'package:file_picker/file_picker.dart';
@@ -108,12 +110,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final micStatus = await Permission.microphone.request();
     if (!micStatus.isGranted) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('voiceChat.micPermission'.tr()),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.info(context, 'voiceChat.micPermission'.tr());
       return;
     }
 
@@ -178,12 +175,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (filePath == null) return;
 
     if (elapsed < _minDurationMs) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('voiceChat.tooShort'.tr()),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppSnackBar.warning(context, 'voiceChat.tooShort'.tr());
       try {
         final f = File(filePath);
         if (await f.exists()) await f.delete();
@@ -201,6 +193,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (!mounted) return;
     if (ok) {
       ref.read(voiceMessageUploadProvider.notifier).reset();
+      ChatTopToast.flash(
+        context,
+        'Ovozli xabar yuborildi',
+        icon: Icons.check_rounded,
+      );
       try {
         final f = File(filePath);
         if (await f.exists()) await f.delete();
@@ -209,16 +206,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
       final err = ref.read(voiceMessageUploadProvider).errorMessage;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'voiceChat.errorPrefix'.tr(
-              namedArgs: {
-                'error': err ?? 'voiceChat.sendErrorFallback'.tr(),
-              },
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppSnackBar.error(
+        context,
+        'voiceChat.errorPrefix'.tr(
+          namedArgs: {'error': err ?? 'voiceChat.sendErrorFallback'.tr()},
         ),
       );
     }
@@ -246,9 +237,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final parentUid = pairing.parentUid;
     if (parentUid == null || parentUid.isEmpty) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Ota-ona aniqlanmadi')),
-      );
+      AppSnackBar.error(context, 'Ota-ona aniqlanmadi');
       return;
     }
     try {
@@ -259,9 +248,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ref.invalidate(voiceMessagesProvider);
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Xabar yuborilmadi: $e')),
-      );
+      AppSnackBar.error(context, 'Xabar yuborilmadi: $e');
     }
   }
 
@@ -329,9 +316,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: AppColors.error),
-    );
+    AppSnackBar.error(context, msg);
   }
 
   // ─── Round video recorder (Telegram-uslubi) ──────────────────────
@@ -349,25 +334,12 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (xfile == null) return;
     if (!mounted) return;
 
-    // Compress UI feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Row(
-          children: [
-            SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-            SizedBox(width: 12),
-            Text('Video tayyorlanmoqda...'),
-          ],
-        ),
-        duration: Duration(seconds: 30),
-      ),
+    // Telegram uslubidagi yuqori "pill" toast (spinner bilan) — plain
+    // SnackBar o'rniga. Ish tugagach `videoToast.dismiss()`.
+    final videoToast = ChatTopToast.show(
+      context,
+      'Video tayyorlanmoqda…',
+      spinner: true,
     );
 
     bool ok;
@@ -378,7 +350,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       try {
         final bytes = await xfile.readAsBytes();
         if (!mounted) return;
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
+        videoToast.dismiss();
         // Brauzer kamera Chrome'da WebM beradi. XFile.name ba'zan
         // kengaytmasiz keladi, shu sababli majburiy .webm qo'yamiz.
         final rawName = xfile.name;
@@ -391,10 +363,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
             );
       } catch (e) {
         if (!mounted) return;
-        ScaffoldMessenger.of(context).hideCurrentSnackBar();
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Video yuborilmadi: $e')),
-        );
+        videoToast.dismiss();
+        AppSnackBar.error(context, 'Video yuborilmadi: $e');
         return;
       }
     } else {
@@ -422,7 +392,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         debugPrint('VideoCompress xato — original yuborilmoqda: $e');
       }
       if (!mounted) return;
-      ScaffoldMessenger.of(context).hideCurrentSnackBar();
+      videoToast.dismiss();
 
       ok = await ref.read(videoMessageUploadProvider.notifier).send(
             videoFile: fileToUpload,
@@ -437,20 +407,16 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       // (Yuqoridagi mobile branch ichida `original` va `fileToUpload`
       // lokal aniqlangan — bu yerga kelmagan.)
       ref.read(videoMessageUploadProvider.notifier).reset();
+      ChatTopToast.flash(context, 'Video yuborildi', icon: Icons.check_rounded);
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
       final state = ref.read(videoMessageUploadProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'voiceChat.errorPrefix'.tr(
-              namedArgs: {
-                'error':
-                    state.errorMessage ?? 'voiceChat.sendErrorFallback'.tr(),
-              },
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppSnackBar.error(
+        context,
+        'voiceChat.errorPrefix'.tr(
+          namedArgs: {
+            'error': state.errorMessage ?? 'voiceChat.sendErrorFallback'.tr(),
+          },
         ),
       );
     }
