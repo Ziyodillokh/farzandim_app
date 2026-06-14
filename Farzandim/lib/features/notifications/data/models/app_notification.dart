@@ -38,6 +38,10 @@ enum NotificationType {
 
   /// Bola o'yin (CATEGORY_GAME) ochdi — pastda "Bloklash" tugmasi bilan.
   game,
+
+  /// Bola bloklangan ilova/ekran-vaqt uchun qo'shimcha vaqt so'rayapti —
+  /// "Vaqt ber" (5–60 daq) / "Rad et" tugmalari bilan.
+  unlockRequest,
 }
 
 /// `NotificationType` uchun UI helper'lar (ikona, rang, label).
@@ -67,6 +71,8 @@ extension NotificationTypeX on NotificationType {
         return Icons.phone_iphone_rounded;
       case NotificationType.game:
         return Icons.sports_esports_rounded;
+      case NotificationType.unlockRequest:
+        return Icons.lock_clock_rounded;
     }
   }
 
@@ -95,6 +101,8 @@ extension NotificationTypeX on NotificationType {
         return const Color(0xFFFBBF24); // sariq — diqqat
       case NotificationType.game:
         return const Color(0xFF7C6FE0); // binafsha — o'yin
+      case NotificationType.unlockRequest:
+        return const Color(0xFFFBBF24); // sariq — diqqat (qaror kerak)
     }
   }
 
@@ -123,6 +131,8 @@ extension NotificationTypeX on NotificationType {
         return "Pair so'rov";
       case NotificationType.game:
         return "O'yin";
+      case NotificationType.unlockRequest:
+        return "Ruxsat so'rovi";
     }
   }
 }
@@ -222,10 +232,21 @@ class AppNotification {
   /// Parent qaror qabul qilishi kerak bo'lgan xabarmi — kartochkada
   /// "Tekshirish" / "Rad etish" tugmalari ko'rsatiladi. Hozircha faqat
   /// `pairRequest` (yangi qurilma ulanmoqchi).
-  bool get isActionable => type == NotificationType.pairRequest;
+  bool get isActionable =>
+      type == NotificationType.pairRequest ||
+      type == NotificationType.unlockRequest;
 
   /// pairRequest uchun — `data['pairRequestId']` (rad etish API'siga kerak).
   String? get pairRequestId => data?['pairRequestId'] as String?;
+
+  /// unlockRequest uchun — `data['unlockRequestId']` (decide API'siga kerak).
+  String? get unlockRequestId => data?['unlockRequestId'] as String?;
+
+  /// unlockRequest turi — 'APP' yoki 'SCREEN_TIME'.
+  String? get unlockKind => data?['kind'] as String?;
+
+  /// Bu xabar bola unlock so'rovimi.
+  bool get isUnlockRequest => type == NotificationType.unlockRequest;
 
   /// O'yin xabari — pastda "Bloklash" tugmasi ko'rsatiladi.
   bool get isGame => type == NotificationType.game;
@@ -280,6 +301,8 @@ class AppNotification {
         return NotificationType.lowBattery;
       case 'connection_lost':
         return NotificationType.offline;
+      case 'unlock_request':
+        return NotificationType.unlockRequest;
       case 'app_limit':
         return NotificationType.appLimit;
       case 'schedule_start':

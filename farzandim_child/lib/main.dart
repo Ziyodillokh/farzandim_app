@@ -11,6 +11,7 @@ import 'package:farzandim_child/core/offline/offline_buffer.dart';
 import 'package:farzandim_child/core/realtime/socket_providers.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/core/theme/app_theme.dart';
+import 'package:farzandim_child/features/app_restrictions/presentation/providers/unlock_request_provider.dart';
 import 'package:farzandim_child/core/theme/theme_mode_provider.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim_child/features/app_update/presentation/dialogs/force_update_dialog.dart';
@@ -124,6 +125,11 @@ class ChildApp extends ConsumerWidget {
     // Sprint 4.4.11: Socket.io lifecycle — pairing state'ga listen
     // qilib avtomatik connect/disconnect (paired → connect).
     ref.watch(socketLifecycleProvider);
+
+    // Bloklash overlay'idagi "Ruxsat so'rash" — native ilovani ochganda
+    // kutilayotgan so'rovni backend'ga yuboradi (+ unlock bridge'ni tirik
+    // qiladi, app ochiq paytdagi onUnlockRequested push'lari uchun).
+    ref.watch(unlockPendingCheckProvider);
 
     // Sprint 4.4.28: app startup'da Backend'dan version tekshirish.
     // Force update kerak bo'lsa modal dialog ochish.

@@ -155,6 +155,7 @@ model Child {
   appLimits     AppLimit[]
   appPermissions AppPermissionPolicy[]
   pairRequests  ChildPairRequest[]
+  unlockRequests UnlockRequest[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -433,6 +434,43 @@ enum NotificationType {
   // Bola qurilmasi 10+ daqiqa heartbeat yubormadi (ilova o'chirilgan,
   // internet uzilgan yoki telefon faol emas). Ota-onaga bir marta push.
   CONNECTION_LOST
+  // Bola bloklangan ilova/vaqt uchun qo'shimcha vaqt so'rayapti (child→parent).
+  UNLOCK_REQUEST
+  // Ota-ona unlock so'roviga qaror berdi: ruxsat berdi yoki rad etdi (parent→child).
+  UNLOCK_DECISION
+}
+
+// ============================================
+// UNLOCK REQUESTS — bola "qo'shimcha vaqt" so'rovi
+// ============================================
+//
+// Oqim: bola bloklangan ilova/ekran-vaqt uchun so'rov yuboradi (PENDING,
+// 15 daqiqada javob kelmasa EXPIRED) → ota-onaga push → ota-ona rad etadi
+// (DENIED) yoki 5–60 daqiqa beradi (APPROVED, grantedMinutes). APPROVED
+// bo'lsa `expiresAt` = qaror + grantedMinutes (ruxsat shu vaqtgacha amal
+// qiladi). Bola limit hisobi shu grant'ni kunlik limitga qo'shadi.
+model UnlockRequest {
+  id             String   @id @default(uuid())
+  childId        String   @map("child_id")
+  // APP uchun qaysi ilova; SCREEN_TIME uchun null (umumiy ekran vaqti).
+  packageName    String?  @map("package_name")
+  // 'APP' | 'SCREEN_TIME'
+  kind           String
+  // 'PENDING' | 'APPROVED' | 'DENIED' | 'EXPIRED'
+  status         String   @default("PENDING")
+  // Ota-ona bergan qo'shimcha daqiqalar (APPROVED bo'lsa 5..60).
+  grantedMinutes Int?     @map("granted_minutes")
+  requestedAt    DateTime @default(now()) @map("requested_at")
+  decidedAt      DateTime? @map("decided_at")
+  // PENDING: so'rov javob kutish muddati (now+15min). APPROVED: ruxsat shu
+  // vaqtgacha amal qiladi (qaror + grantedMinutes). Shu o'tgach yana bloklanadi.
+  expiresAt      DateTime @map("expires_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("unlock_requests")
+  @@index([childId, status])
+  @@index([status, expiresAt])
 }
 
 // --- Feedback (child → parent emoji + matn) ---

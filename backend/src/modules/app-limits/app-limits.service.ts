@@ -145,7 +145,76 @@ export class AppLimitsService {
       orderBy: { packageName: 'asc' },
     });
 
-    return { limits: limits.map(serialize), count: limits.length };
+    const serialized = limits.map(serialize);
+
+    // BOLA qurilmasi so'raganда — amal qilayotgan "qo'shimcha vaqt" grant'larini
+    // kunlik limitga qo'shamiz (vaqtincha). Ota-ona ko'rinishi o'zgarmaydi
+    // (u sozlangan asl limitni ko'radi). Bloklangan (dailyLimitMs=0) ilova
+    // grant tufayli vaqtli limitga aylanadi → grant tugaguncha ochiladi.
+    const isChild = child.childUserId === userId;
+    const effective = isChild
+      ? await this.applyActiveGrants(childId, serialized)
+      : serialized;
+
+    return { limits: effective, count: effective.length };
+  }
+
+  /**
+   * APPROVED + hali tugamagan APP grant'larini mos paket limitiga qo'shadi.
+   * Limit yozuvi bo'lmagan (faqat grant berilgan) paket uchun sintetik vaqtli
+   * limit qo'shadi. Kunlik shiftdan oshmaydi (MAX_DAY_MS).
+   */
+  private async applyActiveGrants(
+    childId: string,
+    limits: ReturnType<typeof serialize>[],
+  ): Promise<ReturnType<typeof serialize>[]> {
+    const now = new Date();
+    const grants = await this.prisma.unlockRequest.findMany({
+      where: {
+        childId,
+        kind: 'APP',
+        status: 'APPROVED',
+        expiresAt: { gt: now },
+        packageName: { not: null },
+      },
+      select: { packageName: true, grantedMinutes: true },
+    });
+    if (grants.length === 0) return limits;
+
+    // Paket bo'yicha jami grant ms (bir paketga bir nechta grant bo'lsa qo'shiladi).
+    const bonusMs = new Map<string, number>();
+    for (const g of grants) {
+      if (!g.packageName || !g.grantedMinutes) continue;
+      bonusMs.set(
+        g.packageName,
+        (bonusMs.get(g.packageName) ?? 0) + g.grantedMinutes * 60_000,
+      );
+    }
+
+    const out = limits.map((l) => {
+      const bonus = bonusMs.get(l.packageName);
+      if (!bonus) return l;
+      bonusMs.delete(l.packageName);
+      return {
+        ...l,
+        dailyLimitMs: Math.min(MAX_DAY_MS, l.dailyLimitMs + bonus),
+      };
+    });
+
+    // Limit yozuvi yo'q, lekin grant bor paketlar — sintetik vaqtli limit.
+    for (const [packageName, bonus] of bonusMs) {
+      out.push({
+        id: `grant:${packageName}`,
+        childId,
+        packageName,
+        dailyLimitMs: Math.min(MAX_DAY_MS, bonus),
+        weeklyLimitMs: null,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    return out;
   }
 
   async create(

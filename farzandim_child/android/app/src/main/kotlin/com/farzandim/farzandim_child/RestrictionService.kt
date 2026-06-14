@@ -145,9 +145,13 @@ class RestrictionService : Service() {
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
+        // START_STICKY qayta ishga tushganda OS NULL intent yuboradi. Avval
+        // bunda hech qaysi branch ishlamay startForeground() chaqirilmasdi →
+        // Android 12+/14 da ForegroundServiceDidNotStartInTimeException crash.
+        // Endi null/noma'lum action → startMonitoring (idempotent: isRunning guard).
         when (intent?.action) {
-            ACTION_START -> startMonitoring()
             ACTION_STOP -> stopMonitoring()
+            else -> startMonitoring()
         }
         return START_STICKY
     }
@@ -656,7 +660,7 @@ class RestrictionService : Service() {
             packageName
         }
 
-        val view = buildOverlayView(appLabel)
+        val view = buildOverlayView(appLabel, packageName)
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -695,7 +699,7 @@ class RestrictionService : Service() {
      * Overlay UI dasturiy quriladi (XML resource shart emas).
      * Qora fon, markazda lock icon + matn + "Yopish" tugma.
      */
-    private fun buildOverlayView(appLabel: String): View {
+    private fun buildOverlayView(appLabel: String, blockedPackage: String): View {
         val ctx = this
         val container = FrameLayout(ctx).apply {
             // Deyarli shaffof scrim — bloklangan ilova orqada xira ko'rinib
@@ -750,6 +754,34 @@ class RestrictionService : Service() {
             setPadding(0, dp(16), 0, dp(32))
         }
 
+        // "Ruxsat so'rash" — Parvoz'ni ochib, bloklangan paket uchun
+        // ota-onaga qo'shimcha vaqt so'rovi yuboradi (Flutter POST qiladi).
+        val requestButton = Button(ctx).apply {
+            text = "Ruxsat so'rash"
+            setTextColor(Color.parseColor("#C5F562")) // lime matn
+            setPadding(dp(40), dp(12), dp(40), dp(12))
+            // Outline pill — asosiy "Yopish" tugmadan vizual farqlanadi.
+            background = GradientDrawable().apply {
+                shape = GradientDrawable.RECTANGLE
+                cornerRadius = dp(28).toFloat()
+                setColor(Color.TRANSPARENT)
+                setStroke(dp(2), Color.parseColor("#C5F562"))
+            }
+            setOnClickListener {
+                try {
+                    val open = Intent(ctx, MainActivity::class.java).apply {
+                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                            Intent.FLAG_ACTIVITY_SINGLE_TOP
+                        putExtra("unlock_request_package", blockedPackage)
+                    }
+                    ctx.startActivity(open)
+                } catch (e: Exception) {
+                    Log.e(TAG, "Ruxsat so'rash: Parvoz'ni ochishda xato", e)
+                }
+                hideOverlay()
+            }
+        }
+
         val closeButton = Button(ctx).apply {
             text = "Yopish"
             setTextColor(Color.BLACK)
@@ -773,10 +805,17 @@ class RestrictionService : Service() {
             }
         }
 
+        // "Ruxsat so'rash" tugmasi uchun pastki bo'sh joy (close bilan orasida).
+        val requestParams = LinearLayout.LayoutParams(
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+            LinearLayout.LayoutParams.WRAP_CONTENT,
+        ).apply { setMargins(0, 0, 0, dp(12)) }
+
         column.addView(icon)
         column.addView(title)
         column.addView(subtitle)
         column.addView(hint)
+        column.addView(requestButton, requestParams)
         column.addView(closeButton)
 
         val params = FrameLayout.LayoutParams(

@@ -5,9 +5,11 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
+import 'package:farzandim/features/notifications/data/repositories/backend_unlock_request_repository.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_card.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/sos_alert_dialog.dart';
+import 'package:farzandim/features/notifications/presentation/widgets/unlock_decision_sheet.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
@@ -129,9 +131,18 @@ class _NotificationsList extends ConsumerWidget {
           child: NotificationCard(
             notification: n,
             onTap: () => _onTap(context, ref, n),
-            onReview: n.isActionable ? () => _review(context, ref, n) : null,
-            onReject: n.isActionable ? () => _reject(context, ref, n) : null,
+            onReview: n.isActionable
+                ? () => n.isUnlockRequest
+                    ? _decideUnlock(context, ref, n)
+                    : _review(context, ref, n)
+                : null,
+            onReject: n.isActionable
+                ? () => n.isUnlockRequest
+                    ? _denyUnlock(context, ref, n)
+                    : _reject(context, ref, n)
+                : null,
             onBlock: n.isGame ? () => _block(context, ref, n) : null,
+            reviewLabel: n.isUnlockRequest ? 'Vaqt ber' : null,
           ),
         ).animate().fadeIn(
               duration: 220.ms,
@@ -176,9 +187,83 @@ class _NotificationsList extends ConsumerWidget {
         if (n.childId.isNotEmpty) {
           context.push(AppRoutes.pairRequestsPath(n.childId));
         }
+      case NotificationType.unlockRequest:
+        // Tap → qaror varag'ini ochamiz (asosiy amal tugmalarda ham bor).
+        _decideUnlock(context, ref, n);
       case NotificationType.offline:
       case NotificationType.online:
         break;
+    }
+  }
+
+  // ─── "Vaqt ber" — unlock so'roviga qaror (sheet: rad et / 5·15·30·60) ───
+
+  Future<void> _decideUnlock(
+    BuildContext context,
+    WidgetRef ref,
+    AppNotification n,
+  ) async {
+    ref.read(notificationsProvider.notifier).markAsRead(n.id);
+    final reqId = n.unlockRequestId;
+    if (reqId == null || reqId.isEmpty) return;
+
+    final decision = await UnlockDecisionSheet.show(
+      context,
+      childName: n.childName,
+      appName: n.appName ?? n.packageName,
+    );
+    if (decision == null || !context.mounted) return;
+
+    final ok = await ref.read(backendUnlockRequestRepositoryProvider).decide(
+          requestId: reqId,
+          approve: decision.approve,
+          minutes: decision.minutes,
+        );
+    // Qaror berilgach xabarni o'chiramiz (qайта harakat kerak emas).
+    ref.read(notificationsProvider.notifier).deleteNotification(n.id);
+    if (!context.mounted) return;
+    final msg = !ok
+        ? "Xatolik. Qaytadan urinib ko'ring."
+        : decision.approve
+            ? '${decision.minutes} daqiqa ruxsat berildi.'
+            : "So'rov rad etildi.";
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor:
+              ok ? AppColors.surfaceVariant : AppColors.error,
+        ),
+      );
+  }
+
+  // ─── "Rad et" — unlock so'rovini tezda rad etish (sheet'siz) ───
+
+  Future<void> _denyUnlock(
+    BuildContext context,
+    WidgetRef ref,
+    AppNotification n,
+  ) async {
+    final reqId = n.unlockRequestId;
+    if (reqId != null && reqId.isNotEmpty) {
+      await ref.read(backendUnlockRequestRepositoryProvider).decide(
+            requestId: reqId,
+            approve: false,
+          );
+    }
+    ref.read(notificationsProvider.notifier).deleteNotification(n.id);
+    if (context.mounted) {
+      ScaffoldMessenger.of(context)
+        ..hideCurrentSnackBar()
+        ..showSnackBar(
+          SnackBar(
+            content: Text('notifications.rejected'.tr()),
+            behavior: SnackBarBehavior.floating,
+            backgroundColor: AppColors.surfaceVariant,
+          ),
+        );
     }
   }
 

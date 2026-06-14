@@ -278,6 +278,9 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
       } else {
         open(AppRoutes.notifications);
       }
+    case NotificationType.unlockRequest:
+      // Qaror varag'i bildirishnomalar ekranidagi kartochkadan ochiladi.
+      open(AppRoutes.notifications);
     case NotificationType.offline:
     case NotificationType.online:
       open(AppRoutes.notifications);

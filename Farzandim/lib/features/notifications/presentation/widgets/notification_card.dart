@@ -23,6 +23,7 @@ class NotificationCard extends StatelessWidget {
     this.onReview,
     this.onReject,
     this.onBlock,
+    this.reviewLabel,
     super.key,
   });
 
@@ -40,6 +41,10 @@ class NotificationCard extends StatelessWidget {
 
   /// "Bloklash" tugmasi (faqat o'yin xabarlari uchun).
   final VoidCallback? onBlock;
+
+  /// "Tekshirish" tugmasi yorlig'ini almashtirish (masalan unlock uchun
+  /// "Vaqt ber"). null bo'lsa standart `notifications.review`.
+  final String? reviewLabel;
 
   bool get _actionable =>
       notification.isActionable && onReview != null && onReject != null;
@@ -140,7 +145,7 @@ class NotificationCard extends StatelessWidget {
                   children: [
                     Expanded(
                       child: _PillButton(
-                        label: 'notifications.review'.tr(),
+                        label: reviewLabel ?? 'notifications.review'.tr(),
                         onTap: onReview!,
                       ),
                     ),
