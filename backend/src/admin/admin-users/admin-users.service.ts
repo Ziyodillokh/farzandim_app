@@ -1,6 +1,8 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
+import { EnvConfig } from '../../common/config/env.schema';
 
 export interface RowJson {
   id: string;
@@ -13,11 +15,25 @@ export interface RowJson {
   plan: string;
   planLabel: string;
   lastActivityAt: string | null;
+  /** Ko'rsatish uchun avatar URL. Parent — OAuth (Telegram/Google) tashqi
+   *  URL; bola — MinIO'dagi fotosi @Public proxy orqali. Yo'q bo'lsa null
+   *  (UI initsiallarni ko'rsatadi). */
+  avatarUrl: string | null;
 }
 
 @Injectable()
 export class AdminUsersService {
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly config: ConfigService<EnvConfig, true>,
+  ) {}
+
+  // Bola fotosi @Public proxy orqali (signed MinIO URL brauzerga yetmaydi).
+  // PUBLIC_BASE_URL — deploy domeni (admin shu domenda ishlaydi).
+  private childAvatarUrl(childId: string): string {
+    const base = this.config.get('PUBLIC_BASE_URL', { infer: true });
+    return `${base}/api/children/${childId}/avatar/image`;
+  }
 
   private parentRow(u: {
     id: string;
@@ -26,6 +42,7 @@ export class AdminUsersService {
     phone: string | null;
     isActive: boolean;
     updatedAt: Date;
+    avatarUrl?: string | null;
     subscriptions?: { plan: { name: string; entitlementTier: string } | null }[];
   }): RowJson {
     const sub = u.subscriptions?.[0];
@@ -40,6 +57,7 @@ export class AdminUsersService {
       plan: sub?.plan?.entitlementTier ?? 'free',
       planLabel: sub?.plan?.name ?? 'Free',
       lastActivityAt: u.updatedAt.toISOString(),
+      avatarUrl: u.avatarUrl ?? null,
     };
   }
 
@@ -48,6 +66,7 @@ export class AdminUsersService {
     name: string;
     lastSeenAt: Date | null;
     updatedAt: Date;
+    photoPath?: string | null;
     childUser?: { phone: string | null; email: string | null } | null;
   }): RowJson {
     return {
@@ -61,6 +80,7 @@ export class AdminUsersService {
       plan: 'free',
       planLabel: 'Free',
       lastActivityAt: (c.lastSeenAt ?? c.updatedAt).toISOString(),
+      avatarUrl: c.photoPath ? this.childAvatarUrl(c.id) : null,
     };
   }
 

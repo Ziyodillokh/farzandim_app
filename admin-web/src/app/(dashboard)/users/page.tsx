@@ -8,7 +8,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Separator } from '@/components/ui/separator';
 import {
@@ -181,6 +181,12 @@ function UserRow({ user }: { user: AdminUserListItem }) {
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
+            {/* Parent — OAuth (Telegram/Google) avatari; bola — yuklangan
+                fotosi (@Public proxy). src bo'sh/xato bo'lsa Radix avtomatik
+                AvatarFallback (initsiallar) ko'rsatadi. */}
+            {user.avatarUrl ? (
+              <AvatarImage src={user.avatarUrl} alt={user.name} />
+            ) : null}
             <AvatarFallback className="text-xs">{initials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
