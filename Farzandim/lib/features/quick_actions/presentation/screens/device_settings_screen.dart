@@ -200,39 +200,6 @@ class _Content extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.lg),
 
-          // ─── Faro AI suhbat tarixi (#70) ───
-          SettingsCard(
-            onTap: () => context.push(AppRoutes.aiHistoryPath(child.id)),
-            child: Row(
-              children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: BoxDecoration(
-                    color: AppColors.info.withValues(alpha: 0.15),
-                    borderRadius: BorderRadius.circular(10),
-                  ),
-                  alignment: Alignment.center,
-                  child: Icon(
-                    Icons.forum_rounded,
-                    color: AppColors.info,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    'Faro suhbati',
-                    style: AppTextStyles.bodyM
-                        .copyWith(fontWeight: FontWeight.w700),
-                  ),
-                ),
-                Icon(Icons.chevron_right, color: AppColors.textTertiary),
-              ],
-            ),
-          ),
-          const SizedBox(height: AppDimensions.lg),
-
           // "Ilova uchun ruxsatlar" qatori OLIB TASHLANDI — funksiya hozircha
           // to'g'ri ishlamaydi; keyinroq qaytarilishi mumkin (route saqlangan).
 

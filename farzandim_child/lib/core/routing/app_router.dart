@@ -28,7 +28,6 @@ import 'package:farzandim_child/features/settings/presentation/screens/settings_
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audio_player_screen.dart';
-import 'package:farzandim_child/features/ai_companion/presentation/ai_chat_screen.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 import 'package:farzandim_child/features/articles/presentation/screens/article_view_screen.dart';
 import 'package:farzandim_child/features/articles/presentation/screens/articles_feed_screen.dart';
@@ -322,12 +321,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/contests',
         pageBuilder: (context, state) => _slidePage(state, const ContestsScreen()),
-      ),
-      // #64/#65 — Faro AI hamroh suhbati
-      GoRoute(
-        path: '/ai-chat',
-        pageBuilder: (context, state) =>
-            _slidePage(state, const AiChatScreen()),
       ),
       // #56 — Sertifikat (g'olib uchun)
       GoRoute(

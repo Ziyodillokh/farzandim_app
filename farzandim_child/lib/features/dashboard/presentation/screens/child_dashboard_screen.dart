@@ -37,7 +37,6 @@ import 'package:farzandim_child/features/dashboard/presentation/widgets/section_
 import 'package:farzandim_child/features/dashboard/presentation/widgets/sos_button.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:farzandim_child/shared/widgets/skeleton_card.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -299,9 +298,6 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
           FamilyCard(parentInfo: parentInfo),
           const SizedBox(height: 16),
           const MotivationalBanner(),
-          const SizedBox(height: 16),
-          // === 🦊 Faro AI hamroh bilan suhbat (#64/#65) ===
-          const _FaroChatCard(),
           const SizedBox(height: 24),
           // === 🎵 Audiokitoblar mini-player (Ilovadan foydalanish'dan oldin) ===
           // Spotify-style compact player: cover + title + author + play.
@@ -332,69 +328,6 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
           const SizedBox(height: 24),
         ],
       ),
-      ),
-    );
-  }
-}
-
-// ─── 🦊 Faro AI hamroh bilan suhbat kartasi (#64/#65) ────────────────
-class _FaroChatCard extends StatelessWidget {
-  const _FaroChatCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () => context.push('/ai-chat'),
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [
-              AppColors.primary.withValues(alpha: 0.18),
-              AppColors.primary.withValues(alpha: 0.06),
-            ],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: AppColors.primary.withValues(alpha: 0.25)),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(
-              width: 54,
-              height: 54,
-              child: FaroMascot(variant: FaroVariant.faceExcited, size: 54),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    'Faro bilan suhbatlash',
-                    style: TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Savol ber, birga o\'rganamiz! 🦊',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 12.5,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Icon(Icons.chevron_right_rounded, color: AppColors.primary),
-          ],
-        ),
       ),
     );
   }
