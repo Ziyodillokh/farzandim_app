@@ -29,10 +29,13 @@ class AboutScreen extends StatelessWidget {
                   child: Column(
                     children: [
                       const SizedBox(height: AppDimensions.xl),
-                      Image.asset(
-                        'assets/icons/parent_logo_icon.png',
-                        width: 80,
-                        height: 80,
+                      ClipOval(
+                        child: Image.asset(
+                          'assets/icons/parent_logo_icon.png',
+                          width: 80,
+                          height: 80,
+                          fit: BoxFit.cover,
+                        ),
                       ),
                       const SizedBox(height: AppDimensions.md),
                       Text(
