@@ -27,6 +27,22 @@ class AudioPlayerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(audioPlayerProvider);
 
+    // Audio yuklab/ijro etib bo'lmasa — jim 0:00 o'rniga aniq xabar.
+    ref.listen<String?>(
+      audioPlayerProvider.select((s) => s.error),
+      (prev, err) {
+        if (err != null && err.isNotEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(err),
+              backgroundColor: Colors.red.shade700,
+              duration: const Duration(seconds: 6),
+            ),
+          );
+        }
+      },
+    );
+
     if (!state.hasAudio) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (Navigator.of(context).canPop()) Navigator.of(context).pop();

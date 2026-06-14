@@ -26,7 +26,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:intl/date_symbol_data_local.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -51,20 +50,10 @@ Future<void> main() async {
   // (Roboto) ishlatamiz. Mobil'da ham xavfsiz: offline holatda crash yo'q.
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  // Background audio — telefon qulflanganda yoki ilova fonga o'tganda
-  // ham audiokitob davom etadi. Android: foreground service + media
-  // notification; iOS: AVAudioSession audio mode. Web'da no-op.
-  if (!kIsWeb) {
-    try {
-      await JustAudioBackground.init(
-        androidNotificationChannelId: 'uz.farzandim.audio.channel',
-        androidNotificationChannelName: 'Audiokitob',
-        androidNotificationOngoing: true,
-      );
-    } catch (e) {
-      debugPrint('[DEV] JustAudioBackground init skipped: $e');
-    }
-  }
+  // ESLATMA: just_audio_background (background media servis) OLIB TASHLANDI —
+  // release APK'da audiokitob JIM qolib duration 0 bo'lardi. Endi audiokitob
+  // oddiy just_audio bilan ishlaydi (ovozli xabarlar kabi, ishonchli). Telefon
+  // qulflanganda davom etish keyin alohida, sinab ko'rilgan holda qo'shiladi.
 
   // easy_localization init — JSON tarjima fayllarini yuklash uchun.
   await EasyLocalization.ensureInitialized();

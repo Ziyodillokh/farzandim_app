@@ -14,12 +14,17 @@ class AudioPlayerState {
   final Duration duration;
   final Duration sleepTimerRemaining;
 
+  /// Audio yuklab/ijro etib bo'lmaganda xato matni (null = xato yo'q). UI shu
+  /// orqali jim 0:00 o'rniga foydalanuvchiga xabar ko'rsatadi.
+  final String? error;
+
   const AudioPlayerState({
     this.currentBook,
     this.isPlaying = false,
     this.position = Duration.zero,
     this.duration = Duration.zero,
     this.sleepTimerRemaining = Duration.zero,
+    this.error,
   });
 
   bool get hasAudio => currentBook != null;
@@ -33,6 +38,8 @@ class AudioPlayerState {
     Duration? position,
     Duration? duration,
     Duration? sleepTimerRemaining,
+    String? error,
+    bool clearError = false,
   }) {
     return AudioPlayerState(
       currentBook: clearBook ? null : (currentBook ?? this.currentBook),
@@ -41,6 +48,7 @@ class AudioPlayerState {
       duration: duration ?? this.duration,
       sleepTimerRemaining:
           sleepTimerRemaining ?? this.sleepTimerRemaining,
+      error: clearError ? null : (error ?? this.error),
     );
   }
 }

@@ -2,13 +2,11 @@ import {
   Body,
   Controller,
   Get,
-  Header,
   Post,
   Param,
   Query,
   Req,
   Res,
-  StreamableFile,
   UseGuards,
 } from '@nestjs/common';
 import { FastifyRequest, FastifyReply } from 'fastify';
@@ -122,16 +120,31 @@ export class ConsumerContentController {
   // uchun player formatni topolmasdi.
   @Get('media/:segment/:file')
   @Public()
-  @Header('Cache-Control', 'public, max-age=86400')
-  @ApiOperation({ summary: 'Stream content media (proxy)' })
+  @ApiOperation({ summary: 'Stream content media (Range-aware proxy)' })
   async streamMedia(
     @Param('segment') segment: string,
     @Param('file') file: string,
-  ): Promise<StreamableFile> {
-    const obj = await this.service.streamContentMedia(segment, file);
-    return new StreamableFile(obj.body, {
-      type: this.contentTypeFor(segment, file, obj.contentType),
-    });
+    @Req() req: FastifyRequest,
+    @Res() reply: FastifyReply,
+  ) {
+    // HTTP Range qo'llab-quvvatlaymiz: ExoPlayer/just_audio audio/video'da
+    // seek (oldinga/orqaga) uchun Range so'rovi yuboradi va M4A moov atom'ni
+    // o'qish uchun ham kerak. Range bo'lsa MinIO 206 (Content-Range) qaytaradi.
+    const range = req.headers.range;
+    const obj = await this.service.getMediaStream(segment, file, range);
+    reply.header('Accept-Ranges', 'bytes');
+    reply.header('Cache-Control', 'public, max-age=86400');
+    // Content-Type'ni fayl kengaytmasidan ANIQLAYMIZ — admin ishonchsiz MIME
+    // (octet-stream / audio/x-m4a) bilan yuklasa player formatni topolmasdi.
+    reply.type(this.contentTypeFor(segment, file, obj.contentType));
+    if (obj.contentRange) {
+      reply.code(206);
+      reply.header('Content-Range', obj.contentRange);
+    }
+    if (obj.contentLength != null) {
+      reply.header('Content-Length', String(obj.contentLength));
+    }
+    return reply.send(obj.stream);
   }
 
   // Fayl kengaytmasidan to'g'ri MIME — saqlangan tur ishonchli (octet-stream

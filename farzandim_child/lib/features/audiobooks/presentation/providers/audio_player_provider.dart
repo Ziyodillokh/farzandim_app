@@ -10,9 +10,9 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
-import 'package:just_audio_background/just_audio_background.dart';
 
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -60,26 +60,26 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     if (state.currentBook?.id != book.id) {
       _ref.read(audiobooksBackendRepositoryProvider).markPlayed(book.id);
     }
-    state = state.copyWith(currentBook: book);
-    // MediaItem tag — lock screen va notification'da rasm + sarlavha
-    // ko'rsatish uchun. just_audio_background buni o'qib system media
-    // controls'ga uzatadi (Android: MediaSession, iOS: MPNowPlayingInfo).
-    await _player.setAudioSource(
-      AudioSource.uri(
-        Uri.parse(book.audioUrl),
-        tag: MediaItem(
-          id: book.id,
-          title: book.title,
-          artist: book.author,
-          album: 'Farzandim Edu',
-          duration: Duration(seconds: book.durationSeconds),
-          artUri: book.coverUrl.isNotEmpty
-              ? Uri.parse(book.coverUrl)
-              : null,
-        ),
-      ),
-    );
-    await _player.play();
+    state = state.copyWith(currentBook: book, clearError: true);
+
+    final url = book.audioUrl.trim();
+    if (url.isEmpty) {
+      state = state.copyWith(error: 'Audio manzili topilmadi');
+      return;
+    }
+
+    // ODDIY just_audio — ovozli xabarlar bilan BIR XIL (isbotlangan, ishonchli).
+    // Avval just_audio_background + MediaItem tag ishlatilgan edi; release
+    // APK'da audio JIM qolib duration 0 bo'lardi (background media servis ishga
+    // tushmasdi). Lock-screen controls o'rniga ishonchli ijroni tanladik.
+    // Xato bo'lsa jim qolmasdan UI'ga chiqaramiz.
+    try {
+      await _player.setUrl(url);
+      await _player.play();
+    } catch (e, st) {
+      debugPrint('[AudioPlayer] yuklab bo\'lmadi url=$url\n$e\n$st');
+      state = state.copyWith(error: "Audioni ijro etib bo'lmadi: $e");
+    }
   }
 
   Future<void> pause() => _player.pause();
