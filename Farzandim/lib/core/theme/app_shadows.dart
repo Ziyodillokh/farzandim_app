@@ -17,12 +17,20 @@ class AppShadows {
           ),
         ]
       : const [
-          // Salqin navy-tusli yumshoq soya — sof qora emas, yumshoqroq.
+          // Yumshoq sage soya — premium "qalqib turish" (sof qora emas).
           BoxShadow(
-            color: Color(0x140B2B26),
+            color: Color(0x161C2A1A),
             blurRadius: 22,
             offset: Offset(0, 8),
             spreadRadius: -2,
+          ),
+          // Yuqori-chap yengil yorug'lik — neumorfik ko'tarilish hissi
+          // (sage fon ustida kartani yumshoq "qabariq" qiladi).
+          BoxShadow(
+            color: Color(0x66FFFFFF),
+            blurRadius: 10,
+            offset: Offset(-4, -4),
+            spreadRadius: -6,
           ),
           BoxShadow(
             color: Color(0x0A000000),
@@ -42,7 +50,7 @@ class AppShadows {
         ]
       : const [
           BoxShadow(
-            color: Color(0x1F0B2B26),
+            color: Color(0x1F1C2A1A),
             blurRadius: 34,
             offset: Offset(0, 16),
             spreadRadius: -4,
@@ -96,14 +104,22 @@ class AppShadows {
           ),
         ]
       : [
+          // Yumshoq sage float — karta fon ustidan nozik "suzadi".
           BoxShadow(
-            color: const Color(0xFF0B2B26).withValues(alpha: 0.10),
+            color: const Color(0xFF1C2A1A).withValues(alpha: 0.10),
             blurRadius: 28,
             offset: const Offset(0, 10),
             spreadRadius: -2,
           ),
+          // Neumorfik yuqori-chap yorug'lik — premium qabariq hissi.
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.white.withValues(alpha: 0.55),
+            blurRadius: 14,
+            offset: const Offset(-5, -5),
+            spreadRadius: -8,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -128,13 +144,20 @@ class AppShadows {
         ]
       : [
           BoxShadow(
-            color: const Color(0xFF0B2B26).withValues(alpha: 0.12),
+            color: const Color(0xFF1C2A1A).withValues(alpha: 0.12),
             blurRadius: 20,
             offset: const Offset(0, 8),
             spreadRadius: -2,
           ),
+          // Neumorfik yuqori-chap yorug'lik.
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.white.withValues(alpha: 0.5),
+            blurRadius: 8,
+            offset: const Offset(-3, -3),
+            spreadRadius: -6,
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
