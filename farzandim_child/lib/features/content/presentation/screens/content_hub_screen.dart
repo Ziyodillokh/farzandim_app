@@ -11,10 +11,13 @@
 // uchun), lekin bottom nav endi /content ga olib boradi.
 
 import 'package:easy_localization/easy_localization.dart';
+// `adaptive` extension (context.adaptive) shu import'dan keladi — kerak.
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/features/articles/data/models/article_model.dart';
-import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
-import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
+// VAQTINCHA o'chirilgan — "Maqolalar" tabi (pastdagi MAQOLALAR markerlariga
+// qarang). Qaytarishda quyidagi import'larni ham oching:
+// import 'package:farzandim_child/features/articles/data/models/article_model.dart';
+// import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
+// import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
@@ -41,8 +44,10 @@ class ContentHubScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // VAQTINCHA: "Maqolalar" tabi o'chirilgan → length 3 emas, 2.
+    // Qaytarishda 3 ga o'zgartiring.
     return DefaultTabController(
-      length: 3,
+      length: 2,
       child: Scaffold(
         backgroundColor: Colors.transparent,
         extendBody: true,
@@ -65,7 +70,8 @@ class ContentHubScreen extends ConsumerWidget {
                     children: const [
                       _VideosTab(),
                       _AudiobooksTab(),
-                      _ArticlesTab(),
+                      // VAQTINCHA o'chirilgan — Maqolalar tabi:
+                      // _ArticlesTab(),
                     ],
                   ),
                 ),
@@ -112,7 +118,8 @@ class _TopTabs extends StatelessWidget {
         tabs: const [
           Tab(text: 'Videolar'),
           Tab(text: 'Audiokitoblar'),
-          Tab(text: 'Maqolalar'),
+          // VAQTINCHA o'chirilgan — Maqolalar tabi:
+          // Tab(text: 'Maqolalar'),
         ],
       ),
     );
@@ -301,7 +308,12 @@ class _AudiobooksTab extends ConsumerWidget {
   }
 }
 
-// ─── Maqolalar tab (#48) ──────────────────────────────────────────────
+// ─── Maqolalar tab (#48) — VAQTINCHA O'CHIRILGAN ──────────────────────
+// Qaytarish uchun: (1) yuqoridagi 3 ta article import'ini oching,
+// (2) DefaultTabController length'ni 2 dan 3 ga, (3) TabBarView'ga
+// `_ArticlesTab()` va tabs'ga `Tab(text: 'Maqolalar')` qatorlarini qayting,
+// (4) quyidagi block-komentni oching.
+/*
 class _ArticlesTab extends ConsumerWidget {
   const _ArticlesTab();
 
@@ -374,3 +386,4 @@ class _ArticlesMessage extends StatelessWidget {
     );
   }
 }
+*/

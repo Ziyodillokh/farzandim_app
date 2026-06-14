@@ -24,7 +24,6 @@ import 'package:farzandim_child/features/videos/presentation/providers/videos_pr
 import 'package:farzandim_child/features/videos/presentation/widgets/video_section.dart';
 import 'package:farzandim_child/features/analytics/presentation/widgets/app_usage_list.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
-import 'package:farzandim_child/features/app_restrictions/presentation/widgets/safe_internet_setup_card.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
@@ -279,9 +278,6 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
           // Sprint 4.4.28: yangi versiya mavjud bo'lsa banner (dismissable).
           UpdateBanner(),
           const SizedBox(height: 16),
-          // Xavfsiz internet yoqilgan, lekin xavfsiz DNS sozlanmagan bo'lsa
-          // tavsiya kartasi (faqat Android; aks holda o'zi yashirinadi).
-          const SafeInternetSetupCard(),
           // === 📺 Videolar playlist (yuqorida) ===
           // Foydalanuvchi talabiga ko'ra videolar "Mening oilam"dan oldin,
           // tezroq ko'rinadigan joyga ko'chirildi.
