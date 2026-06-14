@@ -14,6 +14,9 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/quick_action_tile.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
+import 'package:farzandim/features/development/data/development_repository.dart';
+import 'package:farzandim/features/development/data/development_summary.dart';
+import 'package:farzandim/features/development/presentation/widgets/development_card.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
@@ -304,7 +307,8 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
       ..invalidate(installedAppsProvider(childId))
       ..invalidate(restrictionsProvider(childId))
       ..invalidate(weeklyChildUsageProvider(childId))
-      ..invalidate(childProfileProvider(childId));
+      ..invalidate(childProfileProvider(childId))
+      ..invalidate(developmentSummaryProvider(childId));
     try {
       await Future.wait([
         ref.read(childrenProvider.future),
@@ -402,6 +406,19 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                             _TimeCard(
                               childId: c.id,
                               blockAllInitial: c.blockAllApps,
+                            ),
+                            const SizedBox(height: AppDimensions.lg),
+                            // Rivojlanish ko'rsatkichi (#63) — ijobiy kuzatuv.
+                            Consumer(
+                              builder: (context, ref, _) {
+                                final async = ref.watch(
+                                  developmentSummaryProvider(c.id),
+                                );
+                                return DevelopmentCard(
+                                  summary: async.valueOrNull ??
+                                      DevelopmentSummary.empty,
+                                );
+                              },
                             ),
                             const SizedBox(height: AppDimensions.lg),
                             _QuickActionsGrid(childId: c.id),

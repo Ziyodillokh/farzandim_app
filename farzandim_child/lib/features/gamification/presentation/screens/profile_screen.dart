@@ -14,6 +14,9 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
+import 'package:farzandim_child/features/development/data/development_summary.dart';
+import 'package:farzandim_child/features/development/presentation/development_card.dart';
+import 'package:farzandim_child/features/development/presentation/development_providers.dart';
 import 'package:farzandim_child/features/gamification/data/models/achievement.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_profile.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_status.dart';
@@ -218,6 +221,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               .animate()
               .fadeIn(duration: 400.ms, delay: 100.ms)
               .slideY(begin: 0.1, end: 0),
+          const SizedBox(height: 16),
+
+          // === Rivojlanish ko'rsatkichi (#63) ===
+          Consumer(
+            builder: (context, ref, _) {
+              final async = ref.watch(developmentSummaryProvider);
+              return DevelopmentCard(
+                summary: async.valueOrNull ?? DevelopmentSummary.empty,
+              ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
+            },
+          ),
           const SizedBox(height: 16),
 
           // === XP + Streak (yon — ikkalasi bir xil balandlikda) ===

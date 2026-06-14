@@ -186,4 +186,98 @@ export class GamificationService {
 
     return { events, count: events.length };
   }
+
+  /* ------------------------------------------------------------------ */
+  /*  #63 — Rivojlanish ko'rsatkichi (haftalik faollik indeksi)          */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Bolaning yaxlit rivojlanish ko'rsatkichi (bola + ota-ona ko'radi).
+   *
+   * `score` (0..100) — ijobiy, motivatsion vaznli formula (nazorat emas).
+   * Komponentlar haftalik maqsadga normallashtiriladi (min(qiymat/maqsad, 1)):
+   *   - Testlar  25%  (maqsad: 5 ta/hafta)
+   *   - Kitoblar 20%  (maqsad: 5 ta/hafta — BOOK_READ XP eventlari)
+   *   - Streak   25%  (maqsad: 7 kun ketma-ket)
+   *   - Qadam    20%  (maqsad: 70 000/hafta ≈ 10k/kun)
+   *   - XP       10%  (maqsad: 500 XP/hafta — umumiy faollik)
+   *
+   * `trend` — xpGained'ning oldingi davrga nisbatan o'zgarishi (%).
+   *
+   * Eslatma: videosWatched/articlesRead hozircha PER-CHILD kuzatilmaydi
+   * (faqat global ko'rish hisoblagichi bor) → 0 qaytadi (kontrakt to'liqligi
+   * uchun). Kitob o'qish XP event orqali per-child hisoblanadi.
+   */
+  async getDevelopmentSummary(
+    childId: string,
+    userId: string,
+    range: 'weekly' | 'monthly' = 'weekly',
+  ) {
+    await this.validateChildAccess(childId, userId);
+
+    const days = range === 'monthly' ? 30 : 7;
+    const now = new Date();
+    const periodMs = days * 24 * 60 * 60 * 1000;
+    const start = new Date(now.getTime() - periodMs);
+    const prevStart = new Date(now.getTime() - 2 * periodMs);
+
+    const [xpAgg, prevXpAgg, booksRead, testsCompleted, stepsAgg, profile] =
+      await Promise.all([
+        this.prisma.xpEvent.aggregate({
+          where: { childId, createdAt: { gte: start } },
+          _sum: { xpDelta: true },
+        }),
+        this.prisma.xpEvent.aggregate({
+          where: { childId, createdAt: { gte: prevStart, lt: start } },
+          _sum: { xpDelta: true },
+        }),
+        this.prisma.xpEvent.count({
+          where: { childId, type: 'BOOK_READ', createdAt: { gte: start } },
+        }),
+        this.prisma.olympiadAttempt.count({
+          where: { childId, status: 'finished', finishedAt: { gte: start } },
+        }),
+        this.prisma.childStepDaily.aggregate({
+          where: { childId, date: { gte: start } },
+          _sum: { steps: true },
+        }),
+        this.getOrCreateProfile(childId),
+      ]);
+
+    const xpGained = xpAgg._sum.xpDelta ?? 0;
+    const prevXp = prevXpAgg._sum.xpDelta ?? 0;
+    const steps = stepsAgg._sum.steps ?? 0;
+    const streakDays = profile.streakDays;
+
+    // Haftalik maqsadlar (monthly'da f≈4.3x kattaroq).
+    const f = days / 7;
+    const clamp01 = (v: number) => Math.max(0, Math.min(1, v));
+    const score = Math.round(
+      clamp01(testsCompleted / (5 * f)) * 25 +
+        clamp01(booksRead / (5 * f)) * 20 +
+        clamp01(streakDays / 7) * 25 +
+        clamp01(steps / (70_000 * f)) * 20 +
+        clamp01(xpGained / (500 * f)) * 10,
+    );
+
+    const trend =
+      prevXp > 0
+        ? Math.round(((xpGained - prevXp) / prevXp) * 100)
+        : xpGained > 0
+          ? 100
+          : 0;
+
+    return {
+      range,
+      score,
+      trend,
+      xpGained,
+      testsCompleted,
+      booksRead,
+      articlesRead: 0,
+      videosWatched: 0,
+      streakDays,
+      steps,
+    };
+  }
 }

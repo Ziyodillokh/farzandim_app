@@ -17,6 +17,7 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { GamificationService } from './gamification.service';
 import { CreateXpEventDto } from './dto/create-xp-event.dto';
 import { ListXpEventsDto } from './dto/list-xp-events.dto';
+import { DevelopmentSummaryQueryDto } from './dto/development-summary-query.dto';
 import { Request } from 'express';
 
 @ApiTags('Gamification')
@@ -58,5 +59,19 @@ export class GamificationController {
     @Query() query: ListXpEventsDto,
   ) {
     return this.service.listXpEvents(childId, user.userId, query);
+  }
+
+  @Get('children/:childId/development-summary')
+  @ApiOperation({ summary: 'Holistic weekly development index (#63)' })
+  developmentSummary(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Query() query: DevelopmentSummaryQueryDto,
+  ) {
+    return this.service.getDevelopmentSummary(
+      childId,
+      user.userId,
+      query.range ?? 'weekly',
+    );
   }
 }
