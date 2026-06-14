@@ -13,6 +13,7 @@
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/background/presentation/providers/background_service_provider.dart';
 import 'package:farzandim_child/features/location/presentation/providers/location_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
@@ -162,6 +163,10 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
         childId: pairing.childId!,
         childName: pairing.childName ?? 'Bola',
       );
+      // Joylashuv ruxsati endi berildi — foreground service'ni xavfsiz
+      // ishga tushiramiz (pairing paytida ruxsat yo'qligi sabab kechiktirilgan
+      // edi; Android 14+ location-FGS ruxsatsiz crash berardi).
+      await ref.read(backgroundServiceProvider).start();
     }
     if (mounted) context.go('/permission-setup');
   }
