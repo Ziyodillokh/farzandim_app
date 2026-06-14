@@ -32,6 +32,8 @@ class Child {
     this.phoneNumber,
     this.blockUnknownSources = false,
     this.blockAllApps = false,
+    this.webFilterEnabled = false,
+    this.blockedWebCategories = const [],
   });
 
   /// Backend REST JSON'dan `Child` yaratish (Sprint 4.4 Bosqich 3).
@@ -125,6 +127,9 @@ class Child {
       createdAt: _parseIso8601(json['createdAt']) ?? DateTime.now(),
       blockUnknownSources: (json['blockUnknownSources'] as bool?) ?? false,
       blockAllApps: (json['blockAllApps'] as bool?) ?? false,
+      webFilterEnabled: (json['webFilterEnabled'] as bool?) ?? false,
+      blockedWebCategories:
+          (json['blockedWebCategories'] as List?)?.cast<String>() ?? const [],
       // SOS "Qo'ng'iroq" uchun — backend endi phoneNumber qaytaradi
       // (ota-ona bola qo'shganda/tahrirlaganda kiritadi).
       phoneNumber: json['phoneNumber'] as String?,
@@ -218,6 +223,15 @@ class Child {
   /// qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi (Child App
   /// device-policy'ni o'qib enforce qiladi).
   final bool blockAllApps;
+
+  /// "Xavfsiz internet filtri" — ota-ona ixtiyoriy yoqadigan tashqi web
+  /// filtri (Qurilma sozlamalari). `true` bo'lsa bola qurilmasi tanlangan
+  /// kategoriyalarni bloklaydi (Android'da enforce).
+  final bool webFilterEnabled;
+
+  /// Bloklangan web kategoriyalari: `ADULT` | `GAMBLING` | `SOCIAL`.
+  /// Bo'sh ro'yxat = hech biri (webFilterEnabled true bo'lsa ham).
+  final List<String> blockedWebCategories;
 
   /// Default avatar sticker yo'li — `assets/stickers/`'dan, jinsi va
   /// yosh guruhiga qarab.
@@ -324,6 +338,8 @@ class Child {
     String? phoneNumber,
     bool? blockUnknownSources,
     bool? blockAllApps,
+    bool? webFilterEnabled,
+    List<String>? blockedWebCategories,
   }) {
     return Child(
       id: id ?? this.id,
@@ -344,6 +360,8 @@ class Child {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       blockUnknownSources: blockUnknownSources ?? this.blockUnknownSources,
       blockAllApps: blockAllApps ?? this.blockAllApps,
+      webFilterEnabled: webFilterEnabled ?? this.webFilterEnabled,
+      blockedWebCategories: blockedWebCategories ?? this.blockedWebCategories,
     );
   }
 
@@ -371,7 +389,9 @@ class Child {
         other.lastSeenAt == lastSeenAt &&
         other.phoneNumber == phoneNumber &&
         other.blockUnknownSources == blockUnknownSources &&
-        other.blockAllApps == blockAllApps;
+        other.blockAllApps == blockAllApps &&
+        other.webFilterEnabled == webFilterEnabled &&
+        listEquals(other.blockedWebCategories, blockedWebCategories);
   }
 
   @override
@@ -393,6 +413,8 @@ class Child {
     phoneNumber,
     blockUnknownSources,
     blockAllApps,
+    webFilterEnabled,
+    Object.hashAll(blockedWebCategories),
   );
 
   @override

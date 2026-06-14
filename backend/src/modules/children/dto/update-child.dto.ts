@@ -9,6 +9,8 @@ import {
   Max,
   IsEnum,
   IsBoolean,
+  IsArray,
+  IsIn,
 } from 'class-validator';
 
 export enum Gender {
@@ -67,4 +69,28 @@ export class UpdateChildDto {
   @IsOptional()
   @IsBoolean()
   blockAllApps?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
+      "Xavfsiz internet filtri — ota-ona ixtiyoriy yoqadigan tashqi web " +
+      'filtri (true = yoqilsin). Faqat Android\'da enforce qilinadi.',
+  })
+  @IsOptional()
+  @IsBoolean()
+  webFilterEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    example: ['ADULT', 'GAMBLING'],
+    description:
+      'Bloklangan web kategoriyalari: ADULT | GAMBLING | SOCIAL. Bo\'sh ' +
+      'array = hech biri (webFilterEnabled true bo\'lsa ham).',
+    isArray: true,
+    enum: ['ADULT', 'GAMBLING', 'SOCIAL'],
+  })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @IsIn(['ADULT', 'GAMBLING', 'SOCIAL'], { each: true })
+  blockedWebCategories?: string[];
 }

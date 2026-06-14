@@ -203,6 +203,25 @@ class BackendChildRepository {
     return Child.fromJson(response.data ?? <String, dynamic>{});
   }
 
+  /// "Xavfsiz internet filtri" — `PUT /children/:id`. `enabled` filtr holati,
+  /// `categories` bloklangan kategoriyalar (ADULT | GAMBLING | SOCIAL).
+  /// Yangilangan `Child` qaytadi (bola qurilmasi device-policy'ni o'qib
+  /// enforce qiladi).
+  Future<Child> setWebFilter(
+    String childId, {
+    required bool enabled,
+    required List<String> categories,
+  }) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/children/$childId',
+      data: <String, dynamic>{
+        'webFilterEnabled': enabled,
+        'blockedWebCategories': categories,
+      },
+    );
+    return Child.fromJson(response.data ?? <String, dynamic>{});
+  }
+
   /// Avatar rasm proxy URL — `GET /api/children/:id/avatar/image`.
   ///
   /// Backend MinIO'dan rasmni stream qiladi (signed URL'ga qaraganda
@@ -210,5 +229,4 @@ class BackendChildRepository {
   /// bola foto yuklagan bo'lsa shu manzilda rasm turadi, aks holda 404.
   String avatarProxyUrl(String childId) =>
       '${_dio.options.baseUrl}/children/$childId/avatar/image';
-
 }
