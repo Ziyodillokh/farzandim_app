@@ -29,13 +29,14 @@ final videoActiveTabProvider = StateProvider<int>((ref) => 1);
 /// Real backend'dan video ro'yxat. Bola hali pair qilinmagan bo'lsa
 /// yoki 401/timeout bo'lsa exception qaytaradi → UI mock fallback ishlatadi.
 ///
-/// Cache TTL: 5 daqiqa. Bundan keyin yangi screen mount'da fresh fetch.
+/// Cache TTL: 30 soniya. Bundan keyin yangi screen mount'da fresh fetch —
+/// admin yangi video (YouTube havola) qo'shgach bola tezda ko'radi (avval
+/// 5 daqiqa edi, yangi kontent kech chiqardi). Pull-to-refresh ham bor.
 /// `ref.invalidate(backendVideosProvider)` orqali manual refresh ham mumkin.
 final backendVideosProvider = FutureProvider<List<VideoModel>>((ref) async {
-  // 5 daqiqalik auto-dispose: agar 5 minut hech kim watch qilmasa, provider
-  // qayta ishga tushganda fresh fetch qiladi (eski admin upload videolar
-  // tomonidan o'chirilgan list'ni stale ko'rsatmaslik uchun).
-  ref.cacheFor(const Duration(minutes: 5));
+  // 30s auto-dispose: hech kim watch qilmasa, provider qayta mount'da fresh
+  // fetch qiladi (yangi/o'chirilgan admin videolarni tez aks ettiradi).
+  ref.cacheFor(const Duration(seconds: 30));
   final repo = ref.watch(videosBackendRepositoryProvider);
   return repo.fetchVideos();
 });

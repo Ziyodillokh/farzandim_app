@@ -50,35 +50,52 @@ class VideosFeedScreen extends ConsumerWidget {
               const VideoTabs(),
               const SizedBox(height: 16),
               Expanded(
-                child: filtered.isEmpty
-                    ? _EmptyState(onClear: () => _clearAll(ref))
-                    : SingleChildScrollView(
-                        padding: const EdgeInsets.only(bottom: 100),
-                        child: Column(
-                          crossAxisAlignment:
-                              CrossAxisAlignment.start,
+                // Pastga torting → yangilash. Admin yangi video (jumladan
+                // YouTube havola) qo'shgach, bola ro'yxatni shu yerda darhol
+                // yangilaydi (5 daqiqalik keshni e'tiborsiz, fresh fetch).
+                child: RefreshIndicator(
+                  onRefresh: () async {
+                    ref.invalidate(backendVideosProvider);
+                    await ref.read(backendVideosProvider.future);
+                  },
+                  child: filtered.isEmpty
+                      ? ListView(
+                          physics: const AlwaysScrollableScrollPhysics(),
                           children: [
-                            if (heroVideo != null) ...[
-                              HeroVideoCard(video: heroVideo),
-                              const SizedBox(height: 24),
-                            ],
-                            if (topVideos.isNotEmpty) ...[
-                              VideoSection(
-                                title: 'videos.feed.topVideos'.tr(),
-                                videos: topVideos,
-                                onViewAll: () {},
-                              ),
-                              const SizedBox(height: 24),
-                            ],
-                            if (recommended.isNotEmpty)
-                              VideoSection(
-                                title: 'videos.feed.recommended'.tr(),
-                                videos: recommended,
-                                onViewAll: () {},
-                              ),
+                            SizedBox(
+                              height: MediaQuery.sizeOf(context).height * 0.18,
+                            ),
+                            _EmptyState(onClear: () => _clearAll(ref)),
                           ],
+                        )
+                      : SingleChildScrollView(
+                          physics: const AlwaysScrollableScrollPhysics(),
+                          padding: const EdgeInsets.only(bottom: 100),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              if (heroVideo != null) ...[
+                                HeroVideoCard(video: heroVideo),
+                                const SizedBox(height: 24),
+                              ],
+                              if (topVideos.isNotEmpty) ...[
+                                VideoSection(
+                                  title: 'videos.feed.topVideos'.tr(),
+                                  videos: topVideos,
+                                  onViewAll: () {},
+                                ),
+                                const SizedBox(height: 24),
+                              ],
+                              if (recommended.isNotEmpty)
+                                VideoSection(
+                                  title: 'videos.feed.recommended'.tr(),
+                                  videos: recommended,
+                                  onViewAll: () {},
+                                ),
+                            ],
+                          ),
                         ),
-                      ),
+                ),
               ),
             ],
           ),
