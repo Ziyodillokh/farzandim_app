@@ -15,6 +15,7 @@ import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
+import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -199,11 +200,48 @@ class _Content extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.lg),
 
+          // ─── Faro AI suhbat tarixi (#70) ───
+          SettingsCard(
+            onTap: () => context.push(AppRoutes.aiHistoryPath(child.id)),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.info.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.forum_rounded,
+                    color: AppColors.info,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Faro suhbati',
+                    style: AppTextStyles.bodyM
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: AppColors.textTertiary),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+
           // "Ilova uchun ruxsatlar" qatori OLIB TASHLANDI — funksiya hozircha
           // to'g'ri ishlamaydi; keyinroq qaytarilishi mumkin (route saqlangan).
 
           // ─── Notanish manbalardan ilovalar (toggle) ───
           _UnknownSourcesCard(child: child),
+          const SizedBox(height: AppDimensions.lg),
+
+          // ─── Xavfsiz internet (ixtiyoriy web filtr) ───
+          _WebFilterCard(child: child),
           const SizedBox(height: AppDimensions.lg),
 
           // ─── Ruxsatlar holati (Block 4 / M12) ───
@@ -576,6 +614,234 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ════════════════════════ XAVFSIZ INTERNET (WEB FILTER) ════════════════════
+
+/// Filtr kategoriyalari — backend `blockedWebCategories` bilan bir xil kodlar.
+/// Parvoz ichidagi kontent allaqachon yoshga mos; bu tashqi web uchun ixtiyoriy
+/// xavfsiz filtr (monitoring emas).
+const _webFilterCategories = <({String code, IconData icon, String labelKey})>[
+  (
+    code: 'ADULT',
+    icon: Icons.explicit_rounded,
+    labelKey: 'deviceSettings.webFilter.cat.adult',
+  ),
+  (
+    code: 'GAMBLING',
+    icon: Icons.casino_rounded,
+    labelKey: 'deviceSettings.webFilter.cat.gambling',
+  ),
+  (
+    code: 'SOCIAL',
+    icon: Icons.groups_rounded,
+    labelKey: 'deviceSettings.webFilter.cat.social',
+  ),
+];
+
+class _WebFilterCard extends ConsumerStatefulWidget {
+  const _WebFilterCard({required this.child});
+
+  final Child child;
+
+  @override
+  ConsumerState<_WebFilterCard> createState() => _WebFilterCardState();
+}
+
+class _WebFilterCardState extends ConsumerState<_WebFilterCard> {
+  late bool _enabled = widget.child.webFilterEnabled;
+  late Set<String> _categories = widget.child.blockedWebCategories.toSet();
+  bool _saving = false;
+
+  @override
+  void didUpdateWidget(_WebFilterCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Backend'dan yangi qiymat kelsa sinxronlash — lekin saqlash jarayonida
+    // foydalanuvchi tanlovini ustun qo'yamiz.
+    if (!_saving &&
+        (oldWidget.child.webFilterEnabled != widget.child.webFilterEnabled ||
+            !listEquals(
+              oldWidget.child.blockedWebCategories,
+              widget.child.blockedWebCategories,
+            ))) {
+      _enabled = widget.child.webFilterEnabled;
+      _categories = widget.child.blockedWebCategories.toSet();
+    }
+  }
+
+  /// Backend'ga joriy holatni yuboradi (optimistik UI allaqachon yangilangan).
+  /// Xato bo'lsa `revert` orqali eski holatga qaytaramiz.
+  Future<void> _save({
+    required bool enabled,
+    required Set<String> categories,
+    required VoidCallback revert,
+    String? snackKey,
+  }) async {
+    setState(() => _saving = true);
+    try {
+      await ref
+          .read(backendChildRepositoryProvider)
+          .setWebFilter(
+            widget.child.id,
+            enabled: enabled,
+            categories: categories.toList(),
+          );
+      ref.invalidate(childrenProvider);
+      if (mounted && snackKey != null) _snack(context, snackKey.tr());
+    } catch (_) {
+      if (mounted) {
+        setState(revert);
+        _snack(
+          context,
+          'deviceSettings.webFilter.errorSnack'.tr(),
+          error: true,
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  Future<void> _onToggle(bool value) async {
+    if (_saving) return;
+    final prevEnabled = _enabled;
+    setState(() => _enabled = value); // optimistik
+    await _save(
+      enabled: value,
+      categories: _categories,
+      revert: () => _enabled = prevEnabled,
+      snackKey: value
+          ? 'deviceSettings.webFilter.enabledSnack'
+          : 'deviceSettings.webFilter.disabledSnack',
+    );
+  }
+
+  Future<void> _onCategoryTap(String code) async {
+    if (_saving || !_enabled) return;
+    final prev = Set<String>.from(_categories);
+    setState(() {
+      if (!_categories.add(code)) _categories.remove(code);
+    });
+    await _save(
+      enabled: _enabled,
+      categories: _categories,
+      revert: () => _categories = prev,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SettingsCard(
+      accent: AppColors.primary,
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              SettingsIconChip(
+                icon: Icons.shield_rounded,
+                accent: AppColors.primary,
+              ),
+              const SizedBox(width: AppDimensions.md),
+              Expanded(
+                child: Text(
+                  'deviceSettings.webFilter.title'.tr(),
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ),
+              const SizedBox(width: AppDimensions.md),
+              AppSwitch(
+                value: _enabled,
+                onChanged: _saving ? null : _onToggle,
+              ),
+            ],
+          ),
+          const SizedBox(height: AppDimensions.sm),
+          Text(
+            'deviceSettings.webFilter.desc'.tr(
+              namedArgs: {'name': widget.child.name},
+            ),
+            style: AppTextStyles.bodyS.copyWith(
+              color: AppColors.textSecondary,
+              height: 1.4,
+            ),
+          ),
+          // Filtr yoqilganda kategoriya tanlovi ko'rinadi.
+          if (_enabled) ...[
+            const SizedBox(height: AppDimensions.md),
+            Wrap(
+              spacing: AppDimensions.sm,
+              runSpacing: AppDimensions.sm,
+              children: [
+                for (final c in _webFilterCategories)
+                  _CategoryChip(
+                    icon: c.icon,
+                    label: c.labelKey.tr(),
+                    selected: _categories.contains(c.code),
+                    onTap: _saving ? null : () => _onCategoryTap(c.code),
+                  ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Tanlanadigan kategoriya pill'i (ko'p tanlovli — ADULT/GAMBLING/SOCIAL).
+class _CategoryChip extends StatelessWidget {
+  const _CategoryChip({
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final borderRadius = BorderRadius.circular(AppDimensions.radiusPill);
+    final fg = selected ? AppColors.onPrimary : AppColors.textSecondary;
+    return Material(
+      color: selected ? AppColors.primary : AppColors.surface,
+      borderRadius: borderRadius,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: borderRadius,
+        child: Container(
+          padding: const EdgeInsets.symmetric(
+            horizontal: AppDimensions.md,
+            vertical: AppDimensions.sm,
+          ),
+          decoration: BoxDecoration(
+            borderRadius: borderRadius,
+            border: selected ? null : Border.all(color: AppColors.border),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 16, color: fg),
+              const SizedBox(width: 6),
+              Text(
+                label,
+                style: AppTextStyles.bodyS.copyWith(
+                  color: fg,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

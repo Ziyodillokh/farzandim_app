@@ -15,6 +15,7 @@
 
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/theme_mode_provider.dart';
+import 'package:farzandim/features/ai_history/presentation/ai_history_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -397,6 +398,12 @@ List<RouteBase> buildAppRoutes() {
         NotificationPreferencesScreen(
           childId: state.pathParameters['childId']!,
         ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.aiHistoryPattern,
+      pageBuilder: (context, state) => _slidePage(
+        AiHistoryScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

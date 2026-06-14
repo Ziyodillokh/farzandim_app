@@ -42,6 +42,14 @@ const envSchema = z.object({
     z.string().optional(),
   ),
 
+  // AI hamroh (Faro) — Anthropic Claude API kaliti. Ixtiyoriy: yo'q bo'lsa
+  // AI o'chiq (xavfsiz fallback), boshqa funksiyalar ishlayveradi. Kalit
+  // FAQAT serverda — hech qachon client'ga yuborilmaydi (#64/#65).
+  ANTHROPIC_API_KEY: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+
   PUBLIC_BASE_URL: z.string().url().default('https://farzandimedu.uz'),
 
   PAYME_MERCHANT_ID: z.preprocess(

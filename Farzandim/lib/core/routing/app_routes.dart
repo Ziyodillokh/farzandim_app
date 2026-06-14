@@ -68,6 +68,10 @@ class AppRoutes {
   static String notificationPreferencesPath(String childId) =>
       '/notification-preferences/$childId';
 
+  /// Faro AI suhbat tarixi (#70) — bola bo'yicha, faqat ota-ona.
+  static const String aiHistoryPattern = '/ai-history/:childId';
+  static String aiHistoryPath(String childId) => '/ai-history/$childId';
+
   /// Hisobni butunlay o'chirish (Play Market talabi).
   static const String settingsDeleteAccount = '/settings/delete-account';
 

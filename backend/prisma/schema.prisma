@@ -115,6 +115,16 @@ model Child {
   // qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi.
   blockAllApps        Boolean @default(false) @map("block_all_apps")
 
+  // Xavfsiz internet filtri (ixtiyoriy, ota-ona yoqadi). Parvoz ichidagi
+  // kontent allaqachon yoshga mos; bu esa tashqi web uchun ota-ona ixtiyoriy
+  // yoqadigan xavfsiz filtr. Faqat Android'da enforce qilinadi (xavfsiz DNS).
+  // iOS'da Screen Time orqali; bu yerda majburlanmaydi.
+  webFilterEnabled    Boolean  @default(false) @map("web_filter_enabled")
+  // Yoqilgan filtr kategoriyalari: ADULT | GAMBLING | SOCIAL. Bo'sh array =
+  // hech biri (webFilterEnabled true bo'lsa ham). DTO'da class-validator bilan
+  // tekshiriladi.
+  blockedWebCategories String[] @default([]) @map("blocked_web_categories")
+
   // Bola qiziqishlari — onboarding'da tanlangan tag'lar (kitob, sport,
   // multfilm, kosmos, ...). Tavsiya tizimi (Books/Videos/Audiobooks/Konkurs)
   // shu tag'larga qarab kontent saralaydi. Admin paneldagi profilda ham
@@ -158,6 +168,7 @@ model Child {
   unlockRequests UnlockRequest[]
   categoryBlocks CategoryBlock[]
   notificationPreference NotificationPreference?
+  aiMessages    AiMessage[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -448,6 +459,30 @@ enum NotificationType {
   STUDY_NUDGE
   HEALTH_NUDGE
   CONTENT_REMINDER
+}
+
+// ============================================
+// AI COMPANION — Faro AI hamroh suhbati (#64/#65/#69/#70)
+// ============================================
+//
+// Bola Faro bilan yozadi. Har xabar (bola + AI javobi) saqlanadi. `flagged`
+// — xavfsizlik filtri ishlaganda (xavfli/nojo'ya mavzu) true; ota-ona
+// suhbatni ko'radi va flagged xabarlar ajratib ko'rsatiladi. Shaxsiy
+// ma'lumot to'planmaydi (system prompt so'ramaydi).
+model AiMessage {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  // 'user' (bola) | 'assistant' (Faro)
+  role      String
+  text      String
+  // Xavfsizlik filtri ishladimi (xavfli kiruvchi yoki chiquvchi matn).
+  flagged   Boolean  @default(false)
+  createdAt DateTime @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("ai_messages")
+  @@index([childId, createdAt])
 }
 
 // ============================================
