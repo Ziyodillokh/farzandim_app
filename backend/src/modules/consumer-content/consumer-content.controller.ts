@@ -193,29 +193,27 @@ export class ConsumerContentController {
       reply.code(400).send('Invalid video id');
       return;
     }
-    // `origin` — YouTube embed player ruxsatli embedder'ni shu orqali tekshiradi;
-    // bo'lmasa Android WebView'da "Xato 153" beradi. Sahifa xizmat qilingan
-    // haqiqiy host'ni olamiz. `youtube-nocookie` domeni embed-cheklovlarga
-    // bardoshliroq. `enablejsapi=1` ham embed-player'ni to'g'ri sozlaydi.
-    const reqHeaders = reply.request.headers;
-    const host =
-      (reqHeaders['x-forwarded-host'] as string | undefined) ??
-      reqHeaders.host ??
-      'farzandimedu.uz';
-    const origin = `https://${host}`;
+    // MUHIM (Xato 153 fix): AVVAL `enablejsapi=1&origin=...` ishlatilardi —
+    // bu YouTube'ni QAT'IY origin tekshiruviga majburlaydi va WebView'ning
+    // haqiqiy referer'i origin param bilan to'liq mos kelmasa "Xato 153"
+    // ("Videopleyerni sozlashda xatolik") beradi. Biz JS API (postMessage
+    // player control) ishlatmaymiz, shuning uchun `enablejsapi`'ni OLIB
+    // TASHLADIK → qat'iy tekshiruv yo'q, embed oddiy ishlaydi.
+    // `referrer` meta — WebView YouTube'ga to'g'ri referer yuborishi uchun.
     const src =
-      `https://www.youtube-nocookie.com/embed/${id}` +
-      `?playsinline=1&rel=0&modestbranding=1&enablejsapi=1` +
-      `&origin=${encodeURIComponent(origin)}`;
+      `https://www.youtube.com/embed/${id}` +
+      `?playsinline=1&rel=0&modestbranding=1&fs=1`;
     const html =
       '<!DOCTYPE html><html><head>' +
       '<meta name="viewport" content="width=device-width,initial-scale=1,' +
       'maximum-scale=1,user-scalable=no">' +
+      '<meta name="referrer" content="strict-origin-when-cross-origin">' +
       '<style>html,body{margin:0;background:#000;height:100%;overflow:hidden}' +
       'iframe{position:fixed;top:0;left:0;width:100%;height:100%;border:0}' +
       '</style></head><body>' +
       `<iframe src="${src}" ` +
-      'allow="autoplay;encrypted-media;picture-in-picture" ' +
+      'referrerpolicy="strict-origin-when-cross-origin" ' +
+      'allow="autoplay;encrypted-media;picture-in-picture;fullscreen" ' +
       'allowfullscreen></iframe></body></html>';
     reply.type('text/html').send(html);
   }
