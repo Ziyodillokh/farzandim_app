@@ -9,6 +9,7 @@ import { StorageService } from '../../common/storage/storage.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { BatchUpsertAppsDto, InstalledAppDto } from './dto/batch-upsert-apps.dto';
+import { classifyPackage } from './app-category.util';
 
 // 96x96 PNG ikona odatda 5–30 KB, lekin murakkab (adaptiv/gradient)
 // ikonalar 50 KB dan oshib, jimgina rad etilardi → ota-onada ikona
@@ -118,6 +119,8 @@ export class InstalledAppsService {
 
     const ops = dto.apps.map((app: InstalledAppDto) => {
       const iconPath = iconPathByPkg.get(app.packageName) ?? app.iconPath;
+      // Kategoriya bloklash (#14) uchun — paket nomidan klassifikatsiya.
+      const category = classifyPackage(app.packageName);
       return this.prisma.installedApp.upsert({
         where: {
           childId_packageName: { childId, packageName: app.packageName },
@@ -129,6 +132,7 @@ export class InstalledAppsService {
           installSource: app.installSource,
           iconPath,
           isSystem: app.isSystem,
+          category,
           lastSeenAt: now,
         },
         create: {
@@ -140,6 +144,7 @@ export class InstalledAppsService {
           installSource: app.installSource,
           iconPath,
           isSystem: app.isSystem,
+          category,
         },
       });
     });

@@ -20,6 +20,8 @@ import { AppLimitsService } from './app-limits.service';
 import { CreateAppLimitDto } from './dto/create-app-limit.dto';
 import { UpdateAppLimitDto } from './dto/update-app-limit.dto';
 import { ListAppLimitsDto } from './dto/list-app-limits.dto';
+import { BlockNowDto } from './dto/block-now.dto';
+import { ToggleCategoryDto } from './dto/toggle-category.dto';
 import { Request } from 'express';
 
 @ApiTags('App Limits')
@@ -52,6 +54,51 @@ export class AppLimitsController {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
+  }
+
+  @Post('children/:childId/app-limits/block-now')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Instantly block an app (parent) — #15' })
+  blockNow(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: BlockNowDto,
+    @Req() req: Request,
+  ) {
+    return this.service.blockNow(childId, user.userId, dto.packageName, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Get('children/:childId/app-categories')
+  @ApiOperation({ summary: 'List app categories + block state — #14' })
+  listCategories(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.listCategories(childId, user.userId);
+  }
+
+  @Post('children/:childId/app-categories')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Block/unblock a whole category (parent) — #14' })
+  toggleCategory(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ToggleCategoryDto,
+    @Req() req: Request,
+  ) {
+    return this.service.toggleCategory(
+      childId,
+      user.userId,
+      dto.category,
+      dto.block,
+      {
+        ip: req.ip,
+        headers: req.headers as Record<string, string | string[] | undefined>,
+      },
+    );
   }
 
   @Get('app-limits/:id')

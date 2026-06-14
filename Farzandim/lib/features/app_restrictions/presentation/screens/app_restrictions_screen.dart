@@ -3,11 +3,13 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_combined.dart';
+import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart'
     show AppLimitModal;
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_combined_tile.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_tile_skeleton.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/category_block_sheet.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
@@ -64,7 +66,11 @@ class _AppRestrictionsScreenState
         child: SafeArea(
           child: Column(
             children: [
-              _FaollikHeader(title: 'deviceSettings.activity'.tr()),
+              _FaollikHeader(
+                title: 'deviceSettings.activity'.tr(),
+                onCategoryTap: () =>
+                    CategoryBlockSheet.show(context, _childId),
+              ),
               if (children.length > 1)
                 _ChildChips(
                   children: children,
@@ -133,6 +139,9 @@ class _AppRestrictionsScreenState
                             child: AppCombinedTile(
                               app: app,
                               onTap: () => _showLimitSheet(app),
+                              onLongPress: app.isBlocked
+                                  ? null
+                                  : () => _blockNow(app),
                             ),
                           );
                         },
@@ -190,13 +199,69 @@ class _AppRestrictionsScreenState
       ),
     );
   }
+
+  /// Uzun bosish → "Darhol blokla" (#15): tasdiq → block-now → bola
+  /// qurilmasida ~bir necha soniyada kuchga kiradi (silent resync push).
+  Future<void> _blockNow(AppCombined app) async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: const Text('Darhol bloklash'),
+        content: Text(
+          '"${app.appName}" ilovasini hoziroq bloklaymizmi? '
+          'Bola qurilmasida bir necha soniyada kuchga kiradi.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: const Text('Bekor'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            style: TextButton.styleFrom(foregroundColor: AppColors.error),
+            child: const Text('Blokla'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    String msg;
+    Color bg;
+    try {
+      await ref.read(backendAppLimitRepositoryProvider).blockNow(
+            childId: _childId,
+            packageName: app.packageName,
+          );
+      ref.invalidate(restrictionsProvider(_childId));
+      msg = '"${app.appName}" bloklandi.';
+      bg = AppColors.surfaceVariant;
+    } on AppLimitException catch (e) {
+      msg = e.message;
+      bg = AppColors.error;
+    }
+    if (!mounted) return;
+    ScaffoldMessenger.of(context)
+      ..hideCurrentSnackBar()
+      ..showSnackBar(
+        SnackBar(
+          content: Text(msg),
+          behavior: SnackBarBehavior.floating,
+          backgroundColor: bg,
+        ),
+      );
+  }
 }
 
-/// "Faollik" header — ← + markazda sarlavha.
+/// "Faollik" header — ← + markazda sarlavha + (o'ngda) kategoriya bloklash.
 class _FaollikHeader extends StatelessWidget {
-  const _FaollikHeader({required this.title});
+  const _FaollikHeader({required this.title, this.onCategoryTap});
 
   final String title;
+
+  /// Kategoriya bo'yicha bloklash varag'ini ochadi (#14).
+  final VoidCallback? onCategoryTap;
 
   @override
   Widget build(BuildContext context) {
@@ -223,7 +288,20 @@ class _FaollikHeader extends StatelessWidget {
               ),
             ),
           ),
-          const SizedBox(width: 48),
+          SizedBox(
+            width: 48,
+            height: 48,
+            child: onCategoryTap == null
+                ? null
+                : IconButton(
+                    tooltip: 'Kategoriya bloklash',
+                    icon: Icon(
+                      Icons.category_rounded,
+                      color: AppColors.textPrimary,
+                    ),
+                    onPressed: onCategoryTap,
+                  ),
+          ),
         ],
       ),
     );

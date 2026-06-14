@@ -66,6 +66,12 @@ class RestrictionService : Service() {
         const val ACTION_START = "com.farzandim.action.START_RESTRICTION"
         const val ACTION_STOP = "com.farzandim.action.STOP_RESTRICTION"
 
+        // Overlay sababi — matn/ikona shunga qarab tanlanadi (#12).
+        // BLOCKED = to'liq blok (ota-ona/kategoriya/jadval). LIMIT = kunlik
+        // vaqt tugadi.
+        private const val REASON_BLOCKED = "blocked"
+        private const val REASON_LIMIT = "limit"
+
         // SharedPreferences key — Dart RestrictionsSyncService yozadi.
         // Schema: "com.app1,com.app2,..." (comma-separated)
         private const val PREFS_NAME = "FlutterSharedPreferences"
@@ -256,7 +262,7 @@ class RestrictionService : Service() {
                         "Limit oshdi: $foreground ${usageMs / 60000} min " +
                             ">= $limitMinutes min",
                     )
-                    showOverlay(foreground)
+                    showOverlay(foreground, REASON_LIMIT)
                     currentBlockedPackage = foreground
                 }
                 return
@@ -642,7 +648,7 @@ class RestrictionService : Service() {
      * To'liq ekran overlay ko'rsatish. SYSTEM_ALERT_WINDOW permission
      * kerak. Permission yo'q bo'lsa jim chiqadi.
      */
-    private fun showOverlay(packageName: String) {
+    private fun showOverlay(packageName: String, reason: String = REASON_BLOCKED) {
         if (!Settings.canDrawOverlays(this)) {
             Log.w(TAG, "SYSTEM_ALERT_WINDOW permission yo'q")
             return
@@ -660,7 +666,7 @@ class RestrictionService : Service() {
             packageName
         }
 
-        val view = buildOverlayView(appLabel, packageName)
+        val view = buildOverlayView(appLabel, packageName, reason)
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -699,7 +705,12 @@ class RestrictionService : Service() {
      * Overlay UI dasturiy quriladi (XML resource shart emas).
      * Qora fon, markazda lock icon + matn + "Yopish" tugma.
      */
-    private fun buildOverlayView(appLabel: String, blockedPackage: String): View {
+    private fun buildOverlayView(
+        appLabel: String,
+        blockedPackage: String,
+        reason: String,
+    ): View {
+        val isLimit = reason == REASON_LIMIT
         val ctx = this
         val container = FrameLayout(ctx).apply {
             // Deyarli shaffof scrim — bloklangan ilova orqada xira ko'rinib
@@ -722,16 +733,16 @@ class RestrictionService : Service() {
             }
         }
 
-        // Lock icon (Unicode emoji o'rniga TypedValue bilan boy icon).
+        // Sabab bo'yicha ikona/sarlavha/izoh (#12): vaqt tugasa 🌙, blok bo'lsa 🔒.
         val icon = TextView(ctx).apply {
-            text = "🔒" // 🔒
+            text = if (isLimit) "🌙" else "🔒"
             setTextColor(Color.parseColor("#C5F562")) // AppColors.primary lime
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 64f)
             gravity = Gravity.CENTER
         }
 
         val title = TextView(ctx).apply {
-            text = "Bu ilova bloklangan"
+            text = if (isLimit) "Bugungi vaqt tugadi" else "Bu ilova bloklangan"
             setTextColor(Color.WHITE)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f)
             typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
@@ -747,7 +758,12 @@ class RestrictionService : Service() {
         }
 
         val hint = TextView(ctx).apply {
-            text = "Ota-onangiz tomonidan bloklangan"
+            text = if (isLimit) {
+                "Bu ilova uchun bugungi vaqting tugadi. Ko'proq vaqt uchun " +
+                    "ota-onangdan ruxsat so'rashing mumkin."
+            } else {
+                "Ota-onangiz tomonidan bloklangan"
+            }
             setTextColor(Color.parseColor("#6B6B78")) // AppColors.textTertiary
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
             gravity = Gravity.CENTER

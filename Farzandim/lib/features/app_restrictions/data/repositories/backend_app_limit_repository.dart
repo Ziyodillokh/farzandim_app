@@ -112,6 +112,69 @@ class BackendAppLimitRepository {
     }
   }
 
+  /// Darhol bloklash (#15) — ilovani to'liq blok qiladi va bolaga silent
+  /// resync push yuboradi (fon'da ham ~bir necha soniyada kuchga kiradi).
+  Future<bool> blockNow({
+    required String childId,
+    required String packageName,
+  }) async {
+    try {
+      await _dio.post<void>(
+        '/children/$childId/app-limits/block-now',
+        data: {'packageName': packageName},
+      );
+      return true;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendAppLimitRepository.blockNow xato '
+        '${e.response?.statusCode} body=${e.response?.data}',
+      );
+      throw AppLimitException(_messageForDioError(e));
+    }
+  }
+
+  /// Kategoriyalar holati (#14) — har biri: nom, ilova soni, bloklanganmi.
+  Future<List<AppCategoryInfo>> getCategories(String childId) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/children/$childId/app-categories',
+      );
+      final list =
+          response.data?['categories'] as List<dynamic>? ?? const [];
+      return list
+          .map((m) => AppCategoryInfo.fromJson(m as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      debugPrint('BackendAppLimitRepository.getCategories: $e');
+      throw AppLimitException(_messageForDioError(e));
+    }
+  }
+
+  /// Kategoriyani bloklaydi (`block=true`) yoki ochadi. Yangilangan ro'yxat.
+  Future<List<AppCategoryInfo>> toggleCategory({
+    required String childId,
+    required String category,
+    required bool block,
+  }) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/children/$childId/app-categories',
+        data: {'category': category, 'block': block},
+      );
+      final list =
+          response.data?['categories'] as List<dynamic>? ?? const [];
+      return list
+          .map((m) => AppCategoryInfo.fromJson(m as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendAppLimitRepository.toggleCategory xato '
+        '${e.response?.statusCode} body=${e.response?.data}',
+      );
+      throw AppLimitException(_messageForDioError(e));
+    }
+  }
+
   /// Domain'ga xos 401/403/404 xabarlari; qolgan hamma holat (backend
   /// message, internet yo'q) markaziy `friendlyError`da — status-kod
   /// mantig'i takrorlanmaydi.
@@ -125,6 +188,38 @@ class BackendAppLimitRepository {
     if (code == 404) return 'errors.appLimit.childNotFound'.tr();
     return friendlyError(e, fallback: 'errors.appLimit.saveFailed'.tr());
   }
+}
+
+/// Kategoriya holati (#14) — UI category-block varag'i uchun.
+@immutable
+class AppCategoryInfo {
+  const AppCategoryInfo({
+    required this.category,
+    required this.label,
+    required this.appCount,
+    required this.blocked,
+  });
+
+  factory AppCategoryInfo.fromJson(Map<String, dynamic> json) {
+    return AppCategoryInfo(
+      category: json['category'] as String? ?? 'OTHER',
+      label: json['label'] as String? ?? '',
+      appCount: (json['appCount'] as num?)?.toInt() ?? 0,
+      blocked: json['blocked'] as bool? ?? false,
+    );
+  }
+
+  /// Kategoriya kodi (SOCIAL/GAME/VIDEO/EDU/OTHER).
+  final String category;
+
+  /// O'zbekcha nom.
+  final String label;
+
+  /// Shu kategoriyadagi o'rnatilgan (foydalanuvchi) ilovalar soni.
+  final int appCount;
+
+  /// Hozir bloklanganmi.
+  final bool blocked;
 }
 
 /// App-limit operatsiyasi muvaffaqiyatsiz bo'lganda — aniq, ko'rsatish mumkin

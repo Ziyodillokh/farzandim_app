@@ -21,6 +21,13 @@ final fcmServiceProvider = Provider<FcmService>((ref) {
   return service;
 });
 
+/// `restrictions_sync` (darhol blok / kategoriya / limit o'zgardi) — fon'da
+/// ham limitни darhol qayta yuklaydi (#15). Jim (UI ko'rsatmaydi).
+void _handleRestrictionsSync(Ref ref, RemoteMessage message) {
+  if (message.data['type'] != 'restrictions_sync') return;
+  unawaited(ref.read(restrictionsSyncServiceProvider).sync());
+}
+
 /// `unlock_decision` push kelganda — limit qayta sync + bolaga snackbar.
 /// APPROVED → success ("X daqiqa ruxsat"); DENIED → info ("rad etildi").
 void _handleUnlockDecision(Ref ref, RemoteMessage message) {
@@ -47,8 +54,15 @@ void _handleUnlockDecision(Ref ref, RemoteMessage message) {
 /// `ref.watch(fcmInitializerProvider)` chaqiradi.
 final fcmInitializerProvider = FutureProvider<void>((ref) async {
   final service = ref.read(fcmServiceProvider);
-  // Foreground + tap'da unlock qarorини qayta ishlaymiz (limit sync + UI).
-  service.onForegroundMessage = (msg) => _handleUnlockDecision(ref, msg);
-  service.onMessageTap = (msg) => _handleUnlockDecision(ref, msg);
+  // Foreground + tap'da: unlock qarori (limit sync + UI) va restrictions_sync
+  // (darhol blok/kategoriya — jim limit sync).
+  service.onForegroundMessage = (msg) {
+    _handleUnlockDecision(ref, msg);
+    _handleRestrictionsSync(ref, msg);
+  };
+  service.onMessageTap = (msg) {
+    _handleUnlockDecision(ref, msg);
+    _handleRestrictionsSync(ref, msg);
+  };
   await service.init();
 });

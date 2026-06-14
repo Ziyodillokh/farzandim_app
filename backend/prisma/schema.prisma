@@ -156,6 +156,7 @@ model Child {
   appPermissions AppPermissionPolicy[]
   pairRequests  ChildPairRequest[]
   unlockRequests UnlockRequest[]
+  categoryBlocks CategoryBlock[]
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -473,6 +474,29 @@ model UnlockRequest {
   @@index([status, expiresAt])
 }
 
+// ============================================
+// CATEGORY BLOCK — ota-ona butun kategoriyani bloklaydi (#14)
+// ============================================
+//
+// Ota-ona "Ijtimoiy tarmoqlar" kabi kategoriyani bloklasa, shu yozuv
+// yaratiladi. Bola limit ro'yxati (app-limits.list) shu kategoriyadagi
+// barcha o'rnatilgan ilovalarni DINAMIK ravishda blok sifatida qaytaradi
+// (yangi o'rnatilgan ilova ham avtomatik qamrab olinadi). Mavjud per-app
+// limit/blok enforcement zanjiri (sync → native) o'zgarmasdan ishlaydi.
+model CategoryBlock {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  // SOCIAL | GAME | VIDEO | EDU | OTHER
+  category  String
+  createdAt DateTime @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, category])
+  @@map("category_blocks")
+  @@index([childId])
+}
+
 // --- Feedback (child → parent emoji + matn) ---
 model Feedback {
   id        String        @id @default(uuid())
@@ -613,6 +637,9 @@ model InstalledApp {
   installSource String?  @map("install_source")
   iconPath      String?  @map("icon_path")
   isSystem      Boolean  @default(false) @map("is_system")
+  // Ilova kategoriyasi (kategoriya bloklash uchun): SOCIAL/GAME/VIDEO/EDU/OTHER.
+  // Backend paket nomidan klassifikator orqali to'ldiradi (yoki bola yuborsa).
+  category      String?  @map("category")
   firstSeenAt   DateTime @default(now()) @map("first_seen_at")
   lastSeenAt    DateTime @default(now()) @map("last_seen_at")
 

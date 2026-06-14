@@ -10,6 +10,11 @@ import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { CreateAppLimitDto } from './dto/create-app-limit.dto';
 import { UpdateAppLimitDto } from './dto/update-app-limit.dto';
+import {
+  APP_CATEGORIES,
+  categoryLabel,
+  classifyPackage,
+} from '../installed-apps/app-category.util';
 
 const MAX_DAY_MS = 24 * 60 * 60 * 1000; // 86_400_000
 const MAX_WEEK_MS = 7 * MAX_DAY_MS;
@@ -112,6 +117,29 @@ export class AppLimitsService {
     }
   }
 
+  /**
+   * Bola qurilmasiga "darhol qayta sync qil" silent data-push (#15). WS faqat
+   * foreground'da ishlaydi; bu fon/yopiq holatda ham blokni bir necha
+   * soniyada kuchga kiritadi (RestrictionsSyncService darhol sync qiladi).
+   * childUserId yo'q yoki push xatosi — jim (limit baribir DB'da saqlangan,
+   * 30s davriy sync baribir oladi).
+   */
+  private async pushChildResync(child: {
+    childUserId: string | null;
+  }): Promise<void> {
+    if (!child.childUserId) return;
+    try {
+      await this.fcm.sendPushToUser(child.childUserId, {
+        title: '',
+        body: '',
+        dataOnly: true,
+        data: { type: 'restrictions_sync' },
+      });
+    } catch {
+      /* push xatosi limitга ta'sir qilmaydi */
+    }
+  }
+
   async findOne(id: string, userId: string) {
     const limit = await this.prisma.appLimit.findUnique({
       where: { id },
@@ -152,11 +180,61 @@ export class AppLimitsService {
     // (u sozlangan asl limitni ko'radi). Bloklangan (dailyLimitMs=0) ilova
     // grant tufayli vaqtli limitga aylanadi → grant tugaguncha ochiladi.
     const isChild = child.childUserId === userId;
-    const effective = isChild
-      ? await this.applyActiveGrants(childId, serialized)
-      : serialized;
+    let effective = serialized;
+    if (isChild) {
+      // 1) Kategoriya bloklari → bloklangan kategoriyadagi o'rnatilgan
+      //    ilovalarni sintetik blok (dailyLimitMs=0) sifatida qo'shamiz (#14).
+      effective = await this.applyCategoryBlocks(childId, effective);
+      // 2) Unlock grant daqiqalari → mos paket limitiga qo'shiladi (grant
+      //    kategoriya blokidan ustun: bloklangan ilova vaqtincha ochiladi).
+      effective = await this.applyActiveGrants(childId, effective);
+    }
 
     return { limits: effective, count: effective.length };
+  }
+
+  /**
+   * Bloklangan kategoriyalardagi o'rnatilgan ilovalarni sintetik blok
+   * (dailyLimitMs=0) sifatida qaytaradi (#14). Allaqachon aniq limit/blok
+   * bo'lgan paketlarga tegmaydi. DINAMIK — yangi o'rnatilgan ilova ham
+   * keyingi sync'da avtomatik qamrab olinadi.
+   */
+  private async applyCategoryBlocks(
+    childId: string,
+    limits: ReturnType<typeof serialize>[],
+  ): Promise<ReturnType<typeof serialize>[]> {
+    const blocks = await this.prisma.categoryBlock.findMany({
+      where: { childId },
+      select: { category: true },
+    });
+    if (blocks.length === 0) return limits;
+    const blockedCats = new Set(blocks.map((b) => b.category));
+
+    const apps = await this.prisma.installedApp.findMany({
+      where: { childId },
+      select: { packageName: true, category: true },
+    });
+    const existing = new Set(limits.map((l) => l.packageName));
+    const now = new Date();
+    const out = [...limits];
+    for (const app of apps) {
+      if (existing.has(app.packageName)) continue;
+      // Saqlangan kategoriya bo'lmasa (eski yozuv) — paketdan klassifikatsiya.
+      const cat = app.category ?? classifyPackage(app.packageName);
+      if (!blockedCats.has(cat)) continue;
+      existing.add(app.packageName);
+      out.push({
+        id: `cat:${app.packageName}`,
+        childId,
+        packageName: app.packageName,
+        dailyLimitMs: 0,
+        weeklyLimitMs: null,
+        isActive: true,
+        createdAt: now,
+        updatedAt: now,
+      });
+    }
+    return out;
   }
 
   /**
@@ -274,6 +352,7 @@ export class AppLimitsService {
       limit.dailyLimitMs,
       limit.isActive,
     );
+    void this.pushChildResync(child);
 
     return serialize(limit);
   }
@@ -330,6 +409,7 @@ export class AppLimitsService {
       updated.dailyLimitMs,
       updated.isActive,
     );
+    void this.pushChildResync(limit.child);
 
     return serialize(updated);
   }
@@ -359,7 +439,131 @@ export class AppLimitsService {
       request,
     );
     this.realtime.emitToChild(childIdForEmit, 'app_limit:deleted', { id });
+    void this.pushChildResync(limit.child);
 
     return { ok: true };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  #15 — POST /children/:childId/app-limits/block-now                 */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Darhol bloklash — ilovani to'liq blok (dailyLimitMs=0) qiladi va bolaga
+   * silent resync push yuboradi (fon'da ham ~bir necha soniyada kuchga kiradi,
+   * davriy sync kutilmaydi). Ota-ona uchun.
+   */
+  async blockNow(
+    childId: string,
+    userId: string,
+    packageName: string,
+    request?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const child = await this.prisma.child.findUnique({ where: { id: childId } });
+    if (!child) throw new NotFoundException('Child not found');
+    if (child.parentId !== userId) {
+      throw new ForbiddenException('Only parent can block');
+    }
+
+    const limit = await this.prisma.appLimit.upsert({
+      where: { childId_packageName: { childId, packageName } },
+      create: { childId, packageName, dailyLimitMs: 0n, isActive: true },
+      update: { dailyLimitMs: 0n, isActive: true },
+    });
+
+    await this.audit.log(
+      userId,
+      'app_limit',
+      'BLOCK_NOW',
+      limit.id,
+      { packageName },
+      request,
+    );
+    this.realtime.emitToChild(childId, 'app_limit:updated', serialize(limit));
+    void this.pushChildResync(child);
+
+    return serialize(limit);
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  #14 — Kategoriya bloklash                                          */
+  /* ------------------------------------------------------------------ */
+
+  /** Bola/ota-ona: kategoriyalar holati (ilova soni + bloklanganmi). */
+  async listCategories(childId: string, userId: string) {
+    const child = await this.prisma.child.findUnique({ where: { id: childId } });
+    if (!child) throw new NotFoundException('Child not found');
+    if (child.parentId !== userId && child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const [apps, blocks] = await Promise.all([
+      this.prisma.installedApp.findMany({
+        where: { childId, isSystem: false },
+        select: { packageName: true, category: true },
+      }),
+      this.prisma.categoryBlock.findMany({
+        where: { childId },
+        select: { category: true },
+      }),
+    ]);
+    const blocked = new Set(blocks.map((b) => b.category));
+    const counts = new Map<string, number>();
+    for (const a of apps) {
+      const cat = a.category ?? classifyPackage(a.packageName);
+      counts.set(cat, (counts.get(cat) ?? 0) + 1);
+    }
+
+    return {
+      categories: APP_CATEGORIES.map((category) => ({
+        category,
+        label: categoryLabel(category),
+        appCount: counts.get(category) ?? 0,
+        blocked: blocked.has(category),
+      })),
+    };
+  }
+
+  /** Ota-ona: kategoriyani bloklaydi yoki blokdan chiqaradi. */
+  async toggleCategory(
+    childId: string,
+    userId: string,
+    category: string,
+    block: boolean,
+    request?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
+  ) {
+    const child = await this.prisma.child.findUnique({ where: { id: childId } });
+    if (!child) throw new NotFoundException('Child not found');
+    if (child.parentId !== userId) {
+      throw new ForbiddenException('Only parent can block categories');
+    }
+
+    if (block) {
+      await this.prisma.categoryBlock.upsert({
+        where: { childId_category: { childId, category } },
+        create: { childId, category },
+        update: {},
+      });
+    } else {
+      await this.prisma.categoryBlock
+        .delete({ where: { childId_category: { childId, category } } })
+        .catch(() => {
+          /* allaqachon yo'q — idempotent */
+        });
+    }
+
+    await this.audit.log(
+      userId,
+      'category_block',
+      block ? 'BLOCK' : 'UNBLOCK',
+      childId,
+      { category },
+      request,
+    );
+    // Bola limit ro'yxati (augmentatsiya) o'zgardi → darhol sync.
+    this.realtime.emitToChild(childId, 'app_limit:updated', { category, block });
+    void this.pushChildResync(child);
+
+    return this.listCategories(childId, userId);
   }
 }
