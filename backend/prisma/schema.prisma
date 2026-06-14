@@ -157,6 +157,7 @@ model Child {
   pairRequests  ChildPairRequest[]
   unlockRequests UnlockRequest[]
   categoryBlocks CategoryBlock[]
+  notificationPreference NotificationPreference?
 
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
@@ -442,6 +443,40 @@ enum NotificationType {
   // Bola telefonida muhim ruxsat (joylashuv/bildirishnoma/fon/maxsus
   // imkoniyatlar) granted→denied bo'ldi — ota-onaga holat ogohlantirishi.
   PERMISSION_CHANGED
+  // Rejalashtirilgan ijobiy eslatmalar (bolaga) — dars/test, sport/sog'lom,
+  // yangi kontent. NotificationPreference + tinch soatlar bilan boshqariladi.
+  STUDY_NUDGE
+  HEALTH_NUDGE
+  CONTENT_REMINDER
+}
+
+// ============================================
+// NOTIFICATION PREFERENCE — eslatma sozlamalari (#66/#67/#77)
+// ============================================
+//
+// Har bola uchun bitta yozuv. Ota-ona (yoki bola) eslatma turlarini yoqadi/
+// o'chiradi va tinch soatlarni (tun) belgilaydi. NudgeService cron shu
+// sozlamaga va `last*NudgeAt` (kuniga bir marta — spam yo'q) ga qarab push
+// yuboradi.
+model NotificationPreference {
+  id              String  @id @default(uuid())
+  childId         String  @unique @map("child_id")
+  studyNudge      Boolean @default(true) @map("study_nudge")
+  healthNudge     Boolean @default(true) @map("health_nudge")
+  contentReminder Boolean @default(true) @map("content_reminder")
+  // Tinch soatlar "HH:MM" (mahalliy, Asia/Tashkent). null = cheklov yo'q.
+  quietFrom       String? @map("quiet_from")
+  quietTo         String? @map("quiet_to")
+  // Oxirgi yuborilgan vaqt — kuniga/haftada bir marta kafolati uchun.
+  lastStudyNudgeAt      DateTime? @map("last_study_nudge_at")
+  lastHealthNudgeAt     DateTime? @map("last_health_nudge_at")
+  lastContentReminderAt DateTime? @map("last_content_reminder_at")
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+
+  @@map("notification_preferences")
 }
 
 // ============================================

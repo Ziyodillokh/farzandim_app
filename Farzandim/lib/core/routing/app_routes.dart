@@ -62,6 +62,12 @@ class AppRoutes {
   /// Bolalarni boshqarish ro'yxati.
   static const String settingsChildren = '/settings/children';
 
+  /// Eslatma sozlamalari (dars/sport/kontent + tinch soat) — bola bo'yicha.
+  static const String notificationPreferencesPattern =
+      '/notification-preferences/:childId';
+  static String notificationPreferencesPath(String childId) =>
+      '/notification-preferences/$childId';
+
   /// Hisobni butunlay o'chirish (Play Market talabi).
   static const String settingsDeleteAccount = '/settings/delete-account';
 

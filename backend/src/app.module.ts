@@ -31,6 +31,7 @@ import { SosAlertsModule } from './modules/sos-alerts/sos-alerts.module';
 import { InstalledAppsModule } from './modules/installed-apps/installed-apps.module';
 import { AppLimitsModule } from './modules/app-limits/app-limits.module';
 import { UnlockRequestsModule } from './modules/unlock-requests/unlock-requests.module';
+import { NudgesModule } from './modules/nudges/nudges.module';
 import { AppPermissionsModule } from './modules/app-permissions/app-permissions.module';
 import { AppUsageModule } from './modules/app-usage/app-usage.module';
 import { ChildPairRequestsModule } from './modules/child-pair-requests/child-pair-requests.module';
@@ -92,6 +93,7 @@ import { AppController } from './app.controller';
     InstalledAppsModule,
     AppLimitsModule,
     UnlockRequestsModule,
+    NudgesModule,
     AppPermissionsModule,
     AppUsageModule,
     ChildPairRequestsModule,

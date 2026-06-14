@@ -24,6 +24,9 @@ enum NotificationType {
   voice,          // Yangi voice xabar
   geoZone,        // Geo-zone kirish/chiqish
   system,         // Yangi feature, app update
+  studyNudge,     // Dars/test eslatmasi (📚)
+  healthNudge,    // Harakat/sport eslatmasi (🏃)
+  contentReminder, // Yangi kontent eslatmasi (🎬)
 }
 
 extension NotificationTypeX on NotificationType {
@@ -43,6 +46,12 @@ extension NotificationTypeX on NotificationType {
         return 'geo_zone';
       case NotificationType.system:
         return 'system';
+      case NotificationType.studyNudge:
+        return 'study_nudge';
+      case NotificationType.healthNudge:
+        return 'health_nudge';
+      case NotificationType.contentReminder:
+        return 'content_reminder';
     }
   }
 
@@ -69,6 +78,12 @@ extension NotificationTypeX on NotificationType {
         return AppIcons.mapPin;
       case NotificationType.system:
         return Icons.info_outline;
+      case NotificationType.studyNudge:
+        return Icons.menu_book_rounded;
+      case NotificationType.healthNudge:
+        return Icons.directions_run_rounded;
+      case NotificationType.contentReminder:
+        return Icons.movie_rounded;
     }
   }
 
@@ -88,6 +103,12 @@ extension NotificationTypeX on NotificationType {
         return AppColors.catBlue; // sky
       case NotificationType.system:
         return const Color(0xFFA0AEC0); // grey
+      case NotificationType.studyNudge:
+        return AppColors.catBlue; // sky — dars
+      case NotificationType.healthNudge:
+        return AppColors.catEmeraldLight; // emerald — sport
+      case NotificationType.contentReminder:
+        return AppColors.catViolet; // violet — kontent
     }
   }
 }
@@ -166,7 +187,11 @@ class AppNotification {
     final data = doc.data() as Map<String, dynamic>? ?? {};
     return AppNotification(
       id: doc.id,
-      type: NotificationTypeX.fromCode(data['type'] as String? ?? 'system'),
+      // Backend enum'lari katta harfli (PARENT_REQUEST kabi) — fromBackendJson
+      // kabi lowercase qilamiz, aks holda hammasi `system`ga tushib qolardi.
+      type: NotificationTypeX.fromCode(
+        (data['type'] as String? ?? 'system').toLowerCase(),
+      ),
       title: data['title'] as String? ?? '',
       body: data['body'] as String? ?? '',
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),

@@ -51,6 +51,7 @@ import 'package:farzandim/features/schedules/presentation/screens/schedules_list
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
+import 'package:farzandim/features/settings/presentation/screens/notification_preferences_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
 import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
@@ -388,6 +389,14 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.qaDevicePattern,
       pageBuilder: (context, state) => _slidePage(
         DeviceSettingsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.notificationPreferencesPattern,
+      pageBuilder: (context, state) => _slidePage(
+        NotificationPreferencesScreen(
+          childId: state.pathParameters['childId']!,
+        ),
       ),
     ),
     GoRoute(

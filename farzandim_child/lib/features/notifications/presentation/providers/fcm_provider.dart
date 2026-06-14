@@ -28,6 +28,16 @@ void _handleRestrictionsSync(Ref ref, RemoteMessage message) {
   unawaited(ref.read(restrictionsSyncServiceProvider).sync());
 }
 
+/// Eslatma (study/health/content) push BOSILGANDA — tegishli ekranga olib
+/// boradi (#66/#67/#77). `relatedRoute` backend'dan keladi.
+void _handleNudgeTap(Ref ref, RemoteMessage message) {
+  const nudgeTypes = {'study_nudge', 'health_nudge', 'content_reminder'};
+  if (!nudgeTypes.contains(message.data['type'])) return;
+  final route = message.data['relatedRoute'] as String?;
+  if (route == null || route.isEmpty) return;
+  ref.read(routerProvider).go(route);
+}
+
 /// `unlock_decision` push kelganda — limit qayta sync + bolaga snackbar.
 /// APPROVED → success ("X daqiqa ruxsat"); DENIED → info ("rad etildi").
 void _handleUnlockDecision(Ref ref, RemoteMessage message) {
@@ -63,6 +73,7 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
   service.onMessageTap = (msg) {
     _handleUnlockDecision(ref, msg);
     _handleRestrictionsSync(ref, msg);
+    _handleNudgeTap(ref, msg);
   };
   await service.init();
 });

@@ -164,6 +164,41 @@ class _Content extends ConsumerWidget {
           ),
           const SizedBox(height: AppDimensions.lg),
 
+          // ─── Eslatmalar (dars/sport/kontent + tinch soat) ───
+          SettingsCard(
+            onTap: () => context.push(
+              AppRoutes.notificationPreferencesPath(child.id),
+            ),
+            child: Row(
+              children: [
+                Container(
+                  width: 40,
+                  height: 40,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary.withValues(alpha: 0.15),
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  alignment: Alignment.center,
+                  child: Icon(
+                    Icons.notifications_active_rounded,
+                    color: AppColors.primary,
+                    size: 22,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Eslatmalar',
+                    style: AppTextStyles.bodyM
+                        .copyWith(fontWeight: FontWeight.w700),
+                  ),
+                ),
+                Icon(Icons.chevron_right, color: AppColors.textTertiary),
+              ],
+            ),
+          ),
+          const SizedBox(height: AppDimensions.lg),
+
           // "Ilova uchun ruxsatlar" qatori OLIB TASHLANDI — funksiya hozircha
           // to'g'ri ishlamaydi; keyinroq qaytarilishi mumkin (route saqlangan).
 
