@@ -1,5 +1,6 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
+import { ScheduleModule } from '@nestjs/schedule';
 import { validate } from './common/config/env.schema';
 
 // Infrastructure / shared modules
@@ -9,6 +10,7 @@ import { FcmModule } from './common/fcm/fcm.module';
 import { SmsModule } from './common/sms/sms.module';
 import { AuditModule } from './common/audit/audit.module';
 import { RealtimeModule } from './common/realtime/realtime.module';
+import { ConnectionMonitorModule } from './common/connection/connection-monitor.module';
 
 // Consumer feature modules
 import { AuthModule } from './modules/auth/auth.module';
@@ -58,6 +60,7 @@ import { AppController } from './app.controller';
 @Module({
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate }),
+    ScheduleModule.forRoot(),
 
     // Infrastructure
     DatabaseModule,
@@ -67,6 +70,7 @@ import { AppController } from './app.controller';
     SmsModule,
     AuditModule,
     RealtimeModule,
+    ConnectionMonitorModule,
 
     // Consumer modules
     AuthModule,

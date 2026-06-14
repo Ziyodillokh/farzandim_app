@@ -87,6 +87,11 @@ model Child {
   pairedAt     DateTime? @map("paired_at")
   isConnected  Boolean  @default(false) @map("is_connected")
   lastSeenAt   DateTime? @map("last_seen_at")
+  // "Aloqa uzildi" push spam'siz qilish uchun — oxirgi marta ota-onaga
+  // uzilish ogohlantirishi yuborilgan vaqt. Bola qayta online bo'lganda
+  // (heartbeat → lastSeenAt yangilanadi) null'ga qaytadi, keyingi uzilishda
+  // yana BITTA push chiqsin (ConnectionMonitorService cron'i tekshiradi).
+  connectionLostNotifiedAt DateTime? @map("connection_lost_notified_at")
 
   // Device info (Child App POST /location bilan birga yuboradi)
   batteryLevel   Int?     @map("battery_level")
@@ -425,6 +430,9 @@ enum NotificationType {
   VOICE
   GEO_ZONE
   SYSTEM
+  // Bola qurilmasi 10+ daqiqa heartbeat yubormadi (ilova o'chirilgan,
+  // internet uzilgan yoki telefon faol emas). Ota-onaga bir marta push.
+  CONNECTION_LOST
 }
 
 // --- Feedback (child → parent emoji + matn) ---

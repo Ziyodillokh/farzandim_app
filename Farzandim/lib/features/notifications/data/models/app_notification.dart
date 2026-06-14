@@ -278,6 +278,8 @@ class AppNotification {
         return NotificationType.exitZone;
       case 'low_battery':
         return NotificationType.lowBattery;
+      case 'connection_lost':
+        return NotificationType.offline;
       case 'app_limit':
         return NotificationType.appLimit;
       case 'schedule_start':

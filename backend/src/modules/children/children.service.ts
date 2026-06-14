@@ -198,6 +198,12 @@ export class ChildrenService {
     }
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
+    // Qayta online bo'ldi — "aloqa uzildi" bayrog'ini tozalaymiz, keyingi
+    // uzilishda yana BITTA push chiqsin (ConnectionMonitorService). Faqat
+    // o'rnatilgan bo'lsa yozamiz (har heartbeat'da bekorga yozmaslik uchun).
+    if (child.connectionLostNotifiedAt !== null) {
+      data.connectionLostNotifiedAt = null;
+    }
 
     // Past batareya (<10%) crossing — YANGILASHDAN OLDIN tekshiramiz
     // (prevBattery = child.batteryLevel). Aks holda device-info heartbeat
