@@ -125,10 +125,11 @@ export class ConsumerContentController {
     const obj = await this.service.getMediaStream(segment, file, range);
     reply.header('Accept-Ranges', 'bytes');
     reply.header('Cache-Control', 'public, max-age=86400');
-    // Content-Type'ni fayl kengaytmasidan ANIQLAYMIZ — admin audio'ni MIME'siz
-    // yuklagani uchun MinIO'da ko'pincha octet-stream/bo'sh saqlanadi va telefon
-    // player (just_audio/ExoPlayer/AVPlayer) octet-stream'da 0:00 da qotardi.
-    reply.type(this.contentTypeFor(file, obj.contentType));
+    // Content-Type'ni fayl kengaytmasi/segment'dan ANIQLAYMIZ — admin audio'ni
+    // MIME'siz yuklagani uchun MinIO'da octet-stream YOKI noto'g'ri tur
+    // (audio/x-m4a kabi) saqlanadi va telefon player (just_audio/ExoPlayer/
+    // AVPlayer) buni o'qiy olmay 0:00 da qotardi.
+    reply.type(this.contentTypeFor(segment, file, obj.contentType));
     if (obj.contentRange) {
       reply.code(206);
       reply.header('Content-Range', obj.contentRange);
@@ -160,14 +161,25 @@ export class ConsumerContentController {
     pdf: 'application/pdf',
   };
 
-  private contentTypeFor(file: string, stored?: string): string {
+  private contentTypeFor(
+    segment: string,
+    file: string,
+    stored?: string,
+  ): string {
+    // 1) Fayl kengaytmasi ANIQ manba — admin MIME'si ishonchsiz (octet-stream
+    //    yoki audio/x-m4a kabi), shuning uchun kengaytmaga ustunlik beramiz.
+    const ext = file.includes('.')
+      ? (file.split('.').pop()?.toLowerCase() ?? '')
+      : '';
+    const byExt = ConsumerContentController.MIME[ext];
+    if (byExt) return byExt;
+    // 2) Saqlangan tur ishonchli (octet emas) bo'lsa — o'shani.
     if (stored && stored !== 'application/octet-stream') return stored;
-    const ext = file.split('.').pop()?.toLowerCase() ?? '';
-    return (
-      ConsumerContentController.MIME[ext] ??
-      stored ??
-      'application/octet-stream'
-    );
+    // 3) Kengaytma yo'q + ishonchsiz stored — segment bo'yicha default
+    //    (admin audiokitoblari m4a/mp4, videolar mp4).
+    if (segment === 'audio') return 'audio/mp4';
+    if (segment === 'video') return 'video/mp4';
+    return 'application/octet-stream';
   }
 
   // @Public YouTube embed sahifa — bola webview SHU sahifani yuklaydi.
