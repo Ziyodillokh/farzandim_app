@@ -13,6 +13,10 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { GamificationService } from '../gamification/gamification.service';
 import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 
+// Javob vaqti chegarasi grace (sekund) — answerQuestion VA submitAttempt
+// AYNI shu qiymatdan foydalanadi (ikki endpoint bir xil vaqt xulqi).
+const GRACE_SEC = 30;
+
 function lifecycleOf(o: {
   status: string;
   startTime: Date;
@@ -175,6 +179,13 @@ export class ConsumerOlympiadsService {
       throw new NotFoundException('Olympiad not found');
     }
 
+    // Lifecycle nazorati: FAQAT faol oynada boshlash mumkin. Avval tekshirilmasdi
+    // — kelajakdagi (scheduled, startTime > now) yoki tugagan (finished, endTime
+    // < now) konkursni ham boshlash mumkin edi.
+    if (lifecycleOf(olympiad) !== 'active') {
+      throw new ForbiddenException('Konkurs hozir faol emas');
+    }
+
     // Check existing attempt (unique constraint: olympiadId + childId)
     const existing = await this.prisma.olympiadAttempt.findUnique({
       where: {
@@ -182,6 +193,11 @@ export class ConsumerOlympiadsService {
       },
     });
     if (existing) {
+      // Tugagan urinishni qayta "resume" qilib bo'lmaydi (answerQuestion 409
+      // berib UX'ni buzardi). Faqat davom etayotgan urinish qaytariladi.
+      if (existing.status === 'finished') {
+        throw new ConflictException('Bu konkursni allaqachon yakunlagansiz');
+      }
       return {
         attemptId: existing.id,
         startedAt: existing.startedAt.toISOString(),
@@ -238,8 +254,8 @@ export class ConsumerOlympiadsService {
     const elapsedSec = Math.floor(
       (Date.now() - attempt.startedAt.getTime()) / 1000,
     );
-    const limitSec = attempt.olympiad.durationMin * 60 + 30;
-    if (elapsedSec > limitSec) {
+    const limitSec = attempt.olympiad.durationMin * 60 + GRACE_SEC;
+    if (elapsedSec >= limitSec) {
       await this.prisma.olympiadAttempt.update({
         where: { id: attemptId },
         data: {
@@ -329,7 +345,7 @@ export class ConsumerOlympiadsService {
     userId: string,
     attemptId: string,
     answers: Array<{ questionId: string; selectedIndex: number }>,
-    timeSec: number,
+    _clientTimeSec: number,
   ) {
     const child = await this.loadChild(userId);
 
@@ -346,8 +362,46 @@ export class ConsumerOlympiadsService {
       throw new ConflictException('Attempt already finished');
     }
 
+    // Aralash oqimni taqiqlash: savol-savol (answerQuestion) javoblari mavjud
+    // bo'lsa batch submit ishlatib bo'lmaydi (score override / dublikat
+    // shishishi). Mock fallback oqimida answers bo'sh bo'ladi → ruxsat.
+    const prevAnswers = Array.isArray(attempt.answers)
+      ? (attempt.answers as unknown[])
+      : [];
+    if (prevAnswers.length > 0) {
+      throw new ConflictException(
+        'Javoblar savol-savol berilgan — submit kerak emas',
+      );
+    }
+
+    // Server-side vaqt nazorati — answerQuestion bilan IDENTIK. Client timeSec
+    // ishonchsiz (reyting timeSec bo'yicha tartiblanadi → manipulyatsiya).
+    const elapsedSec = Math.floor(
+      (Date.now() - attempt.startedAt.getTime()) / 1000,
+    );
+    const limitSec = attempt.olympiad.durationMin * 60 + GRACE_SEC;
+    if (elapsedSec >= limitSec) {
+      await this.prisma.olympiadAttempt.update({
+        where: { id: attemptId },
+        data: {
+          status: 'finished',
+          finishedAt: new Date(),
+          timeSec: elapsedSec,
+        },
+      });
+      throw new HttpException(
+        { error: 'Time limit exceeded', autoFinished: true },
+        HttpStatus.REQUEST_TIMEOUT,
+      );
+    }
+
     const questionMap = new Map(
       attempt.olympiad.questions.map((q) => [q.id, q]),
+    );
+    // Dublikat questionId dedup — bir xil to'g'ri javob ikki marta score
+    // qo'shmasin (answerQuestion'da dedup bor edi, bu yerda yo'q edi).
+    const uniqueAnswers = Array.from(
+      new Map(answers.map((a) => [a.questionId, a])).values(),
     );
     let score = 0;
     let correctAnswers = 0;
@@ -356,7 +410,7 @@ export class ConsumerOlympiadsService {
       selectedIndex: number;
       isCorrect: boolean;
     }> = [];
-    for (const a of answers) {
+    for (const a of uniqueAnswers) {
       const q = questionMap.get(a.questionId);
       if (!q) continue;
       const isCorrect = a.selectedIndex === q.correctIndex;
@@ -377,7 +431,7 @@ export class ConsumerOlympiadsService {
         status: 'finished',
         score,
         correctAnswers,
-        timeSec,
+        timeSec: elapsedSec,
         finishedAt: new Date(),
         answers: graded as Prisma.InputJsonValue,
       },

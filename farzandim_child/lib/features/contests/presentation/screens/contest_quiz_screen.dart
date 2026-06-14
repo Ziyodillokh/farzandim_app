@@ -80,7 +80,7 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
       // Final hook
       if (prev?.status != next.status &&
           next.status == QuizStatus.finished &&
-          next.accuracy >= 0.8) {
+          next.isWinner) {
         _confettiController.play();
         SoundService.playVictory();
       }
@@ -782,7 +782,7 @@ class _ResultScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isWinner = state.accuracy >= 0.7;
+    final isWinner = state.isWinner;
     final percent = (state.accuracy * 100).round();
 
     return Padding(

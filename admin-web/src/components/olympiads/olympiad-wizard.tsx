@@ -83,7 +83,6 @@ export function OlympiadWizard({
   // Step 3
   const [type, setType] = useState('test');
   const [difficulty, setDifficulty] = useState("o'rta");
-  const [maxAttempts, setMaxAttempts] = useState(1);
   const [xpReward, setXpReward] = useState(50);
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleAnswers, setShuffleAnswers] = useState(true);
@@ -94,7 +93,7 @@ export function OlympiadWizard({
   const reset = () => {
     setStep(0); setTitle("Iste'dod Uchquni"); setDescription(''); setSubject('Matematika');
     setAgeFrom(9); setAgeTo(12); setDurationMin(30); setQuestions([emptyQuestion()]);
-    setType('test'); setDifficulty("o'rta"); setMaxAttempts(1); setXpReward(50);
+    setType('test'); setDifficulty("o'rta"); setXpReward(50);
     setShuffleQuestions(true); setShuffleAnswers(true); setHideResults(false);
     setAllowBack(true); setCertificateEnabled(true);
   };
@@ -114,7 +113,7 @@ export function OlympiadWizard({
       const payload: OlympiadCreatePayload = {
         title, description, subject, ageFrom, ageTo, type, difficulty,
         startTime: start.toISOString(), endTime: end.toISOString(),
-        durationMin, maxAttempts, xpReward,
+        durationMin, xpReward,
         shuffleQuestions, shuffleAnswers, hideResults, allowBack, certificateEnabled,
         questions,
       };
@@ -131,7 +130,19 @@ export function OlympiadWizard({
 
   const canNext = () => {
     if (step === 0) return title.trim().length > 0 && ageTo >= ageFrom;
-    if (step === 2) return questions.every((q) => q.text.trim() && q.options.every((o) => o.trim()));
+    if (step === 1) return durationMin >= 5 && durationMin <= 300;
+    if (step === 2)
+      return (
+        questions.length > 0 &&
+        questions.every(
+          (q) =>
+            q.text.trim().length > 0 &&
+            q.options.length >= 2 &&
+            q.options.every((o) => o.trim().length > 0) &&
+            q.correctIndex >= 0 &&
+            q.correctIndex < q.options.length,
+        )
+      );
     return true;
   };
 
@@ -181,10 +192,10 @@ export function OlympiadWizard({
               </Field>
               <div className="grid grid-cols-2 gap-4">
                 <Field label="Yosh (dan)">
-                  <Input type="number" min={3} max={18} value={ageFrom} onChange={(e) => setAgeFrom(+e.target.value)} />
+                  <Input type="number" min={0} max={25} value={ageFrom} onChange={(e) => setAgeFrom(+e.target.value)} />
                 </Field>
                 <Field label="Yosh (gacha)">
-                  <Input type="number" min={3} max={18} value={ageTo} onChange={(e) => setAgeTo(+e.target.value)} />
+                  <Input type="number" min={0} max={25} value={ageTo} onChange={(e) => setAgeTo(+e.target.value)} />
                 </Field>
               </div>
             </div>
@@ -196,8 +207,9 @@ export function OlympiadWizard({
                 <Input type="number" min={5} max={300} value={durationMin} onChange={(e) => setDurationMin(+e.target.value)} />
               </Field>
               <p className="rounded-lg bg-muted/50 p-3 text-sm text-muted-foreground">
-                Boshlanish vaqti avtomatik ertangi kunga, tugash vaqti davomiylik asosida belgilanadi.
-                Keyinroq tahrirlashingiz mumkin.
+                Davomiylik — bola boshlagandan keyin savollarga javob berish uchun
+                vaqt chegarasi. Konkurs nashr qilingach DARHOL ochiq bo'ladi va
+                30 kun davomida qatnashish mumkin (vaqtni keyin tahrirlashingiz mumkin).
               </p>
             </div>
           )}
@@ -326,9 +338,6 @@ export function OlympiadWizard({
                       <SelectItem value="qiyin">Qiyin</SelectItem>
                     </SelectContent>
                   </Select>
-                </Field>
-                <Field label="Urinishlar soni">
-                  <Input type="number" min={1} max={10} value={maxAttempts} onChange={(e) => setMaxAttempts(+e.target.value)} />
                 </Field>
                 <Field label="XP mukofoti">
                   <Input type="number" min={0} max={1000} value={xpReward} onChange={(e) => setXpReward(+e.target.value)} />

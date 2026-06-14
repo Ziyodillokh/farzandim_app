@@ -50,7 +50,6 @@ export class AdminOlympiadsService {
       startTime: o.startTime.toISOString(),
       endTime: o.endTime.toISOString(),
       durationMin: o.durationMin,
-      maxAttempts: o.maxAttempts,
       xpReward: o.xpReward,
       shuffleQuestions: o.shuffleQuestions,
       shuffleAnswers: o.shuffleAnswers,
@@ -157,9 +156,19 @@ export class AdminOlympiadsService {
     }
 
     for (const q of dto.questions ?? []) {
-      if (q.correctIndex >= q.options.length) {
+      if (!Array.isArray(q.options) || q.options.length < 2) {
+        throw new BadRequestException(
+          'Har bir savol kamida 2 ta variantga ega bo\'lishi shart',
+        );
+      }
+      if (q.correctIndex < 0 || q.correctIndex >= q.options.length) {
         throw new BadRequestException('correctIndex out of range for question');
       }
+    }
+    // Nashr qilingan holatda yaratilsa — kamida 1 savol shart (bo'sh konkurs
+    // bola tomonda darhol "tugagan" bo'lib qoladi).
+    if ((dto.status ?? 'draft') === 'published' && (dto.questions?.length ?? 0) === 0) {
+      throw new BadRequestException('Nashr qilish uchun kamida 1 savol kerak');
     }
 
     const created = await this.prisma.olympiad.create({
@@ -174,7 +183,6 @@ export class AdminOlympiadsService {
         startTime: start,
         endTime: end,
         durationMin: dto.durationMin ?? 30,
-        maxAttempts: dto.maxAttempts ?? 1,
         xpReward: dto.xpReward ?? 50,
         shuffleQuestions: dto.shuffleQuestions ?? true,
         shuffleAnswers: dto.shuffleAnswers ?? true,
@@ -202,6 +210,35 @@ export class AdminOlympiadsService {
   }
 
   async update(id: string, dto: UpdateOlympiadDto) {
+    // Cross-field validatsiya — create() bilan bir xil, lekin partial update
+    // uchun mavjud qiymatlarni DB'dan o'qib effektiv juftlikni tekshiramiz
+    // (faqat bitta maydon yangilansa ham). Avval umuman tekshirilmasdi.
+    if (
+      dto.startTime !== undefined ||
+      dto.endTime !== undefined ||
+      dto.ageFrom !== undefined ||
+      dto.ageTo !== undefined
+    ) {
+      const cur = await this.prisma.olympiad.findUnique({
+        where: { id },
+        select: { startTime: true, endTime: true, ageFrom: true, ageTo: true },
+      });
+      if (!cur) throw new NotFoundException('Olympiad not found');
+      const start = dto.startTime !== undefined ? new Date(dto.startTime) : cur.startTime;
+      const end = dto.endTime !== undefined ? new Date(dto.endTime) : cur.endTime;
+      const ageFrom = dto.ageFrom ?? cur.ageFrom;
+      const ageTo = dto.ageTo ?? cur.ageTo;
+      if (start >= end) {
+        throw new BadRequestException('startTime must be before endTime');
+      }
+      if (ageFrom > ageTo) {
+        throw new BadRequestException('ageFrom must be <= ageTo');
+      }
+    }
+    if (dto.durationMin !== undefined && dto.durationMin < 1) {
+      throw new BadRequestException('durationMin must be >= 1');
+    }
+
     const updates: Prisma.OlympiadUpdateInput = {};
     if (dto.title !== undefined) updates.title = dto.title;
     if (dto.description !== undefined) updates.description = dto.description ?? null;
@@ -213,7 +250,6 @@ export class AdminOlympiadsService {
     if (dto.startTime !== undefined) updates.startTime = new Date(dto.startTime);
     if (dto.endTime !== undefined) updates.endTime = new Date(dto.endTime);
     if (dto.durationMin !== undefined) updates.durationMin = dto.durationMin;
-    if (dto.maxAttempts !== undefined) updates.maxAttempts = dto.maxAttempts;
     if (dto.xpReward !== undefined) updates.xpReward = dto.xpReward;
     if (dto.shuffleQuestions !== undefined) updates.shuffleQuestions = dto.shuffleQuestions;
     if (dto.shuffleAnswers !== undefined) updates.shuffleAnswers = dto.shuffleAnswers;
@@ -236,6 +272,18 @@ export class AdminOlympiadsService {
   }
 
   async publish(id: string) {
+    // Bo'sh (0 savol) konkursni nashr qilib bo'lmaydi — bola tomonda u darhol
+    // "tugagan" bo'lib, score buziladi (questionsTotal=0).
+    const o = await this.prisma.olympiad.findUnique({
+      where: { id },
+      include: { _count: { select: { questions: true } } },
+    });
+    if (!o) throw new NotFoundException('Olympiad not found');
+    if (o._count.questions === 0) {
+      throw new BadRequestException(
+        'Konkursni nashr qilish uchun kamida 1 ta savol kerak',
+      );
+    }
     try {
       const updated = await this.prisma.olympiad.update({
         where: { id },
@@ -345,7 +393,10 @@ export class AdminOlympiadsService {
   }
 
   async addQuestion(olympiadId: string, dto: QuestionDto) {
-    if (dto.correctIndex >= dto.options.length) {
+    if (!Array.isArray(dto.options) || dto.options.length < 2) {
+      throw new BadRequestException('Savol kamida 2 ta variantga ega bo\'lishi shart');
+    }
+    if (dto.correctIndex < 0 || dto.correctIndex >= dto.options.length) {
       throw new BadRequestException('correctIndex out of range');
     }
     const last = await this.prisma.olympiadQuestion.findFirst({
@@ -373,6 +424,9 @@ export class AdminOlympiadsService {
   }
 
   async updateQuestion(olympiadId: string, questionId: string, dto: Partial<QuestionDto>) {
+    if (dto.options !== undefined && dto.options.length < 2) {
+      throw new BadRequestException('Savol kamida 2 ta variantga ega bo\'lishi shart');
+    }
     const updates: Prisma.OlympiadQuestionUpdateInput = {};
     if (dto.text !== undefined) updates.text = dto.text;
     if (dto.options !== undefined) updates.options = dto.options;
@@ -451,7 +505,15 @@ export class AdminOlympiadsService {
         `Qo'llab-quvvatlanmaydigan format: ${mime}`,
       );
     }
-    const ext = extname(file.filename || '') || '.jpg';
+    // Kengaytmani MIME'dan aniqlaymiz (filename bo'sh/noto'g'ri bo'lsa PNG ham
+    // .jpg saqlanardi). MIME yuqorida allaqachon validatsiyalangan.
+    const mimeToExt: Record<string, string> = {
+      'image/jpeg': '.jpg',
+      'image/png': '.png',
+      'image/webp': '.webp',
+      'image/gif': '.gif',
+    };
+    const ext = mimeToExt[mime] ?? extname(file.filename || '') ?? '.jpg';
     // Single-segment key (slash yo'q) — proxy `:key` path param uchun.
     const key = `q_${randomUUID()}${ext}`;
     await this.storage.upload(BUCKETS.olympiad, key, file.buffer, mime);

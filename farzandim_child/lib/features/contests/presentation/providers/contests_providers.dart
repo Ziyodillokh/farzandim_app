@@ -34,3 +34,14 @@ final finishedContestsProvider = Provider<List<ContestModel>>((ref) {
     orElse: () => const <ContestModel>[],
   );
 });
+
+/// Yuklanmoqdami — UI spinner ko'rsatish uchun.
+final contestsLoadingProvider = Provider<bool>((ref) {
+  return ref.watch(backendContestsProvider).isLoading;
+});
+
+/// Tarmoq/server xatosi bo'ldimi — jim bo'sh ro'yxat o'rniga xato+qayta urinish
+/// ko'rsatish uchun (avval xato sukut bilan "konkurs yo'q" deb ko'rinardi).
+final contestsErrorProvider = Provider<bool>((ref) {
+  return ref.watch(backendContestsProvider).hasError;
+});

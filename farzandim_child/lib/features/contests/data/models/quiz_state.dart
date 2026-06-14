@@ -14,6 +14,11 @@ enum QuizStatus { loading, intro, playing, paused, finished }
 enum AnswerState { none, correct, wrong, timeout }
 
 class QuizState {
+  /// G'olib chegarasi — YAGONA manba (UI, provider, XP bir xil ishlatadi).
+  /// Avval UI 0.7, provider/XP 0.8 edi: 70-79% bola "Tabriklaymiz" ko'rib,
+  /// g'olib XP olmasdi (nomuvofiqlik).
+  static const double winnerThreshold = 0.80;
+
   final QuizStatus status;
   final int currentIndex;
   final int? selectedAnswer;
@@ -56,6 +61,9 @@ class QuizState {
     final total = correctCount + wrongCount;
     return total > 0 ? correctCount / total : 0;
   }
+
+  /// G'olibmi — UI va XP AYNI shu getterdan foydalanadi (yagona chegara).
+  bool get isWinner => accuracy >= winnerThreshold;
 
   QuizState copyWith({
     QuizStatus? status,

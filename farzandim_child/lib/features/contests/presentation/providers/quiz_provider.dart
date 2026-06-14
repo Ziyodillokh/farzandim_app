@@ -48,10 +48,6 @@ class QuizNotifier extends StateNotifier<QuizState> {
   /// Backend OlympiadAttempt id. _start() paytida olinadi.
   String? _attemptId;
 
-  /// 80%+ to'g'ri javoblar = "g'olib" deb sanaladi (bonus XP+DON).
-  /// Konsept v2 4.2: g'olib/sovrindor +200 XP, +50 DON.
-  static const double _winnerThreshold = 0.80;
-
   /// XP yutilganmi yo'qmi — har konkursga bir martagacha cheklash uchun
   /// dedup `relatedId: contest.id` orqali ham qilinadi (XpService dedup),
   /// lekin local flag chaqirishni qisqartirish uchun.
@@ -340,10 +336,8 @@ class QuizNotifier extends StateNotifier<QuizState> {
     // Backend submit (canonical score)
     unawaited(_submitBackendAttempt());
 
-    // 80%+ to'g'ri bo'lsa — g'olib bonus XP (Konsept v2 4.2).
-    final total = state.effectiveQuestions.length;
-    final ratio = total == 0 ? 0.0 : state.correctCount / total;
-    if (ratio >= _winnerThreshold) {
+    // G'olib bonus XP — UI bilan AYNI chegara (QuizState.winnerThreshold).
+    if (state.isWinner) {
       unawaited(_awardWinnerXp());
     }
   }

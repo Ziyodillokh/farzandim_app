@@ -26,6 +26,8 @@ class ContestsScreen extends ConsumerWidget {
     final activeTab = ref.watch(contestsActiveTabProvider);
     final activeContests = ref.watch(activeContestsProvider);
     final finishedContests = ref.watch(finishedContestsProvider);
+    final loading = ref.watch(contestsLoadingProvider);
+    final hasError = ref.watch(contestsErrorProvider);
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -81,10 +83,21 @@ class ContestsScreen extends ConsumerWidget {
               const ContestsTabs(),
               const SizedBox(height: 16),
               Expanded(
-                child: activeTab == 0
-                    ? _List(contests: activeContests, isActive: true)
-                    : _List(
-                        contests: finishedContests, isActive: false),
+                child: loading
+                    ? const Center(
+                        child: CircularProgressIndicator(
+                          color: AppColors.primary,
+                        ),
+                      )
+                    : hasError
+                        ? _ErrorState(
+                            onRetry: () =>
+                                ref.invalidate(backendContestsProvider),
+                          )
+                        : activeTab == 0
+                            ? _List(contests: activeContests, isActive: true)
+                            : _List(
+                                contests: finishedContests, isActive: false),
               ),
             ],
           ),
@@ -132,6 +145,54 @@ class _List extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 140),
       itemCount: contests.length,
       itemBuilder: (_, i) => ContestCard(contest: contests[i]),
+    );
+  }
+}
+
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(
+            Icons.wifi_off_rounded,
+            size: 64,
+            color: context.adaptive.textTertiary,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            "Konkurslarni yuklab bo'lmadi",
+            style: TextStyle(
+              fontSize: 16,
+              color: context.adaptive.textSecondary,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            'Internet aloqasini tekshiring',
+            style: TextStyle(
+              fontSize: 13,
+              color: context.adaptive.textTertiary,
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            onPressed: onRetry,
+            icon: const Icon(Icons.refresh_rounded),
+            label: const Text('Qayta urinish'),
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AppColors.primary,
+              foregroundColor: Colors.black,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

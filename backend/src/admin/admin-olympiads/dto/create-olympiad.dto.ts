@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
 import {
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsEnum,
@@ -27,7 +28,9 @@ export class QuestionDto {
 
   @ApiProperty({ type: [String] })
   @IsArray()
+  @ArrayMinSize(2, { message: 'Savol kamida 2 ta variantga ega bo\'lishi shart' })
   @IsString({ each: true })
+  @MaxLength(200, { each: true })
   options: string[];
 
   @ApiProperty()
@@ -104,13 +107,6 @@ export class CreateOlympiadDto {
   @Min(1)
   @Max(600)
   durationMin?: number;
-
-  @ApiProperty({ default: 1 })
-  @IsOptional()
-  @IsInt()
-  @Min(1)
-  @Max(20)
-  maxAttempts?: number;
 
   @ApiProperty({ default: 50 })
   @IsOptional()

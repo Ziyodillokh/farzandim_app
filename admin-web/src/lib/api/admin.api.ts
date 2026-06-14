@@ -255,7 +255,6 @@ export interface OlympiadCreatePayload {
   startTime: string;
   endTime: string;
   durationMin: number;
-  maxAttempts: number;
   xpReward: number;
   shuffleQuestions: boolean;
   shuffleAnswers: boolean;
