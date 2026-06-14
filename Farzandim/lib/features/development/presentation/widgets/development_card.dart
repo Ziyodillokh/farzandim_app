@@ -9,6 +9,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/development/data/development_summary.dart';
+import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
 
 class DevelopmentCard extends StatelessWidget {
@@ -19,13 +20,10 @@ class DevelopmentCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final s = summary;
-    return Container(
-      padding: const EdgeInsets.all(AppDimensions.md),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusL),
-        border: Border.all(color: AppColors.border),
-      ),
+    // Dashboard'dagi boshqa kartalar (TimeCard, ...) bilan bir xil premium
+    // shisha til — GlassCard light/night rejimni ichida boshqaradi (oddiy
+    // solid Container ikkala rejimda fonga begona ko'rinardi).
+    return GlassCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
