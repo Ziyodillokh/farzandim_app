@@ -110,12 +110,16 @@ class AudiobooksBackendRepository {
     }
   }
 
+  // Soat-format — HAR DOIM soniyani ko'rsatadi (12s → "0:12", 90s → "1:30",
+  // 1soat → "1:01:40"). Avval faqat daqiqa ("0 daq") edi: qisqa audiolar
+  // 0 ko'rinardi.
   String _formatDuration(int sec) {
     if (sec <= 0) return '0:00';
     final h = sec ~/ 3600;
     final m = (sec % 3600) ~/ 60;
-    if (h > 0) return '${h}s ${m}d';
-    return '$m daq';
+    final s = sec % 60;
+    String two(int n) => n.toString().padLeft(2, '0');
+    return h > 0 ? '$h:${two(m)}:${two(s)}' : '$m:${two(s)}';
   }
 
   Color _coverColorFor(String id) {

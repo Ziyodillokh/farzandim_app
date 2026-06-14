@@ -102,8 +102,15 @@ export function OlympiadWizard({
   const create = useMutation({
     mutationFn: () => {
       const now = new Date();
-      const start = new Date(now.getTime() + 24 * 60 * 60 * 1000);
-      const end = new Date(start.getTime() + durationMin * 60 * 1000);
+      // Konkurs DARHOL ochiq bo'lsin: yaratilib (publish qilingach) bola
+      // darhol qatnasha oladi. startTime = hozir (1 daq bufer — soat farqi
+      // tufayli "scheduled" bo'lib qolmasin), endTime = +30 kun (MAVJUDLIK
+      // oynasi). MUHIM: `durationMin` — bu HAR URINISH uchun vaqt chegarasi
+      // (savollarga javob berish), mavjudlik oynasi EMAS. Avval end =
+      // start + durationMin edi → konkurs atigi 30 daq va ERTAGA ochilardi,
+      // shu sabab bola qatnasha olmasdi.
+      const start = new Date(now.getTime() - 60 * 1000);
+      const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       const payload: OlympiadCreatePayload = {
         title, description, subject, ageFrom, ageTo, type, difficulty,
         startTime: start.toISOString(), endTime: end.toISOString(),
