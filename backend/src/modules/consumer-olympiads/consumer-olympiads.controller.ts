@@ -92,4 +92,13 @@ export class ConsumerOlympiadsController {
       dto.timeSec ?? 0,
     );
   }
+
+  @Get('attempts/:id/certificate')
+  @ApiOperation({ summary: 'Certificate data for a winning attempt (#56)' })
+  certificate(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.service.getCertificate(user.userId, id);
+  }
 }

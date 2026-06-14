@@ -33,6 +33,10 @@ class QuizState {
   final List<int?> answers;
   final List<QuestionModel> questions;
 
+  /// Backend attempt ID (sertifikat endpoint'iga kerak — #56). Real attempt
+  /// boshlanganda o'rnatiladi; mock/offline rejimda null.
+  final String? attemptId;
+
   const QuizState({
     this.status = QuizStatus.loading,
     this.currentIndex = 0,
@@ -47,6 +51,7 @@ class QuizState {
     this.totalElapsed = Duration.zero,
     this.answers = const [],
     this.questions = const [],
+    this.attemptId,
   });
 
   List<QuestionModel> get effectiveQuestions =>
@@ -80,6 +85,7 @@ class QuizState {
     Duration? totalElapsed,
     List<int?>? answers,
     List<QuestionModel>? questions,
+    String? attemptId,
   }) {
     return QuizState(
       status: status ?? this.status,
@@ -96,6 +102,7 @@ class QuizState {
       totalElapsed: totalElapsed ?? this.totalElapsed,
       answers: answers ?? this.answers,
       questions: questions ?? this.questions,
+      attemptId: attemptId ?? this.attemptId,
     );
   }
 }

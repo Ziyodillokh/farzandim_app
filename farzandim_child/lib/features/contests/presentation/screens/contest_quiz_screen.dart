@@ -21,6 +21,7 @@ import 'package:confetti/confetti.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
+import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/data/sound_service.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
 import 'package:farzandim_child/shared/widgets/gradient_background.dart';
@@ -369,7 +370,9 @@ class _QuestionScreen extends ConsumerWidget {
                     ),
                   ),
                   const SizedBox(height: 32),
-                  for (int i = 0; i < 4; i++)
+                  // Variantlar soni bo'yicha (avval qat'iy `i < 4` edi — savolda
+                  // 4 tadan kam variant bo'lsa options[i] RangeError berardi).
+                  for (int i = 0; i < question.options.length; i++)
                     Padding(
                       padding:
                           const EdgeInsets.symmetric(vertical: 6),
@@ -774,14 +777,14 @@ class _OptionCard extends StatelessWidget {
 
 // ─── Result ─────────────────────────────────────────────────────────
 
-class _ResultScreen extends StatelessWidget {
+class _ResultScreen extends ConsumerWidget {
   const _ResultScreen({required this.contest, required this.state});
 
   final ContestModel contest;
   final QuizState state;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final isWinner = state.isWinner;
     final percent = (state.accuracy * 100).round();
 
@@ -863,6 +866,27 @@ class _ResultScreen extends StatelessWidget {
             ),
           ),
           const Spacer(),
+          // Sertifikat (#56) — faqat g'olib (chegaradan yuqori) va real
+          // attempt bo'lsa. Tugma bosilganda backend haqdorligini tekshiradi.
+          if (isWinner && state.attemptId != null) ...[
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () => _openCertificate(context, ref),
+                icon: const Icon(Icons.workspace_premium_rounded, size: 20),
+                label: const Text('Sertifikat'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFD4AF37),
+                  foregroundColor: Colors.black,
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                ),
+              ),
+            ),
+            const SizedBox(height: 12),
+          ],
           Row(
             children: [
               Expanded(
@@ -917,6 +941,26 @@ class _ResultScreen extends StatelessWidget {
         'Yiqqan ball: ${state.totalScore}\n\n'
         'Sen ham qatnash!';
     await Share.share(text);
+  }
+
+  /// Sertifikat ma'lumotini backend'dan oladi (haqdorlikni tekshiradi) va
+  /// sertifikat ekranini ochadi. Haqli bo'lmasa — xabar.
+  Future<void> _openCertificate(BuildContext context, WidgetRef ref) async {
+    final attemptId = state.attemptId;
+    if (attemptId == null) return;
+    final messenger = ScaffoldMessenger.of(context);
+    final data =
+        await ref.read(certificateRepositoryProvider).fetch(attemptId);
+    if (!context.mounted) return;
+    if (data == null) {
+      messenger.showSnackBar(
+        const SnackBar(content: Text('Sertifikat hozircha mavjud emas.')),
+      );
+      return;
+    }
+    if (context.mounted) {
+      context.push('/certificate', extra: data);
+    }
   }
 
   String _formatDuration(Duration d) {

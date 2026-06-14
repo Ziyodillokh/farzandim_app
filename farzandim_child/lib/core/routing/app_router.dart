@@ -31,6 +31,8 @@ import 'package:farzandim_child/features/audiobooks/presentation/screens/audio_p
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 import 'package:farzandim_child/features/articles/presentation/screens/article_view_screen.dart';
 import 'package:farzandim_child/features/articles/presentation/screens/articles_feed_screen.dart';
+import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
+import 'package:farzandim_child/features/contests/presentation/screens/certificate_screen.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/presentation/screens/books_feed_screen.dart';
 import 'package:farzandim_child/features/books/presentation/screens/pdf_viewer_screen.dart';
@@ -319,6 +321,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/contests',
         pageBuilder: (context, state) => _slidePage(state, const ContestsScreen()),
+      ),
+      // #56 — Sertifikat (g'olib uchun)
+      GoRoute(
+        path: '/certificate',
+        builder: (context, state) {
+          final data = state.extra as CertificateData;
+          return CertificateScreen(data: data);
+        },
       ),
       GoRoute(
         path: '/contest-start',

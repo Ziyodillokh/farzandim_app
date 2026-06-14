@@ -99,6 +99,8 @@ class QuizNotifier extends StateNotifier<QuizState> {
       final repo = _ref.read(contestsBackendRepositoryProvider);
       final id = await repo.startAttempt(contest.id);
       _attemptId = id;
+      // Sertifikat (#56) uchun attempt ID'ni state'ga ham yozamiz.
+      state = state.copyWith(attemptId: id);
       debugPrint('Quiz: attempt started id=$id');
     } catch (e) {
       debugPrint('Quiz: startAttempt failed: $e');
@@ -292,7 +294,10 @@ class QuizNotifier extends StateNotifier<QuizState> {
       );
     }
 
-    _feedbackTimer ??= Timer(const Duration(milliseconds: 1500), _nextQuestion);
+    // Har javobda fresh timer — avval `??=` ishlatilgani uchun 1-savoldan
+    // keyin `_feedbackTimer` non-null qolib, quiz 2-savolда qotardi.
+    _feedbackTimer?.cancel();
+    _feedbackTimer = Timer(const Duration(milliseconds: 1500), _nextQuestion);
   }
 
   void _onTimeout() {
@@ -306,6 +311,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       answers: answers,
     );
 
+    _feedbackTimer?.cancel();
     _feedbackTimer =
         Timer(const Duration(milliseconds: 1500), _nextQuestion);
   }

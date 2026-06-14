@@ -17,6 +17,9 @@ import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 // AYNI shu qiymatdan foydalanadi (ikki endpoint bir xil vaqt xulqi).
 const GRACE_SEC = 30;
 
+/** Sertifikat (#56) uchun minimal natija foizi — bundan past bo'lsa berilmaydi. */
+const CERT_THRESHOLD_PERCENT = 80;
+
 function lifecycleOf(o: {
   status: string;
   startTime: Date;
@@ -559,5 +562,90 @@ export class ConsumerOlympiadsService {
       currentUser: currentUserRow,
       range,
     };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  #56 — Sertifikat (g'olib uchun)                                    */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Sertifikat ma'lumoti (child-side widget render qiladi → rasm/PDF).
+   * Server-side PDF generatsiya O'RNIGA JSON qaytaramiz (variant b): kam
+   * bog'liqlik (yangi paket yo'q), dizayn to'liq child tomonda boshqariladi,
+   * va ulashish/saqlash native (share_plus) bilan ishlaydi.
+   *
+   * Shartlar: attempt shu bolaники, status='finished', certificateEnabled,
+   * natija >= chegara (CERT_THRESHOLD_PERCENT). Aks holda 404/403.
+   *
+   * Privacy: to'liq ism o'rniga xavfsiz nick (ism + familiya bosh harfi).
+   */
+  async getCertificate(userId: string, attemptId: string) {
+    const child = await this.loadChild(userId);
+
+    const attempt = await this.prisma.olympiadAttempt.findUnique({
+      where: { id: attemptId },
+      include: { olympiad: true },
+    });
+    // Mavjud emas yoki boshqa bolaники — 404 (mavjudligini oshkor qilmaymiz).
+    if (!attempt || attempt.childId !== child.childId) {
+      throw new NotFoundException('Certificate not available');
+    }
+    if (attempt.status !== 'finished') {
+      throw new NotFoundException('Attempt not finished');
+    }
+    if (!attempt.olympiad.certificateEnabled) {
+      throw new NotFoundException('Certificate not enabled for this olympiad');
+    }
+
+    const percent = this.computePercent(attempt);
+    if (percent < CERT_THRESHOLD_PERCENT) {
+      throw new ForbiddenException(
+        `Score ${percent}% is below the ${CERT_THRESHOLD_PERCENT}% threshold`,
+      );
+    }
+
+    const childRow = await this.prisma.child.findUnique({
+      where: { id: child.childId },
+      select: { name: true },
+    });
+
+    return {
+      certificateId: this.certificateId(attempt.id),
+      childNick: this.privacyNick(childRow?.name ?? ''),
+      olympiadTitle: attempt.olympiad.title,
+      subject: attempt.olympiad.subject,
+      score: attempt.score,
+      percent,
+      date: (attempt.finishedAt ?? attempt.startedAt).toISOString(),
+    };
+  }
+
+  private computePercent(a: {
+    score: number;
+    totalPoints: number;
+    correctAnswers: number;
+    questionsTotal: number;
+  }): number {
+    if (a.totalPoints > 0) {
+      return Math.round((a.score / a.totalPoints) * 100);
+    }
+    if (a.questionsTotal > 0) {
+      return Math.round((a.correctAnswers / a.questionsTotal) * 100);
+    }
+    return 0;
+  }
+
+  /** Barqaror, qisqa sertifikat ID (attempt'dan). */
+  private certificateId(attemptId: string): string {
+    return `PRV-${attemptId.replace(/-/g, '').slice(0, 10).toUpperCase()}`;
+  }
+
+  /** "Alisher Karimov" → "Alisher K." (privacy — to'liq familiya yashiriladi). */
+  private privacyNick(name: string): string {
+    const parts = name.trim().split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return 'Parvoz yulduzi';
+    if (parts.length === 1) return parts[0];
+    const initial = parts[1].charAt(0).toUpperCase();
+    return `${parts[0]} ${initial}.`;
   }
 }
