@@ -54,6 +54,7 @@ export class AdminDashboardService {
 
     const todayStart = this.startOfDay(now);
     const yesterdayStart = new Date(todayStart.getTime() - 86_400_000);
+    const weekAgoStart = new Date(todayStart.getTime() - 7 * 86_400_000);
     const days = this.eachDay(from, to);
 
     const rangeStart = this.startOfDay(from);
@@ -66,7 +67,7 @@ export class AdminDashboardService {
       todayLogins,
       yesterdayLogins,
       videosUploaded,
-      videosUploadedYesterday,
+      videosBeforeWeek,
       totalParents,
       totalChildren,
       audiobooksCount,
@@ -81,10 +82,12 @@ export class AdminDashboardService {
       this.prisma.userSession.count({
         where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
       }),
-      this.prisma.video.count({ where: { createdAt: { gte: todayStart } } }),
-      this.prisma.video.count({
-        where: { createdAt: { gte: yesterdayStart, lt: todayStart } },
-      }),
+      // Yuklangan videolar — JAMI son (audiobooks/konkurslar bilan izchil).
+      // Avval faqat bugun yuklangan (createdAt >= todayStart) sanalardi →
+      // eski videolar 0 ko'rinardi (kecha yuklangan 3 video → 0).
+      this.prisma.video.count(),
+      // Trend uchun — 7 kun oldingacha mavjud videolar soni (haftalik o'sish %).
+      this.prisma.video.count({ where: { createdAt: { lt: weekAgoStart } } }),
       this.prisma.user.count({ where: { role: 'PARENT' } }),
       this.prisma.child.count(),
       // KPI — real qiymatlar.
@@ -155,7 +158,7 @@ export class AdminDashboardService {
       },
       trends: {
         todayLogins: this.percentDelta(todayLogins, yesterdayLogins),
-        videosUploaded: this.percentDelta(videosUploaded, videosUploadedYesterday),
+        videosUploaded: this.percentDelta(videosUploaded, videosBeforeWeek),
         audiobooks: 0,
         activeContests: 0,
         paidPlanBuyers: 0,

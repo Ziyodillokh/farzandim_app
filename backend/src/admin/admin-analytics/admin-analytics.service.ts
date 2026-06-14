@@ -382,9 +382,11 @@ export class AdminAnalyticsService {
       totalOlympiads,
       totalAttempts,
     ] = await Promise.all([
-      this.prisma.videoMessage.count(),
-      this.prisma.audiobook?.count().catch(() => 0) ?? Promise.resolve(0),
-      this.prisma.book?.count().catch(() => 0) ?? Promise.resolve(0),
+      // Kontent videolari (Video modeli) — avval videoMessage (chat video)
+      // sanalardi, bu noto'g'ri edi.
+      this.prisma.video.count(),
+      this.prisma.audiobook.count(),
+      this.prisma.book.count(),
       this.prisma.olympiad.count(),
       this.prisma.olympiadAttempt.count(),
     ]);
