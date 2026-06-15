@@ -1,58 +1,65 @@
 // ─────────────────────────────────────────────────────────────────────
-// ProfileScreen — bola o'zining gamifikatsiya progress'ini ko'radi
+// ProfileScreen — Stitch "Profil (Night)" dizayniga mos, REAL data bilan
 // ─────────────────────────────────────────────────────────────────────
 //
-// Tartib (yuqoridan pastga):
-//   1. Avatar + ism + StatusBadge
-//   2. LevelProgressCard (Lv + XP progress)
-//   3. DonWalletCard + StreakIndicator (yon)
-//   4. AchievementsGrid (6 nishon)
-//   5. Oxirgi XP events (tarix, 5 ta)
+// Tartib (Stitch): TopBar → katta avatar + "Daraja N" badge → ism + status →
+// 2 stat (Kunlik Seriya / Umumiy XP) → Keyingi Darajaga progress + maslahat →
+// Yutuqlar (badge'lar). Night asosiy palitra; light — sodda oq versiya.
+// Ma'lumotlar: gamificationProfileProvider (xp/streak/level/status/yutuqlar).
 
+import 'package:confetti/confetti.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
-import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
-import 'package:farzandim_child/features/development/data/development_summary.dart';
-import 'package:farzandim_child/features/development/presentation/development_card.dart';
-import 'package:farzandim_child/features/development/presentation/development_providers.dart';
 import 'package:farzandim_child/features/gamification/data/models/achievement.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_profile.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_status.dart';
-import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/achievements_grid.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/don_wallet_card.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/level_progress_card.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/profile_skeleton.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/status_badge.dart';
-import 'package:farzandim_child/features/gamification/presentation/widgets/streak_indicator.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
-import 'package:confetti/confetti.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
+
+// ─────────────── Stitch palette (night asosiy + sodda light) ───────────────
+
+class _P {
+  _P(this.dark);
+  final bool dark;
+
+  Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF8F9FF);
+  Color get clay => dark ? const Color(0xFF112642) : Colors.white;
+  Color get text => dark ? Colors.white : const Color(0xFF0B1C30);
+  Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
+  Color get variant => dark ? const Color(0xFFD3E4FE) : const Color(0xFF3D4A3D);
+
+  Color get green => const Color(0xFF22C55E); // primary-container
+  Color get orangeFlame => const Color(0xFFFFB95F);
+  Color get badge => const Color(0xFFEF9900);
+  Color get badgeText => const Color(0xFF5C3800);
+  Color get blueRing => const Color(0xFF2170E4);
+  Color get progTrack => dark ? const Color(0xFF08121F) : const Color(0xFFE3EAF6);
+  Color get locked => const Color(0xFF6D7B6C);
+  Color get border => dark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFD3E4FE);
+}
+
+TextStyle _jak(_P p, {double size = 14, FontWeight weight = FontWeight.w600, Color? color, double? height, double? spacing}) =>
+    GoogleFonts.plusJakartaSans(fontSize: size, fontWeight: weight, color: color ?? p.text, height: height, letterSpacing: spacing);
+
+// ─────────────── SCREEN ───────────────
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
-
   @override
   ConsumerState<ProfileScreen> createState() => _ProfileScreenState();
 }
 
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
-  /// Achievement diff kuzatish — yangi unlock bo'lganlar uchun snackbar.
   List<String> _previousAchievementIds = const [];
   bool _initialLoaded = false;
-
-  /// Confetti — achievement unlock paytida fonda otiladi.
-  late final ConfettiController _confetti = ConfettiController(
-    duration: const Duration(seconds: 2),
-  );
+  late final ConfettiController _confetti = ConfettiController(duration: const Duration(seconds: 2));
 
   @override
   void dispose() {
@@ -62,92 +69,63 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final ref = this.ref;
-    // Profile stream'ga listen — yangi achievement unlock bo'lsa snackbar.
+    // Yangi yutuq unlock bo'lsa — confetti + toast.
     ref.listen(gamificationProfileProvider, (prev, next) {
       final profile = next.valueOrNull;
       if (profile == null) return;
-
       if (!_initialLoaded) {
         _previousAchievementIds = profile.unlockedAchievements;
         _initialLoaded = true;
         return;
       }
-
-      final newIds = profile.unlockedAchievements
-          .where((id) => !_previousAchievementIds.contains(id))
-          .toList();
-
+      final newIds = profile.unlockedAchievements.where((id) => !_previousAchievementIds.contains(id)).toList();
       if (newIds.isNotEmpty) {
         _previousAchievementIds = profile.unlockedAchievements;
-        // Bayram — confetti + heavy haptic + toast'lar.
         _confetti.play();
         HapticFeedback.heavyImpact();
         for (final id in newIds) {
-          final achievement = Achievements.byId(id);
-          if (achievement != null) {
-            _showAchievementToast(context, achievement);
-          }
+          final a = Achievements.byId(id);
+          if (a != null) _showAchievementToast(context, a);
         }
       }
     });
+
+    final p = _P(context.adaptive.isDark);
     final pairing = ref.watch(pairingStateProvider);
     final profileAsync = ref.watch(gamificationProfileProvider);
-    final eventsAsync = ref.watch(recentXpEventsProvider);
-
-    final childName = pairing.childName ??
-        'common.fallbackChildName'.tr();
+    final childName = pairing.childName ?? 'common.fallbackChildName'.tr();
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: p.bg,
       extendBody: true,
       body: Stack(
         children: [
-          GradientBackground(
-            child: SafeArea(
-              bottom: false,
-              child: profileAsync.when(
-                data: (profile) => _buildContent(
-                  context,
-                  ref,
-                  profile,
-                  eventsAsync.valueOrNull ?? const [],
-                  childName,
-                ),
-                loading: _buildSkeleton,
-                error: (e, _) => Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(24),
-                    child: Text(
-                      'common.errorPrefix'
-                          .tr(namedArgs: {'error': '$e'}),
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(color: AppColors.error),
-                    ),
-                  ),
+          SafeArea(
+            bottom: false,
+            child: profileAsync.when(
+              data: (profile) => _buildContent(context, p, profile, childName, pairing.childId),
+              loading: () => Center(child: CircularProgressIndicator(color: p.green)),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text('common.errorPrefix'.tr(namedArgs: {'error': '$e'}),
+                      textAlign: TextAlign.center, style: _jak(p, color: const Color(0xFFFF4B4B))),
                 ),
               ),
             ),
           ),
-          // Confetti — yutuq unlock paytida ekran tepasidan otiladi.
           Align(
             alignment: Alignment.topCenter,
             child: ConfettiWidget(
               confettiController: _confetti,
-              blastDirection: 1.5708, // 90° pastga
+              blastDirection: 1.5708,
               maxBlastForce: 20,
               minBlastForce: 8,
               emissionFrequency: 0.05,
               numberOfParticles: 25,
               gravity: 0.3,
               shouldLoop: false,
-              colors: const [
-                AppColors.primary,
-                AppColors.catGold,
-                AppColors.catOrange,
-                AppColors.catBlue,
-                AppColors.catViolet,
-              ],
+              colors: const [Color(0xFF22C55E), Color(0xFFFFB95F), Color(0xFF2170E4), Color(0xFFEF9900), Color(0xFFADC6FF)],
             ),
           ),
         ],
@@ -156,135 +134,33 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  /// Shimmer skeleton — yuklash paytidagi platzhalder.
-  Widget _buildSkeleton() => const ProfileSkeleton();
+  Widget _buildContent(BuildContext context, _P p, GamificationProfile profile, String childName, String? childId) {
+    final avatarUrl = (childId != null && childId.isNotEmpty)
+        ? ref.watch(childAvatarUrlProvider(childId)).valueOrNull
+        : null;
+    final level = profile.level;
+    final xpInLevel = profile.xp % 100;
+    final remaining = 100 - xpInLevel;
+    final frac = xpInLevel / 100.0;
 
-  Widget _buildContent(
-    BuildContext context,
-    WidgetRef ref,
-    GamificationProfile profile,
-    List<XpEvent> events,
-    String childName,
-  ) {
     return SingleChildScrollView(
-      // extendBody:true + bottom nav (MiniAudioPlayer + 56px nav row) ustidan
-      // oxirgi blok ("Oxirgi faoliyat") kesilmasligi uchun yetarli pastki bo'sh
-      // joy: nav balandligi + qurilma gesture/nav-bar safe-area'si.
-      padding: EdgeInsets.fromLTRB(
-        16,
-        0,
-        16,
-        140 + MediaQuery.viewPaddingOf(context).bottom,
-      ),
+      padding: EdgeInsets.fromLTRB(20, 4, 20, 150 + MediaQuery.viewPaddingOf(context).bottom),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          DashboardTopHeader(
-            onAvatarTap: () => context.push('/account-edit'),
-          ),
+          _TopBar(p: p),
+          const SizedBox(height: 8),
+          _ProfileHeader(p: p, name: childName, status: profile.status.translationKey.tr(), level: level, avatarUrl: avatarUrl),
+          const SizedBox(height: 28),
+          _StatsRow(p: p, streak: profile.streak, xp: profile.xp),
           const SizedBox(height: 16),
-
-          // === Header: avatar + ism + status ===
-          // Bola foto tap → /account-edit (yangi rasm yuklash). Foto
-          // bo'lmasa fallback person ikoni. Avatar atrofida status rangi
-          // bilan ring + pastki-o'ng tomonda kamera tugma.
-          Row(
-            children: [
-              _ProfileAvatar(profile: profile, ref: ref),
-              const SizedBox(width: 16),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      childName,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(
-                        color: context.adaptive.textPrimary,
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 6),
-                    StatusBadge(status: profile.status),
-                  ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-
-          // === Level + XP progress ===
-          LevelProgressCard(profile: profile)
-              .animate()
-              .fadeIn(duration: 400.ms, delay: 100.ms)
-              .slideY(begin: 0.1, end: 0),
-          const SizedBox(height: 16),
-
-          // === Rivojlanish ko'rsatkichi (#63) ===
-          Consumer(
-            builder: (context, ref, _) {
-              final async = ref.watch(developmentSummaryProvider);
-              return DevelopmentCard(
-                summary: async.valueOrNull ?? DevelopmentSummary.empty,
-              ).animate().fadeIn(duration: 400.ms, delay: 150.ms);
-            },
-          ),
-          const SizedBox(height: 16),
-
-          // === XP + Streak (yon — ikkalasi bir xil balandlikda) ===
-          IntrinsicHeight(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Expanded(child: DonWalletCard(xp: profile.xp)),
-                const SizedBox(width: 12),
-                Expanded(child: StreakIndicator(streak: profile.streak)),
-              ],
-            ),
-          )
-              .animate()
-              .fadeIn(duration: 400.ms, delay: 200.ms)
-              .slideY(begin: 0.1, end: 0),
-          const SizedBox(height: 24),
-
-          // === Yutuqlar ===
-          Text(
-            'gamification.achievementsTitle'.tr(),
-            style: TextStyle(
-              color: context.adaptive.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          AchievementsGrid(unlockedIds: profile.unlockedAchievements),
-          const SizedBox(height: 24),
-
-          // === XP tarix ===
-          Text(
-            'gamification.recentActivityTitle'.tr(),
-            style: TextStyle(
-              color: context.adaptive.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 12),
-          if (events.isEmpty)
-            _EmptyHistory()
-          else
-            Column(
-              children: events.take(5).map((e) => _XpEventTile(event: e)).toList(),
-            ),
+          _ProgressCard(p: p, remaining: remaining, frac: frac, level: level),
+          const SizedBox(height: 28),
+          _Achievements(p: p, unlockedIds: profile.unlockedAchievements),
         ],
       ),
     );
   }
 
-  /// Yangi yutuq unlock bo'lganda toast.
   void _showAchievementToast(BuildContext context, Achievement achievement) {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
@@ -295,37 +171,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Container(
               width: 36,
               height: 36,
-              decoration: const BoxDecoration(
-                color: Colors.white24,
-                shape: BoxShape.circle,
-              ),
+              decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
               child: Icon(achievement.icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'gamification.achievementUnlockedTitle'.tr(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 12,
-                      fontWeight: FontWeight.w500,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    achievement.titleKey.tr(),
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 15,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
-              ),
+              child: Text('gamification.achievementUnlockedTitle'.tr(),
+                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
             ),
           ],
         ),
@@ -334,216 +186,309 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-class _EmptyHistory extends StatelessWidget {
+// ─────────────── TOP BAR ───────────────
+
+class _TopBar extends StatelessWidget {
+  const _TopBar({required this.p});
+  final _P p;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Container(
+          width: 40,
+          height: 40,
+          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: p.green, width: 2)),
+          clipBehavior: Clip.antiAlias,
+          child: Image.asset('assets/icons/child_logo_icon.png', fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => Container(color: p.clay, child: Icon(Icons.person, color: p.green, size: 20))),
+        ),
+        const SizedBox(width: 10),
+        Text('Parvoz', style: _jak(p, size: 22, weight: FontWeight.w700, color: p.green, spacing: -0.4)),
+        const Spacer(),
+        _IconBtn(p: p, icon: Icons.notifications_outlined, onTap: () => context.push('/notifications')),
+        const SizedBox(width: 4),
+        _IconBtn(p: p, icon: Icons.settings_outlined, onTap: () => context.push('/settings')),
+      ],
+    );
+  }
+}
+
+class _IconBtn extends StatelessWidget {
+  const _IconBtn({required this.p, required this.icon, required this.onTap});
+  final _P p;
+  final IconData icon;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return IconButton(
+      onPressed: onTap,
+      icon: Icon(icon, color: p.variant, size: 24),
+      splashRadius: 22,
+    );
+  }
+}
+
+// ─────────────── PROFILE HEADER ───────────────
+
+class _ProfileHeader extends StatelessWidget {
+  const _ProfileHeader({required this.p, required this.name, required this.status, required this.level, required this.avatarUrl});
+  final _P p;
+  final String name;
+  final String status;
+  final int level;
+  final String? avatarUrl;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        SizedBox(
+          width: 128,
+          height: 140,
+          child: Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.topCenter,
+            children: [
+              // Glow.
+              Positioned(
+                top: 8,
+                child: Container(
+                  width: 120,
+                  height: 120,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [BoxShadow(color: p.blueRing.withValues(alpha: 0.35), blurRadius: 30, spreadRadius: 4)],
+                  ),
+                ),
+              ),
+              // Avatar + blue ring.
+              Container(
+                width: 128,
+                height: 128,
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: p.blueRing, width: 4)),
+                clipBehavior: Clip.antiAlias,
+                child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                    ? Image.network(avatarUrl!, fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _avatarFallback(), loadingBuilder: (_, c, pr) => pr == null ? c : _avatarFallback())
+                    : _avatarFallback(),
+              ),
+              // "Daraja N" badge.
+              Positioned(
+                bottom: 0,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
+                  decoration: BoxDecoration(
+                    color: p.badge,
+                    borderRadius: BorderRadius.circular(99),
+                    border: Border.all(color: p.bg, width: 2),
+                    boxShadow: [BoxShadow(color: p.badge.withValues(alpha: 0.5), blurRadius: 12)],
+                  ),
+                  child: Text('Daraja $level', style: _jak(p, size: 13, weight: FontWeight.w700, color: p.badgeText)),
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 12),
+        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _jak(p, size: 26, weight: FontWeight.w700, spacing: -0.4)),
+        const SizedBox(height: 2),
+        Text(status, style: _jak(p, size: 16, weight: FontWeight.w500, color: p.muted)),
+      ],
+    );
+  }
+
+  Widget _avatarFallback() => Container(
+        color: p.clay,
+        alignment: Alignment.center,
+        child: Icon(Icons.person_rounded, color: p.muted, size: 56),
+      );
+}
+
+// ─────────────── STATS (Kunlik Seriya / Umumiy XP) ───────────────
+
+class _StatsRow extends StatelessWidget {
+  const _StatsRow({required this.p, required this.streak, required this.xp});
+  final _P p;
+  final int streak;
+  final int xp;
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(child: _BigStat(p: p, icon: Icons.local_fire_department_rounded, tint: p.orangeFlame, value: '$streak', label: 'Kunlik Seriya')),
+        const SizedBox(width: 12),
+        Expanded(child: _BigStat(p: p, icon: Icons.star_rounded, tint: p.green, value: '$xp', label: 'Umumiy XP')),
+      ],
+    );
+  }
+}
+
+class _BigStat extends StatelessWidget {
+  const _BigStat({required this.p, required this.icon, required this.tint, required this.value, required this.label});
+  final _P p;
+  final IconData icon;
+  final Color tint;
+  final String value;
+  final String label;
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 20, horizontal: 12),
+      decoration: BoxDecoration(
+        color: p.clay,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: p.border, width: 1),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: p.dark ? 0.2 : 0.05), blurRadius: 24, offset: const Offset(0, 8))],
+      ),
+      child: Column(
+        children: [
+          Icon(icon, color: tint, size: 36),
+          const SizedBox(height: 8),
+          FittedBox(child: Text(value, style: _jak(p, size: 44, weight: FontWeight.w800, height: 1.0, spacing: -1))),
+          const SizedBox(height: 4),
+          Text(label, style: _jak(p, size: 13.5, weight: FontWeight.w600, color: p.variant)),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────── KEYINGI DARAJAGA ───────────────
+
+class _ProgressCard extends StatelessWidget {
+  const _ProgressCard({required this.p, required this.remaining, required this.frac, required this.level});
+  final _P p;
+  final int remaining;
+  final double frac;
+  final int level;
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
+        color: p.clay,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: p.border, width: 1),
+        boxShadow: [BoxShadow(color: Colors.black.withValues(alpha: p.dark ? 0.2 : 0.05), blurRadius: 24, offset: const Offset(0, 8))],
       ),
-      child: Row(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(Icons.history,
-              color: context.adaptive.textSecondary, size: 24),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              'gamification.recentActivityEmpty'.tr(),
-              style: TextStyle(
-                color: context.adaptive.textSecondary,
-                fontSize: 13,
-              ),
-            ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text('Keyingi Darajaga', style: _jak(p, size: 20, weight: FontWeight.w700)),
+              Text('$remaining XP qoldi', style: _jak(p, size: 14, weight: FontWeight.w600, color: p.green)),
+            ],
           ),
-        ],
-      ),
-    );
-  }
-}
-
-class _XpEventTile extends StatelessWidget {
-  const _XpEventTile({required this.event});
-
-  final XpEvent event;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
-      ),
-      child: Row(
-        children: [
+          const SizedBox(height: 16),
           Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: AppColors.primary.withOpacity(0.15),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: const Icon(
-              Icons.bolt,
-              color: AppColors.primary,
-              size: 20,
-            ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              event.type.translationKey.tr(),
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: context.adaptive.textPrimary,
-                fontSize: 14,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-          Text(
-            '+${event.xpDelta} XP',
-            style: const TextStyle(
-              color: AppColors.primary,
-              fontSize: 14,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-          if (event.donDelta > 0) ...[
-            const SizedBox(width: 8),
-            Text(
-              '+${event.donDelta} DON',
-              style: const TextStyle(
-                color: AppColors.catGold,
-                fontSize: 12,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Profile avatar — bola rasmi + tahrir overlay ────────────────────
-// Foto bo'lsa: dumaloq foto + status rangli ring + kamera badge.
-// Foto bo'lmasa: fallback person ikoni + status rangli ring + kamera badge.
-// Tap → /account-edit (yangi rasm yuklash).
-class _ProfileAvatar extends StatelessWidget {
-  const _ProfileAvatar({required this.profile, required this.ref});
-
-  final GamificationProfile profile;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    final pairing = ref.watch(pairingStateProvider);
-    final childId = pairing.childId;
-    final photoUrl = (childId != null && childId.isNotEmpty)
-        ? ref.watch(childAvatarUrlProvider(childId)).valueOrNull
-        : null;
-
-    return GestureDetector(
-      onTap: () => context.push('/account-edit'),
-      behavior: HitTestBehavior.opaque,
-      child: SizedBox(
-        width: 72,
-        height: 72,
-        child: Stack(
-          clipBehavior: Clip.none,
-          children: [
-            // Status rangli ring
-            Container(
-              width: 72,
-              height: 72,
-              padding: const EdgeInsets.all(2.5),
-              decoration: BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    profile.status.color,
-                    // ignore: deprecated_member_use
-                    profile.status.color.withOpacity(0.6),
-                  ],
-                ),
-                shape: BoxShape.circle,
-              ),
-              child: Container(
-                decoration: BoxDecoration(
-                  color: context.adaptive.bgPrimary,
-                  shape: BoxShape.circle,
-                ),
-                padding: const EdgeInsets.all(2),
-                child: ClipOval(
-                  child: photoUrl != null && photoUrl.isNotEmpty
-                      ? Image.network(
-                          photoUrl,
-                          fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) =>
-                              _PhotoFallback(profile: profile),
-                          loadingBuilder: (_, child, progress) =>
-                              progress == null
-                                  ? child
-                                  : _PhotoFallback(profile: profile),
-                        )
-                      : _PhotoFallback(profile: profile),
-                ),
-              ),
-            ),
-            // Kamera tugma — pastki o'ng burchakda
-            Positioned(
-              right: -2,
-              bottom: -2,
-              child: Container(
-                width: 26,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: AppColors.primary,
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: context.adaptive.bgPrimary,
-                    width: 2.5,
+            height: 12,
+            decoration: BoxDecoration(color: p.progTrack, borderRadius: BorderRadius.circular(99), border: Border.all(color: Colors.white.withValues(alpha: 0.05))),
+            clipBehavior: Clip.antiAlias,
+            child: Align(
+              alignment: Alignment.centerLeft,
+              child: FractionallySizedBox(
+                widthFactor: frac.clamp(0.02, 1.0),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: p.green,
+                    borderRadius: BorderRadius.circular(99),
+                    boxShadow: [BoxShadow(color: p.green.withValues(alpha: 0.6), blurRadius: 12)],
                   ),
                 ),
-                alignment: Alignment.center,
-                child: const Icon(
-                  Icons.camera_alt_rounded,
-                  color: Colors.white,
-                  size: 14,
-                ),
               ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Center(
+            child: Text(
+              'Yana $remaining XP to\'plab, ${level + 1}-darajaga ko\'taril!',
+              textAlign: TextAlign.center,
+              style: _jak(p, size: 14, weight: FontWeight.w400, color: p.muted, height: 1.4),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────── YUTUQLAR ───────────────
+
+class _Achievements extends StatelessWidget {
+  const _Achievements({required this.p, required this.unlockedIds});
+  final _P p;
+  final List<String> unlockedIds;
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text('Yutuqlar', style: _jak(p, size: 20, weight: FontWeight.w700)),
+        const SizedBox(height: 14),
+        SizedBox(
+          height: 132,
+          child: ListView.separated(
+            scrollDirection: Axis.horizontal,
+            padding: EdgeInsets.zero,
+            itemCount: Achievements.all.length,
+            separatorBuilder: (_, __) => const SizedBox(width: 12),
+            itemBuilder: (context, i) {
+              final a = Achievements.all[i];
+              return _BadgeCard(p: p, achievement: a, unlocked: unlockedIds.contains(a.id));
+            },
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+class _BadgeCard extends StatelessWidget {
+  const _BadgeCard({required this.p, required this.achievement, required this.unlocked});
+  final _P p;
+  final Achievement achievement;
+  final bool unlocked;
+  @override
+  Widget build(BuildContext context) {
+    return Opacity(
+      opacity: unlocked ? 1.0 : 0.6,
+      child: Container(
+        width: 120,
+        padding: const EdgeInsets.all(14),
+        decoration: BoxDecoration(
+          color: p.clay,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: p.border, width: 1),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              width: 60,
+              height: 60,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                color: unlocked ? achievement.color.withValues(alpha: 0.18) : const Color(0xFF08121F),
+                border: unlocked ? null : Border.all(color: Colors.white.withValues(alpha: 0.10)),
+                boxShadow: unlocked ? [BoxShadow(color: achievement.color.withValues(alpha: 0.4), blurRadius: 14)] : null,
+              ),
+              child: Icon(
+                unlocked ? achievement.icon : Icons.lock_rounded,
+                color: unlocked ? achievement.color : p.locked,
+                size: 28,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              achievement.titleKey.tr(),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _jak(p, size: 13, weight: FontWeight.w600, color: unlocked ? p.text : p.locked),
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-class _PhotoFallback extends StatelessWidget {
-  const _PhotoFallback({required this.profile});
-
-  final GamificationProfile profile;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      // ignore: deprecated_member_use
-      color: profile.status.color.withOpacity(0.18),
-      alignment: Alignment.center,
-      child: Icon(
-        Icons.person_rounded,
-        color: profile.status.color,
-        size: 36,
       ),
     );
   }
