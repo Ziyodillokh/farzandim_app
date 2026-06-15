@@ -13,6 +13,9 @@
 //   - Haptic feedback (light/heavy/medium)
 //   - Sound effects (placeholder)
 //   - Share natija
+//
+// Dizayn: "Parvoz Premium" (Stitch) — deep navy fon, glass kartalar,
+// aqua aksent + glow. CP palitra + cjak() matn helper.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:math' as math;
@@ -23,8 +26,8 @@ import 'package:farzandim_child/features/contests/data/models/contest_model.dart
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/data/sound_service.dart';
+import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -60,6 +63,7 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(quizProvider(widget.contest));
+    final p = CP(context.adaptive.isDark);
 
     ref.listen<QuizState>(quizProvider(widget.contest), (prev, next) {
       // Answer feedback hooks
@@ -88,9 +92,8 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
     });
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: Stack(
+      backgroundColor: p.bg,
+      body: Stack(
           children: [
             SafeArea(child: _buildContent(state)),
             Align(
@@ -114,7 +117,6 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
             ),
           ],
         ),
-      ),
     );
   }
 
@@ -149,27 +151,53 @@ class _LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 120,
-            height: 120,
+            width: 132,
+            height: 132,
             decoration: BoxDecoration(
-              color: contest.placeholderColor,
+              color: p.card,
               shape: BoxShape.circle,
+              border: Border.all(color: p.accent.withValues(alpha: 0.35), width: 1.4),
+              boxShadow: [
+                BoxShadow(
+                  color: p.accent.withValues(alpha: 0.30),
+                  blurRadius: 40,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
-            child: Icon(contest.placeholderIcon,
-                color: Colors.white, size: 64),
+            child: Center(
+              child: Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: contest.placeholderColor.withValues(alpha: 0.95),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(contest.placeholderIcon,
+                    color: Colors.white, size: 52),
+              ),
+            ),
           ),
-          const SizedBox(height: 32),
-          const CircularProgressIndicator(color: AppColors.primary),
-          const SizedBox(height: 24),
-          const Text(
+          const SizedBox(height: 36),
+          SizedBox(
+            width: 30,
+            height: 30,
+            child: CircularProgressIndicator(
+              strokeWidth: 3,
+              color: p.accent,
+              backgroundColor: p.border,
+            ),
+          ),
+          const SizedBox(height: 22),
+          Text(
             'Savollar tayyorlanmoqda...',
-            style: TextStyle(
-                fontSize: 16, color: AppColors.textSecondary),
+            style: cjak(p, size: 15, weight: FontWeight.w600, color: p.muted),
           ),
         ],
       ),
@@ -210,6 +238,7 @@ class _IntroScreenState extends State<_IntroScreen>
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -222,50 +251,72 @@ class _IntroScreenState extends State<_IntroScreen>
                   AnimatedBuilder(
                     animation: _pulse,
                     builder: (_, __) => Transform.scale(
-                      scale: 1.0 + (_pulse.value * 0.1),
+                      scale: 1.0 + (_pulse.value * 0.08),
                       child: Container(
-                        width: 160,
-                        height: 160,
+                        width: 168,
+                        height: 168,
                         decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: p.accent.withValues(alpha: 0.10),
                           shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: p.accent
+                                  .withValues(alpha: 0.18 + _pulse.value * 0.22),
+                              blurRadius: 48,
+                              spreadRadius: 4,
+                            ),
+                          ],
                         ),
                         child: Center(
                           child: Container(
                             width: 120,
                             height: 120,
-                            decoration: const BoxDecoration(
-                              color: AppColors.primary,
+                            decoration: BoxDecoration(
+                              gradient: LinearGradient(
+                                begin: Alignment.topLeft,
+                                end: Alignment.bottomRight,
+                                colors: [p.accentSoft, p.accent],
+                              ),
                               shape: BoxShape.circle,
                             ),
-                            child: const Icon(Icons.quiz,
-                                color: Colors.black, size: 64),
+                            child: Icon(Icons.quiz_rounded,
+                                color: p.onAccent, size: 60),
                           ),
                         ),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
-                  const Text(
+                  const SizedBox(height: 36),
+                  Text(
                     'Konkurs boshlanmoqda!',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: AppColors.textPrimary,
-                    ),
+                    textAlign: TextAlign.center,
+                    style: cjak(p,
+                        size: 28, weight: FontWeight.w800, height: 1.15),
                   ),
-                  const SizedBox(height: 24),
-                  const _StatRow(
-                      icon: Icons.quiz, text: '10 ta savol'),
-                  const SizedBox(height: 12),
-                  const _StatRow(
-                      icon: AppIcons.schedule,
-                      text: 'Har savol uchun 40 sek'),
-                  const SizedBox(height: 12),
-                  _StatRow(
-                    icon: AppIcons.star,
-                    text: '${widget.contest.bonus} ball sovrin',
+                  const SizedBox(height: 28),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 18),
+                    decoration: BoxDecoration(
+                      color: p.card,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: p.border),
+                    ),
+                    child: Column(
+                      children: [
+                        const _StatRow(
+                            icon: Icons.quiz_rounded, text: '10 ta savol'),
+                        const SizedBox(height: 14),
+                        const _StatRow(
+                            icon: AppIcons.schedule,
+                            text: 'Har savol uchun 40 sek'),
+                        const SizedBox(height: 14),
+                        _StatRow(
+                          icon: AppIcons.star,
+                          text: '${widget.contest.bonus} ball sovrin',
+                        ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -275,22 +326,35 @@ class _IntroScreenState extends State<_IntroScreen>
             padding: const EdgeInsets.symmetric(vertical: 16),
             child: SizedBox(
               width: double.infinity,
-              child: ElevatedButton(
-                onPressed: widget.onStart,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 20),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(999),
+                  boxShadow: [
+                    BoxShadow(
+                      color: p.accent.withValues(alpha: 0.34),
+                      blurRadius: 26,
+                      offset: const Offset(0, 8),
+                    ),
+                  ],
                 ),
-                child: const Text(
-                  'BOSHLASH',
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    letterSpacing: 1.5,
+                child: ElevatedButton(
+                  onPressed: widget.onStart,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: p.accent,
+                    foregroundColor: p.onAccent,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 20),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                  ),
+                  child: Text(
+                    'BOSHLASH',
+                    style: cjak(p,
+                        size: 18,
+                        weight: FontWeight.w800,
+                        color: p.onAccent,
+                        spacing: 1.5),
                   ),
                 ),
               ),
@@ -310,17 +374,23 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(icon, color: AppColors.primary, size: 20),
-        const SizedBox(width: 8),
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: p.accent.withValues(alpha: 0.12),
+            shape: BoxShape.circle,
+          ),
+          child: Icon(icon, color: p.accent, size: 18),
+        ),
+        const SizedBox(width: 12),
         Text(
           text,
-          style: const TextStyle(
-            fontSize: 16,
-            color: AppColors.textPrimary,
-          ),
+          style: cjak(p, size: 15, weight: FontWeight.w600),
         ),
       ],
     );
@@ -337,6 +407,7 @@ class _QuestionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final p = CP(context.adaptive.isDark);
     final question = state.currentQuestion;
 
     return Padding(
@@ -347,29 +418,35 @@ class _QuestionScreen extends ConsumerWidget {
             currentIndex: state.currentIndex,
             onClose: () => _showPauseDialog(context, ref),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: 14),
           if (state.currentStreak >= 3)
             Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+              padding: const EdgeInsets.only(bottom: 12),
               child: _StreakBadge(streak: state.currentStreak),
             ),
           _ScoreTimerRow(state: state),
-          const SizedBox(height: 24),
+          const SizedBox(height: 22),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 children: [
-                  Text(
-                    question.text,
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(
-                      fontSize: 20,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                      height: 1.4,
+                  Container(
+                    width: double.infinity,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 20, vertical: 24),
+                    decoration: BoxDecoration(
+                      color: p.card,
+                      borderRadius: BorderRadius.circular(18),
+                      border: Border.all(color: p.border),
+                    ),
+                    child: Text(
+                      question.text,
+                      textAlign: TextAlign.center,
+                      style: cjak(p,
+                          size: 20, weight: FontWeight.w700, height: 1.4),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 24),
                   // Variantlar soni bo'yicha (avval qat'iy `i < 4` edi — savolda
                   // 4 tadan kam variant bo'lsa options[i] RangeError berardi).
                   for (int i = 0; i < question.options.length; i++)
@@ -391,30 +468,27 @@ class _QuestionScreen extends ConsumerWidget {
                       question.explanation != null) ...[
                     const SizedBox(height: 16),
                     Container(
-                      padding: const EdgeInsets.all(12),
+                      padding: const EdgeInsets.all(14),
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
-                        color: AppColors.primary.withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(12),
+                        color: p.accent.withValues(alpha: 0.10),
+                        borderRadius: BorderRadius.circular(14),
                         border: Border.all(
-                          // ignore: deprecated_member_use
-                          color: AppColors.primary.withOpacity(0.3),
+                          color: p.accent.withValues(alpha: 0.32),
                         ),
                       ),
                       child: Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          const Icon(Icons.lightbulb_outline,
-                              color: AppColors.primary, size: 20),
-                          const SizedBox(width: 8),
+                          Icon(Icons.lightbulb_rounded,
+                              color: p.accent, size: 20),
+                          const SizedBox(width: 10),
                           Expanded(
                             child: Text(
                               question.explanation!,
-                              style: const TextStyle(
-                                fontSize: 13,
-                                color: AppColors.textPrimary,
-                                height: 1.4,
-                              ),
+                              style: cjak(p,
+                                  size: 13,
+                                  weight: FontWeight.w500,
+                                  height: 1.45),
                             ),
                           ),
                         ],
@@ -434,39 +508,41 @@ class _QuestionScreen extends ConsumerWidget {
   void _showPauseDialog(BuildContext context, WidgetRef ref) {
     ref.read(quizProvider(contest).notifier).pause();
 
+    final p = CP(context.adaptive.isDark);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
       builder: (ctx) => Dialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: p.card,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(22),
+          side: BorderSide(color: p.border),
         ),
         child: Padding(
           padding: const EdgeInsets.all(24),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(AppIcons.pause,
-                  color: AppColors.warning, size: 56),
-              const SizedBox(height: 16),
-              const Text(
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: p.warn.withValues(alpha: 0.15),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(AppIcons.pause, color: p.warn, size: 38),
+              ),
+              const SizedBox(height: 18),
+              Text(
                 "Konkursni to'xtatasizmi?",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
+                style: cjak(p, size: 18, weight: FontWeight.w800),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Chiqsangiz progress saqlanmaydi',
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: AppColors.textSecondary,
-                ),
+                style: cjak(p, size: 13, weight: FontWeight.w500, color: p.muted),
               ),
               const SizedBox(height: 24),
               Row(
@@ -483,17 +559,21 @@ class _QuestionScreen extends ConsumerWidget {
                         }
                       },
                       style: OutlinedButton.styleFrom(
+                        foregroundColor: p.danger,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
                         ),
-                        side:
-                            const BorderSide(color: AppColors.error),
+                        side: BorderSide(
+                            color: p.danger.withValues(alpha: 0.55)),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Chiqish',
-                        style: TextStyle(color: AppColors.error),
+                        style: cjak(p,
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: p.danger),
                       ),
                     ),
                   ),
@@ -507,18 +587,21 @@ class _QuestionScreen extends ConsumerWidget {
                             .resume();
                       },
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.black,
+                        backgroundColor: p.accent,
+                        foregroundColor: p.onAccent,
+                        elevation: 0,
                         padding:
                             const EdgeInsets.symmetric(vertical: 14),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      child: const Text(
+                      child: Text(
                         'Davom etish',
-                        style:
-                            TextStyle(fontWeight: FontWeight.w600),
+                        style: cjak(p,
+                            size: 14,
+                            weight: FontWeight.w700,
+                            color: p.onAccent),
                       ),
                     ),
                   ),
@@ -541,37 +624,41 @@ class _QuestionTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(AppIcons.close,
-                color: AppColors.textPrimary),
-            onPressed: onClose,
+          Material(
+            color: p.card,
+            shape: CircleBorder(side: BorderSide(color: p.border)),
+            clipBehavior: Clip.antiAlias,
+            child: InkWell(
+              onTap: onClose,
+              child: Padding(
+                padding: const EdgeInsets.all(9),
+                child: Icon(AppIcons.close, color: p.text, size: 22),
+              ),
+            ),
           ),
           Expanded(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 14),
               child: ClipRRect(
-                borderRadius: BorderRadius.circular(4),
+                borderRadius: BorderRadius.circular(999),
                 child: LinearProgressIndicator(
                   value: (currentIndex + 1) / 10,
-                  minHeight: 6,
-                  backgroundColor: AppColors.surfaceVariant,
-                  valueColor: const AlwaysStoppedAnimation<Color>(
-                      AppColors.primary),
+                  minHeight: 8,
+                  backgroundColor: p.border,
+                  valueColor:
+                      AlwaysStoppedAnimation<Color>(p.accent),
                 ),
               ),
             ),
           ),
           Text(
             '${currentIndex + 1}/10',
-            style: const TextStyle(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
-            ),
+            style: cjak(p, size: 14, weight: FontWeight.w700),
           ),
         ],
       ),
@@ -586,28 +673,32 @@ class _StreakBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
           colors: [AppColors.catOrangeLight, AppColors.catPinkRose],
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.catOrangeLight.withValues(alpha: 0.40),
+            blurRadius: 18,
+            offset: const Offset(0, 5),
+          ),
+        ],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(AppIcons.streak,
-              color: Colors.white, size: 20),
-          const SizedBox(width: 6),
+          const Icon(AppIcons.streak, color: Colors.white, size: 20),
+          const SizedBox(width: 7),
           Text(
             'Streak: $streak',
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
+            style: cjak(p,
+                size: 14, weight: FontWeight.w800, color: Colors.white),
           ),
         ],
       ),
@@ -622,57 +713,54 @@ class _ScoreTimerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final timeColor = state.timeRemaining <= 10
-        ? AppColors.error
-        : AppColors.textPrimary;
+    final p = CP(context.adaptive.isDark);
+    final isLow = state.timeRemaining <= 10;
+    final timeColor = isLow ? p.danger : p.text;
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            color: p.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: p.border),
           ),
           child: Row(
             children: [
-              const Icon(AppIcons.star,
-                  color: AppColors.primary, size: 20),
-              const SizedBox(width: 6),
+              Icon(AppIcons.star, color: p.accent, size: 20),
+              const SizedBox(width: 7),
               Text(
                 '${state.totalScore}',
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: cjak(p, size: 16, weight: FontWeight.w800),
               ),
             ],
           ),
         ),
         Container(
           padding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
           decoration: BoxDecoration(
-            color: state.timeRemaining <= 10
-                // ignore: deprecated_member_use
-                ? AppColors.error.withOpacity(0.15)
-                : AppColors.surface,
-            borderRadius: BorderRadius.circular(12),
+            color: isLow
+                ? p.danger.withValues(alpha: 0.15)
+                : p.card,
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isLow
+                  ? p.danger.withValues(alpha: 0.45)
+                  : p.border,
+            ),
           ),
           child: Row(
             children: [
-              Icon(Icons.timer, color: timeColor, size: 20),
-              const SizedBox(width: 6),
+              Icon(Icons.timer_rounded, color: timeColor, size: 20),
+              const SizedBox(width: 7),
               Text(
                 '0:${state.timeRemaining.toString().padLeft(2, '0')}',
-                style: TextStyle(
-                  color: timeColor,
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+                style: cjak(p,
+                    size: 16, weight: FontWeight.w800, color: timeColor),
               ),
             ],
           ),
@@ -701,26 +789,33 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color bgColor = AppColors.surface;
-    Color borderColor = AppColors.border;
-    Color textColor = AppColors.textPrimary;
+    final p = CP(context.adaptive.isDark);
+    final correctColor = AppColors.catMint;
+
+    Color bgColor = p.card;
+    Color borderColor = p.border;
+    Color textColor = p.text;
+    Color badgeColor = p.accent;
     Widget? trailingIcon;
 
     if (answerState != AnswerState.none) {
       if (isCorrect) {
-        // ignore: deprecated_member_use
-        bgColor = Colors.green.withOpacity(0.15);
-        borderColor = Colors.green;
-        textColor = Colors.green;
-        trailingIcon = const Icon(AppIcons.success,
-            color: Colors.green, size: 24);
+        bgColor = correctColor.withValues(alpha: 0.14);
+        borderColor = correctColor;
+        textColor = correctColor;
+        badgeColor = correctColor;
+        trailingIcon =
+            Icon(AppIcons.success, color: correctColor, size: 24);
       } else if (isSelected) {
-        // ignore: deprecated_member_use
-        bgColor = AppColors.error.withOpacity(0.15);
-        borderColor = AppColors.error;
-        textColor = AppColors.error;
-        trailingIcon = const Icon(Icons.cancel,
-            color: AppColors.error, size: 24);
+        bgColor = p.danger.withValues(alpha: 0.14);
+        borderColor = p.danger;
+        textColor = p.danger;
+        badgeColor = p.danger;
+        trailingIcon =
+            Icon(Icons.cancel_rounded, color: p.danger, size: 24);
+      } else {
+        textColor = p.muted;
+        badgeColor = p.muted;
       }
     }
 
@@ -728,10 +823,10 @@ class _OptionCard extends StatelessWidget {
       onTap: answerState == AnswerState.none ? onTap : null,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(15),
         decoration: BoxDecoration(
           color: bgColor,
-          border: Border.all(color: borderColor, width: 2),
+          border: Border.all(color: borderColor, width: 1.6),
           borderRadius: BorderRadius.circular(16),
         ),
         child: Row(
@@ -740,31 +835,30 @@ class _OptionCard extends StatelessWidget {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                // ignore: deprecated_member_use
-                color: borderColor.withOpacity(0.2),
+                color: badgeColor.withValues(alpha: 0.16),
                 shape: BoxShape.circle,
+                border: Border.all(
+                    color: badgeColor.withValues(alpha: 0.45), width: 1),
               ),
               child: Center(
                 child: Text(
                   letter,
-                  style: TextStyle(
-                    color: textColor,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: cjak(p,
+                      size: 15,
+                      weight: FontWeight.w800,
+                      color: badgeColor),
                 ),
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 13),
             Expanded(
               child: Text(
                 text,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: textColor,
-                  fontWeight: FontWeight.w500,
-                  height: 1.3,
-                ),
+                style: cjak(p,
+                    size: 15,
+                    weight: FontWeight.w600,
+                    color: textColor,
+                    height: 1.3),
               ),
             ),
             if (trailingIcon != null) trailingIcon,
@@ -785,6 +879,7 @@ class _ResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final p = CP(context.adaptive.isDark);
     final isWinner = state.isWinner;
     final percent = (state.accuracy * 100).round();
 
@@ -794,29 +889,41 @@ class _ResultScreen extends ConsumerWidget {
         children: [
           const SizedBox(height: 24),
           Container(
-            width: 120,
-            height: 120,
+            width: 124,
+            height: 124,
             decoration: BoxDecoration(
-              color: isWinner
-                  ? AppColors.primary
-                  // ignore: deprecated_member_use
-                  : AppColors.warning.withOpacity(0.3),
+              gradient: isWinner
+                  ? LinearGradient(
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                      colors: [p.accentSoft, p.accent],
+                    )
+                  : null,
+              color: isWinner ? null : p.warn.withValues(alpha: 0.16),
               shape: BoxShape.circle,
+              border: isWinner
+                  ? null
+                  : Border.all(
+                      color: p.warn.withValues(alpha: 0.5), width: 1.4),
+              boxShadow: [
+                BoxShadow(
+                  color: (isWinner ? p.accent : p.warn)
+                      .withValues(alpha: 0.34),
+                  blurRadius: 40,
+                  spreadRadius: 2,
+                ),
+              ],
             ),
             child: Icon(
-              isWinner ? AppIcons.trophy : Icons.psychology,
-              color: isWinner ? Colors.black : AppColors.warning,
-              size: 64,
+              isWinner ? AppIcons.trophy : Icons.psychology_rounded,
+              color: isWinner ? p.onAccent : p.warn,
+              size: 62,
             ),
           ),
           const SizedBox(height: 24),
           Text(
             isWinner ? 'Tabriklaymiz!' : 'Yaxshi urinish!',
-            style: const TextStyle(
-              fontSize: 32,
-              fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
-            ),
+            style: cjak(p, size: 32, weight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           Text(
@@ -824,17 +931,15 @@ class _ResultScreen extends ConsumerWidget {
                 ? 'Konkursni muvaffaqiyatli yakunladingiz'
                 : "Keyingi safar yanada yaxshi natija ko'rsatasiz",
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: cjak(p, size: 14, weight: FontWeight.w500, color: p.muted),
           ),
-          const SizedBox(height: 32),
+          const SizedBox(height: 28),
           Container(
             padding: const EdgeInsets.all(20),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+              color: p.card,
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: p.border),
             ),
             child: Column(
               children: [
@@ -842,22 +947,22 @@ class _ResultScreen extends ConsumerWidget {
                     label: "To'g'ri javoblar",
                     value: '${state.correctCount}/10',
                     color: AppColors.catMint),
-                const Divider(color: AppColors.border, height: 24),
+                _ResultDivider(p: p),
                 _ResultStat(
                     label: 'Yiqqan ball',
                     value: '${state.totalScore}',
-                    color: AppColors.primary),
-                const Divider(color: AppColors.border, height: 24),
+                    color: p.accent),
+                _ResultDivider(p: p),
                 _ResultStat(
                     label: 'Aniqlik',
                     value: '$percent%',
                     color: AppColors.catLavenderDark),
-                const Divider(color: AppColors.border, height: 24),
+                _ResultDivider(p: p),
                 _ResultStat(
                     label: 'Maksimal streak',
                     value: '${state.maxStreak}',
                     color: AppColors.catOrangeLight),
-                const Divider(color: AppColors.border, height: 24),
+                _ResultDivider(p: p),
                 _ResultStat(
                     label: 'Vaqt',
                     value: _formatDuration(state.totalElapsed),
@@ -873,12 +978,20 @@ class _ResultScreen extends ConsumerWidget {
               width: double.infinity,
               child: ElevatedButton.icon(
                 onPressed: () => _openCertificate(context, ref),
-                icon: const Icon(Icons.workspace_premium_rounded, size: 20),
-                label: const Text('Sertifikat'),
+                icon: Icon(Icons.workspace_premium_rounded,
+                    size: 20, color: p.onAccent),
+                label: Text(
+                  'Sertifikat',
+                  style: cjak(p,
+                      size: 15,
+                      weight: FontWeight.w800,
+                      color: p.onAccent),
+                ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFD4AF37),
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
+                  backgroundColor: p.gold,
+                  foregroundColor: p.onAccent,
+                  elevation: 0,
+                  padding: const EdgeInsets.symmetric(vertical: 15),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(999),
                   ),
@@ -892,16 +1005,19 @@ class _ResultScreen extends ConsumerWidget {
               Expanded(
                 child: OutlinedButton.icon(
                   onPressed: () => _onShare(context),
-                  icon: const Icon(Icons.share, size: 18),
-                  label: const Text('Ulashish'),
+                  icon: Icon(Icons.share_rounded, size: 18, color: p.text),
+                  label: Text(
+                    'Ulashish',
+                    style: cjak(p, size: 14, weight: FontWeight.w700),
+                  ),
                   style: OutlinedButton.styleFrom(
-                    foregroundColor: AppColors.textPrimary,
+                    foregroundColor: p.text,
                     padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                        const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                     ),
-                    side: const BorderSide(color: AppColors.border),
+                    side: BorderSide(color: p.border),
                   ),
                 ),
               ),
@@ -911,18 +1027,21 @@ class _ResultScreen extends ConsumerWidget {
                 child: ElevatedButton(
                   onPressed: () => context.go('/contests'),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
+                    backgroundColor: p.accent,
+                    foregroundColor: p.onAccent,
+                    elevation: 0,
                     padding:
-                        const EdgeInsets.symmetric(vertical: 14),
+                        const EdgeInsets.symmetric(vertical: 15),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(999),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Yopish',
-                    style:
-                        TextStyle(fontWeight: FontWeight.w600),
+                    style: cjak(p,
+                        size: 15,
+                        weight: FontWeight.w800,
+                        color: p.onAccent),
                   ),
                 ),
               ),
@@ -970,6 +1089,17 @@ class _ResultScreen extends ConsumerWidget {
   }
 }
 
+class _ResultDivider extends StatelessWidget {
+  const _ResultDivider({required this.p});
+
+  final CP p;
+
+  @override
+  Widget build(BuildContext context) {
+    return Divider(color: p.border, height: 24, thickness: 1);
+  }
+}
+
 class _ResultStat extends StatelessWidget {
   const _ResultStat({
     required this.label,
@@ -983,33 +1113,33 @@ class _ResultStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
     return Row(
       children: [
         Container(
-          width: 8,
-          height: 8,
+          width: 10,
+          height: 10,
           decoration: BoxDecoration(
             color: color,
             shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: color.withValues(alpha: 0.5),
+                blurRadius: 8,
+              ),
+            ],
           ),
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 13),
         Expanded(
           child: Text(
             label,
-            style: const TextStyle(
-              fontSize: 14,
-              color: AppColors.textSecondary,
-            ),
+            style: cjak(p, size: 14, weight: FontWeight.w500, color: p.muted),
           ),
         ),
         Text(
           value,
-          style: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.bold,
-            color: AppColors.textPrimary,
-          ),
+          style: cjak(p, size: 16, weight: FontWeight.w800),
         ),
       ],
     );
