@@ -1,28 +1,26 @@
 // ─────────────────────────────────────────────────────────────────────
-// ContentHubScreen — "Kutubxona" (Parvoz UI Redesign — NIGHT)
+// ContentHubScreen — "Kutubxona" (Parvoz UI Redesign — NIGHT, Premium Edition)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Google Stitch "Parvoz UI Redesign / Kutubxona (Night)" dizayniga
-// moslangan. Tuzilma (yuqoridan pastga):
-//   • Parvoz header (logo + bell + settings)
-//   • Videolar / Audiokitoblar segment (pill)
-//   • Kategoriya chiplari (Barchasi + ...)
-//   • Hero karta (YANGI DARS badge + Boshlash)
-//   • "Siz uchun tavsiyalar" (2-ustun grid)
-//   • "Eng ko'p ko'rilganlar" (gorizontal, ko'rishlar soni)
+// Google Stitch "Parvoz UI Redesign / Kutubxona (Night) - Premium Edition"
+// dizayniga 1:1 moslangan. Tuzilma (yuqoridan pastga):
+//   • Parvoz header (logo + bell + settings, backdrop border)
+//   • Videolar / Audio kitoblar segment (rounded-xl, yashil faol)
+//   • Kategoriya chiplari (rounded-xl, YASHIL faol)
+//   • Hero karta — to'liq rasm + gradient overlay + ustiga matn +
+//     "YANGI DARS" (to'q-sariq badge) + yashil-glow "Boshlash" tugma
+//   • "Siz uchun tavsiyalar" (2-ustun grid, rounded-2xl)
+//   • "Eng ko'p ko'rilganlar" (gorizontal, rounded-2xl, ko'rishlar soni)
 //
-// Faqat NIGHT — `AppTheme.darkTheme` bilan majburiy dark, ranglar
-// `AppColors.parvoz*` (Stitch night palitra). Light mode keyin alohida.
-//
-// Real data: effectiveVideosProvider + audiobooks/books providerlari
-// (mock yo'q). Eski /videos, /audiobooks, /books route'lari deep-link
-// uchun saqlanadi; bottom nav /content ga olib boradi.
+// Faqat NIGHT — `AppTheme.darkTheme` bilan majburiy. Ranglar
+// `AppColors.parvoz*` (Premium: surface #162B45, green #2ECC71, badge #F39C12).
+// Real data: effectiveVideosProvider + audiobooks/books (mock yo'q).
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_theme.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/presentation/providers/books_providers.dart';
 import 'package:farzandim_child/features/books/presentation/widgets/book_section.dart';
@@ -55,8 +53,7 @@ class _ContentHubScreenState extends ConsumerState<ContentHubScreen>
 
   @override
   Widget build(BuildContext context) {
-    // NIGHT majburiy: butun subtree dark theme (qayta ishlatilgan
-    // audiokitob/kitob widgetlari ham to'g'ri dark render bo'lsin).
+    // NIGHT majburiy: butun subtree dark theme.
     return Theme(
       data: AppTheme.darkTheme,
       child: Scaffold(
@@ -67,9 +64,9 @@ class _ContentHubScreenState extends ConsumerState<ContentHubScreen>
           child: Column(
             children: [
               const _ParvozHeader(),
-              const SizedBox(height: 12),
-              _ParvozSegment(controller: _tab),
               const SizedBox(height: 16),
+              _ParvozSegment(controller: _tab),
+              const SizedBox(height: 20),
               Expanded(
                 child: TabBarView(
                   controller: _tab,
@@ -95,8 +92,11 @@ class _ParvozHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 0),
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+      ),
       child: Row(
         children: [
           const Text(
@@ -104,7 +104,7 @@ class _ParvozHeader extends StatelessWidget {
             style: TextStyle(
               color: AppColors.parvozGreen,
               fontSize: 24,
-              fontWeight: FontWeight.w800,
+              fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
             ),
           ),
@@ -113,7 +113,7 @@ class _ParvozHeader extends StatelessWidget {
             icon: Icons.notifications_none_rounded,
             onTap: () => context.push('/notifications'),
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 8),
           _ParvozIconButton(
             icon: Icons.settings_outlined,
             onTap: () => context.push('/settings'),
@@ -135,19 +135,19 @@ class _ParvozIconButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       child: Container(
-        width: 44,
-        height: 44,
+        width: 40,
+        height: 40,
         decoration: const BoxDecoration(
           color: AppColors.parvozSurface,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: AppColors.parvozTextDim, size: 22),
+        child: Icon(icon, color: AppColors.parvozText, size: 22),
       ),
     );
   }
 }
 
-// ─── Segment: Videolar / Audiokitoblar (pill) ─────────────────────────
+// ─── Segment: Videolar / Audio kitoblar (rounded-xl, yashil faol) ──────
 class _ParvozSegment extends StatelessWidget {
   const _ParvozSegment({required this.controller});
 
@@ -158,10 +158,10 @@ class _ParvozSegment extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
-        padding: const EdgeInsets.all(4),
+        padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
           color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(14),
         ),
         child: AnimatedBuilder(
           animation: controller,
@@ -170,7 +170,7 @@ class _ParvozSegment extends StatelessWidget {
             return Row(
               children: [
                 _seg('Videolar', 0, idx),
-                _seg('Audiokitoblar', 1, idx),
+                _seg('Audio kitoblar', 1, idx),
               ],
             );
           },
@@ -187,18 +187,18 @@ class _ParvozSegment extends StatelessWidget {
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOut,
-          padding: const EdgeInsets.symmetric(vertical: 10),
+          padding: const EdgeInsets.symmetric(vertical: 11),
           alignment: Alignment.center,
           decoration: BoxDecoration(
             color: selected ? AppColors.parvozGreen : Colors.transparent,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(9),
           ),
           child: Text(
             label,
             style: TextStyle(
               color: selected ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
               fontSize: 14,
-              fontWeight: FontWeight.w700,
+              fontWeight: selected ? FontWeight.bold : FontWeight.w600,
             ),
           ),
         ),
@@ -223,7 +223,6 @@ class _VideosTab extends ConsumerWidget {
       );
     }
 
-    // Kategoriyalar — videolardagi distinct `category`.
     final categories = <String>[];
     for (final v in all) {
       if (v.category.isNotEmpty && !categories.contains(v.category)) {
@@ -249,7 +248,7 @@ class _VideosTab extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _ParvozChips(categories: categories),
-          const SizedBox(height: 24),
+          const SizedBox(height: 28),
           if (filtered.isEmpty)
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
@@ -265,20 +264,20 @@ class _VideosTab extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _ParvozHeroCard(video: hero),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
           ],
           if (recommended.isNotEmpty) ...[
             const _ParvozSectionTitle('Siz uchun tavsiyalar'),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),
               child: _ParvozVideoGrid(videos: recommended),
             ),
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
           ],
           if (topViewed.isNotEmpty) ...[
             const _ParvozSectionTitle("Eng ko'p ko'rilganlar"),
-            const SizedBox(height: 14),
+            const SizedBox(height: 16),
             _ParvozWideList(videos: topViewed),
           ],
         ],
@@ -287,7 +286,7 @@ class _VideosTab extends ConsumerWidget {
   }
 }
 
-// ─── Kategoriya chiplari ──────────────────────────────────────────────
+// ─── Kategoriya chiplari (rounded-xl, YASHIL faol) ────────────────────
 class _ParvozChips extends ConsumerWidget {
   const _ParvozChips({required this.categories});
 
@@ -299,12 +298,12 @@ class _ParvozChips extends ConsumerWidget {
     final items = <String?>[null, ...categories]; // null = Barchasi
 
     return SizedBox(
-      height: 38,
+      height: 44,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: items.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 10),
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
         itemBuilder: (_, i) {
           final cat = items[i];
           final isSel = cat == selected;
@@ -313,11 +312,11 @@ class _ParvozChips extends ConsumerWidget {
                 ref.read(_parvozCategoryProvider.notifier).state = cat,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSel ? AppColors.parvozBlue : Colors.transparent,
-                borderRadius: BorderRadius.circular(999),
+                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                borderRadius: BorderRadius.circular(12),
                 border: isSel
                     ? null
                     : Border.all(color: AppColors.parvozBorder, width: 1),
@@ -325,9 +324,10 @@ class _ParvozChips extends ConsumerWidget {
               child: Text(
                 cat ?? 'Barchasi',
                 style: TextStyle(
-                  color: isSel ? Colors.white : AppColors.parvozTextDim,
-                  fontSize: 13,
-                  fontWeight: FontWeight.w600,
+                  color:
+                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  fontSize: 14,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
                 ),
               ),
             ),
@@ -353,14 +353,15 @@ class _ParvozSectionTitle extends StatelessWidget {
         style: const TextStyle(
           color: AppColors.parvozText,
           fontSize: 20,
-          fontWeight: FontWeight.w700,
+          fontWeight: FontWeight.bold,
+          letterSpacing: -0.3,
         ),
       ),
     );
   }
 }
 
-// ─── Hero karta ───────────────────────────────────────────────────────
+// ─── Hero karta — to'liq rasm + overlay + glow tugma ──────────────────
 class _ParvozHeroCard extends StatelessWidget {
   const _ParvozHeroCard({required this.video});
 
@@ -373,122 +374,140 @@ class _ParvozHeroCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(
-            color: AppColors.parvozBorder.withValues(alpha: 0.5),
-          ),
-        ),
-        clipBehavior: Clip.antiAlias,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            SizedBox(
-              height: 170,
-              width: double.infinity,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  _NetImage(
-                    url: video.thumbnailUrl,
-                    fallback: video.thumbnailColor,
-                  ),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          AppColors.parvozSurface.withValues(alpha: 0.95),
-                        ],
-                        stops: const [0.45, 1.0],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: AppColors.parvozGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(6),
-                      border: Border.all(
-                        color: AppColors.parvozGreen.withValues(alpha: 0.3),
-                      ),
-                    ),
-                    child: const Text(
-                      'YANGI DARS',
-                      style: TextStyle(
-                        color: AppColors.parvozGreen,
-                        fontSize: 10,
-                        fontWeight: FontWeight.w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                  Text(
-                    video.title,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.parvozText,
-                      fontSize: 20,
-                      fontWeight: FontWeight.w700,
-                      height: 1.2,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    video.description,
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.parvozTextDim,
-                      fontSize: 14,
-                      height: 1.4,
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  DecoratedBox(
-                    decoration: BoxDecoration(
-                      color: AppColors.parvozGreen,
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    child: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 13),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            Icons.play_circle_fill_rounded,
-                            color: AppColors.parvozOnGreen,
-                            size: 22,
-                          ),
-                          SizedBox(width: 8),
-                          Text(
-                            'Boshlash',
-                            style: TextStyle(
-                              color: AppColors.parvozOnGreen,
-                              fontSize: 16,
-                              fontWeight: FontWeight.w700,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.3),
+              blurRadius: 30,
+              offset: const Offset(0, 8),
             ),
           ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          height: 280,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _NetImage(url: video.thumbnailUrl, fallback: video.thumbnailColor),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      AppColors.parvozBg,
+                      AppColors.parvozBg.withValues(alpha: 0.7),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
+                  ),
+                ),
+              ),
+              // YANGI DARS badge (to'q-sariq, yuqori-chap)
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.parvozBadge,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'YANGI DARS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              // Matn + tugma (pastda overlay)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        video.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        video.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFD1D5DB),
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.parvozGreen,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.parvozGreen
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 20,
+                            ),
+                          ],
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.play_circle_fill_rounded,
+                                color: AppColors.parvozOnGreen,
+                                size: 22,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Boshlash',
+                                style: TextStyle(
+                                  color: AppColors.parvozOnGreen,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -509,9 +528,9 @@ class _ParvozVideoGrid extends StatelessWidget {
       padding: EdgeInsets.zero,
       gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
         crossAxisCount: 2,
-        crossAxisSpacing: 12,
-        mainAxisSpacing: 12,
-        mainAxisExtent: 182,
+        crossAxisSpacing: 16,
+        mainAxisSpacing: 16,
+        mainAxisExtent: 210,
       ),
       itemCount: videos.length,
       itemBuilder: (_, i) => _ParvozGridCard(video: videos[i]),
@@ -531,17 +550,22 @@ class _ParvozGridCard extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.parvozBorder.withValues(alpha: 0.4),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.parvozBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             SizedBox(
-              height: 104,
+              height: 128,
               width: double.infinity,
               child: Stack(
                 fit: StackFit.expand,
@@ -552,8 +576,8 @@ class _ParvozGridCard extends StatelessWidget {
                   ),
                   if (video.hasDuration)
                     Positioned(
-                      bottom: 6,
-                      right: 6,
+                      bottom: 8,
+                      right: 8,
                       child: _DurationBadge(video.duration),
                     ),
                 ],
@@ -561,7 +585,7 @@ class _ParvozGridCard extends StatelessWidget {
             ),
             Expanded(
               child: Padding(
-                padding: const EdgeInsets.all(10),
+                padding: const EdgeInsets.all(14),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -571,8 +595,8 @@ class _ParvozGridCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.parvozText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
                         height: 1.2,
                       ),
                     ),
@@ -583,7 +607,8 @@ class _ParvozGridCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         color: AppColors.parvozTextDim,
-                        fontSize: 11,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ],
@@ -606,12 +631,12 @@ class _ParvozWideList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 96,
+      height: 104,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: videos.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
         itemBuilder: (_, i) => _ParvozWideCard(video: videos[i]),
       ),
     );
@@ -628,74 +653,82 @@ class _ParvozWideCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
-        width: 250,
+        width: 280,
+        padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(
-            color: AppColors.parvozBorder.withValues(alpha: 0.4),
-          ),
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.parvozBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
         ),
-        clipBehavior: Clip.antiAlias,
         child: Row(
           children: [
-            SizedBox(
-              width: 96,
-              height: 96,
-              child: _NetImage(
-                url: video.thumbnailUrl,
-                fallback: video.thumbnailColor,
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: _NetImage(
+                  url: video.thumbnailUrl,
+                  fallback: video.thumbnailColor,
+                ),
               ),
             ),
+            const SizedBox(width: 16),
             Expanded(
-              child: Padding(
-                padding: const EdgeInsets.all(10),
-                child: Column(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      video.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozText,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        height: 1.2,
-                      ),
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    video.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      video.category,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozTextDim,
-                        fontSize: 11,
-                      ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    video.category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
                     ),
-                    const SizedBox(height: 6),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.visibility_outlined,
-                          size: 14,
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.visibility_outlined,
+                        size: 16,
+                        color: AppColors.parvozGreen,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_formatViews(video.views)} ko\'rilgan',
+                        style: const TextStyle(
                           color: AppColors.parvozGreen,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
                         ),
-                        const SizedBox(width: 4),
-                        Text(
-                          '${_formatViews(video.views)} ko\'rilgan',
-                          style: const TextStyle(
-                            color: AppColors.parvozGreen,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
-                ),
+                      ),
+                    ],
+                  ),
+                ],
               ),
             ),
           ],
@@ -714,10 +747,10 @@ class _DurationBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.7),
-        borderRadius: BorderRadius.circular(4),
+        color: Colors.black.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(6),
       ),
       child: Text(
         text,
@@ -785,35 +818,38 @@ String _formatViews(int v) {
   return '$v';
 }
 
-// ─── Audiokitoblar tab (mavjud tuzilma — dark theme ostida) ───────────
+// ─── Audio kitoblar tab (Premium Edition — Stitch) ────────────────────
+// Tartib: kategoriya chiplari → Hero audiokitob (cover + Eshitish + bookmark)
+// → "Siz uchun tavsiyalar" (gorizontal) → "Eng ko'p eshitilganlar" (raqamli
+// vertikal ro'yxat + play) → Kitoblar (PDF, funksiya saqlanishi uchun).
 class _AudiobooksTab extends ConsumerWidget {
   const _AudiobooksTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(effectiveAudiobooksProvider);
     final forYou = ref.watch(forYouAudiobooksProvider);
     final mostListened = ref.watch(mostListenedProvider);
-    final newest = ref.watch(newestAudiobooksProvider);
-    final allFiltered = ref.watch(filteredAudiobooksProvider);
     final asyncBooks = ref.watch(backendBooksProvider);
-
-    final hasAudiobooks = allFiltered.isNotEmpty;
     final books = asyncBooks.valueOrNull ?? const <BookModel>[];
 
-    if (!hasAudiobooks && books.isEmpty) {
-      return const Column(
-        children: [
-          AudiobooksSearchBar(),
-          SizedBox(height: 8),
-          Expanded(
-            child: _ParvozEmpty(
-              icon: Icons.headphones_rounded,
-              text: 'Audiokitoblar topilmadi',
-            ),
-          ),
-        ],
+    if (all.isEmpty && books.isEmpty) {
+      return const _ParvozEmpty(
+        icon: Icons.headphones_rounded,
+        text: 'Audiokitoblar topilmadi',
       );
     }
+
+    final categories = <String>[];
+    for (final b in all) {
+      if (b.category.isNotEmpty && !categories.contains(b.category)) {
+        categories.add(b.category);
+      }
+    }
+
+    final featured = forYou.isNotEmpty ? forYou.first : null;
+    final recommended =
+        forYou.length > 1 ? forYou.skip(1).toList() : <AudiobookModel>[];
 
     final schoolBooks = books.where((b) => b.category == 'school').toList();
     final adabiyotBooks = books.where((b) => b.category == 'adabiyot').toList();
@@ -821,66 +857,514 @@ class _AudiobooksTab extends ConsumerWidget {
         .where((b) => b.category != 'school' && b.category != 'adabiyot')
         .toList();
 
-    return Column(
-      children: [
-        const AudiobooksSearchBar(),
-        const SizedBox(height: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 180),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 180),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (categories.isNotEmpty) ...[
+            _ParvozAudioChips(categories: categories),
+            const SizedBox(height: 28),
+          ],
+          if (featured != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _ParvozAudioHero(book: featured),
+            ),
+            const SizedBox(height: 32),
+          ],
+          if (recommended.isNotEmpty) ...[
+            const _ParvozSectionTitle('Siz uchun tavsiyalar'),
+            const SizedBox(height: 16),
+            _ParvozAudioHList(books: recommended),
+            const SizedBox(height: 32),
+          ],
+          if (mostListened.isNotEmpty) ...[
+            const _ParvozSectionTitle("Eng ko'p eshitilganlar"),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  for (var i = 0; i < mostListened.length; i++) ...[
+                    _ParvozAudioRow(book: mostListened[i], rank: i + 1),
+                    if (i != mostListened.length - 1) const SizedBox(height: 12),
+                  ],
+                ],
+              ),
+            ),
+          ],
+          if (books.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            BookSection(
+              title: 'Kitoblar',
+              books: books,
+              onTap: (b) => context.push('/books/pdf', extra: b),
+            ),
+            if (schoolBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Maktab darsliklari',
+                books: schoolBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
+            if (adabiyotBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Adabiyot',
+                books: adabiyotBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
+            if (otherBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Boshqalar',
+                books: otherBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Audio: kategoriya chiplari (audiobookCategoryFilter) ─────────────
+class _ParvozAudioChips extends ConsumerWidget {
+  const _ParvozAudioChips({required this.categories});
+
+  final List<String> categories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(audiobookCategoryFilterProvider);
+    final items = <String?>[null, ...categories];
+
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final cat = items[i];
+          final isSel = cat == selected;
+          return GestureDetector(
+            onTap: () =>
+                ref.read(audiobookCategoryFilterProvider.notifier).state = cat,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: isSel
+                    ? null
+                    : Border.all(color: AppColors.parvozBorder, width: 1),
+              ),
+              child: Text(
+                cat ?? 'Barchasi',
+                style: TextStyle(
+                  color:
+                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  fontSize: 14,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── Audio: Hero (featured audiokitob) ────────────────────────────────
+class _ParvozAudioHero extends ConsumerWidget {
+  const _ParvozAudioHero({required this.book});
+
+  final AudiobookModel book;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: BoxDecoration(
+        color: AppColors.parvozSurface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: AppColors.parvozBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.3),
+            blurRadius: 30,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 190,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _NetImage(url: book.coverUrl, fallback: book.coverColor),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            AppColors.parvozBg.withValues(alpha: 0.85),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.6],
+                        ),
+                      ),
+                    ),
+                    if (book.duration.isNotEmpty)
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: _AudioDurationPill(book.duration),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              book.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozText,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              book.category.isEmpty
+                  ? book.author
+                  : '${book.author} • ${book.category}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozTextDim,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
               children: [
-                const SizedBox(height: 8),
-                if (forYou.isNotEmpty) ...[
-                  AudiobookSection(title: 'Siz uchun', books: forYou),
-                  const SizedBox(height: 24),
-                ],
-                if (mostListened.isNotEmpty) ...[
-                  AudiobookSection(
-                      title: "Eng ko'p o'qilgan", books: mostListened),
-                  const SizedBox(height: 24),
-                ],
-                if (newest.isNotEmpty) ...[
-                  AudiobookSection(title: "Yangi qo'shilgan", books: newest),
-                  const SizedBox(height: 24),
-                ],
-                if (books.isNotEmpty) ...[
-                  BookSection(
-                    title: 'Kitoblar',
-                    books: books,
-                    onTap: (b) => context.push('/books/pdf', extra: b),
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () =>
+                        ref.read(audioPlayerProvider.notifier).play(book),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.parvozGreen,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                AppColors.parvozGreen.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 13),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.play_arrow_rounded,
+                              color: AppColors.parvozOnGreen,
+                              size: 22,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Eshitish',
+                              style: TextStyle(
+                                color: AppColors.parvozOnGreen,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
                   ),
-                  if (schoolBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Maktab darsliklari',
-                      books: schoolBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                  if (adabiyotBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Adabiyot',
-                      books: adabiyotBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                  if (otherBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Boshqalar',
-                      books: otherBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                ],
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.parvozBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.parvozBorder),
+                  ),
+                  child: const Icon(
+                    Icons.bookmark_border_rounded,
+                    color: AppColors.parvozText,
+                    size: 22,
+                  ),
+                ),
               ],
             ),
-          ),
+          ],
         ),
-      ],
+      ),
+    );
+  }
+}
+
+class _AudioDurationPill extends StatelessWidget {
+  const _AudioDurationPill(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.parvozBorderStrong),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.headphones_rounded,
+              color: AppColors.parvozGreen, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Audio: gorizontal tavsiya kartalari ──────────────────────────────
+class _ParvozAudioHList extends StatelessWidget {
+  const _ParvozAudioHList({required this.books});
+
+  final List<AudiobookModel> books;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 212,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: books.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (_, i) => _ParvozAudioHCard(book: books[i]),
+      ),
+    );
+  }
+}
+
+class _ParvozAudioHCard extends ConsumerWidget {
+  const _ParvozAudioHCard({required this.book});
+
+  final AudiobookModel book;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
+      child: Container(
+        width: 150,
+        decoration: BoxDecoration(
+          color: AppColors.parvozSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.parvozBorder),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.2),
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+        ),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _NetImage(url: book.coverUrl, fallback: book.coverColor),
+                  if (book.duration.isNotEmpty)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: _DurationBadge(book.duration),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      book.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      book.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozTextDim,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Audio: "Eng ko'p eshitilganlar" qatori ───────────────────────────
+class _ParvozAudioRow extends ConsumerWidget {
+  const _ParvozAudioRow({required this.book, required this.rank});
+
+  final AudiobookModel book;
+  final int rank;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(
+          color: AppColors.parvozSurface,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.parvozBorder),
+        ),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 22,
+              child: Text(
+                '$rank',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: _NetImage(url: book.coverUrl, fallback: book.coverColor),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    book.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.headphones_rounded,
+                          size: 14, color: AppColors.parvozTextDim),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${_formatViews(book.listenCount)} marta eshitildi',
+                        style: const TextStyle(
+                          color: AppColors.parvozTextDim,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.parvozBorderStrong),
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: AppColors.parvozGreen,
+                size: 22,
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

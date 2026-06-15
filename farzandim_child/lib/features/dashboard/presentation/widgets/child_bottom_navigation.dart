@@ -59,14 +59,12 @@ class ChildBottomNavigation extends ConsumerWidget {
             decoration: BoxDecoration(
               color: AppColors.parvozSurface,
               borderRadius: BorderRadius.circular(999),
-              border: Border.all(
-                color: AppColors.parvozBorder.withValues(alpha: 0.6),
-              ),
+              border: Border.all(color: AppColors.parvozBorderStrong),
               boxShadow: [
                 BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.35),
-                  blurRadius: 24,
-                  offset: const Offset(0, 8),
+                  color: Colors.black.withValues(alpha: 0.4),
+                  blurRadius: 32,
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -136,19 +134,18 @@ class _NavItem extends StatelessWidget {
         onTap();
       },
       behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 220),
-        curve: Curves.easeOut,
+      child: Padding(
         padding: const EdgeInsets.all(10),
-        decoration: BoxDecoration(
-          // Faol — to'liq ko'k doira (Stitch secondary-container).
-          color: active ? AppColors.parvozBlue : Colors.transparent,
-          shape: BoxShape.circle,
-        ),
-        child: Icon(
-          active ? (activeIcon ?? icon) : icon,
-          color: active ? Colors.white : AppColors.parvozTextDim,
-          size: 26,
+        // Premium: faol — YASHIL to'ldirilgan ikon (fon doira yo'q).
+        child: AnimatedScale(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOutBack,
+          scale: active ? 1.12 : 1.0,
+          child: Icon(
+            active ? (activeIcon ?? icon) : icon,
+            color: active ? AppColors.parvozGreen : AppColors.parvozTextDim,
+            size: 26,
+          ),
         ),
       ),
     );

@@ -182,28 +182,34 @@ class AppColors {
   static const Color parvozBg = Color(0xFF0B1C30);
 
   /// Kartalar, tugmalar, segment, header tugmalari foni.
-  static const Color parvozSurface = Color(0xFF213145);
+  static const Color parvozSurface = Color(0xFF162B45);
 
   /// Yengilroq surface — chip/placeholder/rasm orqa foni.
-  static const Color parvozSurfaceHigh = Color(0xFF2A3F58);
+  static const Color parvozSurfaceHigh = Color(0xFF1E3552);
 
   /// Yashil aksent — logo, faol tab, CTA tugma, ko'rishlar soni.
-  static const Color parvozGreen = Color(0xFF6BFF8F);
+  static const Color parvozGreen = Color(0xFF2ECC71);
 
   /// Yashil ustidagi matn/ikon (to'q).
-  static const Color parvozOnGreen = Color(0xFF03260F);
+  static const Color parvozOnGreen = Color(0xFF0B1C30);
 
   /// Ko'k aksent — faol kategoriya chip / faol nav.
   static const Color parvozBlue = Color(0xFF2170E4);
 
   /// Asosiy matn (deyarli oq).
-  static const Color parvozText = Color(0xFFF1F6FF);
+  static const Color parvozText = Color(0xFFFFFFFF);
 
   /// Ikkilamchi matn (tavsif, kategoriya — muted blue-gray).
-  static const Color parvozTextDim = Color(0xFF93A6C0);
+  static const Color parvozTextDim = Color(0xFF9CA3AF);
 
-  /// Nozik chegara (kartalar, nofaol chip).
-  static const Color parvozBorder = Color(0xFF2E4763);
+  /// Nozik chegara (white/5) — kartalar, nofaol chip.
+  static const Color parvozBorder = Color(0x0DFFFFFF);
+
+  /// Kuchliroq chegara (white/10) — floating nav.
+  static const Color parvozBorderStrong = Color(0x1AFFFFFF);
+
+  /// 'YANGI DARS' badge — to'q-sariq (Premium Edition).
+  static const Color parvozBadge = Color(0xFFF39C12);
 
   // ============ LEGACY ALIASES (Sprint 4.4 backwards compat) ============
   /// Sprint 4.4'da `primaryDark` ishlatilgan — yangi `primaryHover` alias.
