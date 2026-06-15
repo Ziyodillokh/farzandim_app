@@ -44,9 +44,9 @@ class _P {
   final bool dark;
 
   Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF8F9FF);
-  // Glassmorphism — yarim shaffof panel (aurora fonidan rang sizib o'tadi).
-  Color get card => dark ? const Color(0xFF162B45).withValues(alpha: 0.58) : Colors.white.withValues(alpha: 0.74);
-  Color get cardSolid => dark ? const Color(0xFF162B45) : Colors.white;
+  // Solid toza kartalar — bir xil fon, gradient/aurora YO'Q.
+  Color get card => dark ? const Color(0xFF213145) : const Color(0xFFE5EEFF);
+  Color get cardSolid => dark ? const Color(0xFF213145) : Colors.white;
   Color get cardGradTo => dark ? const Color(0xFF1A2636) : const Color(0xFFDCE9FF);
   Color get text => dark ? const Color(0xFFF8F9FF) : const Color(0xFF0B1C30);
   Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
@@ -61,18 +61,15 @@ class _P {
   Color get blueDeep => dark ? const Color(0xFF0058BE) : const Color(0xFF2170E4);
 
   Color get progTrack => dark ? Colors.white.withValues(alpha: 0.14) : const Color(0xFFD3E4FE);
-  // Glass border — nozik oq highlight (Stitch: border-white/10..20).
-  Color get border => dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFF0B1C30).withValues(alpha: 0.06);
+  // Nozik border — soft definition (soyasiz, dog'siz).
+  Color get border => dark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFD3E4FE);
   Color get divider => dark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFD3E4FE);
 
-  // Glass panel dekoratsiyasi — shaffof fon + oq border + ko'taruvchi soya.
-  BoxDecoration glass({double radius = 14}) => BoxDecoration(
+  // Toza karta — solid fon + nozik border. Soya YO'Q (qora dog' bo'lmasin).
+  BoxDecoration glass({double radius = 16}) => BoxDecoration(
         color: card,
         borderRadius: BorderRadius.circular(radius),
         border: Border.all(color: border, width: 1),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.30 : 0.05), blurRadius: 22, offset: const Offset(0, 10)),
-        ],
       );
 }
 
@@ -167,9 +164,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen> wit
       extendBody: true,
       body: Stack(
         children: [
-          // 1. Aurora fon — glass panellardan rang sizib o'tadi.
-          Positioned.fill(child: _Aurora(p: p)),
-          // 2. Skroll kontent (glass header ostidan o'tadi).
+          // Skroll kontent (glass header ostidan o'tadi). Fon — bir xil p.bg.
           Positioned.fill(
             child: RefreshIndicator(
               color: p.green,
@@ -381,19 +376,12 @@ class _StatCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 6),
       decoration: BoxDecoration(
         color: p.card,
-        borderRadius: BorderRadius.circular(14),
-        border: Border(
-          top: BorderSide(color: p.border, width: 1),
-          left: BorderSide(color: p.border, width: 1),
-          right: BorderSide(color: p.border, width: 1),
-          bottom: BorderSide(color: accent.withValues(alpha: 0.55), width: 2),
-        ),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: p.dark ? 0.30 : 0.05), blurRadius: 22, offset: const Offset(0, 10)),
-        ],
+        // Uniform border → radius ishlaydi (avval noykbir xil border to'rtburchak qilgan edi).
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: accent.withValues(alpha: 0.40), width: 1.5),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -792,8 +780,8 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
   Widget build(BuildContext context) {
     final p = widget.p;
     final dark = p.dark;
-    // Stitch glass — yarim shaffof qizil + oq border.
-    final cardBg = (dark ? const Color(0xFF310002) : const Color(0xFFFFDAD6)).withValues(alpha: dark ? 0.72 : 0.90);
+    // Solid qizil karta + nozik oq border.
+    final cardBg = dark ? const Color(0xFF310002) : const Color(0xFFFFDAD6);
     final glow = dark ? const Color(0xFF93000A) : const Color(0xFFFF897D);
     final accent = dark ? const Color(0xFFFFB4AB) : const Color(0xFF93000A);
 
@@ -803,9 +791,6 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
         color: cardBg,
         borderRadius: BorderRadius.circular(18),
         border: Border.all(color: Colors.white.withValues(alpha: dark ? 0.12 : 0.06), width: 1),
-        boxShadow: [
-          BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.32 : 0.06), blurRadius: 22, offset: const Offset(0, 10)),
-        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -996,47 +981,6 @@ class _AppUsageSection extends ConsumerWidget {
           ),
         ),
       ],
-    );
-  }
-}
-
-// ─────────────── AURORA FON (glass panellar uchun chuqurlik) ───────────────
-
-class _Aurora extends StatelessWidget {
-  const _Aurora({required this.p});
-  final _P p;
-
-  @override
-  Widget build(BuildContext context) {
-    final dark = p.dark;
-    return DecoratedBox(
-      decoration: BoxDecoration(color: p.bg),
-      child: Stack(
-        children: [
-          _blob(top: -90, left: -70, size: 320, color: dark ? const Color(0xFF22C55E) : const Color(0xFF6BFF8F), alpha: dark ? 0.16 : 0.10),
-          _blob(top: 280, right: -110, size: 360, color: const Color(0xFF2170E4), alpha: dark ? 0.16 : 0.09),
-          _blob(bottom: 140, left: -90, size: 320, color: dark ? const Color(0xFF1E9E5A) : const Color(0xFF22C55E), alpha: dark ? 0.12 : 0.07),
-        ],
-      ),
-    );
-  }
-
-  Widget _blob({double? top, double? bottom, double? left, double? right, required double size, required Color color, required double alpha}) {
-    return Positioned(
-      top: top,
-      bottom: bottom,
-      left: left,
-      right: right,
-      child: IgnorePointer(
-        child: Container(
-          width: size,
-          height: size,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            gradient: RadialGradient(colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)]),
-          ),
-        ),
-      ),
     );
   }
 }
