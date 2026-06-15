@@ -289,7 +289,17 @@ class _StatsSection extends ConsumerWidget {
     final pairing = ref.watch(pairingStateProvider);
     final gamification = ref.watch(gamificationProfileProvider).valueOrNull;
     final users = ref.watch(allUsersProvider);
-    final me = users.cast<RankingUser?>().firstWhere((u) => u?.isCurrentUser ?? false, orElse: () => null);
+    // dart2js'da `cast<RankingUser?>().firstWhere(orElse: () => null)` startup'da
+    // bo'sh/loading ro'yxatda `null as RankingUser` type-xato berardi (crash).
+    // Null-xavfsiz qidiruv — cast yo'q. `me` FINAL (closure'da promote bo'lsin).
+    RankingUser? currentUser;
+    for (final u in users) {
+      if (u.isCurrentUser) {
+        currentUser = u;
+        break;
+      }
+    }
+    final me = currentUser;
     final xp = gamification?.xp ?? me?.totalScore ?? 0;
     final level = levelForXp(xp);
 
