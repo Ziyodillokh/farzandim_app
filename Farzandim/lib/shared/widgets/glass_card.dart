@@ -114,29 +114,28 @@ class GlassCard extends StatelessWidget {
               ),
             ),
           ),
-          // b) Specular TEPA chizig'i (~1.5px) — "haqiqiy shisha" eng kuchli
-          //    belgisi (yuqoridan tushgan mint-salqin yorug'lik). Faqat dark;
-          //    ClipRRect burchaklarda kesadi, markazda eng yorug'.
-          if (isDark)
-            Positioned(
-              top: 0,
-              left: 0,
-              right: 0,
-              child: IgnorePointer(
-                child: Container(
-                  height: 1.5,
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: [
-                        Colors.transparent,
-                        AppColors.glassTopHighlight,
-                        Colors.transparent,
-                      ],
-                    ),
+          // b) Specular TEPA chizig'i (~1.5px) — "haqiqiy shisha" belgisi
+          //    (yuqoridan tushgan yorug'lik). Light + dark; ClipRRect
+          //    burchaklarda kesadi, markazda eng yorug'.
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(
+              child: Container(
+                height: 1.5,
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    colors: [
+                      Colors.transparent,
+                      AppColors.glassTopHighlight,
+                      Colors.transparent,
+                    ],
                   ),
                 ),
               ),
             ),
+          ),
           inner,
         ],
       ),
@@ -146,15 +145,15 @@ class GlassCard extends StatelessWidget {
     //      konveks chuqurlik; light: tekis glassFill) + tint (dark: forest
     //      jilo).
     Widget surface = DecoratedBox(
-      decoration: isDark
-          ? BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [AppColors.glassFillTop, AppColors.glassFillBottom],
-              ),
-            )
-          : BoxDecoration(color: AppColors.glassFill),
+      // Yo'naltirilgan gradient — tepa yorug', past salqin-chuqur = KONVEKS
+      // chuqurlik. Endi light'da ham (avval tekis edi → tekis ko'rinardi).
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [AppColors.glassFillTop, AppColors.glassFillBottom],
+        ),
+      ),
       child: DecoratedBox(
         decoration: BoxDecoration(
           color: isDark ? AppColors.glassTint : Colors.transparent,

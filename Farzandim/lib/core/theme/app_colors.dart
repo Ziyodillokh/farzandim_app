@@ -29,10 +29,10 @@ class AppColors {
 
   /// Gradient fon — yuqori rang #2C5364 (yorug' petrol-teal, yog'duni
   /// ushlaydi).
-  static Color get backgroundTop => _c(0xFF2C5364, 0xFFEFF1F5);
+  static Color get backgroundTop => _c(0xFF2C5364, 0xFFF2F4F8);
 
   /// Gradient fon — pastki rang #0F2027 (chuqur teal pol).
-  static Color get backgroundBottom => _c(0xFF0F2027, 0xFFE3E7EE);
+  static Color get backgroundBottom => _c(0xFF0F2027, 0xFFDCE1EB);
 
   /// Karta, modal, dialog foni (solid) va GlassCard blur'siz fallback asosi.
   /// Dark: mid-teal #203A43 (gradientning o'rta tonni) — fondan yorug'roq.
@@ -112,17 +112,17 @@ class AppColors {
   static Color get glassFill => _c(0x24FFFFFF, 0xF2FBFCFE);
 
   /// Fill gradient tepasi (yorug'roq, frost). Faqat dark.
-  static Color get glassFillTop => _c(0x30FFFFFF, 0xF2FDFDFF);
+  static Color get glassFillTop => _c(0x30FFFFFF, 0xFFFCFDFF);
 
   /// Fill gradient pasti (to'qroq — konveks chuqurlik beradi). Dark.
-  static Color get glassFillBottom => _c(0x17FFFFFF, 0xF2F5F7FB);
+  static Color get glassFillBottom => _c(0x17FFFFFF, 0xFFEDF1F8);
 
   /// Specular tepa chizig'i (~1.5px) — yuqoridan tushgan yorug'lik
   /// effekti. Faqat dark.
-  static Color get glassTopHighlight => _c(0x99CFEFEA, 0x00000000);
+  static Color get glassTopHighlight => _c(0x99CFEFEA, 0x73FFFFFF);
 
   /// Shisha chekka — yorqin "glowing" rim.
-  static Color get glassRim => _c(0x4DFFFFFF, 0xE6FFFFFF);
+  static Color get glassRim => _c(0x4DFFFFFF, 0x12223648);
 
   /// Shisha pastki chekka — nozik (asimmetrik border zaxirasi).
   static Color get glassRimBottom => _c(0x1AFFFFFF, 0x66FFFFFF);
@@ -142,16 +142,16 @@ class AppColors {
   // ham toza shisha doira. 6 ta BackdropFilter'dan qochish uchun shunday.
 
   /// Tile tanasi — yuqori (juda nozik frost, fon ko'rinadi). Dark/light.
-  static Color get qaTileFillTop => _c(0x14FFFFFF, 0xF2FBFCFE);
+  static Color get qaTileFillTop => _c(0x14FFFFFF, 0xFFFCFDFF);
 
   /// Tile tanasi — past (deyarli shaffof → konveks chuqurlik).
-  static Color get qaTileFillBottom => _c(0x08FFFFFF, 0xE6EFF2F8);
+  static Color get qaTileFillBottom => _c(0x08FFFFFF, 0xFFEBEFF7);
 
   /// Tile ichki teal tint (dark) — nozik reflektsiya.
   static Color get qaTileTint => _c(0x142C5364, 0x08235447);
 
   /// Tile rim — yorqin crisp chekka (asosiy ajralish belgisi).
-  static Color get qaTileRim => _c(0x66FFFFFF, 0xD9FFFFFF);
+  static Color get qaTileRim => _c(0x66FFFFFF, 0x12223648);
 
   /// Tile label matni (dark'da yorug', xira emas).
   static Color get qaTileLabel => _c(0xFFF5F8F7, 0xFF0B2B26);

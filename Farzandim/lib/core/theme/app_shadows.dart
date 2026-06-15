@@ -17,17 +17,17 @@ class AppShadows {
           ),
         ]
       : const [
-          // Salqin yumshoq "ko'tarilish" — kulrang fon ustida karta premium
-          // chuqurlik bilan suzadi (sof qora emas, salqin slate tusli).
+          // Qatlamli premium "lift" — salqin slate, manfiy spread (tig'iz,
+          // yumshoq). Sof qora emas.
           BoxShadow(
-            color: Color(0x1A1B2A3A),
-            blurRadius: 24,
+            color: Color(0x1216293C),
+            blurRadius: 22,
             offset: Offset(0, 10),
-            spreadRadius: -6,
+            spreadRadius: -10,
           ),
           BoxShadow(
-            color: Color(0x0D1B2A3A),
-            blurRadius: 6,
+            color: Color(0x0E16293C),
+            blurRadius: 5,
             offset: Offset(0, 2),
             spreadRadius: -2,
           ),
@@ -43,16 +43,24 @@ class AppShadows {
           ),
         ]
       : const [
+          // Modal/FAB — kuchliroq, lekin baribir yumshoq qatlamli.
           BoxShadow(
-            color: Color(0x1F0B2B26),
-            blurRadius: 34,
-            offset: Offset(0, 16),
-            spreadRadius: -4,
+            color: Color(0x2116293C),
+            blurRadius: 48,
+            offset: Offset(0, 26),
+            spreadRadius: -18,
           ),
           BoxShadow(
-            color: Color(0x0F000000),
+            color: Color(0x1616293C),
+            blurRadius: 22,
+            offset: Offset(0, 10),
+            spreadRadius: -8,
+          ),
+          BoxShadow(
+            color: Color(0x12000000),
             blurRadius: 6,
             offset: Offset(0, 2),
+            spreadRadius: -2,
           ),
         ];
 
@@ -98,18 +106,26 @@ class AppShadows {
           ),
         ]
       : [
-          // Premium salqin "floating" — karta fon ustidan yumshoq suzadi.
+          // Premium 3-qatlamli "floating": keng ambient + yo'naltirilgan key
+          // + tig'iz kontakt = realistik chuqurlik (salqin slate, manfiy
+          // spread → yumshoq, tig'iz, "suzayotgan" karta).
           BoxShadow(
-            color: const Color(0xFF1B2A3A).withValues(alpha: 0.12),
-            blurRadius: 30,
-            offset: const Offset(0, 12),
-            spreadRadius: -4,
+            color: const Color(0xFF16293C).withValues(alpha: 0.10),
+            blurRadius: 40,
+            offset: const Offset(0, 22),
+            spreadRadius: -18,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
+            color: const Color(0xFF16293C).withValues(alpha: 0.10),
+            blurRadius: 22,
+            offset: const Offset(0, 12),
+            spreadRadius: -10,
+          ),
+          BoxShadow(
+            color: const Color(0xFF16293C).withValues(alpha: 0.06),
             blurRadius: 6,
-            offset: const Offset(0, 2),
-            spreadRadius: -2,
+            offset: const Offset(0, 3),
+            spreadRadius: -3,
           ),
         ];
 
@@ -132,15 +148,16 @@ class AppShadows {
         ]
       : [
           BoxShadow(
-            color: const Color(0xFF0B2B26).withValues(alpha: 0.12),
-            blurRadius: 20,
+            color: const Color(0xFF16293C).withValues(alpha: 0.12),
+            blurRadius: 18,
             offset: const Offset(0, 8),
-            spreadRadius: -2,
+            spreadRadius: -6,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
-            blurRadius: 6,
+            color: const Color(0xFF16293C).withValues(alpha: 0.07),
+            blurRadius: 5,
             offset: const Offset(0, 2),
+            spreadRadius: -2,
           ),
         ];
 }
