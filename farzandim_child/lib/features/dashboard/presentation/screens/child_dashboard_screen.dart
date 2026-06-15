@@ -44,7 +44,9 @@ class _P {
   final bool dark;
 
   Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF8F9FF);
-  Color get card => dark ? const Color(0xFF213145) : const Color(0xFFE5EEFF);
+  // Glassmorphism — yarim shaffof panel (aurora fonidan rang sizib o'tadi).
+  Color get card => dark ? const Color(0xFF162B45).withValues(alpha: 0.58) : Colors.white.withValues(alpha: 0.74);
+  Color get cardSolid => dark ? const Color(0xFF162B45) : Colors.white;
   Color get cardGradTo => dark ? const Color(0xFF1A2636) : const Color(0xFFDCE9FF);
   Color get text => dark ? const Color(0xFFF8F9FF) : const Color(0xFF0B1C30);
   Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
@@ -59,8 +61,19 @@ class _P {
   Color get blueDeep => dark ? const Color(0xFF0058BE) : const Color(0xFF2170E4);
 
   Color get progTrack => dark ? Colors.white.withValues(alpha: 0.14) : const Color(0xFFD3E4FE);
-  Color get border => dark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFD3E4FE);
-  Color get divider => dark ? Colors.white.withValues(alpha: 0.05) : const Color(0xFFD3E4FE);
+  // Glass border — nozik oq highlight (Stitch: border-white/10..20).
+  Color get border => dark ? Colors.white.withValues(alpha: 0.12) : const Color(0xFF0B1C30).withValues(alpha: 0.06);
+  Color get divider => dark ? Colors.white.withValues(alpha: 0.06) : const Color(0xFFD3E4FE);
+
+  // Glass panel dekoratsiyasi — shaffof fon + oq border + ko'taruvchi soya.
+  BoxDecoration glass({double radius = 14}) => BoxDecoration(
+        color: card,
+        borderRadius: BorderRadius.circular(radius),
+        border: Border.all(color: border, width: 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.30 : 0.05), blurRadius: 22, offset: const Offset(0, 10)),
+        ],
+      );
 }
 
 TextStyle _jak(_P p, {double size = 14, FontWeight weight = FontWeight.w600, Color? color, double? height, double? spacing}) =>
@@ -146,72 +159,95 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen> wit
       );
     }
 
+    final topInset = MediaQuery.paddingOf(context).top;
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
+
     return Scaffold(
       backgroundColor: p.bg,
       extendBody: true,
-      body: SafeArea(
-        bottom: false,
-        child: RefreshIndicator(
-          color: p.green,
-          backgroundColor: p.card,
-          onRefresh: () async {
-            _refreshAnalytics();
-            await Future<void>.delayed(const Duration(milliseconds: 600));
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(20, 8, 20, 130 + MediaQuery.viewPaddingOf(context).bottom),
-            children: [
-              _DashHeader(p: p),
-              UpdateBanner(),
-              const SizedBox(height: 18),
-              _StatsSection(p: p),
-              const SizedBox(height: 26),
-              _VideosSection(p: p),
-              _ScheduleSection(p: p),
-              _FamilySection(p: p),
-              const SizedBox(height: 24),
-              _AdviceCard(p: p),
-              const SizedBox(height: 26),
-              _AudiobookSection(p: p),
-              _AppUsageSection(p: p),
-              const SizedBox(height: 26),
-              _SosCard(p: p),
-              const SizedBox(height: 8),
-            ],
+      body: Stack(
+        children: [
+          // 1. Aurora fon — glass panellardan rang sizib o'tadi.
+          Positioned.fill(child: _Aurora(p: p)),
+          // 2. Skroll kontent (glass header ostidan o'tadi).
+          Positioned.fill(
+            child: RefreshIndicator(
+              color: p.green,
+              backgroundColor: p.cardSolid,
+              onRefresh: () async {
+                _refreshAnalytics();
+                await Future<void>.delayed(const Duration(milliseconds: 600));
+              },
+              child: ListView(
+                physics: const AlwaysScrollableScrollPhysics(),
+                padding: EdgeInsets.fromLTRB(20, topInset + 88, 20, 130 + bottomInset),
+                children: [
+                  UpdateBanner(),
+                  _StatsSection(p: p),
+                  const SizedBox(height: 26),
+                  _VideosSection(p: p),
+                  _ScheduleSection(p: p),
+                  _FamilySection(p: p),
+                  const SizedBox(height: 24),
+                  _AdviceCard(p: p),
+                  const SizedBox(height: 26),
+                  _AudiobookSection(p: p),
+                  _AppUsageSection(p: p),
+                  const SizedBox(height: 26),
+                  _SosCard(p: p),
+                  const SizedBox(height: 8),
+                ],
+              ),
+            ),
           ),
-        ),
+          // 3. Sticky glass header (blur) — status-bar'dan pastda, qulay masofada.
+          Positioned(top: 0, left: 0, right: 0, child: _GlassHeader(p: p)),
+        ],
       ),
       bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 }
 
-// ─────────────── HEADER ───────────────
+// ─────────────── GLASS HEADER (sticky, blur) ───────────────
 
-class _DashHeader extends ConsumerWidget {
-  const _DashHeader({required this.p});
+class _GlassHeader extends ConsumerWidget {
+  const _GlassHeader({required this.p});
   final _P p;
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
-    return Row(
-      children: [
-        Container(
-          width: 40,
-          height: 40,
-          decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: p.green, width: 2)),
-          clipBehavior: Clip.antiAlias,
-          child: Image.asset('assets/icons/child_logo_icon.png', fit: BoxFit.cover,
-              errorBuilder: (_, __, ___) => Container(color: p.card, child: Icon(Icons.person, color: p.green, size: 20))),
+    final topInset = MediaQuery.paddingOf(context).top;
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
+        child: Container(
+          decoration: BoxDecoration(
+            color: p.bg.withValues(alpha: p.dark ? 0.55 : 0.70),
+            border: Border(bottom: BorderSide(color: p.border, width: 1)),
+          ),
+          // status-bar + 22px qulay masofa (avval 8px edi — juda tepada turardi).
+          padding: EdgeInsets.fromLTRB(20, topInset + 22, 20, 14),
+          child: Row(
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: p.green, width: 2)),
+                clipBehavior: Clip.antiAlias,
+                child: Image.asset('assets/icons/child_logo_icon.png', fit: BoxFit.cover,
+                    errorBuilder: (_, __, ___) => Container(color: p.cardSolid, child: Icon(Icons.person, color: p.green, size: 20))),
+              ),
+              const SizedBox(width: 10),
+              Text('Parvoz', style: _jak(p, size: 24, weight: FontWeight.w700, color: p.green, spacing: -0.4)),
+              const Spacer(),
+              _IconBtn(p: p, icon: Icons.notifications_outlined, badge: unread, onTap: () => context.push('/notifications')),
+              const SizedBox(width: 10),
+              _IconBtn(p: p, icon: Icons.settings_outlined, onTap: () => context.push('/settings')),
+            ],
+          ),
         ),
-        const SizedBox(width: 10),
-        Text('Parvoz', style: _jak(p, size: 24, weight: FontWeight.w700, color: p.green, spacing: -0.4)),
-        const Spacer(),
-        _IconBtn(p: p, icon: Icons.notifications_outlined, badge: unread, onTap: () => context.push('/notifications')),
-        const SizedBox(width: 10),
-        _IconBtn(p: p, icon: Icons.settings_outlined, onTap: () => context.push('/settings')),
-      ],
+      ),
     );
   }
 }
@@ -234,7 +270,7 @@ class _IconBtn extends StatelessWidget {
           Container(
             width: 40,
             height: 40,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: p.card),
+            decoration: BoxDecoration(shape: BoxShape.circle, color: p.card, border: Border.all(color: p.border, width: 1)),
             child: Icon(icon, color: p.variant, size: 22),
           ),
           if (badge > 0)
@@ -348,8 +384,16 @@ class _StatCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
       decoration: BoxDecoration(
         color: p.card,
-        borderRadius: BorderRadius.circular(12),
-        border: Border(bottom: BorderSide(color: accent.withValues(alpha: 0.35), width: 2)),
+        borderRadius: BorderRadius.circular(14),
+        border: Border(
+          top: BorderSide(color: p.border, width: 1),
+          left: BorderSide(color: p.border, width: 1),
+          right: BorderSide(color: p.border, width: 1),
+          bottom: BorderSide(color: accent.withValues(alpha: 0.55), width: 2),
+        ),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: p.dark ? 0.30 : 0.05), blurRadius: 22, offset: const Offset(0, 10)),
+        ],
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -403,7 +447,7 @@ class _VideoCard extends StatelessWidget {
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
         width: 240,
-        decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: p.border, width: 1)),
+        decoration: p.glass(radius: 14),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -469,11 +513,7 @@ class _ScheduleSection extends ConsumerWidget {
           onTap: () => context.push('/schedules'),
           child: Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              gradient: LinearGradient(begin: Alignment.topLeft, end: Alignment.bottomRight, colors: [p.card, p.cardGradTo]),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: p.border, width: 1),
-            ),
+            decoration: p.glass(radius: 14),
             child: Row(
               children: [
                 Container(
@@ -529,7 +569,7 @@ class _FamilySection extends ConsumerWidget {
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: p.border, width: 1)),
+          decoration: p.glass(radius: 14),
           child: Row(
             children: [
               Container(
@@ -581,11 +621,7 @@ class _AdviceCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.orange.withValues(alpha: p.dark ? 0.10 : 0.08),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: p.orange.withValues(alpha: 0.30), width: 1),
-      ),
+      decoration: p.glass(radius: 14),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -635,7 +671,7 @@ class _AudiobookSection extends ConsumerWidget {
           },
           child: Container(
             padding: const EdgeInsets.all(14),
-            decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: p.border, width: 1)),
+            decoration: p.glass(radius: 14),
             child: Row(
               children: [
                 ClipRRect(
@@ -756,8 +792,8 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
   Widget build(BuildContext context) {
     final p = widget.p;
     final dark = p.dark;
-    // Stitch night — aniq ranglar; light — yumshoq qizil.
-    final cardBg = dark ? const Color(0xFF310002) : const Color(0xFFFFDAD6);
+    // Stitch glass — yarim shaffof qizil + oq border.
+    final cardBg = (dark ? const Color(0xFF310002) : const Color(0xFFFFDAD6)).withValues(alpha: dark ? 0.72 : 0.90);
     final glow = dark ? const Color(0xFF93000A) : const Color(0xFFFF897D);
     final accent = dark ? const Color(0xFFFFB4AB) : const Color(0xFF93000A);
 
@@ -766,7 +802,10 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
       decoration: BoxDecoration(
         color: cardBg,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: accent.withValues(alpha: 0.20), width: 1),
+        border: Border.all(color: Colors.white.withValues(alpha: dark ? 0.12 : 0.06), width: 1),
+        boxShadow: [
+          BoxShadow(color: Colors.black.withValues(alpha: dark ? 0.32 : 0.06), blurRadius: 22, offset: const Offset(0, 10)),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Stack(
@@ -938,7 +977,7 @@ class _AppUsageSection extends ConsumerWidget {
         const SizedBox(height: 12),
         Container(
           padding: const EdgeInsets.all(8),
-          decoration: BoxDecoration(color: p.card, borderRadius: BorderRadius.circular(14), border: Border.all(color: p.border, width: 1)),
+          decoration: p.glass(radius: 14),
           child: Column(
             children: [
               const AppUsageList(limit: 5),
@@ -957,6 +996,47 @@ class _AppUsageSection extends ConsumerWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ─────────────── AURORA FON (glass panellar uchun chuqurlik) ───────────────
+
+class _Aurora extends StatelessWidget {
+  const _Aurora({required this.p});
+  final _P p;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = p.dark;
+    return DecoratedBox(
+      decoration: BoxDecoration(color: p.bg),
+      child: Stack(
+        children: [
+          _blob(top: -90, left: -70, size: 320, color: dark ? const Color(0xFF22C55E) : const Color(0xFF6BFF8F), alpha: dark ? 0.16 : 0.10),
+          _blob(top: 280, right: -110, size: 360, color: const Color(0xFF2170E4), alpha: dark ? 0.16 : 0.09),
+          _blob(bottom: 140, left: -90, size: 320, color: dark ? const Color(0xFF1E9E5A) : const Color(0xFF22C55E), alpha: dark ? 0.12 : 0.07),
+        ],
+      ),
+    );
+  }
+
+  Widget _blob({double? top, double? bottom, double? left, double? right, required double size, required Color color, required double alpha}) {
+    return Positioned(
+      top: top,
+      bottom: bottom,
+      left: left,
+      right: right,
+      child: IgnorePointer(
+        child: Container(
+          width: size,
+          height: size,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            gradient: RadialGradient(colors: [color.withValues(alpha: alpha), color.withValues(alpha: 0)]),
+          ),
+        ),
+      ),
     );
   }
 }
