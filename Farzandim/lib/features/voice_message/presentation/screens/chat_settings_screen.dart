@@ -9,6 +9,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/chat_wallpaper_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -41,9 +42,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       await ref.read(chatWallpaperProvider.notifier).setImage(dest);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('voiceChat.mediaSendError'.tr())),
-        );
+        AppToast.error(context, 'voiceChat.mediaSendError'.tr());
       }
     } finally {
       if (mounted) setState(() => _picking = false);

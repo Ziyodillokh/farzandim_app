@@ -9,6 +9,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/otp_input.dart';
@@ -194,13 +195,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       );
       if (!mounted) return;
       _startResendTimer();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('auth.signUp.resentSnack'.tr()),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surface,
-        ),
-      );
+      AppToast.info(context, 'auth.signUp.resentSnack'.tr());
     } on DioException catch (e) {
       if (!mounted) return;
       setState(

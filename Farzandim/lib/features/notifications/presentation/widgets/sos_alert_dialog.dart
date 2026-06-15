@@ -6,6 +6,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/secondary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -64,24 +65,14 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
     Navigator.of(context).pop();
 
     if (phone == null || phone.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('notifications.sos.callNoPhone'.tr()),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      AppToast.warning(context, 'notifications.sos.callNoPhone'.tr());
       return;
     }
 
     final uri = Uri(scheme: 'tel', path: phone);
     final launched = await launchUrl(uri);
     if (!launched && mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('notifications.sos.callFailed'.tr()),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppToast.error(context, 'notifications.sos.callFailed'.tr());
     }
   }
 

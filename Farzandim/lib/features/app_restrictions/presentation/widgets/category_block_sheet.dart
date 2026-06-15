@@ -11,6 +11,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -73,15 +74,7 @@ class _CategoryBlockSheetState extends ConsumerState<CategoryBlockSheet> {
       if (mounted) setState(() => _categories = updated);
     } catch (e) {
       if (mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text('$e'),
-              backgroundColor: AppColors.error,
-              behavior: SnackBarBehavior.floating,
-            ),
-          );
+        AppToast.error(context, '$e');
       }
     } finally {
       if (mounted) setState(() => _busy.remove(cat.category));

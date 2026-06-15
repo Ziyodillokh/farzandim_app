@@ -116,20 +116,7 @@ class _CallButton extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: () {
-          ScaffoldMessenger.of(context)
-            ..hideCurrentSnackBar()
-            ..showSnackBar(
-              SnackBar(
-                content: Text(
-                  'settings.comingSoon'.tr(),
-                  style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.textPrimary,
-                  ),
-                ),
-                behavior: SnackBarBehavior.floating,
-                backgroundColor: AppColors.surfaceVariant,
-              ),
-            );
+          AppToast.info(context, 'settings.comingSoon'.tr());
         },
         child: SizedBox(
           width: 44,

@@ -11,6 +11,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/photo_request/presentation/providers/photo_request_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -64,19 +65,9 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
 
     if (ok) {
       Navigator.of(context).pop();
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('photoRequests.sentSnack'.tr()),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppToast.success(context, 'photoRequests.sentSnack'.tr());
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('photoRequests.sendErrorSnack'.tr()),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppToast.error(context, 'photoRequests.sendErrorSnack'.tr());
     }
   }
 

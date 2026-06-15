@@ -13,6 +13,7 @@ import 'package:farzandim/features/app_restrictions/presentation/widgets/categor
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -242,15 +243,11 @@ class _AppRestrictionsScreenState
       bg = AppColors.error;
     }
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: bg,
-        ),
-      );
+    if (bg == AppColors.error) {
+      AppToast.error(context, msg);
+    } else {
+      AppToast.success(context, msg);
+    }
   }
 }
 

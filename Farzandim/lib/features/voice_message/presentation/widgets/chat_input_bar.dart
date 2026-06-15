@@ -4,6 +4,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
@@ -139,15 +140,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     final hint = _mode == ChatRecordMode.video
         ? 'voiceChat.videoMode'.tr()
         : 'voiceChat.voiceMode'.tr();
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(hint),
-          duration: const Duration(milliseconds: 1400),
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
+    AppToast.info(context, hint);
   }
 
   void _openAttachSheet() {

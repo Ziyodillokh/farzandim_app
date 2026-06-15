@@ -7,6 +7,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/sos/data/repositories/backend_sos_repository.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -236,12 +237,7 @@ class _AlertsList extends ConsumerWidget {
     final lat = (alert['latitude'] as num?)?.toDouble();
     final lng = (alert['longitude'] as num?)?.toDouble();
     if (lat == null || lng == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('sos.noLocationSnack'.tr()),
-          backgroundColor: AppColors.warning,
-        ),
-      );
+      AppToast.warning(context, 'sos.noLocationSnack'.tr());
       return;
     }
     showDialog<void>(
@@ -305,19 +301,9 @@ class _AlertsList extends ConsumerWidget {
     if (!context.mounted) return;
     if (ok) {
       ref.invalidate(sosAlertsByStatusProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('sos.resolvedSnack'.tr()),
-          backgroundColor: AppColors.success,
-        ),
-      );
+      AppToast.success(context, 'sos.resolvedSnack'.tr());
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('sos.resolveErrorSnack'.tr()),
-          backgroundColor: AppColors.error,
-        ),
-      );
+      AppToast.error(context, 'sos.resolveErrorSnack'.tr());
     }
   }
 }

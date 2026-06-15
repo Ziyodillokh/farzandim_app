@@ -8,6 +8,7 @@ import 'package:farzandim/features/voice_message/data/models/voice_message.dart'
 import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -152,13 +153,7 @@ class VoiceChatBubble extends ConsumerWidget {
                   }
                 } catch (_) {
                   if (context.mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('voiceChat.loadFailedSnack'.tr()),
-                        backgroundColor: Colors.red,
-                        duration: const Duration(seconds: 2),
-                      ),
-                    );
+                    AppToast.error(context, 'voiceChat.loadFailedSnack'.tr());
                   }
                 }
               },

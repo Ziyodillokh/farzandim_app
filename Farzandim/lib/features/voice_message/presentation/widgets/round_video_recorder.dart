@@ -29,6 +29,7 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -233,9 +234,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           await File(xfile.path).delete();
         } catch (_) {}
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('voiceChat.tooShortSnack'.tr())),
-        );
+        AppToast.info(context, 'voiceChat.tooShortSnack'.tr());
         Navigator.of(context).pop();
         return;
       }

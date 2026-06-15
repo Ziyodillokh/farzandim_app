@@ -8,6 +8,7 @@ import 'package:farzandim/features/app_restrictions/presentation/widgets/app_ico
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_tile_skeleton.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -62,11 +63,7 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
       // jim yutilmaydi (EH-07). Quyidagi invalidate haqiqiy holatni qaytaradi
       // (optimistik toggle orqaga "sakraydi").
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('appPermissions.saveFailed'.tr()),
-          ),
-        );
+        AppToast.error(context, 'appPermissions.saveFailed'.tr());
       }
     }
     ref.invalidate(

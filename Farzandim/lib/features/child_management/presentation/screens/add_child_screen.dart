@@ -4,12 +4,12 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/custom_dropdown.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:farzandim/shared/widgets/gender_selector.dart';
@@ -198,14 +198,10 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   }
 
   void _showError(String? error) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          'childManagement.addEdit.errorPrefix'.tr(
-            namedArgs: {'error': error ?? ''},
-          ),
-        ),
-        backgroundColor: AppColors.error,
+    AppToast.error(
+      context,
+      'childManagement.addEdit.errorPrefix'.tr(
+        namedArgs: {'error': error ?? ''},
       ),
     );
   }

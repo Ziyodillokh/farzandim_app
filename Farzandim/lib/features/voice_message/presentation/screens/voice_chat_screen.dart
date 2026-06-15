@@ -20,6 +20,7 @@ import 'package:farzandim/features/voice_message/presentation/widgets/chat_input
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_bubble.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/round_video_recorder.dart';
 import 'package:farzandim/features/voice_message/presentation/widgets/voice_chat_bubble.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/material.dart';
@@ -181,9 +182,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final micStatus = await Permission.microphone.request();
     if (!micStatus.isGranted) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('voiceChat.micPermissionSnack'.tr())),
-      );
+      AppToast.info(context, 'voiceChat.micPermissionSnack'.tr());
       return;
     }
 
@@ -263,12 +262,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
     // Min davomiylikdan kam — fayl o'chirib snackbar.
     if (elapsed < _minDurationMs) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('voiceChat.tooShortSnack'.tr()),
-          duration: const Duration(seconds: 2),
-        ),
-      );
+      AppToast.info(context, 'voiceChat.tooShortSnack'.tr());
       try {
         await File(filePath).delete();
       } catch (_) {}
@@ -308,13 +302,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       });
     } else {
       final state = ref.read(voiceUploadProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            state.errorMessage ?? 'voiceChat.sendErrorDefault'.tr(),
-          ),
-          backgroundColor: Colors.red,
-        ),
+      AppToast.error(
+        context,
+        state.errorMessage ?? 'voiceChat.sendErrorDefault'.tr(),
       );
     }
   }
@@ -406,13 +396,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
       final state = ref.read(videoUploadProvider);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            state.errorMessage ?? 'voiceChat.sendErrorDefault'.tr(),
-          ),
-          backgroundColor: Colors.red,
-        ),
+      AppToast.error(
+        context,
+        state.errorMessage ?? 'voiceChat.sendErrorDefault'.tr(),
       );
     }
   }
@@ -507,9 +493,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   void _showError(String msg) {
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(msg), backgroundColor: Colors.red),
-    );
+    AppToast.error(context, msg);
   }
 
   @override

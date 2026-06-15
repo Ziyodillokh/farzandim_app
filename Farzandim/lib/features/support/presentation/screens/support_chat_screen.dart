@@ -21,6 +21,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/support/data/models/support_message.dart';
 import 'package:farzandim/features/support/data/repositories/support_attachment_repository.dart';
 import 'package:farzandim/features/support/presentation/providers/support_chat_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart';
@@ -374,18 +375,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
 
   void _attachError() {
     if (!mounted) return;
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(
-            'support.attachError'.tr(),
-            style: AppTextStyles.bodyS.copyWith(color: AppColors.textPrimary),
-          ),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor: AppColors.surfaceVariant,
-        ),
-      );
+    AppToast.error(context, 'support.attachError'.tr());
   }
 }
 

@@ -26,6 +26,7 @@ import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -87,14 +88,10 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       if (!mounted) return;
       // Ro'yxat yangilansin (isConnected=true keladi).
       ref.read(childrenRefreshTickProvider.notifier).state++;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'repairQr.reconnectedSnack'
-                .tr(namedArgs: {'name': widget.childName}),
-          ),
-          backgroundColor: AppColors.success,
-        ),
+      AppToast.success(
+        context,
+        'repairQr.reconnectedSnack'
+            .tr(namedArgs: {'name': widget.childName}),
       );
       Navigator.of(context).pop(true);
     });
@@ -291,14 +288,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
             ClipboardData(text: 'farzandim:repair:$_token'),
           );
           if (!mounted) return;
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('repairQr.copiedSnack'.tr()),
-              backgroundColor: AppColors.primary,
-              behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 2),
-            ),
-          );
+          AppToast.success(context, 'repairQr.copiedSnack'.tr());
         },
         icon: const Icon(Icons.content_copy_rounded, size: 18),
         label: Text('repairQr.copyButton'.tr()),

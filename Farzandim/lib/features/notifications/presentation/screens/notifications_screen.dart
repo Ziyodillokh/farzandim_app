@@ -11,6 +11,7 @@ import 'package:farzandim/features/notifications/presentation/widgets/notificati
 import 'package:farzandim/features/notifications/presentation/widgets/sos_alert_dialog.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/unlock_decision_sheet.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -234,16 +235,11 @@ class _NotificationsList extends ConsumerWidget {
         : decision.approve
             ? '${decision.minutes} daqiqa ruxsat berildi.'
             : "So'rov rad etildi.";
-    ScaffoldMessenger.of(context)
-      ..hideCurrentSnackBar()
-      ..showSnackBar(
-        SnackBar(
-          content: Text(msg),
-          behavior: SnackBarBehavior.floating,
-          backgroundColor:
-              ok ? AppColors.surfaceVariant : AppColors.error,
-        ),
-      );
+    if (ok) {
+      AppToast.success(context, msg);
+    } else {
+      AppToast.error(context, msg);
+    }
   }
 
   // ─── "Rad et" — unlock so'rovini tezda rad etish (sheet'siz) ───
@@ -262,15 +258,7 @@ class _NotificationsList extends ConsumerWidget {
     }
     ref.read(notificationsProvider.notifier).deleteNotification(n.id);
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('notifications.rejected'.tr()),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceVariant,
-          ),
-        );
+      AppToast.info(context, 'notifications.rejected'.tr());
     }
   }
 
@@ -299,15 +287,7 @@ class _NotificationsList extends ConsumerWidget {
     }
     ref.read(notificationsProvider.notifier).deleteNotification(n.id);
     if (context.mounted) {
-      ScaffoldMessenger.of(context)
-        ..hideCurrentSnackBar()
-        ..showSnackBar(
-          SnackBar(
-            content: Text('notifications.rejected'.tr()),
-            behavior: SnackBarBehavior.floating,
-            backgroundColor: AppColors.surfaceVariant,
-          ),
-        );
+      AppToast.info(context, 'notifications.rejected'.tr());
     }
   }
 
@@ -329,26 +309,14 @@ class _NotificationsList extends ConsumerWidget {
           );
       ref.read(notificationsProvider.notifier).markAsRead(n.id);
       if (context.mounted) {
-        ScaffoldMessenger.of(context)
-          ..hideCurrentSnackBar()
-          ..showSnackBar(
-            SnackBar(
-              content: Text(
-                'notifications.blockedSnack'.tr(namedArgs: {'app': appName}),
-              ),
-              behavior: SnackBarBehavior.floating,
-              backgroundColor: AppColors.surfaceVariant,
-            ),
-          );
+        AppToast.info(
+          context,
+          'notifications.blockedSnack'.tr(namedArgs: {'app': appName}),
+        );
       }
     } catch (_) {
       if (context.mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('notifications.blockError'.tr()),
-            backgroundColor: AppColors.error,
-          ),
-        );
+        AppToast.error(context, 'notifications.blockError'.tr());
       }
     }
   }

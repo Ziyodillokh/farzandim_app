@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_user_repository.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -53,21 +54,15 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       await ref.read(backendUserRepositoryProvider).deleteAccount();
       await ref.read(backendAuthProvider.notifier).logout();
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('deleteAccount.deletedSnack'.tr())),
-      );
+      AppToast.success(context, 'deleteAccount.deletedSnack'.tr());
       context.go(AppRoutes.welcome);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isDeleting = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'deleteAccount.unexpectedError'.tr(
-              namedArgs: {'error': '$e'},
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppToast.error(
+        context,
+        'deleteAccount.unexpectedError'.tr(
+          namedArgs: {'error': '$e'},
         ),
       );
     }

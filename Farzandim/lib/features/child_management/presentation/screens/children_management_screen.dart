@@ -6,6 +6,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/child_management/presentation/widgets/repair_qr_dialog.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
@@ -434,24 +435,17 @@ class _ActionMenu extends ConsumerWidget {
     if (!context.mounted) return;
 
     if (result.isSuccess) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'childManagement.list.deletedSnack'.tr(
-              namedArgs: {'name': child.name},
-            ),
-          ),
+      AppToast.success(
+        context,
+        'childManagement.list.deletedSnack'.tr(
+          namedArgs: {'name': child.name},
         ),
       );
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'childManagement.list.errorPrefix'.tr(
-              namedArgs: {'error': result.error ?? ''},
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppToast.error(
+        context,
+        'childManagement.list.errorPrefix'.tr(
+          namedArgs: {'error': result.error ?? ''},
         ),
       );
     }

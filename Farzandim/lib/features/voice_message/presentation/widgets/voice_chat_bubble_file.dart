@@ -64,23 +64,11 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
       }
       final result = await OpenFilex.open(savePath);
       if (result.type != ResultType.done && mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('voiceChat.fileOpenFailed'.tr()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        AppToast.error(context, 'voiceChat.fileOpenFailed'.tr());
       }
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('voiceChat.fileOpenFailed'.tr()),
-            backgroundColor: Colors.red,
-            duration: const Duration(seconds: 2),
-          ),
-        );
+        AppToast.error(context, 'voiceChat.fileOpenFailed'.tr());
       }
     } finally {
       if (mounted) setState(() => _busy = false);

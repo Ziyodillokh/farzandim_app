@@ -17,6 +17,7 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/photo_request/data/repositories/backend_photo_request_repository.dart';
 import 'package:farzandim/features/photo_request/presentation/providers/photo_request_provider.dart';
 import 'package:farzandim/features/photo_request/presentation/widgets/photo_request_dialog.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -341,16 +342,11 @@ class _RequestTile extends ConsumerWidget {
         .read(photoRequestActionsProvider.notifier)
         .deleteRequest(childId: childId, requestId: requestId);
     if (!context.mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? 'photoRequests.deletedSnack'.tr()
-              : 'photoRequests.deleteErrorSnack'.tr(),
-        ),
-        backgroundColor: ok ? AppColors.success : AppColors.error,
-      ),
-    );
+    if (ok) {
+      AppToast.success(context, 'photoRequests.deletedSnack'.tr());
+    } else {
+      AppToast.error(context, 'photoRequests.deleteErrorSnack'.tr());
+    }
   }
 
   String _formatTime(DateTime dt) {

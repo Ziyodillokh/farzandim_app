@@ -6,6 +6,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
@@ -129,14 +130,10 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
       // foydalanuvchiga modal'da yangi kodni ko'rsatamiz (copy + 24h info).
       await _showNewFamilyCodeDialog(result.data!, childName);
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text(
-            'childManagement.familyCode.errorPrefix'.tr(
-              namedArgs: {'error': result.error ?? ''},
-            ),
-          ),
-          backgroundColor: AppColors.error,
+      AppToast.error(
+        context,
+        'childManagement.familyCode.errorPrefix'.tr(
+          namedArgs: {'error': result.error ?? ''},
         ),
       );
     }
@@ -306,13 +303,9 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             onPressed: () async {
               await Clipboard.setData(ClipboardData(text: code));
               if (!ctx.mounted) return;
-              ScaffoldMessenger.of(ctx).showSnackBar(
-                SnackBar(
-                  content: Text(
-                    'childManagement.familyCode.newCodeDialog.copiedSnack'.tr(),
-                  ),
-                  duration: const Duration(seconds: 1),
-                ),
+              AppToast.success(
+                ctx,
+                'childManagement.familyCode.newCodeDialog.copiedSnack'.tr(),
               );
             },
             icon: Icon(Icons.copy, color: AppColors.accent, size: 18),

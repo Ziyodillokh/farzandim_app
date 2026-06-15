@@ -423,19 +423,8 @@ Future<void> _openSupportFile(
     await OpenFilex.open(path);
     return;
   }
-  final messenger = ScaffoldMessenger.of(context);
-  void unavailable() => messenger
-    ..hideCurrentSnackBar()
-    ..showSnackBar(
-      SnackBar(
-        content: Text(
-          'support.fileUnavailable'.tr(),
-          style: AppTextStyles.bodyS.copyWith(color: AppColors.textPrimary),
-        ),
-        behavior: SnackBarBehavior.floating,
-        backgroundColor: AppColors.surfaceVariant,
-      ),
-    );
+  void unavailable() =>
+      AppToast.error(context, 'support.fileUnavailable'.tr());
   if (message.hasRemote && !kIsWeb) {
     try {
       final local = await ref

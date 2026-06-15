@@ -13,6 +13,7 @@ import 'package:farzandim/features/profile/presentation/providers/profile_provid
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -192,9 +193,7 @@ class SettingsScreen extends ConsumerWidget {
   // qurilma ro'yxatdan o'tmagan; sent>0 lekin push kelmasa bildirishnoma
   // ruxsati muammosi; failed>0 bo'lsa server tomonda Firebase xatosi.
   Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text('settings.pushTest.sending'.tr())));
+    AppToast.info(context, 'settings.pushTest.sending'.tr());
 
     final res = await ref.read(fcmServiceProvider).sendTestPush();
     if (!context.mounted) return;

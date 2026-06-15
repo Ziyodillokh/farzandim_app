@@ -13,6 +13,7 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/pair_requests/data/models/pair_request.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -145,16 +146,11 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
         .approve(childId: widget.childId, requestId: widget.request.id);
     if (!mounted) return;
     ref.invalidate(pendingPairRequestsProvider(widget.childId));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? 'pairRequests.approvedSnack'.tr()
-              : 'pairRequests.approveErrorSnack'.tr(),
-        ),
-        backgroundColor: ok ? AppColors.success : AppColors.error,
-      ),
-    );
+    if (ok) {
+      AppToast.success(context, 'pairRequests.approvedSnack'.tr());
+    } else {
+      AppToast.error(context, 'pairRequests.approveErrorSnack'.tr());
+    }
     if (mounted) setState(() => _busy = false);
   }
 
@@ -201,16 +197,11 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
         .reject(childId: widget.childId, requestId: widget.request.id);
     if (!mounted) return;
     ref.invalidate(pendingPairRequestsProvider(widget.childId));
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text(
-          ok
-              ? 'pairRequests.rejectedSnack'.tr()
-              : 'pairRequests.rejectErrorSnack'.tr(),
-        ),
-        backgroundColor: ok ? AppColors.warning : AppColors.error,
-      ),
-    );
+    if (ok) {
+      AppToast.warning(context, 'pairRequests.rejectedSnack'.tr());
+    } else {
+      AppToast.error(context, 'pairRequests.rejectErrorSnack'.tr());
+    }
     if (mounted) setState(() => _busy = false);
   }
 
