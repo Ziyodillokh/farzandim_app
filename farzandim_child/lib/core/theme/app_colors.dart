@@ -173,6 +173,38 @@ class AppColors {
   static const Color catLime = Color(0xFFD0FF6E);
   static const Color catLimeBright = Color(0xFFC5F562);
 
+  // ============ PARVOZ REDESIGN (Night) — Stitch "Parvoz UI" ============
+  // Kutubxona va keyingi sahifalar uchun yangi NIGHT palitra (Stitch
+  // "Parvoz UI Redesign" loyihasi). Faqat yangi (redizayn) sahifalarda
+  // ishlatiladi — mavjud ekranlarga tegmaydi (bosqichma-bosqich migratsiya).
+  // Light mode keyin alohida qo'shiladi.
+  /// Chuqur navy fon (sahifa orqa foni).
+  static const Color parvozBg = Color(0xFF0B1C30);
+
+  /// Kartalar, tugmalar, segment, header tugmalari foni.
+  static const Color parvozSurface = Color(0xFF213145);
+
+  /// Yengilroq surface — chip/placeholder/rasm orqa foni.
+  static const Color parvozSurfaceHigh = Color(0xFF2A3F58);
+
+  /// Yashil aksent — logo, faol tab, CTA tugma, ko'rishlar soni.
+  static const Color parvozGreen = Color(0xFF6BFF8F);
+
+  /// Yashil ustidagi matn/ikon (to'q).
+  static const Color parvozOnGreen = Color(0xFF03260F);
+
+  /// Ko'k aksent — faol kategoriya chip / faol nav.
+  static const Color parvozBlue = Color(0xFF2170E4);
+
+  /// Asosiy matn (deyarli oq).
+  static const Color parvozText = Color(0xFFF1F6FF);
+
+  /// Ikkilamchi matn (tavsif, kategoriya — muted blue-gray).
+  static const Color parvozTextDim = Color(0xFF93A6C0);
+
+  /// Nozik chegara (kartalar, nofaol chip).
+  static const Color parvozBorder = Color(0xFF2E4763);
+
   // ============ LEGACY ALIASES (Sprint 4.4 backwards compat) ============
   /// Sprint 4.4'da `primaryDark` ishlatilgan — yangi `primaryHover` alias.
   static const Color primaryDark = primaryHover;

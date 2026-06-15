@@ -1,21 +1,21 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChildBottomNavigation — 4 ta tab + ustida MiniAudioPlayer
+// ChildBottomNavigation — floating pill nav (Parvoz UI Redesign — Night)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Tab'lar:
-//   📊 bar_chart       — /dashboard      (Diagnostika + ilova foydalanish)
-//   📺 ondemand_video  — /videos         (Videolar feed)
-//   🎧 headphones      — /audiobooks     (Audiokitoblar)
-//   🏆 emoji_events    — /contests       (Konkurslar)
-//   👤 person          — /profile        (Gamifikatsiya: Level/XP/DON)
-//   🔔 notifications   — /notifications  (Bildirishnoma + badge)
+// Google Stitch "Parvoz UI Redesign" dizayniga moslangan SUZUVCHI pill
+// navigatsiya: yon va pastdan bo'shliq, to'liq yumaloq (rounded-full),
+// navy surface + nozik chegara + yumshoq soya. Faol element — KO'K
+// (#2170E4) doira ichida oq to'ldirilgan ikon (Stitch active state).
 //
-// Eslatma: /dashboard ekrani Diagnostika ma'lumotlarini o'z ichiga oladi —
-// /analytics ekrani /dashboard'ga redirect qilinadi (ikkalasi bir xil page).
+// Tab'lar (chap→o'ng):
+//   🏠 home          — /dashboard   (Bosh sahifa)
+//   📚 video_library — /content     (Kutubxona — videolar + audiokitoblar)
+//   ✈️ send          — /voice-chat  (Suhbat)
+//   🏆 leaderboard   — /contests    (Reyting / Konkurslar)
+//   👤 person        — /profile     (Profil)
 //
-// MiniAudioPlayer nav row ustiga qo'yiladi — audio o'ynayotgan paytda
-// hamma ekranlarda ko'rinishi uchun (Spotify uslubi). Audio yo'q
-// bo'lsa SizedBox.shrink — joy band qilmaydi.
+// MiniAudioPlayer pill ustida suzadi (audio o'ynayotganda). Faqat NIGHT —
+// ranglar AppColors.parvoz* (light mode keyin alohida).
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -30,96 +30,83 @@ class ChildBottomNavigation extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // Content library disabled bo'lsa bottom nav butunlay yashirinadi.
-    // Bildirishnoma badge endi yuqori header'da ko'rinadi.
     if (!kEnableContentLibrary) {
       return const SizedBox.shrink();
     }
 
     final location = GoRouterState.of(context).matchedLocation;
+    final bottomInset = MediaQuery.of(context).padding.bottom;
+
+    void go(String path) {
+      if (location != path) {
+        if (path == '/dashboard') {
+          context.go(path);
+        } else {
+          context.push(path);
+        }
+      }
+    }
 
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
         const MiniAudioPlayer(),
-        Container(
-          decoration: BoxDecoration(
-            color: context.adaptive.bgSurface,
-            border: Border(
-              top: BorderSide(color: context.adaptive.border),
-            ),
-          ),
-          child: SafeArea(
-            top: false,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
-                children: [
-                  _NavItem(
-                    icon: Icons.bar_chart_outlined,
-                    activeIcon: Icons.bar_chart_rounded,
-                    active: location == '/dashboard',
-                    onTap: () {
-                      if (location != '/dashboard') {
-                        context.go('/dashboard');
-                      }
-                    },
-                  ),
-                  // Content hub — videolar + audiokitoblar + kitoblar
-                  // bitta tab ostida birlashtirildi. /content ekranida
-                  // TabBar orqali bo'limlar tanlanadi.
-                  _NavItem(
-                    icon: Icons.video_library_outlined,
-                    activeIcon: Icons.video_library_rounded,
-                    active: location == '/content' ||
-                        location == '/videos' ||
-                        location == '/audiobooks' ||
-                        location == '/books',
-                    onTap: () {
-                      if (location != '/content') {
-                        context.push('/content');
-                      }
-                    },
-                  ),
-                  // Messanger — Telegram uslubidagi qog'oz samolyot
-                  // (Material send), lekin Telegram logosidan farqli — bu
-                  // doira ichida emas, pasdan ko'tarilgan oddiy samolyot.
-                  _NavItem(
-                    icon: Icons.send_outlined,
-                    activeIcon: Icons.send_rounded,
-                    active: location == '/voice-chat',
-                    onTap: () {
-                      if (location != '/voice-chat') {
-                        context.push('/voice-chat');
-                      }
-                    },
-                  ),
-                  // Konkurslar — alohida tab (avvalgi joyiga qaytarildi).
-                  _NavItem(
-                    icon: Icons.emoji_events_outlined,
-                    activeIcon: Icons.emoji_events_rounded,
-                    active: location == '/contests',
-                    onTap: () {
-                      if (location != '/contests') {
-                        context.push('/contests');
-                      }
-                    },
-                  ),
-                  _NavItem(
-                    icon: Icons.person_outlined,
-                    activeIcon: Icons.person_rounded,
-                    active: location == '/profile',
-                    onTap: () {
-                      if (location != '/profile') {
-                        context.push('/profile');
-                      }
-                    },
-                  ),
-                  // Bildirishnoma ikonkasi yuqori header'ga ko'chirildi —
-                  // pastki nav'da takrorlanmaydi.
-                ],
+        Padding(
+          // Suzuvchi: yon 20, pastdan 12 + safe-area (home indikator).
+          padding: EdgeInsets.fromLTRB(20, 0, 20, 12 + bottomInset),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+            decoration: BoxDecoration(
+              color: AppColors.parvozSurface,
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                color: AppColors.parvozBorder.withValues(alpha: 0.6),
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.35),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _NavItem(
+                  icon: Icons.home_outlined,
+                  activeIcon: Icons.home_rounded,
+                  active: location == '/dashboard',
+                  onTap: () => go('/dashboard'),
+                ),
+                _NavItem(
+                  icon: Icons.video_library_outlined,
+                  activeIcon: Icons.video_library_rounded,
+                  active: location == '/content' ||
+                      location == '/videos' ||
+                      location == '/audiobooks' ||
+                      location == '/books',
+                  onTap: () => go('/content'),
+                ),
+                _NavItem(
+                  icon: Icons.send_outlined,
+                  activeIcon: Icons.send_rounded,
+                  active: location == '/voice-chat',
+                  onTap: () => go('/voice-chat'),
+                ),
+                _NavItem(
+                  icon: Icons.leaderboard_outlined,
+                  activeIcon: Icons.leaderboard_rounded,
+                  active: location == '/contests',
+                  onTap: () => go('/contests'),
+                ),
+                _NavItem(
+                  icon: Icons.person_outline_rounded,
+                  activeIcon: Icons.person_rounded,
+                  active: location == '/profile',
+                  onTap: () => go('/profile'),
+                ),
+              ],
             ),
           ),
         ),
@@ -150,34 +137,18 @@ class _NavItem extends StatelessWidget {
       },
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 220),
         curve: Curves.easeOut,
-        width: 64,
-        height: 56,
-        alignment: Alignment.center,
+        padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
-          gradient: active
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [
-                    Color(0x335ECB44),
-                    Color(0x22169E45),
-                  ],
-                )
-              : null,
-          color: active ? null : Colors.transparent,
-          borderRadius: BorderRadius.circular(14),
+          // Faol — to'liq ko'k doira (Stitch secondary-container).
+          color: active ? AppColors.parvozBlue : Colors.transparent,
+          shape: BoxShape.circle,
         ),
-        child: AnimatedScale(
-          duration: const Duration(milliseconds: 200),
-          curve: Curves.easeOutBack,
-          scale: active ? 1.15 : 1.0,
-          child: Icon(
-            active ? (activeIcon ?? icon) : icon,
-            color: active ? AppColors.primary : context.adaptive.textTertiary,
-            size: 28,
-          ),
+        child: Icon(
+          active ? (activeIcon ?? icon) : icon,
+          color: active ? Colors.white : AppColors.parvozTextDim,
+          size: 26,
         ),
       ),
     );
