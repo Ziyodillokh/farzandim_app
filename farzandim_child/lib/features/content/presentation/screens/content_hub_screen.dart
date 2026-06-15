@@ -267,12 +267,12 @@ class _VideosTab extends ConsumerWidget {
             const SizedBox(height: 32),
           ],
           if (recommended.isNotEmpty) ...[
-            const _ParvozSectionTitle('Siz uchun tavsiyalar'),
-            const SizedBox(height: 16),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: _ParvozVideoGrid(videos: recommended),
+            _ParvozSectionHeader(
+              title: 'Siz uchun tavsiyalar',
+              onSeeAll: () => context.push('/videos'),
             ),
+            const SizedBox(height: 16),
+            _ParvozVideoHList(videos: recommended),
             const SizedBox(height: 32),
           ],
           if (topViewed.isNotEmpty) ...[
@@ -514,26 +514,93 @@ class _ParvozHeroCard extends StatelessWidget {
   }
 }
 
-// ─── "Siz uchun tavsiyalar" — 2-ustun grid ────────────────────────────
-class _ParvozVideoGrid extends StatelessWidget {
-  const _ParvozVideoGrid({required this.videos});
+// ─── Section sarlavhasi + "Barchasi" tugmasi ──────────────────────────
+class _ParvozSectionHeader extends StatelessWidget {
+  const _ParvozSectionHeader({required this.title, this.onSeeAll});
+
+  final String title;
+  final VoidCallback? onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozText,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          if (onSeeAll != null)
+            GestureDetector(
+              onTap: onSeeAll,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 7, 10, 7),
+                decoration: BoxDecoration(
+                  color: AppColors.parvozGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.parvozGreen.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Barchasi',
+                      style: TextStyle(
+                        color: AppColors.parvozGreen,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.parvozGreen,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── "Siz uchun tavsiyalar" — bir qatorli gorizontal ro'yxat ──────────
+class _ParvozVideoHList extends StatelessWidget {
+  const _ParvozVideoHList({required this.videos});
 
   final List<VideoModel> videos;
 
   @override
   Widget build(BuildContext context) {
-    return GridView.builder(
-      shrinkWrap: true,
-      physics: const NeverScrollableScrollPhysics(),
-      padding: EdgeInsets.zero,
-      gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-        crossAxisCount: 2,
-        crossAxisSpacing: 16,
-        mainAxisSpacing: 16,
-        mainAxisExtent: 210,
+    return SizedBox(
+      height: 210,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: videos.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (_, i) => SizedBox(
+          width: 160,
+          child: _ParvozGridCard(video: videos[i]),
+        ),
       ),
-      itemCount: videos.length,
-      itemBuilder: (_, i) => _ParvozGridCard(video: videos[i]),
     );
   }
 }
@@ -875,7 +942,10 @@ class _AudiobooksTab extends ConsumerWidget {
             const SizedBox(height: 32),
           ],
           if (recommended.isNotEmpty) ...[
-            const _ParvozSectionTitle('Siz uchun tavsiyalar'),
+            _ParvozSectionHeader(
+              title: 'Siz uchun tavsiyalar',
+              onSeeAll: () => context.push('/audiobooks'),
+            ),
             const SizedBox(height: 16),
             _ParvozAudioHList(books: recommended),
             const SizedBox(height: 32),
