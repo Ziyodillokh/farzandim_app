@@ -696,6 +696,7 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
   late final AnimationController _progress;
   Timer? _holdTimer;
   bool _holding = false;
+  Offset? _downPos;
 
   @override
   void initState() {
@@ -710,23 +711,36 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
     super.dispose();
   }
 
-  // Tasodifan bosishni oldini olish — 3 sekund ushlab turish kerak (mavjud SOS logikasi).
-  void _startHold() {
-    setState(() => _holding = true);
+  // Tasodifan bosishni oldini olish — barmoqni 3 sekund ushlab turish kerak.
+  // Xom Listener (pointer) ishlatamiz: ListView ichida gesture arena tap'ni
+  // scroll'ga yutqazib yubormaydi, shuning uchun hold ishonchli ishlaydi.
+  void _startHold(Offset pos) {
+    if (_holding) return;
+    _downPos = pos;
     HapticFeedback.lightImpact();
     _progress.forward(from: 0);
     _holdTimer?.cancel();
     _holdTimer = Timer(_holdDuration, _send);
+    setState(() => _holding = true);
+  }
+
+  // Barmoq sezilarli siljisa — bu scroll, hold emas → bekor qilamiz.
+  void _onMove(Offset pos) {
+    if (!_holding || _downPos == null) return;
+    if ((pos - _downPos!).distance > 16) _cancelHold();
   }
 
   void _cancelHold() {
     _holdTimer?.cancel();
     _holdTimer = null;
+    _downPos = null;
     _progress.reverse();
     if (mounted) setState(() => _holding = false);
   }
 
   Future<void> _send() async {
+    _holdTimer = null;
+    _downPos = null;
     HapticFeedback.heavyImpact();
     if (mounted) setState(() => _holding = false);
     await ref.read(sosStateProvider.notifier).send();
@@ -778,7 +792,7 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
                 width: 56,
                 height: 56,
                 decoration: BoxDecoration(shape: BoxShape.circle, color: accent.withValues(alpha: 0.20)),
-                child: Icon(Icons.shield_rounded, color: accent, size: 30),
+                child: Icon(Icons.verified_user_rounded, color: accent, size: 30),
               ),
               const SizedBox(height: 12),
               Text('Biz doim yoningizdamiz!',
@@ -792,6 +806,12 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
               ),
               const SizedBox(height: 18),
               _button(dark),
+              if (ref.watch(sosStateProvider).status == SosStatus.idle) ...[
+                const SizedBox(height: 10),
+                Text('Yuborish uchun 3 soniya bosib turing',
+                    textAlign: TextAlign.center,
+                    style: _jak(p, size: 11.5, weight: FontWeight.w500, color: accent.withValues(alpha: 0.65))),
+              ],
             ],
           ),
         ],
@@ -802,7 +822,7 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
   Widget _button(bool dark) {
     final p = widget.p;
     final sos = ref.watch(sosStateProvider);
-    const btnShadow = Color(0xFF93000A);
+    const deepRed = Color(0xFF93000A);
 
     final sending = sos.status == SosStatus.sending;
     final sent = sos.status == SosStatus.sent;
@@ -819,53 +839,60 @@ class _SosCardState extends ConsumerState<_SosCard> with SingleTickerProviderSta
       btnText = Colors.white;
     }
 
-    IconData? icon;
-    String label;
-    var spinner = false;
-    if (sending) {
-      spinner = true;
-      label = 'Yuborilmoqda…';
-    } else if (sent) {
-      icon = Icons.check_circle_rounded;
-      label = 'Yuborildi';
-    } else if (isError) {
-      icon = Icons.error_outline_rounded;
-      label = 'Qayta urining';
-    } else {
-      icon = Icons.campaign_rounded;
-      label = _holding ? 'Ushlab turing…' : 'Yordam chaqirish';
-    }
-
-    return GestureDetector(
-      onTapDown: disabled ? null : (_) => _startHold(),
-      onTapUp: disabled ? null : (_) => _cancelHold(),
-      onTapCancel: disabled ? null : _cancelHold,
+    return Listener(
+      behavior: HitTestBehavior.opaque,
+      onPointerDown: disabled ? null : (e) => _startHold(e.position),
+      onPointerMove: disabled ? null : (e) => _onMove(e.position),
+      onPointerUp: disabled ? null : (_) => _cancelHold(),
+      onPointerCancel: disabled ? null : (_) => _cancelHold(),
       child: AnimatedBuilder(
         animation: _progress,
         builder: (context, _) {
           final pressed = _holding;
+          final fill = _progress.value;
+
+          IconData? icon;
+          String label;
+          var spinner = false;
+          if (sending) {
+            spinner = true;
+            label = 'Yuborilmoqda…';
+          } else if (sent) {
+            icon = Icons.check_circle_rounded;
+            label = 'Yuborildi';
+          } else if (isError) {
+            icon = Icons.error_outline_rounded;
+            label = 'Qayta urining';
+          } else if (pressed) {
+            icon = Icons.campaign_rounded;
+            final remaining = (_holdDuration.inSeconds * (1 - fill)).ceil().clamp(1, 3);
+            label = 'Ushlab turing… ${remaining}s';
+          } else {
+            icon = Icons.campaign_rounded;
+            label = 'Yordam chaqirish';
+          }
+
           return Transform.translate(
             offset: Offset(0, pressed ? 2 : 0),
             child: Container(
               width: double.infinity,
-              height: 52,
+              height: 54,
               decoration: BoxDecoration(
                 color: btnBg,
                 borderRadius: BorderRadius.circular(99),
-                boxShadow: [BoxShadow(color: btnShadow, offset: Offset(0, pressed ? 2 : 4))],
+                boxShadow: [BoxShadow(color: deepRed, offset: Offset(0, pressed ? 2 : 4))],
               ),
               clipBehavior: Clip.antiAlias,
               child: Stack(
+                fit: StackFit.expand,
                 children: [
-                  // 3 sekund hold progress fill (chap → o'ng).
-                  if (_holding && _progress.value > 0)
-                    Positioned.fill(
-                      child: Align(
-                        alignment: Alignment.centerLeft,
-                        child: FractionallySizedBox(
-                          widthFactor: _progress.value,
-                          child: ColoredBox(color: Colors.black.withValues(alpha: 0.18)),
-                        ),
+                  // 3 sekund hold progress — chap → o'ng to'ladi.
+                  if (pressed && fill > 0)
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: FractionallySizedBox(
+                        widthFactor: fill,
+                        child: ColoredBox(color: deepRed.withValues(alpha: 0.55)),
                       ),
                     ),
                   Center(
