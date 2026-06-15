@@ -74,28 +74,13 @@ class PrimaryButton extends StatelessWidget {
       width: expanded ? double.infinity : null,
       height: AppDimensions.buttonHeight,
       child: DecoratedBox(
-        // Premium: enabled holatda nozik 3-bosqichli yashil gradient (tepa
-        // yorug', past to'q = sayqallangan konveks pill) + brand glow — CTA
-        // bo'rtadi. Disabled: tekis surfaceVariant.
+        // Premium: enabled holatda lime ostida nozik brand glow — CTA bo'rtadi.
         decoration: BoxDecoration(
           borderRadius: borderRadius,
           boxShadow: isDisabled ? null : AppShadows.glow(AppColors.primary),
-          color: isDisabled ? AppColors.surfaceVariant : null,
-          gradient: isDisabled
-              ? null
-              : LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [
-                    AppColors.primaryLight,
-                    AppColors.primary,
-                    AppColors.primaryDark,
-                  ],
-                  stops: const [0, 0.5, 1],
-                ),
         ),
         child: Material(
-          color: Colors.transparent,
+          color: isDisabled ? AppColors.surfaceVariant : AppColors.primary,
           borderRadius: borderRadius,
           child: InkWell(
             onTap: isLoading ? null : onPressed,
