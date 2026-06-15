@@ -25,21 +25,21 @@ class AppColors {
   // Light: yumshoq oq-kulrang fon, oq kartalar undan ajralib turadi.
 
   /// Solid fon — chuqur teal #0F2027 (dark), yumshoq oq-kulrang (light).
-  static Color get background => _c(0xFF0F2027, 0xFFF4F7F6);
+  static Color get background => _c(0xFF0F2027, 0xFFEAEDF2);
 
   /// Gradient fon — yuqori rang #2C5364 (yorug' petrol-teal, yog'duni
   /// ushlaydi).
-  static Color get backgroundTop => _c(0xFF2C5364, 0xFFEEF2F0);
+  static Color get backgroundTop => _c(0xFF2C5364, 0xFFEFF1F5);
 
   /// Gradient fon — pastki rang #0F2027 (chuqur teal pol).
-  static Color get backgroundBottom => _c(0xFF0F2027, 0xFFE8EDEB);
+  static Color get backgroundBottom => _c(0xFF0F2027, 0xFFE3E7EE);
 
   /// Karta, modal, dialog foni (solid) va GlassCard blur'siz fallback asosi.
   /// Dark: mid-teal #203A43 (gradientning o'rta tonni) — fondan yorug'roq.
-  static Color get surface => _c(0xFF203A43, 0xFFFFFFFF);
+  static Color get surface => _c(0xFF203A43, 0xFFFBFCFE);
 
   /// surface ustidagi nested element (TextField, karta ichidagi tugma).
-  static Color get surfaceVariant => _c(0xFF2A4A55, 0xFFE8F0ED);
+  static Color get surfaceVariant => _c(0xFF2A4A55, 0xFFEFF2F6);
 
   // ────────────── ASOSIY AKSENT (Primary) — brand yashil ──────────────
   // Brand yashil faqat shu yerda (CTA fill). Dark'da biroz yorug'roq
@@ -82,21 +82,21 @@ class AppColors {
   // ────────────── CHEGARALAR (Borders) ──────────────
   // Kuchaytirildi — tugma/karta fondan aniq ajralib tursin.
 
-  static Color get border => _c(0xFF294B53, 0xFFD4E0DD);
-  static Color get divider => _c(0xFF122F37, 0xFFE0EAE7);
+  static Color get border => _c(0xFF294B53, 0xFFD8DEE8);
+  static Color get divider => _c(0xFF122F37, 0xFFE6EAF0);
 
   // ────────────── SWITCH (toggle on/off) ──────────────
   // OFF holat ikkala mode'da ham aniq ko'rinsin — eski Switch.adaptive
   // dark'da fonga singib ketardi. ON holat `activeColor` (default primary).
   /// Toggle OFF track — light/night ikkalasida ham aniq ko'rinadi.
-  static Color get switchOffTrack => _c(0xFF3A4F56, 0xFFCBD7D3);
+  static Color get switchOffTrack => _c(0xFF3A4F56, 0xFFCFD6E0);
 
   /// Toggle OFF thumb — OFF track ustida aniq ko'rinadi.
   static Color get switchOffThumb => _c(0xFFC0CBC8, 0xFFFFFFFF);
 
   // ────────────── REBRAND qo'shimcha tokenlari ──────────────
   /// Grafik o'tgan-kun bar'i (muted teal — dark fonga mos).
-  static Color get chartBarMuted => _c(0xFF294A52, 0xFFB8D4CC);
+  static Color get chartBarMuted => _c(0xFF294A52, 0xFFC5CFDB);
 
   /// Quick-action "binafsha" feature rangi.
   static Color get featurePurple => _c(0xFF7C6FE0, 0xFF6B5DD0);
@@ -109,13 +109,13 @@ class AppColors {
   // shisha orqali ko'rinadi va refraksiya qiladi, opaque emas.
   /// Shisha yuzasi — tekis fallback fill (light 75% oq; dark gradient
   /// zaxirasi).
-  static Color get glassFill => _c(0x24FFFFFF, 0xBFFFFFFF);
+  static Color get glassFill => _c(0x24FFFFFF, 0xF2FBFCFE);
 
   /// Fill gradient tepasi (yorug'roq, frost). Faqat dark.
-  static Color get glassFillTop => _c(0x30FFFFFF, 0xBFFFFFFF);
+  static Color get glassFillTop => _c(0x30FFFFFF, 0xF2FDFDFF);
 
   /// Fill gradient pasti (to'qroq — konveks chuqurlik beradi). Dark.
-  static Color get glassFillBottom => _c(0x17FFFFFF, 0xBFFFFFFF);
+  static Color get glassFillBottom => _c(0x17FFFFFF, 0xF2F5F7FB);
 
   /// Specular tepa chizig'i (~1.5px) — yuqoridan tushgan yorug'lik
   /// effekti. Faqat dark.
@@ -142,10 +142,10 @@ class AppColors {
   // ham toza shisha doira. 6 ta BackdropFilter'dan qochish uchun shunday.
 
   /// Tile tanasi — yuqori (juda nozik frost, fon ko'rinadi). Dark/light.
-  static Color get qaTileFillTop => _c(0x14FFFFFF, 0xF0FFFFFF);
+  static Color get qaTileFillTop => _c(0x14FFFFFF, 0xF2FBFCFE);
 
   /// Tile tanasi — past (deyarli shaffof → konveks chuqurlik).
-  static Color get qaTileFillBottom => _c(0x08FFFFFF, 0xE6FFFFFF);
+  static Color get qaTileFillBottom => _c(0x08FFFFFF, 0xE6EFF2F8);
 
   /// Tile ichki teal tint (dark) — nozik reflektsiya.
   static Color get qaTileTint => _c(0x142C5364, 0x08235447);

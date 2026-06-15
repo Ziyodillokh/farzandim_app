@@ -405,6 +405,19 @@ jobs:
       - name: Update version manifest (config/app-versions.json)
         run: |
           V="1.0.${{ github.run_number }}"
+          # Child APK 'continue-on-error: true' bilan quriladi — yiqilsa job
+          # davom etadi. SHU HOLATDA manifest child versiyasini OSHIRMAYMIZ:
+          # aks holda ilova "yangilanish bor" deb ko'rsatadi, lekin URL'dagi APK
+          # eski (oldingi muvaffaqiyatli build) bo'lib qoladi → foydalanuvchi
+          # yangilashni bossa ham eski versiyada qotib qoladi (real bug edi).
+          C="farzandim_child/build/app/outputs/flutter-apk/app-release.apk"
+          if [ -f "$C" ]; then
+            CHILD_V="$V"
+          else
+            sshpass -e scp ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/config/app-versions.json" current.json 2>/dev/null || echo '{}' > current.json
+            CHILD_V=$(python3 -c "import json; d=json.load(open('current.json')); print(((d.get('child') or {}).get('android') or {}).get('latest','1.0.0'))" 2>/dev/null || echo "1.0.0")
+            echo "::error::Child APK build YIQILDI — manifest child versiyasi '$CHILD_V'da saqlandi (yangi child APK yo'q). 'Build child APK' qadami logini tekshiring."
+          fi
           cat > app-versions.json <<EOF
           {
             "parent": {
@@ -414,12 +427,12 @@ jobs:
               "isForceUpdate": false
             },
             "child": {
-              "android": { "latest": "$V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-child.apk" },
+              "android": { "latest": "$CHILD_V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-child.apk" },
               "ios": { "latest": "1.0.0", "minSupported": "1.0.0" },
-              "releaseNotes": "Yangi versiya $V",
+              "releaseNotes": "Yangi versiya $CHILD_V",
               "isForceUpdate": false
             }
           }
           EOF
           sshpass -e scp ${SSH_OPTS} app-versions.json "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/backend/config/app-versions.json"
-          echo "version manifest yangilandi: $V"
+          echo "version manifest yangilandi: parent=$V child=$CHILD_V"

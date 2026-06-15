@@ -17,17 +17,19 @@ class AppShadows {
           ),
         ]
       : const [
-          // Salqin navy-tusli yumshoq soya — sof qora emas, yumshoqroq.
+          // Salqin yumshoq "ko'tarilish" — kulrang fon ustida karta premium
+          // chuqurlik bilan suzadi (sof qora emas, salqin slate tusli).
           BoxShadow(
-            color: Color(0x140B2B26),
-            blurRadius: 22,
-            offset: Offset(0, 8),
-            spreadRadius: -2,
+            color: Color(0x1A1B2A3A),
+            blurRadius: 24,
+            offset: Offset(0, 10),
+            spreadRadius: -6,
           ),
           BoxShadow(
-            color: Color(0x0A000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
+            color: Color(0x0D1B2A3A),
+            blurRadius: 6,
+            offset: Offset(0, 2),
+            spreadRadius: -2,
           ),
         ];
 
@@ -96,16 +98,18 @@ class AppShadows {
           ),
         ]
       : [
+          // Premium salqin "floating" — karta fon ustidan yumshoq suzadi.
           BoxShadow(
-            color: const Color(0xFF0B2B26).withValues(alpha: 0.10),
-            blurRadius: 28,
-            offset: const Offset(0, 10),
-            spreadRadius: -2,
+            color: const Color(0xFF1B2A3A).withValues(alpha: 0.12),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+            spreadRadius: -4,
           ),
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.06),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 6,
             offset: const Offset(0, 2),
+            spreadRadius: -2,
           ),
         ];
 
