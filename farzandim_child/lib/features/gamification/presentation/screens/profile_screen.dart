@@ -35,7 +35,7 @@ class _P {
   Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
   Color get variant => dark ? const Color(0xFFD3E4FE) : const Color(0xFF3D4A3D);
 
-  Color get green => const Color(0xFF22C55E); // primary-container
+  Color get green => dark ? const Color(0xFF22D3EE) : const Color(0xFF0E7490); // aqua brend
   Color get orangeFlame => const Color(0xFFFFB95F);
   Color get badge => const Color(0xFFEF9900);
   Color get badgeText => const Color(0xFF5C3800);
@@ -125,7 +125,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               numberOfParticles: 25,
               gravity: 0.3,
               shouldLoop: false,
-              colors: const [Color(0xFF22C55E), Color(0xFFFFB95F), Color(0xFF2170E4), Color(0xFFEF9900), Color(0xFFADC6FF)],
+              colors: const [Color(0xFF22D3EE), Color(0xFFFFB95F), Color(0xFF2170E4), Color(0xFFEF9900), Color(0xFFADC6FF)],
             ),
           ),
         ],

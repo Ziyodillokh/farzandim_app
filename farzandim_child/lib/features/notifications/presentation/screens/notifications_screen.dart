@@ -38,7 +38,7 @@ class _P {
   Color get card => dark ? const Color(0xFF162B45) : Colors.white;
   Color get text => dark ? Colors.white : const Color(0xFF0B1C30);
   Color get muted => dark ? const Color(0xFF94A3B8) : const Color(0xFF5A6B66);
-  Color get green => const Color(0xFF2ECC71);
+  Color get green => dark ? const Color(0xFF22D3EE) : const Color(0xFF0E7490);
   Color get orange => const Color(0xFFF39C12);
   Color get red => const Color(0xFFE74C3C);
   Color get border => green.withValues(alpha: dark ? 0.20 : 0.30);

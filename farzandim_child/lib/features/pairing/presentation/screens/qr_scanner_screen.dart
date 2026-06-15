@@ -875,7 +875,7 @@ class _PairSuccessView extends StatelessWidget {
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF16A34A), Color(0xFF12894B), Color(0xFF0B5E36)],
+            colors: [Color(0xFF16B5C9), Color(0xFF0E8DA3), Color(0xFF0A5A70)],
           ),
         ),
         child: Stack(

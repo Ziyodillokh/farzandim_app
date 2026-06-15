@@ -21,18 +21,18 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ============ PRIMARY (Duolingo Green) ============
-  /// Asosiy CTA tugma fon, success state, FARO accent.
-  static const Color primary = Color(0xFF58CC02);
+  // ============ PRIMARY (Aqua / Siyan brend) ============
+  /// Asosiy CTA tugma fon, FARO accent. (Avval Duolingo yashil edi.)
+  static const Color primary = Color(0xFF16B5C9);
 
   /// Hover state (web), pressed state (mobile).
-  static const Color primaryHover = Color(0xFF46A302);
+  static const Color primaryHover = Color(0xFF0E7490);
 
   /// Disabled tugma fon.
-  static const Color primaryDisabled = Color(0xFF9CCC65);
+  static const Color primaryDisabled = Color(0xFF8FCBD6);
 
   /// 3D button pastki shadow (Sprint UI.2 PlayfulButton uchun).
-  static const Color primaryShadow = Color(0xFF46A302);
+  static const Color primaryShadow = Color(0xFF0E7490);
 
   // ============ SECONDARY (Friendly Blue) ============
   /// Info, location, navigation hints uchun.
@@ -57,8 +57,8 @@ class AppColors {
   static const Color danger = Color(0xFFFF4B4B);
   static const Color dangerShadow = Color(0xFFCC3030);
 
-  /// Success = primary (Duolingo convention).
-  static const Color success = primary;
+  /// Success — universal yashil (brend aqua'dan ajratilgan; ✓, "yuborildi").
+  static const Color success = Color(0xFF22C55E);
 
   /// Info = secondary.
   static const Color info = secondary;
@@ -187,10 +187,10 @@ class AppColors {
   /// Yengilroq surface — chip/placeholder/rasm orqa foni.
   static const Color parvozSurfaceHigh = Color(0xFF1E3552);
 
-  /// Yashil aksent — logo, faol tab, CTA tugma, ko'rishlar soni.
-  static const Color parvozGreen = Color(0xFF2ECC71);
+  /// Aqua aksent — logo, faol tab, CTA tugma, ko'rishlar soni. (Avval yashil.)
+  static const Color parvozGreen = Color(0xFF22D3EE);
 
-  /// Yashil ustidagi matn/ikon (to'q).
+  /// Aqua ustidagi matn/ikon (to'q navy — yorqin aqua'da a'lo kontrast).
   static const Color parvozOnGreen = Color(0xFF0B1C30);
 
   /// Ko'k aksent — faol kategoriya chip / faol nav.

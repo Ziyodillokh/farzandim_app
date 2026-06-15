@@ -52,9 +52,10 @@ class _P {
   Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
   Color get variant => dark ? const Color(0xFFD3E4FE) : const Color(0xFF3D4A3D);
 
-  Color get green => dark ? const Color(0xFF6BFF8F) : const Color(0xFF006E2F);
-  Color get greenBtn => const Color(0xFF16A34A);
-  Color get greenBorder => const Color(0xFF22C55E);
+  // Aqua brend (avval yashil edi).
+  Color get green => dark ? const Color(0xFF22D3EE) : const Color(0xFF0E7490);
+  Color get greenBtn => const Color(0xFF0E8DA3); // chuqurroq — oq ikonka uchun
+  Color get greenBorder => const Color(0xFF16B5C9);
   Color get orange => const Color(0xFFEF9900);
   Color get blueIcon => dark ? const Color(0xFFADC6FF) : const Color(0xFF2170E4);
   Color get blue => const Color(0xFF2170E4);
