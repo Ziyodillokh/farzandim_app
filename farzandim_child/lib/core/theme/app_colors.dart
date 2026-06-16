@@ -211,6 +211,15 @@ class AppColors {
   /// 'YANGI DARS' badge — to'q-sariq (Premium Edition).
   static const Color parvozBadge = Color(0xFFF39C12);
 
+  // ── Glass (shishali karta) — translucent gradient + yorqin rim. Navy fon
+  //    ustidan yaqqol ajralib turadi (blur'siz — uzun ro'yxatlarda jank yo'q).
+  /// Glass gradient — yuqori (yorug'roq, sheen).
+  static const Color parvozGlassTop = Color(0xD92C415C);
+  /// Glass gradient — past (surface tusli).
+  static const Color parvozGlassBottom = Color(0xD9152840);
+  /// Glass yorqin chekka (rim) — shisha qirrasi (white ~16%).
+  static const Color parvozGlassRim = Color(0x2AFFFFFF);
+
   // ============ LEGACY ALIASES (Sprint 4.4 backwards compat) ============
   /// Sprint 4.4'da `primaryDark` ishlatilgan — yangi `primaryHover` alias.
   static const Color primaryDark = primaryHover;

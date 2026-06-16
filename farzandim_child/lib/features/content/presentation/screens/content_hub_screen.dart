@@ -372,17 +372,7 @@ class _ParvozHeroCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(16),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.3),
-              blurRadius: 30,
-              offset: const Offset(0, 8),
-            ),
-          ],
-        ),
+        decoration: _glassDeco(radius: 16),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           height: 280,
@@ -615,18 +605,7 @@ class _ParvozGridCard extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
-        decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.parvozBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: _glassDeco(radius: 16),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -722,18 +701,7 @@ class _ParvozWideCard extends StatelessWidget {
       child: Container(
         width: 280,
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.parvozBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: _glassDeco(radius: 16),
         child: Row(
           children: [
             ClipRRect(
@@ -876,6 +844,27 @@ class _ParvozEmpty extends StatelessWidget {
     );
   }
 }
+
+// Shishali (glass) karta dekoratsiyasi — translucent gradient + yorqin rim +
+// yumshoq soya. Navy fon ustidan yaqqol ajralib turadi (per-card blur YO'Q —
+// uzun ro'yxat/grid'da silliq 60fps).
+BoxDecoration _glassDeco({double radius = 16}) => BoxDecoration(
+  borderRadius: BorderRadius.circular(radius),
+  gradient: const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+  ),
+  border: Border.all(color: AppColors.parvozGlassRim, width: 1),
+  boxShadow: const [
+    BoxShadow(
+      color: Color(0x59000000),
+      blurRadius: 22,
+      offset: Offset(0, 10),
+      spreadRadius: -2,
+    ),
+  ],
+);
 
 String _formatViews(int v) {
   if (v >= 1000) {
@@ -1064,18 +1053,7 @@ class _ParvozAudioHero extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return Container(
-      decoration: BoxDecoration(
-        color: AppColors.parvozSurface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.parvozBorder),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.3),
-            blurRadius: 30,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
+      decoration: _glassDeco(radius: 20),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1272,18 +1250,7 @@ class _ParvozAudioHCard extends ConsumerWidget {
       onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       child: Container(
         width: 150,
-        decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.parvozBorder),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.2),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
+        decoration: _glassDeco(radius: 16),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1356,11 +1323,7 @@ class _ParvozAudioRow extends ConsumerWidget {
       onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.parvozBorder),
-        ),
+        decoration: _glassDeco(radius: 16),
         child: Row(
           children: [
             SizedBox(
