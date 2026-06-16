@@ -1,12 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────
-// ArticlesFeedScreen — maqolalar feed (#48)
+// ArticlesFeedScreen — maqolalar feed (#48) (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
+//
+// Faqat ko'rinish night/glass'ga o'tkazildi (parvoz tokenlar + ParvozHeader).
+// LOGIKA SAQLANGAN — provider'lar, navigatsiya, refresh, ArticleCard tap.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
 import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -19,27 +22,27 @@ class ArticlesFeedScreen extends ConsumerWidget {
     final async = ref.watch(backendArticlesProvider);
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              _Header(onBack: () => context.pop()),
-              Expanded(
-                child: async.when(
-                  data: (articles) => _List(articles: articles, ref: ref),
-                  loading: () =>
-                      const Center(child: CircularProgressIndicator()),
-                  error: (_, __) => _Empty(
-                    icon: Icons.wifi_off_rounded,
-                    text: 'Maqolalarni yuklab bo\'lmadi.',
-                    onRetry: () => ref.invalidate(backendArticlesProvider),
-                  ),
-                ),
-              ),
-            ],
+      backgroundColor: AppColors.parvozBg,
+      body: Column(
+        children: [
+          ParvozHeader(
+            title: 'Maqolalar',
+            onBack: () => context.pop(),
           ),
-        ),
+          Expanded(
+            child: async.when(
+              data: (articles) => _List(articles: articles, ref: ref),
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.parvozGreen),
+              ),
+              error: (_, __) => _Empty(
+                icon: Icons.wifi_off_rounded,
+                text: 'Maqolalarni yuklab bo\'lmadi.',
+                onRetry: () => ref.invalidate(backendArticlesProvider),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -59,15 +62,17 @@ class _List extends StatelessWidget {
       );
     }
     return RefreshIndicator(
+      color: AppColors.parvozGreen,
+      backgroundColor: AppColors.parvozSurface,
       onRefresh: () async {
         ref.invalidate(backendArticlesProvider);
         await ref.read(backendArticlesProvider.future);
       },
       child: ListView.separated(
         physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 120),
+        padding: const EdgeInsets.fromLTRB(20, 12, 20, 120),
         itemCount: articles.length,
-        separatorBuilder: (_, __) => const SizedBox(height: 12),
+        separatorBuilder: (_, __) => const SizedBox(height: 14),
         itemBuilder: (_, i) {
           final a = articles[i];
           return ArticleCard(
@@ -75,38 +80,6 @@ class _List extends StatelessWidget {
             onTap: () => context.push('/articles/view', extra: a),
           );
         },
-      ),
-    );
-  }
-}
-
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 8),
-      child: Row(
-        children: [
-          IconButton(
-            icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-            onPressed: onBack,
-          ),
-          const Expanded(
-            child: Text(
-              'Maqolalar',
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
       ),
     );
   }
@@ -124,19 +97,47 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 64, color: AppColors.textTertiary),
-          const SizedBox(height: 16),
+          Container(
+            width: 96,
+            height: 96,
+            decoration: parvozGlass(radius: 28),
+            child: Icon(icon, size: 44, color: AppColors.parvozTextDim),
+          ),
+          const SizedBox(height: 20),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
+            padding: const EdgeInsets.symmetric(horizontal: 40),
             child: Text(
               text,
               textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+              style: const TextStyle(
+                color: AppColors.parvozTextDim,
+                fontSize: 15,
+                height: 1.4,
+              ),
             ),
           ),
           if (onRetry != null) ...[
-            const SizedBox(height: 16),
-            TextButton(onPressed: onRetry, child: const Text('Qayta urinish')),
+            const SizedBox(height: 20),
+            GestureDetector(
+              onTap: onRetry,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                decoration: BoxDecoration(
+                  color: AppColors.parvozGreen,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: const Text(
+                  'Qayta urinish',
+                  style: TextStyle(
+                    color: AppColors.parvozOnGreen,
+                    fontSize: 14,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
           ],
         ],
       ),

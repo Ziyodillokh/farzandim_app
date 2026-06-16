@@ -67,8 +67,8 @@ class _Tab extends StatelessWidget {
               fontSize: 17,
               fontWeight: isActive ? FontWeight.bold : FontWeight.normal,
               color: isActive
-                  ? AppColors.textPrimary
-                  : AppColors.textSecondary,
+                  ? AppColors.parvozText
+                  : AppColors.parvozTextDim,
             ),
           ),
           const SizedBox(height: 6),
@@ -77,7 +77,7 @@ class _Tab extends StatelessWidget {
             height: 3,
             width: 36,
             decoration: BoxDecoration(
-              color: isActive ? AppColors.primary : Colors.transparent,
+              color: isActive ? AppColors.parvozGreen : Colors.transparent,
               borderRadius: BorderRadius.circular(2),
             ),
           ),

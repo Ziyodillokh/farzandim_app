@@ -21,7 +21,9 @@
 // aks holda kulrang/disabled. Web'da har doim enabled (mock holat).
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -39,16 +41,6 @@ class PermissionSetupScreen extends ConsumerStatefulWidget {
 class _PermissionSetupScreenState
     extends ConsumerState<PermissionSetupScreen>
     with WidgetsBindingObserver {
-  // Solid dark palette — dizayn UI'ga mos (theme rangidan mustaqil).
-  static const Color _bgTop = Color(0xFF14132B);
-  static const Color _bgBottom = Color(0xFF0B0A18);
-  static const Color _cardFill = Color(0xFF1F1D33);
-  static const Color _hintText = Color(0xFFB0AFC2);
-  static const Color _toggleOff = Color(0xFFE43A6D);
-  static const Color _toggleOn = Color(0xFF8FE26B);
-  static const Color _buttonEnabled = Color(0xFF8FE26B);
-  static const Color _buttonDisabled = Color(0xFF6F6F76);
-
   final UsageStatsService _usage = UsageStatsService();
 
   // ─── Toggle holatlari (dizaynga ko'ra 10 ta) ───────────────────────
@@ -171,165 +163,117 @@ class _PermissionSetupScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topCenter,
-            end: Alignment.bottomCenter,
-            colors: [_bgTop, _bgBottom],
-          ),
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-            child: Column(
-              children: [
-                _buildHeader(),
-                const SizedBox(height: 16),
-                Expanded(
-                  child: ListView(
-                    padding: EdgeInsets.zero,
-                    children: [
-                      _PermissionCard(
-                        title: 'permissionSetup.p_overlay'.tr(),
-                        hint: 'permissionSetup.p_overlayHint'.tr(),
-                        value: _overlay,
-                        onChanged: (v) => _toggle(
-                          current: _overlay,
-                          request: () => _usage.openOverlaySettings(),
-                          setMock: (b) => _overlay = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+      backgroundColor: AppColors.parvozBg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+          child: Column(
+            children: [
+              _buildHeader(),
+              const SizedBox(height: 16),
+              Expanded(
+                child: ListView(
+                  padding: EdgeInsets.zero,
+                  children: [
+                    _PermissionCard(
+                      title: 'permissionSetup.p_overlay'.tr(),
+                      hint: 'permissionSetup.p_overlayHint'.tr(),
+                      value: _overlay,
+                      onChanged: (v) => _toggle(
+                        current: _overlay,
+                        request: () => _usage.openOverlaySettings(),
+                        setMock: (b) => _overlay = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_location'.tr(),
-                        value: _location,
-                        onChanged: (v) => _toggle(
-                          current: _location,
-                          request: () async {
-                            await Permission.location.request();
-                            await Permission.locationAlways.request();
-                          },
-                          setMock: (b) => _location = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_location'.tr(),
+                      value: _location,
+                      onChanged: (v) => _toggle(
+                        current: _location,
+                        request: () async {
+                          await Permission.location.request();
+                          await Permission.locationAlways.request();
+                        },
+                        setMock: (b) => _location = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_battery'.tr(),
-                        value: _battery,
-                        onChanged: (v) => _toggle(
-                          current: _battery,
-                          request: () =>
-                              Permission.ignoreBatteryOptimizations.request(),
-                          setMock: (b) => _battery = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_battery'.tr(),
+                      value: _battery,
+                      onChanged: (v) => _toggle(
+                        current: _battery,
+                        request: () =>
+                            Permission.ignoreBatteryOptimizations.request(),
+                        setMock: (b) => _battery = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_mic'.tr(),
-                        value: _mic,
-                        onChanged: (v) => _toggle(
-                          current: _mic,
-                          request: () => Permission.microphone.request(),
-                          setMock: (b) => _mic = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_mic'.tr(),
+                      value: _mic,
+                      onChanged: (v) => _toggle(
+                        current: _mic,
+                        request: () => Permission.microphone.request(),
+                        setMock: (b) => _mic = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_usage'.tr(),
-                        value: _usageStats,
-                        onChanged: (v) => _toggle(
-                          current: _usageStats,
-                          request: () => _usage.openSettings(),
-                          setMock: (b) => _usageStats = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_usage'.tr(),
+                      value: _usageStats,
+                      onChanged: (v) => _toggle(
+                        current: _usageStats,
+                        request: () => _usage.openSettings(),
+                        setMock: (b) => _usageStats = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_backgroundData'.tr(),
-                        value: _bgData,
-                        // Background data API standartda yo'q — manual toggle.
-                        onChanged: (v) => setState(() => _bgData = !_bgData),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_backgroundData'.tr(),
+                      value: _bgData,
+                      // Background data API standartda yo'q — manual toggle.
+                      onChanged: (v) => setState(() => _bgData = !_bgData),
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_notif'.tr(),
+                      value: _notif,
+                      onChanged: (v) => _toggle(
+                        current: _notif,
+                        request: () => Permission.notification.request(),
+                        setMock: (b) => _notif = b,
                       ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_notif'.tr(),
-                        value: _notif,
-                        onChanged: (v) => _toggle(
-                          current: _notif,
-                          request: () => Permission.notification.request(),
-                          setMock: (b) => _notif = b,
-                        ),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
-                      ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_autostart'.tr(),
-                        value: _autostart,
-                        // Autostart — OEM-specific (Xiaomi/MIUI), standart API yo'q.
-                        onChanged: (v) =>
-                            setState(() => _autostart = !_autostart),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
-                      ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_other'.tr(),
-                        value: _otherOem,
-                        onChanged: (v) =>
-                            setState(() => _otherOem = !_otherOem),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
-                      ),
-                      const SizedBox(height: 12),
-                      _PermissionCard(
-                        title: 'permissionSetup.p_notifListener'.tr(),
-                        value: _notifListener,
-                        onChanged: (v) =>
-                            setState(() => _notifListener = !_notifListener),
-                        offColor: _toggleOff,
-                        onColor: _toggleOn,
-                        cardColor: _cardFill,
-                        hintColor: _hintText,
-                      ),
-                      const SizedBox(height: 16),
-                    ],
-                  ),
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_autostart'.tr(),
+                      value: _autostart,
+                      // Autostart — OEM-specific (Xiaomi/MIUI), standart API yo'q.
+                      onChanged: (v) =>
+                          setState(() => _autostart = !_autostart),
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_other'.tr(),
+                      value: _otherOem,
+                      onChanged: (v) =>
+                          setState(() => _otherOem = !_otherOem),
+                    ),
+                    const SizedBox(height: 12),
+                    _PermissionCard(
+                      title: 'permissionSetup.p_notifListener'.tr(),
+                      value: _notifListener,
+                      onChanged: (v) =>
+                          setState(() => _notifListener = !_notifListener),
+                    ),
+                    const SizedBox(height: 16),
+                  ],
                 ),
-                _buildNextButton(),
-              ],
-            ),
+              ),
+              _buildNextButton(),
+            ],
           ),
         ),
       ),
@@ -347,7 +291,7 @@ class _PermissionSetupScreenState
           child: Text(
             'Xiaomi-23110NRD0DA',
             style: TextStyle(
-              color: Colors.white,
+              color: AppColors.parvozTextDim,
               fontSize: 13,
               fontWeight: FontWeight.w500,
             ),
@@ -357,10 +301,11 @@ class _PermissionSetupScreenState
         Text(
           'permissionSetup.title'.tr(),
           style: const TextStyle(
-            color: Colors.white,
+            color: AppColors.parvozText,
             fontSize: 22,
             fontWeight: FontWeight.w700,
             height: 1.3,
+            letterSpacing: -0.3,
           ),
         ),
       ],
@@ -377,12 +322,12 @@ class _PermissionSetupScreenState
       child: ElevatedButton(
         onPressed: enabled ? _onNext : null,
         style: ElevatedButton.styleFrom(
-          backgroundColor: _buttonEnabled,
-          disabledBackgroundColor: _buttonDisabled,
-          foregroundColor: Colors.black,
-          disabledForegroundColor: Colors.white,
+          backgroundColor: AppColors.parvozGreen,
+          disabledBackgroundColor: AppColors.parvozSurfaceHigh,
+          foregroundColor: AppColors.parvozOnGreen,
+          disabledForegroundColor: AppColors.parvozTextDim,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(16),
           ),
           elevation: 0,
         ),
@@ -390,7 +335,7 @@ class _PermissionSetupScreenState
           'permissionSetup.next'.tr(),
           style: const TextStyle(
             fontSize: 17,
-            fontWeight: FontWeight.w600,
+            fontWeight: FontWeight.w700,
           ),
         ),
       ),
@@ -404,10 +349,6 @@ class _PermissionCard extends StatelessWidget {
     required this.title,
     required this.value,
     required this.onChanged,
-    required this.offColor,
-    required this.onColor,
-    required this.cardColor,
-    required this.hintColor,
     this.hint,
   });
 
@@ -415,19 +356,12 @@ class _PermissionCard extends StatelessWidget {
   final String? hint;
   final bool value;
   final ValueChanged<bool> onChanged;
-  final Color offColor;
-  final Color onColor;
-  final Color cardColor;
-  final Color hintColor;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-      decoration: BoxDecoration(
-        color: cardColor,
-        borderRadius: BorderRadius.circular(18),
-      ),
+      decoration: parvozGlassFlat(radius: 18),
       child: Row(
         children: [
           Expanded(
@@ -437,7 +371,7 @@ class _PermissionCard extends StatelessWidget {
                 Text(
                   title,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.parvozText,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                     height: 1.35,
@@ -447,8 +381,8 @@ class _PermissionCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Text(
                     hint!,
-                    style: TextStyle(
-                      color: hintColor,
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
                       fontSize: 12,
                       height: 1.35,
                     ),
@@ -468,8 +402,15 @@ class _PermissionCard extends StatelessWidget {
               height: 30,
               padding: const EdgeInsets.all(3),
               decoration: BoxDecoration(
-                color: value ? onColor : offColor,
+                color: value
+                    ? AppColors.parvozGreen
+                    : AppColors.parvozSurfaceHigh,
                 borderRadius: BorderRadius.circular(999),
+                border: Border.all(
+                  color: value
+                      ? AppColors.parvozGreen
+                      : AppColors.parvozBorderStrong,
+                ),
               ),
               child: AnimatedAlign(
                 duration: const Duration(milliseconds: 180),
@@ -477,10 +418,10 @@ class _PermissionCard extends StatelessWidget {
                 alignment:
                     value ? Alignment.centerRight : Alignment.centerLeft,
                 child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
+                  width: 22,
+                  height: 22,
+                  decoration: BoxDecoration(
+                    color: value ? AppColors.parvozOnGreen : Colors.white,
                     shape: BoxShape.circle,
                   ),
                 ),

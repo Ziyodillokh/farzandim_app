@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────
 // OnboardingScreen — bola ilovasini birinchi marta ochganida bir ekran
+// (Parvoz NIGHT/GLASS Premium redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
 // Yagona ekran: "Sevimli mavzularingiz?" — bola qiziqishlarini tanlash.
@@ -13,6 +14,9 @@
 //
 // SharedPreferences `onboarding_seen_v1` bilan bir martalik —
 // SplashScreen flag tekshiradi va qayta ko'rsatmaydi.
+//
+// LOGIKA SAQLANGAN — faqat ko'rinish night/glass (parvoz tokenlar +
+// parvozGlassFlat). GradientBackground olib tashlandi.
 
 // ignore_for_file: public_member_api_docs
 
@@ -20,8 +24,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/onboarding/data/interest_options.dart';
 import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
-import 'package:farzandim_child/shared/widgets/primary_button.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_animate/flutter_animate.dart';
@@ -88,134 +91,152 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              // Yuqori o'ng — "O'tkazib yuborish"
-              Padding(
-                padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
-                child: Row(
-                  children: [
-                    const Spacer(),
-                    TextButton(
-                      onPressed: _onSkip,
-                      child: Text(
-                        'onboarding.skip'.tr(),
-                        style: const TextStyle(
-                          color: AppColors.textSecondary,
-                          fontSize: 14,
-                          fontWeight: FontWeight.w600,
-                        ),
+      backgroundColor: AppColors.parvozBg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // Yuqori o'ng — "O'tkazib yuborish"
+            Padding(
+              padding: const EdgeInsets.fromLTRB(8, 8, 12, 0),
+              child: Row(
+                children: [
+                  const Spacer(),
+                  TextButton(
+                    onPressed: _onSkip,
+                    child: Text(
+                      'onboarding.skip'.tr(),
+                      style: const TextStyle(
+                        color: AppColors.parvozTextDim,
+                        fontSize: 14,
+                        fontWeight: FontWeight.w600,
                       ),
                     ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 4),
+
+            // Parvoz logo — glass card + aqua glow
+            const _LogoHero()
+                .animate()
+                .fadeIn(duration: 480.ms)
+                .scale(
+                  begin: const Offset(0.85, 0.85),
+                  end: const Offset(1, 1),
+                  curve: Curves.easeOutBack,
+                ),
+
+            const SizedBox(height: 18),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 28),
+              child: Text(
+                'onboarding.interests.title'.tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 24,
+                  fontWeight: FontWeight.w900,
+                  color: AppColors.parvozText,
+                  letterSpacing: -0.4,
+                  height: 1.2,
+                ),
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 420.ms, delay: 120.ms)
+                .moveY(begin: 10, end: 0),
+
+            const SizedBox(height: 8),
+
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 36),
+              child: Text(
+                'onboarding.interests.subtitle'.tr(),
+                textAlign: TextAlign.center,
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.parvozTextDim,
+                  height: 1.45,
+                ),
+              ),
+            )
+                .animate()
+                .fadeIn(duration: 420.ms, delay: 200.ms)
+                .moveY(begin: 10, end: 0),
+
+            const SizedBox(height: 12),
+
+            _SelectedCounter(count: _selectedInterests.length),
+
+            const SizedBox(height: 8),
+
+            // Chip grid
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 20,
+                  vertical: 6,
+                ),
+                child: Wrap(
+                  alignment: WrapAlignment.center,
+                  spacing: 10,
+                  runSpacing: 12,
+                  children: [
+                    for (var i = 0; i < kInterestOptions.length; i++)
+                      _InterestChip(
+                        option: kInterestOptions[i],
+                        selected: _selectedInterests
+                            .contains(kInterestOptions[i].id),
+                        onTap: () =>
+                            _toggleInterest(kInterestOptions[i].id),
+                      )
+                          .animate()
+                          .fadeIn(
+                            duration: 320.ms,
+                            delay: (40 * i + 220).ms,
+                          )
+                          .moveY(begin: 10, end: 0),
                   ],
                 ),
               ),
+            ),
 
-              const SizedBox(height: 4),
-
-              // Parvoz logo — toza oq card + yumshoq yashil glow
-              const _LogoHero()
-                  .animate()
-                  .fadeIn(duration: 480.ms)
-                  .scale(
-                    begin: const Offset(0.85, 0.85),
-                    end: const Offset(1, 1),
-                    curve: Curves.easeOutBack,
-                  ),
-
-              const SizedBox(height: 18),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 28),
-                child: Text(
-                  'onboarding.interests.title'.tr(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 24,
-                    fontWeight: FontWeight.w900,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.4,
-                    height: 1.2,
-                  ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 420.ms, delay: 120.ms)
-                  .moveY(begin: 10, end: 0),
-
-              const SizedBox(height: 8),
-
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 36),
-                child: Text(
-                  'onboarding.interests.subtitle'.tr(),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                    height: 1.45,
-                  ),
-                ),
-              )
-                  .animate()
-                  .fadeIn(duration: 420.ms, delay: 200.ms)
-                  .moveY(begin: 10, end: 0),
-
-              const SizedBox(height: 12),
-
-              _SelectedCounter(count: _selectedInterests.length),
-
-              const SizedBox(height: 8),
-
-              // Chip grid
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 20,
-                    vertical: 6,
-                  ),
-                  child: Wrap(
-                    alignment: WrapAlignment.center,
-                    spacing: 10,
-                    runSpacing: 12,
-                    children: [
-                      for (var i = 0; i < kInterestOptions.length; i++)
-                        _InterestChip(
-                          option: kInterestOptions[i],
-                          selected: _selectedInterests
-                              .contains(kInterestOptions[i].id),
-                          onTap: () =>
-                              _toggleInterest(kInterestOptions[i].id),
-                        )
-                            .animate()
-                            .fadeIn(
-                              duration: 320.ms,
-                              delay: (40 * i + 220).ms,
-                            )
-                            .moveY(begin: 10, end: 0),
-                    ],
-                  ),
-                ),
-              ),
-
-              Padding(
-                padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
-                child: PrimaryButton(
-                  text: _canFinish
-                      ? 'onboarding.startWithCount'.tr(
-                          namedArgs: {
-                            'count': '${_selectedInterests.length}',
-                          },
-                        )
-                      : 'onboarding.minSelect'.tr(),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 20),
+              child: SizedBox(
+                width: double.infinity,
+                child: ElevatedButton(
                   onPressed: _canFinish ? _onPrimary : null,
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.parvozGreen,
+                    foregroundColor: AppColors.parvozOnGreen,
+                    disabledBackgroundColor: AppColors.parvozSurfaceHigh,
+                    disabledForegroundColor: AppColors.parvozTextDim,
+                    elevation: 0,
+                    padding: const EdgeInsets.symmetric(vertical: 18),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                  ),
+                  child: Text(
+                    _canFinish
+                        ? 'onboarding.startWithCount'.tr(
+                            namedArgs: {
+                              'count': '${_selectedInterests.length}',
+                            },
+                          )
+                        : 'onboarding.minSelect'.tr(),
+                    style: const TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -223,7 +244,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
 }
 
 // ───────────────────────────────────────────────────────────────────
-// Logo hero — Parvoz logo toza oq card + brand glow
+// Logo hero — Parvoz logo glass card + aqua glow
 // ───────────────────────────────────────────────────────────────────
 
 class _LogoHero extends StatelessWidget {
@@ -235,27 +256,23 @@ class _LogoHero extends StatelessWidget {
     return Container(
       width: cardSize,
       height: cardSize,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(32),
+      decoration: parvozGlass(radius: 32).copyWith(
         boxShadow: [
           BoxShadow(
-            color: AppColors.primary.withValues(alpha: 0.22),
+            color: AppColors.parvozGreen.withValues(alpha: 0.22),
             blurRadius: 28,
             spreadRadius: 2,
             offset: const Offset(0, 8),
           ),
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 12,
-            offset: const Offset(0, 4),
+          const BoxShadow(
+            color: Color(0x59000000),
+            blurRadius: 22,
+            offset: Offset(0, 10),
+            spreadRadius: -2,
           ),
         ],
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.14),
-          width: 1.2,
-        ),
       ),
+      clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: ClipRRect(
@@ -264,12 +281,12 @@ class _LogoHero extends StatelessWidget {
             'assets/icons/child_app_logo.png',
             fit: BoxFit.contain,
             errorBuilder: (_, __, ___) => Container(
-              color: AppColors.primary,
+              color: AppColors.parvozGreen,
               alignment: Alignment.center,
               child: const Text(
                 'P',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: AppColors.parvozOnGreen,
                   fontSize: 56,
                   fontWeight: FontWeight.w900,
                 ),
@@ -305,15 +322,18 @@ class _SelectedCounter extends StatelessWidget {
                   vertical: 5,
                 ),
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.12),
+                  color: AppColors.parvozGreen.withValues(alpha: 0.16),
                   borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.parvozGreen.withValues(alpha: 0.35),
+                  ),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
                       Icons.check_circle_rounded,
-                      color: AppColors.primary,
+                      color: AppColors.parvozGreen,
                       size: 14,
                     ),
                     const SizedBox(width: 4),
@@ -322,7 +342,7 @@ class _SelectedCounter extends StatelessWidget {
                         namedArgs: {'count': '$count'},
                       ),
                       style: const TextStyle(
-                        color: AppColors.primary,
+                        color: AppColors.parvozGreen,
                         fontSize: 12,
                         fontWeight: FontWeight.w800,
                       ),
@@ -354,26 +374,20 @@ class _InterestChip extends StatelessWidget {
   Widget build(BuildContext context) {
     // Tanlanganda matn va ikon rangi o'zgarmaydi, kenglik konstant
     // (Wrap'da layout shift bo'lmasligi uchun).
-    final bg = selected
-        ? AppColors.primary.withValues(alpha: 0.12)
-        : AppColors.bgSurface;
-    final border = selected
-        ? AppColors.primary
-        : AppColors.primary.withValues(alpha: 0.16);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 200),
       curve: Curves.easeOut,
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: border, width: 1.5),
-      ),
+      decoration: selected
+          ? parvozGlassFlat(radius: 999).copyWith(
+              border: Border.all(color: AppColors.parvozGreen, width: 1.5),
+            )
+          : parvozGlassFlat(radius: 999),
       child: Material(
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
           borderRadius: BorderRadius.circular(999),
-          splashColor: AppColors.primary.withValues(alpha: 0.12),
+          splashColor: AppColors.parvozGreen.withValues(alpha: 0.12),
           child: Padding(
             padding:
                 const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
@@ -386,7 +400,7 @@ class _InterestChip extends StatelessWidget {
                   height: 32,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: option.accent.withValues(alpha: 0.14),
+                    color: option.accent.withValues(alpha: 0.18),
                   ),
                   child: Icon(
                     option.icon,
@@ -398,7 +412,7 @@ class _InterestChip extends StatelessWidget {
                 Text(
                   option.label(),
                   style: const TextStyle(
-                    color: AppColors.textPrimary,
+                    color: AppColors.parvozText,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),
@@ -411,7 +425,7 @@ class _InterestChip extends StatelessWidget {
                   child: const Icon(
                     Icons.check_circle_rounded,
                     size: 16,
-                    color: AppColors.primary,
+                    color: AppColors.parvozGreen,
                   ),
                 ),
               ],

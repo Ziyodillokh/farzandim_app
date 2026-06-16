@@ -1,10 +1,14 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChatSettingsScreen — chat orqa foni + mavzu (Parent App'dan port)
+// ChatSettingsScreen — chat orqa foni + mavzu (Parvoz NIGHT/GLASS Redesign)
 // ─────────────────────────────────────────────────────────────────────
 //
 // Foydalanuvchi (bola) bu ekrandan:
 //   - Light/Dark mavzu tanlaydi (themeModeProvider'ga yoziladi)
 //   - Chat orqa fonini tanlaydi (default / preset / galereya rasm)
+//
+// Faqat NIGHT (parvoz tokenlar). Funksiyalar o'zgarmadi — faqat ko'rinish
+// Premium night/glass'ga ko'chirildi (ParvozHeader + ParvozSectionLabel +
+// parvozGlass / parvozGlassFlat).
 
 import 'dart:io';
 
@@ -12,6 +16,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/theme_mode_provider.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/chat_wallpaper_provider.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,136 +77,129 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     final presetIndex = chatWallpaperPresetIndex(wp);
 
     return Scaffold(
-      backgroundColor: context.adaptive.bgPrimary,
-      appBar: AppBar(
-        backgroundColor: context.adaptive.bgPrimary,
-        foregroundColor: context.adaptive.textPrimary,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
-          onPressed: () => Navigator.of(context).pop(),
-        ),
-        title: Text(
-          'chatSettings.title'.tr(),
-          style: TextStyle(
-            color: context.adaptive.textPrimary,
-            fontSize: 18,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-      body: ListView(
-        padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+      backgroundColor: AppColors.parvozBg,
+      body: Column(
         children: [
-          // ─── Mavzu (light / dark) ───
-          _SectionTitle(title: 'chatSettings.theme'.tr()),
-          const SizedBox(height: 8),
-          Row(
-            children: [
-              Expanded(
-                child: _ThemeOption(
-                  label: 'chatSettings.light'.tr(),
-                  icon: Icons.light_mode_rounded,
-                  selected: themeMode == ThemeMode.light,
-                  onTap: () => ref
-                      .read(themeModeProvider.notifier)
-                      .setMode(ThemeMode.light),
-                ),
-              ),
-              const SizedBox(width: 16),
-              Expanded(
-                child: _ThemeOption(
-                  label: 'chatSettings.dark'.tr(),
-                  icon: Icons.dark_mode_rounded,
-                  selected: themeMode == ThemeMode.dark,
-                  onTap: () => ref
-                      .read(themeModeProvider.notifier)
-                      .setMode(ThemeMode.dark),
-                ),
-              ),
-            ],
+          ParvozHeader(
+            title: 'chatSettings.title'.tr(),
+            onBack: () => Navigator.of(context).pop(),
           ),
-
-          const SizedBox(height: 32),
-
-          // ─── Orqa fon ───
-          _SectionTitle(title: 'chatSettings.wallpaper'.tr()),
-          const SizedBox(height: 4),
-          Text(
-            'chatSettings.wallpaperHint'.tr(),
-            style: TextStyle(
-              color: context.adaptive.textSecondary,
-              fontSize: 13,
-            ),
-          ),
-          const SizedBox(height: 16),
-          GridView.count(
-            crossAxisCount: 3,
-            mainAxisSpacing: 16,
-            crossAxisSpacing: 16,
-            childAspectRatio: 0.66,
-            shrinkWrap: true,
-            physics: const NeverScrollableScrollPhysics(),
-            children: [
-              // Standart (ilova foni).
-              _WallpaperTile(
-                selected: wp == kChatWallpaperDefault,
-                label: 'chatSettings.default'.tr(),
-                onTap: () =>
-                    ref.read(chatWallpaperProvider.notifier).setDefault(),
-                preview: ColoredBox(color: context.adaptive.bgPrimary),
-              ),
-              // Preset gradientlar.
-              for (var i = 0; i < chatWallpaperPresets.length; i++)
-                _WallpaperTile(
-                  selected: presetIndex == i,
-                  onTap: () =>
-                      ref.read(chatWallpaperProvider.notifier).setPreset(i),
-                  preview: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: chatWallpaperPresets[i],
+          Expanded(
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 40),
+              children: [
+                // ─── Mavzu (light / dark) ───
+                ParvozSectionLabel('chatSettings.theme'.tr()),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _ThemeOption(
+                        label: 'chatSettings.light'.tr(),
+                        icon: Icons.light_mode_rounded,
+                        selected: themeMode == ThemeMode.light,
+                        onTap: () => ref
+                            .read(themeModeProvider.notifier)
+                            .setMode(ThemeMode.light),
                       ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: _ThemeOption(
+                        label: 'chatSettings.dark'.tr(),
+                        icon: Icons.dark_mode_rounded,
+                        selected: themeMode == ThemeMode.dark,
+                        onTap: () => ref
+                            .read(themeModeProvider.notifier)
+                            .setMode(ThemeMode.dark),
+                      ),
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 28),
+
+                // ─── Orqa fon ───
+                ParvozSectionLabel('chatSettings.wallpaper'.tr()),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4, bottom: 16),
+                  child: Text(
+                    'chatSettings.wallpaperHint'.tr(),
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
+                      fontSize: 13,
                     ),
                   ),
                 ),
-              // Joriy galereya rasmi (tanlangan bo'lsa) — faqat mobil.
-              if (!kIsWeb &&
-                  filePath != null &&
-                  File(filePath).existsSync())
-                _WallpaperTile(
-                  selected: true,
-                  onTap: _pickImage,
-                  preview: Image.file(File(filePath), fit: BoxFit.cover),
-                ),
-              // Galereyadan tanlash tugmasi.
-              _WallpaperTile(
-                selected: false,
-                label: 'chatSettings.gallery'.tr(),
-                onTap: _pickImage,
-                preview: ColoredBox(
-                  color: context.adaptive.bgCard,
-                  child: Center(
-                    child: _picking
-                        ? const SizedBox(
-                            width: 22,
-                            height: 22,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: AppColors.primary,
+                GridView.count(
+                  crossAxisCount: 3,
+                  mainAxisSpacing: 16,
+                  crossAxisSpacing: 16,
+                  childAspectRatio: 0.66,
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  children: [
+                    // Standart (ilova foni).
+                    _WallpaperTile(
+                      selected: wp == kChatWallpaperDefault,
+                      label: 'chatSettings.default'.tr(),
+                      onTap: () =>
+                          ref.read(chatWallpaperProvider.notifier).setDefault(),
+                      preview: const ColoredBox(color: AppColors.parvozBg),
+                    ),
+                    // Preset gradientlar.
+                    for (var i = 0; i < chatWallpaperPresets.length; i++)
+                      _WallpaperTile(
+                        selected: presetIndex == i,
+                        onTap: () =>
+                            ref.read(chatWallpaperProvider.notifier).setPreset(i),
+                        preview: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: chatWallpaperPresets[i],
                             ),
-                          )
-                        : const Icon(
-                            Icons.add_photo_alternate_outlined,
-                            color: AppColors.primary,
-                            size: 30,
                           ),
-                  ),
+                        ),
+                      ),
+                    // Joriy galereya rasmi (tanlangan bo'lsa) — faqat mobil.
+                    if (!kIsWeb &&
+                        filePath != null &&
+                        File(filePath).existsSync())
+                      _WallpaperTile(
+                        selected: true,
+                        onTap: _pickImage,
+                        preview: Image.file(File(filePath), fit: BoxFit.cover),
+                      ),
+                    // Galereyadan tanlash tugmasi.
+                    _WallpaperTile(
+                      selected: false,
+                      label: 'chatSettings.gallery'.tr(),
+                      onTap: _pickImage,
+                      preview: ColoredBox(
+                        color: AppColors.parvozSurfaceHigh,
+                        child: Center(
+                          child: _picking
+                              ? const SizedBox(
+                                  width: 22,
+                                  height: 22,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    color: AppColors.parvozGreen,
+                                  ),
+                                )
+                              : const Icon(
+                                  Icons.add_photo_alternate_outlined,
+                                  color: AppColors.parvozGreen,
+                                  size: 30,
+                                ),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ],
       ),
@@ -209,23 +207,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
   }
 }
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle({required this.title});
-
-  final String title;
-
-  @override
-  Widget build(BuildContext context) {
-    return Text(
-      title,
-      style: TextStyle(
-        color: context.adaptive.textPrimary,
-        fontWeight: FontWeight.w700,
-        fontSize: 16,
-      ),
-    );
-  }
-}
+// ════════════════════════ WIDGET'LAR ════════════════════════
 
 class _ThemeOption extends StatelessWidget {
   const _ThemeOption({
@@ -247,13 +229,11 @@ class _ThemeOption extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 18),
-        decoration: BoxDecoration(
-          color: selected
-              ? AppColors.primary.withValues(alpha: 0.15)
-              : context.adaptive.bgCard,
-          borderRadius: BorderRadius.circular(16),
+        decoration: parvozGlassFlat().copyWith(
           border: Border.all(
-            color: selected ? AppColors.primary : context.adaptive.border,
+            color: selected
+                ? AppColors.parvozGreen
+                : AppColors.parvozGlassRim,
             width: selected ? 2 : 1,
           ),
         ),
@@ -261,8 +241,9 @@ class _ThemeOption extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color:
-                  selected ? AppColors.primary : context.adaptive.textSecondary,
+              color: selected
+                  ? AppColors.parvozGreen
+                  : AppColors.parvozTextDim,
               size: 28,
             ),
             const SizedBox(height: 8),
@@ -270,8 +251,8 @@ class _ThemeOption extends StatelessWidget {
               label,
               style: TextStyle(
                 color: selected
-                    ? context.adaptive.textPrimary
-                    : context.adaptive.textSecondary,
+                    ? AppColors.parvozText
+                    : AppColors.parvozTextDim,
                 fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
               ),
             ),
@@ -308,8 +289,8 @@ class _WallpaperTile extends StatelessWidget {
                 decoration: BoxDecoration(
                   border: Border.all(
                     color: selected
-                        ? AppColors.primary
-                        : context.adaptive.border,
+                        ? AppColors.parvozGreen
+                        : AppColors.parvozBorderStrong,
                     width: selected ? 3 : 1,
                   ),
                   borderRadius: BorderRadius.circular(16),
@@ -330,7 +311,7 @@ class _WallpaperTile extends StatelessWidget {
                   label!,
                   textAlign: TextAlign.center,
                   style: const TextStyle(
-                    color: Colors.white,
+                    color: AppColors.parvozText,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),
@@ -344,11 +325,14 @@ class _WallpaperTile extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.all(2),
                 decoration: const BoxDecoration(
-                  color: AppColors.primary,
+                  color: AppColors.parvozGreen,
                   shape: BoxShape.circle,
                 ),
-                child:
-                    const Icon(Icons.check, color: Colors.black, size: 14),
+                child: const Icon(
+                  Icons.check,
+                  color: AppColors.parvozOnGreen,
+                  size: 14,
+                ),
               ),
             ),
         ],

@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// SocialPostCard — bitta post (PDF p18, 24)
+// SocialPostCard — bitta post (PDF p18, 24) — Parvoz NIGHT/GLASS
 // ─────────────────────────────────────────────────────────────────────
 //
 // Tarkib:
@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/social/data/models/social_post.dart';
 import 'package:farzandim_child/features/social/presentation/providers/social_providers.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -31,10 +32,7 @@ class SocialPostCard extends ConsumerWidget {
 
     return Container(
       margin: const EdgeInsets.only(bottom: 16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(20),
-      ),
+      decoration: parvozGlass(radius: 20),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -58,7 +56,7 @@ class SocialPostCard extends ConsumerWidget {
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                               style: const TextStyle(
-                                color: AppColors.textPrimary,
+                                color: AppColors.parvozText,
                                 fontSize: 15,
                                 fontWeight: FontWeight.w600,
                               ),
@@ -68,7 +66,7 @@ class SocialPostCard extends ConsumerWidget {
                             const SizedBox(width: 4),
                             const Icon(
                               Icons.verified,
-                              color: AppColors.primary,
+                              color: AppColors.parvozGreen,
                               size: 16,
                             ),
                           ],
@@ -78,7 +76,7 @@ class SocialPostCard extends ConsumerWidget {
                       Text(
                         _timeAgo(post.createdAt),
                         style: const TextStyle(
-                          color: AppColors.textTertiary,
+                          color: AppColors.parvozTextDim,
                           fontSize: 11,
                         ),
                       ),
@@ -102,7 +100,7 @@ class SocialPostCard extends ConsumerWidget {
               maxLines: 4,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: AppColors.textPrimary,
+                color: AppColors.parvozText,
                 fontSize: 15,
                 height: 1.4,
               ),
@@ -115,16 +113,16 @@ class SocialPostCard extends ConsumerWidget {
               height: 200,
               margin: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
-                color: post.thumbnailColor ?? AppColors.surfaceVariant,
+                color: post.thumbnailColor ?? AppColors.parvozSurfaceHigh,
                 borderRadius: BorderRadius.circular(14),
               ),
+              clipBehavior: Clip.antiAlias,
               child: Center(
                 child: Container(
                   width: 60,
                   height: 60,
                   decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: Colors.white.withOpacity(0.3),
+                    color: Colors.white.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                   child: Icon(
@@ -157,14 +155,14 @@ class SocialPostCard extends ConsumerWidget {
                               : Icons.favorite_outline,
                           color: isLiked
                               ? AppColors.error
-                              : AppColors.textSecondary,
+                              : AppColors.parvozTextDim,
                           size: 22,
                         ),
                         const SizedBox(width: 6),
                         Text(
                           '${post.likes + (isLiked ? 1 : 0)}',
                           style: const TextStyle(
-                            color: AppColors.textSecondary,
+                            color: AppColors.parvozTextDim,
                             fontSize: 13,
                             fontWeight: FontWeight.w500,
                           ),
@@ -241,7 +239,7 @@ class _Avatar extends StatelessWidget {
       width: 44,
       height: 44,
       decoration: BoxDecoration(
-        color: author.avatarColor ?? AppColors.surfaceVariant,
+        color: author.avatarColor ?? AppColors.parvozSurfaceHigh,
         shape: BoxShape.circle,
       ),
       alignment: Alignment.center,
@@ -275,12 +273,12 @@ class _FollowButton extends StatelessWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
         decoration: BoxDecoration(
-          color: isFollowing ? Colors.transparent : AppColors.primary,
+          color: isFollowing ? Colors.transparent : AppColors.parvozGreen,
           borderRadius: BorderRadius.circular(999),
           border: Border.all(
             color: isFollowing
-                ? AppColors.border
-                : AppColors.primary,
+                ? AppColors.parvozBorderStrong
+                : AppColors.parvozGreen,
             width: 1.5,
           ),
         ),
@@ -289,7 +287,7 @@ class _FollowButton extends StatelessWidget {
           children: [
             Icon(
               isFollowing ? AppIcons.check : AppIcons.profile,
-              color: isFollowing ? AppColors.textSecondary : Colors.black,
+              color: isFollowing ? AppColors.parvozTextDim : AppColors.parvozOnGreen,
               size: 16,
             ),
             const SizedBox(width: 4),
@@ -298,7 +296,7 @@ class _FollowButton extends StatelessWidget {
                   ? 'social.following'.tr()
                   : 'social.follow'.tr(),
               style: TextStyle(
-                color: isFollowing ? AppColors.textSecondary : Colors.black,
+                color: isFollowing ? AppColors.parvozTextDim : AppColors.parvozOnGreen,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),
@@ -320,14 +318,13 @@ class _TagChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
       decoration: BoxDecoration(
-        // ignore: deprecated_member_use
-        color: AppColors.primary.withOpacity(0.12),
+        color: AppColors.parvozGreen.withValues(alpha: 0.14),
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text(
         tag,
         style: const TextStyle(
-          color: AppColors.primary,
+          color: AppColors.parvozGreen,
           fontSize: 11,
           fontWeight: FontWeight.w500,
         ),
