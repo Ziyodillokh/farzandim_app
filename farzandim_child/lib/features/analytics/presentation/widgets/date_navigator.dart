@@ -1,13 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────
 // DateNavigator — Sprint 4.4.32 real data integration
+//                 (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
 // `< Bugun · 17 may 2026 >` formatdagi sana ko'rsatkichi.
 // Chevron tugmalar selectedAnalyticsDateProvider'ni ±1 kun o'zgartiradi.
 // Kelajak sanaga o'tish bloklangan (today > sana keyingisi).
+// LOGIKA SAQLANGAN — faqat ranglar parvoz night tokenlar
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -28,7 +30,7 @@ class DateNavigator extends ConsumerWidget {
         IconButton(
           icon: const Icon(
             AppIcons.chevronLeft,
-            color: AppColors.textPrimary,
+            color: AppColors.parvozText,
           ),
           tooltip: 'Avvalgi kun',
           onPressed: () => _shift(ref, -1),
@@ -40,7 +42,7 @@ class DateNavigator extends ConsumerWidget {
             style: const TextStyle(
               fontSize: 16,
               fontWeight: FontWeight.w600,
-              color: AppColors.textPrimary,
+              color: AppColors.parvozText,
             ),
           ),
         ),
@@ -48,8 +50,8 @@ class DateNavigator extends ConsumerWidget {
           icon: Icon(
             AppIcons.chevronRight,
             color: isFuture
-                ? AppColors.textTertiary
-                : AppColors.textPrimary,
+                ? AppColors.parvozTextDim
+                : AppColors.parvozText,
           ),
           tooltip: 'Keyingi kun',
           onPressed: isFuture ? null : () => _shift(ref, 1),

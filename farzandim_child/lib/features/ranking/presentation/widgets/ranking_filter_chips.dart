@@ -1,12 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────
-// RankingFilterChips — Hudud / Yosh chip + bottom sheet pickers
+// RankingFilterChips — Hudud / Yosh chip + bottom sheet pickers (Parvoz NIGHT)
 // ─────────────────────────────────────────────────────────────────────
 //
 // Faqat tab Hudud yoki Yosh bo'lganda ko'rinadi. Tap → bottom sheet.
+// Logika (selectedRegionProvider, selectedYoshGuruhiProvider) o'zgartirilmadi.
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -84,26 +85,26 @@ class _FilterButton extends StatelessWidget {
         padding:
             const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: context.adaptive.bgCard,
+          color: AppColors.parvozSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.adaptive.border),
+          border: Border.all(color: AppColors.parvozBorder),
         ),
         child: Row(
           children: [
-            Icon(icon, color: AppColors.primary, size: 18),
+            Icon(icon, color: AppColors.parvozGreen, size: 18),
             const SizedBox(width: 8),
             Expanded(
               child: Text(
                 text,
                 overflow: TextOverflow.ellipsis,
-                style: TextStyle(
-                  color: context.adaptive.textPrimary,
+                style: const TextStyle(
+                  color: AppColors.parvozText,
                   fontSize: 13,
                 ),
               ),
             ),
-            Icon(Icons.keyboard_arrow_down,
-                color: context.adaptive.textSecondary, size: 18),
+            const Icon(Icons.keyboard_arrow_down,
+                color: AppColors.parvozTextDim, size: 18),
           ],
         ),
       ),
@@ -125,9 +126,14 @@ class _RegionPicker extends ConsumerWidget {
       builder: (_, scrollController) {
         return Container(
           decoration: const BoxDecoration(
-            color: AppColors.surface,
+            color: AppColors.parvozSurface,
             borderRadius:
                 BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border(
+              top: BorderSide(color: AppColors.parvozBorderStrong),
+              left: BorderSide(color: AppColors.parvozBorder),
+              right: BorderSide(color: AppColors.parvozBorder),
+            ),
           ),
           child: Column(
             children: [
@@ -136,7 +142,7 @@ class _RegionPicker extends ConsumerWidget {
                 width: 40,
                 height: 4,
                 decoration: BoxDecoration(
-                  color: AppColors.textTertiary,
+                  color: AppColors.parvozBorderStrong,
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
@@ -147,17 +153,17 @@ class _RegionPicker extends ConsumerWidget {
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.parvozText,
                   ),
                 ),
               ),
-              const Divider(color: AppColors.border, height: 1),
+              const Divider(color: AppColors.parvozBorder, height: 1),
               Expanded(
                 child: ListView.separated(
                   controller: scrollController,
                   itemCount: UzbekistanRegions.all.length,
                   separatorBuilder: (_, __) => const Divider(
-                      color: AppColors.border, height: 1),
+                      color: AppColors.parvozBorder, height: 1),
                   itemBuilder: (_, i) {
                     final region = UzbekistanRegions.all[i];
                     final isSelected = region == selected;
@@ -166,7 +172,9 @@ class _RegionPicker extends ConsumerWidget {
                       title: Text(
                         region,
                         style: TextStyle(
-                          color: AppColors.textPrimary,
+                          color: isSelected
+                              ? AppColors.parvozGreen
+                              : AppColors.parvozText,
                           fontWeight: isSelected
                               ? FontWeight.w600
                               : FontWeight.normal,
@@ -174,7 +182,7 @@ class _RegionPicker extends ConsumerWidget {
                       ),
                       trailing: isSelected
                           ? const Icon(AppIcons.check,
-                              color: AppColors.primary)
+                              color: AppColors.parvozGreen)
                           : null,
                       onTap: () {
                         ref
@@ -211,8 +219,13 @@ class _YoshPicker extends ConsumerWidget {
 
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.parvozSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: AppColors.parvozBorderStrong),
+          left: BorderSide(color: AppColors.parvozBorder),
+          right: BorderSide(color: AppColors.parvozBorder),
+        ),
       ),
       child: SafeArea(
         child: Column(
@@ -223,7 +236,7 @@ class _YoshPicker extends ConsumerWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textTertiary,
+                color: AppColors.parvozBorderStrong,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -234,21 +247,27 @@ class _YoshPicker extends ConsumerWidget {
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.parvozText,
                 ),
               ),
             ),
-            const Divider(color: AppColors.border, height: 1),
+            const Divider(color: AppColors.parvozBorder, height: 1),
             for (final yosh in _yoshGuruhlari)
               ListTile(
                 title: Text(
                   '$yosh yosh',
-                  style: const TextStyle(
-                      color: AppColors.textPrimary),
+                  style: TextStyle(
+                    color: yosh == selected
+                        ? AppColors.parvozGreen
+                        : AppColors.parvozText,
+                    fontWeight: yosh == selected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
+                  ),
                 ),
                 trailing: yosh == selected
                     ? const Icon(AppIcons.check,
-                        color: AppColors.primary)
+                        color: AppColors.parvozGreen)
                     : null,
                 onTap: () {
                   ref

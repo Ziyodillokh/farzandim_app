@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// AnalyticsScreen — "Hammasini ko'rish" 3 tab (Sprint 4.4.42)
+// AnalyticsScreen — "Ilovalar" 3 tab (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
 // 3 ta tab swipe bilan navigatsiya:
@@ -7,18 +7,18 @@
 //   1. Vaqt cheklovi — Parent limit qo'ygan ilovalar + qolgan vaqt
 //   2. Bloklangan — Parent block qo'ygan ilovalar
 //
-// TabBarView swipe gesture qo'llab-quvvatlaydi.
-
-import 'package:farzandim_child/core/theme/app_icons.dart';
+// LOGIKA SAQLANGAN: provider'lar, navigatsiya, cheklov/bloklash mantiq
+// FAQAT KO'RINISH o'zgargan: parvoz night/glass tokenlar
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/analytics/presentation/widgets/app_usage_list.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/shared/widgets/app_icon_memory.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -44,16 +44,17 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
+      backgroundColor: AppColors.parvozBg,
       extendBody: true,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.parvozBg,
         elevation: 0,
         scrolledUnderElevation: 0,
+        surfaceTintColor: Colors.transparent,
         leading: IconButton(
           icon: const Icon(
             AppIcons.back,
-            color: AppColors.textPrimary,
+            color: AppColors.parvozText,
           ),
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/dashboard'),
@@ -61,35 +62,37 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         title: const Text(
           'Ilovalar',
           style: TextStyle(
-            color: AppColors.textPrimary,
+            color: AppColors.parvozText,
             fontSize: 18,
             fontWeight: FontWeight.w700,
+            letterSpacing: -0.3,
           ),
         ),
         bottom: PreferredSize(
-          preferredSize: const Size.fromHeight(48),
+          preferredSize: const Size.fromHeight(52),
           child: Container(
             margin: const EdgeInsets.fromLTRB(16, 0, 16, 8),
             decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.parvozSurface,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: AppColors.parvozBorderStrong),
             ),
             child: TabBar(
               controller: _tabController,
               indicator: BoxDecoration(
-                color: AppColors.primary,
-                borderRadius: BorderRadius.circular(10),
+                color: AppColors.parvozGreen,
+                borderRadius: BorderRadius.circular(11),
               ),
               indicatorSize: TabBarIndicatorSize.tab,
               indicatorPadding: const EdgeInsets.all(4),
-              labelColor: Colors.black,
-              unselectedLabelColor: AppColors.textSecondary,
+              labelColor: AppColors.parvozOnGreen,
+              unselectedLabelColor: AppColors.parvozTextDim,
               labelStyle: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w700,
               ),
               unselectedLabelStyle: const TextStyle(
-                fontSize: 13,
+                fontSize: 12,
                 fontWeight: FontWeight.w500,
               ),
               dividerColor: Colors.transparent,
@@ -102,18 +105,16 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
           ),
         ),
       ),
-      body: GradientBackground(
-        child: SafeArea(
-          top: false,
-          bottom: false,
-          child: TabBarView(
-            controller: _tabController,
-            children: const [
-              _AllAppsTab(),
-              _LimitedAppsTab(),
-              _BlockedAppsTab(),
-            ],
-          ),
+      body: SafeArea(
+        top: false,
+        bottom: false,
+        child: TabBarView(
+          controller: _tabController,
+          children: const [
+            _AllAppsTab(),
+            _LimitedAppsTab(),
+            _BlockedAppsTab(),
+          ],
         ),
       ),
       bottomNavigationBar: const ChildBottomNavigation(),
@@ -128,9 +129,9 @@ class _AllAppsTab extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
-      child: const AppUsageList(),
+    return const SingleChildScrollView(
+      padding: EdgeInsets.fromLTRB(16, 8, 16, 100),
+      child: AppUsageList(),
     );
   }
 }
@@ -173,11 +174,9 @@ class _LimitedAppsTab extends ConsumerWidget {
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+            decoration: parvozGlassFlat(radius: 16).copyWith(
               border: Border.all(
-                color: AppColors.warning.withValues(alpha: 0.18),
+                color: AppColors.warning.withValues(alpha: 0.28),
               ),
             ),
             child: Column(
@@ -190,7 +189,7 @@ class _LimitedAppsTab extends ConsumerWidget {
                   ),
                   if (i < limited.length - 1)
                     const Divider(
-                      color: AppColors.border,
+                      color: AppColors.parvozBorderStrong,
                       height: 1,
                       indent: 16,
                       endIndent: 16,
@@ -237,11 +236,9 @@ class _BlockedAppsTab extends ConsumerWidget {
         return SingleChildScrollView(
           padding: const EdgeInsets.fromLTRB(16, 8, 16, 100),
           child: Container(
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
+            decoration: parvozGlassFlat(radius: 16).copyWith(
               border: Border.all(
-                color: AppColors.error.withValues(alpha: 0.18),
+                color: AppColors.error.withValues(alpha: 0.28),
               ),
             ),
             child: Column(
@@ -253,7 +250,7 @@ class _BlockedAppsTab extends ConsumerWidget {
                   ),
                   if (i < blocked.length - 1)
                     const Divider(
-                      color: AppColors.border,
+                      color: AppColors.parvozBorderStrong,
                       height: 1,
                       indent: 16,
                       endIndent: 16,
@@ -311,7 +308,7 @@ class _LimitTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.parvozText,
                   ),
                 ),
                 const SizedBox(height: 6),
@@ -329,7 +326,7 @@ class _LimitTile extends StatelessWidget {
                   child: LinearProgressIndicator(
                     value: percent.toDouble(),
                     minHeight: 4,
-                    backgroundColor: AppColors.border,
+                    backgroundColor: AppColors.parvozBorderStrong,
                     valueColor: AlwaysStoppedAnimation<Color>(accent),
                   ),
                 ),
@@ -344,7 +341,7 @@ class _LimitTile extends StatelessWidget {
                 overLimit ? 'Tugadi' : 'Qoldi',
                 style: const TextStyle(
                   fontSize: 10,
-                  color: AppColors.textTertiary,
+                  color: AppColors.parvozTextDim,
                 ),
               ),
               Text(
@@ -403,7 +400,7 @@ class _BlockTile extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: AppColors.textPrimary,
+                    color: AppColors.parvozText,
                   ),
                 ),
                 const SizedBox(height: 2),
@@ -413,24 +410,23 @@ class _BlockTile extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     fontSize: 11,
-                    color: AppColors.textTertiary,
+                    color: AppColors.parvozTextDim,
                   ),
                 ),
               ],
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.15),
+              color: AppColors.error.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(AppIcons.block,
-                    color: AppColors.error, size: 13),
+                Icon(AppIcons.block, color: AppColors.error, size: 13),
                 SizedBox(width: 4),
                 Text(
                   'Bloklangan',
@@ -490,7 +486,6 @@ class _Icon extends StatelessWidget {
       );
     }
     if (iconBase64 != null && iconBase64!.isNotEmpty) {
-      // Cache'langan dekod + cacheWidth (jank fix).
       return AppIconMemory(
         base64: iconBase64,
         size: _size,
@@ -535,7 +530,7 @@ class _Loading extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return const Center(
-      child: CircularProgressIndicator(color: AppColors.primary),
+      child: CircularProgressIndicator(color: AppColors.parvozGreen),
     );
   }
 }
@@ -544,7 +539,7 @@ class _Empty extends StatelessWidget {
   const _Empty({
     required this.text,
     this.icon = Icons.inbox_rounded,
-    this.color = AppColors.textTertiary,
+    this.color = AppColors.parvozTextDim,
   });
 
   final String text;

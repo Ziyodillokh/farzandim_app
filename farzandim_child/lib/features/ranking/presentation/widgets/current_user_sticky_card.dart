@@ -1,6 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────
-// CurrentUserStickyCard — pastki yopishqoq card (Дунё ranking)
+// CurrentUserStickyCard — pastki yopishqoq card (Parvoz NIGHT/GLASS)
 // ─────────────────────────────────────────────────────────────────────
+//
+// Logika (filteredUsersProvider, scoreFor, pointsToNext) o'zgartirilmadi.
+// Ko'rinish: parvoz glass + aqua aksent.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
@@ -31,24 +34,25 @@ class CurrentUserStickyCard extends ConsumerWidget {
     }
 
     return Container(
-      decoration: BoxDecoration(
+      decoration: const BoxDecoration(
         gradient: LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            // ignore: deprecated_member_use
-            AppColors.primary.withOpacity(0.95),
-            AppColors.primary,
-          ],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
         ),
         borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(16)),
+            BorderRadius.vertical(top: Radius.circular(20)),
+        border: Border(
+          top: BorderSide(color: AppColors.parvozGreen, width: 1.5),
+          left: BorderSide(color: AppColors.parvozGlassRim, width: 1),
+          right: BorderSide(color: AppColors.parvozGlassRim, width: 1),
+        ),
         boxShadow: [
           BoxShadow(
-            // ignore: deprecated_member_use
-            color: Colors.black.withOpacity(0.3),
-            blurRadius: 12,
-            offset: const Offset(0, -2),
+            color: Color(0x59000000),
+            blurRadius: 22,
+            offset: Offset(0, -8),
+            spreadRadius: -2,
           ),
         ],
       ),
@@ -58,13 +62,15 @@ class CurrentUserStickyCard extends ConsumerWidget {
           padding: const EdgeInsets.all(16),
           child: Row(
             children: [
+              // Rank badge
               Container(
                 width: 48,
                 height: 48,
                 decoration: BoxDecoration(
-                  // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.15),
+                  color: AppColors.parvozGreen.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(12),
+                  border: Border.all(
+                      color: AppColors.parvozGreen.withValues(alpha: 0.4)),
                 ),
                 alignment: Alignment.center,
                 child: Text(
@@ -72,18 +78,27 @@ class CurrentUserStickyCard extends ConsumerWidget {
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
-                    color: Colors.black,
+                    color: AppColors.parvozGreen,
                   ),
                 ),
               ),
               const SizedBox(width: 12),
+              // Avatar doira
               Container(
                 width: 40,
                 height: 40,
                 decoration: BoxDecoration(
                   color: currentUser.avatarColor,
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.black, width: 2),
+                  border: Border.all(
+                      color: AppColors.parvozGreen, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppColors.parvozGreen.withValues(alpha: 0.3),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
                 child: Center(
                   child: Text(
@@ -109,7 +124,7 @@ class CurrentUserStickyCard extends ConsumerWidget {
                       style: const TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
-                        color: Colors.black,
+                        color: AppColors.parvozText,
                       ),
                     ),
                     if (pointsToNext != null && pointsToNext > 0)
@@ -117,10 +132,9 @@ class CurrentUserStickyCard extends ConsumerWidget {
                         "Yana $pointsToNext ball — #${rank - 1} ga ko'tarilasiz!",
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
+                        style: const TextStyle(
                           fontSize: 11,
-                          // ignore: deprecated_member_use
-                          color: Colors.black.withOpacity(0.8),
+                          color: AppColors.parvozTextDim,
                         ),
                       ),
                   ],
@@ -136,15 +150,14 @@ class CurrentUserStickyCard extends ConsumerWidget {
                     style: const TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
-                      color: Colors.black,
+                      color: AppColors.parvozGreen,
                     ),
                   ),
-                  Text(
+                  const Text(
                     'ball',
                     style: TextStyle(
                       fontSize: 11,
-                      // ignore: deprecated_member_use
-                      color: Colors.black.withOpacity(0.7),
+                      color: AppColors.parvozTextDim,
                     ),
                   ),
                 ],

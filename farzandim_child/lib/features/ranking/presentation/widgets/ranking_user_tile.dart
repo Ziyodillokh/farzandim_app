@@ -1,9 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────
-// RankingUserTile — 4+ pozitsiyadagi user qatori
+// RankingUserTile — 4+ pozitsiyadagi user qatori (Parvoz NIGHT/GLASS)
 // ─────────────────────────────────────────────────────────────────────
+//
+// Logika (scoreFor, rankDiff, isCurrentUser) o'zgartirilmadi.
+// Ko'rinish: parvozGlassFlat + parvoz tokenlar.
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/ranking/data/models/ranking_user.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:flutter/material.dart';
@@ -28,16 +31,36 @@ class RankingUserTile extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(
-        color: user.isCurrentUser
-            // ignore: deprecated_member_use
-            ? AppColors.primary.withOpacity(0.15)
-            : context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(12),
-        border: user.isCurrentUser
-            ? Border.all(color: AppColors.primary, width: 1.5)
-            : Border.all(color: context.adaptive.border, width: 0.5),
-      ),
+      decoration: user.isCurrentUser
+          ? BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+              ),
+              border: Border.all(
+                  color: AppColors.parvozGreen, width: 1.5),
+              boxShadow: [
+                BoxShadow(
+                  // ignore: deprecated_member_use
+                  // ignore: deprecated_member_use
+              color: AppColors.parvozGreen.withOpacity(0.15),
+                  blurRadius: 12,
+                  offset: const Offset(0, 4),
+                ),
+              ],
+            )
+          : BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+              ),
+              border: Border.all(
+                  color: AppColors.parvozGlassRim, width: 1),
+            ),
       child: Row(
         children: [
           SizedBox(
@@ -45,10 +68,10 @@ class RankingUserTile extends StatelessWidget {
             child: Text(
               '#$rank',
               textAlign: TextAlign.center,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 14,
                 fontWeight: FontWeight.bold,
-                color: context.adaptive.textSecondary,
+                color: AppColors.parvozTextDim,
               ),
             ),
           ),
@@ -62,10 +85,10 @@ class RankingUserTile extends StatelessWidget {
                       : Icons.remove,
               size: 14,
               color: rankDiff > 0
-                  ? Colors.green
+                  ? AppColors.parvozGreen
                   : rankDiff < 0
                       ? AppColors.error
-                      : context.adaptive.textTertiary,
+                      : AppColors.parvozTextDim,
             ),
           ),
           const SizedBox(width: 8),
@@ -75,6 +98,8 @@ class RankingUserTile extends StatelessWidget {
             decoration: BoxDecoration(
               color: user.avatarColor,
               shape: BoxShape.circle,
+              border: Border.all(
+                  color: AppColors.parvozBorderStrong, width: 1),
             ),
             child: Center(
               child: Text(
@@ -103,7 +128,7 @@ class RankingUserTile extends StatelessWidget {
                           fontWeight: user.isCurrentUser
                               ? FontWeight.bold
                               : FontWeight.w600,
-                          color: context.adaptive.textPrimary,
+                          color: AppColors.parvozText,
                         ),
                       ),
                     ),
@@ -113,13 +138,13 @@ class RankingUserTile extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 6, vertical: 2),
                         decoration: BoxDecoration(
-                          color: AppColors.primary,
+                          color: AppColors.parvozGreen,
                           borderRadius: BorderRadius.circular(4),
                         ),
                         child: const Text(
                           'SIZ',
                           style: TextStyle(
-                            color: Colors.black,
+                            color: AppColors.parvozOnGreen,
                             fontSize: 9,
                             fontWeight: FontWeight.bold,
                           ),
@@ -133,9 +158,9 @@ class RankingUserTile extends StatelessWidget {
                   children: [
                     Text(
                       '${user.age} yosh',
-                      style: TextStyle(
+                      style: const TextStyle(
                         fontSize: 11,
-                        color: context.adaptive.textTertiary,
+                        color: AppColors.parvozTextDim,
                       ),
                     ),
                     if (user.streakDays > 0) ...[
@@ -177,15 +202,15 @@ class RankingUserTile extends StatelessWidget {
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
                   color: user.isCurrentUser
-                      ? AppColors.primary
-                      : context.adaptive.textPrimary,
+                      ? AppColors.parvozGreen
+                      : AppColors.parvozText,
                 ),
               ),
-              Text(
+              const Text(
                 'ball',
                 style: TextStyle(
                   fontSize: 10,
-                  color: context.adaptive.textTertiary,
+                  color: AppColors.parvozTextDim,
                 ),
               ),
             ],

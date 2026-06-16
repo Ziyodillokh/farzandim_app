@@ -1,13 +1,13 @@
 // ─────────────────────────────────────────────────────────────────────
-// RankingScreen — Reyting (PDF p19-20)
+// RankingScreen — Reyting (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Top header → 'Reyting' → Tabs → Time pills → Filter chips →
-// TopThreePodium + ListView (4..N) + sticky CurrentUserStickyCard.
+// Logika o'zgartirilmadi: filteredUsersProvider, timeRangeProvider, navigatsiya,
+// animate() stagger — hammasi saqlanadi. Faqat ko'rinish night/glass.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
-import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:farzandim_child/features/ranking/presentation/widgets/current_user_sticky_card.dart';
 import 'package:farzandim_child/features/ranking/presentation/widgets/ranking_filter_chips.dart';
@@ -17,11 +17,9 @@ import 'package:farzandim_child/features/ranking/presentation/widgets/time_range
 import 'package:farzandim_child/features/ranking/presentation/widgets/top_three_podium.dart';
 import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 
 class RankingScreen extends ConsumerWidget {
   const RankingScreen({super.key});
@@ -31,35 +29,17 @@ class RankingScreen extends ConsumerWidget {
     final users = ref.watch(filteredUsersProvider);
     final timeRange = ref.watch(timeRangeProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBody: true,
-      body: GradientBackground(
-        child: SafeArea(
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        extendBody: true,
+        body: SafeArea(
           bottom: false,
           child: Column(
             children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DashboardTopHeader(
-                  onAvatarTap: () => context.push('/account-edit'),
-                ),
-              ),
-              const SizedBox(height: 8),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'Reyting',
-                    style: TextStyle(
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                      color: context.adaptive.textPrimary,
-                    ),
-                  ),
-                ),
-              ),
+              // ── Night header: "Reyting" sarlavha (nav-tab — orqaga yo'q) ──
+              const _RankingHeader(),
               const SizedBox(height: 16),
               const RankingTabs(),
               const SizedBox(height: 12),
@@ -72,7 +52,7 @@ class RankingScreen extends ConsumerWidget {
                         children: [
                           ListView(
                             padding: const EdgeInsets.only(
-                                top: 8, bottom: 120),
+                                top: 8, bottom: 140),
                             children: [
                               const TopThreePodium(),
                               const SizedBox(height: 16),
@@ -107,8 +87,71 @@ class RankingScreen extends ConsumerWidget {
             ],
           ),
         ),
+        bottomNavigationBar: const ChildBottomNavigation(),
       ),
-      bottomNavigationBar: const ChildBottomNavigation(),
+    );
+  }
+}
+
+// ─── Night header: nav-tab bo'lgani uchun orqaga yo'q, faqat sarlavha ───
+class _RankingHeader extends StatelessWidget {
+  const _RankingHeader();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+      ),
+      child: Row(
+        children: [
+          // Parvoz logo aksent
+          const Text(
+            'Parvoz',
+            style: TextStyle(
+              color: AppColors.parvozGreen,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Vertikal ajratuvchi
+          Container(
+            width: 1,
+            height: 18,
+            color: AppColors.parvozBorder,
+            margin: const EdgeInsets.symmetric(horizontal: 4),
+          ),
+          const SizedBox(width: 4),
+          // Sahifa sarlavhasi
+          const Text(
+            'Reyting',
+            style: TextStyle(
+              color: AppColors.parvozText,
+              fontSize: 22,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.3,
+            ),
+          ),
+          const Spacer(),
+          // Trofey aksent ikona
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: AppColors.parvozSurface,
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.emoji_events_outlined,
+              color: AppColors.parvozGreen,
+              size: 22,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -118,7 +161,6 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // FARO faceExcited — bola konkurslarga qatnashishga motivatsiya
     return const EmptyStateMascot(
       faroVariant: FaroVariant.faceExcited,
       title: "Reyting hozircha bo'sh",

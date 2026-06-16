@@ -1,13 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────
-// ScheduleTile — bitta jadval qatori (Telegram-style card)
+// ScheduleTile — bitta jadval qatori (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
-// `isCurrent` rost bo'lsa lime green border + "HOZIR" badge.
+// `isCurrent` rost bo'lsa — aqua aksent border + "HOZIR" badge.
+// Fon: parvozGlassFlat (soyasiz glass) — ro'yxat itemlar uchun mos.
+// Logika (schedule model, isCurrent, type icon) O'ZGARMAGAN.
 
 import 'package:flutter/material.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 
 class ScheduleTile extends StatelessWidget {
   const ScheduleTile({
@@ -22,50 +25,69 @@ class ScheduleTile extends StatelessWidget {
   IconData _typeIcon(ScheduleType type) {
     switch (type) {
       case ScheduleType.school:
-        return Icons.school;
+        return Icons.school_rounded;
       case ScheduleType.sport:
-        return Icons.sports_soccer;
+        return Icons.sports_soccer_rounded;
       case ScheduleType.sleep:
         return Icons.nightlight_round;
       case ScheduleType.meal:
-        return Icons.restaurant;
+        return Icons.restaurant_rounded;
       case ScheduleType.custom:
-        return Icons.event;
+        return Icons.event_rounded;
     }
   }
 
   @override
   Widget build(BuildContext context) {
+    // Aktiv (hozirgi) element uchun aqua border ustiga qo'shimcha aksent
+    final decoration = isCurrent
+        ? BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            gradient: const LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+            ),
+            border: Border.all(color: AppColors.parvozGreen, width: 1.5),
+            boxShadow: [
+              BoxShadow(
+                color: AppColors.parvozGreen.withValues(alpha: 0.18),
+                blurRadius: 16,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          )
+        : parvozGlassFlat(radius: 16);
+
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+      margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 5),
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: isCurrent
-            ? AppColors.primary.withValues(alpha: 0.15)
-            : context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: isCurrent
-            ? Border.all(color: AppColors.primary, width: 2)
-            : Border.all(color: context.adaptive.border, width: 1),
-      ),
+      decoration: decoration,
       child: Row(
         children: [
+          // ─── Tur ikoni doirasi ────────────────────────────────────
           Container(
             width: 48,
             height: 48,
             decoration: BoxDecoration(
               color: isCurrent
-                  ? AppColors.primary
-                  : AppColors.primary.withValues(alpha: 0.15),
+                  ? AppColors.parvozGreen.withValues(alpha: 0.18)
+                  : AppColors.parvozSurface,
               shape: BoxShape.circle,
+              border: Border.all(
+                color: isCurrent
+                    ? AppColors.parvozGreen.withValues(alpha: 0.5)
+                    : AppColors.parvozBorder,
+              ),
             ),
             child: Icon(
               _typeIcon(schedule.type),
-              color: isCurrent ? Colors.black : AppColors.primary,
-              size: 24,
+              color: isCurrent ? AppColors.parvozGreen : AppColors.parvozTextDim,
+              size: 22,
             ),
           ),
           const SizedBox(width: 16),
+          // ─── Sarlavha + vaqt ─────────────────────────────────────
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -76,46 +98,60 @@ class ScheduleTile extends StatelessWidget {
                       child: Text(
                         schedule.title,
                         style: TextStyle(
-                          color: context.adaptive.textPrimary,
+                          color: isCurrent
+                              ? AppColors.parvozText
+                              : AppColors.parvozText,
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
                     ),
-                    if (isCurrent)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 3,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        child: const Text(
-                          'HOZIR',
-                          style: TextStyle(
-                            color: Colors.black,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                      ),
+                    if (isCurrent) _HozirBadge(),
                   ],
                 ),
-                const SizedBox(height: 4),
+                const SizedBox(height: 5),
                 Text(
                   schedule.timeRangeFormatted,
-                  style: TextStyle(
-                    color: context.adaptive.textSecondary,
+                  style: const TextStyle(
+                    color: AppColors.parvozTextDim,
                     fontSize: 13,
-                    fontFeatures: const [FontFeature.tabularFigures()],
+                    fontFeatures: [FontFeature.tabularFigures()],
                   ),
                 ),
               ],
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+// ─── "HOZIR" badge — aqua aksent ────────────────────────────────────────
+class _HozirBadge extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: AppColors.parvozGreen,
+        borderRadius: BorderRadius.circular(999),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.parvozGreen.withValues(alpha: 0.3),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: const Text(
+        'HOZIR',
+        style: TextStyle(
+          color: AppColors.parvozOnGreen,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+          letterSpacing: 0.5,
+        ),
       ),
     );
   }

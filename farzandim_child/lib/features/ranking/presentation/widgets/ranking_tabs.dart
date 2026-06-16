@@ -1,9 +1,9 @@
 // ─────────────────────────────────────────────────────────────────────
-// RankingTabs — Umumiy / Hudud / Yosh segmented control
+// RankingTabs — Umumiy / Hudud / Yosh segmented control (Parvoz NIGHT)
 // ─────────────────────────────────────────────────────────────────────
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,9 +20,9 @@ class RankingTabs extends ConsumerWidget {
       child: Container(
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
-          color: context.adaptive.bgCard,
+          color: AppColors.parvozSurface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: context.adaptive.border, width: 0.5),
+          border: Border.all(color: AppColors.parvozBorder, width: 1),
         ),
         child: Row(
           children: [
@@ -81,7 +81,7 @@ class _Tab extends ConsumerWidget {
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? AppColors.primary : Colors.transparent,
+          color: isActive ? AppColors.parvozGreen : Colors.transparent,
           borderRadius: BorderRadius.circular(8),
         ),
         child: Row(
@@ -91,8 +91,8 @@ class _Tab extends ConsumerWidget {
               icon,
               size: 16,
               color: isActive
-                  ? Colors.black
-                  : context.adaptive.textSecondary,
+                  ? AppColors.parvozOnGreen
+                  : AppColors.parvozTextDim,
             ),
             const SizedBox(width: 6),
             Text(
@@ -101,8 +101,8 @@ class _Tab extends ConsumerWidget {
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
                 color: isActive
-                    ? Colors.black
-                    : context.adaptive.textSecondary,
+                    ? AppColors.parvozOnGreen
+                    : AppColors.parvozTextDim,
               ),
             ),
           ],
