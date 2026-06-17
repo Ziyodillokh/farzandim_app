@@ -156,6 +156,11 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     final stops =
         ref.watch(locationStopsProvider(query)).valueOrNull ??
         const <LocationStop>[];
+    // Trek bo'ylab kirilgan ko'cha nomlari — sheet builder ichida emas,
+    // shu yerda (build) o'qiymiz (ref.watch faqat build'da chaqirilsin).
+    final streets =
+        ref.watch(traversedStreetsProvider(query)).valueOrNull ??
+        const <String>[];
 
     // Tarix nuqtalarini tozalash — yomon-aniqlik fix va statsionar jitter
     // klasterlari olib tashlanadi (zigzag/soxta "borib-kelish" + shishgan
@@ -228,28 +233,31 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
               },
             ),
 
-            // Yuqori panel (orqaga + sarlavha).
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.md),
-              child: _TopBar(childName: childName),
-            ),
-
-            // Bottom panel: faqat sana picker + stats.
-            Positioned(
-              left: 0,
-              right: 0,
-              bottom: 0,
-              child: _BottomPanel(
+            // Bottom sheet: TORTILADIGAN — pastga tortib xaritani ko'rsa
+            // bo'ladi, tepaga tortib + scroll bilan ko'chalar o'qiladi.
+            // (Avval Positioned panel cheksiz o'sib xaritani to'sib qo'yardi.)
+            DraggableScrollableSheet(
+              initialChildSize: 0.40,
+              minChildSize: 0.13,
+              maxChildSize: 0.92,
+              snap: true,
+              snapSizes: const [0.40],
+              builder: (context, scrollController) => _BottomPanel(
+                scrollController: scrollController,
                 fromDt: _fromDt,
                 toDt: _toDt,
                 onCustomDateTap: _pickDateRange,
                 stops: stops,
-                streets:
-                    ref.watch(traversedStreetsProvider(query)).valueOrNull ??
-                        const [],
+                streets: streets,
                 onPlaceTap: _goToStop,
                 distanceKm: _distanceKmMemo,
               ),
+            ),
+
+            // Yuqori panel (orqaga + sarlavha) — sheet USTIDA, doim bosiladi.
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.md),
+              child: _TopBar(childName: childName),
             ),
           ],
         ),
