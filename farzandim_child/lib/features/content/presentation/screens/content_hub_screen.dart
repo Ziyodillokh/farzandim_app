@@ -16,6 +16,7 @@
 // `AppColors.parvoz*` (Premium: surface #162B45, green #2ECC71, badge #F39C12).
 // Real data: effectiveVideosProvider + audiobooks/books (mock yo'q).
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -808,12 +809,14 @@ class _NetImage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (url.isEmpty) return ColoredBox(color: fallback);
-    return Image.network(
-      url,
+    // Disk-cache (cached_network_image): kontent rasmlari bir marta
+    // yuklangach keyingi safar (offline ham) darhol chiqadi.
+    return CachedNetworkImage(
+      imageUrl: url,
       fit: BoxFit.cover,
-      loadingBuilder: (_, child, progress) =>
-          progress == null ? child : ColoredBox(color: fallback),
-      errorBuilder: (_, __, ___) => ColoredBox(color: fallback),
+      fadeInDuration: const Duration(milliseconds: 180),
+      placeholder: (_, __) => ColoredBox(color: fallback),
+      errorWidget: (_, __, ___) => ColoredBox(color: fallback),
     );
   }
 }

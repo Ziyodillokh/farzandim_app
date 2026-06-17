@@ -2,6 +2,7 @@
 // HeroVideoCard — feed yuqorisidagi katta vertikal card (PDF p5)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:flutter/material.dart';
@@ -25,7 +26,8 @@ class HeroVideoCard extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             image: video.thumbnailUrl.isNotEmpty
                 ? DecorationImage(
-                    image: NetworkImage(video.thumbnailUrl),
+                    // Disk-cache: thumbnail bir marta yuklangach darhol chiqadi.
+                    image: CachedNetworkImageProvider(video.thumbnailUrl),
                     fit: BoxFit.cover,
                   )
                 : null,

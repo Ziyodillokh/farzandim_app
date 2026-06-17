@@ -33,20 +33,47 @@ final videoActiveTabProvider = StateProvider<int>((ref) => 1);
 /// admin yangi video (YouTube havola) qo'shgach bola tezda ko'radi (avval
 /// 5 daqiqa edi, yangi kontent kech chiqardi). Pull-to-refresh ham bor.
 /// `ref.invalidate(backendVideosProvider)` orqali manual refresh ham mumkin.
-final backendVideosProvider = FutureProvider<List<VideoModel>>((ref) async {
-  // 30s auto-dispose: hech kim watch qilmasa, provider qayta mount'da fresh
-  // fetch qiladi (yangi/o'chirilgan admin videolarni tez aks ettiradi).
-  ref.cacheFor(const Duration(seconds: 30));
-  final repo = ref.watch(videosBackendRepositoryProvider);
-  return repo.fetchVideos();
-});
+/// Cache-first (stale-while-revalidate): cold start'da lokal cache'dagi
+/// videolar DARHOL qaytadi, parallelda fon'da backend'dan yangisi kelib
+/// `state`'ni yangilaydi. Cache yo'q bo'lsa odatdagidek network kutiladi.
+/// Offline bo'lsa cache qoladi (xato yutiladi). Watching → AsyncValue,
+/// `.future`/`.valueOrNull` FutureProvider bilan bir xil — eski consumerlar
+/// (pull-to-refresh `ref.read(...future)`) o'zgartirishsiz ishlaydi.
+final backendVideosProvider =
+    AsyncNotifierProvider<VideosNotifier, List<VideoModel>>(
+  VideosNotifier.new,
+);
 
-/// `ref.cacheFor` polyfill — Riverpod 3.x'da native, hozircha extension.
-extension _RefCache on Ref {
-  void cacheFor(Duration duration) {
-    final link = keepAlive();
-    final timer = Timer(duration, link.close);
-    onDispose(timer.cancel);
+class VideosNotifier extends AsyncNotifier<List<VideoModel>> {
+  bool _disposed = false;
+
+  @override
+  Future<List<VideoModel>> build() async {
+    ref.onDispose(() => _disposed = true);
+    // 30s keepAlive: tez nav qaytishda qayta fetch qilmaydi (avvalgi xulq).
+    final link = ref.keepAlive();
+    final timer = Timer(const Duration(seconds: 30), link.close);
+    ref.onDispose(timer.cancel);
+
+    final repo = ref.watch(videosBackendRepositoryProvider);
+    final cached = await repo.cachedVideos();
+    if (cached.isNotEmpty) {
+      // Cache bor — darhol qaytaramiz, yangisini fon'da olamiz (build tugagach).
+      Future.microtask(() => _refresh(repo));
+      return cached;
+    }
+    // Cache yo'q (birinchi marta) — network kutiladi.
+    return repo.fetchVideos();
+  }
+
+  Future<void> _refresh(VideosBackendRepository repo) async {
+    try {
+      final fresh = await repo.fetchVideos();
+      if (_disposed) return;
+      state = AsyncData(fresh);
+    } catch (_) {
+      // Offline/timeout: cache'dagi (allaqachon ko'rsatilgan) ro'yxat qoladi.
+    }
   }
 }
 
