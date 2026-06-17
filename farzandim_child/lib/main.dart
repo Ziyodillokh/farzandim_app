@@ -56,37 +56,34 @@ Future<void> main() async {
   // oddiy just_audio bilan ishlaydi (ovozli xabarlar kabi, ishonchli). Telefon
   // qulflanganda davom etish keyin alohida, sinab ko'rilgan holda qo'shiladi.
 
-  // easy_localization init — JSON tarjima fayllarini yuklash uchun.
-  await EasyLocalization.ensureInitialized();
+  // ── PERF: init'lar PARALLEL (ketma-ket await o'rniga) ──────────────
+  // Avval EasyLocalization → Firebase → date×2 KETMA-KET kutilardi (sekin
+  // cold start). Endi hammasi parallel: Firebase (eng uzun, ~1-3s native)
+  // bilan bir vaqtda localization + locale data yuklanadi. EasyLocalization
+  // runApp'dagi widget'dan oldin tayyor bo'lishi shart — shuning uchun
+  // Future.wait ichida (lekin Firebase bilan parallel).
+  await Future.wait<void>([
+    EasyLocalization.ensureInitialized(),
+    // DEV: Firebase config'siz ham ishga tushsin (catchError bilan no-op).
+    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+        .then((_) {
+      // Data-only FCM background handler ('location_wake'). Web'da yo'q.
+      if (!kIsWeb) {
+        try {
+          FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+        } catch (e) {
+          debugPrint('[DEV] FCM background handler skipped: $e');
+        }
+      }
+    }).catchError((Object e) {
+      debugPrint('[DEV] Firebase init skipped: $e');
+    }),
+    // Locale data — DateFormat('d MMMM','uz') uchun (LocaleDataException oldini).
+    initializeDateFormatting('uz_UZ', null),
+    initializeDateFormatting('ru_RU', null),
+  ]);
 
-  // DEV: Firebase config'siz ham app ishga tushsin (stub bilan kompilyatsiya
-  // o'tadi, lekin runtime'da real loyiha kalit'lari bo'lmasa initializeApp
-  // xato beradi). Auth/Firestore/FCM bunday holatda no-op.
-  try {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-  } catch (e) {
-    debugPrint('[DEV] Firebase init skipped: $e');
-  }
-
-  // Data-only FCM background handler — 'location_wake' (ota-ona xaritani
-  // ochganda app fonda bo'lsa ham yangi fix yuboriladi). Web'da yo'q.
-  if (!kIsWeb) {
-    try {
-      FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
-    } catch (e) {
-      debugPrint('[DEV] FCM background handler skipped: $e');
-    }
-  }
-
-  // Locale ma'lumotlarini yuklash — `DateFormat('d MMMM', 'uz')` kabi
-  // non-default locale ishlatilganda kerak (LocaleDataException oldini oladi).
-  await initializeDateFormatting('uz_UZ', null);
-  await initializeDateFormatting('ru_RU', null);
-
-  // Foreground Service notification kanali va options.
-  // Web'da no-op — flutter_foreground_task faqat Android/iOS.
+  // Foreground Service notification kanali. Web'da no-op.
   if (!kIsWeb) {
     BackgroundService.init();
   }
