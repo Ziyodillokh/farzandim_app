@@ -1,6 +1,7 @@
 import rasm1 from "../../imports/Main/rasm1.png";
 import rasm2 from "../../imports/Main/rasm2.png";
 import rasm3 from "../../imports/Main/rasm3.png";
+import logoFarzandim from "../../imports/Main/logo_farzandim.png";
 import svgPaths from "../../imports/Main/svg-35b9599amp";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -9,12 +10,23 @@ import { QRCodeSVG } from "qrcode.react";
 // ──────────────────────────────────────────────
 
 function LogoIcon() {
+  // Farzandimning haqiqiy logosi — dumaloq plitka (app-icon ko'rinishi).
   return (
-    <div className="relative shrink-0 size-8">
-      <svg className="absolute inset-0 size-full" fill="none" viewBox="0 0 32 32">
-        <rect fill="white" height="32" rx="8" width="32" />
-        <path clipRule="evenodd" d={svgPaths.p2a8c3b90} fill="black" fillRule="evenodd" />
-      </svg>
+    <div
+      className="relative shrink-0 overflow-hidden"
+      style={{
+        width: 40,
+        height: 40,
+        borderRadius: 11,
+        background: "#ffffff",
+        boxShadow: "0 6px 18px -6px rgba(0,0,0,0.55), 0 0 0 1px rgba(255,255,255,0.10)",
+      }}
+    >
+      <img
+        src={logoFarzandim}
+        alt="Farzandim logo"
+        style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
+      />
     </div>
   );
 }
