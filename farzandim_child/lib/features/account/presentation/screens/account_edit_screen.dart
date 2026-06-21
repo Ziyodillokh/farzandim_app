@@ -1,12 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────
-// AccountEditScreen — bola profili tahrirlash (PDF p21)
+// AccountEditScreen — bola profili tahrirlash (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Maydonlar: foto (galereya), ism, yosh (5-18), hudud (14 viloyat).
-// Saqlash: Firestore (`users/{p}/children/{c}`) + Storage agar foto
-// almashtirilgan bo'lsa.
+// Maydonlar: foto (galereya), ism, yosh (5-18), hudud, til. Saqlash backend
+// orqali (uploadMyAvatar + updateMyProfile). LOGIKA SAQLANGAN — faqat ko'rinish
+// night/glass (parvoz tokenlar + parvozGlass). Light keyin alohida.
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:typed_data';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -17,7 +16,7 @@ import 'package:farzandim_child/features/account/presentation/widgets/age_list_d
 import 'package:farzandim_child/features/account/presentation/widgets/region_picker_bottom_sheet.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
@@ -26,8 +25,7 @@ class AccountEditScreen extends ConsumerStatefulWidget {
   const AccountEditScreen({super.key});
 
   @override
-  ConsumerState<AccountEditScreen> createState() =>
-      _AccountEditScreenState();
+  ConsumerState<AccountEditScreen> createState() => _AccountEditScreenState();
 }
 
 class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
@@ -35,9 +33,6 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
 
   int? _selectedAge;
   String? _selectedRegion;
-  // Tanlangan foto baytlari — web/mobile bir xil ishlaydi. Avval File
-  // ishlatilardi (Image.file), lekin u web'da `!kIsWeb` assertion bilan
-  // crash beradi. Uint8List + Image.memory hamma platformada ishlaydi.
   Uint8List? _selectedPhotoBytes;
   String? _existingPhotoUrl;
 
@@ -50,9 +45,6 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     super.dispose();
   }
 
-  /// Birinchi marta (childData kelgach) controller va state'ga
-  /// hozirgi qiymatlarni yozib qo'yamiz. Keyingi stream emissionlarini
-  /// e'tiborga olmaymiz — foydalanuvchi inputi bekor bo'lib ketmasligi uchun.
   void _loadCurrentData(Map<String, dynamic> childData) {
     if (_hasLoaded) return;
     _hasLoaded = true;
@@ -60,8 +52,6 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     _nameController.text = (childData['name'] as String?) ?? '';
     _selectedAge = childData['age'] as int?;
     _selectedRegion = childData['region'] as String?;
-    // Backend `photoPath` saqlaydi (URL emas). Mavjud rasmni ommaviy proxy
-    // orqali ko'rsatamiz: GET /children/:id/avatar/image.
     final childId = childData['id'] as String?;
     final photoPath = childData['photoPath'] as String?;
     final bust = DateTime.now().millisecondsSinceEpoch;
@@ -77,15 +67,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       maxWidth: 1024,
       imageQuality: 85,
     );
-
     if (pickedFile != null) {
-      // readAsBytes() — web va mobile'da bir xil ishlaydi. File(path)
-      // konstruktori web'da `dart:io` mavjud emasligi sababli crash beradi.
       final bytes = await pickedFile.readAsBytes();
       if (!mounted) return;
-      setState(() {
-        _selectedPhotoBytes = bytes;
-      });
+      setState(() => _selectedPhotoBytes = bytes);
     }
   }
 
@@ -133,20 +118,16 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     try {
       final repo = ref.read(childRepositoryProvider);
 
-      // Avval rasm (tanlangan bo'lsa) — backend photoPath'ni yangilaydi.
       if (_selectedPhotoBytes != null) {
         await repo.uploadMyAvatar(bytes: _selectedPhotoBytes!);
       }
 
-      // Keyin ism/yosh/hudud.
       await repo.updateMyProfile(
         name: name,
         age: _selectedAge,
         region: _selectedRegion,
       );
 
-      // Dashboard/header keshlarini yangilash — yangi ma'lumot va rasm
-      // darhol ko'rinsin.
       ref.invalidate(childDataStreamProvider((
         parentUid: pairing.parentUid!,
         childId: pairing.childId!,
@@ -163,9 +144,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
         AppColors.error,
       );
     } finally {
-      if (mounted) {
-        setState(() => _isLoading = false);
-      }
+      if (mounted) setState(() => _isLoading = false);
     }
   }
 
@@ -183,11 +162,9 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
         pairing.parentUid == null ||
         pairing.childId == null) {
       return const Scaffold(
-        backgroundColor: Colors.transparent,
-        body: GradientBackground(
-          child: Center(
-            child: CircularProgressIndicator(color: AppColors.primary),
-          ),
+        backgroundColor: AppColors.parvozBg,
+        body: Center(
+          child: CircularProgressIndicator(color: AppColors.parvozGreen),
         ),
       );
     }
@@ -198,66 +175,50 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     )));
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: childDataAsync.when(
-            data: (data) {
-              if (data != null) _loadCurrentData(data);
-              return _buildForm(context);
-            },
-            loading: () => const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
-            ),
-            error: (e, _) => Center(
-              child: Padding(
-                padding: const EdgeInsets.all(24),
-                child: Text(
-                  'account.errorPrefix'.tr(namedArgs: {'error': '$e'}),
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(color: AppColors.error),
+      backgroundColor: AppColors.parvozBg,
+      body: Column(
+        children: [
+          ParvozHeader(
+            title: 'account.title'.tr(),
+            onBack: () => Navigator.pop(context),
+          ),
+          Expanded(
+            child: childDataAsync.when(
+              data: (data) {
+                if (data != null) _loadCurrentData(data);
+                return _buildForm(context);
+              },
+              loading: () => const Center(
+                child: CircularProgressIndicator(color: AppColors.parvozGreen),
+              ),
+              error: (e, _) => Center(
+                child: Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Text(
+                    'account.errorPrefix'.tr(namedArgs: {'error': '$e'}),
+                    textAlign: TextAlign.center,
+                    style: const TextStyle(color: AppColors.error),
+                  ),
                 ),
               ),
             ),
           ),
-        ),
+        ],
       ),
     );
   }
 
   Widget _buildForm(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              IconButton(
-                icon: Icon(AppIcons.back,
-                    color: context.adaptive.textPrimary),
-                onPressed: () => Navigator.pop(context),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(
-                  'account.title'.tr(),
-                  style: TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: context.adaptive.textPrimary,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
           Expanded(
             child: SingleChildScrollView(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  _buildLabel('account.photoLabel'.tr()),
                   const SizedBox(height: 8),
                   Center(
                     child: GestureDetector(
@@ -265,38 +226,39 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                       child: Container(
                         width: 120,
                         height: 120,
-                        decoration: BoxDecoration(
-                          color: context.adaptive.bgCard,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                            color: context.adaptive.border,
-                            width: 1,
-                          ),
-                        ),
+                        decoration: parvozGlass(radius: 24),
+                        clipBehavior: Clip.antiAlias,
                         child: _buildPhoto(),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 32),
+                  const SizedBox(height: 10),
+                  Center(
+                    child: TextButton.icon(
+                      onPressed: _pickPhoto,
+                      icon: const Icon(Icons.photo_camera_rounded,
+                          color: AppColors.parvozGreen, size: 18),
+                      label: Text(
+                        'account.photoLabel'.tr(),
+                        style: const TextStyle(
+                          color: AppColors.parvozGreen,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
                   _buildLabel('account.nameLabel'.tr()),
                   const SizedBox(height: 8),
                   Container(
-                    decoration: BoxDecoration(
-                      color: context.adaptive.bgCard,
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: context.adaptive.border,
-                        width: 1,
-                      ),
-                    ),
+                    decoration: parvozGlassFlat(radius: 14),
                     child: TextField(
                       controller: _nameController,
-                      style: TextStyle(
-                          color: context.adaptive.textPrimary),
+                      style: const TextStyle(color: AppColors.parvozText),
                       decoration: InputDecoration(
                         hintText: 'account.nameHint'.tr(),
-                        hintStyle: TextStyle(
-                            color: context.adaptive.textTertiary),
+                        hintStyle:
+                            const TextStyle(color: AppColors.parvozTextDim),
                         border: InputBorder.none,
                         contentPadding: const EdgeInsets.all(16),
                       ),
@@ -306,10 +268,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                   _buildLabel('account.ageLabel'.tr()),
                   const SizedBox(height: 8),
                   _buildPicker(
+                    icon: Icons.cake_rounded,
                     text: _selectedAge != null
-                        ? 'account.ageValue'.tr(
-                            namedArgs: {'age': '$_selectedAge'},
-                          )
+                        ? 'account.ageValue'
+                            .tr(namedArgs: {'age': '$_selectedAge'})
                         : 'account.agePlaceholder'.tr(),
                     onTap: _selectAge,
                     isPlaceholder: _selectedAge == null,
@@ -318,8 +280,8 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                   _buildLabel('account.regionLabel'.tr()),
                   const SizedBox(height: 8),
                   _buildPicker(
-                    text: _selectedRegion ??
-                        'account.regionPlaceholder'.tr(),
+                    icon: Icons.location_on_rounded,
+                    text: _selectedRegion ?? 'account.regionPlaceholder'.tr(),
                     onTap: _selectRegion,
                     isPlaceholder: _selectedRegion == null,
                   ),
@@ -327,6 +289,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                   _buildLabel('account.languageLabel'.tr()),
                   const SizedBox(height: 8),
                   _buildPicker(
+                    icon: Icons.translate_rounded,
                     text: _currentLanguageLabel(context),
                     onTap: _selectLanguage,
                     isPlaceholder: false,
@@ -340,19 +303,17 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
             children: [
               Expanded(
                 child: OutlinedButton(
-                  onPressed:
-                      _isLoading ? null : () => Navigator.pop(context),
+                  onPressed: _isLoading ? null : () => Navigator.pop(context),
                   style: OutlinedButton.styleFrom(
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(14),
                     ),
-                    side: BorderSide(color: context.adaptive.border),
+                    side: const BorderSide(color: AppColors.parvozGlassRim),
                   ),
                   child: Text(
                     'account.backButton'.tr(),
-                    style:
-                        TextStyle(color: context.adaptive.textPrimary),
+                    style: const TextStyle(color: AppColors.parvozText),
                   ),
                 ),
               ),
@@ -361,11 +322,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _onSave,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primary,
-                    foregroundColor: Colors.black,
+                    backgroundColor: AppColors.parvozGreen,
+                    foregroundColor: AppColors.parvozOnGreen,
+                    elevation: 0,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(14),
                     ),
                   ),
                   child: _isLoading
@@ -373,14 +335,13 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                           width: 20,
                           height: 20,
                           child: CircularProgressIndicator(
-                            color: Colors.black,
+                            color: AppColors.parvozOnGreen,
                             strokeWidth: 2,
                           ),
                         )
                       : Text(
                           'account.saveButton'.tr(),
-                          style: const TextStyle(
-                              fontWeight: FontWeight.w600),
+                          style: const TextStyle(fontWeight: FontWeight.w700),
                         ),
                 ),
               ),
@@ -394,15 +355,16 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   Widget _buildLabel(String text) {
     return Text(
       text,
-      style: TextStyle(
+      style: const TextStyle(
         fontSize: 14,
         fontWeight: FontWeight.w600,
-        color: context.adaptive.textPrimary,
+        color: AppColors.parvozText,
       ),
     );
   }
 
   Widget _buildPicker({
+    required IconData icon,
     required String text,
     required VoidCallback onTap,
     bool isPlaceholder = false,
@@ -411,29 +373,24 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: context.adaptive.bgCard,
-          borderRadius: BorderRadius.circular(12),
-          border: Border.all(
-            color: context.adaptive.border,
-            width: 1,
-          ),
-        ),
+        decoration: parvozGlassFlat(radius: 14),
         child: Row(
           children: [
+            Icon(icon, color: AppColors.parvozGreen, size: 20),
+            const SizedBox(width: 12),
             Expanded(
               child: Text(
                 text,
                 style: TextStyle(
                   color: isPlaceholder
-                      ? context.adaptive.textTertiary
-                      : context.adaptive.textPrimary,
+                      ? AppColors.parvozTextDim
+                      : AppColors.parvozText,
                   fontWeight: FontWeight.w500,
                 ),
               ),
             ),
-            Icon(Icons.keyboard_arrow_down,
-                color: context.adaptive.textSecondary),
+            const Icon(Icons.keyboard_arrow_down_rounded,
+                color: AppColors.parvozTextDim),
           ],
         ),
       ),
@@ -442,37 +399,28 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
 
   Widget _buildPhoto() {
     if (_selectedPhotoBytes != null) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        // Image.memory — web va mobile'da bir xil. Image.file web'da
-        // `Image.file is not supported on Flutter Web` assertion beradi.
-        child: Image.memory(_selectedPhotoBytes!, fit: BoxFit.cover),
-      );
+      return Image.memory(_selectedPhotoBytes!, fit: BoxFit.cover);
     }
     if (_existingPhotoUrl != null && _existingPhotoUrl!.isNotEmpty) {
-      return ClipRRect(
-        borderRadius: BorderRadius.circular(20),
-        child: Image.network(
-          _existingPhotoUrl!,
-          fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => _buildPhotoPlaceholder(),
-        ),
+      return Image.network(
+        _existingPhotoUrl!,
+        fit: BoxFit.cover,
+        errorBuilder: (_, __, ___) => _buildPhotoPlaceholder(),
       );
     }
     return _buildPhotoPlaceholder();
   }
 
   Widget _buildPhotoPlaceholder() {
-    return Center(
+    return const Center(
       child: Icon(
-        AppIcons.camera,
-        color: context.adaptive.textTertiary,
+        Icons.photo_camera_rounded,
+        color: AppColors.parvozTextDim,
         size: 32,
       ),
     );
   }
 
-  // ── Til tanlash ─────────────────────────────────────────────────────
   String _currentLanguageLabel(BuildContext context) {
     final code = context.locale.languageCode;
     return 'languages.$code'.tr();
@@ -481,7 +429,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   Future<void> _selectLanguage() async {
     final selected = await showModalBottomSheet<Locale>(
       context: context,
-      backgroundColor: context.adaptive.bgCard,
+      backgroundColor: AppColors.parvozSurface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -489,7 +437,6 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     );
 
     if (selected != null && mounted && selected != context.locale) {
-      // easy_localization SharedPreferences'ga saqlaydi — qayta ochilganda ham saqlanadi.
       await context.setLocale(selected);
     }
   }
@@ -500,11 +447,7 @@ class _LanguagePickerSheet extends StatelessWidget {
 
   final Locale current;
 
-  static const _options = [
-    Locale('uz'),
-    Locale('ru'),
-    Locale('en'),
-  ];
+  static const _options = [Locale('uz'), Locale('ru'), Locale('en')];
 
   @override
   Widget build(BuildContext context) {
@@ -517,10 +460,10 @@ class _LanguagePickerSheet extends StatelessWidget {
           children: [
             Text(
               'account.languagePickerTitle'.tr(),
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 16,
-                fontWeight: FontWeight.w600,
-                color: context.adaptive.textPrimary,
+                fontWeight: FontWeight.w700,
+                color: AppColors.parvozText,
               ),
             ),
             const SizedBox(height: 12),
@@ -529,14 +472,13 @@ class _LanguagePickerSheet extends StatelessWidget {
                 contentPadding: EdgeInsets.zero,
                 title: Text(
                   'languages.${locale.languageCode}'.tr(),
-                  style:
-                      TextStyle(color: context.adaptive.textPrimary),
+                  style: const TextStyle(color: AppColors.parvozText),
                 ),
                 trailing: locale == current
-                    ? const Icon(AppIcons.success,
-                        color: AppColors.primary)
-                    : Icon(Icons.radio_button_unchecked,
-                        color: context.adaptive.textTertiary),
+                    ? const Icon(Icons.check_rounded,
+                        color: AppColors.parvozGreen)
+                    : const Icon(Icons.radio_button_unchecked,
+                        color: AppColors.parvozTextDim),
                 onTap: () => Navigator.pop(context, locale),
               ),
           ],

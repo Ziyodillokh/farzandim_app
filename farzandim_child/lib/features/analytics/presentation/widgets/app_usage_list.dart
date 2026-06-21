@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────
 // AppUsageList — Sprint 4.4.32 real Backend usage + limit + icon
+//                (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
 // `dailyUsageProvider` + `childAppLimitsProvider` merge:
@@ -7,15 +8,17 @@
 //   - Har ilova uchun: icon (base64 yoki Material fallback), nom,
 //     foydalanish vaqti, Parent limit (agar bor) + qolgan vaqt yoki
 //     limit oshganligi belgisi.
-
-import 'package:farzandim_child/core/theme/app_icons.dart';
+//
+// LOGIKA SAQLANGAN — faqat ko'rinish parvoz night/glass tokenlar
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/shared/widgets/app_icon_memory.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -32,11 +35,7 @@ class AppUsageList extends ConsumerWidget {
     final installedAsync = ref.watch(installedAppsMapProvider);
 
     return Container(
-      decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: context.adaptive.border, width: 0.5),
-      ),
+      decoration: parvozGlassFlat(radius: 16),
       child: usageAsync.when(
         loading: () => const _LoadingBox(),
         error: (_, __) => const _EmptyBox(text: "Ma'lumot yuklanmadi"),
@@ -72,8 +71,8 @@ class AppUsageList extends ConsumerWidget {
                 children: [
                   _UsageRow(app: app, limit: lim),
                   if (i < visible.length - 1)
-                    Divider(
-                      color: context.adaptive.divider,
+                    const Divider(
+                      color: AppColors.parvozBorderStrong,
                       height: 1,
                       indent: 16,
                       endIndent: 16,
@@ -225,10 +224,10 @@ class _UsageRow extends StatelessWidget {
                   app.appName.isEmpty ? app.packageName : app.appName,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 15,
                     fontWeight: FontWeight.w600,
-                    color: context.adaptive.textPrimary,
+                    color: AppColors.parvozText,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -248,15 +247,13 @@ class _UsageRow extends StatelessWidget {
   Widget _buildSubtitle() {
     final lim = limit;
     if (lim == null) {
-      return Builder(builder: (ctx) {
-        return Text(
-          app.formattedTime,
-          style: TextStyle(
-            fontSize: 13,
-            color: ctx.adaptive.textSecondary,
-          ),
-        );
-      });
+      return Text(
+        app.formattedTime,
+        style: const TextStyle(
+          fontSize: 13,
+          color: AppColors.parvozTextDim,
+        ),
+      );
     }
 
     if (lim.isFullBlock) {
@@ -282,48 +279,43 @@ class _UsageRow extends StatelessWidget {
     final remainingMs = limitMs - usedMs;
     final overLimit = remainingMs <= 0;
 
-    return Builder(builder: (ctx) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Text(
-                '${app.formattedTime} / ${_formatMs(limitMs)}',
-                style: TextStyle(
-                  fontSize: 13,
-                  color: overLimit
-                      ? AppColors.error
-                      : ctx.adaptive.textSecondary,
-                  fontWeight:
-                      overLimit ? FontWeight.w600 : FontWeight.w400,
-                ),
-              ),
-              if (overLimit) ...[
-                const SizedBox(width: 6),
-                const Icon(
-                  AppIcons.warning,
-                  size: 13,
-                  color: AppColors.error,
-                ),
-              ],
-            ],
-          ),
-          const SizedBox(height: 6),
-          ClipRRect(
-            borderRadius: BorderRadius.circular(999),
-            child: LinearProgressIndicator(
-              value: percent.toDouble(),
-              minHeight: 4,
-              backgroundColor: ctx.adaptive.border,
-              valueColor: AlwaysStoppedAnimation<Color>(
-                overLimit ? AppColors.error : AppColors.primary,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          children: [
+            Text(
+              '${app.formattedTime} / ${_formatMs(limitMs)}',
+              style: TextStyle(
+                fontSize: 13,
+                color: overLimit ? AppColors.error : AppColors.parvozTextDim,
+                fontWeight: overLimit ? FontWeight.w600 : FontWeight.w400,
               ),
             ),
+            if (overLimit) ...[
+              const SizedBox(width: 6),
+              const Icon(
+                AppIcons.warning,
+                size: 13,
+                color: AppColors.error,
+              ),
+            ],
+          ],
+        ),
+        const SizedBox(height: 6),
+        ClipRRect(
+          borderRadius: BorderRadius.circular(999),
+          child: LinearProgressIndicator(
+            value: percent.toDouble(),
+            minHeight: 4,
+            backgroundColor: AppColors.parvozBorderStrong,
+            valueColor: AlwaysStoppedAnimation<Color>(
+              overLimit ? AppColors.error : AppColors.parvozGreen,
+            ),
           ),
-        ],
-      );
-    });
+        ),
+      ],
+    );
   }
 
   Widget? _buildTrailing() {
@@ -340,28 +332,26 @@ class _UsageRow extends StatelessWidget {
         ),
       );
     }
-    return Builder(builder: (ctx) {
-      return Column(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          Text(
-            'Qoldi',
-            style: TextStyle(
-              fontSize: 10,
-              color: ctx.adaptive.textTertiary,
-            ),
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        const Text(
+          'Qoldi',
+          style: TextStyle(
+            fontSize: 10,
+            color: AppColors.parvozTextDim,
           ),
-          Text(
-            _formatMs(remainingMs),
-            style: const TextStyle(
-              fontSize: 13,
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-            ),
+        ),
+        Text(
+          _formatMs(remainingMs),
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.parvozGreen,
+            fontWeight: FontWeight.w700,
           ),
-        ],
-      );
-    });
+        ),
+      ],
+    );
   }
 
   static String _formatMs(int ms) {
@@ -381,7 +371,7 @@ class _AppIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final size = 40.0;
+    const size = 40.0;
     final radius = BorderRadius.circular(10);
 
     // 1. iconUrl (MinIO signed URL)
@@ -438,13 +428,14 @@ class _Fallback extends StatelessWidget {
       child: icon != null
           ? Icon(icon, color: Colors.white, size: size * 0.52)
           : Text(
-        _initialsForName(app.appName.isEmpty ? app.packageName : app.appName),
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
+              _initialsForName(
+                  app.appName.isEmpty ? app.packageName : app.appName),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
     );
   }
 
@@ -495,14 +486,14 @@ class _Fallback extends StatelessWidget {
   /// Paket nomidan deterministik rang (hash → palette).
   static Color _colorForPackage(String pkg) {
     const palette = [
-      AppColors.catIndigo, // indigo
-      AppColors.catPurple, // violet
-      AppColors.catPink, // pink
-      AppColors.danger, // red
-      AppColors.warning, // amber
-      AppColors.catEmerald, // emerald
-      AppColors.catBlue, // blue
-      AppColors.catTeal, // teal
+      AppColors.catIndigo,
+      AppColors.catPurple,
+      AppColors.catPink,
+      AppColors.danger,
+      AppColors.warning,
+      AppColors.catEmerald,
+      AppColors.catBlue,
+      AppColors.catTeal,
     ];
     final hash = pkg.codeUnits.fold<int>(0, (a, b) => a + b);
     return palette[hash % palette.length];
@@ -517,7 +508,7 @@ class _LoadingBox extends StatelessWidget {
     return const SizedBox(
       height: 120,
       child: Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: CircularProgressIndicator(color: AppColors.parvozGreen),
       ),
     );
   }
@@ -534,7 +525,7 @@ class _EmptyBox extends StatelessWidget {
       child: Center(
         child: Text(
           text,
-          style: TextStyle(color: context.adaptive.textSecondary),
+          style: const TextStyle(color: AppColors.parvozTextDim),
         ),
       ),
     );

@@ -9,18 +9,39 @@ import 'package:farzandim_child/features/onboarding/presentation/providers/inter
 /// Backend'dan kitoblar ro'yxati. Bola pair qilinmagan/401 bo'lsa
 /// exception qaytaradi → effective fallback bo'sh ro'yxat.
 ///
-/// 5-daqiqalik cache TTL (oxirgi watch'dan 5 min keyin re-fetch).
-final backendBooksProvider = FutureProvider<List<BookModel>>((ref) async {
-  ref.cacheFor(const Duration(minutes: 5));
-  final repo = ref.watch(booksBackendRepositoryProvider);
-  return repo.fetchBooks();
-});
+/// Cache-first (stale-while-revalidate): cold start'da lokal cache'dagi
+/// kitoblar DARHOL qaytadi, fon'da backend yangilaydi. Offline'da cache
+/// qoladi. 5-daqiqalik keepAlive — tez nav qaytishda qayta fetch yo'q.
+final backendBooksProvider =
+    AsyncNotifierProvider<BooksNotifier, List<BookModel>>(
+  BooksNotifier.new,
+);
 
-extension _RefCache on Ref {
-  void cacheFor(Duration duration) {
-    final link = keepAlive();
-    final timer = Timer(duration, link.close);
-    onDispose(timer.cancel);
+class BooksNotifier extends AsyncNotifier<List<BookModel>> {
+  bool _disposed = false;
+
+  @override
+  Future<List<BookModel>> build() async {
+    ref.onDispose(() => _disposed = true);
+    final link = ref.keepAlive();
+    final timer = Timer(const Duration(minutes: 5), link.close);
+    ref.onDispose(timer.cancel);
+
+    final repo = ref.watch(booksBackendRepositoryProvider);
+    final cached = await repo.cachedBooks();
+    if (cached.isNotEmpty) {
+      Future.microtask(() => _refresh(repo));
+      return cached;
+    }
+    return repo.fetchBooks();
+  }
+
+  Future<void> _refresh(BooksBackendRepository repo) async {
+    try {
+      final fresh = await repo.fetchBooks();
+      if (_disposed) return;
+      state = AsyncData(fresh);
+    } catch (_) {/* offline: cache qoladi */}
   }
 }
 

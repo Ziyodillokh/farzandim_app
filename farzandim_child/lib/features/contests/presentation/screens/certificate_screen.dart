@@ -5,17 +5,35 @@
 // Sertifikat widget sifatida render qilinadi (RepaintBoundary), so'ng PNG
 // rasm sifatida tortib olinib `share_plus` orqali ulashiladi/saqlanadi.
 // Privacy: bola nick (to'liq ism emas) ko'rsatiladi.
+//
+// Dizayn: "Parvoz Premium" — deep navy sertifikat kartasi, gold #FFC83D
+// aksent + aqua #22D3EE glow. Karta o'zi (RepaintBoundary ichi) qat'iy
+// (non-adaptive) palitra — PNG har doim premium chiqishi uchun. Ekran
+// chrome (Scaffold/AppBar/tugma) esa CP adaptiv palitradan foydalanadi.
 
 import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
+import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:share_plus/share_plus.dart';
+
+// ── Sertifikat kartasi qat'iy palitrasi (PNG uchun, theme'dan mustaqil) ──
+const _kCertBgTop = Color(0xFF0B1C30); // deep navy
+const _kCertBgBottom = Color(0xFF132A45);
+const _kCertCard = Color(0xFF16293E);
+const _kGold = Color(0xFFFFC83D);
+const _kGoldSoft = Color(0xFFFFE08A);
+const _kAqua = Color(0xFF22D3EE);
+const _kAquaSoft = Color(0xFF8AEBFF);
+const _kInk = Color(0xFFEAF1F2);
+const _kMuted = Color(0xFFA7B7BD);
+const _kFaint = Color(0xFF6E8090);
 
 class CertificateScreen extends StatefulWidget {
   const CertificateScreen({required this.data, super.key});
@@ -74,21 +92,20 @@ class _CertificateScreenState extends State<CertificateScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = CP(context.adaptive.isDark);
+
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: p.bg,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(Icons.arrow_back_rounded, color: p.text),
           onPressed: () => context.pop(),
         ),
-        title: const Text(
+        title: Text(
           'Sertifikat',
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.bold,
-          ),
+          style: cjak(p, size: 18, weight: FontWeight.w800),
         ),
       ),
       body: Column(
@@ -105,28 +122,11 @@ class _CertificateScreenState extends State<CertificateScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(20, 0, 20, 24),
-            child: SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _sharing ? null : _share,
-                icon: _sharing
-                    ? const SizedBox(
-                        width: 18,
-                        height: 18,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.ios_share_rounded, size: 20),
-                label: Text(_sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish'),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  foregroundColor: Colors.black,
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: _ShareButton(
+              p: p,
+              sharing: _sharing,
+              onTap: _sharing ? null : _share,
             ),
           ),
         ],
@@ -135,7 +135,64 @@ class _CertificateScreenState extends State<CertificateScreen> {
   }
 }
 
-/// Tortib olinadigan (PNG) sertifikat dizayni.
+/// Aqua "Saqlash / Ulashish" tugmasi — glow bilan.
+class _ShareButton extends StatelessWidget {
+  const _ShareButton({required this.p, required this.sharing, this.onTap});
+
+  final CP p;
+  final bool sharing;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        height: 56,
+        decoration: BoxDecoration(
+          gradient: LinearGradient(
+            colors: [p.accentSoft, p.accent],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+          ),
+          borderRadius: BorderRadius.circular(999),
+          boxShadow: [
+            BoxShadow(
+              color: p.accent.withValues(alpha: 0.40),
+              blurRadius: 22,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            if (sharing)
+              SizedBox(
+                width: 18,
+                height: 18,
+                child: CircularProgressIndicator(
+                  strokeWidth: 2.4,
+                  valueColor: AlwaysStoppedAnimation(p.onAccent),
+                ),
+              )
+            else
+              Icon(Icons.ios_share_rounded, size: 20, color: p.onAccent),
+            const SizedBox(width: 10),
+            Text(
+              sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish',
+              style: cjak(p, size: 16, weight: FontWeight.w800, color: p.onAccent),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Tortib olinadigan (PNG) sertifikat dizayni — qat'iy premium palitra.
 class _Certificate extends StatelessWidget {
   const _Certificate({required this.data, required this.dateText});
 
@@ -144,124 +201,247 @@ class _Certificate extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    const gold = Color(0xFFD4AF37);
     return Container(
       width: 340,
-      padding: const EdgeInsets.all(8),
+      // Tashqi gold "ramka" — nozik gradient hoshiya.
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          colors: [Color(0xFF235347), Color(0xFF2F6B5C)],
+          colors: [_kGold, Color(0xFFB7861F), _kGold],
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
         ),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(26),
+        boxShadow: [
+          BoxShadow(
+            color: _kGold.withValues(alpha: 0.22),
+            blurRadius: 30,
+            offset: const Offset(0, 12),
+          ),
+        ],
       ),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
         decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: gold, width: 2),
+          gradient: const LinearGradient(
+            colors: [_kCertBgTop, _kCertBgBottom],
+            begin: Alignment.topCenter,
+            end: Alignment.bottomCenter,
+          ),
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.06)),
         ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        child: Stack(
           children: [
-            // Brend
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(Icons.flight_takeoff_rounded,
-                    color: Color(0xFF235347), size: 22),
-                const SizedBox(width: 6),
-                Text(
-                  'PARVOZ',
-                  style: TextStyle(
-                    color: const Color(0xFF235347),
-                    fontSize: 18,
-                    fontWeight: FontWeight.w900,
-                    letterSpacing: 2,
+            // Yuqorida aqua glow halqasi (dekorativ).
+            Positioned(
+              top: -50,
+              right: -50,
+              child: Container(
+                width: 150,
+                height: 150,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _kAqua.withValues(alpha: 0.22),
+                      _kAqua.withValues(alpha: 0),
+                    ],
                   ),
                 ),
-              ],
-            ),
-            const SizedBox(height: 18),
-            const Icon(Icons.emoji_events_rounded, color: gold, size: 56),
-            const SizedBox(height: 12),
-            const Text(
-              'SERTIFIKAT',
-              style: TextStyle(
-                color: Color(0xFF1A1A1A),
-                fontSize: 26,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 4,
               ),
             ),
-            const SizedBox(height: 4),
-            Container(width: 60, height: 3, color: gold),
-            const SizedBox(height: 20),
-            const Text(
-              'Ushbu sertifikat',
-              style: TextStyle(color: Color(0xFF6B6B78), fontSize: 13),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              data.childNick,
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF1A1A1A),
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+            Positioned(
+              bottom: -60,
+              left: -40,
+              child: Container(
+                width: 160,
+                height: 160,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: RadialGradient(
+                    colors: [
+                      _kGold.withValues(alpha: 0.14),
+                      _kGold.withValues(alpha: 0),
+                    ],
+                  ),
+                ),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              "“${data.olympiadTitle}” olimpiadasini\nmuvaffaqiyatli "
-              'yakunlagani uchun beriladi',
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: Color(0xFF4A4A4A),
-                fontSize: 13,
-                height: 1.5,
-              ),
-            ),
-            const SizedBox(height: 18),
-            // Natija
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-              decoration: BoxDecoration(
-                color: const Color(0xFFF4F7F5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceAround,
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 28),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
                 children: [
-                  _Stat(label: 'Natija', value: '${data.percent}%'),
-                  Container(width: 1, height: 28, color: const Color(0xFFE0E0E0)),
-                  _Stat(label: 'Ball', value: '${data.score}'),
-                  Container(width: 1, height: 28, color: const Color(0xFFE0E0E0)),
-                  _Stat(label: 'Fan', value: data.subject),
+                  // ── Brend ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      const Icon(Icons.flight_takeoff_rounded,
+                          color: _kAqua, size: 22),
+                      const SizedBox(width: 7),
+                      Text(
+                        'PARVOZ',
+                        style: cjak(
+                          CP(true),
+                          size: 18,
+                          weight: FontWeight.w900,
+                          color: _kAquaSoft,
+                          spacing: 3,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 22),
+                  // ── Kubok medallioni ──
+                  Container(
+                    width: 92,
+                    height: 92,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        colors: [
+                          _kGold.withValues(alpha: 0.28),
+                          _kGold.withValues(alpha: 0.04),
+                        ],
+                      ),
+                      border: Border.all(
+                        color: _kGold.withValues(alpha: 0.55),
+                        width: 1.5,
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: _kGold.withValues(alpha: 0.35),
+                          blurRadius: 24,
+                        ),
+                      ],
+                    ),
+                    child: const Icon(Icons.emoji_events_rounded,
+                        color: _kGold, size: 50),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'SERTIFIKAT',
+                    style: cjak(
+                      CP(true),
+                      size: 26,
+                      weight: FontWeight.w900,
+                      color: _kInk,
+                      spacing: 5,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  // Gold ajratuvchi chiziq.
+                  Container(
+                    width: 64,
+                    height: 3,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [_kGoldSoft, _kGold],
+                      ),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  Text(
+                    'Ushbu sertifikat',
+                    style: cjak(CP(true),
+                        size: 13, weight: FontWeight.w500, color: _kMuted),
+                  ),
+                  const SizedBox(height: 8),
+                  Text(
+                    data.childNick,
+                    textAlign: TextAlign.center,
+                    style: cjak(
+                      CP(true),
+                      size: 23,
+                      weight: FontWeight.w800,
+                      color: _kGold,
+                    ),
+                  ),
+                  const SizedBox(height: 10),
+                  Text(
+                    "“${data.olympiadTitle}” olimpiadasini\nmuvaffaqiyatli "
+                    'yakunlagani uchun beriladi',
+                    textAlign: TextAlign.center,
+                    style: cjak(
+                      CP(true),
+                      size: 13,
+                      weight: FontWeight.w500,
+                      color: _kMuted,
+                      height: 1.5,
+                    ),
+                  ),
+                  const SizedBox(height: 22),
+                  // ── Natija paneli ──
+                  Container(
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    decoration: BoxDecoration(
+                      color: _kCertCard,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _kAqua.withValues(alpha: 0.18),
+                      ),
+                    ),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceAround,
+                      children: [
+                        _Stat(label: 'Natija', value: '${data.percent}%'),
+                        const _Divider(),
+                        _Stat(label: 'Ball', value: '${data.score}'),
+                        const _Divider(),
+                        _Stat(label: 'Fan', value: data.subject),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  // ── Sana + ID ──
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Row(
+                        children: [
+                          const Icon(Icons.calendar_today_rounded,
+                              size: 12, color: _kFaint),
+                          const SizedBox(width: 5),
+                          Text(
+                            dateText,
+                            style: cjak(CP(true),
+                                size: 11,
+                                weight: FontWeight.w500,
+                                color: _kFaint),
+                          ),
+                        ],
+                      ),
+                      Text(
+                        data.certificateId,
+                        style: cjak(CP(true),
+                            size: 10,
+                            weight: FontWeight.w500,
+                            color: _kFaint.withValues(alpha: 0.8)),
+                      ),
+                    ],
+                  ),
                 ],
               ),
-            ),
-            const SizedBox(height: 18),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(
-                  dateText,
-                  style:
-                      const TextStyle(color: Color(0xFF6B6B78), fontSize: 11),
-                ),
-                Text(
-                  data.certificateId,
-                  style:
-                      const TextStyle(color: Color(0xFF9999A8), fontSize: 10),
-                ),
-              ],
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Natija panelidagi vertikal ajratuvchi.
+class _Divider extends StatelessWidget {
+  const _Divider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 1,
+      height: 30,
+      color: Colors.white.withValues(alpha: 0.08),
     );
   }
 }
@@ -280,16 +460,18 @@ class _Stat extends StatelessWidget {
           value,
           maxLines: 1,
           overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Color(0xFF235347),
-            fontSize: 15,
-            fontWeight: FontWeight.w800,
+          style: cjak(
+            CP(true),
+            size: 16,
+            weight: FontWeight.w800,
+            color: _kAquaSoft,
           ),
         ),
-        const SizedBox(height: 2),
+        const SizedBox(height: 3),
         Text(
           label,
-          style: const TextStyle(color: Color(0xFF6B6B78), fontSize: 10),
+          style: cjak(CP(true),
+              size: 10, weight: FontWeight.w500, color: _kMuted),
         ),
       ],
     );

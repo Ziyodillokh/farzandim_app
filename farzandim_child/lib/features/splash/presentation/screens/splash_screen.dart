@@ -20,10 +20,9 @@
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
-import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
+import 'package:farzandim_child/features/consent/data/services/consent_storage.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
     show kOnboardingSeenKey;
-import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -45,75 +44,51 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     Future.microtask(_route);
   }
 
+  // PERF: avval 800ms sun'iy delay + 1s consent poll bor edi (native splash
+  // ustiga ortiqcha). Endi routing qarori to'g'ridan storage'dan (consent +
+  // SharedPreferences pairing/onboarding) o'qiladi — provider-timing kutmasdan,
+  // ~50-150ms. 250ms — silliq brend o'tishi (native splashdan keyin).
   Future<void> _route() async {
-    await Future<void>.delayed(const Duration(milliseconds: 800));
+    final routeFuture = _decideRoute();
+    // Route qarori bilan PARALLEL minimal brend-flash (jarangsiz o'tish).
+    await Future<void>.delayed(const Duration(milliseconds: 250));
+    final route = await routeFuture;
     if (!mounted) return;
+    context.go(route);
+  }
 
-    // Parent Consent (Store compliance) — birinchi ochilishda majburiy.
-    // `unknown` paytda SharedPreferences hali yuklanmagan, biroz kutamiz.
-    var consent = ref.read(consentStateProvider);
-    if (consent == ConsentState.unknown) {
-      for (var i = 0; i < 10; i++) {
-        await Future<void>.delayed(const Duration(milliseconds: 100));
-        if (!mounted) return;
-        consent = ref.read(consentStateProvider);
-        if (consent != ConsentState.unknown) break;
-      }
-    }
-    if (consent == ConsentState.notGiven) {
-      context.go('/consent');
-      return;
-    }
+  /// Qaysi ekranga o'tishni storage'dan to'g'ridan hal qiladi (tez, ishonchli).
+  Future<String> _decideRoute() async {
+    // 1. Parent Consent (Store compliance) — storage'dan to'g'ridan.
+    final consentGiven = await ConsentStorage.isParentConsentGiven();
+    if (!consentGiven) return '/consent';
 
-    final pairing = ref.read(pairingStateProvider);
-    if (!pairing.isPaired) {
-      // Pair bo'lmagan bola — to'g'ridan-to'g'ri kod kiritish ekraniga.
-      // Onboarding (qiziqishlar) endi faqat KOD kiritilgandan keyin
-      // ko'rsatiladi (pastdagi paired bloki).
-      context.go('/pairing');
-      return;
-    }
+    final prefs = await SharedPreferences.getInstance();
 
-    // ── Pair bo'lgan ──
-    // Onboarding (qiziqishlar) hali ko'rilmagan bo'lsa — avval shuni
-    // ko'rsatamiz. Bola tugatgach `onboarding_seen_v1=true` saqlanadi va
-    // keyingi startup'larda to'g'ridan-to'g'ri permission/dashboard'ga.
-    {
-      final prefs = await SharedPreferences.getInstance();
-      final onboardingSeen = prefs.getBool(kOnboardingSeenKey) ?? false;
-      if (!mounted) return;
-      if (!onboardingSeen) {
-        context.go('/onboarding');
-        return;
-      }
-    }
+    // 2. Pairing — `paired` holati SharedPreferences'dagi parentUid/childId
+    //    bilan aniqlanadi (Firebase emas — tez).
+    final parentUid = prefs.getString('parentUid');
+    final childId = prefs.getString('childId');
+    if (parentUid == null || childId == null) return '/pairing';
 
-    // Web preview'da permission_handler / UsageStats — UnimplementedError.
-    // Pair bo'lgan bo'lsa to'g'ridan-to'g'ri dashboard'ga.
-    if (kIsWeb) {
-      context.go('/dashboard');
-      return;
-    }
+    // 3. Onboarding (qiziqishlar) — faqat pair'dan keyin, bir marta.
+    final onboardingSeen = prefs.getBool(kOnboardingSeenKey) ?? false;
+    if (!onboardingSeen) return '/onboarding';
 
+    // 4. Web preview — permission/UsageStats yo'q.
+    if (kIsWeb) return '/dashboard';
+
+    // 5. 4 ta sistema ruxsati.
     final usageService = UsageStatsService();
     final locStatus = await Permission.locationAlways.status;
-    final batteryStatus =
-        await Permission.ignoreBatteryOptimizations.status;
+    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     final usageGranted = await usageService.hasPermission();
     final overlayGranted = await usageService.hasOverlayPermission();
-
     final allGranted = locStatus.isGranted &&
         batteryStatus.isGranted &&
         usageGranted &&
         overlayGranted;
-
-    if (!mounted) return;
-    if (!allGranted) {
-      context.go('/permission-setup');
-      return;
-    }
-
-    context.go('/dashboard');
+    return allGranted ? '/dashboard' : '/permission-setup';
   }
 
   @override

@@ -87,6 +87,7 @@ class _CircleIconButton extends StatelessWidget {
 
 class _BottomPanel extends StatelessWidget {
   const _BottomPanel({
+    required this.scrollController,
     required this.fromDt,
     required this.toDt,
     required this.onCustomDateTap,
@@ -96,6 +97,8 @@ class _BottomPanel extends StatelessWidget {
     required this.distanceKm,
   });
 
+  /// DraggableScrollableSheet beradigan controller — tortish + scroll birga.
+  final ScrollController scrollController;
   final DateTime fromDt;
   final DateTime toDt;
   final VoidCallback onCustomDateTap;
@@ -133,23 +136,26 @@ class _BottomPanel extends StatelessWidget {
           ),
         ],
       ),
-      padding: EdgeInsets.fromLTRB(
-        AppDimensions.lg,
-        AppDimensions.sm,
-        AppDimensions.lg,
-        MediaQuery.of(context).padding.bottom + AppDimensions.md,
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
+      clipBehavior: Clip.antiAlias,
+      child: ListView(
+        controller: scrollController,
+        padding: EdgeInsets.fromLTRB(
+          AppDimensions.lg,
+          AppDimensions.sm,
+          AppDimensions.lg,
+          MediaQuery.of(context).padding.bottom + AppDimensions.md,
+        ),
         children: [
-          // Premium drag handle.
-          Container(
-            width: 40,
-            height: 4,
-            margin: const EdgeInsets.only(bottom: AppDimensions.md),
-            decoration: BoxDecoration(
-              color: AppColors.textTertiary.withValues(alpha: 0.4),
-              borderRadius: BorderRadius.circular(2),
+          // Tortish handle'i — DraggableScrollableSheet bilan funksional.
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              margin: const EdgeInsets.only(bottom: AppDimensions.md),
+              decoration: BoxDecoration(
+                color: AppColors.textTertiary.withValues(alpha: 0.4),
+                borderRadius: BorderRadius.circular(2),
+              ),
             ),
           ),
           // ── Tashrif buyurilgan joylar (backend to'xtashlari) ──

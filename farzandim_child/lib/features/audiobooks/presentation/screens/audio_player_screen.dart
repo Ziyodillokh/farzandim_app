@@ -1,22 +1,25 @@
 // ─────────────────────────────────────────────────────────────────────
-// AudioPlayerScreen — full screen audio player (PDF p11)
+// AudioPlayerScreen — Parvoz NIGHT/GLASS audio pleer (Premium Edition)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Top: ✕, sleep timer indicator, ⋮.
-// Markazda 240x240 cover + title + author.
-// Slider + vaqt + controls (replay_10 / play-pause 72px / forward_10).
-// Pastda: tezlik tugma (1.0x ▼), like (❤️ — placeholder).
+// Fon: AppColors.parvozBg (solid navy — GradientBackground olib tashlandi).
+// Cover: parvozGlass() bilan o'ralgan, glow soyasi aqua.
+// Top bar: ParvozHeader orqaga + sleep timer glass chip + menu.
+// Slider: aqua aktiv iz, oq thumb.
+// Play tugmasi: aqua (#22D3EE) doira, ustida to'q navy icon.
+// Tezlik/seek: parvozText/parvozTextDim.
+// BottomSheet'lar: parvozSurface fon, parvozBorder ajratuvchi.
 //
-// Menu ⋮ → Tezlik / Uyqu taymeri / Tafsilotlar (3 ta nested sheet).
-
-import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'dart:ui';
+// LOGIKA SAQLANADI: ref.watch(audioPlayerProvider), ref.listen(error),
+// hasAudio guard, seek/play/pause/resume/setSpeed/sleepTimer — barchasi
+// o'zgarishsiz.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -27,7 +30,7 @@ class AudioPlayerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(audioPlayerProvider);
 
-    // Audio yuklab/ijro etib bo'lmasa — jim 0:00 o'rniga aniq xabar.
+    // Audio yuklab/ijro etib bo'lmasa — snackbar xabar.
     ref.listen<String?>(
       audioPlayerProvider.select((s) => s.error),
       (prev, err) {
@@ -53,91 +56,59 @@ class AudioPlayerScreen extends ConsumerWidget {
     final book = state.currentBook!;
 
     return Scaffold(
-      backgroundColor: Colors.black,
-      body: Stack(
-        fit: StackFit.expand,
+      backgroundColor: AppColors.parvozBg,
+      body: Column(
         children: [
-          // Blurred background — cover rasmidan, kontent ustida o'qib bo'ladigan qiladi.
-          if (book.coverUrl.isNotEmpty)
-            Image.network(
-              book.coverUrl,
-              fit: BoxFit.cover,
-              errorBuilder: (_, _, _) => const GradientBackground(child: SizedBox.shrink()),
-            )
-          else
-            const GradientBackground(child: SizedBox.shrink()),
-          // Blur + qoramtir overlay
-          BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 30, sigmaY: 30),
-            child: Container(
-              // ignore: deprecated_member_use
-              color: Colors.black.withOpacity(0.55),
-            ),
-          ),
-          // Pastdan tepaga qora gradient — kontent ostida o'qishni
-          // osonlashtirish va premium "deep" tuyg'usi.
-          Container(
-            decoration: BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [
-                  // ignore: deprecated_member_use
-                  Colors.black.withOpacity(0.25),
-                  // ignore: deprecated_member_use
-                  Colors.black.withOpacity(0.85),
-                ],
-              ),
-            ),
-          ),
-          SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 20),
-              child: Column(
-                children: [
-                  _TopBar(book: book, state: state),
-                  const SizedBox(height: 12),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        _Cover(book: book),
-                        const SizedBox(height: 28),
-                        Text(
-                          book.author,
-                          textAlign: TextAlign.center,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w400,
-                            letterSpacing: 0.3,
-                            // ignore: deprecated_member_use
-                            color: Colors.white.withOpacity(0.75),
-                          ),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          book.title,
-                          textAlign: TextAlign.center,
-                          maxLines: 2,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            fontSize: 26,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            height: 1.2,
-                          ),
-                        ),
-                        const SizedBox(height: 32),
-                        _SliderRow(state: state),
-                        const SizedBox(height: 16),
-                        _Controls(state: state, book: book),
-                      ],
+          // ── Top bar: orqaga + sleep timer + menu ──
+          _PlayerTopBar(book: book, state: state),
+          // ── Qolgan kontent ──
+          Expanded(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 24),
+                child: Column(
+                  children: [
+                    const SizedBox(height: 24),
+                    // ── Cover ──
+                    _Cover(book: book),
+                    const SizedBox(height: 24),
+                    // ── Muallif ──
+                    Text(
+                      book.author,
+                      textAlign: TextAlign.center,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 14,
+                        fontWeight: FontWeight.w500,
+                        letterSpacing: 0.3,
+                        color: AppColors.parvozTextDim,
+                      ),
                     ),
-                  ),
-                  const SizedBox(height: 16),
-                ],
+                    const SizedBox(height: 6),
+                    // ── Sarlavha ──
+                    Text(
+                      book.title,
+                      textAlign: TextAlign.center,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        fontSize: 24,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.parvozText,
+                        height: 1.2,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    // ── Slider + vaqt ──
+                    _SliderRow(state: state),
+                    const SizedBox(height: 20),
+                    // ── Boshqaruv tugmalari ──
+                    _Controls(state: state, book: book),
+                    const SizedBox(height: 32),
+                  ],
+                ),
               ),
             ),
           ),
@@ -149,64 +120,91 @@ class AudioPlayerScreen extends ConsumerWidget {
 
 // ─── Top bar ─────────────────────────────────────────────────────────
 
-class _TopBar extends ConsumerWidget {
-  const _TopBar({required this.book, required this.state});
+class _PlayerTopBar extends ConsumerWidget {
+  const _PlayerTopBar({required this.book, required this.state});
 
   final AudiobookModel book;
   final AudioPlayerState state;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-        children: [
-          _GlassIconButton(
-            icon: Icons.keyboard_arrow_down_rounded,
-            onTap: () => Navigator.pop(context),
-          ),
-          if (state.hasSleepTimer)
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: BackdropFilter(
-                filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 8),
-                  decoration: BoxDecoration(
-                    // ignore: deprecated_member_use
-                    color: Colors.white.withOpacity(0.15),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      // ignore: deprecated_member_use
-                      color: Colors.white.withOpacity(0.18),
-                    ),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(AppIcons.hourglass,
-                          color: Colors.white, size: 14),
-                      const SizedBox(width: 6),
-                      Text(
-                        _formatDuration(state.sleepTimerRemaining),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ],
-                  ),
+    return SafeArea(
+      bottom: false,
+      child: Container(
+        height: 56,
+        padding: const EdgeInsets.symmetric(horizontal: 12),
+        decoration: const BoxDecoration(
+          border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+        ),
+        child: Row(
+          children: [
+            // Orqaga tugma
+            GestureDetector(
+              onTap: () => Navigator.pop(context),
+              behavior: HitTestBehavior.opaque,
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.keyboard_arrow_down_rounded,
+                  color: AppColors.parvozText,
+                  size: 28,
                 ),
               ),
             ),
-          _GlassIconButton(
-            icon: Icons.more_horiz_rounded,
-            onTap: () => _openMenu(context, book),
-          ),
-        ],
+            // ── Sleep timer chip (markazda) ──
+            Expanded(
+              child: Center(
+                child: state.hasSleepTimer
+                    ? Container(
+                        padding: const EdgeInsets.symmetric(
+                            horizontal: 12, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.parvozSurface,
+                          borderRadius: BorderRadius.circular(20),
+                          border: Border.all(
+                              color: AppColors.parvozBorderStrong),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            const Icon(AppIcons.hourglass,
+                                color: AppColors.parvozGreen, size: 14),
+                            const SizedBox(width: 6),
+                            Text(
+                              _formatDuration(state.sleepTimerRemaining),
+                              style: const TextStyle(
+                                color: AppColors.parvozText,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
+                        ),
+                      )
+                    : const SizedBox.shrink(),
+              ),
+            ),
+            // Menu tugmasi
+            GestureDetector(
+              onTap: () => _openMenu(context, book),
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: const BoxDecoration(
+                  color: AppColors.parvozSurface,
+                  shape: BoxShape.circle,
+                ),
+                child: const Icon(
+                  Icons.more_horiz_rounded,
+                  color: AppColors.parvozText,
+                  size: 22,
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -220,7 +218,7 @@ class _TopBar extends ConsumerWidget {
   }
 }
 
-// ─── Cover ───────────────────────────────────────────────────────────
+// ─── Cover (glass card) ──────────────────────────────────────────────
 
 class _Cover extends StatelessWidget {
   const _Cover({required this.book});
@@ -229,45 +227,50 @@ class _Cover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 3:4 vertikal — kitob muqovasi proporsiyasi
+    // 3:4 kitob muqovasi proporsiyasi, glass frame
     return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 280, maxHeight: 380),
+      constraints: const BoxConstraints(maxWidth: 260, maxHeight: 352),
       child: AspectRatio(
         aspectRatio: 3 / 4,
         child: Container(
-          decoration: BoxDecoration(
-            color: book.coverColor,
-            borderRadius: BorderRadius.circular(20),
+          decoration: parvozGlass(radius: 20).copyWith(
             image: book.coverUrl.isNotEmpty
                 ? DecorationImage(
                     image: NetworkImage(book.coverUrl),
                     fit: BoxFit.cover,
                   )
                 : null,
+            color: book.coverUrl.isEmpty ? book.coverColor : null,
+            // parvozGreen glow soyasi — cover pastida
             boxShadow: [
               BoxShadow(
                 // ignore: deprecated_member_use
-                color: Colors.black.withOpacity(0.55),
+                color: AppColors.parvozGreen.withOpacity(0.18),
                 blurRadius: 40,
                 spreadRadius: 4,
-                offset: const Offset(0, 20),
+                offset: const Offset(0, 18),
+              ),
+              const BoxShadow(
+                color: Color(0x80000000),
+                blurRadius: 28,
+                offset: Offset(0, 12),
               ),
             ],
           ),
+          clipBehavior: Clip.antiAlias,
           child: book.coverUrl.isEmpty
               ? Center(
                   child: Container(
-                    width: 90,
-                    height: 90,
-                    decoration: BoxDecoration(
-                      // ignore: deprecated_member_use
-                      color: Colors.white.withOpacity(0.25),
+                    width: 80,
+                    height: 80,
+                    decoration: const BoxDecoration(
+                      color: AppColors.parvozSurface,
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
                       AppIcons.speaker,
-                      color: Colors.white,
-                      size: 52,
+                      color: AppColors.parvozTextDim,
+                      size: 44,
                     ),
                   ),
                 )
@@ -300,12 +303,12 @@ class _SliderRow extends ConsumerWidget {
                 const RoundSliderThumbShape(enabledThumbRadius: 7),
             overlayShape:
                 const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: Colors.white,
+            activeTrackColor: AppColors.parvozGreen,
             // ignore: deprecated_member_use
-            inactiveTrackColor: Colors.white.withOpacity(0.25),
-            thumbColor: Colors.white,
+            inactiveTrackColor: AppColors.parvozBorderStrong,
+            thumbColor: AppColors.parvozText,
             // ignore: deprecated_member_use
-            overlayColor: Colors.white.withOpacity(0.15),
+            overlayColor: AppColors.parvozGreen.withOpacity(0.15),
           ),
           child: Slider(
             value: state.position.inSeconds
@@ -326,20 +329,18 @@ class _SliderRow extends ConsumerWidget {
             children: [
               Text(
                 _formatDuration(state.position),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  // ignore: deprecated_member_use
-                  color: Colors.white.withOpacity(0.75),
+                  color: AppColors.parvozTextDim,
                 ),
               ),
               Text(
                 _formatDuration(state.duration),
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  // ignore: deprecated_member_use
-                  color: Colors.white.withOpacity(0.75),
+                  color: AppColors.parvozTextDim,
                 ),
               ),
             ],
@@ -375,28 +376,33 @@ class _Controls extends ConsumerWidget {
             );
           },
           behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Center(
-              child: Text(
-                '${_formatSpeed(speed)}x',
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 15,
-                  fontWeight: FontWeight.w600,
-                ),
+          child: Container(
+            width: 52,
+            height: 40,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: AppColors.parvozSurface,
+              borderRadius: BorderRadius.circular(10),
+              border:
+                  Border.all(color: AppColors.parvozBorderStrong),
+            ),
+            child: Text(
+              '${_formatSpeed(speed)}x',
+              style: const TextStyle(
+                color: AppColors.parvozText,
+                fontSize: 14,
+                fontWeight: FontWeight.w700,
               ),
             ),
           ),
         ),
-        // 15s ortga
+        // 10s ortga
         _SeekButton(
           icon: Icons.replay_10_rounded,
           onTap: () =>
               ref.read(audioPlayerProvider.notifier).seekBackward(),
         ),
-        // Play/Pause (katta oq doira)
+        // Play/Pause — aqua doira, to'q navy icon
         GestureDetector(
           onTap: () {
             final notifier = ref.read(audioPlayerProvider.notifier);
@@ -410,13 +416,14 @@ class _Controls extends ConsumerWidget {
             width: 76,
             height: 76,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: AppColors.parvozGreen,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
                   // ignore: deprecated_member_use
-                  color: Colors.black.withOpacity(0.3),
-                  blurRadius: 18,
+                  color: AppColors.parvozGreen.withOpacity(0.35),
+                  blurRadius: 24,
+                  spreadRadius: 2,
                   offset: const Offset(0, 6),
                 ),
               ],
@@ -425,19 +432,19 @@ class _Controls extends ConsumerWidget {
               state.isPlaying
                   ? Icons.pause_rounded
                   : Icons.play_arrow_rounded,
-              color: Colors.black,
+              color: AppColors.parvozOnGreen,
               size: 44,
             ),
           ),
         ),
-        // 15s oldinga
+        // 10s oldinga
         _SeekButton(
           icon: Icons.forward_10_rounded,
           onTap: () =>
               ref.read(audioPlayerProvider.notifier).seekForward(),
         ),
-        // O'ng bo'sh joy — chap "1x" bilan simmetriya
-        const SizedBox(width: 48, height: 48),
+        // O'ng bo'sh joy — simmetriya (tezlik chip bilan)
+        const SizedBox(width: 52, height: 40),
       ],
     );
   }
@@ -455,47 +462,12 @@ class _SeekButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 56,
-        height: 56,
+        width: 52,
+        height: 52,
         child: Icon(
           icon,
-          color: Colors.white,
-          size: 38,
-        ),
-      ),
-    );
-  }
-}
-
-// Yumshoq glass tugma — top bar uchun.
-class _GlassIconButton extends StatelessWidget {
-  const _GlassIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: ClipOval(
-        child: BackdropFilter(
-          filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              // ignore: deprecated_member_use
-              color: Colors.white.withOpacity(0.12),
-              shape: BoxShape.circle,
-              border: Border.all(
-                // ignore: deprecated_member_use
-                color: Colors.white.withOpacity(0.15),
-              ),
-            ),
-            child: Icon(icon, color: Colors.white, size: 24),
-          ),
+          color: AppColors.parvozText,
+          size: 36,
         ),
       ),
     );
@@ -524,10 +496,10 @@ class _SpeedPickerSheet extends ConsumerWidget {
           ListTile(
             title: Text(
               '${speed}x',
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: const TextStyle(color: AppColors.parvozText),
             ),
             trailing: speed == currentSpeed
-                ? const Icon(AppIcons.check, color: AppColors.primary)
+                ? const Icon(AppIcons.check, color: AppColors.parvozGreen)
                 : null,
             onTap: () {
               ref.read(audioSpeedProvider.notifier).state = speed;
@@ -555,16 +527,16 @@ class _AudioMenuSheet extends ConsumerWidget {
     return _SheetContainer(
       children: [
         ListTile(
-          leading: const Icon(Icons.speed, color: AppColors.primary),
+          leading: const Icon(Icons.speed, color: AppColors.parvozGreen),
           title: const Text('Tezlik',
-              style: TextStyle(color: AppColors.textPrimary)),
+              style: TextStyle(color: AppColors.parvozText)),
           subtitle: Text(
             '${speed}x',
             style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 12),
+                color: AppColors.parvozTextDim, fontSize: 12),
           ),
           trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.textSecondary),
+              color: AppColors.parvozTextDim),
           onTap: () {
             Navigator.pop(context);
             showModalBottomSheet<void>(
@@ -575,18 +547,19 @@ class _AudioMenuSheet extends ConsumerWidget {
           },
         ),
         ListTile(
-          leading: const Icon(AppIcons.hourglass, color: AppColors.primary),
+          leading:
+              const Icon(AppIcons.hourglass, color: AppColors.parvozGreen),
           title: const Text(
             'Uyqu taymeri',
-            style: TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: AppColors.parvozText),
           ),
           subtitle: Text(
             hasSleepTimer ? 'Faol' : "O'chirilgan",
             style: const TextStyle(
-                color: AppColors.textSecondary, fontSize: 12),
+                color: AppColors.parvozTextDim, fontSize: 12),
           ),
           trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.textSecondary),
+              color: AppColors.parvozTextDim),
           onTap: () {
             Navigator.pop(context);
             showModalBottomSheet<void>(
@@ -598,13 +571,13 @@ class _AudioMenuSheet extends ConsumerWidget {
         ),
         ListTile(
           leading: const Icon(Icons.info_outline,
-              color: AppColors.primary),
+              color: AppColors.parvozGreen),
           title: const Text(
             'Tafsilotlar',
-            style: TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: AppColors.parvozText),
           ),
           trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.textSecondary),
+              color: AppColors.parvozTextDim),
           onTap: () {
             Navigator.pop(context);
             showModalBottomSheet<void>(
@@ -636,10 +609,10 @@ class _SleepTimerSheet extends ConsumerWidget {
         ListTile(
           title: const Text(
             "O'chirish",
-            style: TextStyle(color: AppColors.textPrimary),
+            style: TextStyle(color: AppColors.parvozText),
           ),
           trailing: !hasTimer
-              ? const Icon(AppIcons.check, color: AppColors.primary)
+              ? const Icon(AppIcons.check, color: AppColors.parvozGreen)
               : null,
           onTap: () {
             notifier.cancelSleepTimer();
@@ -650,7 +623,7 @@ class _SleepTimerSheet extends ConsumerWidget {
           ListTile(
             title: Text(
               '$min daqiqa',
-              style: const TextStyle(color: AppColors.textPrimary),
+              style: const TextStyle(color: AppColors.parvozText),
             ),
             onTap: () {
               notifier.startSleepTimer(min);
@@ -679,9 +652,8 @@ class _DetailsSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
-        borderRadius:
-            BorderRadius.vertical(top: Radius.circular(24)),
+        color: AppColors.parvozSurface,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Padding(
@@ -696,7 +668,7 @@ class _DetailsSheet extends StatelessWidget {
                   width: 40,
                   height: 4,
                   decoration: BoxDecoration(
-                    color: AppColors.textTertiary,
+                    color: AppColors.parvozBorderStrong,
                     borderRadius: BorderRadius.circular(2),
                   ),
                 ),
@@ -706,7 +678,7 @@ class _DetailsSheet extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.parvozText,
                 ),
               ),
               const SizedBox(height: 16),
@@ -721,7 +693,7 @@ class _DetailsSheet extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 14,
                   fontWeight: FontWeight.w600,
-                  color: AppColors.textSecondary,
+                  color: AppColors.parvozTextDim,
                 ),
               ),
               const SizedBox(height: 8),
@@ -729,7 +701,7 @@ class _DetailsSheet extends StatelessWidget {
                 book.description,
                 style: const TextStyle(
                   fontSize: 14,
-                  color: AppColors.textPrimary,
+                  color: AppColors.parvozText,
                   height: 1.5,
                 ),
               ),
@@ -745,14 +717,19 @@ class _DetailsSheet extends StatelessWidget {
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           // ignore: deprecated_member_use
-                          color: AppColors.primary.withOpacity(0.15),
+                          color: AppColors.parvozGreen.withOpacity(0.12),
                           borderRadius: BorderRadius.circular(12),
+                          border: Border.all(
+                            // ignore: deprecated_member_use
+                            color: AppColors.parvozGreen.withOpacity(0.25),
+                          ),
                         ),
                         child: Text(
                           tag,
                           style: const TextStyle(
-                            color: AppColors.primary,
+                            color: AppColors.parvozGreen,
                             fontSize: 12,
+                            fontWeight: FontWeight.w600,
                           ),
                         ),
                       ),
@@ -779,7 +756,7 @@ class _DetailsSheet extends StatelessWidget {
               label,
               style: const TextStyle(
                 fontSize: 13,
-                color: AppColors.textSecondary,
+                color: AppColors.parvozTextDim,
               ),
             ),
           ),
@@ -788,7 +765,7 @@ class _DetailsSheet extends StatelessWidget {
               value,
               style: const TextStyle(
                 fontSize: 14,
-                color: AppColors.textPrimary,
+                color: AppColors.parvozText,
                 fontWeight: FontWeight.w500,
               ),
             ),
@@ -811,7 +788,7 @@ class _SheetContainer extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       decoration: const BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.parvozSurface,
         borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
@@ -823,7 +800,7 @@ class _SheetContainer extends StatelessWidget {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: AppColors.textTertiary,
+                color: AppColors.parvozBorderStrong,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
@@ -835,14 +812,15 @@ class _SheetContainer extends StatelessWidget {
                   style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
+                    color: AppColors.parvozText,
                   ),
                 ),
               )
             else
               const SizedBox(height: 16),
             if (title != null)
-              const Divider(color: AppColors.border, height: 1),
+              const Divider(
+                  color: AppColors.parvozBorder, height: 1),
             ...children,
             const SizedBox(height: 16),
           ],

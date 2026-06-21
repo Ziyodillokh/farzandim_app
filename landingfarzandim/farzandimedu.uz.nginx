@@ -1,0 +1,68 @@
+# HTTP - HTTPS'ga redirect
+server {
+    listen 80;
+    listen [::]:80;
+    server_name farzandimedu.uz www.farzandimedu.uz;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+# HTTPS - asosiy server
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name farzandimedu.uz www.farzandimedu.uz;
+
+    ssl_certificate /etc/letsencrypt/live/farzandimedu.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/farzandimedu.uz/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    client_max_body_size 110M;
+
+    # ── PRODUCTION API (o'zgartirilmadi) ──────────────────────────────
+    # MUHIM: do'kondagi mobil ilovalar (parent + child) shu endpointlarga
+    # ulanadi (env_config default = https://farzandimedu.uz). O'CHIRILMASIN.
+    location /api {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host $host;
+        proxy_read_timeout 86400s;
+    }
+
+    # MinIO bucket proxy — signed URL'lar mobile orqali yetadi (o'zgartirilmadi)
+    location ~ ^/farzandim- {
+        proxy_pass http://127.0.0.1:9000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        client_max_body_size 100M;
+        proxy_request_buffering off;
+        proxy_buffering off;
+    }
+
+    # ── LANDING (yangi) — farzandimedu.uz root ────────────────────────
+    # Eski admin panel (/admin/) va login.html statik OLIB TASHLANDI.
+    # Endi asosiy domen landing sahifani ko'rsatadi (Vite SPA).
+    location / {
+        root /var/www/farzandim-landing;
+        index index.html;
+        try_files $uri $uri/ /index.html;
+    }
+}

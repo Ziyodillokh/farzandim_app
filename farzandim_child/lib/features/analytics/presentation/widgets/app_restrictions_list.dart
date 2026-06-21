@@ -1,5 +1,6 @@
 // ─────────────────────────────────────────────────────────────────────
 // AppRestrictionsList — Parent qo'ygan cheklovlar (Sprint 4.4.33+34)
+//                       (Parvoz NIGHT/GLASS redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
 // 2 ta alohida expandable section:
@@ -9,17 +10,15 @@
 // Header tap → list ochiladi/yopiladi (chevron rotate animation +
 // AnimatedSize content). Default: ikkalasi yopiq (kam joy egallaydi).
 //
-// Manbalar:
-//   - childAppLimitsProvider (AppLimit ro'yxati)
-//   - installedAppsMapProvider (appName + icon merge)
-
-import 'package:farzandim_child/core/theme/app_icons.dart';
+// LOGIKA SAQLANGAN — faqat ko'rinish parvoz night/glass tokenlar
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/shared/widgets/app_icon_memory.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -82,8 +81,8 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
                         meta: installed[blocked[i].packageName],
                       ),
                       if (i < blocked.length - 1)
-                        Divider(
-                          color: context.adaptive.border,
+                        const Divider(
+                          color: AppColors.parvozBorderStrong,
                           height: 1,
                           indent: 16,
                           endIndent: 16,
@@ -114,7 +113,7 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
                       ),
                       if (i < limited.length - 1)
                         const Divider(
-                          color: AppColors.border,
+                          color: AppColors.parvozBorderStrong,
                           height: 1,
                           indent: 16,
                           endIndent: 16,
@@ -217,6 +216,8 @@ class _SectionHeader extends StatelessWidget {
       child: InkWell(
         onTap: onTap,
         borderRadius: BorderRadius.circular(12),
+        splashColor: AppColors.parvozBorderStrong,
+        highlightColor: AppColors.parvozBorderStrong,
         child: Padding(
           padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
           child: Row(
@@ -225,7 +226,7 @@ class _SectionHeader extends StatelessWidget {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(icon, color: color, size: 18),
@@ -234,8 +235,8 @@ class _SectionHeader extends StatelessWidget {
               Expanded(
                 child: Text(
                   title,
-                  style: TextStyle(
-                    color: context.adaptive.textPrimary,
+                  style: const TextStyle(
+                    color: AppColors.parvozText,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -245,7 +246,7 @@ class _SectionHeader extends StatelessWidget {
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: color.withValues(alpha: 0.15),
+                  color: color.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
@@ -261,9 +262,9 @@ class _SectionHeader extends StatelessWidget {
               AnimatedRotation(
                 turns: expanded ? 0.5 : 0,
                 duration: const Duration(milliseconds: 200),
-                child: Icon(
+                child: const Icon(
                   AppIcons.expandMore,
-                  color: context.adaptive.textSecondary,
+                  color: AppColors.parvozTextDim,
                   size: 22,
                 ),
               ),
@@ -284,12 +285,8 @@ class _RestrictionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: accent.withValues(alpha: 0.18),
-        ),
+      decoration: parvozGlassFlat(radius: 16).copyWith(
+        border: Border.all(color: accent.withValues(alpha: 0.28)),
       ),
       child: Column(children: children),
     );
@@ -320,25 +317,24 @@ class _BlockedTile extends StatelessWidget {
               appName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: context.adaptive.textPrimary,
+                color: AppColors.parvozText,
               ),
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.error.withValues(alpha: 0.15),
+              color: AppColors.error.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
             child: const Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(AppIcons.block,
-                    color: AppColors.error, size: 13),
+                Icon(AppIcons.block, color: AppColors.error, size: 13),
                 SizedBox(width: 4),
                 Text(
                   'Bloklangan',
@@ -388,19 +384,20 @@ class _LimitedTile extends StatelessWidget {
               appName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
-                color: context.adaptive.textPrimary,
+                color: AppColors.parvozText,
               ),
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
             decoration: BoxDecoration(
               color: AppColors.warning.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(999),
+              border: Border.all(
+                  color: AppColors.warning.withValues(alpha: 0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -454,7 +451,6 @@ class _Icon extends StatelessWidget {
       );
     }
     if (iconBase64 != null && iconBase64!.isNotEmpty) {
-      // Cache'langan dekod + cacheWidth (jank fix).
       return AppIconMemory(
         base64: iconBase64,
         size: _size,
@@ -509,7 +505,7 @@ class _Skeleton extends StatelessWidget {
     return const SizedBox(
       height: 80,
       child: Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: CircularProgressIndicator(color: AppColors.parvozGreen),
       ),
     );
   }

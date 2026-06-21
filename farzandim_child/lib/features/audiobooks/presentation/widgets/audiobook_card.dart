@@ -2,6 +2,7 @@
 // AudiobookCard — feed sectionidagi 140x230 card (3:4 cover + meta)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -46,14 +47,14 @@ class AudiobookCard extends ConsumerWidget {
                     children: [
                       // Rasm yoki fallback color
                       if (book.coverUrl.isNotEmpty)
-                        Image.network(
-                          book.coverUrl,
+                        // Disk-cache: muqova bir marta yuklangach darhol chiqadi.
+                        CachedNetworkImage(
+                          imageUrl: book.coverUrl,
                           fit: BoxFit.cover,
-                          loadingBuilder: (_, child, progress) {
-                            if (progress == null) return child;
-                            return Container(color: book.coverColor);
-                          },
-                          errorBuilder: (_, __, ___) => _fallbackCover(),
+                          fadeInDuration: const Duration(milliseconds: 180),
+                          placeholder: (_, __) =>
+                              Container(color: book.coverColor),
+                          errorWidget: (_, __, ___) => _fallbackCover(),
                         )
                       else
                         _fallbackCover(),

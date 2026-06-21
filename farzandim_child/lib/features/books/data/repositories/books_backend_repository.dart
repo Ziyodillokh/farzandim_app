@@ -17,6 +17,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/cache/content_cache.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
@@ -36,6 +37,10 @@ class BooksBackendRepository {
         queryParameters: {'page': page, 'limit': limit},
       );
       final items = (response.data?['items'] as List<dynamic>?) ?? const [];
+      // PERF/offline: birinchi sahifani lokal cache'ga (stale-while-revalidate).
+      if (page == 1) {
+        await ContentCache.save('books', items);
+      }
       return items
           .whereType<Map<String, dynamic>>()
           .map(_toBookModel)
@@ -44,6 +49,16 @@ class BooksBackendRepository {
       debugPrint('BooksBackend.fetchBooks: ${e.response?.statusCode} ${e.message}');
       rethrow;
     }
+  }
+
+  /// Lokal cache'dagi kitoblar (yo'q bo'lsa bo'sh) — cold start'da darhol.
+  Future<List<BookModel>> cachedBooks() async {
+    final items = await ContentCache.read('books');
+    if (items == null) return const [];
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(_toBookModel)
+        .toList(growable: false);
   }
 
   Future<void> markRead(String bookId) async {

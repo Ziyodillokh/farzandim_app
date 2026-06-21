@@ -1,10 +1,12 @@
 // ─────────────────────────────────────────────────────────────────────
 // ArticleViewScreen — maqolani o'qish (markdown render) (#48)
+// Parvoz NIGHT/GLASS redizayn — faqat ko'rinish (logika saqlangan).
 // ─────────────────────────────────────────────────────────────────────
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 import 'package:farzandim_child/features/articles/data/repositories/articles_backend_repository.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_markdown/flutter_markdown.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,67 +35,131 @@ class _ArticleViewScreenState extends ConsumerState<ArticleViewScreen> {
   Widget build(BuildContext context) {
     final a = widget.article;
     return Scaffold(
-      backgroundColor: AppColors.bgPrimary,
+      backgroundColor: AppColors.parvozBg,
       body: CustomScrollView(
         slivers: [
           SliverAppBar(
             pinned: true,
-            expandedHeight: a.hasCover ? 220 : 0,
-            backgroundColor: AppColors.surface,
-            leading: IconButton(
-              icon: const Icon(Icons.arrow_back, color: AppColors.textPrimary),
-              onPressed: () => context.pop(),
+            expandedHeight: a.hasCover ? 240 : 0,
+            backgroundColor: AppColors.parvozBg,
+            surfaceTintColor: Colors.transparent,
+            elevation: 0,
+            leading: Padding(
+              padding: const EdgeInsets.all(8),
+              child: GestureDetector(
+                onTap: () => context.pop(),
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.parvozBg.withValues(alpha: 0.55),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: AppColors.parvozBorderStrong),
+                  ),
+                  child: const Icon(
+                    Icons.arrow_back_rounded,
+                    color: AppColors.parvozText,
+                  ),
+                ),
+              ),
             ),
             flexibleSpace: a.hasCover
                 ? FlexibleSpaceBar(
-                    background: Image.network(
-                      a.coverUrl,
-                      fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) =>
-                          Container(color: a.coverColor),
+                    background: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        Image.network(
+                          a.coverUrl,
+                          fit: BoxFit.cover,
+                          errorBuilder: (_, __, ___) =>
+                              ColoredBox(color: a.coverColor),
+                        ),
+                        // Pastga qarab navy gradient — matn bilan ulanish.
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                AppColors.parvozBg.withValues(alpha: 0.55),
+                                AppColors.parvozBg,
+                              ],
+                              stops: const [0.45, 0.85, 1.0],
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
                   )
                 : null,
           ),
           SliverToBoxAdapter(
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 60),
+              padding: const EdgeInsets.fromLTRB(20, 16, 20, 60),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
                     a.title,
                     style: const TextStyle(
-                      color: AppColors.textPrimary,
-                      fontSize: 24,
+                      color: AppColors.parvozText,
+                      fontSize: 26,
                       fontWeight: FontWeight.bold,
-                      height: 1.25,
+                      height: 1.22,
+                      letterSpacing: -0.4,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 14),
                   Row(
                     children: [
                       if (a.category.isNotEmpty) ...[
-                        Text(
-                          a.category,
-                          style: TextStyle(
-                            color: a.coverColor,
-                            fontSize: 13,
-                            fontWeight: FontWeight.w600,
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 12,
+                            vertical: 6,
+                          ),
+                          decoration: BoxDecoration(
+                            color:
+                                AppColors.parvozGreen.withValues(alpha: 0.14),
+                            borderRadius: BorderRadius.circular(999),
+                            border: Border.all(
+                              color:
+                                  AppColors.parvozGreen.withValues(alpha: 0.25),
+                            ),
+                          ),
+                          child: Text(
+                            a.category,
+                            style: const TextStyle(
+                              color: AppColors.parvozGreen,
+                              fontSize: 12,
+                              fontWeight: FontWeight.bold,
+                            ),
                           ),
                         ),
                         const SizedBox(width: 10),
                       ],
+                      Icon(
+                        Icons.child_care_rounded,
+                        size: 15,
+                        color: AppColors.parvozTextDim,
+                      ),
+                      const SizedBox(width: 4),
                       Text(
                         '${a.yoshGuruhi} yosh',
                         style: const TextStyle(
-                          color: AppColors.textTertiary,
+                          color: AppColors.parvozTextDim,
                           fontSize: 13,
+                          fontWeight: FontWeight.w500,
                         ),
                       ),
                     ],
                   ),
-                  const Divider(height: 28, color: AppColors.border),
+                  const SizedBox(height: 18),
+                  Container(
+                    height: 1,
+                    color: AppColors.parvozBorderStrong,
+                  ),
+                  const SizedBox(height: 18),
                   MarkdownBody(
                     data: a.body,
                     selectable: true,
@@ -110,37 +176,35 @@ class _ArticleViewScreenState extends ConsumerState<ArticleViewScreen> {
 
   MarkdownStyleSheet _markdownStyle() {
     const text = TextStyle(
-      color: AppColors.textPrimary,
+      color: AppColors.parvozText,
       fontSize: 16,
-      height: 1.6,
+      height: 1.65,
     );
     return MarkdownStyleSheet(
       p: text,
       h1: const TextStyle(
-        color: AppColors.textPrimary,
+        color: AppColors.parvozText,
         fontSize: 22,
         fontWeight: FontWeight.bold,
       ),
       h2: const TextStyle(
-        color: AppColors.textPrimary,
+        color: AppColors.parvozText,
         fontSize: 19,
         fontWeight: FontWeight.bold,
       ),
       h3: const TextStyle(
-        color: AppColors.textPrimary,
+        color: AppColors.parvozText,
         fontSize: 17,
         fontWeight: FontWeight.w700,
       ),
       listBullet: text,
       strong: const TextStyle(
-        color: AppColors.textPrimary,
+        color: AppColors.parvozText,
         fontWeight: FontWeight.bold,
       ),
-      blockquoteDecoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      a: const TextStyle(color: AppColors.primary),
+      blockquotePadding: const EdgeInsets.all(14),
+      blockquoteDecoration: parvozGlassFlat(radius: 12),
+      a: const TextStyle(color: AppColors.parvozGreen),
     );
   }
 }

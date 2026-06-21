@@ -50,7 +50,9 @@ env:
   REMOTE_BASE: new-platform
   NODE_VERSION: '22'
   FLUTTER_VERSION: '3.44.0'
-  SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
+  # ServerAlive* — uzatish paytida server javob bermay qolsa scp ~60s'da uzadi
+  # (aks holda keep-alive yo'qligi sabab scp soatlab osilib qolardi).
+  SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
 
 jobs:
   # ── Qaysi folderlar o'zgarganini aniqlaymiz ──
@@ -292,6 +294,7 @@ jobs:
     needs: [changes, parent-quality]
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
+    timeout-minutes: 30
     env:
       SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:

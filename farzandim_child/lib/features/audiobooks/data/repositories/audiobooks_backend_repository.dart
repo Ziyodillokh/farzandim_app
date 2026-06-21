@@ -20,6 +20,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/cache/content_cache.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -40,6 +41,10 @@ class AudiobooksBackendRepository {
         queryParameters: {'page': page, 'limit': limit},
       );
       final items = (response.data?['items'] as List<dynamic>?) ?? const [];
+      // PERF/offline: birinchi sahifani lokal cache'ga (stale-while-revalidate).
+      if (page == 1) {
+        await ContentCache.save('audiobooks', items);
+      }
       return items
           .whereType<Map<String, dynamic>>()
           .map(_toAudiobookModel)
@@ -48,6 +53,16 @@ class AudiobooksBackendRepository {
       debugPrint('AudiobooksBackend.fetch: ${e.response?.statusCode} ${e.message}');
       rethrow;
     }
+  }
+
+  /// Lokal cache'dagi audiokitoblar (yo'q bo'lsa bo'sh) — cold start'da darhol.
+  Future<List<AudiobookModel>> cachedAudiobooks() async {
+    final items = await ContentCache.read('audiobooks');
+    if (items == null) return const [];
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(_toAudiobookModel)
+        .toList(growable: false);
   }
 
   /// Bola tinglashni boshlaganda listens counter++.

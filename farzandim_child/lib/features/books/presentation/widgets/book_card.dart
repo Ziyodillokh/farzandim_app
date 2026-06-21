@@ -1,3 +1,4 @@
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 
@@ -28,7 +29,8 @@ class BookCard extends StatelessWidget {
                   borderRadius: BorderRadius.circular(12),
                   image: book.hasCover
                       ? DecorationImage(
-                          image: NetworkImage(book.coverUrl),
+                          // Disk-cache: muqova bir marta yuklangach darhol chiqadi.
+                          image: CachedNetworkImageProvider(book.coverUrl),
                           fit: BoxFit.cover,
                         )
                       : null,

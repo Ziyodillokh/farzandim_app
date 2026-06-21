@@ -1,9 +1,10 @@
 // ─────────────────────────────────────────────────────────────────────
-// ArticleCard — maqola ro'yxati kartochkasi (#48)
+// ArticleCard — maqola ro'yxati kartochkasi (#48) — Parvoz NIGHT/GLASS
 // ─────────────────────────────────────────────────────────────────────
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 
 class ArticleCard extends StatelessWidget {
@@ -15,82 +16,84 @@ class ArticleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(18);
-    return Material(
-      color: AppColors.surface,
-      borderRadius: radius,
+    return Container(
+      decoration: parvozGlass(radius: 18),
       clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: radius,
-        child: Padding(
-          padding: const EdgeInsets.all(12),
-          child: Row(
-            children: [
-              _Cover(article: article),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      article.title,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 15,
-                        fontWeight: FontWeight.w700,
-                        height: 1.25,
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: radius,
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Row(
+              children: [
+                _Cover(article: article),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        article.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: AppColors.parvozText,
+                          fontSize: 15,
+                          fontWeight: FontWeight.w700,
+                          height: 1.25,
+                        ),
                       ),
-                    ),
-                    const SizedBox(height: 8),
-                    Row(
-                      children: [
-                        if (article.category.isNotEmpty) ...[
-                          Flexible(
-                            child: Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 3,
-                              ),
-                              decoration: BoxDecoration(
-                                color: article.coverColor.withValues(alpha: 0.15),
-                                borderRadius: BorderRadius.circular(999),
-                              ),
-                              child: Text(
-                                article.category,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
-                                  color: article.coverColor,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w600,
+                      const SizedBox(height: 8),
+                      Row(
+                        children: [
+                          if (article.category.isNotEmpty) ...[
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 8,
+                                  vertical: 3,
+                                ),
+                                decoration: BoxDecoration(
+                                  color: article.coverColor.withValues(alpha: 0.18),
+                                  borderRadius: BorderRadius.circular(999),
+                                ),
+                                child: Text(
+                                  article.category,
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    color: article.coverColor,
+                                    fontSize: 11,
+                                    fontWeight: FontWeight.w600,
+                                  ),
                                 ),
                               ),
                             ),
+                            const SizedBox(width: 8),
+                          ],
+                          const Icon(
+                            Icons.visibility_outlined,
+                            size: 14,
+                            color: AppColors.parvozTextDim,
                           ),
-                          const SizedBox(width: 8),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${article.views}',
+                            style: const TextStyle(
+                              color: AppColors.parvozTextDim,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
-                        Icon(
-                          Icons.visibility_outlined,
-                          size: 14,
-                          color: AppColors.textTertiary,
-                        ),
-                        const SizedBox(width: 3),
-                        Text(
-                          '${article.views}',
-                          style: const TextStyle(
-                            color: AppColors.textTertiary,
-                            fontSize: 12,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+                      ),
+                    ],
+                  ),
                 ),
-              ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

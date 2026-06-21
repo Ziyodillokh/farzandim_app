@@ -21,18 +21,18 @@ import 'package:flutter/material.dart';
 class AppColors {
   AppColors._();
 
-  // ============ PRIMARY (Duolingo Green) ============
-  /// Asosiy CTA tugma fon, success state, FARO accent.
-  static const Color primary = Color(0xFF58CC02);
+  // ============ PRIMARY (Aqua / Siyan brend) ============
+  /// Asosiy CTA tugma fon, FARO accent. (Avval Duolingo yashil edi.)
+  static const Color primary = Color(0xFF16B5C9);
 
   /// Hover state (web), pressed state (mobile).
-  static const Color primaryHover = Color(0xFF46A302);
+  static const Color primaryHover = Color(0xFF0E7490);
 
   /// Disabled tugma fon.
-  static const Color primaryDisabled = Color(0xFF9CCC65);
+  static const Color primaryDisabled = Color(0xFF8FCBD6);
 
   /// 3D button pastki shadow (Sprint UI.2 PlayfulButton uchun).
-  static const Color primaryShadow = Color(0xFF46A302);
+  static const Color primaryShadow = Color(0xFF0E7490);
 
   // ============ SECONDARY (Friendly Blue) ============
   /// Info, location, navigation hints uchun.
@@ -57,8 +57,8 @@ class AppColors {
   static const Color danger = Color(0xFFFF4B4B);
   static const Color dangerShadow = Color(0xFFCC3030);
 
-  /// Success = primary (Duolingo convention).
-  static const Color success = primary;
+  /// Success — universal yashil (brend aqua'dan ajratilgan; ✓, "yuborildi").
+  static const Color success = Color(0xFF22C55E);
 
   /// Info = secondary.
   static const Color info = secondary;
@@ -172,6 +172,53 @@ class AppColors {
   static const Color catMint = Color(0xFF4DC4B7);
   static const Color catLime = Color(0xFFD0FF6E);
   static const Color catLimeBright = Color(0xFFC5F562);
+
+  // ============ PARVOZ REDESIGN (Night) — Stitch "Parvoz UI" ============
+  // Kutubxona va keyingi sahifalar uchun yangi NIGHT palitra (Stitch
+  // "Parvoz UI Redesign" loyihasi). Faqat yangi (redizayn) sahifalarda
+  // ishlatiladi — mavjud ekranlarga tegmaydi (bosqichma-bosqich migratsiya).
+  // Light mode keyin alohida qo'shiladi.
+  /// Chuqur navy fon (sahifa orqa foni).
+  static const Color parvozBg = Color(0xFF0B1C30);
+
+  /// Kartalar, tugmalar, segment, header tugmalari foni.
+  static const Color parvozSurface = Color(0xFF162B45);
+
+  /// Yengilroq surface — chip/placeholder/rasm orqa foni.
+  static const Color parvozSurfaceHigh = Color(0xFF1E3552);
+
+  /// Aqua aksent — logo, faol tab, CTA tugma, ko'rishlar soni. (Avval yashil.)
+  static const Color parvozGreen = Color(0xFF22D3EE);
+
+  /// Aqua ustidagi matn/ikon (to'q navy — yorqin aqua'da a'lo kontrast).
+  static const Color parvozOnGreen = Color(0xFF0B1C30);
+
+  /// Ko'k aksent — faol kategoriya chip / faol nav.
+  static const Color parvozBlue = Color(0xFF2170E4);
+
+  /// Asosiy matn (deyarli oq).
+  static const Color parvozText = Color(0xFFFFFFFF);
+
+  /// Ikkilamchi matn (tavsif, kategoriya — muted blue-gray).
+  static const Color parvozTextDim = Color(0xFF9CA3AF);
+
+  /// Nozik chegara (white/5) — kartalar, nofaol chip.
+  static const Color parvozBorder = Color(0x0DFFFFFF);
+
+  /// Kuchliroq chegara (white/10) — floating nav.
+  static const Color parvozBorderStrong = Color(0x1AFFFFFF);
+
+  /// 'YANGI DARS' badge — to'q-sariq (Premium Edition).
+  static const Color parvozBadge = Color(0xFFF39C12);
+
+  // ── Glass (shishali karta) — translucent gradient + yorqin rim. Navy fon
+  //    ustidan yaqqol ajralib turadi (blur'siz — uzun ro'yxatlarda jank yo'q).
+  /// Glass gradient — yuqori (yorug'roq, sheen).
+  static const Color parvozGlassTop = Color(0xD92C415C);
+  /// Glass gradient — past (surface tusli).
+  static const Color parvozGlassBottom = Color(0xD9152840);
+  /// Glass yorqin chekka (rim) — shisha qirrasi (white ~16%).
+  static const Color parvozGlassRim = Color(0x2AFFFFFF);
 
   // ============ LEGACY ALIASES (Sprint 4.4 backwards compat) ============
   /// Sprint 4.4'da `primaryDark` ishlatilgan — yangi `primaryHover` alias.

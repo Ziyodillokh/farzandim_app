@@ -2,6 +2,7 @@
 // VideoCard — section'lardagi kichik card (160x180)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
@@ -33,16 +34,16 @@ class VideoCard extends StatelessWidget {
                   fit: StackFit.expand,
                   children: [
                     if (video.thumbnailUrl.isNotEmpty)
-                      Image.network(
-                        video.thumbnailUrl,
+                      // Disk-cache (cached_network_image): thumbnail bir marta
+                      // yuklangach keyingi safar (offline ham) darhol chiqadi.
+                      CachedNetworkImage(
+                        imageUrl: video.thumbnailUrl,
                         fit: BoxFit.cover,
-                        loadingBuilder: (_, child, progress) {
-                          if (progress == null) return child;
-                          return Container(color: video.thumbnailColor);
-                        },
-                        errorBuilder: (_, __, ___) => Container(
-                          color: video.thumbnailColor,
-                        ),
+                        fadeInDuration: const Duration(milliseconds: 180),
+                        placeholder: (_, __) =>
+                            Container(color: video.thumbnailColor),
+                        errorWidget: (_, __, ___) =>
+                            Container(color: video.thumbnailColor),
                       )
                     else
                       Container(color: video.thumbnailColor),

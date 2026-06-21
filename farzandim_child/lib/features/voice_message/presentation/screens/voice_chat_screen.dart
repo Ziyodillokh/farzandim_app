@@ -456,56 +456,14 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final isVideoUploading = videoUpload == UploadStatus.uploading;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        foregroundColor: context.adaptive.textPrimary,
-        elevation: 0,
-        title: Row(
-          children: [
-            CircleAvatar(
-              backgroundColor: AppColors.primary.withValues(alpha: 0.2),
-              child: const Icon(
-                AppIcons.profile,
-                color: AppColors.primary,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    'voiceChat.headerParent'.tr(),
-                    style: TextStyle(
-                      color: context.adaptive.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                  Text(
-                    'voiceChat.headerSubtitle'.tr(),
-                    style: TextStyle(
-                      color: context.adaptive.textSecondary,
-                      fontSize: 12,
-                    ),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          IconButton(
-            icon: Icon(Icons.more_vert, color: context.adaptive.textPrimary),
-            tooltip: 'chatSettings.title'.tr(),
-            onPressed: () {
+      backgroundColor: AppColors.parvozBg,
+      body: ChatBackground(
+        child: SafeArea(
+          bottom: false,
+          child: Column(
+        children: [
+          _ChatHeader(
+            onSettings: () {
               Navigator.of(context).push(
                 MaterialPageRoute<void>(
                   builder: (_) => const ChatSettingsScreen(),
@@ -513,13 +471,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               );
             },
           ),
-        ],
-      ),
-      body: ChatBackground(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-        children: [
           Expanded(
             child: messagesAsync.when(
               data: (messages) {
@@ -560,7 +511,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               },
               loading: () => const Center(
                 child:
-                    CircularProgressIndicator(color: AppColors.primary),
+                    CircularProgressIndicator(color: AppColors.parvozGreen),
               ),
               error: (e, _) => Center(
                 child: Padding(
@@ -603,6 +554,88 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────
+// Chat header — Parvoz NIGHT (avatar + ota-ona nomi/holati + sozlamalar)
+// ─────────────────────────────────────────────────────────────────────
+
+class _ChatHeader extends StatelessWidget {
+  const _ChatHeader({required this.onSettings});
+
+  final VoidCallback onSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 60,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: const BoxDecoration(
+        color: AppColors.parvozBg,
+        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 42,
+            height: 42,
+            decoration: BoxDecoration(
+              color: AppColors.parvozGreen.withValues(alpha: 0.18),
+              shape: BoxShape.circle,
+              border: Border.all(color: AppColors.parvozBorderStrong),
+            ),
+            child: const Icon(
+              AppIcons.profile,
+              color: AppColors.parvozGreen,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'voiceChat.headerParent'.tr(),
+                  style: const TextStyle(
+                    color: AppColors.parvozText,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'voiceChat.headerSubtitle'.tr(),
+                  style: const TextStyle(
+                    color: AppColors.parvozTextDim,
+                    fontSize: 12,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          GestureDetector(
+            onTap: onSettings,
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 40,
+              height: 40,
+              alignment: Alignment.center,
+              child: const Icon(
+                Icons.more_vert,
+                color: AppColors.parvozTextDim,
+                size: 24,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────────────────────────────
 // Empty state — Parent App uslubidagi markazlashtirilgan mic ikona
 // ─────────────────────────────────────────────────────────────────────
 
@@ -621,20 +654,21 @@ class _EmptyState extends StatelessWidget {
               width: 100,
               height: 100,
               decoration: BoxDecoration(
-                color: AppColors.primary.withValues(alpha: 0.15),
+                color: AppColors.parvozGreen.withValues(alpha: 0.15),
                 shape: BoxShape.circle,
+                border: Border.all(color: AppColors.parvozBorderStrong),
               ),
               child: const Icon(
                 Icons.mic_outlined,
                 size: 50,
-                color: AppColors.primary,
+                color: AppColors.parvozGreen,
               ),
             ),
             const SizedBox(height: 24),
             Text(
               'voiceChat.emptyTitle'.tr(),
-              style: TextStyle(
-                color: context.adaptive.textPrimary,
+              style: const TextStyle(
+                color: AppColors.parvozText,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -643,8 +677,8 @@ class _EmptyState extends StatelessWidget {
             Text(
               'voiceChat.emptySubtitle'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(
-                color: context.adaptive.textSecondary,
+              style: const TextStyle(
+                color: AppColors.parvozTextDim,
                 fontSize: 14,
                 height: 1.4,
               ),

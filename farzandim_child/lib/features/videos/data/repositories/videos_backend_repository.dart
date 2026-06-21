@@ -27,6 +27,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/cache/content_cache.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
@@ -46,6 +47,11 @@ class VideosBackendRepository {
         queryParameters: {'page': page, 'limit': limit},
       );
       final items = (response.data?['items'] as List<dynamic>?) ?? const [];
+      // PERF/offline: birinchi sahifani lokal cache'ga yozamiz — keyingi
+      // ochilishda darhol ko'rsatiladi (stale-while-revalidate).
+      if (page == 1) {
+        await ContentCache.save('videos', items);
+      }
       return items
           .whereType<Map<String, dynamic>>()
           .map(_toVideoModel)
@@ -54,6 +60,17 @@ class VideosBackendRepository {
       debugPrint('VideosBackend.fetchVideos: ${e.response?.statusCode} ${e.message}');
       rethrow;
     }
+  }
+
+  /// Lokal cache'dagi videolar (yo'q bo'lsa bo'sh ro'yxat). Network kutmaydi —
+  /// cold start'da darhol qaytadi, UI'ni bir zumda to'ldiradi.
+  Future<List<VideoModel>> cachedVideos() async {
+    final items = await ContentCache.read('videos');
+    if (items == null) return const [];
+    return items
+        .whereType<Map<String, dynamic>>()
+        .map(_toVideoModel)
+        .toList(growable: false);
   }
 
   /// Bola video boshlaganda view counter++ (fire-and-forget).

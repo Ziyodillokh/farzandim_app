@@ -1,5 +1,5 @@
 // ─────────────────────────────────────────────────────────────────────
-// TimeRangePills — Kunlik / Haftalik / Oylik / Butun davr
+// TimeRangePills — Kunlik / Haftalik / Oylik / Butun davr (Parvoz NIGHT)
 // ─────────────────────────────────────────────────────────────────────
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -42,13 +42,13 @@ class TimeRangePills extends ConsumerWidget {
                   horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
                 color: isActive
-                    ? AppColors.primary
-                    : context.adaptive.bgCard,
+                    ? AppColors.parvozGreen
+                    : AppColors.parvozSurface,
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(
                   color: isActive
-                      ? AppColors.primary
-                      : context.adaptive.border,
+                      ? AppColors.parvozGreen
+                      : AppColors.parvozBorder,
                 ),
               ),
               alignment: Alignment.center,
@@ -56,8 +56,8 @@ class TimeRangePills extends ConsumerWidget {
                 _labels[i],
                 style: TextStyle(
                   color: isActive
-                      ? Colors.black
-                      : context.adaptive.textSecondary,
+                      ? AppColors.parvozOnGreen
+                      : AppColors.parvozTextDim,
                   fontSize: 13,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.normal,

@@ -16,8 +16,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/background/presentation/providers/background_service_provider.dart';
 import 'package:farzandim_child/features/location/presentation/providers/location_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
-import 'package:farzandim_child/shared/widgets/primary_button.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -174,97 +173,117 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.all(24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 16),
+      backgroundColor: AppColors.parvozBg,
+      body: SafeArea(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const SizedBox(height: 16),
 
-                Text(
-                  'permissions.title'.tr(),
-                  style: const TextStyle(
-                    fontSize: 28,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+              Text(
+                'permissions.title'.tr(),
+                style: const TextStyle(
+                  fontSize: 28,
+                  fontWeight: FontWeight.bold,
+                  color: AppColors.parvozText,
+                  letterSpacing: -0.4,
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'permissions.subtitle'.tr(),
-                  style: const TextStyle(
-                    fontSize: 14,
-                    color: AppColors.textSecondary,
-                  ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'permissions.subtitle'.tr(),
+                style: const TextStyle(
+                  fontSize: 14,
+                  color: AppColors.parvozTextDim,
+                  height: 1.4,
                 ),
+              ),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                if (_isAutoRequesting) _buildAutoProgress(),
+              if (_isAutoRequesting) _buildAutoProgress(),
 
-                const SizedBox(height: 16),
+              const SizedBox(height: 16),
 
-                _buildPermissionTile(
-                  icon: AppIcons.mapPin,
-                  title: 'permissions.locationTitle'.tr(),
-                  description: 'permissions.locationDescription'.tr(),
-                  granted: _locationGranted,
-                  onTap: () async {
-                    final status =
-                        await Permission.locationWhenInUse.request();
-                    // whenInUse berilgach "har doim" ruxsatini ham so'raymiz.
-                    if (status.isGranted) {
-                      await _requestLocationAlways();
-                    }
-                    if (mounted) {
-                      setState(() => _locationGranted = status.isGranted);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
+              _buildPermissionTile(
+                icon: AppIcons.mapPin,
+                title: 'permissions.locationTitle'.tr(),
+                description: 'permissions.locationDescription'.tr(),
+                granted: _locationGranted,
+                onTap: () async {
+                  final status =
+                      await Permission.locationWhenInUse.request();
+                  // whenInUse berilgach "har doim" ruxsatini ham so'raymiz.
+                  if (status.isGranted) {
+                    await _requestLocationAlways();
+                  }
+                  if (mounted) {
+                    setState(() => _locationGranted = status.isGranted);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
 
-                _buildPermissionTile(
-                  icon: AppIcons.bell,
-                  title: 'permissions.notificationTitle'.tr(),
-                  description: 'permissions.notificationDescription'.tr(),
-                  granted: _notificationGranted,
-                  onTap: () async {
-                    final status = await Permission.notification.request();
-                    if (mounted) {
-                      setState(() => _notificationGranted = status.isGranted);
-                    }
-                  },
-                ),
-                const SizedBox(height: 12),
+              _buildPermissionTile(
+                icon: AppIcons.bell,
+                title: 'permissions.notificationTitle'.tr(),
+                description: 'permissions.notificationDescription'.tr(),
+                granted: _notificationGranted,
+                onTap: () async {
+                  final status = await Permission.notification.request();
+                  if (mounted) {
+                    setState(() => _notificationGranted = status.isGranted);
+                  }
+                },
+              ),
+              const SizedBox(height: 12),
 
-                _buildPermissionTile(
-                  icon: AppIcons.camera,
-                  title: 'permissions.cameraTitle'.tr(),
-                  description: 'permissions.cameraDescription'.tr(),
-                  granted: _cameraGranted,
-                  onTap: () async {
-                    final status = await Permission.camera.request();
-                    if (mounted) {
-                      setState(() => _cameraGranted = status.isGranted);
-                    }
-                  },
-                ),
+              _buildPermissionTile(
+                icon: AppIcons.camera,
+                title: 'permissions.cameraTitle'.tr(),
+                description: 'permissions.cameraDescription'.tr(),
+                granted: _cameraGranted,
+                onTap: () async {
+                  final status = await Permission.camera.request();
+                  if (mounted) {
+                    setState(() => _cameraGranted = status.isGranted);
+                  }
+                },
+              ),
 
-                const Spacer(),
+              const Spacer(),
 
-                if (!_isAutoRequesting)
-                  PrimaryButton(
-                    text: _allGranted
-                        ? 'permissions.continueButton'.tr()
-                        : 'permissions.enableAllButton'.tr(),
+              if (!_isAutoRequesting)
+                SizedBox(
+                  width: double.infinity,
+                  height: 56,
+                  child: ElevatedButton(
                     onPressed: _allGranted ? _onContinue : null,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.parvozGreen,
+                      foregroundColor: AppColors.parvozOnGreen,
+                      disabledBackgroundColor: AppColors.parvozSurfaceHigh,
+                      disabledForegroundColor: AppColors.parvozTextDim,
+                      elevation: 0,
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(16),
+                      ),
+                    ),
+                    child: Text(
+                      _allGranted
+                          ? 'permissions.continueButton'.tr()
+                          : 'permissions.enableAllButton'.tr(),
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
                   ),
-                const SizedBox(height: 16),
-              ],
-            ),
+                ),
+              const SizedBox(height: 16),
+            ],
           ),
         ),
       ),
@@ -274,20 +293,14 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
   Widget _buildAutoProgress() {
     return Container(
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: AppColors.primary.withValues(alpha: 0.3),
-        ),
-      ),
+      decoration: parvozGlassFlat(radius: 16),
       child: Row(
         children: [
           const SizedBox(
             width: 24,
             height: 24,
             child: CircularProgressIndicator(
-              color: AppColors.primary,
+              color: AppColors.parvozGreen,
               strokeWidth: 3,
             ),
           ),
@@ -299,8 +312,8 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                 Text(
                   'permissions.autoRequesting'.tr(),
                   style: const TextStyle(
-                    color: AppColors.primary,
-                    fontWeight: FontWeight.w600,
+                    color: AppColors.parvozGreen,
+                    fontWeight: FontWeight.w700,
                     fontSize: 14,
                   ),
                 ),
@@ -310,7 +323,7 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
                     'total': '$_totalPermissions',
                   }),
                   style: const TextStyle(
-                    color: AppColors.textSecondary,
+                    color: AppColors.parvozTextDim,
                     fontSize: 12,
                   ),
                 ),
@@ -329,75 +342,72 @@ class _PermissionsScreenState extends ConsumerState<PermissionsScreen> {
     required bool granted,
     required VoidCallback onTap,
   }) {
-    return InkWell(
-      onTap: granted ? null : onTap,
-      borderRadius: BorderRadius.circular(16),
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: granted
-              ? AppColors.primary.withValues(alpha: 0.1)
-              : AppColors.surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(
-            color: granted ? AppColors.primary : Colors.transparent,
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: granted ? null : onTap,
+        borderRadius: BorderRadius.circular(16),
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: parvozGlass(radius: 16),
+          child: Row(
+            children: [
+              Container(
+                width: 48,
+                height: 48,
+                decoration: BoxDecoration(
+                  color: granted
+                      ? AppColors.parvozGreen.withValues(alpha: 0.16)
+                      : AppColors.parvozSurfaceHigh,
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(
+                  icon,
+                  color: granted
+                      ? AppColors.parvozGreen
+                      : AppColors.parvozTextDim,
+                  size: 24,
+                ),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: const TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                        color: AppColors.parvozText,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      description,
+                      style: const TextStyle(
+                        fontSize: 13,
+                        color: AppColors.parvozTextDim,
+                        height: 1.3,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              if (granted)
+                const Icon(
+                  AppIcons.success,
+                  color: AppColors.parvozGreen,
+                  size: 24,
+                )
+              else
+                const Icon(
+                  AppIcons.chevronRight,
+                  color: AppColors.parvozTextDim,
+                ),
+            ],
           ),
-        ),
-        child: Row(
-          children: [
-            Container(
-              width: 48,
-              height: 48,
-              decoration: BoxDecoration(
-                color: granted
-                    ? AppColors.primary.withValues(alpha: 0.2)
-                    : AppColors.surfaceVariant,
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                icon,
-                color: granted ? AppColors.primary : AppColors.textSecondary,
-                size: 24,
-              ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textPrimary,
-                    ),
-                  ),
-                  const SizedBox(height: 2),
-                  Text(
-                    description,
-                    style: const TextStyle(
-                      fontSize: 13,
-                      color: AppColors.textSecondary,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(width: 8),
-            if (granted)
-              const Icon(
-                AppIcons.success,
-                color: AppColors.primary,
-                size: 24,
-              )
-            else
-              const Icon(
-                AppIcons.chevronRight,
-                color: AppColors.textSecondary,
-              ),
-          ],
         ),
       ),
     );

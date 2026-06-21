@@ -128,6 +128,7 @@ dependencies:
   phosphor_flutter: ^2.1.0
   # Maqolalar (#48) — markdown render uchun.
   flutter_markdown: ^0.7.4
+  cached_network_image: ^3.4.1
 
 # `record_linux 0.7.2` + `record_platform_interface 1.5.0` orasida API
 # nomutanosibligi (RecordLinux.startStream signature). Eski stable

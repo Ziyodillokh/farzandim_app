@@ -1,82 +1,84 @@
 // ─────────────────────────────────────────────────────────────────────
-// ContentHubScreen — Videolar + Audiokitoblar (PDF kitoblar ichida)
+// ContentHubScreen — "Kutubxona" (Parvoz UI Redesign — NIGHT, Premium Edition)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Foydalanuvchi talabiga ko'ra 2 ta TopTab — Videolar va Audiokitoblar.
-// PDF kitoblar Audiokitoblar tab ichida alohida section sifatida turadi
-// (Figma 2-rasmga muvofiq: Siz uchun vertikal cover+title list).
-// Konkurslar alohida bo'lim sifatida saqlandi (boshqa tab).
+// Google Stitch "Parvoz UI Redesign / Kutubxona (Night) - Premium Edition"
+// dizayniga 1:1 moslangan. Tuzilma (yuqoridan pastga):
+//   • Parvoz header (logo + bell + settings, backdrop border)
+//   • Videolar / Audio kitoblar segment (rounded-xl, yashil faol)
+//   • Kategoriya chiplari (rounded-xl, YASHIL faol)
+//   • Hero karta — to'liq rasm + gradient overlay + ustiga matn +
+//     "YANGI DARS" (to'q-sariq badge) + yashil-glow "Boshlash" tugma
+//   • "Siz uchun tavsiyalar" (2-ustun grid, rounded-2xl)
+//   • "Eng ko'p ko'rilganlar" (gorizontal, rounded-2xl, ko'rishlar soni)
 //
-// Eski /videos, /audiobooks, /books route'lari saqlanadi (deep-link
-// uchun), lekin bottom nav endi /content ga olib boradi.
+// Faqat NIGHT — `AppTheme.darkTheme` bilan majburiy. Ranglar
+// `AppColors.parvoz*` (Premium: surface #162B45, green #2ECC71, badge #F39C12).
+// Real data: effectiveVideosProvider + audiobooks/books (mock yo'q).
 
-import 'package:easy_localization/easy_localization.dart';
-// `adaptive` extension (context.adaptive) shu import'dan keladi — kerak.
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
-// VAQTINCHA o'chirilgan — "Maqolalar" tabi (pastdagi MAQOLALAR markerlariga
-// qarang). Qaytarishda quyidagi import'larni ham oching:
-// import 'package:farzandim_child/features/articles/data/models/article_model.dart';
-// import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
-// import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/presentation/providers/books_providers.dart';
 import 'package:farzandim_child/features/books/presentation/widgets/book_section.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
-import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
-import 'package:farzandim_child/features/videos/data/models/filter_state.dart';
+import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
-import 'package:farzandim_child/features/videos/presentation/widgets/hero_video_card.dart';
-import 'package:farzandim_child/features/videos/presentation/widgets/video_section.dart';
-import 'package:farzandim_child/features/videos/presentation/widgets/video_tabs.dart';
-import 'package:farzandim_child/features/videos/presentation/widgets/videos_search_bar.dart';
-import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-class ContentHubScreen extends ConsumerWidget {
+/// Tanlangan kategoriya chip (null = "Barchasi").
+final _parvozCategoryProvider = StateProvider<String?>((ref) => null);
+
+class ContentHubScreen extends ConsumerStatefulWidget {
   const ContentHubScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    // VAQTINCHA: "Maqolalar" tabi o'chirilgan → length 3 emas, 2.
-    // Qaytarishda 3 ga o'zgartiring.
-    return DefaultTabController(
-      length: 2,
+  ConsumerState<ContentHubScreen> createState() => _ContentHubScreenState();
+}
+
+class _ContentHubScreenState extends ConsumerState<ContentHubScreen>
+    with SingleTickerProviderStateMixin {
+  late final TabController _tab = TabController(length: 2, vsync: this);
+
+  @override
+  void dispose() {
+    _tab.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    // NIGHT majburiy: butun subtree dark theme.
+    return Theme(
+      data: AppTheme.darkTheme,
       child: Scaffold(
-        backgroundColor: Colors.transparent,
+        backgroundColor: AppColors.parvozBg,
         extendBody: true,
-        body: GradientBackground(
-          child: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DashboardTopHeader(
-                    onAvatarTap: () => context.push('/account-edit'),
-                  ),
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              const _ParvozHeader(),
+              const SizedBox(height: 16),
+              _ParvozSegment(controller: _tab),
+              const SizedBox(height: 20),
+              Expanded(
+                child: TabBarView(
+                  controller: _tab,
+                  physics: const BouncingScrollPhysics(),
+                  children: const [
+                    _VideosTab(),
+                    _AudiobooksTab(),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                const _TopTabs(),
-                Expanded(
-                  child: TabBarView(
-                    physics: const BouncingScrollPhysics(),
-                    children: const [
-                      _VideosTab(),
-                      _AudiobooksTab(),
-                      // VAQTINCHA o'chirilgan — Maqolalar tabi:
-                      // _ArticlesTab(),
-                    ],
-                  ),
-                ),
-              ],
-            ),
+              ),
+            ],
           ),
         ),
         bottomNavigationBar: const ChildBottomNavigation(),
@@ -85,305 +87,1320 @@ class ContentHubScreen extends ConsumerWidget {
   }
 }
 
-// ─── Top tabs (2 ta) — premium underline style (Figma asosida) ────────
-// Skreenshot dizayniga muvofiq: filled pill o'rniga pastdan rangli
-// chiziq, faol tab matni oq+bold, nofaol tab matni kulrang.
-class _TopTabs extends StatelessWidget {
-  const _TopTabs();
-
-  // Brand accent — orange chiziq (skreenshotga mos). Tema accent emas,
-  // chunki content hub ichida LOGO ham orange (vizual yagonalik).
-  static const _accent = Color(0xFFFF6B35);
+// ─── Header: "Parvoz" + bell + settings ───────────────────────────────
+class _ParvozHeader extends StatelessWidget {
+  const _ParvozHeader();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      child: TabBar(
-        // Pastdan 3px qalin underline — premium app'lardagi standart.
-        indicator: const UnderlineTabIndicator(
-          borderSide: BorderSide(width: 3, color: _accent),
-          insets: EdgeInsets.symmetric(horizontal: 32),
-        ),
-        indicatorSize: TabBarIndicatorSize.label,
-        labelColor: context.adaptive.textPrimary,
-        unselectedLabelColor: context.adaptive.textTertiary,
-        labelStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-        unselectedLabelStyle:
-            const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
-        dividerColor: Colors.transparent,
-        labelPadding: const EdgeInsets.symmetric(horizontal: 4, vertical: 12),
-        tabAlignment: TabAlignment.start,
-        isScrollable: true,
-        tabs: const [
-          Tab(text: 'Videolar'),
-          Tab(text: 'Audiokitoblar'),
-          // VAQTINCHA o'chirilgan — Maqolalar tabi:
-          // Tab(text: 'Maqolalar'),
+      padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
+      decoration: const BoxDecoration(
+        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+      ),
+      child: Row(
+        children: [
+          const Text(
+            'Parvoz',
+            style: TextStyle(
+              color: AppColors.parvozGreen,
+              fontSize: 24,
+              fontWeight: FontWeight.bold,
+              letterSpacing: -0.5,
+            ),
+          ),
+          const Spacer(),
+          _ParvozIconButton(
+            icon: Icons.notifications_none_rounded,
+            onTap: () => context.push('/notifications'),
+          ),
+          const SizedBox(width: 8),
+          _ParvozIconButton(
+            icon: Icons.settings_outlined,
+            onTap: () => context.push('/settings'),
+          ),
         ],
       ),
     );
   }
 }
 
-// ─── Videos tab (videos_feed_screen body) ─────────────────────────────
+class _ParvozIconButton extends StatelessWidget {
+  const _ParvozIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: const BoxDecoration(
+          color: AppColors.parvozSurface,
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, color: AppColors.parvozText, size: 22),
+      ),
+    );
+  }
+}
+
+// ─── Segment: Videolar / Audio kitoblar (rounded-xl, yashil faol) ──────
+class _ParvozSegment extends StatelessWidget {
+  const _ParvozSegment({required this.controller});
+
+  final TabController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Container(
+        padding: const EdgeInsets.all(6),
+        decoration: BoxDecoration(
+          color: AppColors.parvozSurface,
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: AnimatedBuilder(
+          animation: controller,
+          builder: (context, _) {
+            final idx = controller.index;
+            return Row(
+              children: [
+                _seg('Videolar', 0, idx),
+                _seg('Audio kitoblar', 1, idx),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+
+  Widget _seg(String label, int i, int active) {
+    final selected = i == active;
+    return Expanded(
+      child: GestureDetector(
+        onTap: () => controller.animateTo(i),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOut,
+          padding: const EdgeInsets.symmetric(vertical: 11),
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: selected ? AppColors.parvozGreen : Colors.transparent,
+            borderRadius: BorderRadius.circular(9),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: selected ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+              fontSize: 14,
+              fontWeight: selected ? FontWeight.bold : FontWeight.w600,
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Videolar tab ─────────────────────────────────────────────────────
 class _VideosTab extends ConsumerWidget {
   const _VideosTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final heroVideo = ref.watch(heroVideoProvider);
-    final topVideos = ref.watch(topVideosProvider);
-    final recommended = ref.watch(recommendedVideosProvider);
-    final filtered = ref.watch(filteredVideosProvider);
+    final all = ref.watch(effectiveVideosProvider);
+    final selectedCat = ref.watch(_parvozCategoryProvider);
 
-    return Column(
-      children: [
-        const VideosSearchBar(),
-        const VideoTabs(),
-        const SizedBox(height: 16),
-        Expanded(
-          child: filtered.isEmpty
-              ? EmptyStateMascot(
-                  faroVariant: FaroVariant.faceSad,
-                  title: 'videos.feed.emptyTitle'.tr(),
-                  subtitle: 'videos.feed.emptyHint'.tr(),
-                  actionLabel: 'videos.feed.emptyClearButton'.tr(),
-                  onAction: () {
-                    ref.read(videoSearchQueryProvider.notifier).state = '';
-                    ref.read(videoFilterProvider.notifier).state =
-                        const VideoFilterState();
-                  },
-                )
-              : SingleChildScrollView(
-                  padding: const EdgeInsets.only(bottom: 140),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      if (heroVideo != null) ...[
-                        HeroVideoCard(video: heroVideo),
-                        const SizedBox(height: 24),
-                      ],
-                      if (topVideos.isNotEmpty) ...[
-                        VideoSection(
-                          title: 'videos.feed.topVideos'.tr(),
-                          videos: topVideos,
-                          onViewAll: () {},
-                        ),
-                        const SizedBox(height: 24),
-                      ],
-                      if (recommended.isNotEmpty)
-                        VideoSection(
-                          title: 'videos.feed.recommended'.tr(),
-                          videos: recommended,
-                          onViewAll: () {},
-                        ),
-                    ],
-                  ),
+    if (all.isEmpty) {
+      return const _ParvozEmpty(
+        icon: Icons.video_library_outlined,
+        text: "Hozircha video yo'q",
+      );
+    }
+
+    final categories = <String>[];
+    for (final v in all) {
+      if (v.category.isNotEmpty && !categories.contains(v.category)) {
+        categories.add(v.category);
+      }
+    }
+
+    final filtered = selectedCat == null
+        ? all
+        : all.where((v) => v.category == selectedCat).toList();
+
+    final hero = filtered.isNotEmpty ? filtered.first : null;
+    final recommended =
+        filtered.length > 1 ? filtered.skip(1).take(4).toList() : <VideoModel>[];
+    final mostViewed = [...filtered]
+      ..sort((a, b) => b.views.compareTo(a.views));
+    final topViewed = mostViewed.take(6).toList();
+
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 150),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          _ParvozChips(categories: categories),
+          const SizedBox(height: 28),
+          if (filtered.isEmpty)
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+              child: Center(
+                child: Text(
+                  "Bu kategoriyada video yo'q",
+                  style: TextStyle(color: AppColors.parvozTextDim, fontSize: 14),
                 ),
-        ),
-      ],
+              ),
+            ),
+          if (hero != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _ParvozHeroCard(video: hero),
+            ),
+            const SizedBox(height: 32),
+          ],
+          if (recommended.isNotEmpty) ...[
+            _ParvozSectionHeader(
+              title: 'Siz uchun tavsiyalar',
+              onSeeAll: () => context.push('/videos'),
+            ),
+            const SizedBox(height: 16),
+            _ParvozVideoHList(videos: recommended),
+            const SizedBox(height: 32),
+          ],
+          if (topViewed.isNotEmpty) ...[
+            const _ParvozSectionTitle("Eng ko'p ko'rilganlar"),
+            const SizedBox(height: 16),
+            _ParvozWideList(videos: topViewed),
+          ],
+        ],
+      ),
     );
   }
 }
 
-// ─── Audiobooks tab (audiokitoblar + PDF kitoblar) ────────────────────
-// Figma 2-rasmga muvofiq: yuqorida audiokitob sectionlari (horizontal),
-// pastida PDF kitoblar sectionlari (kategoriyalarga ajratilgan).
+// ─── Kategoriya chiplari (rounded-xl, YASHIL faol) ────────────────────
+class _ParvozChips extends ConsumerWidget {
+  const _ParvozChips({required this.categories});
+
+  final List<String> categories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(_parvozCategoryProvider);
+    final items = <String?>[null, ...categories]; // null = Barchasi
+
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final cat = items[i];
+          final isSel = cat == selected;
+          return GestureDetector(
+            onTap: () =>
+                ref.read(_parvozCategoryProvider.notifier).state = cat,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: isSel
+                    ? null
+                    : Border.all(color: AppColors.parvozBorder, width: 1),
+              ),
+              child: Text(
+                cat ?? 'Barchasi',
+                style: TextStyle(
+                  color:
+                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  fontSize: 14,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── Section sarlavhasi ───────────────────────────────────────────────
+class _ParvozSectionTitle extends StatelessWidget {
+  const _ParvozSectionTitle(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: AppColors.parvozText,
+          fontSize: 20,
+          fontWeight: FontWeight.bold,
+          letterSpacing: -0.3,
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Hero karta — to'liq rasm + overlay + glow tugma ──────────────────
+class _ParvozHeroCard extends StatelessWidget {
+  const _ParvozHeroCard({required this.video});
+
+  final VideoModel video;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/video-player', extra: video),
+      child: Container(
+        decoration: _glassDeco(radius: 16),
+        clipBehavior: Clip.antiAlias,
+        child: SizedBox(
+          height: 280,
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              _NetImage(url: video.thumbnailUrl, fallback: video.thumbnailColor),
+              DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomCenter,
+                    end: Alignment.topCenter,
+                    colors: [
+                      AppColors.parvozBg,
+                      AppColors.parvozBg.withValues(alpha: 0.7),
+                      Colors.transparent,
+                    ],
+                    stops: const [0.0, 0.45, 1.0],
+                  ),
+                ),
+              ),
+              // YANGI DARS badge (to'q-sariq, yuqori-chap)
+              Positioned(
+                top: 16,
+                left: 16,
+                child: Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: AppColors.parvozBadge,
+                    borderRadius: BorderRadius.circular(8),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.25),
+                        blurRadius: 8,
+                        offset: const Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: const Text(
+                    'YANGI DARS',
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1,
+                    ),
+                  ),
+                ),
+              ),
+              // Matn + tugma (pastda overlay)
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                child: Padding(
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        video.title,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          height: 1.15,
+                        ),
+                      ),
+                      const SizedBox(height: 8),
+                      Text(
+                        video.description,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          color: Color(0xFFD1D5DB),
+                          fontSize: 14,
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 20),
+                      DecoratedBox(
+                        decoration: BoxDecoration(
+                          color: AppColors.parvozGreen,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(
+                              color: AppColors.parvozGreen
+                                  .withValues(alpha: 0.3),
+                              blurRadius: 20,
+                            ),
+                          ],
+                        ),
+                        child: const Padding(
+                          padding: EdgeInsets.symmetric(vertical: 14),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              Icon(
+                                Icons.play_circle_fill_rounded,
+                                color: AppColors.parvozOnGreen,
+                                size: 22,
+                              ),
+                              SizedBox(width: 8),
+                              Text(
+                                'Boshlash',
+                                style: TextStyle(
+                                  color: AppColors.parvozOnGreen,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.bold,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Section sarlavhasi + "Barchasi" tugmasi ──────────────────────────
+class _ParvozSectionHeader extends StatelessWidget {
+  const _ParvozSectionHeader({required this.title, this.onSeeAll});
+
+  final String title;
+  final VoidCallback? onSeeAll;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Flexible(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozText,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+                letterSpacing: -0.3,
+              ),
+            ),
+          ),
+          if (onSeeAll != null)
+            GestureDetector(
+              onTap: onSeeAll,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(14, 7, 10, 7),
+                decoration: BoxDecoration(
+                  color: AppColors.parvozGreen.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(999),
+                  border: Border.all(
+                    color: AppColors.parvozGreen.withValues(alpha: 0.25),
+                  ),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Barchasi',
+                      style: TextStyle(
+                        color: AppColors.parvozGreen,
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    SizedBox(width: 2),
+                    Icon(
+                      Icons.chevron_right_rounded,
+                      color: AppColors.parvozGreen,
+                      size: 18,
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── "Siz uchun tavsiyalar" — bir qatorli gorizontal ro'yxat ──────────
+class _ParvozVideoHList extends StatelessWidget {
+  const _ParvozVideoHList({required this.videos});
+
+  final List<VideoModel> videos;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 210,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: videos.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (_, i) => SizedBox(
+          width: 160,
+          child: _ParvozGridCard(video: videos[i]),
+        ),
+      ),
+    );
+  }
+}
+
+class _ParvozGridCard extends StatelessWidget {
+  const _ParvozGridCard({required this.video});
+
+  final VideoModel video;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/video-player', extra: video),
+      child: Container(
+        decoration: _glassDeco(radius: 16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 128,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _NetImage(
+                    url: video.thumbnailUrl,
+                    fallback: video.thumbnailColor,
+                  ),
+                  if (video.hasDuration)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: _DurationBadge(video.duration),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(14),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      video.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      video.category,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozTextDim,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── "Eng ko'p ko'rilganlar" — gorizontal keng kartalar ───────────────
+class _ParvozWideList extends StatelessWidget {
+  const _ParvozWideList({required this.videos});
+
+  final List<VideoModel> videos;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 104,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: videos.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (_, i) => _ParvozWideCard(video: videos[i]),
+      ),
+    );
+  }
+}
+
+class _ParvozWideCard extends StatelessWidget {
+  const _ParvozWideCard({required this.video});
+
+  final VideoModel video;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () => context.push('/video-player', extra: video),
+      child: Container(
+        width: 280,
+        padding: const EdgeInsets.all(12),
+        decoration: _glassDeco(radius: 16),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: SizedBox(
+                width: 80,
+                height: 80,
+                child: _NetImage(
+                  url: video.thumbnailUrl,
+                  fallback: video.thumbnailColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.center,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    video.title,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                      height: 1.2,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    video.category,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
+                      fontSize: 12,
+                      fontWeight: FontWeight.w500,
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.visibility_outlined,
+                        size: 16,
+                        color: AppColors.parvozGreen,
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        '${_formatViews(video.views)} ko\'rilgan',
+                        style: const TextStyle(
+                          color: AppColors.parvozGreen,
+                          fontSize: 11,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.3,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Yordamchi widgetlar ──────────────────────────────────────────────
+class _DurationBadge extends StatelessWidget {
+  const _DurationBadge(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.8),
+        borderRadius: BorderRadius.circular(6),
+      ),
+      child: Text(
+        text,
+        style: const TextStyle(
+          color: Colors.white,
+          fontSize: 10,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
+    );
+  }
+}
+
+class _NetImage extends StatelessWidget {
+  const _NetImage({required this.url, required this.fallback});
+
+  final String url;
+  final Color fallback;
+
+  @override
+  Widget build(BuildContext context) {
+    if (url.isEmpty) return ColoredBox(color: fallback);
+    // Disk-cache (cached_network_image): kontent rasmlari bir marta
+    // yuklangach keyingi safar (offline ham) darhol chiqadi.
+    return CachedNetworkImage(
+      imageUrl: url,
+      fit: BoxFit.cover,
+      fadeInDuration: const Duration(milliseconds: 180),
+      placeholder: (_, __) => ColoredBox(color: fallback),
+      errorWidget: (_, __, ___) => ColoredBox(color: fallback),
+    );
+  }
+}
+
+class _ParvozEmpty extends StatelessWidget {
+  const _ParvozEmpty({required this.icon, required this.text});
+
+  final IconData icon;
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(icon, size: 64, color: AppColors.parvozTextDim),
+          const SizedBox(height: 16),
+          Text(
+            text,
+            style: const TextStyle(
+              color: AppColors.parvozTextDim,
+              fontSize: 16,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// Shishali (glass) karta dekoratsiyasi — translucent gradient + yorqin rim +
+// yumshoq soya. Navy fon ustidan yaqqol ajralib turadi (per-card blur YO'Q —
+// uzun ro'yxat/grid'da silliq 60fps).
+BoxDecoration _glassDeco({double radius = 16}) => BoxDecoration(
+  borderRadius: BorderRadius.circular(radius),
+  gradient: const LinearGradient(
+    begin: Alignment.topLeft,
+    end: Alignment.bottomRight,
+    colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+  ),
+  border: Border.all(color: AppColors.parvozGlassRim, width: 1),
+  boxShadow: const [
+    BoxShadow(
+      color: Color(0x59000000),
+      blurRadius: 22,
+      offset: Offset(0, 10),
+      spreadRadius: -2,
+    ),
+  ],
+);
+
+String _formatViews(int v) {
+  if (v >= 1000) {
+    final k = v / 1000;
+    return '${k.toStringAsFixed(k >= 10 ? 0 : 1)}k';
+  }
+  return '$v';
+}
+
+// ─── Audio kitoblar tab (Premium Edition — Stitch) ────────────────────
+// Tartib: kategoriya chiplari → Hero audiokitob (cover + Eshitish + bookmark)
+// → "Siz uchun tavsiyalar" (gorizontal) → "Eng ko'p eshitilganlar" (raqamli
+// vertikal ro'yxat + play) → Kitoblar (PDF, funksiya saqlanishi uchun).
 class _AudiobooksTab extends ConsumerWidget {
   const _AudiobooksTab();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final all = ref.watch(effectiveAudiobooksProvider);
     final forYou = ref.watch(forYouAudiobooksProvider);
     final mostListened = ref.watch(mostListenedProvider);
-    final newest = ref.watch(newestAudiobooksProvider);
-    final allFiltered = ref.watch(filteredAudiobooksProvider);
     final asyncBooks = ref.watch(backendBooksProvider);
-
-    final hasAudiobooks = allFiltered.isNotEmpty;
     final books = asyncBooks.valueOrNull ?? const <BookModel>[];
 
-    if (!hasAudiobooks && books.isEmpty) {
-      return Column(
-        children: [
-          const AudiobooksSearchBar(),
-          const SizedBox(height: 8),
-          Expanded(child: _emptyAudiobooks()),
-        ],
+    if (all.isEmpty && books.isEmpty) {
+      return const _ParvozEmpty(
+        icon: Icons.headphones_rounded,
+        text: 'Audiokitoblar topilmadi',
       );
     }
 
-    // PDF kitoblarni kategoriya bo'yicha guruhlash (school / adabiyot /
-    // boshqalar) — barchasi Audiokitoblar tab ichida ko'rsatiladi.
+    final categories = <String>[];
+    for (final b in all) {
+      if (b.category.isNotEmpty && !categories.contains(b.category)) {
+        categories.add(b.category);
+      }
+    }
+
+    final featured = forYou.isNotEmpty ? forYou.first : null;
+    final recommended =
+        forYou.length > 1 ? forYou.skip(1).toList() : <AudiobookModel>[];
+
     final schoolBooks = books.where((b) => b.category == 'school').toList();
     final adabiyotBooks = books.where((b) => b.category == 'adabiyot').toList();
     final otherBooks = books
         .where((b) => b.category != 'school' && b.category != 'adabiyot')
         .toList();
 
-    return Column(
-      children: [
-        const AudiobooksSearchBar(),
-        const SizedBox(height: 8),
-        Expanded(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.only(bottom: 180),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                const SizedBox(height: 8),
-                if (forYou.isNotEmpty) ...[
-                  AudiobookSection(title: 'Siz uchun', books: forYou),
-                  const SizedBox(height: 24),
-                ],
-                if (mostListened.isNotEmpty) ...[
-                  AudiobookSection(
-                      title: "Eng ko'p o'qilgan", books: mostListened),
-                  const SizedBox(height: 24),
-                ],
-                if (newest.isNotEmpty) ...[
-                  AudiobookSection(
-                      title: "Yangi qo'shilgan", books: newest),
-                  const SizedBox(height: 24),
-                ],
-                // ─── PDF kitoblar (Audiokitoblar tab ichida) ─────────
-                if (books.isNotEmpty) ...[
-                  BookSection(
-                    title: 'Kitoblar',
-                    books: books,
-                    onTap: (b) => context.push('/books/pdf', extra: b),
-                  ),
-                  if (schoolBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Maktab darsliklari',
-                      books: schoolBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                  if (adabiyotBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Adabiyot',
-                      books: adabiyotBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                  if (otherBooks.isNotEmpty) ...[
-                    const SizedBox(height: 20),
-                    BookSection(
-                      title: 'Boshqalar',
-                      books: otherBooks,
-                      onTap: (b) => context.push('/books/pdf', extra: b),
-                    ),
-                  ],
-                ],
-              ],
+    return SingleChildScrollView(
+      physics: const BouncingScrollPhysics(),
+      padding: const EdgeInsets.only(bottom: 180),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          if (categories.isNotEmpty) ...[
+            _ParvozAudioChips(categories: categories),
+            const SizedBox(height: 28),
+          ],
+          if (featured != null) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: _ParvozAudioHero(book: featured),
             ),
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _emptyAudiobooks() {
-    return Builder(builder: (ctx) {
-      return Center(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(Icons.headphones,
-                size: 64, color: ctx.adaptive.textTertiary),
+            const SizedBox(height: 32),
+          ],
+          if (recommended.isNotEmpty) ...[
+            _ParvozSectionHeader(
+              title: 'Siz uchun tavsiyalar',
+              onSeeAll: () => context.push('/audiobooks'),
+            ),
             const SizedBox(height: 16),
-            Text(
-              "Audiokitoblar topilmadi",
-              style: TextStyle(
-                  fontSize: 16, color: ctx.adaptive.textSecondary),
+            _ParvozAudioHList(books: recommended),
+            const SizedBox(height: 32),
+          ],
+          if (mostListened.isNotEmpty) ...[
+            const _ParvozSectionTitle("Eng ko'p eshitilganlar"),
+            const SizedBox(height: 16),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              child: Column(
+                children: [
+                  for (var i = 0; i < mostListened.length; i++) ...[
+                    _ParvozAudioRow(book: mostListened[i], rank: i + 1),
+                    if (i != mostListened.length - 1) const SizedBox(height: 12),
+                  ],
+                ],
+              ),
             ),
           ],
-        ),
-      );
-    });
-  }
-}
-
-// ─── Maqolalar tab (#48) — VAQTINCHA O'CHIRILGAN ──────────────────────
-// Qaytarish uchun: (1) yuqoridagi 3 ta article import'ini oching,
-// (2) DefaultTabController length'ni 2 dan 3 ga, (3) TabBarView'ga
-// `_ArticlesTab()` va tabs'ga `Tab(text: 'Maqolalar')` qatorlarini qayting,
-// (4) quyidagi block-komentni oching.
-/*
-class _ArticlesTab extends ConsumerWidget {
-  const _ArticlesTab();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final async = ref.watch(backendArticlesProvider);
-    return async.when(
-      loading: () => const Center(child: CircularProgressIndicator()),
-      error: (_, __) => _ArticlesMessage(
-        text: 'Maqolalarni yuklab bo\'lmadi.',
-        onRetry: () => ref.invalidate(backendArticlesProvider),
-      ),
-      data: (articles) {
-        if (articles.isEmpty) {
-          return const _ArticlesMessage(
-            text: 'Hozircha maqola yo\'q. Tez orada qo\'shiladi!',
-          );
-        }
-        return RefreshIndicator(
-          onRefresh: () async {
-            ref.invalidate(backendArticlesProvider);
-            await ref.read(backendArticlesProvider.future);
-          },
-          child: ListView.separated(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 12, 16, 140),
-            itemCount: articles.length,
-            separatorBuilder: (_, __) => const SizedBox(height: 12),
-            itemBuilder: (_, i) {
-              final ArticleModel a = articles[i];
-              return ArticleCard(
-                article: a,
-                onTap: () => context.push('/articles/view', extra: a),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-}
-
-class _ArticlesMessage extends StatelessWidget {
-  const _ArticlesMessage({required this.text, this.onRetry});
-  final String text;
-  final VoidCallback? onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(Icons.menu_book_rounded, size: 56, color: AppColors.textTertiary),
-          const SizedBox(height: 14),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 32),
-            child: Text(
-              text,
-              textAlign: TextAlign.center,
-              style: const TextStyle(color: AppColors.textSecondary),
+          if (books.isNotEmpty) ...[
+            const SizedBox(height: 32),
+            BookSection(
+              title: 'Kitoblar',
+              books: books,
+              onTap: (b) => context.push('/books/pdf', extra: b),
             ),
-          ),
-          if (onRetry != null) ...[
-            const SizedBox(height: 12),
-            TextButton(onPressed: onRetry, child: const Text('Qayta urinish')),
+            if (schoolBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Maktab darsliklari',
+                books: schoolBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
+            if (adabiyotBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Adabiyot',
+                books: adabiyotBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
+            if (otherBooks.isNotEmpty) ...[
+              const SizedBox(height: 20),
+              BookSection(
+                title: 'Boshqalar',
+                books: otherBooks,
+                onTap: (b) => context.push('/books/pdf', extra: b),
+              ),
+            ],
           ],
         ],
       ),
     );
   }
 }
-*/
+
+// ─── Audio: kategoriya chiplari (audiobookCategoryFilter) ─────────────
+class _ParvozAudioChips extends ConsumerWidget {
+  const _ParvozAudioChips({required this.categories});
+
+  final List<String> categories;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final selected = ref.watch(audiobookCategoryFilterProvider);
+    final items = <String?>[null, ...categories];
+
+    return SizedBox(
+      height: 44,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: items.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 12),
+        itemBuilder: (_, i) {
+          final cat = items[i];
+          final isSel = cat == selected;
+          return GestureDetector(
+            onTap: () =>
+                ref.read(audiobookCategoryFilterProvider.notifier).state = cat,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 20),
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                borderRadius: BorderRadius.circular(12),
+                border: isSel
+                    ? null
+                    : Border.all(color: AppColors.parvozBorder, width: 1),
+              ),
+              child: Text(
+                cat ?? 'Barchasi',
+                style: TextStyle(
+                  color:
+                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  fontSize: 14,
+                  fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+
+// ─── Audio: Hero (featured audiokitob) ────────────────────────────────
+class _ParvozAudioHero extends ConsumerWidget {
+  const _ParvozAudioHero({required this.book});
+
+  final AudiobookModel book;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return Container(
+      decoration: _glassDeco(radius: 20),
+      clipBehavior: Clip.antiAlias,
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: SizedBox(
+                height: 190,
+                width: double.infinity,
+                child: Stack(
+                  fit: StackFit.expand,
+                  children: [
+                    _NetImage(url: book.coverUrl, fallback: book.coverColor),
+                    DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.bottomCenter,
+                          end: Alignment.topCenter,
+                          colors: [
+                            AppColors.parvozBg.withValues(alpha: 0.85),
+                            Colors.transparent,
+                          ],
+                          stops: const [0.0, 0.6],
+                        ),
+                      ),
+                    ),
+                    if (book.duration.isNotEmpty)
+                      Positioned(
+                        bottom: 10,
+                        left: 10,
+                        child: _AudioDurationPill(book.duration),
+                      ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Text(
+              book.title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozText,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              book.category.isEmpty
+                  ? book.author
+                  : '${book.author} • ${book.category}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: AppColors.parvozTextDim,
+                fontSize: 14,
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: GestureDetector(
+                    onTap: () =>
+                        ref.read(audioPlayerProvider.notifier).play(book),
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: AppColors.parvozGreen,
+                        borderRadius: BorderRadius.circular(12),
+                        boxShadow: [
+                          BoxShadow(
+                            color:
+                                AppColors.parvozGreen.withValues(alpha: 0.3),
+                            blurRadius: 15,
+                            offset: const Offset(0, 4),
+                          ),
+                        ],
+                      ),
+                      child: const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 13),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            Icon(
+                              Icons.play_arrow_rounded,
+                              color: AppColors.parvozOnGreen,
+                              size: 22,
+                            ),
+                            SizedBox(width: 6),
+                            Text(
+                              'Eshitish',
+                              style: TextStyle(
+                                color: AppColors.parvozOnGreen,
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: AppColors.parvozBg,
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: AppColors.parvozBorder),
+                  ),
+                  child: const Icon(
+                    Icons.bookmark_border_rounded,
+                    color: AppColors.parvozText,
+                    size: 22,
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _AudioDurationPill extends StatelessWidget {
+  const _AudioDurationPill(this.text);
+
+  final String text;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      decoration: BoxDecoration(
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: AppColors.parvozBorderStrong),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(Icons.headphones_rounded,
+              color: AppColors.parvozGreen, size: 14),
+          const SizedBox(width: 5),
+          Text(
+            text,
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Audio: gorizontal tavsiya kartalari ──────────────────────────────
+class _ParvozAudioHList extends StatelessWidget {
+  const _ParvozAudioHList({required this.books});
+
+  final List<AudiobookModel> books;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 212,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        itemCount: books.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 16),
+        itemBuilder: (_, i) => _ParvozAudioHCard(book: books[i]),
+      ),
+    );
+  }
+}
+
+class _ParvozAudioHCard extends ConsumerWidget {
+  const _ParvozAudioHCard({required this.book});
+
+  final AudiobookModel book;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
+      child: Container(
+        width: 150,
+        decoration: _glassDeco(radius: 16),
+        clipBehavior: Clip.antiAlias,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            SizedBox(
+              height: 120,
+              width: double.infinity,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  _NetImage(url: book.coverUrl, fallback: book.coverColor),
+                  if (book.duration.isNotEmpty)
+                    Positioned(
+                      bottom: 8,
+                      right: 8,
+                      child: _DurationBadge(book.duration),
+                    ),
+                ],
+              ),
+            ),
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsets.all(12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      book.title,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozText,
+                        fontSize: 14,
+                        fontWeight: FontWeight.bold,
+                        height: 1.2,
+                      ),
+                    ),
+                    const Spacer(),
+                    Text(
+                      book.author,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozTextDim,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─── Audio: "Eng ko'p eshitilganlar" qatori ───────────────────────────
+class _ParvozAudioRow extends ConsumerWidget {
+  const _ParvozAudioRow({required this.book, required this.rank});
+
+  final AudiobookModel book;
+  final int rank;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    return GestureDetector(
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
+      child: Container(
+        padding: const EdgeInsets.all(12),
+        decoration: _glassDeco(radius: 16),
+        child: Row(
+          children: [
+            SizedBox(
+              width: 22,
+              child: Text(
+                '$rank',
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.25),
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(10),
+              child: SizedBox(
+                width: 64,
+                height: 64,
+                child: _NetImage(url: book.coverUrl, fallback: book.coverColor),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Text(
+                    book.title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      color: AppColors.parvozText,
+                      fontSize: 14,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      const Icon(Icons.headphones_rounded,
+                          size: 14, color: AppColors.parvozTextDim),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${_formatViews(book.listenCount)} marta eshitildi',
+                        style: const TextStyle(
+                          color: AppColors.parvozTextDim,
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 12),
+            Container(
+              width: 40,
+              height: 40,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.parvozBorderStrong),
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                color: AppColors.parvozGreen,
+                size: 22,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}

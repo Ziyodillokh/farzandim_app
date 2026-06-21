@@ -21,9 +21,10 @@ final themeModeProvider =
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() {
-    // Sinxron default — light. Saqlangan tanlov async yuklanadi.
+    // PARVOZ redizayn fazasi: default — DARK (night). "Faqat night" davri;
+    // light mode keyin qo'shilganda qaytariladi. Saqlangan tanlov async yuklanadi.
     _restore();
-    return ThemeMode.light;
+    return ThemeMode.dark;
   }
 
   Future<void> _restore() async {

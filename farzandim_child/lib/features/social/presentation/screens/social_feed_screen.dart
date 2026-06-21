@@ -1,11 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// SocialFeedScreen — ichki sotsial tarmoq (PDF p18, 24)
+// SocialFeedScreen — ichki sotsial tarmoq (Parvoz NIGHT/GLASS Premium)
 // ─────────────────────────────────────────────────────────────────────
 //
 // Konsept v2 talabi: ichki share, tashqi link YO'Q. Bola faqat
 // ruxsatli kontent yaratuvchilarni kuzatadi.
+//
+// Parvoz UI Redesign (NIGHT): GradientBackground olib tashlandi →
+// Scaffold(backgroundColor: AppColors.parvozBg). Butun subtree
+// `AppTheme.darkTheme` ostida — header/tab/post-kartalar night ranglarga
+// avtomatik moslanadi. Faqat KO'RINISH o'zgardi; provider'lar, navigatsiya,
+// .tr() tarjimalar va state — o'zgarmadi.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/social/presentation/providers/social_providers.dart';
@@ -13,7 +21,6 @@ import 'package:farzandim_child/features/social/presentation/widgets/social_feed
 import 'package:farzandim_child/features/social/presentation/widgets/social_post_card.dart';
 import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,11 +34,14 @@ class SocialFeedScreen extends ConsumerWidget {
     final posts = ref.watch(filteredSocialPostsProvider);
     final tab = ref.watch(socialFeedTabProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBody: true,
-      body: GradientBackground(
-        child: SafeArea(
+    // NIGHT majburiy: butun subtree dark theme — header/tab/post-kartalar
+    // parvoz fon ustida to'g'ri ko'rinadi.
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        extendBody: true,
+        body: SafeArea(
           bottom: false,
           child: Column(
             children: [
@@ -51,6 +61,7 @@ class SocialFeedScreen extends ConsumerWidget {
                 child: posts.isEmpty
                     ? EmptyStateMascot(
                         faroVariant: FaroVariant.faceIdle,
+                        accentColor: AppColors.parvozGreen,
                         title: tab == SocialFeedTab.following
                             ? 'social.emptyFollowingTitle'.tr()
                             : 'social.emptyForYouTitle'.tr(),
@@ -81,8 +92,8 @@ class SocialFeedScreen extends ConsumerWidget {
             ],
           ),
         ),
+        bottomNavigationBar: const ChildBottomNavigation(),
       ),
-      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 }
