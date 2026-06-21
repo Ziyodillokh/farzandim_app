@@ -3,6 +3,7 @@ import {
   NotFoundException,
   ForbiddenException,
 } from '@nestjs/common';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
@@ -17,6 +18,19 @@ export class NotificationsService {
     private readonly realtime: RealtimeGateway,
   ) {}
 
+  /**
+   * Ota-onaga mo'ljallangan bildirishnoma turlari — bu yozuvlar `childId`
+   * bo'yicha saqlanadi (ota-ona panelида ko'rinishi uchun), lekin BOLA o'z
+   * ilovasида ularni ko'rmasligi kerak (masalan "Parvoz app bilan aloqa uzildi"
+   * bola uchun mantiqsiz). Bola qurilmasi so'raganда shu turlar chiqariladi.
+   */
+  private static readonly PARENT_ONLY_TYPES: NotificationType[] = [
+    NotificationType.CONNECTION_LOST,
+    NotificationType.PERMISSION_CHANGED,
+    NotificationType.UNLOCK_REQUEST,
+    NotificationType.GEO_ZONE,
+  ];
+
   async listByChild(userId: string, childId: string, query: ListNotificationsDto) {
     const child = await this.prisma.child.findUnique({ where: { id: childId } });
     if (!child) throw new NotFoundException('Child not found');
@@ -24,11 +38,18 @@ export class NotificationsService {
       throw new ForbiddenException('Forbidden');
     }
 
+    // So'rovchi BOLA qurilmasimi — shunda ota-onaga tegishli turlarni yashiramiz.
+    const isChildDevice = child.childUserId === userId;
+    const audienceFilter = isChildDevice
+      ? { type: { notIn: NotificationsService.PARENT_ONLY_TYPES } }
+      : {};
+
     const limit = query.limit ?? 100;
 
     const notifications = await this.prisma.notification.findMany({
       where: {
         childId,
+        ...audienceFilter,
         ...(query.type ? { type: query.type } : {}),
         ...(query.isRead !== undefined ? { isRead: query.isRead === 'true' } : {}),
       },
@@ -36,8 +57,9 @@ export class NotificationsService {
       take: limit,
     });
 
+    // Unread badge ham yashirilgan turlarni sanamasin.
     const unreadCount = await this.prisma.notification.count({
-      where: { childId, isRead: false },
+      where: { childId, isRead: false, ...audienceFilter },
     });
 
     return { notifications, count: notifications.length, unreadCount };

@@ -9,9 +9,11 @@
 //   4. NotificationCard list (yangi → eski)
 //   5. EmptyState (bo'sh bo'lsa, FARO sleeping bilan)
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/notification_tokens.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/notifications/data/models/app_notification.dart';
@@ -71,12 +73,32 @@ class NotificationsScreen extends ConsumerWidget {
                       ),
                     ),
                     if (unreadCount > 0)
-                      TextButton.icon(
-                        onPressed: () => _markAllAsRead(ref),
-                        icon: const Icon(AppIcons.success, size: 18),
-                        label: Text('notifications.markAllRead'.tr()),
-                        style: TextButton.styleFrom(
-                          foregroundColor: AppColors.primary,
+                      GestureDetector(
+                        onTap: () => _markAllAsRead(ref),
+                        behavior: HitTestBehavior.opaque,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 7),
+                          decoration: BoxDecoration(
+                            color: NotifTokens.successSoft,
+                            borderRadius: BorderRadius.circular(999),
+                          ),
+                          child: const Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(Icons.check_circle_rounded,
+                                  size: 16, color: NotifTokens.success),
+                              SizedBox(width: 6),
+                              Text(
+                                "O'qildi",
+                                style: TextStyle(
+                                  color: NotifTokens.success,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                   ],
@@ -119,44 +141,104 @@ class NotificationsScreen extends ConsumerWidget {
     );
   }
 
+  Future<void> _refresh(WidgetRef ref) async {
+    HapticFeedback.lightImpact();
+    ref.invalidate(notificationsProvider);
+    try {
+      await ref.read(notificationsProvider.future);
+    } catch (_) {}
+  }
+
+  /// Sana bo'limi yorlig'i: Bugun / Kecha / Bu hafta / Avvalroq.
+  static String _bucketLabel(DateTime dt) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final d = DateTime(dt.year, dt.month, dt.day);
+    final diff = today.difference(d).inDays;
+    if (diff <= 0) return 'Bugun';
+    if (diff == 1) return 'Kecha';
+    if (diff < 7) return 'Bu hafta';
+    return 'Avvalroq';
+  }
+
   Widget _buildList(
     BuildContext context,
     WidgetRef ref,
     List<AppNotification> items,
   ) {
+    // Bo'sh holat ham pastga tortib yangilanadigan bo'lsin.
     if (items.isEmpty) {
-      return EmptyStateMascot(
-        faroVariant: FaroVariant.faceSleeping,
-        title: 'notifications.emptyTitle'.tr(),
-        subtitle: 'notifications.emptySubtitle'.tr(),
+      return RefreshIndicator(
+        color: AppColors.primary,
+        onRefresh: () => _refresh(ref),
+        child: ListView(
+          physics: const AlwaysScrollableScrollPhysics(),
+          children: [
+            SizedBox(height: MediaQuery.sizeOf(context).height * 0.10),
+            EmptyStateMascot(
+              faroVariant: FaroVariant.faceSleeping,
+              title: 'notifications.emptyTitle'.tr(),
+              subtitle: 'notifications.emptySubtitle'.tr(),
+            ),
+          ],
+        ),
       );
     }
 
-    return ListView.builder(
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
-      itemCount: items.length,
-      itemBuilder: (_, i) {
-        final notification = items[i];
-        // Stagger: har kartochka 50ms kechikish bilan fade-up
-        return NotificationCard(
-          notification: notification,
-          onTap: () => _onTap(context, ref, notification),
-          onDismiss: () => _onDismiss(ref, notification.id),
-        )
-            .animate()
-            .fadeIn(
-              duration: 300.ms,
-              delay: (50 * i).ms,
-              curve: Curves.easeOut,
-            )
-            .slideY(
-              begin: 0.1,
-              end: 0,
-              duration: 300.ms,
-              delay: (50 * i).ms,
-              curve: Curves.easeOutCubic,
-            );
-      },
+    // Sana bo'yicha guruhlaymiz (ro'yxat allaqachon yangi → eski tartibda).
+    final order = <String>[];
+    final groups = <String, List<AppNotification>>{};
+    for (final n in items) {
+      final label = _bucketLabel(n.createdAt);
+      if (!groups.containsKey(label)) {
+        groups[label] = <AppNotification>[];
+        order.add(label);
+      }
+      groups[label]!.add(n);
+    }
+
+    // Bo'lim sarlavhalari + kartalar — yagona tekis ro'yxat.
+    final rows = <Widget>[];
+    for (final label in order) {
+      rows.add(_SectionHeader(label: label));
+      for (final n in groups[label]!) {
+        rows.add(
+          NotificationCard(
+            notification: n,
+            onTap: () => _onTap(context, ref, n),
+            onDismiss: () => _onDismiss(ref, n.id),
+          ),
+        );
+      }
+    }
+
+    // prefers-reduced-motion — kirish animatsiyasini o'chiramiz.
+    final reduce = MediaQuery.maybeOf(context)?.disableAnimations ?? false;
+
+    return RefreshIndicator(
+      color: AppColors.primary,
+      onRefresh: () => _refresh(ref),
+      child: ListView.builder(
+        padding: const EdgeInsets.fromLTRB(16, 0, 16, 120),
+        physics: const AlwaysScrollableScrollPhysics(),
+        itemCount: rows.length,
+        itemBuilder: (_, i) {
+          if (reduce) return rows[i];
+          // Staggered: fade + 18px yuqoriga sirpanish, ~80ms kechikish
+          // (uzun ro'yxatda umumiy kechikish cheklangan).
+          final delay = (80 * math.min(i, 9)).ms;
+          return rows[i]
+              .animate()
+              .fadeIn(duration: 320.ms, delay: delay, curve: Curves.easeOut)
+              .moveY(
+                begin: 18,
+                end: 0,
+                duration: 320.ms,
+                delay: delay,
+                curve: Curves.easeOutCubic,
+              );
+        },
+      ),
     );
   }
 
@@ -195,5 +277,28 @@ class NotificationsScreen extends ConsumerWidget {
     final repo = ref.read(backendNotificationRepositoryProvider);
     await repo.markAllAsRead(childId);
     ref.invalidate(notificationsProvider);
+  }
+}
+
+/// Sana bo'limi sarlavhasi (Bugun / Kecha / Bu hafta / Avvalroq).
+class _SectionHeader extends StatelessWidget {
+  const _SectionHeader({required this.label});
+
+  final String label;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(4, 6, 0, 10),
+      child: Text(
+        label,
+        style: const TextStyle(
+          color: AppColors.textSecondary,
+          fontSize: 13,
+          fontWeight: FontWeight.w700,
+          letterSpacing: 0.2,
+        ),
+      ),
+    );
   }
 }

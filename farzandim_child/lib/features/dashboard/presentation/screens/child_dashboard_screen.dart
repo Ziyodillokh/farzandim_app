@@ -18,11 +18,9 @@ import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
-import 'package:farzandim_child/features/analytics/presentation/widgets/app_restrictions_list.dart';
-import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_section.dart';
-import 'package:farzandim_child/features/analytics/presentation/widgets/app_usage_list.dart';
+import 'package:farzandim_child/features/analytics/presentation/widgets/weekly_usage_chart.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
@@ -295,13 +293,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
           const SizedBox(height: 16),
           const MotivationalBanner(),
           const SizedBox(height: 24),
-          // === 🎵 Audiokitoblar mini-player (Ilovadan foydalanish'dan oldin) ===
-          // Spotify-style compact player: cover + title + author + play.
-          if (kEnableContentLibrary) ...[
-            const _DashboardAudiobookMiniPlayer(),
-            const SizedBox(height: 20),
-          ],
-          // === 📊 Ilovadan foydalanish (eng pastda — foydalanuvchi talabi) ===
+          // === 📊 Ilovadan foydalanish (o'z holida — foydalanuvchi talabi) ===
           if (kEnableContentLibrary) ...[
             SectionHeader(
               title: 'dashboard.appUsageTitle'.tr(),
@@ -309,14 +301,11 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
               iconColor: const Color(0xFF7C5CFF),
             ),
             const SizedBox(height: 8),
-            const AppUsageList(limit: 5),
+            const WeeklyUsageChart(),
             const SizedBox(height: 8),
             _AppUsageSeeAllButton(
               onTap: () => context.push('/analytics'),
             ),
-            const SizedBox(height: 24),
-            // Sprint 4.4.33: Parent qo'ygan cheklovlar (block + limit).
-            const AppRestrictionsList(),
             const SizedBox(height: 24),
           ],
           // === SOS (eng pastda, har doim mavjud) ===
@@ -349,182 +338,6 @@ class _DashboardVideosSection extends ConsumerWidget {
         leadingIconColor: const Color(0xFFE53935), // YouTube red
         onViewAll: () => context.push('/content'),
       ),
-    );
-  }
-}
-
-// ─── Audiokitoblar mini-player (Ilovadan foydalanish'dan oldin) ────────
-// Spotify-style compact card: cover + title + author + play tugma.
-// Tap'da Audiokitoblar tabi (Content hub) ochiladi. 1-2 ta kitobni
-// gorizontal stack ko'rinishida ko'rsatadi (eng yangi yoki tanlangan).
-class _DashboardAudiobookMiniPlayer extends ConsumerWidget {
-  const _DashboardAudiobookMiniPlayer();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final books = ref.watch(forYouAudiobooksProvider);
-    // Yoshga mos audiokitob yo'q bo'lsa seksiyani ko'rsatmaymiz.
-    if (books.isEmpty) return const SizedBox.shrink();
-    final featured = books.first;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 28,
-                    height: 28,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF1DB954).withValues(alpha: 0.15),
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.headphones_rounded,
-                      size: 16,
-                      color: Color(0xFF169E45),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    'Audiokitoblar',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.bold,
-                      color: context.adaptive.textPrimary,
-                    ),
-                  ),
-                ],
-              ),
-              GestureDetector(
-                onTap: () => context.push('/content'),
-                child: const Text(
-                  'Barchasi',
-                  style: TextStyle(color: AppColors.primary, fontSize: 14),
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(height: 8),
-        GestureDetector(
-          onTap: () => context.push('/content'),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 16),
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [Color(0xFF1DB954), Color(0xFF169E45)],
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: const [
-                BoxShadow(
-                  color: Color(0x441DB954),
-                  blurRadius: 14,
-                  offset: Offset(0, 4),
-                ),
-              ],
-            ),
-            child: Row(
-              children: [
-                // Cover (album art).
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(10),
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    color: Colors.white24,
-                    child: featured.coverUrl.isNotEmpty
-                        ? Image.network(
-                            featured.coverUrl,
-                            fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => const Icon(
-                              Icons.headphones,
-                              color: Colors.white,
-                              size: 32,
-                            ),
-                          )
-                        : const Icon(
-                            Icons.headphones,
-                            color: Colors.white,
-                            size: 32,
-                          ),
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Title + author.
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        featured.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        featured.author,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white70,
-                          fontSize: 12,
-                        ),
-                      ),
-                      const SizedBox(height: 6),
-                      // Compact progress placeholder (full = unlistened).
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(2),
-                        child: Container(
-                          height: 3,
-                          color: Colors.white24,
-                          child: const Align(
-                            alignment: Alignment.centerLeft,
-                            child: FractionallySizedBox(
-                              widthFactor: 0.0,
-                              child: SizedBox(height: 3),
-                            ),
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 12),
-                // Play button.
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    color: Color(0xFF169E45),
-                    size: 30,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ],
     );
   }
 }
