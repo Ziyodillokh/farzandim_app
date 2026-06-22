@@ -1,71 +1,48 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
-    <!-- Internet — Firebase, Firestore, FCM uchun -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- Joylashuv — bola haqida ota-onaga xabar berish -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
 
-    <!-- Kamera — kelajak foto so'rovlari uchun -->
     <uses-permission android:name="android.permission.CAMERA"/>
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <uses-feature android:name="android.hardware.camera"/>
 
-    <!-- Bildirishnomalar — Android 13+ runtime ruxsati -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Wi-Fi va tarmoq holati — DeviceInfoService uchun -->
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
     <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
 
-    <!-- Foreground Service (8.F) — bola joylashuvini doimiy kuzatish -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
-    <!-- "Baland ovoz" (qurilmani topish) — jiringlash + vibratsiya + ekranni
-         uyg'otish (full-screen intent, Google Family Link kabi). RingService
-         FOREGROUND_SERVICE_SPECIAL_USE ishlatadi (RestrictionService bilan bir
-         xil — yuqorida e'lon qilingan). -->
     <uses-permission android:name="android.permission.VIBRATE"/>
     <uses-permission android:name="android.permission.USE_FULL_SCREEN_INTENT"/>
 
-    <!-- Auto-start at boot -->
     <uses-permission android:name="android.permission.RECEIVE_BOOT_COMPLETED"/>
 
-    <!-- Battery optimization istisno so'rash -->
     <uses-permission android:name="android.permission.REQUEST_IGNORE_BATTERY_OPTIMIZATIONS"/>
 
-    <!-- Qadam sanagich (pedometer — TYPE_STEP_COUNTER) -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION"/>
 
-    <!-- App Restrictions Bosqich 1: foydalanish statistikasi -->
     <uses-permission android:name="android.permission.PACKAGE_USAGE_STATS"
         tools:ignore="ProtectedPermissions"/>
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission"/>
 
-    <!-- SIM kartadan telefon raqamini o'qish (Sprint 4.1 SOS dialer):
-         Android 8+ uchun READ_PHONE_NUMBERS, eski versiyalar uchun
-         READ_PHONE_STATE fallback. SimInfoPlugin shu permission'ni
-         tekshirib SIM'dan raqamni o'qiydi. iOS'da bunday API yo'q. -->
     <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
     <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
 
-    <!-- App Restrictions Bosqich 4A: overlay + restriction FGS -->
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
-    <!-- Faqat Android 14+ (API 34+) majburiy — eski versiyalarda ignor qilinadi -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"
         android:minSdkVersion="34"
         tools:ignore="UnusedAttribute"/>
 
-    <!-- Background audio (just_audio_background) — telefon qulflanganda ham
-         audiokitob davom etadi. Android 14+ FOREGROUND_SERVICE_MEDIA_PLAYBACK
-         alohida ruxsat talab qiladi (avtomatik beriladi). -->
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
 
     <application
@@ -103,16 +80,10 @@
             android:name="flutterEmbedding"
             android:value="2" />
 
-        <!-- FCM default notification channel — Parent App'dan kelgan
-             voice/video/photo push'larini ushbu high-importance channel
-             orqali ko'rsatish. FcmService runtime'da yaratadi. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="farzandim_child_default"/>
 
-        <!-- flutter_foreground_task — Foreground Service tipini
-             location+dataSync ga override qilish (Android 14+).
-             Plugin'ning o'z service'i qayta ro'yxatdan o'tkaziladi. -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
             android:foregroundServiceType="location|dataSync"
@@ -120,9 +91,6 @@
             android:stopWithTask="false"
             tools:replace="android:foregroundServiceType" />
 
-        <!-- App Restrictions Bosqich 4A: cheklov xizmati.
-             foregroundServiceType="specialUse" + property — faqat Android 14+ uchun.
-             Eski Android versiyalarida bu atributlar ignor qilinadi. -->
         <service
             android:name=".RestrictionService"
             android:exported="false"
@@ -134,10 +102,6 @@
                 tools:targetApi="34"/>
         </service>
 
-        <!-- Telefon yoqilganda / ilova yangilanganda RestrictionService'ni
-             avtomatik tiklash (o'yin aniqlash reboot/update'dan keyin ham
-             ishlasin). flutter_foreground_task o'zini autoRunOnBoot bilan
-             tiklaydi; bu receiver FAQAT native RestrictionService uchun. -->
         <receiver
             android:name=".BootReceiver"
             android:exported="true"
@@ -149,10 +113,6 @@
             </intent-filter>
         </receiver>
 
-        <!-- "Baland ovoz" — ring native FCM ushlovchisi. Plugin'ning standart
-             messaging service'ini olib tashlab, uni KENGAYTIRGAN subclass bilan
-             almashtiramiz: "ring" data push'ni native ushlaydi (ilova yopiq
-             bo'lsa ham), qolganlarini super() Flutter'ga uzatadi. -->
         <service
             android:name="io.flutter.plugins.firebase.messaging.FlutterFirebaseMessagingService"
             tools:node="remove"/>
@@ -164,9 +124,6 @@
             </intent-filter>
         </service>
 
-        <!-- Ring ekrani — qulf ustida ko'rinadi va ekranni yoqadi (Family Link
-             kabi). RingService full-screen intent orqali ochadi. Yengil
-             Activity (Flutter engine'siz). -->
         <activity
             android:name=".RingActivity"
             android:exported="false"
@@ -178,9 +135,6 @@
             android:theme="@android:style/Theme.Material.NoActionBar"
             tools:targetApi="27"/>
 
-        <!-- Ring foreground service — STREAM_ALARM orqali baland jiringlaydi.
-             specialUse (mediaPlayback emas) — Android 14'da background FCM'dan
-             ishga tushishi uchun (mediaPlayback MediaSession talab qiladi). -->
         <service
             android:name=".RingService"
             android:exported="false"
@@ -192,8 +146,6 @@
                 tools:targetApi="34"/>
         </service>
 
-        <!-- Background audio (just_audio_background) — audiokitob telefon
-             qulflanganda davom etadi. Notification'da play/pause/skip. -->
         <service
             android:name="com.ryanheise.audioservice.AudioService"
             android:foregroundServiceType="mediaPlayback"
@@ -217,18 +169,11 @@
          https://developer.android.com/reference/android/content/Intent#ACTION_PROCESS_TEXT.
 
          In particular, this is used by the Flutter engine in io.flutter.plugin.text.ProcessTextPlugin. -->
-    <!-- Android 11+ (API 30) package-visibility: ilova tashqi ilovalarni
-         ko'rishi/ochishi uchun. QUERY_ALL_PACKAGES ham bor (ilova cheklash
-         uchun), lekin url_launcher mustaqil ishlashi uchun aniq intent'lar
-         ham e'lon qilinadi (kelajakda QUERY_ALL_PACKAGES olib tashlansa ham
-         SOS qo'ng'iroq / brauzer / Play Market ochiladi). -->
     <queries>
-        <!-- Flutter engine ProcessTextPlugin -->
         <intent>
             <action android:name="android.intent.action.PROCESS_TEXT"/>
             <data android:mimeType="text/plain"/>
         </intent>
-        <!-- SOS "Qo'ng'iroq" — tel: dialer (url_launcher) -->
         <intent>
             <action android:name="android.intent.action.DIAL"/>
             <data android:scheme="tel"/>
@@ -237,12 +182,10 @@
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="tel"/>
         </intent>
-        <!-- Tashqi havola / brauzer (url_launcher) -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="https"/>
         </intent>
-        <!-- Play Market — ilovani yangilash havolasi (url_launcher) -->
         <intent>
             <action android:name="android.intent.action.VIEW"/>
             <data android:scheme="market"/>
