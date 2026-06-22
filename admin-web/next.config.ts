@@ -1,6 +1,10 @@
 import type { NextConfig } from 'next';
 
 const nextConfig: NextConfig = {
+  // Admin panel asosiy domen subpath'ida: farzandimedu.uz/admin (root '/' — landing).
+  // Next.js barcha route/asset'larni /admin ostiga prefiks qiladi; API chaqiruvlari
+  // NEXT_PUBLIC_API_URL (absolyut) bo'lgani uchun basePath ularga ta'sir qilmaydi.
+  basePath: '/admin',
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['lucide-react', '@tabler/icons-react', 'recharts'],
@@ -9,6 +13,7 @@ const nextConfig: NextConfig = {
     remotePatterns: [
       { protocol: 'http', hostname: 'localhost' },
       { protocol: 'http', hostname: '127.0.0.1' },
+      { protocol: 'https', hostname: 'farzandimedu.uz' },
       { protocol: 'https', hostname: '**.farzandimedu.uz' },
     ],
   },

@@ -1,9 +1,9 @@
 import logoFarzandim from "../../imports/Main/logo_farzandim.png";
 import logoParvoz from "../../imports/Main/logo_parvoz.png";
 
-// APK yuklab olish linklari (test serveri).
-const PARENT_APK = "https://test.farzandimedu.uz/app/farzandim-parent.apk";
-const CHILD_APK = "https://test.farzandimedu.uz/app/farzandim-child.apk";
+// APK yuklab olish linklari (asosiy domen).
+const PARENT_APK = "https://farzandimedu.uz/app/farzandim-parent.apk";
+const CHILD_APK = "https://farzandimedu.uz/app/farzandim-child.apk";
 
 function DownloadIcon({ color }: { color: string }) {
   return (
