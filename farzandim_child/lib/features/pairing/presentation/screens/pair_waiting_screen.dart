@@ -14,6 +14,7 @@ import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:async';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/material.dart';
@@ -149,128 +150,134 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
   @override
   Widget build(BuildContext context) {
     final isError = _result != null;
-    final accent = isError ? AppColors.error : AppColors.primary;
+    final accent = isError ? AppColors.error : AppColors.parvozGreen;
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
-      body: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
-          child: Column(
-            children: [
-              const Spacer(),
-              Container(
-                width: 120,
-                height: 120,
-                decoration: BoxDecoration(
-                  color: accent.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: isError
-                    ? Icon(
-                        _result == 'REJECTED'
-                            ? AppIcons.block
-                            : AppIcons.scheduleActive,
-                        color: accent,
-                        size: 56,
-                      )
-                    : const CircularProgressIndicator(
-                        color: AppColors.primary,
-                        strokeWidth: 3,
-                      ),
-              ),
-              const SizedBox(height: 32),
-              Text(
-                _titleFor(),
-                style: const TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 22,
-                  fontWeight: FontWeight.w700,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              const SizedBox(height: 12),
-              Text(
-                _subtitleFor(),
-                style: const TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 15,
-                  height: 1.4,
-                ),
-                textAlign: TextAlign.center,
-              ),
-              if (!isError) ...[
-                const SizedBox(height: 32),
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        body: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+            child: Column(
+              children: [
+                const Spacer(),
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 24,
-                    vertical: 12,
-                  ),
+                  width: 120,
+                  height: 120,
                   decoration: BoxDecoration(
-                    color: AppColors.primary.withValues(alpha: 0.1),
-                    borderRadius: BorderRadius.circular(999),
+                    color: accent.withValues(alpha: 0.15),
+                    shape: BoxShape.circle,
                     border: Border.all(
-                      color: AppColors.primary.withValues(alpha: 0.3),
+                      color: accent.withValues(alpha: 0.3),
                     ),
                   ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        AppIcons.scheduleActive,
-                        color: AppColors.primary,
-                        size: 18,
+                  alignment: Alignment.center,
+                  child: isError
+                      ? Icon(
+                          _result == 'REJECTED'
+                              ? AppIcons.block
+                              : AppIcons.scheduleActive,
+                          color: accent,
+                          size: 56,
+                        )
+                      : const CircularProgressIndicator(
+                          color: AppColors.parvozGreen,
+                          strokeWidth: 3,
+                        ),
+                ),
+                const SizedBox(height: 32),
+                Text(
+                  _titleFor(),
+                  style: const TextStyle(
+                    color: AppColors.parvozText,
+                    fontSize: 22,
+                    fontWeight: FontWeight.w700,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _subtitleFor(),
+                  style: const TextStyle(
+                    color: AppColors.parvozTextDim,
+                    fontSize: 15,
+                    height: 1.4,
+                  ),
+                  textAlign: TextAlign.center,
+                ),
+                if (!isError) ...[
+                  const SizedBox(height: 32),
+                  Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 24,
+                      vertical: 12,
+                    ),
+                    decoration: BoxDecoration(
+                      color: AppColors.parvozGreen.withValues(alpha: 0.1),
+                      borderRadius: BorderRadius.circular(999),
+                      border: Border.all(
+                        color: AppColors.parvozGreen.withValues(alpha: 0.3),
                       ),
-                      const SizedBox(width: 8),
-                      Text(
-                        'Qolgan vaqt: ${_formatLeft(_left)}',
-                        style: const TextStyle(
-                          color: AppColors.primary,
-                          fontSize: 15,
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          AppIcons.scheduleActive,
+                          color: AppColors.parvozGreen,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          'Qolgan vaqt: ${_formatLeft(_left)}',
+                          style: const TextStyle(
+                            color: AppColors.parvozGreen,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+                const Spacer(),
+                if (isError)
+                  SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton(
+                      onPressed: _backToPairing,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.parvozGreen,
+                        foregroundColor: AppColors.parvozOnGreen,
+                        padding:
+                            const EdgeInsets.symmetric(vertical: 16),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      child: const Text(
+                        'Qaytadan urinish',
+                        style: TextStyle(
+                          fontSize: 16,
                           fontWeight: FontWeight.w600,
                         ),
                       ),
-                    ],
-                  ),
-                ),
-              ],
-              const Spacer(),
-              if (isError)
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
+                    ),
+                  )
+                else
+                  TextButton(
                     onPressed: _backToPairing,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.primary,
-                      foregroundColor: Colors.black,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 16),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                    ),
                     child: const Text(
-                      'Qaytadan urinish',
+                      'Bekor qilish',
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
+                        color: AppColors.parvozTextDim,
+                        fontSize: 15,
                       ),
                     ),
                   ),
-                )
-              else
-                TextButton(
-                  onPressed: _backToPairing,
-                  child: const Text(
-                    'Bekor qilish',
-                    style: TextStyle(
-                      color: AppColors.textSecondary,
-                      fontSize: 15,
-                    ),
-                  ),
-                ),
-            ],
+              ],
+            ),
           ),
         ),
       ),

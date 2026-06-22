@@ -175,7 +175,7 @@ class _ReelItemState extends State<_ReelItem> {
                     child: VideoPlayer(_controller),
                   )
                 : const CircularProgressIndicator(
-                    color: AppColors.primary),
+                    color: AppColors.parvozGreen),
           ),
           if (!_isPlaying)
             Center(

@@ -6,7 +6,7 @@
 // Aktiv/Yakunlangan segmented tab, rasm-tepa glass kartalar.
 // Backend (backendContestsProvider + active/finished) o'zi ulanib turadi.
 
-import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
@@ -22,14 +22,18 @@ class ContestsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(context.adaptive.isDark);
+    // NIGHT majburiy: butun subtree dark theme — bola ilovasi light bo'lsa ham
+    // konkurslar ekrani izchil Parvoz NIGHT (deep navy + aqua) ko'rinadi.
+    final p = CP(true);
     final activeTab = ref.watch(contestsActiveTabProvider);
     final active = ref.watch(activeContestsProvider);
     final finished = ref.watch(finishedContestsProvider);
     final loading = ref.watch(contestsLoadingProvider);
     final hasError = ref.watch(contestsErrorProvider);
 
-    return Scaffold(
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
       backgroundColor: p.bg,
       extendBody: true,
       body: SafeArea(
@@ -93,6 +97,7 @@ class ContestsScreen extends ConsumerWidget {
         ),
       ),
       bottomNavigationBar: const ChildBottomNavigation(),
+      ),
     );
   }
 }

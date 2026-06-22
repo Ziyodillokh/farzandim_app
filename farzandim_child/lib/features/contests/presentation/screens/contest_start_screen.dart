@@ -60,7 +60,7 @@ class _ContestStartScreenState extends State<ContestStartScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Scaffold(
       backgroundColor: p.bg,
       body: SafeArea(
@@ -99,7 +99,7 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 8, 16, 10),
       child: Row(
@@ -204,7 +204,7 @@ class _ContestInfoStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -457,7 +457,7 @@ class _ContestRulesStep extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
@@ -607,7 +607,7 @@ class _ContestReadyStepState extends State<_ContestReadyStep>
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     if (_isCountingDown) return _Countdown(countdown: _countdown);
 
     return Padding(
@@ -701,7 +701,7 @@ class _Countdown extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Center(
       child: TweenAnimationBuilder<double>(
         key: ValueKey(countdown),
@@ -755,7 +755,7 @@ class _ContinueButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.only(top: 12, bottom: 16),
       child: SizedBox(

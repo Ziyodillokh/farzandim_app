@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/presentation/providers/books_providers.dart';
 import 'package:farzandim_child/features/books/presentation/widgets/book_section.dart';
@@ -15,67 +16,80 @@ class BooksFeedScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final asyncBooks = ref.watch(backendBooksProvider);
 
-    return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
-      body: SafeArea(
-        child: asyncBooks.when(
-          loading: () => const Center(child: CircularProgressIndicator()),
-          error: (e, _) => _ErrorView(error: e.toString(), onRetry: () => ref.invalidate(backendBooksProvider)),
-          data: (books) {
-            if (books.isEmpty) return const _EmptyView();
-            // Kategoriya bo'yicha grouplash — oddiy: 3 ta section
-            final school = books.where((b) => b.category == 'school').toList();
-            final adabiyot = books.where((b) => b.category == 'adabiyot').toList();
-            final other = books
-                .where((b) => b.category != 'school' && b.category != 'adabiyot')
-                .toList();
-            return RefreshIndicator(
-              onRefresh: () async {
-                ref.invalidate(backendBooksProvider);
-                await ref.read(backendBooksProvider.future);
-              },
-              child: ListView(
-                padding: const EdgeInsets.symmetric(vertical: 16),
-                children: [
-                  const Padding(
-                    padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
-                    child: Text(
-                      'Kitoblar',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
+    // NIGHT majburiy: butun subtree dark theme.
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        body: SafeArea(
+          child: asyncBooks.when(
+            loading: () => const Center(
+              child: CircularProgressIndicator(color: AppColors.parvozGreen),
+            ),
+            error: (e, _) => _ErrorView(
+                error: e.toString(),
+                onRetry: () => ref.invalidate(backendBooksProvider)),
+            data: (books) {
+              if (books.isEmpty) return const _EmptyView();
+              // Kategoriya bo'yicha grouplash — oddiy: 3 ta section
+              final school = books.where((b) => b.category == 'school').toList();
+              final adabiyot =
+                  books.where((b) => b.category == 'adabiyot').toList();
+              final other = books
+                  .where(
+                      (b) => b.category != 'school' && b.category != 'adabiyot')
+                  .toList();
+              return RefreshIndicator(
+                color: AppColors.parvozGreen,
+                backgroundColor: AppColors.parvozSurface,
+                onRefresh: () async {
+                  ref.invalidate(backendBooksProvider);
+                  await ref.read(backendBooksProvider.future);
+                },
+                child: ListView(
+                  padding: const EdgeInsets.symmetric(vertical: 16),
+                  children: [
+                    const Padding(
+                      padding: EdgeInsets.fromLTRB(16, 0, 16, 12),
+                      child: Text(
+                        'Kitoblar',
+                        style: TextStyle(
+                          color: AppColors.parvozText,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: -0.3,
+                        ),
                       ),
                     ),
-                  ),
-                  BookSection(
-                    title: 'Hammasi',
-                    books: books,
-                    onTap: (b) => _openPdf(context, b),
-                  ),
-                  const SizedBox(height: 20),
-                  BookSection(
-                    title: 'Maktab darsliklari',
-                    books: school,
-                    onTap: (b) => _openPdf(context, b),
-                  ),
-                  if (adabiyot.isNotEmpty) const SizedBox(height: 20),
-                  BookSection(
-                    title: 'Adabiyot',
-                    books: adabiyot,
-                    onTap: (b) => _openPdf(context, b),
-                  ),
-                  if (other.isNotEmpty) const SizedBox(height: 20),
-                  BookSection(
-                    title: 'Boshqalar',
-                    books: other,
-                    onTap: (b) => _openPdf(context, b),
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            );
-          },
+                    BookSection(
+                      title: 'Hammasi',
+                      books: books,
+                      onTap: (b) => _openPdf(context, b),
+                    ),
+                    const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Maktab darsliklari',
+                      books: school,
+                      onTap: (b) => _openPdf(context, b),
+                    ),
+                    if (adabiyot.isNotEmpty) const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Adabiyot',
+                      books: adabiyot,
+                      onTap: (b) => _openPdf(context, b),
+                    ),
+                    if (other.isNotEmpty) const SizedBox(height: 20),
+                    BookSection(
+                      title: 'Boshqalar',
+                      books: other,
+                      onTap: (b) => _openPdf(context, b),
+                    ),
+                    const SizedBox(height: 24),
+                  ],
+                ),
+              );
+            },
+          ),
         ),
       ),
     );
@@ -98,11 +112,11 @@ class _EmptyView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(AppIcons.menu,
-                size: 64, color: AppColors.textSecondary),
+                size: 64, color: AppColors.parvozTextDim),
             SizedBox(height: 16),
             Text(
               'Hozircha kitoblar mavjud emas.',
-              style: TextStyle(color: AppColors.textSecondary),
+              style: TextStyle(color: AppColors.parvozTextDim),
             ),
           ],
         ),
@@ -125,11 +139,11 @@ class _ErrorView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             const Icon(AppIcons.error,
-                size: 48, color: AppColors.textSecondary),
+                size: 48, color: AppColors.parvozTextDim),
             const SizedBox(height: 16),
             const Text(
               'Yuklab bo\'lmadi.',
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
+              style: TextStyle(color: AppColors.parvozText, fontSize: 16),
             ),
             const SizedBox(height: 8),
             Text(
@@ -138,12 +152,19 @@ class _ErrorView extends StatelessWidget {
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
               style: const TextStyle(
-                color: AppColors.textSecondary,
+                color: AppColors.parvozTextDim,
                 fontSize: 12,
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Qayta urinish')),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.parvozGreen,
+                foregroundColor: AppColors.parvozOnGreen,
+              ),
+              onPressed: onRetry,
+              child: const Text('Qayta urinish'),
+            ),
           ],
         ),
       ),

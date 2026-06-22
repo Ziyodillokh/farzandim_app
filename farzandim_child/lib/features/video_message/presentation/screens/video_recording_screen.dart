@@ -11,6 +11,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/video_message/data/services/video_recorder_service.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/widgets/circular_camera_preview.dart';
@@ -217,7 +218,7 @@ class _VideoRecordingScreenState
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.parvozBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -226,7 +227,7 @@ class _VideoRecordingScreenState
               left: 16,
               child: IconButton(
                 icon: const Icon(AppIcons.close,
-                    color: Colors.white, size: 28),
+                    color: AppColors.parvozText, size: 28),
                 onPressed: () => Navigator.pop(context),
               ),
             ),
@@ -241,7 +242,7 @@ class _VideoRecordingScreenState
                         _errorMessage!,
                         textAlign: TextAlign.center,
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.parvozText,
                           fontSize: 16,
                         ),
                       ),
@@ -267,7 +268,7 @@ class _VideoRecordingScreenState
                           },
                         ),
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.parvozText,
                           fontSize: 18,
                           fontWeight: FontWeight.w600,
                         ),
@@ -276,7 +277,7 @@ class _VideoRecordingScreenState
                       Text(
                         'videoRecording.recordHint'.tr(),
                         style: const TextStyle(
-                          color: Colors.white70,
+                          color: AppColors.parvozTextDim,
                           fontSize: 16,
                         ),
                       ),
@@ -287,7 +288,8 @@ class _VideoRecordingScreenState
                       onLongPressEnd: _onLongPressEnd,
                     ),
                   ] else
-                    const CircularProgressIndicator(color: Colors.white),
+                    const CircularProgressIndicator(
+                        color: AppColors.parvozGreen),
                 ],
               ),
             ),

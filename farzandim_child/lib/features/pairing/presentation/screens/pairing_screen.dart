@@ -94,12 +94,12 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     setState(() {});
   }
 
-  // Dizayn talabiga ko'ra ekran solid dark fon, oq matn, binafsha link
-  // (UI mockup'ga qat'iy mos). Theme rangidan mustaqil — pairing
-  // bola ilovasining birinchi ekrani.
-  static const Color _bgDark = Color(0xFF0E0E14);
-  static const Color _boxFill = Color(0xFF2A2A33);
-  static const Color _linkColor = Color(0xFF7C5CFF);
+  // Parvoz NIGHT dizayn-tizimi (navy fon + aqua aksent) — butun ilova bilan
+  // izchil. Pairing bola ilovasining birinchi ekranlaridan biri, shuning uchun
+  // qolgan NIGHT ekranlar bilan bir xil palitra (oldin qora+binafsha edi).
+  static const Color _bgDark = AppColors.parvozBg;
+  static const Color _boxFill = AppColors.parvozSurface;
+  static const Color _linkColor = AppColors.parvozGreen;
 
   @override
   Widget build(BuildContext context) {
@@ -219,7 +219,8 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _linkColor,
-                    foregroundColor: Colors.white,
+                    // Aqua fon ustida navy matn — yuqori kontrast.
+                    foregroundColor: AppColors.parvozOnGreen,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(14),
                     ),
@@ -304,14 +305,14 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     showDialog<void>(
       context: context,
       builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
+        backgroundColor: AppColors.parvozSurface,
         title: Text(
           'pairing.helpTitle'.tr(),
-          style: const TextStyle(color: AppColors.textPrimary),
+          style: const TextStyle(color: AppColors.parvozText),
         ),
         content: Text(
           'pairing.helpContent'.tr(),
-          style: const TextStyle(color: AppColors.textSecondary, height: 1.5),
+          style: const TextStyle(color: AppColors.parvozTextDim, height: 1.5),
         ),
         actions: [
           TextButton(

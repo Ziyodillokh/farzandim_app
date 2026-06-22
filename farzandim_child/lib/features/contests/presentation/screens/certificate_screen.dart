@@ -15,8 +15,10 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:go_router/go_router.dart';
@@ -92,44 +94,36 @@ class _CertificateScreenState extends State<CertificateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
-
-    return Scaffold(
-      backgroundColor: p.bg,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: p.text),
-          onPressed: () => context.pop(),
-        ),
-        title: Text(
-          'Sertifikat',
-          style: cjak(p, size: 18, weight: FontWeight.w800),
-        ),
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: SingleChildScrollView(
-                padding: const EdgeInsets.all(20),
-                child: RepaintBoundary(
-                  key: _boundaryKey,
-                  child: _Certificate(data: widget.data, dateText: _dateText),
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        body: Column(
+          children: [
+            ParvozHeader(
+              title: 'Sertifikat',
+              onBack: () => context.pop(),
+            ),
+            Expanded(
+              child: Center(
+                child: SingleChildScrollView(
+                  padding: const EdgeInsets.all(20),
+                  child: RepaintBoundary(
+                    key: _boundaryKey,
+                    child: _Certificate(data: widget.data, dateText: _dateText),
+                  ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-            child: _ShareButton(
-              p: p,
-              sharing: _sharing,
-              onTap: _sharing ? null : _share,
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+              child: _ShareButton(
+                sharing: _sharing,
+                onTap: _sharing ? null : _share,
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -137,9 +131,8 @@ class _CertificateScreenState extends State<CertificateScreen> {
 
 /// Aqua "Saqlash / Ulashish" tugmasi — glow bilan.
 class _ShareButton extends StatelessWidget {
-  const _ShareButton({required this.p, required this.sharing, this.onTap});
+  const _ShareButton({required this.sharing, this.onTap});
 
-  final CP p;
   final bool sharing;
   final VoidCallback? onTap;
 
@@ -152,15 +145,11 @@ class _ShareButton extends StatelessWidget {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          gradient: LinearGradient(
-            colors: [p.accentSoft, p.accent],
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-          ),
+          color: AppColors.parvozGreen,
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
             BoxShadow(
-              color: p.accent.withValues(alpha: 0.40),
+              color: AppColors.parvozGreen.withValues(alpha: 0.40),
               blurRadius: 22,
               offset: const Offset(0, 8),
             ),
@@ -170,20 +159,26 @@ class _ShareButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (sharing)
-              SizedBox(
+              const SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.4,
-                  valueColor: AlwaysStoppedAnimation(p.onAccent),
+                  valueColor: AlwaysStoppedAnimation(AppColors.parvozOnGreen),
                 ),
               )
             else
-              Icon(Icons.ios_share_rounded, size: 20, color: p.onAccent),
+              const Icon(Icons.ios_share_rounded,
+                  size: 20, color: AppColors.parvozOnGreen),
             const SizedBox(width: 10),
             Text(
               sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish',
-              style: cjak(p, size: 16, weight: FontWeight.w800, color: p.onAccent),
+              style: cjak(
+                CP(true),
+                size: 16,
+                weight: FontWeight.w800,
+                color: AppColors.parvozOnGreen,
+              ),
             ),
           ],
         ),

@@ -23,22 +23,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-// ─────────────── Palette (aqua night + sodda light) ───────────────
+// ─────────────── Palette (Parvoz NIGHT — barcha sahifalar bilan izchil) ───────────────
 
 class _P {
-  _P(this.dark);
-  final bool dark;
+  _P();
 
-  Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF6F8FC);
-  Color get card => dark ? const Color(0xFF213145) : Colors.white;
-  Color get cardHigh => dark ? const Color(0xFF2A3C54) : const Color(0xFFEEF3FB);
-  Color get text => dark ? const Color(0xFFEAF1F2) : const Color(0xFF0B1C30);
-  Color get muted => dark ? const Color(0xFFA7B7BD) : const Color(0xFF5A6B73);
-  Color get border => dark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFDCE6F2);
-  Color get track => dark ? const Color(0xFF0C1B2E) : const Color(0xFFE3EAF6);
+  Color get bg => AppColors.parvozBg;
+  Color get card => AppColors.parvozSurface;
+  Color get cardHigh => AppColors.parvozSurfaceHigh;
+  Color get text => AppColors.parvozText;
+  Color get muted => AppColors.parvozTextDim;
+  Color get border => AppColors.parvozBorder;
+  Color get track => AppColors.parvozBg;
 
-  Color get aqua => const Color(0xFF22D3EE);
-  Color get onAqua => const Color(0xFF06222E);
+  Color get aqua => AppColors.parvozGreen;
+  Color get onAqua => AppColors.parvozOnGreen;
   Color get gold => const Color(0xFFFFC83D);
   Color get fire => const Color(0xFFFF7A45);
   Color get locked => const Color(0xFF5C6B78);
@@ -91,7 +90,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     });
 
-    final p = _P(context.adaptive.isDark);
+    final p = _P();
     final pairing = ref.watch(pairingStateProvider);
     final profileAsync = ref.watch(gamificationProfileProvider);
     final childName = pairing.childName ?? 'common.fallbackChildName'.tr();

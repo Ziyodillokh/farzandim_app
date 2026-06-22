@@ -94,7 +94,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.backgroundBottom,
+      backgroundColor: AppColors.parvozBg,
       body: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -111,13 +111,13 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
             const Text(
               'Parvoz',
               style: TextStyle(
-                color: AppColors.textPrimary,
+                color: AppColors.parvozText,
                 fontSize: 28,
                 fontWeight: FontWeight.bold,
               ),
             ),
             const SizedBox(height: 24),
-            const CircularProgressIndicator(color: AppColors.primary),
+            const CircularProgressIndicator(color: AppColors.parvozGreen),
           ],
         ),
       ),

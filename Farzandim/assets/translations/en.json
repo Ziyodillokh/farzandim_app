@@ -569,6 +569,18 @@
       "enabledSnack": "Apps from unknown sources are now blocked",
       "disabledSnack": "Apps from unknown sources are now allowed",
       "errorSnack": "Couldn't save, please try again"
+    },
+    "webFilter": {
+      "title": "Safe internet",
+      "desc": "Harmful websites (adult, gambling) are restricted on {name}'s device. Android only, via safe DNS.",
+      "enabledSnack": "Safe internet enabled",
+      "disabledSnack": "Safe internet disabled",
+      "errorSnack": "Couldn't save, please try again",
+      "cat": {
+        "adult": "Adult",
+        "gambling": "Gambling",
+        "social": "Social"
+      }
     }
   },
   "weeklyReport": {

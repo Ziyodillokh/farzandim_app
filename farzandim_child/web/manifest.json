@@ -1,23 +1,29 @@
 {
-    "name": "farzandim_child",
-    "short_name": "farzandim_child",
+    "name": "Parvoz — bolalar ilovasi",
+    "short_name": "Parvoz",
+    "description": "Parvoz — bolalar uchun xavfsiz va yoshga mos ta'lim hamda oilaviy aloqa ilovasi: videolar, audiokitoblar, maqolalar, kun tartibi va favqulodda SOS.",
+    "lang": "uz",
+    "dir": "ltr",
     "start_url": ".",
+    "scope": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
     "orientation": "portrait-primary",
+    "background_color": "#0B1C30",
+    "theme_color": "#0B1C30",
+    "categories": ["education", "kids", "lifestyle"],
     "prefer_related_applications": false,
     "icons": [
         {
             "src": "icons/Icon-192.png",
             "sizes": "192x192",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-512.png",
             "sizes": "512x512",
-            "type": "image/png"
+            "type": "image/png",
+            "purpose": "any"
         },
         {
             "src": "icons/Icon-maskable-192.png",

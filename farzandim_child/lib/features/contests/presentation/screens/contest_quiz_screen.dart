@@ -63,7 +63,7 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(quizProvider(widget.contest));
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
 
     ref.listen<QuizState>(quizProvider(widget.contest), (prev, next) {
       // Answer feedback hooks
@@ -107,7 +107,7 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
                 numberOfParticles: 30,
                 gravity: 0.3,
                 colors: const [
-                  AppColors.primary,
+                  AppColors.parvozGreen,
                   AppColors.catPinkRose,
                   AppColors.catLavenderDark,
                   AppColors.catOrangeWarm,
@@ -151,7 +151,7 @@ class _LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -238,7 +238,7 @@ class _IntroScreenState extends State<_IntroScreen>
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Column(
@@ -374,7 +374,7 @@ class _StatRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -407,7 +407,7 @@ class _QuestionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     final question = state.currentQuestion;
 
     return Padding(
@@ -508,7 +508,7 @@ class _QuestionScreen extends ConsumerWidget {
   void _showPauseDialog(BuildContext context, WidgetRef ref) {
     ref.read(quizProvider(contest).notifier).pause();
 
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -624,7 +624,7 @@ class _QuestionTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8),
       child: Row(
@@ -673,7 +673,7 @@ class _StreakBadge extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return AnimatedContainer(
       duration: const Duration(milliseconds: 300),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
@@ -713,7 +713,7 @@ class _ScoreTimerRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     final isLow = state.timeRemaining <= 10;
     final timeColor = isLow ? p.danger : p.text;
 
@@ -789,7 +789,7 @@ class _OptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     final correctColor = AppColors.catMint;
 
     Color bgColor = p.card;
@@ -879,7 +879,7 @@ class _ResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     final isWinner = state.isWinner;
     final percent = (state.accuracy * 100).round();
 
@@ -1113,7 +1113,7 @@ class _ResultStat extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(context.adaptive.isDark);
+    final p = CP(true);
     return Row(
       children: [
         Container(

@@ -169,17 +169,18 @@ class _CategoryRow extends StatelessWidget {
   final ValueChanged<bool> onChanged;
 
   IconData get _icon {
+    // Zamonaviy Material (rounded) ikonkalar — har kategoriyaga aniqroq mos.
     switch (info.category) {
       case 'SOCIAL':
-        return Icons.groups_rounded;
+        return Icons.diversity_3_rounded; // ijtimoiy tarmoq (odamlar guruhi)
       case 'GAME':
-        return Icons.sports_esports_rounded;
+        return Icons.sports_esports_rounded; // o'yin pulti
       case 'VIDEO':
-        return Icons.play_circle_fill_rounded;
+        return Icons.smart_display_rounded; // streaming/video
       case 'EDU':
-        return Icons.school_rounded;
+        return Icons.auto_stories_rounded; // ta'lim (ochiq kitob)
       default:
-        return Icons.apps_rounded;
+        return Icons.grid_view_rounded; // boshqa (ilovalar to'ri)
     }
   }
 

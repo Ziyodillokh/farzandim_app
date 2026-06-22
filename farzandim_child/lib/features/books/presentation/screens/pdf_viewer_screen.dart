@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:path_provider/path_provider.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/books/data/models/book_model.dart';
 import 'package:farzandim_child/features/books/data/repositories/books_backend_repository.dart';
 
@@ -72,42 +73,69 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
     final ctl = TextEditingController(text: '${_currentPage + 1}');
     final picked = await showDialog<int>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Sahifaga o\'tish'),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            TextField(
-              controller: ctl,
-              autofocus: true,
-              keyboardType: TextInputType.number,
-              decoration: InputDecoration(
-                labelText: 'Sahifa raqami (1–$_totalPages)',
-                border: const OutlineInputBorder(),
+      builder: (ctx) => Theme(
+        data: AppTheme.darkTheme,
+        child: AlertDialog(
+          backgroundColor: AppColors.parvozSurface,
+          title: const Text(
+            'Sahifaga o\'tish',
+            style: TextStyle(color: AppColors.parvozText),
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: ctl,
+                autofocus: true,
+                keyboardType: TextInputType.number,
+                style: const TextStyle(color: AppColors.parvozText),
+                decoration: InputDecoration(
+                  labelText: 'Sahifa raqami (1–$_totalPages)',
+                  labelStyle: const TextStyle(color: AppColors.parvozTextDim),
+                  filled: true,
+                  fillColor: AppColors.parvozSurfaceHigh,
+                  enabledBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.parvozBorderStrong),
+                  ),
+                  focusedBorder: const OutlineInputBorder(
+                    borderSide: BorderSide(color: AppColors.parvozGreen),
+                  ),
+                  border: const OutlineInputBorder(),
+                ),
+              ),
+              const SizedBox(height: 8),
+              Text(
+                'Jami: $_totalPages sahifa',
+                style: const TextStyle(
+                  fontSize: 12,
+                  color: AppColors.parvozTextDim,
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'Bekor',
+                style: TextStyle(color: AppColors.parvozTextDim),
               ),
             ),
-            const SizedBox(height: 8),
-            Text(
-              'Jami: $_totalPages sahifa',
-              style: const TextStyle(fontSize: 12, color: Colors.grey),
+            FilledButton(
+              style: FilledButton.styleFrom(
+                backgroundColor: AppColors.parvozGreen,
+                foregroundColor: AppColors.parvozOnGreen,
+              ),
+              onPressed: () {
+                final n = int.tryParse(ctl.text.trim());
+                if (n != null && n >= 1 && n <= _totalPages) {
+                  Navigator.pop(ctx, n - 1);
+                }
+              },
+              child: const Text('O\'tish'),
             ),
           ],
         ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('Bekor'),
-          ),
-          FilledButton(
-            onPressed: () {
-              final n = int.tryParse(ctl.text.trim());
-              if (n != null && n >= 1 && n <= _totalPages) {
-                Navigator.pop(ctx, n - 1);
-              }
-            },
-            child: const Text('O\'tish'),
-          ),
-        ],
       ),
     );
     if (picked != null && _controller != null) {
@@ -118,17 +146,28 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   void _showSearchPlaceholder() {
     showDialog<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        title: const Text('Qidirish'),
-        content: const Text(
-          'Matn qidirish hozircha qo\'llab-quvvatlanmaydi. Keyingi versiyada qo\'shiladi.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(ctx),
-            child: const Text('OK'),
+      builder: (ctx) => Theme(
+        data: AppTheme.darkTheme,
+        child: AlertDialog(
+          backgroundColor: AppColors.parvozSurface,
+          title: const Text(
+            'Qidirish',
+            style: TextStyle(color: AppColors.parvozText),
           ),
-        ],
+          content: const Text(
+            'Matn qidirish hozircha qo\'llab-quvvatlanmaydi. Keyingi versiyada qo\'shiladi.',
+            style: TextStyle(color: AppColors.parvozTextDim),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text(
+                'OK',
+                style: TextStyle(color: AppColors.parvozGreen),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
@@ -136,68 +175,104 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        title: Text(
-          widget.book.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'Qidirish',
-            icon: const Icon(Icons.search),
-            onPressed: _ready ? _showSearchPlaceholder : null,
-          ),
-          IconButton(
-            tooltip: 'Sahifaga o\'tish',
-            icon: const Icon(Icons.format_list_numbered),
-            onPressed: _ready ? _jumpToPage : null,
-          ),
-          if (_totalPages > 0)
-            Padding(
-              padding: const EdgeInsets.only(right: 12),
-              child: Center(
-                child: Text(
-                  '${_currentPage + 1}/$_totalPages',
-                  style: const TextStyle(
-                    color: Colors.white70,
-                    fontSize: 13,
-                  ),
+      backgroundColor: AppColors.parvozBg,
+      body: Column(
+        children: [
+          SafeArea(
+            bottom: false,
+            child: Container(
+              height: 56,
+              padding: const EdgeInsets.only(left: 4, right: 8),
+              decoration: const BoxDecoration(
+                border: Border(
+                  bottom: BorderSide(color: AppColors.parvozBorderStrong),
                 ),
+              ),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.of(context).maybePop(),
+                    behavior: HitTestBehavior.opaque,
+                    child: const SizedBox(
+                      width: 44,
+                      height: 44,
+                      child: Icon(
+                        Icons.arrow_back_rounded,
+                        color: AppColors.parvozText,
+                        size: 24,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Text(
+                      widget.book.title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: const TextStyle(
+                        color: AppColors.parvozText,
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    tooltip: 'Qidirish',
+                    icon: const Icon(Icons.search, color: AppColors.parvozText),
+                    onPressed: _ready ? _showSearchPlaceholder : null,
+                  ),
+                  IconButton(
+                    tooltip: 'Sahifaga o\'tish',
+                    icon: const Icon(
+                      Icons.format_list_numbered,
+                      color: AppColors.parvozText,
+                    ),
+                    onPressed: _ready ? _jumpToPage : null,
+                  ),
+                  if (_totalPages > 0)
+                    Padding(
+                      padding: const EdgeInsets.only(left: 2, right: 4),
+                      child: Text(
+                        '${_currentPage + 1}/$_totalPages',
+                        style: const TextStyle(
+                          color: AppColors.parvozTextDim,
+                          fontSize: 13,
+                        ),
+                      ),
+                    ),
+                ],
               ),
             ),
-        ],
-      ),
-      body: GestureDetector(
-        behavior: HitTestBehavior.translucent,
-        onTap: () => setState(() => _showBottomBar = !_showBottomBar),
-        child: Stack(
-          children: [
-            _buildBody(),
-            if (_ready && _totalPages > 1 && _showBottomBar)
-              Positioned(
-                left: 0,
-                right: 0,
-                bottom: 0,
-                child: SafeArea(
-                  top: false,
-                  child: _PageScrubber(
-                    currentPage: _currentPage,
-                    totalPages: _totalPages,
-                    onChanged: (p) {
-                      _controller?.setPage(p);
-                    },
-                    onFirst: () => _controller?.setPage(0),
-                    onLast: () => _controller?.setPage(_totalPages - 1),
-                  ),
-                ),
+          ),
+          Expanded(
+            child: GestureDetector(
+              behavior: HitTestBehavior.translucent,
+              onTap: () => setState(() => _showBottomBar = !_showBottomBar),
+              child: Stack(
+                children: [
+                  _buildBody(),
+                  if (_ready && _totalPages > 1 && _showBottomBar)
+                    Positioned(
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      child: SafeArea(
+                        top: false,
+                        child: _PageScrubber(
+                          currentPage: _currentPage,
+                          totalPages: _totalPages,
+                          onChanged: (p) {
+                            _controller?.setPage(p);
+                          },
+                          onFirst: () => _controller?.setPage(0),
+                          onLast: () => _controller?.setPage(_totalPages - 1),
+                        ),
+                      ),
+                    ),
+                ],
               ),
-          ],
-        ),
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -210,17 +285,19 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              const Icon(AppIcons.error, color: Colors.white54, size: 48),
+              const Icon(AppIcons.error,
+                  color: AppColors.parvozTextDim, size: 48),
               const SizedBox(height: 16),
               const Text(
                 'PDF ochilmadi',
-                style: TextStyle(color: Colors.white, fontSize: 16),
+                style: TextStyle(color: AppColors.parvozText, fontSize: 16),
               ),
               const SizedBox(height: 8),
               Text(
                 _error!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.white54, fontSize: 12),
+                style: const TextStyle(
+                    color: AppColors.parvozTextDim, fontSize: 12),
               ),
             ],
           ),
@@ -243,11 +320,11 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                CircularProgressIndicator(color: AppColors.primary),
+                CircularProgressIndicator(color: AppColors.parvozGreen),
                 SizedBox(height: 16),
                 Text(
                   'Kitob yuklanmoqda...',
-                  style: TextStyle(color: Colors.white),
+                  style: TextStyle(color: AppColors.parvozText),
                 ),
               ],
             ),
@@ -286,7 +363,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
           },
         ),
         if (!_ready)
-          const Center(child: CircularProgressIndicator(color: AppColors.primary)),
+          const Center(
+              child: CircularProgressIndicator(color: AppColors.parvozGreen)),
       ],
     );
   }
@@ -312,22 +390,26 @@ class _PageScrubber extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      // ignore: deprecated_member_use
-      color: Colors.black.withOpacity(0.85),
+      decoration: const BoxDecoration(
+        color: AppColors.parvozSurface,
+        border: Border(
+          top: BorderSide(color: AppColors.parvozBorderStrong),
+        ),
+      ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [
           IconButton(
             tooltip: 'Birinchi sahifa',
-            icon: const Icon(Icons.first_page, color: Colors.white),
+            icon: const Icon(Icons.first_page, color: AppColors.parvozText),
             onPressed: onFirst,
           ),
           Expanded(
             child: SliderTheme(
               data: SliderTheme.of(context).copyWith(
-                activeTrackColor: AppColors.primary,
-                inactiveTrackColor: Colors.white24,
-                thumbColor: AppColors.primary,
+                activeTrackColor: AppColors.parvozGreen,
+                inactiveTrackColor: AppColors.parvozBorderStrong,
+                thumbColor: AppColors.parvozGreen,
                 trackHeight: 3,
                 thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
@@ -344,7 +426,7 @@ class _PageScrubber extends StatelessWidget {
           ),
           IconButton(
             tooltip: 'Oxirgi sahifa',
-            icon: const Icon(Icons.last_page, color: Colors.white),
+            icon: const Icon(Icons.last_page, color: AppColors.parvozText),
             onPressed: onLast,
           ),
           Padding(
@@ -352,7 +434,7 @@ class _PageScrubber extends StatelessWidget {
             child: Text(
               '${currentPage + 1}/$totalPages',
               style: const TextStyle(
-                color: Colors.white,
+                color: AppColors.parvozText,
                 fontSize: 12,
                 fontWeight: FontWeight.w600,
               ),

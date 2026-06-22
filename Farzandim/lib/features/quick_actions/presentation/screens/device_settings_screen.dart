@@ -314,19 +314,48 @@ class _PermRow extends StatelessWidget {
     }
 
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: AppDimensions.sm),
+      padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          Icon(icon, size: 20, color: AppColors.textSecondary),
-          const SizedBox(width: AppDimensions.md),
-          Expanded(child: Text(label, style: AppTextStyles.bodyM)),
-          Icon(statusIcon, size: 16, color: color),
-          const SizedBox(width: 4),
-          Text(
-            statusKey.tr(),
-            style: AppTextStyles.bodyS.copyWith(
-              color: color,
-              fontWeight: FontWeight.w600,
+          // Ikona — yumshoq fonli kichik chip (vizual ravon).
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: AppColors.textSecondary.withValues(alpha: 0.10),
+              borderRadius: BorderRadius.circular(9),
+            ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 18, color: AppColors.textSecondary),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              label,
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Holat — yumaloq pill (chetga taqalmasligi uchun ichki padding).
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.12),
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(statusIcon, size: 14, color: color),
+                const SizedBox(width: 5),
+                Text(
+                  statusKey.tr(),
+                  style: AppTextStyles.label.copyWith(
+                    color: color,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+              ],
             ),
           ),
         ],

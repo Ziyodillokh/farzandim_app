@@ -136,7 +136,7 @@ class _VideoPreviewScreenState
     final isSent = upload.status == UploadStatus.sent;
 
     return Scaffold(
-      backgroundColor: Colors.black,
+      backgroundColor: AppColors.parvozBg,
       body: SafeArea(
         child: Stack(
           children: [
@@ -145,7 +145,7 @@ class _VideoPreviewScreenState
               left: 16,
               child: IconButton(
                 icon: const Icon(AppIcons.close,
-                    color: Colors.white, size: 28),
+                    color: AppColors.parvozText, size: 28),
                 onPressed: isUploading ? null : _onCancel,
               ),
             ),
@@ -176,7 +176,7 @@ class _VideoPreviewScreenState
                                   )
                                 : const Center(
                                     child: CircularProgressIndicator(
-                                      color: Colors.white,
+                                      color: AppColors.parvozGreen,
                                     ),
                                   ),
                           ),
@@ -188,7 +188,7 @@ class _VideoPreviewScreenState
                             child: CircularProgressIndicator(
                               value: upload.progress,
                               strokeWidth: 6,
-                              color: AppColors.primary,
+                              color: AppColors.parvozGreen,
                               // ignore: deprecated_member_use
                               backgroundColor: Colors.white.withOpacity(0.2),
                             ),
@@ -217,8 +217,8 @@ class _VideoPreviewScreenState
                       color: isSent
                           ? AppColors.success
                           : isUploading
-                              ? AppColors.primary
-                              : Colors.white,
+                              ? AppColors.parvozGreen
+                              : AppColors.parvozText,
                       fontSize: 16,
                       fontWeight: FontWeight.w600,
                     ),
@@ -234,14 +234,14 @@ class _VideoPreviewScreenState
                           label: Text(
                               'videoRecording.cancelButton'.tr()),
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: Colors.white,
+                            foregroundColor: AppColors.parvozText,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 24, vertical: 14),
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(999),
                             ),
                             side: const BorderSide(
-                                color: Colors.white24),
+                                color: AppColors.parvozBorderStrong),
                           ),
                         ),
                         const SizedBox(width: 16),
@@ -251,8 +251,8 @@ class _VideoPreviewScreenState
                           label:
                               Text('videoRecording.sendButton'.tr()),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: AppColors.primary,
-                            foregroundColor: Colors.black,
+                            backgroundColor: AppColors.parvozGreen,
+                            foregroundColor: AppColors.parvozOnGreen,
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 32, vertical: 14),
                             shape: RoundedRectangleBorder(

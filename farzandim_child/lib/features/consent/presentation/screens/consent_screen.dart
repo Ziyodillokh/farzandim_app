@@ -83,9 +83,8 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.adaptive;
     return Scaffold(
-      backgroundColor: palette.bgPrimary,
+      backgroundColor: AppColors.parvozBg,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 16, 24, 24),
@@ -97,23 +96,23 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 24),
-                      _ShieldBadge(color: AppColors.primary),
+                      const _ShieldBadge(color: AppColors.parvozGreen),
                       const SizedBox(height: 24),
-                      Text(
+                      const Text(
                         'Bu ilova ota-onangiz\nruxsati bilan ishlaydi',
                         style: TextStyle(
-                          color: palette.textPrimary,
+                          color: AppColors.parvozText,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
                           height: 1.25,
                         ),
                       ),
                       const SizedBox(height: 12),
-                      Text(
+                      const Text(
                         "Ilovani ishlatishni boshlashdan oldin ota-onangiz "
                         "quyidagi shartlarga rozi bo'lishi kerak.",
                         style: TextStyle(
-                          color: palette.textSecondary,
+                          color: AppColors.parvozTextDim,
                           fontSize: 15,
                           height: 1.4,
                         ),
@@ -162,12 +161,12 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                 confirming: _confirming,
               ),
               const SizedBox(height: 12),
-              Text(
+              const Text(
                 "Tugmani 3 sekund ushlab turing — bu ota-ona "
                 "ekanligingizni tasdiqlaydi.",
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: palette.textTertiary,
+                  color: AppColors.parvozTextDim,
                   fontSize: 12,
                 ),
               ),
@@ -191,6 +190,7 @@ class _ShieldBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
+        border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
       ),
       child: Icon(
         Icons.verified_user_rounded,
@@ -214,7 +214,6 @@ class _ConsentBullet extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = context.adaptive;
     return Padding(
       padding: const EdgeInsets.only(bottom: 14),
       child: Row(
@@ -224,10 +223,10 @@ class _ConsentBullet extends StatelessWidget {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: AppColors.primary.withValues(alpha: 0.10),
+              color: AppColors.parvozGreen.withValues(alpha: 0.10),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(icon, color: AppColors.primary, size: 20),
+            child: Icon(icon, color: AppColors.parvozGreen, size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -236,8 +235,8 @@ class _ConsentBullet extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    color: palette.textPrimary,
+                  style: const TextStyle(
+                    color: AppColors.parvozText,
                     fontSize: 15,
                     fontWeight: FontWeight.w700,
                   ),
@@ -245,8 +244,8 @@ class _ConsentBullet extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   text,
-                  style: TextStyle(
-                    color: palette.textSecondary,
+                  style: const TextStyle(
+                    color: AppColors.parvozTextDim,
                     fontSize: 13,
                     height: 1.35,
                   ),
@@ -286,13 +285,14 @@ class _LongPressConfirmButton extends StatelessWidget {
           return Container(
             height: 60,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: AppColors.parvozGreen,
               borderRadius: BorderRadius.circular(16),
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryShadow.withValues(alpha: 0.4),
-                  offset: const Offset(0, 4),
-                  blurRadius: 0,
+                  color: AppColors.parvozGreen.withValues(alpha: 0.35),
+                  offset: const Offset(0, 6),
+                  blurRadius: 18,
+                  spreadRadius: -4,
                 ),
               ],
             ),
@@ -305,7 +305,7 @@ class _LongPressConfirmButton extends StatelessWidget {
                     heightFactor: 1,
                     alignment: Alignment.centerLeft,
                     child: Container(
-                      color: AppColors.primaryHover,
+                      color: AppColors.parvozBlue,
                     ),
                   ),
                 ),
@@ -319,7 +319,7 @@ class _LongPressConfirmButton extends StatelessWidget {
                           height: 18,
                           child: CircularProgressIndicator(
                             strokeWidth: 2.4,
-                            color: Colors.white,
+                            color: AppColors.parvozOnGreen,
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -329,7 +329,7 @@ class _LongPressConfirmButton extends StatelessWidget {
                             ? 'Tasdiqlanmoqda...'
                             : 'Ota-onam tasdiqlaydi',
                         style: const TextStyle(
-                          color: Colors.white,
+                          color: AppColors.parvozOnGreen,
                           fontSize: 17,
                           fontWeight: FontWeight.w800,
                         ),

@@ -6,13 +6,13 @@
 // Sprint 5.x: Books bottom nav'dan olib tashlandi, audiobooks ichida tab.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
 import 'package:farzandim_child/features/books/presentation/widgets/books_feed_body.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -22,13 +22,15 @@ class AudiobooksFeedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return DefaultTabController(
-      length: 2,
-      child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBody: true,
-        body: GradientBackground(
-          child: SafeArea(
+    // NIGHT majburiy: butun subtree dark theme.
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: DefaultTabController(
+        length: 2,
+        child: Scaffold(
+          backgroundColor: AppColors.parvozBg,
+          extendBody: true,
+          body: SafeArea(
             bottom: false,
             child: Column(
               children: [
@@ -52,8 +54,8 @@ class AudiobooksFeedScreen extends ConsumerWidget {
               ],
             ),
           ),
+          bottomNavigationBar: const ChildBottomNavigation(),
         ),
-        bottomNavigationBar: const ChildBottomNavigation(),
       ),
     );
   }
@@ -67,17 +69,18 @@ class _TopTabs extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: AppColors.parvozSurface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: AppColors.parvozBorder),
       ),
       child: TabBar(
         indicator: BoxDecoration(
-          color: AppColors.primary,
+          color: AppColors.parvozGreen,
           borderRadius: BorderRadius.circular(14),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: Colors.black,
-        unselectedLabelColor: AppColors.textSecondary,
+        labelColor: AppColors.parvozOnGreen,
+        unselectedLabelColor: AppColors.parvozTextDim,
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         dividerColor: Colors.transparent,
@@ -146,14 +149,14 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.textTertiary),
+          Icon(Icons.search_off, size: 64, color: AppColors.parvozTextDim),
           SizedBox(height: 16),
           Text(
             'Hech narsa topilmadi',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.textPrimary,
+              color: AppColors.parvozText,
             ),
           ),
         ],

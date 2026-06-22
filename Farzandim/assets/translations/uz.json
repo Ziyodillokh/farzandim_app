@@ -569,6 +569,18 @@
       "enabledSnack": "Notanish manbalardan ilovalar bloklandi",
       "disabledSnack": "Notanish manbalardan ilovalar ruxsat etildi",
       "errorSnack": "Saqlab bo'lmadi, qayta urinib ko'ring"
+    },
+    "webFilter": {
+      "title": "Xavfsiz internet",
+      "desc": "{name} qurilmasida zararli veb-saytlar (kattalar, qimor) cheklanadi. Faqat Android'da, xavfsiz DNS orqali ishlaydi.",
+      "enabledSnack": "Xavfsiz internet yoqildi",
+      "disabledSnack": "Xavfsiz internet o'chirildi",
+      "errorSnack": "Saqlab bo'lmadi, qayta urinib ko'ring",
+      "cat": {
+        "adult": "Kattalar",
+        "gambling": "Qimor",
+        "social": "Ijtimoiy tarmoq"
+      }
     }
   },
   "weeklyReport": {

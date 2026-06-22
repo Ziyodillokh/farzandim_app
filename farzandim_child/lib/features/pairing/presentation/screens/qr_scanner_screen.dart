@@ -20,6 +20,7 @@ import 'package:confetti/confetti.dart';
 import 'package:dio/dio.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -340,23 +341,24 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     // paste UI'ni ko'rsatamiz (kamera ishga tushirilmaydi, batareya tejaladi).
     if (_manualPasteMode) {
       return Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.parvozBg,
         appBar: AppBar(
           backgroundColor: Colors.transparent,
           elevation: 0,
           leading: IconButton(
-            icon: const Icon(Icons.close, color: Colors.white),
+            icon: const Icon(Icons.close, color: AppColors.parvozText),
             onPressed: () => Navigator.pop(context),
           ),
           title: const Text(
             "Token'ni qo'lda kiriting",
-            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+            style: TextStyle(
+                color: AppColors.parvozText, fontWeight: FontWeight.w600),
           ),
           actions: [
             IconButton(
               tooltip: 'Kamerada skanerlash',
               icon: const Icon(Icons.qr_code_scanner_rounded,
-                  color: Colors.white),
+                  color: AppColors.parvozText),
               onPressed: () {
                 setState(() => _manualPasteMode = false);
                 // Kameraga qaytsak qaytadan boshlash kerak (controller stop
@@ -393,7 +395,8 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           // Paste rejimi — kamera ishlamasa yoki token tayyor bo'lsa.
           IconButton(
             tooltip: "Token'ni qo'lda kiritish",
-            icon: const Icon(Icons.keyboard_alt_rounded, color: Colors.white),
+            icon:
+                const Icon(Icons.keyboard_alt_rounded, color: Colors.white),
             onPressed: () => setState(() => _manualPasteMode = true),
           ),
           // Mobil'da torch (web'da effekt bermaydi, lekin tugma bezarar).
@@ -604,8 +607,8 @@ class _CameraErrorView extends StatelessWidget {
                 icon: const Icon(Icons.refresh_rounded),
                 label: const Text('Qaytadan urinish'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C5CFF),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.parvozGreen,
+                  foregroundColor: AppColors.parvozOnGreen,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -681,8 +684,8 @@ class _PermissionDeniedView extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () => onRetry(),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF7C5CFF),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.parvozGreen,
+                  foregroundColor: AppColors.parvozOnGreen,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -807,7 +810,7 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(12),
                   borderSide: const BorderSide(
-                    color: Color(0xFF14B8A6),
+                    color: AppColors.parvozGreen,
                     width: 2,
                   ),
                 ),
@@ -821,8 +824,8 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                     ? null
                     : () => widget.onSubmit(_controller.text),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF14B8A6),
-                  foregroundColor: Colors.white,
+                  backgroundColor: AppColors.parvozGreen,
+                  foregroundColor: AppColors.parvozOnGreen,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -833,7 +836,7 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                         height: 20,
                         width: 20,
                         child: CircularProgressIndicator(
-                          color: Colors.white,
+                          color: AppColors.parvozOnGreen,
                           strokeWidth: 2,
                         ),
                       )
@@ -851,7 +854,8 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
               Text(
                 widget.status!,
                 textAlign: TextAlign.center,
-                style: const TextStyle(color: Colors.amber, fontSize: 13),
+                style: const TextStyle(
+                    color: AppColors.parvozBadge, fontSize: 13),
               ),
             ],
           ],
@@ -870,12 +874,17 @@ class _PairSuccessView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.parvozBg,
       body: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
             begin: Alignment.topCenter,
             end: Alignment.bottomCenter,
-            colors: [Color(0xFF16B5C9), Color(0xFF0E8DA3), Color(0xFF0A5A70)],
+            colors: [
+              AppColors.parvozGreen,
+              Color(0xFF0E8DA3),
+              AppColors.parvozBg,
+            ],
           ),
         ),
         child: Stack(

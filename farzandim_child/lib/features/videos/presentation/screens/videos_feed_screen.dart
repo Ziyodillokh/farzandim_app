@@ -7,6 +7,8 @@
 // bo'sh bo'lsa empty state ko'rsatiladi.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/videos/data/models/filter_state.dart';
@@ -17,7 +19,6 @@ import 'package:farzandim_child/features/videos/presentation/widgets/video_tabs.
 import 'package:farzandim_child/features/videos/presentation/widgets/videos_search_bar.dart';
 import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
-import 'package:farzandim_child/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -32,11 +33,12 @@ class VideosFeedScreen extends ConsumerWidget {
     final recommended = ref.watch(recommendedVideosProvider);
     final filtered = ref.watch(filteredVideosProvider);
 
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBody: true,
-      body: GradientBackground(
-        child: SafeArea(
+    return Theme(
+      data: AppTheme.darkTheme,
+      child: Scaffold(
+        backgroundColor: AppColors.parvozBg,
+        extendBody: true,
+        body: SafeArea(
           bottom: false,
           child: Column(
             children: [
@@ -100,8 +102,8 @@ class VideosFeedScreen extends ConsumerWidget {
             ],
           ),
         ),
+        bottomNavigationBar: const ChildBottomNavigation(),
       ),
-      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 

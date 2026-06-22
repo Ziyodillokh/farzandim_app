@@ -21,6 +21,7 @@ import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 
 class YoutubePlayerScreen extends ConsumerStatefulWidget {
   const YoutubePlayerScreen({required this.video, super.key});
@@ -110,11 +111,11 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final controller = _controller;
     if (controller == null) {
       return const Scaffold(
-        backgroundColor: Colors.black,
+        backgroundColor: AppColors.parvozBg,
         body: Center(
           child: Text(
             "Video havolasi noto'g'ri",
-            style: TextStyle(color: Colors.white70),
+            style: TextStyle(color: AppColors.parvozTextDim),
           ),
         ),
       );
@@ -136,28 +137,27 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
   // ── Portret: video 16:9 + sarlavha + "To'liq ekran" + tavsif ──
   Widget _buildPortrait(WebViewController controller) {
     return Scaffold(
-      backgroundColor: Colors.black,
-      appBar: AppBar(
-        backgroundColor: Colors.black,
-        foregroundColor: Colors.white,
-        elevation: 0,
-        title: Text(
-          widget.video.title,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(fontSize: 16),
-        ),
-        actions: [
-          IconButton(
-            tooltip: 'YouTube',
-            onPressed: _openInYoutube,
-            icon: const Icon(Icons.open_in_new_rounded),
-          ),
-        ],
-      ),
+      backgroundColor: AppColors.parvozBg,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          ParvozHeader(
+            title: widget.video.title,
+            onBack: () => Navigator.of(context).maybePop(),
+            trailing: GestureDetector(
+              onTap: _openInYoutube,
+              behavior: HitTestBehavior.opaque,
+              child: const SizedBox(
+                width: 40,
+                height: 40,
+                child: Icon(
+                  Icons.open_in_new_rounded,
+                  color: AppColors.parvozText,
+                  size: 22,
+                ),
+              ),
+            ),
+          ),
           _videoBox(controller, showFullscreenButton: true),
           Expanded(
             child: SingleChildScrollView(
@@ -168,7 +168,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                   Text(
                     widget.video.title,
                     style: const TextStyle(
-                      color: Colors.white,
+                      color: AppColors.parvozText,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                       height: 1.3,
@@ -182,8 +182,8 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                       icon: const Icon(Icons.fullscreen_rounded),
                       label: const Text("To'liq ekranda ko'rish"),
                       style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.primary,
-                        foregroundColor: Colors.black,
+                        backgroundColor: AppColors.parvozGreen,
+                        foregroundColor: AppColors.parvozOnGreen,
                         padding: const EdgeInsets.symmetric(vertical: 14),
                         textStyle: const TextStyle(
                           fontSize: 15,
@@ -197,7 +197,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                     Text(
                       widget.video.description,
                       style: const TextStyle(
-                        color: AppColors.textSecondary,
+                        color: AppColors.parvozTextDim,
                         height: 1.5,
                         fontSize: 14,
                       ),
@@ -221,7 +221,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           Positioned.fill(child: WebViewWidget(controller: controller)),
           if (_loading)
             const Center(
-              child: CircularProgressIndicator(color: AppColors.primary),
+              child: CircularProgressIndicator(color: AppColors.parvozGreen),
             ),
           SafeArea(
             child: Align(
@@ -255,7 +255,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
             WebViewWidget(controller: controller),
             if (_loading)
               const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child: CircularProgressIndicator(color: AppColors.parvozGreen),
               ),
             if (showFullscreenButton)
               Align(

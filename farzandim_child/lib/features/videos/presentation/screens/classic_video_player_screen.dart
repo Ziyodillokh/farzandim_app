@@ -291,7 +291,8 @@ class _ClassicVideoPlayerScreenState
             if (_controller.value.isInitialized &&
                 _controller.value.isBuffering)
               const Center(
-                child: CircularProgressIndicator(color: AppColors.primary),
+                child:
+                    CircularProgressIndicator(color: AppColors.parvozGreen),
               ),
             if (_showControls && !settings.screenLocked) _buildControls(),
             if (settings.screenLocked) _buildLockIndicator(),
@@ -330,8 +331,8 @@ class _ClassicVideoPlayerScreenState
               icon: const Icon(Icons.refresh),
               label: const Text("Qaytadan urinib ko'rish"),
               style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.black,
+                backgroundColor: AppColors.parvozGreen,
+                foregroundColor: AppColors.parvozOnGreen,
               ),
             ),
           ],
@@ -340,7 +341,7 @@ class _ClassicVideoPlayerScreenState
     }
     if (_initializing || !_controller.value.isInitialized) {
       return const Center(
-        child: CircularProgressIndicator(color: AppColors.primary),
+        child: CircularProgressIndicator(color: AppColors.parvozGreen),
       );
     }
     // FittedBox bilan rasm size widget'ga moslashtiriladi. BoxFit.contain
@@ -499,7 +500,7 @@ class _ClassicVideoPlayerScreenState
                       .toDouble()
                       .clamp(0.0, maxSec),
                   max: maxSec,
-                  activeColor: AppColors.primary,
+                  activeColor: AppColors.parvozGreen,
                   inactiveColor: Colors.white.withValues(alpha: 0.3),
                   onChanged: (val) {
                     _controller.seekTo(Duration(seconds: val.toInt()));
