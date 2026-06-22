@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Akkauntni o'chirish — Farzandim</title>
+  <meta name="description" content="Farzandim akkauntini va barcha ma'lumotlarni qanday o'chirish: ilova ichida yoki email orqali so'rov." />
+  <meta name="robots" content="index, follow" />
+  <style>
+    :root {
+      --bg: #0A0A12; --surface: #14141f; --accent: #C5F562;
+      --text: #F2F5F4; --muted: #9aa3a0; --border: #24242f; --danger: #EF4444;
+    }
+    * { box-sizing: border-box; }
+    body { margin:0; background:var(--bg); color:var(--text);
+      font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Arial,sans-serif;
+      line-height:1.7; -webkit-font-smoothing:antialiased; }
+    .wrap { max-width: 760px; margin: 0 auto; padding: 48px 20px 96px; }
+    header { border-bottom: 1px solid var(--border); padding-bottom: 24px; margin-bottom: 32px; }
+    .brand { display:flex; align-items:center; gap:10px; font-weight:700; font-size:20px; }
+    .dot { width:12px; height:12px; border-radius:50%; background:var(--accent); }
+    h1 { font-size: 28px; margin: 20px 0 6px; }
+    .updated { color: var(--muted); font-size: 14px; }
+    h2 { font-size: 19px; margin: 34px 0 10px; color:#fff; }
+    p { margin: 0 0 14px; color:#d7dcda; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    ul { margin: 0 0 16px; padding-left: 20px; }
+    li { margin-bottom: 6px; color:#d7dcda; }
+    ol.steps { counter-reset: step; list-style: none; padding: 0; }
+    ol.steps li { position: relative; padding: 0 0 18px 44px; }
+    ol.steps li::before {
+      counter-increment: step; content: counter(step);
+      position: absolute; left: 0; top: -2px;
+      width: 30px; height: 30px; border-radius: 50%;
+      background: var(--accent); color: #0A0A12; font-weight: 700;
+      display: flex; align-items: center; justify-content: center; font-size: 15px;
+    }
+    .card { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 20px 22px; margin: 24px 0; }
+    .danger-card { border-color: rgba(239,68,68,.4); background: rgba(239,68,68,.06); }
+    .note { font-size: 14px; color: var(--muted); }
+    .pill { display:inline-block; background:rgba(197,245,98,.12); color:var(--accent); border-radius:999px; padding:4px 12px; font-size:13px; font-weight:600; }
+    footer { margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--border); color: var(--muted); font-size: 14px; }
+    strong { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <header>
+      <div class="brand"><span class="dot"></span> Farzandim</div>
+      <h1>Akkauntni va ma'lumotlarni o'chirish</h1>
+      <div class="updated">So'nggi yangilanish: 2026-05-12 · <a href="/privacy.html">Maxfiylik siyosati →</a></div>
+    </header>
+
+    <p>Farzandim akkauntingizni va u bilan bog'liq barcha ma'lumotlarni istalgan vaqtda butunlay o'chirib tashlashingiz mumkin. O'chirishning ikki yo'li bor.</p>
+
+    <h2>1-usul — Ilova ichida (tavsiya etiladi)</h2>
+    <ol class="steps">
+      <li>Farzandim ilovasini oching va akkauntingizga kiring.</li>
+      <li><strong>Sozlamalar</strong> bo'limiga o'ting.</li>
+      <li><strong>"Hisobni butunlay o'chirish"</strong> tugmasini tanlang.</li>
+      <li>Tasdiqlash so'zini (<strong>O'CHIRISH</strong>) kiriting va tasdiqlang.</li>
+    </ol>
+    <p class="pill">So'rov darhol bajariladi — server ma'lumotlarni atomik tarzda o'chiradi.</p>
+
+    <h2>2-usul — Email orqali so'rov</h2>
+    <p>Ilovaga kira olmasangiz (masalan, telefon yo'qolgan bo'lsa), o'chirishni email orqali so'rashingiz mumkin:</p>
+    <div class="card">
+      <p style="margin:0 0 6px"><strong>Email:</strong> <a href="mailto:shahlomansurovat@gmail.com?subject=Akkauntni%20o'chirish%20so'rovi">shahlomansurovat@gmail.com</a></p>
+      <p style="margin:0" class="note">Xat mavzusida "Akkauntni o'chirish" deb yozing va akkauntingiz telefon raqami/email manzilini ko'rsating. So'rov 30 kun ichida bajariladi.</p>
+    </div>
+
+    <h2>Qaysi ma'lumotlar o'chiriladi?</h2>
+    <ul>
+      <li>Profilingiz (ism, telefon, email, rasm)</li>
+      <li>Barcha bola profillari va ularga oid ma'lumotlar</li>
+      <li>Joylashuv tarixi va geo-zonalar</li>
+      <li>Ovozli, video va matnli xabarlar</li>
+      <li>Jadvallar va cheklov sozlamalari</li>
+      <li>Saqlangan fayllar (foto, audio, video)</li>
+      <li>Autentifikatsiya yozuvi (Firebase Auth)</li>
+    </ul>
+
+    <h2>Qancha vaqtda o'chadi?</h2>
+    <p>Ilova ichidagi o'chirish <strong>darhol</strong> bajariladi. To'liq tozalash va backup nusxalarning o'chirilishi <strong>30 kun ichida</strong> yakunlanadi. Tizim loglari (shaxsni aniqlamaydigan) xavfsizlik maqsadida maksimum 1 yilgacha saqlanishi mumkin.</p>
+
+    <div class="card danger-card">
+      <p style="margin:0"><strong>Diqqat:</strong> O'chirish qaytarib bo'lmaydi. O'chirilgandan keyin qaytadan ro'yxatdan o'tish yangi akkaunt yaratadi — eski ma'lumotlar tiklanmaydi.</p>
+    </div>
+
+    <footer>
+      © 2026 Farzandim · <a href="/">Bosh sahifa</a> · <a href="/privacy.html">Maxfiylik siyosati</a>
+    </footer>
+  </div>
+</body>
+</html>
