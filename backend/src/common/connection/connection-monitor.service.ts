@@ -4,8 +4,20 @@ import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../database/prisma.service';
 import { FcmService } from '../fcm/fcm.service';
 
-/** Bola shu daqiqadan ko'p heartbeat yubormasa "aloqa uzildi" deb hisoblanadi. */
-export const CONNECTION_LOST_MINUTES = 10;
+/**
+ * Bola shu daqiqadan ko'p heartbeat yubormasa "aloqa uzildi" deb hisoblanadi.
+ *
+ * 30 daqiqa (avval 10 edi) — noto'g'ri ogohlantirishlarni kamaytirish uchun:
+ *   • telefon reboot bo'lsa, foreground-service qaytadan ishga tushguncha
+ *     bir necha daqiqa gap bo'ladi;
+ *   • bola ilovani ochmasa / ekran o'chiq idle bo'lsa, Android Doze heartbeat
+ *     timer'ini ~15 daqiqagacha paketlaydi;
+ *   • OEM (Xiaomi/MIUI) batareya optimizatsiyasi FGS'ni vaqtincha o'ldirib
+ *     keyin tiklashi mumkin.
+ * Shu holatlar 30 daqiqaga sig'adi; haqiqiy uzilish (telefon o'chiq, ilova
+ * o'chirilgan, internet uzilgan — soatlab) baribir aniqlanadi.
+ */
+export const CONNECTION_LOST_MINUTES = 30;
 
 /**
  * "Aloqa uzildi" matni — COMPLIANCE: AYNAN shunday bo'lishi shart, o'zgartirilmasin.
