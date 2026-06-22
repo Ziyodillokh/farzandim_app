@@ -3,7 +3,7 @@
     "android": {
       "latest": "1.0.0",
       "minSupported": "1.0.0",
-      "directApkUrl": "https://test.farzandimedu.uz/app/farzandim-parent.apk"
+      "directApkUrl": "https://farzandimedu.uz/app/farzandim-parent.apk"
     },
     "ios": {
       "latest": "1.0.0",
@@ -16,7 +16,7 @@
     "android": {
       "latest": "1.0.0",
       "minSupported": "1.0.0",
-      "directApkUrl": "https://test.farzandimedu.uz/app/farzandim-child.apk"
+      "directApkUrl": "https://farzandimedu.uz/app/farzandim-child.apk"
     },
     "ios": {
       "latest": "1.0.0",

@@ -1,0 +1,23 @@
+# test.farzandimedu.uz — ISTE'FODA. Yangi platforma asosiy farzandimedu.uz'ga
+# ko'chirildi. Bu domen endi faqat asosiy domenga 301 redirect qiladi
+# (eski havolalar/QR uzilmasin). DNS yozuvini ham olib tashlash mumkin.
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name test.farzandimedu.uz;
+    return 301 https://farzandimedu.uz$request_uri;
+}
+
+server {
+    listen 443 ssl http2;
+    listen [::]:443 ssl http2;
+    server_name test.farzandimedu.uz;
+
+    ssl_certificate /etc/letsencrypt/live/test.farzandimedu.uz/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/test.farzandimedu.uz/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+
+    return 301 https://farzandimedu.uz$request_uri;
+}

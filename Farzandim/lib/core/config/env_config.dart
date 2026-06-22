@@ -35,7 +35,8 @@ class EnvConfig {
   );
 
   /// API path prefix — barcha REST endpoint'lar `/api` bilan boshlanadi
-  /// (Backend Fastify struct: `/api/auth/*`, `/api/users/*`, ...).
+  /// (Backend NestJS global prefix: `/api/auth/*`, `/api/users/*`, ...).
+  /// Production: https://farzandimedu.uz/api (test.* dan ko'chirildi).
   static const String apiPath = '/api';
 
   /// To'liq API URL: `https://farzandimedu.uz/api`.

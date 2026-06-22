@@ -1,4 +1,18 @@
-# HTTP - HTTPS'ga redirect
+# ─────────────────────────────────────────────────────────────────────
+# farzandimedu.uz — ASOSIY domen (production)
+# ─────────────────────────────────────────────────────────────────────
+#   /            → landing (statik SPA, /var/www/farzandim-landing)
+#   /api         → YANGI backend (NestJS, :3100)
+#   /socket.io/  → YANGI backend realtime (:3100)
+#   /storage/    → YANGI MinIO public (:9100)
+#   /app/        → Flutter parent web + APK (farzandim-parent.apk)
+#   /child/      → Flutter child web + APK (farzandim-child.apk)
+#   /admin       → admin panel (Next.js, :3101, basePath=/admin)
+#
+# Eski stack (:3000 backend, :9000 MinIO, /admin Flutter) OLIB TASHLANDI —
+# yangi platforma asosiy domenga ko'chirildi (test.* dan).
+
+# HTTP → HTTPS redirect
 server {
     listen 80;
     listen [::]:80;
@@ -13,7 +27,7 @@ server {
     }
 }
 
-# HTTPS - asosiy server
+# HTTPS — asosiy server
 server {
     listen 443 ssl http2;
     listen [::]:443 ssl http2;
@@ -25,41 +39,59 @@ server {
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
     client_max_body_size 110M;
 
-    # ── PRODUCTION API (o'zgartirilmadi) ──────────────────────────────
-    # MUHIM: do'kondagi mobil ilovalar (parent + child) shu endpointlarga
-    # ulanadi (env_config default = https://farzandimedu.uz). O'CHIRILMASIN.
+    # ── YANGI backend API (:3100) ─────────────────────────────────────
     location /api {
-        proxy_pass http://127.0.0.1:3000;
+        proxy_pass http://127.0.0.1:3100;
         proxy_http_version 1.1;
         proxy_set_header Host $host;
         proxy_set_header X-Real-IP $remote_addr;
         proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
         proxy_set_header X-Forwarded-Proto $scheme;
-    }
-
-    location /socket.io/ {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
         proxy_set_header Upgrade $http_upgrade;
         proxy_set_header Connection "upgrade";
+    }
+
+    # Realtime (socket.io) → :3100
+    location /socket.io/ {
+        proxy_pass http://127.0.0.1:3100;
+        proxy_http_version 1.1;
         proxy_set_header Host $host;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
         proxy_read_timeout 86400s;
     }
 
-    # MinIO bucket proxy — signed URL'lar mobile orqali yetadi (o'zgartirilmadi)
-    location ~ ^/farzandim- {
-        proxy_pass http://127.0.0.1:9000;
-        proxy_http_version 1.1;
+    # ── YANGI MinIO public obyektlar (:9100) ──────────────────────────
+    location /storage/ {
+        proxy_pass http://127.0.0.1:9100/;
         proxy_set_header Host $host;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        client_max_body_size 100M;
-        proxy_request_buffering off;
-        proxy_buffering off;
     }
 
-    # ── LANDING (yangi) — farzandimedu.uz root ────────────────────────
-    # Eski admin panel (/admin/) va login.html statik OLIB TASHLANDI.
-    # Endi asosiy domen landing sahifani ko'rsatadi (Vite SPA).
+    # ── Admin panel (Next.js :3101, basePath=/admin) ──────────────────
+    location /admin {
+        proxy_pass http://127.0.0.1:3101;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # ── Flutter parent web + APK ──────────────────────────────────────
+    location /app/ {
+        alias /home/farzandim/new-platform/flutter/parent/;
+        try_files $uri $uri/ /app/index.html;
+    }
+
+    # ── Flutter child web + APK ───────────────────────────────────────
+    location /child/ {
+        alias /home/farzandim/new-platform/flutter/child/;
+        try_files $uri $uri/ /child/index.html;
+    }
+
+    # ── Landing (root) ────────────────────────────────────────────────
     location / {
         root /var/www/farzandim-landing;
         index index.html;

@@ -1,4 +1,4 @@
-name: Deploy → test.farzandimedu.uz
+name: Deploy → farzandimedu.uz
 
 # ─────────────────────────────────────────────────────────────────────────────
 # Yangi platformani (NestJS backend + Next.js admin + Flutter web/APK) serverning
@@ -44,9 +44,11 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  TEST_DOMAIN: test.farzandimedu.uz
-  API_URL: https://test.farzandimedu.uz/api
-  WS_URL: wss://test.farzandimedu.uz
+  # ASOSIY domen (production). Eski "test.*" bosqichi tugadi — yangi platforma
+  # asosiy farzandimedu.uz'ga ko'chirildi. (REMOTE_BASE server papkasi o'zgarmaydi.)
+  TEST_DOMAIN: farzandimedu.uz
+  API_URL: https://farzandimedu.uz/api
+  WS_URL: wss://farzandimedu.uz
   REMOTE_BASE: new-platform
   NODE_VERSION: '22'
   FLUTTER_VERSION: '3.44.0'
@@ -216,7 +218,8 @@ jobs:
           pm2 reload v2-admin --update-env || pm2 start ~/new-platform/ecosystem.config.js --only v2-admin
           pm2 save
           sleep 2
-          curl -fsS http://127.0.0.1:3101/ -o /dev/null && echo "admin-web OK"
+          # basePath=/admin → bosh sahifa endi /admin'da (root '/' 404 beradi).
+          curl -fsS http://127.0.0.1:3101/admin -o /dev/null && echo "admin-web OK"
           EOF
 
   # ─────────────────────────── FLUTTER (parent + child → web) ───────────────────────────
@@ -392,16 +395,32 @@ jobs:
 
       - name: Upload APKs to server (/app/*.apk)
         run: |
+          set +e   # xatoni qo'lda boshqaramiz (timeout + retry + resume)
           P="Farzandim/build/app/outputs/flutter-apk/app-release.apk"
           C="farzandim_child/build/app/outputs/flutter-apk/app-release.apk"
-          sshpass -e scp ${SSH_OPTS} "$P" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-parent.apk"
+          DEST="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent"
+          # rsync --timeout=60: 60s ma'lumot kelmasa uzadi (scp osilib qolardi).
+          # --partial: yarim fayl saqlanadi → retry 0 dan emas, davomidan.
+          upload() {
+            src="$1"; name="$2"
+            for i in 1 2 3; do
+              echo "→ upload $name (urinish $i)"
+              sshpass -e rsync -az --partial --timeout=60 -e "ssh ${SSH_OPTS}" "$src" "${DEST}/${name}" && return 0
+              echo "::warning::$name upload urinish $i muvaffaqiyatsiz — 10s'dan keyin qayta"
+              sleep 10
+            done
+            return 1
+          }
+          FAIL=0
+          upload "$P" "farzandim-parent.apk" || { echo "::error::parent APK upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
           if [ -f "$C" ]; then
-            sshpass -e scp ${SSH_OPTS} "$C" "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/farzandim-child.apk"
+            upload "$C" "farzandim-child.apk" || { echo "::error::child APK upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
           else
             echo "child APK build yo'q — o'tkazib yuborildi"
           fi
           sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
+          exit $FAIL
 
       # Version manifest — ilova /api/app/version dan o'qiydi va "Yangilash" tugmasini ko'rsatadi.
       # latest = build versiyasi (versionName), shu sabab yangi build = yangilanish chiqadi.
