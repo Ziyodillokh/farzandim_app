@@ -1238,15 +1238,18 @@ model Moderator {
 // ============================================
 model OtpCode {
   id        String   @id @default(uuid())
-  phone     String
+  // phone YOKI email — bittasi to'ladi (telefon SMS OTP yoki email OTP).
+  phone     String?
+  email     String?
   code      String
   attempts  Int      @default(0)
   expiresAt DateTime @map("expires_at")
   verifiedAt DateTime? @map("verified_at")
   createdAt DateTime @default(now()) @map("created_at")
-  
+
   @@map("otp_codes")
   @@index([phone, createdAt(sort: Desc)])
+  @@index([email, createdAt(sort: Desc)])
 }
 
 // ============================================

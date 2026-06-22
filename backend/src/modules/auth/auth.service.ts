@@ -13,6 +13,7 @@ import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { SmsService } from '../../common/sms/sms.service';
+import { MailService } from '../../common/mail/mail.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -60,6 +61,7 @@ export class AuthService {
     private readonly telegramService: TelegramService,
     private readonly socialAuth: SocialAuthService,
     private readonly sms: SmsService,
+    private readonly mail: MailService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -142,6 +144,99 @@ export class AuthService {
       throw new BadRequestException(
         "Juda ko'p urinish. Yangi kod so'rang.",
       );
+    }
+    if (otp.code !== code) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Noto'g'ri kod");
+    }
+
+    await this.prisma.otpCode.update({
+      where: { id: otp.id },
+      data: { verifiedAt: new Date() },
+    });
+
+    return { ok: true };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Register OTP — EMAIL varianti (SMS OTP bilan bir xil)              */
+  /* ------------------------------------------------------------------ */
+  // Telefon SMS OTP'ning aynan nusxasi, faqat OtpCode `email` ustuni +
+  // MailService (nodemailer) orqali. Frontend: email → kod → (verify) →
+  // /register (email + parol). register() email uchun ham verifiedAt
+  // tekshiradi (chetlab o'tib bo'lmaydi).
+
+  async sendRegisterEmailOtp(emailRaw: string): Promise<{ ok: true }> {
+    const email = emailRaw.trim().toLowerCase();
+
+    if (!this.mail.isMailConfigured()) {
+      throw new ServiceUnavailableException(
+        'Email xizmati hozircha mavjud emas',
+      );
+    }
+
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing) {
+      throw new ConflictException("Bu email allaqachon ro'yxatdan o'tgan");
+    }
+
+    const recent = await this.prisma.otpCode.findFirst({
+      where: {
+        email,
+        createdAt: {
+          gt: new Date(Date.now() - AuthService.REGISTER_OTP_RESEND_COOLDOWN_MS),
+        },
+      },
+    });
+    if (recent) {
+      throw new BadRequestException('Kod yaqinda yuborildi. Biroz kuting.');
+    }
+
+    const code = String(Math.floor(10_000 + Math.random() * 90_000));
+
+    await this.prisma.otpCode.create({
+      data: {
+        email,
+        code,
+        expiresAt: new Date(Date.now() + AuthService.REGISTER_OTP_TTL_MS),
+      },
+    });
+
+    const mailResult = await this.mail.sendRegisterCode(email, code);
+    if (!mailResult.sent) {
+      this.logger.error(
+        { email, err: mailResult.error },
+        'Register OTP email yuborilmadi',
+      );
+      throw new BadGatewayException("Email yuborib bo'lmadi");
+    }
+
+    return { ok: true };
+  }
+
+  async verifyRegisterEmailOtp(
+    emailRaw: string,
+    code: string,
+  ): Promise<{ ok: true }> {
+    const email = emailRaw.trim().toLowerCase();
+
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        email,
+        verifiedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+
+    if (!otp) {
+      throw new BadRequestException('Kod topilmadi yoki muddati tugagan');
+    }
+    if (otp.attempts >= AuthService.REGISTER_OTP_MAX_ATTEMPTS) {
+      throw new BadRequestException("Juda ko'p urinish. Yangi kod so'rang.");
     }
     if (otp.code !== code) {
       await this.prisma.otpCode.update({
@@ -498,6 +593,31 @@ export class AuthService {
       if (exists) {
         throw new ConflictException("Bu email allaqachon ro'yxatdan o'tgan");
       }
+
+      // ── Email OTP tasdiqlanganligi MAJBURIY (SMS bilan bir xil) ──
+      // `POST /auth/verify-register-email-otp` to'g'ri kod bilan oldindan
+      // chaqirilgan bo'lishi shart — aks holda email verification chetlab
+      // o'tilyapti. Faqat SMTP sozlangan bo'lsa talab qilamiz; sozlanmagan
+      // bo'lsa email-OTP umuman ishlamaydi, eski xulq buzilmasin.
+      if (this.mail.isMailConfigured()) {
+        const verifiedOtp = await this.prisma.otpCode.findFirst({
+          where: {
+            email,
+            verifiedAt: {
+              not: null,
+              gt: new Date(
+                Date.now() - AuthService.REGISTER_OTP_VERIFIED_VALIDITY_MS,
+              ),
+            },
+          },
+          orderBy: { verifiedAt: 'desc' },
+        });
+        if (!verifiedOtp) {
+          throw new UnauthorizedException(
+            'Email tasdiqlanmagan. Iltimos, kodni qayta tasdiqlang.',
+          );
+        }
+      }
     }
     if (phone) {
       const exists = await this.prisma.user.findUnique({ where: { phone } });
@@ -549,6 +669,11 @@ export class AuthService {
     if (phone) {
       await this.prisma.otpCode
         .deleteMany({ where: { phone } })
+        .catch(() => undefined);
+    }
+    if (email) {
+      await this.prisma.otpCode
+        .deleteMany({ where: { email } })
         .catch(() => undefined);
     }
 

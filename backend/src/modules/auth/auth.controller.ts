@@ -27,6 +27,10 @@ import {
   SendRegisterOtpDto,
   VerifyRegisterOtpDto,
 } from './dto/register-otp.dto';
+import {
+  SendRegisterEmailOtpDto,
+  VerifyRegisterEmailOtpDto,
+} from './dto/register-email-otp.dto';
 import { LoginDto } from './dto/login.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
@@ -104,6 +108,28 @@ export class AuthController {
   @ApiResponse({ status: 400, description: 'Wrong/expired code or too many attempts' })
   async verifyRegisterOtp(@Body() dto: VerifyRegisterOtpDto) {
     return this.authService.verifyRegisterOtp(dto.phone, dto.code);
+  }
+
+  @Post('send-register-email-otp')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Send email OTP (nodemailer) to verify email before register' })
+  @ApiResponse({ status: 200, description: 'OTP sent' })
+  @ApiResponse({ status: 400, description: 'Recent code already sent / cooldown' })
+  @ApiResponse({ status: 409, description: 'Email already registered' })
+  @ApiResponse({ status: 503, description: 'Email service not configured' })
+  async sendRegisterEmailOtp(@Body() dto: SendRegisterEmailOtpDto) {
+    return this.authService.sendRegisterEmailOtp(dto.email);
+  }
+
+  @Post('verify-register-email-otp')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify the email OTP code sent before register' })
+  @ApiResponse({ status: 200, description: 'Code verified' })
+  @ApiResponse({ status: 400, description: 'Wrong/expired code or too many attempts' })
+  async verifyRegisterEmailOtp(@Body() dto: VerifyRegisterEmailOtpDto) {
+    return this.authService.verifyRegisterEmailOtp(dto.email, dto.code);
   }
 
   @Post('register')

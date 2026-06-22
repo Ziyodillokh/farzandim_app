@@ -136,22 +136,15 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return e.contains('@') && e.contains('.') && e.length >= 5;
   }
 
-  /// Phone: POST /auth/send-register-otp orqali Eskiz SMS yuboriladi.
-  /// Email: backend endpoint hozircha yo'q → to'g'ridan-to'g'ri profil
-  /// bosqichiga o'tamiz (email registratsiyasi profilda parol bilan
-  /// to'liq verify qilinadi — POST /auth/register).
+  /// Phone: POST /auth/send-register-otp → Eskiz SMS.
+  /// Email: POST /auth/send-register-email-otp → nodemailer email kodi.
+  /// Email kodi SMS kodi bilan AYNAN bir xil oqimda (kod → verify → profil).
+  ///
+  /// GRACEFUL: agar email xizmati (SMTP) serverda sozlanmagan bo'lsa, backend
+  /// 503 qaytaradi — bu holda eski xulqqa tushamiz (OTP'siz to'g'ridan profil
+  /// bosqichiga). Server SMTP'ni yoqsa — email OTP avtomatik ishlay boshlaydi.
   Future<void> _sendCode() async {
     FocusScope.of(context).unfocus();
-
-    // Email holatida OTP yo'q — kod bosqichini o'tkazib yuboramiz.
-    if (!_isPhone) {
-      _timer?.cancel();
-      setState(() {
-        _step = 2;
-        _error = null;
-      });
-      return;
-    }
 
     setState(() {
       _loading = true;
@@ -159,10 +152,17 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
     final dio = ref.read(dioClientProvider);
     try {
-      await dio.post<Map<String, dynamic>>(
-        '/auth/send-register-otp',
-        data: {'phone': '+998${_phone.text.trim()}'},
-      );
+      if (_isPhone) {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/send-register-otp',
+          data: {'phone': '+998${_phone.text.trim()}'},
+        );
+      } else {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/send-register-email-otp',
+          data: {'email': _email.text.trim()},
+        );
+      }
       if (!mounted) return;
       _startResendTimer();
       setState(() {
@@ -172,34 +172,55 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       });
     } on DioException catch (e) {
       if (!mounted) return;
+      // Email xizmati sozlanmagan (503) → eski xulq: OTP'siz profilga o'tamiz.
+      if (!_isPhone && e.response?.statusCode == 503) {
+        _timer?.cancel();
+        setState(() {
+          _loading = false;
+          _step = 2;
+          _error = null;
+        });
+        return;
+      }
       setState(() {
         _loading = false;
-        _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi");
+        _error = _readDioError(
+          e,
+          fallback:
+              _isPhone ? "SMS yuborib bo'lmadi" : "Email yuborib bo'lmadi",
+        );
       });
     }
   }
 
   Future<void> _resendCode() async {
     if (_resendLeft > 0) return;
-    if (!_isPhone) {
-      _startResendTimer();
-      return;
-    }
 
     setState(() => _error = null);
     final dio = ref.read(dioClientProvider);
     try {
-      await dio.post<Map<String, dynamic>>(
-        '/auth/send-register-otp',
-        data: {'phone': '+998${_phone.text.trim()}'},
-      );
+      if (_isPhone) {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/send-register-otp',
+          data: {'phone': '+998${_phone.text.trim()}'},
+        );
+      } else {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/send-register-email-otp',
+          data: {'email': _email.text.trim()},
+        );
+      }
       if (!mounted) return;
       _startResendTimer();
       AppToast.info(context, 'auth.signUp.resentSnack'.tr());
     } on DioException catch (e) {
       if (!mounted) return;
       setState(
-        () => _error = _readDioError(e, fallback: "SMS yuborib bo'lmadi"),
+        () => _error = _readDioError(
+          e,
+          fallback:
+              _isPhone ? "SMS yuborib bo'lmadi" : "Email yuborib bo'lmadi",
+        ),
       );
     }
   }
@@ -217,21 +238,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool get _codeValid => _code.length == 5;
 
-  /// Phone: POST /auth/verify-register-otp — backend Eskiz'dan kelgan
-  /// haqiqiy kod bilan solishtiradi. Noto'g'ri bo'lsa 400 qaytariladi.
-  /// Email holatida OTP yo'q (allaqachon o'tkazib yuborilgan).
+  /// Phone: POST /auth/verify-register-otp (Eskiz kodi).
+  /// Email: POST /auth/verify-register-email-otp (nodemailer kodi).
+  /// Noto'g'ri/eskirgan kod → 400.
   Future<void> _verifyCode() async {
     if (!_codeValid) return;
     FocusScope.of(context).unfocus();
-
-    if (!_isPhone) {
-      _timer?.cancel();
-      setState(() {
-        _step = 2;
-        _error = null;
-      });
-      return;
-    }
 
     setState(() {
       _loading = true;
@@ -239,13 +251,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     });
     final dio = ref.read(dioClientProvider);
     try {
-      await dio.post<Map<String, dynamic>>(
-        '/auth/verify-register-otp',
-        data: {
-          'phone': '+998${_phone.text.trim()}',
-          'code': _code,
-        },
-      );
+      if (_isPhone) {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/verify-register-otp',
+          data: {
+            'phone': '+998${_phone.text.trim()}',
+            'code': _code,
+          },
+        );
+      } else {
+        await dio.post<Map<String, dynamic>>(
+          '/auth/verify-register-email-otp',
+          data: {
+            'email': _email.text.trim(),
+            'code': _code,
+          },
+        );
+      }
       if (!mounted) return;
       _timer?.cancel();
       setState(() {

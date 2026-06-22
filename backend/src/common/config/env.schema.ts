@@ -108,6 +108,23 @@ const envSchema = z.object({
   ),
   ESKIZ_FROM: z.string().default('4546'),
 
+  // ─── Email (nodemailer / SMTP) — ixtiyoriy ─────────────────────────
+  // Email tasdiqlash kodi (SMS OTP'ning email varianti) shu SMTP orqali
+  // yuboriladi. Gmail uchun: HOST=smtp.gmail.com, PORT=587, USER=<gmail>,
+  // PASS=<16-belgili App Password>. Sozlanmagan bo'lsa email-OTP 503 beradi
+  // (telefon orqali ro'yxatdan o'tish baribir ishlaydi).
+  SMTP_HOST: z.string().default('smtp.gmail.com'),
+  SMTP_PORT: z.coerce.number().int().positive().default(587),
+  SMTP_USER: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  SMTP_PASS: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  MAIL_FROM: z.string().default('Farzandim Edu <no-reply@farzandimedu.uz>'),
+
   // ─── Google Sign In (ixtiyoriy) ────────────────────────────────────
   // Vergul bilan ajratilgan Google OAuth client ID'lar (Web/Android/iOS).
   // Backend `aud` (audience) shu ro'yxatdagi bittasi bo'lishini tekshiradi.
