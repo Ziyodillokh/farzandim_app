@@ -15,7 +15,6 @@ import 'dart:io';
 import 'dart:ui' as ui;
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
@@ -94,36 +93,34 @@ class _CertificateScreenState extends State<CertificateScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Theme(
-      data: AppTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: AppColors.parvozBg,
-        body: Column(
-          children: [
-            ParvozHeader(
-              title: 'Sertifikat',
-              onBack: () => context.pop(),
-            ),
-            Expanded(
-              child: Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(20),
-                  child: RepaintBoundary(
-                    key: _boundaryKey,
-                    child: _Certificate(data: widget.data, dateText: _dateText),
-                  ),
+    final pv = context.adaptive;
+    return Scaffold(
+      backgroundColor: pv.pvBg,
+      body: Column(
+        children: [
+          ParvozHeader(
+            title: 'Sertifikat',
+            onBack: () => context.pop(),
+          ),
+          Expanded(
+            child: Center(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.all(20),
+                child: RepaintBoundary(
+                  key: _boundaryKey,
+                  child: _Certificate(data: widget.data, dateText: _dateText),
                 ),
               ),
             ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
-              child: _ShareButton(
-                sharing: _sharing,
-                onTap: _sharing ? null : _share,
-              ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+            child: _ShareButton(
+              sharing: _sharing,
+              onTap: _sharing ? null : _share,
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -138,6 +135,7 @@ class _ShareButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
@@ -145,11 +143,11 @@ class _ShareButton extends StatelessWidget {
         width: double.infinity,
         height: 56,
         decoration: BoxDecoration(
-          color: AppColors.parvozGreen,
+          color: pv.pvGreen,
           borderRadius: BorderRadius.circular(999),
           boxShadow: [
             BoxShadow(
-              color: AppColors.parvozGreen.withValues(alpha: 0.40),
+              color: pv.pvGreen.withValues(alpha: 0.40),
               blurRadius: 22,
               offset: const Offset(0, 8),
             ),
@@ -159,25 +157,25 @@ class _ShareButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             if (sharing)
-              const SizedBox(
+              SizedBox(
                 width: 18,
                 height: 18,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.4,
-                  valueColor: AlwaysStoppedAnimation(AppColors.parvozOnGreen),
+                  valueColor: AlwaysStoppedAnimation(pv.pvOnGreen),
                 ),
               )
             else
-              const Icon(Icons.ios_share_rounded,
-                  size: 20, color: AppColors.parvozOnGreen),
+              Icon(Icons.ios_share_rounded,
+                  size: 20, color: pv.pvOnGreen),
             const SizedBox(width: 10),
             Text(
               sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish',
               style: cjak(
-                CP(true),
+                CP(pv.isDark),
                 size: 16,
                 weight: FontWeight.w800,
-                color: AppColors.parvozOnGreen,
+                color: pv.pvOnGreen,
               ),
             ),
           ],

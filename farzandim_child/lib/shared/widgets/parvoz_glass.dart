@@ -20,19 +20,25 @@ import 'package:flutter/material.dart';
 /// Shishali (glass) karta dekoratsiyasi — navy fon ustidan yaqqol ajraladi.
 /// Per-card blur YO'Q (uzun ro'yxat/grid'da 60fps). Rasm ustiga qo'yilganda
 /// `clipBehavior: Clip.antiAlias` bilan ishlating.
-BoxDecoration parvozGlass({double radius = 16}) => BoxDecoration(
+BoxDecoration parvozGlass({double radius = 16, bool dark = true}) =>
+    BoxDecoration(
       borderRadius: BorderRadius.circular(radius),
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+        colors: dark
+            ? const [AppColors.parvozGlassTop, AppColors.parvozGlassBottom]
+            : const [Color(0xFFFFFFFF), Color(0xFFEEF4FF)],
       ),
-      border: Border.all(color: AppColors.parvozGlassRim, width: 1),
-      boxShadow: const [
+      border: Border.all(
+        color: dark ? AppColors.parvozGlassRim : const Color(0xFFD3E4FE),
+        width: 1,
+      ),
+      boxShadow: [
         BoxShadow(
-          color: Color(0x59000000),
+          color: dark ? const Color(0x59000000) : const Color(0x142170E4),
           blurRadius: 22,
-          offset: Offset(0, 10),
+          offset: const Offset(0, 10),
           spreadRadius: -2,
         ),
       ],
@@ -40,14 +46,20 @@ BoxDecoration parvozGlass({double radius = 16}) => BoxDecoration(
 
 /// Soyasiz glass — forma maydonlari, list itemlar uchun (gradient + rim,
 /// soya YO'Q — ko'p element ustma-ust kelganda toza).
-BoxDecoration parvozGlassFlat({double radius = 14}) => BoxDecoration(
+BoxDecoration parvozGlassFlat({double radius = 14, bool dark = true}) =>
+    BoxDecoration(
       borderRadius: BorderRadius.circular(radius),
-      gradient: const LinearGradient(
+      gradient: LinearGradient(
         begin: Alignment.topLeft,
         end: Alignment.bottomRight,
-        colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
+        colors: dark
+            ? const [AppColors.parvozGlassTop, AppColors.parvozGlassBottom]
+            : const [Color(0xFFFFFFFF), Color(0xFFEEF4FF)],
       ),
-      border: Border.all(color: AppColors.parvozGlassRim, width: 1),
+      border: Border.all(
+        color: dark ? AppColors.parvozGlassRim : const Color(0xFFD3E4FE),
+        width: 1,
+      ),
     );
 
 /// Premium night header — orqaga tugma + markazda sarlavha + (ixtiyoriy) trailing.
@@ -65,13 +77,15 @@ class ParvozHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Kun/tunga moslashadi (oldin qattiq oq matn edi → yorug' fonda ko'rinmasdi).
+    final pv = context.adaptive;
     return SafeArea(
       bottom: false,
       child: Container(
         height: 56,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+        decoration: BoxDecoration(
+          border: Border(bottom: BorderSide(color: pv.pvBorder)),
         ),
         child: Row(
           children: [
@@ -79,11 +93,11 @@ class ParvozHeader extends StatelessWidget {
               GestureDetector(
                 onTap: onBack,
                 behavior: HitTestBehavior.opaque,
-                child: const SizedBox(
+                child: SizedBox(
                   width: 40,
                   height: 40,
                   child: Icon(Icons.arrow_back_rounded,
-                      color: AppColors.parvozText, size: 24),
+                      color: pv.pvText, size: 24),
                 ),
               )
             else
@@ -94,8 +108,8 @@ class ParvozHeader extends StatelessWidget {
                 textAlign: TextAlign.center,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: const TextStyle(
-                  color: AppColors.parvozText,
+                style: TextStyle(
+                  color: pv.pvText,
                   fontSize: 20,
                   fontWeight: FontWeight.bold,
                   letterSpacing: -0.3,
@@ -122,11 +136,11 @@ class ParvozSectionLabel extends StatelessWidget {
       padding: const EdgeInsets.only(left: 4, bottom: 10),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 12,
           fontWeight: FontWeight.w700,
           letterSpacing: 0.8,
-          color: AppColors.parvozTextDim,
+          color: context.adaptive.pvTextDim,
         ),
       ),
     );

@@ -6,7 +6,6 @@
 // Sprint 5.x: Books bottom nav'dan olib tashlandi, audiobooks ichida tab.
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_section.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobooks_search_bar.dart';
@@ -22,40 +21,37 @@ class AudiobooksFeedScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    // NIGHT majburiy: butun subtree dark theme.
-    return Theme(
-      data: AppTheme.darkTheme,
-      child: DefaultTabController(
-        length: 2,
-        child: Scaffold(
-          backgroundColor: AppColors.parvozBg,
-          extendBody: true,
-          body: SafeArea(
-            bottom: false,
-            child: Column(
-              children: [
-                Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: DashboardTopHeader(
-                    onAvatarTap: () => context.push('/account-edit'),
-                  ),
+    final pv = context.adaptive;
+    return DefaultTabController(
+      length: 2,
+      child: Scaffold(
+        backgroundColor: pv.pvBg,
+        extendBody: true,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: DashboardTopHeader(
+                  onAvatarTap: () => context.push('/account-edit'),
                 ),
-                const SizedBox(height: 8),
-                const _TopTabs(),
-                Expanded(
-                  child: TabBarView(
-                    physics: const BouncingScrollPhysics(),
-                    children: [
-                      _AudiobooksTab(ref: ref),
-                      const BooksFeedBody(),
-                    ],
-                  ),
+              ),
+              const SizedBox(height: 8),
+              const _TopTabs(),
+              Expanded(
+                child: TabBarView(
+                  physics: const BouncingScrollPhysics(),
+                  children: [
+                    _AudiobooksTab(ref: ref),
+                    const BooksFeedBody(),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-          bottomNavigationBar: const ChildBottomNavigation(),
         ),
+        bottomNavigationBar: const ChildBottomNavigation(),
       ),
     );
   }
@@ -66,21 +62,22 @@ class _TopTabs extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: AppColors.parvozSurface,
+        color: pv.pvSurface,
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: AppColors.parvozBorder),
+        border: Border.all(color: pv.pvBorder),
       ),
       child: TabBar(
         indicator: BoxDecoration(
-          color: AppColors.parvozGreen,
+          color: pv.pvGreen,
           borderRadius: BorderRadius.circular(14),
         ),
         indicatorSize: TabBarIndicatorSize.tab,
-        labelColor: AppColors.parvozOnGreen,
-        unselectedLabelColor: AppColors.parvozTextDim,
+        labelColor: pv.pvOnGreen,
+        unselectedLabelColor: pv.pvTextDim,
         labelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
         unselectedLabelStyle: const TextStyle(fontSize: 14, fontWeight: FontWeight.w500),
         dividerColor: Colors.transparent,
@@ -145,18 +142,19 @@ class _EmptyState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    final pv = context.adaptive;
+    return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(Icons.search_off, size: 64, color: AppColors.parvozTextDim),
-          SizedBox(height: 16),
+          Icon(Icons.search_off, size: 64, color: pv.pvTextDim),
+          const SizedBox(height: 16),
           Text(
             'Hech narsa topilmadi',
             style: TextStyle(
               fontSize: 18,
               fontWeight: FontWeight.bold,
-              color: AppColors.parvozText,
+              color: pv.pvText,
             ),
           ),
         ],

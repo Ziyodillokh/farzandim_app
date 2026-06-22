@@ -18,7 +18,6 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
@@ -28,6 +27,7 @@ import 'package:farzandim_child/features/books/presentation/widgets/book_section
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -54,35 +54,32 @@ class _ContentHubScreenState extends ConsumerState<ContentHubScreen>
 
   @override
   Widget build(BuildContext context) {
-    // NIGHT majburiy: butun subtree dark theme.
-    return Theme(
-      data: AppTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: AppColors.parvozBg,
-        extendBody: true,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              const _ParvozHeader(),
-              const SizedBox(height: 16),
-              _ParvozSegment(controller: _tab),
-              const SizedBox(height: 20),
-              Expanded(
-                child: TabBarView(
-                  controller: _tab,
-                  physics: const BouncingScrollPhysics(),
-                  children: const [
-                    _VideosTab(),
-                    _AudiobooksTab(),
-                  ],
-                ),
+    // Kun/tunga moslashadi (ilovaning themeMode'ini meros oladi).
+    return Scaffold(
+      backgroundColor: context.adaptive.pvBg,
+      extendBody: true,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            const _ParvozHeader(),
+            const SizedBox(height: 16),
+            _ParvozSegment(controller: _tab),
+            const SizedBox(height: 20),
+            Expanded(
+              child: TabBarView(
+                controller: _tab,
+                physics: const BouncingScrollPhysics(),
+                children: const [
+                  _VideosTab(),
+                  _AudiobooksTab(),
+                ],
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        bottomNavigationBar: const ChildBottomNavigation(),
       ),
+      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 }
@@ -93,17 +90,18 @@ class _ParvozHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return Container(
       padding: const EdgeInsets.fromLTRB(20, 8, 20, 14),
-      decoration: const BoxDecoration(
-        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: pv.pvBorder)),
       ),
       child: Row(
         children: [
-          const Text(
+          Text(
             'Parvoz',
             style: TextStyle(
-              color: AppColors.parvozGreen,
+              color: pv.pvGreen,
               fontSize: 24,
               fontWeight: FontWeight.bold,
               letterSpacing: -0.5,
@@ -133,16 +131,17 @@ class _ParvozIconButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: onTap,
       child: Container(
         width: 40,
         height: 40,
-        decoration: const BoxDecoration(
-          color: AppColors.parvozSurface,
+        decoration: BoxDecoration(
+          color: pv.pvSurface,
           shape: BoxShape.circle,
         ),
-        child: Icon(icon, color: AppColors.parvozText, size: 22),
+        child: Icon(icon, color: pv.pvText, size: 22),
       ),
     );
   }
@@ -156,12 +155,13 @@ class _ParvozSegment extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Container(
         padding: const EdgeInsets.all(6),
         decoration: BoxDecoration(
-          color: AppColors.parvozSurface,
+          color: pv.pvSurface,
           borderRadius: BorderRadius.circular(14),
         ),
         child: AnimatedBuilder(
@@ -170,8 +170,8 @@ class _ParvozSegment extends StatelessWidget {
             final idx = controller.index;
             return Row(
               children: [
-                _seg('Videolar', 0, idx),
-                _seg('Audio kitoblar', 1, idx),
+                _seg('Videolar', 0, idx, pv),
+                _seg('Audio kitoblar', 1, idx, pv),
               ],
             );
           },
@@ -180,7 +180,7 @@ class _ParvozSegment extends StatelessWidget {
     );
   }
 
-  Widget _seg(String label, int i, int active) {
+  Widget _seg(String label, int i, int active, AdaptivePalette pv) {
     final selected = i == active;
     return Expanded(
       child: GestureDetector(
@@ -191,13 +191,13 @@ class _ParvozSegment extends StatelessWidget {
           padding: const EdgeInsets.symmetric(vertical: 11),
           alignment: Alignment.center,
           decoration: BoxDecoration(
-            color: selected ? AppColors.parvozGreen : Colors.transparent,
+            color: selected ? pv.pvGreen : Colors.transparent,
             borderRadius: BorderRadius.circular(9),
           ),
           child: Text(
             label,
             style: TextStyle(
-              color: selected ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+              color: selected ? pv.pvOnGreen : pv.pvTextDim,
               fontSize: 14,
               fontWeight: selected ? FontWeight.bold : FontWeight.w600,
             ),
@@ -251,12 +251,13 @@ class _VideosTab extends ConsumerWidget {
           _ParvozChips(categories: categories),
           const SizedBox(height: 28),
           if (filtered.isEmpty)
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 20, vertical: 40),
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Center(
                 child: Text(
                   "Bu kategoriyada video yo'q",
-                  style: TextStyle(color: AppColors.parvozTextDim, fontSize: 14),
+                  style: TextStyle(
+                      color: context.adaptive.pvTextDim, fontSize: 14),
                 ),
               ),
             ),
@@ -295,6 +296,7 @@ class _ParvozChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pv = context.adaptive;
     final selected = ref.watch(_parvozCategoryProvider);
     final items = <String?>[null, ...categories]; // null = Barchasi
 
@@ -316,17 +318,16 @@ class _ParvozChips extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                color: isSel ? pv.pvGreen : pv.pvSurface,
                 borderRadius: BorderRadius.circular(12),
                 border: isSel
                     ? null
-                    : Border.all(color: AppColors.parvozBorder, width: 1),
+                    : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
                 cat ?? 'Barchasi',
                 style: TextStyle(
-                  color:
-                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  color: isSel ? pv.pvOnGreen : pv.pvTextDim,
                   fontSize: 14,
                   fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
                 ),
@@ -351,8 +352,8 @@ class _ParvozSectionTitle extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Text(
         text,
-        style: const TextStyle(
-          color: AppColors.parvozText,
+        style: TextStyle(
+          color: context.adaptive.pvText,
           fontSize: 20,
           fontWeight: FontWeight.bold,
           letterSpacing: -0.3,
@@ -370,10 +371,11 @@ class _ParvozHeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
-        decoration: _glassDeco(radius: 16),
+        decoration: parvozGlass(radius: 16, dark: pv.isDark),
         clipBehavior: Clip.antiAlias,
         child: SizedBox(
           height: 280,
@@ -381,17 +383,19 @@ class _ParvozHeroCard extends StatelessWidget {
             fit: StackFit.expand,
             children: [
               _NetImage(url: video.thumbnailUrl, fallback: video.thumbnailColor),
-              DecoratedBox(
+              // Rasm ustidagi skrim — matn o'qilishi uchun har doim to'q
+              // (rasm — media, tegilmaydi).
+              const DecoratedBox(
                 decoration: BoxDecoration(
                   gradient: LinearGradient(
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      AppColors.parvozBg,
-                      AppColors.parvozBg.withValues(alpha: 0.7),
+                      Color(0xFF0B1C30),
+                      Color(0xB30B1C30),
                       Colors.transparent,
                     ],
-                    stops: const [0.0, 0.45, 1.0],
+                    stops: [0.0, 0.45, 1.0],
                   ),
                 ),
               ),
@@ -403,7 +407,7 @@ class _ParvozHeroCard extends StatelessWidget {
                   padding:
                       const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.parvozBadge,
+                    color: pv.pvBadge,
                     borderRadius: BorderRadius.circular(8),
                     boxShadow: [
                       BoxShadow(
@@ -460,31 +464,30 @@ class _ParvozHeroCard extends StatelessWidget {
                       const SizedBox(height: 20),
                       DecoratedBox(
                         decoration: BoxDecoration(
-                          color: AppColors.parvozGreen,
+                          color: pv.pvGreen,
                           borderRadius: BorderRadius.circular(12),
                           boxShadow: [
                             BoxShadow(
-                              color: AppColors.parvozGreen
-                                  .withValues(alpha: 0.3),
+                              color: pv.pvGreen.withValues(alpha: 0.3),
                               blurRadius: 20,
                             ),
                           ],
                         ),
-                        child: const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 14),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 14),
                           child: Row(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Icon(
                                 Icons.play_circle_fill_rounded,
-                                color: AppColors.parvozOnGreen,
+                                color: pv.pvOnGreen,
                                 size: 22,
                               ),
-                              SizedBox(width: 8),
+                              const SizedBox(width: 8),
                               Text(
                                 'Boshlash',
                                 style: TextStyle(
-                                  color: AppColors.parvozOnGreen,
+                                  color: pv.pvOnGreen,
                                   fontSize: 16,
                                   fontWeight: FontWeight.bold,
                                 ),
@@ -514,6 +517,7 @@ class _ParvozSectionHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
@@ -524,8 +528,8 @@ class _ParvozSectionHeader extends StatelessWidget {
               title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.parvozText,
+              style: TextStyle(
+                color: pv.pvText,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
                 letterSpacing: -0.3,
@@ -539,27 +543,27 @@ class _ParvozSectionHeader extends StatelessWidget {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(14, 7, 10, 7),
                 decoration: BoxDecoration(
-                  color: AppColors.parvozGreen.withValues(alpha: 0.12),
+                  color: pv.pvGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
-                    color: AppColors.parvozGreen.withValues(alpha: 0.25),
+                    color: pv.pvGreen.withValues(alpha: 0.25),
                   ),
                 ),
-                child: const Row(
+                child: Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
                       'Barchasi',
                       style: TextStyle(
-                        color: AppColors.parvozGreen,
+                        color: pv.pvGreen,
                         fontSize: 13,
                         fontWeight: FontWeight.bold,
                       ),
                     ),
-                    SizedBox(width: 2),
+                    const SizedBox(width: 2),
                     Icon(
                       Icons.chevron_right_rounded,
-                      color: AppColors.parvozGreen,
+                      color: pv.pvGreen,
                       size: 18,
                     ),
                   ],
@@ -603,10 +607,11 @@ class _ParvozGridCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
-        decoration: _glassDeco(radius: 16),
+        decoration: parvozGlass(radius: 16, dark: pv.isDark),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -640,8 +645,8 @@ class _ParvozGridCard extends StatelessWidget {
                       video.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozText,
+                      style: TextStyle(
+                        color: pv.pvText,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
@@ -652,8 +657,8 @@ class _ParvozGridCard extends StatelessWidget {
                       video.category,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozTextDim,
+                      style: TextStyle(
+                        color: pv.pvTextDim,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -697,12 +702,13 @@ class _ParvozWideCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: () => context.push('/video-player', extra: video),
       child: Container(
         width: 280,
         padding: const EdgeInsets.all(12),
-        decoration: _glassDeco(radius: 16),
+        decoration: parvozGlass(radius: 16, dark: pv.isDark),
         child: Row(
           children: [
             ClipRRect(
@@ -726,8 +732,8 @@ class _ParvozWideCard extends StatelessWidget {
                     video.title,
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.parvozText,
+                    style: TextStyle(
+                      color: pv.pvText,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                       height: 1.2,
@@ -738,8 +744,8 @@ class _ParvozWideCard extends StatelessWidget {
                     video.category,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.parvozTextDim,
+                    style: TextStyle(
+                      color: pv.pvTextDim,
                       fontSize: 12,
                       fontWeight: FontWeight.w500,
                     ),
@@ -747,16 +753,16 @@ class _ParvozWideCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   Row(
                     children: [
-                      const Icon(
+                      Icon(
                         Icons.visibility_outlined,
                         size: 16,
-                        color: AppColors.parvozGreen,
+                        color: pv.pvGreen,
                       ),
                       const SizedBox(width: 6),
                       Text(
                         '${_formatViews(video.views)} ko\'rilgan',
-                        style: const TextStyle(
-                          color: AppColors.parvozGreen,
+                        style: TextStyle(
+                          color: pv.pvGreen,
                           fontSize: 11,
                           fontWeight: FontWeight.bold,
                           letterSpacing: 0.3,
@@ -829,16 +835,17 @@ class _ParvozEmpty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pv = context.adaptive;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Icon(icon, size: 64, color: AppColors.parvozTextDim),
+          Icon(icon, size: 64, color: pv.pvTextDim),
           const SizedBox(height: 16),
           Text(
             text,
-            style: const TextStyle(
-              color: AppColors.parvozTextDim,
+            style: TextStyle(
+              color: pv.pvTextDim,
               fontSize: 16,
             ),
           ),
@@ -847,27 +854,6 @@ class _ParvozEmpty extends StatelessWidget {
     );
   }
 }
-
-// Shishali (glass) karta dekoratsiyasi — translucent gradient + yorqin rim +
-// yumshoq soya. Navy fon ustidan yaqqol ajralib turadi (per-card blur YO'Q —
-// uzun ro'yxat/grid'da silliq 60fps).
-BoxDecoration _glassDeco({double radius = 16}) => BoxDecoration(
-  borderRadius: BorderRadius.circular(radius),
-  gradient: const LinearGradient(
-    begin: Alignment.topLeft,
-    end: Alignment.bottomRight,
-    colors: [AppColors.parvozGlassTop, AppColors.parvozGlassBottom],
-  ),
-  border: Border.all(color: AppColors.parvozGlassRim, width: 1),
-  boxShadow: const [
-    BoxShadow(
-      color: Color(0x59000000),
-      blurRadius: 22,
-      offset: Offset(0, 10),
-      spreadRadius: -2,
-    ),
-  ],
-);
 
 String _formatViews(int v) {
   if (v >= 1000) {
@@ -1003,6 +989,7 @@ class _ParvozAudioChips extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pv = context.adaptive;
     final selected = ref.watch(audiobookCategoryFilterProvider);
     final items = <String?>[null, ...categories];
 
@@ -1024,17 +1011,16 @@ class _ParvozAudioChips extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20),
               alignment: Alignment.center,
               decoration: BoxDecoration(
-                color: isSel ? AppColors.parvozGreen : AppColors.parvozSurface,
+                color: isSel ? pv.pvGreen : pv.pvSurface,
                 borderRadius: BorderRadius.circular(12),
                 border: isSel
                     ? null
-                    : Border.all(color: AppColors.parvozBorder, width: 1),
+                    : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
                 cat ?? 'Barchasi',
                 style: TextStyle(
-                  color:
-                      isSel ? AppColors.parvozOnGreen : AppColors.parvozTextDim,
+                  color: isSel ? pv.pvOnGreen : pv.pvTextDim,
                   fontSize: 14,
                   fontWeight: isSel ? FontWeight.bold : FontWeight.w600,
                 ),
@@ -1055,8 +1041,9 @@ class _ParvozAudioHero extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pv = context.adaptive;
     return Container(
-      decoration: _glassDeco(radius: 20),
+      decoration: parvozGlass(radius: 20, dark: pv.isDark),
       clipBehavior: Clip.antiAlias,
       child: Padding(
         padding: const EdgeInsets.all(16),
@@ -1072,16 +1059,17 @@ class _ParvozAudioHero extends ConsumerWidget {
                   fit: StackFit.expand,
                   children: [
                     _NetImage(url: book.coverUrl, fallback: book.coverColor),
-                    DecoratedBox(
+                    // Cover ustidagi skrim — pill o'qilishi uchun to'q (media).
+                    const DecoratedBox(
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
                           colors: [
-                            AppColors.parvozBg.withValues(alpha: 0.85),
+                            Color(0xD90B1C30),
                             Colors.transparent,
                           ],
-                          stops: const [0.0, 0.6],
+                          stops: [0.0, 0.6],
                         ),
                       ),
                     ),
@@ -1100,8 +1088,8 @@ class _ParvozAudioHero extends ConsumerWidget {
               book.title,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.parvozText,
+              style: TextStyle(
+                color: pv.pvText,
                 fontSize: 20,
                 fontWeight: FontWeight.bold,
               ),
@@ -1113,8 +1101,8 @@ class _ParvozAudioHero extends ConsumerWidget {
                   : '${book.author} • ${book.category}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: const TextStyle(
-                color: AppColors.parvozTextDim,
+              style: TextStyle(
+                color: pv.pvTextDim,
                 fontSize: 14,
               ),
             ),
@@ -1127,32 +1115,31 @@ class _ParvozAudioHero extends ConsumerWidget {
                         ref.read(audioPlayerProvider.notifier).play(book),
                     child: DecoratedBox(
                       decoration: BoxDecoration(
-                        color: AppColors.parvozGreen,
+                        color: pv.pvGreen,
                         borderRadius: BorderRadius.circular(12),
                         boxShadow: [
                           BoxShadow(
-                            color:
-                                AppColors.parvozGreen.withValues(alpha: 0.3),
+                            color: pv.pvGreen.withValues(alpha: 0.3),
                             blurRadius: 15,
                             offset: const Offset(0, 4),
                           ),
                         ],
                       ),
-                      child: const Padding(
-                        padding: EdgeInsets.symmetric(vertical: 13),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 13),
                         child: Row(
                           mainAxisAlignment: MainAxisAlignment.center,
                           children: [
                             Icon(
                               Icons.play_arrow_rounded,
-                              color: AppColors.parvozOnGreen,
+                              color: pv.pvOnGreen,
                               size: 22,
                             ),
-                            SizedBox(width: 6),
+                            const SizedBox(width: 6),
                             Text(
                               'Eshitish',
                               style: TextStyle(
-                                color: AppColors.parvozOnGreen,
+                                color: pv.pvOnGreen,
                                 fontSize: 16,
                                 fontWeight: FontWeight.bold,
                               ),
@@ -1168,13 +1155,13 @@ class _ParvozAudioHero extends ConsumerWidget {
                   width: 48,
                   height: 48,
                   decoration: BoxDecoration(
-                    color: AppColors.parvozBg,
+                    color: pv.pvBg,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: AppColors.parvozBorder),
+                    border: Border.all(color: pv.pvBorder),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.bookmark_border_rounded,
-                    color: AppColors.parvozText,
+                    color: pv.pvText,
                     size: 22,
                   ),
                 ),
@@ -1249,11 +1236,12 @@ class _ParvozAudioHCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       child: Container(
         width: 150,
-        decoration: _glassDeco(radius: 16),
+        decoration: parvozGlass(radius: 16, dark: pv.isDark),
         clipBehavior: Clip.antiAlias,
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1284,8 +1272,8 @@ class _ParvozAudioHCard extends ConsumerWidget {
                       book.title,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozText,
+                      style: TextStyle(
+                        color: pv.pvText,
                         fontSize: 14,
                         fontWeight: FontWeight.bold,
                         height: 1.2,
@@ -1296,8 +1284,8 @@ class _ParvozAudioHCard extends ConsumerWidget {
                       book.author,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: AppColors.parvozTextDim,
+                      style: TextStyle(
+                        color: pv.pvTextDim,
                         fontSize: 12,
                         fontWeight: FontWeight.w500,
                       ),
@@ -1322,11 +1310,12 @@ class _ParvozAudioRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final pv = context.adaptive;
     return GestureDetector(
       onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       child: Container(
         padding: const EdgeInsets.all(12),
-        decoration: _glassDeco(radius: 16),
+        decoration: parvozGlass(radius: 16, dark: pv.isDark),
         child: Row(
           children: [
             SizedBox(
@@ -1335,7 +1324,7 @@ class _ParvozAudioRow extends ConsumerWidget {
                 '$rank',
                 textAlign: TextAlign.center,
                 style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.25),
+                  color: pv.pvText.withValues(alpha: 0.25),
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
@@ -1360,8 +1349,8 @@ class _ParvozAudioRow extends ConsumerWidget {
                     book.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: const TextStyle(
-                      color: AppColors.parvozText,
+                    style: TextStyle(
+                      color: pv.pvText,
                       fontSize: 14,
                       fontWeight: FontWeight.bold,
                     ),
@@ -1369,13 +1358,13 @@ class _ParvozAudioRow extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      const Icon(Icons.headphones_rounded,
-                          size: 14, color: AppColors.parvozTextDim),
+                      Icon(Icons.headphones_rounded,
+                          size: 14, color: pv.pvTextDim),
                       const SizedBox(width: 5),
                       Text(
                         '${_formatViews(book.listenCount)} marta eshitildi',
-                        style: const TextStyle(
-                          color: AppColors.parvozTextDim,
+                        style: TextStyle(
+                          color: pv.pvTextDim,
                           fontSize: 12,
                         ),
                       ),
@@ -1390,11 +1379,11 @@ class _ParvozAudioRow extends ConsumerWidget {
               height: 40,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                border: Border.all(color: AppColors.parvozBorderStrong),
+                border: Border.all(color: pv.pvBorderStrong),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.play_arrow_rounded,
-                color: AppColors.parvozGreen,
+                color: pv.pvGreen,
                 size: 22,
               ),
             ),

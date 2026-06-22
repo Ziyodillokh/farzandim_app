@@ -2,22 +2,18 @@
 // PermissionSetupScreen — Pair'dan keyingi ruxsat yig'ish ekrani
 // ─────────────────────────────────────────────────────────────────────
 //
-// Dizayn talabiga ko'ra 10 ta toggle (mockup'ga 1:1):
-//   1.  SYSTEM_ALERT_WINDOW (overlay)            — Boshqa ilovalar ustida
-//   2.  locationAlways                           — Geolokatsiya
-//   3.  ignoreBatteryOptimizations               — Quvvat optimizatsiya
-//   4.  Microphone                               — Mikrofon (voice msg)
-//   5.  PACKAGE_USAGE_STATS                      — Ilova statistikasi
-//   6.  Background data (OEM, no standart API)   — Orqa fon ma'lumot
-//   7.  POST_NOTIFICATIONS                       — Bildirishnomalar (FCM)
-//   8.  Autostart (Xiaomi/MIUI, OEM)             — Avto-ishga tushirish
-//   9.  Boshqa OEM ruxsatlari (placeholder)
-//   10. Notification Listener access
+// FAQAT 4 ta ENG ZARUR ruxsat (avval 10 ta edi — juda ko'p edi). Qolgan
+// ixtiyoriy ruxsatlar (geolokatsiya, mikrofon, OEM autostart va h.k.)
+// kerak bo'lsa keyin Sozlamalar → Ruxsatlar ekranidan beriladi.
+//   1.  POST_NOTIFICATIONS                       — Bildirishnomalar (FCM)
+//   2.  PACKAGE_USAGE_STATS                      — Ilova nazorati
+//   3.  SYSTEM_ALERT_WINDOW (overlay)            — Bloklash ekranini ko'rsatish
+//   4.  ignoreBatteryOptimizations               — Xizmat tirik qolishi
 //
 // Lifecycle resume → recheck (sistema sozlamalaridan qaytgach).
 // Web preview'da Android API'lar UnimplementedError beradi —
 // har biri try/catch bilan o'ralib mock 'false' qaytaradi.
-// "Keyingisi" tugma'si — hammasi yashil bo'lganida yashil rangda,
+// "Keyingisi" tugma'si — 4 tasi yashil bo'lganida yashil rangda,
 // aks holda kulrang/disabled. Web'da har doim enabled (mock holat).
 
 import 'package:easy_localization/easy_localization.dart';
@@ -43,17 +39,11 @@ class _PermissionSetupScreenState
     with WidgetsBindingObserver {
   final UsageStatsService _usage = UsageStatsService();
 
-  // ─── Toggle holatlari (dizaynga ko'ra 10 ta) ───────────────────────
-  bool _overlay = false; // 1 — SYSTEM_ALERT_WINDOW
-  bool _location = false; // 2 — locationAlways
-  bool _battery = false; // 3 — ignoreBatteryOptimizations
-  bool _mic = false; // 4 — microphone
-  bool _usageStats = false; // 5 — PACKAGE_USAGE_STATS
-  bool _bgData = false; // 6 — unrestricted background data (OEM)
-  bool _notif = false; // 7 — POST_NOTIFICATIONS
-  bool _autostart = false; // 8 — Xiaomi autostart (OEM)
-  bool _otherOem = false; // 9 — boshqa OEM (placeholder)
-  bool _notifListener = false; // 10 — notification listener access
+  // ─── Toggle holatlari (faqat 4 ta eng zarur) ──────────────────────
+  bool _notif = false; // 1 — POST_NOTIFICATIONS
+  bool _usageStats = false; // 2 — PACKAGE_USAGE_STATS (ilova nazorati)
+  bool _overlay = false; // 3 — SYSTEM_ALERT_WINDOW (bloklash ekrani)
+  bool _battery = false; // 4 — ignoreBatteryOptimizations (xizmat tirik)
 
   bool _checking = false;
 
@@ -96,19 +86,15 @@ class _PermissionSetupScreenState
     setState(() => _checking = true);
 
     final overlay = await _safe(_usage.hasOverlayPermission);
-    final loc = await _safeStatus(() => Permission.locationAlways.status);
     final batt =
         await _safeStatus(() => Permission.ignoreBatteryOptimizations.status);
-    final mic = await _safeStatus(() => Permission.microphone.status);
     final usage = await _safe(_usage.hasPermission);
     final notif = await _safeStatus(() => Permission.notification.status);
 
     if (!mounted) return;
     setState(() {
       _overlay = overlay;
-      _location = loc;
       _battery = batt;
-      _mic = mic;
       _usageStats = usage;
       _notif = notif;
       _checking = false;
@@ -142,17 +128,7 @@ class _PermissionSetupScreenState
     await _checkAll();
   }
 
-  bool get _allGranted =>
-      _overlay &&
-      _location &&
-      _battery &&
-      _mic &&
-      _usageStats &&
-      _bgData &&
-      _notif &&
-      _autostart &&
-      _otherOem &&
-      _notifListener;
+  bool get _allGranted => _notif && _usageStats && _overlay && _battery;
 
   void _onNext() {
     // Mobile'da hammasi yoqilmasa tugma disabled — bu yerda safety check.
@@ -175,6 +151,29 @@ class _PermissionSetupScreenState
                 child: ListView(
                   padding: EdgeInsets.zero,
                   children: [
+                    // 1 — Bildirishnoma (FCM)
+                    _PermissionCard(
+                      title: 'permissionSetup.p_notif'.tr(),
+                      value: _notif,
+                      onChanged: (v) => _toggle(
+                        current: _notif,
+                        request: () => Permission.notification.request(),
+                        setMock: (b) => _notif = b,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // 2 — Ilova nazorati (usage stats)
+                    _PermissionCard(
+                      title: 'permissionSetup.p_usage'.tr(),
+                      value: _usageStats,
+                      onChanged: (v) => _toggle(
+                        current: _usageStats,
+                        request: () => _usage.openSettings(),
+                        setMock: (b) => _usageStats = b,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    // 3 — Ilova ustida ko'rsatish (overlay → bloklash ekrani)
                     _PermissionCard(
                       title: 'permissionSetup.p_overlay'.tr(),
                       hint: 'permissionSetup.p_overlayHint'.tr(),
@@ -186,19 +185,7 @@ class _PermissionSetupScreenState
                       ),
                     ),
                     const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_location'.tr(),
-                      value: _location,
-                      onChanged: (v) => _toggle(
-                        current: _location,
-                        request: () async {
-                          await Permission.location.request();
-                          await Permission.locationAlways.request();
-                        },
-                        setMock: (b) => _location = b,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
+                    // 4 — Quvvat optimizatsiyasi (xizmat tirik qolishi)
                     _PermissionCard(
                       title: 'permissionSetup.p_battery'.tr(),
                       value: _battery,
@@ -208,65 +195,6 @@ class _PermissionSetupScreenState
                             Permission.ignoreBatteryOptimizations.request(),
                         setMock: (b) => _battery = b,
                       ),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_mic'.tr(),
-                      value: _mic,
-                      onChanged: (v) => _toggle(
-                        current: _mic,
-                        request: () => Permission.microphone.request(),
-                        setMock: (b) => _mic = b,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_usage'.tr(),
-                      value: _usageStats,
-                      onChanged: (v) => _toggle(
-                        current: _usageStats,
-                        request: () => _usage.openSettings(),
-                        setMock: (b) => _usageStats = b,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_backgroundData'.tr(),
-                      value: _bgData,
-                      // Background data API standartda yo'q — manual toggle.
-                      onChanged: (v) => setState(() => _bgData = !_bgData),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_notif'.tr(),
-                      value: _notif,
-                      onChanged: (v) => _toggle(
-                        current: _notif,
-                        request: () => Permission.notification.request(),
-                        setMock: (b) => _notif = b,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_autostart'.tr(),
-                      value: _autostart,
-                      // Autostart — OEM-specific (Xiaomi/MIUI), standart API yo'q.
-                      onChanged: (v) =>
-                          setState(() => _autostart = !_autostart),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_other'.tr(),
-                      value: _otherOem,
-                      onChanged: (v) =>
-                          setState(() => _otherOem = !_otherOem),
-                    ),
-                    const SizedBox(height: 12),
-                    _PermissionCard(
-                      title: 'permissionSetup.p_notifListener'.tr(),
-                      value: _notifListener,
-                      onChanged: (v) =>
-                          setState(() => _notifListener = !_notifListener),
                     ),
                     const SizedBox(height: 16),
                   ],

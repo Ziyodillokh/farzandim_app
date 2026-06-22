@@ -266,4 +266,26 @@ class AdaptivePalette {
   Color get border => isDark ? AppColors.borderDark : AppColors.border;
   Color get divider => isDark ? AppColors.dividerDark : AppColors.divider;
   Color get surface => bgCard; // legacy alias
+
+  // ─── Parvoz NIGHT/DAY moslashuvchi tokenlar ───────────────────────────
+  // Tun = parvoz* (navy + aqua). Kun = yorug' variant (dashboard _P palitra).
+  // "Majburan-qora" ekranlar shulardan foydalanib kun/tunga moslashadi
+  // (oldin AppColors.parvoz* qattiq qora ishlatardi).
+  Color get pvBg => isDark ? AppColors.parvozBg : const Color(0xFFF8F9FF);
+  Color get pvSurface => isDark ? AppColors.parvozSurface : Colors.white;
+  Color get pvSurfaceHigh =>
+      isDark ? AppColors.parvozSurfaceHigh : const Color(0xFFE5EEFF);
+  Color get pvCard =>
+      isDark ? const Color(0xFF213145) : const Color(0xFFE5EEFF);
+  Color get pvGreen => isDark ? AppColors.parvozGreen : const Color(0xFF0E7490);
+  Color get pvOnGreen => isDark ? AppColors.parvozOnGreen : Colors.white;
+  Color get pvText => isDark ? AppColors.parvozText : const Color(0xFF0B1C30);
+  Color get pvTextDim =>
+      isDark ? AppColors.parvozTextDim : const Color(0xFF5A6B66);
+  Color get pvBorder =>
+      isDark ? AppColors.parvozBorder : const Color(0xFFD3E4FE);
+  Color get pvBorderStrong =>
+      isDark ? AppColors.parvozBorderStrong : const Color(0xFFC2D6F5);
+  Color get pvBlue => AppColors.parvozBlue;
+  Color get pvBadge => AppColors.parvozBadge;
 }

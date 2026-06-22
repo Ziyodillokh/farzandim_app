@@ -8,7 +8,6 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_theme.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/dashboard_top_header.dart';
 import 'package:farzandim_child/features/videos/data/models/filter_state.dart';
@@ -33,77 +32,76 @@ class VideosFeedScreen extends ConsumerWidget {
     final recommended = ref.watch(recommendedVideosProvider);
     final filtered = ref.watch(filteredVideosProvider);
 
-    return Theme(
-      data: AppTheme.darkTheme,
-      child: Scaffold(
-        backgroundColor: AppColors.parvozBg,
-        extendBody: true,
-        body: SafeArea(
-          bottom: false,
-          child: Column(
-            children: [
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: DashboardTopHeader(
-                  onAvatarTap: () => context.push('/account-edit'),
-                ),
+    final pv = context.adaptive;
+
+    return Scaffold(
+      backgroundColor: pv.pvBg,
+      extendBody: true,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: DashboardTopHeader(
+                onAvatarTap: () => context.push('/account-edit'),
               ),
-              const VideosSearchBar(),
-              const VideoTabs(),
-              const SizedBox(height: 16),
-              Expanded(
-                // Pastga torting → yangilash. Admin yangi video (jumladan
-                // YouTube havola) qo'shgach, bola ro'yxatni shu yerda darhol
-                // yangilaydi (5 daqiqalik keshni e'tiborsiz, fresh fetch).
-                child: RefreshIndicator(
-                  onRefresh: () async {
-                    ref.invalidate(backendVideosProvider);
-                    await ref.read(backendVideosProvider.future);
-                  },
-                  child: filtered.isEmpty
-                      ? ListView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          children: [
-                            SizedBox(
-                              height: MediaQuery.sizeOf(context).height * 0.18,
-                            ),
-                            _EmptyState(onClear: () => _clearAll(ref)),
-                          ],
-                        )
-                      : SingleChildScrollView(
-                          physics: const AlwaysScrollableScrollPhysics(),
-                          padding: const EdgeInsets.only(bottom: 140),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              if (heroVideo != null) ...[
-                                HeroVideoCard(video: heroVideo),
-                                const SizedBox(height: 24),
-                              ],
-                              if (topVideos.isNotEmpty) ...[
-                                VideoSection(
-                                  title: 'videos.feed.topVideos'.tr(),
-                                  videos: topVideos,
-                                  onViewAll: () {},
-                                ),
-                                const SizedBox(height: 24),
-                              ],
-                              if (recommended.isNotEmpty)
-                                VideoSection(
-                                  title: 'videos.feed.recommended'.tr(),
-                                  videos: recommended,
-                                  onViewAll: () {},
-                                ),
-                            ],
+            ),
+            const VideosSearchBar(),
+            const VideoTabs(),
+            const SizedBox(height: 16),
+            Expanded(
+              // Pastga torting → yangilash. Admin yangi video (jumladan
+              // YouTube havola) qo'shgach, bola ro'yxatni shu yerda darhol
+              // yangilaydi (5 daqiqalik keshni e'tiborsiz, fresh fetch).
+              child: RefreshIndicator(
+                onRefresh: () async {
+                  ref.invalidate(backendVideosProvider);
+                  await ref.read(backendVideosProvider.future);
+                },
+                child: filtered.isEmpty
+                    ? ListView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        children: [
+                          SizedBox(
+                            height: MediaQuery.sizeOf(context).height * 0.18,
                           ),
+                          _EmptyState(onClear: () => _clearAll(ref)),
+                        ],
+                      )
+                    : SingleChildScrollView(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: const EdgeInsets.only(bottom: 140),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            if (heroVideo != null) ...[
+                              HeroVideoCard(video: heroVideo),
+                              const SizedBox(height: 24),
+                            ],
+                            if (topVideos.isNotEmpty) ...[
+                              VideoSection(
+                                title: 'videos.feed.topVideos'.tr(),
+                                videos: topVideos,
+                                onViewAll: () {},
+                              ),
+                              const SizedBox(height: 24),
+                            ],
+                            if (recommended.isNotEmpty)
+                              VideoSection(
+                                title: 'videos.feed.recommended'.tr(),
+                                videos: recommended,
+                                onViewAll: () {},
+                              ),
+                          ],
                         ),
-                ),
+                      ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
-        bottomNavigationBar: const ChildBottomNavigation(),
       ),
+      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
 

@@ -137,11 +137,14 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen> wit
   Future<void> _guardPermissions() async {
     if (kIsWeb) return;
     final usageService = UsageStatsService();
-    final locStatus = await Permission.locationAlways.status;
+    // FAQAT eng zarur 3 ta (permission_setup_screen bilan mos): ilova nazorati,
+    // bloklash overlay'i, quvvat optimizatsiyasi. Geolokatsiya/mikrofon endi
+    // majburiy emas — ixtiyoriy, keyin Sozlamalar → Ruxsatlardan beriladi.
     final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     final usageGranted = await usageService.hasPermission();
     final overlayGranted = await usageService.hasOverlayPermission();
-    final allGranted = locStatus.isGranted && batteryStatus.isGranted && usageGranted && overlayGranted;
+    final allGranted =
+        batteryStatus.isGranted && usageGranted && overlayGranted;
     if (!allGranted && mounted) context.go('/permission-setup');
   }
 
