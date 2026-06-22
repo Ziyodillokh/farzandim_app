@@ -11,6 +11,7 @@ import 'package:farzandim/features/app_update/presentation/providers/app_update_
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
+import 'package:farzandim/features/notifications/presentation/widgets/notification_permission_primer.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
 import 'package:flutter/gestures.dart';
@@ -65,7 +66,23 @@ class FarzandimApp extends ConsumerWidget {
     ref
       ..listen<BackendAuthState>(backendAuthProvider, (previous, next) {
         if (next is AuthAuthenticated && previous is! AuthAuthenticated) {
-          ref.read(fcmServiceProvider).reRegisterToken();
+          // Login muvaffaqiyatli — avval bildirishnoma "primer"i (rationale)
+          // ko'rsatiladi, so'ng OS ruxsati so'raladi va FCM token saqlanadi.
+          // Navigator konteksti tayyor bo'lishi uchun post-frame'da chaqiramiz.
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            final navContext = ref
+                .read(routerProvider)
+                .routerDelegate
+                .navigatorKey
+                .currentContext;
+            if (navContext != null && navContext.mounted) {
+              NotificationPermissionPrimer.ensure(navContext, ref);
+            } else {
+              // Kontekst topilmasa (kamdan-kam) — token'ni baribir
+              // registratsiya qilamiz (eski fallback xulqi).
+              ref.read(fcmServiceProvider).reRegisterToken();
+            }
+          });
         }
       })
       // SOS WS event'i — eng yuqori prioritet, qizil banner.

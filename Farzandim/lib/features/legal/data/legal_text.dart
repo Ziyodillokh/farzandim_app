@@ -117,7 +117,7 @@ abstract final class LegalText {
       'Ma\'lumotlar quyidagi muddatlarda saqlanadi:\n\n'
           '   • Faol akkaunt: akkount o\'chirilmaguncha\n'
           '   • Akkaunt o\'chirilgach: 30 kun ichida butunlay '
-          'o\'chiriladi (Sprint 2.2 deleteAccount Cloud Function)\n'
+          'o\'chiriladi (server tomonida atomik ravishda)\n'
           '   • Backup tasvirlar: Firebase 90 kun davomida saqlaydi\n'
           '   • Tizim loglari: maksimum 1 yil (xavfsizlik va xato '
           'tahlili uchun)\n'

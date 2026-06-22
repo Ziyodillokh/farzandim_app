@@ -28,6 +28,7 @@ import 'dart:io';
 
 import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/services/permission_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
@@ -77,6 +78,9 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
   CameraController? _controller;
   bool _initializing = true;
   String? _initError;
+  // Ruxsat doimiy rad etilganda — error UI'da "Sozlamalarni ochish" tugmasi
+  // ko'rsatiladi (faqat snackbar emas, foydalanuvchi tuzoqda qolmasin).
+  bool _permanentlyDenied = false;
 
   bool _isRecording = false;
   bool _isLocked = false;
@@ -97,23 +101,28 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
 
   Future<void> _initCamera() async {
     try {
-      final status = await Permission.camera.request();
-      if (!status.isGranted) {
-        if (!mounted) return;
-        setState(() {
-          _initializing = false;
-          _initError = 'voiceChat.cameraPermissionSnack'.tr();
-        });
+      // Kamera va mikrofon ruxsatlari AYNAN shu yerda — video yozuvchi
+      // ochilganda so'raladi (just-in-time). Doimiy rad bo'lsa error UI
+      // "Sozlamalarni ochish" tugmasini ko'rsatadi.
+      const service = PermissionService();
+
+      final camOutcome = await service.request(Permission.camera);
+      if (camOutcome != PermissionOutcome.granted) {
+        _setPermissionError(
+          message: 'voiceChat.cameraPermissionSnack'.tr(),
+          permanentlyDenied:
+              camOutcome == PermissionOutcome.permanentlyDenied,
+        );
         return;
       }
       // Mikrofon ham — video yozuvga kerak.
-      final micStatus = await Permission.microphone.request();
-      if (!micStatus.isGranted) {
-        if (!mounted) return;
-        setState(() {
-          _initializing = false;
-          _initError = 'voiceChat.micPermissionSnack'.tr();
-        });
+      final micOutcome = await service.request(Permission.microphone);
+      if (micOutcome != PermissionOutcome.granted) {
+        _setPermissionError(
+          message: 'voiceChat.micPermissionSnack'.tr(),
+          permanentlyDenied:
+              micOutcome == PermissionOutcome.permanentlyDenied,
+        );
         return;
       }
 
@@ -157,6 +166,19 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
     }
   }
 
+  /// Ruxsat rad etilganda error holatini o'rnatadi.
+  void _setPermissionError({
+    required String message,
+    required bool permanentlyDenied,
+  }) {
+    if (!mounted) return;
+    setState(() {
+      _initializing = false;
+      _initError = message;
+      _permanentlyDenied = permanentlyDenied;
+    });
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     // App background'ga ketsa kamera resursni bo'shatamiz.
@@ -178,10 +200,12 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
     if (c != null) {
       // Recording aktiv bo'lsa stop (file ignore).
       if (_isRecording) {
-        unawaited(c.stopVideoRecording().catchError((_) {
-          // Stop xatosi — controllerni baribir dispose qilamiz.
-          return XFile('');
-        }));
+        unawaited(
+          c.stopVideoRecording().catchError((_) {
+            // Stop xatosi — controllerni baribir dispose qilamiz.
+            return XFile('');
+          }),
+        );
       }
       unawaited(c.dispose());
     }
@@ -319,11 +343,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 top: 16,
                 left: 16,
                 child: IconButton(
-                  icon: const Icon(
-                    Icons.close,
-                    color: Colors.white,
-                    size: 28,
-                  ),
+                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -400,6 +420,16 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
             style: const TextStyle(color: Colors.white, fontSize: 14),
           ),
           const SizedBox(height: 24),
+          // Doimiy rad etilgan bo'lsa — to'g'ridan-to'g'ri ilova sozlamalariga
+          // o'tkazamiz (snackbar bilan tuzoqda qoldirmaymiz).
+          if (_permanentlyDenied)
+            TextButton(
+              onPressed: openAppSettings,
+              child: Text(
+                'permissions.openSettings'.tr(),
+                style: TextStyle(color: AppColors.primary, fontSize: 14),
+              ),
+            ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
@@ -414,8 +444,10 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
 
   Widget _buildPreviewWithControls() {
     final progress =
-        (_elapsed.inMilliseconds / _maxRecordingDuration.inMilliseconds)
-            .clamp(0.0, 1.0);
+        (_elapsed.inMilliseconds / _maxRecordingDuration.inMilliseconds).clamp(
+          0.0,
+          1.0,
+        );
     final c = _controller!;
 
     return Column(
@@ -495,10 +527,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
             ],
           ),
         ),
-        if (!_isLocked) ...[
-          const SizedBox(height: 36),
-          _buildRecordButton(),
-        ],
+        if (!_isLocked) ...[const SizedBox(height: 36), _buildRecordButton()],
       ],
     );
   }
@@ -668,8 +697,7 @@ class _HintChip extends StatelessWidget {
             style: TextStyle(
               color: highlight ? Colors.white : Colors.white70,
               fontSize: 12,
-              fontWeight:
-                  highlight ? FontWeight.w700 : FontWeight.w500,
+              fontWeight: highlight ? FontWeight.w700 : FontWeight.w500,
             ),
           ),
         ],

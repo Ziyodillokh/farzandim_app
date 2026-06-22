@@ -608,6 +608,17 @@
       "7": "Ya"
     }
   },
+  "permissions": {
+    "openSettings": "Sozlamalarni ochish",
+    "micDeniedTitle": "Mikrofonga ruxsat kerak",
+    "micDeniedBody": "Ovozli xabar yozish uchun mikrofon ruxsati kerak. Telefon sozlamalaridan Farzandim uchun mikrofonni yoqing.",
+    "cameraDeniedTitle": "Kameraga ruxsat kerak",
+    "cameraDeniedBody": "Video xabar yozish uchun kamera va mikrofon ruxsati kerak. Telefon sozlamalaridan Farzandim uchun ularni yoqing.",
+    "notifPrimerTitle": "Muhim xabarlardan xabardor bo'ling",
+    "notifPrimerBody": "Farzandingiz SOS yuborsa, geo-zonaga kirsa yoki undan chiqsa va boshqa muhim holatlarda darhol bildirishnoma olasiz.",
+    "notifPrimerAllow": "Ruxsat berish",
+    "notifPrimerLater": "Keyinroq"
+  },
   "voiceChat": {
     "headerSubtitle": "Shaxsiy yozishmalar",
     "fallbackChildName": "Bola",
@@ -686,8 +697,8 @@
   "about": {
     "headerTitle": "Ilova haqida",
     "appName": "Farzandim",
-    "version": "Versiya 1.0.0 (MVP)",
-    "description1": "Farzandim — O'zbekistondagi birinchi oilaviy xavfsizlik ilovasi.",
+    "version": "Versiya 1.0.0",
+    "description1": "Farzandim — O'zbekiston oilalari uchun oilaviy xavfsizlik va ta'lim ilovasi.",
     "description2": "Bizning maqsadimiz — har bir oilada ota-onalar va bolalar o'rtasida xavfsiz va tushunchali aloqa o'rnatish.",
     "termsLink": "Foydalanuvchi shartnomasi",
     "privacyLink": "Maxfiylik siyosati",

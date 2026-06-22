@@ -608,6 +608,17 @@
       "7": "Su"
     }
   },
+  "permissions": {
+    "openSettings": "Open settings",
+    "micDeniedTitle": "Microphone access needed",
+    "micDeniedBody": "Recording a voice message requires microphone access. Enable the microphone for Farzandim in your phone settings.",
+    "cameraDeniedTitle": "Camera access needed",
+    "cameraDeniedBody": "Recording a video message requires camera and microphone access. Enable them for Farzandim in your phone settings.",
+    "notifPrimerTitle": "Stay on top of what matters",
+    "notifPrimerBody": "Get an instant alert when your child sends an SOS, enters or leaves a geo-zone, and in other important moments.",
+    "notifPrimerAllow": "Allow",
+    "notifPrimerLater": "Later"
+  },
   "voiceChat": {
     "headerSubtitle": "Personal chat",
     "fallbackChildName": "Child",
@@ -686,8 +697,8 @@
   "about": {
     "headerTitle": "About",
     "appName": "Farzandim",
-    "version": "Version 1.0.0 (MVP)",
-    "description1": "Farzandim is the first family safety app in Uzbekistan.",
+    "version": "Version 1.0.0",
+    "description1": "Farzandim is a family safety and education app for families in Uzbekistan.",
     "description2": "Our mission is to establish safe and understanding communication between parents and children in every family.",
     "termsLink": "Terms of Service",
     "privacyLink": "Privacy Policy",

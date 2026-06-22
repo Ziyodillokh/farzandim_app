@@ -1,44 +1,39 @@
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <!-- Bola fotosini tanlash uchun ruxsatlar (image_picker paketi). -->
-    <!-- Android 12 va eski: galereyaga umumiy kirish. -->
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
-    <!-- Android 13+: yangi granular media ruxsati (faqat rasmlar). -->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"/>
     <uses-permission android:name="android.permission.READ_MEDIA_IMAGES"/>
-    <!-- Kamera — foydalanuvchi yangi foto olishni xohlasa. -->
     <uses-permission android:name="android.permission.CAMERA"/>
-    <!-- Kamerasiz qurilmalarda ham ilova ishlaydi (sticker'lar bor). -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
+    <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
+    <uses-feature android:name="android.hardware.microphone" android:required="false"/>
 
-    <!-- Internet — Firebase, FCM, Google Maps tile'lari uchun.
-         Location permission'lar Parent App'da YO'Q: ota-ona telefonidan
-         GPS o'qilmaydi, bola joyi Child App'dan Firestore orqali keladi. -->
     <uses-permission android:name="android.permission.INTERNET"/>
 
-    <!-- Bosqich 6.B: FCM push notifications. Android 13+ explicit
-         POST_NOTIFICATIONS permission talab qiladi (eski Android'da
-         avtomatik beriladi). -->
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <!-- Bosqich 10: Ovozli xabar yozish uchun mikrofon ruxsati.
-         `record` paketi `permission_handler` orqali runtime'da so'raydi —
-         shu manifest deklaratsiyasi mavjud bo'lishi shart. -->
     <uses-permission android:name="android.permission.RECORD_AUDIO"/>
+
+    <!-- Plugin-injected permissions hardening. video_compress otherwise merges
+         an uncapped WRITE_EXTERNAL_STORAGE; open_filex merges READ_MEDIA_VIDEO
+         and READ_MEDIA_AUDIO which are not used (chat opens images/documents
+         only). Capping/removing them keeps the final merged manifest minimal. -->
+    <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"
+        android:maxSdkVersion="29"
+        tools:replace="android:maxSdkVersion"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_VIDEO"
+        tools:node="remove"/>
+    <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"
+        tools:node="remove"/>
 
     <application
         android:label="Farzandim"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
-        <!-- Google Maps SDK API kaliti.
-             ${MAPS_API_KEY} build vaqtida `local.properties`'dan
-             `app/build.gradle.kts` orqali in'ektsiya qilinadi.
-             Kalit topilmasa, xarita kulrang ko'rinadi (build muvaffaqiyatli). -->
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="${MAPS_API_KEY}"/>
 
-        <!-- FCM default notification channel (Bosqich 6.B).
-             Android 8.0+ majburiy. Push xabarlar shu channel'ga keladi
-             agar yuboruvchi explicit channel_id bermasa. -->
         <meta-data
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="farzandim_default"/>

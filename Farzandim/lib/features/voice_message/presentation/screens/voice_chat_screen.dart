@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
+import 'package:farzandim/core/services/permission_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
@@ -49,8 +50,7 @@ class VoiceChatScreen extends ConsumerStatefulWidget {
   final String childId;
 
   @override
-  ConsumerState<VoiceChatScreen> createState() =>
-      _VoiceChatScreenState();
+  ConsumerState<VoiceChatScreen> createState() => _VoiceChatScreenState();
 }
 
 class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
@@ -107,8 +107,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ref.invalidate(childrenProvider);
 
       // Bola Backend user ID (childUserId) — list'dan widget.childId bo'yicha.
-      final children =
-          ref.read(childrenProvider).valueOrNull ?? const [];
+      final children = ref.read(childrenProvider).valueOrNull ?? const [];
       String? childUserId;
       for (final c in children) {
         if (c.id == widget.childId) {
@@ -167,11 +166,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   }
 
   void _onInfoPressed() {
-    Navigator.of(context).push(
-      MaterialPageRoute<void>(
-        builder: (_) => const ChatSettingsScreen(),
-      ),
-    );
+    Navigator.of(
+      context,
+    ).push(MaterialPageRoute<void>(builder: (_) => const ChatSettingsScreen()));
   }
 
   // ─── Recording handlers ──────────────────────────────────────────
@@ -179,10 +176,23 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   Future<void> _onLongPressStart() async {
     if (_isRecording) return;
 
-    final micStatus = await Permission.microphone.request();
-    if (!micStatus.isGranted) {
+    // Mikrofon ruxsati AYNAN shu yerda — yozish boshlanishidan oldin
+    // so'raladi (just-in-time). Doimiy rad etilgan bo'lsa, foydalanuvchi
+    // tuzoqda qolmasligi uchun "Sozlamalarni ochish" dialogi ko'rsatiladi.
+    final outcome = await const PermissionService().request(
+      Permission.microphone,
+    );
+    if (outcome != PermissionOutcome.granted) {
       if (!mounted) return;
-      AppToast.info(context, 'voiceChat.micPermissionSnack'.tr());
+      if (outcome == PermissionOutcome.permanentlyDenied) {
+        await showOpenAppSettingsDialog(
+          context,
+          title: 'permissions.micDeniedTitle'.tr(),
+          message: 'permissions.micDeniedBody'.tr(),
+        );
+      } else {
+        AppToast.info(context, 'voiceChat.micPermissionSnack'.tr());
+      }
       return;
     }
 
@@ -212,13 +222,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       });
 
       _elapsedSeconds = 0;
-      _elapsedTimer = Timer.periodic(
-        const Duration(seconds: 1),
-        (_) {
-          if (!mounted) return;
-          setState(() => _elapsedSeconds++);
-        },
-      );
+      _elapsedTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+        if (!mounted) return;
+        setState(() => _elapsedSeconds++);
+      });
 
       if (!mounted) return;
       setState(() => _isRecording = true);
@@ -235,9 +242,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     _amplitudeSub = null;
 
     final elapsed = _recordingStartedAt != null
-        ? DateTime.now()
-            .difference(_recordingStartedAt!)
-            .inMilliseconds
+        ? DateTime.now().difference(_recordingStartedAt!).inMilliseconds
         : 0;
 
     final filePath = await _recorderService.stopRecording();
@@ -278,14 +283,15 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final child = ref.read(childByIdProvider(widget.childId));
     final childName = child?.name ?? 'voiceChat.fallbackChildName'.tr();
 
-    final messageId =
-        await ref.read(voiceUploadProvider.notifier).send(
-              childId: widget.childId,
-              childName: childName,
-              localFilePath: filePath,
-              durationSeconds: durationSeconds,
-              waveform: waveform,
-            );
+    final messageId = await ref
+        .read(voiceUploadProvider.notifier)
+        .send(
+          childId: widget.childId,
+          childName: childName,
+          localFilePath: filePath,
+          durationSeconds: durationSeconds,
+          waveform: waveform,
+        );
 
     if (!mounted) return;
 
@@ -375,10 +381,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     if (!mounted) return;
     ScaffoldMessenger.of(context).hideCurrentSnackBar();
 
-    final ok = await ref.read(videoUploadProvider.notifier).send(
-          childId: widget.childId,
-          videoFile: fileToUpload,
-        );
+    final ok = await ref
+        .read(videoUploadProvider.notifier)
+        .send(childId: widget.childId, videoFile: fileToUpload);
 
     if (!mounted) return;
 
@@ -427,11 +432,13 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   // ─── Media (rasm / hujjat) tanlash + yuborish ────────────────────
   Future<void> _pickGallery() async {
     try {
-      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
-        source: ImageSource.gallery,
-        imageQuality: 85,
-        maxWidth: 1920,
-      );
+      final x = await ref
+          .read(imagePickerServiceProvider)
+          .pickImageFile(
+            source: ImageSource.gallery,
+            imageQuality: 85,
+            maxWidth: 1920,
+          );
       if (x != null) await _sendMediaFile(File(x.path));
     } catch (_) {
       _showError('voiceChat.mediaSendError'.tr());
@@ -440,11 +447,13 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   Future<void> _pickCamera() async {
     try {
-      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
-        source: ImageSource.camera,
-        imageQuality: 85,
-        maxWidth: 1920,
-      );
+      final x = await ref
+          .read(imagePickerServiceProvider)
+          .pickImageFile(
+            source: ImageSource.camera,
+            imageQuality: 85,
+            maxWidth: 1920,
+          );
       if (x != null) await _sendMediaFile(File(x.path));
     } catch (_) {
       _showError('voiceChat.mediaSendError'.tr());
@@ -469,10 +478,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     }
     setState(() => _isMediaUploading = true);
     try {
-      await ref.read(backendVoiceMessageRepositoryProvider).sendMedia(
-            receiverId: receiverId,
-            file: file,
-          );
+      await ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .sendMedia(receiverId: receiverId, file: file);
       ref.invalidate(rawVoiceMessagesProvider);
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
@@ -513,8 +521,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final child = ref.watch(childByIdProvider(widget.childId));
     final childName = child?.name ?? 'voiceChat.fallbackChildName'.tr();
     // Voice + video birlashtirilgan lenta (ASC).
-    final messagesAsync =
-        ref.watch(chatMessagesProvider(widget.childId));
+    final messagesAsync = ref.watch(chatMessagesProvider(widget.childId));
     final historyLoading = ref.watch(
       chatHistoryProvider(widget.childId).select((s) => s.loading),
     );
@@ -552,11 +559,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               _ChatHeader(
                 childName: childName,
                 avatar: child != null
-                    ? ChildAvatar(
-                        child: child,
-                        size: 40,
-                        showBorder: false,
-                      )
+                    ? ChildAvatar(child: child, size: 40, showBorder: false)
                     : const _FallbackAvatar(),
                 onBack: () => context.pop(),
                 onInfo: _onInfoPressed,
@@ -591,28 +594,24 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                         children: [
                           ListView.builder(
                             controller: _scrollController,
-                            physics:
-                                const AlwaysScrollableScrollPhysics(),
-                            padding:
-                                const EdgeInsets.symmetric(vertical: 12),
+                            physics: const AlwaysScrollableScrollPhysics(),
+                            padding: const EdgeInsets.symmetric(vertical: 12),
                             itemCount: messages.length,
                             itemBuilder: (_, i) {
                               final item = messages[i];
                               // Sealed switch — yangi tip qo'shilsa
                               // exhaustive xato beradi.
                               return switch (item) {
-                                VoiceItem(:final message) =>
-                                  VoiceChatBubble(
-                                    key: ValueKey(item.id),
-                                    message: message,
-                                    isOwn: message.sender == 'parent',
-                                  ),
-                                VideoItem(:final message) =>
-                                  RoundVideoBubble(
-                                    key: ValueKey(item.id),
-                                    message: message,
-                                    isOwn: message.sender == 'parent',
-                                  ),
+                                VoiceItem(:final message) => VoiceChatBubble(
+                                  key: ValueKey(item.id),
+                                  message: message,
+                                  isOwn: message.sender == 'parent',
+                                ),
+                                VideoItem(:final message) => RoundVideoBubble(
+                                  key: ValueKey(item.id),
+                                  message: message,
+                                  isOwn: message.sender == 'parent',
+                                ),
                               };
                             },
                           ),
@@ -652,9 +651,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                     child: Padding(
                       padding: const EdgeInsets.all(AppDimensions.lg),
                       child: Text(
-                        'voiceChat.errorPrefix'.tr(
-                          namedArgs: {'error': '$e'},
-                        ),
+                        'voiceChat.errorPrefix'.tr(namedArgs: {'error': '$e'}),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodyS.copyWith(
                           color: AppColors.textSecondary,
@@ -666,9 +663,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               ),
               ChatInputBar(
                 isRecording: _isRecording,
-                isVoiceUploading: ref.watch(voiceUploadProvider).status ==
+                isVoiceUploading:
+                    ref.watch(voiceUploadProvider).status ==
                     UploadStatus.uploading,
-                isVideoUploading: ref.watch(videoUploadProvider).status ==
+                isVideoUploading:
+                    ref.watch(videoUploadProvider).status ==
                     VideoUploadStatus.uploading,
                 isMediaUploading: _isMediaUploading,
                 elapsedSeconds: _elapsedSeconds,
@@ -689,5 +688,4 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ),
     );
   }
-
 }

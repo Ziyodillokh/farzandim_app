@@ -125,6 +125,22 @@ class FcmService {
     }
   }
 
+  /// Ruxsat SO'RAMASDAN FCM token'ni olib Backend'ga registratsiya qiladi.
+  ///
+  /// Bildirishnoma ruxsati allaqachon hal qilingan oqimlar uchun
+  /// (`NotificationPermissionPrimer` rationale + OS dialogini o'zi
+  /// boshqaradi) — bu metod OS dialogini qayta chiqarmaydi.
+  Future<void> registerToken() async {
+    try {
+      final token = await _messaging.getToken();
+      if (token != null) {
+        await saveTokenForCurrentUser(token);
+      }
+    } catch (e) {
+      debugPrint('FCM registerToken xato: $e');
+    }
+  }
+
   /// Diagnostika: o'ziga test push yuborish (Settings tugmasi).
   /// Backend `{ tokens, sent, failed, invalid }` qaytaradi yoki `null`.
   Future<Map<String, dynamic>?> sendTestPush() async {
