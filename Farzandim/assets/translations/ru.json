@@ -76,6 +76,7 @@
       "emailLabel": "Номер телефона или E-mail",
       "emailHint": "Эл. почта или телефон",
       "passwordLabel": "Пароль",
+      "passwordHint": "Введите пароль",
       "forgotPassword": "Забыли пароль?",
       "submitButton": "Войти",
       "signUpButton": "Создать аккаунт"

@@ -76,6 +76,7 @@
       "emailLabel": "Phone number or email",
       "emailHint": "Email or phone number",
       "passwordLabel": "Password",
+      "passwordHint": "Enter your password",
       "forgotPassword": "Forgot password?",
       "submitButton": "Sign in",
       "signUpButton": "Create account"

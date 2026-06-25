@@ -76,6 +76,7 @@
       "emailLabel": "Telefon raqam yoki E-mail",
       "emailHint": "Email yoki telefon raqam",
       "passwordLabel": "Parolingiz",
+      "passwordHint": "Parolingizni kiriting",
       "forgotPassword": "Parolingizni unutdingizmi?",
       "submitButton": "Kirish",
       "signUpButton": "Akkauntga qo'shilish"

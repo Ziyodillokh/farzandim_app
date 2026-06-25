@@ -487,6 +487,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ParvozTextField(
               label: 'auth.signUp.phoneLabel'.tr(),
               controller: _phone,
+              hint: 'auth.signUp.phoneHint'.tr(),
               keyboardType: TextInputType.phone,
               maxLength: 9,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
@@ -515,6 +516,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ParvozTextField(
               label: 'auth.signUp.emailLabel'.tr(),
               controller: _email,
+              hint: 'auth.signUp.emailHint'.tr(),
               keyboardType: TextInputType.emailAddress,
               onChanged: (_) => setState(() {}),
             ),
@@ -748,6 +750,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ParvozTextField(
             label: 'auth.signUp.firstNameLabel'.tr(),
             controller: _firstName,
+            hint: 'auth.signUp.firstNameHint'.tr(),
             keyboardType: TextInputType.name,
             onChanged: (_) => setState(() {}),
           ),
@@ -755,6 +758,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ParvozTextField(
             label: 'auth.signUp.lastNameLabel'.tr(),
             controller: _lastName,
+            hint: 'auth.signUp.lastNameHint'.tr(),
             keyboardType: TextInputType.name,
             onChanged: (_) => setState(() {}),
           ),
@@ -762,6 +766,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ParvozTextField(
             label: 'auth.signUp.passwordLabel'.tr(),
             controller: _password,
+            hint: 'auth.signUp.passwordHint'.tr(),
             obscure: true,
             onChanged: (_) => setState(() {}),
           ),
@@ -769,6 +774,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ParvozTextField(
             label: 'auth.signUp.confirmPasswordLabel'.tr(),
             controller: _confirm,
+            hint: 'auth.signUp.confirmPasswordHint'.tr(),
             obscure: true,
             onChanged: (_) => setState(() {}),
           ),
@@ -899,9 +905,16 @@ class _ParvozOtpState extends State<_ParvozOtp> {
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [for (var i = 0; i < _len; i++) _box(i)],
+    return TextSelectionTheme(
+      data: const TextSelectionThemeData(
+        cursorColor: ParvozColors.blue,
+        selectionHandleColor: ParvozColors.blue,
+        selectionColor: Color(0x5C216BFF),
+      ),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [for (var i = 0; i < _len; i++) _box(i)],
+      ),
     );
   }
 

@@ -399,6 +399,7 @@ class ParvozTextField extends StatefulWidget {
     required this.controller,
     this.obscure = false,
     this.keyboardType,
+    this.hint,
     this.onChanged,
     this.prefix,
     this.inputFormatters,
@@ -410,6 +411,7 @@ class ParvozTextField extends StatefulWidget {
   final TextEditingController controller;
   final bool obscure;
   final TextInputType? keyboardType;
+  final String? hint;
   final ValueChanged<String>? onChanged;
   final Widget? prefix;
   final List<TextInputFormatter>? inputFormatters;
@@ -482,26 +484,40 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                   const SizedBox(width: 10),
                 ],
                 Expanded(
-                  child: TextField(
-                    controller: widget.controller,
-                    focusNode: _focus,
-                    obscureText: obscure,
-                    keyboardType: widget.keyboardType,
-                    inputFormatters: widget.inputFormatters,
-                    maxLength: widget.maxLength,
-                    onChanged: widget.onChanged,
-                    cursorColor: ParvozColors.blue,
-                    style: GoogleFonts.poppins(
-                      fontSize: 15,
-                      color: Colors.white,
+                  // Matn belgilash kursori/tomchilari ko'k (global teal emas).
+                  child: TextSelectionTheme(
+                    data: const TextSelectionThemeData(
+                      cursorColor: ParvozColors.blue,
+                      selectionHandleColor: ParvozColors.blue,
+                      selectionColor: Color(0x5C216BFF),
                     ),
-                    decoration: const InputDecoration(
-                      // Global teal fill'ni o'chiramiz — shisha fon ko'rinsin.
-                      filled: false,
-                      isCollapsed: true,
-                      counterText: '',
-                      border: InputBorder.none,
-                      contentPadding: EdgeInsets.symmetric(vertical: 18),
+                    child: TextField(
+                      controller: widget.controller,
+                      focusNode: _focus,
+                      obscureText: obscure,
+                      keyboardType: widget.keyboardType,
+                      inputFormatters: widget.inputFormatters,
+                      maxLength: widget.maxLength,
+                      onChanged: widget.onChanged,
+                      cursorColor: ParvozColors.blue,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                      decoration: InputDecoration(
+                        // Global teal fill'ni o'chiramiz — shisha ko'rinsin.
+                        filled: false,
+                        isCollapsed: true,
+                        counterText: '',
+                        border: InputBorder.none,
+                        hintText: widget.hint,
+                        hintStyle: GoogleFonts.poppins(
+                          fontSize: 15,
+                          color: Colors.white.withValues(alpha: 0.35),
+                        ),
+                        contentPadding:
+                            const EdgeInsets.symmetric(vertical: 18),
+                      ),
                     ),
                   ),
                 ),

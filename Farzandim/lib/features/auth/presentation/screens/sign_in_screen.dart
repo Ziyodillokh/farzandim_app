@@ -124,6 +124,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ParvozTextField(
                     label: 'auth.signIn.emailLabel'.tr(),
                     controller: _identifier,
+                    hint: 'auth.signIn.emailHint'.tr(),
                     keyboardType: TextInputType.emailAddress,
                     onChanged: (_) => setState(() {}),
                   ),
@@ -133,6 +134,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                   ParvozTextField(
                     label: 'auth.signIn.passwordLabel'.tr(),
                     controller: _password,
+                    hint: 'auth.signIn.passwordHint'.tr(),
                     obscure: true,
                     onChanged: (_) => setState(() {}),
                   ),
