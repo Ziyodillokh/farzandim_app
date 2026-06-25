@@ -279,16 +279,34 @@ jobs:
 
       - name: Upload static builds (nginx beradi)
         run: |
-          sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
-            Farzandim/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent/"
+          set +e   # xatoni qo'lda boshqaramiz (timeout + retry + partial)
+          DEST="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter"
+          # rsync --timeout=60 + --partial + 3 urinish: server vaqtincha javob
+          # bermay qolsa (keep-alive uzilishi / tarmoq sakrashi) bitta urinishda
+          # yiqilmaydi — APK upload qadamidagi bilan bir xil chidamlilik.
+          upload() {
+            src="$1"; dst="$2"
+            for i in 1 2 3; do
+              echo "→ rsync $dst (urinish $i)"
+              sshpass -e rsync -az --delete --partial --timeout=60 \
+                --exclude '*.apk' -e "ssh ${SSH_OPTS}" "$src" "$dst" && return 0
+              echo "::warning::$dst urinish $i muvaffaqiyatsiz — 10s'dan keyin qayta"
+              sleep 10
+            done
+            return 1
+          }
+          FAIL=0
+          upload "Farzandim/build/web/" "${DEST}/parent/" \
+            || { echo "::error::parent web upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
           if [ -f farzandim_child/build/web/index.html ]; then
-            sshpass -e rsync -az --delete --exclude '*.apk' -e "ssh ${SSH_OPTS}" \
-              farzandim_child/build/web/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/child/"
+            upload "farzandim_child/build/web/" "${DEST}/child/" \
+              || { echo "::error::child web upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
           else
             echo "child web build yo'q — o'tkazib yuborildi"
           fi
           sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
+          exit $FAIL
 
   # ─────────────────────────── APK (parent + child → release .apk) ───────────────────────────
   # --no-shrink: R8 minify o'chiq (CI'da R8 "Compilation failed" bermasin). Test uchun yetarli.

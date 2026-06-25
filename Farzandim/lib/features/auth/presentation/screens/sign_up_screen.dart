@@ -490,13 +490,24 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               keyboardType: TextInputType.phone,
               maxLength: 9,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              prefix: Text(
-                '+998',
-                style: GoogleFonts.poppins(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
+              prefix: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    '+998',
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w500,
+                      color: Colors.white,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Container(
+                    width: 1,
+                    height: 22,
+                    color: Colors.white.withValues(alpha: 0.15),
+                  ),
+                ],
               ),
               onChanged: (_) => setState(() {}),
             )
@@ -930,6 +941,7 @@ class _ParvozOtpState extends State<_ParvozOtp> {
                 color: Colors.white,
               ),
               decoration: const InputDecoration(
+                filled: false,
                 counterText: '',
                 border: InputBorder.none,
                 isCollapsed: true,

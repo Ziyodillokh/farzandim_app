@@ -462,8 +462,8 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
               begin: Alignment.topRight,
               end: Alignment.bottomLeft,
               colors: [
-                Colors.white.withValues(alpha: 0.06),
-                Colors.white.withValues(alpha: 0.02),
+                Colors.white.withValues(alpha: 0.08),
+                Colors.white.withValues(alpha: 0.03),
               ],
             ),
             border: Border.all(
@@ -496,6 +496,8 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                       color: Colors.white,
                     ),
                     decoration: const InputDecoration(
+                      // Global teal fill'ni o'chiramiz — shisha fon ko'rinsin.
+                      filled: false,
                       isCollapsed: true,
                       counterText: '',
                       border: InputBorder.none,
