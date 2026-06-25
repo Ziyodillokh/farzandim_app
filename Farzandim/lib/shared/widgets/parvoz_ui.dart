@@ -509,7 +509,14 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                         filled: false,
                         isCollapsed: true,
                         counterText: '',
+                        // Global teal focusedBorder'ni ham o'chiramiz —
+                        // faqat tashqi DecoratedBox rim (ko'k) qoladi.
                         border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
+                        errorBorder: InputBorder.none,
+                        focusedErrorBorder: InputBorder.none,
+                        disabledBorder: InputBorder.none,
                         hintText: widget.hint,
                         hintStyle: GoogleFonts.poppins(
                           fontSize: 15,
