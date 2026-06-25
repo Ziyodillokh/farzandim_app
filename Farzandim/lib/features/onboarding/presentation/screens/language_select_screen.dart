@@ -110,7 +110,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                                 onTap: () => _select(lang),
                               ),
                               if (lang != AppLanguage.values.last)
-                                const SizedBox(height: 8),
+                                const SizedBox(height: 12),
                             ],
                           ],
                         ),
@@ -205,8 +205,12 @@ class _BrandLogo extends StatelessWidget {
   }
 }
 
-/// Bitta til varianti — frosted glass karta. Tanlangani ko'k bo'lib yonadi
-/// va o'ngida check ko'rsatiladi.
+/// Bitta til varianti — premium frosted glass karta.
+///
+/// Shisha effekti qatlamlardan tuziladi (fon juda qora, shu sabab oddiy
+/// shaffoflik bilinmaydi): yarim-shaffof yo'naltirilgan fill (yorug' yuqori-
+/// chap, light -45°) + nozik ko'k tint + sheen + tepa specular chiziq +
+/// yorqin rim + chuqurlik soyasi. Tanlangani ko'k gradient + ko'k glow.
 class _LangRow extends StatelessWidget {
   const _LangRow({
     required this.lang,
@@ -226,81 +230,159 @@ class _LangRow extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: DecoratedBox(
-        // Ko'k yog'du faqat tanlangan kartada — clip'dan tashqarida turishi
-        // uchun tashqi qatlamda.
+        // Chuqurlik soyasi (clip'dan tashqarida) — shisha fonidan ko'tariladi.
         decoration: BoxDecoration(
           borderRadius: radius,
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: _kBlue.withValues(alpha: 0.45),
-                    blurRadius: 24,
-                    spreadRadius: -4,
-                    offset: const Offset(0, 8),
-                  ),
-                ]
-              : null,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.45),
+              blurRadius: 22,
+              spreadRadius: -6,
+              offset: const Offset(0, 12),
+            ),
+            if (selected)
+              BoxShadow(
+                color: _kBlue.withValues(alpha: 0.5),
+                blurRadius: 28,
+                spreadRadius: -2,
+                offset: const Offset(0, 10),
+              ),
+          ],
         ),
         child: ClipRRect(
           borderRadius: radius,
           child: BackdropFilter(
-            // Haqiqiy "shisha" frost — ortidagi fon biroz xiralashadi.
-            filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+            // Haqiqiy frost — ortida nimadir bo'lsa (yog'du) xiralashadi.
+            filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 220),
               curve: Curves.easeOut,
+              width: double.infinity,
               height: 60,
               decoration: BoxDecoration(
-                borderRadius: radius,
+                // Yo'naltirilgan fill — yorug' yuqori-chap, to'q past-o'ng
+                // (light -45°, konveks chuqurlik).
                 gradient: selected
                     ? const LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [_kBlueLight, _kBlue],
                       )
                     : LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                         colors: [
-                          Colors.white.withValues(alpha: 0.12),
-                          Colors.white.withValues(alpha: 0.06),
+                          Colors.white.withValues(alpha: 0.16),
+                          Colors.white.withValues(alpha: 0.035),
                         ],
                       ),
-                border: Border.all(
-                  color: selected
-                      ? Colors.white.withValues(alpha: 0.22)
-                      : Colors.white.withValues(alpha: 0.14),
-                ),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
+              child: Stack(
                 children: [
-                  ClipRRect(
-                    borderRadius: const BorderRadius.all(Radius.circular(5)),
-                    child: SvgPicture.asset(
-                      _flagAsset(lang),
-                      width: 24,
-                      height: 24,
+                  // Nozik ko'k ambient tint (faqat shisha kartalarda).
+                  if (!selected)
+                    Positioned.fill(
+                      child: IgnorePointer(
+                        child: ColoredBox(
+                          color: _kGlow.withValues(alpha: 0.05),
+                        ),
+                      ),
+                    ),
+                  // Sheen — yuqori-chapdan yumshoq yorug'lik.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          gradient: LinearGradient(
+                            begin: Alignment.topLeft,
+                            end: Alignment.center,
+                            colors: [
+                              Colors.white.withValues(
+                                alpha: selected ? 0.22 : 0.14,
+                              ),
+                              Colors.transparent,
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  Text(
-                    lang.label,
-                    style: GoogleFonts.poppins(
-                      fontSize: 16,
-                      fontWeight: FontWeight.w500,
-                      color: Colors.white,
-                      height: 1.5,
+                  // Tepa specular chiziq (~1.5px) — "haqiqiy shisha" eng kuchli
+                  // belgisi (yuqoridan tushgan yorug'lik).
+                  Positioned(
+                    top: 0,
+                    left: 18,
+                    right: 18,
+                    child: IgnorePointer(
+                      child: SizedBox(
+                        height: 1.5,
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              colors: [
+                                Colors.transparent,
+                                Colors.white.withValues(
+                                  alpha: selected ? 0.6 : 0.55,
+                                ),
+                                Colors.transparent,
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  if (selected) ...[
-                    const SizedBox(width: 10),
-                    const Icon(
-                      Icons.check_rounded,
-                      size: 20,
-                      color: Colors.white,
+                  // Yorqin rim — refraksiya chetini taqlid qiladi.
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: DecoratedBox(
+                        decoration: BoxDecoration(
+                          borderRadius: radius,
+                          border: Border.all(
+                            color: Colors.white.withValues(
+                              alpha: selected ? 0.32 : 0.22,
+                            ),
+                            width: 1.2,
+                          ),
+                        ),
+                      ),
                     ),
-                  ],
+                  ),
+                  // Mazmun — bayroq + nom + (tanlangan) check.
+                  Center(
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        ClipRRect(
+                          borderRadius:
+                              const BorderRadius.all(Radius.circular(5)),
+                          child: SvgPicture.asset(
+                            _flagAsset(lang),
+                            width: 24,
+                            height: 24,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          lang.label,
+                          style: GoogleFonts.poppins(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w500,
+                            color: Colors.white,
+                            height: 1.5,
+                          ),
+                        ),
+                        if (selected) ...[
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.check_rounded,
+                            size: 20,
+                            color: Colors.white,
+                          ),
+                        ],
+                      ],
+                    ),
+                  ),
                 ],
               ),
             ),
