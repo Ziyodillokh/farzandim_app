@@ -4,38 +4,25 @@ import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
-import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
-import 'package:farzandim/shared/widgets/custom_text_field.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/otp_input.dart';
-import 'package:farzandim/shared/widgets/password_text_field.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/social_button.dart';
-import 'package:farzandim/shared/widgets/tab_switcher.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Ro'yxatdan o'tish — 3 bosqichli "wizard":
-///   1) Aloqa: telefon YOKI email tanlanadi + maxfiylik roziligi → kod
-///      yuboriladi
-///   2) Kod: 5 xonali tasdiqlash kodi kiritiladi (2 daqiqa qayta-yuborish
-///      taymeri)
+/// Ro'yxatdan o'tish — Parvoz dizayni, 3 bosqichli "wizard":
+///   1) Aloqa: telefon YOKI email + maxfiylik roziligi → kod yuboriladi
+///   2) Kod: 5 xonali tasdiqlash kodi (2 daqiqa qayta-yuborish taymeri)
 ///   3) Profil: ism, familiya, parol, parolni takrorlash → ro'yxatdan o'tadi
 ///
-/// ⚠️ HOZIRCHA UI PROTOTIP: kod yuborish va tasdiqlash MOCK qilingan
-/// (haqiqiy SMS/email backend hali ulanmagan — keyin POST /auth/send-code +
-/// /auth/verify-code qo'shiladi). Yakuniy qadam esa HAQIQIY backend
-/// `registerWithPassword` ni chaqiradi.
+/// Telefon OTP — Eskiz SMS; email OTP — nodemailer (SMTP yo'q bo'lsa 503 →
+/// OTP'siz to'g'ridan profilga). Yakuniy qadam HAQIQIY `registerWithPassword`.
 class SignUpScreen extends ConsumerStatefulWidget {
-  /// `SignUpScreen` konstruktor.
   const SignUpScreen({super.key});
 
   @override
@@ -56,16 +43,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   final _password = TextEditingController();
   final _confirm = TextEditingController();
 
-  /// Ommaviy offerta (Maxfiylik + Shartlar) qabul qilindimi.
   bool _consent = false;
-
-  /// Kiritilgan tasdiqlash kodi (OtpInput'dan).
   String _code = '';
-
   bool _loading = false;
   String? _error;
 
-  /// Qayta-yuborish taymeri — 2 daqiqa (120s).
   static const _resendStart = 120;
   int _resendLeft = 0;
   Timer? _timer;
@@ -75,7 +57,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool get _isPhone => _method == 0;
 
-  /// Foydalanuvchi tanlagan aloqa qiymati (ko'rsatish uchun).
   String get _contact =>
       _isPhone ? '+998 ${_phone.text.trim()}' : _email.text.trim();
 
@@ -136,16 +117,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return e.contains('@') && e.contains('.') && e.length >= 5;
   }
 
-  /// Phone: POST /auth/send-register-otp → Eskiz SMS.
-  /// Email: POST /auth/send-register-email-otp → nodemailer email kodi.
-  /// Email kodi SMS kodi bilan AYNAN bir xil oqimda (kod → verify → profil).
-  ///
-  /// GRACEFUL: agar email xizmati (SMTP) serverda sozlanmagan bo'lsa, backend
-  /// 503 qaytaradi — bu holda eski xulqqa tushamiz (OTP'siz to'g'ridan profil
-  /// bosqichiga). Server SMTP'ni yoqsa — email OTP avtomatik ishlay boshlaydi.
   Future<void> _sendCode() async {
     FocusScope.of(context).unfocus();
-
     setState(() {
       _loading = true;
       _error = null;
@@ -195,7 +168,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   Future<void> _resendCode() async {
     if (_resendLeft > 0) return;
-
     setState(() => _error = null);
     final dio = ref.read(dioClientProvider);
     try {
@@ -225,7 +197,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
-  /// Backend xato javobini foydalanuvchiga ko'rsatish uchun matnga aylantiradi.
   String _readDioError(DioException e, {required String fallback}) {
     final data = e.response?.data;
     if (data is Map && data['message'] is String) {
@@ -238,13 +209,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   bool get _codeValid => _code.length == 5;
 
-  /// Phone: POST /auth/verify-register-otp (Eskiz kodi).
-  /// Email: POST /auth/verify-register-email-otp (nodemailer kodi).
-  /// Noto'g'ri/eskirgan kod → 400.
   Future<void> _verifyCode() async {
     if (!_codeValid) return;
     FocusScope.of(context).unfocus();
-
     setState(() {
       _loading = true;
       _error = null;
@@ -254,18 +221,12 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       if (_isPhone) {
         await dio.post<Map<String, dynamic>>(
           '/auth/verify-register-otp',
-          data: {
-            'phone': '+998${_phone.text.trim()}',
-            'code': _code,
-          },
+          data: {'phone': '+998${_phone.text.trim()}', 'code': _code},
         );
       } else {
         await dio.post<Map<String, dynamic>>(
           '/auth/verify-register-email-otp',
-          data: {
-            'email': _email.text.trim(),
-            'code': _code,
-          },
+          data: {'email': _email.text.trim(), 'code': _code},
         );
       }
       if (!mounted) return;
@@ -294,7 +255,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return true;
   }
 
-  /// HAQIQIY backend: registerWithPassword (ism+familiya → bitta `name`).
   Future<void> _register() async {
     if (_password.text != _confirm.text) {
       setState(() => _error = 'auth.signUp.passwordMismatch'.tr());
@@ -354,14 +314,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       setState(() {
         _step = newStep;
         _error = null;
-        // OTP bosqichiga qaytganda box'lar bo'sh qayta quriladi —
-        // `_code`ni ham tozalaymiz (aks holda bo'sh box + yoniq tugma desync).
         if (newStep == 1) _code = '';
       });
       if (newStep == 0) {
         _timer?.cancel();
       } else if (newStep == 1) {
-        // Taymer muzlab qolmasligi uchun OTP'ga qaytganda qayta yoqamiz.
         _startResendTimer();
       }
     } else if (context.canPop()) {
@@ -381,47 +338,54 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         if (!didPop) _onBack();
       },
       child: Scaffold(
-        backgroundColor: Colors.transparent,
-        extendBodyBehindAppBar: true,
-        appBar: AppBar(
-          backgroundColor: Colors.transparent,
-          elevation: 0,
-          leading: IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
-            onPressed: _onBack,
-          ),
-        ),
-        body: GradientBackground(
-          child: SafeArea(
-            child: Column(
-              children: [
-                const SizedBox(height: AppDimensions.sm),
-                _StepDots(step: _step),
-                const SizedBox(height: AppDimensions.sm),
-                Expanded(
-                  child: AnimatedSwitcher(
-                    duration: const Duration(milliseconds: 280),
-                    switchInCurve: Curves.easeOutCubic,
-                    switchOutCurve: Curves.easeInCubic,
-                    transitionBuilder: (child, animation) {
-                      final slide = Tween<Offset>(
-                        begin: const Offset(0.12, 0),
-                        end: Offset.zero,
-                      ).animate(animation);
-                      return FadeTransition(
-                        opacity: animation,
-                        child: SlideTransition(position: slide, child: child),
-                      );
-                    },
-                    child: KeyedSubtree(
-                      key: ValueKey(_step),
-                      child: _buildStep(),
+        backgroundColor: ParvozColors.bg,
+        body: Stack(
+          children: [
+            const Positioned(
+              top: -150,
+              left: 0,
+              right: 0,
+              child: Center(child: ParvozTopGlow()),
+            ),
+            SafeArea(
+              child: Column(
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+                    child: Row(
+                      children: [
+                        ParvozBackButton(onTap: _onBack),
+                        Expanded(child: Center(child: _StepDots(step: _step))),
+                        const SizedBox(width: 44),
+                      ],
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: AnimatedSwitcher(
+                      duration: const Duration(milliseconds: 280),
+                      switchInCurve: Curves.easeOutCubic,
+                      switchOutCurve: Curves.easeInCubic,
+                      transitionBuilder: (child, animation) {
+                        final slide = Tween<Offset>(
+                          begin: const Offset(0.12, 0),
+                          end: Offset.zero,
+                        ).animate(animation);
+                        return FadeTransition(
+                          opacity: animation,
+                          child: SlideTransition(position: slide, child: child),
+                        );
+                      },
+                      child: KeyedSubtree(
+                        key: ValueKey(_step),
+                        child: _buildStep(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
-          ),
+          ],
         ),
       ),
     );
@@ -438,11 +402,72 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
-  EdgeInsets get _pad => const EdgeInsets.fromLTRB(
-    AppDimensions.lg,
-    AppDimensions.sm,
-    AppDimensions.lg,
-    AppDimensions.xl,
+  EdgeInsets get _pad => const EdgeInsets.fromLTRB(24, 12, 24, 32);
+
+  Widget _title(String text) => Text(
+    text,
+    textAlign: TextAlign.center,
+    style: GoogleFonts.unbounded(
+      fontSize: 24,
+      fontWeight: FontWeight.w700,
+      color: Colors.white,
+      letterSpacing: -0.5,
+      height: 1.25,
+    ),
+  );
+
+  Widget _subtitle(String text) => Text(
+    text,
+    textAlign: TextAlign.center,
+    style: GoogleFonts.poppins(
+      fontSize: 14,
+      height: 1.45,
+      color: Colors.white.withValues(alpha: 0.6),
+    ),
+  );
+
+  Widget _errorRow(String msg) => Row(
+    children: [
+      const Icon(
+        Icons.error_outline_rounded,
+        size: 16,
+        color: Color(0xFFFF6B6B),
+      ),
+      const SizedBox(width: 6),
+      Expanded(
+        child: Text(
+          msg,
+          style: GoogleFonts.poppins(
+            fontSize: 13,
+            color: const Color(0xFFFF6B6B),
+          ),
+        ),
+      ),
+    ],
+  );
+
+  Widget _appleButton() => ParvozSecondaryButton(
+    label: 'auth.social.apple'.tr(),
+    enabled: !_loading && _consent,
+    leading: SvgPicture.asset(
+      'assets/icons/ic_apple_mark.svg',
+      width: 20,
+      height: 20,
+    ),
+    onPressed: () =>
+        _social(ref.read(backendAuthProvider.notifier).signInWithApple),
+  );
+
+  Widget _googleButton() => ParvozSecondaryButton(
+    label: 'auth.social.google'.tr(),
+    enabled: !_loading && _consent,
+    leading: SvgPicture.asset(
+      'assets/icons/ic_google_mark.svg',
+      width: 20,
+      height: 20,
+    ),
+    onPressed: () =>
+        _social(ref.read(backendAuthProvider.notifier).signInWithGoogle),
   );
 
   // ─── 1-bosqich UI ───
@@ -452,103 +477,112 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'auth.signUp.title'.tr(),
-            style: AppTextStyles.headlineXL.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppDimensions.sm),
-          Text(
-            'auth.signUp.contactSubtitle'.tr(),
-            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppDimensions.xl),
-
-          // Tab: Telefon / Email
-          TabSwitcher(
-            tabs: ['auth.signUp.phoneTab'.tr(), 'auth.signUp.emailTab'.tr()],
-            activeIndex: _method,
-            onChanged: (i) => setState(() {
-              _method = i;
-              _error = null;
-            }),
-          ),
-          const SizedBox(height: AppDimensions.lg),
-
-          if (_isPhone) ...[
-            AuthFieldLabel('auth.signUp.phoneLabel'.tr()),
-            const SizedBox(height: AppDimensions.sm),
-            CustomTextField(
+          _title('auth.signUp.title'.tr()),
+          const SizedBox(height: 8),
+          _subtitle('auth.signUp.contactSubtitle'.tr()),
+          const SizedBox(height: 28),
+          _segmented(),
+          const SizedBox(height: 20),
+          if (_isPhone)
+            ParvozTextField(
+              label: 'auth.signUp.phoneLabel'.tr(),
               controller: _phone,
-              hint: 'auth.signUp.phoneHint'.tr(),
-              prefix: '+998 ',
               keyboardType: TextInputType.phone,
               maxLength: 9,
               inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              prefix: Text(
+                '+998',
+                style: GoogleFonts.poppins(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
               onChanged: (_) => setState(() {}),
-            ),
-          ] else ...[
-            AuthFieldLabel('auth.signUp.emailLabel'.tr()),
-            const SizedBox(height: AppDimensions.sm),
-            CustomTextField(
+            )
+          else
+            ParvozTextField(
+              label: 'auth.signUp.emailLabel'.tr(),
               controller: _email,
-              hint: 'auth.signUp.emailHint'.tr(),
               keyboardType: TextInputType.emailAddress,
               onChanged: (_) => setState(() {}),
             ),
-          ],
-          const SizedBox(height: AppDimensions.lg),
-
+          const SizedBox(height: 20),
           _consentRow(),
-
           if (_error != null) ...[
-            const SizedBox(height: AppDimensions.md),
-            AuthErrorText(_error!),
+            const SizedBox(height: 16),
+            _errorRow(_error!),
           ],
-          const SizedBox(height: AppDimensions.lg),
-
-          PrimaryButton(
+          const SizedBox(height: 24),
+          ParvozPrimaryButton(
             label: 'auth.signUp.sendCodeButton'.tr(),
-            onPressed: _contactValid && !_loading ? _sendCode : null,
+            enabled: _contactValid,
+            loading: _loading,
+            onPressed: _sendCode,
           ),
-          const SizedBox(height: AppDimensions.lg),
-
-          // Social — alternativa
+          const SizedBox(height: 20),
           Row(
             children: [
-              Expanded(
-                child: SocialButton(
-                  iconAsset: 'assets/icons/ic_apple.svg',
-                  semanticsLabel: 'auth.social.apple'.tr(),
-                  onPressed: (_loading || !_consent)
-                      ? null
-                      : () => _social(
-                          ref
-                              .read(backendAuthProvider.notifier)
-                              .signInWithApple,
-                        ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.md),
-              Expanded(
-                child: SocialButton(
-                  iconAsset: 'assets/icons/ic_google.svg',
-                  semanticsLabel: 'auth.social.google'.tr(),
-                  onPressed: (_loading || !_consent)
-                      ? null
-                      : () => _social(
-                          ref
-                              .read(backendAuthProvider.notifier)
-                              .signInWithGoogle,
-                        ),
-                ),
-              ),
+              Expanded(child: _appleButton()),
+              const SizedBox(width: 12),
+              Expanded(child: _googleButton()),
             ],
           ),
         ],
+      ),
+    );
+  }
+
+  Widget _segmented() {
+    return Container(
+      height: 52,
+      padding: const EdgeInsets.all(4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(999),
+        color: Colors.white.withValues(alpha: 0.05),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+      ),
+      child: Row(
+        children: [
+          _segTab('auth.signUp.phoneTab'.tr(), 0),
+          _segTab('auth.signUp.emailTab'.tr(), 1),
+        ],
+      ),
+    );
+  }
+
+  Widget _segTab(String label, int index) {
+    final active = _method == index;
+    return Expanded(
+      child: GestureDetector(
+        behavior: HitTestBehavior.opaque,
+        onTap: () => setState(() {
+          _method = index;
+          _error = null;
+        }),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 200),
+          curve: Curves.easeOut,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(999),
+            gradient: active
+                ? const LinearGradient(
+                    colors: [ParvozColors.blueLight, ParvozColors.blue],
+                  )
+                : null,
+          ),
+          child: Text(
+            label,
+            style: GoogleFonts.poppins(
+              fontSize: 14,
+              fontWeight: active ? FontWeight.w600 : FontWeight.w500,
+              color: active
+                  ? Colors.white
+                  : Colors.white.withValues(alpha: 0.6),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -557,54 +591,58 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        SizedBox(
-          width: 24,
-          height: 24,
-          child: Checkbox(
-            value: _consent,
-            onChanged: (v) => setState(() => _consent = v ?? false),
-            activeColor: AppColors.primary,
-            checkColor: AppColors.onPrimary,
-            side: BorderSide(color: AppColors.border, width: 1.5),
-            shape: RoundedRectangleBorder(
+        GestureDetector(
+          behavior: HitTestBehavior.opaque,
+          onTap: () => setState(() => _consent = !_consent),
+          child: Container(
+            width: 22,
+            height: 22,
+            margin: const EdgeInsets.only(top: 2),
+            decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(6),
+              color: _consent ? ParvozColors.blue : Colors.transparent,
+              border: Border.all(
+                color: _consent
+                    ? ParvozColors.blue
+                    : Colors.white.withValues(alpha: 0.3),
+                width: 1.5,
+              ),
             ),
-            materialTapTargetSize: MaterialTapTargetSize.shrinkWrap,
-            visualDensity: VisualDensity.compact,
+            child: _consent
+                ? const Icon(Icons.check, size: 15, color: Colors.white)
+                : null,
           ),
         ),
-        const SizedBox(width: AppDimensions.sm),
+        const SizedBox(width: 10),
         Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(top: 2),
-            child: Text.rich(
-              TextSpan(
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textSecondary,
-                  height: 1.4,
-                ),
-                children: [
-                  TextSpan(text: 'auth.signUp.consent.prefix'.tr()),
-                  TextSpan(
-                    text: 'auth.signUp.consent.privacy'.tr(),
-                    style: const TextStyle(
-                      color: kAuthLinkColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    recognizer: _privacyTap,
-                  ),
-                  TextSpan(text: 'auth.signUp.consent.and'.tr()),
-                  TextSpan(
-                    text: 'auth.signUp.consent.terms'.tr(),
-                    style: const TextStyle(
-                      color: kAuthLinkColor,
-                      fontWeight: FontWeight.w600,
-                    ),
-                    recognizer: _termsTap,
-                  ),
-                  TextSpan(text: 'auth.signUp.consent.suffix'.tr()),
-                ],
+          child: Text.rich(
+            TextSpan(
+              style: GoogleFonts.poppins(
+                fontSize: 13,
+                height: 1.45,
+                color: Colors.white.withValues(alpha: 0.6),
               ),
+              children: [
+                TextSpan(text: 'auth.signUp.consent.prefix'.tr()),
+                TextSpan(
+                  text: 'auth.signUp.consent.privacy'.tr(),
+                  style: const TextStyle(
+                    color: ParvozColors.blue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  recognizer: _privacyTap,
+                ),
+                TextSpan(text: 'auth.signUp.consent.and'.tr()),
+                TextSpan(
+                  text: 'auth.signUp.consent.terms'.tr(),
+                  style: const TextStyle(
+                    color: ParvozColors.blue,
+                    fontWeight: FontWeight.w600,
+                  ),
+                  recognizer: _termsTap,
+                ),
+                TextSpan(text: 'auth.signUp.consent.suffix'.tr()),
+              ],
             ),
           ),
         ),
@@ -619,27 +657,22 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'auth.signUp.otpTitle'.tr(),
-            style: AppTextStyles.headlineXL.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppDimensions.sm),
+          _title('auth.signUp.otpTitle'.tr()),
+          const SizedBox(height: 8),
           Text.rich(
             TextSpan(
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textSecondary,
-                height: 1.4,
+              style: GoogleFonts.poppins(
+                fontSize: 14,
+                height: 1.45,
+                color: Colors.white.withValues(alpha: 0.6),
               ),
               children: [
                 TextSpan(text: 'auth.signUp.otpSentTo'.tr()),
                 const TextSpan(text: '  '),
                 TextSpan(
                   text: _contact,
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
+                  style: const TextStyle(
+                    color: Colors.white,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
@@ -647,47 +680,43 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
             ),
             textAlign: TextAlign.center,
           ),
-          const SizedBox(height: AppDimensions.xl),
-
-          OtpInput(
-            length: 5,
-            onChanged: (v) => setState(() => _code = v),
-            onCompleted: (v) => setState(() => _code = v),
-          ),
-          const SizedBox(height: AppDimensions.lg),
-
-          // Qayta yuborish — taymer tugaguncha o'chiq.
+          const SizedBox(height: 28),
+          _ParvozOtp(onChanged: (v) => setState(() => _code = v)),
+          const SizedBox(height: 20),
           Center(
             child: _resendLeft > 0
                 ? Text(
                     'auth.signUp.resendTimer'.tr(
                       namedArgs: {'time': _resendLabel},
                     ),
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: AppColors.textTertiary,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      color: Colors.white.withValues(alpha: 0.4),
                     ),
                   )
-                : TextButton(
-                    onPressed: _resendCode,
+                : GestureDetector(
+                    behavior: HitTestBehavior.opaque,
+                    onTap: _resendCode,
                     child: Text(
                       'auth.verifyOtp.resend'.tr(),
-                      style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w700,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w600,
+                        color: ParvozColors.blue,
                       ),
                     ),
                   ),
           ),
-
           if (_error != null) ...[
-            const SizedBox(height: AppDimensions.md),
-            AuthErrorText(_error!),
+            const SizedBox(height: 16),
+            _errorRow(_error!),
           ],
-          const SizedBox(height: AppDimensions.lg),
-
-          PrimaryButton(
+          const SizedBox(height: 24),
+          ParvozPrimaryButton(
             label: 'auth.verifyOtp.submitButton'.tr(),
-            onPressed: _codeValid && !_loading ? _verifyCode : null,
+            enabled: _codeValid,
+            loading: _loading,
+            onPressed: _verifyCode,
           ),
         ],
       ),
@@ -696,74 +725,56 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
 
   // ─── 3-bosqich UI ───
   Widget _buildProfileStep() {
+    final mismatch =
+        _confirm.text.isNotEmpty && _confirm.text != _password.text;
     return SingleChildScrollView(
       padding: _pad,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(
-            'auth.signUp.profileTitle'.tr(),
-            style: AppTextStyles.headlineXL.copyWith(
-              fontWeight: FontWeight.w800,
-            ),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(height: AppDimensions.xl),
-
-          AuthFieldLabel('auth.signUp.firstNameLabel'.tr()),
-          const SizedBox(height: AppDimensions.sm),
-          CustomTextField(
+          _title('auth.signUp.profileTitle'.tr()),
+          const SizedBox(height: 28),
+          ParvozTextField(
+            label: 'auth.signUp.firstNameLabel'.tr(),
             controller: _firstName,
-            hint: 'auth.signUp.firstNameHint'.tr(),
             keyboardType: TextInputType.name,
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: AppDimensions.lg),
-
-          AuthFieldLabel('auth.signUp.lastNameLabel'.tr()),
-          const SizedBox(height: AppDimensions.sm),
-          CustomTextField(
+          const SizedBox(height: 18),
+          ParvozTextField(
+            label: 'auth.signUp.lastNameLabel'.tr(),
             controller: _lastName,
-            hint: 'auth.signUp.lastNameHint'.tr(),
             keyboardType: TextInputType.name,
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: AppDimensions.lg),
-
-          AuthFieldLabel('auth.signUp.passwordLabel'.tr()),
-          const SizedBox(height: AppDimensions.sm),
-          PasswordTextField(
+          const SizedBox(height: 18),
+          ParvozTextField(
+            label: 'auth.signUp.passwordLabel'.tr(),
             controller: _password,
-            hint: 'auth.signUp.passwordHint'.tr(),
+            obscure: true,
             onChanged: (_) => setState(() {}),
           ),
-          const SizedBox(height: AppDimensions.lg),
-
-          AuthFieldLabel('auth.signUp.confirmPasswordLabel'.tr()),
-          const SizedBox(height: AppDimensions.sm),
-          PasswordTextField(
+          const SizedBox(height: 18),
+          ParvozTextField(
+            label: 'auth.signUp.confirmPasswordLabel'.tr(),
             controller: _confirm,
-            hint: 'auth.signUp.confirmPasswordHint'.tr(),
+            obscure: true,
             onChanged: (_) => setState(() {}),
           ),
-
-          // Parollar mosligini real-time ko'rsatamiz (tugma o'chiq bo'lsa ham
-          // user nega davom eta olmayotganini biladi).
-          if (_confirm.text.isNotEmpty && _confirm.text != _password.text) ...[
-            const SizedBox(height: AppDimensions.sm),
-            AuthErrorText('auth.signUp.passwordMismatch'.tr()),
+          if (mismatch) ...[
+            const SizedBox(height: 8),
+            _errorRow('auth.signUp.passwordMismatch'.tr()),
           ],
-
           if (_error != null) ...[
-            const SizedBox(height: AppDimensions.md),
-            AuthErrorText(_error!),
+            const SizedBox(height: 16),
+            _errorRow(_error!),
           ],
-          const SizedBox(height: AppDimensions.xl),
-
-          PrimaryButton(
+          const SizedBox(height: 28),
+          ParvozPrimaryButton(
             label: 'auth.signUp.submitButton'.tr(),
-            isLoading: _loading,
-            onPressed: _profileValid && !_loading ? _register : null,
+            enabled: _profileValid,
+            loading: _loading,
+            onPressed: _register,
           ),
         ],
       ),
@@ -771,7 +782,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   }
 }
 
-/// Yuqoridagi 3 bosqich indikatori (nuqtalar).
+/// 3 bosqich indikatori (nuqtalar) — Parvoz ko'k.
 class _StepDots extends StatelessWidget {
   const _StepDots({required this.step});
 
@@ -780,7 +791,7 @@ class _StepDots extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
+      mainAxisSize: MainAxisSize.min,
       children: [
         for (var i = 0; i < 3; i++) ...[
           AnimatedContainer(
@@ -788,13 +799,146 @@ class _StepDots extends StatelessWidget {
             width: i == step ? 26 : 8,
             height: 8,
             decoration: BoxDecoration(
-              color: i <= step ? AppColors.accent : AppColors.border,
+              color: i <= step
+                  ? ParvozColors.blue
+                  : Colors.white.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(4),
             ),
           ),
           if (i < 2) const SizedBox(width: 6),
         ],
       ],
+    );
+  }
+}
+
+/// 5 xonali OTP — shisha box'lar, fokus/to'ldirilganda ko'k rim.
+class _ParvozOtp extends StatefulWidget {
+  const _ParvozOtp({required this.onChanged});
+
+  final ValueChanged<String> onChanged;
+
+  @override
+  State<_ParvozOtp> createState() => _ParvozOtpState();
+}
+
+class _ParvozOtpState extends State<_ParvozOtp> {
+  static const _len = 5;
+  final List<TextEditingController> _ctrls =
+      List.generate(_len, (_) => TextEditingController());
+  final List<FocusNode> _nodes = List.generate(_len, (_) => FocusNode());
+
+  @override
+  void initState() {
+    super.initState();
+    for (final n in _nodes) {
+      n.addListener(_onFocus);
+    }
+  }
+
+  void _onFocus() => setState(() {});
+
+  @override
+  void dispose() {
+    for (final c in _ctrls) {
+      c.dispose();
+    }
+    for (final n in _nodes) {
+      n
+        ..removeListener(_onFocus)
+        ..dispose();
+    }
+    super.dispose();
+  }
+
+  String get _value => _ctrls.map((c) => c.text).join();
+
+  void _onChanged(int i, String v) {
+    if (v.length > 1) {
+      final digits = v.replaceAll(RegExp(r'\D'), '');
+      for (var j = 0; j < _len; j++) {
+        _ctrls[j].text = j < digits.length ? digits[j] : '';
+      }
+      final filled = digits.length.clamp(0, _len);
+      _nodes[filled >= _len ? _len - 1 : filled].requestFocus();
+      widget.onChanged(_value);
+      setState(() {});
+      return;
+    }
+    if (v.isNotEmpty && i < _len - 1) {
+      _nodes[i + 1].requestFocus();
+    }
+    widget.onChanged(_value);
+    setState(() {});
+  }
+
+  KeyEventResult _onKey(int i, KeyEvent e) {
+    if (e is KeyDownEvent &&
+        e.logicalKey == LogicalKeyboardKey.backspace &&
+        _ctrls[i].text.isEmpty &&
+        i > 0) {
+      _nodes[i - 1].requestFocus();
+      _ctrls[i - 1].clear();
+      widget.onChanged(_value);
+      setState(() {});
+      return KeyEventResult.handled;
+    }
+    return KeyEventResult.ignored;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [for (var i = 0; i < _len; i++) _box(i)],
+    );
+  }
+
+  Widget _box(int i) {
+    final filled = _ctrls[i].text.isNotEmpty;
+    final focused = _nodes[i].hasFocus;
+    return SizedBox(
+      width: 52,
+      height: 60,
+      child: Focus(
+        canRequestFocus: false,
+        onKeyEvent: (_, e) => _onKey(i, e),
+        child: DecoratedBox(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(16),
+            color: Colors.white.withValues(alpha: 0.05),
+            border: Border.all(
+              color: (focused || filled)
+                  ? ParvozColors.blue
+                  : Colors.white.withValues(alpha: 0.12),
+              width: focused ? 1.6 : 1.2,
+            ),
+          ),
+          child: Center(
+            child: TextField(
+              controller: _ctrls[i],
+              focusNode: _nodes[i],
+              keyboardType: TextInputType.number,
+              textAlign: TextAlign.center,
+              maxLength: 1,
+              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+              onChanged: (v) => _onChanged(i, v),
+              cursorColor: ParvozColors.blue,
+              style: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w700,
+                color: Colors.white,
+              ),
+              decoration: const InputDecoration(
+                counterText: '',
+                border: InputBorder.none,
+                isCollapsed: true,
+                contentPadding: EdgeInsets.zero,
+              ),
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

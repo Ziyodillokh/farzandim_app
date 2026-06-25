@@ -65,18 +65,19 @@
   "auth": {
     "welcome": {
       "title": "Xush kelibsiz",
-      "subtitle": "Farzandingizni onlayn himoya qiling",
+      "subtitle": "Farzandingiz kelajagi sizning qo'lingizda",
       "signUpButton": "Ro'yxatdan o'tish",
-      "signInButton": "Akkauntga kirish",
+      "signInButton": "Kirish",
       "continueButton": "Telegram orqali davom etish"
     },
     "signIn": {
       "title": "Akkauntga kirish",
-      "emailLabel": "Elektron pochta yoki telefon raqam",
+      "subtitle": "Telefon raqam yoki E-mailingiz orqali ilovaga kiring",
+      "emailLabel": "Telefon raqam yoki E-mail",
       "emailHint": "Email yoki telefon raqam",
-      "passwordLabel": "Parol",
+      "passwordLabel": "Parolingiz",
       "forgotPassword": "Parolingizni unutdingizmi?",
-      "submitButton": "Akkauntga kirish",
+      "submitButton": "Kirish",
       "signUpButton": "Akkauntga qo'shilish"
     },
     "signUp": {

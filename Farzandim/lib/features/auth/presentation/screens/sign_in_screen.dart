@@ -1,21 +1,15 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/scan_account_screen.dart';
-import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
-import 'package:farzandim/shared/widgets/custom_text_field.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/password_text_field.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/secondary_button.dart';
-import 'package:farzandim/shared/widgets/social_button.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 
-/// Akkauntga kirish — email yoki telefon + parol.
+/// Akkauntga kirish — Parvoz dizayni (email/telefon + parol).
 ///
 /// Backend: POST /api/auth/login. Muvaffaqiyatda auth state Authenticated'ga
 /// o'tadi va router avtomatik dashboard'ga yo'naltiradi.
@@ -67,8 +61,8 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   }
 
   /// Google/Apple bilan kirish. Backend "yangi bo'lsa yarat, bor bo'lsa kirgiz"
-  /// qiladi. MUHIM: Google orqali ro'yxatdan o'tgan foydalanuvchining paroli
-  /// yo'q — u FAQAT shu tugmalar orqali qaytib kira oladi.
+  /// qiladi. MUHIM: Google orqali ro'yxatdan o'tganlarning paroli yo'q — ular
+  /// FAQAT shu tugmalar orqali qaytib kira oladi.
   Future<void> _social(Future<String?> Function() action) async {
     if (_loading) return;
     setState(() {
@@ -88,146 +82,189 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      extendBodyBehindAppBar: true,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        leading: const AuthBackButton(),
-      ),
-      body: GradientBackground(
-        child: SafeArea(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(
-              AppDimensions.lg,
-              AppDimensions.sm,
-              AppDimensions.lg,
-              AppDimensions.xl,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                const SizedBox(height: AppDimensions.sm),
-                Text(
-                  'auth.signIn.title'.tr(),
-                  style: AppTextStyles.headlineXL.copyWith(
-                    fontWeight: FontWeight.w800,
-                  ),
-                  textAlign: TextAlign.center,
-                ),
-                const SizedBox(height: AppDimensions.xl + AppDimensions.sm),
-
-                // ─── Email / telefon ───
-                AuthFieldLabel('auth.signIn.emailLabel'.tr()),
-                const SizedBox(height: AppDimensions.sm),
-                CustomTextField(
-                  controller: _identifier,
-                  hint: 'auth.signIn.emailHint'.tr(),
-                  keyboardType: TextInputType.emailAddress,
-                  onChanged: (_) => setState(() {}),
-                ),
-                const SizedBox(height: AppDimensions.lg),
-
-                // ─── Parol ───
-                AuthFieldLabel('auth.signIn.passwordLabel'.tr()),
-                const SizedBox(height: AppDimensions.sm),
-                PasswordTextField(
-                  controller: _password,
-                  hint: '••••••',
-                  onChanged: (_) => setState(() {}),
-                ),
-
-                // ─── Parolni unutdingizmi? ───
-                Align(
-                  alignment: Alignment.centerRight,
-                  child: TextButton(
-                    onPressed: () => context.push(AppRoutes.forgotPassword),
-                    style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(
-                        vertical: AppDimensions.sm,
-                      ),
-                      minimumSize: Size.zero,
-                      tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                    ),
-                    child: Text(
-                      'auth.signIn.forgotPassword'.tr(),
-                      style: AppTextStyles.bodyS.copyWith(
-                        color: kAuthLinkColor,
-                        fontWeight: FontWeight.w600,
-                      ),
+      backgroundColor: ParvozColors.bg,
+      body: Stack(
+        children: [
+          const Positioned(
+            top: -150,
+            left: 0,
+            right: 0,
+            child: Center(child: ParvozTopGlow()),
+          ),
+          SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 56, 24, 32),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  Text(
+                    'auth.signIn.title'.tr(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.unbounded(
+                      fontSize: 24,
+                      fontWeight: FontWeight.w700,
+                      color: Colors.white,
+                      letterSpacing: -0.5,
+                      height: 1.25,
                     ),
                   ),
-                ),
-
-                if (_error != null) ...[
-                  const SizedBox(height: AppDimensions.sm),
-                  AuthErrorText(_error!),
-                ],
-
-                const SizedBox(height: AppDimensions.md),
-
-                // ─── Asosiy: Akkauntga kirish ───
-                PrimaryButton(
-                  label: 'auth.signIn.submitButton'.tr(),
-                  isLoading: _loading,
-                  onPressed: _canSubmit && !_loading ? _submit : null,
-                ),
-                const SizedBox(height: AppDimensions.md),
-
-                // ─── Google / Apple bilan kirish ───
-                // Google orqali ro'yxatdan o'tganlarning paroli yo'q — ular
-                // FAQAT shu tugmalar orqali qaytib kira oladi.
-                Row(
-                  children: [
-                    Expanded(
-                      child: SocialButton(
-                        iconAsset: 'assets/icons/ic_apple.svg',
-                        semanticsLabel: 'auth.social.apple'.tr(),
-                        onPressed: _loading
-                            ? null
-                            : () => _social(
-                                ref
-                                    .read(backendAuthProvider.notifier)
-                                    .signInWithApple,
-                              ),
-                      ),
+                  const SizedBox(height: 8),
+                  Text(
+                    'auth.signIn.subtitle'.tr(),
+                    textAlign: TextAlign.center,
+                    style: GoogleFonts.poppins(
+                      fontSize: 14,
+                      height: 1.45,
+                      color: Colors.white.withValues(alpha: 0.6),
                     ),
-                    const SizedBox(width: AppDimensions.md),
-                    Expanded(
-                      child: SocialButton(
-                        iconAsset: 'assets/icons/ic_google.svg',
-                        semanticsLabel: 'auth.social.google'.tr(),
-                        onPressed: _loading
-                            ? null
-                            : () => _social(
-                                ref
-                                    .read(backendAuthProvider.notifier)
-                                    .signInWithGoogle,
-                              ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: AppDimensions.sm + AppDimensions.xs),
+                  ),
+                  const SizedBox(height: 32),
 
-                // ─── Ikkilamchi: Akkauntga qo'shilish (QR kamera skaner) ───
-                // Asosiy qurilmaning QR kodini skanerlab, 2-qurilma sifatida
-                // kiradi. MaterialPageRoute (go_router stack'iga tegmasdan).
-                SecondaryButton(
-                  label: 'auth.signIn.signUpButton'.tr(),
-                  icon: Icons.qr_code_scanner_rounded,
-                  onPressed: _loading
-                      ? null
-                      : () => Navigator.of(context).push(
-                          MaterialPageRoute<void>(
-                            builder: (_) => const ScanAccountScreen(),
+                  // ─── Email / telefon ───
+                  ParvozTextField(
+                    label: 'auth.signIn.emailLabel'.tr(),
+                    controller: _identifier,
+                    keyboardType: TextInputType.emailAddress,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // ─── Parol ───
+                  ParvozTextField(
+                    label: 'auth.signIn.passwordLabel'.tr(),
+                    controller: _password,
+                    obscure: true,
+                    onChanged: (_) => setState(() {}),
+                  ),
+                  const SizedBox(height: 8),
+
+                  // ─── Parolni unutdingizmi? (chap, ko'k) ───
+                  Align(
+                    alignment: Alignment.centerLeft,
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: () => context.push(AppRoutes.forgotPassword),
+                      child: Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4),
+                        child: Text(
+                          'auth.signIn.forgotPassword'.tr(),
+                          style: GoogleFonts.poppins(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w500,
+                            color: ParvozColors.blue,
                           ),
                         ),
-                ),
-              ],
+                      ),
+                    ),
+                  ),
+
+                  if (_error != null) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        const Icon(
+                          Icons.error_outline_rounded,
+                          size: 16,
+                          color: Color(0xFFFF6B6B),
+                        ),
+                        const SizedBox(width: 6),
+                        Expanded(
+                          child: Text(
+                            _error!,
+                            style: GoogleFonts.poppins(
+                              fontSize: 13,
+                              color: const Color(0xFFFF6B6B),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+
+                  const SizedBox(height: 24),
+
+                  // ─── Asosiy: Kirish (ko'k) ───
+                  ParvozPrimaryButton(
+                    label: 'auth.signIn.submitButton'.tr(),
+                    loading: _loading,
+                    enabled: _canSubmit,
+                    onPressed: _submit,
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ─── Apple / Google (shisha) ───
+                  Row(
+                    children: [
+                      Expanded(
+                        child: ParvozSecondaryButton(
+                          label: 'auth.social.apple'.tr(),
+                          enabled: !_loading,
+                          leading: SvgPicture.asset(
+                            'assets/icons/ic_apple_mark.svg',
+                            width: 20,
+                            height: 20,
+                          ),
+                          onPressed: () => _social(
+                            ref
+                                .read(backendAuthProvider.notifier)
+                                .signInWithApple,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: ParvozSecondaryButton(
+                          label: 'auth.social.google'.tr(),
+                          enabled: !_loading,
+                          leading: SvgPicture.asset(
+                            'assets/icons/ic_google_mark.svg',
+                            width: 20,
+                            height: 20,
+                          ),
+                          onPressed: () => _social(
+                            ref
+                                .read(backendAuthProvider.notifier)
+                                .signInWithGoogle,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+
+                  // ─── Ikkilamchi: Akkauntga qo'shilish (QR kamera skaner) ───
+                  ParvozSecondaryButton(
+                    label: 'auth.signIn.signUpButton'.tr(),
+                    enabled: !_loading,
+                    leading: const Icon(
+                      Icons.qr_code_2_rounded,
+                      size: 22,
+                      color: Colors.white,
+                    ),
+                    onPressed: () => Navigator.of(context).push(
+                      MaterialPageRoute<void>(
+                        builder: (_) => const ScanAccountScreen(),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
+          SafeArea(
+            child: Align(
+              alignment: Alignment.topLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 4, top: 4),
+                child: ParvozBackButton(
+                  onTap: () => context.canPop()
+                      ? context.pop()
+                      : context.go(AppRoutes.welcome),
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

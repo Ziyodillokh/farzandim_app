@@ -65,14 +65,15 @@
   "auth": {
     "welcome": {
       "title": "Добро пожаловать",
-      "subtitle": "Защитите вашего ребёнка онлайн",
+      "subtitle": "Будущее вашего ребёнка в ваших руках",
       "signUpButton": "Зарегистрироваться",
-      "signInButton": "Войти в аккаунт",
+      "signInButton": "Войти",
       "continueButton": "Продолжить через Telegram"
     },
     "signIn": {
       "title": "Вход в аккаунт",
-      "emailLabel": "Эл. почта или номер телефона",
+      "subtitle": "Войдите по номеру телефона или E-mail",
+      "emailLabel": "Номер телефона или E-mail",
       "emailHint": "Эл. почта или телефон",
       "passwordLabel": "Пароль",
       "forgotPassword": "Забыли пароль?",

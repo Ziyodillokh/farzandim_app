@@ -65,14 +65,15 @@
   "auth": {
     "welcome": {
       "title": "Welcome",
-      "subtitle": "Protect your child online",
+      "subtitle": "Your child's future is in your hands",
       "signUpButton": "Sign up",
       "signInButton": "Sign in",
       "continueButton": "Continue with Telegram"
     },
     "signIn": {
       "title": "Sign in",
-      "emailLabel": "Email or phone number",
+      "subtitle": "Sign in with your phone number or email",
+      "emailLabel": "Phone number or email",
       "emailHint": "Email or phone number",
       "passwordLabel": "Password",
       "forgotPassword": "Forgot password?",
