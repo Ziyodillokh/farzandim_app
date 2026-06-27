@@ -41,7 +41,7 @@ class _Header extends ConsumerWidget {
               child: IgnorePointer(
                 child: Opacity(
                   opacity: s.$2,
-                  child: SvgPicture.asset(scatter, width: 22, height: 22),
+                  child: SvgPicture.asset(scatter, width: 16, height: 16),
                 ),
               ),
             ),
@@ -79,23 +79,44 @@ class _Header extends ConsumerWidget {
             right: 0,
             child: Column(
               children: [
-                Stack(
-                  children: [
-                    ChildAvatar(child: child, size: 116, showBorder: false),
-                    Positioned(
-                      right: 7,
-                      bottom: 7,
-                      child: Container(
-                        width: 22,
-                        height: 22,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: online ? _online : _dim,
-                          border: Border.all(color: _bg, width: 3.5),
-                        ),
-                      ),
+                // Qora dumaloq border (gradientli) + uning ustida avatar.
+                Container(
+                  width: 134,
+                  height: 134,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Color(0xFF1A2230), Color(0xFF0B1119)],
+                      stops: [0.5, 1],
                     ),
-                  ],
+                  ),
+                  child: Center(
+                    child: Stack(
+                      children: [
+                        ChildAvatar(
+                          child: child,
+                          size: 116,
+                          showBorder: false,
+                        ),
+                        Positioned(
+                          right: 6,
+                          bottom: 6,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: online ? _online : _dim,
+                              border: Border.all(
+                                color: const Color(0xFF0B1119),
+                                width: 3.5,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 12),
                 Text(
@@ -135,16 +156,21 @@ class _Header extends ConsumerWidget {
   }
 }
 
-/// Tarqoq ikonalar joylashuvi (fraksion alignment + opacity).
+/// Tarqoq ikonalar joylashuvi (fraksion alignment + opacity) — butun header
+/// bo'ylab kichik va xira (barcha telefonlarda bir xil).
 const List<(Alignment, double)> _scatterSpots = [
-  (Alignment(-0.62, -0.55), 0.16),
-  (Alignment(0.6, -0.78), 0.16),
-  (Alignment(-0.78, -0.88), 0.09),
-  (Alignment(0.82, -0.45), 0.09),
-  (Alignment(-0.32, -0.95), 0.06),
-  (Alignment(0.4, -0.32), 0.07),
-  (Alignment(0.72, -0.98), 0.05),
-  (Alignment(-0.86, -0.3), 0.06),
+  (Alignment(-0.62, -0.62), 0.14),
+  (Alignment(0.62, -0.74), 0.14),
+  (Alignment(-0.84, -0.86), 0.08),
+  (Alignment(0.86, -0.5), 0.08),
+  (Alignment(-0.34, -0.94), 0.06),
+  (Alignment(0.34, -0.96), 0.06),
+  (Alignment(-0.74, 0.04), 0.1),
+  (Alignment(0.78, -0.02), 0.1),
+  (Alignment(-0.46, 0.34), 0.06),
+  (Alignment(0.52, 0.3), 0.06),
+  (Alignment(0.9, 0.28), 0.05),
+  (Alignment(-0.9, 0.3), 0.05),
 ];
 
 /// Nozik ko'k radial yog'du (avatar ortida).
