@@ -2,8 +2,9 @@ part of 'dashboard_screen.dart';
 
 // ════════════════════════ HEADER ════════════════════════
 
-/// Tepa qism — markaziy avatar (online nuqta) + ism + qurilma/batareya,
-/// chap-tepada Messenger, o'ng-tepada bildirishnoma (o'qilmagan qizil nuqta).
+/// Tepa qism — markaziy avatar (yashil online nuqta) + ism + qurilma/batareya,
+/// chap-tepada Messenger, o'ng-tepada bildirishnoma. Orqada nozik ko'k yog'du
+/// va jinsga qarab tarqoq ikonalar (o'g'il=mototsikl, qiz=kapalak).
 class _Header extends ConsumerWidget {
   const _Header({required this.child});
 
@@ -14,82 +15,89 @@ class _Header extends ConsumerWidget {
     final unread = ref.watch(unreadCountProvider);
     final online = child.isLiveOnline;
     final battery = child.deviceInfo?.batteryLevel;
-    final device = (child.deviceModel != null && child.deviceModel!.isNotEmpty)
+    final device =
+        (child.deviceModel != null && child.deviceModel!.isNotEmpty)
         ? child.deviceModel!
         : (child.deviceInfo?.deviceModel ?? '—');
+    final scatter = child.gender == Gender.female
+        ? 'assets/icons/scatter_butterfly.svg'
+        : 'assets/icons/scatter_moto.svg';
 
     return SizedBox(
-      height: 272,
+      height: 300,
       width: double.infinity,
       child: Stack(
-        alignment: Alignment.topCenter,
         children: [
-          // Ko'k yog'du (avatar ortida).
-          Positioned(
-            top: -70,
-            child: IgnorePointer(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      _blue.withValues(alpha: 0.45),
-                      const Color(0x00216BFF),
-                    ],
-                    stops: const [0, 0.7],
-                  ),
+          // Nozik ko'k yog'du (avatar ortida).
+          const Align(
+            alignment: Alignment(0, -0.45),
+            child: IgnorePointer(child: _HeaderGlow()),
+          ),
+          // Tarqoq dekorativ ikonalar (jinsga qarab) — fraksion joylashuv,
+          // barcha telefonlarda bir xil ko'rinadi.
+          for (final s in _scatterSpots)
+            Align(
+              alignment: s.$1,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: s.$2,
+                  child: SvgPicture.asset(scatter, width: 22, height: 22),
                 ),
               ),
             ),
-          ),
-
           // Messenger (chap-tepa).
           Positioned(
-            top: 8,
+            top: 26,
             left: 16,
-            child: _CircleButton(
-              icon: Icons.forum_rounded,
+            child: _HeaderButton(
+              icon: SvgPicture.asset(
+                'assets/icons/ic_chat.svg',
+                width: 20,
+                height: 20,
+              ),
               onTap: () => context.push(AppRoutes.qaVoicePath(child.id)),
             ),
           ),
-
           // Bildirishnoma (o'ng-tepa) + o'qilmagan qizil nuqta.
           Positioned(
-            top: 8,
+            top: 26,
             right: 16,
-            child: _CircleButton(
-              icon: Icons.notifications_none_rounded,
+            child: _HeaderButton(
+              icon: SvgPicture.asset(
+                'assets/icons/ic_bell.svg',
+                width: 18,
+                height: 20,
+              ),
               showDot: unread > 0,
               onTap: () => context.push(AppRoutes.notifications),
             ),
           ),
-
           // Markaziy profil.
           Positioned(
-            top: 12,
+            top: 30,
+            left: 0,
+            right: 0,
             child: Column(
               children: [
                 Stack(
                   children: [
-                    ChildAvatar(child: child, size: 110, showBorder: false),
+                    ChildAvatar(child: child, size: 116, showBorder: false),
                     Positioned(
-                      right: 6,
-                      bottom: 6,
+                      right: 7,
+                      bottom: 7,
                       child: Container(
-                        width: 20,
-                        height: 20,
+                        width: 22,
+                        height: 22,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           color: online ? _online : _dim,
-                          border: Border.all(color: _bg, width: 3),
+                          border: Border.all(color: _bg, width: 3.5),
                         ),
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   child.name,
                   maxLines: 1,
@@ -112,11 +120,7 @@ class _Header extends ConsumerWidget {
                       const SizedBox(width: 8),
                       const _Dot(),
                       const SizedBox(width: 8),
-                      Icon(
-                        _batteryIcon(battery),
-                        size: 16,
-                        color: _dim,
-                      ),
+                      Icon(_batteryIcon(battery), size: 16, color: _dim),
                       const SizedBox(width: 2),
                       Text('$battery%', style: _pop(14, c: _dim)),
                     ],
@@ -126,6 +130,38 @@ class _Header extends ConsumerWidget {
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+/// Tarqoq ikonalar joylashuvi (fraksion alignment + opacity).
+const List<(Alignment, double)> _scatterSpots = [
+  (Alignment(-0.62, -0.55), 0.16),
+  (Alignment(0.6, -0.78), 0.16),
+  (Alignment(-0.78, -0.88), 0.09),
+  (Alignment(0.82, -0.45), 0.09),
+  (Alignment(-0.32, -0.95), 0.06),
+  (Alignment(0.4, -0.32), 0.07),
+  (Alignment(0.72, -0.98), 0.05),
+  (Alignment(-0.86, -0.3), 0.06),
+];
+
+/// Nozik ko'k radial yog'du (avatar ortida).
+class _HeaderGlow extends StatelessWidget {
+  const _HeaderGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 230,
+      height: 230,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [_blue.withValues(alpha: 0.22), const Color(0x00216BFF)],
+          stops: const [0, 0.72],
+        ),
       ),
     );
   }
@@ -153,15 +189,15 @@ class _Dot extends StatelessWidget {
   }
 }
 
-/// 44x44 shisha dumaloq tugma (Messenger / bildirishnoma).
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({
+/// 44x44 header tugma (chat/bell SVG ikonkasi bilan).
+class _HeaderButton extends StatelessWidget {
+  const _HeaderButton({
     required this.icon,
     required this.onTap,
     this.showDot = false,
   });
 
-  final IconData icon;
+  final Widget icon;
   final VoidCallback onTap;
   final bool showDot;
 
@@ -174,18 +210,18 @@ class _CircleButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0x17FFFFFF),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(color: _cardBorder),
         ),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Icon(icon, size: 20, color: Colors.white),
+            icon,
             if (showDot)
               Positioned(
-                top: 11,
-                right: 11,
+                top: 10,
+                right: 10,
                 child: Container(
                   width: 8,
                   height: 8,
@@ -197,6 +233,53 @@ class _CircleButton extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════ SHISHA YUZA (secondary) ════════════════════════
+
+/// Parvoz "secondary shisha" yuzasi (kontent o'lchamida) — pastki tugmalar
+/// uchun (onboarding'dagi shisha tugma bilan bir xil til).
+class _Glass extends StatelessWidget {
+  const _Glass({required this.child, this.radius = 999});
+
+  final Widget child;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final br = BorderRadius.circular(radius);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: br,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 18,
+            spreadRadius: -6,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: br,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color(0x1FFFFFFF), Color(0x08FFFFFF)],
+              ),
+              border: Border.all(color: const Color(0x33FFFFFF), width: 1.2),
+              borderRadius: br,
+            ),
+            child: child,
+          ),
         ),
       ),
     );
@@ -432,10 +515,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
-      child: SizedBox(
-        height: 1,
-        child: ColoredBox(color: Color(0x14FFFFFF)),
-      ),
+      child: SizedBox(height: 1, child: ColoredBox(color: Color(0x14FFFFFF))),
     );
   }
 }
@@ -490,10 +570,7 @@ class _XpCard extends ConsumerWidget {
                       color: _blue,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      'XP',
-                      style: _pop(12, w: FontWeight.w600),
-                    ),
+                    child: Text('XP', style: _pop(12, w: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -509,6 +586,7 @@ class _XpCard extends ConsumerWidget {
                   _LeaderboardRow(
                     entry: rows[i],
                     isMe: rows[i].childId == child.id,
+                    me: child,
                   ),
                   if (i < rows.length - 1) const _Divider(),
                 ],
@@ -546,26 +624,39 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({required this.entry, required this.isMe});
+  const _LeaderboardRow({
+    required this.entry,
+    required this.isMe,
+    this.me,
+  });
 
   final LeaderboardEntry entry;
   final bool isMe;
 
+  /// Joriy bola (faqat o'z qatorida haqiqiy avatar ko'rsatish uchun).
+  final Child? me;
+
   @override
   Widget build(BuildContext context) {
-    final ch = entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?';
+    final Widget avatar;
+    if (isMe && me != null) {
+      avatar = ChildAvatar(child: me!, size: 24, showBorder: false);
+    } else {
+      final ch = entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?';
+      avatar = Container(
+        width: 24,
+        height: 24,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isMe ? _blue.withValues(alpha: 0.25) : _cardBg,
+        ),
+        child: Text(ch, style: _pop(11, w: FontWeight.w600)),
+      );
+    }
     return Row(
       children: [
-        Container(
-          width: 24,
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isMe ? _blue.withValues(alpha: 0.25) : _cardBg,
-          ),
-          child: Text(ch, style: _pop(11, w: FontWeight.w600)),
-        ),
+        avatar,
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -643,21 +734,19 @@ class _ActionCard extends StatelessWidget {
   const _ActionCard({
     required this.icon,
     required this.label,
-    this.onTap,
-    this.comingSoon = false,
+    required this.onTap,
   });
 
   final IconData icon;
   final String label;
-  final VoidCallback? onTap;
-  final bool comingSoon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return _Card(
       minHeight: 120,
       padding: const EdgeInsets.all(12),
-      onTap: onTap ?? (comingSoon ? () => _soon(context) : null),
+      onTap: onTap,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
@@ -669,24 +758,14 @@ class _ActionCard extends StatelessWidget {
               textAlign: TextAlign.center,
               style: _pop(15, w: FontWeight.w500),
             ),
-            if (comingSoon) ...[
-              const SizedBox(height: 4),
-              Text(
-                'dashboard.comingSoon'.tr(),
-                style: _pop(11, c: _dim),
-              ),
-            ],
           ],
         ),
       ),
     );
   }
-
-  void _soon(BuildContext context) =>
-      AppToast.info(context, 'dashboard.comingSoon'.tr());
 }
 
-// ════════════════════════ BOLA QO'SHISH ════════════════════════
+// ════════════════════════ BOLA QO'SHISH (shisha) ════════════════════════
 
 class _AddChildButton extends StatelessWidget {
   const _AddChildButton();
@@ -696,33 +775,33 @@ class _AddChildButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push(AppRoutes.addChild),
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(Icons.add_rounded, size: 22, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              'dashboard.emptyState.addButton'.tr(),
-              style: _pop(16, w: FontWeight.w500),
+      child: _Glass(
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(Icons.add_rounded, size: 22, color: Colors.white),
+                const SizedBox(width: 8),
+                Text(
+                  'dashboard.emptyState.addButton'.tr(),
+                  style: _pop(16, w: FontWeight.w500),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ════════════════════════ PASTKI BAR ════════════════════════
+// ════════════════════════ PASTKI BAR (shisha) ════════════════════════
 
-/// Suzuvchi pastki panel — ulangan bolalar almashtirgich + Sozlamalar.
+/// Suzuvchi pastki panel — ulangan bolalar almashtirgich + Sozlamalar
+/// (ikkalasi ham Parvoz secondary shisha fonida).
 class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.children,
@@ -752,23 +831,20 @@ class _BottomBar extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
             Flexible(
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: _cardBg,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: _cardBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < children.length; i++)
-                      _SwitcherItem(
-                        child: children[i],
-                        active: i == selectedIndex,
-                        onTap: () => onSelect(i),
-                      ),
-                  ],
+              child: _Glass(
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < children.length; i++)
+                        _SwitcherItem(
+                          child: children[i],
+                          active: i == selectedIndex,
+                          onTap: () => onSelect(i),
+                        ),
+                    ],
+                  ),
                 ),
               ),
             ),
@@ -776,18 +852,16 @@ class _BottomBar extends StatelessWidget {
             GestureDetector(
               onTap: () => context.push(AppRoutes.settings),
               behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _cardBg,
-                  border: Border.all(color: _cardBorder),
-                ),
-                child: const Icon(
-                  Icons.settings_rounded,
-                  size: 24,
-                  color: Colors.white,
+              child: const _Glass(
+                radius: 26,
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Icon(
+                    Icons.settings_rounded,
+                    size: 24,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -831,9 +905,14 @@ class _SwitcherItem extends StatelessWidget {
             ChildAvatar(child: child, size: 44, showBorder: false),
             if (active) ...[
               const SizedBox(width: 8),
-              Text(
-                child.name,
-                style: _pop(16, w: FontWeight.w500),
+              ConstrainedBox(
+                constraints: const BoxConstraints(maxWidth: 110),
+                child: Text(
+                  child.name,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _pop(16, w: FontWeight.w500),
+                ),
               ),
             ],
           ],

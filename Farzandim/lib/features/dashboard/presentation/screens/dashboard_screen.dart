@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -7,6 +8,7 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/providers/selected_child_index_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
@@ -16,10 +18,10 @@ import 'package:farzandim/features/gamification/presentation/providers/leaderboa
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -294,7 +296,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                             child: _ActionCard(
                               icon: Icons.insights_rounded,
                               label: 'dashboard.quickActions.weeklyReport'.tr(),
-                              comingSoon: true,
+                              onTap: () => context.push(
+                                AppRoutes.weeklyReportPath(child.id),
+                              ),
                             ),
                           ),
                         ],
