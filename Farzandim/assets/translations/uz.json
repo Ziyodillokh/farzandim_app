@@ -65,7 +65,7 @@
   "auth": {
     "welcome": {
       "title": "Xush kelibsiz",
-      "subtitle": "Farzandingiz kelajagi sizning qo'lingizda",
+      "subtitle": "Farzandingiz kelajagi sizning\nqo'lingizda",
       "signUpButton": "Ro'yxatdan o'tish",
       "signInButton": "Kirish",
       "continueButton": "Telegram orqali davom etish"

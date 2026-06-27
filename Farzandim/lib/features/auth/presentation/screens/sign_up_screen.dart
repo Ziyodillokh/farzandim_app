@@ -352,12 +352,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-                    child: Row(
-                      children: [
-                        ParvozBackButton(onTap: _onBack),
-                        Expanded(child: Center(child: _StepDots(step: _step))),
-                        const SizedBox(width: 44),
-                      ],
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: ParvozBackButton(onTap: _onBack),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -795,36 +792,6 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
           ),
         ],
       ),
-    );
-  }
-}
-
-/// 3 bosqich indikatori (nuqtalar) — Parvoz ko'k.
-class _StepDots extends StatelessWidget {
-  const _StepDots({required this.step});
-
-  final int step;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        for (var i = 0; i < 3; i++) ...[
-          AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: i == step ? 26 : 8,
-            height: 8,
-            decoration: BoxDecoration(
-              color: i <= step
-                  ? ParvozColors.blue
-                  : Colors.white.withValues(alpha: 0.18),
-              borderRadius: BorderRadius.circular(4),
-            ),
-          ),
-          if (i < 2) const SizedBox(width: 6),
-        ],
-      ],
     );
   }
 }

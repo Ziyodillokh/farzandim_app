@@ -42,10 +42,10 @@ class ParvozBrandLogo extends StatelessWidget {
       children: [
         SvgPicture.asset(
           'assets/icons/parvoz_logo_mark.svg',
-          width: 44,
-          height: 44,
+          width: 50,
+          height: 50,
         ),
-        const SizedBox(width: 12),
+        const SizedBox(width: 13),
         Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -53,7 +53,7 @@ class ParvozBrandLogo extends StatelessWidget {
             Text(
               'Parvoz',
               style: GoogleFonts.unbounded(
-                fontSize: 18,
+                fontSize: 20,
                 fontWeight: FontWeight.w600,
                 color: Colors.white,
                 letterSpacing: -0.3,
@@ -64,7 +64,7 @@ class ParvozBrandLogo extends StatelessWidget {
             Text(
               'Parents',
               style: GoogleFonts.poppins(
-                fontSize: 11,
+                fontSize: 12,
                 height: 1,
                 color: Colors.white.withValues(alpha: 0.6),
               ),
