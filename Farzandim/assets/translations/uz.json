@@ -248,6 +248,11 @@
       "blockAll": "Barcha ilovalarni bloklash"
     },
     "usageTime": "Foydalanish vaqti",
+    "outdoors": "Ko'chada",
+    "scheduleTitle": "Kun tartibi",
+    "comingSoon": "Tez kunda",
+    "screenTimeLabel": "Ekran vaqti",
+    "xpBalance": "XP balansi",
     "noDevice": "Qurilma ulanmagan",
     "deviceModelUnknown": "Telefon modeli aniqlanmagan",
     "geoZoneAlert": {

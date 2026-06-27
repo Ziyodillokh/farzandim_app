@@ -248,6 +248,11 @@
       "blockAll": "Block all apps"
     },
     "usageTime": "Usage time",
+    "outdoors": "Outdoors",
+    "scheduleTitle": "Daily routine",
+    "comingSoon": "Coming soon",
+    "screenTimeLabel": "Screen time",
+    "xpBalance": "XP balance",
     "noDevice": "Device not connected",
     "deviceModelUnknown": "Phone model unknown",
     "geoZoneAlert": {

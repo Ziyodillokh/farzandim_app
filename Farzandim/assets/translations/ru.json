@@ -248,6 +248,11 @@
       "blockAll": "Заблокировать все приложения"
     },
     "usageTime": "Время использования",
+    "outdoors": "На улице",
+    "scheduleTitle": "Распорядок дня",
+    "comingSoon": "Скоро",
+    "screenTimeLabel": "Экранное время",
+    "xpBalance": "Баланс XP",
     "noDevice": "Устройство не подключено",
     "deviceModelUnknown": "Модель телефона не определена",
     "geoZoneAlert": {
