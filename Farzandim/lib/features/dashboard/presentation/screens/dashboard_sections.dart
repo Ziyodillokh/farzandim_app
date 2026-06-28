@@ -424,6 +424,7 @@ class _ScreenTimeCard extends ConsumerWidget {
 
     return _Card(
       minHeight: 220,
+      onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
