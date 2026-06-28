@@ -1,37 +1,61 @@
-import 'dart:typed_data';
+// ─────────────────────────────────────────────────────────────────────
+// AddChildScreen — "Farzandingizni qo'shing" (Parvoz dizayn)
+// ─────────────────────────────────────────────────────────────────────
+//
+// Gradient fon + tepada 3 qadamli Solar step-indikator (1: bola ma'lumoti,
+// 2: ulash, 3: kutubxona). Maydonlar: ism, tug'ilgan kun (kalendar),
+// telefon, jins (tanlash). Pastda primary "Keyingisi" tugmasi.
+//
+// MA'LUMOT: tug'ilgan kundan YOSH hisoblanadi va backendga shu yuboriladi
+// (backend tug'ilgan kunni saqlamaydi — faqat `age`). Tahrirda mavjud
+// yoshdan taxminiy sana tiklanadi (yosh aniq round-trip bo'ladi). Hudud
+// bu dizaynda yo'q — bo'sh yuboriladi (repo bo'sh hududni o'tkazib yuboradi).
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/core/services/image_picker_service.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
-import 'package:farzandim/shared/widgets/custom_dropdown.dart';
-import 'package:farzandim/shared/widgets/custom_text_field.dart';
-import 'package:farzandim/shared/widgets/gender_selector.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/photo_source_bottom_sheet.dart';
-import 'package:farzandim/shared/widgets/photo_upload_placeholder.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/secondary_button.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:image_picker/image_picker.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
-/// Bola qo'shish yoki tahrirlash formasi.
+// ════════════ Parvoz tokenlar (lokal) ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _surface = Color(0xFF11161D); // kalendar / sheet yuzasi
+const _stepInactive = Color(0xFF1B2128); // nofaol qadam doirasi
+const _fieldBorder = Color(0x1FFFFFFF); // oq 12% (login/register input rimi)
+const _line = Color(0x1AFFFFFF); // qadam chizig'i (oq 10%)
+const _dim = Color(0x8CFFFFFF); // oq 55%
+
+TextStyle _unb(
+  double size, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+  double ls = -0.5,
+}) => GoogleFonts.unbounded(
+  fontSize: size,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.25,
+);
+
+TextStyle _pop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// Bola qo'shish yoki tahrirlash formasi (Parvoz dizayn).
 ///
 /// **Add mode** (`childId == null`): yangi bola yaratiladi, oila kodi
-/// generatsiya qilinadi, oila kodi ekraniga o'tiladi.
-///
-/// **Edit mode** (`childId != null`, Bosqich 7.2): provider'dan bola
-/// o'qib state'ga to'ldiriladi (photoBytes, ism, yosh, hudud, jinsi).
-/// Saqlanganda `updateChild` chaqiriladi va list ekraniga qaytadi.
-/// Oila kodi va createdAt o'zgartirilmaydi.
+/// ekraniga o'tiladi. **Edit mode**: provider'dan o'qib to'ldiriladi.
 class AddChildScreen extends ConsumerStatefulWidget {
   /// `AddChildScreen` konstruktor.
   const AddChildScreen({super.key, this.childId});
@@ -46,88 +70,144 @@ class AddChildScreen extends ConsumerStatefulWidget {
 class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   final _nameController = TextEditingController();
   final _phoneController = TextEditingController();
-  int? _selectedAge;
-  String? _selectedRegion;
+  DateTime? _birthDate;
   Gender? _selectedGender;
-  Uint8List? _photoBytes;
   bool _isSaving = false;
+  int? _initialAge; // edit: backenddagi asliy yosh
+  bool _birthDateChanged = false; // foydalanuvchi sanani o'zgartirdimi
 
   bool get _isEditMode => widget.childId != null;
 
-  /// Forma to'liq to'ldirilganmi? Tugma `enabled` holatini boshqaradi.
-  ///
-  /// - Ism: trim qilingach kamida 2 belgi (bo'sh joylar hisobga olinmaydi)
-  /// - Yoshi, hududi, jinsi: dropdown'lar tanlangan bo'lishi shart
   bool get _isFormValid =>
       _nameController.text.trim().length >= 2 &&
-      _selectedAge != null &&
-      _selectedRegion != null &&
+      _birthDate != null &&
       _selectedGender != null;
 
   @override
   void initState() {
     super.initState();
     if (_isEditMode) {
-      // Edit mode — provider'dan bola o'qib state'ni to'ldiramiz.
       final child = ref.read(childByIdProvider(widget.childId!));
       if (child != null) {
         _nameController.text = child.name;
         _phoneController.text = child.phoneNumber ?? '';
-        _selectedAge = child.age;
-        _selectedRegion = child.region;
         _selectedGender = child.gender;
-        _photoBytes = child.photoBytes;
+        _initialAge = child.age;
+        // Backend faqat `age` saqlaydi — ko'rsatish uchun taxminiy sana
+        // tiklaymiz. Saqlashda sana o'zgarmasa ASLIY yosh ishlatiladi
+        // (29-fevralda round-trip xatosi bo'lmasligi uchun).
+        if (child.age > 0) {
+          final now = DateTime.now();
+          // 29-fevral boshqa (kabisa bo'lmagan) yilga rolldan o'tmasin.
+          final day = (now.month == 2 && now.day == 29) ? 28 : now.day;
+          _birthDate = DateTime(now.year - child.age, now.month, day);
+        }
       }
     }
   }
 
   @override
   void dispose() {
-    // Memory leak'ning oldini olish uchun controller'ni yopamiz.
     _nameController.dispose();
     _phoneController.dispose();
     super.dispose();
   }
 
-  /// Foto tanlash oqimi:
-  /// 1) Bottom sheet ochib, manba (galereya/kamera) tanlanadi
-  /// 2) `image_picker` orqali rasm tanlanadi (yoki bekor qilinadi)
-  /// 3) Bytes state'iga yoziladi → `setState` UI'ni yangilaydi
-  ///
-  /// Har `await` dan keyin `mounted` tekshirilamiz — widget dispose
-  /// bo'lgan bo'lsa setState xato bermaslik uchun.
-  Future<void> _onPickPhoto() async {
-    final source = await PhotoSourceBottomSheet.show(context);
-    if (source == null) return; // foydalanuvchi bekor qildi
-    if (!mounted) return;
-
-    final service = ImagePickerService();
-    final bytes = source == ImageSource.gallery
-        ? await service.pickFromGallery()
-        : await service.pickFromCamera();
-
-    if (!mounted) return;
-    if (bytes == null) return; // tanlash bekor qilindi yoki ruxsat berilmadi
-
-    setState(() => _photoBytes = bytes);
+  /// Tug'ilgan kundan to'liq yoshni hisoblaydi.
+  int _ageFromBirth(DateTime b) {
+    final now = DateTime.now();
+    var age = now.year - b.year;
+    if (now.month < b.month || (now.month == b.month && now.day < b.day)) {
+      age--;
+    }
+    return age < 0 ? 0 : age;
   }
 
-  /// Add yoki Edit mode'da forma ma'lumotlarini Firestore'ga saqlaydi.
-  ///
-  /// **Add mode**: `childActionsProvider.addChild` chaqiriladi —
-  /// pairing code yaratiladi, Firestore'ga yoziladi, oila kodi
-  /// ekraniga o'tiladi.
-  /// **Edit mode**: identifikator, oila kodi, createdAt o'zgarmaydi.
-  /// `updateChild` Firestore'ga `update` qiladi.
-  ///
-  /// **Eslatma — `photoBytes`:** Bosqich 2.5.A'da Firebase Storage
-  /// upload yo'q. `photoUrl` Bosqich 2.5.B'da qo'shiladi.
+  String _fmtDate(DateTime d) =>
+      '${d.day.toString().padLeft(2, '0')}.'
+      '${d.month.toString().padLeft(2, '0')}.${d.year}';
+
+  Future<void> _pickDate() async {
+    final now = DateTime.now();
+    final first = DateTime(now.year - 25);
+    final raw = _birthDate ?? DateTime(now.year - 10, now.month, now.day);
+    // initialDate firstDate..lastDate oralig'ida bo'lishi shart (assert).
+    final initial = raw.isBefore(first)
+        ? first
+        : (raw.isAfter(now) ? now : raw);
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: initial,
+      firstDate: first,
+      lastDate: now,
+      initialDatePickerMode: DatePickerMode.year,
+      helpText: 'childManagement.addEdit.birthDateHint'.tr(),
+      builder: (ctx, child) => Theme(
+        data: Theme.of(ctx).copyWith(
+          colorScheme: const ColorScheme.dark(
+            primary: _blue,
+            onPrimary: Colors.white,
+            surface: _surface,
+          ),
+          datePickerTheme: const DatePickerThemeData(
+            backgroundColor: _surface,
+            headerBackgroundColor: _blue,
+            headerForegroundColor: Colors.white,
+          ),
+        ),
+        child: child!,
+      ),
+    );
+    if (picked != null) {
+      setState(() {
+        _birthDate = picked;
+        _birthDateChanged = true;
+      });
+    }
+  }
+
+  Future<void> _pickGender() async {
+    final picked = await showModalBottomSheet<Gender>(
+      context: context,
+      backgroundColor: _surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            for (final g in Gender.values)
+              ListTile(
+                leading: Icon(
+                  g == Gender.male ? SolarIconsBold.men : SolarIconsBold.women,
+                  color: _selectedGender == g ? _blue : _dim,
+                ),
+                title: Text(g.label, style: _pop(16)),
+                trailing: _selectedGender == g
+                    ? const Icon(SolarIconsBold.checkCircle, color: _blue)
+                    : null,
+                onTap: () => Navigator.of(ctx).pop(g),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (picked != null) setState(() => _selectedGender = picked);
+  }
+
   Future<void> _onSave() async {
-    if (!_isFormValid) return;
-
+    if (!_isFormValid || _isSaving) return;
     setState(() => _isSaving = true);
-
     final actions = ref.read(childActionsProvider.notifier);
+    // Tahrirda sana qo'lda o'zgartirilmagan bo'lsa asliy yoshni saqlaymiz —
+    // reconstruct qilingan sanadan qayta hisoblash xatosi bo'lmasin.
+    final age = (_isEditMode && !_birthDateChanged && _initialAge != null)
+        ? _initialAge!
+        : _ageFromBirth(_birthDate!);
+    final phone = _phoneController.text.trim();
 
     if (_isEditMode) {
       final existing = ref.read(childByIdProvider(widget.childId!));
@@ -137,7 +217,6 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
         context.pop();
         return;
       }
-
       final updated = Child(
         id: existing.id,
         familyCode: existing.familyCode,
@@ -146,22 +225,14 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
         deviceModel: existing.deviceModel,
         photoUrl: existing.photoUrl,
         name: _nameController.text.trim(),
-        age: _selectedAge!,
+        age: age,
         gender: _selectedGender!,
-        region: _selectedRegion!,
-        phoneNumber: _phoneController.text.trim(),
+        region: existing.region,
+        phoneNumber: phone,
       );
-      // Foydalanuvchi yangi foto tanlagan bo'lsa Storage'ga upload
-      // qilinadi (eski URL almashtiriladi).
-      final result = await actions.updateChild(
-        widget.childId!,
-        updated,
-        newPhotoBytes: _photoBytes,
-      );
-
+      final result = await actions.updateChild(widget.childId!, updated);
       if (!mounted) return;
       setState(() => _isSaving = false);
-
       if (result.isSuccess) {
         context.pop();
       } else {
@@ -170,24 +241,16 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
       return;
     }
 
-    // ─── Add mode ───
-    // `photoBytes` berilgan bo'lsa repository Storage'ga upload qiladi.
     final result = await actions.addChild(
       name: _nameController.text.trim(),
-      age: _selectedAge!,
+      age: age,
       gender: _selectedGender!,
-      region: _selectedRegion!,
-      photoBytes: _photoBytes,
-      phoneNumber: _phoneController.text.trim(),
+      region: '',
+      phoneNumber: phone,
     );
-
     if (!mounted) return;
     setState(() => _isSaving = false);
-
     if (result.isSuccess) {
-      // Child obyektini extra orqali ham yuboramiz — race condition
-      // oldini olish uchun (childrenProvider GET'ni kutmasdan
-      // FamilyCodeScreen darhol bola ma'lumotlarini ko'rsata oladi).
       context.go(AppRoutes.familyCodePath(result.data!.id), extra: result.data);
     } else {
       _showError(result.error);
@@ -205,164 +268,315 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final genderLabel = _selectedGender?.label;
+    final birthText = _birthDate != null ? _fmtDate(_birthDate!) : null;
     return Scaffold(
-      appBar: AppBar(
-        // go_router avtomatik back tugmasini chiqaradi (push'dan kelgan).
-        title: Text(
-          _isEditMode
-              ? 'childManagement.addEdit.editTitle'.tr()
-              : 'childManagement.addEdit.addTitle'.tr(),
-          style: AppTextStyles.bodyM.copyWith(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
+      backgroundColor: _bg,
+      body: Stack(
+        children: [
+          // Tepa-markazda yumshoq ko'k yog'du.
+          const Positioned(
+            top: -70,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(child: Center(child: _Glow())),
           ),
-        ),
-        centerTitle: true,
-        backgroundColor: Colors.transparent,
-      ),
-      body: GradientBackground(
-        child: SafeArea(
-          // ── Tashqi Column: forma (scroll) + pastdagi tugmalar (fiks) ──
-          child: Column(
-            children: [
-              // Forma — qolgan joyni egallaydi va scroll qiladi.
-              Expanded(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: AppDimensions.lg,
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const SizedBox(height: AppDimensions.lg),
-
-                      // ── Fotosurat ──
-                      _label('childManagement.addEdit.photoLabel'.tr()),
-                      const SizedBox(height: 12),
-                      Center(
-                        child: PhotoUploadPlaceholder(
-                          photoBytes: _photoBytes,
-                          onTap: _onPickPhoto,
-                          onRemove: () => setState(() => _photoBytes = null),
+          SafeArea(
+            child: Column(
+              children: [
+                Expanded(
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const SizedBox(height: 24),
+                        const _StepIndicator(),
+                        const SizedBox(height: 32),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'childManagement.addEdit.formTitleAdd'.tr(),
+                              maxLines: 1,
+                              style: _unb(28),
+                            ),
+                          ),
                         ),
-                      ),
-                      const SizedBox(height: AppDimensions.xl),
-
-                      // ── Ism ──
-                      _label('childManagement.addEdit.nameLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      CustomTextField(
-                        controller: _nameController,
-                        hint: 'childManagement.addEdit.nameHint'.tr(),
-                        maxLength: 30,
-                        onChanged: (_) => setState(() {}),
-                      ),
-                      const SizedBox(height: AppDimensions.lg),
-
-                      // ── Telefon raqami (ixtiyoriy — SOS "Qo'ng'iroq") ──
-                      _label('childManagement.addEdit.phoneLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      CustomTextField(
-                        controller: _phoneController,
-                        hint: 'childManagement.addEdit.phoneHint'.tr(),
-                        keyboardType: TextInputType.phone,
-                        maxLength: 20,
-                      ),
-                      const SizedBox(height: AppDimensions.lg),
-
-                      // ── Yoshi ──
-                      _label('childManagement.addEdit.ageLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      CustomDropdown<int>(
-                        hint: 'childManagement.addEdit.ageHint'.tr(),
-                        value: _selectedAge,
-                        items: [
-                          for (var age = 5; age <= 18; age++)
-                            DropdownMenuItem(
-                              value: age,
-                              child: Text(
-                                'childManagement.addEdit.ageItem'.tr(
-                                  namedArgs: {'age': '$age'},
-                                ),
-                              ),
-                            ),
-                        ],
-                        onChanged: (v) => setState(() => _selectedAge = v),
-                      ),
-                      const SizedBox(height: AppDimensions.lg),
-
-                      // ── Hudud ──
-                      _label('childManagement.addEdit.regionLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      CustomDropdown<String>(
-                        hint: 'childManagement.addEdit.regionHint'.tr(),
-                        value: _selectedRegion,
-                        items: [
-                          for (final region in UzbekistanRegions.regions)
-                            DropdownMenuItem(
-                              value: region,
-                              child: Text(region),
-                            ),
-                        ],
-                        onChanged: (v) => setState(() => _selectedRegion = v),
-                      ),
-                      const SizedBox(height: AppDimensions.lg),
-
-                      // ── Jinsi ──
-                      _label('childManagement.addEdit.genderLabel'.tr()),
-                      const SizedBox(height: AppDimensions.sm),
-                      GenderSelector(
-                        selected: _selectedGender,
-                        onChanged: (g) => setState(() => _selectedGender = g),
-                      ),
-                      const SizedBox(height: AppDimensions.xl),
-                    ],
+                        const SizedBox(height: 8),
+                        Text(
+                          'childManagement.addEdit.subtitle'.tr(),
+                          style: _pop(14, c: _dim),
+                        ),
+                        const SizedBox(height: 28),
+                        ParvozTextField(
+                          label: 'childManagement.addEdit.nameFieldLabel'.tr(),
+                          controller: _nameController,
+                          hint: 'childManagement.addEdit.nameHint'.tr(),
+                          onChanged: (_) => setState(() {}),
+                        ),
+                        const SizedBox(height: 20),
+                        _PillTapField(
+                          label: 'childManagement.addEdit.birthDateLabel'.tr(),
+                          value: birthText,
+                          hint: 'childManagement.addEdit.birthDateHint'.tr(),
+                          icon: SolarIconsBold.calendar,
+                          onTap: _pickDate,
+                        ),
+                        const SizedBox(height: 20),
+                        ParvozTextField(
+                          label: 'childManagement.addEdit.phoneFieldLabel'.tr(),
+                          controller: _phoneController,
+                          hint: 'childManagement.addEdit.phoneHint'.tr(),
+                          keyboardType: TextInputType.phone,
+                        ),
+                        const SizedBox(height: 20),
+                        _PillTapField(
+                          label: 'childManagement.addEdit.genderFieldLabel'
+                              .tr(),
+                          value: genderLabel,
+                          hint: 'childManagement.addEdit.genderHint'.tr(),
+                          icon: SolarIconsBold.altArrowDown,
+                          onTap: _pickGender,
+                        ),
+                        const SizedBox(height: 24),
+                      ],
+                    ),
                   ),
                 ),
-              ),
-
-              // ── Pastki tugmalar — scroll qilmaydi, doim ko'rinadi ──
-              Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.lg,
-                  AppDimensions.md,
-                  AppDimensions.lg,
-                  AppDimensions.lg,
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
+                  child: _PrimaryButton(
+                    label: _isEditMode
+                        ? 'childManagement.addEdit.updateButton'.tr()
+                        : 'childManagement.addEdit.nextButton'.tr(),
+                    loading: _isSaving,
+                    enabled: _isFormValid,
+                    onTap: _onSave,
+                  ),
                 ),
-                child: Row(
-                  children: [
-                    // flex: 1 — kichikroq tugma chap tomonda
-                    Expanded(
-                      child: SecondaryButton(
-                        label: 'childManagement.addEdit.backButton'.tr(),
-                        onPressed: () => context.pop(),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    // flex: 2 — asosiy harakat 2 marta kengroq
-                    Expanded(
-                      flex: 2,
-                      child: PrimaryButton(
-                        label: _isEditMode
-                            ? 'childManagement.addEdit.updateButton'.tr()
-                            : 'childManagement.addEdit.saveButton'.tr(),
-                        isLoading: _isSaving,
-                        onPressed: _isFormValid && !_isSaving ? _onSave : null,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+              ],
+            ),
           ),
+        ],
+      ),
+    );
+  }
+}
+
+// ════════════ Fon yog'dusi ════════════
+
+class _Glow extends StatelessWidget {
+  const _Glow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 380,
+      height: 280,
+      decoration: BoxDecoration(
+        gradient: RadialGradient(
+          colors: [_blue.withValues(alpha: 0.22), const Color(0x00216BFF)],
+          stops: const [0, 0.7],
         ),
       ),
     );
   }
+}
 
-  /// Forma seksiyasi sarlavhasi — 16sp Semibold oq matn.
-  Widget _label(String text) => Text(
-    text,
-    style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
-  );
+// ════════════ Qadam indikatori ════════════
+
+class _StepIndicator extends StatelessWidget {
+  const _StepIndicator();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Row(
+      children: [
+        _StepCircle(icon: SolarIconsBold.peopleNearby, active: true),
+        _StepLine(),
+        _StepCircle(icon: SolarIconsBold.clipboardCheck),
+        _StepLine(),
+        _StepCircle(icon: SolarIconsBold.map),
+      ],
+    );
+  }
+}
+
+class _StepCircle extends StatelessWidget {
+  const _StepCircle({required this.icon, this.active = false});
+
+  final IconData icon;
+  final bool active;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 50,
+      height: 50,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        color: active ? _blue : _stepInactive,
+        border: active ? null : Border.all(color: _fieldBorder),
+        boxShadow: active
+            ? [
+                BoxShadow(
+                  color: _blue.withValues(alpha: 0.45),
+                  blurRadius: 18,
+                  spreadRadius: -2,
+                  offset: const Offset(0, 6),
+                ),
+              ]
+            : null,
+      ),
+      child: Icon(
+        icon,
+        size: 24,
+        color: active ? Colors.white : Colors.white.withValues(alpha: 0.75),
+      ),
+    );
+  }
+}
+
+class _StepLine extends StatelessWidget {
+  const _StepLine();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Expanded(
+      child: Padding(
+        padding: EdgeInsets.symmetric(horizontal: 6),
+        child: SizedBox(height: 2, child: ColoredBox(color: _line)),
+      ),
+    );
+  }
+}
+
+// ════════════ Maydonlar ════════════
+
+/// Bosiladigan pill-maydon (sana / jins) — login/register input'lari bilan
+/// bir xil shisha pill ko'rinishi, o'ngda Solar ikon.
+class _PillTapField extends StatelessWidget {
+  const _PillTapField({
+    required this.label,
+    required this.hint,
+    required this.icon,
+    required this.onTap,
+    this.value,
+  });
+
+  final String label;
+  final String? value;
+  final String hint;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final hasValue = value != null && value!.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
+        ),
+        const SizedBox(height: 10),
+        GestureDetector(
+          onTap: onTap,
+          behavior: HitTestBehavior.opaque,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.03),
+                ],
+              ),
+              border: Border.all(color: _fieldBorder, width: 1.2),
+            ),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      hasValue ? value! : hint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: hasValue
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.35),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Icon(icon, size: 22, color: _dim),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ════════════ Primary tugma ════════════
+
+class _PrimaryButton extends StatelessWidget {
+  const _PrimaryButton({
+    required this.label,
+    required this.onTap,
+    required this.loading,
+    required this.enabled,
+  });
+
+  final String label;
+  final VoidCallback onTap;
+  final bool loading;
+  final bool enabled;
+
+  @override
+  Widget build(BuildContext context) {
+    final canTap = enabled && !loading;
+    return Opacity(
+      opacity: enabled ? 1 : 0.5,
+      child: GestureDetector(
+        onTap: canTap ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: ParvozGlass(
+          blue: true,
+          child: loading
+              ? const SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.6,
+                    color: Colors.white,
+                  ),
+                )
+              : Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(label, style: _pop(16, w: FontWeight.w500)),
+                    const SizedBox(width: 10),
+                    const Icon(
+                      SolarIconsOutline.arrowRight,
+                      size: 18,
+                      color: Colors.white,
+                    ),
+                  ],
+                ),
+        ),
+      ),
+    );
+  }
 }

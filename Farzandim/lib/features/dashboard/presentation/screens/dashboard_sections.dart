@@ -2,8 +2,9 @@ part of 'dashboard_screen.dart';
 
 // ════════════════════════ HEADER ════════════════════════
 
-/// Tepa qism — markaziy avatar (online nuqta) + ism + qurilma/batareya,
-/// chap-tepada Messenger, o'ng-tepada bildirishnoma (o'qilmagan qizil nuqta).
+/// Tepa qism — markaziy avatar (yashil online nuqta) + ism + qurilma/batareya,
+/// chap-tepada Messenger, o'ng-tepada bildirishnoma. Orqada nozik ko'k yog'du
+/// va jinsga qarab tarqoq ikonalar (o'g'il=mototsikl, qiz=kapalak).
 class _Header extends ConsumerWidget {
   const _Header({required this.child});
 
@@ -17,79 +18,99 @@ class _Header extends ConsumerWidget {
     final device = (child.deviceModel != null && child.deviceModel!.isNotEmpty)
         ? child.deviceModel!
         : (child.deviceInfo?.deviceModel ?? '—');
+    final scatter = child.gender == Gender.female
+        ? 'assets/icons/scatter_butterfly.svg'
+        : 'assets/icons/scatter_moto.svg';
 
     return SizedBox(
-      height: 272,
+      height: 300,
       width: double.infinity,
       child: Stack(
-        alignment: Alignment.topCenter,
         children: [
-          // Ko'k yog'du (avatar ortida).
-          Positioned(
-            top: -70,
-            child: IgnorePointer(
-              child: Container(
-                width: 300,
-                height: 300,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: [
-                      _blue.withValues(alpha: 0.45),
-                      const Color(0x00216BFF),
-                    ],
-                    stops: const [0, 0.7],
-                  ),
+          // Nozik ko'k yog'du (avatar ortida).
+          const Align(
+            alignment: Alignment(0, -0.45),
+            child: IgnorePointer(child: _HeaderGlow()),
+          ),
+          // Tarqoq dekorativ ikonalar (jinsga qarab) — fraksion joylashuv,
+          // barcha telefonlarda bir xil ko'rinadi.
+          for (final s in _scatterSpots)
+            Align(
+              alignment: s.$1,
+              child: IgnorePointer(
+                child: Opacity(
+                  opacity: s.$2,
+                  child: SvgPicture.asset(scatter, width: 16, height: 16),
                 ),
               ),
             ),
-          ),
-
           // Messenger (chap-tepa).
           Positioned(
-            top: 8,
+            top: 26,
             left: 16,
-            child: _CircleButton(
-              icon: SolarIconsBold.chatRoundLine,
+            child: _HeaderButton(
+              icon: SvgPicture.asset(
+                'assets/icons/ic_chat.svg',
+                width: 20,
+                height: 20,
+              ),
               onTap: () => context.push(AppRoutes.qaVoicePath(child.id)),
             ),
           ),
-
           // Bildirishnoma (o'ng-tepa) + o'qilmagan qizil nuqta.
           Positioned(
-            top: 8,
+            top: 26,
             right: 16,
-            child: _CircleButton(
-              icon: SolarIconsBold.bell,
+            child: _HeaderButton(
+              icon: SvgPicture.asset(
+                'assets/icons/ic_bell.svg',
+                width: 18,
+                height: 20,
+              ),
               showDot: unread > 0,
               onTap: () => context.push(AppRoutes.notifications),
             ),
           ),
-
           // Markaziy profil.
           Positioned(
-            top: 12,
+            top: 30,
+            left: 0,
+            right: 0,
             child: Column(
               children: [
-                Stack(
-                  children: [
-                    ChildAvatar(child: child, size: 110, showBorder: false),
-                    Positioned(
-                      right: 6,
-                      bottom: 6,
-                      child: Container(
-                        width: 20,
-                        height: 20,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          color: online ? _online : _dim,
-                          border: Border.all(color: _bg, width: 3),
+                // Qora dumaloq border (gradientli) + uning ustida avatar.
+                Container(
+                  width: 134,
+                  height: 134,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    color: Color(0xFF1A1F26),
+                  ),
+                  child: Center(
+                    child: Stack(
+                      children: [
+                        ChildAvatar(child: child, size: 116, showBorder: false),
+                        Positioned(
+                          right: 6,
+                          bottom: 6,
+                          child: Container(
+                            width: 22,
+                            height: 22,
+                            decoration: BoxDecoration(
+                              shape: BoxShape.circle,
+                              color: online ? _online : _dim,
+                              border: Border.all(
+                                color: const Color(0xFF0B1119),
+                                width: 3.5,
+                              ),
+                            ),
+                          ),
                         ),
-                      ),
+                      ],
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 10),
+                const SizedBox(height: 12),
                 Text(
                   child.name,
                   maxLines: 1,
@@ -127,6 +148,43 @@ class _Header extends ConsumerWidget {
   }
 }
 
+/// Tarqoq ikonalar joylashuvi (fraksion alignment + opacity) — butun header
+/// bo'ylab kichik va xira (barcha telefonlarda bir xil).
+const List<(Alignment, double)> _scatterSpots = [
+  (Alignment(-0.62, -0.62), 0.14),
+  (Alignment(0.62, -0.74), 0.14),
+  (Alignment(-0.84, -0.86), 0.08),
+  (Alignment(0.86, -0.5), 0.08),
+  (Alignment(-0.34, -0.94), 0.06),
+  (Alignment(0.34, -0.96), 0.06),
+  (Alignment(-0.74, 0.04), 0.1),
+  (Alignment(0.78, -0.02), 0.1),
+  (Alignment(-0.46, 0.34), 0.06),
+  (Alignment(0.52, 0.3), 0.06),
+  (Alignment(0.9, 0.28), 0.05),
+  (Alignment(-0.9, 0.3), 0.05),
+];
+
+/// Nozik ko'k radial yog'du (avatar ortida).
+class _HeaderGlow extends StatelessWidget {
+  const _HeaderGlow();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 230,
+      height: 230,
+      decoration: BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: RadialGradient(
+          colors: [_blue.withValues(alpha: 0.22), const Color(0x00216BFF)],
+          stops: const [0, 0.72],
+        ),
+      ),
+    );
+  }
+}
+
 IconData _batteryIcon(int level) {
   if (level >= 90) return SolarIconsBold.batteryFull;
   if (level >= 60) return SolarIconsBold.batteryHalf;
@@ -149,15 +207,15 @@ class _Dot extends StatelessWidget {
   }
 }
 
-/// 44x44 shisha dumaloq tugma (Messenger / bildirishnoma).
-class _CircleButton extends StatelessWidget {
-  const _CircleButton({
+/// 44x44 header tugma (chat/bell SVG ikonkasi bilan).
+class _HeaderButton extends StatelessWidget {
+  const _HeaderButton({
     required this.icon,
     required this.onTap,
     this.showDot = false,
   });
 
-  final IconData icon;
+  final Widget icon;
   final VoidCallback onTap;
   final bool showDot;
 
@@ -170,18 +228,18 @@ class _CircleButton extends StatelessWidget {
         width: 44,
         height: 44,
         decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(16),
+          color: const Color(0x17FFFFFF),
+          borderRadius: BorderRadius.circular(15),
           border: Border.all(color: _cardBorder),
         ),
         child: Stack(
           alignment: Alignment.center,
           children: [
-            Icon(icon, size: 20, color: Colors.white),
+            icon,
             if (showDot)
               Positioned(
-                top: 11,
-                right: 11,
+                top: 10,
+                right: 10,
                 child: Container(
                   width: 8,
                   height: 8,
@@ -193,6 +251,53 @@ class _CircleButton extends StatelessWidget {
                 ),
               ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════════════════ SHISHA YUZA (secondary) ════════════════════════
+
+/// Parvoz "secondary shisha" yuzasi (kontent o'lchamida) — pastki tugmalar
+/// uchun (onboarding'dagi shisha tugma bilan bir xil til).
+class _Glass extends StatelessWidget {
+  const _Glass({required this.child, this.radius = 999});
+
+  final Widget child;
+  final double radius;
+
+  @override
+  Widget build(BuildContext context) {
+    final br = BorderRadius.circular(radius);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: br,
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.4),
+            blurRadius: 18,
+            spreadRadius: -6,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      child: ClipRRect(
+        borderRadius: br,
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [Color(0x1FFFFFFF), Color(0x08FFFFFF)],
+              ),
+              border: Border.all(color: const Color(0x33FFFFFF), width: 1.2),
+              borderRadius: br,
+            ),
+            child: child,
+          ),
         ),
       ),
     );
@@ -315,6 +420,7 @@ class _ScreenTimeCard extends ConsumerWidget {
 
     return _Card(
       minHeight: 220,
+      onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
       padding: const EdgeInsets.all(12),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -500,6 +606,7 @@ class _XpCard extends ConsumerWidget {
                   _LeaderboardRow(
                     entry: rows[i],
                     isMe: rows[i].childId == child.id,
+                    me: child,
                   ),
                   if (i < rows.length - 1) const _Divider(),
                 ],
@@ -537,26 +644,35 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({required this.entry, required this.isMe});
+  const _LeaderboardRow({required this.entry, required this.isMe, this.me});
 
   final LeaderboardEntry entry;
   final bool isMe;
 
+  /// Joriy bola (faqat o'z qatorida haqiqiy avatar ko'rsatish uchun).
+  final Child? me;
+
   @override
   Widget build(BuildContext context) {
-    final ch = entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?';
+    final Widget avatar;
+    if (isMe && me != null) {
+      avatar = ChildAvatar(child: me!, size: 24, showBorder: false);
+    } else {
+      final ch = entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?';
+      avatar = Container(
+        width: 24,
+        height: 24,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: isMe ? _blue.withValues(alpha: 0.25) : _cardBg,
+        ),
+        child: Text(ch, style: _pop(11, w: FontWeight.w600)),
+      );
+    }
     return Row(
       children: [
-        Container(
-          width: 24,
-          height: 24,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: isMe ? _blue.withValues(alpha: 0.25) : _cardBg,
-          ),
-          child: Text(ch, style: _pop(11, w: FontWeight.w600)),
-        ),
+        avatar,
         const SizedBox(width: 8),
         Expanded(
           child: Text(
@@ -634,47 +750,38 @@ class _ActionCard extends StatelessWidget {
   const _ActionCard({
     required this.icon,
     required this.label,
-    this.onTap,
-    this.comingSoon = false,
+    required this.onTap,
   });
 
-  final IconData icon;
+  final Widget icon;
   final String label;
-  final VoidCallback? onTap;
-  final bool comingSoon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
     return _Card(
       minHeight: 120,
       padding: const EdgeInsets.all(12),
-      onTap: onTap ?? (comingSoon ? () => _soon(context) : null),
+      onTap: onTap,
       child: Center(
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 28, color: Colors.white),
-            const SizedBox(height: 10),
+            icon,
+            const SizedBox(height: 12),
             Text(
               label,
               textAlign: TextAlign.center,
               style: _pop(15, w: FontWeight.w500),
             ),
-            if (comingSoon) ...[
-              const SizedBox(height: 4),
-              Text('dashboard.comingSoon'.tr(), style: _pop(11, c: _dim)),
-            ],
           ],
         ),
       ),
     );
   }
-
-  void _soon(BuildContext context) =>
-      AppToast.info(context, 'dashboard.comingSoon'.tr());
 }
 
-// ════════════════════════ BOLA QO'SHISH ════════════════════════
+// ════════════════════════ BOLA QO'SHISH (shisha) ════════════════════════
 
 class _AddChildButton extends StatelessWidget {
   const _AddChildButton();
@@ -684,36 +791,38 @@ class _AddChildButton extends StatelessWidget {
     return GestureDetector(
       onTap: () => context.push(AppRoutes.addChild),
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: _cardBg,
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: _cardBorder),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Icon(SolarIconsBold.addCircle, size: 22, color: Colors.white),
-            const SizedBox(width: 8),
-            Text(
-              'dashboard.emptyState.addButton'.tr(),
-              style: _pop(16, w: FontWeight.w500),
+      child: _Glass(
+        child: SizedBox(
+          width: double.infinity,
+          height: 54,
+          child: Center(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(
+                  SolarIconsBold.addCircle,
+                  size: 22,
+                  color: Colors.white,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'dashboard.emptyState.addButton'.tr(),
+                  style: _pop(16, w: FontWeight.w500),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
   }
 }
 
-// ════════════════════════ PASTKI BAR ════════════════════════
+// ════════════════════════ PASTKI BAR (shisha) ════════════════════════
 
-/// Suzuvchi pastki panel — bola almashtirgich + Sozlamalar TOGGLE.
-/// Faqat BITTASI ochiq (to'liq uzun pill), ikkinchisi kichik yumaloq doira.
-/// Yopiq doira bosilsa — ochiladi, ikkinchisi yumaloq doiraga aylanadi.
-class _BottomBar extends StatefulWidget {
+/// Suzuvchi pastki panel — ulangan bolalar almashtirgich + Sozlamalar
+/// (ikkalasi ham Parvoz secondary shisha fonida).
+class _BottomBar extends StatelessWidget {
   const _BottomBar({
     required this.children,
     required this.selectedIndex,
@@ -725,24 +834,9 @@ class _BottomBar extends StatefulWidget {
   final ValueChanged<int> onSelect;
 
   @override
-  State<_BottomBar> createState() => _BottomBarState();
-}
-
-class _BottomBarState extends State<_BottomBar> {
-  // 0 = bola almashtirgich ochiq, 1 = Sozlamalar ochiq.
-  // Default: Sozlamalar to'liq pill (foydalanuvchi ko'rsatgan ko'rinish).
-  int _active = 1;
-
-  static const Duration _dur = Duration(milliseconds: 280);
-  static const Curve _curve = Curves.easeOutCubic;
-  static const double _collapsed = 60; // yumaloq doira (= balandlik)
-  static const double _gap = 10;
-
-  @override
   Widget build(BuildContext context) {
-    final switcherOpen = _active == 0;
-    final pill = BorderRadius.circular(999);
     return DecoratedBox(
+      // Kontent nav ortida yumshoq fonga so'nadi.
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -753,113 +847,49 @@ class _BottomBarState extends State<_BottomBar> {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
-        child: LayoutBuilder(
-          builder: (context, c) {
-            final expanded = c.maxWidth - _collapsed - _gap;
-            return Row(
-              children: [
-                // ── Bola almashtirgich ──
-                AnimatedContainer(
-                  duration: _dur,
-                  curve: _curve,
-                  width: switcherOpen ? expanded : _collapsed,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: _cardBg,
-                    borderRadius: pill,
-                    border: Border.all(color: _cardBorder),
-                  ),
-                  child: ClipRRect(
-                    borderRadius: pill,
-                    child: _SwitcherSegment(
-                      open: switcherOpen,
-                      children: widget.children,
-                      selectedIndex: widget.selectedIndex,
-                      onSelect: widget.onSelect,
-                      onExpand: () => setState(() => _active = 0),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: _gap),
-                // ── Sozlamalar ──
-                AnimatedContainer(
-                  duration: _dur,
-                  curve: _curve,
-                  width: switcherOpen ? _collapsed : expanded,
-                  height: 60,
-                  decoration: BoxDecoration(
-                    color: switcherOpen ? _cardBg : const Color(0xFF2E7D6B),
-                    borderRadius: pill,
-                    border: switcherOpen
-                        ? Border.all(color: _cardBorder)
-                        : null,
-                  ),
-                  child: ClipRRect(
-                    borderRadius: pill,
-                    child: _SettingsSegment(
-                      open: !switcherOpen,
-                      // 1 marta bosish — to'g'ridan-to'g'ri sozlamalarga.
-                      // Holatni ham 1 ga o'rnatamiz (qaytganda yashil pill).
-                      onTap: () {
-                        setState(() => _active = 1);
-                        context.push(AppRoutes.settings);
-                      },
-                    ),
-                  ),
-                ),
-              ],
-            );
-          },
-        ),
-      ),
-    );
-  }
-}
-
-/// Bola almashtirgich segmenti — ochiq: avatarlar+ism pill; yopiq: faol
-/// bola avatari (yumaloq doira, bosilsa ochiladi).
-class _SwitcherSegment extends StatelessWidget {
-  const _SwitcherSegment({
-    required this.open,
-    required this.children,
-    required this.selectedIndex,
-    required this.onSelect,
-    required this.onExpand,
-  });
-
-  final bool open;
-  final List<Child> children;
-  final int selectedIndex;
-  final ValueChanged<int> onSelect;
-  final VoidCallback onExpand;
-
-  @override
-  Widget build(BuildContext context) {
-    if (!open) {
-      final idx = selectedIndex.clamp(0, children.length - 1);
-      return GestureDetector(
-        onTap: onExpand,
-        behavior: HitTestBehavior.opaque,
-        child: Center(
-          child: ChildAvatar(child: children[idx], size: 42, showBorder: false),
-        ),
-      );
-    }
-    // Ochiq — kontent konteynerdan keng bo'lsa kesiladi (animatsiya paytida
-    // overflow xatosi bo'lmasligi uchun OverflowBox).
-    return OverflowBox(
-      maxWidth: double.infinity,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Row(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            for (var i = 0; i < children.length; i++)
-              _SwitcherItem(
-                child: children[i],
-                active: i == selectedIndex,
-                onTap: () => onSelect(i),
+            Flexible(
+              child: _Glass(
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      for (var i = 0; i < children.length; i++)
+                        _SwitcherItem(
+                          child: children[i],
+                          active: i == selectedIndex,
+                          onTap: () => onSelect(i),
+                        ),
+                      // 1 yoki 2 bola bo'lsa "+" (qo'shish); 3 ta bo'lsa yo'q.
+                      if (children.length < _kMaxChildren)
+                        _AddSwitcherButton(
+                          onTap: () => context.push(AppRoutes.addChild),
+                        ),
+                    ],
+                  ),
+                ),
               ),
+            ),
+            const SizedBox(width: 10),
+            GestureDetector(
+              onTap: () => context.push(AppRoutes.settings),
+              behavior: HitTestBehavior.opaque,
+              child: const _Glass(
+                radius: 26,
+                child: SizedBox(
+                  width: 52,
+                  height: 52,
+                  child: Icon(
+                    SolarIconsBold.settings,
+                    size: 24,
+                    color: Colors.white,
+                  ),
+                ),
+              ),
+            ),
           ],
         ),
       ),
@@ -867,13 +897,10 @@ class _SwitcherSegment extends StatelessWidget {
   }
 }
 
-/// Sozlamalar segmenti — ochiq: gear+"Sozlamalar" (yashil); yopiq: gear
-/// yumaloq doira. HAR IKKI holatda ham BIR MARTA bosish to'g'ridan-to'g'ri
-/// sozlamalarga o'tadi (avval yopiq doira faqat ochilardi — endi yo'q).
-class _SettingsSegment extends StatelessWidget {
-  const _SettingsSegment({required this.open, required this.onTap});
+/// Almashtirgich "+" — yangi bola qo'shish (faqat bolalar < 3 bo'lganda).
+class _AddSwitcherButton extends StatelessWidget {
+  const _AddSwitcherButton({required this.onTap});
 
-  final bool open;
   final VoidCallback onTap;
 
   @override
@@ -881,29 +908,92 @@ class _SettingsSegment extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: open
-          ? OverflowBox(
-              maxWidth: double.infinity,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(
-                    SolarIconsBold.settings,
-                    size: 22,
-                    color: Colors.white,
-                  ),
-                  const SizedBox(width: 8),
-                  Text('Sozlamalar', style: _pop(15, w: FontWeight.w600)),
-                ],
-              ),
-            )
-          : const Center(
-              child: Icon(
-                SolarIconsBold.settings,
-                size: 24,
-                color: Colors.white,
-              ),
-            ),
+      child: Container(
+        width: 44,
+        height: 44,
+        margin: const EdgeInsets.only(left: 2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        child: const Icon(
+          SolarIconsBold.addCircle,
+          size: 22,
+          color: Colors.white,
+        ),
+      ),
+    );
+  }
+}
+
+/// Uzun ismni chap tomonga silliq surib ko'rsatuvchi matn (marquee). Ism
+/// [maxWidth]'dan kalta bo'lsa oddiy matn; uzun bo'lsa avtomatik suriladi.
+class _MarqueeText extends StatefulWidget {
+  const _MarqueeText({
+    required this.text,
+    required this.style,
+    required this.maxWidth,
+  });
+
+  final String text;
+  final TextStyle style;
+  final double maxWidth;
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tp = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+    )..layout();
+    final label = Text(
+      widget.text,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.visible,
+      style: widget.style,
+    );
+    final overflow = tp.width - widget.maxWidth;
+    if (overflow <= 0) return label;
+
+    return ClipRect(
+      child: SizedBox(
+        width: widget.maxWidth,
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, child) {
+            final t = Curves.easeInOut.transform(_ctrl.value);
+            return Transform.translate(
+              offset: Offset(-overflow * t, 0),
+              child: child,
+            );
+          },
+          child: Align(alignment: Alignment.centerLeft, child: label),
+        ),
+      ),
     );
   }
 }
@@ -941,7 +1031,11 @@ class _SwitcherItem extends StatelessWidget {
             ChildAvatar(child: child, size: 44, showBorder: false),
             if (active) ...[
               const SizedBox(width: 8),
-              Text(child.name, style: _pop(16, w: FontWeight.w500)),
+              _MarqueeText(
+                text: child.name,
+                style: _pop(16, w: FontWeight.w500),
+                maxWidth: 110,
+              ),
             ],
           ],
         ),
