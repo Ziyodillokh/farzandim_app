@@ -14,6 +14,7 @@ import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class CategoryBlockSheet extends ConsumerStatefulWidget {
   const CategoryBlockSheet({required this.childId, super.key});
@@ -172,15 +173,16 @@ class _CategoryRow extends StatelessWidget {
     // Zamonaviy Material (rounded) ikonkalar — har kategoriyaga aniqroq mos.
     switch (info.category) {
       case 'SOCIAL':
-        return Icons.diversity_3_rounded; // ijtimoiy tarmoq (odamlar guruhi)
+        return SolarIconsBold
+            .usersGroupRounded; // ijtimoiy tarmoq (odamlar guruhi)
       case 'GAME':
-        return Icons.sports_esports_rounded; // o'yin pulti
+        return SolarIconsBold.gamepad; // o'yin pulti
       case 'VIDEO':
-        return Icons.smart_display_rounded; // streaming/video
+        return SolarIconsBold.playStream; // streaming/video
       case 'EDU':
-        return Icons.auto_stories_rounded; // ta'lim (ochiq kitob)
+        return SolarIconsBold.book; // ta'lim (ochiq kitob)
       default:
-        return Icons.grid_view_rounded; // boshqa (ilovalar to'ri)
+        return SolarIconsBold.widget; // boshqa (ilovalar to'ri)
     }
   }
 

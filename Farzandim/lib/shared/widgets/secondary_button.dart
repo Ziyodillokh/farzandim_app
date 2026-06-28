@@ -23,7 +23,7 @@ import 'package:flutter/material.dart';
 /// // Loading bilan, ikonka bilan:
 /// SecondaryButton(
 ///   label: "Akkauntga qo'shish",
-///   icon: Icons.qr_code_2,
+///   icon: SolarIconsBold.qrCode,
 ///   isLoading: _isLoading,
 ///   onPressed: _isLoading ? null : _onAdd,
 /// )
@@ -97,8 +97,9 @@ class SecondaryButton extends StatelessWidget {
       );
     }
 
-    final textColor =
-        isDisabled ? AppColors.textTertiary : AppColors.textPrimary;
+    final textColor = isDisabled
+        ? AppColors.textTertiary
+        : AppColors.textPrimary;
     final textWidget = Text(
       label,
       style: AppTextStyles.bodyM.copyWith(

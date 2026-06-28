@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Ilova ikonkasi — priority: `iconUrl` (Backend MinIO signed URL) >
 /// `iconBase64` (eski Bola App PNG) > paket nomidan Material `IconData`.
@@ -67,31 +68,33 @@ class _AppIconWidgetState extends State<AppIconWidget> {
   /// Paket nomidan tipik IconData taxmin qilamiz.
   IconData _fallbackIcon(String pkg) {
     final p = pkg.toLowerCase();
-    if (p.contains('instagram')) return Icons.camera_alt;
+    if (p.contains('instagram')) return SolarIconsBold.camera;
     if (p.contains('tiktok') || p.contains('musically')) {
-      return Icons.music_note;
+      return SolarIconsBold.musicNote;
     }
-    if (p.contains('youtube')) return Icons.play_arrow;
-    if (p.contains('whatsapp')) return Icons.chat;
-    if (p.contains('telegram')) return Icons.send;
+    if (p.contains('youtube')) return SolarIconsBold.play;
+    if (p.contains('whatsapp')) return SolarIconsBold.chatRound;
+    if (p.contains('telegram')) return SolarIconsBold.plain;
     if (p.contains('chrome') || p.contains('browser')) {
-      return Icons.public;
+      return SolarIconsBold.global;
     }
     if (p.contains('game') || p.contains('pubg')) {
-      return Icons.sports_esports;
+      return SolarIconsBold.gamepad;
     }
-    if (p.contains('settings')) return Icons.settings;
-    if (p.contains('launcher')) return Icons.home;
-    if (p.contains('camera')) return Icons.photo_camera;
-    if (p.contains('phone') || p.contains('dialer')) return Icons.phone;
-    if (p.contains('facebook')) return Icons.thumb_up;
-    if (p.contains('snapchat')) return Icons.photo_camera;
+    if (p.contains('settings')) return SolarIconsBold.settings;
+    if (p.contains('launcher')) return SolarIconsBold.home;
+    if (p.contains('camera')) return SolarIconsBold.camera;
+    if (p.contains('phone') || p.contains('dialer')) {
+      return SolarIconsBold.phone;
+    }
+    if (p.contains('facebook')) return SolarIconsBold.like;
+    if (p.contains('snapchat')) return SolarIconsBold.camera;
     if (p.contains('spotify') || p.contains('music')) {
-      return Icons.headphones;
+      return SolarIconsBold.headphonesRound;
     }
-    if (p.contains('google')) return Icons.search;
-    if (p.contains('pinterest')) return Icons.push_pin;
-    return Icons.apps;
+    if (p.contains('google')) return SolarIconsBold.magnifier;
+    if (p.contains('pinterest')) return SolarIconsBold.pin;
+    return SolarIconsBold.widget;
   }
 
   @override

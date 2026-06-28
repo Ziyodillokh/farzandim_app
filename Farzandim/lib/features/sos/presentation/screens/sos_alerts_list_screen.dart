@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Parent App'da bola yuborgan SOS alert'lar ro'yxati.
 class SosAlertsListScreen extends ConsumerWidget {
@@ -39,7 +40,7 @@ class SosAlertsListScreen extends ConsumerWidget {
                         showResolveButton: true,
                         emptyTitle: 'sos.emptyActiveTitle'.tr(),
                         emptySubtitle: 'sos.emptyActiveSubtitle'.tr(),
-                        emptyIcon: Icons.check_circle_outline_rounded,
+                        emptyIcon: SolarIconsBold.checkCircle,
                         emptyIconColor: AppColors.success,
                       ),
                       _AlertsList(
@@ -47,7 +48,7 @@ class SosAlertsListScreen extends ConsumerWidget {
                         showResolveButton: false,
                         emptyTitle: 'sos.emptyHistoryTitle'.tr(),
                         emptySubtitle: 'sos.emptyHistorySubtitle'.tr(),
-                        emptyIcon: Icons.history_rounded,
+                        emptyIcon: SolarIconsBold.history,
                         emptyIconColor: AppColors.textSecondary,
                       ),
                     ],
@@ -75,7 +76,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              SolarIconsBold.altArrowLeft,
               color: AppColors.textPrimary,
               size: 20,
             ),
@@ -167,7 +168,7 @@ class _AlertsList extends ConsumerWidget {
               const SizedBox(height: AppDimensions.md),
               TextButton.icon(
                 onPressed: () => ref.invalidate(sosAlertsByStatusProvider),
-                icon: Icon(Icons.refresh_rounded, color: AppColors.accent),
+                icon: Icon(SolarIconsBold.refresh, color: AppColors.accent),
                 label: Text(
                   'common.retry'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
@@ -347,8 +348,8 @@ class _AlertTile extends StatelessWidget {
               children: [
                 SettingsIconChip(
                   icon: showResolveButton
-                      ? Icons.warning_amber_rounded
-                      : Icons.check_rounded,
+                      ? SolarIconsBold.dangerTriangle
+                      : SolarIconsBold.checkCircle,
                   accent: accent,
                   size: 44,
                 ),
@@ -419,7 +420,7 @@ class _AlertTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      icon: const Icon(Icons.map_rounded, size: 18),
+                      icon: const Icon(SolarIconsBold.map, size: 18),
                       label: Flexible(
                         child: Text(
                           'sos.mapButton'.tr(),
@@ -444,7 +445,7 @@ class _AlertTile extends StatelessWidget {
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
-                      icon: const Icon(Icons.check_rounded, size: 18),
+                      icon: const Icon(SolarIconsBold.checkCircle, size: 18),
                       label: Flexible(
                         child: Text(
                           'sos.resolveAction'.tr(),
@@ -507,7 +508,7 @@ class _LocationMapDialog extends StatelessWidget {
             padding: const EdgeInsets.all(AppDimensions.md),
             child: Row(
               children: [
-                Icon(Icons.location_on_rounded, color: AppColors.error),
+                Icon(SolarIconsBold.mapPoint, color: AppColors.error),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -516,7 +517,10 @@ class _LocationMapDialog extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: Icon(Icons.close, color: AppColors.textPrimary),
+                  icon: Icon(
+                    SolarIconsBold.closeCircle,
+                    color: AppColors.textPrimary,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ],

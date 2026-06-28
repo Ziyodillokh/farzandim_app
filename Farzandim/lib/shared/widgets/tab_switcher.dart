@@ -83,8 +83,9 @@ class TabSwitcher extends StatelessWidget {
                             color: isActive
                                 ? AppColors.background
                                 : AppColors.textSecondary,
-                            fontWeight:
-                                isActive ? FontWeight.w600 : FontWeight.w500,
+                            fontWeight: isActive
+                                ? FontWeight.w600
+                                : FontWeight.w500,
                           ),
                           child: Text(tabs[i]),
                         ),

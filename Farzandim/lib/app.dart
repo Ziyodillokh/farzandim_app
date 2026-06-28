@@ -17,6 +17,7 @@ import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart'
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// iOS uslubidagi bouncing scroll fizika (web va native).
 /// Sichqoncha/trackpad bilan ham drag ishlaydi — web'da test qulay.
@@ -98,7 +99,7 @@ class FarzandimApp extends ConsumerWidget {
           SnackBar(
             content: Row(
               children: [
-                const Icon(Icons.warning_amber_rounded, color: Colors.white),
+                const Icon(SolarIconsBold.dangerTriangle, color: Colors.white),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(

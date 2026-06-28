@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola jinsi tanlash widget'i — yonma-yon ikkita pill tugma.
 ///
@@ -23,11 +24,7 @@ import 'package:flutter/material.dart';
 /// - **Tanlanmagan:** surface fon, oq matn (w500), border bilan
 class GenderSelector extends StatelessWidget {
   /// `GenderSelector` konstruktor.
-  const GenderSelector({
-    required this.onChanged,
-    super.key,
-    this.selected,
-  });
+  const GenderSelector({required this.onChanged, super.key, this.selected});
 
   /// Joriy tanlangan jinsi. `null` bo'lsa ikkala tugma ham tanlanmagan
   /// holatida ko'rinadi.
@@ -43,7 +40,7 @@ class GenderSelector extends StatelessWidget {
         Expanded(
           child: _buildOption(
             label: 'childManagement.addEdit.genderMale'.tr(),
-            icon: Icons.male,
+            icon: SolarIconsBold.men,
             isSelected: selected == Gender.male,
             onTap: () => onChanged(Gender.male),
           ),
@@ -52,7 +49,7 @@ class GenderSelector extends StatelessWidget {
         Expanded(
           child: _buildOption(
             label: 'childManagement.addEdit.genderFemale'.tr(),
-            icon: Icons.female,
+            icon: SolarIconsBold.women,
             isSelected: selected == Gender.female,
             onTap: () => onChanged(Gender.female),
           ),
@@ -85,9 +82,7 @@ class GenderSelector extends StatelessWidget {
           decoration: BoxDecoration(
             borderRadius: borderRadius,
             // Tanlanmagan tugmaga border — fondan ajralib turishi uchun.
-            border: isSelected
-                ? null
-                : Border.all(color: AppColors.border),
+            border: isSelected ? null : Border.all(color: AppColors.border),
           ),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
@@ -97,8 +92,7 @@ class GenderSelector extends StatelessWidget {
               Text(
                 label,
                 style: AppTextStyles.bodyM.copyWith(
-                  fontWeight:
-                      isSelected ? FontWeight.w600 : FontWeight.w500,
+                  fontWeight: isSelected ? FontWeight.w600 : FontWeight.w500,
                   color: fg,
                 ),
               ),

@@ -14,6 +14,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bolalarni boshqarish — ro'yxat, qo'shish, tahrirlash, o'chirish.
 ///
@@ -63,7 +64,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
               onPressed: () => context.push(AppRoutes.addChild),
               backgroundColor: AppColors.primary,
               foregroundColor: AppColors.onPrimary,
-              icon: const Icon(Icons.add),
+              icon: const Icon(SolarIconsBold.addCircle),
               label: Text(
                 'childManagement.list.addChildFab'.tr(),
                 style: AppTextStyles.bodyM.copyWith(
@@ -94,7 +95,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -127,7 +131,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.child_care_outlined,
+              SolarIconsBold.smileCircle,
               size: 80,
               color: AppColors.textSecondary,
             ),
@@ -143,7 +147,7 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: AppDimensions.lg),
             PrimaryButton(
               label: 'childManagement.list.emptyAddButton'.tr(),
-              icon: Icons.add,
+              icon: SolarIconsBold.addCircle,
               expanded: false,
               onPressed: () => context.push(AppRoutes.addChild),
             ),
@@ -291,7 +295,7 @@ class _FamilyCodePill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.tag, size: 12, color: AppColors.onPrimary),
+          const Icon(SolarIconsBold.tag, size: 12, color: AppColors.onPrimary),
           const SizedBox(width: 4),
           Text(
             code,
@@ -315,7 +319,7 @@ class _ActionMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert, color: AppColors.textPrimary),
+      icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
       color: AppColors.surfaceVariant,
       onSelected: (action) async {
         switch (action) {
@@ -336,7 +340,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'edit',
           child: Row(
             children: [
-              Icon(Icons.edit_outlined, size: 20, color: AppColors.textPrimary),
+              Icon(SolarIconsBold.pen, size: 20, color: AppColors.textPrimary),
               const SizedBox(width: 12),
               Text(
                 'childManagement.list.editAction'.tr(),
@@ -353,7 +357,7 @@ class _ActionMenu extends ConsumerWidget {
           value: 'repair',
           child: Row(
             children: [
-              Icon(Icons.qr_code_2_rounded, size: 20, color: AppColors.primary),
+              Icon(SolarIconsBold.qrCode, size: 20, color: AppColors.primary),
               const SizedBox(width: 12),
               Text(
                 'childManagement.list.repairAction'.tr(),
@@ -369,7 +373,11 @@ class _ActionMenu extends ConsumerWidget {
           value: 'delete',
           child: Row(
             children: [
-              Icon(Icons.delete_outline, size: 20, color: AppColors.error),
+              Icon(
+                SolarIconsBold.trashBinMinimalistic,
+                size: 20,
+                color: AppColors.error,
+              ),
               const SizedBox(width: 12),
               Text(
                 'childManagement.list.deleteAction'.tr(),
@@ -437,9 +445,7 @@ class _ActionMenu extends ConsumerWidget {
     if (result.isSuccess) {
       AppToast.success(
         context,
-        'childManagement.list.deletedSnack'.tr(
-          namedArgs: {'name': child.name},
-        ),
+        'childManagement.list.deletedSnack'.tr(namedArgs: {'name': child.name}),
       );
     } else {
       AppToast.error(
@@ -467,7 +473,7 @@ class _ErrorState extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(Icons.error_outline, size: 56, color: AppColors.error),
+            Icon(SolarIconsBold.dangerCircle, size: 56, color: AppColors.error),
             const SizedBox(height: AppDimensions.md),
             Text(
               'childManagement.list.errorTitle'.tr(),

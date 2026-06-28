@@ -22,7 +22,10 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            icon: Icon(
+              SolarIconsBold.altArrowLeft,
+              color: AppColors.textPrimary,
+            ),
           ),
           Expanded(
             child: Text(
@@ -247,7 +250,11 @@ class _RightStatus extends StatelessWidget {
             style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(width: 6),
-          Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+          Icon(
+            SolarIconsBold.forbiddenCircle,
+            size: 18,
+            color: AppColors.error,
+          ),
         ],
       );
     }
@@ -263,17 +270,13 @@ class _RightStatus extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Icon(
-            Icons.hourglass_empty_rounded,
-            size: 18,
-            color: AppColors.accent,
-          ),
+          Icon(SolarIconsBold.hourglass, size: 18, color: AppColors.accent),
         ],
       );
     }
     // Limit yo'q — bosib qo'yish mumkinligini bildiruvchi xira ikonka.
     return Icon(
-      Icons.hourglass_empty_rounded,
+      SolarIconsBold.hourglass,
       size: 18,
       color: AppColors.textTertiary,
     );

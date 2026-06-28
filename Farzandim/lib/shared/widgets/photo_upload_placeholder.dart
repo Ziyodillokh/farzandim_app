@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Foto yuklash uchun placeholder — 120x120 yumaloq burchakli kvadrat.
 ///
@@ -89,7 +90,7 @@ class _AddIcon extends StatelessWidget {
         border: Border.all(color: AppColors.textSecondary, width: 2),
       ),
       child: Icon(
-        Icons.add,
+        SolarIconsBold.addCircle,
         color: AppColors.textSecondary,
         size: 28,
       ),
@@ -125,7 +126,7 @@ class _PhotoView extends StatelessWidget {
               errorBuilder: (_, __, ___) => ColoredBox(
                 color: AppColors.surfaceVariant,
                 child: Icon(
-                  Icons.broken_image_outlined,
+                  SolarIconsBold.galleryRemove,
                   color: AppColors.textTertiary,
                 ),
               ),
@@ -153,9 +154,7 @@ class _RemoveButton extends StatelessWidget {
   Widget build(BuildContext context) {
     return Material(
       color: AppColors.surface,
-      shape: CircleBorder(
-        side: BorderSide(color: AppColors.border),
-      ),
+      shape: CircleBorder(side: BorderSide(color: AppColors.border)),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
         onTap: onTap,
@@ -163,7 +162,7 @@ class _RemoveButton extends StatelessWidget {
           width: 28,
           height: 28,
           child: Icon(
-            Icons.close,
+            SolarIconsBold.closeCircle,
             size: 16,
             color: AppColors.textPrimary,
           ),

@@ -43,10 +43,7 @@ class SwrCache {
       final envelope = jsonDecode(raw) as Map<String, dynamic>;
       final savedAtMs = envelope['savedAt'] as int?;
       if (savedAtMs == null) return null;
-      return (
-        envelope['data'],
-        DateTime.fromMillisecondsSinceEpoch(savedAtMs),
-      );
+      return (envelope['data'], DateTime.fromMillisecondsSinceEpoch(savedAtMs));
     } catch (e) {
       debugPrint('SwrCache.read($key): $e');
       return null;

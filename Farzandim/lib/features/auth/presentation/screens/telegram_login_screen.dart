@@ -71,7 +71,8 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
       if (raw['ok'] != true) {
         if (!mounted) return;
         setState(() {
-          _error = (raw['error'] as String?) ??
+          _error =
+              (raw['error'] as String?) ??
               'auth.telegramLogin.unknownError'.tr();
         });
         return;
@@ -84,9 +85,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
       );
       final user = AuthUser.fromJson(raw['user'] as Map<String, dynamic>);
 
-      await ref
-          .read(backendAuthProvider.notifier)
-          .onLoggedIn(tokens, user);
+      await ref.read(backendAuthProvider.notifier).onLoggedIn(tokens, user);
 
       if (!mounted) return;
       // Router refreshListenable backendAuthProvider'ga listen qiladi —
@@ -99,8 +98,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error = 'auth.telegramLogin.parseError'
-            .tr(namedArgs: {'error': '$e'});
+        _error = 'auth.telegramLogin.parseError'.tr(namedArgs: {'error': '$e'});
       });
     }
   }
@@ -117,11 +115,7 @@ class _TelegramLoginScreenState extends ConsumerState<TelegramLoginScreen> {
         children: [
           WebViewWidget(controller: _controller),
           if (_loading)
-            Center(
-              child: CircularProgressIndicator(
-                color: AppColors.primary,
-              ),
-            ),
+            Center(child: CircularProgressIndicator(color: AppColors.primary)),
           if (_error != null)
             Positioned(
               left: 16,

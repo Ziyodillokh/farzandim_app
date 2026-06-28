@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Birinchi ochilish — til tanlash ekrani (Parvoz dizayni).
 ///
@@ -151,11 +152,7 @@ class _LangRow extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: const BorderRadius.all(Radius.circular(5)),
-              child: SvgPicture.asset(
-                _flagAsset(lang),
-                width: 24,
-                height: 24,
-              ),
+              child: SvgPicture.asset(_flagAsset(lang), width: 24, height: 24),
             ),
             const SizedBox(width: 12),
             Text(
@@ -170,7 +167,7 @@ class _LangRow extends StatelessWidget {
             if (selected) ...[
               const SizedBox(width: 10),
               const Icon(
-                Icons.check_rounded,
+                SolarIconsBold.checkCircle,
                 size: 20,
                 color: Colors.white,
               ),

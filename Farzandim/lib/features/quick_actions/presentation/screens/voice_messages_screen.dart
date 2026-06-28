@@ -11,6 +11,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bolalar ro'yxati — Telegram chat list uslubida.
 ///
@@ -46,9 +47,7 @@ class VoiceMessagesScreen extends ConsumerWidget {
                       ? const _NoChildren()
                       : _ChildrenList(onRefresh: onRefresh),
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (e, _) => Center(
                     child: Padding(
@@ -93,7 +92,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: onBack,
@@ -126,7 +125,7 @@ class _NoChildren extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.child_care,
+              SolarIconsBold.smileCircle,
               size: 64,
               color: AppColors.textTertiary,
             ),
@@ -224,11 +223,7 @@ class _ChildVoiceTile extends ConsumerWidget {
             Stack(
               clipBehavior: Clip.none,
               children: [
-                ChildAvatar(
-                  child: child,
-                  size: 56,
-                  showBorder: false,
-                ),
+                ChildAvatar(child: child, size: 56, showBorder: false),
                 unreadAsync.when(
                   data: (count) {
                     if (count == 0) return const SizedBox.shrink();
@@ -323,16 +318,13 @@ class _ChildVoiceTile extends ConsumerWidget {
                       final senderText = latest.sender == 'parent'
                           ? 'voiceMessages.youPrefix'.tr()
                           : '';
-                      final durationText =
-                          'voiceMessages.durationSeconds'.tr(
-                        namedArgs: {
-                          'seconds': '${latest.durationSeconds}',
-                        },
+                      final durationText = 'voiceMessages.durationSeconds'.tr(
+                        namedArgs: {'seconds': '${latest.durationSeconds}'},
                       );
                       return Row(
                         children: [
                           Icon(
-                            Icons.mic,
+                            SolarIconsBold.microphone,
                             size: 14,
                             color: AppColors.textSecondary,
                           ),

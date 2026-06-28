@@ -10,48 +10,48 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola uchun photo requests ro'yxati — Backend fetch + WS refresh.
 final photoRequestsProvider =
-    StreamProvider.family<List<Map<String, dynamic>>, String>(
-        (ref, childId) async* {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) {
-    yield const [];
-    return;
-  }
+    StreamProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      childId,
+    ) async* {
+      final auth = ref.watch(backendAuthProvider);
+      if (auth is! AuthAuthenticated) {
+        yield const [];
+        return;
+      }
 
-  final repo = ref.watch(backendPhotoRequestRepositoryProvider);
-  yield await repo.getRequests(childId: childId);
+      final repo = ref.watch(backendPhotoRequestRepositoryProvider);
+      yield await repo.getRequests(childId: childId);
 
-  final controller = StreamController<List<Map<String, dynamic>>>();
-  Future<void> refresh() async {
-    if (controller.isClosed) return;
-    final list = await repo.getRequests(childId: childId);
-    if (!controller.isClosed) controller.add(list);
-  }
+      final controller = StreamController<List<Map<String, dynamic>>>();
+      Future<void> refresh() async {
+        if (controller.isClosed) return;
+        final list = await repo.getRequests(childId: childId);
+        if (!controller.isClosed) controller.add(list);
+      }
 
-  final createdSub = repo.createdStream().listen((data) {
-    if (data is Map && data['childId'] == childId) refresh();
-  });
-  final completedSub = repo.completedStream().listen((data) {
-    if (data is Map && data['childId'] == childId) refresh();
-  });
-  final declinedSub = repo.declinedStream().listen((data) {
-    if (data is Map && data['childId'] == childId) refresh();
-  });
+      final createdSub = repo.createdStream().listen((data) {
+        if (data is Map && data['childId'] == childId) refresh();
+      });
+      final completedSub = repo.completedStream().listen((data) {
+        if (data is Map && data['childId'] == childId) refresh();
+      });
+      final declinedSub = repo.declinedStream().listen((data) {
+        if (data is Map && data['childId'] == childId) refresh();
+      });
 
-  ref.onDispose(() {
-    createdSub.cancel();
-    completedSub.cancel();
-    declinedSub.cancel();
-    controller.close();
-  });
-  yield* controller.stream;
-});
+      ref.onDispose(() {
+        createdSub.cancel();
+        completedSub.cancel();
+        declinedSub.cancel();
+        controller.close();
+      });
+      yield* controller.stream;
+    });
 
 /// Photo request action'lari (Parent — create + delete).
-class PhotoRequestActionsNotifier
-    extends StateNotifier<AsyncValue<void>> {
-  PhotoRequestActionsNotifier(this._ref)
-      : super(const AsyncValue.data(null));
+class PhotoRequestActionsNotifier extends StateNotifier<AsyncValue<void>> {
+  PhotoRequestActionsNotifier(this._ref) : super(const AsyncValue.data(null));
 
   final Ref _ref;
 
@@ -59,10 +59,7 @@ class PhotoRequestActionsNotifier
       _ref.read(backendPhotoRequestRepositoryProvider);
 
   /// Parent yangi rasm so'rovi yaratadi.
-  Future<bool> createRequest({
-    required String childId,
-    String? message,
-  }) async {
+  Future<bool> createRequest({required String childId, String? message}) async {
     state = const AsyncValue.loading();
     try {
       await _repo.createRequest(childId: childId, message: message);
@@ -92,7 +89,7 @@ class PhotoRequestActionsNotifier
   }
 }
 
-final photoRequestActionsProvider = StateNotifierProvider<
-    PhotoRequestActionsNotifier, AsyncValue<void>>(
-  PhotoRequestActionsNotifier.new,
-);
+final photoRequestActionsProvider =
+    StateNotifierProvider<PhotoRequestActionsNotifier, AsyncValue<void>>(
+      PhotoRequestActionsNotifier.new,
+    );

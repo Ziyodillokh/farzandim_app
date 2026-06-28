@@ -26,12 +26,14 @@ class PairRequest {
     return PairRequest(
       id: json['id'] as String? ?? '',
       childId: json['childId'] as String? ?? '',
-      childName: (json['childName'] as String?) ??
+      childName:
+          (json['childName'] as String?) ??
           (json['child'] as Map?)?['name'] as String? ??
           'Bola',
       status: _parseStatus(json['status'] as String?),
       createdAt: _parseIso(json['createdAt']) ?? DateTime.now(),
-      expiresAt: _parseIso(json['expiresAt']) ??
+      expiresAt:
+          _parseIso(json['expiresAt']) ??
           DateTime.now().add(const Duration(minutes: 5)),
       ipAddress: json['ipAddress'] as String?,
       deviceModel: json['deviceModel'] as String?,
@@ -81,8 +83,7 @@ class PairRequest {
   String get deviceLabel {
     final parts = <String>[
       if (deviceModel != null && deviceModel!.isNotEmpty) deviceModel!,
-      if (androidVersion != null && androidVersion!.isNotEmpty)
-        androidVersion!,
+      if (androidVersion != null && androidVersion!.isNotEmpty) androidVersion!,
     ];
     return parts.isEmpty
         ? 'pairRequests.deviceUnknown'.tr()

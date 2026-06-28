@@ -23,6 +23,7 @@ import 'package:farzandim/features/video_message/data/repositories/backend_video
 import 'package:farzandim/features/voice_message/data/services/video_thumb_cache.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 import 'package:video_player/video_player.dart';
 
 /// Doiraning diametri (Telegram'da odatda ~200, biroz kichikroq olamiz).
@@ -105,7 +106,8 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
 
   Future<void> _openFullscreen() async {
     // Proxy stream URL (signed URL telefondan yetib bo'lmaydi).
-    final url = _signedUrl ??
+    final url =
+        _signedUrl ??
         ref
             .read(backendVideoMessageRepositoryProvider)
             .videoStreamUrl(widget.message.id);
@@ -126,15 +128,17 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(
             flex: 5,
             child: Column(
-              crossAxisAlignment:
-                  isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isOwn
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
@@ -156,7 +160,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                 gaplessPlayback: true,
                                 errorBuilder: (_, __, ___) => Center(
                                   child: Icon(
-                                    Icons.videocam_off_outlined,
+                                    SolarIconsBold.videocamera,
                                     color: AppColors.textTertiary,
                                     size: 36,
                                   ),
@@ -176,7 +180,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                             else
                               Center(
                                 child: Icon(
-                                  Icons.videocam_off_outlined,
+                                  SolarIconsBold.videocamera,
                                   color: AppColors.textTertiary,
                                   size: 36,
                                 ),
@@ -203,17 +207,17 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                   width: 54,
                                   height: 54,
                                   decoration: BoxDecoration(
-                                    color: Colors.black
-                                        .withValues(alpha: 0.45),
+                                    color: Colors.black.withValues(alpha: 0.45),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.85),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
                                       width: 2,
                                     ),
                                   ),
                                   child: const Icon(
-                                    Icons.play_arrow_rounded,
+                                    SolarIconsBold.play,
                                     color: Colors.white,
                                     size: 32,
                                   ),
@@ -232,10 +236,8 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color: Colors.black
-                                        .withValues(alpha: 0.55),
-                                    borderRadius:
-                                        BorderRadius.circular(999),
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     _formatDuration(msg.durationSeconds),
@@ -264,8 +266,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     Text(
                       _formatTime(msg.createdAt),
                       style: TextStyle(
-                        color:
-                            AppColors.textSecondary.withValues(alpha: 0.9),
+                        color: AppColors.textSecondary.withValues(alpha: 0.9),
                         fontSize: 11,
                       ),
                     ),
@@ -273,13 +274,12 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                       const SizedBox(width: 4),
                       Icon(
                         msg.status == VideoMessageStatus.seen
-                            ? Icons.done_all
-                            : Icons.done,
+                            ? SolarIconsBold.checkSquare
+                            : SolarIconsBold.checkCircle,
                         size: 14,
                         color: msg.status == VideoMessageStatus.seen
                             ? Colors.blue.shade400
-                            : AppColors.textSecondary
-                                .withValues(alpha: 0.7),
+                            : AppColors.textSecondary.withValues(alpha: 0.7),
                       ),
                     ],
                   ],
@@ -301,8 +301,7 @@ class _FullscreenVideoDialog extends StatefulWidget {
   final String videoUrl;
 
   @override
-  State<_FullscreenVideoDialog> createState() =>
-      _FullscreenVideoDialogState();
+  State<_FullscreenVideoDialog> createState() => _FullscreenVideoDialogState();
 }
 
 class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
@@ -334,9 +333,9 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
     // Round player diameter — ekran kichik tomoni ~85%.
     final diameter =
         (screenSize.width < screenSize.height
-                ? screenSize.width
-                : screenSize.height) *
-            0.85;
+            ? screenSize.width
+            : screenSize.height) *
+        0.85;
     final videoAr = _controller.value.aspectRatio == 0
         ? 1.0
         : _controller.value.aspectRatio;
@@ -372,9 +371,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                   SizedBox(
                     width: 48,
                     height: 48,
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.primary),
                   ),
                 Positioned(
                   top: 40,
@@ -384,7 +381,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                     shape: const CircleBorder(),
                     child: IconButton(
                       icon: const Icon(
-                        Icons.close,
+                        SolarIconsBold.closeCircle,
                         color: Colors.white,
                         size: 26,
                       ),

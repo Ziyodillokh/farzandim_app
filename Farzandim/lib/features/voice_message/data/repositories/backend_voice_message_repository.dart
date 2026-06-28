@@ -10,18 +10,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendVoiceMessageRepositoryProvider =
     Provider<BackendVoiceMessageRepository>((ref) {
-  return BackendVoiceMessageRepository(
-    dio: ref.watch(dioClientProvider),
-    socketClient: ref.watch(socketClientProvider),
-  );
-});
+      return BackendVoiceMessageRepository(
+        dio: ref.watch(dioClientProvider),
+        socketClient: ref.watch(socketClientProvider),
+      );
+    });
 
 class BackendVoiceMessageRepository {
   BackendVoiceMessageRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -109,10 +109,7 @@ class BackendVoiceMessageRepository {
     try {
       final response = await _dio.post<Map<String, dynamic>>(
         '/voice-messages/text',
-        data: <String, dynamic>{
-          'receiverId': receiverId,
-          'text': trimmed,
-        },
+        data: <String, dynamic>{'receiverId': receiverId, 'text': trimmed},
       );
       return response.data?['id'] as String?;
     } on DioException catch (e) {

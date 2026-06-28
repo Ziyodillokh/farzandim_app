@@ -11,8 +11,9 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendAppUsageRepositoryProvider =
-    Provider<BackendAppUsageRepository>((ref) {
+final backendAppUsageRepositoryProvider = Provider<BackendAppUsageRepository>((
+  ref,
+) {
   return BackendAppUsageRepository(dio: ref.watch(dioClientProvider));
 });
 
@@ -59,23 +60,23 @@ class BackendAppUsageRepository {
 
   List<AppUsageEntry> _mapInstalledApps(String childId, List<dynamic> list) {
     return list.map((m) {
-        final map = m as Map;
-        final pkg = '${map['packageName']}';
-        // Backend signed MinIO URL telefon uchun yetib bo'lmaydi
-        // (MINIO_PUBLIC_URL ichki manzil). Backend ikona bor deb belgilasa
-        // (iconUrl != null), barqaror proxy URL quramiz — backend rasmni
-        // o'zi stream qiladi (`/installed-apps/:pkg/icon`).
-        final hasIcon = map['iconUrl'] != null || map['iconPath'] != null;
-        final iconUrl = hasIcon ? _iconProxyUrl(childId, pkg) : null;
-        return AppUsageEntry.fromMap({
-          'packageName': pkg,
-          'appName': map['appName'],
-          'totalTimeMs': 0,
-          'lastTimeUsed': map['lastSeenAt'],
-          'iconBase64': map['iconBase64'],
-          'iconUrl': iconUrl,
-        });
-      }).toList();
+      final map = m as Map;
+      final pkg = '${map['packageName']}';
+      // Backend signed MinIO URL telefon uchun yetib bo'lmaydi
+      // (MINIO_PUBLIC_URL ichki manzil). Backend ikona bor deb belgilasa
+      // (iconUrl != null), barqaror proxy URL quramiz — backend rasmni
+      // o'zi stream qiladi (`/installed-apps/:pkg/icon`).
+      final hasIcon = map['iconUrl'] != null || map['iconPath'] != null;
+      final iconUrl = hasIcon ? _iconProxyUrl(childId, pkg) : null;
+      return AppUsageEntry.fromMap({
+        'packageName': pkg,
+        'appName': map['appName'],
+        'totalTimeMs': 0,
+        'lastTimeUsed': map['lastSeenAt'],
+        'iconBase64': map['iconBase64'],
+        'iconUrl': iconUrl,
+      });
+    }).toList();
   }
 
   /// Ilova ikonasi proxy URL — backend MinIO'dan rasmni stream qiladi.
@@ -103,9 +104,7 @@ class BackendAppUsageRepository {
   }
 
   /// Keshdagi oxirgi haftalik totals (stale). Yo'q yoki buzuq bo'lsa null.
-  Future<List<DailyUsageTotal>?> getCachedWeeklyTotals(
-    String childId,
-  ) async {
+  Future<List<DailyUsageTotal>?> getCachedWeeklyTotals(String childId) async {
     final cached = await SwrCache.read('weekly_usage:$childId');
     if (cached == null) return null;
     final (data, _) = cached;
@@ -165,11 +164,7 @@ class BackendAppUsageRepository {
           'iconUrl': _iconProxyUrl(childId, pkg),
         });
       }).toList();
-      return AppUsageDay(
-        date: dateStr,
-        updatedAt: DateTime.now(),
-        apps: apps,
-      );
+      return AppUsageDay(date: dateStr, updatedAt: DateTime.now(), apps: apps);
     } on DioException catch (e) {
       // Xatoni yutmaymiz — offline'da yolg'on "0 daqiqa" ko'rinardi.
       debugPrint('BackendAppUsageRepository.getTodayUsage: $e');

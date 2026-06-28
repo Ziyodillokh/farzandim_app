@@ -20,6 +20,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Sozlamalar bosh ekrani.
 class SettingsScreen extends ConsumerWidget {
@@ -68,12 +69,12 @@ class SettingsScreen extends ConsumerWidget {
                               accent: AppColors.secondary,
                               items: [
                                 _MenuItem(
-                                  icon: Icons.person_add_alt_1_rounded,
+                                  icon: SolarIconsBold.userPlus,
                                   title: 'settings.menu.addChild'.tr(),
                                   onTap: () => context.push(AppRoutes.addChild),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.edit_rounded,
+                                  icon: SolarIconsBold.pen,
                                   title: 'settings.menu.editChild'.tr(),
                                   onTap: () =>
                                       context.push(AppRoutes.settingsChildren),
@@ -86,13 +87,13 @@ class SettingsScreen extends ConsumerWidget {
                               accent: AppColors.accent,
                               items: [
                                 _MenuItem(
-                                  icon: Icons.sos_rounded,
+                                  icon: SolarIconsBold.siren,
                                   title: 'settings.menu.sosAlerts'.tr(),
                                   onTap: () =>
                                       context.push(AppRoutes.sosAlerts),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.devices_rounded,
+                                  icon: SolarIconsBold.devices,
                                   title: 'settings.menu.sessions'.tr(),
                                   badge: otherSessions > 0
                                       ? '$otherSessions'
@@ -101,29 +102,29 @@ class SettingsScreen extends ConsumerWidget {
                                       context.push(AppRoutes.settingsSessions),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.language_rounded,
+                                  icon: SolarIconsBold.global,
                                   title: 'settings.menu.language'.tr(),
                                   onTap: () =>
                                       _showLanguageDialog(context, ref),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.help_outline_rounded,
+                                  icon: SolarIconsBold.questionCircle,
                                   title: 'settings.menu.support'.tr(),
                                   onTap: () => context.push(AppRoutes.support),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.info_outline_rounded,
+                                  icon: SolarIconsBold.infoCircle,
                                   title: 'settings.menu.about'.tr(),
                                   onTap: () =>
                                       context.push(AppRoutes.settingsAbout),
                                 ),
                                 _MenuItem(
-                                  icon: Icons.share_rounded,
+                                  icon: SolarIconsBold.share,
                                   title: 'settings.menu.share'.tr(),
                                   onTap: _shareApp,
                                 ),
                                 _MenuItem(
-                                  icon: Icons.notifications_active_rounded,
+                                  icon: SolarIconsBold.bellBing,
                                   title: 'settings.pushTest.menuTitle'.tr(),
                                   onTap: () => _sendTestPush(context, ref),
                                 ),
@@ -415,7 +416,7 @@ class _OverflowMenu extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return PopupMenuButton<String>(
-      icon: Icon(Icons.more_vert_rounded, color: AppColors.textPrimary),
+      icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
       color: AppColors.surface,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppDimensions.radiusM),
@@ -434,7 +435,7 @@ class _OverflowMenu extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                Icons.logout_rounded,
+                SolarIconsBold.logout,
                 color: AppColors.textPrimary,
                 size: 20,
               ),
@@ -448,7 +449,7 @@ class _OverflowMenu extends ConsumerWidget {
           child: Row(
             children: [
               Icon(
-                Icons.delete_outline_rounded,
+                SolarIconsBold.trashBinMinimalistic,
                 color: AppColors.error,
                 size: 20,
               ),
@@ -596,7 +597,7 @@ class _MenuItem extends StatelessWidget {
               const SizedBox(width: AppDimensions.sm),
             ],
             Icon(
-              Icons.chevron_right_rounded,
+              SolarIconsBold.altArrowRight,
               color: AppColors.textTertiary,
               size: 22,
             ),
@@ -635,7 +636,11 @@ class _LanguageOption extends StatelessWidget {
             const SizedBox(width: AppDimensions.md),
             Expanded(child: Text(language.label, style: AppTextStyles.bodyM)),
             if (isSelected)
-              Icon(Icons.check_circle, color: AppColors.accent, size: 20),
+              Icon(
+                SolarIconsBold.checkCircle,
+                color: AppColors.accent,
+                size: 20,
+              ),
           ],
         ),
       ),

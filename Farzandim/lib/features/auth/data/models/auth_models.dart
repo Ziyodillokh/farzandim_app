@@ -2,10 +2,7 @@
 // JSON qo'lda parse qilinadi, oddiy va aniq.
 
 class AuthTokens {
-  const AuthTokens({
-    required this.accessToken,
-    required this.refreshToken,
-  });
+  const AuthTokens({required this.accessToken, required this.refreshToken});
 
   factory AuthTokens.fromJson(Map<String, dynamic> json) {
     final access = json['accessToken'] as String?;
@@ -46,10 +43,9 @@ class AuthUser {
       // Backend `PARENT`/`CHILD` (uppercase enum) → lowercase normalize.
       role: rawRole.toLowerCase(),
       // Backend nom mapping: name → displayName, avatarUrl → photoUrl
-      displayName: (json['name'] as String?) ??
-          (json['displayName'] as String?),
-      photoUrl: (json['avatarUrl'] as String?) ??
-          (json['photoUrl'] as String?),
+      displayName:
+          (json['name'] as String?) ?? (json['displayName'] as String?),
+      photoUrl: (json['avatarUrl'] as String?) ?? (json['photoUrl'] as String?),
       // Backend telegramId String sifatida qaytaradi (BigInt overflow xavfi).
       telegramId: json['telegramId']?.toString(),
       language: json['language'] as String?,
@@ -93,15 +89,15 @@ class AuthUser {
   /// Lokal cache uchun (optimistik startup). `fromJson` o'qiy oladigan
   /// kalitlar bilan — `displayName`/`photoUrl` (round-trip xavfsiz).
   Map<String, dynamic> toJson() => <String, dynamic>{
-        'id': id,
-        'role': role,
-        'displayName': displayName,
-        'photoUrl': photoUrl,
-        'telegramId': telegramId,
-        'language': language,
-        'phone': phone,
-        'email': email,
-      };
+    'id': id,
+    'role': role,
+    'displayName': displayName,
+    'photoUrl': photoUrl,
+    'telegramId': telegramId,
+    'language': language,
+    'phone': phone,
+    'email': email,
+  };
 }
 
 /// `FlutterAuth.postMessage(JSON)` orqali login.html'dan keladi.

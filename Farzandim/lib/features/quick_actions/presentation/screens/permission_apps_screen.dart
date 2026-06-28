@@ -14,6 +14,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bitta ruxsat uchun ilovalar ro'yxati (masalan "Kamera uchun ruxsatlar").
 ///
@@ -160,12 +161,13 @@ class _PermissionAppsScreenState extends ConsumerState<PermissionAppsScreen> {
                             const SizedBox(height: AppDimensions.md),
                             TextButton.icon(
                               onPressed: () => ref.invalidate(
-                                appPermissionPoliciesProvider(
-                                  (_childId, widget.permission),
-                                ),
+                                appPermissionPoliciesProvider((
+                                  _childId,
+                                  widget.permission,
+                                )),
                               ),
                               icon: Icon(
-                                Icons.refresh_rounded,
+                                SolarIconsBold.refresh,
                                 color: AppColors.accent,
                               ),
                               label: Text(
@@ -311,7 +313,7 @@ class _ChildDropdown extends ConsumerWidget {
             ),
             const SizedBox(width: 4),
             Icon(
-              Icons.keyboard_arrow_down_rounded,
+              SolarIconsBold.altArrowDown,
               size: 20,
               color: AppColors.textSecondary,
             ),
@@ -341,7 +343,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),

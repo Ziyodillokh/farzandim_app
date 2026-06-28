@@ -22,6 +22,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 part 'dashboard_sections.dart';
 
@@ -95,7 +96,10 @@ class DashboardScreen extends ConsumerWidget {
       body = _DashboardBody(children: children);
     }
 
-    return Scaffold(backgroundColor: _bg, body: SafeArea(child: body));
+    return Scaffold(
+      backgroundColor: _bg,
+      body: SafeArea(child: body),
+    );
   }
 }
 
@@ -121,7 +125,11 @@ class _ErrorState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.wifi_off_rounded, size: 48, color: _dim),
+          const Icon(
+            SolarIconsBold.wifiRouterMinimalistic,
+            size: 48,
+            color: _dim,
+          ),
           const SizedBox(height: 16),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -134,7 +142,7 @@ class _ErrorState extends StatelessWidget {
           const SizedBox(height: 20),
           TextButton.icon(
             onPressed: onRetry,
-            icon: const Icon(Icons.refresh_rounded, color: _blue),
+            icon: const Icon(SolarIconsBold.refresh, color: _blue),
             label: Text(
               'common.retry'.tr(),
               style: _pop(15, w: FontWeight.w600, c: _blue),
@@ -164,7 +172,7 @@ class _EmptyState extends StatelessWidget {
               color: _cardBg,
             ),
             child: const Icon(
-              Icons.person_add_alt_1_rounded,
+              SolarIconsBold.userPlus,
               size: 44,
               color: Colors.white,
             ),
@@ -281,7 +289,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                         children: [
                           Expanded(
                             child: _ActionCard(
-                              icon: Icons.lock_clock_rounded,
+                              icon: SolarIconsBold.lock,
                               label: 'dashboard.quickActions.appRestrictions'
                                   .tr(),
                               onTap: () => context.push(
@@ -292,7 +300,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                           const SizedBox(width: 4),
                           Expanded(
                             child: _ActionCard(
-                              icon: Icons.insights_rounded,
+                              icon: SolarIconsBold.graphUp,
                               label: 'dashboard.quickActions.weeklyReport'.tr(),
                               comingSoon: true,
                             ),

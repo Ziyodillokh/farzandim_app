@@ -6,6 +6,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class ForceUpdateDialog extends StatelessWidget {
@@ -34,9 +35,7 @@ class ForceUpdateDialog extends StatelessWidget {
       canPop: false,
       child: Dialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.all(24),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -52,7 +51,7 @@ class ForceUpdateDialog extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: Icon(
-                  Icons.system_update_alt_rounded,
+                  SolarIconsBold.smartphoneUpdate,
                   color: AppColors.accent,
                   size: 36,
                 ),
@@ -106,8 +105,8 @@ class ForceUpdateDialog extends StatelessWidget {
                     ? 'appUpdate.force.openAppStore'.tr()
                     : 'appUpdate.force.openPlayStore'.tr(),
                 icon: platform == TargetPlatform.iOS
-                    ? Icons.apple_rounded
-                    : Icons.shop_rounded,
+                    ? SolarIconsBold.smartphone
+                    : SolarIconsBold.shop,
                 onPressed: () => _launch(
                   platformInfo?.playStoreUrl ?? platformInfo?.appStoreUrl,
                 ),
@@ -117,7 +116,7 @@ class ForceUpdateDialog extends StatelessWidget {
                 const SizedBox(height: 10),
                 _SecondaryButton(
                   label: 'appUpdate.force.downloadApk'.tr(),
-                  icon: Icons.download_rounded,
+                  icon: SolarIconsBold.download,
                   onPressed: () => _launch(platformInfo!.directApkUrl),
                 ),
               ],
@@ -152,7 +151,7 @@ class _VersionRow extends StatelessWidget {
           AppColors.textSecondary,
         ),
         Icon(
-          Icons.arrow_forward_rounded,
+          SolarIconsBold.altArrowRight,
           color: AppColors.textTertiary,
           size: 20,
         ),
@@ -217,10 +216,7 @@ class _PrimaryButton extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -254,10 +250,7 @@ class _SecondaryButton extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );

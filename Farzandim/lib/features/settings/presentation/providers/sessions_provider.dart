@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Faol sessiyalar ro'yxati + tugatish amallari.
 final sessionsProvider =
     AutoDisposeAsyncNotifierProvider<SessionsNotifier, List<UserSession>>(
-  SessionsNotifier.new,
-);
+      SessionsNotifier.new,
+    );
 
 class SessionsNotifier extends AutoDisposeAsyncNotifier<List<UserSession>> {
   @override

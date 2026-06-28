@@ -33,6 +33,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Maks. yozuv davomiyligi.
 const Duration _maxRecordingDuration = Duration(seconds: 30);
@@ -110,8 +111,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
       if (camOutcome != PermissionOutcome.granted) {
         _setPermissionError(
           message: 'voiceChat.cameraPermissionSnack'.tr(),
-          permanentlyDenied:
-              camOutcome == PermissionOutcome.permanentlyDenied,
+          permanentlyDenied: camOutcome == PermissionOutcome.permanentlyDenied,
         );
         return;
       }
@@ -120,8 +120,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
       if (micOutcome != PermissionOutcome.granted) {
         _setPermissionError(
           message: 'voiceChat.micPermissionSnack'.tr(),
-          permanentlyDenied:
-              micOutcome == PermissionOutcome.permanentlyDenied,
+          permanentlyDenied: micOutcome == PermissionOutcome.permanentlyDenied,
         );
         return;
       }
@@ -343,7 +342,11 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 top: 16,
                 left: 16,
                 child: IconButton(
-                  icon: const Icon(Icons.close, color: Colors.white, size: 28),
+                  icon: const Icon(
+                    SolarIconsBold.closeCircle,
+                    color: Colors.white,
+                    size: 28,
+                  ),
                   onPressed: () => Navigator.of(context).pop(),
                 ),
               ),
@@ -388,7 +391,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                         shape: BoxShape.circle,
                       ),
                       child: const Icon(
-                        Icons.stop_rounded,
+                        SolarIconsBold.stop,
                         color: Colors.white,
                         size: 36,
                       ),
@@ -409,7 +412,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
         mainAxisSize: MainAxisSize.min,
         children: [
           const Icon(
-            Icons.videocam_off_outlined,
+            SolarIconsBold.videocamera,
             color: Colors.white70,
             size: 56,
           ),
@@ -557,12 +560,12 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _HintChip(
-                  icon: Icons.arrow_back,
+                  icon: SolarIconsBold.altArrowLeft,
                   text: 'common.cancel'.tr(),
                   highlight: cancelIntensity > 0.3,
                 ),
                 _HintChip(
-                  icon: Icons.arrow_upward,
+                  icon: SolarIconsBold.altArrowUp,
                   text: 'voiceChat.lockHint'.tr(),
                   highlight: -_verticalDrag > 20,
                 ),
@@ -604,7 +607,9 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 ],
               ),
               child: Icon(
-                isActive ? Icons.fiber_manual_record : Icons.videocam_rounded,
+                isActive
+                    ? SolarIconsBold.recordCircle
+                    : SolarIconsBold.videocamera,
                 color: Colors.white,
                 size: isActive ? 28 : 36,
               ),
@@ -629,9 +634,12 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _HintChip(icon: Icons.arrow_back, text: 'common.cancel'.tr()),
             _HintChip(
-              icon: Icons.arrow_upward,
+              icon: SolarIconsBold.altArrowLeft,
+              text: 'common.cancel'.tr(),
+            ),
+            _HintChip(
+              icon: SolarIconsBold.altArrowUp,
               text: 'voiceChat.lockHint'.tr(),
             ),
           ],

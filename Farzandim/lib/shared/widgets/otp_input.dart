@@ -43,10 +43,7 @@ class _OtpInputState extends State<OtpInput> {
   @override
   void initState() {
     super.initState();
-    _controllers = List.generate(
-      widget.length,
-      (_) => TextEditingController(),
-    );
+    _controllers = List.generate(widget.length, (_) => TextEditingController());
     _focusNodes = List.generate(widget.length, (_) => FocusNode());
     if (widget.autoFocus) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -72,16 +69,13 @@ class _OtpInputState extends State<OtpInput> {
     // Foydalanuvchi 6 raqamni yopishtirsa — har bir box'ga taqsimlash.
     if (value.length > 1) {
       final digits = value.replaceAll(RegExp('[^0-9]'), '');
-      for (var i = 0;
-          i < widget.length && index + i < widget.length;
-          i++) {
+      for (var i = 0; i < widget.length && index + i < widget.length; i++) {
         if (i < digits.length) {
           _controllers[index + i].text = digits[i];
         }
       }
       // Oxirgi to'lgan box'ga focus ko'chirish.
-      final lastFilled =
-          (index + digits.length).clamp(0, widget.length - 1);
+      final lastFilled = (index + digits.length).clamp(0, widget.length - 1);
       _focusNodes[lastFilled].requestFocus();
     } else if (value.isNotEmpty && index < widget.length - 1) {
       _focusNodes[index + 1].requestFocus();
@@ -148,9 +142,7 @@ class _OtpBox extends StatelessWidget {
           focusNode: focusNode,
           textAlign: TextAlign.center,
           keyboardType: TextInputType.number,
-          inputFormatters: [
-            FilteringTextInputFormatter.digitsOnly,
-          ],
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
           style: TextStyle(
             fontSize: 22,
             fontWeight: FontWeight.w700,
@@ -167,10 +159,7 @@ class _OtpBox extends StatelessWidget {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(12),
-              borderSide: BorderSide(
-                color: AppColors.accent,
-                width: 2,
-              ),
+              borderSide: BorderSide(color: AppColors.accent, width: 2),
             ),
           ),
           onChanged: onChanged,

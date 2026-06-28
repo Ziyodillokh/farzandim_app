@@ -7,6 +7,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 part 'chat_input_bar_widgets.dart';
 
@@ -160,7 +161,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
               _AttachOption(
-                icon: Icons.photo_library_rounded,
+                icon: SolarIconsBold.gallery,
                 color: const Color(0xFF7E5BEF),
                 label: 'voiceChat.attachGallery'.tr(),
                 onTap: () {
@@ -169,7 +170,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 },
               ),
               _AttachOption(
-                icon: Icons.photo_camera_rounded,
+                icon: SolarIconsBold.camera,
                 color: const Color(0xFFEF5DA8),
                 label: 'voiceChat.attachCamera'.tr(),
                 onTap: () {
@@ -178,7 +179,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 },
               ),
               _AttachOption(
-                icon: Icons.insert_drive_file_rounded,
+                icon: SolarIconsBold.file,
                 color: const Color(0xFF2D9CDB),
                 label: 'voiceChat.attachFile'.tr(),
                 onTap: () {
@@ -217,7 +218,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     IconButton(
                       onPressed: widget.onCancel,
                       icon: const Icon(
-                        Icons.delete_outline,
+                        SolarIconsBold.trashBinMinimalistic,
                         color: Colors.red,
                         size: 28,
                       ),
@@ -241,10 +242,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
                   // [2] Oxirgi child: mic/video toggle yoki send.
                   if (hasText && !widget.isRecording)
-                    _SendButton(
-                      onTap: _sendText,
-                      disabled: _anyUploading,
-                    )
+                    _SendButton(onTap: _sendText, disabled: _anyUploading)
                   else
                     _buildActionButton(),
                 ],
@@ -267,9 +265,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       decoration: BoxDecoration(
         color: AppColors.surface,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: AppColors.border.withValues(alpha: 0.6),
-        ),
+        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),
@@ -288,9 +284,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(),
             icon: Icon(
-              _showEmoji
-                  ? Icons.keyboard_rounded
-                  : Icons.emoji_emotions_outlined,
+              _showEmoji ? SolarIconsBold.keyboard : SolarIconsBold.smileCircle,
               color: AppColors.textSecondary,
               size: 23,
             ),
@@ -308,10 +302,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               onTap: () {
                 if (_showEmoji) setState(() => _showEmoji = false);
               },
-              style: TextStyle(
-                color: AppColors.textPrimary,
-                fontSize: 15,
-              ),
+              style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
               decoration: InputDecoration(
                 hintText: 'voiceChat.messageHint'.tr(),
                 hintStyle: TextStyle(
@@ -346,7 +337,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 : Transform.rotate(
                     angle: -0.7,
                     child: Icon(
-                      Icons.attach_file_rounded,
+                      SolarIconsBold.paperclip,
                       color: AppColors.textSecondary,
                       size: 22,
                     ),
@@ -417,9 +408,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (isRecording
-                      ? const Color(0xFFFF5252)
-                      : AppColors.primary)
+              color: (isRecording ? const Color(0xFFFF5252) : AppColors.primary)
                   .withValues(alpha: isRecording ? 0.4 : 0.28),
               blurRadius: isRecording ? 18 : 12,
               spreadRadius: 1,
@@ -443,16 +432,16 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     ScaleTransition(scale: anim, child: child),
                 child: Icon(
                   isRecording
-                      ? Icons.stop_rounded
+                      ? SolarIconsBold.stop
                       : isVideoMode
-                          ? Icons.videocam_rounded
-                          : Icons.mic_rounded,
+                      ? SolarIconsBold.videocamera
+                      : SolarIconsBold.microphone,
                   key: ValueKey(
                     isRecording
                         ? 'stop'
                         : isVideoMode
-                            ? 'video'
-                            : 'mic',
+                        ? 'video'
+                        : 'mic',
                   ),
                   color: AppColors.onPrimary,
                   size: 24,

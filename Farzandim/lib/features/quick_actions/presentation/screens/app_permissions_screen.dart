@@ -7,6 +7,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Ilova uchun ruxsatlar ekrani — bola qurilmasidagi ruxsatlar ro'yxati.
 ///
@@ -23,14 +24,14 @@ class AppPermissionsScreen extends StatelessWidget {
 
   /// Ruxsat kalitlari + ikonkalari (Figma tartibida).
   static const List<(String, IconData)> _permissions = [
-    ('location', Icons.location_on_outlined),
-    ('camera', Icons.camera_alt_outlined),
-    ('contacts', Icons.contacts_outlined),
-    ('microphone', Icons.mic_none_rounded),
-    ('sms', Icons.sms_outlined),
-    ('calendar', Icons.calendar_today_outlined),
-    ('phone', Icons.call_outlined),
-    ('storage', Icons.folder_outlined),
+    ('location', SolarIconsBold.mapPoint),
+    ('camera', SolarIconsBold.camera),
+    ('contacts', SolarIconsBold.userCircle),
+    ('microphone', SolarIconsBold.microphone),
+    ('sms', SolarIconsBold.chatRoundLine),
+    ('calendar', SolarIconsBold.calendar),
+    ('phone', SolarIconsBold.phone),
+    ('storage', SolarIconsBold.folder),
   ];
 
   @override
@@ -101,7 +102,7 @@ class _PermissionRow extends StatelessWidget {
             ),
           ),
           Icon(
-            Icons.chevron_right_rounded,
+            SolarIconsBold.altArrowRight,
             size: 22,
             color: AppColors.textTertiary,
           ),
@@ -130,7 +131,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),

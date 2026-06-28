@@ -32,8 +32,9 @@ String? _currentUserId(Ref ref) {
 /// filtr qiladi, WS eventda ham bitta refetch bo'ladi.
 ///
 /// Yuborish/retry'dan keyin yangilash: `ref.invalidate(rawVoiceMessagesProvider)`.
-final rawVoiceMessagesProvider =
-    StreamProvider<List<Map<String, dynamic>>>((ref) async* {
+final rawVoiceMessagesProvider = StreamProvider<List<Map<String, dynamic>>>((
+  ref,
+) async* {
   final currentUserId = _currentUserId(ref);
   if (currentUserId == null) {
     yield const <Map<String, dynamic>>[];
@@ -69,74 +70,78 @@ final rawVoiceMessagesProvider =
 /// bo'sh ro'yxat.
 final voiceMessagesProvider =
     Provider.family<AsyncValue<List<VoiceMessage>>, String>((ref, childId) {
-  final currentUserId = _currentUserId(ref);
-  if (currentUserId == null) {
-    return const AsyncValue.data(<VoiceMessage>[]);
-  }
+      final currentUserId = _currentUserId(ref);
+      if (currentUserId == null) {
+        return const AsyncValue.data(<VoiceMessage>[]);
+      }
 
-  // Butun ro'yxat emas, faqat shu bolaning linkedDeviceUid'ini watch
-  // qilamiz (`select`) — children-polling har 60s yangi List identity
-  // bersa ham pair/unpair bo'lmaguncha bu provider qayta hisoblanmaydi.
-  final childUserId = ref.watch(childrenListProvider.select((children) {
-    for (final c in children) {
-      if (c.id == childId) return c.linkedDeviceUid;
-    }
-    return null;
-  }));
-  if (childUserId == null) {
-    return const AsyncValue.data(<VoiceMessage>[]);
-  }
+      // Butun ro'yxat emas, faqat shu bolaning linkedDeviceUid'ini watch
+      // qilamiz (`select`) — children-polling har 60s yangi List identity
+      // bersa ham pair/unpair bo'lmaguncha bu provider qayta hisoblanmaydi.
+      final childUserId = ref.watch(
+        childrenListProvider.select((children) {
+          for (final c in children) {
+            if (c.id == childId) return c.linkedDeviceUid;
+          }
+          return null;
+        }),
+      );
+      if (childUserId == null) {
+        return const AsyncValue.data(<VoiceMessage>[]);
+      }
 
-  List<VoiceMessage> parse(List<Map<String, dynamic>> raw) {
-    final mine = raw.where(
-      (m) =>
-          m['senderId'] == childUserId || m['receiverId'] == childUserId,
-    );
-    // Bitta buzuq xabar butun tarixni yiqitmasin.
-    final parsed = parseListSafely(
-      mine,
-      (m) => VoiceMessage.fromBackendJson(
-        m,
-        currentUserId: currentUserId,
-        childId: childId,
-      ),
-      tag: 'voiceMessages',
-    );
-    // Backend DESC keladi — chat ekrani uchun ASC (chronological).
-    return parsed.reversed.toList();
-  }
+      List<VoiceMessage> parse(List<Map<String, dynamic>> raw) {
+        final mine = raw.where(
+          (m) => m['senderId'] == childUserId || m['receiverId'] == childUserId,
+        );
+        // Bitta buzuq xabar butun tarixni yiqitmasin.
+        final parsed = parseListSafely(
+          mine,
+          (m) => VoiceMessage.fromBackendJson(
+            m,
+            currentUserId: currentUserId,
+            childId: childId,
+          ),
+          tag: 'voiceMessages',
+        );
+        // Backend DESC keladi — chat ekrani uchun ASC (chronological).
+        return parsed.reversed.toList();
+      }
 
-  final rawAsync = ref.watch(rawVoiceMessagesProvider);
-  // Refetch paytida AsyncLoading oldingi qiymatni ichida olib yuradi,
-  // lekin `whenData` uni tashlab yuboradi — har xabar yuborilganda chat
-  // bir lahza bo'shab qolardi. hasValue bo'lsa mavjud ro'yxat ko'rinaveradi.
-  if (rawAsync.hasValue) {
-    return AsyncValue.data(parse(rawAsync.requireValue));
-  }
-  return rawAsync.whenData(parse);
-});
+      final rawAsync = ref.watch(rawVoiceMessagesProvider);
+      // Refetch paytida AsyncLoading oldingi qiymatni ichida olib yuradi,
+      // lekin `whenData` uni tashlab yuboradi — har xabar yuborilganda chat
+      // bir lahza bo'shardi. hasValue bo'lsa mavjud ro'yxat ko'rinadi.
+      if (rawAsync.hasValue) {
+        return AsyncValue.data(parse(rawAsync.requireValue));
+      }
+      return rawAsync.whenData(parse);
+    });
 
 /// Eng oxirgi ovozli xabar — list ekrani preview.
 final latestVoiceMessageProvider =
     Provider.family<AsyncValue<VoiceMessage?>, String>((ref, childId) {
-  return ref.watch(voiceMessagesProvider(childId)).whenData((all) {
-    if (all.isEmpty) return null;
-    // ASC saralangan — eng yangisi oxirida.
-    return all.last;
-  });
-});
+      return ref.watch(voiceMessagesProvider(childId)).whenData((all) {
+        if (all.isEmpty) return null;
+        // ASC saralangan — eng yangisi oxirida.
+        return all.last;
+      });
+    });
 
 /// O'qilmagan (bola yuborgan, hali sent) xabarlar soni — qizil badge.
-final unreadVoiceMessagesProvider =
-    Provider.family<AsyncValue<int>, String>((ref, childId) {
-  return ref.watch(voiceMessagesProvider(childId)).whenData(
-    (all) => all
-        .where(
-          (m) =>
-              m.sender == 'child' && m.status == VoiceMessageStatus.sent,
-        )
-        .length,
-  );
+final unreadVoiceMessagesProvider = Provider.family<AsyncValue<int>, String>((
+  ref,
+  childId,
+) {
+  return ref
+      .watch(voiceMessagesProvider(childId))
+      .whenData(
+        (all) => all
+            .where(
+              (m) => m.sender == 'child' && m.status == VoiceMessageStatus.sent,
+            )
+            .length,
+      );
 });
 
 // ─────────────────────────────────────────────────────────────────────
@@ -218,20 +223,19 @@ class ChatHistoryState {
     bool? loading,
     bool? hasMoreVoice,
     bool? hasMoreVideo,
-  }) =>
-      ChatHistoryState(
-        older: older ?? this.older,
-        loading: loading ?? this.loading,
-        hasMoreVoice: hasMoreVoice ?? this.hasMoreVoice,
-        hasMoreVideo: hasMoreVideo ?? this.hasMoreVideo,
-      );
+  }) => ChatHistoryState(
+    older: older ?? this.older,
+    loading: loading ?? this.loading,
+    hasMoreVoice: hasMoreVoice ?? this.hasMoreVoice,
+    hasMoreVideo: hasMoreVideo ?? this.hasMoreVideo,
+  );
 }
 
 /// Chat tarixini sahifalab yuklaydi. Har manba (voice/video) o'z
 /// cursor'i bilan: eng eski ma'lum xabar vaqtidan `before` so'raladi.
 class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
   ChatHistoryNotifier(this._ref, this.childId)
-      : super(const ChatHistoryState());
+    : super(const ChatHistoryState());
 
   final Ref _ref;
 
@@ -277,7 +281,9 @@ class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
     try {
       final results = await Future.wait<List<Map<String, dynamic>>>([
         if (state.hasMoreVoice)
-          _ref.read(backendVoiceMessageRepositoryProvider).getMessagesRaw(
+          _ref
+              .read(backendVoiceMessageRepositoryProvider)
+              .getMessagesRaw(
                 peerId: childUserId,
                 before: _oldestVoice(),
                 limit: _pageSize,
@@ -285,7 +291,9 @@ class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
         else
           Future.value(const []),
         if (state.hasMoreVideo)
-          _ref.read(backendVideoMessageRepositoryProvider).getMessages(
+          _ref
+              .read(backendVideoMessageRepositoryProvider)
+              .getMessages(
                 peerId: childUserId,
                 before: _oldestVideo(),
                 limit: _pageSize,
@@ -299,9 +307,7 @@ class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
         // peerId server tomonda filtrlaydi; eski backend versiyasiga
         // qarshi himoya uchun klientda ham tekshiramiz.
         results[0].where(
-          (m) =>
-              m['senderId'] == childUserId ||
-              m['receiverId'] == childUserId,
+          (m) => m['senderId'] == childUserId || m['receiverId'] == childUserId,
         ),
         (m) => VoiceMessage.fromBackendJson(
           m,
@@ -312,9 +318,7 @@ class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
       );
       final videoPage = parseListSafely(
         results[1].where(
-          (m) =>
-              m['senderId'] == childUserId ||
-              m['receiverId'] == childUserId,
+          (m) => m['senderId'] == childUserId || m['receiverId'] == childUserId,
         ),
         (m) => VideoMessage.fromBackendJson(
           m,
@@ -362,9 +366,9 @@ class ChatHistoryNotifier extends StateNotifier<ChatHistoryState> {
 /// 2 daqiqa kesh saqlanadi (tez qaytishda qayta yuklamaslik uchun).
 final chatHistoryProvider = StateNotifierProvider.autoDispose
     .family<ChatHistoryNotifier, ChatHistoryState, String>((ref, childId) {
-  keepAliveFor(ref, const Duration(minutes: 2));
-  return ChatHistoryNotifier(ref, childId);
-});
+      keepAliveFor(ref, const Duration(minutes: 2));
+      return ChatHistoryNotifier(ref, childId);
+    });
 
 /// Voice + Video xabarlarni bitta sortlangan ro'yxatga birlashtiradi.
 ///
@@ -374,45 +378,46 @@ final chatHistoryProvider = StateNotifierProvider.autoDispose
 /// Yuklangan eski sahifalar (`chatHistoryProvider`) lenta boshiga qo'shiladi.
 final chatMessagesProvider =
     Provider.family<AsyncValue<List<ChatItem>>, String>((ref, childId) {
-  final voiceAsync = ref.watch(voiceMessagesProvider(childId));
-  final videoAsync = ref.watch(videoMessagesProvider(childId));
-  final older =
-      ref.watch(chatHistoryProvider(childId).select((s) => s.older));
+      final voiceAsync = ref.watch(voiceMessagesProvider(childId));
+      final videoAsync = ref.watch(videoMessagesProvider(childId));
+      final older = ref.watch(
+        chatHistoryProvider(childId).select((s) => s.older),
+      );
 
-  // Ikkalasi ham loading/error bo'lsa shu state'ni propagate qilamiz.
-  if (voiceAsync.isLoading && videoAsync.isLoading) {
-    return const AsyncValue.loading();
-  }
-  // Xato faqat boshqa manba ham ma'lumotsiz bo'lsa propagate qilinadi;
-  // bittasi xato, bittasi data bo'lsa — datani ko'rsataveramiz.
-  if (voiceAsync.hasError && videoAsync.valueOrNull == null) {
-    return AsyncValue.error(
-      voiceAsync.error!,
-      voiceAsync.stackTrace ?? StackTrace.current,
-    );
-  }
-  if (videoAsync.hasError && voiceAsync.valueOrNull == null) {
-    return AsyncValue.error(
-      videoAsync.error!,
-      videoAsync.stackTrace ?? StackTrace.current,
-    );
-  }
+      // Ikkalasi ham loading/error bo'lsa shu state'ni propagate qilamiz.
+      if (voiceAsync.isLoading && videoAsync.isLoading) {
+        return const AsyncValue.loading();
+      }
+      // Xato faqat boshqa manba ham ma'lumotsiz bo'lsa propagate qilinadi;
+      // bittasi xato, bittasi data bo'lsa — datani ko'rsataveramiz.
+      if (voiceAsync.hasError && videoAsync.valueOrNull == null) {
+        return AsyncValue.error(
+          voiceAsync.error!,
+          voiceAsync.stackTrace ?? StackTrace.current,
+        );
+      }
+      if (videoAsync.hasError && voiceAsync.valueOrNull == null) {
+        return AsyncValue.error(
+          videoAsync.error!,
+          videoAsync.stackTrace ?? StackTrace.current,
+        );
+      }
 
-  final voices = voiceAsync.valueOrNull ?? const <VoiceMessage>[];
-  final videos = videoAsync.valueOrNull ?? const <VideoMessage>[];
+      final voices = voiceAsync.valueOrNull ?? const <VoiceMessage>[];
+      final videos = videoAsync.valueOrNull ?? const <VideoMessage>[];
 
-  // Eski sahifalar + jonli oyna; id bo'yicha dedup — jonli nusxa ustun
-  // (read-status yangiroq bo'ladi).
-  final byId = <String, ChatItem>{
-    for (final item in older) item.id: item,
-    for (final item in voices.map(VoiceItem.new)) item.id: item,
-    for (final item in videos.map(VideoItem.new)) item.id: item,
-  };
-  final items = byId.values.toList()
-    ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
+      // Eski sahifalar + jonli oyna; id bo'yicha dedup — jonli nusxa ustun
+      // (read-status yangiroq bo'ladi).
+      final byId = <String, ChatItem>{
+        for (final item in older) item.id: item,
+        for (final item in voices.map(VoiceItem.new)) item.id: item,
+        for (final item in videos.map(VideoItem.new)) item.id: item,
+      };
+      final items = byId.values.toList()
+        ..sort((a, b) => a.createdAt.compareTo(b.createdAt));
 
-  return AsyncValue.data(items);
-});
+      return AsyncValue.data(items);
+    });
 
 /// List ekrani uchun bolalarni saralangan ro'yxat sifatida qaytaradi:
 /// yuqorida — eng yangi xabar bo'lgan bolalar (yangidan eskiga),
@@ -421,17 +426,18 @@ final sortedChildrenForVoiceProvider = Provider<List<Child>>((ref) {
   final children = ref.watch(childrenListProvider);
   if (children.isEmpty) return const [];
 
-  final pairs = children.map((child) {
-    final latest =
-        ref.watch(latestVoiceMessageProvider(child.id)).valueOrNull;
-    return (child: child, latest: latest);
-  }).toList()
-    ..sort((a, b) {
-      if (a.latest == null && b.latest == null) return 0;
-      if (a.latest == null) return 1;
-      if (b.latest == null) return -1;
-      return b.latest!.createdAt.compareTo(a.latest!.createdAt);
-    });
+  final pairs =
+      children.map((child) {
+        final latest = ref
+            .watch(latestVoiceMessageProvider(child.id))
+            .valueOrNull;
+        return (child: child, latest: latest);
+      }).toList()..sort((a, b) {
+        if (a.latest == null && b.latest == null) return 0;
+        if (a.latest == null) return 1;
+        if (b.latest == null) return -1;
+        return b.latest!.createdAt.compareTo(a.latest!.createdAt);
+      });
 
   return pairs.map((p) => p.child).toList();
 });

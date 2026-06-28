@@ -33,8 +33,9 @@ String? _currentUserId(Ref ref) {
 /// fetch BITTA joyda; per-bola providerlar faqat filtr.
 ///
 /// Yuborish/refresh'dan keyin yangilash: `ref.invalidate(rawVideoMessagesProvider)`.
-final rawVideoMessagesProvider =
-    StreamProvider<List<Map<String, dynamic>>>((ref) async* {
+final rawVideoMessagesProvider = StreamProvider<List<Map<String, dynamic>>>((
+  ref,
+) async* {
   final currentUserId = _currentUserId(ref);
   if (currentUserId == null) {
     yield const <Map<String, dynamic>>[];
@@ -69,50 +70,52 @@ final rawVideoMessagesProvider =
 /// Bola hali pair qilmagan (`linkedDeviceUid == null`) → bo'sh ro'yxat.
 final videoMessagesProvider =
     Provider.family<AsyncValue<List<VideoMessage>>, String>((ref, childId) {
-  final currentUserId = _currentUserId(ref);
-  if (currentUserId == null) {
-    return const AsyncValue.data(<VideoMessage>[]);
-  }
+      final currentUserId = _currentUserId(ref);
+      if (currentUserId == null) {
+        return const AsyncValue.data(<VideoMessage>[]);
+      }
 
-  // MUHIM (P0-4 bilan parallel): butun Child obyektini emas, FAQAT
-  // linkedDeviceUid'ni watch qilamiz (`select`) — 60s heartbeat yangi
-  // Child (lastSeenAt) berganda bu provider recompute BO'LMAYDI.
-  final childUserId = ref.watch(childrenListProvider.select((children) {
-    for (final c in children) {
-      if (c.id == childId) return c.linkedDeviceUid;
-    }
-    return null;
-  }));
-  if (childUserId == null) {
-    return const AsyncValue.data(<VideoMessage>[]);
-  }
+      // MUHIM (P0-4 bilan parallel): butun Child obyektini emas, FAQAT
+      // linkedDeviceUid'ni watch qilamiz (`select`) — 60s heartbeat yangi
+      // Child (lastSeenAt) berganda bu provider recompute BO'LMAYDI.
+      final childUserId = ref.watch(
+        childrenListProvider.select((children) {
+          for (final c in children) {
+            if (c.id == childId) return c.linkedDeviceUid;
+          }
+          return null;
+        }),
+      );
+      if (childUserId == null) {
+        return const AsyncValue.data(<VideoMessage>[]);
+      }
 
-  List<VideoMessage> parse(List<Map<String, dynamic>> raw) {
-    final mine = raw.where(
-      (m) => m['senderId'] == childUserId || m['receiverId'] == childUserId,
-    );
-    // ARCH-12: bitta buzuq xabar butun tarixni yiqitmasin.
-    final parsed = parseListSafely(
-      mine,
-      (m) => VideoMessage.fromBackendJson(
-        m,
-        currentUserId: currentUserId,
-        childId: childId,
-      ),
-      tag: 'videoMessages',
-    );
-    // Backend DESC keladi — chat ekrani uchun ASC (chronological).
-    return parsed.reversed.toList();
-  }
+      List<VideoMessage> parse(List<Map<String, dynamic>> raw) {
+        final mine = raw.where(
+          (m) => m['senderId'] == childUserId || m['receiverId'] == childUserId,
+        );
+        // ARCH-12: bitta buzuq xabar butun tarixni yiqitmasin.
+        final parsed = parseListSafely(
+          mine,
+          (m) => VideoMessage.fromBackendJson(
+            m,
+            currentUserId: currentUserId,
+            childId: childId,
+          ),
+          tag: 'videoMessages',
+        );
+        // Backend DESC keladi — chat ekrani uchun ASC (chronological).
+        return parsed.reversed.toList();
+      }
 
-  final rawAsync = ref.watch(rawVideoMessagesProvider);
-  // Flash-guard (voice bilan bir xil): refetch paytida oldingi ro'yxat
-  // ko'rsatilib turadi — chat bir lahza bo'shab qolmaydi.
-  if (rawAsync.hasValue) {
-    return AsyncValue.data(parse(rawAsync.requireValue));
-  }
-  return rawAsync.whenData(parse);
-});
+      final rawAsync = ref.watch(rawVideoMessagesProvider);
+      // Flash-guard (voice bilan bir xil): refetch paytida oldingi ro'yxat
+      // ko'rsatilib turadi — chat bir lahza bo'shab qolmaydi.
+      if (rawAsync.hasValue) {
+        return AsyncValue.data(parse(rawAsync.requireValue));
+      }
+      return rawAsync.whenData(parse);
+    });
 
 /// Video upload notifier.
 enum VideoUploadStatus { idle, uploading, sent, error }
@@ -133,12 +136,11 @@ class VideoUploadState {
     VideoUploadStatus? status,
     double? progress,
     String? errorMessage,
-  }) =>
-      VideoUploadState(
-        status: status ?? this.status,
-        progress: progress ?? this.progress,
-        errorMessage: errorMessage,
-      );
+  }) => VideoUploadState(
+    status: status ?? this.status,
+    progress: progress ?? this.progress,
+    errorMessage: errorMessage,
+  );
 }
 
 class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
@@ -162,13 +164,12 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
       return false;
     }
 
-    state = state.copyWith(
-      status: VideoUploadStatus.uploading,
-      progress: 0,
-    );
+    state = state.copyWith(status: VideoUploadStatus.uploading, progress: 0);
 
     try {
-      await _ref.read(backendVideoMessageRepositoryProvider).sendMessage(
+      await _ref
+          .read(backendVideoMessageRepositoryProvider)
+          .sendMessage(
             receiverId: receiverId,
             videoFile: videoFile,
             durationSeconds: durationSeconds,
@@ -177,10 +178,7 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
             },
           );
       _ref.invalidate(rawVideoMessagesProvider);
-      state = state.copyWith(
-        status: VideoUploadStatus.sent,
-        progress: 1,
-      );
+      state = state.copyWith(status: VideoUploadStatus.sent, progress: 1);
       return true;
     } catch (e) {
       state = state.copyWith(
@@ -196,5 +194,5 @@ class VideoUploadNotifier extends StateNotifier<VideoUploadState> {
 
 final videoUploadProvider =
     StateNotifierProvider<VideoUploadNotifier, VideoUploadState>(
-  VideoUploadNotifier.new,
-);
+      VideoUploadNotifier.new,
+    );

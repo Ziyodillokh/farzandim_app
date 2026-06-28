@@ -23,6 +23,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class PhotoRequestsListScreen extends ConsumerWidget {
   const PhotoRequestsListScreen({required this.childId, super.key});
@@ -87,7 +88,7 @@ class PhotoRequestsListScreen extends ConsumerWidget {
           onPressed: () => PhotoRequestDialog.show(context, childId: childId),
           backgroundColor: AppColors.primary,
           foregroundColor: AppColors.onPrimary,
-          icon: const Icon(Icons.photo_camera_rounded),
+          icon: const Icon(SolarIconsBold.camera),
           label: Text(
             'photoRequests.requestButton'.tr(),
             style: AppTextStyles.bodyM.copyWith(
@@ -116,7 +117,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              SolarIconsBold.altArrowLeft,
               color: AppColors.textPrimary,
               size: 20,
             ),
@@ -228,17 +229,17 @@ class _RequestTile extends ConsumerWidget {
 
     final (icon, color, label) = switch (status) {
       'COMPLETED' => (
-        Icons.check_circle_rounded,
+        SolarIconsBold.checkCircle,
         AppColors.success,
         'photoRequests.statusCompleted'.tr(),
       ),
       'DECLINED' => (
-        Icons.cancel_rounded,
+        SolarIconsBold.closeCircle,
         AppColors.error,
         'photoRequests.statusDeclined'.tr(),
       ),
       _ => (
-        Icons.schedule_rounded,
+        SolarIconsBold.clockCircle,
         AppColors.warning,
         'photoRequests.statusPending'.tr(),
       ),
@@ -439,7 +440,7 @@ class _CompletedPhotoState extends ConsumerState<_CompletedPhoto> {
               alignment: Alignment.center,
               color: AppColors.surfaceVariant,
               child: Icon(
-                Icons.broken_image_rounded,
+                SolarIconsBold.galleryRemove,
                 color: AppColors.textSecondary,
               ),
             ),
@@ -486,7 +487,7 @@ class _FullscreenPhoto extends StatelessWidget {
                     fit: BoxFit.contain,
                     memCacheWidth: 1080,
                     errorWidget: (_, __, ___) => const Icon(
-                      Icons.broken_image_rounded,
+                      SolarIconsBold.galleryRemove,
                       color: Colors.white,
                       size: 64,
                     ),
@@ -499,7 +500,11 @@ class _FullscreenPhoto extends StatelessWidget {
             top: MediaQuery.of(context).padding.top + 8,
             right: 8,
             child: IconButton(
-              icon: const Icon(Icons.close, color: Colors.white, size: 28),
+              icon: const Icon(
+                SolarIconsBold.closeCircle,
+                color: Colors.white,
+                size: 28,
+              ),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ),
@@ -521,7 +526,7 @@ class _EmptyState extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             Icon(
-              Icons.photo_camera_outlined,
+              SolarIconsBold.camera,
               color: AppColors.textSecondary,
               size: 64,
             ),

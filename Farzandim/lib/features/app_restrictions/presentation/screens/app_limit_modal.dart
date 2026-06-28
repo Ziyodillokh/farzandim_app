@@ -127,7 +127,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.hourglass_empty_rounded,
+                    SolarIconsBold.hourglass,
                     color: AppColors.accent,
                     size: 22,
                   ),
@@ -154,7 +154,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
                   ),
                   TextButton.icon(
                     onPressed: _saving ? null : _editDuration,
-                    icon: const Icon(Icons.edit_outlined, size: 16),
+                    icon: const Icon(SolarIconsBold.pen, size: 16),
                     label: Text('appLimits.edit'.tr()),
                     style: TextButton.styleFrom(
                       foregroundColor: AppColors.accent,
@@ -172,7 +172,7 @@ class _AppLimitModalState extends ConsumerState<AppLimitModal> {
               child: Row(
                 children: [
                   Icon(
-                    Icons.all_inclusive_rounded,
+                    SolarIconsBold.infinity,
                     color: AppColors.textSecondary,
                     size: 22,
                   ),

@@ -61,12 +61,7 @@ class AppVersionInfo {
   final bool isForceUpdate;
 }
 
-enum UpdateState {
-  unknown,
-  upToDate,
-  softUpdateAvailable,
-  forceUpdateRequired,
-}
+enum UpdateState { unknown, upToDate, softUpdateAvailable, forceUpdateRequired }
 
 @immutable
 class AppUpdateStatus {
@@ -78,9 +73,9 @@ class AppUpdateStatus {
   });
 
   const AppUpdateStatus.unknown(this.currentVersion)
-      : state = UpdateState.unknown,
-        info = null,
-        targetUrl = null;
+    : state = UpdateState.unknown,
+      info = null,
+      targetUrl = null;
 
   final UpdateState state;
   final String currentVersion;

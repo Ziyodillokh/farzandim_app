@@ -11,6 +11,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/development/data/development_summary.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class DevelopmentCard extends StatelessWidget {
   const DevelopmentCard({required this.summary, super.key});
@@ -64,13 +65,13 @@ class DevelopmentCard extends StatelessWidget {
                     Row(
                       children: [
                         _Metric(
-                          icon: Icons.quiz_rounded,
+                          icon: SolarIconsBold.questionCircle,
                           color: AppColors.info,
                           label: 'Test',
                           value: '${s.testsCompleted}',
                         ),
                         _Metric(
-                          icon: Icons.menu_book_rounded,
+                          icon: SolarIconsBold.book,
                           color: AppColors.success,
                           label: 'Kitob',
                           value: '${s.booksRead}',
@@ -81,13 +82,13 @@ class DevelopmentCard extends StatelessWidget {
                     Row(
                       children: [
                         _Metric(
-                          icon: Icons.local_fire_department_rounded,
+                          icon: SolarIconsBold.fire,
                           color: AppColors.warning,
                           label: 'Streak',
                           value: '${s.streakDays} kun',
                         ),
                         _Metric(
-                          icon: Icons.directions_walk_rounded,
+                          icon: SolarIconsBold.walking,
                           color: AppColors.primary,
                           label: 'Qadam',
                           value: _compact(s.steps),
@@ -193,7 +194,7 @@ class _TrendChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            up ? Icons.trending_up_rounded : Icons.trending_down_rounded,
+            up ? SolarIconsBold.graphUp : SolarIconsBold.graphDown,
             size: 15,
             color: color,
           ),

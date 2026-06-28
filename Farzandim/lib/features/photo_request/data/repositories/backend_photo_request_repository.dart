@@ -21,18 +21,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendPhotoRequestRepositoryProvider =
     Provider<BackendPhotoRequestRepository>((ref) {
-  return BackendPhotoRequestRepository(
-    dio: ref.watch(dioClientProvider),
-    socketClient: ref.watch(socketClientProvider),
-  );
-});
+      return BackendPhotoRequestRepository(
+        dio: ref.watch(dioClientProvider),
+        socketClient: ref.watch(socketClientProvider),
+      );
+    });
 
 class BackendPhotoRequestRepository {
   BackendPhotoRequestRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -47,10 +47,7 @@ class BackendPhotoRequestRepository {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/photo-requests',
-        queryParameters: {
-          if (status != null) 'status': status,
-          'limit': limit,
-        },
+        queryParameters: {if (status != null) 'status': status, 'limit': limit},
       );
       final data = response.data;
       if (data == null) return const [];

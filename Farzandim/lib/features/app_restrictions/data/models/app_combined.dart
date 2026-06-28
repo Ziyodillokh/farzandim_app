@@ -192,8 +192,9 @@ List<AppCombined> combineAppData({
   ];
 
   result.sort((a, b) {
-    final byStatus =
-        statusOrder.indexOf(a.status).compareTo(statusOrder.indexOf(b.status));
+    final byStatus = statusOrder
+        .indexOf(a.status)
+        .compareTo(statusOrder.indexOf(b.status));
     if (byStatus != 0) return byStatus;
     final byUsage = b.usageTimeMs.compareTo(a.usageTimeMs);
     if (byUsage != 0) return byUsage;

@@ -24,7 +24,7 @@ import 'package:flutter/material.dart';
 /// // Ikonka + shrink-wrap (empty state karta uchun):
 /// PrimaryButton(
 ///   label: "Yangi bola qo'shish",
-///   icon: Icons.add,
+///   icon: SolarIconsBold.addCircle,
 ///   expanded: false,
 ///   onPressed: () => context.push(AppRoutes.addChild),
 /// )
@@ -86,9 +86,7 @@ class PrimaryButton extends StatelessWidget {
             onTap: isLoading ? null : onPressed,
             borderRadius: borderRadius,
             child: Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.lg,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
               child: Center(
                 // expanded=false paytda Center kontentga teng kenglik oladi.
                 widthFactor: expanded ? null : 1,
@@ -114,8 +112,7 @@ class PrimaryButton extends StatelessWidget {
       );
     }
 
-    final textColor =
-        isDisabled ? AppColors.textTertiary : AppColors.onPrimary;
+    final textColor = isDisabled ? AppColors.textTertiary : AppColors.onPrimary;
     final textWidget = Text(
       label,
       style: AppTextStyles.bodyM.copyWith(

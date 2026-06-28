@@ -19,6 +19,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Qurilma sozlamalari ekrani — Figma 1:1.
 ///
@@ -147,7 +148,7 @@ class _Content extends ConsumerWidget {
             children: [
               Expanded(
                 child: _ActionTile(
-                  icon: Icons.volume_up_rounded,
+                  icon: SolarIconsBold.volumeLoud,
                   label: 'deviceSettings.loudSound'.tr(),
                   onTap: () => _ringDevice(context, ref, child.id),
                 ),
@@ -155,7 +156,7 @@ class _Content extends ConsumerWidget {
               const SizedBox(width: AppDimensions.md),
               Expanded(
                 child: _ActionTile(
-                  icon: Icons.bar_chart_rounded,
+                  icon: SolarIconsBold.chart,
                   label: 'deviceSettings.activity'.tr(),
                   onTap: () =>
                       context.push(AppRoutes.appRestrictionsPath(child.id)),
@@ -167,9 +168,8 @@ class _Content extends ConsumerWidget {
 
           // ─── Eslatmalar (dars/sport/kontent + tinch soat) ───
           SettingsCard(
-            onTap: () => context.push(
-              AppRoutes.notificationPreferencesPath(child.id),
-            ),
+            onTap: () =>
+                context.push(AppRoutes.notificationPreferencesPath(child.id)),
             child: Row(
               children: [
                 Container(
@@ -181,7 +181,7 @@ class _Content extends ConsumerWidget {
                   ),
                   alignment: Alignment.center,
                   child: Icon(
-                    Icons.notifications_active_rounded,
+                    SolarIconsBold.bellBing,
                     color: AppColors.primary,
                     size: 22,
                   ),
@@ -190,11 +190,15 @@ class _Content extends ConsumerWidget {
                 Expanded(
                   child: Text(
                     'Eslatmalar',
-                    style: AppTextStyles.bodyM
-                        .copyWith(fontWeight: FontWeight.w700),
+                    style: AppTextStyles.bodyM.copyWith(
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
                 ),
-                Icon(Icons.chevron_right, color: AppColors.textTertiary),
+                Icon(
+                  SolarIconsBold.altArrowRight,
+                  color: AppColors.textTertiary,
+                ),
               ],
             ),
           ),
@@ -239,7 +243,7 @@ class _PermissionsCard extends StatelessWidget {
           Row(
             children: [
               SettingsIconChip(
-                icon: Icons.verified_user_outlined,
+                icon: SolarIconsBold.shieldCheck,
                 accent: AppColors.secondary,
               ),
               const SizedBox(width: AppDimensions.md),
@@ -255,22 +259,22 @@ class _PermissionsCard extends StatelessWidget {
           ),
           const SizedBox(height: AppDimensions.sm),
           _PermRow(
-            icon: Icons.location_on_rounded,
+            icon: SolarIconsBold.mapPoint,
             label: 'deviceSettings.permissions.location'.tr(),
             status: info?.locationPermission,
           ),
           _PermRow(
-            icon: Icons.notifications_rounded,
+            icon: SolarIconsBold.bell,
             label: 'deviceSettings.permissions.notification'.tr(),
             status: info?.notificationPermission,
           ),
           _PermRow(
-            icon: Icons.battery_saver_rounded,
+            icon: SolarIconsBold.batteryCharge,
             label: 'deviceSettings.permissions.background'.tr(),
             status: info?.backgroundAllowed,
           ),
           _PermRow(
-            icon: Icons.accessibility_new_rounded,
+            icon: SolarIconsBold.accessibility,
             label: 'deviceSettings.permissions.accessibility'.tr(),
             status: info?.accessibilityEnabled,
           ),
@@ -301,15 +305,15 @@ class _PermRow extends StatelessWidget {
     final String statusKey;
     if (status ?? false) {
       color = AppColors.success;
-      statusIcon = Icons.check_circle_rounded;
+      statusIcon = SolarIconsBold.checkCircle;
       statusKey = 'deviceSettings.permissions.granted';
     } else if (status == false) {
       color = AppColors.error;
-      statusIcon = Icons.cancel_rounded;
+      statusIcon = SolarIconsBold.closeCircle;
       statusKey = 'deviceSettings.permissions.denied';
     } else {
       color = AppColors.textTertiary;
-      statusIcon = Icons.help_outline_rounded;
+      statusIcon = SolarIconsBold.questionCircle;
       statusKey = 'deviceSettings.permissions.unknown';
     }
 
@@ -387,7 +391,7 @@ class _DeviceCard extends StatelessWidget {
         children: [
           // Qurilma ikonasi — premium accent chip.
           SettingsIconChip(
-            icon: Icons.smartphone_rounded,
+            icon: SolarIconsBold.smartphone,
             accent: AppColors.secondary,
             size: 60,
           ),
@@ -411,7 +415,7 @@ class _DeviceCard extends StatelessWidget {
                   children: [
                     // Batareya
                     Icon(
-                      Icons.battery_std_rounded,
+                      SolarIconsBold.batteryFull,
                       size: 14,
                       color: _batteryColor(battery),
                     ),
@@ -434,7 +438,7 @@ class _DeviceCard extends StatelessWidget {
                     const SizedBox(width: 10),
                     // Holat
                     Icon(
-                      Icons.wifi_rounded,
+                      SolarIconsBold.wifiRouter,
                       size: 14,
                       color: isOnline
                           ? AppColors.success
@@ -580,7 +584,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
           Row(
             children: [
               SettingsIconChip(
-                icon: Icons.shield_outlined,
+                icon: SolarIconsBold.shield,
                 accent: AppColors.secondary,
               ),
               const SizedBox(width: AppDimensions.md),
@@ -623,17 +627,17 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
 const _webFilterCategories = <({String code, IconData icon, String labelKey})>[
   (
     code: 'ADULT',
-    icon: Icons.explicit_rounded,
+    icon: SolarIconsBold.explicit,
     labelKey: 'deviceSettings.webFilter.cat.adult',
   ),
   (
     code: 'GAMBLING',
-    icon: Icons.casino_rounded,
+    icon: SolarIconsBold.balls,
     labelKey: 'deviceSettings.webFilter.cat.gambling',
   ),
   (
     code: 'SOCIAL',
-    icon: Icons.groups_rounded,
+    icon: SolarIconsBold.usersGroupRounded,
     labelKey: 'deviceSettings.webFilter.cat.social',
   ),
 ];
@@ -738,7 +742,7 @@ class _WebFilterCardState extends ConsumerState<_WebFilterCard> {
           Row(
             children: [
               SettingsIconChip(
-                icon: Icons.shield_rounded,
+                icon: SolarIconsBold.shield,
                 accent: AppColors.primary,
               ),
               const SizedBox(width: AppDimensions.md),
@@ -751,10 +755,7 @@ class _WebFilterCardState extends ConsumerState<_WebFilterCard> {
                 ),
               ),
               const SizedBox(width: AppDimensions.md),
-              AppSwitch(
-                value: _enabled,
-                onChanged: _saving ? null : _onToggle,
-              ),
+              AppSwitch(value: _enabled, onChanged: _saving ? null : _onToggle),
             ],
           ),
           const SizedBox(height: AppDimensions.sm),
@@ -863,7 +864,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -890,7 +894,7 @@ class _ChildNotFound extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(SolarIconsBold.altArrowLeft),
           onPressed: () => context.pop(),
         ),
       ),

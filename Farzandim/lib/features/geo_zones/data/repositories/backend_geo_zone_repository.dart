@@ -24,8 +24,9 @@ import 'package:farzandim/features/geo_zones/data/models/geo_zone_event.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendGeoZoneRepositoryProvider =
-    Provider<BackendGeoZoneRepository>((ref) {
+final backendGeoZoneRepositoryProvider = Provider<BackendGeoZoneRepository>((
+  ref,
+) {
   final auth = ref.watch(backendAuthProvider);
   final currentUserId = auth is AuthAuthenticated ? auth.user.id : '';
   return BackendGeoZoneRepository(
@@ -40,9 +41,9 @@ class BackendGeoZoneRepository {
     required Dio dio,
     required SocketClient socketClient,
     required String currentUserId,
-  })  : _dio = dio,
-        _socketClient = socketClient,
-        _currentUserId = currentUserId;
+  }) : _dio = dio,
+       _socketClient = socketClient,
+       _currentUserId = currentUserId;
 
   final Dio _dio;
   final SocketClient _socketClient;

@@ -1,6 +1,7 @@
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Parol uchun maxsus text field — `obscureText: true` + ko'rsatish/yashirish
 /// (eye) toggle bilan.
@@ -50,7 +51,7 @@ class _PasswordTextFieldState extends State<PasswordTextField> {
       obscureText: _obscureText,
       suffix: IconButton(
         icon: Icon(
-          _obscureText ? Icons.visibility_off : Icons.visibility,
+          _obscureText ? SolarIconsBold.eyeClosed : SolarIconsBold.eye,
         ),
         color: AppColors.textSecondary,
         onPressed: () => setState(() => _obscureText = !_obscureText),

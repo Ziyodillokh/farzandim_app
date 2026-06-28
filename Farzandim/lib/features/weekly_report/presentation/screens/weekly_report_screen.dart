@@ -10,6 +10,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class WeeklyReportScreen extends ConsumerWidget {
   const WeeklyReportScreen({required this.childId, super.key});
@@ -67,7 +68,10 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+            icon: Icon(
+              SolarIconsBold.altArrowLeft,
+              color: AppColors.textPrimary,
+            ),
             onPressed: onBack,
           ),
           const SizedBox(width: 4),
@@ -136,7 +140,7 @@ class _StepsCard extends StatelessWidget {
       (m, d) => d.steps > m ? d.steps : m,
     );
     return _Card(
-      icon: Icons.directions_walk_rounded,
+      icon: SolarIconsBold.walking,
       title: 'weeklyReport.steps'.tr(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -187,7 +191,7 @@ class _ScreenTimeCard extends StatelessWidget {
     );
     final avgMin = (report.screenWeekMinutes / 7).round();
     return _Card(
-      icon: Icons.timer_outlined,
+      icon: SolarIconsBold.stopwatch,
       title: 'weeklyReport.screenTime'.tr(),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -245,7 +249,7 @@ class _TopAppsCard extends StatelessWidget {
       (m, a) => a.totalMinutes > m ? a.totalMinutes : m,
     );
     return _Card(
-      icon: Icons.apps_rounded,
+      icon: SolarIconsBold.widget,
       title: 'weeklyReport.topApps'.tr(),
       child: apps.isEmpty
           ? Padding(

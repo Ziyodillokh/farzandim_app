@@ -2,10 +2,7 @@
 // kompilatsiyada ushlanmaydi, enum bilan esa switch hamma variantni qamraydi.
 
 /// Bola jinsi.
-enum Gender {
-  male,
-  female,
-}
+enum Gender { male, female }
 
 extension GenderX on Gender {
   /// UI'da ko'rsatish uchun o'zbekcha yorliq. Hozircha lokalizatsiya

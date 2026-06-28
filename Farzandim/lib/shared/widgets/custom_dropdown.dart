@@ -2,6 +2,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Pill-shaped dropdown — Farzandim formalari uchun.
 ///
@@ -68,14 +69,12 @@ class CustomDropdown<T> extends StatelessWidget {
           value: value,
           hint: Text(
             hint,
-            style: AppTextStyles.bodyM.copyWith(
-              color: AppColors.textTertiary,
-            ),
+            style: AppTextStyles.bodyM.copyWith(color: AppColors.textTertiary),
           ),
           // To'liq kenglikni egallaydi — pill shaklining ichida.
           isExpanded: true,
           icon: Icon(
-            Icons.keyboard_arrow_down,
+            SolarIconsBold.altArrowDown,
             color: AppColors.textSecondary,
           ),
           // Ochilgan menyu fon'i (default — surfaceContainerHighest).

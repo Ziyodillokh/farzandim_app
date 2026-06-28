@@ -29,6 +29,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class SchedulesListScreen extends ConsumerWidget {
   const SchedulesListScreen({required this.childId, super.key});
@@ -118,7 +119,10 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             onPressed: () => context.pop(),
-            icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+            icon: Icon(
+              SolarIconsBold.altArrowLeft,
+              color: AppColors.textPrimary,
+            ),
           ),
           Expanded(
             child: Text(
@@ -407,7 +411,7 @@ class _SubRow extends StatelessWidget {
             if (trailing != null) trailing!,
             const SizedBox(width: 6),
             Icon(
-              Icons.chevron_right_rounded,
+              SolarIconsBold.altArrowRight,
               size: 20,
               color: AppColors.textTertiary,
             ),

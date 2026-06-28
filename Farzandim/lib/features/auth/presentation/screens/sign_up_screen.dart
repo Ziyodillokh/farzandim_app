@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Ro'yxatdan o'tish — Parvoz dizayni, 3 bosqichli "wizard":
 ///   1) Aloqa: telefon YOKI email + maxfiylik roziligi → kod yuboriladi
@@ -159,8 +160,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _loading = false;
         _error = _readDioError(
           e,
-          fallback:
-              _isPhone ? "SMS yuborib bo'lmadi" : "Email yuborib bo'lmadi",
+          fallback: _isPhone
+              ? "SMS yuborib bo'lmadi"
+              : "Email yuborib bo'lmadi",
         );
       });
     }
@@ -190,8 +192,9 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       setState(
         () => _error = _readDioError(
           e,
-          fallback:
-              _isPhone ? "SMS yuborib bo'lmadi" : "Email yuborib bo'lmadi",
+          fallback: _isPhone
+              ? "SMS yuborib bo'lmadi"
+              : "Email yuborib bo'lmadi",
         ),
       );
     }
@@ -426,7 +429,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
   Widget _errorRow(String msg) => Row(
     children: [
       const Icon(
-        Icons.error_outline_rounded,
+        SolarIconsBold.dangerCircle,
         size: 16,
         color: Color(0xFFFF6B6B),
       ),
@@ -619,7 +622,11 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
               ),
             ),
             child: _consent
-                ? const Icon(Icons.check, size: 15, color: Colors.white)
+                ? const Icon(
+                    SolarIconsBold.checkCircle,
+                    size: 15,
+                    color: Colors.white,
+                  )
                 : null,
           ),
         ),
@@ -808,8 +815,10 @@ class _ParvozOtp extends StatefulWidget {
 
 class _ParvozOtpState extends State<_ParvozOtp> {
   static const _len = 5;
-  final List<TextEditingController> _ctrls =
-      List.generate(_len, (_) => TextEditingController());
+  final List<TextEditingController> _ctrls = List.generate(
+    _len,
+    (_) => TextEditingController(),
+  );
   final List<FocusNode> _nodes = List.generate(_len, (_) => FocusNode());
 
   @override

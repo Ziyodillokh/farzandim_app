@@ -23,11 +23,9 @@ const String _defaultChannelDesc =
 /// Token faqat Backend (`/api/fcm/tokens`)'ga registratsiya qilinadi.
 class FcmService {
   /// Konstruktor.
-  FcmService({
-    FirebaseMessaging? messaging,
-    BackendFcmRepository? backendRepo,
-  })  : _messaging = messaging ?? FirebaseMessaging.instance,
-        _backendRepo = backendRepo;
+  FcmService({FirebaseMessaging? messaging, BackendFcmRepository? backendRepo})
+    : _messaging = messaging ?? FirebaseMessaging.instance,
+      _backendRepo = backendRepo;
 
   final FirebaseMessaging _messaging;
   final BackendFcmRepository? _backendRepo;
@@ -67,8 +65,9 @@ class FcmService {
     // 401 so'rov. Registratsiya endi FAQAT: (a) auth-transition'da
     // (app.dart — bootstrap'da har doim ishlaydi) va (b) token refresh
     // bo'lganda (quyidagi listener).
-    _onTokenRefreshSub =
-        _messaging.onTokenRefresh.listen(saveTokenForCurrentUser);
+    _onTokenRefreshSub = _messaging.onTokenRefresh.listen(
+      saveTokenForCurrentUser,
+    );
 
     _onMessageSub = FirebaseMessaging.onMessage.listen((message) {
       final notification = AppNotification.fromRemoteMessage(message);
@@ -77,8 +76,9 @@ class FcmService {
       unawaited(_showLocalNotification(message));
     });
 
-    _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp
-        .listen(_navigateForMessage);
+    _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen(
+      _navigateForMessage,
+    );
 
     final initialMessage = await _messaging.getInitialMessage();
     if (initialMessage != null) {
@@ -150,9 +150,7 @@ class FcmService {
   /// High-importance Android notification channel yaratish + iOS init.
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
-    const iosInit = DarwinInitializationSettings(
-      
-    );
+    const iosInit = DarwinInitializationSettings();
     const initSettings = InitializationSettings(
       android: androidInit,
       iOS: iosInit,
@@ -174,7 +172,8 @@ class FcmService {
     );
     final androidPlugin = _localNotifications
         .resolvePlatformSpecificImplementation<
-            AndroidFlutterLocalNotificationsPlugin>();
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(androidChannel);
   }
 
@@ -203,8 +202,8 @@ class FcmService {
       iOS: iosDetails,
     );
 
-    final id = (message.messageId ?? DateTime.now().toIso8601String())
-        .hashCode &
+    final id =
+        (message.messageId ?? DateTime.now().toIso8601String()).hashCode &
         0x7FFFFFFF;
     await _localNotifications.show(id, title, body, details);
   }

@@ -16,6 +16,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class NotificationPreferencesScreen extends ConsumerStatefulWidget {
   const NotificationPreferencesScreen({required this.childId, super.key});
@@ -63,15 +64,15 @@ class _NotificationPreferencesScreenState
 
   Future<void> _saveQuiet(String? from, String? to) async {
     await _run(
-      (repo) =>
-          repo.setQuietHours(widget.childId, from: from, to: to),
+      (repo) => repo.setQuietHours(widget.childId, from: from, to: to),
     );
   }
 
   Future<void> _run(
     Future<NotificationPreferences> Function(
       BackendNotificationPreferenceRepository repo,
-    ) action,
+    )
+    action,
   ) async {
     if (_saving) return;
     setState(() => _saving = true);
@@ -172,7 +173,7 @@ class _NotificationPreferencesScreenState
           ),
           const SizedBox(height: AppDimensions.md),
           _ToggleCard(
-            icon: Icons.menu_book_rounded,
+            icon: SolarIconsBold.book,
             color: const Color(0xFF60A5FA),
             title: 'Dars / test eslatmasi',
             subtitle: '"Bugun bitta test yechib ko\'rchi 📚"',
@@ -180,7 +181,7 @@ class _NotificationPreferencesScreenState
             onChanged: _saving ? null : (v) => _save(study: v),
           ),
           _ToggleCard(
-            icon: Icons.directions_run_rounded,
+            icon: SolarIconsBold.running,
             color: const Color(0xFF4ADE80),
             title: "Sport / sog'lom eslatma",
             subtitle: '"Biroz harakat qilsang-chi 🏃"',
@@ -188,7 +189,7 @@ class _NotificationPreferencesScreenState
             onChanged: _saving ? null : (v) => _save(health: v),
           ),
           _ToggleCard(
-            icon: Icons.movie_rounded,
+            icon: SolarIconsBold.clapperboard,
             color: const Color(0xFF7C6FE0),
             title: 'Yangi kontent eslatmasi',
             subtitle: '"Yangi videolar seni kutyapti 🎬"',
@@ -226,7 +227,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: onBack,
             ),
           ),
@@ -293,8 +297,9 @@ class _ToggleCard extends StatelessWidget {
                   const SizedBox(height: 2),
                   Text(
                     subtitle,
-                    style: AppTextStyles.label
-                        .copyWith(color: AppColors.textTertiary),
+                    style: AppTextStyles.label.copyWith(
+                      color: AppColors.textTertiary,
+                    ),
                   ),
                 ],
               ),
@@ -336,7 +341,7 @@ class _QuietCard extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.bedtime_rounded,
+              SolarIconsBold.moonSleep,
               color: AppColors.primary,
               size: 22,
             ),
@@ -348,25 +353,30 @@ class _QuietCard extends StatelessWidget {
               children: [
                 Text(
                   'Tinch soatlar',
-                  style:
-                      AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
+                  style: AppTextStyles.bodyM.copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   label,
-                  style: AppTextStyles.label
-                      .copyWith(color: AppColors.textTertiary),
+                  style: AppTextStyles.label.copyWith(
+                    color: AppColors.textTertiary,
+                  ),
                 ),
               ],
             ),
           ),
           if (prefs.hasQuietHours && onClear != null)
             IconButton(
-              icon: Icon(Icons.close_rounded, color: AppColors.textTertiary),
+              icon: Icon(
+                SolarIconsBold.closeCircle,
+                color: AppColors.textTertiary,
+              ),
               onPressed: onClear,
             )
           else
-            Icon(Icons.chevron_right, color: AppColors.textTertiary),
+            Icon(SolarIconsBold.altArrowRight, color: AppColors.textTertiary),
         ],
       ),
     );

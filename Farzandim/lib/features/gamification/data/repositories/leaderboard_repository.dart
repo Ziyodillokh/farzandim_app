@@ -17,7 +17,8 @@ class LeaderboardRepository {
   Future<LeaderboardPage> fetch({
     required String childId,
     required String period,
-    required int page, String? region,
+    required int page,
+    String? region,
     int limit = 15,
   }) async {
     final res = await _dio.get<Map<String, dynamic>>(

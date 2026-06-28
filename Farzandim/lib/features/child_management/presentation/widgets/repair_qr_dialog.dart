@@ -31,6 +31,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class RepairQrDialog extends ConsumerStatefulWidget {
   const RepairQrDialog({
@@ -52,10 +53,7 @@ class RepairQrDialog extends ConsumerStatefulWidget {
     return Navigator.of(context, rootNavigator: true).push<bool>(
       MaterialPageRoute(
         fullscreenDialog: true,
-        builder: (_) => RepairQrDialog(
-          childId: childId,
-          childName: childName,
-        ),
+        builder: (_) => RepairQrDialog(childId: childId, childName: childName),
       ),
     );
   }
@@ -83,18 +81,19 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         .read(socketClientProvider)
         .eventStream('child:repaired')
         .listen((data) {
-      if (data is! Map) return;
-      if (data['childId'] != widget.childId) return;
-      if (!mounted) return;
-      // Ro'yxat yangilansin (isConnected=true keladi).
-      ref.read(childrenRefreshTickProvider.notifier).state++;
-      AppToast.success(
-        context,
-        'repairQr.reconnectedSnack'
-            .tr(namedArgs: {'name': widget.childName}),
-      );
-      Navigator.of(context).pop(true);
-    });
+          if (data is! Map) return;
+          if (data['childId'] != widget.childId) return;
+          if (!mounted) return;
+          // Ro'yxat yangilansin (isConnected=true keladi).
+          ref.read(childrenRefreshTickProvider.notifier).state++;
+          AppToast.success(
+            context,
+            'repairQr.reconnectedSnack'.tr(
+              namedArgs: {'name': widget.childName},
+            ),
+          );
+          Navigator.of(context).pop(true);
+        });
   }
 
   @override
@@ -136,8 +135,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _error =
-            'repairQr.unexpectedError'.tr(namedArgs: {'error': '$e'});
+        _error = 'repairQr.unexpectedError'.tr(namedArgs: {'error': '$e'});
       });
     }
   }
@@ -167,7 +165,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.close, color: AppColors.textPrimary),
+          icon: Icon(SolarIconsBold.closeCircle, color: AppColors.textPrimary),
           onPressed: () => Navigator.pop(context, false),
         ),
         title: Text(
@@ -290,7 +288,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           if (!mounted) return;
           AppToast.success(context, 'repairQr.copiedSnack'.tr());
         },
-        icon: const Icon(Icons.content_copy_rounded, size: 18),
+        icon: const Icon(SolarIconsBold.copy, size: 18),
         label: Text('repairQr.copyButton'.tr()),
         style: TextButton.styleFrom(
           foregroundColor: AppColors.primary,
@@ -305,11 +303,10 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.timer_outlined, size: 16, color: color),
+        Icon(SolarIconsBold.stopwatch, size: 16, color: color),
         const SizedBox(width: 6),
         Text(
-          'repairQr.timeLeft'
-              .tr(namedArgs: {'seconds': '$_remainingSec'}),
+          'repairQr.timeLeft'.tr(namedArgs: {'seconds': '$_remainingSec'}),
           style: AppTextStyles.bodyS.copyWith(
             color: color,
             fontWeight: FontWeight.w600,
@@ -376,7 +373,7 @@ class _ErrorBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(Icons.error_outline, color: AppColors.error, size: 32),
+          Icon(SolarIconsBold.dangerCircle, color: AppColors.error, size: 32),
           const SizedBox(height: 8),
           Text(
             message,
@@ -386,7 +383,7 @@ class _ErrorBox extends StatelessWidget {
           const SizedBox(height: 12),
           TextButton.icon(
             onPressed: onRetry,
-            icon: Icon(Icons.refresh, color: AppColors.primary),
+            icon: Icon(SolarIconsBold.refresh, color: AppColors.primary),
             label: Text(
               'repairQr.retryButton'.tr(),
               style: TextStyle(color: AppColors.primary),

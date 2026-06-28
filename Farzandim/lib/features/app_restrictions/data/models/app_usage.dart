@@ -161,8 +161,9 @@ class AppUsageDay {
     return aggregatedApps.where((app) {
       // Juda qisqa (tasodifiy) ochilishlar ko'rsatilmaydi.
       if (app.totalTimeMs < _minVisibleMs) return false;
-      return !systemPrefixes
-          .any((prefix) => app.packageName.startsWith(prefix));
+      return !systemPrefixes.any(
+        (prefix) => app.packageName.startsWith(prefix),
+      );
     }).toList();
   }
 

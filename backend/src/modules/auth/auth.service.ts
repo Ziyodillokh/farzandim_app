@@ -80,7 +80,9 @@ export class AuthService {
   /// + ism kiritish uchun yetarli, lekin keyin qayta SMS so'rab tasdiqlatadi.
   private static readonly REGISTER_OTP_VERIFIED_VALIDITY_MS = 10 * 60 * 1000;
 
-  async sendRegisterOtp(phone: string): Promise<{ ok: true }> {
+  async sendRegisterOtp(
+    phone: string,
+  ): Promise<{ ok: true; devCode?: string }> {
     if (!this.sms.isSmsConfigured()) {
       throw new ServiceUnavailableException('SMS xizmati hozircha mavjud emas');
     }
@@ -118,6 +120,18 @@ export class AuthService {
         { phone, err: smsResult.error },
         'Register OTP SMS yuborilmadi',
       );
+      // DEV bypass: SMS ketmaganda (masalan Eskiz TEST rejimida "Number is
+      // forbidden") `OTP_DEV_LOG=true` bo'lsa — kodni backend LOGiga chiqarib,
+      // davom etamiz. Shunda test/dev'da real SMS'siz ro'yxatdan o'tish mumkin.
+      // Prod'da bu flag o'rnatilmaydi → odatdagidek xato qaytadi.
+      if (process.env.OTP_DEV_LOG === 'true') {
+        this.logger.warn(
+          `🔑 [DEV OTP] ${phone} -> ${code}  (SMS ketmadi: ${smsResult.error})`,
+        );
+        // Dev'da kodni javobда ham qaytaramiz (test qulay bo'lsin). Prod'da
+        // flag yo'q → bu yerga yetib kelmaydi.
+        return { ok: true, devCode: code };
+      }
       throw new BadGatewayException("SMS yuborib bo'lmadi");
     }
 

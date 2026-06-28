@@ -14,11 +14,9 @@ final backendSosRepositoryProvider = Provider<BackendSosRepository>((ref) {
 });
 
 class BackendSosRepository {
-  BackendSosRepository({
-    required Dio dio,
-    required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  BackendSosRepository({required Dio dio, required SocketClient socketClient})
+    : _dio = dio,
+      _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -57,8 +55,6 @@ class BackendSosRepository {
     }
   }
 
-  Stream<dynamic> receivedStream() =>
-      _socketClient.eventStream('sos:received');
-  Stream<dynamic> resolvedStream() =>
-      _socketClient.eventStream('sos:resolved');
+  Stream<dynamic> receivedStream() => _socketClient.eventStream('sos:received');
+  Stream<dynamic> resolvedStream() => _socketClient.eventStream('sos:resolved');
 }

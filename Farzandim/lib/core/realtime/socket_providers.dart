@@ -27,8 +27,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///   error: (e, _) => Text(friendlyError(e)),
 /// );
 /// ```
-final socketConnectionProvider =
-    StreamProvider<SocketConnectionState>((ref) {
+final socketConnectionProvider = StreamProvider<SocketConnectionState>((ref) {
   final client = ref.watch(socketClientProvider);
   // Initial state — stream'ni state bilan boshlash.
   return client.stateStream.asBroadcastStream(

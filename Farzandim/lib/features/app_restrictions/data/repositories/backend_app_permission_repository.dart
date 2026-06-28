@@ -7,8 +7,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendAppPermissionRepositoryProvider =
     Provider<BackendAppPermissionRepository>((ref) {
-  return BackendAppPermissionRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendAppPermissionRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendAppPermissionRepository {
   BackendAppPermissionRepository({required Dio dio}) : _dio = dio;
@@ -24,8 +24,7 @@ class BackendAppPermissionRepository {
         '/children/$childId/app-permissions',
         queryParameters: {'permission': permission},
       );
-      final list =
-          response.data?['policies'] as List<dynamic>? ?? const [];
+      final list = response.data?['policies'] as List<dynamic>? ?? const [];
       final map = <String, bool>{};
       for (final p in list) {
         final m = p as Map;
@@ -60,9 +59,11 @@ class BackendAppPermissionRepository {
 /// (childId, permission) → packageName→allowed map.
 /// Ro'yxatda yo'q ilova UI'da default `true` ko'rsatiladi.
 final appPermissionPoliciesProvider =
-    FutureProvider.family<Map<String, bool>, (String, String)>(
-        (ref, key) async {
-  final (childId, permission) = key;
-  final repo = ref.watch(backendAppPermissionRepositoryProvider);
-  return repo.getPolicies(childId: childId, permission: permission);
-});
+    FutureProvider.family<Map<String, bool>, (String, String)>((
+      ref,
+      key,
+    ) async {
+      final (childId, permission) = key;
+      final repo = ref.watch(backendAppPermissionRepositoryProvider);
+      return repo.getPolicies(childId: childId, permission: permission);
+    });

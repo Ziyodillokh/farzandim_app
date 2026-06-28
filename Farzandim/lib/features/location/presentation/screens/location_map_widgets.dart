@@ -1,60 +1,13 @@
 // ARCH-13: monolit ekran fayli `part` fayllarga bo'lindi — private nomlar
 // va vizual xulq o'zgarmagan, faqat fayl tashkiloti.
+// REDIZAYN (Figma): top bar — "Joylashuvi" sarlavha + "qatlamlar" (geo-zona)
+// ikoni; bola almashtirish sarlavhani bosib (ko'p bola bo'lsa).
 part of 'location_map_screen.dart';
 
 // ════════════════════════ TOP BAR ════════════════════════
 
-class _TopBar extends StatelessWidget {
+class _TopBar extends ConsumerWidget {
   const _TopBar({required this.child});
-
-  final Child child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        _CircleIconButton(icon: Icons.arrow_back, onTap: () => context.pop()),
-        const Spacer(),
-        _ChildSelectorChip(child: child),
-      ],
-    );
-  }
-}
-
-class _CircleIconButton extends StatelessWidget {
-  const _CircleIconButton({required this.icon, required this.onTap});
-
-  final IconData icon;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        boxShadow: AppShadows.card,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        shape: CircleBorder(side: BorderSide(color: AppColors.border)),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          child: SizedBox(
-            width: 48,
-            height: 48,
-            child: Center(
-              child: Icon(icon, size: 24, color: AppColors.textPrimary),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _ChildSelectorChip extends ConsumerWidget {
-  const _ChildSelectorChip({required this.child});
 
   final Child child;
 
@@ -62,85 +15,125 @@ class _ChildSelectorChip extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final children = ref.watch(childrenListProvider);
     final hasMultiple = children.length > 1;
-
-    return DecoratedBox(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-        boxShadow: AppShadows.card,
-      ),
-      child: Material(
-        color: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-          side: BorderSide(color: AppColors.border),
+    return Row(
+      children: [
+        _NavIconButton(
+          icon: SolarIconsOutline.arrowLeft,
+          onTap: () => context.pop(),
         ),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: hasMultiple ? () => _openPicker(context, children) : null,
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(8, 6, 12, 6),
+        const SizedBox(width: 12),
+        // Sarlavha — MARKAZDA (ikki tugma orasida). Ko'p bola bo'lsa bosib
+        // bola almashtirish mumkin.
+        Expanded(
+          child: GestureDetector(
+            behavior: HitTestBehavior.opaque,
+            onTap: hasMultiple
+                ? () => _openChildPicker(context, children, child)
+                : null,
             child: Row(
-              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                ChildAvatar(child: child, size: 32, showBorder: false),
-                const SizedBox(width: 8),
-                Text(
-                  child.name,
-                  style: AppTextStyles.bodyM.copyWith(
-                    color: AppColors.textPrimary,
-                    fontWeight: FontWeight.w600,
+                Flexible(
+                  child: Text(
+                    'Joylashuvi',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textAlign: TextAlign.center,
+                    style: _lunb(20, w: FontWeight.w700, ls: -0.4),
                   ),
                 ),
                 if (hasMultiple) ...[
-                  const SizedBox(width: 2),
-                  Icon(Icons.arrow_drop_down, color: AppColors.textSecondary),
+                  const SizedBox(width: 4),
+                  const Icon(
+                    SolarIconsOutline.altArrowDown,
+                    color: _dim,
+                    size: 20,
+                  ),
                 ],
               ],
             ),
           ),
         ),
+        const SizedBox(width: 12),
+        // Xarita / geo-zonalar — buklangan xarita ikoni (Figmadagidek).
+        _NavIconButton(
+          icon: SolarIconsBold.map,
+          onTap: () => context.push(AppRoutes.geoZonesPath(child.id)),
+        ),
+      ],
+    );
+  }
+}
+
+/// Yumaloq-kvadrat (squircle) shisha ikon tugma — Figma top bar uslubi.
+class _NavIconButton extends StatelessWidget {
+  const _NavIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      // To'qroq solid-glass fon — tugmalar xarita ustida toza ko'rinsin.
+      color: const Color(0xE6121C2E),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(_radiusSm),
+        side: const BorderSide(color: _cardBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: onTap,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(child: Icon(icon, size: 23, color: Colors.white)),
+        ),
       ),
     );
   }
+}
 
-  Future<void> _openPicker(BuildContext context, List<Child> children) async {
-    final selected = await showModalBottomSheet<Child>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusL),
-        ),
+/// Bola tanlash varag'i (ko'p bola bo'lganda sarlavhadan ochiladi).
+Future<void> _openChildPicker(
+  BuildContext context,
+  List<Child> children,
+  Child current,
+) async {
+  final selected = await showModalBottomSheet<Child>(
+    context: context,
+    backgroundColor: const Color(0xFF0A1018),
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(
+        top: Radius.circular(AppDimensions.radiusL),
       ),
-      builder: (sheetContext) => SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.md),
-              child: Text(
-                'location.picker.title'.tr(),
-                style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-              ),
+      side: BorderSide(color: _cardBorder),
+    ),
+    builder: (sheetContext) => SafeArea(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(AppDimensions.md),
+            child: Text('location.picker.title'.tr(), style: _lunb(18)),
+          ),
+          for (final c in children)
+            ListTile(
+              leading: ChildAvatar(child: c, size: 40),
+              title: Text(c.name, style: _lpop(14, w: FontWeight.w600)),
+              trailing: c.id == current.id
+                  ? const Icon(SolarIconsBold.checkCircle, color: _blue)
+                  : null,
+              onTap: () => Navigator.of(sheetContext).pop(c),
             ),
-            for (final c in children)
-              ListTile(
-                leading: ChildAvatar(child: c, size: 40),
-                title: Text(c.name, style: AppTextStyles.bodyM),
-                trailing: c.id == child.id
-                    ? Icon(Icons.check, color: AppColors.accent)
-                    : null,
-                onTap: () => Navigator.of(sheetContext).pop(c),
-              ),
-            const SizedBox(height: AppDimensions.sm),
-          ],
-        ),
+          const SizedBox(height: AppDimensions.sm),
+        ],
       ),
-    );
+    ),
+  );
 
-    if (selected != null && selected.id != child.id && context.mounted) {
-      context.pushReplacement(AppRoutes.locationPath(selected.id));
-    }
+  if (selected != null && selected.id != current.id && context.mounted) {
+    context.pushReplacement(AppRoutes.locationPath(selected.id));
   }
 }
 
@@ -153,45 +146,46 @@ class _NoLocationState extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Stack(
-        children: [
-          Padding(
-            padding: const EdgeInsets.all(AppDimensions.md),
-            child: _TopBar(child: child),
-          ),
-          Center(
-            child: Padding(
-              padding: const EdgeInsets.all(AppDimensions.xl),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    Icons.location_off_outlined,
-                    size: 80,
-                    color: AppColors.textSecondary,
-                  ),
-                  const SizedBox(height: AppDimensions.md),
-                  Text(
-                    'location.noLocation.title'.tr(),
-                    style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-                    textAlign: TextAlign.center,
-                  ),
-                  const SizedBox(height: AppDimensions.sm),
-                  Text(
-                    'location.noLocation.subtitle'.tr(
-                      namedArgs: {'name': child.name},
+    return ColoredBox(
+      color: _bg,
+      child: SafeArea(
+        child: Stack(
+          children: [
+            Padding(
+              padding: const EdgeInsets.all(AppDimensions.md),
+              child: _TopBar(child: child),
+            ),
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppDimensions.xl),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(
+                      SolarIconsOutline.mapPointRemove,
+                      size: 80,
+                      color: _dim,
                     ),
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: AppColors.textSecondary,
+                    const SizedBox(height: AppDimensions.md),
+                    Text(
+                      'location.noLocation.title'.tr(),
+                      style: _lunb(18),
+                      textAlign: TextAlign.center,
                     ),
-                    textAlign: TextAlign.center,
-                  ),
-                ],
+                    const SizedBox(height: AppDimensions.sm),
+                    Text(
+                      'location.noLocation.subtitle'.tr(
+                        namedArgs: {'name': child.name},
+                      ),
+                      style: _lpop(13, c: _dim),
+                      textAlign: TextAlign.center,
+                    ),
+                  ],
+                ),
               ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -220,7 +214,11 @@ class _ErrorState extends StatelessWidget {
               child: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.error_outline, size: 64, color: AppColors.error),
+                  Icon(
+                    SolarIconsOutline.dangerCircle,
+                    size: 64,
+                    color: AppColors.error,
+                  ),
                   const SizedBox(height: AppDimensions.md),
                   Text(
                     'location.error.title'.tr(),
@@ -254,7 +252,7 @@ class _NoChildrenScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back),
+          icon: const Icon(SolarIconsOutline.altArrowLeft),
           onPressed: () => context.pop(),
         ),
       ),

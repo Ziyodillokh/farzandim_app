@@ -17,6 +17,7 @@ import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// QR skaner orqali ikkinchi qurilma sifatida kirish.
 class ScanAccountScreen extends ConsumerStatefulWidget {
@@ -105,8 +106,7 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
           MobileScanner(
             controller: _controller,
             onDetect: _onDetect,
-            errorBuilder: (context, error, child) =>
-                _CameraError(error: error),
+            errorBuilder: (context, error, child) => _CameraError(error: error),
           ),
 
           // Skaner ramkasi (markazda).
@@ -141,8 +141,9 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
                       margin: const EdgeInsets.only(bottom: AppDimensions.md),
                       decoration: BoxDecoration(
                         color: AppColors.error,
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusM),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusM,
+                        ),
                       ),
                       child: Text(
                         _error!,
@@ -164,9 +165,7 @@ class _ScanAccountScreenState extends ConsumerState<ScanAccountScreen> {
                   Text(
                     'auth.scan.whereHint'.tr(),
                     textAlign: TextAlign.center,
-                    style: AppTextStyles.bodyS.copyWith(
-                      color: Colors.white70,
-                    ),
+                    style: AppTextStyles.bodyS.copyWith(color: Colors.white70),
                   ),
                 ],
               ),
@@ -203,7 +202,7 @@ class _CameraError extends StatelessWidget {
             mainAxisSize: MainAxisSize.min,
             children: [
               const Icon(
-                Icons.no_photography_outlined,
+                SolarIconsBold.cameraRotate,
                 color: Colors.white54,
                 size: 56,
               ),

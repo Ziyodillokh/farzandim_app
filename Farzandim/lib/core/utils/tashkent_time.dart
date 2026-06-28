@@ -7,8 +7,7 @@
 // 4 joyda dublikat edi — endi bitta util.
 
 /// Toshkent (UTC+5) bo'yicha "hozir".
-DateTime tashkentNow() =>
-    DateTime.now().toUtc().add(const Duration(hours: 5));
+DateTime tashkentNow() => DateTime.now().toUtc().add(const Duration(hours: 5));
 
 /// Toshkent bugungi sanasi "YYYY-MM-DD" (backend kun-kaliti formati).
 String tashkentTodayStr() {

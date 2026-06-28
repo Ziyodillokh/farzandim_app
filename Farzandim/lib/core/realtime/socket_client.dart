@@ -46,16 +46,11 @@ final socketClientProvider = Provider<SocketClient>((ref) {
 });
 
 /// Connection state — UI'da "Real-time uzilgan" indikator uchun.
-enum SocketConnectionState {
-  disconnected,
-  connecting,
-  connected,
-  error,
-}
+enum SocketConnectionState { disconnected, connecting, connected, error }
 
 class SocketClient {
   SocketClient({required TokenStorage tokenStorage})
-      : _tokenStorage = tokenStorage;
+    : _tokenStorage = tokenStorage;
 
   final TokenStorage _tokenStorage;
   io.Socket? _socket;
@@ -63,8 +58,7 @@ class SocketClient {
 
   /// State o'zgarishini UI'ga uzatadigan broadcast stream.
   /// `socketConnectionProvider` (StreamProvider) shu yerdan o'qiydi.
-  final _stateController =
-      StreamController<SocketConnectionState>.broadcast();
+  final _stateController = StreamController<SocketConnectionState>.broadcast();
 
   SocketConnectionState get state => _state;
 
@@ -122,9 +116,7 @@ class SocketClient {
           // 15 daqiqada eskiradi, auto-reconnect eski token bilan kelib
           // backend tomonidan rad etilardi → real-time butunlay o'lardi.
           .setAuthFn((cb) {
-            _tokenStorage
-                .readAccessToken()
-                .then((t) => cb({'token': t ?? ''}));
+            _tokenStorage.readAccessToken().then((t) => cb({'token': t ?? ''}));
           })
           // Reconnect cheksiz (default) — avval 10 urinish bilan to'xtardi:
           // ~1-2 daqiqalik tarmoq uzilishi real-time'ni abadiy o'chirardi.
@@ -234,13 +226,17 @@ class SocketClient {
     }
 
     final completer = Completer<bool>();
-    _socket!.emitWithAck('join:child', childId, ack: (dynamic data) {
-      final ok = data is List && data.isNotEmpty && data[0] == true;
-      if (!ok) {
-        debugPrint('SocketClient: joinChildRoom rad etildi — $data');
-      }
-      if (!completer.isCompleted) completer.complete(ok);
-    });
+    _socket!.emitWithAck(
+      'join:child',
+      childId,
+      ack: (dynamic data) {
+        final ok = data is List && data.isNotEmpty && data[0] == true;
+        if (!ok) {
+          debugPrint('SocketClient: joinChildRoom rad etildi — $data');
+        }
+        if (!completer.isCompleted) completer.complete(ok);
+      },
+    );
 
     // Timeout — backend javob bermasa hang qilib qolmaslik uchun.
     return completer.future.timeout(

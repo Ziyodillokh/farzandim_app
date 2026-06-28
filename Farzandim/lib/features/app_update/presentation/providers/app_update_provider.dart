@@ -14,8 +14,8 @@ const _dismissTtl = Duration(hours: 24);
 
 final appUpdateProvider =
     AsyncNotifierProvider<AppUpdateNotifier, AppUpdateStatus>(
-  AppUpdateNotifier.new,
-);
+      AppUpdateNotifier.new,
+    );
 
 class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
   @override
@@ -46,8 +46,7 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
     // Web'da dart:io Platform UnsupportedError tashlaydi — kIsWeb bilan himoya.
     // Web build Android APK'ni directApkUrl orqali tarqatadi → web'ni
     // android deb olamiz.
-    final isAndroid =
-        kIsWeb || defaultTargetPlatform == TargetPlatform.android;
+    final isAndroid = kIsWeb || defaultTargetPlatform == TargetPlatform.android;
     final platform = isAndroid ? info.android : info.ios;
 
     final ltMin = compareSemver(current, platform.minSupported) < 0;

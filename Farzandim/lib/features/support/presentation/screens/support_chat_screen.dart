@@ -30,6 +30,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:open_filex/open_filex.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 part 'support_chat_widgets.dart';
 part 'support_chat_bubbles.dart';
@@ -256,7 +257,7 @@ class _SupportChatScreenState extends ConsumerState<SupportChatScreen> {
                               width: 42,
                               height: 42,
                               child: Icon(
-                                Icons.keyboard_arrow_down_rounded,
+                                SolarIconsBold.altArrowDown,
                                 color: AppColors.textPrimary,
                                 size: 26,
                               ),

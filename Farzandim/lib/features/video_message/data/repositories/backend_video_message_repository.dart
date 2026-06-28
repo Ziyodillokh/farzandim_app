@@ -24,18 +24,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendVideoMessageRepositoryProvider =
     Provider<BackendVideoMessageRepository>((ref) {
-  return BackendVideoMessageRepository(
-    dio: ref.watch(dioClientProvider),
-    socketClient: ref.watch(socketClientProvider),
-  );
-});
+      return BackendVideoMessageRepository(
+        dio: ref.watch(dioClientProvider),
+        socketClient: ref.watch(socketClientProvider),
+      );
+    });
 
 class BackendVideoMessageRepository {
   BackendVideoMessageRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -83,8 +83,7 @@ class BackendVideoMessageRepository {
     try {
       final formData = FormData.fromMap({
         'receiverId': receiverId,
-        if (durationSeconds != null)
-          'durationSeconds': durationSeconds,
+        if (durationSeconds != null) 'durationSeconds': durationSeconds,
         'file': await MultipartFile.fromFile(videoFile.path),
       });
       final response = await _dio.post<Map<String, dynamic>>(

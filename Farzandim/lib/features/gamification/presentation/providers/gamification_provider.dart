@@ -7,8 +7,10 @@ import 'package:farzandim/features/gamification/data/repositories/backend_gamifi
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola gamification profili — Backend fetch + WS real-time refresh.
-final childProfileProvider =
-    StreamProvider.family<ChildProfile?, String>((ref, childId) async* {
+final childProfileProvider = StreamProvider.family<ChildProfile?, String>((
+  ref,
+  childId,
+) async* {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     yield null;
@@ -36,10 +38,12 @@ final childProfileProvider =
 
 /// XP events history (Bola yutuqlari ekranida tarix).
 final childXpEventsProvider =
-    FutureProvider.family<List<Map<String, dynamic>>, String>(
-        (ref, childId) async {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) return const [];
-  final repo = ref.watch(backendGamificationRepositoryProvider);
-  return repo.getXpEvents(childId: childId, limit: 50);
-});
+    FutureProvider.family<List<Map<String, dynamic>>, String>((
+      ref,
+      childId,
+    ) async {
+      final auth = ref.watch(backendAuthProvider);
+      if (auth is! AuthAuthenticated) return const [];
+      final repo = ref.watch(backendGamificationRepositoryProvider);
+      return repo.getXpEvents(childId: childId, limit: 50);
+    });

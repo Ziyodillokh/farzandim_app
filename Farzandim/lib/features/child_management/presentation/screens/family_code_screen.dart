@@ -15,6 +15,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Oila kodi ekrani — bola qo'shilgandan keyin shu ekranga o'tiladi.
 ///
@@ -152,7 +153,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            Icon(Icons.smartphone, color: AppColors.accent),
+            Icon(SolarIconsBold.smartphone, color: AppColors.accent),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
               child: Text(
@@ -178,7 +179,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             const SizedBox(height: AppDimensions.md),
             // Sariq ogohlantirish karta — nima o'zgaradi.
             _DialogInfoCard(
-              icon: Icons.warning_amber_rounded,
+              icon: SolarIconsBold.dangerTriangle,
               iconColor: AppColors.warning,
               title: 'childManagement.familyCode.regenerateConfirm.warningTitle'
                   .tr(),
@@ -195,7 +196,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
             const SizedBox(height: AppDimensions.sm + 4),
             // Yashil ishonch karta — nima saqlanadi.
             _DialogInfoCard(
-              icon: Icons.check_circle,
+              icon: SolarIconsBold.checkCircle,
               iconColor: AppColors.accent,
               title: '',
               titleColor: AppColors.textPrimary,
@@ -246,7 +247,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
         ),
         title: Row(
           children: [
-            Icon(Icons.check_circle, color: AppColors.accent),
+            Icon(SolarIconsBold.checkCircle, color: AppColors.accent),
             const SizedBox(width: AppDimensions.sm + 4),
             Expanded(
               child: Text(
@@ -308,7 +309,7 @@ class _FamilyCodeScreenState extends ConsumerState<FamilyCodeScreen> {
                 'childManagement.familyCode.newCodeDialog.copiedSnack'.tr(),
               );
             },
-            icon: Icon(Icons.copy, color: AppColors.accent, size: 18),
+            icon: Icon(SolarIconsBold.copy, color: AppColors.accent, size: 18),
             label: Text(
               'childManagement.familyCode.newCodeDialog.copy'.tr(),
               style: AppTextStyles.bodyM.copyWith(color: AppColors.accent),
@@ -449,7 +450,7 @@ class _Header extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppDimensions.sm),
               child: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
                 size: AppDimensions.iconM,
               ),
@@ -591,7 +592,11 @@ class _RegenerateCodeButton extends StatelessWidget {
                       ),
                     )
                   else
-                    Icon(Icons.smartphone, size: 18, color: AppColors.accent),
+                    Icon(
+                      SolarIconsBold.smartphone,
+                      size: 18,
+                      color: AppColors.accent,
+                    ),
                   const SizedBox(width: AppDimensions.sm),
                   Text(
                     isLoading
@@ -624,7 +629,7 @@ class _ShareButton extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
       child: PrimaryButton(
         label: 'childManagement.familyCode.shareButton'.tr(),
-        icon: Icons.share,
+        icon: SolarIconsBold.share,
         onPressed: () => _share(child),
       ),
     );

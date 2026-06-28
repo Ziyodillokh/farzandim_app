@@ -51,7 +51,7 @@ class LeaderboardState {
 
 class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
   LeaderboardNotifier(this._repo, this._args)
-      : super(const LeaderboardState()) {
+    : super(const LeaderboardState()) {
     _loadFirst();
   }
 
@@ -113,8 +113,6 @@ class LeaderboardNotifier extends StateNotifier<LeaderboardState> {
 
 final leaderboardProvider = StateNotifierProvider.autoDispose
     .family<LeaderboardNotifier, LeaderboardState, LeaderboardArgs>(
-  (ref, args) => LeaderboardNotifier(
-    ref.watch(leaderboardRepositoryProvider),
-    args,
-  ),
-);
+      (ref, args) =>
+          LeaderboardNotifier(ref.watch(leaderboardRepositoryProvider), args),
+    );

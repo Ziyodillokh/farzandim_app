@@ -1,37 +1,142 @@
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/realtime/socket_client.dart';
-import 'package:farzandim/core/realtime/socket_providers.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
-import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
+import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
-import 'package:farzandim/features/location/presentation/utils/avatar_marker_builder.dart';
+import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
+import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
+import 'package:farzandim/features/location/presentation/providers/road_route_provider.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_fonts/google_fonts.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' as gmaps;
+import 'package:latlong2/latlong.dart' as ll;
+import 'package:solar_icons/solar_icons.dart';
 
 part 'location_map_sheet.dart';
 part 'location_map_widgets.dart';
 
+// ─── "Parvoz" dizayn tokenlari (dashboard bilan bir xil til) ───
+// Bu ekran lokal palitra ishlatadi — dashboard'ni refactor qilmaymiz,
+// faqat vizual tilni takrorlaymiz.
+const Color _bg = Color(0xFF00060A);
+const Color _blue = Color(0xFF216BFF); // accent / polyline / tanlangan / jonli
+const Color _cardBg = Color(0x12FFFFFF); // oq ~7% shisha fon
+const Color _cardBorder = Color(0x1AFFFFFF); // oq ~10% chegara
+const Color _dim = Color(0x8CFFFFFF); // oq 55% ikkilamchi matn
+const Color _success = Color(0xFF22C55E); // "Bordi" badge yashili
+const Color _warning = Color(0xFFEF9900); // ogohlantirish (ixtiyoriy)
+const double _radius = 24; // katta kartalar
+const double _radiusSm = 16; // kichik chip/plitkalar
+const double _sheetInitial = 0.36; // pastki varaqning boshlang'ich ulushi
+
+// Kalitsiz qora xarita plitkalari (CARTO dark — OpenStreetMap data).
+// Google Maps web/Android'da API kalit talab qiladi; kalit yo'q paytda
+// xarita ochilmaydi. CARTO bepul/kalitsiz, dizayn rasmiga (qora xarita)
+// mos. Prod uchun attribution (© OpenStreetMap, © CARTO) ko'rsatish shart.
+const String _darkTileUrl =
+    'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
+
+/// Unbounded sarlavha stili.
+TextStyle _lunb(
+  double size, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+  double? ls,
+}) {
+  return GoogleFonts.unbounded(
+    fontSize: size,
+    fontWeight: w,
+    color: c,
+    letterSpacing: ls,
+    height: 1.3,
+  );
+}
+
+/// Poppins body/label stili.
+TextStyle _lpop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) {
+  return GoogleFonts.poppins(
+    fontSize: size,
+    fontWeight: w,
+    color: c,
+    height: 1.4,
+  );
+}
+
+/// Ikki `LatLng` orasidagi masofa (metr) — haversine. Stop'ni geo-zonaga
+/// moslashtirish uchun ishlatiladi (timeline va place nomi).
+double _metersBetween(gmaps.LatLng a, gmaps.LatLng b) {
+  const r = 6371000.0;
+  double rad(double deg) => deg * math.pi / 180;
+  final dLat = rad(b.latitude - a.latitude);
+  final dLng = rad(b.longitude - a.longitude);
+  final h =
+      math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(rad(a.latitude)) *
+          math.cos(rad(b.latitude)) *
+          math.sin(dLng / 2) *
+          math.sin(dLng / 2);
+  return 2 * r * math.asin(math.min(1, math.sqrt(h)));
+}
+
+/// Stop'ni eng yaqin mos geo-zonaga moslaydi — radius ichida bo'lsa shu
+/// zona qaytadi, aks holda `null`.
+GeoZone? _zoneForStop(gmaps.LatLng point, List<GeoZone> zones) {
+  GeoZone? best;
+  var bestDist = double.infinity;
+  for (final zone in zones) {
+    final d = _metersBetween(point, zone.center);
+    if (d <= zone.radiusMeters && d < bestDist) {
+      bestDist = d;
+      best = zone;
+    }
+  }
+  return best;
+}
+
+/// `gmaps.LatLng` → flutter_map `latlong2.LatLng` (render uchun).
+ll.LatLng _toLL(double lat, double lng) => ll.LatLng(lat, lng);
+
+/// Bugungi kun uchun tarix so'rovi — mahalliy yarim tundan kun oxirigacha.
+///
+/// MUHIM: `toMs` kun OXIRI (ertangi yarim tun), `now` EMAS. Aks holda kalit
+/// har millisekundda o'zgarib, `FutureProvider.autoDispose.family` doim
+/// qaytadan `loading`ga tushardi (timeline va yo'l chizig'i abadiy spinner).
+LocationHistoryQuery _todayQuery(String childId) {
+  final now = DateTime.now();
+  final startOfToday = DateTime(now.year, now.month, now.day);
+  final endOfToday = startOfToday.add(const Duration(days: 1));
+  return (
+    childId: childId,
+    fromMs: startOfToday.millisecondsSinceEpoch,
+    toMs: endOfToday.millisecondsSinceEpoch,
+  );
+}
+
 /// Bola joylashuvini xaritada ko'rsatuvchi ekran.
 ///
-/// Child App `users/{parentUid}/children/{childId}` doc'iga `location`
-/// field yozadi (10m harakat filter). `childLocationProvider.family`
-/// shu field'ga snapshot stream qo'yadi va real-vaqt marker chiqaradi.
+/// Child App backend'ga joylashuv yozadi; `childLocationProvider.family`
+/// REST + WS orqali real-vaqt marker chiqaradi. Xarita kalitsiz CARTO dark
+/// plitkalarida (flutter_map) chiziladi — Google Maps kaliti shart emas.
 ///
 /// `childId` — qaysi bola ko'rsatiladi. `null` bo'lsa birinchi bola.
 class LocationMapScreen extends ConsumerStatefulWidget {
@@ -47,55 +152,28 @@ class LocationMapScreen extends ConsumerStatefulWidget {
 }
 
 class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
-  GoogleMapController? _mapController;
-  LatLng? _lastAnimatedTo;
-  BitmapDescriptor? _avatarMarker;
-  String? _avatarCacheKey;
-  // Hozir yuklanayotgan avatar key — parallel network fetch + canvas render
-  // bo'lmasligi uchun (SCR-05: har build postFrameCallback chaqirardi).
-  String? _avatarLoadingKey;
+  final MapController _mapController = MapController();
+  // Xarita tayyor bo'lgach (onMapReady) move() chaqirish mumkin — undan
+  // oldin chaqirilsa flutter_map exception beradi.
+  bool _mapReady = false;
+  gmaps.LatLng? _lastAnimatedTo;
   bool _userMovedCamera = false;
-  // Dasturiy kamera harakati — onCameraMoveStarted'da user harakati bilan
-  // adashtirmaslik uchun (SCR-02: birinchi avtomatik kameradan keyin
-  // auto-follow o'zini o'chirib qo'yardi).
-  bool _programmaticMove = false;
+  // Sheet'ning joriy ochilish ulushi — suzuvchi karta shunga qarab yuqoriga
+  // suriladi va kengayganda so'nadi (sheet ostida ko'milib qolmasligi uchun).
+  double _sheetExtent = _sheetInitial;
   // Qaysi bola uchun wake-push yuborilgan (har bola uchun bir marta).
   String? _wokeChildId;
 
   @override
   void dispose() {
-    _mapController?.dispose();
+    _mapController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadAvatarMarker(Child child, String? avatarUrl) async {
-    final key = '${child.id}_${avatarUrl ?? "null"}';
-    if (_avatarCacheKey == key && _avatarMarker != null) return;
-    // In-flight guard (SCR-05) — shu key allaqachon yuklanmoqda bo'lsa
-    // parallel fetch/render boshlamaymiz.
-    if (_avatarLoadingKey == key) return;
-    _avatarLoadingKey = key;
-    try {
-      final marker = await AvatarMarkerBuilder.build(
-        avatarUrl: avatarUrl,
-        fallbackKey: child.name,
-      );
-      if (mounted) {
-        setState(() {
-          _avatarMarker = marker;
-          _avatarCacheKey = key;
-        });
-      }
-    } finally {
-      _avatarLoadingKey = null;
-    }
   }
 
   /// Yangi joylashuv kelganda kamerani avtomatik markerga olib boradi —
   /// faqat user qo'lda surganida emas.
-  void _maybeAnimateCamera(LatLng target, {bool force = false}) {
-    final ctrl = _mapController;
-    if (ctrl == null) return;
+  void _maybeAnimateCamera(gmaps.LatLng target, {bool force = false}) {
+    if (!_mapReady) return;
     if (!force && _userMovedCamera) return;
     final prev = _lastAnimatedTo;
     if (!force &&
@@ -105,34 +183,24 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
       return;
     }
     _lastAnimatedTo = target;
-    _programmaticMove = true;
-    ctrl
-        .animateCamera(CameraUpdate.newLatLng(target))
-        .whenComplete(() => _programmaticMove = false);
+    _mapController.move(
+      _toLL(target.latitude, target.longitude),
+      _mapController.camera.zoom,
+    );
   }
 
-  void _onCameraMoveStarted() {
-    // Dasturiy animatsiya ham bu callback'ni chaqiradi — uni user harakati
-    // deb hisoblamaymiz (SCR-02), aks holda auto-follow birinchi avtomatik
-    // kameradan keyin o'zini o'chirib qo'yardi.
-    if (_programmaticMove) return;
-    if (!_userMovedCamera) {
-      setState(() => _userMovedCamera = true);
-    }
+  /// User qo'lda xaritani surdi — auto-follow'ni o'chiramiz.
+  void _onUserGesture() {
+    _userMovedCamera = true;
   }
 
-  void _recenter() {
-    final loc = _lastAnimatedTo;
-    if (loc == null) return;
-    setState(() => _userMovedCamera = false);
-    final ctrl = _mapController;
-    if (ctrl == null) return;
-    _programmaticMove = true;
-    ctrl
-        .animateCamera(
-          CameraUpdate.newCameraPosition(CameraPosition(target: loc, zoom: 16)),
-        )
-        .whenComplete(() => _programmaticMove = false);
+  /// Kamerani JONLI joylashuvga qaytaradi (eski `_lastAnimatedTo` emas —
+  /// bola surilgan paytda harakatlangan bo'lsa, eski nuqtaga qaytarmasin).
+  void _recenter(gmaps.LatLng loc) {
+    if (!_mapReady) return;
+    _userMovedCamera = false;
+    _lastAnimatedTo = loc;
+    _mapController.move(_toLL(loc.latitude, loc.longitude), 16);
   }
 
   @override
@@ -163,14 +231,19 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     final zones =
         ref.watch(geoZonesProvider(child.id)).valueOrNull ?? const <GeoZone>[];
 
-    final locationAsync = ref.watch(childLocationProvider(child.id));
-    final avatarAsync = ref.watch(childAvatarUrlProvider(child.id));
-    final avatarUrl = avatarAsync.valueOrNull;
+    // Bugungi trek (polyline) — bugun yarim tunidan hozirgacha.
+    final todayQuery = _todayQuery(child.id);
+    final track =
+        ref.watch(locationHistoryProvider(todayQuery)).valueOrNull ??
+        const <ChildLocation>[];
+    // Ko'chalarga yopishtirilgan yo'l (OSRM). Tayyor bo'lmasa — xom trek
+    // (to'g'ri chiziq) bilan ko'rsatamiz.
+    final roadRoute = ref.watch(roadRouteProvider(todayQuery)).valueOrNull;
+    final routeLine = (roadRoute != null && roadRoute.length >= 2)
+        ? roadRoute
+        : [for (final p in track) ll.LatLng(p.latitude, p.longitude)];
 
-    // Avatar marker'ni asinxron tayyorlash (bola yoki avatar o'zgarsa).
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      _loadAvatarMarker(child, avatarUrl);
-    });
+    final locationAsync = ref.watch(childLocationProvider(child.id));
 
     // Yangi location kelganda kamera markerga harakatlanadi
     // (user qo'lda harakatlantirmagan bo'lsa).
@@ -187,56 +260,107 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     });
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: _bg,
       body: locationAsync.when(
-        loading: () => const Center(child: CircularProgressIndicator()),
+        loading: () =>
+            const Center(child: CircularProgressIndicator(color: _blue)),
         error: (e, _) => _ErrorState(child: child, error: e),
         data: (location) {
           if (location == null) {
             return _NoLocationState(child: child);
           }
+          // Birinchi data — kamera nishonini eslab qolamiz.
+          _lastAnimatedTo ??= location.latLng;
           final screenH = MediaQuery.of(context).size.height;
-          // Ixcham sheet — xarita ko'proq ko'rinadi (avval 0.42 edi).
-          const sheetInitial = 0.36;
-          return Stack(
-            children: [
-              _MapLayer(
-                location: location,
-                child: child,
-                zones: zones,
-                avatarMarker: _avatarMarker,
-                bottomPadding: screenH * (sheetInitial - 0.06),
-                onCameraMoveStarted: _onCameraMoveStarted,
-                onMapCreated: (controller) {
-                  _mapController = controller;
-                  _lastAnimatedTo = location.latLng;
-                },
-              ),
-              if (_userMovedCamera)
-                Positioned(
-                  right: AppDimensions.md,
-                  bottom: screenH * sheetInitial + AppDimensions.md,
-                  child: _RecenterFab(childName: child.name, onTap: _recenter),
-                ),
-              SafeArea(
-                child: Padding(
-                  padding: const EdgeInsets.all(AppDimensions.md),
-                  child: _TopBar(child: child),
-                ),
-              ),
-              DraggableScrollableSheet(
-                initialChildSize: sheetInitial,
-                minChildSize: 0.26,
-                maxChildSize: 0.9,
-                snap: true,
-                snapSizes: const [sheetInitial, 0.9],
-                builder: (context, scrollController) => _LocationSheet(
-                  child: child,
+          // Karta sheet kengayganda so'nadi: 0.36 da to'liq, ~0.60 da g'oyib.
+          final cardOpacity = (1 - (_sheetExtent - _sheetInitial) / 0.24).clamp(
+            0.0,
+            1.0,
+          );
+          return NotificationListener<DraggableScrollableNotification>(
+            onNotification: (n) {
+              if ((n.extent - _sheetExtent).abs() > 0.002) {
+                setState(() => _sheetExtent = n.extent);
+              }
+              return false;
+            },
+            child: Stack(
+              children: [
+                _MapLayer(
                   location: location,
-                  scrollController: scrollController,
+                  child: child,
+                  zones: zones,
+                  route: routeLine,
+                  controller: _mapController,
+                  onUserGesture: _onUserGesture,
+                  onMapReady: () => _mapReady = true,
                 ),
-              ),
-            ],
+                // Suzuvchi holat kartasi (Figma) — sheet bilan birga suriladi
+                // va kengayganda so'nadi (ostida ko'milib qolmaydi).
+                Positioned(
+                  left: AppDimensions.md,
+                  right: AppDimensions.md,
+                  bottom: screenH * _sheetExtent + AppDimensions.sm,
+                  child: IgnorePointer(
+                    ignoring: cardOpacity < 0.05,
+                    child: Opacity(
+                      opacity: cardOpacity,
+                      child: _StatusCard(
+                        child: child,
+                        location: location,
+                        zones: zones,
+                        onRecenter: () => _recenter(location.latLng),
+                      ),
+                    ),
+                  ),
+                ),
+                // Yuqori scrim — sarlavha/ikonlar xarita ustida toza o'qilsin
+                // (Figmadagidek; aks holda xarita yozuvlari ortidan ko'rinadi).
+                Positioned(
+                  top: 0,
+                  left: 0,
+                  right: 0,
+                  child: IgnorePointer(
+                    child: Container(
+                      height: MediaQuery.of(context).padding.top + 150,
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            _bg.withValues(alpha: 0.92),
+                            _bg.withValues(alpha: 0),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+                SafeArea(
+                  child: Padding(
+                    // Tepadan pastroq (yuqori chetga yopishmasin).
+                    padding: const EdgeInsets.fromLTRB(
+                      AppDimensions.md,
+                      AppDimensions.md + 34,
+                      AppDimensions.md,
+                      AppDimensions.md,
+                    ),
+                    child: _TopBar(child: child),
+                  ),
+                ),
+                DraggableScrollableSheet(
+                  initialChildSize: _sheetInitial,
+                  minChildSize: 0.26,
+                  maxChildSize: 0.9,
+                  snap: true,
+                  snapSizes: const [_sheetInitial, 0.9],
+                  builder: (context, scrollController) => _LocationSheet(
+                    child: child,
+                    scrollController: scrollController,
+                  ),
+                ),
+              ],
+            ),
           );
         },
       ),
@@ -246,130 +370,263 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
 
 // ════════════════════════ MAP LAYER ════════════════════════
 
+/// Kalitsiz xarita qatlami — CARTO dark plitkalar + ko'k yo'l chizig'i +
+/// aniqlik/zona doiralari + bola avatar-pin markeri.
 class _MapLayer extends StatelessWidget {
   const _MapLayer({
     required this.location,
     required this.child,
     required this.zones,
-    required this.avatarMarker,
-    required this.bottomPadding,
-    required this.onMapCreated,
-    required this.onCameraMoveStarted,
+    required this.route,
+    required this.controller,
+    required this.onUserGesture,
+    required this.onMapReady,
   });
 
   final ChildLocation location;
   final Child child;
   final List<GeoZone> zones;
-  final BitmapDescriptor? avatarMarker;
-  final double bottomPadding;
-  final void Function(GoogleMapController) onMapCreated;
-  final VoidCallback onCameraMoveStarted;
+
+  /// Ko'chalarga yopishtirilgan bugungi yo'l — ko'k uzuq-uzuq polyline.
+  final List<ll.LatLng> route;
+  final MapController controller;
+  final VoidCallback onUserGesture;
+  final VoidCallback onMapReady;
 
   @override
   Widget build(BuildContext context) {
-    return GoogleMap(
-      initialCameraPosition: CameraPosition(target: location.latLng, zoom: 16),
-      // Default Google Maps style (user dark premium juda qorong'i dedi).
-      markers: {
-        Marker(
-          markerId: MarkerId(child.id),
-          position: location.latLng,
-          icon: avatarMarker ?? BitmapDescriptor.defaultMarker,
-          infoWindow: InfoWindow(
-            title: child.name,
-            snippet: 'location.updatedSuffix'.tr(
-              namedArgs: {'time': formatRelativeTime(location.updatedAt)},
+    final here = _toLL(location.latitude, location.longitude);
+    // Yo'l oxirini AYNAN avatar (joriy joylashuv) nuqtasiga ulaymiz — OSRM
+    // yo'lni eng yaqin ko'chaga yopishtirgani uchun kichik bo'shliq qolardi
+    // va "chiziq turgan joyga bormagan"dek ko'rinardi.
+    final line = (route.isNotEmpty && route.last == here)
+        ? route
+        : [...route, here];
+    return FlutterMap(
+      mapController: controller,
+      options: MapOptions(
+        initialCenter: here,
+        initialZoom: 16,
+        onMapReady: onMapReady,
+        onPositionChanged: (camera, hasGesture) {
+          if (hasGesture) onUserGesture();
+        },
+        // Markaz va zoom cheklovi — OSM/CARTO plitka diapazoni.
+        minZoom: 3,
+        maxZoom: 18,
+      ),
+      children: [
+        TileLayer(
+          urlTemplate: _darkTileUrl,
+          userAgentPackageName: 'uz.farzandim.app',
+        ),
+        // Bugungi yo'l chizig'i (ko'chaga yopishган) — kamida 2 nuqta bo'lsa.
+        if (line.length >= 2)
+          PolylineLayer(
+            polylines: [
+              Polyline(
+                points: line,
+                color: _blue,
+                strokeWidth: 4,
+                pattern: StrokePattern.dashed(segments: const [18.0, 10.0]),
+              ),
+            ],
+          ),
+        // Aniqlik halosi + geo-zona doiralari (metrda).
+        CircleLayer(
+          circles: [
+            CircleMarker(
+              point: here,
+              radius: location.accuracy.clamp(20, 120).toDouble(),
+              useRadiusInMeter: true,
+              color: _blue.withValues(alpha: 0.10),
+              borderColor: _blue.withValues(alpha: 0.45),
+              borderStrokeWidth: 1,
             ),
-          ),
+            for (final zone in zones)
+              CircleMarker(
+                point: _toLL(zone.latitude, zone.longitude),
+                radius: zone.radiusMeters,
+                useRadiusInMeter: true,
+                color: _blue.withValues(alpha: 0.12),
+                borderColor: _blue,
+                borderStrokeWidth: 2,
+              ),
+          ],
         ),
-      },
-      circles: {
-        // Aniqlik halosi — "Joyida" holatiga mos yashil tus.
-        Circle(
-          circleId: const CircleId('accuracy'),
-          center: location.latLng,
-          radius: location.accuracy.clamp(20, 120).toDouble(),
-          fillColor: AppColors.success.withValues(alpha: 0.10),
-          strokeColor: AppColors.success.withValues(alpha: 0.45),
-          strokeWidth: 1,
+        // Bola markeri — oq doira ichida avatar + pastga ishora "dumcha".
+        MarkerLayer(
+          markers: [
+            Marker(
+              point: here,
+              width: 58,
+              height: 70,
+              alignment: Alignment.topCenter,
+              // Pin'ni quti pastiga tekislaymiz — "dumcha" uchi aynan
+              // joylashuv nuqtasiga tushadi (aks holda ~12px yuqorida edi).
+              child: Align(
+                alignment: Alignment.bottomCenter,
+                child: _AvatarPin(child: child),
+              ),
+            ),
+          ],
         ),
-        for (final zone in zones)
-          Circle(
-            circleId: CircleId(zone.id),
-            center: zone.center,
-            radius: zone.radiusMeters,
-            fillColor: AppColors.accent.withValues(alpha: 0.12),
-            strokeColor: AppColors.accent,
-            strokeWidth: 2,
-          ),
-      },
-      zoomControlsEnabled: false,
-      mapToolbarEnabled: false,
-      myLocationButtonEnabled: false,
-      onMapCreated: onMapCreated,
-      onCameraMoveStarted: onCameraMoveStarted,
-      padding: EdgeInsets.only(bottom: bottomPadding),
+      ],
     );
   }
 }
 
-// ════════════════════════ RECENTER FAB ════════════════════════
+/// Bola markeri: oq doira ichida avatar + pastga ishora qiluvchi uchburchak.
+class _AvatarPin extends StatelessWidget {
+  const _AvatarPin({required this.child});
 
-class _RecenterFab extends StatelessWidget {
-  const _RecenterFab({required this.childName, required this.onTap});
-  final String childName;
-  final VoidCallback onTap;
+  final Child child;
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: Colors.transparent,
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(999),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          padding: const EdgeInsets.all(3),
           decoration: BoxDecoration(
-            gradient: LinearGradient(
-              colors: [AppColors.primary, AppColors.primaryDark],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(999),
+            color: Colors.white,
+            shape: BoxShape.circle,
             boxShadow: [
               BoxShadow(
-                color: AppColors.primary.withValues(alpha: 0.35),
-                blurRadius: 16,
-                offset: const Offset(0, 4),
-              ),
-              BoxShadow(
-                color: Colors.black.withValues(alpha: 0.3),
+                color: Colors.black.withValues(alpha: 0.4),
                 blurRadius: 8,
-                offset: const Offset(0, 2),
+                offset: const Offset(0, 3),
               ),
             ],
-            border: Border.all(color: Colors.white.withValues(alpha: 0.2)),
           ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(
-                Icons.gps_fixed_rounded,
-                color: AppColors.onPrimary,
-                size: 18,
-              ),
-              const SizedBox(width: 8),
-              Text(
-                childName,
-                style: const TextStyle(
-                  color: AppColors.onPrimary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
+          child: ChildAvatar(child: child, size: 42, showBorder: false),
+        ),
+        // Oq uchburchak "dumcha" — joylashuv nuqtasiga ishora qiladi.
+        Transform.translate(
+          offset: const Offset(0, -2),
+          child: CustomPaint(
+            size: const Size(16, 10),
+            painter: _PinTailPainter(),
           ),
         ),
+      ],
+    );
+  }
+}
+
+/// Markerning pastki oq uchburchagi.
+class _PinTailPainter extends CustomPainter {
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = Colors.white
+      ..style = PaintingStyle.fill;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(size.width, 0)
+      ..lineTo(size.width / 2, size.height)
+      ..close();
+    canvas.drawPath(path, paint);
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ════════════════════════ STATUS CARD (Figma) ════════════════════════
+
+/// Xarita ustidagi suzuvchi holat kartasi (Figma): chap — joy ikoni,
+/// markaz — joy holati ("Ko'chada" yoki zona nomi) + manzil, o'ng —
+/// recenter (navigatsiya) tugmasi.
+class _StatusCard extends ConsumerWidget {
+  const _StatusCard({
+    required this.child,
+    required this.location,
+    required this.zones,
+    required this.onRecenter,
+  });
+
+  final Child child;
+  final ChildLocation location;
+  final List<GeoZone> zones;
+  final VoidCallback onRecenter;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final address = ref.watch(childAddressProvider(child.id)).valueOrNull;
+    // Joriy joylashuv biror zona ichidami — "Uyda"/"Maktabda", aks holda
+    // "Ko'chada" (Figma).
+    final currentZone = _zoneForStop(location.latLng, zones);
+    final status = currentZone != null ? '${currentZone.name}da' : "Ko'chada";
+    return Container(
+      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+      decoration: BoxDecoration(
+        color: const Color(0xF20E1622),
+        borderRadius: BorderRadius.circular(_radius),
+        border: Border.all(color: _cardBorder),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.45),
+            blurRadius: 22,
+            offset: const Offset(0, 10),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: _blue.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(12),
+            ),
+            alignment: Alignment.center,
+            child: const Icon(SolarIconsBold.mapPoint, size: 20, color: _blue),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(status, style: _lunb(16, w: FontWeight.w700, ls: -0.2)),
+                const SizedBox(height: 3),
+                Text(
+                  address ?? 'location.command.addressLoading'.tr(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _lpop(12.5, c: _dim),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          // Recenter — markerga qaytish (Figma navigatsiya o'qi).
+          Material(
+            color: Colors.transparent,
+            child: InkWell(
+              onTap: onRecenter,
+              borderRadius: BorderRadius.circular(12),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: _cardBg,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: _cardBorder),
+                ),
+                alignment: Alignment.center,
+                child: const Icon(
+                  SolarIconsBold.mapArrowUp,
+                  size: 19,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }

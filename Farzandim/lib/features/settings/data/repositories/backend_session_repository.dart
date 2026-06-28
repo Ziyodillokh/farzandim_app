@@ -5,8 +5,9 @@ import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/features/settings/data/models/user_session.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendSessionRepositoryProvider =
-    Provider<BackendSessionRepository>((ref) {
+final backendSessionRepositoryProvider = Provider<BackendSessionRepository>((
+  ref,
+) {
   return BackendSessionRepository(dio: ref.watch(dioClientProvider));
 });
 

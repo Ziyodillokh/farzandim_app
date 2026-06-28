@@ -64,8 +64,7 @@ Stream<T> pollFetchStream<T>(
 
   var hasValue = false;
   late T last;
-  bool changed(T next) =>
-      !hasValue || isSame == null || !isSame(last, next);
+  bool changed(T next) => !hasValue || isSame == null || !isSame(last, next);
 
   if (readCache != null) {
     final cached = await readCache();

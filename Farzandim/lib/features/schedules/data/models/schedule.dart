@@ -1,5 +1,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Jadval kategoriyasi — ikona, rang va default label aniqlaydi.
 enum ScheduleType {
@@ -25,15 +26,15 @@ extension ScheduleTypeX on ScheduleType {
   IconData get icon {
     switch (this) {
       case ScheduleType.school:
-        return Icons.school;
+        return SolarIconsBold.squareAcademicCap;
       case ScheduleType.sport:
-        return Icons.sports_soccer;
+        return SolarIconsBold.football;
       case ScheduleType.sleep:
-        return Icons.bedtime_outlined;
+        return SolarIconsBold.moonSleep;
       case ScheduleType.meal:
-        return Icons.restaurant_outlined;
+        return SolarIconsBold.chefHat;
       case ScheduleType.custom:
-        return Icons.event_note_outlined;
+        return SolarIconsBold.calendarMark;
     }
   }
 
@@ -228,10 +229,10 @@ class Schedule {
       reminderMinutes: 10, // Backend'da yo'q
       isActive: json['isActive'] as bool? ?? true,
       blockedApps: blockedApps,
-      createdAt: _parseBackendIso(json['createdAt'] as String?) ??
-          DateTime.now(),
-      updatedAt: _parseBackendIso(json['updatedAt'] as String?) ??
-          DateTime.now(),
+      createdAt:
+          _parseBackendIso(json['createdAt'] as String?) ?? DateTime.now(),
+      updatedAt:
+          _parseBackendIso(json['updatedAt'] as String?) ?? DateTime.now(),
     );
   }
 
@@ -336,8 +337,7 @@ class Schedule {
   final DateTime updatedAt;
 
   /// `TimeOfDay` boshlanish vaqti (UI TimePicker uchun).
-  TimeOfDay get startTime =>
-      TimeOfDay(hour: startHour, minute: startMinute);
+  TimeOfDay get startTime => TimeOfDay(hour: startHour, minute: startMinute);
 
   /// `TimeOfDay` tugash vaqti (UI TimePicker uchun).
   TimeOfDay get endTime => TimeOfDay(hour: endHour, minute: endMinute);
@@ -353,8 +353,7 @@ class Schedule {
       '${endMinute.toString().padLeft(2, '0')}';
 
   /// Vaqt oraliqi `HH:MM - HH:MM` formatda.
-  String get timeRangeFormatted =>
-      '$startTimeFormatted - $endTimeFormatted';
+  String get timeRangeFormatted => '$startTimeFormatted - $endTimeFormatted';
 
   /// Boshlanish vaqti minutlarda (sortlash uchun).
   int get startMinutes => startHour * 60 + startMinute;
@@ -382,8 +381,7 @@ class Schedule {
       return 'schedules.edit.shortcutWeekend'.tr();
     }
     // ISO tartibida tartiblab ko'rsatamiz.
-    final sorted = weekdays.toList()
-      ..sort((a, b) => a.iso.compareTo(b.iso));
+    final sorted = weekdays.toList()..sort((a, b) => a.iso.compareTo(b.iso));
     return sorted.map((w) => w.label).join(', ');
   }
 

@@ -59,8 +59,8 @@ class VoiceMessage {
           ? VoiceMessageStatus.seen
           : VoiceMessageStatus.sent,
       // Backend ISO 8601 (UTC) qaytaradi — local vaqtga o'giramiz.
-      createdAt: _parseBackendIso(json['createdAt'] as String?) ??
-          DateTime.now(),
+      createdAt:
+          _parseBackendIso(json['createdAt'] as String?) ?? DateTime.now(),
       text: json['text'] as String?,
       mediaKey: json['mediaKey'] as String?,
       mediaType: json['mediaType'] as String?,

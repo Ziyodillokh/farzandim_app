@@ -14,6 +14,7 @@ import 'package:farzandim/features/gamification/presentation/providers/leaderboa
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 const _kGreenTop = Color(0xFF7ED957);
 const _kGreenBottom = Color(0xFF4CAF50);
@@ -163,7 +164,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           width: 44,
           height: 44,
           child: IconButton(
-            icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
+            icon: const Icon(SolarIconsBold.altArrowLeft, color: Colors.white),
             onPressed: () => context.pop(),
           ),
         ),
@@ -246,11 +247,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(
-              Icons.location_on_outlined,
-              color: Colors.white,
-              size: 18,
-            ),
+            const Icon(SolarIconsBold.mapPoint, color: Colors.white, size: 18),
             const SizedBox(width: 6),
             Text(
               _region ?? 'leaderboard.byRegions'.tr(),
@@ -261,7 +258,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             ),
             const SizedBox(width: 4),
             const Icon(
-              Icons.keyboard_arrow_down_rounded,
+              SolarIconsBold.altArrowDown,
               color: Colors.white,
               size: 20,
             ),
@@ -313,7 +310,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
       mainAxisSize: MainAxisSize.min,
       children: [
         if (place == 1)
-          const Icon(Icons.emoji_events_rounded, color: _kGold, size: 24),
+          const Icon(SolarIconsBold.medalStar, color: _kGold, size: 24),
         const SizedBox(height: 2),
         Stack(
           clipBehavior: Clip.none,
@@ -612,7 +609,7 @@ class _XpPill extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.star_rounded,
+            SolarIconsBold.star,
             size: 15,
             color: light ? Colors.white : AppColors.warning,
           ),
@@ -661,7 +658,7 @@ class _RegionPickerSheet extends StatelessWidget {
                 const Spacer(),
                 IconButton(
                   icon: Icon(
-                    Icons.close_rounded,
+                    SolarIconsBold.closeCircle,
                     color: AppColors.textSecondary,
                   ),
                   onPressed: () => Navigator.of(context).pop(),
@@ -698,9 +695,7 @@ class _RegionPickerSheet extends StatelessWidget {
     return ListTile(
       title: Text(label, style: AppTextStyles.bodyM),
       trailing: Icon(
-        isSelected
-            ? Icons.radio_button_checked_rounded
-            : Icons.radio_button_unchecked_rounded,
+        isSelected ? SolarIconsBold.recordCircle : SolarIconsBold.record,
         color: isSelected ? AppColors.accent : AppColors.textTertiary,
       ),
       onTap: () => Navigator.of(context).pop(value),

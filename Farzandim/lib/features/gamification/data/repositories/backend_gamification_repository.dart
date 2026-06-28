@@ -9,11 +9,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendGamificationRepositoryProvider =
     Provider<BackendGamificationRepository>((ref) {
-  return BackendGamificationRepository(
-    dio: ref.watch(dioClientProvider),
-    socketClient: ref.watch(socketClientProvider),
-  );
-});
+      return BackendGamificationRepository(
+        dio: ref.watch(dioClientProvider),
+        socketClient: ref.watch(socketClientProvider),
+      );
+    });
 
 /// Bola gamifikatsiya profili — XP, DON, Level, Status, Streak.
 @immutable
@@ -36,24 +36,22 @@ class ChildProfile {
       status: (json['status'] as String?) ?? 'Boshlovchi',
       streakDays: (json['streakDays'] as num?)?.toInt() ?? 0,
       lastActivityDate: json['lastActivityDate'] != null
-          ? DateTime.tryParse(json['lastActivityDate'] as String)
-              ?.toLocal()
+          ? DateTime.tryParse(json['lastActivityDate'] as String)?.toLocal()
           : null,
-      achievements:
-          (json['achievements'] as List<dynamic>? ?? const [])
-              .cast<Map<String, dynamic>>(),
+      achievements: (json['achievements'] as List<dynamic>? ?? const [])
+          .cast<Map<String, dynamic>>(),
     );
   }
 
   factory ChildProfile.empty() => const ChildProfile(
-        xp: 0,
-        donBalance: 0,
-        level: 1,
-        status: 'Boshlovchi',
-        streakDays: 0,
-        lastActivityDate: null,
-        achievements: [],
-      );
+    xp: 0,
+    donBalance: 0,
+    level: 1,
+    status: 'Boshlovchi',
+    streakDays: 0,
+    lastActivityDate: null,
+    achievements: [],
+  );
 
   final int xp;
   final int donBalance;
@@ -68,8 +66,8 @@ class BackendGamificationRepository {
   BackendGamificationRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -123,10 +121,7 @@ class BackendGamificationRepository {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/xp-events',
-        queryParameters: {
-          if (type != null) 'type': type,
-          'limit': limit,
-        },
+        queryParameters: {if (type != null) 'type': type, 'limit': limit},
       );
       final data = response.data;
       if (data == null) return const [];

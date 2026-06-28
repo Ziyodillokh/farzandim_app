@@ -9,6 +9,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola uchun barcha geo-zona event'lari (kirdi/chiqdi) tarixi.
 ///
@@ -67,9 +68,7 @@ class GeoZoneEventsScreen extends ConsumerWidget {
                     );
                   },
                   loading: () => Center(
-                    child: CircularProgressIndicator(
-                      color: AppColors.accent,
-                    ),
+                    child: CircularProgressIndicator(color: AppColors.accent),
                   ),
                   error: (e, _) => Center(
                     child: Padding(
@@ -114,7 +113,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: () => context.pop(),
@@ -127,9 +126,7 @@ class _Header extends StatelessWidget {
                 children: [
                   Text(
                     'geoZoneEvents.headerTitle'.tr(),
-                    style: AppTextStyles.headlineL.copyWith(
-                      fontSize: 18,
-                    ),
+                    style: AppTextStyles.headlineL.copyWith(fontSize: 18),
                   ),
                   Text(
                     childName,
@@ -175,10 +172,7 @@ class _EventsList extends StatelessWidget {
 }
 
 class _EmptyEvents extends StatelessWidget {
-  const _EmptyEvents({
-    required this.childName,
-    required this.onRefresh,
-  });
+  const _EmptyEvents({required this.childName, required this.onRefresh});
 
   final String childName;
   final Future<void> Function() onRefresh;
@@ -195,8 +189,7 @@ class _EmptyEvents extends StatelessWidget {
         builder: (_, constraints) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
-            constraints:
-                BoxConstraints(minHeight: constraints.maxHeight),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Padding(
               padding: const EdgeInsets.all(AppDimensions.xl),
               child: Column(
@@ -210,7 +203,7 @@ class _EmptyEvents extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.history,
+                      SolarIconsBold.history,
                       size: 50,
                       color: AppColors.accent,
                     ),

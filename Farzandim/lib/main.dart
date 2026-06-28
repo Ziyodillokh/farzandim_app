@@ -45,7 +45,8 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // bilan poyga chiqib, bg isolate qo'shgan xabar (hatto SOS) jim yo'qolishi
     // mumkin edi. Kalit microsecond bilan noyob; dedup syncPending'da
     // notif.id bo'yicha.
-    final key = '$kPendingNotificationsPrefsKey:'
+    final key =
+        '$kPendingNotificationsPrefsKey:'
         '${DateTime.now().microsecondsSinceEpoch}_${notif.id}';
     await prefs.setString(key, jsonEncode(notif.toJson()));
   } catch (e) {
@@ -71,19 +72,19 @@ Future<void> main() async {
         // easy_localization (SharedPreferences'dan til).
         EasyLocalization.ensureInitialized(),
         // Firebase core. DEV: config yo'q bo'lsa ham app ishga tushadi.
-        Firebase.initializeApp(
-          options: DefaultFirebaseOptions.currentPlatform,
-        ).then<void>((_) {
-          // Fonda kelgan push'larni "Bildirishnoma" ro'yxatiga saqlash uchun
-          // background handler (web'da service worker — qo'llanmaydi).
-          if (!kIsWeb) {
-            FirebaseMessaging.onBackgroundMessage(
-              firebaseMessagingBackgroundHandler,
-            );
-          }
-        }).catchError((Object e) {
-          debugPrint('[DEV] Firebase init skipped: $e');
-        }),
+        Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
+            .then<void>((_) {
+              // Fonda kelgan push'larni ro'yxatga saqlash uchun background
+              // handler (web'da service worker — qo'llanmaydi).
+              if (!kIsWeb) {
+                FirebaseMessaging.onBackgroundMessage(
+                  firebaseMessagingBackgroundHandler,
+                );
+              }
+            })
+            .catchError((Object e) {
+              debugPrint('[DEV] Firebase init skipped: $e');
+            }),
       ]);
 
       // App Check / Crashlytics / Analytics — faqat mobil va faqat Firebase

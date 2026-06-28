@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_combined.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// PDF p13 dizayniga moslashtirilgan ilova tile'i, premium UX bilan:
 /// - Native ikon (yoki paket nomidan fallback)
@@ -78,9 +79,7 @@ class AppCombinedTile extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          app.appName.isEmpty
-                              ? app.packageName
-                              : app.appName,
+                          app.appName.isEmpty ? app.packageName : app.appName,
                           style: AppTextStyles.bodyM.copyWith(
                             color: AppColors.textPrimary,
                             fontSize: 16,
@@ -99,23 +98,21 @@ class AppCombinedTile extends StatelessWidget {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: progress.clamp(0.0, 1.0),
-                        backgroundColor: AppColors.textSecondary
-                            .withValues(alpha: 0.1),
+                        backgroundColor: AppColors.textSecondary.withValues(
+                          alpha: 0.1,
+                        ),
                         color: statusColor,
                         minHeight: 4,
                       ),
                     ),
                     const SizedBox(height: 6),
                   ],
-                  _UsageRow(
-                    app: app,
-                    statusColor: statusColor,
-                  ),
+                  _UsageRow(app: app, statusColor: statusColor),
                 ],
               ),
             ),
             Icon(
-              Icons.chevron_right,
+              SolarIconsBold.altArrowRight,
               color: AppColors.textSecondary,
               size: 20,
             ),
@@ -142,7 +139,7 @@ class _UsageRow extends StatelessWidget {
       return Row(
         children: [
           Icon(
-            Icons.block,
+            SolarIconsBold.forbiddenCircle,
             color: AppColors.error,
             size: 14,
           ),
@@ -204,15 +201,12 @@ class _StatusBadge extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (app.isBlocked) {
-      return _pill(
-        color: AppColors.error,
-        icon: Icons.hourglass_disabled,
-      );
+      return _pill(color: AppColors.error, icon: SolarIconsBold.hourglassLine);
     }
     if (app.hasLimit) {
       return _pill(
         color: statusColor,
-        icon: Icons.hourglass_bottom,
+        icon: SolarIconsBold.hourglass,
         text: app.limitFormatted,
       );
     }

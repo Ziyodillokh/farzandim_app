@@ -10,8 +10,7 @@ import 'package:flutter/services.dart';
 class ApiKeys {
   ApiKeys._();
 
-  static String _googleMapsKey =
-      const String.fromEnvironment('MAPS_API_KEY');
+  static String _googleMapsKey = const String.fromEnvironment('MAPS_API_KEY');
 
   /// Google Maps + Places API kaliti.
   static String get googleMapsKey => _googleMapsKey;

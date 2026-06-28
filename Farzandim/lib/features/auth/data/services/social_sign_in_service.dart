@@ -40,7 +40,8 @@ final socialSignInServiceProvider = Provider<SocialSignInService>((ref) {
 /// bo'ladi. Web'da ishlatilmaydi (web/index.html meta tag orqali).
 const String _googleServerClientId = String.fromEnvironment(
   'GOOGLE_SERVER_CLIENT_ID',
-  defaultValue: '883163096233-f4o6fk9lvl6srgj4al0lup2qci36hps3'
+  defaultValue:
+      '883163096233-f4o6fk9lvl6srgj4al0lup2qci36hps3'
       '.apps.googleusercontent.com',
 );
 
@@ -90,11 +91,11 @@ class SocialSignInService {
         webAuthenticationOptions: isAppleNative
             ? null
             : (serviceId == null || redirectUri == null)
-                ? null
-                : WebAuthenticationOptions(
-                    clientId: serviceId,
-                    redirectUri: Uri.parse(redirectUri),
-                  ),
+            ? null
+            : WebAuthenticationOptions(
+                clientId: serviceId,
+                redirectUri: Uri.parse(redirectUri),
+              ),
       );
 
       final idToken = credential.identityToken;

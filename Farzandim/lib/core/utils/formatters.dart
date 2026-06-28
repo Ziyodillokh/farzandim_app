@@ -24,9 +24,7 @@ String formatRelativeTime(DateTime time) {
     );
   }
   if (diff.inHours < 24) {
-    return 'formatters.hoursAgo'.tr(
-      namedArgs: {'hours': '${diff.inHours}'},
-    );
+    return 'formatters.hoursAgo'.tr(namedArgs: {'hours': '${diff.inHours}'});
   }
   // Kecha — kalendar kuni bo'yicha (24 soatdan emas).
   final todayStart = DateTime(now.year, now.month, now.day);

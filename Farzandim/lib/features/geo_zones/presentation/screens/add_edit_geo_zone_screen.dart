@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Yangi geo-zona yaratish yoki mavjudini tahrirlash.
 ///
@@ -207,7 +208,7 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                   label: _isEditMode
                       ? 'geoZoneEdit.updateButton'.tr()
                       : 'geoZoneEdit.saveButton'.tr(),
-                  icon: Icons.check,
+                  icon: SolarIconsBold.checkCircle,
                   onPressed: _isFormValid ? _onSave : null,
                 ),
               ),
@@ -352,7 +353,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -372,7 +376,10 @@ class _Header extends StatelessWidget {
               width: 48,
               height: 48,
               child: IconButton(
-                icon: Icon(Icons.delete_outline, color: AppColors.textPrimary),
+                icon: Icon(
+                  SolarIconsBold.trashBinMinimalistic,
+                  color: AppColors.textPrimary,
+                ),
                 onPressed: onDelete,
               ),
             )
@@ -564,7 +571,7 @@ class _NotificationToggles extends StatelessWidget {
       child: Column(
         children: [
           _ToggleRow(
-            icon: Icons.login_rounded,
+            icon: SolarIconsBold.login,
             iconColor: AppColors.accent,
             label: 'geoZoneEdit.notifyOnEnter'.tr(),
             value: notifyOnEnter,
@@ -572,7 +579,7 @@ class _NotificationToggles extends StatelessWidget {
           ),
           Divider(color: AppColors.border, height: 1),
           _ToggleRow(
-            icon: Icons.logout_rounded,
+            icon: SolarIconsBold.logout,
             iconColor: AppColors.error,
             label: 'geoZoneEdit.notifyOnExit'.tr(),
             value: notifyOnExit,

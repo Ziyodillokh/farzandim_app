@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Auth ekranlardagi linklar uchun indigo rang (Figma dizayni).
 const Color kAuthLinkColor = Color(0xFF7C7CF5);
@@ -37,7 +38,7 @@ class AuthErrorText extends StatelessWidget {
     return Row(
       children: [
         Icon(
-          Icons.error_outline_rounded,
+          SolarIconsBold.dangerCircle,
           size: AppDimensions.iconS,
           color: AppColors.error,
         ),
@@ -60,7 +61,7 @@ class AuthBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(Icons.arrow_back_rounded, color: AppColors.textPrimary),
+      icon: Icon(SolarIconsBold.altArrowLeft, color: AppColors.textPrimary),
       onPressed: () {
         if (context.canPop()) {
           context.pop();

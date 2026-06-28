@@ -18,8 +18,9 @@ class _TextBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(
@@ -50,11 +51,7 @@ class _TextBubble extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(height: 2),
-                  _BubbleMeta(
-                    message: message,
-                    isOwn: isOwn,
-                    color: metaColor,
-                  ),
+                  _BubbleMeta(message: message, isOwn: isOwn, color: metaColor),
                 ],
               ),
             ),
@@ -91,11 +88,11 @@ class _BubbleMeta extends StatelessWidget {
         if (isOwn) ...[
           const SizedBox(width: 4),
           Icon(
-            message.isSeen ? Icons.done_all : Icons.done,
+            message.isSeen
+                ? SolarIconsBold.checkSquare
+                : SolarIconsBold.checkCircle,
             size: 14,
-            color: message.isSeen
-                ? Colors.blue.shade700
-                : color,
+            color: message.isSeen ? Colors.blue.shade700 : color,
           ),
         ],
       ],
@@ -130,9 +127,7 @@ class _ImageBubble extends ConsumerWidget {
 
     final image = GestureDetector(
       onTap: () => Navigator.of(context).push(
-        MaterialPageRoute<void>(
-          builder: (_) => _FullScreenImage(url: url),
-        ),
+        MaterialPageRoute<void>(builder: (_) => _FullScreenImage(url: url)),
       ),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
@@ -155,7 +150,7 @@ class _ImageBubble extends ConsumerWidget {
             height: 160,
             color: Colors.black.withValues(alpha: 0.08),
             child: Icon(
-              Icons.broken_image_outlined,
+              SolarIconsBold.galleryRemove,
               color: AppColors.textSecondary,
               size: 40,
             ),
@@ -189,8 +184,7 @@ class _ImageBubble extends ConsumerWidget {
                         Text(
                           caption,
                           style: TextStyle(
-                            color:
-                                isOwn ? Colors.black : AppColors.textPrimary,
+                            color: isOwn ? Colors.black : AppColors.textPrimary,
                             fontSize: 15,
                             height: 1.35,
                           ),
@@ -230,8 +224,9 @@ class _ImageBubble extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(flex: 5, child: content),
@@ -267,7 +262,9 @@ class _ImageOverlayMeta extends StatelessWidget {
           if (isOwn) ...[
             const SizedBox(width: 3),
             Icon(
-              message.isSeen ? Icons.done_all : Icons.done,
+              message.isSeen
+                  ? SolarIconsBold.checkSquare
+                  : SolarIconsBold.checkCircle,
               size: 13,
               color: message.isSeen ? Colors.lightBlueAccent : Colors.white,
             ),
@@ -302,7 +299,7 @@ class _FullScreenImage extends StatelessWidget {
             fit: BoxFit.contain,
             memCacheWidth: 1080,
             errorWidget: (_, __, ___) => const Icon(
-              Icons.broken_image_outlined,
+              SolarIconsBold.galleryRemove,
               color: Colors.white54,
               size: 64,
             ),

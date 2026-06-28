@@ -13,6 +13,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Sheet natijasi — rad etish yoki N daqiqa berish.
 @immutable
@@ -81,8 +82,12 @@ class UnlockDecisionSheet extends StatelessWidget {
     final reasonText = reason?.trim();
     // So'ralgan miqdor bo'lsa, chiplar "boshqa muddat" sifatida shu qiymatni
     // takrorlamasin (asosiy tugmada bor).
-    final chipMinutes =
-        const [5, 15, 30, 60].where((m) => m != req).toList(growable: false);
+    final chipMinutes = const [
+      5,
+      15,
+      30,
+      60,
+    ].where((m) => m != req).toList(growable: false);
 
     return SafeArea(
       top: false,
@@ -117,9 +122,9 @@ class UnlockDecisionSheet extends StatelessWidget {
             Text(
               req != null
                   ? '$childName — "$subject" uchun $req daqiqa '
-                      "qo'shimcha vaqt so'rayapti."
+                        "qo'shimcha vaqt so'rayapti."
                   : '$childName — "$subject" uchun qo\'shimcha vaqt '
-                      "so'rayapti. Qancha vaqt berasiz?",
+                        "so'rayapti. Qancha vaqt berasiz?",
               style: AppTextStyles.bodyS.copyWith(
                 color: AppColors.textSecondary,
               ),
@@ -217,7 +222,7 @@ class _ReasonBox extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.format_quote_rounded,
+            SolarIconsBold.chatRoundLine,
             size: 18,
             color: AppColors.textTertiary,
           ),
@@ -260,7 +265,7 @@ class _ApproveRequestedButton extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 const Icon(
-                  Icons.check_circle_rounded,
+                  SolarIconsBold.checkCircle,
                   size: 20,
                   color: Colors.black,
                 ),

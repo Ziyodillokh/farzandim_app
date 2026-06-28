@@ -173,6 +173,9 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen> wit
             child: RefreshIndicator(
               color: p.green,
               backgroundColor: p.cardSolid,
+              // Yangilash doirasi glass header OSTIDA chiqsin (aks holda
+              // header ortida qolib yarmi kesilib ko'rinadi).
+              edgeOffset: topInset + 72,
               onRefresh: () async {
                 _refreshAnalytics();
                 await Future<void>.delayed(const Duration(milliseconds: 600));

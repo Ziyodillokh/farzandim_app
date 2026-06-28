@@ -10,12 +10,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Audio yuborish jarayoni holati.
-enum UploadStatus {
-  idle,
-  uploading,
-  sent,
-  error,
-}
+enum UploadStatus { idle, uploading, sent, error }
 
 @immutable
 class VoiceUploadState {
@@ -77,10 +72,7 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
       return null;
     }
 
-    state = state.copyWith(
-      status: UploadStatus.uploading,
-      progress: 0,
-    );
+    state = state.copyWith(status: UploadStatus.uploading, progress: 0);
 
     try {
       final messageId = await _ref
@@ -115,5 +107,5 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
 
 final voiceUploadProvider =
     StateNotifierProvider<VoiceUploadNotifier, VoiceUploadState>(
-  VoiceUploadNotifier.new,
-);
+      VoiceUploadNotifier.new,
+    );

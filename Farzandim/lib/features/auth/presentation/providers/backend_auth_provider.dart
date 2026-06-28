@@ -38,19 +38,19 @@ class AuthError extends BackendAuthState {
 
 final backendAuthProvider =
     StateNotifierProvider<BackendAuthNotifier, BackendAuthState>((ref) {
-  return BackendAuthNotifier(
-    repository: ref.watch(backendAuthRepositoryProvider),
-    socialSignIn: ref.watch(socialSignInServiceProvider),
-  );
-});
+      return BackendAuthNotifier(
+        repository: ref.watch(backendAuthRepositoryProvider),
+        socialSignIn: ref.watch(socialSignInServiceProvider),
+      );
+    });
 
 class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
   BackendAuthNotifier({
     required BackendAuthRepository repository,
     required SocialSignInService socialSignIn,
-  })  : _repo = repository,
-        _social = socialSignIn,
-        super(const AuthUnknown()) {
+  }) : _repo = repository,
+       _social = socialSignIn,
+       super(const AuthUnknown()) {
     // Sessiya tugashi (refresh token 401/403 — tokenlar o'chirilgan) —
     // dio_client xabar beradi, biz darhol login holatiga o'tamiz (router
     // login ekraniga olib boradi). Busiz foydalanuvchi "zombi" qolardi.
@@ -158,10 +158,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       state = AuthAuthenticated(session.user);
       return null;
     } on DioException catch (e) {
-      return friendlyError(
-        e,
-        fallback: 'auth.errors.signInFailed'.tr(),
-      );
+      return friendlyError(e, fallback: 'auth.errors.signInFailed'.tr());
     } catch (_) {
       return 'auth.errors.unexpected'.tr();
     }
@@ -186,10 +183,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       state = AuthAuthenticated(session.user);
       return null;
     } on DioException catch (e) {
-      return friendlyError(
-        e,
-        fallback: 'auth.errors.signUpFailed'.tr(),
-      );
+      return friendlyError(e, fallback: 'auth.errors.signUpFailed'.tr());
     } catch (_) {
       return 'auth.errors.unexpected'.tr();
     }
@@ -211,8 +205,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on DioException catch (e) {
       return friendlyError(e, fallback: 'auth.errors.googleFailed'.tr());
     } catch (e) {
-      return 'auth.errors.googleFailedDetail'
-          .tr(namedArgs: {'error': '$e'});
+      return 'auth.errors.googleFailedDetail'.tr(namedArgs: {'error': '$e'});
     }
   }
 
@@ -240,8 +233,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on DioException catch (e) {
       return friendlyError(e, fallback: 'auth.errors.appleFailed'.tr());
     } catch (e) {
-      return 'auth.errors.appleFailedDetail'
-          .tr(namedArgs: {'error': '$e'});
+      return 'auth.errors.appleFailedDetail'.tr(namedArgs: {'error': '$e'});
     }
   }
 
@@ -252,5 +244,4 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     await SwrCache.clearAll();
     state = const AuthAnonymous();
   }
-
 }

@@ -17,6 +17,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Toast turi — ikona va aksent rangini belgilaydi.
 enum AppToastType { success, error, info, warning }
@@ -101,14 +102,14 @@ class _ToastViewState extends State<_ToastView>
       duration: const Duration(milliseconds: 320),
       reverseDuration: const Duration(milliseconds: 240),
     );
-    _slide = Tween<Offset>(
-      begin: const Offset(0, -1.2),
-      end: Offset.zero,
-    ).animate(CurvedAnimation(
-      parent: _c,
-      curve: Curves.easeOutCubic,
-      reverseCurve: Curves.easeInCubic,
-    ));
+    _slide = Tween<Offset>(begin: const Offset(0, -1.2), end: Offset.zero)
+        .animate(
+          CurvedAnimation(
+            parent: _c,
+            curve: Curves.easeOutCubic,
+            reverseCurve: Curves.easeInCubic,
+          ),
+        );
     _fade = CurvedAnimation(parent: _c, curve: Curves.easeOut);
     _c.forward();
     // Avtomatik yopilish.
@@ -128,20 +129,23 @@ class _ToastViewState extends State<_ToastView>
   }
 
   ({Color color, IconData icon}) get _style => switch (widget.type) {
-        AppToastType.success => (
-            color: AppColors.success,
-            icon: Icons.check_circle_rounded,
-          ),
-        AppToastType.error => (
-            color: AppColors.error,
-            icon: Icons.error_rounded,
-          ),
-        AppToastType.warning => (
-            color: AppColors.warning,
-            icon: Icons.warning_amber_rounded,
-          ),
-        AppToastType.info => (color: AppColors.info, icon: Icons.info_rounded),
-      };
+    AppToastType.success => (
+      color: AppColors.success,
+      icon: SolarIconsBold.checkCircle,
+    ),
+    AppToastType.error => (
+      color: AppColors.error,
+      icon: SolarIconsBold.dangerCircle,
+    ),
+    AppToastType.warning => (
+      color: AppColors.warning,
+      icon: SolarIconsBold.dangerTriangle,
+    ),
+    AppToastType.info => (
+      color: AppColors.info,
+      icon: SolarIconsBold.infoCircle,
+    ),
+  };
 
   @override
   Widget build(BuildContext context) {
@@ -159,8 +163,9 @@ class _ToastViewState extends State<_ToastView>
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 460),
               child: Padding(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: AppDimensions.lg,
+                ),
                 child: Material(
                   color: Colors.transparent,
                   child: GestureDetector(
@@ -172,8 +177,9 @@ class _ToastViewState extends State<_ToastView>
                       ),
                       decoration: BoxDecoration(
                         color: AppColors.surface,
-                        borderRadius:
-                            BorderRadius.circular(AppDimensions.radiusL),
+                        borderRadius: BorderRadius.circular(
+                          AppDimensions.radiusL,
+                        ),
                         border: Border.all(color: AppColors.border),
                         boxShadow: [
                           BoxShadow(

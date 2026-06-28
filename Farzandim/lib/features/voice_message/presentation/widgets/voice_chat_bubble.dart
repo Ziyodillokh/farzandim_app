@@ -14,6 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 part 'voice_chat_bubble_widgets.dart';
 part 'voice_chat_bubble_file.dart';
@@ -191,7 +192,9 @@ class VoiceChatBubble extends ConsumerWidget {
                               ),
                             )
                           : Icon(
-                              isPlaying ? Icons.pause : Icons.play_arrow,
+                              isPlaying
+                                  ? SolarIconsBold.pause
+                                  : SolarIconsBold.play,
                               color: textColor,
                               size: 22,
                             ),
@@ -281,7 +284,9 @@ class VoiceChatBubble extends ConsumerWidget {
                             if (isOwn) ...[
                               const SizedBox(width: 4),
                               Icon(
-                                message.isSeen ? Icons.done_all : Icons.done,
+                                message.isSeen
+                                    ? SolarIconsBold.checkSquare
+                                    : SolarIconsBold.checkCircle,
                                 size: 14,
                                 color: message.isSeen
                                     ? Colors.blue.shade400

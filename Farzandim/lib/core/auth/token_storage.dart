@@ -25,9 +25,7 @@ import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Riverpod provider — global singleton.
-final tokenStorageProvider = Provider<TokenStorage>(
-  (_) => TokenStorage(),
-);
+final tokenStorageProvider = Provider<TokenStorage>((_) => TokenStorage());
 
 /// Token saqlash backend interfeysi — platformaga qarab tanlanadi.
 ///
@@ -49,12 +47,10 @@ abstract class TokenStorageBackend {
 
 class _SecureStorageBackend implements TokenStorageBackend {
   _SecureStorageBackend()
-      : _storage = const FlutterSecureStorage(
-          aOptions: AndroidOptions(encryptedSharedPreferences: true),
-          iOptions: IOSOptions(
-            accessibility: KeychainAccessibility.first_unlock,
-          ),
-        );
+    : _storage = const FlutterSecureStorage(
+        aOptions: AndroidOptions(encryptedSharedPreferences: true),
+        iOptions: IOSOptions(accessibility: KeychainAccessibility.first_unlock),
+      );
 
   final FlutterSecureStorage _storage;
 
@@ -93,8 +89,8 @@ class _SharedPrefsBackend implements TokenStorageBackend {
 
 class TokenStorage {
   TokenStorage({TokenStorageBackend? backend})
-      : _backend = backend ??
-            (kIsWeb ? _SharedPrefsBackend() : _SecureStorageBackend());
+    : _backend =
+          backend ?? (kIsWeb ? _SharedPrefsBackend() : _SecureStorageBackend());
 
   final TokenStorageBackend _backend;
 

@@ -15,8 +15,8 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
   ProfileNotifier({
     required BackendUserRepository repository,
     required BackendAuthState initialAuthState,
-  })  : _repository = repository,
-        super(_initialState(initialAuthState)) {
+  }) : _repository = repository,
+       super(_initialState(initialAuthState)) {
     // Auth allaqachon tayyor bo'lsa darhol to'liq profilni olib kelamiz.
     if (initialAuthState is AuthAuthenticated) {
       _load();
@@ -53,14 +53,8 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
 
   /// Profil tahrirlash — backend'ga PUT yuboradi, javob state'ga yoziladi.
   /// Xato bo'lsa exception otiladi — caller xabar ko'rsatadi.
-  Future<void> updateProfile({
-    required String name,
-    String? language,
-  }) async {
-    final updated = await _repository.updateMe(
-      name: name,
-      language: language,
-    );
+  Future<void> updateProfile({required String name, String? language}) async {
+    final updated = await _repository.updateMe(name: name, language: language);
     state = ParentProfile.fromAuthUser(updated);
   }
 
@@ -72,8 +66,9 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
 }
 
 /// Profil provider'i — auth state o'zgarishiga listen qiladi.
-final profileProvider =
-    StateNotifierProvider<ProfileNotifier, ParentProfile>((ref) {
+final profileProvider = StateNotifierProvider<ProfileNotifier, ParentProfile>((
+  ref,
+) {
   final notifier = ProfileNotifier(
     repository: ref.watch(backendUserRepositoryProvider),
     initialAuthState: ref.read(backendAuthProvider),

@@ -58,8 +58,7 @@ class VideoMessage {
       status: (json['isRead'] as bool? ?? false)
           ? VideoMessageStatus.seen
           : VideoMessageStatus.sent,
-      createdAt: _parseIso(json['createdAt'] as String?) ??
-          DateTime.now(),
+      createdAt: _parseIso(json['createdAt'] as String?) ?? DateTime.now(),
     );
   }
 

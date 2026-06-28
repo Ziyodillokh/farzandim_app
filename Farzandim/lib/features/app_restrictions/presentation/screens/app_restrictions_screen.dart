@@ -18,6 +18,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola ilovalar foydalanish + cheklov ekrani ("Foydalanish vaqti" / "Ilova
 /// cheklovlari").
@@ -41,8 +42,7 @@ class AppRestrictionsScreen extends ConsumerStatefulWidget {
       _AppRestrictionsScreenState();
 }
 
-class _AppRestrictionsScreenState
-    extends ConsumerState<AppRestrictionsScreen> {
+class _AppRestrictionsScreenState extends ConsumerState<AppRestrictionsScreen> {
   late String _childId;
 
   @override
@@ -58,8 +58,7 @@ class _AppRestrictionsScreenState
     final restrictionsAsync = ref.watch(restrictionsProvider(_childId));
     final installedAsync = ref.watch(installedAppsProvider(_childId));
     final child = ref.watch(childByIdProvider(_childId));
-    final childName =
-        child?.name ?? 'appRestrictions.fallbackChildName'.tr();
+    final childName = child?.name ?? 'appRestrictions.fallbackChildName'.tr();
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -69,8 +68,7 @@ class _AppRestrictionsScreenState
             children: [
               _FaollikHeader(
                 title: 'deviceSettings.activity'.tr(),
-                onCategoryTap: () =>
-                    CategoryBlockSheet.show(context, _childId),
+                onCategoryTap: () => CategoryBlockSheet.show(context, _childId),
               ),
               if (children.length > 1)
                 _ChildChips(
@@ -82,8 +80,7 @@ class _AppRestrictionsScreenState
                 child: usageAsync.when(
                   data: (usage) => restrictionsAsync.when(
                     data: (restrictions) {
-                      final installed =
-                          installedAsync.valueOrNull ?? const [];
+                      final installed = installedAsync.valueOrNull ?? const [];
                       final allApps = combineAppData(
                         usage: usage,
                         restrictions: restrictions,
@@ -107,8 +104,7 @@ class _AppRestrictionsScreenState
                           if (index == 0) {
                             // Bugungi jami + haftalik grafik (reuse).
                             return Column(
-                              crossAxisAlignment:
-                                  CrossAxisAlignment.stretch,
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
                               children: [
                                 ScreenTimeChart(childId: _childId),
                                 const SizedBox(height: AppDimensions.lg),
@@ -163,24 +159,20 @@ class _AppRestrictionsScreenState
   }
 
   Widget _loading() => ListView.builder(
-        itemCount: 6,
-        itemBuilder: (_, __) => const AppTileSkeleton(),
-      );
+    itemCount: 6,
+    itemBuilder: (_, __) => const AppTileSkeleton(),
+  );
 
   Widget _errorBox(Object e) => Center(
-        child: Padding(
-          padding: const EdgeInsets.all(AppDimensions.lg),
-          child: Text(
-            'appRestrictions.errorPrefix'.tr(
-              namedArgs: {'error': '$e'},
-            ),
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
-          ),
-        ),
-      );
+    child: Padding(
+      padding: const EdgeInsets.all(AppDimensions.lg),
+      child: Text(
+        'appRestrictions.errorPrefix'.tr(namedArgs: {'error': '$e'}),
+        textAlign: TextAlign.center,
+        style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+      ),
+    ),
+  );
 
   /// Ilova ustiga bosilganda — per-app limit modali (`AppLimitModal`,
   /// "Ilova cheklovlari" ekrani bilan bir xil): bloklash / limit / cheksiz.
@@ -194,10 +186,7 @@ class _AppRestrictionsScreenState
           top: Radius.circular(AppDimensions.radiusL),
         ),
       ),
-      builder: (_) => AppLimitModal(
-        app: app,
-        childId: widget.childId,
-      ),
+      builder: (_) => AppLimitModal(app: app, childId: widget.childId),
     );
   }
 
@@ -231,10 +220,9 @@ class _AppRestrictionsScreenState
     String msg;
     Color bg;
     try {
-      await ref.read(backendAppLimitRepositoryProvider).blockNow(
-            childId: _childId,
-            packageName: app.packageName,
-          );
+      await ref
+          .read(backendAppLimitRepositoryProvider)
+          .blockNow(childId: _childId, packageName: app.packageName);
       ref.invalidate(restrictionsProvider(_childId));
       msg = '"${app.appName}" bloklandi.';
       bg = AppColors.surfaceVariant;
@@ -273,7 +261,10 @@ class _FaollikHeader extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -293,7 +284,7 @@ class _FaollikHeader extends StatelessWidget {
                 : IconButton(
                     tooltip: 'Kategoriya bloklash',
                     icon: Icon(
-                      Icons.category_rounded,
+                      SolarIconsBold.widget,
                       color: AppColors.textPrimary,
                     ),
                     onPressed: onCategoryTap,
@@ -333,9 +324,7 @@ class _ChildChips extends StatelessWidget {
             onTap: () => onSelect(c.id),
             child: Container(
               alignment: Alignment.center,
-              padding: const EdgeInsets.symmetric(
-                horizontal: AppDimensions.lg,
-              ),
+              padding: const EdgeInsets.symmetric(horizontal: AppDimensions.lg),
               decoration: BoxDecoration(
                 color: selected ? AppColors.primary : AppColors.surface,
                 borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
@@ -346,8 +335,7 @@ class _ChildChips extends StatelessWidget {
               child: Text(
                 c.name,
                 style: AppTextStyles.bodyS.copyWith(
-                  color:
-                      selected ? AppColors.onPrimary : AppColors.textPrimary,
+                  color: selected ? AppColors.onPrimary : AppColors.textPrimary,
                   fontWeight: FontWeight.w600,
                 ),
               ),

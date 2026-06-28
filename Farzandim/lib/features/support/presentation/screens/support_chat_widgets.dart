@@ -23,7 +23,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              SolarIconsBold.altArrowLeft,
               size: 20,
               color: AppColors.textPrimary,
             ),
@@ -80,7 +80,7 @@ class _OperatorAvatar extends StatelessWidget {
       ),
       alignment: Alignment.center,
       child: Icon(
-        Icons.support_agent_rounded,
+        SolarIconsBold.headphonesRoundSound,
         color: AppColors.onPrimary,
         size: size * 0.55,
       ),
@@ -122,7 +122,7 @@ class _CallButton extends StatelessWidget {
           width: 44,
           height: 44,
           child: Icon(
-            Icons.call_outlined,
+            SolarIconsBold.phone,
             color: AppColors.textPrimary,
             size: 20,
           ),

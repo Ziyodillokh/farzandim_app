@@ -29,7 +29,9 @@ class DeviceLinkRepository {
 
   /// Mas'ul qurilmada — QR uchun kod yaratadi (authed).
   Future<DeviceLinkCode> create() async {
-    final res = await _dio.post<Map<String, dynamic>>('/auth/device-link/create');
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/auth/device-link/create',
+    );
     final data = res.data ?? const <String, dynamic>{};
     return DeviceLinkCode(
       code: data['code'] as String? ?? '',
@@ -47,10 +49,7 @@ class DeviceLinkRepository {
     final device = await currentDeviceMeta();
     final res = await _dio.post<Map<String, dynamic>>(
       '/auth/device-link/redeem',
-      data: <String, dynamic>{
-        'code': code,
-        ...device.toJson(),
-      },
+      data: <String, dynamic>{'code': code, ...device.toJson()},
     );
     return AuthSession.fromJson(res.data ?? <String, dynamic>{});
   }

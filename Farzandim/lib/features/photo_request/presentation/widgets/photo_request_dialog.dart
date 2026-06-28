@@ -14,6 +14,7 @@ import 'package:farzandim/features/photo_request/presentation/providers/photo_re
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola'ga rasm so'rovi yuborish dialog'i.
 ///
@@ -77,7 +78,7 @@ class _PhotoRequestDialogState extends ConsumerState<PhotoRequestDialog> {
       backgroundColor: AppColors.surface,
       title: Row(
         children: [
-          Icon(Icons.photo_camera_rounded, color: AppColors.accent),
+          Icon(SolarIconsBold.camera, color: AppColors.accent),
           const SizedBox(width: AppDimensions.sm),
           Expanded(
             child: Text(

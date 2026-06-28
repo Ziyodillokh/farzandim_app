@@ -10,6 +10,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 // Tasdiq so'zi locale'ga bog'liq: 'deleteAccount.confirmWord'.tr() har
 // til uchun mos so'zni beradi (uz: O'CHIRISH, ru: УДАЛИТЬ, en: DELETE).
@@ -61,9 +62,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
       setState(() => _isDeleting = false);
       AppToast.error(
         context,
-        'deleteAccount.unexpectedError'.tr(
-          namedArgs: {'error': '$e'},
-        ),
+        'deleteAccount.unexpectedError'.tr(namedArgs: {'error': '$e'}),
       );
     }
   }
@@ -88,7 +87,7 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                       const SizedBox(height: AppDimensions.lg),
                       Center(
                         child: Icon(
-                          Icons.warning_amber_rounded,
+                          SolarIconsBold.dangerTriangle,
                           size: 64,
                           color: AppColors.error,
                         ),
@@ -108,20 +107,20 @@ class _DeleteAccountScreenState extends ConsumerState<DeleteAccountScreen> {
                         textAlign: TextAlign.center,
                       ),
                       const SizedBox(height: AppDimensions.lg),
-                      _BulletList(items: [
-                        'deleteAccount.items.profile'.tr(),
-                        'deleteAccount.items.children'.tr(),
-                        'deleteAccount.items.messages'.tr(),
-                        'deleteAccount.items.geoZones'.tr(),
-                        'deleteAccount.items.schedules'.tr(),
-                        'deleteAccount.items.restrictions'.tr(),
-                      ]),
+                      _BulletList(
+                        items: [
+                          'deleteAccount.items.profile'.tr(),
+                          'deleteAccount.items.children'.tr(),
+                          'deleteAccount.items.messages'.tr(),
+                          'deleteAccount.items.geoZones'.tr(),
+                          'deleteAccount.items.schedules'.tr(),
+                          'deleteAccount.items.restrictions'.tr(),
+                        ],
+                      ),
                       const SizedBox(height: AppDimensions.lg),
                       Text(
                         'deleteAccount.confirmInstruction'.tr(
-                          namedArgs: {
-                            'word': 'deleteAccount.confirmWord'.tr(),
-                          },
+                          namedArgs: {'word': 'deleteAccount.confirmWord'.tr()},
                         ),
                         style: AppTextStyles.bodyM.copyWith(
                           fontWeight: FontWeight.w600,
@@ -226,7 +225,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: disabled ? null : () => context.pop(),

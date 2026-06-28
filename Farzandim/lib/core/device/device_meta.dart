@@ -18,11 +18,11 @@ class DeviceMeta {
 
   /// Bo'sh maydonlarni tashlab, request body uchun JSON.
   Map<String, dynamic> toJson() => <String, dynamic>{
-        if (deviceModel != null && deviceModel!.trim().isNotEmpty)
-          'deviceModel': deviceModel!.trim(),
-        if (platform != null && platform!.trim().isNotEmpty)
-          'platform': platform!.trim(),
-      };
+    if (deviceModel != null && deviceModel!.trim().isNotEmpty)
+      'deviceModel': deviceModel!.trim(),
+    if (platform != null && platform!.trim().isNotEmpty)
+      'platform': platform!.trim(),
+  };
 }
 
 /// Joriy qurilma ma'lumotini aniqlaydi. Xato bo'lsa bo'sh meta qaytaradi
@@ -34,9 +34,7 @@ Future<DeviceMeta> currentDeviceMeta() async {
       final web = await plugin.webBrowserInfo;
       final browser = _capitalize(web.browserName.name);
       final os = web.platform?.trim();
-      final label = (os != null && os.isNotEmpty)
-          ? '$browser ($os)'
-          : browser;
+      final label = (os != null && os.isNotEmpty) ? '$browser ($os)' : browser;
       return DeviceMeta(deviceModel: label, platform: 'web');
     }
     switch (defaultTargetPlatform) {

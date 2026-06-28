@@ -39,10 +39,7 @@ class SkeletonBox extends StatelessWidget {
         width: width,
         height: height,
         decoration: shape == BoxShape.circle
-            ? BoxDecoration(
-                color: AppColors.surface,
-                shape: BoxShape.circle,
-              )
+            ? BoxDecoration(color: AppColors.surface, shape: BoxShape.circle)
             : BoxDecoration(
                 color: AppColors.surface,
                 borderRadius: borderRadius ?? BorderRadius.circular(12),
@@ -60,11 +57,7 @@ class SkeletonAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SkeletonBox(
-      width: size,
-      height: size,
-      shape: BoxShape.circle,
-    );
+    return SkeletonBox(width: size, height: size, shape: BoxShape.circle);
   }
 }
 

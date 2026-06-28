@@ -1,5 +1,6 @@
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bildirishnoma turi — ikona, rang va yorliqni aniqlaydi.
 enum NotificationType {
@@ -54,31 +55,31 @@ extension NotificationTypeX on NotificationType {
   IconData get icon {
     switch (this) {
       case NotificationType.sos:
-        return Icons.warning_rounded;
+        return SolarIconsBold.dangerTriangle;
       case NotificationType.enterZone:
-        return Icons.login;
+        return SolarIconsBold.login;
       case NotificationType.exitZone:
-        return Icons.logout;
+        return SolarIconsBold.logout;
       case NotificationType.lowBattery:
-        return Icons.battery_alert;
+        return SolarIconsBold.batteryLow;
       case NotificationType.appLimit:
-        return Icons.timer_off;
+        return SolarIconsBold.stopwatchPause;
       case NotificationType.scheduleStart:
-        return Icons.calendar_today;
+        return SolarIconsBold.calendar;
       case NotificationType.scheduleReminder:
-        return Icons.notifications_active_outlined;
+        return SolarIconsBold.bellBing;
       case NotificationType.offline:
-        return Icons.cloud_off;
+        return SolarIconsBold.cloudCross;
       case NotificationType.online:
-        return Icons.cloud_done;
+        return SolarIconsBold.cloudCheck;
       case NotificationType.pairRequest:
-        return Icons.phone_iphone_rounded;
+        return SolarIconsBold.iPhone;
       case NotificationType.game:
-        return Icons.sports_esports_rounded;
+        return SolarIconsBold.gamepad;
       case NotificationType.unlockRequest:
-        return Icons.lock_clock_rounded;
+        return SolarIconsBold.lock;
       case NotificationType.permissionChanged:
-        return Icons.shield_outlined;
+        return SolarIconsBold.shield;
     }
   }
 
@@ -188,23 +189,19 @@ class AppNotification {
     final rawType = data['type'] as String?;
     // Backend snake_case yuboradi (`pair_request`), Dart enum
     // camelCase (`pairRequest`) — qo'lda map qilamiz.
-    final type = _mapBackendType(rawType) ??
+    final type =
+        _mapBackendType(rawType) ??
         NotificationType.values.firstWhere(
           (t) => t.name == rawType,
           orElse: () => NotificationType.online,
         );
     return AppNotification(
-      id: message.messageId ??
-          'fcm-${DateTime.now().millisecondsSinceEpoch}',
+      id: message.messageId ?? 'fcm-${DateTime.now().millisecondsSinceEpoch}',
       type: type,
       childId: (data['childId'] as String?) ?? '',
       childName: (data['childName'] as String?) ?? '',
-      title: message.notification?.title ??
-          (data['title'] as String?) ??
-          '',
-      message: message.notification?.body ??
-          (data['message'] as String?) ??
-          '',
+      title: message.notification?.title ?? (data['title'] as String?) ?? '',
+      message: message.notification?.body ?? (data['message'] as String?) ?? '',
       timestamp: DateTime.now(),
       data: data,
     );
@@ -302,16 +299,16 @@ class AppNotification {
 
   /// SharedPreferences persistence — JSON map.
   Map<String, dynamic> toJson() => {
-        'id': id,
-        'type': type.name,
-        'childId': childId,
-        'childName': childName,
-        'title': title,
-        'message': message,
-        'timestamp': timestamp.toIso8601String(),
-        'isRead': isRead,
-        if (data != null) 'data': data,
-      };
+    'id': id,
+    'type': type.name,
+    'childId': childId,
+    'childName': childName,
+    'title': title,
+    'message': message,
+    'timestamp': timestamp.toIso8601String(),
+    'isRead': isRead,
+    if (data != null) 'data': data,
+  };
 
   static NotificationType? _mapBackendType(String? raw) {
     switch (raw) {

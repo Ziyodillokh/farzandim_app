@@ -50,7 +50,7 @@ class _Header extends ConsumerWidget {
             top: 8,
             left: 16,
             child: _CircleButton(
-              icon: Icons.forum_rounded,
+              icon: SolarIconsBold.chatRoundLine,
               onTap: () => context.push(AppRoutes.qaVoicePath(child.id)),
             ),
           ),
@@ -60,7 +60,7 @@ class _Header extends ConsumerWidget {
             top: 8,
             right: 16,
             child: _CircleButton(
-              icon: Icons.notifications_none_rounded,
+              icon: SolarIconsBold.bell,
               showDot: unread > 0,
               onTap: () => context.push(AppRoutes.notifications),
             ),
@@ -112,11 +112,7 @@ class _Header extends ConsumerWidget {
                       const SizedBox(width: 8),
                       const _Dot(),
                       const SizedBox(width: 8),
-                      Icon(
-                        _batteryIcon(battery),
-                        size: 16,
-                        color: _dim,
-                      ),
+                      Icon(_batteryIcon(battery), size: 16, color: _dim),
                       const SizedBox(width: 2),
                       Text('$battery%', style: _pop(14, c: _dim)),
                     ],
@@ -132,11 +128,11 @@ class _Header extends ConsumerWidget {
 }
 
 IconData _batteryIcon(int level) {
-  if (level >= 90) return Icons.battery_full_rounded;
-  if (level >= 60) return Icons.battery_5_bar_rounded;
-  if (level >= 40) return Icons.battery_3_bar_rounded;
-  if (level >= 15) return Icons.battery_2_bar_rounded;
-  return Icons.battery_1_bar_rounded;
+  if (level >= 90) return SolarIconsBold.batteryFull;
+  if (level >= 60) return SolarIconsBold.batteryHalf;
+  if (level >= 40) return SolarIconsBold.batteryHalf;
+  if (level >= 15) return SolarIconsBold.batteryLow;
+  return SolarIconsBold.batteryLow;
 }
 
 /// Kichik kulrang ajratuvchi nuqta (qurilma/batareya orasida).
@@ -264,7 +260,7 @@ class _LocationCard extends ConsumerWidget {
       child: Row(
         children: [
           Icon(
-            inZone ? Icons.home_rounded : Icons.location_on_rounded,
+            inZone ? SolarIconsBold.home : SolarIconsBold.mapPoint,
             size: 26,
             color: Colors.white.withValues(alpha: 0.55),
           ),
@@ -292,7 +288,7 @@ class _LocationCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           Icon(
-            Icons.chevron_right_rounded,
+            SolarIconsBold.altArrowRight,
             size: 22,
             color: Colors.white.withValues(alpha: 0.5),
           ),
@@ -313,8 +309,9 @@ class _ScreenTimeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ms = ref.watch(todayScreenTimeMsProvider(childId));
     final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    final apps =
-        (usage?.filteredApps ?? const <AppUsageEntry>[]).take(3).toList();
+    final apps = (usage?.filteredApps ?? const <AppUsageEntry>[])
+        .take(3)
+        .toList();
 
     return _Card(
       minHeight: 220,
@@ -432,10 +429,7 @@ class _Divider extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
-      child: SizedBox(
-        height: 1,
-        child: ColoredBox(color: Color(0x14FFFFFF)),
-      ),
+      child: SizedBox(height: 1, child: ColoredBox(color: Color(0x14FFFFFF))),
     );
   }
 }
@@ -490,10 +484,7 @@ class _XpCard extends ConsumerWidget {
                       color: _blue,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text(
-                      'XP',
-                      style: _pop(12, w: FontWeight.w600),
-                    ),
+                    child: Text('XP', style: _pop(12, w: FontWeight.w600)),
                   ),
                 ],
               ),
@@ -581,7 +572,7 @@ class _LeaderboardRow extends StatelessWidget {
         ),
         if (isMe)
           Icon(
-            Icons.chevron_right_rounded,
+            SolarIconsBold.altArrowRight,
             size: 16,
             color: const Color(0xFF508AFF).withValues(alpha: 0.8),
           ),
@@ -618,7 +609,7 @@ class _ScheduleCard extends StatelessWidget {
             child: Column(
               children: [
                 Icon(
-                  Icons.event_note_rounded,
+                  SolarIconsBold.calendarMark,
                   size: 30,
                   color: Colors.white.withValues(alpha: 0.4),
                 ),
@@ -671,10 +662,7 @@ class _ActionCard extends StatelessWidget {
             ),
             if (comingSoon) ...[
               const SizedBox(height: 4),
-              Text(
-                'dashboard.comingSoon'.tr(),
-                style: _pop(11, c: _dim),
-              ),
+              Text('dashboard.comingSoon'.tr(), style: _pop(11, c: _dim)),
             ],
           ],
         ),
@@ -707,7 +695,7 @@ class _AddChildButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.add_rounded, size: 22, color: Colors.white),
+            const Icon(SolarIconsBold.addCircle, size: 22, color: Colors.white),
             const SizedBox(width: 8),
             Text(
               'dashboard.emptyState.addButton'.tr(),
@@ -722,8 +710,10 @@ class _AddChildButton extends StatelessWidget {
 
 // ════════════════════════ PASTKI BAR ════════════════════════
 
-/// Suzuvchi pastki panel — ulangan bolalar almashtirgich + Sozlamalar.
-class _BottomBar extends StatelessWidget {
+/// Suzuvchi pastki panel — bola almashtirgich + Sozlamalar TOGGLE.
+/// Faqat BITTASI ochiq (to'liq uzun pill), ikkinchisi kichik yumaloq doira.
+/// Yopiq doira bosilsa — ochiladi, ikkinchisi yumaloq doiraga aylanadi.
+class _BottomBar extends StatefulWidget {
   const _BottomBar({
     required this.children,
     required this.selectedIndex,
@@ -735,9 +725,24 @@ class _BottomBar extends StatelessWidget {
   final ValueChanged<int> onSelect;
 
   @override
+  State<_BottomBar> createState() => _BottomBarState();
+}
+
+class _BottomBarState extends State<_BottomBar> {
+  // 0 = bola almashtirgich ochiq, 1 = Sozlamalar ochiq.
+  // Default: Sozlamalar to'liq pill (foydalanuvchi ko'rsatgan ko'rinish).
+  int _active = 1;
+
+  static const Duration _dur = Duration(milliseconds: 280);
+  static const Curve _curve = Curves.easeOutCubic;
+  static const double _collapsed = 60; // yumaloq doira (= balandlik)
+  static const double _gap = 10;
+
+  @override
   Widget build(BuildContext context) {
+    final switcherOpen = _active == 0;
+    final pill = BorderRadius.circular(999);
     return DecoratedBox(
-      // Kontent nav ortida yumshoq fonga so'nadi.
       decoration: const BoxDecoration(
         gradient: LinearGradient(
           begin: Alignment.topCenter,
@@ -748,52 +753,157 @@ class _BottomBar extends StatelessWidget {
       ),
       child: Padding(
         padding: const EdgeInsets.fromLTRB(16, 28, 16, 16),
+        child: LayoutBuilder(
+          builder: (context, c) {
+            final expanded = c.maxWidth - _collapsed - _gap;
+            return Row(
+              children: [
+                // ── Bola almashtirgich ──
+                AnimatedContainer(
+                  duration: _dur,
+                  curve: _curve,
+                  width: switcherOpen ? expanded : _collapsed,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: _cardBg,
+                    borderRadius: pill,
+                    border: Border.all(color: _cardBorder),
+                  ),
+                  child: ClipRRect(
+                    borderRadius: pill,
+                    child: _SwitcherSegment(
+                      open: switcherOpen,
+                      children: widget.children,
+                      selectedIndex: widget.selectedIndex,
+                      onSelect: widget.onSelect,
+                      onExpand: () => setState(() => _active = 0),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: _gap),
+                // ── Sozlamalar ──
+                AnimatedContainer(
+                  duration: _dur,
+                  curve: _curve,
+                  width: switcherOpen ? _collapsed : expanded,
+                  height: 60,
+                  decoration: BoxDecoration(
+                    color: switcherOpen ? _cardBg : const Color(0xFF2E7D6B),
+                    borderRadius: pill,
+                    border: switcherOpen
+                        ? Border.all(color: _cardBorder)
+                        : null,
+                  ),
+                  child: ClipRRect(
+                    borderRadius: pill,
+                    child: _SettingsSegment(
+                      open: !switcherOpen,
+                      // 1 marta bosish — to'g'ridan-to'g'ri sozlamalarga.
+                      // Holatni ham 1 ga o'rnatamiz (qaytganda yashil pill).
+                      onTap: () {
+                        setState(() => _active = 1);
+                        context.push(AppRoutes.settings);
+                      },
+                    ),
+                  ),
+                ),
+              ],
+            );
+          },
+        ),
+      ),
+    );
+  }
+}
+
+/// Bola almashtirgich segmenti — ochiq: avatarlar+ism pill; yopiq: faol
+/// bola avatari (yumaloq doira, bosilsa ochiladi).
+class _SwitcherSegment extends StatelessWidget {
+  const _SwitcherSegment({
+    required this.open,
+    required this.children,
+    required this.selectedIndex,
+    required this.onSelect,
+    required this.onExpand,
+  });
+
+  final bool open;
+  final List<Child> children;
+  final int selectedIndex;
+  final ValueChanged<int> onSelect;
+  final VoidCallback onExpand;
+
+  @override
+  Widget build(BuildContext context) {
+    if (!open) {
+      final idx = selectedIndex.clamp(0, children.length - 1);
+      return GestureDetector(
+        onTap: onExpand,
+        behavior: HitTestBehavior.opaque,
+        child: Center(
+          child: ChildAvatar(child: children[idx], size: 42, showBorder: false),
+        ),
+      );
+    }
+    // Ochiq — kontent konteynerdan keng bo'lsa kesiladi (animatsiya paytida
+    // overflow xatosi bo'lmasligi uchun OverflowBox).
+    return OverflowBox(
+      maxWidth: double.infinity,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 4),
         child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
-            Flexible(
-              child: Container(
-                padding: const EdgeInsets.all(4),
-                decoration: BoxDecoration(
-                  color: _cardBg,
-                  borderRadius: BorderRadius.circular(999),
-                  border: Border.all(color: _cardBorder),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    for (var i = 0; i < children.length; i++)
-                      _SwitcherItem(
-                        child: children[i],
-                        active: i == selectedIndex,
-                        onTap: () => onSelect(i),
-                      ),
-                  ],
-                ),
+            for (var i = 0; i < children.length; i++)
+              _SwitcherItem(
+                child: children[i],
+                active: i == selectedIndex,
+                onTap: () => onSelect(i),
               ),
-            ),
-            const SizedBox(width: 10),
-            GestureDetector(
-              onTap: () => context.push(AppRoutes.settings),
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 52,
-                height: 52,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: _cardBg,
-                  border: Border.all(color: _cardBorder),
-                ),
-                child: const Icon(
-                  Icons.settings_rounded,
-                  size: 24,
-                  color: Colors.white,
-                ),
-              ),
-            ),
           ],
         ),
       ),
+    );
+  }
+}
+
+/// Sozlamalar segmenti — ochiq: gear+"Sozlamalar" (yashil); yopiq: gear
+/// yumaloq doira. HAR IKKI holatda ham BIR MARTA bosish to'g'ridan-to'g'ri
+/// sozlamalarga o'tadi (avval yopiq doira faqat ochilardi — endi yo'q).
+class _SettingsSegment extends StatelessWidget {
+  const _SettingsSegment({required this.open, required this.onTap});
+
+  final bool open;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: open
+          ? OverflowBox(
+              maxWidth: double.infinity,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    SolarIconsBold.settings,
+                    size: 22,
+                    color: Colors.white,
+                  ),
+                  const SizedBox(width: 8),
+                  Text('Sozlamalar', style: _pop(15, w: FontWeight.w600)),
+                ],
+              ),
+            )
+          : const Center(
+              child: Icon(
+                SolarIconsBold.settings,
+                size: 24,
+                color: Colors.white,
+              ),
+            ),
     );
   }
 }
@@ -831,10 +941,7 @@ class _SwitcherItem extends StatelessWidget {
             ChildAvatar(child: child, size: 44, showBorder: false),
             if (active) ...[
               const SizedBox(width: 8),
-              Text(
-                child.name,
-                style: _pop(16, w: FontWeight.w500),
-              ),
+              Text(child.name, style: _pop(16, w: FontWeight.w500)),
             ],
           ],
         ),

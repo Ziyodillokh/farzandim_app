@@ -14,6 +14,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola feedback inbox ekrani.
 class FeedbackInboxScreen extends ConsumerWidget {
@@ -39,8 +40,7 @@ class FeedbackInboxScreen extends ConsumerWidget {
                   loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.accent),
                   ),
-                  error: (e, _) =>
-                      Center(child: Text(friendlyError(e))),
+                  error: (e, _) => Center(child: Text(friendlyError(e))),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
@@ -84,7 +84,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              SolarIconsBold.altArrowLeft,
               color: AppColors.textPrimary,
               size: 20,
             ),

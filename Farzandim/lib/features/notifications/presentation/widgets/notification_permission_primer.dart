@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Primer bir marta ko'rsatilganini eslab qoladigan kalit.
 const String _primerShownKey = 'notif_primer_shown';
@@ -75,7 +76,7 @@ class NotificationPermissionPrimer {
                   shape: BoxShape.circle,
                 ),
                 child: Icon(
-                  Icons.notifications_active_rounded,
+                  SolarIconsBold.bellBing,
                   color: AppColors.primary,
                   size: 32,
                 ),

@@ -8,6 +8,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:google_places_flutter/google_places_flutter.dart';
 import 'package:google_places_flutter/model/prediction.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// To'liq ekran xarita — geo-zona markazini aniq tanlash uchun.
 ///
@@ -57,9 +58,7 @@ class _FullScreenMapScreenState extends State<FullScreenMapScreen> {
     // Diagnostika: console'da kalit uzunligi.
     // 0 → flag berilmagan (`flutter run --dart-define-from-file=env.json`).
     // 39 → to'g'ri.
-    debugPrint(
-      'PLACES API kalit uzunligi: ${ApiKeys.googleMapsKey.length}',
-    );
+    debugPrint('PLACES API kalit uzunligi: ${ApiKeys.googleMapsKey.length}');
     if (widget.autofocusSearch) {
       // initState'da darhol fokuslab bo'lmaydi (build hali tugamagan).
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -102,9 +101,7 @@ class _FullScreenMapScreenState extends State<FullScreenMapScreen> {
 
     final newCenter = LatLng(lat, lng);
     setState(() => _center = newCenter);
-    _controller?.animateCamera(
-      CameraUpdate.newLatLngZoom(newCenter, 16),
-    );
+    _controller?.animateCamera(CameraUpdate.newLatLngZoom(newCenter, 16));
     // Klaviaturani yashirish.
     _searchFocus.unfocus();
   }
@@ -149,9 +146,7 @@ class _FullScreenMapScreenState extends State<FullScreenMapScreen> {
               ),
               child: Row(
                 children: [
-                  _CircleBackButton(
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
+                  _CircleBackButton(onTap: () => Navigator.of(context).pop()),
                   const SizedBox(width: 12),
                   Expanded(
                     child: ApiKeys.googleMapsKey.isEmpty
@@ -220,7 +215,7 @@ class _CircleBackButton extends StatelessWidget {
             height: 56,
             child: Center(
               child: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 size: 24,
                 color: Colors.black87,
               ),
@@ -255,7 +250,7 @@ class _SearchBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: Row(
         children: [
-          Icon(Icons.search, size: 20, color: Colors.grey[600]),
+          Icon(SolarIconsBold.magnifier, size: 20, color: Colors.grey[600]),
           const SizedBox(width: 12),
           Expanded(
             // Theme override — oq fon ustida cursor/selection
@@ -265,8 +260,7 @@ class _SearchBar extends StatelessWidget {
               data: Theme.of(context).copyWith(
                 textSelectionTheme: TextSelectionThemeData(
                   cursorColor: AppColors.primary,
-                  selectionColor:
-                      AppColors.primary.withValues(alpha: 0.3),
+                  selectionColor: AppColors.primary.withValues(alpha: 0.3),
                   selectionHandleColor: AppColors.primary,
                 ),
               ),
@@ -279,9 +273,7 @@ class _SearchBar extends StatelessWidget {
                 itemClick: (prediction) {
                   controller.text = prediction.description ?? '';
                   controller.selection = TextSelection.fromPosition(
-                    TextPosition(
-                      offset: prediction.description?.length ?? 0,
-                    ),
+                    TextPosition(offset: prediction.description?.length ?? 0),
                   );
                 },
                 itemBuilder: (context, index, prediction) {
@@ -294,10 +286,7 @@ class _SearchBar extends StatelessWidget {
                 containerHorizontalPadding: 0,
                 inputDecoration: InputDecoration(
                   hintText: 'fullScreenMap.searchHint'.tr(),
-                  hintStyle: TextStyle(
-                    color: Colors.grey[500],
-                    fontSize: 16,
-                  ),
+                  hintStyle: TextStyle(color: Colors.grey[500], fontSize: 16),
                   border: InputBorder.none,
                   contentPadding: EdgeInsets.zero,
                   isDense: true,
@@ -326,7 +315,7 @@ class _SearchBar extends StatelessWidget {
                   onTap: controller.clear,
                   borderRadius: BorderRadius.circular(20),
                   child: Icon(
-                    Icons.close,
+                    SolarIconsBold.closeCircle,
                     size: 20,
                     color: Colors.grey[600],
                   ),
@@ -359,7 +348,11 @@ class _MissingKeyBanner extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          Icon(Icons.warning_amber, color: Colors.red.shade700, size: 20),
+          Icon(
+            SolarIconsBold.dangerTriangle,
+            color: Colors.red.shade700,
+            size: 20,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -398,7 +391,8 @@ class _SearchResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final main = prediction.structuredFormatting?.mainText ??
+    final main =
+        prediction.structuredFormatting?.mainText ??
         prediction.description ??
         '';
     final secondary = prediction.structuredFormatting?.secondaryText;
@@ -407,11 +401,7 @@ class _SearchResultTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       child: Row(
         children: [
-          Icon(
-            Icons.location_on,
-            size: 20,
-            color: AppColors.primary,
-          ),
+          Icon(SolarIconsBold.mapPoint, size: 20, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -459,7 +449,7 @@ class _CenterPinOverlay extends StatelessWidget {
         Padding(
           padding: const EdgeInsets.only(bottom: 36),
           child: Icon(
-            Icons.location_pin,
+            SolarIconsBold.mapPoint,
             size: 48,
             color: AppColors.primary,
             shadows: const [
@@ -513,11 +503,7 @@ class _BottomCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(
-                Icons.location_pin,
-                size: 24,
-                color: AppColors.accent,
-              ),
+              Icon(SolarIconsBold.mapPoint, size: 24, color: AppColors.accent),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
@@ -547,7 +533,7 @@ class _BottomCard extends StatelessWidget {
           const SizedBox(height: AppDimensions.md),
           PrimaryButton(
             label: 'fullScreenMap.confirmButton'.tr(),
-            icon: Icons.check,
+            icon: SolarIconsBold.checkCircle,
             onPressed: onConfirm,
           ),
         ],

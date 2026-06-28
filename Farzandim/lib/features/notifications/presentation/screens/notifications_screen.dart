@@ -17,6 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bildirishnomalar markazi (Figma 1:1, Sprint 7 redesign).
 ///
@@ -69,7 +70,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -97,12 +101,13 @@ class _NotificationsList extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     // SOS xabarlar doim tepada (eng muhim), keyin vaqt bo'yicha yangi→eski.
-    final items = [...notifications]..sort((a, b) {
-      final aSos = a.type == NotificationType.sos ? 0 : 1;
-      final bSos = b.type == NotificationType.sos ? 0 : 1;
-      if (aSos != bSos) return aSos - bSos;
-      return b.timestamp.compareTo(a.timestamp);
-    });
+    final items = [...notifications]
+      ..sort((a, b) {
+        final aSos = a.type == NotificationType.sos ? 0 : 1;
+        final bSos = b.type == NotificationType.sos ? 0 : 1;
+        if (aSos != bSos) return aSos - bSos;
+        return b.timestamp.compareTo(a.timestamp);
+      });
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(
         AppDimensions.md,
@@ -124,32 +129,34 @@ class _NotificationsList extends ConsumerWidget {
               color: AppColors.error,
               borderRadius: BorderRadius.circular(AppDimensions.radiusL),
             ),
-            child: const Icon(Icons.delete, color: Colors.white),
+            child: const Icon(
+              SolarIconsBold.trashBinMinimalistic,
+              color: Colors.white,
+            ),
           ),
-          onDismissed: (_) => ref
-              .read(notificationsProvider.notifier)
-              .deleteNotification(n.id),
+          onDismissed: (_) =>
+              ref.read(notificationsProvider.notifier).deleteNotification(n.id),
           child: NotificationCard(
             notification: n,
             onTap: () => _onTap(context, ref, n),
             onReview: n.isActionable
                 ? () => n.isUnlockRequest
-                    ? _decideUnlock(context, ref, n)
-                    : _review(context, ref, n)
+                      ? _decideUnlock(context, ref, n)
+                      : _review(context, ref, n)
                 : null,
             onReject: n.isActionable
                 ? () => n.isUnlockRequest
-                    ? _denyUnlock(context, ref, n)
-                    : _reject(context, ref, n)
+                      ? _denyUnlock(context, ref, n)
+                      : _reject(context, ref, n)
                 : null,
             onBlock: n.isGame ? () => _block(context, ref, n) : null,
             reviewLabel: n.isUnlockRequest ? 'Vaqt ber' : null,
           ),
         ).animate().fadeIn(
-              duration: 220.ms,
-              delay: (30 * i).ms,
-              curve: Curves.easeOut,
-            );
+          duration: 220.ms,
+          delay: (30 * i).ms,
+          curve: Curves.easeOut,
+        );
       },
     );
   }
@@ -222,7 +229,9 @@ class _NotificationsList extends ConsumerWidget {
     );
     if (decision == null || !context.mounted) return;
 
-    final ok = await ref.read(backendUnlockRequestRepositoryProvider).decide(
+    final ok = await ref
+        .read(backendUnlockRequestRepositoryProvider)
+        .decide(
           requestId: reqId,
           approve: decision.approve,
           minutes: decision.minutes,
@@ -233,8 +242,8 @@ class _NotificationsList extends ConsumerWidget {
     final msg = !ok
         ? "Xatolik. Qaytadan urinib ko'ring."
         : decision.approve
-            ? '${decision.minutes} daqiqa ruxsat berildi.'
-            : "So'rov rad etildi.";
+        ? '${decision.minutes} daqiqa ruxsat berildi.'
+        : "So'rov rad etildi.";
     if (ok) {
       AppToast.success(context, msg);
     } else {
@@ -251,10 +260,9 @@ class _NotificationsList extends ConsumerWidget {
   ) async {
     final reqId = n.unlockRequestId;
     if (reqId != null && reqId.isNotEmpty) {
-      await ref.read(backendUnlockRequestRepositoryProvider).decide(
-            requestId: reqId,
-            approve: false,
-          );
+      await ref
+          .read(backendUnlockRequestRepositoryProvider)
+          .decide(requestId: reqId, approve: false);
     }
     ref.read(notificationsProvider.notifier).deleteNotification(n.id);
     if (context.mounted) {
@@ -280,10 +288,9 @@ class _NotificationsList extends ConsumerWidget {
   ) async {
     final reqId = n.pairRequestId;
     if (reqId != null && n.childId.isNotEmpty) {
-      await ref.read(backendPairRequestRepositoryProvider).reject(
-            childId: n.childId,
-            requestId: reqId,
-          );
+      await ref
+          .read(backendPairRequestRepositoryProvider)
+          .reject(childId: n.childId, requestId: reqId);
     }
     ref.read(notificationsProvider.notifier).deleteNotification(n.id);
     if (context.mounted) {
@@ -302,11 +309,9 @@ class _NotificationsList extends ConsumerWidget {
     if (pkg == null || pkg.isEmpty || n.childId.isEmpty) return;
     final appName = n.appName ?? n.childName;
     try {
-      await ref.read(appRestrictionRepositoryProvider).blockApp(
-            childId: n.childId,
-            packageName: pkg,
-            appName: appName,
-          );
+      await ref
+          .read(appRestrictionRepositoryProvider)
+          .blockApp(childId: n.childId, packageName: pkg, appName: appName);
       ref.read(notificationsProvider.notifier).markAsRead(n.id);
       if (context.mounted) {
         AppToast.info(
@@ -348,7 +353,7 @@ class _EmptyState extends StatelessWidget {
             ),
             alignment: Alignment.center,
             child: Icon(
-              Icons.markunread_mailbox_rounded,
+              SolarIconsBold.mailbox,
               size: 76,
               color: AppColors.textSecondary.withValues(alpha: 0.9),
             ),

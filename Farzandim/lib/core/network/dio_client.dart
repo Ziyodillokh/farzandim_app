@@ -222,10 +222,7 @@ void Function()? onSessionExpired;
 // (`kDebugMode` flag bilan).
 class _LoggingInterceptor extends Interceptor {
   @override
-  void onRequest(
-    RequestOptions options,
-    RequestInterceptorHandler handler,
-  ) {
+  void onRequest(RequestOptions options, RequestInterceptorHandler handler) {
     debugPrint(
       '→ ${options.method} ${options.uri}'
       '${options.headers['Authorization'] != null ? ' [auth]' : ''}',
@@ -238,9 +235,7 @@ class _LoggingInterceptor extends Interceptor {
     Response<dynamic> response,
     ResponseInterceptorHandler handler,
   ) {
-    debugPrint(
-      '← ${response.statusCode} ${response.requestOptions.uri}',
-    );
+    debugPrint('← ${response.statusCode} ${response.requestOptions.uri}');
     handler.next(response);
   }
 

@@ -7,6 +7,7 @@ import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bildirishnomalar ekranidagi bitta kartochka (Figma 1:1).
 ///
@@ -225,16 +226,11 @@ class _Avatar extends StatelessWidget {
     // auth header kerak emas. AppIconWidget yetib bo'lmasa type/paket
     // fallback'iga tushadi (ikonka hali sinxronlanmagan bo'lsa).
     final pkg = notification.packageName;
-    if (pkg != null &&
-        pkg.isNotEmpty &&
-        notification.childId.isNotEmpty) {
-      final iconUrl = '${EnvConfig.apiUrl}/children/${notification.childId}'
+    if (pkg != null && pkg.isNotEmpty && notification.childId.isNotEmpty) {
+      final iconUrl =
+          '${EnvConfig.apiUrl}/children/${notification.childId}'
           '/installed-apps/${Uri.encodeComponent(pkg)}/icon';
-      return AppIconWidget(
-        packageName: pkg,
-        iconUrl: iconUrl,
-        size: 46,
-      );
+      return AppIconWidget(packageName: pkg, iconUrl: iconUrl, size: 46);
     }
 
     final color = notification.type.color;
@@ -261,10 +257,7 @@ class _UnreadDot extends StatelessWidget {
     return Container(
       width: 9,
       height: 9,
-      decoration: BoxDecoration(
-        color: AppColors.error,
-        shape: BoxShape.circle,
-      ),
+      decoration: BoxDecoration(color: AppColors.error, shape: BoxShape.circle),
     );
   }
 }
@@ -296,7 +289,11 @@ class _BlockButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(Icons.block_rounded, size: 18, color: AppColors.error),
+              Icon(
+                SolarIconsBold.forbiddenCircle,
+                size: 18,
+                color: AppColors.error,
+              ),
               const SizedBox(width: 8),
               Text(
                 'notifications.blockApp'.tr(),

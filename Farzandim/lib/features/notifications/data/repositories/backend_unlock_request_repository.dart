@@ -18,8 +18,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendUnlockRequestRepositoryProvider =
     Provider<BackendUnlockRequestRepository>((ref) {
-  return BackendUnlockRequestRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendUnlockRequestRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendUnlockRequestRepository {
   BackendUnlockRequestRepository({required Dio dio}) : _dio = dio;

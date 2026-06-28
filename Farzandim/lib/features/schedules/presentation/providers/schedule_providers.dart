@@ -18,8 +18,10 @@ import 'package:farzandim/shared/models/result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola uchun barcha routine'lar (kun rejasi) — Backend fetch + WS refresh.
-final schedulesProvider =
-    StreamProvider.family<List<Schedule>, String>((ref, childId) async* {
+final schedulesProvider = StreamProvider.family<List<Schedule>, String>((
+  ref,
+  childId,
+) async* {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     yield const <Schedule>[];
@@ -140,10 +142,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
         blockedApps: blockedApps,
         updatedAt: DateTime.now(),
       );
-      await _repo.updateRoutine(
-        routineId: scheduleId,
-        routine: updated,
-      );
+      await _repo.updateRoutine(routineId: scheduleId, routine: updated);
       _ref.invalidate(schedulesProvider(childId));
       state = const AsyncValue.data(null);
       return const Result<void>.success();
@@ -188,7 +187,7 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
   }
 }
 
-final scheduleActionsProvider = StateNotifierProvider<
-    ScheduleActionsNotifier, AsyncValue<void>>(
-  ScheduleActionsNotifier.new,
-);
+final scheduleActionsProvider =
+    StateNotifierProvider<ScheduleActionsNotifier, AsyncValue<void>>(
+      ScheduleActionsNotifier.new,
+    );

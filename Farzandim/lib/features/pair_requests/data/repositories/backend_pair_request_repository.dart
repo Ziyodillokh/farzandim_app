@@ -21,18 +21,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendPairRequestRepositoryProvider =
     Provider<BackendPairRequestRepository>((ref) {
-  return BackendPairRequestRepository(
-    dio: ref.watch(dioClientProvider),
-    socketClient: ref.watch(socketClientProvider),
-  );
-});
+      return BackendPairRequestRepository(
+        dio: ref.watch(dioClientProvider),
+        socketClient: ref.watch(socketClientProvider),
+      );
+    });
 
 class BackendPairRequestRepository {
   BackendPairRequestRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
 
   final Dio _dio;
   final SocketClient _socketClient;
@@ -48,8 +48,7 @@ class BackendPairRequestRepository {
       if (data == null) return const [];
       final list = data['requests'] as List<dynamic>? ?? const [];
       return list
-          .map((m) =>
-              PairRequest.fromBackendJson(m as Map<String, dynamic>))
+          .map((m) => PairRequest.fromBackendJson(m as Map<String, dynamic>))
           .toList();
     } on DioException catch (e) {
       // EH-09: yutmaymiz — offline'da yolg'on "so'rov yo'q" ko'rinardi.

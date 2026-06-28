@@ -27,23 +27,23 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
     final m = mime ?? '';
     final n = (name ?? '').toLowerCase();
     if (m.contains('pdf') || n.endsWith('.pdf')) {
-      return Icons.picture_as_pdf_rounded;
+      return SolarIconsBold.fileText;
     }
-    if (m.startsWith('video/')) return Icons.movie_outlined;
-    if (m.startsWith('audio/')) return Icons.audiotrack_rounded;
+    if (m.startsWith('video/')) return SolarIconsBold.clapperboard;
+    if (m.startsWith('audio/')) return SolarIconsBold.musicNote;
     if (m.contains('word') || n.endsWith('.doc') || n.endsWith('.docx')) {
-      return Icons.description_rounded;
+      return SolarIconsBold.documentText;
     }
     if (m.contains('sheet') ||
         m.contains('excel') ||
         n.endsWith('.xls') ||
         n.endsWith('.xlsx')) {
-      return Icons.table_chart_rounded;
+      return SolarIconsBold.chartSquare;
     }
     if (m.contains('zip') || m.contains('rar') || m.contains('compressed')) {
-      return Icons.folder_zip_rounded;
+      return SolarIconsBold.zipFile;
     }
-    return Icons.insert_drive_file_rounded;
+    return SolarIconsBold.file;
   }
 
   Future<void> _openFile() async {
@@ -53,8 +53,10 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
       final repo = ref.read(backendVoiceMessageRepositoryProvider);
       final url = repo.mediaUrl(widget.message.mediaKey!);
       final dir = await getTemporaryDirectory();
-      final safeName = (widget.message.fileName ?? 'fayl')
-          .replaceAll(RegExp(r'[^\w\-. ]'), '_');
+      final safeName = (widget.message.fileName ?? 'fayl').replaceAll(
+        RegExp(r'[^\w\-. ]'),
+        '_',
+      );
       final savePath = '${dir.path}/${widget.message.id}_$safeName';
       final file = File(savePath);
       if (!file.existsSync() || file.lengthSync() == 0) {
@@ -83,8 +85,9 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
     final subColor = isOwn
         ? Colors.black.withValues(alpha: 0.55)
         : AppColors.textSecondary;
-    final iconBg =
-        isOwn ? Colors.black.withValues(alpha: 0.12) : AppColors.primary;
+    final iconBg = isOwn
+        ? Colors.black.withValues(alpha: 0.12)
+        : AppColors.primary;
     final iconFg = isOwn ? Colors.black : Colors.black;
     final caption = message.text;
     final hasCaption = caption != null && caption.isNotEmpty;
@@ -92,8 +95,9 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(
@@ -160,10 +164,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                               const SizedBox(height: 2),
                               Text(
                                 _formatSize(message.fileSize),
-                                style: TextStyle(
-                                  color: subColor,
-                                  fontSize: 12,
-                                ),
+                                style: TextStyle(color: subColor, fontSize: 12),
                               ),
                             ],
                           ),
@@ -174,11 +175,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                       const SizedBox(height: 8),
                       Text(
                         caption,
-                        style: TextStyle(
-                          color: fg,
-                          fontSize: 15,
-                          height: 1.35,
-                        ),
+                        style: TextStyle(color: fg, fontSize: 15, height: 1.35),
                       ),
                     ],
                     const SizedBox(height: 2),

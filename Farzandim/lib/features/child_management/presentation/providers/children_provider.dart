@@ -54,8 +54,9 @@ final childrenProvider = StreamProvider<List<Child>>((ref) {
   // bo'lmasa har emission qayta-fetch qilib, bir lahza bo'sh ro'yxat → "yangi
   // bola qo'shish" sahifasiga otib ketardi (regressiya). User obyekti
   // yangilanishi endi qayta-fetch QILMAYDI.
-  final isAuthed =
-      ref.watch(backendAuthProvider.select((s) => s is AuthAuthenticated));
+  final isAuthed = ref.watch(
+    backendAuthProvider.select((s) => s is AuthAuthenticated),
+  );
   // Manual refresh trigger (pull-to-refresh, resume, CRUD'dan keyin) —
   // recompute darhol yangi fetch boshlaydi.
   ref.watch(childrenRefreshTickProvider);
@@ -90,9 +91,7 @@ final childrenListProvider = Provider<List<Child>>((ref) {
 
 /// `id` bo'yicha bolani topish (sync).
 final childByIdProvider = Provider.family<Child?, String>((ref, id) {
-  return ref
-      .watch(childrenListProvider)
-      .firstWhereOrNull((c) => c.id == id);
+  return ref.watch(childrenListProvider).firstWhereOrNull((c) => c.id == id);
 });
 
 /// Bola CRUD harakatlari uchun notifier.
@@ -101,8 +100,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
   final Ref _ref;
 
-  BackendChildRepository get _repo =>
-      _ref.read(backendChildRepositoryProvider);
+  BackendChildRepository get _repo => _ref.read(backendChildRepositoryProvider);
 
   void _invalidateList() => _ref.invalidate(childrenProvider);
 
@@ -111,9 +109,7 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
     // MEM-4 muhim: avatar proxy URL BARQAROR (childId-based, backend key
     // ham `child-avatars/<id>.<ext>`) — CachedNetworkImage disk-keshi
     // yangi rasm yuklangach ham ESKISINI ko'rsataverardi. Evict shart.
-    unawaited(
-      CachedNetworkImage.evictFromCache(_repo.avatarProxyUrl(childId)),
-    );
+    unawaited(CachedNetworkImage.evictFromCache(_repo.avatarProxyUrl(childId)));
   }
 
   /// Yangi bola qo'shish.
@@ -211,8 +207,8 @@ class ChildActionsNotifier extends StateNotifier<AsyncValue<void>> {
 
 final childActionsProvider =
     StateNotifierProvider<ChildActionsNotifier, AsyncValue<void>>(
-  ChildActionsNotifier.new,
-);
+      ChildActionsNotifier.new,
+    );
 
 /// Bola avatar URL — Backend rasm proxy (`/children/:id/avatar/image`).
 ///
@@ -220,8 +216,10 @@ final childActionsProvider =
 /// bo'lsa barqaror proxy URL quriladi, aks holda `null` (default sticker).
 /// Proxy MinIO'dan rasmni stream qiladi — signed URL'dan ishonchliroq
 /// (telefon ichki MinIO endpointiga ulanolmaydi).
-final childAvatarUrlProvider =
-    FutureProvider.family<String?, String>((ref, childId) async {
+final childAvatarUrlProvider = FutureProvider.family<String?, String>((
+  ref,
+  childId,
+) async {
   final backendAuth = ref.watch(backendAuthProvider);
   if (backendAuth is! AuthAuthenticated) return null;
   final child = ref.watch(childByIdProvider(childId));

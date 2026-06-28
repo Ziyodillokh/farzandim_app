@@ -33,93 +33,90 @@ class _InputBar extends StatelessWidget {
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-            // Yagona ingichka pill: matn + biriktirma (📎 o'ngda). Ichki
-            // "qo'sh-quti" yo'q — TextField to'ldirishi butunlay o'chirilgan.
-            Expanded(
-              child: Container(
-                constraints: const BoxConstraints(minHeight: _barHeight),
-                decoration: BoxDecoration(
-                  color: AppColors.surface,
-                  borderRadius: BorderRadius.circular(_barHeight / 2),
-                  border: Border.all(color: AppColors.border),
-                ),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(18, 12, 4, 12),
-                        child: TextField(
-                          controller: controller,
-                          style: AppTextStyles.bodyM,
-                          minLines: 1,
-                          maxLines: 4,
-                          textInputAction: TextInputAction.send,
-                          onSubmitted: (_) => onSend(),
-                          decoration: InputDecoration(
-                            isCollapsed: true,
-                            isDense: true,
-                            // Global theme `filled:true` ichki quti chizardi —
-                            // bu yerda butunlay o'chiramiz (yagona pill).
-                            filled: false,
-                            fillColor: Colors.transparent,
-                            contentPadding: EdgeInsets.zero,
-                            border: InputBorder.none,
-                            enabledBorder: InputBorder.none,
-                            focusedBorder: InputBorder.none,
-                            hintText: 'support.inputHint'.tr(),
-                            hintStyle: AppTextStyles.bodyM.copyWith(
-                              color: AppColors.textTertiary,
-                            ),
+          // Yagona ingichka pill: matn + biriktirma (📎 o'ngda). Ichki
+          // "qo'sh-quti" yo'q — TextField to'ldirishi butunlay o'chirilgan.
+          Expanded(
+            child: Container(
+              constraints: const BoxConstraints(minHeight: _barHeight),
+              decoration: BoxDecoration(
+                color: AppColors.surface,
+                borderRadius: BorderRadius.circular(_barHeight / 2),
+                border: Border.all(color: AppColors.border),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  Expanded(
+                    child: Padding(
+                      padding: const EdgeInsets.fromLTRB(18, 12, 4, 12),
+                      child: TextField(
+                        controller: controller,
+                        style: AppTextStyles.bodyM,
+                        minLines: 1,
+                        maxLines: 4,
+                        textInputAction: TextInputAction.send,
+                        onSubmitted: (_) => onSend(),
+                        decoration: InputDecoration(
+                          isCollapsed: true,
+                          isDense: true,
+                          // Global theme `filled:true` ichki quti chizardi —
+                          // bu yerda butunlay o'chiramiz (yagona pill).
+                          filled: false,
+                          fillColor: Colors.transparent,
+                          contentPadding: EdgeInsets.zero,
+                          border: InputBorder.none,
+                          enabledBorder: InputBorder.none,
+                          focusedBorder: InputBorder.none,
+                          hintText: 'support.inputHint'.tr(),
+                          hintStyle: AppTextStyles.bodyM.copyWith(
+                            color: AppColors.textTertiary,
                           ),
                         ),
                       ),
                     ),
-                    // Biriktirma — pill ichida o'ngda (Telegram'dagidek).
-                    SizedBox(
-                      width: 42,
-                      height: _barHeight,
-                      child: IconButton(
-                        onPressed: onAttach,
-                        padding: EdgeInsets.zero,
-                        icon: Icon(
-                          Icons.attach_file_rounded,
-                          color: AppColors.textSecondary,
-                          size: 20,
-                        ),
+                  ),
+                  // Biriktirma — pill ichida o'ngda (Telegram'dagidek).
+                  SizedBox(
+                    width: 42,
+                    height: _barHeight,
+                    child: IconButton(
+                      onPressed: onAttach,
+                      padding: EdgeInsets.zero,
+                      icon: Icon(
+                        SolarIconsBold.paperclip,
+                        color: AppColors.textSecondary,
+                        size: 20,
                       ),
                     ),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
-            const SizedBox(width: AppDimensions.xs + 2),
-            // Yuborish — alohida yumaloq tugma (matn borligida lime).
-            GestureDetector(
-              onTap: hasText ? onSend : null,
-              child: AnimatedContainer(
-                duration: const Duration(milliseconds: 150),
-                width: _barHeight,
-                height: _barHeight,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: hasText ? AppColors.primary : AppColors.surface,
-                  shape: BoxShape.circle,
-                  border:
-                      hasText ? null : Border.all(color: AppColors.border),
-                ),
-                child: Icon(
-                  Icons.send_rounded,
-                  size: 20,
-                  color: hasText
-                      ? AppColors.onPrimary
-                      : AppColors.textTertiary,
-                ),
+          ),
+          const SizedBox(width: AppDimensions.xs + 2),
+          // Yuborish — alohida yumaloq tugma (matn borligida lime).
+          GestureDetector(
+            onTap: hasText ? onSend : null,
+            child: AnimatedContainer(
+              duration: const Duration(milliseconds: 150),
+              width: _barHeight,
+              height: _barHeight,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: hasText ? AppColors.primary : AppColors.surface,
+                shape: BoxShape.circle,
+                border: hasText ? null : Border.all(color: AppColors.border),
+              ),
+              child: Icon(
+                SolarIconsBold.plain,
+                size: 20,
+                color: hasText ? AppColors.onPrimary : AppColors.textTertiary,
               ),
             ),
-          ],
-        ),
-      );
+          ),
+        ],
+      ),
+    );
   }
 }
 
@@ -151,19 +148,19 @@ class _AttachmentSheet extends StatelessWidget {
             ),
             const SizedBox(height: AppDimensions.lg),
             _AttachOption(
-              icon: Icons.image_rounded,
+              icon: SolarIconsBold.gallery,
               label: 'support.attach.image'.tr(),
               color: AppColors.info,
               onTap: () => Navigator.of(context).pop(_AttachKind.image),
             ),
             _AttachOption(
-              icon: Icons.videocam_rounded,
+              icon: SolarIconsBold.videocamera,
               label: 'support.attach.video'.tr(),
               color: AppColors.warning,
               onTap: () => Navigator.of(context).pop(_AttachKind.video),
             ),
             _AttachOption(
-              icon: Icons.insert_drive_file_rounded,
+              icon: SolarIconsBold.file,
               label: 'support.attach.document'.tr(),
               color: AppColors.success,
               onTap: () => Navigator.of(context).pop(_AttachKind.document),

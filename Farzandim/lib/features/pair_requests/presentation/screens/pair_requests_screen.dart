@@ -19,6 +19,7 @@ import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class PairRequestsScreen extends ConsumerWidget {
   const PairRequestsScreen({required this.childId, super.key});
@@ -42,8 +43,7 @@ class PairRequestsScreen extends ConsumerWidget {
                   loading: () => Center(
                     child: CircularProgressIndicator(color: AppColors.accent),
                   ),
-                  error: (e, _) =>
-                      Center(child: Text(friendlyError(e))),
+                  error: (e, _) => Center(child: Text(friendlyError(e))),
                   data: (list) {
                     if (list.isEmpty) return const _EmptyState();
                     return RefreshIndicator(
@@ -87,7 +87,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back_ios_new_rounded,
+              SolarIconsBold.altArrowLeft,
               color: AppColors.textPrimary,
               size: 20,
             ),
@@ -96,8 +96,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'pairRequests.headerTitle'
-                    .tr(namedArgs: {'name': childName}),
+                'pairRequests.headerTitle'.tr(namedArgs: {'name': childName}),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -226,7 +225,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
             Row(
               children: [
                 SettingsIconChip(
-                  icon: Icons.phone_iphone_rounded,
+                  icon: SolarIconsBold.iPhone,
                   accent: AppColors.secondary,
                   size: 44,
                 ),
@@ -255,18 +254,18 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
             const SizedBox(height: AppDimensions.sm),
             if (widget.request.appVersion != null)
               _InfoRow(
-                icon: Icons.app_settings_alt,
+                icon: SolarIconsBold.settings,
                 label: 'pairRequests.appLabel'.tr(),
                 value: widget.request.appVersion!,
               ),
             if (widget.request.ipAddress != null)
               _InfoRow(
-                icon: Icons.public,
+                icon: SolarIconsBold.global,
                 label: 'pairRequests.ipLabel'.tr(),
                 value: widget.request.ipAddress!,
               ),
             _InfoRow(
-              icon: Icons.timer_outlined,
+              icon: SolarIconsBold.stopwatch,
               label: 'pairRequests.timeLeftLabel'.tr(),
               value: _formatLeft(_left),
               valueColor: isExpired ? AppColors.error : AppColors.accent,
@@ -287,7 +286,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    icon: const Icon(Icons.close_rounded, size: 18),
+                    icon: const Icon(SolarIconsBold.closeCircle, size: 18),
                     label: Text('pairRequests.rejectButton'.tr()),
                   ),
                 ),
@@ -312,7 +311,7 @@ class _RequestTileState extends ConsumerState<_RequestTile> {
                               color: AppColors.onPrimary,
                             ),
                           )
-                        : const Icon(Icons.check_rounded, size: 18),
+                        : const Icon(SolarIconsBold.checkCircle, size: 18),
                     label: Text(
                       'pairRequests.approveButton'.tr(),
                       style: AppTextStyles.bodyM.copyWith(
@@ -390,7 +389,7 @@ class _EmptyState extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Icon(
-                Icons.check_circle_outline_rounded,
+                SolarIconsBold.checkCircle,
                 color: AppColors.success,
                 size: 48,
               ),

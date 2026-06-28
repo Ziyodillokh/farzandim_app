@@ -14,10 +14,10 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendNotificationPreferenceRepositoryProvider =
     Provider<BackendNotificationPreferenceRepository>((ref) {
-  return BackendNotificationPreferenceRepository(
-    dio: ref.watch(dioClientProvider),
-  );
-});
+      return BackendNotificationPreferenceRepository(
+        dio: ref.watch(dioClientProvider),
+      );
+    });
 
 class BackendNotificationPreferenceRepository {
   BackendNotificationPreferenceRepository({required Dio dio}) : _dio = dio;

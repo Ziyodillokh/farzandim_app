@@ -133,8 +133,7 @@ class BackendLocationRepository {
   /// bir nechta bolaga parallel obuna bo'lsa ham bir-biriga tegmaydi.
   /// Boshlang'ich fetch/resync/polling provider tomonida.
   Stream<ChildLocation> locationEvents(String childId) async* {
-    await for (final data
-        in _socketClient.eventStream('location:updated')) {
+    await for (final data in _socketClient.eventStream('location:updated')) {
       if (data is! Map) continue;
       if ((data['childId'] as String?) != childId) continue;
       final locJson = data['location'];
@@ -142,9 +141,7 @@ class BackendLocationRepository {
       // qattiq cast update'ni jim o'ldirardi, .from() bilan normalizatsiya.
       if (locJson is! Map) continue;
       try {
-        yield ChildLocation.fromBackendJson(
-          Map<String, dynamic>.from(locJson),
-        );
+        yield ChildLocation.fromBackendJson(Map<String, dynamic>.from(locJson));
       } catch (e) {
         debugPrint('LocRepo[$childId]: WS parse xato — $e');
       }

@@ -14,6 +14,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ChatSettingsScreen extends ConsumerStatefulWidget {
   const ChatSettingsScreen({super.key});
@@ -29,11 +30,13 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     if (_picking) return;
     setState(() => _picking = true);
     try {
-      final x = await ref.read(imagePickerServiceProvider).pickImageFile(
-        source: ImageSource.gallery,
-        imageQuality: 90,
-        maxWidth: 1440,
-      );
+      final x = await ref
+          .read(imagePickerServiceProvider)
+          .pickImageFile(
+            source: ImageSource.gallery,
+            imageQuality: 90,
+            maxWidth: 1440,
+          );
       if (x == null) return;
       final dir = await getApplicationDocumentsDirectory();
       final dest =
@@ -62,7 +65,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+          icon: Icon(SolarIconsBold.altArrowLeft, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -89,7 +92,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               Expanded(
                 child: _ThemeOption(
                   label: 'chatSettings.light'.tr(),
-                  icon: Icons.light_mode_rounded,
+                  icon: SolarIconsBold.sun,
                   selected: themeMode == AppThemeMode.light,
                   onTap: () {
                     if (themeMode != AppThemeMode.light) {
@@ -102,7 +105,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
               Expanded(
                 child: _ThemeOption(
                   label: 'chatSettings.dark'.tr(),
-                  icon: Icons.dark_mode_rounded,
+                  icon: SolarIconsBold.moon,
                   selected: themeMode == AppThemeMode.dark,
                   onTap: () {
                     if (themeMode != AppThemeMode.dark) {
@@ -121,9 +124,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
           const SizedBox(height: 4),
           Text(
             'chatSettings.wallpaperHint'.tr(),
-            style: AppTextStyles.bodyS.copyWith(
-              color: AppColors.textSecondary,
-            ),
+            style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.md),
           GridView.count(
@@ -194,7 +195,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                             ),
                           )
                         : Icon(
-                            Icons.add_photo_alternate_outlined,
+                            SolarIconsBold.galleryAdd,
                             color: AppColors.primary,
                             size: 30,
                           ),
@@ -343,7 +344,11 @@ class _WallpaperTile extends StatelessWidget {
                   color: AppColors.primary,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.check, color: Colors.black, size: 14),
+                child: const Icon(
+                  SolarIconsBold.checkCircle,
+                  color: Colors.black,
+                  size: 14,
+                ),
               ),
             ),
         ],

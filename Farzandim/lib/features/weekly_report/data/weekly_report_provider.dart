@@ -56,30 +56,35 @@ class WeeklyReport {
 
     final screenDays = ((screen['days'] as List<dynamic>?) ?? const [])
         .map((e) => e as Map<String, dynamic>)
-        .map((d) => DayMs(
-              date: d['date'] as String? ?? '',
-              totalMs: _int(d['totalMs']),
-              totalMinutes: _int(d['totalMinutes']),
-            ))
+        .map(
+          (d) => DayMs(
+            date: d['date'] as String? ?? '',
+            totalMs: _int(d['totalMs']),
+            totalMinutes: _int(d['totalMinutes']),
+          ),
+        )
         .toList();
 
     final stepDays = ((steps['days'] as List<dynamic>?) ?? const [])
         .map((e) => e as Map<String, dynamic>)
-        .map((d) => DaySteps(
-              date: d['date'] as String? ?? '',
-              steps: _int(d['steps']),
-            ))
+        .map(
+          (d) => DaySteps(
+            date: d['date'] as String? ?? '',
+            steps: _int(d['steps']),
+          ),
+        )
         .toList();
 
     final topApps = apps
         .map((e) => e as Map<String, dynamic>)
-        .map((a) => TopApp(
-              packageName: a['packageName'] as String? ?? '',
-              appName:
-                  a['appName'] as String? ??
-                  (a['packageName'] as String? ?? ''),
-              totalMinutes: _int(a['totalMinutes']),
-            ))
+        .map(
+          (a) => TopApp(
+            packageName: a['packageName'] as String? ?? '',
+            appName:
+                a['appName'] as String? ?? (a['packageName'] as String? ?? ''),
+            totalMinutes: _int(a['totalMinutes']),
+          ),
+        )
         .toList();
 
     return WeeklyReport(
@@ -122,11 +127,14 @@ final weeklyReportRepositoryProvider = Provider<WeeklyReportRepository>((ref) {
 
 /// Pull-to-refresh uchun hisoblagich — invalidate ekranni blank qilib
 /// yuborardi, counter bilan eski data ko'rinib turadi.
-final weeklyReportRefreshProvider =
-    StateProvider.family<int, String>((ref, childId) => 0);
+final weeklyReportRefreshProvider = StateProvider.family<int, String>(
+  (ref, childId) => 0,
+);
 
-final weeklyReportProvider =
-    FutureProvider.family<WeeklyReport, String>((ref, childId) async {
+final weeklyReportProvider = FutureProvider.family<WeeklyReport, String>((
+  ref,
+  childId,
+) async {
   ref.watch(weeklyReportRefreshProvider(childId));
   return ref.watch(weeklyReportRepositoryProvider).get(childId);
 });

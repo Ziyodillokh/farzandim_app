@@ -26,8 +26,7 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
       vsync: this,
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
-    _animation =
-        Tween<double>(begin: 0.3, end: 0.6).animate(_controller);
+    _animation = Tween<double>(begin: 0.3, end: 0.6).animate(_controller);
   }
 
   @override
@@ -41,8 +40,9 @@ class _AppTileSkeletonState extends State<AppTileSkeleton>
     return AnimatedBuilder(
       animation: _animation,
       builder: (_, __) {
-        final color = AppColors.textSecondary
-            .withValues(alpha: _animation.value * 0.3);
+        final color = AppColors.textSecondary.withValues(
+          alpha: _animation.value * 0.3,
+        );
         final radius = BorderRadius.circular(4);
 
         return Padding(

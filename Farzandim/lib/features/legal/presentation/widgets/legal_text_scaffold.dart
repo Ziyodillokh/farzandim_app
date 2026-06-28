@@ -6,6 +6,7 @@ import 'package:farzandim/features/legal/data/legal_text.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Privacy Policy va Terms of Service ekranlari uchun umumiy scaffold.
 ///
@@ -44,10 +45,7 @@ class LegalTextScaffold extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Text(
-                        title,
-                        style: AppTextStyles.headlineL,
-                      ),
+                      Text(title, style: AppTextStyles.headlineL),
                       const SizedBox(height: 4),
                       Text(
                         'legal.lastUpdated'.tr(
@@ -95,7 +93,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: () => context.pop(),
@@ -159,7 +157,7 @@ class _Disclaimer extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Icon(
-            Icons.info_outline,
+            SolarIconsBold.infoCircle,
             size: 20,
             color: AppColors.textSecondary,
           ),

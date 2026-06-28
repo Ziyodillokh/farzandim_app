@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Geo-zona kategoriyasi — kelajak biznes-mantiq uchun (default radius,
 /// ikona tavsiyasi, filtering).
@@ -116,10 +117,10 @@ class GeoZone {
       radiusMeters: (json['radiusMeters'] as num?)?.toDouble() ?? 100,
       notifyOnEnter: json['alertOnEnter'] as bool? ?? true,
       notifyOnExit: json['alertOnExit'] as bool? ?? true,
-      createdAt: _parseBackendIso(json['createdAt'] as String?) ??
-          DateTime.now(),
-      updatedAt: _parseBackendIso(json['createdAt'] as String?) ??
-          DateTime.now(),
+      createdAt:
+          _parseBackendIso(json['createdAt'] as String?) ?? DateTime.now(),
+      updatedAt:
+          _parseBackendIso(json['createdAt'] as String?) ?? DateTime.now(),
     );
   }
 
@@ -142,9 +143,7 @@ class GeoZone {
     if (n.contains('uy') || n.contains('home') || n.contains('дом')) {
       return GeoZoneType.home;
     }
-    if (n.contains('maktab') ||
-        n.contains('school') ||
-        n.contains('школа')) {
+    if (n.contains('maktab') || n.contains('school') || n.contains('школа')) {
       return GeoZoneType.school;
     }
     if (n.contains('sport') || n.contains('gym')) {
@@ -226,22 +225,24 @@ class GeoZone {
   static IconData iconFromString(String? name) {
     switch (name) {
       case 'home':
-        return Icons.home;
+        // Figma: Bold / Essentional, UI / Home 2
+        return SolarIconsBold.home2;
       case 'school':
-        return Icons.school;
+        // Figma: Bold (Duotone) / School / Backpack
+        return SolarIconsBold.backpack;
       case 'park':
-        return Icons.park;
+        return SolarIconsBold.leaf;
       case 'sports':
-        return Icons.sports_soccer;
+        return SolarIconsBold.football;
       case 'restaurant':
-        return Icons.restaurant;
+        return SolarIconsBold.chefHat;
       case 'store':
-        return Icons.store;
+        return SolarIconsBold.shop;
       case 'work':
-        return Icons.work;
+        return SolarIconsBold.suitcase;
       case 'place':
       default:
-        return Icons.place;
+        return SolarIconsBold.mapPoint;
     }
   }
 

@@ -30,6 +30,7 @@ import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
+import 'package:solar_icons/solar_icons.dart';
 import 'package:video_compress/video_compress.dart';
 
 part 'voice_chat_screen_widgets.dart';

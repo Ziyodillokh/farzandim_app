@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 // ─────────────────────────────────────────────────────────────────────
 // Parvoz onboarding dizayn-tizimi (ko'k + shisha)
@@ -116,12 +117,10 @@ class ParvozBackButton extends StatelessWidget {
         decoration: BoxDecoration(
           shape: BoxShape.circle,
           color: Colors.white.withValues(alpha: 0.08),
-          border: Border.all(
-            color: Colors.white.withValues(alpha: 0.12),
-          ),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
         child: const Icon(
-          Icons.arrow_back_rounded,
+          SolarIconsBold.altArrowLeft,
           size: 22,
           color: Colors.white,
         ),
@@ -329,7 +328,7 @@ class ParvozPrimaryButton extends StatelessWidget {
                     if (showArrow) ...[
                       const SizedBox(width: 8),
                       const Icon(
-                        Icons.arrow_forward_rounded,
+                        SolarIconsBold.altArrowRight,
                         size: 18,
                         color: Colors.white,
                       ),
@@ -372,10 +371,7 @@ class ParvozSecondaryButton extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              if (lead != null) ...[
-                lead,
-                const SizedBox(width: 10),
-              ],
+              if (lead != null) ...[lead, const SizedBox(width: 10)],
               Text(
                 label,
                 style: GoogleFonts.poppins(
@@ -451,10 +447,7 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
       children: [
         Text(
           widget.label,
-          style: GoogleFonts.poppins(
-            fontSize: 14,
-            color: Colors.white,
-          ),
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
         ),
         const SizedBox(height: 10),
         DecoratedBox(
@@ -522,8 +515,9 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                           fontSize: 15,
                           color: Colors.white.withValues(alpha: 0.35),
                         ),
-                        contentPadding:
-                            const EdgeInsets.symmetric(vertical: 18),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 18,
+                        ),
                       ),
                     ),
                   ),
@@ -533,9 +527,7 @@ class _ParvozTextFieldState extends State<ParvozTextField> {
                     onTap: () => setState(() => _hidden = !_hidden),
                     behavior: HitTestBehavior.opaque,
                     child: Icon(
-                      _hidden
-                          ? Icons.visibility_off_rounded
-                          : Icons.visibility_rounded,
+                      _hidden ? SolarIconsBold.eyeClosed : SolarIconsBold.eye,
                       size: 20,
                       color: Colors.white.withValues(alpha: 0.4),
                     ),

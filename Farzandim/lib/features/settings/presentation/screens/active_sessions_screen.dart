@@ -15,6 +15,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class ActiveSessionsScreen extends ConsumerWidget {
   const ActiveSessionsScreen({super.key});
@@ -68,7 +69,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back_ios_new_rounded,
+                SolarIconsBold.altArrowLeft,
                 size: 20,
                 color: AppColors.textPrimary,
               ),
@@ -258,13 +259,13 @@ class _PlatformBadge extends StatelessWidget {
     final IconData icon;
     final Color color;
     if (session.isAndroid) {
-      icon = Icons.android;
+      icon = SolarIconsBold.smartphone;
       color = AppColors.success;
     } else if (session.isIos) {
-      icon = Icons.phone_iphone_rounded;
+      icon = SolarIconsBold.iPhone;
       color = AppColors.textPrimary;
     } else {
-      icon = Icons.public_rounded;
+      icon = SolarIconsBold.global;
       color = AppColors.info;
     }
     return Container(
@@ -298,7 +299,7 @@ class _Trailing extends StatelessWidget {
       );
     }
     return IconButton(
-      icon: Icon(Icons.logout_rounded, color: AppColors.error, size: 22),
+      icon: Icon(SolarIconsBold.logout, color: AppColors.error, size: 22),
       tooltip: 'settings.sessions.endSession'.tr(),
       onPressed: () => _confirmRevoke(context),
     );
@@ -328,7 +329,7 @@ class _EndAllOthersButton extends StatelessWidget {
     return Center(
       child: TextButton.icon(
         onPressed: () => _confirm(context),
-        icon: Icon(Icons.back_hand_rounded, color: AppColors.error, size: 18),
+        icon: Icon(SolarIconsBold.handStars, color: AppColors.error, size: 18),
         label: Flexible(
           child: Text(
             'settings.sessions.endAllOthers'.tr(),
@@ -384,7 +385,7 @@ class _AddAccountBar extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Icon(
-                    Icons.qr_code_rounded,
+                    SolarIconsBold.qrCode,
                     color: AppColors.background,
                     size: 22,
                   ),
@@ -426,11 +427,7 @@ class _EmptyState extends StatelessWidget {
         physics: const AlwaysScrollableScrollPhysics(),
         children: [
           SizedBox(height: MediaQuery.of(context).size.height * 0.28),
-          Icon(
-            Icons.devices_other_rounded,
-            color: AppColors.textTertiary,
-            size: 56,
-          ),
+          Icon(SolarIconsBold.devices, color: AppColors.textTertiary, size: 56),
           const SizedBox(height: AppDimensions.md),
           Center(
             child: Text(
@@ -458,7 +455,7 @@ class _ErrorState extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Icon(
-            Icons.cloud_off_rounded,
+            SolarIconsBold.cloudCross,
             color: AppColors.textTertiary,
             size: 48,
           ),

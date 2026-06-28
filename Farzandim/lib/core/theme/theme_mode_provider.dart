@@ -38,8 +38,9 @@ class ThemeModeNotifier extends StateNotifier<AppThemeMode> {
 
   /// Light ↔ dark almashtirish + saqlash.
   Future<void> toggle() async {
-    final next =
-        state == AppThemeMode.dark ? AppThemeMode.light : AppThemeMode.dark;
+    final next = state == AppThemeMode.dark
+        ? AppThemeMode.light
+        : AppThemeMode.dark;
     state = next;
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -55,5 +56,5 @@ class ThemeModeNotifier extends StateNotifier<AppThemeMode> {
 
 final themeModeProvider =
     StateNotifierProvider<ThemeModeNotifier, AppThemeMode>((ref) {
-  return ThemeModeNotifier();
-});
+      return ThemeModeNotifier();
+    });

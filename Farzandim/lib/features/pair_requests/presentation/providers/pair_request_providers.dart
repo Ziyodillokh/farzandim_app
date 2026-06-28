@@ -12,43 +12,42 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola uchun pending pair requests — Backend fetch + WS refresh.
 final pendingPairRequestsProvider =
-    StreamProvider.family<List<PairRequest>, String>(
-        (ref, childId) async* {
-  final auth = ref.watch(backendAuthProvider);
-  if (auth is! AuthAuthenticated) {
-    yield const <PairRequest>[];
-    return;
-  }
-  final repo = ref.watch(backendPairRequestRepositoryProvider);
+    StreamProvider.family<List<PairRequest>, String>((ref, childId) async* {
+      final auth = ref.watch(backendAuthProvider);
+      if (auth is! AuthAuthenticated) {
+        yield const <PairRequest>[];
+        return;
+      }
+      final repo = ref.watch(backendPairRequestRepositoryProvider);
 
-  Future<List<PairRequest>> fetch() => repo.getPendingRequests(childId);
+      Future<List<PairRequest>> fetch() => repo.getPendingRequests(childId);
 
-  yield await fetch();
+      yield await fetch();
 
-  final controller = StreamController<List<PairRequest>>();
-  Future<void> refresh(dynamic data) async {
-    if (data is Map && data['childId'] != childId) return;
-    try {
-      final list = await fetch();
-      if (!controller.isClosed) controller.add(list);
-    } catch (_) {
-      // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi (EH-09:
-      // repo endi throw qiladi; listener callback'da unhandled bo'lmasin).
-    }
-  }
+      final controller = StreamController<List<PairRequest>>();
+      Future<void> refresh(dynamic data) async {
+        if (data is Map && data['childId'] != childId) return;
+        try {
+          final list = await fetch();
+          if (!controller.isClosed) controller.add(list);
+        } catch (_) {
+          // WS-triggered refresh xatosi — oxirgi ro'yxat saqlanadi (EH-09:
+          // repo endi throw qiladi; listener callback'da unhandled bo'lmasin).
+        }
+      }
 
-  final c = repo.createdStream().listen(refresh);
-  final a = repo.approvedStream().listen(refresh);
-  final r = repo.rejectedStream().listen(refresh);
+      final c = repo.createdStream().listen(refresh);
+      final a = repo.approvedStream().listen(refresh);
+      final r = repo.rejectedStream().listen(refresh);
 
-  ref.onDispose(() {
-    c.cancel();
-    a.cancel();
-    r.cancel();
-    controller.close();
-  });
-  yield* controller.stream;
-});
+      ref.onDispose(() {
+        c.cancel();
+        a.cancel();
+        r.cancel();
+        controller.close();
+      });
+      yield* controller.stream;
+    });
 
 /// Hammasi (Dashboard badge uchun yig'ma soni).
 final allPendingPairRequestsCountProvider = Provider<int>((ref) {
@@ -62,8 +61,7 @@ final allPendingPairRequestsCountProvider = Provider<int>((ref) {
 });
 
 /// Global pair_request:created event stream — Parent App'da banner.
-final pairRequestCreatedProvider =
-    StreamProvider<Map<String, dynamic>>((ref) {
+final pairRequestCreatedProvider = StreamProvider<Map<String, dynamic>>((ref) {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) return const Stream.empty();
   final repo = ref.watch(backendPairRequestRepositoryProvider);

@@ -3,6 +3,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/full_screen_map_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Geo-zona qo'shish/tahrirlash formidagi kichik xarita preview.
 ///
@@ -125,12 +126,12 @@ class _ExpandableMapState extends State<ExpandableMap> {
             child: Column(
               children: [
                 _CircleIconButton(
-                  icon: Icons.search,
+                  icon: SolarIconsBold.magnifier,
                   onTap: () => _openFullscreen(autofocusSearch: true),
                 ),
                 const SizedBox(height: AppDimensions.sm),
                 _CircleIconButton(
-                  icon: Icons.fullscreen,
+                  icon: SolarIconsBold.fullScreen,
                   onTap: _openFullscreen,
                 ),
               ],
@@ -162,11 +163,7 @@ class _CircleIconButton extends StatelessWidget {
           width: 36,
           height: 36,
           child: Center(
-            child: Icon(
-              icon,
-              size: 22,
-              color: AppColors.onPrimary,
-            ),
+            child: Icon(icon, size: 22, color: AppColors.onPrimary),
           ),
         ),
       ),

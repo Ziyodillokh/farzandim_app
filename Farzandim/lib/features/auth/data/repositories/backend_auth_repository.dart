@@ -19,11 +19,9 @@ final backendAuthRepositoryProvider = Provider<BackendAuthRepository>((ref) {
 });
 
 class BackendAuthRepository {
-  BackendAuthRepository({
-    required Dio dio,
-    required TokenStorage tokenStorage,
-  })  : _dio = dio,
-        _tokenStorage = tokenStorage;
+  BackendAuthRepository({required Dio dio, required TokenStorage tokenStorage})
+    : _dio = dio,
+      _tokenStorage = tokenStorage;
 
   final Dio _dio;
   final TokenStorage _tokenStorage;
@@ -62,10 +60,7 @@ class BackendAuthRepository {
     final device = await currentDeviceMeta();
     final response = await _dio.post<Map<String, dynamic>>(
       '/auth/google',
-      data: <String, dynamic>{
-        'idToken': idToken,
-        ...device.toJson(),
-      },
+      data: <String, dynamic>{'idToken': idToken, ...device.toJson()},
     );
     return AuthSession.fromJson(response.data ?? <String, dynamic>{});
   }

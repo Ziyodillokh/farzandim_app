@@ -12,6 +12,7 @@ import 'package:farzandim/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Ota-ona profilini tahrirlash ekrani — ism va avatar.
 ///
@@ -60,9 +61,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     setState(() => _isSaving = true);
 
     try {
-      await ref.read(profileProvider.notifier).updateProfile(
-            name: _nameController.text.trim(),
-          );
+      await ref
+          .read(profileProvider.notifier)
+          .updateProfile(name: _nameController.text.trim());
 
       if (!mounted) return;
       AppToast.success(context, 'profile.savedSnack'.tr());
@@ -151,10 +152,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 padding: const EdgeInsets.all(AppDimensions.lg),
                 child: PrimaryButton(
                   label: 'profile.saveButton'.tr(),
-                  icon: Icons.check,
+                  icon: SolarIconsBold.checkCircle,
                   isLoading: _isSaving,
-                  onPressed:
-                      _isFormValid && !_isSaving ? _onSave : null,
+                  onPressed: _isFormValid && !_isSaving ? _onSave : null,
                 ),
               ),
             ],
@@ -203,23 +203,23 @@ class _EditableAvatar extends StatelessWidget {
                     ),
                   )
                 : (photoUrl == null || photoUrl!.isEmpty
-                    ? Icon(
-                        Icons.person_rounded,
-                        color: AppColors.textSecondary,
-                        size: 48,
-                      )
-                    // memCacheWidth — to'liq o'lchamda dekod qilmay xotira
-                    // tejaymiz.
-                    : CachedNetworkImage(
-                        imageUrl: photoUrl!,
-                        fit: BoxFit.cover,
-                        memCacheWidth: 200,
-                        errorWidget: (_, __, ___) => Icon(
-                          Icons.person_rounded,
+                      ? Icon(
+                          SolarIconsBold.userRounded,
                           color: AppColors.textSecondary,
                           size: 48,
-                        ),
-                      )),
+                        )
+                      // memCacheWidth — to'liq o'lchamda dekod qilmay xotira
+                      // tejaymiz.
+                      : CachedNetworkImage(
+                          imageUrl: photoUrl!,
+                          fit: BoxFit.cover,
+                          memCacheWidth: 200,
+                          errorWidget: (_, __, ___) => Icon(
+                            SolarIconsBold.userRounded,
+                            color: AppColors.textSecondary,
+                            size: 48,
+                          ),
+                        )),
           ),
           Positioned(
             right: 0,
@@ -233,7 +233,7 @@ class _EditableAvatar extends StatelessWidget {
                 border: Border.all(color: AppColors.background, width: 2),
               ),
               child: const Icon(
-                Icons.camera_alt_rounded,
+                SolarIconsBold.camera,
                 color: Colors.black,
                 size: 18,
               ),
@@ -262,7 +262,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                Icons.arrow_back,
+                SolarIconsBold.altArrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: () => context.pop(),

@@ -123,7 +123,7 @@ class _Bubble extends ConsumerWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(Icons.refresh_rounded, size: 14, color: AppColors.error),
+                Icon(SolarIconsBold.refresh, size: 14, color: AppColors.error),
                 const SizedBox(width: 4),
                 Text(
                   'support.retry'.tr(),
@@ -164,12 +164,12 @@ class _TimeStatus extends StatelessWidget {
   Widget _statusIcon(Color color) {
     switch (message.status) {
       case SupportSendStatus.sending:
-        return Icon(Icons.schedule_rounded, size: 12, color: color);
+        return Icon(SolarIconsBold.clockCircle, size: 12, color: color);
       case SupportSendStatus.sent:
-        return Icon(Icons.done_all_rounded, size: 14, color: color);
+        return Icon(SolarIconsBold.checkSquare, size: 14, color: color);
       case SupportSendStatus.failed:
         return Icon(
-          Icons.error_outline_rounded,
+          SolarIconsBold.dangerCircle,
           size: 13,
           color: AppColors.error,
         );
@@ -365,7 +365,7 @@ class _ImageBubble extends ConsumerWidget {
                     ),
             ),
             IconButton(
-              icon: const Icon(Icons.close_rounded, color: Colors.white),
+              icon: const Icon(SolarIconsBold.closeCircle, color: Colors.white),
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -385,7 +385,11 @@ class _ImagePlaceholder extends StatelessWidget {
       height: 160,
       color: AppColors.surfaceVariant,
       alignment: Alignment.center,
-      child: Icon(Icons.image_rounded, color: AppColors.textTertiary, size: 40),
+      child: Icon(
+        SolarIconsBold.gallery,
+        color: AppColors.textTertiary,
+        size: 40,
+      ),
     );
   }
 }
@@ -423,8 +427,7 @@ Future<void> _openSupportFile(
     await OpenFilex.open(path);
     return;
   }
-  void unavailable() =>
-      AppToast.error(context, 'support.fileUnavailable'.tr());
+  void unavailable() => AppToast.error(context, 'support.fileUnavailable'.tr());
   if (message.hasRemote && !kIsWeb) {
     try {
       final local = await ref
@@ -492,7 +495,7 @@ class _VideoBubble extends ConsumerWidget {
                     shape: BoxShape.circle,
                   ),
                   child: const Icon(
-                    Icons.play_arrow_rounded,
+                    SolarIconsBold.play,
                     color: Colors.white,
                     size: 34,
                   ),
@@ -593,7 +596,7 @@ class _DocumentBubble extends ConsumerWidget {
                       ),
                     )
                   : Icon(
-                      Icons.insert_drive_file_rounded,
+                      SolarIconsBold.file,
                       color: isUser ? AppColors.onPrimary : AppColors.accent,
                       size: 22,
                     ),

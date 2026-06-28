@@ -7,6 +7,7 @@ import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Ilova haqida ekrani — logo, versiya, qisqa tavsif, linklar.
 class AboutScreen extends StatelessWidget {
@@ -73,14 +74,14 @@ class AboutScreen extends StatelessWidget {
                       ),
                       const SizedBox(height: AppDimensions.lg),
                       _LinkTile(
-                        icon: Icons.description_outlined,
+                        icon: SolarIconsBold.documentText,
                         title: 'about.termsLink'.tr(),
                         onTap: () =>
                             context.push(AppRoutes.legalTermsOfService),
                       ),
                       const SizedBox(height: AppDimensions.sm),
                       _LinkTile(
-                        icon: Icons.privacy_tip_outlined,
+                        icon: SolarIconsBold.shieldWarning,
                         title: 'about.privacyLink'.tr(),
                         onTap: () => context.push(AppRoutes.legalPrivacyPolicy),
                       ),
@@ -120,7 +121,10 @@ class _Header extends StatelessWidget {
             width: 48,
             height: 48,
             child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
+              icon: Icon(
+                SolarIconsBold.altArrowLeft,
+                color: AppColors.textPrimary,
+              ),
               onPressed: () => context.pop(),
             ),
           ),
@@ -164,7 +168,11 @@ class _LinkTile extends StatelessWidget {
           SettingsIconChip(icon: icon, accent: AppColors.accent),
           const SizedBox(width: AppDimensions.md),
           Expanded(child: Text(title, style: AppTextStyles.bodyM)),
-          Icon(Icons.chevron_right, size: 22, color: AppColors.textSecondary),
+          Icon(
+            SolarIconsBold.altArrowRight,
+            size: 22,
+            color: AppColors.textSecondary,
+          ),
         ],
       ),
     );

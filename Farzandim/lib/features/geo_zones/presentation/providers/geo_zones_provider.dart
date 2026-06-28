@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/data/repositories/backend_geo_zone_repository.dart';
+import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/shared/models/result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -21,8 +22,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Backend kontract: `GET /api/children/:childId/geo-zones` → `{zones, count}`.
 /// WS `geo_zone:created/updated/deleted` child room'da emit qilinadi
 /// → cache invalidate orqali yangi ro'yxat fetch qilinadi.
-final geoZonesProvider =
-    StreamProvider.family<List<GeoZone>, String>((ref, childId) async* {
+final geoZonesProvider = StreamProvider.family<List<GeoZone>, String>((
+  ref,
+  childId,
+) async* {
+  // MOCK (UI preview): soxta Uy/Maktab zonalari.
+  if (kLocationMock) {
+    yield mockZones(childId);
+    return;
+  }
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     yield const <GeoZone>[];
@@ -72,17 +80,15 @@ final geoZonesProvider =
 
 /// Bitta zona `id` bo'yicha — edit ekrani uchun. Sync access.
 final geoZoneByIdProvider =
-    Provider.family<GeoZone?, ({String childId, String zoneId})>(
-  (ref, args) {
-    final zones =
-        ref.watch(geoZonesProvider(args.childId)).valueOrNull ??
-            const <GeoZone>[];
-    for (final zone in zones) {
-      if (zone.id == args.zoneId) return zone;
-    }
-    return null;
-  },
-);
+    Provider.family<GeoZone?, ({String childId, String zoneId})>((ref, args) {
+      final zones =
+          ref.watch(geoZonesProvider(args.childId)).valueOrNull ??
+          const <GeoZone>[];
+      for (final zone in zones) {
+        if (zone.id == args.zoneId) return zone;
+      }
+      return null;
+    });
 
 /// Geo-zone alert WS event stream — UI banner/notification uchun.
 ///
@@ -96,10 +102,13 @@ final geoZoneAlertProvider = StreamProvider<Map<String, dynamic>>((ref) {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) return const Stream.empty();
   final repo = ref.watch(backendGeoZoneRepositoryProvider);
-  return repo.alertStream().map((data) {
-    if (data is Map<String, dynamic>) return data;
-    return <String, dynamic>{};
-  }).where((m) => m.isNotEmpty);
+  return repo
+      .alertStream()
+      .map((data) {
+        if (data is Map<String, dynamic>) return data;
+        return <String, dynamic>{};
+      })
+      .where((m) => m.isNotEmpty);
 });
 
 /// Geo-zona action'lari (add/update/delete) notifier'i.
@@ -211,7 +220,7 @@ class GeoZoneActionsNotifier extends StateNotifier<AsyncValue<void>> {
 }
 
 /// Geo-zona action'lari provider'i.
-final geoZoneActionsProvider = StateNotifierProvider<
-    GeoZoneActionsNotifier, AsyncValue<void>>(
-  GeoZoneActionsNotifier.new,
-);
+final geoZoneActionsProvider =
+    StateNotifierProvider<GeoZoneActionsNotifier, AsyncValue<void>>(
+      GeoZoneActionsNotifier.new,
+    );

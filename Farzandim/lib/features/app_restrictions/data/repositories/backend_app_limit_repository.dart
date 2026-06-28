@@ -8,8 +8,9 @@ import 'package:farzandim/features/app_restrictions/data/models/app_restriction.
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendAppLimitRepositoryProvider =
-    Provider<BackendAppLimitRepository>((ref) {
+final backendAppLimitRepositoryProvider = Provider<BackendAppLimitRepository>((
+  ref,
+) {
   return BackendAppLimitRepository(dio: ref.watch(dioClientProvider));
 });
 
@@ -67,10 +68,7 @@ class BackendAppLimitRepository {
     try {
       await _dio.post<void>(
         '/children/$childId/app-limits',
-        data: {
-          'packageName': packageName,
-          'dailyLimitMs': dailyLimitMs,
-        },
+        data: {'packageName': packageName, 'dailyLimitMs': dailyLimitMs},
       );
       return true;
     } on DioException catch (e) {
@@ -139,8 +137,7 @@ class BackendAppLimitRepository {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/app-categories',
       );
-      final list =
-          response.data?['categories'] as List<dynamic>? ?? const [];
+      final list = response.data?['categories'] as List<dynamic>? ?? const [];
       return list
           .map((m) => AppCategoryInfo.fromJson(m as Map<String, dynamic>))
           .toList();
@@ -161,8 +158,7 @@ class BackendAppLimitRepository {
         '/children/$childId/app-categories',
         data: {'category': category, 'block': block},
       );
-      final list =
-          response.data?['categories'] as List<dynamic>? ?? const [];
+      final list = response.data?['categories'] as List<dynamic>? ?? const [];
       return list
           .map((m) => AppCategoryInfo.fromJson(m as Map<String, dynamic>))
           .toList();
@@ -250,8 +246,8 @@ class _AppLimitWire {
       packageName: json['packageName'] as String? ?? '',
       appName: (json['appName'] as String?) ?? '',
       dailyLimitMs: (json['dailyLimitMs'] as num?)?.toInt() ?? 0,
-      updatedAt: DateTime.tryParse(json['updatedAt'] as String? ?? '')
-              ?.toLocal() ??
+      updatedAt:
+          DateTime.tryParse(json['updatedAt'] as String? ?? '')?.toLocal() ??
           DateTime.now(),
     );
   }

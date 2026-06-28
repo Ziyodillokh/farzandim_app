@@ -5,6 +5,7 @@ import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Foto manba tanlash bottom sheet'i — Galereya yoki Kamera.
 ///
@@ -76,7 +77,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
 
             // Galereya tugmasi — pop qilib `ImageSource.gallery` qaytaradi.
             _buildOption(
-              icon: Icons.photo_library_outlined,
+              icon: SolarIconsBold.gallery,
               label: 'voiceChat.attachGallery'.tr(),
               onTap: () => Navigator.pop(context, ImageSource.gallery),
             ),
@@ -91,7 +92,7 @@ class PhotoSourceBottomSheet extends StatelessWidget {
             // ilova, web faqat dev test uchun.
             if (!kIsWeb) ...[
               _buildOption(
-                icon: Icons.camera_alt_outlined,
+                icon: SolarIconsBold.camera,
                 label: 'voiceChat.attachCamera'.tr(),
                 onTap: () => Navigator.pop(context, ImageSource.camera),
               ),

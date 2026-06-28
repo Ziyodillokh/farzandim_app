@@ -9,6 +9,7 @@ import 'package:farzandim/features/app_update/data/models/app_version_info.dart'
 import 'package:farzandim/features/app_update/presentation/providers/app_update_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 class UpdateBanner extends ConsumerWidget {
@@ -25,8 +26,9 @@ class UpdateBanner extends ConsumerWidget {
     if (info == null) return const SizedBox.shrink();
 
     final platform = Theme.of(context).platform;
-    final platformInfo =
-        platform == TargetPlatform.iOS ? info.ios : info.android;
+    final platformInfo = platform == TargetPlatform.iOS
+        ? info.ios
+        : info.android;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -51,7 +53,7 @@ class UpdateBanner extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Icon(
-                  Icons.system_update_alt_rounded,
+                  SolarIconsBold.smartphoneUpdate,
                   color: AppColors.accent,
                   size: 20,
                 ),
@@ -111,7 +113,7 @@ class UpdateBanner extends ConsumerWidget {
               IconButton(
                 tooltip: 'appUpdate.banner.dismissTooltip'.tr(),
                 icon: Icon(
-                  Icons.close_rounded,
+                  SolarIconsBold.closeCircle,
                   size: 18,
                   color: AppColors.textSecondary,
                 ),

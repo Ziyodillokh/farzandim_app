@@ -14,6 +14,22 @@
   -->
   <base href="$FLUTTER_BASE_HREF">
 
+  <!-- DEV: service worker keshini o'chiramiz — har refresh eng yangi build'ni
+       ko'rsatsin (aks holda eski versiya keshda qolib, o'zgarishlar
+       ko'rinmaydi). Build ham `--pwa-strategy=none` bilan SW'siz quriladi. -->
+  <script>
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.getRegistrations().then(function (rs) {
+        rs.forEach(function (r) { r.unregister(); });
+      }).catch(function () {});
+    }
+    if (window.caches && caches.keys) {
+      caches.keys().then(function (ks) {
+        ks.forEach(function (k) { caches.delete(k); });
+      }).catch(function () {});
+    }
+  </script>
+
   <meta charset="UTF-8">
   <meta content="IE=Edge" http-equiv="X-UA-Compatible">
   <meta name="description" content="A new Flutter project.">

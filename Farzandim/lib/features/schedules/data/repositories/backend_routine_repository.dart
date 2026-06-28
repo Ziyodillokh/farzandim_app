@@ -23,8 +23,9 @@ import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-final backendRoutineRepositoryProvider =
-    Provider<BackendRoutineRepository>((ref) {
+final backendRoutineRepositoryProvider = Provider<BackendRoutineRepository>((
+  ref,
+) {
   final auth = ref.watch(backendAuthProvider);
   final currentUserId = auth is AuthAuthenticated ? auth.user.id : '';
   return BackendRoutineRepository(
@@ -39,9 +40,9 @@ class BackendRoutineRepository {
     required Dio dio,
     required SocketClient socketClient,
     required String currentUserId,
-  })  : _dio = dio,
-        _socketClient = socketClient,
-        _currentUserId = currentUserId;
+  }) : _dio = dio,
+       _socketClient = socketClient,
+       _currentUserId = currentUserId;
 
   final Dio _dio;
   final SocketClient _socketClient;

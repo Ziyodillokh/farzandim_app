@@ -58,10 +58,7 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
           // bo'lishi mumkin va `state = list` o'sha yangi xabarni o'chirib
           // yuborardi. Shu uchun id bo'yicha merge — yangilar tepada.
           final liveIds = state.map((n) => n.id).toSet();
-          state = [
-            ...state,
-            ...list.where((n) => !liveIds.contains(n.id)),
-          ];
+          state = [...state, ...list.where((n) => !liveIds.contains(n.id))];
         }
       }
     } catch (e) {
@@ -84,15 +81,16 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
       await prefs.reload();
 
       const prefix = '$kPendingNotificationsPrefsKey:';
-      final pendingKeys =
-          prefs.getKeys().where((k) => k.startsWith(prefix)).toList();
+      final pendingKeys = prefs
+          .getKeys()
+          .where((k) => k.startsWith(prefix))
+          .toList();
 
       // Eski build umumiy massiv kalitiga yozgan bo'lishi mumkin — bir
       // martalik drenaj, yangilanishdan keyin xabarlar yo'qolib qolmasin.
       final legacyRaw = prefs.getString(kPendingNotificationsPrefsKey);
 
-      if (pendingKeys.isEmpty &&
-          (legacyRaw == null || legacyRaw.isEmpty)) {
+      if (pendingKeys.isEmpty && (legacyRaw == null || legacyRaw.isEmpty)) {
         return;
       }
 
@@ -207,8 +205,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
 /// Bildirishnomalar provider'i.
 final notificationsProvider =
     StateNotifierProvider<NotificationsNotifier, List<AppNotification>>(
-  (ref) => NotificationsNotifier(),
-);
+      (ref) => NotificationsNotifier(),
+    );
 
 /// O'qilmagan xabarlar soni — Dashboard bell badge uchun.
 final unreadCountProvider = Provider<int>((ref) {
@@ -233,24 +231,28 @@ enum NotificationFilter {
 
 /// Filter'ga mos kelgan xabarlar (UI'da watch qilinadi).
 final filteredNotificationsProvider =
-    Provider.family<List<AppNotification>, NotificationFilter>(
-        (ref, filter) {
-  final list = ref.watch(notificationsProvider);
-  return switch (filter) {
-    NotificationFilter.all => list,
-    NotificationFilter.sos => list
-        .where((n) => n.type == NotificationType.sos)
-        .toList(),
-    NotificationFilter.zones => list
-        .where((n) =>
-            n.type == NotificationType.enterZone ||
-            n.type == NotificationType.exitZone)
-        .toList(),
-    NotificationFilter.other => list
-        .where((n) =>
-            n.type != NotificationType.sos &&
-            n.type != NotificationType.enterZone &&
-            n.type != NotificationType.exitZone)
-        .toList(),
-  };
-});
+    Provider.family<List<AppNotification>, NotificationFilter>((ref, filter) {
+      final list = ref.watch(notificationsProvider);
+      return switch (filter) {
+        NotificationFilter.all => list,
+        NotificationFilter.sos =>
+          list.where((n) => n.type == NotificationType.sos).toList(),
+        NotificationFilter.zones =>
+          list
+              .where(
+                (n) =>
+                    n.type == NotificationType.enterZone ||
+                    n.type == NotificationType.exitZone,
+              )
+              .toList(),
+        NotificationFilter.other =>
+          list
+              .where(
+                (n) =>
+                    n.type != NotificationType.sos &&
+                    n.type != NotificationType.enterZone &&
+                    n.type != NotificationType.exitZone,
+              )
+              .toList(),
+      };
+    });

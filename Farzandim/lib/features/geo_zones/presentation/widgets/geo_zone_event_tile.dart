@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone_event.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bitta geo-zona event tile (kirdi/chiqdi).
 ///
@@ -38,7 +39,7 @@ class GeoZoneEventTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final isEnter = event.eventType == GeoZoneEventType.enter;
     final color = isEnter ? AppColors.success : AppColors.warning;
-    final icon = isEnter ? Icons.login : Icons.logout;
+    final icon = isEnter ? SolarIconsBold.login : SolarIconsBold.logout;
 
     return Padding(
       padding: const EdgeInsets.symmetric(
@@ -72,12 +73,7 @@ class GeoZoneEventTile extends StatelessWidget {
                         ? 'geoZoneEvents.tile.eventLine.enter'
                         : 'geoZoneEvents.tile.eventLine.exit';
                     return Text(
-                      key.tr(
-                        namedArgs: {
-                          'name': name,
-                          'zone': event.zoneName,
-                        },
-                      ),
+                      key.tr(namedArgs: {'name': name, 'zone': event.zoneName}),
                       style: AppTextStyles.bodyM.copyWith(
                         color: AppColors.textPrimary,
                         fontSize: 14,

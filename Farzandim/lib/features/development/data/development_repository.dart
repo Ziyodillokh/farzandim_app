@@ -17,8 +17,8 @@ final developmentRepositoryProvider = Provider<DevelopmentRepository>((ref) {
 /// Bola rivojlanish ko'rsatkichi (haftalik), childId bo'yicha (family).
 final developmentSummaryProvider =
     FutureProvider.family<DevelopmentSummary, String>((ref, childId) {
-  return ref.read(developmentRepositoryProvider).fetch(childId);
-});
+      return ref.read(developmentRepositoryProvider).fetch(childId);
+    });
 
 class DevelopmentRepository {
   DevelopmentRepository({required Dio dio}) : _dio = dio;

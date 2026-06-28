@@ -11,6 +11,7 @@ import 'package:farzandim/shared/widgets/secondary_button.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
 /// SOS xabari ko'rinishi — ota-onaning eng muhim notification'i.
@@ -23,10 +24,7 @@ class SosAlertDialog extends ConsumerStatefulWidget {
   final AppNotification notification;
 
   /// Dialog'ni ochish.
-  static Future<void> show(
-    BuildContext context,
-    AppNotification notif,
-  ) {
+  static Future<void> show(BuildContext context, AppNotification notif) {
     return showDialog<void>(
       context: context,
       barrierDismissible: false,
@@ -138,7 +136,7 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
                     ),
                     alignment: Alignment.center,
                     child: Icon(
-                      Icons.warning_rounded,
+                      SolarIconsBold.dangerTriangle,
                       color: AppColors.error,
                       size: 36,
                     ),
@@ -161,9 +159,7 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
               'notifications.sos.subtitle'.tr(
                 namedArgs: {'name': notif.childName},
               ),
-              style: AppTextStyles.bodyM.copyWith(
-                fontWeight: FontWeight.w600,
-              ),
+              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
               textAlign: TextAlign.center,
             ),
             const SizedBox(height: 4),
@@ -180,20 +176,16 @@ class _SosAlertDialogState extends ConsumerState<SosAlertDialog>
                 Expanded(
                   child: SecondaryButton(
                     label: 'notifications.sos.locationButton'.tr(),
-                    icon: Icons.location_on,
+                    icon: SolarIconsBold.mapPoint,
                     onPressed: () {
                       Navigator.of(context).pop();
-                      context.push(
-                        AppRoutes.locationPath(notif.childId),
-                      );
+                      context.push(AppRoutes.locationPath(notif.childId));
                     },
                   ),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: _CallButton(
-                    onPressed: () => _onCallPressed(notif),
-                  ),
+                  child: _CallButton(onPressed: () => _onCallPressed(notif)),
                 ),
               ],
             ),
@@ -235,7 +227,7 @@ class _CallButton extends StatelessWidget {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(Icons.phone, size: 20, color: Colors.white),
+                const Icon(SolarIconsBold.phone, size: 20, color: Colors.white),
                 const SizedBox(width: AppDimensions.sm),
                 Text(
                   'notifications.sos.callButton'.tr(),

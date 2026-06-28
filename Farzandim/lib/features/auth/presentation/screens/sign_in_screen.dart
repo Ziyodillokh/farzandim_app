@@ -8,6 +8,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Akkauntga kirish — Parvoz dizayni (email/telefon + parol).
 ///
@@ -165,7 +166,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     Row(
                       children: [
                         const Icon(
-                          Icons.error_outline_rounded,
+                          SolarIconsBold.dangerCircle,
                           size: 16,
                           color: Color(0xFFFF6B6B),
                         ),
@@ -239,7 +240,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                     label: 'auth.signIn.signUpButton'.tr(),
                     enabled: !_loading,
                     leading: const Icon(
-                      Icons.qr_code_2_rounded,
+                      SolarIconsBold.qrCode,
                       size: 22,
                       color: Colors.white,
                     ),

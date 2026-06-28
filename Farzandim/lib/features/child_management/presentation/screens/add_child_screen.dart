@@ -188,10 +188,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
       // Child obyektini extra orqali ham yuboramiz — race condition
       // oldini olish uchun (childrenProvider GET'ni kutmasdan
       // FamilyCodeScreen darhol bola ma'lumotlarini ko'rsata oladi).
-      context.go(
-        AppRoutes.familyCodePath(result.data!.id),
-        extra: result.data,
-      );
+      context.go(AppRoutes.familyCodePath(result.data!.id), extra: result.data);
     } else {
       _showError(result.error);
     }
@@ -246,8 +243,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                         child: PhotoUploadPlaceholder(
                           photoBytes: _photoBytes,
                           onTap: _onPickPhoto,
-                          onRemove: () =>
-                              setState(() => _photoBytes = null),
+                          onRemove: () => setState(() => _photoBytes = null),
                         ),
                       ),
                       const SizedBox(height: AppDimensions.xl),
@@ -308,8 +304,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                               child: Text(region),
                             ),
                         ],
-                        onChanged: (v) =>
-                            setState(() => _selectedRegion = v),
+                        onChanged: (v) => setState(() => _selectedRegion = v),
                       ),
                       const SizedBox(height: AppDimensions.lg),
 
@@ -318,8 +313,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                       const SizedBox(height: AppDimensions.sm),
                       GenderSelector(
                         selected: _selectedGender,
-                        onChanged: (g) =>
-                            setState(() => _selectedGender = g),
+                        onChanged: (g) => setState(() => _selectedGender = g),
                       ),
                       const SizedBox(height: AppDimensions.xl),
                     ],
@@ -353,9 +347,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                             ? 'childManagement.addEdit.updateButton'.tr()
                             : 'childManagement.addEdit.saveButton'.tr(),
                         isLoading: _isSaving,
-                        onPressed: _isFormValid && !_isSaving
-                            ? _onSave
-                            : null,
+                        onPressed: _isFormValid && !_isSaving ? _onSave : null,
                       ),
                     ),
                   ],
@@ -370,7 +362,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
 
   /// Forma seksiyasi sarlavhasi — 16sp Semibold oq matn.
   Widget _label(String text) => Text(
-        text,
-        style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
-      );
+    text,
+    style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
+  );
 }

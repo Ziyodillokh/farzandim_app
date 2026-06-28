@@ -13,7 +13,10 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _CircleIconButton(icon: Icons.arrow_back, onTap: () => context.pop()),
+        _CircleIconButton(
+          icon: SolarIconsBold.altArrowLeft,
+          onTap: () => context.pop(),
+        ),
         const SizedBox(width: AppDimensions.sm),
         Expanded(
           child: Material(
@@ -234,8 +237,9 @@ class _BottomPanel extends StatelessWidget {
                     ),
                     decoration: BoxDecoration(
                       color: AppColors.surfaceVariant,
-                      borderRadius:
-                          BorderRadius.circular(AppDimensions.radiusPill),
+                      borderRadius: BorderRadius.circular(
+                        AppDimensions.radiusPill,
+                      ),
                       border: Border.all(color: AppColors.border),
                     ),
                     child: Text(
@@ -265,7 +269,7 @@ class _BottomPanel extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     const Icon(
-                      Icons.date_range_rounded,
+                      SolarIconsBold.calendar,
                       size: 20,
                       color: AppColors.onPrimary,
                     ),
@@ -282,7 +286,7 @@ class _BottomPanel extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     const Icon(
-                      Icons.keyboard_arrow_down_rounded,
+                      SolarIconsBold.altArrowDown,
                       size: 20,
                       color: Colors.black87,
                     ),
@@ -297,7 +301,7 @@ class _BottomPanel extends StatelessWidget {
             children: [
               Expanded(
                 child: _StatItem(
-                  icon: Icons.place_rounded,
+                  icon: SolarIconsBold.mapPoint,
                   value: 'locationHistory.stats.places'.tr(
                     namedArgs: {'count': '${stops.length}'},
                   ),
@@ -306,7 +310,7 @@ class _BottomPanel extends StatelessWidget {
               const SizedBox(width: 12),
               Expanded(
                 child: _StatItem(
-                  icon: Icons.straighten_rounded,
+                  icon: SolarIconsBold.ruler,
                   value: 'locationHistory.stats.distance'.tr(
                     namedArgs: {'km': distanceKm.toStringAsFixed(1)},
                   ),
@@ -502,7 +506,7 @@ class _EmptyState extends StatelessWidget {
               ),
               alignment: Alignment.center,
               child: Icon(
-                Icons.route_rounded,
+                SolarIconsBold.route,
                 size: 52,
                 color: AppColors.accent,
               ),

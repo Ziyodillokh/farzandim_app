@@ -11,15 +11,18 @@ import 'package:farzandim/features/geo_zones/data/repositories/backend_geo_zone_
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola uchun geo-zona kirish/chiqish hodisalari tarixi.
-final geoZoneEventsProvider =
-    FutureProvider.family<List<GeoZoneEvent>, String>((ref, childId) async {
-  final repo = ref.watch(backendGeoZoneRepositoryProvider);
-  return repo.getEvents(childId);
-});
+final geoZoneEventsProvider = FutureProvider.family<List<GeoZoneEvent>, String>(
+  (ref, childId) async {
+    final repo = ref.watch(backendGeoZoneRepositoryProvider);
+    return repo.getEvents(childId);
+  },
+);
 
 /// Oxirgi 24 soatdagi hodisalar soni — geo-zonalar ro'yxati ekranida badge.
-final geoZoneEventsCountProvider =
-    FutureProvider.family<int, String>((ref, childId) async {
+final geoZoneEventsCountProvider = FutureProvider.family<int, String>((
+  ref,
+  childId,
+) async {
   // EH-09: events provider error bo'lsa badge 0 ko'rsatadi (yiqilmaydi) —
   // badge dekorativ, asosiy ekran o'z error holatini ko'rsatadi.
   try {

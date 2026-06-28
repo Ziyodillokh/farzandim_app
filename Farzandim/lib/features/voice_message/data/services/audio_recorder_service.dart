@@ -49,10 +49,7 @@ class AudioRecorderService {
 
     // RecordConfig default'lari shu loyiha uchun mos: AAC LC encoder,
     // 128 kbps, 44.1 kHz — Telegram-style ovozli xabarlar uchun standart.
-    await _recorder.start(
-      const RecordConfig(),
-      path: _currentFilePath!,
-    );
+    await _recorder.start(const RecordConfig(), path: _currentFilePath!);
 
     _isRecording = true;
 

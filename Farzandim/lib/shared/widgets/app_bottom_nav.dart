@@ -14,6 +14,7 @@ import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/shared/widgets/glass_card.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Pastki navigatsiya — `activeIndex` 0 = Foydalanish vaqti, 1 = Sozlamalar.
 class AppBottomNav extends StatelessWidget {
@@ -52,20 +53,20 @@ class AppBottomNav extends StatelessWidget {
           if (activityActive)
             Expanded(
               child: _ActivePill(
-                icon: Icons.pie_chart_rounded,
+                icon: SolarIconsBold.pieChart,
                 label: activityLabel,
                 onTap: onActivity,
               ),
             )
           else
-            _CircleButton(icon: Icons.pie_chart_rounded, onTap: onActivity),
+            _CircleButton(icon: SolarIconsBold.pieChart, onTap: onActivity),
           const SizedBox(width: AppDimensions.md),
           if (activityActive)
-            _CircleButton(icon: Icons.settings_rounded, onTap: onSettings)
+            _CircleButton(icon: SolarIconsBold.settings, onTap: onSettings)
           else
             Expanded(
               child: _ActivePill(
-                icon: Icons.settings_rounded,
+                icon: SolarIconsBold.settings,
                 label: settingsLabel,
                 onTap: onSettings,
               ),

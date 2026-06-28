@@ -25,7 +25,7 @@ class _ChatHeader extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              Icons.arrow_back,
+              SolarIconsBold.altArrowLeft,
               color: AppColors.textPrimary,
             ),
             onPressed: onBack,
@@ -57,10 +57,7 @@ class _ChatHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(
-              Icons.more_vert,
-              color: AppColors.textPrimary,
-            ),
+            icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
             onPressed: onInfo,
             tooltip: 'chatSettings.title'.tr(),
           ),
@@ -82,11 +79,7 @@ class _FallbackAvatar extends StatelessWidget {
         color: AppColors.primary.withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
-      child: Icon(
-        Icons.person,
-        color: AppColors.accent,
-        size: 22,
-      ),
+      child: Icon(SolarIconsBold.user, color: AppColors.accent, size: 22),
     );
   }
 }
@@ -110,8 +103,7 @@ class _EmptyChat extends StatelessWidget {
         builder: (_, constraints) => SingleChildScrollView(
           physics: const AlwaysScrollableScrollPhysics(),
           child: ConstrainedBox(
-            constraints:
-                BoxConstraints(minHeight: constraints.maxHeight),
+            constraints: BoxConstraints(minHeight: constraints.maxHeight),
             child: Padding(
               padding: const EdgeInsets.all(AppDimensions.xl),
               child: Column(
@@ -125,7 +117,7 @@ class _EmptyChat extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      Icons.mic_outlined,
+                      SolarIconsBold.microphone,
                       size: 50,
                       color: AppColors.accent,
                     ),
@@ -174,13 +166,11 @@ class _ChatLoadingSkeleton extends StatelessWidget {
       itemBuilder: (_, i) {
         final isOwn = i.isEven;
         return Padding(
-          padding: const EdgeInsets.symmetric(
-            horizontal: 12,
-            vertical: 4,
-          ),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           child: Row(
-            mainAxisAlignment:
-                isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+            mainAxisAlignment: isOwn
+                ? MainAxisAlignment.end
+                : MainAxisAlignment.start,
             children: [
               if (isOwn) const Spacer(),
               Flexible(

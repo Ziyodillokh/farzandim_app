@@ -9,6 +9,7 @@ import 'package:farzandim/features/auth/presentation/widgets/auth_widgets.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:qr_flutter/qr_flutter.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Akkauntga qo'shilish — ikkinchi qurilmani ulash uchun QR kod (mas'ul).
 ///
@@ -128,7 +129,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                 const SizedBox(height: AppDimensions.md),
                 TextButton.icon(
                   onPressed: _create,
-                  icon: const Icon(Icons.refresh_rounded, size: 18),
+                  icon: const Icon(SolarIconsBold.refresh, size: 18),
                   label: Text('auth.addAccount.refresh'.tr()),
                   style: TextButton.styleFrom(foregroundColor: kAuthLinkColor),
                 ),
@@ -146,7 +147,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
-                      Icons.timer_outlined,
+                      SolarIconsBold.stopwatch,
                       size: 18,
                       color: _expired
                           ? AppColors.error
@@ -157,7 +158,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                       _expired
                           ? 'auth.addAccount.expired'.tr()
                           : '${'auth.addAccount.expiresIn'.tr()}: '
-                              '$_formattedTime',
+                                '$_formattedTime',
                       style: AppTextStyles.bodyM.copyWith(
                         color: _expired
                             ? AppColors.error
@@ -172,7 +173,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                 if (_expired)
                   TextButton.icon(
                     onPressed: _create,
-                    icon: const Icon(Icons.refresh_rounded, size: 18),
+                    icon: const Icon(SolarIconsBold.refresh, size: 18),
                     label: Text('auth.addAccount.refresh'.tr()),
                     style: TextButton.styleFrom(
                       foregroundColor: kAuthLinkColor,
@@ -188,7 +189,7 @@ class _AddAccountScreenState extends ConsumerState<AddAccountScreen>
                       RotationTransition(
                         turns: _spin,
                         child: const Icon(
-                          Icons.sync_rounded,
+                          SolarIconsBold.refreshCircle,
                           size: 18,
                           color: kAuthLinkColor,
                         ),
@@ -289,7 +290,7 @@ class _QrCard extends StatelessWidget {
                 ),
                 alignment: Alignment.center,
                 child: const Icon(
-                  Icons.favorite_rounded,
+                  SolarIconsBold.heart,
                   size: 26,
                   color: Color(0xFF111114),
                 ),
@@ -310,7 +311,7 @@ class _QrCard extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: const Icon(
-                      Icons.refresh_rounded,
+                      SolarIconsBold.refresh,
                       size: 32,
                       color: Colors.white,
                     ),
@@ -342,8 +343,7 @@ class _InstructionsCard extends StatelessWidget {
       child: Column(
         children: [
           for (var i = 0; i < steps.length; i++) ...[
-            if (i > 0)
-              Divider(height: 1, color: AppColors.divider, indent: 20),
+            if (i > 0) Divider(height: 1, color: AppColors.divider, indent: 20),
             Padding(
               padding: const EdgeInsets.symmetric(
                 horizontal: AppDimensions.lg,
@@ -359,12 +359,7 @@ class _InstructionsCard extends StatelessWidget {
                     ),
                   ),
                   const SizedBox(width: AppDimensions.md),
-                  Expanded(
-                    child: Text(
-                      steps[i],
-                      style: AppTextStyles.bodyM,
-                    ),
-                  ),
+                  Expanded(child: Text(steps[i], style: AppTextStyles.bodyM)),
                 ],
               ),
             ),
