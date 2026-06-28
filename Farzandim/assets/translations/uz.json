@@ -341,6 +341,11 @@
   "geoZoneEdit": {
     "headerAdd": "Yangi geo-zona",
     "headerEdit": "Geo-zonani tahrirlash",
+    "addressLabel": "Manzil",
+    "addressLoading": "Aniqlanmoqda…",
+    "placeNameLabel": "Manzil nomi",
+    "chooseIconLabel": "Belgi tanlang",
+    "cancelButton": "Bekor qilish",
     "mapHint": "Xaritada bosib markazni belgilang yoki markerni torting",
     "nameLabel": "Nom",
     "nameHint": "Uy / Maktab / ...",

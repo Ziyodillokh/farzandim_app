@@ -341,6 +341,11 @@
   "geoZoneEdit": {
     "headerAdd": "New geo-zone",
     "headerEdit": "Edit geo-zone",
+    "addressLabel": "Address",
+    "addressLoading": "Detecting…",
+    "placeNameLabel": "Place name",
+    "chooseIconLabel": "Choose icon",
+    "cancelButton": "Cancel",
     "mapHint": "Tap on the map to set the center, or drag the marker",
     "nameLabel": "Name",
     "nameHint": "Home / School / ...",

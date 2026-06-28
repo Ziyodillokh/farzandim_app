@@ -341,6 +341,11 @@
   "geoZoneEdit": {
     "headerAdd": "Новая гео-зона",
     "headerEdit": "Редактирование гео-зоны",
+    "addressLabel": "Адрес",
+    "addressLoading": "Определяется…",
+    "placeNameLabel": "Название места",
+    "chooseIconLabel": "Выберите значок",
+    "cancelButton": "Отмена",
     "mapHint": "Нажмите на карте, чтобы выбрать центр, или перетащите маркер",
     "nameLabel": "Название",
     "nameHint": "Дом / Школа / ...",

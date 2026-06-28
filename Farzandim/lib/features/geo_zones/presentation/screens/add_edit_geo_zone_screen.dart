@@ -1,45 +1,94 @@
+// ─────────────────────────────────────────────────────────────────────
+// AddEditGeoZoneScreen — "Yangi manzil" (Parvoz dizayn)
+// ─────────────────────────────────────────────────────────────────────
+//
+// To'liq ekran xarita + markazda turuvchi oq pin (joy tanlash patterni:
+// xarita siljiydi, pin markazda qoladi). Pastda shisha-qora panel: manzil
+// (reverse-geocode), nom, Solar belgi tanlash, Bekor qilish / Saqlash.
+//
+// Ma'lumot: kamera markazi → lat/lng; nom → zona nomi; belgi → icon.
+// Saqlash `geoZoneActionsProvider` orqali (add/update), real backend.
+// Radius/bildirishnomalar Figma dizaynida ko'rsatilmaydi — default
+// (yoki tahrir paytida mavjud qiymat) saqlanadi.
+
+import 'dart:async';
+import 'dart:ui' as ui;
+
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_shadows.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
-import 'package:farzandim/features/geo_zones/presentation/widgets/expandable_map.dart';
-import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/features/location/data/services/geocoding_service.dart';
+import 'package:farzandim/shared/models/result.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
-import 'package:farzandim/shared/widgets/custom_text_field.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/settings_card.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-/// Yangi geo-zona yaratish yoki mavjudini tahrirlash.
-///
-/// `zoneId == null` → **add mode**. `zoneId != null` → **edit mode**
-/// (boshlang'ich qiymatlar Stream'dagi keshlangan ro'yxatdan o'qiladi,
-/// header'da delete tugma ko'rinadi).
-///
-/// **UI**:
-/// - 280dp baland xarita (drag marker + tap to relocate + circle preview)
-/// - Nom, ikon picker (8 ta), radius slider (50-500m)
-/// - Enter/exit notification switchlari
-/// - Pastda "Saqlash" (yoki "Yangilash") PrimaryButton
-///
-/// **Firestore (Bosqich 4.2 → migration):** `geoZoneActionsProvider`
-/// orqali async yozadi. Yozilgach Stream avtomatik yangilanadi —
-/// list ekran yangi zonani ko'radi.
+// ════════════ Parvoz tokenlar (lokal) ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _sheetBg = Color(0xFF1A1F23);
+const _iconBtnBg = Color(0xFF21262A);
+const _border = Color(0x1AFFFFFF); // oq 10%
+const _dim = Color(0x8CFFFFFF); // oq 55%
+const _defaultCenter = LatLng(41.2995, 69.2401); // Toshkent markazi
+
+TextStyle _unb(
+  double size, {
+  FontWeight w = FontWeight.w500,
+  Color c = Colors.white,
+  double ls = -0.3,
+}) =>
+    GoogleFonts.unbounded(
+      fontSize: size,
+      fontWeight: w,
+      color: c,
+      letterSpacing: ls,
+      height: 1.4,
+    );
+
+TextStyle _pop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) =>
+    GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// Belgi tanlash — Solar ikon + zona kaliti (`GeoZone.icon`) + turi.
+class _PickerIcon {
+  const _PickerIcon(this.key, this.asset, this.type);
+
+  final String key;
+  final String asset;
+  final GeoZoneType type;
+}
+
+const _pickerIcons = <_PickerIcon>[
+  _PickerIcon(
+    'place',
+    'assets/icons/solar_streets_map_point.svg',
+    GeoZoneType.custom,
+  ),
+  _PickerIcon('school', 'assets/icons/solar_backpack.svg', GeoZoneType.school),
+  _PickerIcon('home', 'assets/icons/solar_home2.svg', GeoZoneType.home),
+  _PickerIcon('study', 'assets/icons/solar_calculator.svg', GeoZoneType.school),
+  _PickerIcon('work', 'assets/icons/solar_case.svg', GeoZoneType.custom),
+];
+
+/// Geo-zona qo'shish / tahrirlash — Parvoz "Yangi manzil" dizayni.
 class AddEditGeoZoneScreen extends ConsumerStatefulWidget {
   /// `AddEditGeoZoneScreen` konstruktor.
-  const AddEditGeoZoneScreen({required this.childId, super.key, this.zoneId});
+  const AddEditGeoZoneScreen({required this.childId, this.zoneId, super.key});
 
-  /// Qaysi bola uchun zona (per-child).
+  /// Qaysi bola uchun zona.
   final String childId;
 
-  /// Tahrirlanadigan zona id'si. `null` bo'lsa add mode.
+  /// Tahrirlanayotgan zona `id`. `null` bo'lsa — yangi zona qo'shish.
   final String? zoneId;
 
   @override
@@ -48,272 +97,273 @@ class AddEditGeoZoneScreen extends ConsumerStatefulWidget {
 }
 
 class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
-  // Toshkent markazi — default boshlang'ich joylashuv.
-  static const _defaultCenter = LatLng(41.2995, 69.2401);
-
-  final TextEditingController _nameController = TextEditingController();
+  GoogleMapController? _controller;
+  final _nameController = TextEditingController();
 
   LatLng _center = _defaultCenter;
+  LatLng _camTarget = _defaultCenter;
   double _radius = 100;
   bool _notifyOnEnter = true;
   bool _notifyOnExit = true;
   String _selectedIcon = 'place';
   GeoZoneType _type = GeoZoneType.custom;
 
-  bool get _isEditMode => widget.zoneId != null;
+  String? _mapStyle;
+  String? _address;
+  bool _addrLoading = false;
+  int _geoReq = 0;
+  bool _saving = false;
 
+  Set<Marker> _zoneMarkers = const {};
+  final Map<String, BitmapDescriptor> _markerCache = {};
+
+  bool get _isEditMode => widget.zoneId != null;
   bool get _isFormValid => _nameController.text.trim().isNotEmpty;
 
   @override
   void initState() {
     super.initState();
-    if (_isEditMode) {
-      // Edit mode — Stream'dagi keshlangan zonadan boshlang'ich
-      // qiymatlarni o'qiymiz. Stream hali yuklanmagan bo'lsa null —
-      // build paytida `addPostFrameCallback` orqali yana urinamiz.
-      _initFromExistingZone();
+    if (_isEditMode) _loadExisting();
+    unawaited(_loadMapStyle());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final zones = ref.read(geoZonesProvider(widget.childId)).valueOrNull;
+      if (zones != null) unawaited(_buildMarkers(zones));
+    });
+  }
+
+  @override
+  void dispose() {
+    _controller?.dispose();
+    _nameController.dispose();
+    super.dispose();
+  }
+
+  Future<void> _loadMapStyle() async {
+    try {
+      final style = await rootBundle.loadString(
+        'assets/map_styles/dark_premium.json',
+      );
+      if (mounted) setState(() => _mapStyle = style);
+    } catch (_) {
+      // Uslub topilmasa — standart xarita (muammosiz).
     }
   }
 
-  void _initFromExistingZone() {
+  void _loadExisting() {
     final zone = ref.read(
       geoZoneByIdProvider((childId: widget.childId, zoneId: widget.zoneId!)),
     );
     if (zone != null) {
-      _nameController.text = zone.name;
-      _center = zone.center;
-      _radius = zone.radiusMeters;
-      _notifyOnEnter = zone.notifyOnEnter;
-      _notifyOnExit = zone.notifyOnExit;
-      _selectedIcon = zone.icon ?? zone.type.defaultIconName;
-      _type = zone.type;
+      _applyZone(zone);
     } else {
-      // Stream hali kelmagan bo'lishi mumkin — keyingi frame'da
-      // qaytadan o'qib state'ni to'ldiramiz.
+      // Stream hali kelmagan bo'lishi mumkin — keyingi frame'da qayta.
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final z = ref.read(
-          geoZoneByIdProvider((
-            childId: widget.childId,
-            zoneId: widget.zoneId!,
-          )),
+          geoZoneByIdProvider(
+            (childId: widget.childId, zoneId: widget.zoneId!),
+          ),
         );
         if (z != null) {
-          setState(() {
-            _nameController.text = z.name;
-            _center = z.center;
-            _radius = z.radiusMeters;
-            _notifyOnEnter = z.notifyOnEnter;
-            _notifyOnExit = z.notifyOnExit;
-            _selectedIcon = z.icon ?? z.type.defaultIconName;
-            _type = z.type;
-          });
+          setState(() => _applyZone(z));
+          _controller?.animateCamera(CameraUpdate.newLatLng(_center));
+          unawaited(_reverseGeocode(_center));
         }
       });
     }
   }
 
-  @override
-  void dispose() {
-    _nameController.dispose();
-    super.dispose();
+  void _applyZone(GeoZone z) {
+    _center = z.center;
+    _camTarget = z.center;
+    _nameController.text = z.name;
+    _radius = z.radiusMeters;
+    _notifyOnEnter = z.notifyOnEnter;
+    _notifyOnExit = z.notifyOnExit;
+    _type = z.type;
+    _selectedIcon = z.icon ?? z.type.defaultIconName;
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              _Header(isEditMode: _isEditMode, onDelete: _confirmDelete),
-              // Xarita + forma BITTA scroll ichida — klaviatura ochilganda
-              // overflow bo'lmaydi, fokuslangan maydon avtomatik ko'rinadi
-              // (avval xarita qattiq edi → kichik ekranda BOTTOM OVERFLOWED).
-              Expanded(
-                child: SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      const SizedBox(height: AppDimensions.sm),
-                      ExpandableMap(
-                        center: _center,
-                        radius: _radius,
-                        onCenterChanged: (newCenter) {
-                          setState(() => _center = newCenter);
-                        },
-                      ),
-                      const SizedBox(height: AppDimensions.md),
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: AppDimensions.lg,
-                        ),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'geoZoneEdit.mapHint'.tr(),
-                              style: AppTextStyles.bodyS.copyWith(
-                                color: AppColors.textSecondary,
-                                fontSize: 13,
-                              ),
-                            ),
-                            const SizedBox(height: AppDimensions.lg - 4),
-                            _SectionTitle('geoZoneEdit.nameLabel'.tr()),
-                            const SizedBox(height: AppDimensions.sm),
-                            CustomTextField(
-                              controller: _nameController,
-                              hint: 'geoZoneEdit.nameHint'.tr(),
-                              onChanged: (_) => setState(() {}),
-                            ),
-                            const SizedBox(height: AppDimensions.lg - 4),
-                            _SectionTitle('geoZoneEdit.iconLabel'.tr()),
-                            const SizedBox(height: AppDimensions.sm),
-                            _IconPicker(
-                              selected: _selectedIcon,
-                              onSelect: (icon) =>
-                                  setState(() => _selectedIcon = icon),
-                            ),
-                            const SizedBox(height: AppDimensions.lg),
-                            _RadiusSlider(
-                              value: _radius,
-                              onChanged: (v) => setState(() => _radius = v),
-                            ),
-                            const SizedBox(height: AppDimensions.md),
-                            _SectionTitle(
-                              'geoZoneEdit.notificationsLabel'.tr(),
-                            ),
-                            const SizedBox(height: 12),
-                            _NotificationToggles(
-                              notifyOnEnter: _notifyOnEnter,
-                              notifyOnExit: _notifyOnExit,
-                              onEnterChanged: (v) =>
-                                  setState(() => _notifyOnEnter = v),
-                              onExitChanged: (v) =>
-                                  setState(() => _notifyOnExit = v),
-                            ),
-                            const SizedBox(height: AppDimensions.xl),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.all(AppDimensions.lg),
-                child: PrimaryButton(
-                  label: _isEditMode
-                      ? 'geoZoneEdit.updateButton'.tr()
-                      : 'geoZoneEdit.saveButton'.tr(),
-                  icon: Icons.check,
-                  onPressed: _isFormValid ? _onSave : null,
-                ),
-              ),
-            ],
+  void _onMapCreated(GoogleMapController c) {
+    _controller = c;
+    unawaited(_reverseGeocode(_center));
+  }
+
+  void _onCameraIdle() {
+    setState(() => _center = _camTarget);
+    unawaited(_reverseGeocode(_center));
+  }
+
+  Future<void> _reverseGeocode(LatLng pos) async {
+    final req = ++_geoReq;
+    setState(() => _addrLoading = true);
+    String? addr;
+    try {
+      addr = await ref
+          .read(geocodingServiceProvider)
+          .reverse(pos.latitude, pos.longitude);
+    } catch (_) {
+      addr = null;
+    }
+    if (!mounted || req != _geoReq) return;
+    setState(() {
+      _address = addr;
+      _addrLoading = false;
+    });
+  }
+
+  Future<void> _buildMarkers(List<GeoZone> zones) async {
+    final markers = <Marker>{};
+    for (final z in zones) {
+      if (z.id == widget.zoneId) continue; // tahrirlanayotgan zonani o'tkazib
+      final key = z.icon ?? z.type.defaultIconName;
+      try {
+        final bmp = _markerCache[key] ??=
+            await _zoneBitmap(GeoZone.iconFromString(key));
+        markers.add(
+          Marker(
+            markerId: MarkerId('zone_${z.id}'),
+            position: z.center,
+            icon: bmp,
+            anchor: const Offset(0.5, 0.5),
           ),
+        );
+      } catch (_) {
+        // Bitmap yaratilmasa — bu markerni o'tkazib yuboramiz.
+      }
+    }
+    if (mounted) setState(() => _zoneMarkers = markers);
+  }
+
+  /// Mavjud zona uchun marker bitmap — qora "bubble" + oq Material ikon.
+  Future<BitmapDescriptor> _zoneBitmap(IconData icon) async {
+    const size = 96.0;
+    final recorder = ui.PictureRecorder();
+    final canvas = Canvas(recorder);
+    final rrect = RRect.fromRectAndCorners(
+      const Rect.fromLTWH(0, 0, size, size),
+      topLeft: const Radius.circular(48),
+      topRight: const Radius.circular(48),
+      bottomRight: const Radius.circular(48),
+    );
+    canvas
+      ..drawRRect(rrect, Paint()..color = _iconBtnBg)
+      ..drawRRect(
+        rrect,
+        Paint()
+          ..color = const Color(0x2EFFFFFF)
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 2,
+      );
+    final tp = TextPainter(textDirection: ui.TextDirection.ltr)
+      ..text = TextSpan(
+        text: String.fromCharCode(icon.codePoint),
+        style: TextStyle(
+          fontSize: 50,
+          fontFamily: icon.fontFamily,
+          package: icon.fontPackage,
+          color: Colors.white,
         ),
-      ),
+      )
+      ..layout();
+    tp.paint(canvas, Offset((size - tp.width) / 2, (size - tp.height) / 2));
+    final image = await recorder.endRecording().toImage(
+      size.toInt(),
+      size.toInt(),
+    );
+    final data = await image.toByteData(format: ui.ImageByteFormat.png);
+    return BitmapDescriptor.bytes(
+      data!.buffer.asUint8List(),
+      width: 40,
+      height: 40,
     );
   }
 
-  // ─── Saqlash / o'chirish ───
-
   Future<void> _onSave() async {
-    final notifier = ref.read(geoZoneActionsProvider.notifier);
     final name = _nameController.text.trim();
-
-    final current = _isEditMode
-        ? ref.read(
-            geoZoneByIdProvider((
-              childId: widget.childId,
-              zoneId: widget.zoneId!,
-            )),
-          )
-        : null;
-
-    final result = _isEditMode && current != null
-        ? await notifier.updateZone(
-            childId: widget.childId,
-            zoneId: widget.zoneId!,
-            current: current,
-            name: name,
-            type: _type,
-            latitude: _center.latitude,
-            longitude: _center.longitude,
-            radiusMeters: _radius,
-            notifyOnEnter: _notifyOnEnter,
-            notifyOnExit: _notifyOnExit,
-            icon: _selectedIcon,
-          )
-        : await notifier.addZone(
-            childId: widget.childId,
-            name: name,
-            type: _type,
-            latitude: _center.latitude,
-            longitude: _center.longitude,
-            radiusMeters: _radius,
-            notifyOnEnter: _notifyOnEnter,
-            notifyOnExit: _notifyOnExit,
-            icon: _selectedIcon,
-          );
-
+    if (name.isEmpty || _saving) return;
+    setState(() => _saving = true);
+    final notifier = ref.read(geoZoneActionsProvider.notifier);
+    Result<void> result;
+    if (_isEditMode) {
+      final current = ref.read(
+        geoZoneByIdProvider((childId: widget.childId, zoneId: widget.zoneId!)),
+      );
+      if (current == null) {
+        setState(() => _saving = false);
+        return;
+      }
+      result = await notifier.updateZone(
+        childId: widget.childId,
+        zoneId: widget.zoneId!,
+        current: current,
+        name: name,
+        type: _type,
+        latitude: _center.latitude,
+        longitude: _center.longitude,
+        radiusMeters: _radius,
+        notifyOnEnter: _notifyOnEnter,
+        notifyOnExit: _notifyOnExit,
+        icon: _selectedIcon,
+      );
+    } else {
+      result = await notifier.addZone(
+        childId: widget.childId,
+        name: name,
+        type: _type,
+        latitude: _center.latitude,
+        longitude: _center.longitude,
+        radiusMeters: _radius,
+        notifyOnEnter: _notifyOnEnter,
+        notifyOnExit: _notifyOnExit,
+        icon: _selectedIcon,
+      );
+    }
     if (!mounted) return;
+    setState(() => _saving = false);
     if (result.isSuccess) {
       context.pop();
     } else {
       AppToast.error(
         context,
         'geoZoneEdit.saveErrorPrefix'.tr(
-          namedArgs: {'error': '${result.error}'},
+          namedArgs: {'error': result.error ?? ''},
         ),
       );
     }
   }
 
   Future<void> _confirmDelete() async {
-    final zone = ref.read(
-      geoZoneByIdProvider((childId: widget.childId, zoneId: widget.zoneId!)),
-    );
-    if (zone == null) return;
-
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (context) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'geoZoneEdit.deleteDialog.title'.tr(),
-          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-        ),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _sheetBg,
+        title: Text('geoZoneEdit.deleteDialog.title'.tr(), style: _unb(18)),
         content: Text(
-          'geoZoneEdit.deleteDialog.content'.tr(namedArgs: {'name': zone.name}),
-          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+          'geoZoneEdit.deleteDialog.content'.tr(
+            namedArgs: {'name': _nameController.text.trim()},
+          ),
+          style: _pop(14, c: _dim),
         ),
         actions: [
           TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
+            onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
               'geoZoneEdit.deleteDialog.cancel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(color: AppColors.textPrimary),
+              style: _pop(14),
             ),
           ),
           TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
+            onPressed: () => Navigator.of(ctx).pop(true),
             child: Text(
               'geoZoneEdit.deleteDialog.delete'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
+              style: _pop(14, w: FontWeight.w600, c: const Color(0xFFFF5A5D)),
             ),
           ),
         ],
       ),
     );
-
-    if (!(confirmed ?? false) || !mounted) return;
-
+    if (confirmed != true || !mounted) return;
     final result = await ref
         .read(geoZoneActionsProvider.notifier)
         .deleteZone(childId: widget.childId, zoneId: widget.zoneId!);
@@ -324,259 +374,370 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
       AppToast.error(
         context,
         'geoZoneEdit.deleteErrorPrefix'.tr(
-          namedArgs: {'error': '${result.error}'},
+          namedArgs: {'error': result.error ?? ''},
         ),
       );
     }
   }
-}
-
-// ════════════════════════ HEADER ════════════════════════
-
-class _Header extends StatelessWidget {
-  const _Header({required this.isEditMode, required this.onDelete});
-
-  final bool isEditMode;
-  final VoidCallback onDelete;
 
   @override
   Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.lg,
-        vertical: AppDimensions.sm,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: IconButton(
-              icon: Icon(Icons.arrow_back, color: AppColors.textPrimary),
-              onPressed: () => context.pop(),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                isEditMode
-                    ? 'geoZoneEdit.headerEdit'.tr()
-                    : 'geoZoneEdit.headerAdd'.tr(),
-                style: AppTextStyles.headlineL.copyWith(fontSize: 20),
-                overflow: TextOverflow.ellipsis,
+    // Zonalar o'zgarsa markerlarni qayta quramiz (real-time).
+    ref.listen<AsyncValue<List<GeoZone>>>(
+      geoZonesProvider(widget.childId),
+      (prev, next) {
+        final zones = next.valueOrNull;
+        if (zones != null) unawaited(_buildMarkers(zones));
+      },
+    );
+
+    final topPad = MediaQuery.of(context).padding.top;
+    final bottomPad = MediaQuery.of(context).padding.bottom;
+
+    return Scaffold(
+      backgroundColor: _bg,
+      body: LayoutBuilder(
+        builder: (context, constraints) {
+          final sheetMax = constraints.maxHeight * 0.78;
+          return Column(
+            children: [
+              Expanded(
+                child: Stack(
+                  children: [
+                    Positioned.fill(
+                      child: GoogleMap(
+                        initialCameraPosition: CameraPosition(
+                          target: _center,
+                          zoom: 15,
+                        ),
+                        style: _mapStyle,
+                        markers: _zoneMarkers,
+                        myLocationButtonEnabled: false,
+                        zoomControlsEnabled: false,
+                        mapToolbarEnabled: false,
+                        compassEnabled: false,
+                        onMapCreated: _onMapCreated,
+                        onCameraMove: (p) => _camTarget = p.target,
+                        onCameraIdle: _onCameraIdle,
+                      ),
+                    ),
+                    // Tepa qorong'i fade — sarlavha o'qiladigan bo'lsin.
+                    Positioned(
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: topPad + 130,
+                      child: const IgnorePointer(
+                        child: DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [_bg, Color(0x0000060A)],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    // Markaz pin (xarita markazini belgilaydi).
+                    const Center(
+                      child: IgnorePointer(
+                        child: Padding(
+                          padding: EdgeInsets.only(bottom: 48),
+                          child: _CenterPin(),
+                        ),
+                      ),
+                    ),
+                    // Header.
+                    Positioned(
+                      top: topPad + 10,
+                      left: 16,
+                      right: 16,
+                      child: _Header(
+                        title: _isEditMode
+                            ? 'geoZoneEdit.headerEdit'.tr()
+                            : 'geoZoneEdit.headerAdd'.tr(),
+                        onBack: () => context.pop(),
+                        onDelete: _isEditMode ? _confirmDelete : null,
+                      ),
+                    ),
+                  ],
+                ),
               ),
-            ),
-          ),
-          if (isEditMode)
-            SizedBox(
-              width: 48,
-              height: 48,
-              child: IconButton(
-                icon: Icon(Icons.delete_outline, color: AppColors.textPrimary),
-                onPressed: onDelete,
+              ConstrainedBox(
+                constraints: BoxConstraints(maxHeight: sheetMax),
+                child: _BottomSheet(
+                  bottomPad: bottomPad,
+                  address: _address,
+                  addrLoading: _addrLoading,
+                  center: _center,
+                  nameController: _nameController,
+                  onNameChanged: (_) => setState(() {}),
+                  selectedIcon: _selectedIcon,
+                  onIconSelected: (item) => setState(() {
+                    _selectedIcon = item.key;
+                    _type = item.type;
+                  }),
+                  saving: _saving,
+                  canSave: _isFormValid,
+                  onCancel: () => context.pop(),
+                  onSave: _onSave,
+                ),
               ),
-            )
-          else
-            const SizedBox(width: 48),
-        ],
+            ],
+          );
+        },
       ),
     );
   }
 }
 
-// ════════════════════════ SECTION TITLE ════════════════════════
+// ════════════ Markaz pin ════════════
 
-class _SectionTitle extends StatelessWidget {
-  const _SectionTitle(this.text);
-  final String text;
+class _CenterPin extends StatelessWidget {
+  const _CenterPin();
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 30,
+          height: 30,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            shape: BoxShape.circle,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 4),
+              ),
+            ],
+          ),
+          child: Center(
+            child: Container(
+              width: 12,
+              height: 12,
+              decoration: const BoxDecoration(
+                color: _sheetBg,
+                shape: BoxShape.circle,
+              ),
+            ),
+          ),
+        ),
+        Container(
+          width: 4,
+          height: 18,
+          decoration: const BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.vertical(bottom: Radius.circular(12)),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ════════════ Header ════════════
+
+class _Header extends StatelessWidget {
+  const _Header({required this.title, required this.onBack, this.onDelete});
+
+  final String title;
+  final VoidCallback onBack;
+  final VoidCallback? onDelete;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Container(
-          width: 3,
-          height: 16,
-          decoration: BoxDecoration(
-            color: AppColors.accent,
-            borderRadius: BorderRadius.circular(2),
+        _SquareIconButton(icon: Icons.arrow_back_rounded, onTap: onBack),
+        Expanded(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              title,
+              maxLines: 1,
+              style: _unb(24, ls: -0.72),
+            ),
           ),
         ),
-        const SizedBox(width: 8),
-        Text(
-          text,
-          style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
-        ),
+        if (onDelete != null)
+          _SquareIconButton(
+            icon: Icons.delete_outline_rounded,
+            onTap: onDelete!,
+          )
+        else
+          const SizedBox(width: 56),
       ],
     );
   }
 }
 
-// ════════════════════════ ICON PICKER ════════════════════════
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({required this.icon, required this.onTap});
 
-class _IconPicker extends StatelessWidget {
-  const _IconPicker({required this.selected, required this.onSelect});
-
-  final String selected;
-  final ValueChanged<String> onSelect;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Wrap(
-      spacing: AppDimensions.sm + 2,
-      runSpacing: AppDimensions.sm + 2,
-      children: GeoZone.availableIcons.map((iconName) {
-        final isSelected = iconName == selected;
-        return GestureDetector(
-          onTap: () => onSelect(iconName),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 180),
-            curve: Curves.easeOut,
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              gradient: isSelected
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [
-                        AppColors.primary,
-                        AppColors.primary.withValues(alpha: 0.78),
-                      ],
-                    )
-                  : null,
-              color: isSelected ? null : AppColors.surface,
-              border: Border.all(
-                color: isSelected ? AppColors.primary : AppColors.border,
-                width: isSelected ? 1.5 : 1,
-              ),
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: isSelected ? AppShadows.glow(AppColors.primary) : null,
-            ),
-            alignment: Alignment.center,
-            child: Icon(
-              GeoZone.iconFromString(iconName),
-              size: 25,
-              color: isSelected ? AppColors.onPrimary : AppColors.textSecondary,
-            ),
-          ),
-        );
-      }).toList(),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: _sheetBg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        child: Icon(icon, size: 24, color: Colors.white),
+      ),
     );
   }
 }
 
-// ════════════════════════ RADIUS SLIDER ════════════════════════
+// ════════════ Pastki panel ════════════
 
-class _RadiusSlider extends StatelessWidget {
-  const _RadiusSlider({required this.value, required this.onChanged});
-
-  final double value;
-  final ValueChanged<double> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          children: [
-            Container(
-              width: 3,
-              height: 16,
-              decoration: BoxDecoration(
-                color: AppColors.accent,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'geoZoneEdit.radiusLabel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w700),
-            ),
-            const Spacer(),
-            // Radius qiymati — accent pill.
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-              decoration: BoxDecoration(
-                color: AppColors.accent.withValues(alpha: 0.12),
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Text(
-                'geoZoneEdit.radiusValue'.tr(
-                  namedArgs: {'meters': '${value.round()}'},
-                ),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        SliderTheme(
-          data: SliderTheme.of(context).copyWith(
-            trackHeight: 5,
-            activeTrackColor: AppColors.primary,
-            inactiveTrackColor: AppColors.border,
-            thumbColor: AppColors.primary,
-            overlayColor: AppColors.primary.withValues(alpha: 0.2),
-            thumbShape: const RoundSliderThumbShape(),
-            trackShape: const RoundedRectSliderTrackShape(),
-          ),
-          child: Slider(
-            value: value,
-            min: 50,
-            max: 500,
-            divisions: 45,
-            onChanged: onChanged,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ════════════════════════ NOTIFICATION TOGGLES ════════════════════════
-
-class _NotificationToggles extends StatelessWidget {
-  const _NotificationToggles({
-    required this.notifyOnEnter,
-    required this.notifyOnExit,
-    required this.onEnterChanged,
-    required this.onExitChanged,
+class _BottomSheet extends StatelessWidget {
+  const _BottomSheet({
+    required this.bottomPad,
+    required this.address,
+    required this.addrLoading,
+    required this.center,
+    required this.nameController,
+    required this.onNameChanged,
+    required this.selectedIcon,
+    required this.onIconSelected,
+    required this.saving,
+    required this.canSave,
+    required this.onCancel,
+    required this.onSave,
   });
 
-  final bool notifyOnEnter;
-  final bool notifyOnExit;
-  final ValueChanged<bool> onEnterChanged;
-  final ValueChanged<bool> onExitChanged;
+  final double bottomPad;
+  final String? address;
+  final bool addrLoading;
+  final LatLng center;
+  final TextEditingController nameController;
+  final ValueChanged<String> onNameChanged;
+  final String selectedIcon;
+  final ValueChanged<_PickerIcon> onIconSelected;
+  final bool saving;
+  final bool canSave;
+  final VoidCallback onCancel;
+  final VoidCallback onSave;
+
+  String get _addressText {
+    final addr = address;
+    if (addr != null && addr.isNotEmpty) return addr;
+    if (addrLoading) return 'geoZoneEdit.addressLoading'.tr();
+    return '${center.latitude.toStringAsFixed(5)}, '
+        '${center.longitude.toStringAsFixed(5)}';
+  }
 
   @override
   Widget build(BuildContext context) {
-    return SettingsCard(
-      accent: AppColors.info,
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: 4,
+    return Container(
+      decoration: const BoxDecoration(
+        color: _sheetBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+        border: Border(
+          top: BorderSide(color: _border),
+          left: BorderSide(color: _border),
+          right: BorderSide(color: _border),
+        ),
       ),
+      padding: EdgeInsets.fromLTRB(16, 16, 16, 16 + bottomPad),
       child: Column(
+        mainAxisSize: MainAxisSize.min,
         children: [
-          _ToggleRow(
-            icon: Icons.login_rounded,
-            iconColor: AppColors.accent,
-            label: 'geoZoneEdit.notifyOnEnter'.tr(),
-            value: notifyOnEnter,
-            onChanged: onEnterChanged,
+          Flexible(
+            child: SingleChildScrollView(
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _FieldLabel('geoZoneEdit.addressLabel'.tr()),
+                  const SizedBox(height: 8),
+                  _DisplayPill(text: _addressText, dim: address == null),
+                  const SizedBox(height: 16),
+                  _FieldLabel('geoZoneEdit.placeNameLabel'.tr()),
+                  const SizedBox(height: 8),
+                  _NamePill(
+                    controller: nameController,
+                    onChanged: onNameChanged,
+                  ),
+                  const SizedBox(height: 16),
+                  _FieldLabel('geoZoneEdit.chooseIconLabel'.tr()),
+                  const SizedBox(height: 10),
+                  _IconPickerRow(
+                    selected: selectedIcon,
+                    onSelected: onIconSelected,
+                  ),
+                ],
+              ),
+            ),
           ),
-          Divider(color: AppColors.border, height: 1),
-          _ToggleRow(
-            icon: Icons.logout_rounded,
-            iconColor: AppColors.error,
-            label: 'geoZoneEdit.notifyOnExit'.tr(),
-            value: notifyOnExit,
-            onChanged: onExitChanged,
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              Expanded(
+                child: GestureDetector(
+                  onTap: onCancel,
+                  behavior: HitTestBehavior.opaque,
+                  child: ParvozGlass(
+                    height: 54,
+                    child: Text(
+                      'geoZoneEdit.cancelButton'.tr(),
+                      style: _pop(16, w: FontWeight.w500),
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Opacity(
+                  opacity: canSave ? 1 : 0.5,
+                  child: GestureDetector(
+                    onTap: (canSave && !saving) ? onSave : null,
+                    behavior: HitTestBehavior.opaque,
+                    child: ParvozGlass(
+                      blue: true,
+                      height: 54,
+                      child: saving
+                          ? const SizedBox(
+                              width: 22,
+                              height: 22,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.4,
+                                color: Colors.white,
+                              ),
+                            )
+                          : Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Text(
+                                  'geoZoneEdit.saveButton'.tr(),
+                                  style: _pop(16, w: FontWeight.w500),
+                                ),
+                                const SizedBox(width: 8),
+                                const Icon(
+                                  Icons.check_rounded,
+                                  size: 18,
+                                  color: Colors.white,
+                                ),
+                              ],
+                            ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
@@ -584,49 +745,171 @@ class _NotificationToggles extends StatelessWidget {
   }
 }
 
-class _ToggleRow extends StatelessWidget {
-  const _ToggleRow({
-    required this.icon,
-    required this.iconColor,
-    required this.label,
-    required this.value,
-    required this.onChanged,
-  });
+class _FieldLabel extends StatelessWidget {
+  const _FieldLabel(this.text);
 
-  final IconData icon;
-  final Color iconColor;
-  final String label;
-  final bool value;
-  final ValueChanged<bool> onChanged;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
-      child: Row(
-        children: [
-          Container(
-            width: 34,
-            height: 34,
-            decoration: BoxDecoration(
-              color: iconColor.withValues(alpha: 0.12),
-              shape: BoxShape.circle,
-            ),
-            alignment: Alignment.center,
-            child: Icon(icon, size: 18, color: iconColor),
+      padding: const EdgeInsets.only(left: 12),
+      child: Text(text, style: _pop(14)),
+    );
+  }
+}
+
+/// Faqat ko'rsatish uchun (reverse-geocode manzil) — qora pill.
+class _DisplayPill extends StatelessWidget {
+  const _DisplayPill({required this.text, required this.dim});
+
+  final String text;
+  final bool dim;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 54,
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: _sheetBg,
+        borderRadius: BorderRadius.circular(60),
+        border: Border.all(color: _border),
+      ),
+      alignment: Alignment.centerLeft,
+      child: Text(
+        text,
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+        style: _pop(14, c: dim ? _dim : Colors.white),
+      ),
+    );
+  }
+}
+
+/// Nom kiritish — qora pill ichida shaffof TextField (ko'k kursor).
+class _NamePill extends StatelessWidget {
+  const _NamePill({required this.controller, required this.onChanged});
+
+  final TextEditingController controller;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 54,
+      padding: const EdgeInsets.symmetric(horizontal: 20),
+      decoration: BoxDecoration(
+        color: _sheetBg,
+        borderRadius: BorderRadius.circular(60),
+        border: Border.all(color: _border),
+      ),
+      alignment: Alignment.center,
+      child: TextSelectionTheme(
+        data: const TextSelectionThemeData(
+          cursorColor: _blue,
+          selectionHandleColor: _blue,
+          selectionColor: Color(0x5C216BFF),
+        ),
+        child: TextField(
+          controller: controller,
+          onChanged: onChanged,
+          cursorColor: _blue,
+          style: _pop(14),
+          decoration: InputDecoration(
+            filled: false,
+            isCollapsed: true,
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            hintText: 'geoZoneEdit.nameHint'.tr(),
+            hintStyle: _pop(14, c: Colors.white.withValues(alpha: 0.35)),
           ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Text(
-              label,
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textPrimary,
-                fontWeight: FontWeight.w500,
+        ),
+      ),
+    );
+  }
+}
+
+/// Belgi tanlash — gorizontal Solar ikonalar qatori.
+class _IconPickerRow extends StatelessWidget {
+  const _IconPickerRow({required this.selected, required this.onSelected});
+
+  final String selected;
+  final ValueChanged<_PickerIcon> onSelected;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 72,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.only(top: 8),
+        itemCount: _pickerIcons.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (context, i) {
+          final item = _pickerIcons[i];
+          return _IconPickerBtn(
+            item: item,
+            selected: item.key == selected,
+            onTap: () => onSelected(item),
+          );
+        },
+      ),
+    );
+  }
+}
+
+class _IconPickerBtn extends StatelessWidget {
+  const _IconPickerBtn({
+    required this.item,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final _PickerIcon item;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 64,
+        height: 64,
+        child: Stack(
+          clipBehavior: Clip.none,
+          children: [
+            Container(
+              width: 64,
+              height: 64,
+              decoration: BoxDecoration(
+                color: _iconBtnBg,
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color:
+                      selected ? const Color(0xFF2D6FFF) : Colors.transparent,
+                ),
+              ),
+              child: Center(
+                child: SvgPicture.asset(item.asset, width: 28, height: 28),
               ),
             ),
-          ),
-          AppSwitch(value: value, onChanged: onChanged),
-        ],
+            if (selected)
+              Positioned(
+                top: -8,
+                right: -6,
+                child: SvgPicture.asset(
+                  'assets/icons/solar_check_circle.svg',
+                  width: 24,
+                  height: 24,
+                ),
+              ),
+          ],
+        ),
       ),
     );
   }
