@@ -29,8 +29,7 @@ const _bg = Color(0xFF00060A);
 const _blue = Color(0xFF216BFF);
 const _surface = Color(0xFF11161D); // kalendar / sheet yuzasi
 const _stepInactive = Color(0xFF1B2128); // nofaol qadam doirasi
-const _fieldFill = Color(0x0DFFFFFF); // oq 5%
-const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
+const _fieldBorder = Color(0x1FFFFFFF); // oq 12% (login/register input rimi)
 const _line = Color(0x1AFFFFFF); // qadam chizig'i (oq 10%)
 const _dim = Color(0x8CFFFFFF); // oq 55%
 
@@ -296,9 +295,17 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                         const SizedBox(height: 24),
                         const _StepIndicator(),
                         const SizedBox(height: 32),
-                        Text(
-                          'childManagement.addEdit.formTitleAdd'.tr(),
-                          style: _unb(27),
+                        SizedBox(
+                          width: double.infinity,
+                          child: FittedBox(
+                            fit: BoxFit.scaleDown,
+                            alignment: Alignment.centerLeft,
+                            child: Text(
+                              'childManagement.addEdit.formTitleAdd'.tr(),
+                              maxLines: 1,
+                              style: _unb(28),
+                            ),
+                          ),
                         ),
                         const SizedBox(height: 8),
                         Text(
@@ -306,22 +313,22 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                           style: _pop(14, c: _dim),
                         ),
                         const SizedBox(height: 28),
-                        _TextField(
+                        ParvozTextField(
                           label: 'childManagement.addEdit.nameFieldLabel'.tr(),
                           controller: _nameController,
                           hint: 'childManagement.addEdit.nameHint'.tr(),
                           onChanged: (_) => setState(() {}),
                         ),
                         const SizedBox(height: 20),
-                        _TapField(
+                        _PillTapField(
                           label: 'childManagement.addEdit.birthDateLabel'.tr(),
                           value: birthText,
                           hint: 'childManagement.addEdit.birthDateHint'.tr(),
-                          icon: SolarIconsOutline.calendar,
+                          icon: SolarIconsBold.calendar,
                           onTap: _pickDate,
                         ),
                         const SizedBox(height: 20),
-                        _TextField(
+                        ParvozTextField(
                           label:
                               'childManagement.addEdit.phoneFieldLabel'.tr(),
                           controller: _phoneController,
@@ -329,12 +336,12 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                           keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 20),
-                        _TapField(
+                        _PillTapField(
                           label:
                               'childManagement.addEdit.genderFieldLabel'.tr(),
                           value: genderLabel,
                           hint: 'childManagement.addEdit.genderHint'.tr(),
-                          icon: SolarIconsOutline.altArrowDown,
+                          icon: SolarIconsBold.altArrowDown,
                           onTap: _pickGender,
                         ),
                         const SizedBox(height: 24),
@@ -394,11 +401,11 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        _StepCircle(icon: SolarIconsBold.userRounded, active: true),
+        _StepCircle(icon: SolarIconsBold.peopleNearby, active: true),
         _StepLine(),
         _StepCircle(icon: SolarIconsBold.clipboardCheck),
         _StepLine(),
-        _StepCircle(icon: SolarIconsBold.book2),
+        _StepCircle(icon: SolarIconsBold.map),
       ],
     );
   }
@@ -455,111 +462,10 @@ class _StepLine extends StatelessWidget {
 
 // ════════════ Maydonlar ════════════
 
-class _FieldLabel extends StatelessWidget {
-  const _FieldLabel(this.text);
-
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4, bottom: 8),
-      child: Text(text, style: _pop(14)),
-    );
-  }
-}
-
-/// Matn kiritish maydoni — yorliq + dumaloq quti (fokusda ko'k rim).
-class _TextField extends StatefulWidget {
-  const _TextField({
-    required this.label,
-    required this.controller,
-    this.hint,
-    this.keyboardType,
-    this.onChanged,
-  });
-
-  final String label;
-  final TextEditingController controller;
-  final String? hint;
-  final TextInputType? keyboardType;
-  final ValueChanged<String>? onChanged;
-
-  @override
-  State<_TextField> createState() => _TextFieldState();
-}
-
-class _TextFieldState extends State<_TextField> {
-  final _focus = FocusNode();
-
-  @override
-  void initState() {
-    super.initState();
-    _focus.addListener(_onFocus);
-  }
-
-  void _onFocus() => setState(() {});
-
-  @override
-  void dispose() {
-    _focus
-      ..removeListener(_onFocus)
-      ..dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final focused = _focus.hasFocus;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _FieldLabel(widget.label),
-        Container(
-          height: 58,
-          padding: const EdgeInsets.symmetric(horizontal: 20),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _fieldFill,
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: focused ? _blue : _fieldBorder,
-              width: focused ? 1.5 : 1,
-            ),
-          ),
-          child: TextSelectionTheme(
-            data: const TextSelectionThemeData(
-              cursorColor: _blue,
-              selectionHandleColor: _blue,
-              selectionColor: Color(0x5C216BFF),
-            ),
-            child: TextField(
-              controller: widget.controller,
-              focusNode: _focus,
-              keyboardType: widget.keyboardType,
-              onChanged: widget.onChanged,
-              cursorColor: _blue,
-              style: _pop(15),
-              decoration: InputDecoration(
-                filled: false,
-                isCollapsed: true,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                hintText: widget.hint,
-                hintStyle: _pop(15, c: Colors.white.withValues(alpha: 0.32)),
-              ),
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// Bosiladigan maydon (sana / jins) — qiymat + o'ng ikon.
-class _TapField extends StatelessWidget {
-  const _TapField({
+/// Bosiladigan pill-maydon (sana / jins) — login/register input'lari bilan
+/// bir xil shisha pill ko'rinishi, o'ngda Solar ikon.
+class _PillTapField extends StatelessWidget {
+  const _PillTapField({
     required this.label,
     required this.hint,
     required this.icon,
@@ -579,36 +485,49 @@ class _TapField extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _FieldLabel(label),
+        Text(
+          label,
+          style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
+        ),
+        const SizedBox(height: 10),
         GestureDetector(
           onTap: onTap,
           behavior: HitTestBehavior.opaque,
-          child: Container(
-            height: 58,
-            padding: const EdgeInsets.symmetric(horizontal: 20),
+          child: DecoratedBox(
             decoration: BoxDecoration(
-              color: _fieldFill,
-              borderRadius: BorderRadius.circular(16),
-              border: Border.all(color: _fieldBorder),
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.white.withValues(alpha: 0.08),
+                  Colors.white.withValues(alpha: 0.03),
+                ],
+              ),
+              border: Border.all(color: _fieldBorder, width: 1.2),
             ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: Text(
-                    hasValue ? value! : hint,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _pop(
-                      15,
-                      c: hasValue
-                          ? Colors.white
-                          : Colors.white.withValues(alpha: 0.32),
+            child: Padding(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 20, vertical: 18),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: Text(
+                      hasValue ? value! : hint,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: hasValue
+                            ? Colors.white
+                            : Colors.white.withValues(alpha: 0.35),
+                      ),
                     ),
                   ),
-                ),
-                const SizedBox(width: 10),
-                Icon(icon, size: 22, color: _dim),
-              ],
+                  const SizedBox(width: 10),
+                  Icon(icon, size: 22, color: _dim),
+                ],
+              ),
             ),
           ),
         ),
