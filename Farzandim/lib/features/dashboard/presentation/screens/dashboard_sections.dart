@@ -85,10 +85,7 @@ class _Header extends ConsumerWidget {
                   height: 134,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
-                    gradient: RadialGradient(
-                      colors: [Color(0xFF1A2230), Color(0xFF0B1119)],
-                      stops: [0.5, 1],
-                    ),
+                    color: Color(0xFF1A1F26),
                   ),
                   child: Center(
                     child: Stack(
@@ -763,7 +760,7 @@ class _ActionCard extends StatelessWidget {
     required this.onTap,
   });
 
-  final IconData icon;
+  final Widget icon;
   final String label;
   final VoidCallback onTap;
 
@@ -777,8 +774,8 @@ class _ActionCard extends StatelessWidget {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(icon, size: 28, color: Colors.white),
-            const SizedBox(height: 10),
+            icon,
+            const SizedBox(height: 12),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -869,6 +866,11 @@ class _BottomBar extends StatelessWidget {
                           active: i == selectedIndex,
                           onTap: () => onSelect(i),
                         ),
+                      // 1 yoki 2 bola bo'lsa "+" (qo'shish); 3 ta bo'lsa yo'q.
+                      if (children.length < _kMaxChildren)
+                        _AddSwitcherButton(
+                          onTap: () => context.push(AppRoutes.addChild),
+                        ),
                     ],
                   ),
                 ),
@@ -892,6 +894,103 @@ class _BottomBar extends StatelessWidget {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Almashtirgich "+" — yangi bola qo'shish (faqat bolalar < 3 bo'lganda).
+class _AddSwitcherButton extends StatelessWidget {
+  const _AddSwitcherButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        margin: const EdgeInsets.only(left: 2),
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: Colors.white.withValues(alpha: 0.08),
+        ),
+        child: const Icon(Icons.add_rounded, size: 22, color: Colors.white),
+      ),
+    );
+  }
+}
+
+/// Uzun ismni chap tomonga silliq surib ko'rsatuvchi matn (marquee). Ism
+/// [maxWidth]'dan kalta bo'lsa oddiy matn; uzun bo'lsa avtomatik suriladi.
+class _MarqueeText extends StatefulWidget {
+  const _MarqueeText({
+    required this.text,
+    required this.style,
+    required this.maxWidth,
+  });
+
+  final String text;
+  final TextStyle style;
+  final double maxWidth;
+
+  @override
+  State<_MarqueeText> createState() => _MarqueeTextState();
+}
+
+class _MarqueeTextState extends State<_MarqueeText>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _ctrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2800),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final tp = TextPainter(
+      text: TextSpan(text: widget.text, style: widget.style),
+      maxLines: 1,
+      textDirection: Directionality.of(context),
+    )..layout();
+    final label = Text(
+      widget.text,
+      maxLines: 1,
+      softWrap: false,
+      overflow: TextOverflow.visible,
+      style: widget.style,
+    );
+    final overflow = tp.width - widget.maxWidth;
+    if (overflow <= 0) return label;
+
+    return ClipRect(
+      child: SizedBox(
+        width: widget.maxWidth,
+        child: AnimatedBuilder(
+          animation: _ctrl,
+          builder: (context, child) {
+            final t = Curves.easeInOut.transform(_ctrl.value);
+            return Transform.translate(
+              offset: Offset(-overflow * t, 0),
+              child: child,
+            );
+          },
+          child: Align(alignment: Alignment.centerLeft, child: label),
         ),
       ),
     );
@@ -931,14 +1030,10 @@ class _SwitcherItem extends StatelessWidget {
             ChildAvatar(child: child, size: 44, showBorder: false),
             if (active) ...[
               const SizedBox(width: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: 110),
-                child: Text(
-                  child.name,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _pop(16, w: FontWeight.w500),
-                ),
+              _MarqueeText(
+                text: child.name,
+                style: _pop(16, w: FontWeight.w500),
+                maxWidth: 110,
               ),
             ],
           ],

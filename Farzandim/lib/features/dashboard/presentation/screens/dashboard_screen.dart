@@ -283,7 +283,11 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                         children: [
                           Expanded(
                             child: _ActionCard(
-                              icon: Icons.lock_clock_rounded,
+                              icon: SvgPicture.asset(
+                                'assets/icons/ic_restrict.svg',
+                                width: 30,
+                                height: 30,
+                              ),
                               label: 'dashboard.quickActions.appRestrictions'
                                   .tr(),
                               onTap: () => context.push(
@@ -294,7 +298,11 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                           const SizedBox(width: 4),
                           Expanded(
                             child: _ActionCard(
-                              icon: Icons.insights_rounded,
+                              icon: SvgPicture.asset(
+                                'assets/icons/ic_report.svg',
+                                width: 30,
+                                height: 30,
+                              ),
                               label: 'dashboard.quickActions.weeklyReport'.tr(),
                               onTap: () => context.push(
                                 AppRoutes.weeklyReportPath(child.id),
