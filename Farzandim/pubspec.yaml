@@ -185,6 +185,7 @@ dependencies:
   # tel:/mailto:/https: URI'larni native dialer/email/browser bilan
   # ochish. SOS dialog'dagi "Qo'ng'iroq" tugmasi `tel:+998...` URI bilan
   # telefon dialer'ini ochadi (Sprint 4.1).
+  solar_icons: ^0.1.0
   url_launcher: ^6.3.1
 
   # video_compress — Telegram round video uchun client-side compression
