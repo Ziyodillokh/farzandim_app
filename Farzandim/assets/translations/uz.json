@@ -861,6 +861,31 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "controlsSetup": {
+    "title": "Nazorat o'rnating",
+    "subtitle": "Farzandingiz qurilmasi uchun cheklovlarni sozlang",
+    "blockApps": {
+      "title": "Ilovalarni bloklash",
+      "empty": "Hali bloklangan ilovalar yo'q",
+      "count": "{count} ta ilova bloklangan"
+    },
+    "timeLimit": {
+      "title": "Kunlik vaqt limiti",
+      "empty": "Hali limit o'rnatilmagan",
+      "count": "{count} ta limit o'rnatilgan"
+    },
+    "schedules": {
+      "title": "Rejimlar",
+      "empty": "Hali rejimlar o'rnatilmagan",
+      "count": "{count} ta rejim"
+    },
+    "unknownSources": {
+      "title": "Notanish manbaalar",
+      "subtitle": "Notanish manbaalarni bloklash",
+      "errorSnack": "Saqlashda xatolik. Qaytadan urinib ko'ring"
+    },
+    "next": "Keyingisi"
+  },
   "childManagement": {
     "list": {
       "title": "Bolalar",

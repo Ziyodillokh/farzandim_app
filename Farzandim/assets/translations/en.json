@@ -861,6 +861,31 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "controlsSetup": {
+    "title": "Set up controls",
+    "subtitle": "Configure restrictions for your child's device",
+    "blockApps": {
+      "title": "Block apps",
+      "empty": "No blocked apps yet",
+      "count": "{count} apps blocked"
+    },
+    "timeLimit": {
+      "title": "Daily time limit",
+      "empty": "No limit set yet",
+      "count": "{count} limits set"
+    },
+    "schedules": {
+      "title": "Schedules",
+      "empty": "No schedules set yet",
+      "count": "{count} schedules"
+    },
+    "unknownSources": {
+      "title": "Unknown sources",
+      "subtitle": "Block unknown sources",
+      "errorSnack": "Save failed. Please try again"
+    },
+    "next": "Next"
+  },
   "childManagement": {
     "list": {
       "title": "Children",

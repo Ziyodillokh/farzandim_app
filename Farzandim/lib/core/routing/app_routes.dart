@@ -41,6 +41,12 @@ class AppRoutes {
 
   static String familyCodePath(String childId) => '/family-code/$childId';
 
+  /// Nazorat o'rnatish ekrani — bola qo'shilgandan keyin (oila kodidan oldin).
+  /// Navigatsiya uchun [controlsSetupPath]'dan foydalaning.
+  static const String controlsSetupPattern = '/controls-setup/:childId';
+
+  static String controlsSetupPath(String childId) => '/controls-setup/$childId';
+
   /// Bildirishnomalar ekrani.
   static const String notifications = '/notifications';
 

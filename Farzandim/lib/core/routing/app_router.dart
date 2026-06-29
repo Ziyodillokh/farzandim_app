@@ -27,6 +27,7 @@ import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/screens/add_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
+import 'package:farzandim/features/child_management/presentation/screens/controls_setup_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
 import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
@@ -289,6 +290,17 @@ List<RouteBase> buildAppRoutes() {
     // Oila kodi ekrani — bola qo'shilgandan keyin shu yerga keladi.
     // `state.extra` orqali yangi yaratilgan Child obyekti yuboriladi
     // (childrenProvider yangilanish race condition'ini bartaraf etish).
+    // Nazorat o'rnatish — bola qo'shilgandan keyin (oila kodidan oldin).
+    GoRoute(
+      path: AppRoutes.controlsSetupPattern,
+      pageBuilder: (context, state) => _slidePage(
+        ControlsSetupScreen(
+          childId: state.pathParameters['childId']!,
+          initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
+    ),
+
     GoRoute(
       path: AppRoutes.familyCodePattern,
       pageBuilder: (context, state) => _slidePage(

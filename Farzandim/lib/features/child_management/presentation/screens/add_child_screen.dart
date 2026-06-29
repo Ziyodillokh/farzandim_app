@@ -306,7 +306,11 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (result.isSuccess) {
-      context.go(AppRoutes.familyCodePath(result.data!.id), extra: result.data);
+      // Bola yaratildi → nazorat o'rnatish (2-qadam), so'ng oila kodi.
+      context.go(
+        AppRoutes.controlsSetupPath(result.data!.id),
+        extra: result.data,
+      );
     } else {
       _showError(result.error);
     }
