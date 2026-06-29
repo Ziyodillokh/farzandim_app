@@ -861,6 +861,43 @@
     "fallbackVideoName": "видео",
     "fallbackDocumentName": "документ"
   },
+  "blockApps": {
+    "title": "Блокировка приложений",
+    "tabApps": "Блокировать приложения",
+    "tabCategories": "Блокировать категории",
+    "appsCount": "{count} приложений",
+    "save": "Сохранить",
+    "saved": "Сохранено",
+    "saveError": "Ошибка сохранения",
+    "loadError": "Не удалось загрузить",
+    "emptyApps": "Список приложений появится, когда устройство ребёнка подключится",
+    "emptyCategories": "Категории появятся, когда устройство ребёнка подключится"
+  },
+  "controlsSetup": {
+    "title": "Настройте контроль",
+    "subtitle": "Настройте ограничения для устройства ребёнка",
+    "blockApps": {
+      "title": "Блокировка приложений",
+      "empty": "Заблокированных приложений пока нет",
+      "count": "Заблокировано приложений: {count}"
+    },
+    "timeLimit": {
+      "title": "Дневной лимит времени",
+      "empty": "Лимит пока не установлен",
+      "count": "Установлено лимитов: {count}"
+    },
+    "schedules": {
+      "title": "Режимы",
+      "empty": "Режимы пока не настроены",
+      "count": "Режимов: {count}"
+    },
+    "unknownSources": {
+      "title": "Неизвестные источники",
+      "subtitle": "Блокировать неизвестные источники",
+      "errorSnack": "Ошибка сохранения. Попробуйте ещё раз"
+    },
+    "next": "Далее"
+  },
   "childManagement": {
     "list": {
       "title": "Дети",
@@ -890,12 +927,16 @@
       "nameFieldLabel": "Имя ребёнка",
       "birthDateLabel": "Дата рождения ребёнка",
       "birthDateHint": "Выберите дату рождения",
+      "birthDatePlaceholder": "ДД.ММ.ГГГГ",
       "phoneFieldLabel": "Номер телефона ребёнка",
       "genderFieldLabel": "Пол ребёнка",
       "genderHint": "Выберите пол",
       "nextButton": "Далее",
       "editTitle": "Редактирование ребёнка",
-      "photoLabel": "Фото",
+      "photoLabel": "Фото профиля ребёнка",
+      "photoUpload": "Загрузить фото",
+      "photoGallery": "Из галереи",
+      "photoCamera": "С камеры",
       "nameLabel": "Имя",
       "nameHint": "Введите имя",
       "phoneLabel": "Номер телефона (необязательно)",

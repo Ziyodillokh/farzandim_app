@@ -17,6 +17,7 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/add_account_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -27,6 +28,7 @@ import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/screens/add_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
+import 'package:farzandim/features/child_management/presentation/screens/controls_setup_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
 import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
@@ -289,6 +291,17 @@ List<RouteBase> buildAppRoutes() {
     // Oila kodi ekrani — bola qo'shilgandan keyin shu yerga keladi.
     // `state.extra` orqali yangi yaratilgan Child obyekti yuboriladi
     // (childrenProvider yangilanish race condition'ini bartaraf etish).
+    // Nazorat o'rnatish — bola qo'shilgandan keyin (oila kodidan oldin).
+    GoRoute(
+      path: AppRoutes.controlsSetupPattern,
+      pageBuilder: (context, state) => _slidePage(
+        ControlsSetupScreen(
+          childId: state.pathParameters['childId']!,
+          initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
+    ),
+
     GoRoute(
       path: AppRoutes.familyCodePattern,
       pageBuilder: (context, state) => _slidePage(
@@ -434,6 +447,12 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.appLimitsPattern,
       pageBuilder: (context, state) => _slidePage(
         AppLimitsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.blockAppsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        BlockAppsScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

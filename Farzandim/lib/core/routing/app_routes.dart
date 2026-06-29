@@ -41,6 +41,12 @@ class AppRoutes {
 
   static String familyCodePath(String childId) => '/family-code/$childId';
 
+  /// Nazorat o'rnatish ekrani — bola qo'shilgandan keyin (oila kodidan oldin).
+  /// Navigatsiya uchun [controlsSetupPath]'dan foydalaning.
+  static const String controlsSetupPattern = '/controls-setup/:childId';
+
+  static String controlsSetupPath(String childId) => '/controls-setup/$childId';
+
   /// Bildirishnomalar ekrani.
   static const String notifications = '/notifications';
 
@@ -162,6 +168,12 @@ class AppRoutes {
 
   /// Berilgan bola id'si uchun App Limits path.
   static String appLimitsPath(String childId) => '/app-limits/$childId';
+
+  /// "Ilovalarni bloklash" — per-app + kategoriya bloklash ekrani.
+  static const String blockAppsPattern = '/block-apps/:childId';
+
+  /// Berilgan bola id'si uchun Block Apps path.
+  static String blockAppsPath(String childId) => '/block-apps/$childId';
 
   /// Bola jadvali (Schedules feature — Firestore CRUD).
   /// `:childId` — qaysi bolaning jadvallari (per-child).

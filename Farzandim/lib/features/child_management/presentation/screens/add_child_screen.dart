@@ -11,17 +11,23 @@
 // yoshdan taxminiy sana tiklanadi (yosh aniq round-trip bo'ladi). Hudud
 // bu dizaynda yo'q — bo'sh yuboriladi (repo bo'sh hududni o'tkazib yuboradi).
 
+import 'dart:typed_data';
+import 'dart:ui' show ImageFilter;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Parvoz tokenlar (lokal) ════════════
@@ -72,6 +78,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   final _phoneController = TextEditingController();
   DateTime? _birthDate;
   Gender? _selectedGender;
+  Uint8List? _photoBytes; // foydalanuvchi tanlagan rasm (yangi/almashtirilgan)
   bool _isSaving = false;
   int? _initialAge; // edit: backenddagi asliy yosh
   bool _birthDateChanged = false; // foydalanuvchi sanani o'zgartirdimi
@@ -198,6 +205,49 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
     if (picked != null) setState(() => _selectedGender = picked);
   }
 
+  /// Profil rasmini tanlash — galereya yoki kamera (sheet) → bytes state'ga.
+  Future<void> _pickPhoto() async {
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: _surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 8),
+            ListTile(
+              leading: const Icon(SolarIconsBold.gallery, color: _blue),
+              title: Text(
+                'childManagement.addEdit.photoGallery'.tr(),
+                style: _pop(16),
+              ),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+            ),
+            ListTile(
+              leading: const Icon(SolarIconsBold.camera, color: _blue),
+              title: Text(
+                'childManagement.addEdit.photoCamera'.tr(),
+                style: _pop(16),
+              ),
+              onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+            ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+    if (source == null) return;
+    final service = ref.read(imagePickerServiceProvider);
+    final bytes = source == ImageSource.gallery
+        ? await service.pickFromGallery()
+        : await service.pickFromCamera();
+    if (!mounted || bytes == null) return;
+    setState(() => _photoBytes = bytes);
+  }
+
   Future<void> _onSave() async {
     if (!_isFormValid || _isSaving) return;
     setState(() => _isSaving = true);
@@ -230,7 +280,11 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
         region: existing.region,
         phoneNumber: phone,
       );
-      final result = await actions.updateChild(widget.childId!, updated);
+      final result = await actions.updateChild(
+        widget.childId!,
+        updated,
+        newPhotoBytes: _photoBytes,
+      );
       if (!mounted) return;
       setState(() => _isSaving = false);
       if (result.isSuccess) {
@@ -247,11 +301,16 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
       gender: _selectedGender!,
       region: '',
       phoneNumber: phone,
+      photoBytes: _photoBytes,
     );
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (result.isSuccess) {
-      context.go(AppRoutes.familyCodePath(result.data!.id), extra: result.data);
+      // Bola yaratildi → nazorat o'rnatish (2-qadam), so'ng oila kodi.
+      context.go(
+        AppRoutes.controlsSetupPath(result.data!.id),
+        extra: result.data,
+      );
     } else {
       _showError(result.error);
     }
@@ -270,6 +329,10 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   Widget build(BuildContext context) {
     final genderLabel = _selectedGender?.label;
     final birthText = _birthDate != null ? _fmtDate(_birthDate!) : null;
+    // Edit rejimida mavjud rasm avatar-preview'da ko'rsatiladi.
+    final existing = _isEditMode
+        ? ref.watch(childByIdProvider(widget.childId!))
+        : null;
     return Scaffold(
       backgroundColor: _bg,
       body: Stack(
@@ -310,27 +373,18 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                           'childManagement.addEdit.subtitle'.tr(),
                           style: _pop(14, c: _dim),
                         ),
-                        const SizedBox(height: 28),
+                        const SizedBox(height: 24),
+                        _PhotoRow(
+                          bytes: _photoBytes,
+                          existingChild: existing,
+                          onUpload: _pickPhoto,
+                        ),
+                        const SizedBox(height: 20),
                         ParvozTextField(
                           label: 'childManagement.addEdit.nameFieldLabel'.tr(),
                           controller: _nameController,
                           hint: 'childManagement.addEdit.nameHint'.tr(),
                           onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 20),
-                        _PillTapField(
-                          label: 'childManagement.addEdit.birthDateLabel'.tr(),
-                          value: birthText,
-                          hint: 'childManagement.addEdit.birthDateHint'.tr(),
-                          icon: SolarIconsBold.calendar,
-                          onTap: _pickDate,
-                        ),
-                        const SizedBox(height: 20),
-                        ParvozTextField(
-                          label: 'childManagement.addEdit.phoneFieldLabel'.tr(),
-                          controller: _phoneController,
-                          hint: 'childManagement.addEdit.phoneHint'.tr(),
-                          keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 20),
                         _PillTapField(
@@ -340,6 +394,22 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                           hint: 'childManagement.addEdit.genderHint'.tr(),
                           icon: SolarIconsBold.altArrowDown,
                           onTap: _pickGender,
+                        ),
+                        const SizedBox(height: 20),
+                        _PillTapField(
+                          label: 'childManagement.addEdit.birthDateLabel'.tr(),
+                          value: birthText,
+                          hint: 'childManagement.addEdit.birthDatePlaceholder'
+                              .tr(),
+                          icon: SolarIconsBold.calendar,
+                          onTap: _pickDate,
+                        ),
+                        const SizedBox(height: 20),
+                        ParvozTextField(
+                          label: 'childManagement.addEdit.phoneFieldLabel'.tr(),
+                          controller: _phoneController,
+                          hint: 'childManagement.addEdit.phoneHint'.tr(),
+                          keyboardType: TextInputType.phone,
                         ),
                         const SizedBox(height: 24),
                       ],
@@ -525,6 +595,151 @@ class _PillTapField extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ════════════ Profil rasmi qatori ════════════
+
+/// "Bolaning profil rasmi" qatori — avatar-preview + glass "Rasm yuklash".
+class _PhotoRow extends StatelessWidget {
+  const _PhotoRow({
+    required this.bytes,
+    required this.existingChild,
+    required this.onUpload,
+  });
+
+  final Uint8List? bytes;
+  final Child? existingChild;
+  final VoidCallback onUpload;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        _AvatarBox(bytes: bytes, existingChild: existingChild),
+        const SizedBox(width: 14),
+        Expanded(
+          child: Text(
+            'childManagement.addEdit.photoLabel'.tr(),
+            style: GoogleFonts.poppins(fontSize: 15, color: Colors.white),
+          ),
+        ),
+        const SizedBox(width: 12),
+        _GlassChip(
+          label: 'childManagement.addEdit.photoUpload'.tr(),
+          icon: SolarIconsBold.gallery,
+          onTap: onUpload,
+        ),
+      ],
+    );
+  }
+}
+
+/// Avatar-preview: tanlangan bytes → mavjud rasm → odam placeholder.
+class _AvatarBox extends StatelessWidget {
+  const _AvatarBox({required this.bytes, required this.existingChild});
+
+  final Uint8List? bytes;
+  final Child? existingChild;
+
+  static const double _d = 56;
+
+  @override
+  Widget build(BuildContext context) {
+    final picked = bytes;
+    if (picked != null) {
+      return Container(
+        width: _d,
+        height: _d,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: ClipOval(
+          child: Image.memory(
+            picked,
+            width: _d,
+            height: _d,
+            fit: BoxFit.cover,
+            cacheWidth: 160,
+          ),
+        ),
+      );
+    }
+    final child = existingChild;
+    if (child != null && child.hasCustomPhoto) {
+      return ChildAvatar(child: child, size: _d);
+    }
+    return Container(
+      width: _d,
+      height: _d,
+      decoration: BoxDecoration(
+        color: _surface,
+        shape: BoxShape.circle,
+        border: Border.all(color: _fieldBorder),
+      ),
+      child: const Icon(SolarIconsBold.user, size: 26, color: _dim),
+    );
+  }
+}
+
+/// Ixcham shisha (frosted) chip — secondary tugma uslubida.
+class _GlassChip extends StatelessWidget {
+  const _GlassChip({
+    required this.label,
+    required this.icon,
+    required this.onTap,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+          child: Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 11),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.white.withValues(alpha: 0.11),
+                  Colors.white.withValues(alpha: 0.025),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.2,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(icon, size: 16, color: Colors.white),
+                const SizedBox(width: 7),
+                Text(
+                  label,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: Colors.white,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
     );
   }
 }

@@ -861,6 +861,43 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "blockApps": {
+    "title": "Block apps",
+    "tabApps": "Block apps",
+    "tabCategories": "Block categories",
+    "appsCount": "{count} apps",
+    "save": "Save",
+    "saved": "Saved",
+    "saveError": "Save failed",
+    "loadError": "Couldn't load",
+    "emptyApps": "Apps will appear here once the child's device connects",
+    "emptyCategories": "Categories will appear once the child's device connects"
+  },
+  "controlsSetup": {
+    "title": "Set up controls",
+    "subtitle": "Configure restrictions for your child's device",
+    "blockApps": {
+      "title": "Block apps",
+      "empty": "No blocked apps yet",
+      "count": "{count} apps blocked"
+    },
+    "timeLimit": {
+      "title": "Daily time limit",
+      "empty": "No limit set yet",
+      "count": "{count} limits set"
+    },
+    "schedules": {
+      "title": "Schedules",
+      "empty": "No schedules set yet",
+      "count": "{count} schedules"
+    },
+    "unknownSources": {
+      "title": "Unknown sources",
+      "subtitle": "Block unknown sources",
+      "errorSnack": "Save failed. Please try again"
+    },
+    "next": "Next"
+  },
   "childManagement": {
     "list": {
       "title": "Children",
@@ -890,12 +927,16 @@
       "nameFieldLabel": "Your child's name",
       "birthDateLabel": "Your child's date of birth",
       "birthDateHint": "Select date of birth",
+      "birthDatePlaceholder": "DD.MM.YYYY",
       "phoneFieldLabel": "Your child's phone number",
       "genderFieldLabel": "Your child's gender",
       "genderHint": "Select gender",
       "nextButton": "Next",
       "editTitle": "Edit child details",
-      "photoLabel": "Photo",
+      "photoLabel": "Child's profile photo",
+      "photoUpload": "Upload photo",
+      "photoGallery": "From gallery",
+      "photoCamera": "From camera",
       "nameLabel": "Name",
       "nameHint": "Enter name",
       "phoneLabel": "Phone number (optional)",
