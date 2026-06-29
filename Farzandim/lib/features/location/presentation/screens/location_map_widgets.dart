@@ -152,7 +152,13 @@ class _NoLocationState extends StatelessWidget {
         child: Stack(
           children: [
             Padding(
-              padding: const EdgeInsets.all(AppDimensions.md),
+              // Tepadan pastroq (yuqori chetga yopishmasin).
+              padding: const EdgeInsets.fromLTRB(
+                AppDimensions.md,
+                AppDimensions.md + 44,
+                AppDimensions.md,
+                AppDimensions.md,
+              ),
               child: _TopBar(child: child),
             ),
             Center(
@@ -205,7 +211,13 @@ class _ErrorState extends StatelessWidget {
       child: Stack(
         children: [
           Padding(
-            padding: const EdgeInsets.all(AppDimensions.md),
+            // Tepadan pastroq (yuqori chetga yopishmasin).
+            padding: const EdgeInsets.fromLTRB(
+              AppDimensions.md,
+              AppDimensions.md + 44,
+              AppDimensions.md,
+              AppDimensions.md,
+            ),
             child: _TopBar(child: child),
           ),
           Center(

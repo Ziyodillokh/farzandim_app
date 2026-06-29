@@ -341,7 +341,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                     // Tepadan pastroq (yuqori chetga yopishmasin).
                     padding: const EdgeInsets.fromLTRB(
                       AppDimensions.md,
-                      AppDimensions.md + 34,
+                      AppDimensions.md + 44,
                       AppDimensions.md,
                       AppDimensions.md,
                     ),

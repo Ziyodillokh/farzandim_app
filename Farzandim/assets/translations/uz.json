@@ -339,8 +339,8 @@
     "confirmButton": "Tasdiqlash"
   },
   "geoZoneEdit": {
-    "headerAdd": "Yangi geo-zona",
-    "headerEdit": "Geo-zonani tahrirlash",
+    "headerAdd": "Yangi manzil",
+    "headerEdit": "Manzilni tahrirlash",
     "addressLabel": "Manzil",
     "addressLoading": "Aniqlanmoqda…",
     "placeNameLabel": "Manzil nomi",
@@ -359,8 +359,8 @@
     "updateButton": "Yangilash",
     "saveErrorPrefix": "Saqlashda xato: {error}",
     "deleteDialog": {
-      "title": "Geo-zonani o'chirish?",
-      "content": "{name} geo-zonasi butunlay o'chiriladi.",
+      "title": "Manzilni o'chirish?",
+      "content": "{name} manzili butunlay o'chiriladi.",
       "cancel": "Bekor qilish",
       "delete": "O'chirish"
     },
@@ -384,7 +384,7 @@
     }
   },
   "geoZones": {
-    "headerTitle": "Geo-zonalar",
+    "headerTitle": "Manzillar",
     "historyTooltip": "Tarix",
     "fallbackChildName": "Bola",
     "errorPrefix": "Xato: {error}",
@@ -394,9 +394,9 @@
       "viewLink": "Ko'rish"
     },
     "empty": {
-      "title": "Hali geo-zona qo'shilmagan",
+      "title": "Hali manzil qo'shilmagan",
       "subtitle": "Bola tez-tez boradigan joylarni belgilang. Bola kirsa yoki chiqsa sizga xabar keladi.",
-      "addButton": "Yangi geo-zona qo'shish"
+      "addButton": "Yangi manzil qo'shish"
     },
     "card": {
       "radius": "{meters}m radius"
