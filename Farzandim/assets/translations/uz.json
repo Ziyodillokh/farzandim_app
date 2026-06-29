@@ -861,6 +861,18 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "blockApps": {
+    "title": "Ilovalarni bloklash",
+    "tabApps": "Ilovlarni bloklash",
+    "tabCategories": "Kategoriyalarni bloklash",
+    "appsCount": "{count} ta ilova",
+    "save": "Saqlash",
+    "saved": "Saqlandi",
+    "saveError": "Saqlashda xatolik",
+    "loadError": "Yuklab bo'lmadi",
+    "emptyApps": "Bola qurilmasi ulanib, ilovalar ro'yxati kelgach shu yerda ko'rinadi",
+    "emptyCategories": "Bola qurilmasi ulangach kategoriyalar ko'rinadi"
+  },
   "controlsSetup": {
     "title": "Nazorat o'rnating",
     "subtitle": "Farzandingiz qurilmasi uchun cheklovlarni sozlang",

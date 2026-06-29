@@ -139,7 +139,7 @@ class ControlsSetupScreen extends ConsumerWidget {
                                   namedArgs: {'count': '$blockedCount'},
                                 ),
                           onTap: () => context.push(
-                            AppRoutes.appLimitsPath(childId),
+                            AppRoutes.blockAppsPath(childId),
                           ),
                         ),
                         const SizedBox(height: 12),
@@ -157,7 +157,7 @@ class ControlsSetupScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 12),
                         _NavCard(
-                          icon: SolarIconsBold.checklist,
+                          icon: SolarIconsBold.sortByTime,
                           title: 'controlsSetup.schedules.title'.tr(),
                           subtitle: scheduleCount == 0
                               ? 'controlsSetup.schedules.empty'.tr()
@@ -453,7 +453,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     return _CardShell(
       child: Row(
         children: [
-          const _IconChip(icon: SolarIconsBold.shieldWarning),
+          const _IconChip(icon: SolarIconsBold.questionCircle),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

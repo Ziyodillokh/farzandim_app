@@ -17,6 +17,7 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/theme_mode_provider.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_limits_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/app_restrictions_screen.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/add_account_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/forgot_password_screen.dart';
@@ -446,6 +447,12 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.appLimitsPattern,
       pageBuilder: (context, state) => _slidePage(
         AppLimitsScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.blockAppsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        BlockAppsScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

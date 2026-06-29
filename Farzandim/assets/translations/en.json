@@ -861,6 +861,18 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "blockApps": {
+    "title": "Block apps",
+    "tabApps": "Block apps",
+    "tabCategories": "Block categories",
+    "appsCount": "{count} apps",
+    "save": "Save",
+    "saved": "Saved",
+    "saveError": "Save failed",
+    "loadError": "Couldn't load",
+    "emptyApps": "Apps will appear here once the child's device connects",
+    "emptyCategories": "Categories will appear once the child's device connects"
+  },
   "controlsSetup": {
     "title": "Set up controls",
     "subtitle": "Configure restrictions for your child's device",
