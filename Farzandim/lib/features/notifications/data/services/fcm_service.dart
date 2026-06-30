@@ -115,13 +115,20 @@ class FcmService {
       // ST-08: ruxsat endi SHU yerda so'raladi — login muvaffaqiyatli
       // bo'lgach (dashboard ochilish payti), til-tanlash ustida emas.
       // Allaqachon berilgan/rad etilgan bo'lsa OS dialog ko'rsatmaydi.
-      await _messaging.requestPermission();
+      final settings = await _messaging.requestPermission();
+      // Foydalanuvchi bildirishnomani rad etgan/bloklagan — bu XATO emas,
+      // uning tanlovi. Token so'ramaymiz (web'da `permission-blocked`
+      // exception'iga olib keladi) va jimgina chiqamiz.
+      if (settings.authorizationStatus == AuthorizationStatus.denied) {
+        debugPrint("FCM: bildirishnoma ruxsati yo'q (push o'chiq).");
+        return;
+      }
       final token = await _messaging.getToken();
       if (token != null) {
         await saveTokenForCurrentUser(token);
       }
     } catch (e) {
-      debugPrint('FCM reRegisterToken xato: $e');
+      _logTokenError('reRegisterToken', e);
     }
   }
 
@@ -137,7 +144,18 @@ class FcmService {
         await saveTokenForCurrentUser(token);
       }
     } catch (e) {
-      debugPrint('FCM registerToken xato: $e');
+      _logTokenError('registerToken', e);
+    }
+  }
+
+  /// Token xatosini loglash. Bildirishnoma ruxsati bloklangan/rad etilgan
+  /// holat — foydalanuvchi tanlovi, "xato" emas; uni yumshoq info sifatida
+  /// loglaymiz (konsolda keraksiz qizil "xato" chiqmasin).
+  void _logTokenError(String op, Object e) {
+    if (e.toString().toLowerCase().contains('permission')) {
+      debugPrint("FCM $op: bildirishnoma ruxsati yo'q (push o'chiq).");
+    } else {
+      debugPrint('FCM $op xato: $e');
     }
   }
 
