@@ -134,7 +134,7 @@ class ControlsSetupScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 28),
                         _NavCard(
-                          icon: SolarIconsBold.widget,
+                          icon: SolarIconsBold.widget_6,
                           title: 'controlsSetup.blockApps.title'.tr(),
                           subtitle: blockedCount == 0
                               ? 'controlsSetup.blockApps.empty'.tr()
@@ -158,7 +158,7 @@ class ControlsSetupScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 12),
                         _NavCard(
-                          icon: SolarIconsBold.sortByTime,
+                          icon: SolarIconsOutline.sortByTime,
                           title: 'controlsSetup.schedules.title'.tr(),
                           subtitle: scheduleCount == 0
                               ? 'controlsSetup.schedules.empty'.tr()
@@ -243,8 +243,9 @@ class _StepIndicator extends StatelessWidget {
   Widget build(BuildContext context) {
     return const Row(
       children: [
-        _StepCircle(icon: SolarIconsBold.peopleNearby),
-        _StepLine(),
+        // 1-qadam bajarilgan (bola ma'lumotlari to'ldirilgan) — ko'k.
+        _StepCircle(icon: SolarIconsBold.peopleNearby, completed: true),
+        _StepLine(filled: true),
         _StepCircle(icon: SolarIconsBold.clipboardCheck, active: true),
         _StepLine(),
         _StepCircle(icon: SolarIconsBold.map),
@@ -254,20 +255,27 @@ class _StepIndicator extends StatelessWidget {
 }
 
 class _StepCircle extends StatelessWidget {
-  const _StepCircle({required this.icon, this.active = false});
+  const _StepCircle({
+    required this.icon,
+    this.active = false,
+    this.completed = false,
+  });
 
   final IconData icon;
   final bool active;
+  final bool completed;
 
   @override
   Widget build(BuildContext context) {
+    // Faol yoki bajarilgan qadam ko'k to'ldiriladi; yog'du faqat faolda.
+    final filled = active || completed;
     return Container(
       width: 50,
       height: 50,
       decoration: BoxDecoration(
         shape: BoxShape.circle,
-        color: active ? _blue : _stepInactive,
-        border: active ? null : Border.all(color: _fieldBorder),
+        color: filled ? _blue : _stepInactive,
+        border: filled ? null : Border.all(color: _fieldBorder),
         boxShadow: active
             ? [
                 BoxShadow(
@@ -282,21 +290,27 @@ class _StepCircle extends StatelessWidget {
       child: Icon(
         icon,
         size: 24,
-        color: active ? Colors.white : Colors.white.withValues(alpha: 0.75),
+        color: filled ? Colors.white : Colors.white.withValues(alpha: 0.75),
       ),
     );
   }
 }
 
 class _StepLine extends StatelessWidget {
-  const _StepLine();
+  const _StepLine({this.filled = false});
+
+  /// Bajarilgan qadamlar orasidagi chiziq ko'k bo'ladi.
+  final bool filled;
 
   @override
   Widget build(BuildContext context) {
-    return const Expanded(
+    return Expanded(
       child: Padding(
-        padding: EdgeInsets.symmetric(horizontal: 6),
-        child: SizedBox(height: 2, child: ColoredBox(color: _line)),
+        padding: const EdgeInsets.symmetric(horizontal: 6),
+        child: SizedBox(
+          height: 2,
+          child: ColoredBox(color: filled ? _blue : _line),
+        ),
       ),
     );
   }
@@ -337,7 +351,7 @@ class _CardShell extends StatelessWidget {
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: _card,
-          borderRadius: BorderRadius.circular(20),
+          borderRadius: BorderRadius.circular(28),
           border: Border.all(color: _fieldBorder),
         ),
         child: child,
