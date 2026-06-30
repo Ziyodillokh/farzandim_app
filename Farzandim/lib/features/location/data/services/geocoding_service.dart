@@ -19,6 +19,11 @@ class GeocodingService {
   final Dio _dio;
   final Map<String, String?> _cache = <String, String?>{};
 
+  /// REQUEST_DENIED (kalit/API config xatosi) bo'lsa `true` — HTTP geocoding
+  /// butun sessiyaga o'chiriladi (har koordinataga doomed so'rov + log spam
+  /// bo'lmasin). UI manzil o'rniga koordinata ko'rsatadi.
+  bool _httpDisabled = false;
+
   /// Koordinatani qisqa manzilga aylantiradi (masalan "Bobur ko'chasi,
   /// Andijon"). Keshlanadi. Xato bo'lsa `null`.
   Future<String?> reverse(
@@ -53,10 +58,10 @@ class GeocodingService {
     }
 
     final apiKey = ApiKeys.googleMapsKey;
-    if (apiKey.isEmpty) {
-      _cache[cacheKey] = null;
-      return null;
-    }
+    // Kalit yo'q yoki HTTP geocoding config xatosidan keyin o'chirilgan —
+    // keshlamasdan null (UI koordinata ko'rsatadi; vaqtinchalik bo'lsa
+    // keyingi marta qayta urinish ishlashi mumkin).
+    if (apiKey.isEmpty || _httpDisabled) return null;
 
     try {
       final res = await _dio.get<Map<String, dynamic>>(
@@ -74,22 +79,43 @@ class GeocodingService {
       final data = res.data;
       final status = data?['status'] as String?;
       final results = data?['results'] as List<dynamic>?;
-      if (status != 'OK' || results == null || results.isEmpty) {
-        if (status != null && status != 'OK' && status != 'ZERO_RESULTS') {
-          debugPrint('GeocodingService: status=$status (kalit/API tekshiring)');
-        }
-        _cache[cacheKey] = null;
+
+      if (status == 'OK' && results != null && results.isNotEmpty) {
+        final formatted =
+            (results.first as Map<String, dynamic>)['formatted_address']
+                as String?;
+        final short = _shorten(formatted);
+        _cache[cacheKey] = short; // muvaffaqiyat — keshlaymiz
+        return short;
+      }
+
+      if (status == 'ZERO_RESULTS') {
+        _cache[cacheKey] = null; // aniq "manzil yo'q" — keshlaymiz
         return null;
       }
-      final formatted =
-          (results.first as Map<String, dynamic>)['formatted_address']
-              as String?;
-      final short = _shorten(formatted);
-      _cache[cacheKey] = short;
-      return short;
+
+      // REQUEST_DENIED — kalit/Geocoding API/billing/cheklov muammosi.
+      // Har so'rov shu xatoni beradi, shuning uchun HTTP geocoding'ni butun
+      // sessiyaga O'CHIRAMIZ va FAQAT BIR MARTA log qilamiz (spam bo'lmasin).
+      if (status == 'REQUEST_DENIED') {
+        _httpDisabled = true;
+        debugPrint(
+          'GeocodingService: REQUEST_DENIED — HTTP geocoding sessiyaga '
+          "o'chirildi. Google Cloud Console'da kalit uchun Geocoding API "
+          'va billing yoqilganini va HTTP-referrer cheklovlari web '
+          "domeningizga ruxsat berishini tekshiring. Manzil o'rniga "
+          "koordinata ko'rsatiladi.",
+        );
+        return null; // keshlamaymiz — flag keyingilarini to'xtatadi
+      }
+
+      // OVER_QUERY_LIMIT / INVALID_REQUEST / UNKNOWN_ERROR — vaqtinchalik
+      // bo'lishi mumkin; keshlamaymiz (keyin qayta urinish ishlashi mumkin).
+      return null;
     } catch (e) {
+      // Tarmoq/timeout — vaqtinchalik; keshlamaymiz (transient xatoda null
+      // keshlash manzilni sessiyaga "zaharlaydi" — audit topilmasi).
       debugPrint('GeocodingService.reverse xato: $e');
-      _cache[cacheKey] = null;
       return null;
     }
   }
