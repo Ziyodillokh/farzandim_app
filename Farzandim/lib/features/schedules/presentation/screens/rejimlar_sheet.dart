@@ -21,7 +21,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Parvoz tokenlar (lokal) ════════════
 const _bg = Color(0xFF00060A);
@@ -294,14 +293,14 @@ class _AddButton extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.center,
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(SolarIconsOutline.plus, size: 18, color: Colors.white),
+            const Icon(Icons.add_rounded, size: 20, color: Colors.white),
             const SizedBox(width: 12),
             Text(
               'rejimlar.addSchedule'.tr(),
               style: _pop(15, w: FontWeight.w500),
             ),
             const SizedBox(width: 12),
-            const Icon(SolarIconsOutline.plus, size: 18, color: Colors.white),
+            const Icon(Icons.add_rounded, size: 20, color: Colors.white),
           ],
         ),
       ),

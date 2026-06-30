@@ -266,7 +266,7 @@ class _AddAddressButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(SolarIconsOutline.plus, size: 18, color: Colors.white),
+            const Icon(Icons.add_rounded, size: 20, color: Colors.white),
             const SizedBox(width: 10),
             Text(
               'addressesSetup.addAddress'.tr(),
