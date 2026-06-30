@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart' as tz;
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
@@ -70,7 +71,9 @@ class BackendAppUsageRepository {
       final iconUrl = hasIcon ? _iconProxyUrl(childId, pkg) : null;
       return AppUsageEntry.fromMap({
         'packageName': pkg,
-        'appName': map['appName'],
+        // Mashhur ilovani nomlaymiz / paket nomini chiroyli formatga
+        // keltiramiz ("org.telegram.messenger" → "Telegram").
+        'appName': friendlyAppName(pkg, map['appName'] as String?),
         'totalTimeMs': 0,
         'lastTimeUsed': map['lastSeenAt'],
         'iconBase64': map['iconBase64'],
@@ -150,13 +153,13 @@ class BackendAppUsageRepository {
       final apps = entries.map((m) {
         final map = m as Map;
         final pkg = '${map['packageName']}';
-        // Backend endi InstalledApp'dan real nomni qo'shadi (appName). Bo'lmasa
-        // packageName fallback (keyin combineAppData installedMap bilan ham
-        // to'ldiradi).
+        // Usage endpoint ko'pincha nom bermaydi — friendlyAppName mashhur
+        // ilovani nomlaydi yoki paket nomini chiroyli formatga keltiradi
+        // ("org.telegram.messenger" → "Telegram").
         final realName = map['appName'] as String?;
         return AppUsageEntry.fromMap({
           'packageName': pkg,
-          'appName': (realName != null && realName.isNotEmpty) ? realName : pkg,
+          'appName': friendlyAppName(pkg, realName),
           'totalTimeMs': (map['foregroundMs'] as num?)?.toInt() ?? 0,
           'lastTimeUsed': map['lastUsedAt'],
           // Real ikona proxy — backend ikonani saqlagan bo'lsa stream qiladi,

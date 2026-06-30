@@ -1,4 +1,5 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter/foundation.dart';
@@ -142,9 +143,10 @@ List<AppCombined> combineAppData({
       // Usage endpoint nomni bermaydi (packageName qaytadi) — shuning uchun
       // installed-apps'dagi haqiqiy nom afzal ("telegram.org" emas "Telegram").
       final installed = installedMap[app.packageName];
-      final name = (installed != null && installed.appName.isNotEmpty)
+      final candidate = (installed != null && installed.appName.isNotEmpty)
           ? installed.appName
           : app.appName;
+      final name = friendlyAppName(app.packageName, candidate);
       result.add(
         AppCombined(
           packageName: app.packageName,
@@ -164,9 +166,10 @@ List<AppCombined> combineAppData({
     if (!seenPackages.contains(r.packageName)) {
       seenPackages.add(r.packageName);
       final installed = installedMap[r.packageName];
-      final name = (installed != null && installed.appName.isNotEmpty)
+      final candidate = (installed != null && installed.appName.isNotEmpty)
           ? installed.appName
           : r.appName;
+      final name = friendlyAppName(r.packageName, candidate);
       result.add(
         AppCombined(
           packageName: r.packageName,

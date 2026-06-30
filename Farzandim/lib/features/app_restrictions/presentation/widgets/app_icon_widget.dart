@@ -2,15 +2,15 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:cached_network_image/cached_network_image.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:flutter/material.dart';
-import 'package:solar_icons/solar_icons.dart';
 
-/// Ilova ikonkasi — priority: `iconUrl` (Backend MinIO signed URL) >
-/// `iconBase64` (eski Bola App PNG) > paket nomidan Material `IconData`.
+/// Ilova ikonkasi — priority: `iconUrl` (Backend proxy URL) >
+/// `iconBase64` (eski Bola App PNG) > brend rangli harf-avatar.
 ///
-/// Hech qaysisi mavjud bo'lmasa, paket nomidan taxminiy `IconData`
-/// ko'rsatiladi (Instagram=camera, TikTok=music, va h.k.).
+/// Ikon mavjud bo'lmasa, paket nomidan friendly nom olinib, uning bosh
+/// harfi brend (yoki deterministik) rang ustida ko'rsatiladi — har ilova
+/// aniq va farqlanadigan ko'rinadi ("Telegram" → ko'k "T").
 class AppIconWidget extends StatefulWidget {
   /// `AppIconWidget` konstruktor.
   const AppIconWidget({
@@ -65,38 +65,6 @@ class _AppIconWidgetState extends State<AppIconWidget> {
   String? get iconUrl => widget.iconUrl;
   String get packageName => widget.packageName;
 
-  /// Paket nomidan tipik IconData taxmin qilamiz.
-  IconData _fallbackIcon(String pkg) {
-    final p = pkg.toLowerCase();
-    if (p.contains('instagram')) return SolarIconsBold.camera;
-    if (p.contains('tiktok') || p.contains('musically')) {
-      return SolarIconsBold.musicNote;
-    }
-    if (p.contains('youtube')) return SolarIconsBold.play;
-    if (p.contains('whatsapp')) return SolarIconsBold.chatRound;
-    if (p.contains('telegram')) return SolarIconsBold.plain;
-    if (p.contains('chrome') || p.contains('browser')) {
-      return SolarIconsBold.global;
-    }
-    if (p.contains('game') || p.contains('pubg')) {
-      return SolarIconsBold.gamepad;
-    }
-    if (p.contains('settings')) return SolarIconsBold.settings;
-    if (p.contains('launcher')) return SolarIconsBold.home;
-    if (p.contains('camera')) return SolarIconsBold.camera;
-    if (p.contains('phone') || p.contains('dialer')) {
-      return SolarIconsBold.phone;
-    }
-    if (p.contains('facebook')) return SolarIconsBold.like;
-    if (p.contains('snapchat')) return SolarIconsBold.camera;
-    if (p.contains('spotify') || p.contains('music')) {
-      return SolarIconsBold.headphonesRound;
-    }
-    if (p.contains('google')) return SolarIconsBold.magnifier;
-    if (p.contains('pinterest')) return SolarIconsBold.pin;
-    return SolarIconsBold.widget;
-  }
-
   @override
   Widget build(BuildContext context) {
     final radius = BorderRadius.circular(size * 0.25);
@@ -144,19 +112,27 @@ class _AppIconWidgetState extends State<AppIconWidget> {
     return _buildFallback(radius);
   }
 
+  /// Ikon yo'q — brend rangli harf-avatar (friendly nom bosh harfi).
   Widget _buildFallback(BorderRadius radius) {
+    final color = appAvatarColor(packageName);
+    // WCAG: ~0.179 — qora va oq matn teng kontrast beradigan chegara; undan
+    // yorug' fonda qora, qorong'ida oq matn (har doim o'qiladi).
+    final onColor = color.computeLuminance() > 0.179
+        ? Colors.black
+        : Colors.white;
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.15),
-        borderRadius: radius,
-      ),
+      decoration: BoxDecoration(color: color, borderRadius: radius),
       alignment: Alignment.center,
-      child: Icon(
-        _fallbackIcon(packageName),
-        color: AppColors.accent,
-        size: size * 0.5,
+      child: Text(
+        appInitial(packageName),
+        style: TextStyle(
+          color: onColor,
+          fontSize: size * 0.42,
+          fontWeight: FontWeight.w700,
+          height: 1,
+        ),
       ),
     );
   }
