@@ -888,6 +888,18 @@
     "perDayHours": "{hours} soat / kun",
     "perDayHoursMinutes": "{hours} soat {minutes} daqiqa / kun"
   },
+  "connectChild": {
+    "title": "Bolani ilovasini ulash",
+    "copied": "Kod nusxalandi",
+    "instructionsTitle": "Yoriqnoma",
+    "step1": "Farzandim ilovasini bolaning telefoniga o'rnating",
+    "step2": "Ilovani oching va kod kiritish bo'limini tanlang",
+    "step3": "Ushbu 5 xonali kodni kiriting",
+    "step4": "Qurilma avtomatik ulanadi",
+    "waiting": "Bola qurilmasi ulanishini kutmoqda...",
+    "connected": "Qurilma ulandi",
+    "next": "Keyingi"
+  },
   "blockApps": {
     "title": "Ilovalarni bloklash",
     "tabApps": "Ilovlarni bloklash",

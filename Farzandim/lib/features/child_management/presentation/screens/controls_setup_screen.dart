@@ -22,6 +22,7 @@ import 'package:farzandim/features/app_restrictions/presentation/screens/daily_l
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/features/schedules/presentation/screens/rejimlar_sheet.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
@@ -198,6 +199,8 @@ class ControlsSetupScreen extends ConsumerWidget {
               ],
             ),
           ),
+          // Bola hali ulanmagan bo'lsa — "ilovani ulash" varag'ini ochadi.
+          _ConnectGate(childId: childId, initialChild: child),
         ],
       ),
     );
@@ -212,6 +215,47 @@ class ControlsSetupScreen extends ConsumerWidget {
       child: scaffold,
     );
   }
+}
+
+// ════════════ Ulanish varag'i darvozasi ════════════
+
+/// Ko'rinmas widget — birinchi kadrda, bola hali ulanmagan bo'lsa
+/// "Bolani ilovasini ulash" varag'ini bir marta ochadi.
+class _ConnectGate extends ConsumerStatefulWidget {
+  const _ConnectGate({required this.childId, this.initialChild});
+
+  final String childId;
+  final Child? initialChild;
+
+  @override
+  ConsumerState<_ConnectGate> createState() => _ConnectGateState();
+}
+
+class _ConnectGateState extends ConsumerState<_ConnectGate> {
+  bool _shown = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShow());
+  }
+
+  void _maybeShow() {
+    if (_shown || !mounted) return;
+    final child =
+        ref.read(childByIdProvider(widget.childId)) ?? widget.initialChild;
+    // Bola yo'q yoki allaqachon ulangan — varaq kerak emas.
+    if (child == null || child.isConnected) return;
+    _shown = true;
+    showConnectChildSheet(
+      context,
+      childId: widget.childId,
+      initialChild: child,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 // ════════════ Fon yog'dusi ════════════

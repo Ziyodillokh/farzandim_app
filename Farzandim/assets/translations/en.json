@@ -888,6 +888,18 @@
     "perDayHours": "{hours} h / day",
     "perDayHoursMinutes": "{hours} h {minutes} min / day"
   },
+  "connectChild": {
+    "title": "Connect child's app",
+    "copied": "Code copied",
+    "instructionsTitle": "Instructions",
+    "step1": "Install the Farzandim app on the child's phone",
+    "step2": "Open the app and choose code entry",
+    "step3": "Enter this 5-digit code",
+    "step4": "The device will connect automatically",
+    "waiting": "Waiting for the child's device to connect...",
+    "connected": "Device connected",
+    "next": "Next"
+  },
   "blockApps": {
     "title": "Block apps",
     "tabApps": "Block apps",
