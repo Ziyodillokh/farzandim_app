@@ -17,6 +17,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -138,13 +139,12 @@ class ControlsSetupScreen extends ConsumerWidget {
                               : 'controlsSetup.blockApps.count'.tr(
                                   namedArgs: {'count': '$blockedCount'},
                                 ),
-                          onTap: () => context.push(
-                            AppRoutes.blockAppsPath(childId),
-                          ),
+                          onTap: () =>
+                              showBlockAppsSheet(context, childId: childId),
                         ),
                         const SizedBox(height: 12),
                         _NavCard(
-                          icon: SolarIconsBold.clockCircle,
+                          icon: SolarIconsOutline.clockCircle,
                           title: 'controlsSetup.timeLimit.title'.tr(),
                           subtitle: limitCount == 0
                               ? 'controlsSetup.timeLimit.empty'.tr()
@@ -453,7 +453,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     return _CardShell(
       child: Row(
         children: [
-          const _IconChip(icon: SolarIconsBold.questionCircle),
+          const _IconChip(icon: SolarIconsOutline.questionCircle),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

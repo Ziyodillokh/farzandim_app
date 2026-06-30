@@ -1,15 +1,15 @@
 // ─────────────────────────────────────────────────────────────────────
-// BlockAppsScreen — "Ilovalarni bloklash" (Parvoz dizayn)
+// BlockAppsSheet — "Ilovalarni bloklash" (Parvoz, tortiladigan sheet)
 // ─────────────────────────────────────────────────────────────────────
 //
-// 2 tab: "Ilovlarni bloklash" (har ilovani alohida bloklash) va
-// "Kategoriyalarni bloklash" (butun kategoriya: Ijtimoiy/O'yinlar/...).
-// Toggle'lar LOKAL holatda yig'iladi, pastdagi "Saqlash" tugmasi hammasini
-// backendga qo'llaydi (batch). Yangi/ulanmagan bolada ro'yxatlar bo'sh.
+// Pastdan chiqadigan modal sheet: tepaga tortilsa kengayadi, pastga
+// tortilsa yopiladi (DraggableScrollableSheet). 2 tab: "Ilovlarni bloklash"
+// (har ilovani alohida) va "Kategoriyalarni bloklash" (Ijtimoiy/O'yinlar/...).
+// Toggle'lar lokal, "Saqlash" hammasini backendga qo'llaydi (batch).
 //
 // Ma'lumot: ilovalar `installedAppsProvider`, blok holati
-// `restrictionsProvider` (isBlocked), kategoriyalar `getCategories`.
-// Saqlash: `blockApp`/`removeLimit` (facade) + `toggleCategory` (repo).
+// `restrictionsProvider`, kategoriyalar `getCategories`. Saqlash:
+// `blockApp`/`removeLimit` (facade) + `toggleCategory` (repo).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
@@ -20,7 +20,6 @@ import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ════════════ Parvoz tokenlar (lokal) ════════════
@@ -51,30 +50,89 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
-/// Ilovalarni bloklash ekrani — per-app + kategoriya bloklash (batch saqlash).
-class BlockAppsScreen extends ConsumerStatefulWidget {
-  /// `BlockAppsScreen` konstruktor.
-  const BlockAppsScreen({required this.childId, super.key});
+/// "Ilovalarni bloklash"ni tortiladigan modal sheet sifatida ochadi.
+void showBlockAppsSheet(BuildContext context, {required String childId}) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (_) => _BlockAppsSheet(childId: childId),
+  );
+}
 
-  /// Qaysi bola uchun.
+/// Drag qobig'i — tepaga/pastga tortiladi, minimumdan past tortilsa yopiladi.
+class _BlockAppsSheet extends StatefulWidget {
+  const _BlockAppsSheet({required this.childId});
+
   final String childId;
 
   @override
-  ConsumerState<BlockAppsScreen> createState() => _BlockAppsScreenState();
+  State<_BlockAppsSheet> createState() => _BlockAppsSheetState();
 }
 
-class _BlockAppsScreenState extends ConsumerState<BlockAppsScreen> {
+class _BlockAppsSheetState extends State<_BlockAppsSheet> {
+  bool _opened = false; // ochilish tugadimi (drag-yopishni faqat shundan keyin)
+  bool _dismissing = false; // qayta-qayta pop bo'lmasin
+
+  @override
+  void initState() {
+    super.initState();
+    // Sheet darhol 0.9'da ochiladi (0'dan animatsiya emas) — birinchi
+    // frame'dan keyin "ochilgan" deb belgilaymiz, shunda drag-yopish ishlaydi.
+    WidgetsBinding.instance.addPostFrameCallback((_) => _opened = true);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return NotificationListener<DraggableScrollableNotification>(
+      onNotification: (n) {
+        if (n.extent >= 0.85) _opened = true;
+        // Ochilgandan keyin minimumga yaqin tortilsa — yopamiz.
+        if (_opened && !_dismissing && n.extent <= 0.46) {
+          _dismissing = true;
+          Navigator.of(context).maybePop();
+        }
+        return false;
+      },
+      child: DraggableScrollableSheet(
+        initialChildSize: 0.9,
+        minChildSize: 0.45,
+        maxChildSize: 0.96,
+        snap: true,
+        snapSizes: const [0.9],
+        expand: false,
+        builder: (ctx, scrollController) => _BlockAppsBody(
+          childId: widget.childId,
+          scrollController: scrollController,
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════ Sheet mazmuni ════════════
+
+class _BlockAppsBody extends ConsumerStatefulWidget {
+  const _BlockAppsBody({required this.childId, required this.scrollController});
+
+  final String childId;
+  final ScrollController scrollController;
+
+  @override
+  ConsumerState<_BlockAppsBody> createState() => _BlockAppsBodyState();
+}
+
+class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
   int _tab = 0; // 0 = ilovalar, 1 = kategoriyalar
   bool _saving = false;
 
-  // Kategoriyalar (getCategories orqali bir marta yuklanadi).
   List<AppCategoryInfo>? _categories;
   bool _catLoading = true;
   bool _catError = false;
 
-  // Lokal o'zgartirishlar (Saqlash bosilguncha backendga tegmaydi).
   final Map<String, bool> _appLocal = {}; // packageName -> bloklanganmi
-  final Map<String, bool> _catLocal = {}; // category code -> bloklanganmi
+  final Map<String, bool> _catLocal = {}; // category -> bloklanganmi
 
   @override
   void initState() {
@@ -111,8 +169,8 @@ class _BlockAppsScreenState extends ConsumerState<BlockAppsScreen> {
       for (final c in cats) {
         final desired = _catLocal[c.category];
         if (desired != null && desired != c.blocked) {
-          // toggleCategory yangilangan ro'yxatni qaytaradi — uni saqlaymiz
-          // (apps loop xato bersa, retry eskirgan holatga qayta yubormasin).
+          // toggleCategory yangilangan ro'yxatni qaytaradi — saqlaymiz
+          // (apps loop xato bersa, retry eskirgan holatni yubormasin).
           cats = await repo.toggleCategory(
             childId: widget.childId,
             category: c.category,
@@ -161,7 +219,7 @@ class _BlockAppsScreenState extends ConsumerState<BlockAppsScreen> {
       ref.invalidate(restrictionsProvider(widget.childId));
       if (!mounted) return;
       AppToast.success(context, 'blockApps.saved'.tr());
-      context.pop();
+      Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
       final msg = e is AppLimitException
@@ -175,65 +233,81 @@ class _BlockAppsScreenState extends ConsumerState<BlockAppsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            const SizedBox(height: 8),
-            // Drag handle (sheet ko'rinishi).
-            Container(
-              width: 44,
-              height: 4,
-              decoration: BoxDecoration(
-                color: Colors.white.withValues(alpha: 0.18),
-                borderRadius: BorderRadius.circular(99),
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: ColoredBox(
+        color: _bg,
+        child: SafeArea(
+          top: false,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              const SizedBox(height: 10),
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: Colors.white.withValues(alpha: 0.18),
+                    borderRadius: BorderRadius.circular(99),
+                  ),
+                ),
               ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'blockApps.title'.tr(),
-              style: _unb(18, w: FontWeight.w700, ls: -0.4),
-            ),
-            const SizedBox(height: 18),
-            Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: _SegmentedTabs(
-                tabs: [
-                  'blockApps.tabApps'.tr(),
-                  'blockApps.tabCategories'.tr(),
-                ],
-                active: _tab,
-                onChanged: (i) => setState(() => _tab = i),
+              const SizedBox(height: 16),
+              Text(
+                'blockApps.title'.tr(),
+                textAlign: TextAlign.center,
+                style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),
-            ),
-            const SizedBox(height: 14),
-            Expanded(
-              child: _tab == 0 ? _buildApps() : _buildCategories(),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 16),
-              child: _SaveButton(loading: _saving, onTap: _onSave),
-            ),
-          ],
+              const SizedBox(height: 18),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: _SegmentedTabs(
+                  tabs: [
+                    'blockApps.tabApps'.tr(),
+                    'blockApps.tabCategories'.tr(),
+                  ],
+                  active: _tab,
+                  onChanged: (i) => setState(() => _tab = i),
+                ),
+              ),
+              const SizedBox(height: 14),
+              Expanded(
+                child: _tab == 0 ? _buildApps() : _buildCategories(),
+              ),
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+                child: _SaveButton(loading: _saving, onTap: _onSave),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  // ── Ilovalar tab ──
+  // Drag ishlashi uchun har holat ham scrollController + always-scrollable.
+  Widget _fill(Widget child) {
+    return ListView(
+      controller: widget.scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
+      children: [SizedBox(height: 320, child: Center(child: child))],
+    );
+  }
+
   Widget _buildApps() {
     final apps = ref.watch(installedAppsProvider(widget.childId)).valueOrNull;
     final restr = ref.watch(restrictionsProvider(widget.childId)).valueOrNull;
-    // Ikkalasi ham yuklanishini kutamiz — aks holda bloklangan ilovalar bir
-    // lahza OFF ko'rinadi (restr kesh'siz, apps keshdan tez keladi).
-    if (apps == null || restr == null) return const _Loading();
-    if (apps.isEmpty) return _Empty('blockApps.emptyApps'.tr());
+    // Ikkalasini ham kutamiz — aks holda bloklangan ilova bir lahza OFF.
+    if (apps == null || restr == null) return _fill(const _Loading());
+    if (apps.isEmpty) return _fill(_Empty('blockApps.emptyApps'.tr()));
     final orig = <String, bool>{};
     for (final r in restr) {
       orig[r.packageName] = r.isBlocked;
     }
     return ListView.separated(
+      controller: widget.scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: apps.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -253,17 +327,18 @@ class _BlockAppsScreenState extends ConsumerState<BlockAppsScreen> {
     );
   }
 
-  // ── Kategoriyalar tab ──
   Widget _buildCategories() {
-    if (_catLoading) return const _Loading();
-    if (_catError) return _Empty('blockApps.loadError'.tr());
-    // appCount>0 (ilovasi bor) YOKI bloklangan — bloklangan bo'sh kategoriya
-    // ham ko'rinib, uni o'chirish imkoni qolsin.
+    if (_catLoading) return _fill(const _Loading());
+    if (_catError) return _fill(_Empty('blockApps.loadError'.tr()));
+    // appCount>0 (ilovasi bor) YOKI bloklangan — bo'sh-bloklangan ham
+    // ko'rinib, uni o'chirish imkoni qolsin.
     final cats = (_categories ?? const <AppCategoryInfo>[])
         .where((c) => c.appCount > 0 || c.blocked)
         .toList();
-    if (cats.isEmpty) return _Empty('blockApps.emptyCategories'.tr());
+    if (cats.isEmpty) return _fill(_Empty('blockApps.emptyCategories'.tr()));
     return ListView.separated(
+      controller: widget.scrollController,
+      physics: const AlwaysScrollableScrollPhysics(),
       padding: const EdgeInsets.symmetric(horizontal: 16),
       itemCount: cats.length,
       separatorBuilder: (_, __) => const SizedBox(height: 10),
@@ -476,12 +551,10 @@ class _Loading extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
-      child: SizedBox(
-        width: 26,
-        height: 26,
-        child: CircularProgressIndicator(strokeWidth: 2.4, color: _blue),
-      ),
+    return const SizedBox(
+      width: 26,
+      height: 26,
+      child: CircularProgressIndicator(strokeWidth: 2.4, color: _blue),
     );
   }
 }
@@ -493,14 +566,12 @@ class _Empty extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 40),
-        child: Text(
-          text,
-          textAlign: TextAlign.center,
-          style: _pop(14, c: _dim),
-        ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Text(
+        text,
+        textAlign: TextAlign.center,
+        style: _pop(14, c: _dim),
       ),
     );
   }
