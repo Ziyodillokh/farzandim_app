@@ -898,7 +898,8 @@
     "step4": "The device will connect automatically",
     "waiting": "Waiting for the child's device to connect...",
     "connected": "Device connected",
-    "next": "Next"
+    "next": "Next",
+    "later": "Connect later"
   },
   "blockApps": {
     "title": "Block apps",

@@ -100,7 +100,7 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
     AppToast.success(context, 'connectChild.copied'.tr());
   }
 
-  void _onNext() {
+  void _close() {
     _poll?.cancel();
     Navigator.of(context).pop();
   }
@@ -112,12 +112,9 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
     final connected = child?.isConnected ?? false;
     final code = child?.familyCode ?? widget.initialChild?.familyCode ?? '';
 
-    // Ulangach pollni to'xtatamiz (zombi timer bo'lmasin).
-    if (connected) _poll?.cancel();
-
     final height = MediaQuery.of(context).size.height * 0.82;
 
-    return ClipRRect(
+    final sheet = ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
       child: ColoredBox(
         color: _bg,
@@ -167,18 +164,24 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
                 _StatusLine(connected: connected),
                 const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
                   child: _NextButton(
                     enabled: connected,
-                    onTap: connected ? _onNext : null,
+                    onTap: connected ? _close : null,
                   ),
                 ),
+                _LaterButton(onTap: _close),
+                const SizedBox(height: 6),
               ],
             ),
           ),
         ),
       ),
     );
+
+    // Ulanmaguncha apparat "orqa" tugmasi varaqni yopmaydi (qotib turadi) —
+    // chiqish faqat ataylab "Keyinroq" yoki ulangach "Keyingi" orqali.
+    return PopScope(canPop: connected, child: sheet);
   }
 }
 
@@ -256,7 +259,10 @@ class _StepRow extends StatelessWidget {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$number.', style: _pop(14, w: FontWeight.w600, c: _dim)),
+        Text(
+          '$number.',
+          style: _pop(14, w: FontWeight.w600, c: _dim),
+        ),
         const SizedBox(width: 10),
         Expanded(child: Text(text, style: _pop(14))),
       ],
@@ -317,6 +323,21 @@ class _NextButton extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// "Keyinroq ulayman" — ataylab chiqish (varaq tortib/orqa bilan yopilmaydi).
+class _LaterButton extends StatelessWidget {
+  const _LaterButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: onTap,
+      child: Text('connectChild.later'.tr(), style: _pop(13, c: _dim)),
     );
   }
 }

@@ -235,27 +235,24 @@ class _ConnectGateState extends ConsumerState<_ConnectGate> {
   bool _shown = false;
 
   @override
-  void initState() {
-    super.initState();
-    WidgetsBinding.instance.addPostFrameCallback((_) => _maybeShow());
-  }
-
-  void _maybeShow() {
-    if (_shown || !mounted) return;
+  Widget build(BuildContext context) {
+    // Reaktiv: bola yuklanib (provider race / deep-link bo'lsa ham), hali
+    // ulanmagan bo'lsa — "ilovani ulash" varag'ini bir marta ochamiz.
     final child =
-        ref.read(childByIdProvider(widget.childId)) ?? widget.initialChild;
-    // Bola yo'q yoki allaqachon ulangan — varaq kerak emas.
-    if (child == null || child.isConnected) return;
-    _shown = true;
-    showConnectChildSheet(
-      context,
-      childId: widget.childId,
-      initialChild: child,
-    );
+        ref.watch(childByIdProvider(widget.childId)) ?? widget.initialChild;
+    if (!_shown && child != null && !child.isConnected) {
+      _shown = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        showConnectChildSheet(
+          context,
+          childId: widget.childId,
+          initialChild: child,
+        );
+      });
+    }
+    return const SizedBox.shrink();
   }
-
-  @override
-  Widget build(BuildContext context) => const SizedBox.shrink();
 }
 
 // ════════════ Fon yog'dusi ════════════
