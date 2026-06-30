@@ -870,6 +870,24 @@
     "addSchedule": "Добавить режим",
     "save": "Сохранить"
   },
+  "dailyLimit": {
+    "title": "Дневной лимит времени",
+    "subtitle": "Все приложения",
+    "setLimit": "Установить лимит",
+    "save": "Сохранить",
+    "saved": "Сохранено",
+    "saveError": "Ошибка сохранения",
+    "empty": "Приложения не найдены",
+    "emptyHint": "Список приложений появится здесь после подключения устройства ребёнка",
+    "pickerTitle": "Установить время",
+    "pickerSubtitle": "Разрешённое время в день",
+    "unitHour": "Часы",
+    "unitMinute": "Минуты",
+    "removeLimit": "Убрать лимит",
+    "perDayMinutes": "{minutes} мин / день",
+    "perDayHours": "{hours} ч / день",
+    "perDayHoursMinutes": "{hours} ч {minutes} мин / день"
+  },
   "blockApps": {
     "title": "Блокировка приложений",
     "tabApps": "Блокировать приложения",

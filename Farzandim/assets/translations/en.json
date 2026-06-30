@@ -870,6 +870,24 @@
     "addSchedule": "Add schedule",
     "save": "Save"
   },
+  "dailyLimit": {
+    "title": "Daily time limit",
+    "subtitle": "All apps",
+    "setLimit": "Set limit",
+    "save": "Save",
+    "saved": "Saved",
+    "saveError": "Save error",
+    "empty": "No apps found",
+    "emptyHint": "The app list will appear here once the child device is connected",
+    "pickerTitle": "Set time",
+    "pickerSubtitle": "Allowed time per day",
+    "unitHour": "Hours",
+    "unitMinute": "Minutes",
+    "removeLimit": "Remove limit",
+    "perDayMinutes": "{minutes} min / day",
+    "perDayHours": "{hours} h / day",
+    "perDayHoursMinutes": "{hours} h {minutes} min / day"
+  },
   "blockApps": {
     "title": "Block apps",
     "tabApps": "Block apps",

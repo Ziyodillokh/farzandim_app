@@ -4,9 +4,9 @@
 //
 // Bola qo'shilgandan keyin (oila kodidan oldin) ochiladi. Ota-ona shu yerda
 // asosiy cheklovlarni sozlaydi:
-//   1. Ilovalarni bloklash   → app-limits ekrani (push)
-//   2. Kunlik vaqt limiti     → app-limits ekrani (push)
-//   3. Rejimlar                → schedules ekrani (push)
+//   1. Ilovalarni bloklash   → showBlockAppsSheet (tortiladigan varaq)
+//   2. Kunlik vaqt limiti     → showDailyLimitSheet (tortiladigan varaq)
+//   3. Rejimlar                → showRejimlarSheet (tortiladigan varaq)
 //   4. Notanish manbaalar      → inline toggle (blockUnknownSources)
 // Pastdagi "Keyingisi" → oila kodi (family-code) ekrani.
 //
@@ -18,6 +18,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -152,9 +153,8 @@ class ControlsSetupScreen extends ConsumerWidget {
                               : 'controlsSetup.timeLimit.count'.tr(
                                   namedArgs: {'count': '$limitCount'},
                                 ),
-                          onTap: () => context.push(
-                            AppRoutes.appLimitsPath(childId),
-                          ),
+                          onTap: () =>
+                              showDailyLimitSheet(context, childId: childId),
                         ),
                         const SizedBox(height: 12),
                         _NavCard(

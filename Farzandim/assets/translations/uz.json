@@ -870,6 +870,24 @@
     "addSchedule": "Rejim qo'shish",
     "save": "Saqlash"
   },
+  "dailyLimit": {
+    "title": "Kunlik vaqt limiti",
+    "subtitle": "Barcha ilovalar",
+    "setLimit": "Limit qo'yish",
+    "save": "Saqlash",
+    "saved": "Saqlandi",
+    "saveError": "Saqlashda xatolik",
+    "empty": "Ilovalar topilmadi",
+    "emptyHint": "Bola qurilmasi ulanib, ilovalar ro'yxati kelgach shu yerda ko'rinadi",
+    "pickerTitle": "Vaqt belgilash",
+    "pickerSubtitle": "Kuniga ruxsat etilgan vaqt",
+    "unitHour": "Soat",
+    "unitMinute": "Daqiqa",
+    "removeLimit": "Limitni olib tashlash",
+    "perDayMinutes": "{minutes} daqiqa / kun",
+    "perDayHours": "{hours} soat / kun",
+    "perDayHoursMinutes": "{hours} soat {minutes} daqiqa / kun"
+  },
   "blockApps": {
     "title": "Ilovalarni bloklash",
     "tabApps": "Ilovlarni bloklash",
