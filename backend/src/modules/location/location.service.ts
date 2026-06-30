@@ -381,12 +381,11 @@ export class LocationService {
       orderBy: { createdAt: 'desc' },
     });
 
-    if (!location) {
-      throw new NotFoundException('No location data');
-    }
-
+    // Bola hali joylashuv yubormagan (yangi/ulanmagan) holat — bu xato emas,
+    // kutilgan bo'sh holat. 404 o'rniga 200 + location:null qaytaramiz: klient
+    // null'ni qulay ishlaydi va brauzer konsolida ortiqcha qizil 404 chiqmaydi.
     return {
-      location,
+      location: location ?? null,
       child: {
         id: child.id,
         name: child.name,
