@@ -1,15 +1,19 @@
-// "Bolani ilovasini ulash" — bola qo'shilgandan keyin chiqadigan Parvoz
-// modal varaq. 5 xonali oila kodini katta ko'rsatadi (bosib nusxalansa
-// bo'ladi), yo'riqnoma beradi va "Keyingi" tugmasi bola qurilmasi
-// ULANGUNCHA o'chiq turadi. Ulanish `child.isConnected` orqali aniqlanadi;
-// varaq ochiq turganda har 3 soniyada backend qayta tekshiriladi
-// (childrenRefreshTickProvider). Ulangach "Keyingi" yonadi → varaq yopilib,
-// "Nazorat o'rnating" sahifasidan foydalanish mumkin bo'ladi.
+// "Bolani ilovasini ulash" — bola ma'lumotlari to'ldirilib "Keyingisi"
+// bosilganda chiqadigan Parvoz modal varaq (orqa foni = farzand ma'lumotlari
+// sahifasi). 5 xonali oila kodini shisha (secondary) qutida katta ko'rsatadi
+// (bosib nusxalansa bo'ladi), yo'riqnoma beradi.
 //
-// Varaq tortib yopilmaydi (isDismissible:false, enableDrag:false) — bola
-// ulanmaguncha "qotib turadi".
+// Varaq pastga tortib yopilsa bo'ladi (qotmaydi), lekin yopish keyingi
+// sahifaga o'tkazmaydi — "Keyingisi"ni qayta bossa varaq yana chiqadi.
+// "Keyingi" tugmasi bola qurilmasi ULANGUNCHA o'chiq turadi: ulanmasdan
+// keyingi (nazorat) sahifaga o'tib bo'lmaydi.
+//
+// Ulanish `child.isConnected` orqali aniqlanadi; varaq ochiq turganda har
+// 3s backend qayta tekshiriladi (childrenRefreshTickProvider). Ulangach
+// "Keyingi" yonadi → pop(true), add_child nazorat sahifasiga o'tadi.
 
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
@@ -24,8 +28,6 @@ import 'package:google_fonts/google_fonts.dart';
 // ════════════ Parvoz tokenlar (lokal) ════════════
 const _bg = Color(0xFF0B1016);
 const _green = Color(0xFF34C759);
-const _codeBox = Color(0xFF171E27);
-const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 
 TextStyle _unb(
@@ -47,19 +49,18 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
-/// "Bolani ilovasini ulash" varag'ini ochadi (tortib yopilmaydi).
-void showConnectChildSheet(
+/// "Bolani ilovasini ulash" varag'ini ochadi. Bola ulanib "Keyingi"
+/// bosilsa `true`, pastga tortib yopilsa `null` qaytaradi.
+Future<bool?> showConnectChildSheet(
   BuildContext context, {
   required String childId,
   Child? initialChild,
 }) {
-  showModalBottomSheet<void>(
+  return showModalBottomSheet<bool>(
     context: context,
     isScrollControlled: true,
-    isDismissible: false,
-    enableDrag: false,
     backgroundColor: Colors.transparent,
-    barrierColor: Colors.black.withValues(alpha: 0.62),
+    barrierColor: Colors.black.withValues(alpha: 0.45),
     builder: (_) =>
         _ConnectChildSheet(childId: childId, initialChild: initialChild),
   );
@@ -84,7 +85,13 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
     // Varaq ochiq turganda backend'ni tezroq (3s) tekshiramiz — o'rnatilgan
     // 60s poll bola "ulandi" lahzasini kuttirib qo'ymasin. Tick ro'yxatni
     // bo'shatmasdan qayta yuklaydi (invalidate emas).
-    _poll = Timer.periodic(const Duration(seconds: 3), (_) {
+    _poll = Timer.periodic(const Duration(seconds: 3), (timer) {
+      // Ulangach to'xtaymiz — isConnected barqaror flag, ortga qaytmaydi.
+      final c = ref.read(childByIdProvider(widget.childId));
+      if (c?.isConnected ?? false) {
+        timer.cancel();
+        return;
+      }
       ref.read(childrenRefreshTickProvider.notifier).state++;
     });
   }
@@ -100,9 +107,9 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
     AppToast.success(context, 'connectChild.copied'.tr());
   }
 
-  void _close() {
+  void _proceed() {
     _poll?.cancel();
-    Navigator.of(context).pop();
+    Navigator.of(context).pop(true);
   }
 
   @override
@@ -112,9 +119,9 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
     final connected = child?.isConnected ?? false;
     final code = child?.familyCode ?? widget.initialChild?.familyCode ?? '';
 
-    final height = MediaQuery.of(context).size.height * 0.82;
+    final height = MediaQuery.of(context).size.height * 0.8;
 
-    final sheet = ClipRRect(
+    return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
       child: ColoredBox(
         color: _bg,
@@ -164,28 +171,22 @@ class _ConnectChildSheetState extends ConsumerState<_ConnectChildSheet> {
                 _StatusLine(connected: connected),
                 const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 4),
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                   child: _NextButton(
                     enabled: connected,
-                    onTap: connected ? _close : null,
+                    onTap: connected ? _proceed : null,
                   ),
                 ),
-                _LaterButton(onTap: _close),
-                const SizedBox(height: 6),
               ],
             ),
           ),
         ),
       ),
     );
-
-    // Ulanmaguncha apparat "orqa" tugmasi varaqni yopmaydi (qotib turadi) —
-    // chiqish faqat ataylab "Keyinroq" yoki ulangach "Keyingi" orqali.
-    return PopScope(canPop: connected, child: sheet);
   }
 }
 
-/// Katta kod qutisi — bosilsa nusxalanadi, o'ngda nusxa ikoni.
+/// Katta kod qutisi — shisha (secondary) fon; bosilsa nusxalanadi.
 class _CodeBox extends StatelessWidget {
   const _CodeBox({required this.code, required this.onCopy});
 
@@ -197,30 +198,46 @@ class _CodeBox extends StatelessWidget {
     return GestureDetector(
       onTap: onCopy,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 86,
-        padding: const EdgeInsets.symmetric(horizontal: 22),
-        decoration: BoxDecoration(
-          color: _codeBox,
-          borderRadius: BorderRadius.circular(22),
-          border: Border.all(color: _fieldBorder),
-        ),
-        child: Row(
-          children: [
-            const SizedBox(width: 32), // o'ng ikonni muvozanatlash
-            Expanded(
-              child: Text(
-                code,
-                textAlign: TextAlign.center,
-                style: _unb(34, w: FontWeight.w700, ls: 4),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(24),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
+          child: Container(
+            height: 88,
+            padding: const EdgeInsets.symmetric(horizontal: 22),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(24),
+              gradient: LinearGradient(
+                begin: Alignment.topRight,
+                end: Alignment.bottomLeft,
+                colors: [
+                  Colors.white.withValues(alpha: 0.10),
+                  Colors.white.withValues(alpha: 0.025),
+                ],
+              ),
+              border: Border.all(
+                color: Colors.white.withValues(alpha: 0.2),
+                width: 1.2,
               ),
             ),
-            Icon(
-              Icons.copy_rounded,
-              size: 22,
-              color: Colors.white.withValues(alpha: 0.6),
+            child: Row(
+              children: [
+                const SizedBox(width: 34), // o'ng nusxa ikonini muvozanatlash
+                Expanded(
+                  child: Text(
+                    code,
+                    textAlign: TextAlign.center,
+                    style: _unb(34, w: FontWeight.w700, ls: 4),
+                  ),
+                ),
+                Icon(
+                  Icons.copy_rounded,
+                  size: 22,
+                  color: Colors.white.withValues(alpha: 0.6),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -301,7 +318,7 @@ class _StatusLine extends StatelessWidget {
   }
 }
 
-/// Pastdagi "Keyingi" — ulanguncha o'chiq (xira).
+/// Pastdagi "Keyingi" — ulanguncha o'chiq (xira); ulansa pop(true).
 class _NextButton extends StatelessWidget {
   const _NextButton({required this.enabled, required this.onTap});
 
@@ -323,21 +340,6 @@ class _NextButton extends StatelessWidget {
           ),
         ),
       ),
-    );
-  }
-}
-
-/// "Keyinroq ulayman" — ataylab chiqish (varaq tortib/orqa bilan yopilmaydi).
-class _LaterButton extends StatelessWidget {
-  const _LaterButton({required this.onTap});
-
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return TextButton(
-      onPressed: onTap,
-      child: Text('connectChild.later'.tr(), style: _pop(13, c: _dim)),
     );
   }
 }

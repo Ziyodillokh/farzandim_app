@@ -20,6 +20,7 @@ import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -82,6 +83,7 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
   bool _isSaving = false;
   int? _initialAge; // edit: backenddagi asliy yosh
   bool _birthDateChanged = false; // foydalanuvchi sanani o'zgartirdimi
+  Child? _createdChild; // add: yaratilgan bola (qayta yaratmaslik uchun)
 
   bool get _isEditMode => widget.childId != null;
 
@@ -250,6 +252,12 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
 
   Future<void> _onSave() async {
     if (!_isFormValid || _isSaving) return;
+    // Add: bola allaqachon yaratilgan (varaq yopilib "Keyingisi" qayta
+    // bosildi) — qayta yaratmasdan ulanish varag'ini qayta ochamiz.
+    if (!_isEditMode && _createdChild != null) {
+      await _openConnectSheet();
+      return;
+    }
     setState(() => _isSaving = true);
     final actions = ref.read(childActionsProvider.notifier);
     // Tahrirda sana qo'lda o'zgartirilmagan bo'lsa asliy yoshni saqlaymiz —
@@ -306,13 +314,28 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (result.isSuccess) {
-      // Bola yaratildi → nazorat o'rnatish (2-qadam), so'ng oila kodi.
-      context.go(
-        AppRoutes.controlsSetupPath(result.data!.id),
-        extra: result.data,
-      );
+      // Bola yaratildi → ulanish varag'i (kod + yo'riqnoma). Bola ulanib
+      // "Keyingi" bosilgachgina nazorat sahifasiga o'tiladi. setState —
+      // forma qulflanadi (yaratilgandan keyin tahrir jim yo'qolmasin).
+      setState(() => _createdChild = result.data);
+      await _openConnectSheet();
     } else {
       _showError(result.error);
+    }
+  }
+
+  /// Ulanish varag'ini ochadi; bola ulanib "Keyingi" bosilsa nazorat
+  /// sahifasiga o'tadi (aks holda sahifada qolamiz — qayta ochsa bo'ladi).
+  Future<void> _openConnectSheet() async {
+    final child = _createdChild;
+    if (child == null) return;
+    final proceed = await showConnectChildSheet(
+      context,
+      childId: child.id,
+      initialChild: child,
+    );
+    if ((proceed ?? false) && mounted) {
+      context.go(AppRoutes.controlsSetupPath(child.id), extra: child);
     }
   }
 
@@ -333,6 +356,9 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
     final existing = _isEditMode
         ? ref.watch(childByIdProvider(widget.childId!))
         : null;
+    // Bola yaratilgandan keyin forma qulflanadi — tahrir jim yo'qolmasin
+    // (o'zgartirish kerak bo'lsa keyin "tahrirlash" oqimida qilinadi).
+    final locked = !_isEditMode && _createdChild != null;
     return Scaffold(
       backgroundColor: _bg,
       body: Stack(
@@ -350,69 +376,79 @@ class _AddChildScreenState extends ConsumerState<AddChildScreen> {
                 Expanded(
                   child: SingleChildScrollView(
                     padding: const EdgeInsets.symmetric(horizontal: 24),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        const SizedBox(height: 24),
-                        const _StepIndicator(),
-                        const SizedBox(height: 32),
-                        SizedBox(
-                          width: double.infinity,
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerLeft,
-                            child: Text(
-                              'childManagement.addEdit.formTitleAdd'.tr(),
-                              maxLines: 1,
-                              style: _unb(28),
+                    child: IgnorePointer(
+                      ignoring: locked,
+                      child: Opacity(
+                        opacity: locked ? 0.5 : 1,
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            const SizedBox(height: 24),
+                            const _StepIndicator(),
+                            const SizedBox(height: 32),
+                            SizedBox(
+                              width: double.infinity,
+                              child: FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerLeft,
+                                child: Text(
+                                  'childManagement.addEdit.formTitleAdd'.tr(),
+                                  maxLines: 1,
+                                  style: _unb(28),
+                                ),
+                              ),
                             ),
-                          ),
+                            const SizedBox(height: 8),
+                            Text(
+                              'childManagement.addEdit.subtitle'.tr(),
+                              style: _pop(14, c: _dim),
+                            ),
+                            const SizedBox(height: 24),
+                            _PhotoRow(
+                              bytes: _photoBytes,
+                              existingChild: existing,
+                              onUpload: _pickPhoto,
+                            ),
+                            const SizedBox(height: 20),
+                            ParvozTextField(
+                              label: 'childManagement.addEdit.nameFieldLabel'
+                                  .tr(),
+                              controller: _nameController,
+                              hint: 'childManagement.addEdit.nameHint'.tr(),
+                              onChanged: (_) => setState(() {}),
+                            ),
+                            const SizedBox(height: 20),
+                            _PillTapField(
+                              label: 'childManagement.addEdit.genderFieldLabel'
+                                  .tr(),
+                              value: genderLabel,
+                              hint: 'childManagement.addEdit.genderHint'.tr(),
+                              icon: SolarIconsBold.altArrowDown,
+                              onTap: _pickGender,
+                            ),
+                            const SizedBox(height: 20),
+                            _PillTapField(
+                              label: 'childManagement.addEdit.birthDateLabel'
+                                  .tr(),
+                              value: birthText,
+                              hint:
+                                  'childManagement.addEdit.birthDatePlaceholder'
+                                      .tr(),
+                              icon: SolarIconsBold.calendar,
+                              onTap: _pickDate,
+                            ),
+                            const SizedBox(height: 20),
+                            ParvozTextField(
+                              label: 'childManagement.addEdit.phoneFieldLabel'
+                                  .tr(),
+                              controller: _phoneController,
+                              hint: 'childManagement.addEdit.phoneHint'.tr(),
+                              keyboardType: TextInputType.phone,
+                            ),
+                            const SizedBox(height: 24),
+                          ],
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          'childManagement.addEdit.subtitle'.tr(),
-                          style: _pop(14, c: _dim),
-                        ),
-                        const SizedBox(height: 24),
-                        _PhotoRow(
-                          bytes: _photoBytes,
-                          existingChild: existing,
-                          onUpload: _pickPhoto,
-                        ),
-                        const SizedBox(height: 20),
-                        ParvozTextField(
-                          label: 'childManagement.addEdit.nameFieldLabel'.tr(),
-                          controller: _nameController,
-                          hint: 'childManagement.addEdit.nameHint'.tr(),
-                          onChanged: (_) => setState(() {}),
-                        ),
-                        const SizedBox(height: 20),
-                        _PillTapField(
-                          label: 'childManagement.addEdit.genderFieldLabel'
-                              .tr(),
-                          value: genderLabel,
-                          hint: 'childManagement.addEdit.genderHint'.tr(),
-                          icon: SolarIconsBold.altArrowDown,
-                          onTap: _pickGender,
-                        ),
-                        const SizedBox(height: 20),
-                        _PillTapField(
-                          label: 'childManagement.addEdit.birthDateLabel'.tr(),
-                          value: birthText,
-                          hint: 'childManagement.addEdit.birthDatePlaceholder'
-                              .tr(),
-                          icon: SolarIconsBold.calendar,
-                          onTap: _pickDate,
-                        ),
-                        const SizedBox(height: 20),
-                        ParvozTextField(
-                          label: 'childManagement.addEdit.phoneFieldLabel'.tr(),
-                          controller: _phoneController,
-                          hint: 'childManagement.addEdit.phoneHint'.tr(),
-                          keyboardType: TextInputType.phone,
-                        ),
-                        const SizedBox(height: 24),
-                      ],
+                      ),
                     ),
                   ),
                 ),
