@@ -22,6 +22,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
+import 'package:farzandim/features/schedules/presentation/screens/rejimlar_sheet.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -164,9 +165,8 @@ class ControlsSetupScreen extends ConsumerWidget {
                               : 'controlsSetup.schedules.count'.tr(
                                   namedArgs: {'count': '$scheduleCount'},
                                 ),
-                          onTap: () => context.push(
-                            AppRoutes.schedulesPath(childId),
-                          ),
+                          onTap: () =>
+                              showRejimlarSheet(context, childId: childId),
                         ),
                         const SizedBox(height: 12),
                         _UnknownSourcesCard(

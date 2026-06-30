@@ -861,6 +861,15 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "rejimlar": {
+    "title": "Rejimlar",
+    "sleepTitle": "Uyqu vaqti",
+    "schoolTitle": "Maktab vaqti",
+    "appsCount": "{count} ta ilova",
+    "configure": "Sozlash",
+    "addSchedule": "Rejim qo'shish",
+    "save": "Saqlash"
+  },
   "blockApps": {
     "title": "Ilovalarni bloklash",
     "tabApps": "Ilovlarni bloklash",

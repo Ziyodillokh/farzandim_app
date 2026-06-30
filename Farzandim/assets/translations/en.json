@@ -861,6 +861,15 @@
     "fallbackVideoName": "video",
     "fallbackDocumentName": "document"
   },
+  "rejimlar": {
+    "title": "Schedules",
+    "sleepTitle": "Sleep time",
+    "schoolTitle": "School time",
+    "appsCount": "{count} apps",
+    "configure": "Configure",
+    "addSchedule": "Add schedule",
+    "save": "Save"
+  },
   "blockApps": {
     "title": "Block apps",
     "tabApps": "Block apps",

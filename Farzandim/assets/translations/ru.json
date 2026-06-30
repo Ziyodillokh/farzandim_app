@@ -861,6 +861,15 @@
     "fallbackVideoName": "видео",
     "fallbackDocumentName": "документ"
   },
+  "rejimlar": {
+    "title": "Режимы",
+    "sleepTitle": "Время сна",
+    "schoolTitle": "Школьное время",
+    "appsCount": "{count} приложений",
+    "configure": "Настроить",
+    "addSchedule": "Добавить режим",
+    "save": "Сохранить"
+  },
   "blockApps": {
     "title": "Блокировка приложений",
     "tabApps": "Блокировать приложения",
