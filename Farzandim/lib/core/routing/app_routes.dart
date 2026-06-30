@@ -47,6 +47,13 @@ class AppRoutes {
 
   static String controlsSetupPath(String childId) => '/controls-setup/$childId';
 
+  /// Manzillar (geo-zonalar) o'rnatish — wizard 3-qadam (nazoratdan keyin).
+  /// Navigatsiya uchun [addressesSetupPath]'dan foydalaning.
+  static const String addressesSetupPattern = '/addresses-setup/:childId';
+
+  static String addressesSetupPath(String childId) =>
+      '/addresses-setup/$childId';
+
   /// Bildirishnomalar ekrani.
   static const String notifications = '/notifications';
 

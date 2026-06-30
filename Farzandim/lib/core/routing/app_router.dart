@@ -33,6 +33,7 @@ import 'package:farzandim/features/dashboard/presentation/screens/dashboard_scre
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
 import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_zone_screen.dart';
+import 'package:farzandim/features/geo_zones/presentation/screens/addresses_setup_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zones_list_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/privacy_policy_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
@@ -295,6 +296,17 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.controlsSetupPattern,
       pageBuilder: (context, state) => _slidePage(
         ControlsSetupScreen(
+          childId: state.pathParameters['childId']!,
+          initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
+    ),
+
+    // Manzillar o'rnatish — wizard 3-qadam (nazoratdan keyin, kodidan oldin).
+    GoRoute(
+      path: AppRoutes.addressesSetupPattern,
+      pageBuilder: (context, state) => _slidePage(
+        AddressesSetupScreen(
           childId: state.pathParameters['childId']!,
           initialChild: state.extra is Child ? state.extra! as Child : null,
         ),

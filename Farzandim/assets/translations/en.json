@@ -882,6 +882,12 @@
     "emptyApps": "Apps will appear here once the child's device connects",
     "emptyCategories": "Categories will appear once the child's device connects"
   },
+  "addressesSetup": {
+    "title": "Enter your child's addresses",
+    "subtitle": "Add the places your child visits often",
+    "addAddress": "Add address",
+    "done": "Done"
+  },
   "controlsSetup": {
     "title": "Set up controls",
     "subtitle": "Configure restrictions for your child's device",

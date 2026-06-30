@@ -882,6 +882,12 @@
     "emptyApps": "Bola qurilmasi ulanib, ilovalar ro'yxati kelgach shu yerda ko'rinadi",
     "emptyCategories": "Bola qurilmasi ulangach kategoriyalar ko'rinadi"
   },
+  "addressesSetup": {
+    "title": "Bolangiz manzillarini kiriting",
+    "subtitle": "Farzandingiz tez-tez boradigan joylarni qo'shing",
+    "addAddress": "Manzil qo'shish",
+    "done": "Tayyor"
+  },
   "controlsSetup": {
     "title": "Nazorat o'rnating",
     "subtitle": "Farzandingiz qurilmasi uchun cheklovlarni sozlang",

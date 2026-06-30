@@ -183,13 +183,14 @@ class ControlsSetupScreen extends ConsumerWidget {
                   child: _PrimaryButton(
                     label: 'controlsSetup.next'.tr(),
                     onTap: () {
+                      // Keyingi qadam: manzillar (geo-zonalar) o'rnatish.
                       if (child != null) {
                         context.go(
-                          AppRoutes.familyCodePath(child.id),
+                          AppRoutes.addressesSetupPath(child.id),
                           extra: child,
                         );
                       } else {
-                        context.go(AppRoutes.familyCodePath(childId));
+                        context.go(AppRoutes.addressesSetupPath(childId));
                       }
                     },
                   ),
