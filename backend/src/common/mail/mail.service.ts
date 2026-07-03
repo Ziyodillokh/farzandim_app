@@ -76,6 +76,16 @@ export class MailService {
     );
   }
 
+  /** Email o'zgartirish — yangi manzilni tasdiqlash kodi. */
+  async sendVerifyCode(email: string, code: string): Promise<MailResult> {
+    return this.sendCode(
+      email,
+      code,
+      'Farzandim Edu — email tasdiqlash kodi',
+      'Farzandim Edu ilovasida yangi email manzilingizni tasdiqlash uchun kod',
+    );
+  }
+
   /** Umumiy kod yuborish — matn + minimal HTML shabloni. */
   private async sendCode(
     to: string,

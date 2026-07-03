@@ -761,11 +761,32 @@
     "resend": "Resend",
     "resendIn": "Resend ({s})",
     "save": "Save",
-    "saved": "Phone number updated",
+    "savedPhone": "Phone number updated",
+    "savedEmail": "Email updated",
     "codeSent": "Confirmation code sent",
     "invalidPhone": "Invalid number (+998 XX XXX XX XX)",
     "invalidEmail": "Invalid email",
     "comingSoon": "Email change coming soon"
+  },
+  "passwordEdit": {
+    "title": "Edit password",
+    "newPassword": "Enter new password",
+    "oldPassword": "Enter old password",
+    "forgot": "Forgot your password?",
+    "otpLabel": "Enter the SMS code sent to {target}",
+    "resend": "Resend",
+    "resendIn": "Resend ({s})",
+    "save": "Save",
+    "saved": "Password updated",
+    "codeSent": "Confirmation code sent",
+    "minHint": "At least 6 characters",
+    "backToChange": "Change with old password"
+  },
+  "loginEdit": {
+    "title": "Login",
+    "info": "You sign in with your email or phone number. You can change them here.",
+    "editEmail": "Edit email",
+    "editPhone": "Edit phone"
   },
   "premium": {
     "subscribers": "+1k subscribers",

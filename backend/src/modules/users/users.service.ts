@@ -12,11 +12,21 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { SmsService } from '../../common/sms/sms.service';
+import { MailService } from '../../common/mail/mail.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
+import {
+  hashPassword,
+  verifyPassword,
+} from '../../admin/admin-auth/helpers/password';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyPhoneDto } from './dto/verify-phone.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
+import { randomInt } from 'crypto';
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
@@ -39,6 +49,7 @@ export class UsersService {
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
     private readonly sms: SmsService,
+    private readonly mail: MailService,
     private readonly audit: AuditService,
   ) {}
 
@@ -223,7 +234,17 @@ export class UsersService {
       );
     }
 
-    const code = String(Math.floor(100_000 + Math.random() * 900_000));
+    const code = this.genCode();
+
+    // Eskiz tasdiqlangan REGISTER shabloni — boshqa matn yuborilsa Eskiz
+    // "not in template" xato qaytaradi. Avval yuboramiz: yuborib bo'lmasa
+    // OtpCode yozilmaydi (aks holda muvaffaqiyatsiz yuborish 60s cooldown'ni
+    // ishga tushirib qayta urinishni bloklardi).
+    const smsResult = await this.sms.sendRegisterCode(phone, code);
+    if (!smsResult.sent) {
+      this.logger.error({ phone, err: smsResult.error }, 'OTP SMS yuborilmadi');
+      throw new BadGatewayException("SMS yuborib bo'lmadi");
+    }
 
     await this.prisma.otpCode.create({
       data: {
@@ -232,14 +253,6 @@ export class UsersService {
         expiresAt: new Date(Date.now() + OTP_TTL_MS),
       },
     });
-
-    // Eskiz tasdiqlangan REGISTER shabloni — boshqa matn yuborilsa
-    // Eskiz "not in template" xato qaytaradi.
-    const smsResult = await this.sms.sendRegisterCode(phone, code);
-    if (!smsResult.sent) {
-      this.logger.error({ phone, err: smsResult.error }, 'OTP SMS yuborilmadi');
-      throw new BadGatewayException("SMS yuborib bo'lmadi");
-    }
 
     return { ok: true, message: 'Tasdiqlash kodi yuborildi' };
   }
@@ -284,6 +297,146 @@ export class UsersService {
       throw new ConflictException('Phone already in use');
     }
 
+    // Pre-check bilan update orasidagi poyga: @unique buzilsa (P2002) toza
+    // 409 qaytaramiz (500 emas).
+    try {
+      await this.prisma.$transaction([
+        this.prisma.otpCode.update({
+          where: { id: otp.id },
+          data: { verifiedAt: new Date() },
+        }),
+        this.prisma.user.update({
+          where: { id: userId },
+          data: { phone },
+        }),
+      ]);
+    } catch (err) {
+      if ((err as { code?: string })?.code === 'P2002') {
+        throw new ConflictException('Phone already in use');
+      }
+      throw err;
+    }
+
+    return { id: userId, phone, isPhoneVerified: true };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /users/me/password — eski parol bilan o'zgartirish            */
+  /* ------------------------------------------------------------------ */
+
+  async changePassword(userId: string, dto: ChangePasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { passwordHash: true },
+    });
+    if (!user) {
+      throw new NotFoundException('User not found');
+    }
+    // Faqat social-login (Telegram/Google/Apple) bo'lsa parol yo'q — tiklash
+    // orqali o'rnatilishi kerak (eski parol tekshirib bo'lmaydi).
+    if (!user.passwordHash) {
+      throw new BadRequestException(
+        "Parol o'rnatilmagan. Parolni tiklash orqali o'rnating.",
+      );
+    }
+    const valid = await verifyPassword(dto.oldPassword, user.passwordHash);
+    if (!valid) {
+      throw new BadRequestException("Eski parol noto'g'ri");
+    }
+    if (dto.newPassword === dto.oldPassword) {
+      throw new BadRequestException('Yangi parol eskisidan farq qilishi kerak');
+    }
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.user.update({
+      where: { id: userId },
+      data: { passwordHash },
+    });
+    return { ok: true };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /users/me/password/request-otp — joriy telefonga OTP          */
+  /* ------------------------------------------------------------------ */
+
+  async requestPasswordOtp(userId: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { phone: true },
+    });
+    if (!user?.phone) {
+      throw new BadRequestException(
+        "Telefon raqami yo'q — parolni telefon orqali tiklab bo'lmaydi",
+      );
+    }
+    if (!this.sms.isSmsConfigured()) {
+      throw new ServiceUnavailableException('SMS xizmati hozircha mavjud emas');
+    }
+    const recent = await this.prisma.otpCode.findFirst({
+      where: {
+        phone: user.phone,
+        createdAt: { gt: new Date(Date.now() - OTP_RESEND_COOLDOWN_MS) },
+      },
+    });
+    if (recent) {
+      throw new BadRequestException('Kod yaqinda yuborildi. Biroz kuting.');
+    }
+    const code = this.genCode();
+    // Avval yuboramiz: yuborib bo'lmasa OtpCode yozilmaydi (aks holda cooldown
+    // haqiqiy qayta urinishni bloklardi).
+    const smsResult = await this.sms.sendRegisterCode(user.phone, code);
+    if (!smsResult.sent) {
+      this.logger.error(
+        { phone: user.phone, err: smsResult.error },
+        'Parol reset OTP SMS yuborilmadi',
+      );
+      throw new BadGatewayException("SMS yuborib bo'lmadi");
+    }
+    await this.prisma.otpCode.create({
+      data: {
+        phone: user.phone,
+        code,
+        expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      },
+    });
+    return { ok: true, message: 'Tasdiqlash kodi yuborildi' };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /users/me/password/reset — OTP tasdiqlab yangi parol          */
+  /* ------------------------------------------------------------------ */
+
+  async resetPasswordWithOtp(userId: string, dto: ResetPasswordDto) {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { phone: true },
+    });
+    if (!user?.phone) {
+      throw new BadRequestException(
+        "Telefon raqami yo'q — parolni telefon orqali tiklab bo'lmaydi",
+      );
+    }
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        phone: user.phone,
+        verifiedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!otp) {
+      throw new BadRequestException('Kod topilmadi yoki muddati tugagan');
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw new BadRequestException("Juda ko'p urinish. Yangi kod so'rang.");
+    }
+    if (otp.code !== dto.code) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Noto'g'ri kod");
+    }
+    const passwordHash = await hashPassword(dto.newPassword);
     await this.prisma.$transaction([
       this.prisma.otpCode.update({
         where: { id: otp.id },
@@ -291,10 +444,112 @@ export class UsersService {
       }),
       this.prisma.user.update({
         where: { id: userId },
-        data: { phone },
+        data: { passwordHash },
       }),
     ]);
+    return { ok: true };
+  }
 
-    return { id: userId, phone, isPhoneVerified: true };
+  /* ------------------------------------------------------------------ */
+  /*  POST /users/me/email — yangi emailga OTP                           */
+  /* ------------------------------------------------------------------ */
+
+  async requestEmailOtp(userId: string, dto: RequestEmailOtpDto) {
+    const email = dto.email.trim().toLowerCase();
+    if (!this.mail.isMailConfigured()) {
+      throw new ServiceUnavailableException(
+        'Email xizmati hozircha mavjud emas',
+      );
+    }
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing && existing.id !== userId) {
+      throw new ConflictException('Email already in use');
+    }
+    const recent = await this.prisma.otpCode.findFirst({
+      where: {
+        email,
+        createdAt: { gt: new Date(Date.now() - OTP_RESEND_COOLDOWN_MS) },
+      },
+    });
+    if (recent) {
+      throw new BadRequestException('Kod yaqinda yuborildi. Biroz kuting.');
+    }
+    const code = this.genCode();
+    // Avval yuboramiz: yuborib bo'lmasa OtpCode yozilmaydi.
+    const mailResult = await this.mail.sendVerifyCode(email, code);
+    if (!mailResult.sent) {
+      this.logger.error(
+        { email, err: mailResult.error },
+        'Email OTP yuborilmadi',
+      );
+      throw new BadGatewayException("Email yuborib bo'lmadi");
+    }
+    await this.prisma.otpCode.create({
+      data: {
+        email,
+        code,
+        expiresAt: new Date(Date.now() + OTP_TTL_MS),
+      },
+    });
+    return { ok: true, message: 'Tasdiqlash kodi yuborildi' };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /users/me/email/verify — OTP tasdiqlab emailni saqlash        */
+  /* ------------------------------------------------------------------ */
+
+  async verifyEmailOtp(userId: string, dto: VerifyEmailDto) {
+    const email = dto.email.trim().toLowerCase();
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        email,
+        verifiedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!otp) {
+      throw new BadRequestException('Kod topilmadi yoki muddati tugagan');
+    }
+    if (otp.attempts >= OTP_MAX_ATTEMPTS) {
+      throw new BadRequestException("Juda ko'p urinish. Yangi kod so'rang.");
+    }
+    if (otp.code !== dto.code) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Noto'g'ri kod");
+    }
+    // Race-condition: tasdiqlash payti email band bo'lib qolmaganini tekshir.
+    const existing = await this.prisma.user.findUnique({ where: { email } });
+    if (existing && existing.id !== userId) {
+      throw new ConflictException('Email already in use');
+    }
+    // Pre-check bilan update orasidagi poyga: @unique buzilsa (P2002) toza
+    // 409 qaytaramiz (500 emas).
+    try {
+      await this.prisma.$transaction([
+        this.prisma.otpCode.update({
+          where: { id: otp.id },
+          data: { verifiedAt: new Date() },
+        }),
+        this.prisma.user.update({
+          where: { id: userId },
+          data: { email },
+        }),
+      ]);
+    } catch (err) {
+      if ((err as { code?: string })?.code === 'P2002') {
+        throw new ConflictException('Email already in use');
+      }
+      throw err;
+    }
+    return { id: userId, email, isEmailVerified: true };
+  }
+
+  /** 6 xonali OTP kod — crypto.randomInt (bashorat qilib bo'lmaydigan). */
+  private genCode(): string {
+    return String(randomInt(100_000, 1_000_000));
   }
 }

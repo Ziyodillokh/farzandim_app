@@ -2,11 +2,13 @@
 // bottom sheet (orqa fon = tizim so'zlamalari). Foydalanuvchi hisobi
 // ma'lumotlari ko'rsatiladi: Email, Telefon, Login (= email/telefon), Parol.
 //
-// Telefon qalami → showPhoneEditSheet (to'liq ishlaydi, OTP orqali).
-// Email qalami → showEmailEditSheet (dizayn tayyor, backend endpointi yo'q —
-// saqlash "tez kunda"). Login/parol qalamlari hali "tez kunda" toast
-// ko'rsatadi. Pastda Chiqish (logout) va Yopish, hamda farzandlarni boshqarish
-// va hisobni o'chirish (Play talabi) yo'llari saqlangan — dead code bo'lmasin.
+// Har bir qator to'liq ishlaydi (backend endpointlari mavjud):
+//   Email  → showEmailEditSheet  (OTP → yangi email; POST /users/me/email)
+//   Telefon → showPhoneEditSheet  (OTP → yangi raqam; POST /users/me/phone)
+//   Login  → showLoginEditSheet   (login = email/telefon; ularга yo'naltiradi)
+//   Parol  → showPasswordEditSheet (eski parol yoki telefon OTP orqali)
+// Pastda Chiqish (logout) va Yopish, hamda farzandlarni boshqarish va hisobni
+// o'chirish (Play talabi) yo'llari saqlangan — dead code bo'lmasin.
 //
 // Eski to'liq ProfileScreen shu faylda sheet'ga aylantirildi. Ism/avatar
 // tahriri dizaynda yo'q; provider metodlari (updateProfile/uploadAvatar)
@@ -18,7 +20,8 @@ import 'package:farzandim/features/auth/presentation/providers/backend_auth_prov
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
 import 'package:farzandim/features/profile/presentation/screens/contact_edit_sheet.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/features/profile/presentation/screens/login_edit_sheet.dart';
+import 'package:farzandim/features/profile/presentation/screens/password_edit_sheet.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -72,13 +75,17 @@ class _AccountSheet extends ConsumerStatefulWidget {
 }
 
 class _AccountSheetState extends ConsumerState<_AccountSheet> {
-  void _editSoon() => AppToast.info(context, 'account.editSoon'.tr());
-
-  /// Telefonni tahrirlash — to'liq ishlaydigan OTP varag'i (backend bor).
+  /// Telefonni tahrirlash — OTP varag'i (POST /users/me/phone).
   void _editPhone() => showPhoneEditSheet(context);
 
-  /// Emailni tahrirlash — dizayn varag'i (backend endpointi hali yo'q).
+  /// Emailni tahrirlash — OTP varag'i (POST /users/me/email).
   void _editEmail() => showEmailEditSheet(context);
+
+  /// Login (= email/telefon) varag'i.
+  void _editLogin() => showLoginEditSheet(context);
+
+  /// Parolni tahrirlash — eski parol yoki OTP orqali.
+  void _editPassword() => showPasswordEditSheet(context);
 
   void _close() => Navigator.of(context).pop();
 
@@ -186,14 +193,14 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                 _Field(
                   label: 'account.login'.tr(),
                   value: orDash(login),
-                  onEdit: _editSoon,
+                  onEdit: _editLogin,
                 ),
                 _Field(
                   label: 'account.password'.tr(),
                   value: '••••••••',
                   isPassword: true,
-                  onEye: _editSoon,
-                  onEdit: _editSoon,
+                  onEye: _editPassword,
+                  onEdit: _editPassword,
                 ),
                 const SizedBox(height: 6),
                 _NavRow(

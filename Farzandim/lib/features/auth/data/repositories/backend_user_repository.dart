@@ -85,6 +85,53 @@ class BackendUserRepository {
     );
   }
 
+  /// Yangi email manzilga tasdiqlash OTP yuboradi (POST /users/me/email).
+  /// Xato: DioException (409 band, 400 cooldown, 502/503 mail).
+  Future<void> requestEmailOtp(String email) async {
+    await _dio.post<void>('/users/me/email', data: {'email': email});
+  }
+
+  /// OTP kodni tasdiqlab emailni yangilaydi (POST /users/me/email/verify).
+  Future<void> verifyEmailOtp({
+    required String email,
+    required String code,
+  }) async {
+    await _dio.post<void>(
+      '/users/me/email/verify',
+      data: {'email': email, 'code': code},
+    );
+  }
+
+  /// Parolni eski parol bilan o'zgartiradi (POST /users/me/password).
+  /// Xato: DioException (400 eski parol noto'g'ri / parol o'rnatilmagan).
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) async {
+    await _dio.post<void>(
+      '/users/me/password',
+      data: {'oldPassword': oldPassword, 'newPassword': newPassword},
+    );
+  }
+
+  /// Parol tiklash uchun joriy telefonga OTP yuboradi
+  /// (POST /users/me/password/request-otp). Xato: DioException.
+  Future<void> requestPasswordOtp() async {
+    await _dio.post<void>('/users/me/password/request-otp');
+  }
+
+  /// OTP tasdiqlab yangi parol o'rnatadi (POST /users/me/password/reset).
+  /// Xato: DioException (400 kod/muddat).
+  Future<void> resetPassword({
+    required String code,
+    required String newPassword,
+  }) async {
+    await _dio.post<void>(
+      '/users/me/password/reset',
+      data: {'code': code, 'newPassword': newPassword},
+    );
+  }
+
   /// Akkauntni Backend'da butunlay o'chiradi (DELETE /api/users/me).
   /// Backend cascade: bola(lar), lokatsiya, xabarlar, obuna — hammasi o'chadi.
   /// Xato bo'lsa `DioException` otadi (caller UI'da ko'rsatadi).
