@@ -739,8 +739,35 @@
     "errorPrefix": "Ошибка удаления: {error}",
     "unexpectedError": "Непредвиденная ошибка: {error}"
   },
+  "premium": {
+    "subscribers": "+1k подписчиков",
+    "title": "Parvoz Premium",
+    "subtitle": "Вышла новая версия приложения",
+    "benefitsTitle": "Преимущества",
+    "benefit1": "+2 ребёнка",
+    "benefit2": "Больше контроля",
+    "benefit3": "Поддержка 24 / 7",
+    "benefit4": "Закрытая группа для родителей",
+    "cta": "Подключить Premium",
+    "price": "$5/мес",
+    "footer": "Отменить подписку можно в любое время",
+    "comingSoon": "Оплата будет доступна скоро"
+  },
   "settings": {
     "title": "Настройки",
+    "systemTitle": "Системные настройки",
+    "premiumBanner": {
+      "description": "Больше возможностей и лучший тариф. Будущее вашего ребёнка в ваших руках.",
+      "details": "Подробнее"
+    },
+    "rows": {
+      "account": { "title": "Аккаунт", "subtitle": "Логин, пароль, телефон" },
+      "sessions": { "title": "Активные сессии", "subtitle": "{count} активных сессий" },
+      "notifications": { "title": "Уведомления", "subtitle": "Системные сообщения" },
+      "language": { "title": "Язык приложения" },
+      "support": { "title": "Поддержка", "subtitle": "Обратная связь" },
+      "about": { "title": "О нас", "subtitle": "О компании" }
+    },
     "sections": {
       "profile": "ПРОФИЛЬ",
       "children": "ДЕТИ",

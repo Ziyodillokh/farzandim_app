@@ -739,8 +739,35 @@
     "errorPrefix": "O'chirish xatosi: {error}",
     "unexpectedError": "Kutilmagan xato: {error}"
   },
+  "premium": {
+    "subscribers": "+1k obunachi",
+    "title": "Parvoz Premium",
+    "subtitle": "Ilovaning yangi versiyasi chiqti",
+    "benefitsTitle": "Afzalliklar",
+    "benefit1": "+2 ta bola qo'shish",
+    "benefit2": "Ko'proq nazorat",
+    "benefit3": "24 / 7 qo'llab quvvatlash",
+    "benefit4": "Ota-onalar maxsus yopiq guruhi",
+    "cta": "Premiumga ulanish",
+    "price": "$5/oy",
+    "footer": "Har qanday vaqt obunani bekor qilishingiz mumkin",
+    "comingSoon": "To'lov tizimi tez kunda ulanadi"
+  },
   "settings": {
     "title": "Sozlamalar",
+    "systemTitle": "Tizim so'zlamalari",
+    "premiumBanner": {
+      "description": "Kattaroq tarif, ko'proq imkoniyatlar. Farzandingiz kelajagi sizning qo'lingizda.",
+      "details": "Batafsil"
+    },
+    "rows": {
+      "account": { "title": "Akkount", "subtitle": "Login, parol, telefon" },
+      "sessions": { "title": "Faol sessiyalar", "subtitle": "{count} ta faol sessiya" },
+      "notifications": { "title": "Bildirishnomalar", "subtitle": "Tizim haqida xabarlar" },
+      "language": { "title": "Ilova tili" },
+      "support": { "title": "Qo'llab quvvatlash", "subtitle": "Qayta aloqa" },
+      "about": { "title": "Biz haqimizda", "subtitle": "Kompaniya haqida" }
+    },
     "sections": {
       "profile": "PROFIL",
       "children": "BOLALAR",

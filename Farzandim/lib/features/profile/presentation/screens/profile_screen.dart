@@ -1,9 +1,12 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/custom_text_field.dart';
@@ -144,6 +147,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         onChanged: (_) => setState(() {}),
                       ),
                       const SizedBox(height: AppDimensions.xl),
+                      // Akkount amallari. Farzandlarni boshqarish (tahrirlash/
+                      // o'chirish) sozlamalar 6-qatorli dizaynidan tushib
+                      // qolmasligi uchun shu yerda qoldirildi.
+                      _AccountAction(
+                        icon: SolarIconsBold.usersGroupRounded,
+                        label: 'settings.menu.editChild'.tr(),
+                        onTap: () => context.push(AppRoutes.settingsChildren),
+                      ),
+                      const SizedBox(height: AppDimensions.sm),
+                      _AccountAction(
+                        icon: SolarIconsBold.logout,
+                        label: 'settings.logout.button'.tr(),
+                        onTap: () => _showLogoutDialog(context),
+                      ),
+                      const SizedBox(height: AppDimensions.sm),
+                      _AccountAction(
+                        icon: SolarIconsBold.trashBinMinimalistic,
+                        label: 'settings.deleteAccount'.tr(),
+                        color: AppColors.error,
+                        onTap: () =>
+                            context.push(AppRoutes.settingsDeleteAccount),
+                      ),
+                      const SizedBox(height: AppDimensions.xl),
                     ],
                   ),
                 ),
@@ -159,6 +185,98 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+
+  /// Chiqishni tasdiqlash dialogi (sozlamalardan shu yerga ko'chirildi).
+  void _showLogoutDialog(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.surface,
+        title: Text(
+          'settings.logout.dialogTitle'.tr(),
+          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
+        ),
+        content: Text(
+          'settings.logout.dialogContent'.tr(),
+          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: Text(
+              'settings.logout.cancel'.tr(),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.textSecondary,
+              ),
+            ),
+          ),
+          TextButton(
+            onPressed: () async {
+              Navigator.of(dialogContext).pop();
+              try {
+                await ref.read(fcmServiceProvider).removeTokenForCurrentUser();
+              } catch (_) {
+                // token o'chirish xatosi logout'ni to'xtatmasin.
+              }
+              await ref.read(backendAuthProvider.notifier).logout();
+            },
+            child: Text(
+              'settings.logout.confirm'.tr(),
+              style: AppTextStyles.bodyM.copyWith(
+                color: AppColors.error,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Akkount amali qatori — chiqish / hisobni o'chirish (bosiladigan karta).
+class _AccountAction extends StatelessWidget {
+  const _AccountAction({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.color,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final Color? color;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = color ?? AppColors.textPrimary;
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+      child: Container(
+        padding: const EdgeInsets.symmetric(
+          horizontal: AppDimensions.md,
+          vertical: 14,
+        ),
+        decoration: BoxDecoration(
+          color: AppColors.surface,
+          borderRadius: BorderRadius.circular(AppDimensions.radiusM),
+          border: Border.all(color: AppColors.border),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: c),
+            const SizedBox(width: AppDimensions.md),
+            Expanded(
+              child: Text(label, style: AppTextStyles.bodyM.copyWith(color: c)),
+            ),
+            Icon(SolarIconsBold.altArrowRight, size: 20, color: c),
+          ],
         ),
       ),
     );

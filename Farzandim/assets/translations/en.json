@@ -739,8 +739,35 @@
     "errorPrefix": "Delete error: {error}",
     "unexpectedError": "Unexpected error: {error}"
   },
+  "premium": {
+    "subscribers": "+1k subscribers",
+    "title": "Parvoz Premium",
+    "subtitle": "A new version of the app is out",
+    "benefitsTitle": "Benefits",
+    "benefit1": "+2 children",
+    "benefit2": "More control",
+    "benefit3": "24 / 7 support",
+    "benefit4": "Private parents-only group",
+    "cta": "Get Premium",
+    "price": "$5/mo",
+    "footer": "You can cancel anytime",
+    "comingSoon": "Payments coming soon"
+  },
   "settings": {
     "title": "Settings",
+    "systemTitle": "System settings",
+    "premiumBanner": {
+      "description": "A bigger plan and more features. Your child's future is in your hands.",
+      "details": "Learn more"
+    },
+    "rows": {
+      "account": { "title": "Account", "subtitle": "Login, password, phone" },
+      "sessions": { "title": "Active sessions", "subtitle": "{count} active sessions" },
+      "notifications": { "title": "Notifications", "subtitle": "System messages" },
+      "language": { "title": "App language" },
+      "support": { "title": "Support", "subtitle": "Feedback" },
+      "about": { "title": "About us", "subtitle": "About the company" }
+    },
     "sections": {
       "profile": "PROFILE",
       "children": "CHILDREN",

@@ -60,6 +60,9 @@ class AppRoutes {
   /// Sozlamalar ekrani (asosiy menyu).
   static const String settings = '/settings';
 
+  /// Parvoz Premium (obuna / paywall) sahifasi.
+  static const String premium = '/premium';
+
   /// Ilova haqida.
   static const String settingsAbout = '/settings/about';
 

@@ -1,263 +1,140 @@
-// Sozlamalar ekrani — profil header, guruhlangan menyu kartalari va
-// suzuvchi pastki navigatsiya.
+// "Tizim so'zlamalari" — Parvoz dizayn. Tepada orqa tugma + sarlavha,
+// so'ng premium tarif banneri (Batafsil → Parvoz Premium sahifasi) va 6 ta
+// sozlama qatori: Akkount, Faol sessiyalar, Bildirishnomalar, Ilova tili,
+// Qo'llab quvvatlash, Biz haqimizda.
+//
+// Chiqish / hisobni o'chirish "Akkount" (profil) sahifasiga ko'chirildi.
+
+import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
-import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
-import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
-import 'package:farzandim/features/profile/data/models/parent_profile.dart';
-import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
-import 'package:farzandim/shared/widgets/app_bottom_nav.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-/// Sozlamalar bosh ekrani.
+// ════════════ Tokenlar (lokal) ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _card = Color(0xFF1A1F23);
+const _cardBorder = Color(0x1FFFFFFF); // oq 12%
+const _dim = Color(0x99FFFFFF); // oq 60%
+const _glass = Color(0x1AFFFFFF); // oq 10% (Batafsil)
+
+TextStyle _unb(
+  double size, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+  double ls = -0.5,
+}) => GoogleFonts.unbounded(
+  fontSize: size,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.4,
+);
+
+TextStyle _pop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// Tizim so'zlamalari bosh ekrani.
 class SettingsScreen extends ConsumerWidget {
+  /// `SettingsScreen` konstruktor.
   const SettingsScreen({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final profile = ref.watch(profileProvider);
-    // Boshqa qurilmalar soni (joriydan tashqari) — "Faol sessiyalar" badge'i.
-    final otherSessions = ref
+    final sessionCount = ref
         .watch(sessionsProvider)
-        .maybeWhen(
-          data: (list) => list.where((s) => !s.isCurrent).length,
-          orElse: () => 0,
-        );
-    final isDark = AppColors.isDark;
+        .maybeWhen(data: (list) => list.length, orElse: () => 0);
+    final langLabel = AppLanguage.fromCode(context.locale.languageCode).label;
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              _ProfileHeader(profile: profile),
-              // Menyu scroll'i butun bo'shliqni egallaydi; AppBottomNav uning
-              // ustida suzadi — orqa gradient uzluksiz ko'rinadi.
-              Expanded(
-                child: Stack(
-                  clipBehavior: Clip.none,
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            _Header(onBack: () => Navigator.of(context).pop()),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
+                child: Column(
                   children: [
-                    Positioned.fill(
-                      child: SingleChildScrollView(
-                        padding: const EdgeInsets.fromLTRB(
-                          AppDimensions.lg,
-                          AppDimensions.sm,
-                          AppDimensions.lg,
-                          AppDimensions.lg +
-                              AppBottomNav.kBarHeight +
-                              AppDimensions.md +
-                              8,
-                        ),
-                        child: Column(
-                          children: [
-                            // ── Karta 1: bola ──
-                            _MenuCard(
-                              accent: AppColors.secondary,
-                              items: [
-                                _MenuItem(
-                                  icon: SolarIconsBold.userPlus,
-                                  title: 'settings.menu.addChild'.tr(),
-                                  onTap: () => context.push(AppRoutes.addChild),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.pen,
-                                  title: 'settings.menu.editChild'.tr(),
-                                  onTap: () =>
-                                      context.push(AppRoutes.settingsChildren),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: AppDimensions.md),
-                            // ── Karta 2: SOS / sessiyalar / til / yordam ──
-                            _MenuCard(
-                              accent: AppColors.accent,
-                              items: [
-                                _MenuItem(
-                                  icon: SolarIconsBold.siren,
-                                  title: 'settings.menu.sosAlerts'.tr(),
-                                  onTap: () =>
-                                      context.push(AppRoutes.sosAlerts),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.devices,
-                                  title: 'settings.menu.sessions'.tr(),
-                                  badge: otherSessions > 0
-                                      ? '$otherSessions'
-                                      : null,
-                                  onTap: () =>
-                                      context.push(AppRoutes.settingsSessions),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.global,
-                                  title: 'settings.menu.language'.tr(),
-                                  onTap: () =>
-                                      _showLanguageDialog(context, ref),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.questionCircle,
-                                  title: 'settings.menu.support'.tr(),
-                                  onTap: () => context.push(AppRoutes.support),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.infoCircle,
-                                  title: 'settings.menu.about'.tr(),
-                                  onTap: () =>
-                                      context.push(AppRoutes.settingsAbout),
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.share,
-                                  title: 'settings.menu.share'.tr(),
-                                  onTap: _shareApp,
-                                ),
-                                _MenuItem(
-                                  icon: SolarIconsBold.bellBing,
-                                  title: 'settings.pushTest.menuTitle'.tr(),
-                                  onTap: () => _sendTestPush(context, ref),
-                                ),
-                              ],
-                            ),
-                          ],
-                        ),
-                      ),
+                    _PremiumBanner(
+                      onTap: () => context.push(AppRoutes.premium),
                     ),
-                    // Fade scrim — nav ortidagi kontent yumshoq so'nadi:
-                    // pastga qarab shaffofdan fon rangiga o'tadi.
-                    Positioned(
-                      left: 0,
-                      right: 0,
-                      bottom: 0,
-                      height: 110,
-                      child: IgnorePointer(
-                        child: DecoratedBox(
-                          decoration: BoxDecoration(
-                            gradient: LinearGradient(
-                              begin: Alignment.topCenter,
-                              end: Alignment.bottomCenter,
-                              colors: [
-                                AppColors.background.withValues(alpha: 0),
-                                AppColors.background.withValues(
-                                  alpha: isDark ? 0.35 : 0.25,
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ),
+                    const SizedBox(height: 24),
+                    _SettingRow(
+                      icon: SolarIconsBold.userCircle,
+                      title: 'settings.rows.account.title'.tr(),
+                      subtitle: 'settings.rows.account.subtitle'.tr(),
+                      onTap: () => context.push(AppRoutes.settingsProfile),
                     ),
-                    // Suzuvchi nav — fonsiz (shaffof), gradient ustida
-                    // qalqaydi va glass kartalar bilan bir uslubda.
-                    Positioned(
-                      left: AppDimensions.lg,
-                      right: AppDimensions.lg,
-                      bottom: AppDimensions.md,
-                      child: AppBottomNav(
-                        activeIndex: 1,
-                        activityLabel: 'dashboard.usageTime'.tr(),
-                        settingsLabel: 'settings.title'.tr(),
-                        onActivity: () => context.pop(),
-                        onSettings: () {},
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.devices,
+                      title: 'settings.rows.sessions.title'.tr(),
+                      subtitle: 'settings.rows.sessions.subtitle'.tr(
+                        namedArgs: {'count': '$sessionCount'},
                       ),
+                      onTap: () => context.push(AppRoutes.settingsSessions),
+                    ),
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.bellBing,
+                      title: 'settings.rows.notifications.title'.tr(),
+                      subtitle: 'settings.rows.notifications.subtitle'.tr(),
+                      onTap: () => context.push(AppRoutes.notifications),
+                    ),
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.global,
+                      title: 'settings.rows.language.title'.tr(),
+                      subtitle: langLabel,
+                      onTap: () => _showLanguageDialog(context, ref),
+                    ),
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.handHeart,
+                      title: 'settings.rows.support.title'.tr(),
+                      subtitle: 'settings.rows.support.subtitle'.tr(),
+                      onTap: () => context.push(AppRoutes.support),
+                    ),
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.smileCircle,
+                      title: 'settings.rows.about.title'.tr(),
+                      subtitle: 'settings.rows.about.subtitle'.tr(),
+                      onTap: () => context.push(AppRoutes.settingsAbout),
                     ),
                   ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
   }
-
-  // ─── Ulashish ───
-
-  Future<void> _shareApp() async {
-    await Share.share('settings.shareText'.tr());
-  }
-
-  // ─── Push diagnostikasi ───
-  //
-  // Backend o'ziga test push yuborib natijani qaytaradi. tokens=0 bo'lsa
-  // qurilma ro'yxatdan o'tmagan; sent>0 lekin push kelmasa bildirishnoma
-  // ruxsati muammosi; failed>0 bo'lsa server tomonda Firebase xatosi.
-  Future<void> _sendTestPush(BuildContext context, WidgetRef ref) async {
-    AppToast.info(context, 'settings.pushTest.sending'.tr());
-
-    final res = await ref.read(fcmServiceProvider).sendTestPush();
-    if (!context.mounted) return;
-
-    final String title;
-    final String body;
-    if (res == null) {
-      title = 'settings.pushTest.requestFailedTitle'.tr();
-      body = 'settings.pushTest.requestFailedBody'.tr();
-    } else {
-      final tokens = (res['tokens'] as num?)?.toInt() ?? 0;
-      final sent = (res['sent'] as num?)?.toInt() ?? 0;
-      final failed = (res['failed'] as num?)?.toInt() ?? 0;
-      if (tokens == 0) {
-        title = 'settings.pushTest.noTokenTitle'.tr();
-        body = 'settings.pushTest.noTokenBody'.tr();
-      } else if (sent > 0) {
-        title = 'settings.pushTest.sentTitle'.tr();
-        body = 'settings.pushTest.sentBody'.tr(
-          namedArgs: {'tokens': '$tokens', 'sent': '$sent'},
-        );
-      } else {
-        title = 'settings.pushTest.serverFailedTitle'.tr();
-        body = 'settings.pushTest.serverFailedBody'.tr(
-          namedArgs: {
-            'tokens': '$tokens',
-            'sent': '$sent',
-            'failed': '$failed',
-          },
-        );
-      }
-    }
-
-    await showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          title,
-          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-        ),
-        content: Text(body, style: AppTextStyles.bodyM),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text('common.ok'.tr()),
-          ),
-        ],
-      ),
-    );
-  }
-
-  // ─── Til dialog ───
 
   void _showLanguageDialog(BuildContext context, WidgetRef ref) {
     showDialog<void>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'settings.language.dialogTitle'.tr(),
-          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
+        backgroundColor: _card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: _cardBorder),
         ),
+        title: Text('settings.language.dialogTitle'.tr(), style: _unb(17)),
         contentPadding: const EdgeInsets.symmetric(vertical: 8),
         content: Column(
           mainAxisSize: MainAxisSize.min,
@@ -281,325 +158,278 @@ class SettingsScreen extends ConsumerWidget {
   }
 }
 
-// ════════════════════════ PROFILE HEADER ════════════════════════
+// ════════════ Sarlavha (orqa + markazlashgan matn) ════════════
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack});
 
-class _ProfileHeader extends StatelessWidget {
-  const _ProfileHeader({required this.profile});
-
-  final ParentProfile profile;
+  final VoidCallback onBack;
 
   @override
   Widget build(BuildContext context) {
-    // Telefon bilan ro'yxatdan o'tgan bo'lsa telefon, aks holda email.
-    final identifier = _identifier(profile);
-
     return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.lg,
-        AppDimensions.md,
-        AppDimensions.md,
-        AppDimensions.sm,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
         children: [
-          _Avatar(photoUrl: profile.photoUrl, name: profile.name),
-          const SizedBox(width: AppDimensions.md),
+          _SquareButton(icon: SolarIconsOutline.altArrowLeft, onTap: onBack),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  profile.name.isNotEmpty
-                      ? profile.name
-                      : 'settings.profile.placeholder'.tr(),
-                  style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-                if (identifier != null) ...[
-                  const SizedBox(height: 6),
-                  _IdentifierPill(text: identifier),
-                ],
-              ],
+            child: Center(
+              child: Text(
+                'settings.systemTitle'.tr(),
+                style: _unb(20, w: FontWeight.w500, ls: -0.6),
+              ),
             ),
           ),
-          const _OverflowMenu(),
+          // O'ng tomonda ko'rinmas muvozanat (sarlavha markazda tursin).
+          const SizedBox(width: 56, height: 56),
         ],
       ),
     );
   }
-
-  String? _identifier(ParentProfile p) {
-    if (p.phoneNumber != null && p.phoneNumber!.trim().isNotEmpty) {
-      return p.phoneNumber!.trim();
-    }
-    if (p.email != null && p.email!.trim().isNotEmpty) {
-      return p.email!.trim();
-    }
-    return null;
-  }
 }
 
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.photoUrl, required this.name});
+/// 56x56 kvadrat tugma (orqaga) — Figma: #1A1F23 + oq rim + radius 16.
+class _SquareButton extends StatelessWidget {
+  const _SquareButton({required this.icon, required this.onTap});
 
-  final String? photoUrl;
-  final String name;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final hasPhoto = photoUrl != null && photoUrl!.isNotEmpty;
-    return Container(
-      width: 52,
-      height: 52,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: AppColors.surfaceVariant,
-        border: Border.all(color: AppColors.border),
-        image: hasPhoto
-            ? DecorationImage(image: NetworkImage(photoUrl!), fit: BoxFit.cover)
-            : null,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _cardBorder),
+        ),
+        child: Icon(icon, size: 24, color: Colors.white),
       ),
-      alignment: Alignment.center,
-      child: hasPhoto
-          ? null
-          : Text(
-              _initials(name),
-              style: AppTextStyles.headlineL.copyWith(
-                fontSize: 18,
-                color: AppColors.accent,
+    );
+  }
+}
+
+// ════════════ Premium banner ════════════
+class _PremiumBanner extends StatelessWidget {
+  const _PremiumBanner({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      height: 204,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: _cardBorder),
+      ),
+      child: Stack(
+        children: [
+          // Ichki xira rangli porlash (ko'k→siyan→binafsha aurora).
+          Positioned(
+            left: -30,
+            top: -40,
+            width: 280,
+            height: 210,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 48, sigmaY: 48),
+              child: const DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.bottomLeft,
+                    end: Alignment.topRight,
+                    colors: [
+                      Color(0xFF0055FF),
+                      Color(0xFF3CF9FF),
+                      Color(0xFF6A00FF),
+                    ],
+                    stops: [0, 0.55, 1],
+                  ),
+                ),
               ),
             ),
+          ),
+          // Ko'k radial tint (tepa-chapda, 40%).
+          const Positioned.fill(
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                gradient: RadialGradient(
+                  center: Alignment(-0.55, -0.9),
+                  radius: 1.1,
+                  colors: [Color(0x66508AFF), Colors.transparent],
+                  stops: [0, 0.75],
+                ),
+              ),
+            ),
+          ),
+          // Mazmun.
+          Padding(
+            padding: const EdgeInsets.all(14),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(children: [_BannerLogo(), Spacer(), _PremiumPill()]),
+                Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'settings.premiumBanner.description'.tr(),
+                      style: _pop(14, c: const Color(0xFFF9F9F9)),
+                    ),
+                    const SizedBox(height: 10),
+                    _BatafsilButton(onTap: onTap),
+                  ],
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
-  }
-
-  String _initials(String name) {
-    final trimmed = name.trim();
-    if (trimmed.isEmpty) return '👤';
-    final parts = trimmed.split(RegExp(r'\s+'));
-    final first = parts.first.characters.first;
-    final second = parts.length > 1 ? parts[1].characters.first : '';
-    return (first + second).toUpperCase();
   }
 }
 
-class _IdentifierPill extends StatelessWidget {
-  const _IdentifierPill({required this.text});
-  final String text;
+class _BannerLogo extends StatelessWidget {
+  const _BannerLogo();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        softWrap: false,
-        style: AppTextStyles.bodyS.copyWith(
-          color: AppColors.onPrimary,
-          fontWeight: FontWeight.w700,
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        SvgPicture.asset(
+          'assets/icons/parvoz_logo_mark.svg',
+          width: 34,
+          height: 34,
         ),
-      ),
-    );
-  }
-}
-
-class _OverflowMenu extends ConsumerWidget {
-  const _OverflowMenu();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
-      color: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-      ),
-      onSelected: (value) {
-        switch (value) {
-          case 'logout':
-            _showLogoutDialog(context, ref);
-          case 'delete':
-            context.push(AppRoutes.settingsDeleteAccount);
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          value: 'logout',
-          child: Row(
-            children: [
-              Icon(
-                SolarIconsBold.logout,
-                color: AppColors.textPrimary,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text('settings.logout.button'.tr(), style: AppTextStyles.bodyM),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(
-                SolarIconsBold.trashBinMinimalistic,
-                color: AppColors.error,
-                size: 20,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'settings.deleteAccount'.tr(),
-                style: AppTextStyles.bodyM.copyWith(color: AppColors.error),
-              ),
-            ],
-          ),
+        const SizedBox(width: 9),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Parvoz', style: _unb(16, ls: -0.3)),
+            const SizedBox(height: 2),
+            Text('Parents', style: _pop(11, c: _dim)),
+          ],
         ),
       ],
     );
   }
-
-  void _showLogoutDialog(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'settings.logout.dialogTitle'.tr(),
-          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-        ),
-        content: Text(
-          'settings.logout.dialogContent'.tr(),
-          style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(),
-            child: Text(
-              'settings.logout.cancel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () async {
-              Navigator.of(dialogContext).pop();
-              try {
-                await ref.read(fcmServiceProvider).removeTokenForCurrentUser();
-              } catch (_) {
-                // token o'chirish xatosi logout'ni to'xtatmasin.
-              }
-              await ref.read(backendAuthProvider.notifier).logout();
-            },
-            child: Text(
-              'settings.logout.confirm'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
 }
 
-// ════════════════════════ MENU CARD / ITEM ════════════════════════
-
-class _MenuCard extends StatelessWidget {
-  const _MenuCard({required this.items, required this.accent});
-  final List<_MenuItem> items;
-  final Color accent;
+/// "PREMIUM" pill — ko'k→indigo→binafsha gradient.
+class _PremiumPill extends StatelessWidget {
+  const _PremiumPill();
 
   @override
   Widget build(BuildContext context) {
-    return SettingsCard(
-      accent: accent,
-      padding: EdgeInsets.zero,
-      child: Column(
-        children: [
-          for (var i = 0; i < items.length; i++) ...[
-            items[i],
-            if (i != items.length - 1)
-              Divider(
-                height: 1,
-                thickness: 1,
-                indent: 56,
-                color: AppColors.divider,
-              ),
-          ],
-        ],
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+        gradient: const LinearGradient(
+          begin: Alignment(-1, -0.4),
+          end: Alignment(1, 0.4),
+          colors: [Color(0xFF21AEFF), Color(0xFF3F3FCC), Color(0xFF5D1499)],
+          stops: [0.01, 0.46, 0.93],
+        ),
+      ),
+      child: Text('PREMIUM', style: _unb(13, ls: -0.39)),
+    );
+  }
+}
+
+/// "Batafsil" — shaffof shisha pill tugma.
+class _BatafsilButton extends StatelessWidget {
+  const _BatafsilButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 44,
+        width: double.infinity,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: _glass,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Text(
+          'settings.premiumBanner.details'.tr(),
+          style: _pop(16, w: FontWeight.w500),
+        ),
       ),
     );
   }
 }
 
-class _MenuItem extends StatelessWidget {
-  const _MenuItem({
+// ════════════ Sozlama qatori ════════════
+class _SettingRow extends StatelessWidget {
+  const _SettingRow({
     required this.icon,
     required this.title,
+    required this.subtitle,
     required this.onTap,
-    this.badge,
   });
 
   final IconData icon;
   final String title;
+  final String subtitle;
   final VoidCallback onTap;
-  final String? badge;
 
   @override
   Widget build(BuildContext context) {
-    return InkWell(
+    return GestureDetector(
       onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.md,
-          vertical: 16,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _cardBorder),
         ),
         child: Row(
           children: [
-            Icon(icon, size: 22, color: AppColors.textPrimary),
-            const SizedBox(width: AppDimensions.md),
+            Icon(icon, size: 28, color: Colors.white),
+            const SizedBox(width: 12),
             Expanded(
-              child: Text(
-                title,
-                style: AppTextStyles.bodyM,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    title,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(16, ls: -0.48),
+                  ),
+                  Text(
+                    subtitle,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(14, c: _dim),
+                  ),
+                ],
               ),
             ),
-            if (badge != null) ...[
-              Container(
-                constraints: const BoxConstraints(minWidth: 22),
-                height: 22,
-                padding: const EdgeInsets.symmetric(horizontal: 7),
-                decoration: BoxDecoration(
-                  color: AppColors.info,
-                  borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  badge!,
-                  style: AppTextStyles.label.copyWith(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-              ),
-              const SizedBox(width: AppDimensions.sm),
-            ],
+            const SizedBox(width: 10),
             Icon(
-              SolarIconsBold.altArrowRight,
-              color: AppColors.textTertiary,
+              SolarIconsOutline.altArrowRight,
               size: 22,
+              color: Colors.white.withValues(alpha: 0.7),
             ),
           ],
         ),
@@ -608,8 +438,7 @@ class _MenuItem extends StatelessWidget {
   }
 }
 
-// ════════════════════════ LANGUAGE OPTION ════════════════════════
-
+// ════════════ Til tanlash qatori (dialog ichida) ════════════
 class _LanguageOption extends StatelessWidget {
   const _LanguageOption({
     required this.language,
@@ -626,21 +455,14 @@ class _LanguageOption extends StatelessWidget {
     return InkWell(
       onTap: onTap,
       child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.md,
-          vertical: 12,
-        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
         child: Row(
           children: [
             Text(language.flag, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: AppDimensions.md),
-            Expanded(child: Text(language.label, style: AppTextStyles.bodyM)),
+            const SizedBox(width: 16),
+            Expanded(child: Text(language.label, style: _pop(15))),
             if (isSelected)
-              Icon(
-                SolarIconsBold.checkCircle,
-                color: AppColors.accent,
-                size: 20,
-              ),
+              const Icon(SolarIconsBold.checkCircle, color: _blue, size: 20),
           ],
         ),
       ),

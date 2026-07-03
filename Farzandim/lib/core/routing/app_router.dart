@@ -54,6 +54,7 @@ import 'package:farzandim/features/settings/presentation/screens/about_screen.da
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/notification_preferences_screen.dart';
+import 'package:farzandim/features/settings/presentation/screens/parvoz_premium_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
 import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
@@ -333,6 +334,10 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.settings,
       pageBuilder: (context, state) => _slidePage(const SettingsScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.premium,
+      pageBuilder: (context, state) => _slidePage(const ParvozPremiumScreen()),
     ),
     GoRoute(
       path: AppRoutes.settingsAbout,
