@@ -11,6 +11,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -26,6 +27,8 @@ const _meRow = Color(0xFF173654); // "Siz" qatori
 const _meGlow = Color(0xFF1E4D80); // "Siz" qatori (porlaganda)
 const _blue = Color(0xFF216BFF); // DON tegi
 const _dim = Color(0x99FFFFFF); // oq 60%
+const _sheetBg = Color(0xFF12171E); // "DON qanday yig'iladi?" varag'i foni
+const _divider = Color(0x14FFFFFF); // oq ~8% ajratgich
 
 // Podium bar ranglari
 const _barSilver = Color(0xFFC9C9C9);
@@ -190,23 +193,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   }
 
   void _showHelp() {
-    showDialog<void>(
+    showModalBottomSheet<void>(
       context: context,
-      builder: (ctx) => AlertDialog(
-        backgroundColor: _card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: _cardBorder),
-        ),
-        title: Text('leaderboard.help.title'.tr(), style: _unb(17)),
-        content: Text('leaderboard.help.body'.tr(), style: _pop(14, c: _dim)),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: Text('common.ok'.tr(), style: _pop(15, c: _blue)),
-          ),
-        ],
-      ),
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => const _HowToEarnSheet(),
     );
   }
 
@@ -434,7 +426,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
       child: Row(
         children: [
-          _SquareButton(icon: SolarIconsOutline.altArrowLeft, onTap: onBack),
+          _SquareButton(icon: SolarIconsOutline.arrowLeft, onTap: onBack),
           Expanded(
             child: Center(
               child: Text(
@@ -854,5 +846,143 @@ class _StickyPill extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ════════════ "DON qanday yig'iladi?" varag'i ════════════
+class _HowToEarnSheet extends StatelessWidget {
+  const _HowToEarnSheet();
+
+  @override
+  Widget build(BuildContext context) {
+    final h = MediaQuery.sizeOf(context).height;
+    return Container(
+      height: math.max(h * 0.62, 480),
+      decoration: const BoxDecoration(
+        color: _sheetBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: _cardBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            children: [
+              // Tortish dastagi
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 22),
+              Text('leaderboard.howToEarn.title'.tr(), style: _unb(17)),
+              const SizedBox(height: 22),
+              _EarnRow(
+                icon: SolarIconsBold.book,
+                title: 'leaderboard.howToEarn.readBook.title'.tr(),
+                sub: 'leaderboard.howToEarn.readBook.sub'.tr(),
+                don: 100,
+              ),
+              const _EarnDivider(),
+              _EarnRow(
+                icon: SolarIconsBold.clipboard,
+                title: 'leaderboard.howToEarn.doTest.title'.tr(),
+                sub: 'leaderboard.howToEarn.doTest.sub'.tr(),
+                don: 100,
+              ),
+              const _EarnDivider(),
+              _EarnRow(
+                icon: SolarIconsBold.play,
+                title: 'leaderboard.howToEarn.watchVideo.title'.tr(),
+                sub: 'leaderboard.howToEarn.watchVideo.sub'.tr(),
+                don: 100,
+              ),
+              const Spacer(),
+              ParvozSecondaryButton(
+                label: 'common.close'.tr(),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Bitta "yo'l" qatori: ikon + sarlavha/quyi sarlavha + DON qiymati.
+class _EarnRow extends StatelessWidget {
+  const _EarnRow({
+    required this.icon,
+    required this.title,
+    required this.sub,
+    required this.don,
+  });
+
+  final IconData icon;
+  final String title;
+  final String sub;
+  final int don;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 14),
+      child: Row(
+        children: [
+          Container(
+            width: 46,
+            height: 46,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _row,
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(color: _cardBorder),
+            ),
+            child: Icon(icon, size: 22, color: Colors.white),
+          ),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _unb(14),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  sub,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _pop(12, c: _dim),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          Text(_fmtDon(don), style: _unb(15)),
+          const SizedBox(width: 6),
+          const _DonTag(),
+        ],
+      ),
+    );
+  }
+}
+
+/// Qatorlar orasidagi ingichka ajratgich.
+class _EarnDivider extends StatelessWidget {
+  const _EarnDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 1, color: _divider);
   }
 }

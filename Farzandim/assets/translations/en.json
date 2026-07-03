@@ -1093,6 +1093,21 @@
       "title": "What is DON?",
       "body": "DON are points your child earns for tasks and activity. The rating is based on DON."
     },
+    "howToEarn": {
+      "title": "How is DON earned?",
+      "readBook": {
+        "title": "Reading a book",
+        "sub": "For each book read"
+      },
+      "doTest": {
+        "title": "Taking a test",
+        "sub": "For each completed test"
+      },
+      "watchVideo": {
+        "title": "Watching a useful video",
+        "sub": "For each video watched"
+      }
+    },
     "periods": {
       "weekly": "Weekly",
       "monthly": "Monthly",

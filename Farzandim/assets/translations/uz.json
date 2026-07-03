@@ -1093,6 +1093,21 @@
       "title": "DON nima?",
       "body": "DON — farzandingiz vazifalar va faollik uchun to'playdigan ballari. Reyting DON bo'yicha tuziladi."
     },
+    "howToEarn": {
+      "title": "DON qanday yig'iladi?",
+      "readBook": {
+        "title": "Kitob o'qisa",
+        "sub": "Har o'qilgan kitob uchun"
+      },
+      "doTest": {
+        "title": "Test ishlasa",
+        "sub": "Har yakunlangan test uchun"
+      },
+      "watchVideo": {
+        "title": "Foydali video ko'rsa",
+        "sub": "Har ko'rilgan video uchun"
+      }
+    },
     "periods": {
       "weekly": "Haftalik",
       "monthly": "Oylik",
