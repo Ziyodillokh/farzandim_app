@@ -1,13 +1,10 @@
 // "Telefonni tahrirlash" / "Emailni tahrirlash" — Akkount sheet'idagi
-// qalam ikonidan ochiladigan Parvoz bottom sheet'lari.
+// qalam ikonidan ochiladigan Parvoz bottom sheet'lari. Ikkalasi ham bir xil
+// oqim: yangi qiymat kirit → OTP yuboriladi → 6 xonali kod → tasdiqlab saqlash.
 //
-// TELEFON: to'liq ishlaydi — yangi raqamga OTP yuboriladi
-// (profileProvider.requestPhoneOtp → POST /users/me/phone), 6 xonali kod
-// kiritilib tasdiqlanadi (verifyPhoneAndSave → POST /users/me/phone/verify),
-// so'ng profil yangilanadi.
-//
-// EMAIL: backend'da o'zgartirish endpointi hali YO'Q — UI dizayn bilan bir
-// xil, lekin "Saqlash" hozircha "tez kunda" toast ko'rsatadi.
+// TELEFON: yangi raqamga SMS OTP (POST /users/me/phone + /verify).
+// EMAIL: yangi manzilga email OTP (POST /users/me/email + /verify).
+// Ikkalasi ham tasdiqlangach profilni qayta yuklaydi.
 
 import 'dart:async';
 
@@ -15,17 +12,15 @@ import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/parvoz_otp_input.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal) ════════════
 const _bg = Color(0xFF0F141A);
-const _card = Color(0xFF1A1F23);
-const _cardBorder = Color(0x1FFFFFFF); // oq 12%
 const _blue = Color(0xFF216BFF);
 const _dim = Color(0x99FFFFFF); // oq 60%
 const _danger = Color(0xFFFF5A5A);
@@ -123,14 +118,22 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
     });
   }
 
+  /// Kiritilgan qiymatni normallashtiradi (telefon → +998…, email → lower);
+  /// yaroqsiz bo'lsa `null`.
+  String? _normalizedTarget() {
+    if (widget.isPhone) return _normalizePhone(_valueCtrl.text);
+    final email = _valueCtrl.text.trim();
+    return _emailRe.hasMatch(email) ? email.toLowerCase() : null;
+  }
+
   Future<void> _sendCode() async {
-    if (!widget.isPhone) {
-      AppToast.info(context, 'contactEdit.comingSoon'.tr());
-      return;
-    }
-    final phone = _normalizePhone(_valueCtrl.text);
-    if (phone == null) {
-      setState(() => _error = 'contactEdit.invalidPhone'.tr());
+    final target = _normalizedTarget();
+    if (target == null) {
+      setState(
+        () => _error = widget.isPhone
+            ? 'contactEdit.invalidPhone'.tr()
+            : 'contactEdit.invalidEmail'.tr(),
+      );
       return;
     }
     setState(() {
@@ -138,16 +141,25 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
       _error = null;
     });
     try {
-      await ref.read(profileProvider.notifier).requestPhoneOtp(phone);
+      final notifier = ref.read(profileProvider.notifier);
+      if (widget.isPhone) {
+        await notifier.requestPhoneOtp(target);
+      } else {
+        await notifier.requestEmailOtp(target);
+      }
       if (!mounted) return;
       setState(() {
         _codeSent = true;
-        _sentTo = phone;
+        _sentTo = target;
         _busy = false;
       });
       _startCooldown();
       AppToast.success(context, 'contactEdit.codeSent'.tr());
-      _otpFocus.requestFocus();
+      // OTP maydoni rebuild'dan keyin enabled bo'ladi — fokusni post-frame
+      // so'raymiz (disabled maydonga requestFocus no-op bo'lardi).
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _otpFocus.requestFocus();
+      });
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -158,24 +170,29 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
   }
 
   Future<void> _save() async {
-    if (!widget.isPhone) {
-      AppToast.info(context, 'contactEdit.comingSoon'.tr());
-      return;
-    }
-    final phone = _normalizePhone(_valueCtrl.text);
-    if (phone == null || !_otpValid) return;
+    // `_sentTo` — kod aynan yuborilgan qiymat (maydonni keyin tahrirlasa ham
+    // to'g'ri tasdiqlanadi).
+    if (!_codeSent || !_otpValid) return;
     setState(() {
       _busy = true;
       _error = null;
     });
     try {
-      await ref
-          .read(profileProvider.notifier)
-          .verifyPhoneAndSave(phone: phone, code: _otpCtrl.text);
+      final notifier = ref.read(profileProvider.notifier);
+      if (widget.isPhone) {
+        await notifier.verifyPhoneAndSave(phone: _sentTo, code: _otpCtrl.text);
+      } else {
+        await notifier.verifyEmailAndSave(email: _sentTo, code: _otpCtrl.text);
+      }
       if (!mounted) return;
       // Toast ROOT overlay'ga yoziladi — pop'dan OLDIN ko'rsatamiz, aks holda
       // sheet yopilib context o'lik bo'lib toast chiqmay qoladi.
-      AppToast.success(context, 'contactEdit.saved'.tr());
+      AppToast.success(
+        context,
+        widget.isPhone
+            ? 'contactEdit.savedPhone'.tr()
+            : 'contactEdit.savedEmail'.tr(),
+      );
       Navigator.of(context).pop();
     } catch (e) {
       if (!mounted) return;
@@ -191,17 +208,12 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
     final title = widget.isPhone
         ? 'contactEdit.phoneTitle'.tr()
         : 'contactEdit.emailTitle'.tr();
-    // Telefon: qadamga qarab "Kod yuborish" → "Saqlash". Email: doim "Saqlash".
-    final showSaveLabel = !widget.isPhone || _codeSent;
-    final primaryLabel = showSaveLabel
+    // Qadamga qarab "Kod yuborish" → "Saqlash".
+    final primaryLabel = _codeSent
         ? 'contactEdit.save'.tr()
         : 'contactEdit.sendCode'.tr();
-    final primaryEnabled = widget.isPhone
-        ? (_codeSent ? _otpValid : _valueValid)
-        : _valueValid;
-    final onPrimary = widget.isPhone
-        ? (_codeSent ? _save : _sendCode)
-        : () => AppToast.info(context, 'contactEdit.comingSoon'.tr());
+    final primaryEnabled = _codeSent ? _otpValid : _valueValid;
+    final onPrimary = _codeSent ? _save : _sendCode;
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(26)),
@@ -278,7 +290,7 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
                           style: _pop(13, c: _dim),
                         ),
                       ),
-                      if (widget.isPhone && _codeSent)
+                      if (_codeSent)
                         _resend > 0
                             ? Text(
                                 'contactEdit.resendIn'.tr(
@@ -297,11 +309,10 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
                     ],
                   ),
                   const SizedBox(height: 12),
-                  _OtpInput(
+                  ParvozOtpInput(
                     controller: _otpCtrl,
                     focusNode: _otpFocus,
-                    // Email uchun doim faol; telefon uchun kod yuborilgach.
-                    enabled: !widget.isPhone || _codeSent,
+                    enabled: _codeSent,
                   ),
                   if (_error != null) ...[
                     const SizedBox(height: 12),
@@ -339,79 +350,6 @@ class _ContactEditSheetState extends ConsumerState<_ContactEditSheet> {
       }
     }
     return 'errors.generic'.tr();
-  }
-}
-
-/// 6 xonali OTP kiritish — 6 dumaloq katakcha + ustida shaffof TextField.
-class _OtpInput extends StatelessWidget {
-  const _OtpInput({
-    required this.controller,
-    required this.focusNode,
-    required this.enabled,
-  });
-
-  final TextEditingController controller;
-  final FocusNode focusNode;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final value = controller.text;
-    return Opacity(
-      opacity: enabled ? 1 : 0.4,
-      child: Stack(
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              for (var i = 0; i < _otpLen; i++)
-                _box(
-                  i < value.length ? value[i] : '',
-                  active: enabled && i == value.length,
-                ),
-            ],
-          ),
-          // Ustidagi shaffof maydon — bosilsa fokus + klaviatura, kiritilgan
-          // raqamlar kataklarda ko'rinadi.
-          Positioned.fill(
-            child: Opacity(
-              opacity: 0,
-              child: TextField(
-                controller: controller,
-                focusNode: focusNode,
-                enabled: enabled,
-                keyboardType: TextInputType.number,
-                maxLength: _otpLen,
-                showCursor: false,
-                inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-                style: const TextStyle(color: Colors.transparent),
-                decoration: const InputDecoration(
-                  counterText: '',
-                  border: InputBorder.none,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _box(String digit, {required bool active}) {
-    return Container(
-      width: 50,
-      height: 50,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        color: _card,
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: active ? _blue : _cardBorder,
-          width: active ? 1.5 : 1,
-        ),
-      ),
-      child: Text(digit, style: _unb(20, ls: 0)),
-    );
   }
 }
 

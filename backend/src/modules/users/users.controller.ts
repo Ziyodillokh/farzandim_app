@@ -25,6 +25,10 @@ import { UsersService } from './users.service';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyPhoneDto } from './dto/verify-phone.dto';
+import { ChangePasswordDto } from './dto/change-password.dto';
+import { ResetPasswordDto } from './dto/reset-password.dto';
+import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
+import { VerifyEmailDto } from './dto/verify-email.dto';
 import { CurrentUser } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -117,7 +121,7 @@ export class UsersController {
   @ApiOperation({ summary: 'Request OTP code for phone verification' })
   @ApiResponse({ status: 200, description: 'OTP sent' })
   @ApiResponse({ status: 409, description: 'Phone already in use' })
-  @ApiResponse({ status: 429, description: 'Cooldown — try again later' })
+  @ApiResponse({ status: 400, description: 'Cooldown — try again later' })
   @ApiResponse({ status: 502, description: 'SMS delivery failed' })
   @ApiResponse({ status: 503, description: 'SMS provider not configured' })
   async requestPhoneOtp(
@@ -131,13 +135,78 @@ export class UsersController {
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Verify phone with OTP code' })
   @ApiResponse({ status: 200, description: 'Phone verified and saved' })
-  @ApiResponse({ status: 400, description: 'Invalid or expired code' })
+  @ApiResponse({
+    status: 400,
+    description: 'Invalid/expired code or too many attempts',
+  })
   @ApiResponse({ status: 409, description: 'Phone already in use' })
-  @ApiResponse({ status: 429, description: 'Too many attempts' })
   async verifyPhoneOtp(
     @CurrentUser() user: JwtPayload,
     @Body() dto: VerifyPhoneDto,
   ) {
     return this.usersService.verifyPhoneOtp(user.userId, dto);
+  }
+
+  @Post('me/password')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Change password with old password' })
+  @ApiResponse({ status: 200, description: 'Password changed' })
+  @ApiResponse({ status: 400, description: 'Wrong old password / no password' })
+  async changePassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ChangePasswordDto,
+  ) {
+    return this.usersService.changePassword(user.userId, dto);
+  }
+
+  @Post('me/password/request-otp')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request password-reset OTP to current phone' })
+  @ApiResponse({ status: 200, description: 'OTP sent' })
+  @ApiResponse({ status: 400, description: 'No phone / cooldown' })
+  @ApiResponse({ status: 502, description: 'SMS delivery failed' })
+  @ApiResponse({ status: 503, description: 'SMS provider not configured' })
+  async requestPasswordOtp(@CurrentUser() user: JwtPayload) {
+    return this.usersService.requestPasswordOtp(user.userId);
+  }
+
+  @Post('me/password/reset')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Reset password with OTP code' })
+  @ApiResponse({ status: 200, description: 'Password reset' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired code' })
+  async resetPassword(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: ResetPasswordDto,
+  ) {
+    return this.usersService.resetPasswordWithOtp(user.userId, dto);
+  }
+
+  @Post('me/email')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Request OTP code for new email verification' })
+  @ApiResponse({ status: 200, description: 'OTP sent to new email' })
+  @ApiResponse({ status: 409, description: 'Email already in use' })
+  @ApiResponse({ status: 400, description: 'Cooldown — try again later' })
+  @ApiResponse({ status: 502, description: 'Email delivery failed' })
+  @ApiResponse({ status: 503, description: 'Mail provider not configured' })
+  async requestEmailOtp(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: RequestEmailOtpDto,
+  ) {
+    return this.usersService.requestEmailOtp(user.userId, dto);
+  }
+
+  @Post('me/email/verify')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Verify email with OTP code' })
+  @ApiResponse({ status: 200, description: 'Email verified and saved' })
+  @ApiResponse({ status: 400, description: 'Invalid or expired code' })
+  @ApiResponse({ status: 409, description: 'Email already in use' })
+  async verifyEmailOtp(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: VerifyEmailDto,
+  ) {
+    return this.usersService.verifyEmailOtp(user.userId, dto);
   }
 }

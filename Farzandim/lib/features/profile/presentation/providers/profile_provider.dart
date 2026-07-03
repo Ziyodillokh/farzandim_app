@@ -75,8 +75,44 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
     required String code,
   }) async {
     await _repository.verifyPhoneOtp(phone: phone, code: code);
+    // Optimistik: me() tarmoq sababli null qaytarsa ham yangi raqam ko'rinadi.
+    state = state.copyWith(phoneNumber: phone);
     await _load();
   }
+
+  /// Email o'zgartirish — 1-qadam: yangi emailga OTP yuboradi.
+  Future<void> requestEmailOtp(String email) =>
+      _repository.requestEmailOtp(email);
+
+  /// Email o'zgartirish — 2-qadam: OTP tasdiqlab saqlaydi va profilni
+  /// yangilab oladi (yangi email UI'da ko'rinishi uchun).
+  Future<void> verifyEmailAndSave({
+    required String email,
+    required String code,
+  }) async {
+    await _repository.verifyEmailOtp(email: email, code: code);
+    // Optimistik: me() null qaytarsa ham yangi email ko'rinadi.
+    state = state.copyWith(email: email);
+    await _load();
+  }
+
+  /// Parolni eski parol bilan o'zgartiradi.
+  Future<void> changePassword({
+    required String oldPassword,
+    required String newPassword,
+  }) => _repository.changePassword(
+    oldPassword: oldPassword,
+    newPassword: newPassword,
+  );
+
+  /// Parol tiklash — 1-qadam: joriy telefonga OTP yuboradi.
+  Future<void> requestPasswordOtp() => _repository.requestPasswordOtp();
+
+  /// Parol tiklash — 2-qadam: OTP tasdiqlab yangi parol o'rnatadi.
+  Future<void> resetPasswordWithOtp({
+    required String code,
+    required String newPassword,
+  }) => _repository.resetPassword(code: code, newPassword: newPassword);
 }
 
 /// Profil provider'i — auth state o'zgarishiga listen qiladi.
