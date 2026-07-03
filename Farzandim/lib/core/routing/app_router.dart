@@ -48,7 +48,6 @@ import 'package:farzandim/features/onboarding/presentation/providers/language_pi
 import 'package:farzandim/features/onboarding/presentation/screens/language_select_screen.dart';
 import 'package:farzandim/features/pair_requests/presentation/screens/pair_requests_screen.dart';
 import 'package:farzandim/features/photo_request/presentation/screens/photo_requests_list_screen.dart';
-import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/app_permissions_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/device_settings_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/permission_apps_screen.dart';
@@ -58,6 +57,7 @@ import 'package:farzandim/features/settings/presentation/screens/about_screen.da
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/delete_account_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/notification_preferences_screen.dart';
+import 'package:farzandim/features/settings/presentation/screens/parvoz_premium_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
 import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
@@ -354,6 +354,10 @@ List<RouteBase> buildAppRoutes() {
       pageBuilder: (context, state) => _slidePage(const SettingsScreen()),
     ),
     GoRoute(
+      path: AppRoutes.premium,
+      pageBuilder: (context, state) => _slidePage(const ParvozPremiumScreen()),
+    ),
+    GoRoute(
       path: AppRoutes.settingsAbout,
       pageBuilder: (context, state) => _slidePage(const AboutScreen()),
     ),
@@ -365,11 +369,7 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.support,
       pageBuilder: (context, state) => _slidePage(const SupportChatScreen()),
     ),
-    // Profil va Bolalar boshqaruvi — Bosqich 7.3 va 7.2.
-    GoRoute(
-      path: AppRoutes.settingsProfile,
-      pageBuilder: (context, state) => _slidePage(const ProfileScreen()),
-    ),
+    // Bolalar boshqaruvi. (Akkount/Profil endi bottom sheet — routsiz.)
     GoRoute(
       path: AppRoutes.settingsChildren,
       pageBuilder: (context, state) =>

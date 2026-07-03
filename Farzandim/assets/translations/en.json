@@ -739,8 +739,63 @@
     "errorPrefix": "Delete error: {error}",
     "unexpectedError": "Unexpected error: {error}"
   },
+  "account": {
+    "title": "Account",
+    "email": "Email",
+    "phone": "Phone",
+    "login": "Login",
+    "password": "Password",
+    "editSoon": "Editing coming soon",
+    "manageChildren": "Manage children"
+  },
+  "contactEdit": {
+    "phoneTitle": "Edit phone",
+    "emailTitle": "Edit email",
+    "newPhone": "Enter new number",
+    "newEmail": "Enter new e-mail",
+    "phoneHint": "+998 90 123 45 67",
+    "emailHint": "email@example.com",
+    "otpLabel": "Enter the confirmation code",
+    "otpSentLabel": "Enter the code sent to {target}",
+    "sendCode": "Send code",
+    "resend": "Resend",
+    "resendIn": "Resend ({s})",
+    "save": "Save",
+    "saved": "Phone number updated",
+    "codeSent": "Confirmation code sent",
+    "invalidPhone": "Invalid number (+998 XX XXX XX XX)",
+    "invalidEmail": "Invalid email",
+    "comingSoon": "Email change coming soon"
+  },
+  "premium": {
+    "subscribers": "+1k subscribers",
+    "title": "Parvoz Premium",
+    "subtitle": "A new version of the app is out",
+    "benefitsTitle": "Benefits",
+    "benefit1": "+2 children",
+    "benefit2": "More control",
+    "benefit3": "24 / 7 support",
+    "benefit4": "Private parents-only group",
+    "cta": "Get Premium",
+    "price": "$5/mo",
+    "footer": "You can cancel anytime",
+    "comingSoon": "Payments coming soon"
+  },
   "settings": {
     "title": "Settings",
+    "systemTitle": "System settings",
+    "premiumBanner": {
+      "description": "A bigger plan and more features. Your child's future is in your hands.",
+      "details": "Learn more"
+    },
+    "rows": {
+      "account": { "title": "Account", "subtitle": "Login, password, phone" },
+      "sessions": { "title": "Active sessions", "subtitle": "{count} active sessions" },
+      "notifications": { "title": "Notifications", "subtitle": "System messages" },
+      "language": { "title": "App language" },
+      "support": { "title": "Support", "subtitle": "Feedback" },
+      "about": { "title": "About us", "subtitle": "About the company" }
+    },
     "sections": {
       "profile": "PROFILE",
       "children": "CHILDREN",
@@ -1084,7 +1139,26 @@
     "loadFailed": "Couldn't load permissions.\nCheck your internet connection."
   },
   "leaderboard": {
-    "title": "Leaderboard",
+    "title": "DON rating",
+    "help": {
+      "title": "What is DON?",
+      "body": "DON are points your child earns for tasks and activity. The rating is based on DON."
+    },
+    "howToEarn": {
+      "title": "How is DON earned?",
+      "readBook": {
+        "title": "Reading a book",
+        "sub": "For each book read"
+      },
+      "doTest": {
+        "title": "Taking a test",
+        "sub": "For each completed test"
+      },
+      "watchVideo": {
+        "title": "Watching a useful video",
+        "sub": "For each video watched"
+      }
+    },
     "periods": {
       "weekly": "Weekly",
       "monthly": "Monthly",

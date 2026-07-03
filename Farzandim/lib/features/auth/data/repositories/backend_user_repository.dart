@@ -66,6 +66,25 @@ class BackendUserRepository {
     return AuthUser.fromJson(data);
   }
 
+  /// Yangi telefon raqamiga tasdiqlash OTP kodini yuboradi
+  /// (POST /users/me/phone). `phone` — `+998XXXXXXXXX` formatida.
+  /// Xato: DioException (409 band, 429 kutish, 502/503 SMS).
+  Future<void> requestPhoneOtp(String phone) async {
+    await _dio.post<void>('/users/me/phone', data: {'phone': phone});
+  }
+
+  /// OTP kodni tasdiqlab telefonni yangilaydi
+  /// (POST /users/me/phone/verify). Xato: DioException (400 kod, 409 band).
+  Future<void> verifyPhoneOtp({
+    required String phone,
+    required String code,
+  }) async {
+    await _dio.post<void>(
+      '/users/me/phone/verify',
+      data: {'phone': phone, 'code': code},
+    );
+  }
+
   /// Akkauntni Backend'da butunlay o'chiradi (DELETE /api/users/me).
   /// Backend cascade: bola(lar), lokatsiya, xabarlar, obuna — hammasi o'chadi.
   /// Xato bo'lsa `DioException` otadi (caller UI'da ko'rsatadi).

@@ -287,6 +287,8 @@ flutter:
     - assets/app_icon/     # telefon home screen ikonkalari
     - assets/icons/        # logo'lar (parent_logo_icon.png, va h.k.)
     - assets/images/       # welcome_bg, kelajakdagi rasmlar
+    - assets/images/premium/ # Parvoz Premium memoji avatarlari (obunachilar)
+    - assets/images/leaderboard/ # DON reytingi podium medallari (1/2/3)
     - assets/stickers/     # bola avatar default stickerlari (boy/girl x yosh)
     - assets/translations/ # uz.json, ru.json, en.json — easy_localization
     - assets/map_styles/   # Google Maps custom JSON style (dark premium)

@@ -739,8 +739,63 @@
     "errorPrefix": "Ошибка удаления: {error}",
     "unexpectedError": "Непредвиденная ошибка: {error}"
   },
+  "account": {
+    "title": "Аккаунт",
+    "email": "Email",
+    "phone": "Телефон",
+    "login": "Логин",
+    "password": "Пароль",
+    "editSoon": "Редактирование скоро появится",
+    "manageChildren": "Управление детьми"
+  },
+  "contactEdit": {
+    "phoneTitle": "Изменить телефон",
+    "emailTitle": "Изменить email",
+    "newPhone": "Введите новый номер",
+    "newEmail": "Введите новый e-mail",
+    "phoneHint": "+998 90 123 45 67",
+    "emailHint": "email@example.com",
+    "otpLabel": "Введите код подтверждения",
+    "otpSentLabel": "Введите код, отправленный на {target}",
+    "sendCode": "Отправить код",
+    "resend": "Отправить снова",
+    "resendIn": "Отправить снова ({s})",
+    "save": "Сохранить",
+    "saved": "Номер телефона обновлён",
+    "codeSent": "Код подтверждения отправлен",
+    "invalidPhone": "Неверный номер (+998 XX XXX XX XX)",
+    "invalidEmail": "Неверный email",
+    "comingSoon": "Смена email скоро появится"
+  },
+  "premium": {
+    "subscribers": "+1k подписчиков",
+    "title": "Parvoz Premium",
+    "subtitle": "Вышла новая версия приложения",
+    "benefitsTitle": "Преимущества",
+    "benefit1": "+2 ребёнка",
+    "benefit2": "Больше контроля",
+    "benefit3": "Поддержка 24 / 7",
+    "benefit4": "Закрытая группа для родителей",
+    "cta": "Подключить Premium",
+    "price": "$5/мес",
+    "footer": "Отменить подписку можно в любое время",
+    "comingSoon": "Оплата будет доступна скоро"
+  },
   "settings": {
     "title": "Настройки",
+    "systemTitle": "Системные настройки",
+    "premiumBanner": {
+      "description": "Больше возможностей и лучший тариф. Будущее вашего ребёнка в ваших руках.",
+      "details": "Подробнее"
+    },
+    "rows": {
+      "account": { "title": "Аккаунт", "subtitle": "Логин, пароль, телефон" },
+      "sessions": { "title": "Активные сессии", "subtitle": "{count} активных сессий" },
+      "notifications": { "title": "Уведомления", "subtitle": "Системные сообщения" },
+      "language": { "title": "Язык приложения" },
+      "support": { "title": "Поддержка", "subtitle": "Обратная связь" },
+      "about": { "title": "О нас", "subtitle": "О компании" }
+    },
     "sections": {
       "profile": "ПРОФИЛЬ",
       "children": "ДЕТИ",
@@ -1084,7 +1139,26 @@
     "loadFailed": "Не удалось загрузить разрешения.\nПроверьте подключение к интернету."
   },
   "leaderboard": {
-    "title": "Рейтинг",
+    "title": "DON рейтинг",
+    "help": {
+      "title": "Что такое DON?",
+      "body": "DON — баллы, которые ваш ребёнок зарабатывает за задания и активность. Рейтинг составляется по DON."
+    },
+    "howToEarn": {
+      "title": "Как начисляются DON?",
+      "readBook": {
+        "title": "Читает книгу",
+        "sub": "За каждую прочитанную книгу"
+      },
+      "doTest": {
+        "title": "Проходит тест",
+        "sub": "За каждый пройденный тест"
+      },
+      "watchVideo": {
+        "title": "Смотрит полезное видео",
+        "sub": "За каждое просмотренное видео"
+      }
+    },
     "periods": {
       "weekly": "Неделя",
       "monthly": "Месяц",
