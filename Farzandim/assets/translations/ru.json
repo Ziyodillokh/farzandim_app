@@ -739,6 +739,15 @@
     "errorPrefix": "Ошибка удаления: {error}",
     "unexpectedError": "Непредвиденная ошибка: {error}"
   },
+  "account": {
+    "title": "Аккаунт",
+    "email": "Email",
+    "phone": "Телефон",
+    "login": "Логин",
+    "password": "Пароль",
+    "editSoon": "Редактирование скоро появится",
+    "manageChildren": "Управление детьми"
+  },
   "premium": {
     "subscribers": "+1k подписчиков",
     "title": "Parvoz Premium",

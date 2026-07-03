@@ -66,9 +66,6 @@ class AppRoutes {
   /// Ilova haqida.
   static const String settingsAbout = '/settings/about';
 
-  /// Profil tahrirlash.
-  static const String settingsProfile = '/settings/profile';
-
   /// Faol sessiyalar — login qilingan qurilmalar.
   static const String settingsSessions = '/settings/sessions';
 

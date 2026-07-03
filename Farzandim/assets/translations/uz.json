@@ -739,6 +739,15 @@
     "errorPrefix": "O'chirish xatosi: {error}",
     "unexpectedError": "Kutilmagan xato: {error}"
   },
+  "account": {
+    "title": "Akkount",
+    "email": "Email",
+    "phone": "Telefon",
+    "login": "Login",
+    "password": "Parol",
+    "editSoon": "Tahrirlash tez kunda qo'shiladi",
+    "manageChildren": "Farzandlarni boshqarish"
+  },
   "premium": {
     "subscribers": "+1k obunachi",
     "title": "Parvoz Premium",

@@ -739,6 +739,15 @@
     "errorPrefix": "Delete error: {error}",
     "unexpectedError": "Unexpected error: {error}"
   },
+  "account": {
+    "title": "Account",
+    "email": "Email",
+    "phone": "Phone",
+    "login": "Login",
+    "password": "Password",
+    "editSoon": "Editing coming soon",
+    "manageChildren": "Manage children"
+  },
   "premium": {
     "subscribers": "+1k subscribers",
     "title": "Parvoz Premium",

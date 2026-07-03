@@ -9,6 +9,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
 import 'package:flutter/material.dart';
@@ -76,7 +77,7 @@ class SettingsScreen extends ConsumerWidget {
                       icon: SolarIconsBold.userCircle,
                       title: 'settings.rows.account.title'.tr(),
                       subtitle: 'settings.rows.account.subtitle'.tr(),
-                      onTap: () => context.push(AppRoutes.settingsProfile),
+                      onTap: () => showAccountSheet(context),
                     ),
                     const SizedBox(height: 4),
                     _SettingRow(
