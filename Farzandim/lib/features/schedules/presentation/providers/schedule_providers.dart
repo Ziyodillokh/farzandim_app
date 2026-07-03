@@ -12,6 +12,7 @@
 import 'dart:async';
 
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/data/repositories/backend_routine_repository.dart';
 import 'package:farzandim/shared/models/result.dart';
@@ -22,6 +23,11 @@ final schedulesProvider = StreamProvider.family<List<Schedule>, String>((
   ref,
   childId,
 ) async* {
+  // MOCK (UI preview): soxta rejimlar (Uyqu / Maktab / Sport).
+  if (kLocationMock) {
+    yield mockSchedules(childId);
+    return;
+  }
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     yield const <Schedule>[];
@@ -81,6 +87,31 @@ class ScheduleActionsNotifier extends StateNotifier<AsyncValue<void>> {
     bool isActive = true,
     List<String> blockedApps = const [],
   }) async {
+    // MOCK (UI preview): store'ga qo'shamiz + provider'ni yangilaymiz.
+    if (kLocationMock) {
+      mockAddSchedule(
+        childId,
+        Schedule(
+          id: 'mock-${DateTime.now().microsecondsSinceEpoch}',
+          parentUid: 'mock',
+          childId: childId,
+          title: title,
+          type: type,
+          weekdays: weekdays,
+          startHour: startHour,
+          startMinute: startMinute,
+          endHour: endHour,
+          endMinute: endMinute,
+          reminderMinutes: reminderMinutes,
+          isActive: isActive,
+          blockedApps: blockedApps,
+          createdAt: DateTime.now(),
+          updatedAt: DateTime.now(),
+        ),
+      );
+      _ref.invalidate(schedulesProvider(childId));
+      return const Result<void>.success();
+    }
     state = const AsyncValue.loading();
     try {
       final routine = Schedule(

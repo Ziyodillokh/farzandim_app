@@ -6,6 +6,7 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola uchun bugungi foydalanish — backend fetch + 30 sek polling.
@@ -36,6 +37,11 @@ final todayUsageProvider = StreamProvider.autoDispose
 /// `autoDispose` + 2 daqiqa keep-alive (yuqoridagi kabi).
 final installedAppsProvider = StreamProvider.autoDispose
     .family<List<AppUsageEntry>, String>((ref, childId) async* {
+      // MOCK (UI preview): soxta o'rnatilgan ilovalar ro'yxati.
+      if (kLocationMock) {
+        yield mockInstalledApps(childId);
+        return;
+      }
       final isAuthed = ref.watch(
         backendAuthProvider.select((s) => s is AuthAuthenticated),
       );
@@ -60,6 +66,11 @@ final installedAppsProvider = StreamProvider.autoDispose
 /// Bola uchun cheklovlar — backend `/app-limits` orqali.
 final restrictionsProvider =
     StreamProvider.family<List<AppRestriction>, String>((ref, childId) async* {
+      // MOCK (UI preview): soxta bloklangan + limitli ilovalar.
+      if (kLocationMock) {
+        yield mockRestrictions(childId);
+        return;
+      }
       final isAuthed = ref.watch(
         backendAuthProvider.select((s) => s is AuthAuthenticated),
       );

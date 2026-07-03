@@ -67,22 +67,27 @@ String _formatPerDay(int minutes) {
 }
 
 /// "Kunlik vaqt limiti"ni tortiladigan modal varaq sifatida ochadi.
-void showDailyLimitSheet(BuildContext context, {required String childId}) {
+void showDailyLimitSheet(
+  BuildContext context, {
+  required String childId,
+  String? title,
+}) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => _DailyLimitSheet(childId: childId),
+    builder: (_) => _DailyLimitSheet(childId: childId, title: title),
   );
 }
 
 // ════════════ Drag qobig'i ════════════
 /// Tepaga/pastga tortiladi; minimumdan past tortilsa yopiladi.
 class _DailyLimitSheet extends StatefulWidget {
-  const _DailyLimitSheet({required this.childId});
+  const _DailyLimitSheet({required this.childId, this.title});
 
   final String childId;
+  final String? title;
 
   @override
   State<_DailyLimitSheet> createState() => _DailyLimitSheetState();
@@ -119,6 +124,7 @@ class _DailyLimitSheetState extends State<_DailyLimitSheet> {
         builder: (ctx, scrollController) => _DailyLimitBody(
           childId: widget.childId,
           scrollController: scrollController,
+          title: widget.title,
         ),
       ),
     );
@@ -130,10 +136,12 @@ class _DailyLimitBody extends ConsumerStatefulWidget {
   const _DailyLimitBody({
     required this.childId,
     required this.scrollController,
+    this.title,
   });
 
   final String childId;
   final ScrollController scrollController;
+  final String? title;
 
   @override
   ConsumerState<_DailyLimitBody> createState() => _DailyLimitBodyState();
@@ -169,7 +177,7 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
               ),
               const SizedBox(height: 16),
               Text(
-                'dailyLimit.title'.tr(),
+                widget.title ?? 'dailyLimit.title'.tr(),
                 textAlign: TextAlign.center,
                 style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),

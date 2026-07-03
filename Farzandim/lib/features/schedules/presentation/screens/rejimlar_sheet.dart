@@ -12,14 +12,14 @@
 // topiladi; sanoq = `schedule.blockedApps.length`.
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/features/schedules/presentation/screens/add_rejim_sheet.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 // ════════════ Parvoz tokenlar (lokal) ════════════
@@ -113,29 +113,26 @@ class _RejimlarBody extends ConsumerWidget {
   final String childId;
   final ScrollController scrollController;
 
-  Schedule? _byType(List<Schedule> all, ScheduleType type) {
-    for (final s in all) {
-      if (s.type == type) return s;
+  /// "Sozlash" — rejim turiga qarab ilova sozlash varag'ini ochadi.
+  /// Uyqu (sleep) → ilovalarni bloklash; Maktab (school) → kunlik limit;
+  /// boshqasi → bloklash (default). Rejimlar varag'i ustidan ochiladi.
+  void _openConfig(BuildContext context, ScheduleType type) {
+    final title = 'rejimlar.title'.tr();
+    if (type == ScheduleType.school) {
+      showDailyLimitSheet(context, childId: childId, title: title);
+    } else {
+      showBlockAppsSheet(
+        context,
+        childId: childId,
+        title: title,
+        showCategories: false,
+      );
     }
-    return null;
   }
-
-  void _openEditor(BuildContext context) {
-    // Avval sheet'ni yopamiz, keyin editorga o'tamiz (sos_alert_dialog
-    // pattern) — modal stack'da osilib qolmasin, orqaga to'g'ri ishlasin.
-    final router = GoRouter.of(context);
-    Navigator.of(context).pop();
-    router.push(AppRoutes.schedulesPath(childId));
-  }
-
-  void _comingSoon(BuildContext context) =>
-      AppToast.info(context, 'dashboard.comingSoon'.tr());
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(schedulesProvider(childId)).valueOrNull ?? const [];
-    final sleep = _byType(all, ScheduleType.sleep);
-    final school = _byType(all, ScheduleType.school);
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -170,19 +167,19 @@ class _RejimlarBody extends ConsumerWidget {
                   physics: const AlwaysScrollableScrollPhysics(),
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   children: [
-                    _ScheduleCard(
-                      label: 'rejimlar.sleepTitle'.tr(),
-                      appCount: sleep?.blockedApps.length ?? 0,
-                      onConfigure: () => _openEditor(context),
+                    for (final s in all) ...[
+                      _ScheduleCard(
+                        label: s.title.isNotEmpty ? s.title : s.type.label,
+                        appCount: s.blockedApps.length,
+                        onConfigure: () => _openConfig(context, s.type),
+                      ),
+                      const SizedBox(height: 10),
+                    ],
+                    const SizedBox(height: 8),
+                    _AddButton(
+                      onTap: () =>
+                          showAddRejimSheet(context, childId: childId),
                     ),
-                    const SizedBox(height: 10),
-                    _ScheduleCard(
-                      label: 'rejimlar.schoolTitle'.tr(),
-                      appCount: school?.blockedApps.length ?? 0,
-                      onConfigure: () => _openEditor(context),
-                    ),
-                    const SizedBox(height: 18),
-                    _AddButton(onTap: () => _comingSoon(context)),
                   ],
                 ),
               ),

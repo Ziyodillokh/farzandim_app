@@ -47,6 +47,11 @@ class AppRoutes {
 
   static String controlsSetupPath(String childId) => '/controls-setup/$childId';
 
+  /// Bola sozlamalari (nazorat hub) — dashboard "Bola sozlamalari" kartasi.
+  static const String childSettingsPattern = '/child-settings/:childId';
+
+  static String childSettingsPath(String childId) => '/child-settings/$childId';
+
   /// Manzillar (geo-zonalar) o'rnatish — wizard 3-qadam (nazoratdan keyin).
   /// Navigatsiya uchun [addressesSetupPath]'dan foydalaning.
   static const String addressesSetupPattern = '/addresses-setup/:childId';
@@ -160,6 +165,14 @@ class AppRoutes {
   /// childId yo'q). Telegram chat list uslubida — har bola
   /// preview + unread badge.
   static const String voiceMessages = '/voice-messages';
+
+  /// "Chatlar" — preview chat ro'yxati (Parvoz dizayn, mock).
+  static const String chatList = '/chats';
+
+  /// Preview chat detali (`:id` — kontakt id'si).
+  static const String chatDetailPattern = '/chats/:id';
+
+  static String chatDetailPath(String id) => '/chats/$id';
 
   /// Bola ilovalari foydalanish statistikasi (App Restrictions feature).
   /// `:childId` — qaysi bolaning statistikasi (per-child).

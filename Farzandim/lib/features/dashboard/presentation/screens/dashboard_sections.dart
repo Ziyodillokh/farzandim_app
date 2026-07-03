@@ -54,7 +54,7 @@ class _Header extends ConsumerWidget {
                 width: 20,
                 height: 20,
               ),
-              onTap: () => context.push(AppRoutes.qaVoicePath(child.id)),
+              onTap: () => context.push(AppRoutes.chatList),
             ),
           ),
           // Bildirishnoma (o'ng-tepa) + o'qilmagan qizil nuqta.
@@ -414,9 +414,13 @@ class _ScreenTimeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ms = ref.watch(todayScreenTimeMsProvider(childId));
     final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    final apps = (usage?.filteredApps ?? const <AppUsageEntry>[])
+    final realApps = (usage?.filteredApps ?? const <AppUsageEntry>[])
         .take(3)
         .toList();
+    // Bo'sh bo'lsa preview uchun mock ilovalar + mock vaqt (haqiqiy
+    // ma'lumot bola ilovasidan keladi).
+    final apps = realApps.isNotEmpty ? realApps : _kMockApps;
+    final displayMs = ms > 0 ? ms : (2 * 60 + 44) * 60000;
 
     return _Card(
       minHeight: 220,
@@ -432,35 +436,32 @@ class _ScreenTimeCard extends ConsumerWidget {
             children: [
               Text('dashboard.screenTimeLabel'.tr(), style: _pop(14, c: _dim)),
               const SizedBox(height: 2),
-              Text(_fmtScreenTime(ms), style: _unb(22, ls: -0.6)),
+              Text(_fmtScreenTime(displayMs), style: _unb(22, ls: -0.6)),
             ],
           ),
           const SizedBox(height: 12),
-          if (apps.isEmpty)
-            Text('—', style: _pop(14, c: _dim))
-          else
-            Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (var i = 0; i < apps.length; i++) ...[
-                  Row(
-                    children: [
-                      _AppIcon(app: apps[i]),
-                      const SizedBox(width: 8),
-                      Expanded(
-                        child: Text(
-                          '${i + 1}. ${apps[i].appName}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: _pop(14),
-                        ),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              for (var i = 0; i < apps.length; i++) ...[
+                Row(
+                  children: [
+                    _AppIcon(app: apps[i]),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${i + 1}. ${apps[i].appName}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _pop(14),
                       ),
-                    ],
-                  ),
-                  if (i < apps.length - 1) const _Divider(),
-                ],
+                    ),
+                  ],
+                ),
+                if (i < apps.length - 1) const _Divider(),
               ],
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -475,6 +476,28 @@ String _fmtScreenTime(int ms) {
   if (h > 0) return '${h}s $m min';
   return '$m min';
 }
+
+/// Ekran vaqti bo'sh bo'lganda preview uchun mock ilovalar (harf ikonli).
+final List<AppUsageEntry> _kMockApps = [
+  AppUsageEntry(
+    packageName: '_mock.pubg',
+    appName: 'PUBG',
+    totalTimeMs: 5400000,
+    lastTimeUsed: DateTime(2024),
+  ),
+  AppUsageEntry(
+    packageName: '_mock.instagram',
+    appName: 'Instagram',
+    totalTimeMs: 2400000,
+    lastTimeUsed: DateTime(2024),
+  ),
+  AppUsageEntry(
+    packageName: '_mock.telegram',
+    appName: 'Telegram',
+    totalTimeMs: 1200000,
+    lastTimeUsed: DateTime(2024),
+  ),
+];
 
 /// 24px dumaloq ilova ikonkasi (URL → base64 → harf fallback).
 class _AppIcon extends StatelessWidget {
@@ -551,10 +574,16 @@ class _XpCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(childProfileProvider(child.id)).valueOrNull;
     final xp = profile?.xp ?? 0;
+    // Target dizayn "DON balansi" deydi. Backend hozircha `xp` sifatida
+    // saqlaydi — shuning uchun shu qiymatni DON deb ko'rsatamiz. Bo'sh
+    // bo'lsa (0) preview uchun mock 1250.
+    final displayDon = xp > 0 ? xp : 1250;
     final lb = ref.watch(
       leaderboardProvider((childId: child.id, period: 'all', region: null)),
     );
     final rows = _leaderboardWindow(lb, child.id);
+    // Reyting bo'sh bo'lsa preview uchun mock qatorlar.
+    final displayRows = rows.isNotEmpty ? rows : _mockLeaderboard(child);
 
     return _Card(
       minHeight: 220,
@@ -568,13 +597,13 @@ class _XpCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('dashboard.xpBalance'.tr(), style: _pop(14, c: _dim)),
+              Text('DON balansi', style: _pop(14, c: _dim)),
               const SizedBox(height: 2),
               Row(
                 children: [
                   Flexible(
                     child: Text(
-                      _fmtNumber(xp),
+                      _fmtNumber(displayDon),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _unb(22, ls: -0.6),
@@ -590,28 +619,25 @@ class _XpCard extends ConsumerWidget {
                       color: _blue,
                       borderRadius: BorderRadius.circular(20),
                     ),
-                    child: Text('XP', style: _pop(12, w: FontWeight.w600)),
+                    child: Text('DON', style: _pop(12, w: FontWeight.w600)),
                   ),
                 ],
               ),
             ],
           ),
           const SizedBox(height: 12),
-          if (rows.isEmpty)
-            const SizedBox.shrink()
-          else
-            Column(
-              children: [
-                for (var i = 0; i < rows.length; i++) ...[
-                  _LeaderboardRow(
-                    entry: rows[i],
-                    isMe: rows[i].childId == child.id,
-                    me: child,
-                  ),
-                  if (i < rows.length - 1) const _Divider(),
-                ],
+          Column(
+            children: [
+              for (var i = 0; i < displayRows.length; i++) ...[
+                _LeaderboardRow(
+                  entry: displayRows[i],
+                  isMe: displayRows[i].childId == child.id,
+                  me: child,
+                ),
+                if (i < displayRows.length - 1) const _Divider(),
               ],
-            ),
+            ],
+          ),
         ],
       ),
     );
@@ -628,9 +654,14 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
   }
   final idx = all.indexWhere((e) => e.childId == childId);
   if (idx >= 0) {
-    final start = (idx - 1).clamp(0, all.length);
-    final end = (idx + 2).clamp(0, all.length);
-    return all.sublist(start, end);
+    // Doim 3 qatorli oyna (bola markazda, chetlarda ham 3 ta) — 1-rasmdagidek
+    // to'liq to'ldirilgan reyting, yuqorida katta bo'sh joy qolmasin.
+    if (all.length <= 3) return all;
+    var start = idx - 1;
+    final maxStart = all.length - 3;
+    if (start < 0) start = 0;
+    if (start > maxStart) start = maxStart;
+    return all.sublist(start, start + 3);
   }
   final out = <LeaderboardEntry>[];
   final me = lb.currentChild;
@@ -641,6 +672,33 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
   }
   out.sort((a, b) => a.rank.compareTo(b.rank));
   return out.take(3).toList();
+}
+
+/// Reyting bo'sh bo'lganda preview uchun mock qatorlar (bola o'rtada).
+List<LeaderboardEntry> _mockLeaderboard(Child me) {
+  return [
+    const LeaderboardEntry(
+      rank: 94,
+      childId: '_mock_up',
+      name: 'Soliha',
+      region: '',
+      xp: 1280,
+    ),
+    LeaderboardEntry(
+      rank: 95,
+      childId: me.id,
+      name: me.name,
+      region: '',
+      xp: 1250,
+    ),
+    const LeaderboardEntry(
+      rank: 96,
+      childId: '_mock_dn',
+      name: 'Javohir',
+      region: '',
+      xp: 1210,
+    ),
+  ];
 }
 
 class _LeaderboardRow extends StatelessWidget {
@@ -708,40 +766,231 @@ String _fmtNumber(int n) {
   return buf.toString();
 }
 
-// ════════════════════════ KUN TARTIBI (TEZ KUNDA) ════════════════════════
+// ════════════════════════ KUNLIK QADAMLAR / RIVOJLANISH ════════════════════════
+// Hafta kunlari qisqartmalari (Dushanba…Yakshanba).
+const List<String> _kWeekLabels = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
 
-class _ScheduleCard extends StatelessWidget {
-  const _ScheduleCard();
+/// Bir hafta-kuni holati: bajarilgan / olov (streak) / muzlatilgan / bo'sh.
+enum _DayState { done, fire, freeze, empty }
+
+/// Kunlik qadamlar kartasi — oltiburchak nishon + "8 837 / 10 000" + hafta.
+/// MOCK ma'lumot (preview): haqiqiy qadam sanagich bola ilovasidan keladi.
+class _StepsCard extends StatelessWidget {
+  const _StepsCard();
 
   @override
   Widget build(BuildContext context) {
+    const steps = 8837;
+    const goal = 10000;
+    const days = [
+      _DayState.done,
+      _DayState.done,
+      _DayState.done,
+      _DayState.done,
+      _DayState.empty,
+      _DayState.empty,
+      _DayState.empty,
+    ];
     return _Card(
+      onTap: () {},
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('dashboard.scheduleTitle'.tr(), style: _pop(14, c: _dim)),
-          const SizedBox(height: 14),
-          Center(
-            child: Column(
-              children: [
-                Icon(
-                  SolarIconsBold.calendarMark,
-                  size: 30,
-                  color: Colors.white.withValues(alpha: 0.4),
+          Row(
+            children: [
+              Image.asset(
+                'assets/icons/badge_steps.png',
+                width: 52,
+                height: 52,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Kunlik qadamlar', style: _pop(14, c: _dim)),
+                    const SizedBox(height: 2),
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.baseline,
+                      textBaseline: TextBaseline.alphabetic,
+                      children: [
+                        Text(_fmtNumber(steps), style: _unb(22, ls: -0.6)),
+                        Text(
+                          ' / ${_fmtNumber(goal)}',
+                          style: _unb(15, ls: -0.4, c: _dim),
+                        ),
+                      ],
+                    ),
+                  ],
                 ),
-                const SizedBox(height: 8),
-                Text(
-                  'dashboard.comingSoon'.tr(),
-                  style: _pop(14, w: FontWeight.w500, c: _dim),
-                ),
-              ],
-            ),
+              ),
+              const Icon(SolarIconsBold.altArrowRight, size: 20, color: _dim),
+            ],
           ),
-          const SizedBox(height: 6),
+          const SizedBox(height: 16),
+          const _WeekTracker(states: days),
         ],
       ),
     );
   }
+}
+
+/// Kunlik rivojlanish (streak) kartasi — oltiburchak "7" + "7 kun" + hafta
+/// (olov = bajarilgan, muzlatilgan = o'tkazib yuborilgan). MOCK preview.
+class _StreakCard extends StatelessWidget {
+  const _StreakCard();
+
+  @override
+  Widget build(BuildContext context) {
+    const days = [
+      _DayState.fire,
+      _DayState.fire,
+      _DayState.freeze,
+      _DayState.fire,
+      _DayState.empty,
+      _DayState.empty,
+      _DayState.empty,
+    ];
+    return _Card(
+      onTap: () {},
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Image.asset(
+                'assets/icons/badge_streak.png',
+                width: 52,
+                height: 52,
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text('Kunlik rivojlanish', style: _pop(14, c: _dim)),
+                    const SizedBox(height: 2),
+                    Text('7 kun', style: _unb(22, ls: -0.6)),
+                  ],
+                ),
+              ),
+              const Icon(SolarIconsBold.altArrowRight, size: 20, color: _dim),
+            ],
+          ),
+          const SizedBox(height: 16),
+          const _WeekTracker(states: days),
+        ],
+      ),
+    );
+  }
+}
+
+/// 7 kunlik gorizontal treker — har kun rounded PILL (kapsula) ichida.
+/// Ikkala karta (qadamlar + rivojlanish) bir xil pill uslubini ishlatadi.
+class _WeekTracker extends StatelessWidget {
+  const _WeekTracker({required this.states});
+
+  final List<_DayState> states;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        for (var i = 0; i < 7; i++) ...[
+          Expanded(child: _DayCircle(label: _kWeekLabels[i], state: states[i])),
+          if (i < 6) const SizedBox(width: 6),
+        ],
+      ],
+    );
+  }
+}
+
+/// Bitta kun kapsulasi — yorliq (tepada) + holat indikatori (pastda): ko'k
+/// check / olov / muzlik / bo'sh punktir. Qorong'i rounded pill ichida.
+class _DayCircle extends StatelessWidget {
+  const _DayCircle({required this.label, required this.state});
+
+  final String label;
+  final _DayState state;
+
+  @override
+  Widget build(BuildContext context) {
+    const dot = 26.0;
+    Widget indicator;
+    switch (state) {
+      case _DayState.done:
+        indicator = const DecoratedBox(
+          decoration: BoxDecoration(shape: BoxShape.circle, color: _blue),
+          child: Icon(Icons.check_rounded, size: 15, color: Colors.white),
+        );
+      case _DayState.fire:
+        indicator = DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFFFF9F1C).withValues(alpha: 0.20),
+          ),
+          child: const Icon(
+            Icons.local_fire_department_rounded,
+            size: 15,
+            color: Color(0xFFFF9F1C),
+          ),
+        );
+      case _DayState.freeze:
+        indicator = DecoratedBox(
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: _blue.withValues(alpha: 0.20),
+          ),
+          child: const Icon(
+            Icons.ac_unit_rounded,
+            size: 14,
+            color: Color(0xFF4FA8FF),
+          ),
+        );
+      case _DayState.empty:
+        indicator = const CustomPaint(painter: _DashRingPainter());
+    }
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 10),
+      decoration: BoxDecoration(
+        color: const Color(0x14FFFFFF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: const Color(0x14FFFFFF)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Text(label, maxLines: 1, style: _pop(11, w: FontWeight.w600)),
+          const SizedBox(height: 8),
+          SizedBox(width: dot, height: dot, child: indicator),
+        ],
+      ),
+    );
+  }
+}
+
+/// Bo'sh kun uchun punktir doira.
+class _DashRingPainter extends CustomPainter {
+  const _DashRingPainter();
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = const Color(0x40FFFFFF)
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.4;
+    final c = Offset(size.width / 2, size.height / 2);
+    final r = size.width / 2 - 0.8;
+    const dashes = 12;
+    const sweep = 2 * 3.14159265 / dashes;
+    final rect = Rect.fromCircle(center: c, radius: r);
+    for (var i = 0; i < dashes; i++) {
+      canvas.drawArc(rect, i * sweep, sweep * 0.55, false, paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }
 
 // ════════════════════════ AMAL KARTASI ════════════════════════

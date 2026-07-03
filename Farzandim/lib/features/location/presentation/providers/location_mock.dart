@@ -10,9 +10,12 @@
 // Ishlatib bo'lgach `kLocationMock = false` qiling (yoki bu faylni o'chiring +
 // provayderlardagi short-circuit'larni olib tashlang). Prod'da HAR DOIM false.
 
+import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
+import 'package:farzandim/features/schedules/data/models/schedule.dart';
 
 /// Mock rejim yoqilganmi. UI'ni ko'rish uchun `true`, prod uchun `false`.
 const bool kLocationMock = false;
@@ -117,6 +120,123 @@ List<GeoZone> mockZones(String childId) {
 
 /// Mock manzil — pastki "qayerda" kartasi (rasmga mos).
 const String mockAddress = 'Mirzo ulugbek, 12 uy';
+
+// ─────────────────────────────────────────────────────────────────────
+// "Bola sozlamalari" hub preview uchun mock (Ilova cheklovlari + Rejimlar).
+// ─────────────────────────────────────────────────────────────────────
+
+/// Mock ilova cheklovlari — 2 ta bloklangan + 3 ta kunlik limit.
+/// (Hub: "Ilovalarni bloklash: 2 ta", "Kunlik vaqt limiti: 3 ta").
+List<AppRestriction> mockRestrictions(String childId) {
+  final now = DateTime.now();
+  AppRestriction r(
+    String pkg,
+    String name, {
+    int limit = 0,
+    bool blocked = false,
+  }) => AppRestriction(
+    packageName: pkg,
+    appName: name,
+    limitMinutes: limit,
+    isBlocked: blocked,
+    updatedAt: now,
+  );
+  return [
+    r('com.pubg.imobile', 'PUBG Mobile', blocked: true),
+    r('com.zhiliaoapp.musically', 'TikTok', blocked: true),
+    r('com.instagram.android', 'Instagram', limit: 60),
+    r('com.google.android.youtube', 'YouTube', limit: 90),
+    r('org.telegram.messenger', 'Telegram', limit: 45),
+  ];
+}
+
+// O'zgaruvchan mock store — "Rejim qo'shish" preview'da qo'shilgan rejimlar
+// shu yerda saqlanadi (provider invalidate qilinsa yangi ro'yxat chiqadi).
+final Map<String, List<Schedule>> _mockScheduleStore = {};
+
+/// Mock rejimlar — Uyqu vaqti + Maktab vaqti (+ preview'da qo'shilganlar).
+List<Schedule> mockSchedules(String childId) =>
+    _mockScheduleStore.putIfAbsent(childId, () => _seedSchedules(childId));
+
+/// Preview'da yangi rejim qo'shadi (store'ga qo'shib, ro'yxatni o'stiradi).
+void mockAddSchedule(String childId, Schedule schedule) {
+  _mockScheduleStore[childId] = [...mockSchedules(childId), schedule];
+}
+
+List<Schedule> _seedSchedules(String childId) {
+  final now = DateTime.now();
+  Schedule s(
+    String id,
+    String title,
+    ScheduleType type,
+    List<Weekday> days,
+    int sh,
+    int sm,
+    int eh,
+    int em,
+    List<String> blocked,
+  ) => Schedule(
+    id: id,
+    parentUid: 'mock',
+    childId: childId,
+    title: title,
+    type: type,
+    weekdays: days,
+    startHour: sh,
+    startMinute: sm,
+    endHour: eh,
+    endMinute: em,
+    reminderMinutes: 10,
+    blockedApps: blocked,
+    createdAt: now,
+    updatedAt: now,
+  );
+  return [
+    s('mock-sch-sleep', 'Uyqu vaqti', ScheduleType.sleep, Weekday.values, 22, 0,
+        7, 0, const [
+      'com.pubg.imobile',
+      'com.zhiliaoapp.musically',
+      'com.google.android.youtube',
+      'com.instagram.android',
+    ]),
+    s('mock-sch-school', 'Maktab vaqti', ScheduleType.school, const [
+      Weekday.monday,
+      Weekday.tuesday,
+      Weekday.wednesday,
+      Weekday.thursday,
+      Weekday.friday,
+    ], 8, 0, 14, 0, const [
+      'com.pubg.imobile',
+      'com.zhiliaoapp.musically',
+      'org.telegram.messenger',
+    ]),
+  ];
+}
+
+/// Mock o'rnatilgan ilovalar — block/limit varaqlari shu ro'yxatni ko'rsatadi.
+/// Restriction'lardagi paketlar bilan bir xil (blok/limit holati mos tushsin).
+List<AppUsageEntry> mockInstalledApps(String childId) {
+  final now = DateTime.now();
+  AppUsageEntry a(String pkg, String name, int minutes, int hoursAgo) =>
+      AppUsageEntry(
+        packageName: pkg,
+        appName: name,
+        totalTimeMs: minutes * 60000,
+        lastTimeUsed: now.subtract(Duration(hours: hoursAgo)),
+      );
+  return [
+    a('com.pubg.imobile', 'PUBG Mobile', 164, 1),
+    a('com.zhiliaoapp.musically', 'TikTok', 132, 0),
+    a('com.instagram.android', 'Instagram', 96, 0),
+    a('com.google.android.youtube', 'YouTube', 88, 2),
+    a('org.telegram.messenger', 'Telegram', 54, 0),
+    a('com.whatsapp', 'WhatsApp', 41, 1),
+    a('com.android.chrome', 'Chrome', 33, 3),
+    a('com.google.android.apps.youtube.kids', 'YouTube Kids', 28, 5),
+    a('com.supercell.clashofclans', 'Clash of Clans', 22, 6),
+    a('com.spotify.music', 'Spotify', 47, 2),
+  ];
+}
 
 /// Mock timeline ko'rinishi (rasmga 1:1): joy nomi + ko'cha + "Kechikdi"mi.
 /// `now`(10:30)=Noma'lum/Bordi, `school`(09:30)=Maktabda/Kechikdi,

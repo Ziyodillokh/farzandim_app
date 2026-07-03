@@ -12,7 +12,6 @@
 // (yoki tahrir paytida mavjud qiymat) saqlanadi.
 
 import 'dart:async';
-import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
@@ -22,12 +21,13 @@ import 'package:farzandim/shared/models/result.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Parvoz tokenlar (lokal) ════════════
@@ -38,6 +38,18 @@ const _iconBtnBg = Color(0xFF21262A);
 const _border = Color(0x1AFFFFFF); // oq 10%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 const _defaultCenter = LatLng(41.2995, 69.2401); // Toshkent markazi
+
+// Kalitsiz CARTO dark plitkalar (Google Maps kaliti shart emas).
+const String _darkTileUrl =
+    'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
+
+/// Zona belgisi kaliti → SVG asset yo'li (marker uchun).
+String _assetForKey(String key) {
+  for (final p in _pickerIcons) {
+    if (p.key == key) return p.asset;
+  }
+  return _pickerIcons.first.asset;
+}
 
 TextStyle _unb(
   double size, {
@@ -96,7 +108,7 @@ class AddEditGeoZoneScreen extends ConsumerStatefulWidget {
 }
 
 class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
-  GoogleMapController? _controller;
+  final MapController _mapController = MapController();
   final _nameController = TextEditingController();
 
   LatLng _center = _defaultCenter;
@@ -107,14 +119,12 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
   String _selectedIcon = 'place';
   GeoZoneType _type = GeoZoneType.custom;
 
-  String? _mapStyle;
+  bool _mapReady = false;
+  Timer? _idleTimer; // kamera to'xtaganini aniqlash uchun debounce
   String? _address;
   bool _addrLoading = false;
   int _geoReq = 0;
   bool _saving = false;
-
-  Set<Marker> _zoneMarkers = const {};
-  final Map<String, BitmapDescriptor> _markerCache = {};
 
   bool get _isEditMode => widget.zoneId != null;
   bool get _isFormValid => _nameController.text.trim().isNotEmpty;
@@ -123,29 +133,14 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
   void initState() {
     super.initState();
     if (_isEditMode) _loadExisting();
-    unawaited(_loadMapStyle());
-    WidgetsBinding.instance.addPostFrameCallback((_) {
-      final zones = ref.read(geoZonesProvider(widget.childId)).valueOrNull;
-      if (zones != null) unawaited(_buildMarkers(zones));
-    });
   }
 
   @override
   void dispose() {
-    _controller?.dispose();
+    _idleTimer?.cancel();
+    _mapController.dispose();
     _nameController.dispose();
     super.dispose();
-  }
-
-  Future<void> _loadMapStyle() async {
-    try {
-      final style = await rootBundle.loadString(
-        'assets/map_styles/dark_premium.json',
-      );
-      if (mounted) setState(() => _mapStyle = style);
-    } catch (_) {
-      // Uslub topilmasa — standart xarita (muammosiz).
-    }
   }
 
   void _loadExisting() {
@@ -166,7 +161,7 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
         );
         if (z != null) {
           setState(() => _applyZone(z));
-          _controller?.animateCamera(CameraUpdate.newLatLng(_center));
+          if (_mapReady) _mapController.move(_toLL(_center), 15);
           unawaited(_reverseGeocode(_center));
         }
       });
@@ -184,12 +179,15 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
     _selectedIcon = z.icon ?? z.type.defaultIconName;
   }
 
-  void _onMapCreated(GoogleMapController c) {
-    _controller = c;
+  ll.LatLng _toLL(LatLng p) => ll.LatLng(p.latitude, p.longitude);
+
+  void _onMapReady() {
+    _mapReady = true;
     unawaited(_reverseGeocode(_center));
   }
 
   void _onCameraIdle() {
+    if (!mounted) return;
     setState(() => _center = _camTarget);
     unawaited(_reverseGeocode(_center));
   }
@@ -212,73 +210,6 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
     });
   }
 
-  Future<void> _buildMarkers(List<GeoZone> zones) async {
-    final markers = <Marker>{};
-    for (final z in zones) {
-      if (z.id == widget.zoneId) continue; // tahrirlanayotgan zonani o'tkazib
-      final key = z.icon ?? z.type.defaultIconName;
-      try {
-        final bmp = _markerCache[key] ??= await _zoneBitmap(
-          GeoZone.iconFromString(key),
-        );
-        markers.add(
-          Marker(
-            markerId: MarkerId('zone_${z.id}'),
-            position: z.center,
-            icon: bmp,
-            anchor: const Offset(0.5, 0.5),
-          ),
-        );
-      } catch (_) {
-        // Bitmap yaratilmasa — bu markerni o'tkazib yuboramiz.
-      }
-    }
-    if (mounted) setState(() => _zoneMarkers = markers);
-  }
-
-  /// Mavjud zona uchun marker bitmap — qora "bubble" + oq Material ikon.
-  Future<BitmapDescriptor> _zoneBitmap(IconData icon) async {
-    const size = 96.0;
-    final recorder = ui.PictureRecorder();
-    final canvas = Canvas(recorder);
-    final rrect = RRect.fromRectAndCorners(
-      const Rect.fromLTWH(0, 0, size, size),
-      topLeft: const Radius.circular(48),
-      topRight: const Radius.circular(48),
-      bottomRight: const Radius.circular(48),
-    );
-    canvas
-      ..drawRRect(rrect, Paint()..color = _iconBtnBg)
-      ..drawRRect(
-        rrect,
-        Paint()
-          ..color = const Color(0x2EFFFFFF)
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 2,
-      );
-    final tp = TextPainter(textDirection: ui.TextDirection.ltr)
-      ..text = TextSpan(
-        text: String.fromCharCode(icon.codePoint),
-        style: TextStyle(
-          fontSize: 50,
-          fontFamily: icon.fontFamily,
-          package: icon.fontPackage,
-          color: Colors.white,
-        ),
-      )
-      ..layout();
-    tp.paint(canvas, Offset((size - tp.width) / 2, (size - tp.height) / 2));
-    final image = await recorder.endRecording().toImage(
-      size.toInt(),
-      size.toInt(),
-    );
-    final data = await image.toByteData(format: ui.ImageByteFormat.png);
-    return BitmapDescriptor.bytes(
-      data!.buffer.asUint8List(),
-      width: 40,
-      height: 40,
-    );
-  }
 
   Future<void> _onSave() async {
     final name = _nameController.text.trim();
@@ -383,14 +314,14 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Zonalar o'zgarsa markerlarni qayta quramiz (real-time).
-    ref.listen<AsyncValue<List<GeoZone>>>(geoZonesProvider(widget.childId), (
-      prev,
-      next,
-    ) {
-      final zones = next.valueOrNull;
-      if (zones != null) unawaited(_buildMarkers(zones));
-    });
+    // Boshqa zonalar (tahrirlanayotgandan tashqari) — xaritada belgi + doira.
+    final zones =
+        ref.watch(geoZonesProvider(widget.childId)).valueOrNull ??
+        const <GeoZone>[];
+    final otherZones = [
+      for (final z in zones)
+        if (z.id != widget.zoneId) z,
+    ];
 
     final topPad = MediaQuery.of(context).padding.top;
     final bottomPad = MediaQuery.of(context).padding.bottom;
@@ -406,20 +337,63 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                 child: Stack(
                   children: [
                     Positioned.fill(
-                      child: GoogleMap(
-                        initialCameraPosition: CameraPosition(
-                          target: _center,
-                          zoom: 15,
+                      child: FlutterMap(
+                        mapController: _mapController,
+                        options: MapOptions(
+                          initialCenter: _toLL(_center),
+                          initialZoom: 15,
+                          minZoom: 3,
+                          maxZoom: 18,
+                          onMapReady: _onMapReady,
+                          onPositionChanged: (camera, hasGesture) {
+                            _camTarget = LatLng(
+                              camera.center.latitude,
+                              camera.center.longitude,
+                            );
+                            if (!hasGesture) return;
+                            _idleTimer?.cancel();
+                            _idleTimer = Timer(
+                              const Duration(milliseconds: 350),
+                              _onCameraIdle,
+                            );
+                          },
                         ),
-                        style: _mapStyle,
-                        markers: _zoneMarkers,
-                        myLocationButtonEnabled: false,
-                        zoomControlsEnabled: false,
-                        mapToolbarEnabled: false,
-                        compassEnabled: false,
-                        onMapCreated: _onMapCreated,
-                        onCameraMove: (p) => _camTarget = p.target,
-                        onCameraIdle: _onCameraIdle,
+                        children: [
+                          TileLayer(
+                            urlTemplate: _darkTileUrl,
+                            userAgentPackageName: 'uz.farzandim.app',
+                          ),
+                          if (otherZones.isNotEmpty) ...[
+                            CircleLayer(
+                              circles: [
+                                for (final z in otherZones)
+                                  CircleMarker(
+                                    point: _toLL(z.center),
+                                    radius: z.radiusMeters,
+                                    useRadiusInMeter: true,
+                                    color: _blue.withValues(alpha: 0.10),
+                                    borderColor: _blue.withValues(alpha: 0.5),
+                                    borderStrokeWidth: 1.5,
+                                  ),
+                              ],
+                            ),
+                            MarkerLayer(
+                              markers: [
+                                for (final z in otherZones)
+                                  Marker(
+                                    point: _toLL(z.center),
+                                    width: 44,
+                                    height: 44,
+                                    child: _ZoneMarkerBubble(
+                                      asset: _assetForKey(
+                                        z.icon ?? z.type.defaultIconName,
+                                      ),
+                                    ),
+                                  ),
+                              ],
+                            ),
+                          ],
+                        ],
                       ),
                     ),
                     // Tepa qorong'i fade — sarlavha o'qiladigan bo'lsin.
@@ -449,9 +423,10 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                         ),
                       ),
                     ),
-                    // Header.
+                    // Header — web/emulyatorda topPad=0, shuning uchun aniq
+                    // bo'shliq (tepaga yopishib qolmasin).
                     Positioned(
-                      top: topPad + 10,
+                      top: (topPad < 36 ? 36 : topPad) + 12,
                       left: 16,
                       right: 16,
                       child: _Header(
@@ -488,6 +463,38 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ════════════ Boshqa zona markeri ════════════
+
+/// Boshqa zonalar markeri — qora yumaloq "bubble" + oq SVG belgi.
+class _ZoneMarkerBubble extends StatelessWidget {
+  const _ZoneMarkerBubble({required this.asset});
+
+  final String asset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: _iconBtnBg,
+        borderRadius: const BorderRadius.only(
+          topLeft: Radius.circular(22),
+          topRight: Radius.circular(22),
+          bottomRight: Radius.circular(22),
+          bottomLeft: Radius.circular(6),
+        ),
+        border: Border.all(color: const Color(0x2EFFFFFF), width: 1.5),
+      ),
+      child: SvgPicture.asset(
+        asset,
+        width: 22,
+        height: 22,
+        colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
       ),
     );
   }

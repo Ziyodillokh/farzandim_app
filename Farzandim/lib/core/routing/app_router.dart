@@ -24,10 +24,14 @@ import 'package:farzandim/features/auth/presentation/screens/sign_in_screen.dart
 import 'package:farzandim/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/telegram_login_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart';
+import 'package:farzandim/features/chat/presentation/screens/chat_detail_screen.dart';
+import 'package:farzandim/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/screens/add_child_screen.dart';
+import 'package:farzandim/features/child_management/presentation/screens/child_settings_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/controls_setup_screen.dart';
+import 'package:farzandim/features/child_management/presentation/screens/edit_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
 import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
@@ -281,11 +285,15 @@ List<RouteBase> buildAppRoutes() {
       pageBuilder: (context, state) => _slidePage(const AddChildScreen()),
     ),
 
-    // Bolani tahrirlash — Bosqich 7.2.
+    // Bolani tahrirlash — "Shaxsi ma'lumotlar" ekrani.
     GoRoute(
       path: AppRoutes.editChildPattern,
-      pageBuilder: (context, state) =>
-          _slidePage(AddChildScreen(childId: state.pathParameters['id'])),
+      pageBuilder: (context, state) => _slidePage(
+        EditChildScreen(
+          childId: state.pathParameters['id']!,
+          initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
     ),
 
     // Oila kodi ekrani — bola qo'shilgandan keyin shu yerga keladi.
@@ -296,6 +304,17 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.controlsSetupPattern,
       pageBuilder: (context, state) => _slidePage(
         ControlsSetupScreen(
+          childId: state.pathParameters['childId']!,
+          initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
+    ),
+
+    // Bola sozlamalari (nazorat hub) — dashboard "Bola sozlamalari" kartasi.
+    GoRoute(
+      path: AppRoutes.childSettingsPattern,
+      pageBuilder: (context, state) => _slidePage(
+        ChildSettingsScreen(
           childId: state.pathParameters['childId']!,
           initialChild: state.extra is Child ? state.extra! as Child : null,
         ),
@@ -447,6 +466,17 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.voiceMessages,
       pageBuilder: (context, state) => _slidePage(const VoiceMessagesScreen()),
+    ),
+    // "Chatlar" — preview chat (mock).
+    GoRoute(
+      path: AppRoutes.chatList,
+      pageBuilder: (context, state) => _slidePage(const ChatListScreen()),
+    ),
+    GoRoute(
+      path: AppRoutes.chatDetailPattern,
+      pageBuilder: (context, state) => _slidePage(
+        ChatDetailScreen(contactId: state.pathParameters['id']!),
+      ),
     ),
     GoRoute(
       path: AppRoutes.appRestrictionsPattern,

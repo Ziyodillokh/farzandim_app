@@ -12,9 +12,11 @@
 // `blockApp`/`removeLimit` (facade) + `toggleCategory` (repo).
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -51,21 +53,39 @@ TextStyle _pop(
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
 /// "Ilovalarni bloklash"ni tortiladigan modal sheet sifatida ochadi.
-void showBlockAppsSheet(BuildContext context, {required String childId}) {
+///
+/// [title] — sarlavhani almashtiradi (masalan rejim uchun "Rejimlar").
+/// [showCategories] `false` bo'lsa — tab yo'q, faqat ilovalar (blok/barcha).
+void showBlockAppsSheet(
+  BuildContext context, {
+  required String childId,
+  String? title,
+  bool showCategories = true,
+}) {
   showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => _BlockAppsSheet(childId: childId),
+    builder: (_) => _BlockAppsSheet(
+      childId: childId,
+      title: title,
+      showCategories: showCategories,
+    ),
   );
 }
 
 /// Drag qobig'i — tepaga/pastga tortiladi, minimumdan past tortilsa yopiladi.
 class _BlockAppsSheet extends StatefulWidget {
-  const _BlockAppsSheet({required this.childId});
+  const _BlockAppsSheet({
+    required this.childId,
+    this.title,
+    this.showCategories = true,
+  });
 
   final String childId;
+  final String? title;
+  final bool showCategories;
 
   @override
   State<_BlockAppsSheet> createState() => _BlockAppsSheetState();
@@ -105,6 +125,8 @@ class _BlockAppsSheetState extends State<_BlockAppsSheet> {
         builder: (ctx, scrollController) => _BlockAppsBody(
           childId: widget.childId,
           scrollController: scrollController,
+          title: widget.title,
+          showCategories: widget.showCategories,
         ),
       ),
     );
@@ -114,10 +136,17 @@ class _BlockAppsSheetState extends State<_BlockAppsSheet> {
 // ════════════ Sheet mazmuni ════════════
 
 class _BlockAppsBody extends ConsumerStatefulWidget {
-  const _BlockAppsBody({required this.childId, required this.scrollController});
+  const _BlockAppsBody({
+    required this.childId,
+    required this.scrollController,
+    this.title,
+    this.showCategories = true,
+  });
 
   final String childId;
   final ScrollController scrollController;
+  final String? title;
+  final bool showCategories;
 
   @override
   ConsumerState<_BlockAppsBody> createState() => _BlockAppsBodyState();
@@ -141,6 +170,33 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
   }
 
   Future<void> _loadCategories() async {
+    // MOCK (UI preview): soxta kategoriyalar.
+    if (kLocationMock) {
+      setState(() {
+        _categories = const [
+          AppCategoryInfo(
+            category: 'social',
+            label: 'Ijtimoiy tarmoqlar',
+            appCount: 12,
+            blocked: true,
+          ),
+          AppCategoryInfo(
+            category: 'games',
+            label: "O'yinlar",
+            appCount: 24,
+            blocked: true,
+          ),
+          AppCategoryInfo(
+            category: 'other',
+            label: 'Boshqa',
+            appCount: 36,
+            blocked: true,
+          ),
+        ];
+        _catLoading = false;
+      });
+      return;
+    }
     try {
       final cats = await ref
           .read(backendAppLimitRepositoryProvider)
@@ -255,25 +311,29 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
               ),
               const SizedBox(height: 16),
               Text(
-                'blockApps.title'.tr(),
+                widget.title ?? 'blockApps.title'.tr(),
                 textAlign: TextAlign.center,
                 style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),
               const SizedBox(height: 18),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: _SegmentedTabs(
-                  tabs: [
-                    'blockApps.tabApps'.tr(),
-                    'blockApps.tabCategories'.tr(),
-                  ],
-                  active: _tab,
-                  onChanged: (i) => setState(() => _tab = i),
+              if (widget.showCategories) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: _SegmentedTabs(
+                    tabs: [
+                      'blockApps.tabApps'.tr(),
+                      'blockApps.tabCategories'.tr(),
+                    ],
+                    active: _tab,
+                    onChanged: (i) => setState(() => _tab = i),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 14),
+                const SizedBox(height: 14),
+              ],
               Expanded(
-                child: _tab == 0 ? _buildApps() : _buildCategories(),
+                child: (widget.showCategories && _tab == 1)
+                    ? _buildCategories()
+                    : _buildApps(),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -305,25 +365,60 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
     for (final r in restr) {
       orig[r.packageName] = r.isBlocked;
     }
-    return ListView.separated(
+    bool isBlocked(AppUsageEntry e) =>
+        _appLocal[e.packageName] ?? (orig[e.packageName] ?? false);
+    final blocked = [
+      for (final e in apps)
+        if (isBlocked(e)) e,
+    ];
+    final unblocked = [
+      for (final e in apps)
+        if (!isBlocked(e)) e,
+    ];
+
+    return ListView(
       controller: widget.scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: apps.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
-      itemBuilder: (context, i) {
-        final e = apps[i];
-        final blocked =
-            _appLocal[e.packageName] ?? (orig[e.packageName] ?? false);
-        return _AppRow(
-          appName: e.appName,
-          packageName: e.packageName,
-          iconUrl: e.iconUrl,
-          iconBase64: e.iconBase64,
-          value: blocked,
-          onChanged: (v) => setState(() => _appLocal[e.packageName] = v),
-        );
-      },
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      children: [
+        // ── Bloklangan ilovalar (qizil minus → blokdan chiqarish) ──
+        if (blocked.isNotEmpty) ...[
+          _SectionTitle('blockApps.blockedSection'.tr()),
+          const SizedBox(height: 10),
+          _GroupCard(
+            children: [
+              for (final e in blocked)
+                _AppRow(
+                  entry: e,
+                  blocked: true,
+                  onTap: () =>
+                      setState(() => _appLocal[e.packageName] = false),
+                ),
+            ],
+          ),
+          const SizedBox(height: 22),
+        ],
+        // ── Barcha ilovalar (yashil plus → bloklash) ──
+        _SectionTitle('blockApps.allSection'.tr()),
+        const SizedBox(height: 10),
+        if (unblocked.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 24),
+            child: _Empty('blockApps.allSection'.tr()),
+          )
+        else
+          _GroupCard(
+            children: [
+              for (final e in unblocked)
+                _AppRow(
+                  entry: e,
+                  blocked: false,
+                  onTap: () =>
+                      setState(() => _appLocal[e.packageName] = true),
+                ),
+            ],
+          ),
+      ],
     );
   }
 
@@ -498,47 +593,125 @@ class _CategoryRow extends StatelessWidget {
   }
 }
 
-/// Ilova qatori — ikon + nom + yashil toggle.
-class _AppRow extends StatelessWidget {
-  const _AppRow({
-    required this.appName,
-    required this.packageName,
-    required this.iconUrl,
-    required this.iconBase64,
-    required this.value,
-    required this.onChanged,
-  });
+/// Bo'lim sarlavhasi ("Bloklangan ilovalar" / "Barcha ilovalar").
+class _SectionTitle extends StatelessWidget {
+  const _SectionTitle(this.text);
 
-  final String appName;
-  final String packageName;
-  final String? iconUrl;
-  final String? iconBase64;
-  final bool value;
-  final ValueChanged<bool> onChanged;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return _CardShell(
+    return Padding(
+      padding: const EdgeInsets.only(left: 4),
+      child: Text(text, style: _pop(14, c: _dim)),
+    );
+  }
+}
+
+/// Bir nechta qatorni bitta yumaloq kartaga guruhlaydi (orasida nozik chiziq).
+class _GroupCard extends StatelessWidget {
+  const _GroupCard({required this.children});
+
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _fieldBorder),
+      ),
+      child: Column(
+        children: [
+          for (var i = 0; i < children.length; i++) ...[
+            children[i],
+            if (i < children.length - 1)
+              Divider(
+                height: 1,
+                thickness: 1,
+                indent: 14,
+                endIndent: 14,
+                color: Colors.white.withValues(alpha: 0.06),
+              ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// Ilova qatori — dumaloq ikon + nom + minus (bloklangan) / plus (barcha).
+class _AppRow extends StatelessWidget {
+  const _AppRow({
+    required this.entry,
+    required this.blocked,
+    required this.onTap,
+  });
+
+  final AppUsageEntry entry;
+  final bool blocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
       child: Row(
         children: [
-          AppIconWidget(
-            packageName: packageName,
-            iconUrl: iconUrl,
-            iconBase64: iconBase64,
-            size: 44,
+          ClipOval(
+            child: SizedBox(
+              width: 40,
+              height: 40,
+              child: AppIconWidget(
+                packageName: entry.packageName,
+                iconUrl: entry.iconUrl,
+                iconBase64: entry.iconBase64,
+                size: 40,
+              ),
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
             child: Text(
-              appName,
+              entry.appName,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: _unb(15),
             ),
           ),
           const SizedBox(width: 10),
-          AppSwitch(value: value, onChanged: onChanged, activeColor: _green),
+          _ActionCircle(blocked: blocked, onTap: onTap),
         ],
+      ),
+    );
+  }
+}
+
+/// O'ng tarafdagi harakat tugmasi — qizil minus (blokdan chiqarish) yoki
+/// yashil plus (bloklash).
+class _ActionCircle extends StatelessWidget {
+  const _ActionCircle({required this.blocked, required this.onTap});
+
+  final bool blocked;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = blocked ? const Color(0xFFE5484D) : _green;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 28,
+        height: 28,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+        child: Icon(
+          blocked ? Icons.remove_rounded : Icons.add_rounded,
+          size: 19,
+          color: Colors.white,
+        ),
       ),
     );
   }

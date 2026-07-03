@@ -227,14 +227,14 @@
     "quickActions": {
       "device": "Device settings",
       "voice": "Voice messages",
-      "appRestrictions": "App restrictions",
+      "appRestrictions": "Child settings",
       "appLimits": "Device limits",
       "location": "Location",
       "schedules": "Schedules",
       "callHistory": "Call history",
       "ambientSound": "Ambient sound",
       "messenger": "Messenger",
-      "weeklyReport": "Weekly report"
+      "weeklyReport": "Reports"
     },
     "rating": {
       "title": "Child's rating",
@@ -868,7 +868,26 @@
     "appsCount": "{count} apps",
     "configure": "Configure",
     "addSchedule": "Add schedule",
-    "save": "Save"
+    "save": "Save",
+    "nameLabel": "Schedule name",
+    "nameHint": "e.g. Study time",
+    "timeLabel": "Schedule time",
+    "from": "from",
+    "to": "to",
+    "timePickerTitle": "Set time",
+    "saved": "Schedule added"
+  },
+  "chat": {
+    "title": "Chats",
+    "typing": "Typing...",
+    "today": "Today",
+    "inputHint": "Message...",
+    "send": "Send",
+    "recording": "Recording...",
+    "micDenied": "Microphone access denied",
+    "micError": "Could not start recording",
+    "playError": "Could not play audio",
+    "voiceUnavailable": "Audio unavailable"
   },
   "dailyLimit": {
     "title": "Daily time limit",
@@ -910,7 +929,9 @@
     "saveError": "Save failed",
     "loadError": "Couldn't load",
     "emptyApps": "Apps will appear here once the child's device connects",
-    "emptyCategories": "Categories will appear once the child's device connects"
+    "emptyCategories": "Categories will appear once the child's device connects",
+    "blockedSection": "Blocked apps",
+    "allSection": "All apps"
   },
   "addressesSetup": {
     "title": "Enter your child's addresses",
@@ -998,7 +1019,9 @@
       "errorPrefix": "Error: {error}",
       "genderMale": "Boy",
       "genderFemale": "Girl",
-      "photoSourceTitle": "Choose photo source"
+      "photoSourceTitle": "Choose photo source",
+      "personalInfoTitle": "Personal information",
+      "deleteChildButton": "Delete child"
     },
     "familyCode": {
       "headerTitle": "Add child",

@@ -227,14 +227,14 @@
     "quickActions": {
       "device": "Qurilma sozlamalari",
       "voice": "Ovoz xabarlari",
-      "appRestrictions": "Ilova cheklovlari",
+      "appRestrictions": "Bola sozlamalari",
       "appLimits": "Qurilma cheklovlari",
       "location": "Joylashuv",
       "schedules": "Jadvallar",
       "callHistory": "Qo'ng'iroqlar tarixi",
       "ambientSound": "Atrofdagi ovoz",
       "messenger": "Messenger",
-      "weeklyReport": "Haftalik hisobot"
+      "weeklyReport": "Hisobotlar"
     },
     "rating": {
       "title": "Farzandingiz reytingi",
@@ -868,7 +868,26 @@
     "appsCount": "{count} ta ilova",
     "configure": "Sozlash",
     "addSchedule": "Rejim qo'shish",
-    "save": "Saqlash"
+    "save": "Saqlash",
+    "nameLabel": "Rejim nomi",
+    "nameHint": "Masalan: Dars vaqti",
+    "timeLabel": "Rejim vaqti",
+    "from": "dan",
+    "to": "gacha",
+    "timePickerTitle": "Vaqt belgilash",
+    "saved": "Rejim qo'shildi"
+  },
+  "chat": {
+    "title": "Chatlar",
+    "typing": "Yozmoqda...",
+    "today": "Bugun",
+    "inputHint": "Xabar...",
+    "send": "Yuborish",
+    "recording": "Yozilmoqda...",
+    "micDenied": "Mikrofonga ruxsat berilmadi",
+    "micError": "Yozishni boshlab bo'lmadi",
+    "playError": "Ovozni eshittirib bo'lmadi",
+    "voiceUnavailable": "Bu ovoz mavjud emas"
   },
   "dailyLimit": {
     "title": "Kunlik vaqt limiti",
@@ -910,7 +929,9 @@
     "saveError": "Saqlashda xatolik",
     "loadError": "Yuklab bo'lmadi",
     "emptyApps": "Bola qurilmasi ulanib, ilovalar ro'yxati kelgach shu yerda ko'rinadi",
-    "emptyCategories": "Bola qurilmasi ulangach kategoriyalar ko'rinadi"
+    "emptyCategories": "Bola qurilmasi ulangach kategoriyalar ko'rinadi",
+    "blockedSection": "Bloklangan ilovalar",
+    "allSection": "Barcha ilovalar"
   },
   "addressesSetup": {
     "title": "Bolangiz manzillarini kiriting",
@@ -998,7 +1019,9 @@
       "errorPrefix": "Xatolik: {error}",
       "genderMale": "O'g'il",
       "genderFemale": "Qiz",
-      "photoSourceTitle": "Foto manbasini tanlang"
+      "photoSourceTitle": "Foto manbasini tanlang",
+      "personalInfoTitle": "Shaxsi ma'lumotlar",
+      "deleteChildButton": "Bolani o'chirish"
     },
     "familyCode": {
       "headerTitle": "Bola qo'shish",

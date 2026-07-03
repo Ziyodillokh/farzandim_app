@@ -285,21 +285,24 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const _ScheduleCard(),
+                      const _StepsCard(),
+                      const SizedBox(height: 4),
+                      const _StreakCard(),
                       const SizedBox(height: 4),
                       Row(
                         children: [
                           Expanded(
                             child: _ActionCard(
-                              icon: SvgPicture.asset(
-                                'assets/icons/ic_restrict.svg',
-                                width: 30,
-                                height: 30,
+                              icon: const Icon(
+                                SolarIconsBold.tuning,
+                                size: 30,
+                                color: Colors.white,
                               ),
                               label: 'dashboard.quickActions.appRestrictions'
                                   .tr(),
                               onTap: () => context.push(
-                                AppRoutes.appLimitsPath(child.id),
+                                AppRoutes.childSettingsPath(child.id),
+                                extra: child,
                               ),
                             ),
                           ),

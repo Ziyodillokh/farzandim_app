@@ -227,14 +227,14 @@
     "quickActions": {
       "device": "Настройки устройства",
       "voice": "Голосовые сообщения",
-      "appRestrictions": "Ограничения приложений",
+      "appRestrictions": "Настройки ребёнка",
       "appLimits": "Ограничения устройства",
       "location": "Локация",
       "schedules": "Расписания",
       "callHistory": "История звонков",
       "ambientSound": "Окружающий звук",
       "messenger": "Messenger",
-      "weeklyReport": "Еженедельный отчёт"
+      "weeklyReport": "Отчёты"
     },
     "rating": {
       "title": "Рейтинг ребёнка",
@@ -868,7 +868,26 @@
     "appsCount": "{count} приложений",
     "configure": "Настроить",
     "addSchedule": "Добавить режим",
-    "save": "Сохранить"
+    "save": "Сохранить",
+    "nameLabel": "Название режима",
+    "nameHint": "Например: Время уроков",
+    "timeLabel": "Время режима",
+    "from": "с",
+    "to": "до",
+    "timePickerTitle": "Выбор времени",
+    "saved": "Режим добавлен"
+  },
+  "chat": {
+    "title": "Чаты",
+    "typing": "Печатает...",
+    "today": "Сегодня",
+    "inputHint": "Сообщение...",
+    "send": "Отправить",
+    "recording": "Запись...",
+    "micDenied": "Доступ к микрофону запрещён",
+    "micError": "Не удалось начать запись",
+    "playError": "Не удалось воспроизвести",
+    "voiceUnavailable": "Аудио недоступно"
   },
   "dailyLimit": {
     "title": "Дневной лимит времени",
@@ -910,7 +929,9 @@
     "saveError": "Ошибка сохранения",
     "loadError": "Не удалось загрузить",
     "emptyApps": "Список приложений появится, когда устройство ребёнка подключится",
-    "emptyCategories": "Категории появятся, когда устройство ребёнка подключится"
+    "emptyCategories": "Категории появятся, когда устройство ребёнка подключится",
+    "blockedSection": "Заблокированные приложения",
+    "allSection": "Все приложения"
   },
   "addressesSetup": {
     "title": "Введите адреса ребёнка",
@@ -998,7 +1019,9 @@
       "errorPrefix": "Ошибка: {error}",
       "genderMale": "Мальчик",
       "genderFemale": "Девочка",
-      "photoSourceTitle": "Выберите источник фото"
+      "photoSourceTitle": "Выберите источник фото",
+      "personalInfoTitle": "Личные данные",
+      "deleteChildButton": "Удалить ребёнка"
     },
     "familyCode": {
       "headerTitle": "Добавить ребёнка",
