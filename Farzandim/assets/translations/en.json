@@ -1088,7 +1088,11 @@
     "loadFailed": "Couldn't load permissions.\nCheck your internet connection."
   },
   "leaderboard": {
-    "title": "Leaderboard",
+    "title": "DON rating",
+    "help": {
+      "title": "What is DON?",
+      "body": "DON are points your child earns for tasks and activity. The rating is based on DON."
+    },
     "periods": {
       "weekly": "Weekly",
       "monthly": "Monthly",

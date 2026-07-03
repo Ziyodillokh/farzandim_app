@@ -1,29 +1,73 @@
-// "Reyting" ekrani: davr tablari, viloyat filtri, top-3 podium, paginated
-// ro'yxat va pastda joriy bola ("Siz"). Reyting XP'dan hisoblanadi.
+// "DON reytingi" — Parvoz dizayn. Tepada orqa/yordam tugmalari, davr
+// tablari, top-3 podium (medallar), paginated ro'yxat va pastda yopishqoq
+// "Siz" pill'i. Pill'ni bossa bola qatoriga silliq scroll + porlash.
+// Reyting XP'dan hisoblanadi — UI'da "DON" deb ko'rsatiladi (qiymat = xp).
+
+import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/constants/uzbekistan_regions.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
-import 'package:farzandim/core/utils/tashkent_time.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-const _kGreenTop = Color(0xFF7ED957);
-const _kGreenBottom = Color(0xFF4CAF50);
-const _kGold = Color(0xFFFFC93C);
-const _kSilver = Color(0xFFB8C2CC);
-const _kBronze = Color(0xFFE8893B);
+// ════════════ Tokenlar (lokal) ════════════
+const _bg = Color(0xFF00060A);
+const _card = Color(0xFF1A1F23);
+const _cardBorder = Color(0x14FFFFFF); // oq ~8%
+const _row = Color(0xFF21262A); // oddiy qator foni
+const _meRow = Color(0xFF173654); // "Siz" qatori
+const _meGlow = Color(0xFF1E4D80); // "Siz" qatori (porlaganda)
+const _blue = Color(0xFF216BFF); // DON tegi
+const _dim = Color(0x99FFFFFF); // oq 60%
 
-/// Reyting ekrani.
+// Podium bar ranglari
+const _barSilver = Color(0xFFC9C9C9);
+const _barGold = Color(0xFFD9AA46);
+const _barBronze = Color(0xFFFF8951);
+
+const _rowExtent = 71.0; // qator 68 + 3 gap (scroll matematikasi uchun)
+const _listTopPad = 8.0; // ListView tepa padding'i (offset hisobi uchun)
+
+TextStyle _unb(
+  double size, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+  double ls = -0.45,
+}) => GoogleFonts.unbounded(
+  fontSize: size,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.4,
+);
+
+TextStyle _pop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// DON qiymatini "1 250" ko'rinishida (mingliklar bo'sh joy bilan).
+String _fmtDon(int n) {
+  final s = n.abs().toString();
+  final buf = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) buf.write(' ');
+    buf.write(s[i]);
+  }
+  return buf.toString();
+}
+
+/// Reyting (DON reytingi) ekrani.
 class LeaderboardScreen extends ConsumerStatefulWidget {
+  /// `LeaderboardScreen` konstruktor.
   const LeaderboardScreen({required this.childId, super.key});
 
   /// Qaysi bola uchun ("Siz" reytingi).
@@ -34,20 +78,17 @@ class LeaderboardScreen extends ConsumerStatefulWidget {
 }
 
 class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
-  // weekly | monthly | all
   String _period = 'all';
-  String? _region;
   final ScrollController _scroll = ScrollController();
+  bool _glow = false; // "Siz" qatori porlashi (pill bosilgach)
+  bool _jumping = false; // pill: bola qatorigacha yuklanmoqda
+  bool _showPill = false;
+  bool _needScrollReset = false; // davr almashgach ro'yxatni tepaga qaytarish
 
   static const _periods = ['weekly', 'monthly', 'all'];
-  List<String> get _periodLabels => [
-    'leaderboard.periods.weekly'.tr(),
-    'leaderboard.periods.monthly'.tr(),
-    'leaderboard.periods.all'.tr(),
-  ];
 
   LeaderboardArgs get _args =>
-      (childId: widget.childId, period: _period, region: _region);
+      (childId: widget.childId, period: _period, region: null);
 
   @override
   void initState() {
@@ -57,489 +98,660 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
   @override
   void dispose() {
-    _scroll.dispose();
+    _scroll
+      ..removeListener(_onScroll)
+      ..dispose();
     super.dispose();
   }
 
   void _onScroll() {
+    final st = ref.read(leaderboardProvider(_args));
     if (_scroll.position.pixels >= _scroll.position.maxScrollExtent - 320) {
       ref.read(leaderboardProvider(_args).notifier).loadMore();
     }
+    _syncPill(st);
   }
 
-  String get _periodSubtitle {
-    switch (_period) {
-      case 'weekly':
-        return 'leaderboard.subtitle.weekly'.tr();
-      case 'monthly':
-        final t = tashkentNow();
-        return 'leaderboard.subtitle.monthly'.tr(
-          namedArgs: {'month': 'leaderboard.months.${t.month}'.tr()},
+  /// Pill ko'rinishi: bola podium'da emas va qatori ko'rinmayotgan bo'lsa.
+  void _syncPill(LeaderboardState st) {
+    final cc = st.currentChild;
+    // rank 0 = bu davrda DON yo'q — pill baribir ko'rsatiladi (bosilsa
+    // hech narsa qilmaydi, faqat "Siz reytingda yo'q"ni bildiradi).
+    final show =
+        cc != null &&
+        (cc.rank >= 4 || cc.rank == 0) &&
+        !_childRowVisible(st, cc);
+    if (show != _showPill && mounted) setState(() => _showPill = show);
+  }
+
+  bool _childRowVisible(LeaderboardState st, LeaderboardEntry cc) {
+    final listIndex = cc.rank - 4; // `rest` ichidagi 0-indeks
+    final restLen = st.entries.length > 3 ? st.entries.length - 3 : 0;
+    if (listIndex < 0 || listIndex >= restLen) return false; // yuklanmagan
+    if (!_scroll.hasClients) return false;
+    final off = _scroll.offset;
+    final vp = _scroll.position.viewportDimension;
+    final top = _listTopPad + listIndex * _rowExtent;
+    final visTop = math.max(top, off);
+    final visBottom = math.min(top + _rowExtent, off + vp);
+    return (visBottom - visTop) / _rowExtent >= 0.6;
+  }
+
+  /// Pill bosilganda — bola qatorigacha sahifalarni yuklab, silliq scroll +
+  /// porlash animatsiyasi.
+  Future<void> _jumpToChild() async {
+    // Provider kalitini bir marta olamiz — await'lar orasida davr almashsa
+    // (mutable _args), jump noto'g'ri provider'ga o'tib ketmasin.
+    final args = _args;
+    var st = ref.read(leaderboardProvider(args));
+    final cc = st.currentChild;
+    if (cc == null || cc.rank < 4) return;
+    final listIndex = cc.rank - 4;
+
+    setState(() => _jumping = true);
+    var restLen = st.entries.length > 3 ? st.entries.length - 3 : 0;
+    var guard = 0;
+    while (listIndex >= restLen && st.hasMore && guard < 60) {
+      await ref.read(leaderboardProvider(args).notifier).loadMore();
+      // Fonda yuklash ketayotgan bo'lsa loadMore darhol qaytadi — biroz
+      // kutamiz (aks holda sikl bo'sh aylanadi).
+      await Future<void>.delayed(const Duration(milliseconds: 60));
+      if (!mounted || _args != args) {
+        if (mounted) setState(() => _jumping = false);
+        return;
+      }
+      st = ref.read(leaderboardProvider(args));
+      restLen = st.entries.length > 3 ? st.entries.length - 3 : 0;
+      guard++;
+    }
+    if (!mounted || _args != args) {
+      if (mounted) setState(() => _jumping = false);
+      return;
+    }
+    setState(() => _jumping = false);
+    if (listIndex >= restLen || !_scroll.hasClients) return;
+
+    final vp = _scroll.position.viewportDimension;
+    final target =
+        (_listTopPad + listIndex * _rowExtent - vp / 2 + _rowExtent / 2).clamp(
+          0.0,
+          _scroll.position.maxScrollExtent,
         );
-      default:
-        return 'leaderboard.subtitle.all'.tr();
-    }
+    await _scroll.animateTo(
+      target,
+      duration: const Duration(milliseconds: 550),
+      curve: Curves.easeOutCubic,
+    );
+    if (!mounted) return;
+    setState(() => _glow = true);
+    Future.delayed(const Duration(milliseconds: 1100), () {
+      if (mounted) setState(() => _glow = false);
+    });
   }
 
-  Future<void> _pickRegion() async {
-    final result = await showModalBottomSheet<String>(
+  void _showHelp() {
+    showDialog<void>(
       context: context,
-      backgroundColor: AppColors.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusL),
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _card,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(24),
+          side: const BorderSide(color: _cardBorder),
         ),
+        title: Text('leaderboard.help.title'.tr(), style: _unb(17)),
+        content: Text('leaderboard.help.body'.tr(), style: _pop(14, c: _dim)),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: Text('common.ok'.tr(), style: _pop(15, c: _blue)),
+          ),
+        ],
       ),
-      builder: (_) => _RegionPickerSheet(selected: _region),
     );
-    if (result != null) {
-      setState(() => _region = result.isEmpty ? null : result);
-    }
   }
 
   @override
   Widget build(BuildContext context) {
     final st = ref.watch(leaderboardProvider(_args));
+    // Ma'lumot o'zgarganda (loadMore/refresh) pill ko'rinishini qayta
+    // hisoblaymiz — frame'dan keyin (scroll o'lchamlari yangilangach).
+    ref.listen(leaderboardProvider(_args), (_, next) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        // Davr almashib yangi ro'yxat yuklangach — tepaga qaytaramiz.
+        if (_needScrollReset && !next.initialLoading && _scroll.hasClients) {
+          _scroll.jumpTo(0);
+          _needScrollReset = false;
+        }
+        _syncPill(next);
+      });
+    });
     final top3 = st.entries.take(3).toList();
     final rest = st.entries.length > 3
         ? st.entries.sublist(3)
         : <LeaderboardEntry>[];
+    final cc = st.currentChild;
 
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Column(
+      backgroundColor: _bg,
+      body: Stack(
         children: [
-          // ─── Yashil header ───
-          Container(
-            decoration: const BoxDecoration(
-              gradient: LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [_kGreenTop, _kGreenBottom],
-              ),
-            ),
-            child: SafeArea(
-              bottom: false,
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(
-                  AppDimensions.md,
-                  AppDimensions.sm,
-                  AppDimensions.md,
-                  AppDimensions.lg,
+          const _BlueGlow(),
+          SafeArea(
+            child: Column(
+              children: [
+                _Header(onBack: () => context.pop(), onHelp: _showHelp),
+                const SizedBox(height: 6),
+                _PeriodTabs(
+                  periods: _periods,
+                  active: _period,
+                  onChanged: (p) {
+                    if (p == _period) return;
+                    setState(() {
+                      _period = p;
+                      _glow = false;
+                      _showPill = false;
+                      _needScrollReset = true;
+                    });
+                  },
                 ),
-                child: Column(
-                  children: [
-                    _header(),
-                    const SizedBox(height: AppDimensions.md),
-                    _tabs(),
-                    const SizedBox(height: AppDimensions.md),
-                    _regionButton(),
-                    const SizedBox(height: AppDimensions.lg),
-                    _podium(st, top3),
-                  ],
-                ),
-              ),
+                const SizedBox(height: 14),
+                _Podium(top3: top3),
+                const SizedBox(height: 12),
+                Expanded(child: _buildList(st, rest)),
+              ],
             ),
           ),
-
-          // ─── Dark ro'yxat ───
-          Expanded(child: _list(st, rest)),
-
-          // ─── Sticky "Siz" ───
-          // Top-3 podium'da ko'rinadi, shu yerda takrorlamaymiz.
-          // rank 0 — bu davrda XP yo'q, lekin baribir ko'rsatamiz.
-          if (st.currentChild != null &&
-              (st.currentChild!.rank == 0 || st.currentChild!.rank > 3))
-            _CurrentChildRow(entry: st.currentChild!),
-        ],
-      ),
-    );
-  }
-
-  Widget _header() {
-    return Row(
-      children: [
-        SizedBox(
-          width: 44,
-          height: 44,
-          child: IconButton(
-            icon: const Icon(SolarIconsBold.altArrowLeft, color: Colors.white),
-            onPressed: () => context.pop(),
-          ),
-        ),
-        Expanded(
-          child: Column(
-            children: [
-              Text(
-                'leaderboard.title'.tr(),
-                style: const TextStyle(
-                  color: Colors.white,
-                  fontSize: 20,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
-              Text(
-                _periodSubtitle,
-                style: TextStyle(
-                  color: Colors.white.withValues(alpha: 0.85),
-                  fontSize: 13,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const SizedBox(width: 44),
-      ],
-    );
-  }
-
-  Widget _tabs() {
-    final active = _periods.indexOf(_period);
-    return Container(
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.18),
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Row(
-        children: [
-          for (var i = 0; i < _periodLabels.length; i++)
-            Expanded(
-              child: GestureDetector(
-                onTap: () => setState(() => _period = _periods[i]),
-                child: Container(
-                  alignment: Alignment.center,
-                  padding: const EdgeInsets.symmetric(vertical: 10),
-                  decoration: BoxDecoration(
-                    color: i == active ? Colors.white : Colors.transparent,
-                    borderRadius: BorderRadius.circular(
-                      AppDimensions.radiusPill,
-                    ),
-                  ),
-                  child: Text(
-                    _periodLabels[i],
-                    style: TextStyle(
-                      color: i == active
-                          ? const Color(0xFF1B5E20)
-                          : Colors.white,
-                      fontWeight: FontWeight.w600,
-                      fontSize: 13.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-        ],
-      ),
-    );
-  }
-
-  Widget _regionButton() {
-    return GestureDetector(
-      onTap: _pickRegion,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.22),
-          borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            const Icon(SolarIconsBold.mapPoint, color: Colors.white, size: 18),
-            const SizedBox(width: 6),
-            Text(
-              _region ?? 'leaderboard.byRegions'.tr(),
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(width: 4),
-            const Icon(
-              SolarIconsBold.altArrowDown,
-              color: Colors.white,
-              size: 20,
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _podium(LeaderboardState st, List<LeaderboardEntry> top3) {
-    if (st.initialLoading) {
-      return const SizedBox(
-        height: 150,
-        child: Center(child: CircularProgressIndicator(color: Colors.white)),
-      );
-    }
-    if (top3.isEmpty) {
-      return SizedBox(
-        height: 120,
-        child: Center(
-          child: Text(
-            'leaderboard.noRatingYet'.tr(),
-            style: const TextStyle(color: Colors.white, fontSize: 15),
-          ),
-        ),
-      );
-    }
-    LeaderboardEntry? at(int i) => i < top3.length ? top3[i] : null;
-    // Past (kichik balandlikdagi) ekranda avatarlar ro'yxatni siqmasin.
-    final short = MediaQuery.sizeOf(context).height < 700;
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.end,
-      children: [
-        Expanded(child: _podiumItem(at(1), 2, short ? 48 : 60)),
-        Expanded(child: _podiumItem(at(0), 1, short ? 60 : 78)),
-        Expanded(child: _podiumItem(at(2), 3, short ? 48 : 60)),
-      ],
-    );
-  }
-
-  Widget _podiumItem(LeaderboardEntry? e, int place, double size) {
-    if (e == null) return const SizedBox.shrink();
-    final color = place == 1
-        ? _kGold
-        : place == 2
-        ? _kSilver
-        : _kBronze;
-    return Column(
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        if (place == 1)
-          const Icon(SolarIconsBold.medalStar, color: _kGold, size: 24),
-        const SizedBox(height: 2),
-        Stack(
-          clipBehavior: Clip.none,
-          alignment: Alignment.bottomCenter,
-          children: [
-            Container(
-              padding: const EdgeInsets.all(3),
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                border: Border.all(color: color, width: 3),
-              ),
-              child: _Avatar(childId: e.childId, name: e.name, size: size),
-            ),
+          // Yopishqoq "Siz" pill'i.
+          if (cc != null)
             Positioned(
-              bottom: -10,
-              child: Container(
-                width: 22,
-                height: 22,
-                decoration: BoxDecoration(
-                  color: color,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _kGreenBottom, width: 2),
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  '$place',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontWeight: FontWeight.w800,
-                    fontSize: 12,
+              left: 0,
+              right: 0,
+              bottom: 24,
+              child: IgnorePointer(
+                ignoring: !_showPill,
+                child: AnimatedOpacity(
+                  opacity: _showPill ? 1 : 0,
+                  duration: const Duration(milliseconds: 250),
+                  child: AnimatedSlide(
+                    offset: _showPill ? Offset.zero : const Offset(0, 0.3),
+                    duration: const Duration(milliseconds: 250),
+                    curve: Curves.easeOut,
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24),
+                      child: _StickyPill(
+                        entry: cc,
+                        childId: widget.childId,
+                        loading: _jumping,
+                        onTap: _jumping ? null : _jumpToChild,
+                      ),
+                    ),
                   ),
                 ),
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 14),
-        Text(
-          e.name,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.w700,
-            fontSize: 13,
-          ),
-        ),
-        const SizedBox(height: 4),
-        _XpPill(xp: e.xp, light: true),
-      ],
+        ],
+      ),
     );
   }
 
-  Widget _list(LeaderboardState st, List<LeaderboardEntry> rest) {
+  Widget _buildList(LeaderboardState st, List<LeaderboardEntry> rest) {
+    Widget inner;
     if (st.initialLoading) {
-      return const SizedBox.shrink();
-    }
-    if (st.error) {
-      return Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              'leaderboard.loadFailed'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            const SizedBox(height: 8),
-            TextButton(
-              onPressed: () =>
-                  ref.read(leaderboardProvider(_args).notifier).refresh(),
-              child: Text('common.retry'.tr()),
-            ),
-          ],
+      inner = const Center(
+        child: SizedBox(
+          width: 26,
+          height: 26,
+          child: CircularProgressIndicator(strokeWidth: 2.4, color: _blue),
         ),
       );
-    }
-    if (rest.isEmpty) {
-      return const SizedBox.shrink();
-    }
-    return ListView.separated(
-      controller: _scroll,
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.md,
-        AppDimensions.md,
-        AppDimensions.md,
-        AppDimensions.md,
-      ),
-      itemCount: rest.length + (st.loadingMore ? 1 : 0),
-      separatorBuilder: (_, __) => const SizedBox(height: AppDimensions.sm),
-      itemBuilder: (context, i) {
-        if (i >= rest.length) {
+    } else if (st.error) {
+      inner = Center(
+        child: Text('leaderboard.loadFailed'.tr(), style: _pop(14, c: _dim)),
+      );
+    } else if (st.entries.isEmpty) {
+      inner = Center(
+        child: Text('leaderboard.noRatingYet'.tr(), style: _pop(14, c: _dim)),
+      );
+    } else {
+      inner = ListView.builder(
+        controller: _scroll,
+        physics: const AlwaysScrollableScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
+        itemExtent: _rowExtent,
+        itemCount: rest.length + (st.hasMore ? 1 : 0),
+        itemBuilder: (context, i) {
+          if (i >= rest.length) {
+            return const Center(
+              child: SizedBox(
+                width: 20,
+                height: 20,
+                child: CircularProgressIndicator(strokeWidth: 2, color: _dim),
+              ),
+            );
+          }
+          final e = rest[i];
+          final isMe = e.childId == widget.childId;
           return Padding(
-            padding: const EdgeInsets.all(AppDimensions.md),
-            child: Center(
-              child: CircularProgressIndicator(color: AppColors.accent),
-            ),
+            padding: const EdgeInsets.only(bottom: 3),
+            child: _LeaderRow(entry: e, isMe: isMe, glowing: isMe && _glow),
           );
-        }
-        return _LeaderboardRow(entry: rest[i]);
-      },
+        },
+      );
+    }
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: _card,
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(color: const Color(0x0FFFFFFF)),
+      ),
+      child: Stack(
+        children: [
+          Positioned.fill(child: inner),
+          // Tepa/past yumshoq so'nish.
+          const Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            height: 16,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [_card, Color(0x001A1F23)],
+                  ),
+                ),
+              ),
+            ),
+          ),
+          const Positioned(
+            bottom: 0,
+            left: 0,
+            right: 0,
+            height: 40,
+            child: IgnorePointer(
+              child: DecoratedBox(
+                decoration: BoxDecoration(
+                  gradient: LinearGradient(
+                    begin: Alignment.topCenter,
+                    end: Alignment.bottomCenter,
+                    colors: [Color(0x001A1F23), _card],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
-// ════════════════════════ ROW ════════════════════════
-
-class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({required this.entry, this.highlight = false});
-
-  final LeaderboardEntry entry;
-  final bool highlight;
+// ════════════ Fon: ko'k porlash ════════════
+class _BlueGlow extends StatelessWidget {
+  const _BlueGlow();
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: AppDimensions.sm + 2,
+    return Positioned(
+      top: 40,
+      left: 0,
+      right: 0,
+      child: IgnorePointer(
+        child: Center(
+          child: Container(
+            width: 360,
+            height: 360,
+            decoration: const BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: RadialGradient(
+                colors: [Color(0x59216BFF), Color(0x00216BFF)],
+                stops: [0, 0.72],
+              ),
+            ),
+          ),
+        ),
       ),
+    );
+  }
+}
+
+// ════════════ Sarlavha ════════════
+class _Header extends StatelessWidget {
+  const _Header({required this.onBack, required this.onHelp});
+
+  final VoidCallback onBack;
+  final VoidCallback onHelp;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+      child: Row(
+        children: [
+          _SquareButton(icon: SolarIconsOutline.altArrowLeft, onTap: onBack),
+          Expanded(
+            child: Center(
+              child: Text(
+                'leaderboard.title'.tr(),
+                style: _unb(20, w: FontWeight.w500, ls: -0.6),
+              ),
+            ),
+          ),
+          _SquareButton(icon: SolarIconsOutline.questionCircle, onTap: onHelp),
+        ],
+      ),
+    );
+  }
+}
+
+class _SquareButton extends StatelessWidget {
+  const _SquareButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 56,
+        height: 56,
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _cardBorder),
+        ),
+        child: Icon(icon, size: 22, color: Colors.white),
+      ),
+    );
+  }
+}
+
+// ════════════ Davr tablari ════════════
+class _PeriodTabs extends StatelessWidget {
+  const _PeriodTabs({
+    required this.periods,
+    required this.active,
+    required this.onChanged,
+  });
+
+  final List<String> periods;
+  final String active;
+  final ValueChanged<String> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _cardBorder),
+        ),
+        child: Row(
+          children: [
+            for (final p in periods)
+              Expanded(
+                child: GestureDetector(
+                  onTap: () => onChanged(p),
+                  behavior: HitTestBehavior.opaque,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    height: 34,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: p == active ? _blue : Colors.transparent,
+                      borderRadius: BorderRadius.circular(999),
+                    ),
+                    child: Text(
+                      'leaderboard.periods.$p'.tr(),
+                      style: _pop(
+                        13,
+                        w: FontWeight.w500,
+                        c: p == active ? Colors.white : _dim,
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════ Podium (top-3) ════════════
+class _Podium extends StatelessWidget {
+  const _Podium({required this.top3});
+
+  final List<LeaderboardEntry> top3;
+
+  LeaderboardEntry? _at(int rank) {
+    for (final e in top3) {
+      if (e.rank == rank) return e;
+    }
+    return null;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final first = _at(1);
+    final second = _at(2);
+    final third = _at(3);
+    if (first == null) return const SizedBox(height: 8);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.end,
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: second == null
+                  ? const SizedBox.shrink()
+                  : _PodiumCard(
+                      entry: second,
+                      medal: 'assets/images/leaderboard/medal_silver.png',
+                      barColor: _barSilver,
+                      badge: const [
+                        Color(0xFF929292),
+                        Color(0xFFD2D2D2),
+                        Color(0xFF6D6D6D),
+                      ],
+                    ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: _PodiumCard(
+                entry: first,
+                first: true,
+                medal: 'assets/images/leaderboard/medal_gold.png',
+                barColor: _barGold,
+                badge: const [
+                  Color(0xFFFFAE00),
+                  Color(0xFFFFD16F),
+                  Color(0xFF996900),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Align(
+              alignment: Alignment.bottomCenter,
+              child: third == null
+                  ? const SizedBox.shrink()
+                  : _PodiumCard(
+                      entry: third,
+                      medal: 'assets/images/leaderboard/medal_bronze.png',
+                      barColor: _barBronze,
+                      badge: const [
+                        Color(0xFFFF4800),
+                        Color(0xFFFFA16F),
+                        Color(0xFF991700),
+                      ],
+                    ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _PodiumCard extends StatelessWidget {
+  const _PodiumCard({
+    required this.entry,
+    required this.medal,
+    required this.barColor,
+    required this.badge,
+    this.first = false,
+  });
+
+  final LeaderboardEntry entry;
+  final String medal;
+  final Color barColor;
+  final List<Color> badge;
+  final bool first;
+
+  @override
+  Widget build(BuildContext context) {
+    final avatarSz = first ? 88.0 : 72.0;
+    final barH = first ? 96.0 : 74.0;
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        _Avatar(childId: entry.childId, name: entry.name, size: avatarSz),
+        const SizedBox(height: 8),
+        Text(
+          entry.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _unb(13, ls: -0.39),
+        ),
+        const SizedBox(height: 5),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(21),
+            gradient: LinearGradient(
+              begin: Alignment.topLeft,
+              end: Alignment.bottomRight,
+              colors: badge,
+              stops: const [0.04, 0.39, 0.96],
+            ),
+          ),
+          child: Text('${_fmtDon(entry.xp)} DON', style: _unb(10, ls: -0.3)),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          height: barH,
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: barColor,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(18)),
+          ),
+          alignment: Alignment.topCenter,
+          child: Padding(
+            padding: const EdgeInsets.only(top: 2),
+            child: Image.asset(medal, width: 54, height: 54, cacheWidth: 120),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ════════════ Reyting qatori ════════════
+class _LeaderRow extends StatelessWidget {
+  const _LeaderRow({
+    required this.entry,
+    required this.isMe,
+    required this.glowing,
+  });
+
+  final LeaderboardEntry entry;
+  final bool isMe;
+  final bool glowing;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 300),
+      height: 68,
+      padding: const EdgeInsets.symmetric(horizontal: 14),
       decoration: BoxDecoration(
-        color: highlight
-            ? AppColors.primary.withValues(alpha: 0.12)
-            : AppColors.surface,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: highlight
-            ? Border.all(color: AppColors.accent, width: 1.5)
+        color: isMe ? (glowing ? _meGlow : _meRow) : _row,
+        borderRadius: BorderRadius.circular(24),
+        boxShadow: glowing
+            ? [
+                BoxShadow(
+                  color: const Color(0xFF3B82F6).withValues(alpha: 0.5),
+                  blurRadius: 24,
+                  spreadRadius: 2,
+                ),
+              ]
+            : null,
+        border: glowing
+            ? Border.all(color: const Color(0xFF3B82F6), width: 2)
             : null,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 28,
-            child: Text(
-              entry.rank > 0 ? '${entry.rank}' : '—',
-              textAlign: TextAlign.center,
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textSecondary,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-          const SizedBox(width: AppDimensions.sm),
-          _Avatar(childId: entry.childId, name: entry.name, size: 40),
-          const SizedBox(width: AppDimensions.md),
+          _Avatar(childId: entry.childId, name: entry.name, size: 44),
+          const SizedBox(width: 12),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(
-                        entry.name,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppTextStyles.bodyM.copyWith(
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                    if (highlight) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 8,
-                          vertical: 2,
-                        ),
-                        decoration: BoxDecoration(
-                          color: AppColors.primary,
-                          borderRadius: BorderRadius.circular(8),
-                        ),
-                        child: Text(
-                          'leaderboard.you'.tr(),
-                          style: AppTextStyles.label.copyWith(
-                            color: AppColors.onPrimary,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ],
-                ),
-                if (entry.region.isNotEmpty)
-                  Text(
-                    entry.region,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: AppTextStyles.label.copyWith(
-                      color: AppColors.textSecondary,
-                    ),
-                  ),
-              ],
+            child: Text(
+              '${entry.rank}. ${entry.name}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _unb(15),
             ),
           ),
-          const SizedBox(width: AppDimensions.sm),
-          _XpPill(xp: entry.xp),
+          const SizedBox(width: 8),
+          Text(_fmtDon(entry.xp), style: _unb(15)),
+          const SizedBox(width: 6),
+          const _DonTag(),
         ],
       ),
     );
   }
 }
 
-class _CurrentChildRow extends StatelessWidget {
-  const _CurrentChildRow({required this.entry});
-
-  final LeaderboardEntry entry;
+/// Ko'k "DON" tegi.
+class _DonTag extends StatelessWidget {
+  const _DonTag();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: AppColors.background,
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.md,
-        AppDimensions.sm,
-        AppDimensions.md,
-        AppDimensions.md,
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: _blue,
+        borderRadius: BorderRadius.circular(24),
       ),
-      child: SafeArea(
-        top: false,
-        child: _LeaderboardRow(entry: entry, highlight: true),
-      ),
+      child: Text('DON', style: _pop(13, w: FontWeight.w600)),
     );
   }
 }
 
-// ════════════════════════ AVATAR ════════════════════════
-
+// ════════════ Avatar (tarmoq + harf fallback) ════════════
 class _Avatar extends ConsumerWidget {
   const _Avatar({
     required this.childId,
@@ -556,149 +768,91 @@ class _Avatar extends ConsumerWidget {
     final url = ref.read(leaderboardRepositoryProvider).avatarUrl(childId);
     final letter = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     return ClipOval(
-      // Disk kesh + memCacheWidth — katta rasm xotirani yemasin.
-      child: CachedNetworkImage(
-        imageUrl: url,
+      child: SizedBox(
         width: size,
         height: size,
-        fit: BoxFit.cover,
-        memCacheWidth: 200,
-        errorWidget: (_, __, ___) => _fallback(letter),
-        placeholder: (_, __) => _fallback(letter),
+        child: CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          memCacheWidth: 200,
+          placeholder: (_, __) => _fallback(letter),
+          errorWidget: (_, __, ___) => _fallback(letter),
+        ),
       ),
     );
   }
 
   Widget _fallback(String letter) {
-    return Container(
-      width: size,
-      height: size,
-      color: AppColors.surfaceVariant,
-      alignment: Alignment.center,
-      child: Text(
-        letter,
-        style: TextStyle(
-          color: AppColors.textPrimary,
-          fontWeight: FontWeight.w700,
-          fontSize: size * 0.4,
-        ),
-      ),
+    return ColoredBox(
+      color: const Color(0xFF2A3038),
+      child: Center(child: Text(letter, style: _unb(size * 0.34, ls: 0))),
     );
   }
 }
 
-// ════════════════════════ XP PILL ════════════════════════
+// ════════════ Yopishqoq "Siz" pill'i ════════════
+class _StickyPill extends StatelessWidget {
+  const _StickyPill({
+    required this.entry,
+    required this.childId,
+    required this.loading,
+    required this.onTap,
+  });
 
-class _XpPill extends StatelessWidget {
-  const _XpPill({required this.xp, this.light = false});
-
-  final int xp;
-  final bool light;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: light
-            ? Colors.white.withValues(alpha: 0.22)
-            : AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(
-            SolarIconsBold.star,
-            size: 15,
-            color: light ? Colors.white : AppColors.warning,
-          ),
-          const SizedBox(width: 4),
-          Text(
-            '$xp',
-            style: AppTextStyles.label.copyWith(
-              color: light ? Colors.white : AppColors.textPrimary,
-              fontWeight: FontWeight.w700,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════ REGION PICKER ════════════════════════
-
-class _RegionPickerSheet extends StatelessWidget {
-  const _RegionPickerSheet({required this.selected});
-
-  final String? selected;
+  final LeaderboardEntry entry;
+  final String childId;
+  final bool loading;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    const regions = UzbekistanRegions.regions;
-    return SafeArea(
-      top: false,
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Padding(
-            padding: const EdgeInsets.fromLTRB(
-              AppDimensions.lg,
-              AppDimensions.lg,
-              AppDimensions.lg,
-              AppDimensions.sm,
+    final rankText = entry.rank > 0 ? '${entry.rank}. ' : '';
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+          child: Container(
+            padding: const EdgeInsets.fromLTRB(6, 6, 16, 6),
+            decoration: BoxDecoration(
+              color: Colors.white.withValues(alpha: 0.1),
+              borderRadius: BorderRadius.circular(999),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
             ),
             child: Row(
               children: [
-                Text(
-                  'leaderboard.pickRegion'.tr(),
-                  style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-                ),
-                const Spacer(),
-                IconButton(
-                  icon: Icon(
-                    SolarIconsBold.closeCircle,
-                    color: AppColors.textSecondary,
+                _Avatar(childId: childId, name: entry.name, size: 44),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    '$rankText${entry.name}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(15),
                   ),
-                  onPressed: () => Navigator.of(context).pop(),
                 ),
+                const SizedBox(width: 10),
+                if (loading)
+                  const SizedBox(
+                    width: 18,
+                    height: 18,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Colors.white,
+                    ),
+                  )
+                else ...[
+                  Text(_fmtDon(entry.xp), style: _unb(15)),
+                  const SizedBox(width: 6),
+                  const _DonTag(),
+                ],
               ],
             ),
           ),
-          Flexible(
-            child: ListView(
-              shrinkWrap: true,
-              children: [
-                _tile(
-                  context,
-                  label: 'leaderboard.allRegions'.tr(),
-                  value: '',
-                  isSelected: selected == null,
-                ),
-                for (final r in regions)
-                  _tile(context, label: r, value: r, isSelected: r == selected),
-              ],
-            ),
-          ),
-        ],
+        ),
       ),
-    );
-  }
-
-  Widget _tile(
-    BuildContext context, {
-    required String label,
-    required String value,
-    required bool isSelected,
-  }) {
-    return ListTile(
-      title: Text(label, style: AppTextStyles.bodyM),
-      trailing: Icon(
-        isSelected ? SolarIconsBold.recordCircle : SolarIconsBold.record,
-        color: isSelected ? AppColors.accent : AppColors.textTertiary,
-      ),
-      onTap: () => Navigator.of(context).pop(value),
     );
   }
 }

@@ -1088,7 +1088,11 @@
     "loadFailed": "Ruxsatlarni yuklab bo'lmadi.\nInternet aloqasini tekshiring."
   },
   "leaderboard": {
-    "title": "Reyting",
+    "title": "DON reytingi",
+    "help": {
+      "title": "DON nima?",
+      "body": "DON — farzandingiz vazifalar va faollik uchun to'playdigan ballari. Reyting DON bo'yicha tuziladi."
+    },
     "periods": {
       "weekly": "Haftalik",
       "monthly": "Oylik",
