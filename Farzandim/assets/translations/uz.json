@@ -788,6 +788,18 @@
     "editEmail": "Emailni o'zgartirish",
     "editPhone": "Telefonni o'zgartirish"
   },
+  "languageSheet": {
+    "title": "Ilova tili",
+    "uz": "O'zbek",
+    "ru": "Rus",
+    "en": "English"
+  },
+  "supportSheet": {
+    "title": "Qo'llab quvvatlash",
+    "telegram": "Telegram",
+    "phone": "Telefon",
+    "email": "Email"
+  },
   "premium": {
     "subscribers": "+1k obunachi",
     "title": "Parvoz Premium",

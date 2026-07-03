@@ -788,6 +788,18 @@
     "editEmail": "Изменить email",
     "editPhone": "Изменить телефон"
   },
+  "languageSheet": {
+    "title": "Язык приложения",
+    "uz": "Узбекский",
+    "ru": "Русский",
+    "en": "Английский"
+  },
+  "supportSheet": {
+    "title": "Поддержка",
+    "telegram": "Telegram",
+    "phone": "Телефон",
+    "email": "Email"
+  },
   "premium": {
     "subscribers": "+1k подписчиков",
     "title": "Parvoz Premium",

@@ -74,9 +74,6 @@ class AppRoutes {
   /// Faol sessiyalar — login qilingan qurilmalar.
   static const String settingsSessions = '/settings/sessions';
 
-  /// Qo'llab-quvvatlash chati.
-  static const String support = '/support';
-
   /// Bolalarni boshqarish ro'yxati.
   static const String settingsChildren = '/settings/children';
 

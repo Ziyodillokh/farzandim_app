@@ -60,7 +60,6 @@ import 'package:farzandim/features/settings/presentation/screens/notification_pr
 import 'package:farzandim/features/settings/presentation/screens/parvoz_premium_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
-import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
 import 'package:farzandim/features/weekly_report/presentation/screens/weekly_report_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
@@ -364,10 +363,6 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.settingsSessions,
       pageBuilder: (context, state) => _slidePage(const ActiveSessionsScreen()),
-    ),
-    GoRoute(
-      path: AppRoutes.support,
-      pageBuilder: (context, state) => _slidePage(const SupportChatScreen()),
     ),
     // Bolalar boshqaruvi. (Akkount/Profil endi bottom sheet — routsiz.)
     GoRoute(

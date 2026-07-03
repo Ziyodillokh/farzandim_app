@@ -12,6 +12,8 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
+import 'package:farzandim/features/settings/presentation/screens/language_sheet.dart';
+import 'package:farzandim/features/settings/presentation/screens/support_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -21,7 +23,6 @@ import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal) ════════════
 const _bg = Color(0xFF00060A);
-const _blue = Color(0xFF216BFF);
 const _card = Color(0xFF1A1F23);
 const _cardBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x99FFFFFF); // oq 60%
@@ -100,14 +101,14 @@ class SettingsScreen extends ConsumerWidget {
                       icon: SolarIconsBold.global,
                       title: 'settings.rows.language.title'.tr(),
                       subtitle: langLabel,
-                      onTap: () => _showLanguageDialog(context, ref),
+                      onTap: () => showLanguageSheet(context),
                     ),
                     const SizedBox(height: 4),
                     _SettingRow(
                       icon: SolarIconsBold.handHeart,
                       title: 'settings.rows.support.title'.tr(),
                       subtitle: 'settings.rows.support.subtitle'.tr(),
-                      onTap: () => context.push(AppRoutes.support),
+                      onTap: () => showSupportSheet(context),
                     ),
                     const SizedBox(height: 4),
                     _SettingRow(
@@ -126,37 +127,6 @@ class SettingsScreen extends ConsumerWidget {
     );
   }
 
-  void _showLanguageDialog(BuildContext context, WidgetRef ref) {
-    showDialog<void>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        backgroundColor: _card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(24),
-          side: const BorderSide(color: _cardBorder),
-        ),
-        title: Text('settings.language.dialogTitle'.tr(), style: _unb(17)),
-        contentPadding: const EdgeInsets.symmetric(vertical: 8),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            for (final lang in AppLanguage.values)
-              _LanguageOption(
-                language: lang,
-                isSelected:
-                    lang == AppLanguage.fromCode(context.locale.languageCode),
-                onTap: () async {
-                  await context.setLocale(lang.locale);
-                  if (dialogContext.mounted) {
-                    Navigator.of(dialogContext).pop();
-                  }
-                },
-              ),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ════════════ Sarlavha (orqa + markazlashgan matn) ════════════
@@ -432,38 +402,6 @@ class _SettingRow extends StatelessWidget {
               size: 22,
               color: Colors.white.withValues(alpha: 0.7),
             ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════ Til tanlash qatori (dialog ichida) ════════════
-class _LanguageOption extends StatelessWidget {
-  const _LanguageOption({
-    required this.language,
-    required this.isSelected,
-    required this.onTap,
-  });
-
-  final AppLanguage language;
-  final bool isSelected;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onTap,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        child: Row(
-          children: [
-            Text(language.flag, style: const TextStyle(fontSize: 24)),
-            const SizedBox(width: 16),
-            Expanded(child: Text(language.label, style: _pop(15))),
-            if (isSelected)
-              const Icon(SolarIconsBold.checkCircle, color: _blue, size: 20),
           ],
         ),
       ),
