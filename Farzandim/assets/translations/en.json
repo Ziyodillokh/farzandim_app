@@ -748,6 +748,25 @@
     "editSoon": "Editing coming soon",
     "manageChildren": "Manage children"
   },
+  "contactEdit": {
+    "phoneTitle": "Edit phone",
+    "emailTitle": "Edit email",
+    "newPhone": "Enter new number",
+    "newEmail": "Enter new e-mail",
+    "phoneHint": "+998 90 123 45 67",
+    "emailHint": "email@example.com",
+    "otpLabel": "Enter the confirmation code",
+    "otpSentLabel": "Enter the code sent to {target}",
+    "sendCode": "Send code",
+    "resend": "Resend",
+    "resendIn": "Resend ({s})",
+    "save": "Save",
+    "saved": "Phone number updated",
+    "codeSent": "Confirmation code sent",
+    "invalidPhone": "Invalid number (+998 XX XXX XX XX)",
+    "invalidEmail": "Invalid email",
+    "comingSoon": "Email change coming soon"
+  },
   "premium": {
     "subscribers": "+1k subscribers",
     "title": "Parvoz Premium",

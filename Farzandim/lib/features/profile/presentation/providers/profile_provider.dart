@@ -63,6 +63,20 @@ class ProfileNotifier extends StateNotifier<ParentProfile> {
     await _repository.uploadAvatar(bytes);
     await _load();
   }
+
+  /// Telefon o'zgartirish — 1-qadam: yangi raqamga OTP yuboradi.
+  Future<void> requestPhoneOtp(String phone) =>
+      _repository.requestPhoneOtp(phone);
+
+  /// Telefon o'zgartirish — 2-qadam: OTP tasdiqlab saqlaydi va profilni
+  /// yangilab oladi (yangi raqam UI'da ko'rinishi uchun).
+  Future<void> verifyPhoneAndSave({
+    required String phone,
+    required String code,
+  }) async {
+    await _repository.verifyPhoneOtp(phone: phone, code: code);
+    await _load();
+  }
 }
 
 /// Profil provider'i — auth state o'zgarishiga listen qiladi.

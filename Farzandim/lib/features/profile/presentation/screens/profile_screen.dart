@@ -2,8 +2,9 @@
 // bottom sheet (orqa fon = tizim so'zlamalari). Foydalanuvchi hisobi
 // ma'lumotlari ko'rsatiladi: Email, Telefon, Login (= email/telefon), Parol.
 //
-// Hozircha bu maydonlar backend'da tahrirlanmaydi (email/telefon/parol/login
-// o'zgartirish endpointi yo'q) — qalam/ko'z ikonlari "tez kunda" toast
+// Telefon qalami → showPhoneEditSheet (to'liq ishlaydi, OTP orqali).
+// Email qalami → showEmailEditSheet (dizayn tayyor, backend endpointi yo'q —
+// saqlash "tez kunda"). Login/parol qalamlari hali "tez kunda" toast
 // ko'rsatadi. Pastda Chiqish (logout) va Yopish, hamda farzandlarni boshqarish
 // va hisobni o'chirish (Play talabi) yo'llari saqlangan — dead code bo'lmasin.
 //
@@ -16,7 +17,9 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
+import 'package:farzandim/features/profile/presentation/screens/contact_edit_sheet.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -70,6 +73,12 @@ class _AccountSheet extends ConsumerStatefulWidget {
 
 class _AccountSheetState extends ConsumerState<_AccountSheet> {
   void _editSoon() => AppToast.info(context, 'account.editSoon'.tr());
+
+  /// Telefonni tahrirlash — to'liq ishlaydigan OTP varag'i (backend bor).
+  void _editPhone() => showPhoneEditSheet(context);
+
+  /// Emailni tahrirlash — dizayn varag'i (backend endpointi hali yo'q).
+  void _editEmail() => showEmailEditSheet(context);
 
   void _close() => Navigator.of(context).pop();
 
@@ -167,12 +176,12 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                 _Field(
                   label: 'account.email'.tr(),
                   value: orDash(email),
-                  onEdit: _editSoon,
+                  onEdit: _editEmail,
                 ),
                 _Field(
                   label: 'account.phone'.tr(),
                   value: orDash(phone),
-                  onEdit: _editSoon,
+                  onEdit: _editPhone,
                 ),
                 _Field(
                   label: 'account.login'.tr(),
@@ -193,12 +202,15 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                   onTap: () => _goto(AppRoutes.settingsChildren),
                 ),
                 const SizedBox(height: 18),
-                _SheetButton(
+                ParvozSecondaryButton(
                   label: 'settings.logout.button'.tr(),
-                  onTap: _logout,
+                  onPressed: _logout,
                 ),
                 const SizedBox(height: 10),
-                _SheetButton(label: 'common.close'.tr(), onTap: _close),
+                ParvozSecondaryButton(
+                  label: 'common.close'.tr(),
+                  onPressed: _close,
+                ),
                 const SizedBox(height: 6),
                 Center(
                   child: TextButton(
@@ -309,32 +321,6 @@ class _NavRow extends StatelessWidget {
             const Icon(SolarIconsOutline.altArrowRight, size: 20, color: _dim),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Ikkilamchi (shisha) tugma — "Chiqish" / "Yopish".
-class _SheetButton extends StatelessWidget {
-  const _SheetButton({required this.label, required this.onTap});
-
-  final String label;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 54,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: 0.06),
-          borderRadius: BorderRadius.circular(999),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
-        ),
-        child: Text(label, style: _pop(16, w: FontWeight.w500)),
       ),
     );
   }

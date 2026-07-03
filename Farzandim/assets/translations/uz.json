@@ -748,6 +748,25 @@
     "editSoon": "Tahrirlash tez kunda qo'shiladi",
     "manageChildren": "Farzandlarni boshqarish"
   },
+  "contactEdit": {
+    "phoneTitle": "Telefonni tahrirlash",
+    "emailTitle": "Emailni tahrirlash",
+    "newPhone": "Yangi nomerni kiriting",
+    "newEmail": "Yangi e-mailni kiriting",
+    "phoneHint": "+998 90 123 45 67",
+    "emailHint": "email@example.com",
+    "otpLabel": "Tasdiqlash kodini kiriting",
+    "otpSentLabel": "{target} raqamiga yuborilgan kodni kiriting",
+    "sendCode": "Kod yuborish",
+    "resend": "Qayta yuborish",
+    "resendIn": "Qayta yuborish ({s})",
+    "save": "Saqlash",
+    "saved": "Telefon raqami yangilandi",
+    "codeSent": "Tasdiqlash kodi yuborildi",
+    "invalidPhone": "Telefon raqami noto'g'ri (+998 XX XXX XX XX)",
+    "invalidEmail": "Email noto'g'ri",
+    "comingSoon": "Emailni o'zgartirish tez kunda qo'shiladi"
+  },
   "premium": {
     "subscribers": "+1k obunachi",
     "title": "Parvoz Premium",

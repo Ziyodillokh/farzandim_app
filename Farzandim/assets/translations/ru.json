@@ -748,6 +748,25 @@
     "editSoon": "Редактирование скоро появится",
     "manageChildren": "Управление детьми"
   },
+  "contactEdit": {
+    "phoneTitle": "Изменить телефон",
+    "emailTitle": "Изменить email",
+    "newPhone": "Введите новый номер",
+    "newEmail": "Введите новый e-mail",
+    "phoneHint": "+998 90 123 45 67",
+    "emailHint": "email@example.com",
+    "otpLabel": "Введите код подтверждения",
+    "otpSentLabel": "Введите код, отправленный на {target}",
+    "sendCode": "Отправить код",
+    "resend": "Отправить снова",
+    "resendIn": "Отправить снова ({s})",
+    "save": "Сохранить",
+    "saved": "Номер телефона обновлён",
+    "codeSent": "Код подтверждения отправлен",
+    "invalidPhone": "Неверный номер (+998 XX XXX XX XX)",
+    "invalidEmail": "Неверный email",
+    "comingSoon": "Смена email скоро появится"
+  },
   "premium": {
     "subscribers": "+1k подписчиков",
     "title": "Parvoz Premium",
