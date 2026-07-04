@@ -1002,7 +1002,11 @@
     "micDenied": "Mikrofonga ruxsat berilmadi",
     "micError": "Yozishni boshlab bo'lmadi",
     "playError": "Ovozni eshittirib bo'lmadi",
-    "voiceUnavailable": "Bu ovoz mavjud emas"
+    "voiceUnavailable": "Bu ovoz mavjud emas",
+    "notPaired": "Bola qurilmasi hali ulanmagan",
+    "sendError": "Xabar yuborilmadi",
+    "voiceDeviceOnly": "Ovozli xabar faqat telefonda yuboriladi",
+    "videoDeviceOnly": "Video faqat telefonda yuboriladi"
   },
   "dailyLimit": {
     "title": "Kunlik vaqt limiti",

@@ -1,30 +1,38 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChatDetailScreen — chat detali (preview, Parvoz dizayn, Telegram-style)
+// ChatDetailScreen — chat detali (Parvoz dizayn, REAL backend)
 // ─────────────────────────────────────────────────────────────────────
 //
-// "Chatlar" ro'yxatidagi kontakt bosilganda ochiladi. Header (avatar + ism +
-// "Yozmoqda..."), xabarlar (matn / dumaloq video / ovoz + kun ajratgichi),
-// pastda kirish paneli.
+// Chat = ota-ona ↔ bola. Real: chatMessagesProvider (matn/ovoz/video),
+// sendText (matn), voiceUploadProvider (ovoz), videoUploadProvider (video),
+// AudioPlayerManager (ovoz eshitish), videoStreamUrl (video eshitish).
 //
-// OVOZ — HAQIQIY: `record` (mikrofon → blob/fayl URL) + `just_audio` bilan
-// eshitiladi (web/localhost'da ishlaydi). VIDEO — brauzerda Flutter video
-// yozishni qo'llamaydi (camera paketi cheklovi); UI demo, haqiqiy yozuv
-// telefonda (`voice_message` feature).
+// ⚠️ Web: matn + ko'rish + eshitish ishlaydi. Ovoz/video YUBORISH `File`
+// talab qiladi → faqat telefonda (web'da "faqat telefonda" toast).
 
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/features/chat/data/chat_mock.dart';
+import 'package:farzandim/features/chat/data/video/video_send.dart';
 import 'package:farzandim/features/chat/presentation/screens/round_video_player.dart';
 import 'package:farzandim/features/chat/presentation/screens/round_video_record_sheet.dart';
+import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/video_message/data/models/video_message.dart';
+import 'package:farzandim/features/video_message/data/repositories/backend_video_message_repository.dart';
+import 'package:farzandim/features/video_message/presentation/providers/video_message_provider.dart';
+import 'package:farzandim/features/voice_message/data/models/voice_message.dart';
+import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
+import 'package:farzandim/features/voice_message/data/services/audio_player_manager.dart';
+import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
+import 'package:farzandim/features/voice_message/presentation/providers/voice_upload_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:just_audio/just_audio.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -32,10 +40,16 @@ import 'package:solar_icons/solar_icons.dart';
 const _bg = Color(0xFF00060A);
 const _blue = Color(0xFF216BFF);
 const _chipBg = Color(0xFF1B2128);
-const _recvBubble = Color(0xFF1C232B); // qabul qilingan pufakcha
+const _recvBubble = Color(0xFF1C232B);
 const _fieldBorder = Color(0x1FFFFFFF);
 const _dim = Color(0x8CFFFFFF);
-const _rec = Color(0xFFFF4D4F); // yozish indikatori
+const _rec = Color(0xFFFF4D4F);
+
+const _waveHeights = <double>[
+  0.3, 0.6, 0.9, 0.5, 0.75, 1, 0.45, 0.65, 0.35, 0.85,
+  0.5, 0.7, 0.4, 0.95, 0.55, 0.8, 0.35, 0.6, 0.9, 0.45,
+  0.7, 0.5, 0.8, 0.4,
+];
 
 TextStyle _unb(
   double s, {
@@ -49,73 +63,43 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
 
-// To'lqin uchun deterministik balandliklar (0..1).
-const _waveHeights = <double>[
-  0.3, 0.6, 0.9, 0.5, 0.75, 1, 0.45, 0.65, 0.35, 0.85,
-  0.5, 0.7, 0.4, 0.95, 0.55, 0.8, 0.35, 0.6, 0.9, 0.45,
-  0.7, 0.5, 0.8, 0.4,
-];
+String _time(DateTime d) =>
+    '${d.hour.toString().padLeft(2, '0')}:'
+    '${d.minute.toString().padLeft(2, '0')}';
 
-/// Chat detali ekrani (preview, interaktiv, haqiqiy ovoz).
-class ChatDetailScreen extends StatefulWidget {
+/// Chat detali ekrani (real).
+class ChatDetailScreen extends ConsumerStatefulWidget {
   /// `ChatDetailScreen` konstruktor.
   const ChatDetailScreen({required this.contactId, super.key});
 
-  /// Kontakt identifikatori (route parametri).
+  /// Bola id'si (route parametri).
   final String contactId;
 
   @override
-  State<ChatDetailScreen> createState() => _ChatDetailScreenState();
+  ConsumerState<ChatDetailScreen> createState() => _ChatDetailScreenState();
 }
 
-class _ChatDetailScreenState extends State<ChatDetailScreen> {
-  late final ChatContact _contact = mockContactById(widget.contactId);
-  late final List<ChatMsg> _messages = [...mockMessages(widget.contactId)];
+class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   final _scroll = ScrollController();
-  final _player = AudioPlayer();
-  String? _playingUrl;
-  StreamSubscription<PlayerState>? _playerSub;
-  bool _typing = false; // suhbatdosh "yozmoqda" (preview simulyatsiyasi)
-  Timer? _typingTimer;
+  String? _playingId;
+  StreamSubscription<String?>? _playSub;
 
   @override
   void initState() {
     super.initState();
-    // Ovoz tugagach play holatini tozalaymiz.
-    _playerSub = _player.playerStateStream.listen((s) {
-      if (s.processingState == ProcessingState.completed && mounted) {
-        setState(() => _playingUrl = null);
-      }
+    _playSub = AudioPlayerManager.instance.currentIdStream.listen((id) {
+      if (mounted) setState(() => _playingId = id);
     });
   }
 
   @override
   void dispose() {
-    _playerSub?.cancel();
-    _typingTimer?.cancel();
-    _player.dispose();
+    _playSub?.cancel();
     _scroll.dispose();
     super.dispose();
   }
 
-  /// Preview: xabar yuborilgach suhbatdosh qisqa vaqt "yozmoqda" bo'ladi.
-  void _simulateTyping() {
-    _typingTimer?.cancel();
-    setState(() => _typing = true);
-    _typingTimer = Timer(const Duration(milliseconds: 2500), () {
-      if (mounted) setState(() => _typing = false);
-    });
-  }
-
-  String _nowLabel() {
-    final n = DateTime.now();
-    return '${n.hour.toString().padLeft(2, '0')}:'
-        '${n.minute.toString().padLeft(2, '0')}';
-  }
-
-  void _append(ChatMsg m) {
-    setState(() => _messages.add(m));
-    if (m.mine) _simulateTyping();
+  void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(
@@ -127,120 +111,153 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
     });
   }
 
-  Future<void> _sendVideo() async {
-    final res = await showRoundVideoRecord(context);
-    if (res == null || !mounted) return;
-    _append(
-      ChatMsg(
-        kind: ChatMsgKind.roundVideo,
-        mine: true,
-        time: _nowLabel(),
-        durationSec: res.seconds,
-        mediaUrl: res.url,
-      ),
-    );
-  }
+  Child? get _child => ref.read(childByIdProvider(widget.contactId));
 
-  void _sendVoice(String? url, int secs) {
-    _append(
-      ChatMsg(
-        kind: ChatMsgKind.voice,
-        mine: true,
-        time: _nowLabel(),
-        durationSec: secs < 1 ? 1 : secs,
-        mediaUrl: url,
-      ),
-    );
-  }
-
-  void _sendText(String text) {
-    _append(
-      ChatMsg(
-        kind: ChatMsgKind.text,
-        mine: true,
-        time: _nowLabel(),
-        text: text,
-      ),
-    );
-  }
-
-  /// Ovozli xabarni eshittiradi / to'xtatadi.
-  Future<void> _togglePlay(ChatMsg m) async {
-    final url = m.mediaUrl;
-    if (url == null) {
-      AppToast.info(context, 'chat.voiceUnavailable'.tr());
-      return;
-    }
-    // Shu xabar o'ynayotgan bo'lsa — to'xtatamiz.
-    if (_playingUrl == url) {
-      await _player.stop();
-      if (mounted) setState(() => _playingUrl = null);
+  Future<void> _sendText(String text) async {
+    final receiver = _child?.linkedDeviceUid;
+    if (receiver == null || receiver.isEmpty) {
+      AppToast.error(context, 'chat.notPaired'.tr());
       return;
     }
     try {
-      if (url.startsWith('blob:') || url.startsWith('http')) {
-        await _player.setUrl(url);
-      } else {
-        await _player.setFilePath(url);
-      }
-      if (!mounted) return;
-      setState(() => _playingUrl = url);
-      await _player.play();
+      await ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .sendText(receiverId: receiver, text: text);
+      ref.invalidate(rawVoiceMessagesProvider);
+      _scrollToBottom();
     } catch (_) {
-      if (mounted) AppToast.error(context, 'chat.playError'.tr());
+      if (mounted) AppToast.error(context, 'chat.sendError'.tr());
     }
+  }
+
+  Future<void> _sendVoice(String path, int secs) async {
+    final child = _child;
+    final id = await ref.read(voiceUploadProvider.notifier).send(
+      childId: widget.contactId,
+      childName: child?.name ?? '',
+      localFilePath: path,
+      durationSeconds: secs,
+      waveform: const [],
+    );
+    if (!mounted) return;
+    if (id != null) {
+      ref.invalidate(rawVoiceMessagesProvider);
+      _scrollToBottom();
+    } else {
+      AppToast.error(
+        context,
+        kIsWeb ? 'chat.voiceDeviceOnly'.tr() : 'chat.sendError'.tr(),
+      );
+    }
+  }
+
+  Future<void> _sendVideo() async {
+    final res = await showRoundVideoRecord(context);
+    if (res == null || !mounted) return;
+    if (kIsWeb) {
+      AppToast.info(context, 'chat.videoDeviceOnly'.tr());
+      return;
+    }
+    final ok = await sendRecordedVideo(
+      ref,
+      childId: widget.contactId,
+      path: res.url,
+      seconds: res.seconds,
+    );
+    if (!mounted) return;
+    if (ok) {
+      ref.invalidate(rawVideoMessagesProvider);
+      _scrollToBottom();
+    } else {
+      AppToast.error(context, 'chat.sendError'.tr());
+    }
+  }
+
+  Future<void> _togglePlayVoice(VoiceMessage m) async {
+    final url =
+        ref.read(backendVoiceMessageRepositoryProvider).audioStreamUrl(m.id);
+    await AudioPlayerManager.instance.playOrToggle(
+      messageId: m.id,
+      audioUrl: url,
+    );
+  }
+
+  void _playVideo(VideoMessage m) {
+    final url =
+        ref.read(backendVideoMessageRepositoryProvider).videoStreamUrl(m.id);
+    showRoundVideoPlayer(context, url);
   }
 
   @override
   Widget build(BuildContext context) {
+    final child = ref.watch(childByIdProvider(widget.contactId));
+    final messagesAsync = ref.watch(chatMessagesProvider(widget.contactId));
+
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _Header(contact: _contact, typing: _typing),
+            _Header(child: child),
             Expanded(
-              child: ListView.builder(
-                controller: _scroll,
-                padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
-                itemCount: _messages.length,
-                itemBuilder: (context, i) {
-                  final m = _messages[i];
-                  return Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      if (m.dayLabel != null) _DayDivider(label: m.dayLabel!),
-                      switch (m.kind) {
-                        ChatMsgKind.roundVideo => _RoundVideoMessage(
-                          msg: m,
-                          color: _contact.color,
-                          onTap: m.mediaUrl == null
-                              ? null
-                              : () => showRoundVideoPlayer(
-                                  context, m.mediaUrl!),
+              child: messagesAsync.when(
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: _blue),
+                ),
+                error: (_, __) => Center(
+                  child: Text('errors.loadFailed'.tr(),
+                      style: _pop(14, c: _dim)),
+                ),
+                data: (items) {
+                  if (items.isEmpty) {
+                    return Center(
+                      child: Text('Suhbatni boshlang',
+                          style: _pop(14, c: _dim)),
+                    );
+                  }
+                  return ListView.builder(
+                    controller: _scroll,
+                    padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
+                    itemCount: items.length,
+                    itemBuilder: (context, i) {
+                      final item = items[i];
+                      return switch (item) {
+                        VoiceItem(:final message) => _voiceItem(message),
+                        VideoItem(:final message) => _RoundVideoMessage(
+                          msg: message,
+                          color: _blue,
+                          onTap: () => _playVideo(message),
                         ),
-                        ChatMsgKind.voice => _VoiceBubble(
-                          msg: m,
-                          playing: _playingUrl != null &&
-                              _playingUrl == m.mediaUrl,
-                          onTap: () => _togglePlay(m),
-                        ),
-                        ChatMsgKind.text => _TextBubble(msg: m),
-                      },
-                    ],
+                      };
+                    },
                   );
                 },
               ),
             ),
             _InputBar(
-              onCamera: _sendVideo,
-              onSendVoice: _sendVoice,
               onSendText: _sendText,
+              onSendVoice: _sendVoice,
+              onCamera: _sendVideo,
             ),
           ],
         ),
       ),
+    );
+  }
+
+  Widget _voiceItem(VoiceMessage m) {
+    if (m.isText) return _TextBubble(msg: m);
+    if (m.isImage || m.isFile) {
+      return _TextBubble(
+        msg: m,
+        overrideText: m.isImage ? '📷 Rasm' : '📎 Fayl',
+      );
+    }
+    return _VoiceBubble(
+      msg: m,
+      playing: _playingId == m.id,
+      onTap: () => _togglePlayVoice(m),
     );
   }
 }
@@ -248,20 +265,13 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 // ════════════ Header ════════════
 
 class _Header extends StatelessWidget {
-  const _Header({required this.contact, required this.typing});
+  const _Header({required this.child});
 
-  final ChatContact contact;
-  final bool typing;
+  final Child? child;
 
   @override
   Widget build(BuildContext context) {
-    // Yozayotganda "Yozmoqda..." (ko'k), aks holda onlayn/oxirgi ko'rilgan.
-    final statusText = typing
-        ? 'chat.typing'.tr()
-        : (contact.online ? 'chat.online'.tr() : 'chat.lastSeen'.tr());
-    final statusColor = typing
-        ? _blue
-        : (contact.online ? const Color(0xFF34C759) : _dim);
+    final online = child?.isLiveOnline ?? false;
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
       child: Row(
@@ -280,59 +290,20 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Column(
               children: [
-                Text(contact.name, style: _unb(18)),
+                Text(child?.name ?? 'Chat', style: _unb(18)),
                 const SizedBox(height: 2),
                 Text(
-                  statusText,
-                  style: _pop(13, w: FontWeight.w500, c: statusColor),
+                  online ? 'chat.online'.tr() : 'chat.lastSeen'.tr(),
+                  style: _pop(13,
+                      w: FontWeight.w500,
+                      c: online ? const Color(0xFF34C759) : _dim),
                 ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          _MiniAvatar(contact: contact),
-        ],
-      ),
-    );
-  }
-}
-
-class _MiniAvatar extends StatelessWidget {
-  const _MiniAvatar({required this.contact});
-
-  final ChatContact contact;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 44,
-      height: 44,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(color: contact.color, shape: BoxShape.circle),
-      child: Text(contact.initial, style: _unb(18, w: FontWeight.w700)),
-    );
-  }
-}
-
-// ════════════ Kun ajratgichi ════════════
-
-class _DayDivider extends StatelessWidget {
-  const _DayDivider({required this.label});
-
-  final String label;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12),
-      child: Row(
-        children: [
-          const Expanded(child: Divider(color: Color(0x14FFFFFF))),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            child: Text(label, style: _pop(12, c: _dim)),
-          ),
-          const Expanded(child: Divider(color: Color(0x14FFFFFF))),
+          if (child != null)
+            ChildAvatar(child: child!, size: 44, showBorder: false),
         ],
       ),
     );
@@ -342,13 +313,14 @@ class _DayDivider extends StatelessWidget {
 // ════════════ Matn pufakchasi ════════════
 
 class _TextBubble extends StatelessWidget {
-  const _TextBubble({required this.msg});
+  const _TextBubble({required this.msg, this.overrideText});
 
-  final ChatMsg msg;
+  final VoiceMessage msg;
+  final String? overrideText;
 
   @override
   Widget build(BuildContext context) {
-    final mine = msg.mine;
+    final mine = msg.sender == 'parent';
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Container(
@@ -359,12 +331,12 @@ class _TextBubble extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
         decoration: BoxDecoration(
           color: mine ? _blue : _recvBubble,
-          borderRadius: _bubbleRadius(mine),
+          borderRadius: _radius(mine),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(msg.text ?? '', style: _pop(15)),
+            Text(overrideText ?? msg.text ?? '', style: _pop(15)),
             const SizedBox(height: 3),
             _MetaRow(msg: msg, onLight: mine),
           ],
@@ -374,32 +346,32 @@ class _TextBubble extends StatelessWidget {
   }
 }
 
-BorderRadius _bubbleRadius(bool mine) => BorderRadius.only(
+BorderRadius _radius(bool mine) => BorderRadius.only(
   topLeft: const Radius.circular(18),
   topRight: const Radius.circular(18),
   bottomLeft: Radius.circular(mine ? 18 : 4),
   bottomRight: Radius.circular(mine ? 4 : 18),
 );
 
-/// Vaqt + o'qilgan belgisi (o'ng pastda).
 class _MetaRow extends StatelessWidget {
   const _MetaRow({required this.msg, this.onLight = false});
 
-  final ChatMsg msg;
-  final bool onLight; // ochiq (ko'k) fon ustidami
+  final VoiceMessage msg;
+  final bool onLight;
 
   @override
   Widget build(BuildContext context) {
+    final mine = msg.sender == 'parent';
     final sub = onLight ? Colors.white70 : _dim;
     return Row(
       mainAxisSize: MainAxisSize.min,
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(msg.time, style: _pop(11, c: sub)),
-        if (msg.mine) ...[
+        Text(_time(msg.createdAt), style: _pop(11, c: sub)),
+        if (mine) ...[
           const SizedBox(width: 4),
           Icon(
-            Icons.done_all_rounded,
+            msg.isSeen ? Icons.done_all_rounded : Icons.done_rounded,
             size: 15,
             color: onLight ? Colors.white : _blue,
           ),
@@ -409,7 +381,7 @@ class _MetaRow extends StatelessWidget {
   }
 }
 
-// ════════════ Ovozli xabar pufakchasi ════════════
+// ════════════ Ovozli xabar ════════════
 
 class _VoiceBubble extends StatelessWidget {
   const _VoiceBubble({
@@ -418,19 +390,19 @@ class _VoiceBubble extends StatelessWidget {
     required this.onTap,
   });
 
-  final ChatMsg msg;
+  final VoiceMessage msg;
   final bool playing;
   final VoidCallback onTap;
 
   String get _dur {
-    final m = msg.durationSec ~/ 60;
-    final s = (msg.durationSec % 60).toString().padLeft(2, '0');
+    final m = msg.durationSeconds ~/ 60;
+    final s = (msg.durationSeconds % 60).toString().padLeft(2, '0');
     return '$m:$s';
   }
 
   @override
   Widget build(BuildContext context) {
-    final mine = msg.mine;
+    final mine = msg.sender == 'parent';
     final barColor = mine ? Colors.white : _blue;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
@@ -442,7 +414,7 @@ class _VoiceBubble extends StatelessWidget {
         padding: const EdgeInsets.fromLTRB(10, 8, 12, 8),
         decoration: BoxDecoration(
           color: mine ? _blue : _recvBubble,
-          borderRadius: _bubbleRadius(mine),
+          borderRadius: _radius(mine),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -474,7 +446,8 @@ class _VoiceBubble extends StatelessWidget {
                 const SizedBox(width: 10),
                 _Waveform(color: barColor),
                 const SizedBox(width: 10),
-                Text(_dur, style: _pop(12, c: mine ? Colors.white70 : _dim)),
+                Text(_dur,
+                    style: _pop(12, c: mine ? Colors.white70 : _dim)),
               ],
             ),
             const SizedBox(height: 4),
@@ -514,33 +487,31 @@ class _Waveform extends StatelessWidget {
   }
 }
 
-// ════════════ Dumaloq video xabar ════════════
+// ════════════ Dumaloq video ════════════
 
 class _RoundVideoMessage extends StatelessWidget {
   const _RoundVideoMessage({
     required this.msg,
     required this.color,
-    this.onTap,
+    required this.onTap,
   });
 
-  final ChatMsg msg;
+  final VideoMessage msg;
   final Color color;
-  final VoidCallback? onTap;
+  final VoidCallback onTap;
 
   static const double _d = 190;
 
   @override
   Widget build(BuildContext context) {
-    final mine = msg.mine;
-    final hasVideo = msg.mediaUrl != null;
+    final mine = msg.sender == 'parent';
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
-          crossAxisAlignment: mine
-              ? CrossAxisAlignment.end
-              : CrossAxisAlignment.start,
+          crossAxisAlignment:
+              mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
           children: [
             GestureDetector(
               onTap: onTap,
@@ -557,14 +528,9 @@ class _RoundVideoMessage extends StatelessWidget {
                   ),
                   border: Border.all(color: const Color(0x22FFFFFF), width: 2),
                 ),
-                child: Center(
-                  child: Icon(
-                    hasVideo
-                        ? Icons.play_arrow_rounded
-                        : SolarIconsBold.videocameraRecord,
-                    size: hasVideo ? 56 : 44,
-                    color: Colors.white,
-                  ),
+                child: const Center(
+                  child: Icon(Icons.play_arrow_rounded,
+                      size: 56, color: Colors.white),
                 ),
               ),
             ),
@@ -574,11 +540,13 @@ class _RoundVideoMessage extends StatelessWidget {
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(msg.time, style: _pop(11, c: _dim)),
+                  Text(_time(msg.createdAt), style: _pop(11, c: _dim)),
                   if (mine) ...[
                     const SizedBox(width: 4),
-                    const Icon(
-                      Icons.done_all_rounded,
+                    Icon(
+                      msg.status == VideoMessageStatus.seen
+                          ? Icons.done_all_rounded
+                          : Icons.done_rounded,
                       size: 15,
                       color: _blue,
                     ),
@@ -593,18 +561,18 @@ class _RoundVideoMessage extends StatelessWidget {
   }
 }
 
-// ════════════ Kirish paneli (matn / ovoz / video) ════════════
+// ════════════ Kirish paneli ════════════
 
 class _InputBar extends StatefulWidget {
   const _InputBar({
-    required this.onCamera,
-    required this.onSendVoice,
     required this.onSendText,
+    required this.onSendVoice,
+    required this.onCamera,
   });
 
-  final VoidCallback onCamera;
-  final void Function(String? url, int secs) onSendVoice;
   final ValueChanged<String> onSendText;
+  final void Function(String path, int secs) onSendVoice;
+  final VoidCallback onCamera;
 
   @override
   State<_InputBar> createState() => _InputBarState();
@@ -642,11 +610,9 @@ class _InputBarState extends State<_InputBar> {
         if (mounted) AppToast.error(context, 'chat.micDenied'.tr());
         return;
       }
-      // Web'da path e'tiborsiz (stop() blob URL qaytaradi); qurilmada tmp fayl.
       var path = '';
       if (!kIsWeb) {
-        final dir = await getTemporaryDirectory();
-        path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        path = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
       await _recorder.start(const RecordConfig(), path: path);
       if (!mounted) return;
@@ -672,15 +638,15 @@ class _InputBarState extends State<_InputBar> {
     if (mounted) setState(() => _recording = false);
   }
 
-  Future<void> _sendVoice() async {
+  Future<void> _stopSendVoice() async {
     _timer?.cancel();
     final secs = _elapsed;
-    String? url;
+    String? path;
     try {
-      url = await _recorder.stop();
+      path = await _recorder.stop();
     } catch (_) {}
     if (mounted) setState(() => _recording = false);
-    widget.onSendVoice(url, secs < 1 ? 1 : secs);
+    if (path != null) widget.onSendVoice(path, secs < 1 ? 1 : secs);
   }
 
   String get _elapsedLabel {
@@ -694,11 +660,11 @@ class _InputBarState extends State<_InputBar> {
     final bottom = MediaQuery.of(context).padding.bottom;
     return Padding(
       padding: EdgeInsets.fromLTRB(14, 8, 14, 10 + bottom),
-      child: _recording ? _buildRecording() : _buildIdle(),
+      child: _recording ? _recordingRow() : _idleRow(),
     );
   }
 
-  Widget _buildIdle() {
+  Widget _idleRow() {
     final hasText = _textCtrl.text.trim().isNotEmpty;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
@@ -713,7 +679,6 @@ class _InputBarState extends State<_InputBar> {
               borderRadius: BorderRadius.circular(26),
               border: Border.all(color: _fieldBorder),
             ),
-            // Global teal fill'ni o'chiramiz + ko'k belgilash.
             child: TextSelectionTheme(
               data: const TextSelectionThemeData(
                 cursorColor: _blue,
@@ -745,11 +710,7 @@ class _InputBarState extends State<_InputBar> {
         ),
         const SizedBox(width: 10),
         if (hasText)
-          _CircleAction(
-            icon: Icons.send_rounded,
-            blue: true,
-            onTap: _sendText,
-          )
+          _CircleAction(icon: Icons.send_rounded, blue: true, onTap: _sendText)
         else ...[
           _CircleAction(icon: SolarIconsBold.microphone, onTap: _startVoice),
           const SizedBox(width: 10),
@@ -759,7 +720,7 @@ class _InputBarState extends State<_InputBar> {
     );
   }
 
-  Widget _buildRecording() {
+  Widget _recordingRow() {
     return Row(
       children: [
         _CircleAction(icon: Icons.close_rounded, onTap: _cancelVoice),
@@ -780,19 +741,18 @@ class _InputBarState extends State<_InputBar> {
                 Text(_elapsedLabel, style: _pop(15, w: FontWeight.w600)),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text(
-                    'chat.recording'.tr(),
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _pop(13, c: _dim),
-                  ),
+                  child: Text('chat.recording'.tr(),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _pop(13, c: _dim)),
                 ),
               ],
             ),
           ),
         ),
         const SizedBox(width: 10),
-        _CircleAction(icon: Icons.send_rounded, blue: true, onTap: _sendVoice),
+        _CircleAction(
+            icon: Icons.send_rounded, blue: true, onTap: _stopSendVoice),
       ],
     );
   }

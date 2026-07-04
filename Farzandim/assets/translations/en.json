@@ -1002,7 +1002,11 @@
     "micDenied": "Microphone access denied",
     "micError": "Could not start recording",
     "playError": "Could not play audio",
-    "voiceUnavailable": "Audio unavailable"
+    "voiceUnavailable": "Audio unavailable",
+    "notPaired": "Child device not connected yet",
+    "sendError": "Message not sent",
+    "voiceDeviceOnly": "Voice messages can only be sent from the phone",
+    "videoDeviceOnly": "Video can only be sent from the phone"
   },
   "dailyLimit": {
     "title": "Daily time limit",

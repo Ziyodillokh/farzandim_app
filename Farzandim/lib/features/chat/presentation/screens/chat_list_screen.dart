@@ -1,15 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChatListScreen — "Chatlar" (preview, Parvoz dizayn)
+// ChatListScreen — "Chatlar" (Parvoz dizayn, REAL backend)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Dashboard'dagi chat ikonasidan ochiladi. Kontaktlar ro'yxati (avatar +
-// onlayn nuqta + oxirgi xabar + vaqt + o'qilmagan badge). Kontakt bosilsa
-// chat detali (ChatDetailScreen) ochiladi. Ma'lumot: `chat_mock.dart`.
+// Dashboard'dagi chat ikonasidan ochiladi. Chat = ota-ona ↔ bola: har bola
+// bitta chat. Real: sortedChildrenForVoiceProvider + latestVoiceMessage +
+// unreadVoiceMessages. Bola bosilsa chat detali (ChatDetailScreen) ochiladi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/features/chat/data/chat_mock.dart';
+import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/voice_message/data/models/voice_message.dart';
+import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
+import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -35,20 +39,41 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.4);
 
-/// "Chatlar" ro'yxati ekrani (preview).
-class ChatListScreen extends StatelessWidget {
+String _timeLabel(DateTime d) {
+  final now = DateTime.now();
+  final today = DateTime(now.year, now.month, now.day);
+  final that = DateTime(d.year, d.month, d.day);
+  if (that == today) {
+    return '${d.hour.toString().padLeft(2, '0')}:'
+        '${d.minute.toString().padLeft(2, '0')}';
+  }
+  final diff = today.difference(that).inDays;
+  if (diff == 1) return 'kecha';
+  return '$diff kun';
+}
+
+String _preview(VoiceMessage? m) {
+  if (m == null) return 'Suhbatni boshlang';
+  if (m.isText) return m.text ?? '';
+  if (m.isImage) return '📷 Rasm';
+  if (m.isFile) return '📎 Fayl';
+  return '🎤 Ovozli xabar';
+}
+
+/// "Chatlar" ro'yxati ekrani (real).
+class ChatListScreen extends ConsumerWidget {
   /// `ChatListScreen` konstruktor.
   const ChatListScreen({super.key});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final children = ref.watch(sortedChildrenForVoiceProvider);
     return Scaffold(
       backgroundColor: _bg,
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Header ──
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
               child: Row(
@@ -61,30 +86,23 @@ class ChatListScreen extends StatelessWidget {
                     }
                   }),
                   Expanded(
-                    child: Text(
-                      'chat.title'.tr(),
-                      textAlign: TextAlign.center,
-                      style: _unb(22),
-                    ),
+                    child: Text('chat.title'.tr(),
+                        textAlign: TextAlign.center, style: _unb(22)),
                   ),
                   const SizedBox(width: 44),
                 ],
               ),
             ),
             Expanded(
-              child: ListView.separated(
-                padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
-                itemCount: mockContacts.length,
-                separatorBuilder: (_, __) => const SizedBox(height: 10),
-                itemBuilder: (context, i) {
-                  final c = mockContacts[i];
-                  return _ChatTile(
-                    contact: c,
-                    onTap: () =>
-                        context.push(AppRoutes.chatDetailPath(c.id)),
-                  );
-                },
-              ),
+              child: children.isEmpty
+                  ? _Empty()
+                  : ListView.separated(
+                      padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
+                      itemCount: children.length,
+                      separatorBuilder: (_, __) => const SizedBox(height: 10),
+                      itemBuilder: (context, i) =>
+                          _ChatTile(child: children[i]),
+                    ),
             ),
           ],
         ),
@@ -93,16 +111,39 @@ class ChatListScreen extends StatelessWidget {
   }
 }
 
-class _ChatTile extends StatelessWidget {
-  const _ChatTile({required this.contact, required this.onTap});
-
-  final ChatContact contact;
-  final VoidCallback onTap;
-
+class _Empty extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 40),
+      child: Center(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(SolarIconsBold.chatRoundLine, size: 46, color: _dim),
+            const SizedBox(height: 14),
+            Text("Hali bola qo'shilmagan",
+                textAlign: TextAlign.center, style: _pop(15, c: _dim)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _ChatTile extends ConsumerWidget {
+  const _ChatTile({required this.child});
+
+  final Child child;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final latest = ref.watch(latestVoiceMessageProvider(child.id)).valueOrNull;
+    final unread =
+        ref.watch(unreadVoiceMessagesProvider(child.id)).valueOrNull ?? 0;
+    final online = child.isLiveOnline;
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => context.push(AppRoutes.chatDetailPath(child.id)),
       behavior: HitTestBehavior.opaque,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -113,25 +154,43 @@ class _ChatTile extends StatelessWidget {
         ),
         child: Row(
           children: [
-            _Avatar(contact: contact, size: 52),
+            SizedBox(
+              width: 52,
+              height: 52,
+              child: Stack(
+                children: [
+                  ChildAvatar(child: child, size: 52, showBorder: false),
+                  if (online)
+                    Positioned(
+                      right: 1,
+                      bottom: 1,
+                      child: Container(
+                        width: 13,
+                        height: 13,
+                        decoration: BoxDecoration(
+                          color: _online,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: _card, width: 2.5),
+                        ),
+                      ),
+                    ),
+                ],
+              ),
+            ),
             const SizedBox(width: 12),
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    contact.name,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _unb(16),
-                  ),
+                  Text(child.name,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _unb(16)),
                   const SizedBox(height: 3),
-                  Text(
-                    contact.lastMessage,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _pop(13, c: _dim),
-                  ),
+                  Text(_preview(latest),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _pop(13, c: _dim)),
                 ],
               ),
             ),
@@ -139,21 +198,18 @@ class _ChatTile extends StatelessWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(contact.time, style: _pop(12, c: _dim)),
+                Text(latest == null ? '' : _timeLabel(latest.createdAt),
+                    style: _pop(12, c: _dim)),
                 const SizedBox(height: 8),
-                if (contact.unread > 0)
+                if (unread > 0)
                   Container(
                     padding: const EdgeInsets.all(6),
                     constraints: const BoxConstraints(minWidth: 22),
                     decoration: const BoxDecoration(
-                      color: _blue,
-                      shape: BoxShape.circle,
-                    ),
-                    child: Text(
-                      '${contact.unread}',
-                      textAlign: TextAlign.center,
-                      style: _pop(11, w: FontWeight.w700),
-                    ),
+                        color: _blue, shape: BoxShape.circle),
+                    child: Text('$unread',
+                        textAlign: TextAlign.center,
+                        style: _pop(11, w: FontWeight.w700)),
                   )
                 else
                   const SizedBox(height: 22),
@@ -161,53 +217,6 @@ class _ChatTile extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
-  }
-}
-
-/// Bosh harfli dumaloq avatar + onlayn nuqta.
-class _Avatar extends StatelessWidget {
-  const _Avatar({required this.contact, required this.size});
-
-  final ChatContact contact;
-  final double size;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Stack(
-        children: [
-          Container(
-            width: size,
-            height: size,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: contact.color,
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              contact.initial,
-              style: _unb(size * 0.4, w: FontWeight.w700),
-            ),
-          ),
-          if (contact.online)
-            Positioned(
-              right: 1,
-              bottom: 1,
-              child: Container(
-                width: 13,
-                height: 13,
-                decoration: BoxDecoration(
-                  color: _online,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: _card, width: 2.5),
-                ),
-              ),
-            ),
-        ],
       ),
     );
   }
@@ -231,11 +240,8 @@ class _BackButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _fieldBorder),
         ),
-        child: const Icon(
-          SolarIconsOutline.arrowLeft,
-          size: 22,
-          color: Colors.white,
-        ),
+        child: const Icon(SolarIconsOutline.arrowLeft,
+            size: 22, color: Colors.white),
       ),
     );
   }

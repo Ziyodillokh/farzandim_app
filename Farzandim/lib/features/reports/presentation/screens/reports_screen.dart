@@ -1,16 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────
-// ReportsScreen — "Hisobotlar" (Parvoz dizayn)
+// ReportsScreen — "Hisobotlar" (Parvoz dizayn, REAL backend)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Dashboard'dagi "Hisobotlar" kartasidan ochiladi. Davr filtri (Oldingi oy),
-// 2x2 statistika (kitoblar / testlar / qadamlar / rivojlanish), DON balansi +
-// reyting, kunlik o'rtacha ekran vaqti (ustunli grafik), top ilovalar.
-//
-// Ma'lumot hozircha namunaviy (design preview) — keyin real provayderlarga
-// ulanadi. IP: ilova ikonlari brend-rangli harf-belgi (asl logotip emas).
+// Dashboard'dagi "Hisobotlar" kartasidan ochiladi. Real provayderlar:
+//   • Ekran vaqti      → weeklyChildUsageProvider (7 kunlik totallar)
+//   • Top ilovalar     → todayUsageProvider (displayApps)
+//   • DON + streak     → childProfileProvider
+//   • Reyting          → leaderboardProvider
+// Kitob/test/qadam backend'da hali yo'q → 0. Bola ulanmasa data bo'sh.
 
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
+import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
+import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
+import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
+import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -25,6 +33,8 @@ const _chipBg = Color(0xFF1B2128);
 const _fieldBorder = Color(0x1FFFFFFF);
 const _dim = Color(0x8CFFFFFF);
 
+const _weekdayShort = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
+
 TextStyle _unb(
   double s, {
   FontWeight w = FontWeight.w600,
@@ -37,34 +47,19 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
 
-/// Namunaviy top ilova (rank + nom + rang + vaqt).
-class _AppRow {
-  const _AppRow(this.rank, this.name, this.color, this.time);
-  final int rank;
-  final String name;
-  final Color color;
-  final String time;
+String _fmtHm(int ms) {
+  final h = ms ~/ 3600000;
+  final m = (ms % 3600000) ~/ 60000;
+  if (h == 0) return '$m min';
+  return '${h}s $m min';
 }
 
-const _apps = <_AppRow>[
-  _AppRow(1, 'PUBG', Color(0xFFE9A23B), '1s 34 min'),
-  _AppRow(2, 'Instagram', Color(0xFFE1306C), '1s 34 min'),
-  _AppRow(3, 'Telegram', Color(0xFF2AABEE), '1s 34 min'),
-  _AppRow(4, 'Chrome', Color(0xFF4285F4), '1s 34 min'),
-  _AppRow(5, 'Spotify', Color(0xFF1DB954), '1s 34 min'),
-];
-
-// Ekran vaqti ustunlari (0..1, 60 daqiqaga nisbatan) — 12 soat = 12 ustun.
-const _bars = <double>[
-  0.12, 0.22, 0.3, 0.2, 0.48, 0.62, 0.78, 0.92, 0.5, 0.66, 0.4, 1,
-];
-
-/// "Hisobotlar" ekrani.
+/// "Hisobotlar" ekrani (real ma'lumot).
 class ReportsScreen extends StatelessWidget {
   /// `ReportsScreen` konstruktor.
   const ReportsScreen({required this.childId, super.key});
 
-  /// Bola id'si (route parametri; kelajakda real ma'lumot uchun).
+  /// Qaysi bola hisoboti (route parametri).
   final String childId;
 
   @override
@@ -75,7 +70,6 @@ class ReportsScreen extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            // ── Header ──
             Padding(
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: Row(
@@ -88,11 +82,8 @@ class ReportsScreen extends StatelessWidget {
                     }
                   }),
                   Expanded(
-                    child: Text(
-                      'Hisobotlar',
-                      textAlign: TextAlign.center,
-                      style: _unb(22),
-                    ),
+                    child: Text('Hisobotlar',
+                        textAlign: TextAlign.center, style: _unb(22)),
                   ),
                   const SizedBox(width: 44),
                 ],
@@ -101,16 +92,14 @@ class ReportsScreen extends StatelessWidget {
             Expanded(
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 28),
-                children: const [
-                  _PeriodFilter(),
-                  SizedBox(height: 14),
-                  _StatGrid(),
-                  SizedBox(height: 12),
-                  _DonCard(),
-                  SizedBox(height: 18),
-                  _ScreenTimeSection(),
-                  SizedBox(height: 14),
-                  _TopAppsCard(),
+                children: [
+                  _StatGrid(childId: childId),
+                  const SizedBox(height: 12),
+                  _DonCard(childId: childId),
+                  const SizedBox(height: 18),
+                  _ScreenTimeSection(childId: childId),
+                  const SizedBox(height: 14),
+                  _TopAppsCard(childId: childId),
                 ],
               ),
             ),
@@ -121,74 +110,36 @@ class ReportsScreen extends StatelessWidget {
   }
 }
 
-// ════════════ Davr filtri ════════════
-
-class _PeriodFilter extends StatelessWidget {
-  const _PeriodFilter();
-
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Container(
-          padding: const EdgeInsets.fromLTRB(16, 9, 8, 9),
-          decoration: BoxDecoration(
-            color: _blue,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Text('Oldingi oy', style: _pop(14, w: FontWeight.w600)),
-              const SizedBox(width: 8),
-              const Icon(SolarIconsBold.closeCircle, size: 20,
-                  color: Colors.white),
-            ],
-          ),
-        ),
-        const Spacer(),
-        Container(
-          width: 48,
-          height: 42,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: _card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: _fieldBorder),
-          ),
-          child: const Icon(SolarIconsOutline.calendar, size: 22,
-              color: Colors.white),
-        ),
-      ],
-    );
-  }
-}
-
 // ════════════ 2x2 statistika ════════════
 
-class _StatGrid extends StatelessWidget {
-  const _StatGrid();
+class _StatGrid extends ConsumerWidget {
+  const _StatGrid({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(childProfileProvider(childId)).valueOrNull;
+    final streak = profile?.streakDays ?? 0;
+    // Kitob/test/qadam backend'da hali yo'q — 0.
     return Column(
       children: [
         const Row(
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icon(SolarIconsBold.notebookMinimalistic, size: 30,
-                    color: Color(0xFFA78BFA)),
-                value: '2ta',
+                icon: Icon(SolarIconsBold.notebookMinimalistic,
+                    size: 30, color: Color(0xFFA78BFA)),
+                value: '0',
                 label: "O'qilgan kitoblar",
               ),
             ),
             SizedBox(width: 12),
             Expanded(
               child: _StatCard(
-                icon: Icon(SolarIconsBold.questionCircle, size: 30,
-                    color: _green),
-                value: '102 ta',
+                icon: Icon(SolarIconsBold.questionCircle,
+                    size: 30, color: _green),
+                value: '0',
                 label: 'Ishlangan testlar',
               ),
             ),
@@ -201,16 +152,16 @@ class _StatGrid extends StatelessWidget {
               child: _StatCard(
                 icon: SvgPicture.asset('assets/icons/ic_shoe.svg',
                     width: 40, height: 40),
-                value: '~10 000',
+                value: '0',
                 label: 'Kunlik qadamlar',
               ),
             ),
             const SizedBox(width: 12),
-            const Expanded(
+            Expanded(
               child: _StatCard(
-                icon: Icon(SolarIconsBold.flame, size: 34,
-                    color: Color(0xFFFF7A1A)),
-                value: '30 kun',
+                icon: const Icon(SolarIconsBold.flame,
+                    size: 34, color: Color(0xFFFF7A1A)),
+                value: '$streak kun',
                 label: 'Kunlik rivojlanish',
               ),
             ),
@@ -245,12 +196,16 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          SizedBox(height: 40, child: Align(
-            alignment: Alignment.centerLeft, child: icon)),
+          SizedBox(
+            height: 40,
+            child: Align(alignment: Alignment.centerLeft, child: icon),
+          ),
           const Spacer(),
           Text(value, style: _unb(22, w: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis,
+          Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
               style: _pop(13, c: _dim)),
         ],
       ),
@@ -260,11 +215,19 @@ class _StatCard extends StatelessWidget {
 
 // ════════════ DON balansi + reyting ════════════
 
-class _DonCard extends StatelessWidget {
-  const _DonCard();
+class _DonCard extends ConsumerWidget {
+  const _DonCard({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(childProfileProvider(childId)).valueOrNull;
+    final don = profile?.donBalance ?? 0;
+    final lb = ref.watch(
+      leaderboardProvider((childId: childId, period: 'all', region: null)),
+    );
+    final rows = _leaderboardWindow(lb, childId);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
@@ -279,10 +242,8 @@ class _DonCard extends StatelessWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              Text('1 250', style: _unb(24, w: FontWeight.w700)),
-              const SizedBox(width: 8),
-              Text('+560', style: _unb(20, w: FontWeight.w700, c: _green)),
-              const SizedBox(width: 8),
+              Text('$don', style: _unb(24, w: FontWeight.w700)),
+              const SizedBox(width: 10),
               Container(
                 padding:
                     const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
@@ -294,16 +255,14 @@ class _DonCard extends StatelessWidget {
               ),
             ],
           ),
-          const SizedBox(height: 14),
-          const _RankRow(rank: 94, name: 'Soliha', color: Color(0xFFEF7DA0)),
-          const _RankRow(
-            rank: 95,
-            name: 'Akmal',
-            color: Color(0xFF7B61FF),
-            highlight: true,
-            delta: '+3',
-          ),
-          const _RankRow(rank: 96, name: 'Javohir', color: Color(0xFF4285F4)),
+          if (rows.isEmpty) ...[
+            const SizedBox(height: 12),
+            Text('Reyting hali mavjud emas', style: _pop(13, c: _dim)),
+          ] else ...[
+            const SizedBox(height: 12),
+            for (final e in rows)
+              _RankRow(entry: e, highlight: e.childId == childId),
+          ],
         ],
       ),
     );
@@ -311,57 +270,92 @@ class _DonCard extends StatelessWidget {
 }
 
 class _RankRow extends StatelessWidget {
-  const _RankRow({
-    required this.rank,
-    required this.name,
-    required this.color,
-    this.highlight = false,
-    this.delta,
-  });
+  const _RankRow({required this.entry, required this.highlight});
 
-  final int rank;
-  final String name;
-  final Color color;
+  final LeaderboardEntry entry;
   final bool highlight;
-  final String? delta;
 
   @override
   Widget build(BuildContext context) {
-    final textColor = highlight ? _blue : Colors.white;
+    final color = highlight ? _blue : Colors.white;
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          _LetterAvatar(letter: name[0], color: color, size: 28),
+          _LetterAvatar(letter: entry.name, size: 28),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
-              '$rank. $name',
-              style: _pop(15, w: FontWeight.w600, c: textColor),
-            ),
+            child: Text('${entry.rank}. ${entry.name}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _pop(15, w: FontWeight.w600, c: color)),
           ),
-          if (delta != null)
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                const Icon(Icons.arrow_drop_up_rounded, size: 20,
-                    color: _green),
-                Text(delta!, style: _pop(13, w: FontWeight.w600, c: _green)),
-              ],
-            ),
+          Text('${entry.xp}', style: _pop(13, w: FontWeight.w600, c: _dim)),
         ],
       ),
     );
   }
 }
 
-// ════════════ Ekran vaqti + grafik ════════════
+/// Dashboard bilan bir xil 3-qatorli reyting oynasi.
+List<LeaderboardEntry> _leaderboardWindow(
+  LeaderboardState lb,
+  String childId,
+) {
+  if (lb.initialLoading || lb.error) return const [];
+  final all = lb.entries;
+  if (all.isEmpty) {
+    final me = lb.currentChild;
+    return me != null ? [me] : const [];
+  }
+  final idx = all.indexWhere((e) => e.childId == childId);
+  if (idx >= 0) {
+    if (all.length <= 3) return all;
+    var start = idx - 1;
+    final maxStart = all.length - 3;
+    if (start < 0) start = 0;
+    if (start > maxStart) start = maxStart;
+    return all.sublist(start, start + 3);
+  }
+  final out = <LeaderboardEntry>[];
+  final me = lb.currentChild;
+  if (me != null) out.add(me);
+  for (final e in all) {
+    if (out.length >= 3) break;
+    if (e.childId != childId) out.add(e);
+  }
+  out.sort((a, b) => a.rank.compareTo(b.rank));
+  return out.take(3).toList();
+}
 
-class _ScreenTimeSection extends StatelessWidget {
-  const _ScreenTimeSection();
+// ════════════ Ekran vaqti + grafik (7 kunlik) ════════════
+
+class _ScreenTimeSection extends ConsumerWidget {
+  const _ScreenTimeSection({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weekly =
+        ref.watch(weeklyChildUsageProvider(childId)).valueOrNull ?? const [];
+    // Oxirgi 7 kun (bugundan orqaga) — har kun uchun totalMs.
+    final now = DateTime.now();
+    String key(DateTime d) =>
+        '${d.year}-${d.month.toString().padLeft(2, '0')}-'
+        '${d.day.toString().padLeft(2, '0')}';
+    final byDay = {for (final x in weekly) key(x.date): x.totalMs};
+    final days = <({String label, int ms})>[];
+    for (var i = 6; i >= 0; i--) {
+      final d = DateTime(now.year, now.month, now.day - i);
+      days.add((label: _weekdayShort[d.weekday - 1], ms: byDay[key(d)] ?? 0));
+    }
+    final withData = days.where((d) => d.ms > 0).toList();
+    final avgMs = withData.isEmpty
+        ? 0
+        : withData.fold<int>(0, (s, d) => s + d.ms) ~/ withData.length;
+    final maxMs = days.fold<int>(0, (m, d) => d.ms > m ? d.ms : m);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -372,185 +366,153 @@ class _ScreenTimeSection extends StatelessWidget {
         const SizedBox(height: 2),
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text('2s 44 min', style: _unb(26, w: FontWeight.w700)),
+          child: Text(avgMs == 0 ? '—' : _fmtHm(avgMs),
+              style: _unb(26, w: FontWeight.w700)),
         ),
         const SizedBox(height: 12),
         Container(
-          height: 240,
-          padding: const EdgeInsets.fromLTRB(8, 14, 12, 8),
+          height: 220,
+          padding: const EdgeInsets.fromLTRB(10, 14, 12, 10),
           decoration: BoxDecoration(
             color: _card,
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: _fieldBorder),
           ),
-          child: const _BarChart(),
+          child: maxMs == 0
+              ? Center(
+                  child: Text("Ekran vaqti ma'lumoti yo'q",
+                      style: _pop(13, c: _dim)),
+                )
+              : _WeekBars(days: days, maxMs: maxMs),
         ),
       ],
     );
   }
 }
 
-class _BarChart extends StatelessWidget {
-  const _BarChart();
+class _WeekBars extends StatelessWidget {
+  const _WeekBars({required this.days, required this.maxMs});
+
+  final List<({String label, int ms})> days;
+  final int maxMs;
 
   @override
   Widget build(BuildContext context) {
-    // Y o'qi belgilari (4s..0s), 3s — qizil chegara.
-    return LayoutBuilder(
-      builder: (context, c) {
-        final chartH = c.maxHeight - 22; // pastki o'q belgilariga joy
-        return Column(
-          children: [
-            SizedBox(
-              height: chartH,
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Y o'qi belgilari (soatiga ekran vaqti — maksimal 60 min).
-                  SizedBox(
-                    width: 44,
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text('60 min', style: _pop(11, c: _dim)),
-                        Text('45 min',
-                            style: _pop(11, c: const Color(0xFFEF5350))),
-                        Text('30 min', style: _pop(11, c: _dim)),
-                        Text('0', style: _pop(11, c: _dim)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Stack(
-                      children: [
-                        // 45 min qizil punktir chegara (60 min dan 3/4).
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: chartH * 0.25,
-                          child: const _DashedLine(color: Color(0x66EF5350)),
-                        ),
-                        // 30 min kulrang chiziq.
-                        Positioned(
-                          left: 0,
-                          right: 0,
-                          top: chartH * 0.5,
-                          child: const _DashedLine(color: Color(0x1AFFFFFF)),
-                        ),
-                        // Ustunlar.
-                        Padding(
-                          padding: const EdgeInsets.only(top: 6),
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.end,
-                            children: [
-                              for (final h in _bars)
-                                Expanded(
-                                  child: Padding(
-                                    padding: const EdgeInsets.symmetric(
-                                        horizontal: 2),
-                                    child: FractionallySizedBox(
-                                      heightFactor: h.clamp(0.04, 1.0),
-                                      child: Container(
-                                        decoration: BoxDecoration(
-                                          color: _blue,
-                                          borderRadius:
-                                              BorderRadius.circular(4),
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                            ],
+    final maxHours = (maxMs / 3600000).ceil().clamp(1, 24);
+    final topMs = maxHours * 3600000;
+    return Column(
+      children: [
+        Expanded(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              SizedBox(
+                width: 30,
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    Text('${maxHours}s', style: _pop(11, c: _dim)),
+                    Text('${(maxHours / 2).round()}s',
+                        style: _pop(11, c: _dim)),
+                    Text('0', style: _pop(11, c: _dim)),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    for (final d in days)
+                      Expanded(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 4),
+                          child: FractionallySizedBox(
+                            heightFactor: (d.ms / topMs).clamp(0.02, 1.0),
+                            child: Container(
+                              decoration: BoxDecoration(
+                                color: _blue,
+                                borderRadius: BorderRadius.circular(6),
+                              ),
+                            ),
                           ),
                         ),
-                      ],
-                    ),
-                  ),
-                ],
+                      ),
+                  ],
+                ),
               ),
-            ),
-            const SizedBox(height: 6),
-            // X o'qi belgilari.
-            Padding(
-              padding: const EdgeInsets.only(left: 52),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text('00:00', style: _pop(11, c: _dim)),
-                  Text('06:00', style: _pop(11, c: _dim)),
-                  Text('12:00', style: _pop(11, c: _dim)),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _DashedLine extends StatelessWidget {
-  const _DashedLine({required this.color});
-
-  final Color color;
-
-  @override
-  Widget build(BuildContext context) {
-    return LayoutBuilder(
-      builder: (context, c) {
-        const dash = 6.0;
-        const gap = 5.0;
-        final count = (c.maxWidth / (dash + gap)).floor();
-        return Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: List.generate(
-            count,
-            (_) => Container(width: dash, height: 1.4, color: color),
+            ],
           ),
-        );
-      },
+        ),
+        const SizedBox(height: 6),
+        Padding(
+          padding: const EdgeInsets.only(left: 38),
+          child: Row(
+            children: [
+              for (final d in days)
+                Expanded(
+                  child: Text(d.label,
+                      textAlign: TextAlign.center, style: _pop(10, c: _dim)),
+                ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }
 
 // ════════════ Top ilovalar ════════════
 
-class _TopAppsCard extends StatelessWidget {
-  const _TopAppsCard();
+class _TopAppsCard extends ConsumerWidget {
+  const _TopAppsCard({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
+    final apps =
+        (usage?.displayApps ?? const <AppUsageEntry>[]).take(5).toList();
     return Container(
       decoration: BoxDecoration(
         color: _card,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _fieldBorder),
       ),
-      child: Column(
-        children: [
-          for (var i = 0; i < _apps.length; i++) ...[
-            _AppTile(app: _apps[i]),
-            if (i < _apps.length - 1)
-              const Divider(
-                height: 1,
-                thickness: 1,
-                indent: 14,
-                endIndent: 14,
-                color: Color(0x14FFFFFF),
+      child: apps.isEmpty
+          ? Padding(
+              padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
+              child: Center(
+                child: Text("Ilovalar ma'lumoti yo'q",
+                    textAlign: TextAlign.center, style: _pop(13, c: _dim)),
               ),
-          ],
-        ],
-      ),
+            )
+          : Column(
+              children: [
+                for (var i = 0; i < apps.length; i++) ...[
+                  _AppTile(rank: i + 1, app: apps[i]),
+                  if (i < apps.length - 1)
+                    const Divider(
+                      height: 1,
+                      thickness: 1,
+                      indent: 14,
+                      endIndent: 14,
+                      color: Color(0x14FFFFFF),
+                    ),
+                ],
+              ],
+            ),
     );
   }
 }
 
 class _AppTile extends StatelessWidget {
-  const _AppTile({required this.app});
+  const _AppTile({required this.rank, required this.app});
 
-  final _AppRow app;
+  final int rank;
+  final AppUsageEntry app;
 
   @override
   Widget build(BuildContext context) {
@@ -558,12 +520,26 @@ class _AppTile extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
       child: Row(
         children: [
-          _LetterAvatar(letter: app.name[0], color: app.color, size: 34),
+          ClipOval(
+            child: SizedBox(
+              width: 34,
+              height: 34,
+              child: AppIconWidget(
+                packageName: app.packageName,
+                iconUrl: app.iconUrl,
+                iconBase64: app.iconBase64,
+                size: 34,
+              ),
+            ),
+          ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('${app.rank}. ${app.name}', style: _unb(15)),
+            child: Text('$rank. ${app.appName}',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _unb(15)),
           ),
-          Text(app.time, style: _pop(13, c: _dim)),
+          Text(_fmtHm(app.totalTimeMs), style: _pop(13, c: _dim)),
         ],
       ),
     );
@@ -572,29 +548,22 @@ class _AppTile extends StatelessWidget {
 
 // ════════════ Umumiy widgetlar ════════════
 
-/// Brend-rangli harf-avatar (IP-xavfsiz — asl logotip emas).
+/// Ism bosh harfli dumaloq avatar (reyting uchun).
 class _LetterAvatar extends StatelessWidget {
-  const _LetterAvatar({
-    required this.letter,
-    required this.color,
-    required this.size,
-  });
+  const _LetterAvatar({required this.letter, required this.size});
 
   final String letter;
-  final Color color;
   final double size;
 
   @override
   Widget build(BuildContext context) {
+    final ch = letter.isNotEmpty ? letter[0].toUpperCase() : '?';
     return Container(
       width: size,
       height: size,
       alignment: Alignment.center,
-      decoration: BoxDecoration(color: color, shape: BoxShape.circle),
-      child: Text(
-        letter.toUpperCase(),
-        style: _unb(size * 0.42, w: FontWeight.w700),
-      ),
+      decoration: const BoxDecoration(color: _chipBg, shape: BoxShape.circle),
+      child: Text(ch, style: _unb(size * 0.42, w: FontWeight.w700)),
     );
   }
 }
@@ -617,8 +586,8 @@ class _BackButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _fieldBorder),
         ),
-        child: const Icon(SolarIconsOutline.arrowLeft, size: 22,
-            color: Colors.white),
+        child: const Icon(SolarIconsOutline.arrowLeft,
+            size: 22, color: Colors.white),
       ),
     );
   }
