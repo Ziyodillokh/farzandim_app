@@ -91,7 +91,11 @@
     "helpTitle": "Kodni qaerdan olaman?",
     "helpContent": "Ota-onangizdan Farzandim ilovasini ochib, sizning ismingiz qatoridagi kodni so'rang. Kod 5 raqamdan iborat va 24 soat amal qiladi.",
     "helpClose": "Tushundim",
-    "errorFallback": "Kod noto'g'ri"
+    "errorFallback": "Kod noto'g'ri",
+    "enterCodeTitle": "Ota-onangiz ilovasidagi kodni kiriting",
+    "enterCodeSubtitle": "Kod 5 xonadan iborat va 24 soat amal qiladi",
+    "enterButton": "Kirish",
+    "howItWorks": "Bu qanday ishlaydi?"
   },
   "permissions": {
     "title": "Ruxsatlar",
@@ -108,9 +112,16 @@
     "progress": "{current} / {total}"
   },
   "permissionSetup": {
-    "title": "Ilovaning to'g'ri ishlashi uchun hamma ruxsatlarni yoqing",
-    "subtitle": "Parvoz ishlashi uchun 4 ta ruxsat kerak. Har birini yoqing.",
+    "title": "Ruxsatlar",
+    "subtitle": "Farzandim to'g'ri ishlashi uchun quyidagi ruxsatlarni yoqing",
     "next": "Keyingisi",
+    "groupMain": "Asosiy",
+    "groupHelper": "Yordamchi",
+    "locName": "Joylashuv",
+    "notifName": "Bildirishnomalar",
+    "usageName": "Ilova statistikasi",
+    "overlayName": "Boshqa ilovalarni ko'rsatish",
+    "batteryName": "Quvvatni optimallashtirmaslik",
     "p_overlay": "Boshqa ilovalar ustida oynalarni ko'rsatish",
     "p_overlayHint": "Ota-onamni toping va “Ruxsat berish”ni yoqing",
     "p_location": "Geolaktsiyaga kirishga ruxsat bering",
