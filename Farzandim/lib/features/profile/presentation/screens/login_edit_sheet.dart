@@ -87,7 +87,7 @@ class _LoginEditSheet extends ConsumerWidget {
                       onTap: () => Navigator.of(context).pop(),
                       behavior: HitTestBehavior.opaque,
                       child: const Icon(
-                        SolarIconsOutline.altArrowLeft,
+                        SolarIconsOutline.arrowLeft,
                         size: 24,
                         color: Colors.white,
                       ),

@@ -140,7 +140,7 @@ class _Header extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 10, 16, 6),
       child: Row(
         children: [
-          _SquareButton(icon: SolarIconsOutline.altArrowLeft, onTap: onBack),
+          _SquareButton(icon: SolarIconsOutline.arrowLeft, onTap: onBack),
           Expanded(
             child: Center(
               child: Text(

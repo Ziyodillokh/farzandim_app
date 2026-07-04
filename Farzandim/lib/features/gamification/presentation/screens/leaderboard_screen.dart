@@ -426,7 +426,7 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
-          _SquareButton(icon: SolarIconsOutline.questionCircle, onTap: onHelp),
+          _SquareButton(icon: SolarIconsBold.questionCircle, onTap: onHelp),
         ],
       ),
     );
