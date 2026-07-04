@@ -1,12 +1,13 @@
-// "Bildirishnomalar" tortiladigan varaq (Parvoz, rasm 3). Dashboard'dagi
-// qo'ng'iroq ikonidan ochiladi. Xabarni bossa — o'qilgan deb belgilanadi,
-// varaq yopiladi va o'sha xabar detal sahifasi ochiladi.
+// "Bildirishnomalar" tortiladigan varaq (Parvoz). Dashboard'dagi qo'ng'iroq
+// ikonidan ochiladi. Kunlik guruhlangan ro'yxat; SOS tepada qizil karta.
+// Oddiy xabar -> detal sahifasi, SOS -> SOS modali.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:farzandim/features/notifications/presentation/widgets/notification_row.dart';
+import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
+import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +18,6 @@ import 'package:solar_icons/solar_icons.dart';
 // ════════════ Tokenlar (lokal, Parvoz) ════════════
 const _sheetBg = Color(0xFF12171E);
 const _cardBorder = Color(0x14FFFFFF);
-const _divider = Color(0x14FFFFFF);
 const _dim = Color(0x99FFFFFF); // oq 60%
 
 TextStyle _unb(
@@ -39,23 +39,11 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
-/// SOS eng tepada, keyin vaqt bo'yicha yangi→eski.
-List<AppNotification> _sorted(List<AppNotification> list) {
-  final items = [...list]
-    ..sort((a, b) {
-      final aSos = a.type == NotificationType.sos ? 0 : 1;
-      final bSos = b.type == NotificationType.sos ? 0 : 1;
-      if (aSos != bSos) return aSos - bSos;
-      return b.timestamp.compareTo(a.timestamp);
-    });
-  return items;
-}
-
 /// Bildirishnomalar varag'i.
 class NotificationsSheet extends ConsumerWidget {
   const NotificationsSheet._();
 
-  /// Varaqni ochadi; xabar bosilsa — o'sha xabar detal sahifasiga o'tadi.
+  /// Varaqni ochadi; xabar bosilsa — SOS bo'lsa SOS modali, aks holda detal.
   static Future<void> show(BuildContext context) async {
     final tapped = await showModalBottomSheet<AppNotification>(
       context: context,
@@ -64,14 +52,17 @@ class NotificationsSheet extends ConsumerWidget {
       barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => const NotificationsSheet._(),
     );
-    if (tapped != null && context.mounted) {
+    if (tapped == null || !context.mounted) return;
+    if (tapped.type == NotificationType.sos) {
+      await SosSheet.show(context, tapped);
+    } else {
       await context.push(AppRoutes.notificationDetail, extra: tapped);
     }
   }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = _sorted(ref.watch(notificationsProvider));
+    final items = ref.watch(notificationsProvider);
     final h = MediaQuery.sizeOf(context).height;
 
     return Container(
@@ -87,7 +78,6 @@ class NotificationsSheet extends ConsumerWidget {
           padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
           child: Column(
             children: [
-              // Tortish dastagi
               Container(
                 width: 44,
                 height: 4,
@@ -102,26 +92,14 @@ class NotificationsSheet extends ConsumerWidget {
               Expanded(
                 child: items.isEmpty
                     ? const _Empty()
-                    : ListView.separated(
-                        physics: const AlwaysScrollableScrollPhysics(),
-                        padding: EdgeInsets.zero,
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) => const Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _divider,
-                        ),
-                        itemBuilder: (context, i) {
-                          final n = items[i];
-                          return NotificationRow(
-                            notification: n,
-                            onTap: () {
-                              ref
-                                  .read(notificationsProvider.notifier)
-                                  .markAsRead(n.id);
-                              Navigator.of(context).pop(n);
-                            },
-                          );
+                    : NotificationsListView(
+                        items: items,
+                        padding: const EdgeInsets.only(bottom: 8),
+                        onTap: (n) {
+                          ref
+                              .read(notificationsProvider.notifier)
+                              .markAsRead(n.id);
+                          Navigator.of(context).pop(n);
                         },
                       ),
               ),
