@@ -906,8 +906,8 @@
     },
     "sessions": {
       "title": "Активные сессии",
-      "yourSession": "Ваша сессия",
-      "otherSessions": "Другие сессии",
+      "yourSession": "Основная сессия",
+      "otherSessions": "Остальные сессии",
       "endAllOthers": "Завершить все другие сессии",
       "current": "Текущая",
       "addAccount": "Добавить другой аккаунт",

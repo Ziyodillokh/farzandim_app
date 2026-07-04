@@ -906,8 +906,8 @@
     },
     "sessions": {
       "title": "Faol sessiyalar",
-      "yourSession": "Sizning sessiyangiz",
-      "otherSessions": "Boshqa sessiyalar",
+      "yourSession": "Asosiy sessiya",
+      "otherSessions": "Qolgan sessiyalar",
       "endAllOthers": "Boshqa barcha seanslarni tugatish",
       "current": "Mas'ul",
       "addAccount": "Boshqa hisob qo'shish",

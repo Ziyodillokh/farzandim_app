@@ -906,8 +906,8 @@
     },
     "sessions": {
       "title": "Active sessions",
-      "yourSession": "Your session",
-      "otherSessions": "Other sessions",
+      "yourSession": "Main session",
+      "otherSessions": "Remaining sessions",
       "endAllOthers": "End all other sessions",
       "current": "Current",
       "addAccount": "Add another account",
