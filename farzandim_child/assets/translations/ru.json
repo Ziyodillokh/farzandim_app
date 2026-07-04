@@ -28,10 +28,15 @@
     "startButton": "Начать",
     "codeHint": "Получите код у родителей"
   },
+  "language": {
+    "selectTitle": "Выберите язык",
+    "selectSubtitle": "На каком языке использовать приложение?"
+  },
   "onboarding": {
     "skip": "Пропустить",
     "next": "Далее",
     "start": "Начать",
+    "enter": "Войти",
     "startWithCount": "Начать ({count})",
     "minSelect": "Выберите минимум 1",
     "selectedCount": "Выбрано: {count}",

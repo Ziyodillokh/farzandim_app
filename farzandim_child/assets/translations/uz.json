@@ -28,10 +28,15 @@
     "startButton": "Boshlash",
     "codeHint": "Ota-onangizdan kod oling"
   },
+  "language": {
+    "selectTitle": "Tilni tanlang",
+    "selectSubtitle": "Ilova qaysi tilda bo'lishini xohlaysiz?"
+  },
   "onboarding": {
     "skip": "O'tkazib yuborish",
     "next": "Keyingi",
     "start": "Boshlash",
+    "enter": "Kirish",
     "startWithCount": "Boshlash ({count})",
     "minSelect": "Kamida 1 ta tanlang",
     "selectedCount": "{count} ta tanlandi",
@@ -51,7 +56,7 @@
       "body": "Yordam kerak bo'lsa, oilangizga bir tugma bilan xabar bering."
     },
     "interests": {
-      "title": "Sevimli mavzularingiz?",
+      "title": "Sevimli mavzularingiz",
       "subtitle": "Tanlovingizga qarab kitob, video va konkurs tavsiya qilamiz.",
       "sectionTitle": "Qiziqishlaringiz",
       "editTitle": "Qiziqishlarni o'zgartirish",
@@ -61,14 +66,14 @@
   },
   "interests": {
     "book": "Kitoblar",
-    "cartoon": "Multfilmlar",
+    "cartoon": "Multfilm",
     "sport": "Sport",
     "music": "Musiqa",
     "animals": "Hayvonlar",
     "space": "Kosmos",
-    "tech": "Texnologiya",
+    "tech": "Texno",
     "art": "San'at",
-    "science": "Fan",
+    "science": "Ilm-fan",
     "games": "O'yinlar",
     "travel": "Sayohat",
     "food": "Ovqat"

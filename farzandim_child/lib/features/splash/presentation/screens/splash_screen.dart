@@ -21,6 +21,8 @@
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/consent/data/services/consent_storage.dart';
+import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart'
+    show kLanguagePickedKey;
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
     show kOnboardingSeenKey;
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -65,11 +67,19 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     final prefs = await SharedPreferences.getInstance();
 
-    // 2. Pairing — `paired` holati SharedPreferences'dagi parentUid/childId
+    // 2. Pairing holati — `paired` SharedPreferences'dagi parentUid/childId
     //    bilan aniqlanadi (Firebase emas — tez).
     final parentUid = prefs.getString('parentUid');
     final childId = prefs.getString('childId');
-    if (parentUid == null || childId == null) return '/pairing';
+    final isPaired = parentUid != null && childId != null;
+
+    // 3. Til — faqat YANGI foydalanuvchi (hali pair emas va til tanlanmagan).
+    //    Mavjud (pair bo'lgan) foydalanuvchi til sahifasini qayta ko'rmaydi.
+    final languagePicked = prefs.getBool(kLanguagePickedKey) ?? false;
+    if (!isPaired && !languagePicked) return '/welcome';
+
+    // 4. Pair bo'lmagan → kod kiritish.
+    if (!isPaired) return '/pairing';
 
     // 3. Onboarding (qiziqishlar) — faqat pair'dan keyin, bir marta.
     final onboardingSeen = prefs.getBool(kOnboardingSeenKey) ?? false;
@@ -84,7 +94,8 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     final usageGranted = await usageService.hasPermission();
     final overlayGranted = await usageService.hasOverlayPermission();
-    final allGranted = locStatus.isGranted &&
+    final allGranted =
+        locStatus.isGranted &&
         batteryStatus.isGranted &&
         usageGranted &&
         overlayGranted;
