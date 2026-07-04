@@ -188,6 +188,21 @@
   },
   "notifications": {
     "title": "Уведомления",
+    "listTitle": "Уведомления",
+    "actions": {
+      "viewOnMap": "Посмотреть на карте",
+      "openRestrictions": "Перейти к ограничениям",
+      "openSchedules": "Перейти к расписанию",
+      "giveTime": "Дать время",
+      "deny": "Отклонить"
+    },
+    "unlock": {
+      "granted": "Разрешено {minutes} минут.",
+      "denied": "Запрос отклонён."
+    },
+    "detail": {
+      "notFound": "Это уведомление больше недоступно."
+    },
     "blockApp": "Блокировать",
     "blockedSnack": "{app} заблокирован",
     "blockError": "Не удалось заблокировать",
@@ -788,10 +803,30 @@
     "editEmail": "Изменить email",
     "editPhone": "Изменить телефон"
   },
+  "languageSheet": {
+    "title": "Язык приложения",
+    "uz": "Узбекский",
+    "ru": "Русский",
+    "en": "Английский"
+  },
+  "supportSheet": {
+    "title": "Поддержка",
+    "telegram": "Telegram",
+    "phone": "Телефон",
+    "email": "Email"
+  },
   "premium": {
     "subscribers": "+1k подписчиков",
-    "title": "Parvoz Premium",
-    "subtitle": "Вышла новая версия приложения",
+    "title": "Тарифы",
+    "subtitle": "Вы можете отменить подписку в любое время",
+    "startName": "Start",
+    "standartName": "Стандарт",
+    "premiumName": "Premium",
+    "startPrice": "Бесплатно",
+    "standartPrice": "$5 / мес",
+    "premiumPrice": "$10 / мес",
+    "standartCta": "Подключить Стандарт",
+    "premiumCta": "Подключить Премиум",
     "benefitsTitle": "Преимущества",
     "benefit1": "+2 ребёнка",
     "benefit2": "Больше контроля",
@@ -806,6 +841,7 @@
     "title": "Настройки",
     "systemTitle": "Системные настройки",
     "premiumBanner": {
+      "badge": "Тарифы",
       "description": "Больше возможностей и лучший тариф. Будущее вашего ребёнка в ваших руках.",
       "details": "Подробнее"
     },
@@ -878,8 +914,8 @@
     },
     "sessions": {
       "title": "Активные сессии",
-      "yourSession": "Ваша сессия",
-      "otherSessions": "Другие сессии",
+      "yourSession": "Основная сессия",
+      "otherSessions": "Остальные сессии",
       "endAllOthers": "Завершить все другие сессии",
       "current": "Текущая",
       "addAccount": "Добавить другой аккаунт",

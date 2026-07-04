@@ -68,7 +68,7 @@ class _Header extends ConsumerWidget {
                 height: 20,
               ),
               showDot: unread > 0,
-              onTap: () => context.push(AppRoutes.notifications),
+              onTap: () => NotificationsSheet.show(context),
             ),
           ),
           // Markaziy profil.
@@ -897,7 +897,9 @@ class _WeekTracker extends StatelessWidget {
     return Row(
       children: [
         for (var i = 0; i < 7; i++) ...[
-          Expanded(child: _DayCircle(label: _kWeekLabels[i], state: states[i])),
+          Expanded(
+            child: _DayCircle(label: _kWeekLabels[i], state: states[i]),
+          ),
           if (i < 6) const SizedBox(width: 6),
         ],
       ],

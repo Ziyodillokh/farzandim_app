@@ -468,7 +468,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     return _CardShell(
       child: Row(
         children: [
-          const _IconChip(icon: SolarIconsOutline.questionCircle),
+          const _IconChip(icon: SolarIconsBold.questionCircle),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

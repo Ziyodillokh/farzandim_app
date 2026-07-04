@@ -470,7 +470,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
     return _CardShell(
       child: Row(
         children: [
-          const _IconChip(svgAsset: 'assets/icons/ic_question_bold.svg'),
+          const _IconChip(icon: SolarIconsBold.questionCircle),
           const SizedBox(width: 14),
           Expanded(
             child: Column(

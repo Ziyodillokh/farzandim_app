@@ -43,6 +43,8 @@ import 'package:farzandim/features/legal/presentation/screens/privacy_policy_scr
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_history_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_map_screen.dart';
+import 'package:farzandim/features/notifications/data/models/app_notification.dart';
+import 'package:farzandim/features/notifications/presentation/screens/notification_detail_screen.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim/features/onboarding/presentation/providers/language_picked_provider.dart';
 import 'package:farzandim/features/onboarding/presentation/screens/language_select_screen.dart';
@@ -61,7 +63,6 @@ import 'package:farzandim/features/settings/presentation/screens/notification_pr
 import 'package:farzandim/features/settings/presentation/screens/parvoz_premium_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
-import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -347,6 +348,16 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.notifications,
       pageBuilder: (context, state) => _slidePage(const NotificationsScreen()),
     ),
+    GoRoute(
+      path: AppRoutes.notificationDetail,
+      pageBuilder: (context, state) => _slidePage(
+        NotificationDetailScreen(
+          notification: state.extra is AppNotification
+              ? state.extra! as AppNotification
+              : null,
+        ),
+      ),
+    ),
 
     // Sozlamalar — Bosqich 7.1.
     GoRoute(
@@ -364,10 +375,6 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.settingsSessions,
       pageBuilder: (context, state) => _slidePage(const ActiveSessionsScreen()),
-    ),
-    GoRoute(
-      path: AppRoutes.support,
-      pageBuilder: (context, state) => _slidePage(const SupportChatScreen()),
     ),
     // Bolalar boshqaruvi. (Akkount/Profil endi bottom sheet — routsiz.)
     GoRoute(
@@ -474,9 +481,8 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.chatDetailPattern,
-      pageBuilder: (context, state) => _slidePage(
-        ChatDetailScreen(contactId: state.pathParameters['id']!),
-      ),
+      pageBuilder: (context, state) =>
+          _slidePage(ChatDetailScreen(contactId: state.pathParameters['id']!)),
     ),
     GoRoute(
       path: AppRoutes.appRestrictionsPattern,

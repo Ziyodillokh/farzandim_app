@@ -188,6 +188,21 @@
   },
   "notifications": {
     "title": "Bildirishnoma",
+    "listTitle": "Bildirishnomalar",
+    "actions": {
+      "viewOnMap": "Xaritada ko'rish",
+      "openRestrictions": "Cheklovlarga o'tish",
+      "openSchedules": "Jadvalga o'tish",
+      "giveTime": "Vaqt ber",
+      "deny": "Rad et"
+    },
+    "unlock": {
+      "granted": "{minutes} daqiqa ruxsat berildi.",
+      "denied": "So'rov rad etildi."
+    },
+    "detail": {
+      "notFound": "Bu bildirishnoma endi mavjud emas."
+    },
     "blockApp": "Bloklash",
     "blockedSnack": "{app} bloklandi",
     "blockError": "Bloklab bo'lmadi",
@@ -788,10 +803,30 @@
     "editEmail": "Emailni o'zgartirish",
     "editPhone": "Telefonni o'zgartirish"
   },
+  "languageSheet": {
+    "title": "Ilova tili",
+    "uz": "O'zbek",
+    "ru": "Rus",
+    "en": "English"
+  },
+  "supportSheet": {
+    "title": "Qo'llab quvvatlash",
+    "telegram": "Telegram",
+    "phone": "Telefon",
+    "email": "Email"
+  },
   "premium": {
     "subscribers": "+1k obunachi",
-    "title": "Parvoz Premium",
-    "subtitle": "Ilovaning yangi versiyasi chiqti",
+    "title": "Tariflar",
+    "subtitle": "Har qanday vaqtda obunani bekor qilishingiz mumkin",
+    "startName": "Start",
+    "standartName": "Standart",
+    "premiumName": "Premium",
+    "startPrice": "Tekin",
+    "standartPrice": "$5 / oy",
+    "premiumPrice": "$10 / oy",
+    "standartCta": "Standart ulanish",
+    "premiumCta": "Premiumga ulanish",
     "benefitsTitle": "Afzalliklar",
     "benefit1": "+2 ta bola qo'shish",
     "benefit2": "Ko'proq nazorat",
@@ -804,8 +839,9 @@
   },
   "settings": {
     "title": "Sozlamalar",
-    "systemTitle": "Tizim so'zlamalari",
+    "systemTitle": "Tizim sozlamalari",
     "premiumBanner": {
+      "badge": "Tariflar",
       "description": "Kattaroq tarif, ko'proq imkoniyatlar. Farzandingiz kelajagi sizning qo'lingizda.",
       "details": "Batafsil"
     },
@@ -878,8 +914,8 @@
     },
     "sessions": {
       "title": "Faol sessiyalar",
-      "yourSession": "Sizning sessiyangiz",
-      "otherSessions": "Boshqa sessiyalar",
+      "yourSession": "Asosiy sessiya",
+      "otherSessions": "Qolgan sessiyalar",
       "endAllOthers": "Boshqa barcha seanslarni tugatish",
       "current": "Mas'ul",
       "addAccount": "Boshqa hisob qo'shish",

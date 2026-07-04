@@ -62,6 +62,9 @@ class AppRoutes {
   /// Bildirishnomalar ekrani.
   static const String notifications = '/notifications';
 
+  /// Bitta bildirishnoma detal sahifasi (route `extra` = AppNotification).
+  static const String notificationDetail = '/notification-detail';
+
   /// Sozlamalar ekrani (asosiy menyu).
   static const String settings = '/settings';
 
@@ -73,9 +76,6 @@ class AppRoutes {
 
   /// Faol sessiyalar — login qilingan qurilmalar.
   static const String settingsSessions = '/settings/sessions';
-
-  /// Qo'llab-quvvatlash chati.
-  static const String support = '/support';
 
   /// Bolalarni boshqarish ro'yxati.
   static const String settingsChildren = '/settings/children';
