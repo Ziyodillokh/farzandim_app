@@ -212,6 +212,8 @@
     "rejected": "Request rejected",
     "emptyTitle": "No notifications",
     "emptySubtitle": "Important messages about your child will appear here.",
+    "today": "Today",
+    "yesterday": "Yesterday",
     "sos": {
       "title": "SOS!",
       "subtitle": "{name} reported they need help",
@@ -220,6 +222,14 @@
       "callSnack": "Calling...",
       "callNoPhone": "Child's phone number not set",
       "callFailed": "Could not open phone dialer",
+      "cardTitle": "SOS message",
+      "cardSubtitle": "Reach out to {name}!",
+      "addressLabel": "Address",
+      "whenLabel": "When",
+      "whenAt": "{day} at {time}",
+      "callAction": "Call",
+      "messageAction": "Message",
+      "noLocation": "Location not available yet",
       "close": "Close"
     }
   },

@@ -1,13 +1,14 @@
 // Bildirishnomalar to'liq sahifasi (Parvoz). Bu route FCM push bosilganda
 // va Sozlamalar'dan ochiladi (deep-link). Dashboard qo'ng'irog'i esa
-// `NotificationsSheet` (tortiladigan varaq) orqali ochadi. Ikkalasi ham
-// `NotificationRow` va xabar bosilganda detal sahifasiga o'tishni ulashadi.
+// `NotificationsSheet` orqali ochadi. Ikkalasi ham `NotificationsListView`
+// (kunlik guruhlangan) va bosilganda: SOS -> SOS modali, aks holda detal.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:farzandim/features/notifications/presentation/widgets/notification_row.dart';
+import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
+import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -17,7 +18,6 @@ import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal, Parvoz) ════════════
 const _bg = Color(0xFF00060A);
-const _divider = Color(0x14FFFFFF);
 const _dim = Color(0x99FFFFFF); // oq 60%
 
 TextStyle _unb(
@@ -39,26 +39,23 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
-/// SOS eng tepada, keyin vaqt bo'yicha yangi→eski.
-List<AppNotification> _sorted(List<AppNotification> list) {
-  final items = [...list]
-    ..sort((a, b) {
-      final aSos = a.type == NotificationType.sos ? 0 : 1;
-      final bSos = b.type == NotificationType.sos ? 0 : 1;
-      if (aSos != bSos) return aSos - bSos;
-      return b.timestamp.compareTo(a.timestamp);
-    });
-  return items;
-}
-
 /// Bildirishnomalar to'liq sahifasi (route target).
 class NotificationsScreen extends ConsumerWidget {
   /// `NotificationsScreen` konstruktor.
   const NotificationsScreen({super.key});
 
+  void _onTap(BuildContext context, WidgetRef ref, AppNotification n) {
+    ref.read(notificationsProvider.notifier).markAsRead(n.id);
+    if (n.type == NotificationType.sos) {
+      SosSheet.show(context, n);
+    } else {
+      context.push(AppRoutes.notificationDetail, extra: n);
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final items = _sorted(ref.watch(notificationsProvider));
+    final items = ref.watch(notificationsProvider);
 
     return Scaffold(
       backgroundColor: _bg,
@@ -70,32 +67,10 @@ class NotificationsScreen extends ConsumerWidget {
             Expanded(
               child: items.isEmpty
                   ? const _Empty()
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.only(top: 4, bottom: 24),
-                        itemCount: items.length,
-                        separatorBuilder: (_, __) => const Divider(
-                          height: 1,
-                          thickness: 1,
-                          color: _divider,
-                        ),
-                        itemBuilder: (context, i) {
-                          final n = items[i];
-                          return NotificationRow(
-                            notification: n,
-                            onTap: () {
-                              ref
-                                  .read(notificationsProvider.notifier)
-                                  .markAsRead(n.id);
-                              context.push(
-                                AppRoutes.notificationDetail,
-                                extra: n,
-                              );
-                            },
-                          );
-                        },
-                      ),
+                  : NotificationsListView(
+                      items: items,
+                      padding: const EdgeInsets.fromLTRB(20, 4, 20, 24),
+                      onTap: (n) => _onTap(context, ref, n),
                     ),
             ),
           ],

@@ -212,6 +212,8 @@
     "rejected": "So'rov rad etildi",
     "emptyTitle": "Bildirishnomalar yo'q",
     "emptySubtitle": "Bola haqida muhim xabarlar shu yerda paydo bo'ladi.",
+    "today": "Bugun",
+    "yesterday": "Kecha",
     "sos": {
       "title": "SOS!",
       "subtitle": "{name} yordam kerakligini bildirdi",
@@ -220,6 +222,14 @@
       "callSnack": "Qo'ng'iroq qilinmoqda...",
       "callNoPhone": "Bola telefon raqami kiritilmagan",
       "callFailed": "Telefon dialer ochilmadi",
+      "cardTitle": "SOS xabar",
+      "cardSubtitle": "{name}dan xabar oling!",
+      "addressLabel": "Manzil",
+      "whenLabel": "Qachon",
+      "whenAt": "{day}, {time} da",
+      "callAction": "Telefon qilish",
+      "messageAction": "Xabar yozish",
+      "noLocation": "Joylashuv hali yo'q",
       "close": "Yopish"
     }
   },

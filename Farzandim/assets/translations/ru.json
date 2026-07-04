@@ -212,6 +212,8 @@
     "rejected": "Запрос отклонён",
     "emptyTitle": "Уведомлений нет",
     "emptySubtitle": "Важные сообщения о ребёнке будут появляться здесь.",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
     "sos": {
       "title": "SOS!",
       "subtitle": "{name} сообщил(а), что нужна помощь",
@@ -220,6 +222,14 @@
       "callSnack": "Звонок выполняется...",
       "callNoPhone": "Номер телефона ребёнка не указан",
       "callFailed": "Не удалось открыть телефонный набор",
+      "cardTitle": "SOS-сообщение",
+      "cardSubtitle": "Свяжитесь с {name}!",
+      "addressLabel": "Адрес",
+      "whenLabel": "Когда",
+      "whenAt": "{day}, {time}",
+      "callAction": "Позвонить",
+      "messageAction": "Написать",
+      "noLocation": "Местоположение пока недоступно",
       "close": "Закрыть"
     }
   },

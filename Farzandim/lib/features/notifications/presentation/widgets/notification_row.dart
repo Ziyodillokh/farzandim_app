@@ -1,11 +1,17 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal, Parvoz) ════════════
 const _row = Color(0xFF21262A); // ikon-tayl foni
 const _cardBorder = Color(0x14FFFFFF); // oq ~8% rim
 const _dim = Color(0x99FFFFFF); // oq 60% — quyi matn
+const _sosRed = Color(0xFFFF3B30); // SOS asosiy qizil
+const _sosDim = Color(0xB3FF6B60); // SOS quyi matn (muloyim qizil)
+const _sosBg = Color(0x14FF3B30); // SOS karta foni (qizil ~8%)
+const _sosBorder = Color(0x40FF3B30); // SOS karta chegarasi (qizil ~25%)
 
 TextStyle _unb(
   double size, {
@@ -99,6 +105,69 @@ class NotificationRow extends StatelessWidget {
                 ],
               ),
             ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// SOS bildirishnomasi uchun maxsus qizil karta (ro'yxat tepasida).
+/// Bosilsa — SOS modali ochiladi.
+class SosNotificationCard extends StatelessWidget {
+  /// `SosNotificationCard` konstruktor.
+  const SosNotificationCard({
+    required this.notification,
+    required this.onTap,
+    super.key,
+  });
+
+  /// SOS xabari.
+  final AppNotification notification;
+
+  /// Karta bosilganda chaqiriladi.
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = notification.childName.trim();
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
+        decoration: BoxDecoration(
+          color: _sosBg,
+          borderRadius: BorderRadius.circular(18),
+          border: Border.all(color: _sosBorder),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'notifications.sos.cardTitle'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(16, c: _sosRed),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    'notifications.sos.cardSubtitle'.tr(
+                      namedArgs: {'name': name},
+                    ),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(12.5, c: _sosDim),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(SolarIconsBold.altArrowRight, size: 22, color: _sosRed),
           ],
         ),
       ),
