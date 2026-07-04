@@ -26,7 +26,6 @@ const _bg = Color(0xFF00060A);
 const _card = Color(0xFF1A1F23);
 const _cardBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x99FFFFFF); // oq 60%
-const _glass = Color(0x1AFFFFFF); // oq 10% (Batafsil)
 
 TextStyle _unb(
   double size, {
@@ -196,9 +195,15 @@ class _PremiumBanner extends StatelessWidget {
       height: 204,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _card,
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: _cardBorder),
+        // Butun karta bo'ylab silliq aurora gradient (ko'k → siyan → binafsha).
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1B3B6E), Color(0xFF2A7E98), Color(0xFF332C72)],
+          stops: [0, 0.52, 1],
+        ),
       ),
       child: Stack(
         children: [
@@ -295,14 +300,14 @@ class _BannerLogo extends StatelessWidget {
   }
 }
 
-/// "PREMIUM" pill — ko'k→indigo→binafsha gradient.
+/// "Tariflar" pill — ko'k→indigo→binafsha gradient.
 class _PremiumPill extends StatelessWidget {
   const _PremiumPill();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 4),
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
         border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
@@ -313,12 +318,16 @@ class _PremiumPill extends StatelessWidget {
           stops: [0.01, 0.46, 0.93],
         ),
       ),
-      child: Text('PREMIUM', style: _unb(13, ls: -0.39)),
+      child: Text(
+        'settings.premiumBanner.badge'.tr(),
+        style: _unb(13, ls: -0.39),
+      ),
     );
   }
 }
 
-/// "Batafsil" — shaffof shisha pill tugma.
+/// "Batafsil" — ko'rinadigan frosted-glass pill (fon xiralashadi + oq
+/// gradient to'ldirish + yorqin rim), rasmdagidek shishaligi aniq bilinadi.
 class _BatafsilButton extends StatelessWidget {
   const _BatafsilButton({required this.onTap});
 
@@ -329,17 +338,31 @@ class _BatafsilButton extends StatelessWidget {
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: 44,
-        width: double.infinity,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          color: _glass,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Text(
-          'settings.premiumBanner.details'.tr(),
-          style: _pop(16, w: FontWeight.w500),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(999),
+        child: BackdropFilter(
+          filter: ImageFilter.blur(sigmaX: 8, sigmaY: 8),
+          child: Container(
+            height: 46,
+            width: double.infinity,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(999),
+              gradient: LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [
+                  Colors.white.withValues(alpha: 0.26),
+                  Colors.white.withValues(alpha: 0.1),
+                ],
+              ),
+              border: Border.all(color: Colors.white.withValues(alpha: 0.38)),
+            ),
+            child: Text(
+              'settings.premiumBanner.details'.tr(),
+              style: _pop(16, w: FontWeight.w500),
+            ),
+          ),
         ),
       ),
     );

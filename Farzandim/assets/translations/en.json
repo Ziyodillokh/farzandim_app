@@ -818,6 +818,7 @@
     "title": "Settings",
     "systemTitle": "System settings",
     "premiumBanner": {
+      "badge": "Plans",
       "description": "A bigger plan and more features. Your child's future is in your hands.",
       "details": "Learn more"
     },

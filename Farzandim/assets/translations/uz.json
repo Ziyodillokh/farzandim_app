@@ -818,6 +818,7 @@
     "title": "Sozlamalar",
     "systemTitle": "Tizim so'zlamalari",
     "premiumBanner": {
+      "badge": "Tariflar",
       "description": "Kattaroq tarif, ko'proq imkoniyatlar. Farzandingiz kelajagi sizning qo'lingizda.",
       "details": "Batafsil"
     },
