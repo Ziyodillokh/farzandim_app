@@ -63,6 +63,26 @@ final installedAppsProvider = StreamProvider.autoDispose
       );
     });
 
+/// Bola uchun haftalik qadamlar — backend `/weekly-report` (60s polling).
+/// Dashboard "Kunlik qadamlar" + "Kunlik rivojlanish" kartalari uchun.
+final weeklyStepsProvider = StreamProvider.autoDispose
+    .family<WeeklySteps?, String>((ref, childId) async* {
+      final isAuthed = ref.watch(
+        backendAuthProvider.select((s) => s is AuthAuthenticated),
+      );
+      if (!isAuthed) {
+        yield null;
+        return;
+      }
+      keepAliveFor(ref, const Duration(minutes: 2));
+      final repo = ref.watch(backendAppUsageRepositoryProvider);
+      yield* pollFetchStream<WeeklySteps?>(
+        ref,
+        interval: const Duration(seconds: 60),
+        fetch: () => repo.getWeeklySteps(childId),
+      );
+    });
+
 /// Bola uchun cheklovlar — backend `/app-limits` orqali.
 final restrictionsProvider =
     StreamProvider.family<List<AppRestriction>, String>((ref, childId) async* {

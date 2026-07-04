@@ -277,6 +277,10 @@
     "scheduleTitle": "Daily routine",
     "comingSoon": "Coming soon",
     "screenTimeLabel": "Screen time",
+
+    "screenTimeEmpty": "Apps will appear once the device connects",
+
+    "leaderboardEmpty": "Leaderboard not available yet",
     "screenTimeTotal": "Total screen time",
     "screenTimeVsYesterday": "vs yesterday",
     "screenTimePolicy": "Control policy",

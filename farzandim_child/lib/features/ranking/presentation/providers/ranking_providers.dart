@@ -3,9 +3,8 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Sprint 5.7c: real backend `/api/content/olympiads/ranking` ulanishi.
-// `backendRankingProvider` tanlangan TimeRange asosida fetch qiladi,
-// muvaffaqiyatli bo'lsa shu ro'yxat ishlatiladi, aks holda MockRanking
-// fallback.
+// `backendRankingProvider` tanlangan TimeRange asosida fetch qiladi;
+// xato bo'lsa ro'yxat bo'sh ko'rinadi (mock fallback yo'q).
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 

@@ -2,10 +2,9 @@
 // social_providers — Riverpod state
 // ─────────────────────────────────────────────────────────────────────
 //
-// Hozir mock data + local state (StateProvider). Kelajakda Firestore
-// `users/{uid}/follows/` collection bilan sinx.
+// Real backend'da social feed hali yo'q — ro'yxatlar bo'sh (mock o'chirildi).
+// Backend tayyor bo'lganda shu provayderlar REST/WS'ga ulanadi.
 
-import 'package:farzandim_child/features/social/data/mock_social_posts.dart';
 import 'package:farzandim_child/features/social/data/models/social_post.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -18,7 +17,7 @@ final socialFeedTabProvider = StateProvider<SocialFeedTab>(
 
 /// Bola kuzatadigan author ID'lari (Set — qo'shish/o'chirish tez).
 final followingAuthorIdsProvider = StateProvider<Set<String>>(
-  (_) => Set<String>.from(MockSocialPosts.defaultFollowing),
+  (_) => <String>{},
 );
 
 /// Bola yoqtirgan post ID'lari.
@@ -26,9 +25,9 @@ final likedPostIdsProvider = StateProvider<Set<String>>(
   (_) => <String>{},
 );
 
-/// Barcha postlar (mock).
+/// Barcha postlar — backend yo'q, hozircha bo'sh (real holat).
 final allSocialPostsProvider = Provider<List<SocialPost>>((_) {
-  return MockSocialPosts.all;
+  return const <SocialPost>[];
 });
 
 /// Filtered postlar — joriy tab'ga ko'ra.

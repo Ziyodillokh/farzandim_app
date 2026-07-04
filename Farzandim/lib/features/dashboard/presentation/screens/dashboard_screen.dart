@@ -5,6 +5,8 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
+import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart'
+    show DailySteps;
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
@@ -286,9 +288,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const _StepsCard(),
+                      _StepsCard(childId: child.id),
                       const SizedBox(height: 4),
-                      const _StreakCard(),
+                      _StreakCard(childId: child.id),
                       const SizedBox(height: 4),
                       Row(
                         children: [

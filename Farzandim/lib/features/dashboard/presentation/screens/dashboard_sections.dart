@@ -414,13 +414,10 @@ class _ScreenTimeCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final ms = ref.watch(todayScreenTimeMsProvider(childId));
     final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    final realApps = (usage?.filteredApps ?? const <AppUsageEntry>[])
+    // Faqat real ma'lumot — bola ilovasi yubormaguncha bo'sh holat.
+    final apps = (usage?.filteredApps ?? const <AppUsageEntry>[])
         .take(3)
         .toList();
-    // Bo'sh bo'lsa preview uchun mock ilovalar + mock vaqt (haqiqiy
-    // ma'lumot bola ilovasidan keladi).
-    final apps = realApps.isNotEmpty ? realApps : _kMockApps;
-    final displayMs = ms > 0 ? ms : (2 * 60 + 44) * 60000;
 
     return _Card(
       minHeight: 220,
@@ -436,32 +433,38 @@ class _ScreenTimeCard extends ConsumerWidget {
             children: [
               Text('dashboard.screenTimeLabel'.tr(), style: _pop(14, c: _dim)),
               const SizedBox(height: 2),
-              Text(_fmtScreenTime(displayMs), style: _unb(22, ls: -0.6)),
+              Text(_fmtScreenTime(ms), style: _unb(22, ls: -0.6)),
             ],
           ),
           const SizedBox(height: 12),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (var i = 0; i < apps.length; i++) ...[
-                Row(
-                  children: [
-                    _AppIcon(app: apps[i]),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        '${i + 1}. ${apps[i].appName}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _pop(14),
+          if (apps.isEmpty)
+            Text(
+              'dashboard.screenTimeEmpty'.tr(),
+              style: _pop(13, c: _dim),
+            )
+          else
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < apps.length; i++) ...[
+                  Row(
+                    children: [
+                      _AppIcon(app: apps[i]),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          '${i + 1}. ${apps[i].appName}',
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _pop(14),
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                if (i < apps.length - 1) const _Divider(),
+                    ],
+                  ),
+                  if (i < apps.length - 1) const _Divider(),
+                ],
               ],
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -476,28 +479,6 @@ String _fmtScreenTime(int ms) {
   if (h > 0) return '${h}s $m min';
   return '$m min';
 }
-
-/// Ekran vaqti bo'sh bo'lganda preview uchun mock ilovalar (harf ikonli).
-final List<AppUsageEntry> _kMockApps = [
-  AppUsageEntry(
-    packageName: '_mock.pubg',
-    appName: 'PUBG',
-    totalTimeMs: 5400000,
-    lastTimeUsed: DateTime(2024),
-  ),
-  AppUsageEntry(
-    packageName: '_mock.instagram',
-    appName: 'Instagram',
-    totalTimeMs: 2400000,
-    lastTimeUsed: DateTime(2024),
-  ),
-  AppUsageEntry(
-    packageName: '_mock.telegram',
-    appName: 'Telegram',
-    totalTimeMs: 1200000,
-    lastTimeUsed: DateTime(2024),
-  ),
-];
 
 /// 24px dumaloq ilova ikonkasi (URL → base64 → harf fallback).
 class _AppIcon extends StatelessWidget {
@@ -573,17 +554,13 @@ class _XpCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(childProfileProvider(child.id)).valueOrNull;
-    final xp = profile?.xp ?? 0;
     // Target dizayn "DON balansi" deydi. Backend hozircha `xp` sifatida
-    // saqlaydi — shuning uchun shu qiymatni DON deb ko'rsatamiz. Bo'sh
-    // bo'lsa (0) preview uchun mock 1250.
-    final displayDon = xp > 0 ? xp : 1250;
+    // saqlaydi — shu qiymat DON deb ko'rsatiladi (faqat real).
+    final xp = profile?.xp ?? 0;
     final lb = ref.watch(
       leaderboardProvider((childId: child.id, period: 'all', region: null)),
     );
     final rows = _leaderboardWindow(lb, child.id);
-    // Reyting bo'sh bo'lsa preview uchun mock qatorlar.
-    final displayRows = rows.isNotEmpty ? rows : _mockLeaderboard(child);
 
     return _Card(
       minHeight: 220,
@@ -603,7 +580,7 @@ class _XpCard extends ConsumerWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      _fmtNumber(displayDon),
+                      _fmtNumber(xp),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _unb(22, ls: -0.6),
@@ -626,18 +603,21 @@ class _XpCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 12),
-          Column(
-            children: [
-              for (var i = 0; i < displayRows.length; i++) ...[
-                _LeaderboardRow(
-                  entry: displayRows[i],
-                  isMe: displayRows[i].childId == child.id,
-                  me: child,
-                ),
-                if (i < displayRows.length - 1) const _Divider(),
+          if (rows.isEmpty)
+            Text('dashboard.leaderboardEmpty'.tr(), style: _pop(13, c: _dim))
+          else
+            Column(
+              children: [
+                for (var i = 0; i < rows.length; i++) ...[
+                  _LeaderboardRow(
+                    entry: rows[i],
+                    isMe: rows[i].childId == child.id,
+                    me: child,
+                  ),
+                  if (i < rows.length - 1) const _Divider(),
+                ],
               ],
-            ],
-          ),
+            ),
         ],
       ),
     );
@@ -672,33 +652,6 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
   }
   out.sort((a, b) => a.rank.compareTo(b.rank));
   return out.take(3).toList();
-}
-
-/// Reyting bo'sh bo'lganda preview uchun mock qatorlar (bola o'rtada).
-List<LeaderboardEntry> _mockLeaderboard(Child me) {
-  return [
-    const LeaderboardEntry(
-      rank: 94,
-      childId: '_mock_up',
-      name: 'Soliha',
-      region: '',
-      xp: 1280,
-    ),
-    LeaderboardEntry(
-      rank: 95,
-      childId: me.id,
-      name: me.name,
-      region: '',
-      xp: 1250,
-    ),
-    const LeaderboardEntry(
-      rank: 96,
-      childId: '_mock_dn',
-      name: 'Javohir',
-      region: '',
-      xp: 1210,
-    ),
-  ];
 }
 
 class _LeaderboardRow extends StatelessWidget {
@@ -773,23 +726,31 @@ const List<String> _kWeekLabels = ['Du', 'Se', 'Cho', 'Pa', 'Ju', 'Sha', 'Ya'];
 /// Bir hafta-kuni holati: bajarilgan / olov (streak) / muzlatilgan / bo'sh.
 enum _DayState { done, fire, freeze, empty }
 
-/// Kunlik qadamlar kartasi — oltiburchak nishon + "8 837 / 10 000" + hafta.
-/// MOCK ma'lumot (preview): haqiqiy qadam sanagich bola ilovasidan keladi.
-class _StepsCard extends StatelessWidget {
-  const _StepsCard();
+/// Kunlik qadamlar kartasi — nishon + "bugun / 10 000" + hafta trekeri.
+/// REAL: backend `/weekly-report` steps (bola ilovasi yuboradi).
+class _StepsCard extends ConsumerWidget {
+  const _StepsCard({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
-    const steps = 8837;
+  Widget build(BuildContext context, WidgetRef ref) {
+    final weekly = ref.watch(weeklyStepsProvider(childId)).valueOrNull;
     const goal = 10000;
-    const days = [
-      _DayState.done,
-      _DayState.done,
-      _DayState.done,
-      _DayState.done,
-      _DayState.empty,
-      _DayState.empty,
-      _DayState.empty,
+    final now = DateTime.now();
+    String key(DateTime d) => '${d.year}-${d.month}-${d.day}';
+    final byDay = <String, int>{
+      for (final d in weekly?.days ?? const <DailySteps>[])
+        key(d.date): d.steps,
+    };
+    final steps = byDay[key(now)] ?? 0;
+    // Joriy hafta (Du..Ya): qadam bo'lgan kun = done, qolgani empty.
+    final monday = DateTime(now.year, now.month, now.day - (now.weekday - 1));
+    final days = [
+      for (var i = 0; i < 7; i++)
+        ((byDay[key(monday.add(Duration(days: i)))] ?? 0) > 0)
+            ? _DayState.done
+            : _DayState.empty,
     ];
     return _Card(
       onTap: () {},
@@ -828,28 +789,32 @@ class _StepsCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const _WeekTracker(states: days),
+          _WeekTracker(states: days),
         ],
       ),
     );
   }
 }
 
-/// Kunlik rivojlanish (streak) kartasi — oltiburchak "7" + "7 kun" + hafta
-/// (olov = bajarilgan, muzlatilgan = o'tkazib yuborilgan). MOCK preview.
-class _StreakCard extends StatelessWidget {
-  const _StreakCard();
+/// Kunlik rivojlanish (streak) kartasi — olovli nishon + "N kun" + hafta.
+/// REAL: `childProfileProvider.streakDays` (backend gamification).
+class _StreakCard extends ConsumerWidget {
+  const _StreakCard({required this.childId});
+
+  final String childId;
 
   @override
-  Widget build(BuildContext context) {
-    const days = [
-      _DayState.fire,
-      _DayState.fire,
-      _DayState.freeze,
-      _DayState.fire,
-      _DayState.empty,
-      _DayState.empty,
-      _DayState.empty,
+  Widget build(BuildContext context, WidgetRef ref) {
+    final profile = ref.watch(childProfileProvider(childId)).valueOrNull;
+    final streak = profile?.streakDays ?? 0;
+    // Joriy hafta (Du..Ya): streak oynasidagi kunlar olov, qolgani bo'sh.
+    final now = DateTime.now();
+    final todayIdx = now.weekday - 1; // 0=Du
+    final days = [
+      for (var i = 0; i < 7; i++)
+        (i <= todayIdx && (todayIdx - i) < streak)
+            ? _DayState.fire
+            : _DayState.empty,
     ];
     return _Card(
       onTap: () {},
@@ -870,7 +835,7 @@ class _StreakCard extends StatelessWidget {
                   children: [
                     Text('Kunlik rivojlanish', style: _pop(14, c: _dim)),
                     const SizedBox(height: 2),
-                    Text('7 kun', style: _unb(22, ls: -0.6)),
+                    Text('$streak kun', style: _unb(22, ls: -0.6)),
                   ],
                 ),
               ),
@@ -878,7 +843,7 @@ class _StreakCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          const _WeekTracker(states: days),
+          _WeekTracker(states: days),
         ],
       ),
     );

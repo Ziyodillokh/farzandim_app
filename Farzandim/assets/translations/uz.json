@@ -277,6 +277,10 @@
     "scheduleTitle": "Kun tartibi",
     "comingSoon": "Tez kunda",
     "screenTimeLabel": "Ekran vaqti",
+
+    "screenTimeEmpty": "Bola qurilmasi ulanganda ilovalar ko'rinadi",
+
+    "leaderboardEmpty": "Reyting hali mavjud emas",
     "screenTimeTotal": "Umumiy ekran vaqti",
     "screenTimeVsYesterday": "kechadan",
     "screenTimePolicy": "Nazorat siyosati",

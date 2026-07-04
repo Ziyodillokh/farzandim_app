@@ -106,6 +106,26 @@ class BackendAppUsageRepository {
     return _mapWeekly(days);
   }
 
+  /// Haftalik qadamlar — backend `/weekly-report` javobining `steps` bo'limi
+  /// (`{days: [{date, steps}], weekTotal}`). Dashboard qadamlar kartasi uchun.
+  Future<WeeklySteps> getWeeklySteps(String childId) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/children/$childId/weekly-report',
+    );
+    final steps = response.data?['steps'] as Map<String, dynamic>? ?? const {};
+    final days = (steps['days'] as List<dynamic>? ?? const []).map((d) {
+      final m = d as Map;
+      return DailySteps(
+        date: DateTime.tryParse('${m['date']}') ?? DateTime.now(),
+        steps: (m['steps'] as num?)?.toInt() ?? 0,
+      );
+    }).toList();
+    return WeeklySteps(
+      days: days,
+      weekTotal: (steps['weekTotal'] as num?)?.toInt() ?? 0,
+    );
+  }
+
   /// Keshdagi oxirgi haftalik totals (stale). Yo'q yoki buzuq bo'lsa null.
   Future<List<DailyUsageTotal>?> getCachedWeeklyTotals(String childId) async {
     final cached = await SwrCache.read('weekly_usage:$childId');
@@ -183,4 +203,28 @@ class DailyUsageTotal {
   final int totalMs;
 
   double get hours => totalMs / 3600000;
+}
+
+/// Bir kunlik qadamlar (weekly-report `steps.days` elementi).
+class DailySteps {
+  /// `DailySteps` konstruktor.
+  const DailySteps({required this.date, required this.steps});
+
+  /// Sana.
+  final DateTime date;
+
+  /// Shu kundagi qadamlar.
+  final int steps;
+}
+
+/// Haftalik qadamlar to'plami (weekly-report `steps` bo'limi).
+class WeeklySteps {
+  /// `WeeklySteps` konstruktor.
+  const WeeklySteps({required this.days, required this.weekTotal});
+
+  /// Kunlik qadamlar (oxirgi 7 kun).
+  final List<DailySteps> days;
+
+  /// Hafta jami.
+  final int weekTotal;
 }
