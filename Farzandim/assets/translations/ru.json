@@ -188,6 +188,21 @@
   },
   "notifications": {
     "title": "Уведомления",
+    "listTitle": "Уведомления",
+    "actions": {
+      "viewOnMap": "Посмотреть на карте",
+      "openRestrictions": "Перейти к ограничениям",
+      "openSchedules": "Перейти к расписанию",
+      "giveTime": "Дать время",
+      "deny": "Отклонить"
+    },
+    "unlock": {
+      "granted": "Разрешено {minutes} минут.",
+      "denied": "Запрос отклонён."
+    },
+    "detail": {
+      "notFound": "Это уведомление больше недоступно."
+    },
     "blockApp": "Блокировать",
     "blockedSnack": "{app} заблокирован",
     "blockError": "Не удалось заблокировать",

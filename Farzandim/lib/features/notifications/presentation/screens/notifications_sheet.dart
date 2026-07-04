@@ -1,7 +1,6 @@
-// Bildirishnomalar to'liq sahifasi (Parvoz). Bu route FCM push bosilganda
-// va Sozlamalar'dan ochiladi (deep-link). Dashboard qo'ng'irog'i esa
-// `NotificationsSheet` (tortiladigan varaq) orqali ochadi. Ikkalasi ham
-// `NotificationRow` va xabar bosilganda detal sahifasiga o'tishni ulashadi.
+// "Bildirishnomalar" tortiladigan varaq (Parvoz, rasm 3). Dashboard'dagi
+// qo'ng'iroq ikonidan ochiladi. Xabarni bossa — o'qilgan deb belgilanadi,
+// varaq yopiladi va o'sha xabar detal sahifasi ochiladi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -16,7 +15,8 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal, Parvoz) ════════════
-const _bg = Color(0xFF00060A);
+const _sheetBg = Color(0xFF12171E);
+const _cardBorder = Color(0x14FFFFFF);
 const _divider = Color(0x14FFFFFF);
 const _dim = Color(0x99FFFFFF); // oq 60%
 
@@ -51,29 +51,60 @@ List<AppNotification> _sorted(List<AppNotification> list) {
   return items;
 }
 
-/// Bildirishnomalar to'liq sahifasi (route target).
-class NotificationsScreen extends ConsumerWidget {
-  /// `NotificationsScreen` konstruktor.
-  const NotificationsScreen({super.key});
+/// Bildirishnomalar varag'i.
+class NotificationsSheet extends ConsumerWidget {
+  const NotificationsSheet._();
+
+  /// Varaqni ochadi; xabar bosilsa — o'sha xabar detal sahifasiga o'tadi.
+  static Future<void> show(BuildContext context) async {
+    final tapped = await showModalBottomSheet<AppNotification>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      builder: (_) => const NotificationsSheet._(),
+    );
+    if (tapped != null && context.mounted) {
+      await context.push(AppRoutes.notificationDetail, extra: tapped);
+    }
+  }
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final items = _sorted(ref.watch(notificationsProvider));
+    final h = MediaQuery.sizeOf(context).height;
 
-    return Scaffold(
-      backgroundColor: _bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _Header(onBack: () => context.pop()),
-            const SizedBox(height: 6),
-            Expanded(
-              child: items.isEmpty
-                  ? const _Empty()
-                  : Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: ListView.separated(
-                        padding: const EdgeInsets.only(top: 4, bottom: 24),
+    return Container(
+      height: h * 0.8,
+      decoration: const BoxDecoration(
+        color: _sheetBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+        border: Border(top: BorderSide(color: _cardBorder)),
+      ),
+      child: SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+          child: Column(
+            children: [
+              // Tortish dastagi
+              Container(
+                width: 44,
+                height: 4,
+                decoration: BoxDecoration(
+                  color: Colors.white.withValues(alpha: 0.22),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Text('notifications.listTitle'.tr(), style: _unb(17)),
+              const SizedBox(height: 12),
+              Expanded(
+                child: items.isEmpty
+                    ? const _Empty()
+                    : ListView.separated(
+                        physics: const AlwaysScrollableScrollPhysics(),
+                        padding: EdgeInsets.zero,
                         itemCount: items.length,
                         separatorBuilder: (_, __) => const Divider(
                           height: 1,
@@ -88,46 +119,20 @@ class NotificationsScreen extends ConsumerWidget {
                               ref
                                   .read(notificationsProvider.notifier)
                                   .markAsRead(n.id);
-                              context.push(
-                                AppRoutes.notificationDetail,
-                                extra: n,
-                              );
+                              Navigator.of(context).pop(n);
                             },
                           );
                         },
                       ),
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════ Sarlavha ════════════
-class _Header extends StatelessWidget {
-  const _Header({required this.onBack});
-
-  final VoidCallback onBack;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
-      child: Row(
-        children: [
-          ParvozBackButton(onTap: onBack),
-          Expanded(
-            child: Center(
-              child: Text(
-                'notifications.listTitle'.tr(),
-                style: _unb(20, w: FontWeight.w500, ls: -0.6),
               ),
-            ),
+              const SizedBox(height: 12),
+              ParvozSecondaryButton(
+                label: 'common.close'.tr(),
+                onPressed: () => Navigator.of(context).pop(),
+              ),
+            ],
           ),
-          const SizedBox(width: 44),
-        ],
+        ),
       ),
     );
   }
@@ -161,7 +166,7 @@ class _Empty extends StatelessWidget {
           Text('notifications.emptyTitle'.tr(), style: _unb(15)),
           const SizedBox(height: 6),
           Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 40),
+            padding: const EdgeInsets.symmetric(horizontal: 32),
             child: Text(
               'notifications.emptySubtitle'.tr(),
               textAlign: TextAlign.center,

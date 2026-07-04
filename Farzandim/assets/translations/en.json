@@ -188,6 +188,21 @@
   },
   "notifications": {
     "title": "Notifications",
+    "listTitle": "Notifications",
+    "actions": {
+      "viewOnMap": "View on map",
+      "openRestrictions": "Open restrictions",
+      "openSchedules": "Open schedules",
+      "giveTime": "Grant time",
+      "deny": "Deny"
+    },
+    "unlock": {
+      "granted": "Granted {minutes} minutes.",
+      "denied": "Request denied."
+    },
+    "detail": {
+      "notFound": "This notification is no longer available."
+    },
     "blockApp": "Block",
     "blockedSnack": "{app} blocked",
     "blockError": "Could not block",

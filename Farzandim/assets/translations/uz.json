@@ -188,6 +188,21 @@
   },
   "notifications": {
     "title": "Bildirishnoma",
+    "listTitle": "Bildirishnomalar",
+    "actions": {
+      "viewOnMap": "Xaritada ko'rish",
+      "openRestrictions": "Cheklovlarga o'tish",
+      "openSchedules": "Jadvalga o'tish",
+      "giveTime": "Vaqt ber",
+      "deny": "Rad et"
+    },
+    "unlock": {
+      "granted": "{minutes} daqiqa ruxsat berildi.",
+      "denied": "So'rov rad etildi."
+    },
+    "detail": {
+      "notFound": "Bu bildirishnoma endi mavjud emas."
+    },
     "blockApp": "Bloklash",
     "blockedSnack": "{app} bloklandi",
     "blockError": "Bloklab bo'lmadi",

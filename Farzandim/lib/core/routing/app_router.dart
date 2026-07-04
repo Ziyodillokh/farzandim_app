@@ -43,6 +43,8 @@ import 'package:farzandim/features/legal/presentation/screens/privacy_policy_scr
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_history_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_map_screen.dart';
+import 'package:farzandim/features/notifications/data/models/app_notification.dart';
+import 'package:farzandim/features/notifications/presentation/screens/notification_detail_screen.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:farzandim/features/onboarding/presentation/providers/language_picked_provider.dart';
 import 'package:farzandim/features/onboarding/presentation/screens/language_select_screen.dart';
@@ -346,6 +348,16 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.notifications,
       pageBuilder: (context, state) => _slidePage(const NotificationsScreen()),
     ),
+    GoRoute(
+      path: AppRoutes.notificationDetail,
+      pageBuilder: (context, state) => _slidePage(
+        NotificationDetailScreen(
+          notification: state.extra is AppNotification
+              ? state.extra! as AppNotification
+              : null,
+        ),
+      ),
+    ),
 
     // Sozlamalar — Bosqich 7.1.
     GoRoute(
@@ -469,9 +481,8 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.chatDetailPattern,
-      pageBuilder: (context, state) => _slidePage(
-        ChatDetailScreen(contactId: state.pathParameters['id']!),
-      ),
+      pageBuilder: (context, state) =>
+          _slidePage(ChatDetailScreen(contactId: state.pathParameters['id']!)),
     ),
     GoRoute(
       path: AppRoutes.appRestrictionsPattern,

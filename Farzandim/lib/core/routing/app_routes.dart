@@ -62,6 +62,9 @@ class AppRoutes {
   /// Bildirishnomalar ekrani.
   static const String notifications = '/notifications';
 
+  /// Bitta bildirishnoma detal sahifasi (route `extra` = AppNotification).
+  static const String notificationDetail = '/notification-detail';
+
   /// Sozlamalar ekrani (asosiy menyu).
   static const String settings = '/settings';
 
