@@ -148,7 +148,7 @@ class ChildSettingsScreen extends ConsumerWidget {
                         : '$zoneCount ta manzil',
                     onTap: () => context.push(AppRoutes.geoZonesPath(childId)),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   // ── Ilovalarni bloklash ──
                   _NavCard(
@@ -161,7 +161,7 @@ class ChildSettingsScreen extends ConsumerWidget {
                           ),
                     onTap: () => showBlockAppsSheet(context, childId: childId),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   // ── Kunlik vaqt limiti ──
                   _NavCard(
@@ -174,7 +174,7 @@ class ChildSettingsScreen extends ConsumerWidget {
                           ),
                     onTap: () => showDailyLimitSheet(context, childId: childId),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   // ── Rejimlar ──
                   _NavCard(
@@ -187,7 +187,7 @@ class ChildSettingsScreen extends ConsumerWidget {
                           ),
                     onTap: () => showRejimlarSheet(context, childId: childId),
                   ),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: 8),
 
                   // ── Notanish manbaalar (toggle) ──
                   _UnknownSourcesCard(
@@ -225,7 +225,7 @@ class _BackButton extends StatelessWidget {
           border: Border.all(color: _fieldBorder),
         ),
         child: const Icon(
-          SolarIconsOutline.altArrowLeft,
+          SolarIconsOutline.arrowLeft,
           size: 22,
           color: Colors.white,
         ),

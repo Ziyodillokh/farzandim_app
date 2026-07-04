@@ -865,7 +865,7 @@ class _Header extends StatelessWidget {
             height: 48,
             child: IconButton(
               icon: Icon(
-                SolarIconsBold.altArrowLeft,
+                SolarIconsOutline.arrowLeft,
                 color: AppColors.textPrimary,
               ),
               onPressed: () => context.pop(),
@@ -894,7 +894,7 @@ class _ChildNotFound extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(SolarIconsBold.altArrowLeft),
+          icon: const Icon(SolarIconsOutline.arrowLeft),
           onPressed: () => context.pop(),
         ),
       ),

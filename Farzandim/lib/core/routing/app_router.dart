@@ -52,6 +52,7 @@ import 'package:farzandim/features/quick_actions/presentation/screens/app_permis
 import 'package:farzandim/features/quick_actions/presentation/screens/device_settings_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/permission_apps_screen.dart';
 import 'package:farzandim/features/quick_actions/presentation/screens/voice_messages_screen.dart';
+import 'package:farzandim/features/reports/presentation/screens/reports_screen.dart';
 import 'package:farzandim/features/schedules/presentation/screens/schedules_list_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/about_screen.dart';
 import 'package:farzandim/features/settings/presentation/screens/active_sessions_screen.dart';
@@ -62,7 +63,6 @@ import 'package:farzandim/features/settings/presentation/screens/settings_screen
 import 'package:farzandim/features/sos/presentation/screens/sos_alerts_list_screen.dart';
 import 'package:farzandim/features/support/presentation/screens/support_chat_screen.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/voice_chat_screen.dart';
-import 'package:farzandim/features/weekly_report/presentation/screens/weekly_report_screen.dart';
 import 'package:firebase_analytics/firebase_analytics.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/foundation.dart';
@@ -499,7 +499,7 @@ List<RouteBase> buildAppRoutes() {
     GoRoute(
       path: AppRoutes.weeklyReportPattern,
       pageBuilder: (context, state) => _slidePage(
-        WeeklyReportScreen(childId: state.pathParameters['childId']!),
+        ReportsScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

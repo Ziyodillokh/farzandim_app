@@ -560,7 +560,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 _HintChip(
-                  icon: SolarIconsBold.altArrowLeft,
+                  icon: SolarIconsOutline.arrowLeft,
                   text: 'common.cancel'.tr(),
                   highlight: cancelIntensity > 0.3,
                 ),
@@ -635,7 +635,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             _HintChip(
-              icon: SolarIconsBold.altArrowLeft,
+              icon: SolarIconsOutline.arrowLeft,
               text: 'common.cancel'.tr(),
             ),
             _HintChip(

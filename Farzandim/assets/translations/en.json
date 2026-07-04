@@ -956,10 +956,13 @@
   "chat": {
     "title": "Chats",
     "typing": "Typing...",
+    "online": "online",
+    "lastSeen": "last seen recently",
     "today": "Today",
     "inputHint": "Message...",
     "send": "Send",
     "recording": "Recording...",
+    "cameraDenied": "Camera access denied",
     "micDenied": "Microphone access denied",
     "micError": "Could not start recording",
     "playError": "Could not play audio",

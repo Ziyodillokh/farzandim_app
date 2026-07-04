@@ -248,7 +248,7 @@ class _PasswordEditSheetState extends ConsumerState<_PasswordEditSheet> {
                         onTap: () => Navigator.of(context).pop(),
                         behavior: HitTestBehavior.opaque,
                         child: const Icon(
-                          SolarIconsOutline.altArrowLeft,
+                          SolarIconsOutline.arrowLeft,
                           size: 24,
                           color: Colors.white,
                         ),

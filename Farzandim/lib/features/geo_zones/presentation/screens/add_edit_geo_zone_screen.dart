@@ -561,7 +561,7 @@ class _Header extends StatelessWidget {
   Widget build(BuildContext context) {
     return Row(
       children: [
-        _SquareIconButton(icon: SolarIconsBold.altArrowLeft, onTap: onBack),
+        _SquareIconButton(icon: SolarIconsOutline.arrowLeft, onTap: onBack),
         Expanded(
           child: FittedBox(
             fit: BoxFit.scaleDown,

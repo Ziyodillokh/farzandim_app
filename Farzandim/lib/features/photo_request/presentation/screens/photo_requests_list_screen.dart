@@ -117,7 +117,7 @@ class _Header extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              SolarIconsBold.altArrowLeft,
+              SolarIconsOutline.arrowLeft,
               color: AppColors.textPrimary,
               size: 20,
             ),

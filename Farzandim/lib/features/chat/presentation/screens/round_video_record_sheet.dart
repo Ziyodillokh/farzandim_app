@@ -1,20 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// round_video_record_sheet — Dumaloq video yozish oynasi (preview)
+// round_video_record_sheet — Dumaloq video yozish oynasi (haqiqiy kamera)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Chat detalidagi kamera bosilganda ochiladi. To'liq ekran qora fon,
-// markazda dumaloq kamera preview (bu yerda placeholder) + aylanuvchi
-// progress halqa + taymer, pastda: bekor / Yuborish / kamerani almashtirish.
-//
-// ⚠️ Bu PREVIEW — haqiqiy kamera yozuvi `voice_message` feature'idagi
-// `round_video_recorder.dart`'da (camera + video_compress).
+// Chat detalidagi kamera bosilganda ochiladi. Jonli kamera preview (dumaloq)
+// + aylanuvchi progress halqa + taymer, pastda: bekor / Yuborish / (kamera).
+// Web: brauzer MediaRecorder; telefon: camera paketi (VideoCapture).
 
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/chat/data/video/video_capture.dart';
+import 'package:farzandim/features/chat/data/video/video_capture_factory.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 const _blue = Color(0xFF216BFF);
 const _chipBg = Color(0xFF1B2128);
@@ -25,12 +24,22 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.2);
 
-/// Dumaloq video yozish oynasini ochadi (preview).
-///
-/// "Yuborish" bosilsa yozib olingan davomiylik (soniya) qaytadi; bekor
-/// qilinsa `null`.
-Future<int?> showRoundVideoRecord(BuildContext context) {
-  return showGeneralDialog<int>(
+/// Yozib olingan video natijasi.
+class RecordedVideo {
+  /// `RecordedVideo` konstruktor.
+  const RecordedVideo(this.url, this.seconds);
+
+  /// Manba (web: blob URL, qurilma: fayl yo'li).
+  final String url;
+
+  /// Davomiylik (soniya).
+  final int seconds;
+}
+
+/// Dumaloq video yozish oynasini ochadi. "Yuborish" bosilsa `RecordedVideo`,
+/// bekor qilinsa `null` qaytadi.
+Future<RecordedVideo?> showRoundVideoRecord(BuildContext context) {
+  return showGeneralDialog<RecordedVideo>(
     context: context,
     barrierColor: const Color(0xF2000000), // qora ~95%
     barrierLabel: 'record',
@@ -49,23 +58,61 @@ class _RecordOverlay extends StatefulWidget {
 
 class _RecordOverlayState extends State<_RecordOverlay> {
   static const int _maxMs = 30000; // progress halqa to'lish vaqti
+  final VideoCapture _capture = createVideoCapture();
   Timer? _timer;
   int _ms = 0;
+  bool _ready = false;
+  bool _finishing = false;
 
   @override
   void initState() {
     super.initState();
-    // Preview: taymer avtomatik yuradi (haqiqiy yozuv o'rniga).
-    _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+    _setup();
+  }
+
+  Future<void> _setup() async {
+    try {
+      await _capture.init();
+      await _capture.start();
       if (!mounted) return;
-      setState(() => _ms += 50);
-    });
+      setState(() => _ready = true);
+      _timer = Timer.periodic(const Duration(milliseconds: 50), (_) {
+        if (!mounted) return;
+        setState(() => _ms += 50);
+        if (_ms >= _maxMs) _send(); // 30 sek — avtomatik yuborish
+      });
+    } catch (_) {
+      if (!mounted) return;
+      AppToast.error(context, 'chat.cameraDenied'.tr());
+      Navigator.of(context).pop();
+    }
   }
 
   @override
   void dispose() {
     _timer?.cancel();
+    _capture.dispose();
     super.dispose();
+  }
+
+  Future<void> _send() async {
+    if (_finishing) return;
+    _finishing = true;
+    _timer?.cancel();
+    final secs = (_ms / 1000).round();
+    final url = await _capture.stop();
+    if (!mounted) return;
+    Navigator.of(context).pop(
+      url == null ? null : RecordedVideo(url, secs < 1 ? 1 : secs),
+    );
+  }
+
+  Future<void> _cancel() async {
+    if (_finishing) return;
+    _finishing = true;
+    _timer?.cancel();
+    await _capture.cancel();
+    if (mounted) Navigator.of(context).pop();
   }
 
   String get _formatted {
@@ -84,7 +131,6 @@ class _RecordOverlayState extends State<_RecordOverlay> {
         child: Column(
           children: [
             const Spacer(),
-            // ── Dumaloq preview + progress halqa ──
             SizedBox(
               width: 276,
               height: 276,
@@ -101,30 +147,31 @@ class _RecordOverlayState extends State<_RecordOverlay> {
                       valueColor: const AlwaysStoppedAnimation(Colors.white),
                     ),
                   ),
-                  Container(
-                    width: 258,
-                    height: 258,
-                    decoration: const BoxDecoration(
-                      shape: BoxShape.circle,
-                      gradient: LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [Color(0xFF2A3340), _chipBg],
-                      ),
-                    ),
-                    child: const Center(
-                      child: Icon(
-                        SolarIconsBold.videocameraRecord,
-                        size: 64,
-                        color: Colors.white,
-                      ),
+                  ClipOval(
+                    child: SizedBox(
+                      width: 258,
+                      height: 258,
+                      child: _ready
+                          ? _capture.preview()
+                          : const ColoredBox(
+                              color: Color(0xFF2A3340),
+                              child: Center(
+                                child: SizedBox(
+                                  width: 30,
+                                  height: 30,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2.6,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                              ),
+                            ),
                     ),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: 26),
-            // ── Taymer pill ──
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
               decoration: BoxDecoration(
@@ -141,22 +188,16 @@ class _RecordOverlayState extends State<_RecordOverlay> {
               ),
             ),
             const Spacer(),
-            // ── Boshqaruv tugmalari ──
             Padding(
               padding: const EdgeInsets.fromLTRB(28, 0, 28, 24),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  _CircleButton(
-                    icon: Icons.close_rounded,
-                    onTap: () => Navigator.of(context).pop(),
-                  ),
-                  _SendButton(
-                    onTap: () => Navigator.of(context).pop(_ms ~/ 1000),
-                  ),
-                  _CircleButton(
+                  _CircleButton(icon: Icons.close_rounded, onTap: _cancel),
+                  _SendButton(onTap: _send),
+                  const _CircleButton(
                     icon: Icons.cameraswitch_rounded,
-                    onTap: () {},
+                    onTap: null,
                   ),
                 ],
               ),
@@ -172,7 +213,7 @@ class _CircleButton extends StatelessWidget {
   const _CircleButton({required this.icon, required this.onTap});
 
   final IconData icon;
-  final VoidCallback onTap;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
@@ -183,7 +224,11 @@ class _CircleButton extends StatelessWidget {
         width: 56,
         height: 56,
         decoration: const BoxDecoration(color: _chipBg, shape: BoxShape.circle),
-        child: Icon(icon, size: 24, color: Colors.white),
+        child: Icon(
+          icon,
+          size: 24,
+          color: onTap == null ? Colors.white54 : Colors.white,
+        ),
       ),
     );
   }

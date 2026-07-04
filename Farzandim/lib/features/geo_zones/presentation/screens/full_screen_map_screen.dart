@@ -215,7 +215,7 @@ class _CircleBackButton extends StatelessWidget {
             height: 56,
             child: Center(
               child: Icon(
-                SolarIconsBold.altArrowLeft,
+                SolarIconsOutline.arrowLeft,
                 size: 24,
                 color: Colors.black87,
               ),

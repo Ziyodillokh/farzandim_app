@@ -183,7 +183,7 @@ class _BackButton extends StatelessWidget {
           border: Border.all(color: _border),
         ),
         child: const Icon(
-          SolarIconsBold.altArrowLeft,
+          SolarIconsOutline.arrowLeft,
           size: 24,
           color: Colors.white,
         ),

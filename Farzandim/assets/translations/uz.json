@@ -956,10 +956,13 @@
   "chat": {
     "title": "Chatlar",
     "typing": "Yozmoqda...",
+    "online": "onlayn",
+    "lastSeen": "yaqinda ko'rilgan",
     "today": "Bugun",
     "inputHint": "Xabar...",
     "send": "Yuborish",
     "recording": "Yozilmoqda...",
+    "cameraDenied": "Kameraga ruxsat berilmadi",
     "micDenied": "Mikrofonga ruxsat berilmadi",
     "micError": "Yozishni boshlab bo'lmadi",
     "playError": "Ovozni eshittirib bo'lmadi",

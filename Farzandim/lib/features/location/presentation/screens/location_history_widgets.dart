@@ -14,7 +14,7 @@ class _TopBar extends StatelessWidget {
     return Row(
       children: [
         _CircleIconButton(
-          icon: SolarIconsBold.altArrowLeft,
+          icon: SolarIconsOutline.arrowLeft,
           onTap: () => context.pop(),
         ),
         const SizedBox(width: AppDimensions.sm),

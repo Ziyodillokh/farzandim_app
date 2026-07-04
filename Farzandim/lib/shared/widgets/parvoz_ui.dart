@@ -120,7 +120,7 @@ class ParvozBackButton extends StatelessWidget {
           border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
         ),
         child: const Icon(
-          SolarIconsBold.altArrowLeft,
+          SolarIconsOutline.arrowLeft,
           size: 22,
           color: Colors.white,
         ),

@@ -65,7 +65,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
         backgroundColor: AppColors.background,
         elevation: 0,
         leading: IconButton(
-          icon: Icon(SolarIconsBold.altArrowLeft, color: AppColors.textPrimary),
+          icon: Icon(SolarIconsOutline.arrowLeft, color: AppColors.textPrimary),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(

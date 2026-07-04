@@ -152,7 +152,7 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
                   Row(
                     children: [
                       _RoundIconButton(
-                        icon: SolarIconsOutline.altArrowLeft,
+                        icon: SolarIconsOutline.arrowLeft,
                         onTap: () => Navigator.of(context).maybePop(),
                       ),
                       Expanded(

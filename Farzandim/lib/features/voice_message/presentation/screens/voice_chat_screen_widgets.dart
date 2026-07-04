@@ -25,7 +25,7 @@ class _ChatHeader extends StatelessWidget {
         children: [
           IconButton(
             icon: Icon(
-              SolarIconsBold.altArrowLeft,
+              SolarIconsOutline.arrowLeft,
               color: AppColors.textPrimary,
             ),
             onPressed: onBack,

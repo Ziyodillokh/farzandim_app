@@ -61,7 +61,7 @@ class AuthBackButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return IconButton(
-      icon: Icon(SolarIconsBold.altArrowLeft, color: AppColors.textPrimary),
+      icon: Icon(SolarIconsOutline.arrowLeft, color: AppColors.textPrimary),
       onPressed: () {
         if (context.canPop()) {
           context.pop();

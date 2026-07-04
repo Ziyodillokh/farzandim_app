@@ -116,7 +116,7 @@ class _Header extends StatelessWidget {
       child: Row(
         children: [
           _GlassButton(
-            icon: SolarIconsOutline.altArrowLeft,
+            icon: SolarIconsOutline.arrowLeft,
             onTap: () => context.pop(),
           ),
           Expanded(

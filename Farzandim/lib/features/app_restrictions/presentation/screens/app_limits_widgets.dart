@@ -23,7 +23,7 @@ class _Header extends StatelessWidget {
           IconButton(
             onPressed: () => context.pop(),
             icon: Icon(
-              SolarIconsBold.altArrowLeft,
+              SolarIconsOutline.arrowLeft,
               color: AppColors.textPrimary,
             ),
           ),

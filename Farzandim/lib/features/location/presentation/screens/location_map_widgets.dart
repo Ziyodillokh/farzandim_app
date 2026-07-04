@@ -264,7 +264,7 @@ class _NoChildrenScreen extends StatelessWidget {
     return Scaffold(
       appBar: AppBar(
         leading: IconButton(
-          icon: const Icon(SolarIconsOutline.altArrowLeft),
+          icon: const Icon(SolarIconsOutline.arrowLeft),
           onPressed: () => context.pop(),
         ),
       ),

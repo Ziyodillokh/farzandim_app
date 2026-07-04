@@ -16,6 +16,7 @@ import 'dart:async';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/chat/data/chat_mock.dart';
+import 'package:farzandim/features/chat/presentation/screens/round_video_player.dart';
 import 'package:farzandim/features/chat/presentation/screens/round_video_record_sheet.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -74,6 +75,8 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   final _player = AudioPlayer();
   String? _playingUrl;
   StreamSubscription<PlayerState>? _playerSub;
+  bool _typing = false; // suhbatdosh "yozmoqda" (preview simulyatsiyasi)
+  Timer? _typingTimer;
 
   @override
   void initState() {
@@ -89,9 +92,19 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   @override
   void dispose() {
     _playerSub?.cancel();
+    _typingTimer?.cancel();
     _player.dispose();
     _scroll.dispose();
     super.dispose();
+  }
+
+  /// Preview: xabar yuborilgach suhbatdosh qisqa vaqt "yozmoqda" bo'ladi.
+  void _simulateTyping() {
+    _typingTimer?.cancel();
+    setState(() => _typing = true);
+    _typingTimer = Timer(const Duration(milliseconds: 2500), () {
+      if (mounted) setState(() => _typing = false);
+    });
   }
 
   String _nowLabel() {
@@ -102,6 +115,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 
   void _append(ChatMsg m) {
     setState(() => _messages.add(m));
+    if (m.mine) _simulateTyping();
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
         _scroll.animateTo(
@@ -114,14 +128,15 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
   }
 
   Future<void> _sendVideo() async {
-    final secs = await showRoundVideoRecord(context);
-    if (secs == null || !mounted) return;
+    final res = await showRoundVideoRecord(context);
+    if (res == null || !mounted) return;
     _append(
       ChatMsg(
         kind: ChatMsgKind.roundVideo,
         mine: true,
         time: _nowLabel(),
-        durationSec: secs < 1 ? 1 : secs,
+        durationSec: res.seconds,
+        mediaUrl: res.url,
       ),
     );
   }
@@ -134,6 +149,17 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         time: _nowLabel(),
         durationSec: secs < 1 ? 1 : secs,
         mediaUrl: url,
+      ),
+    );
+  }
+
+  void _sendText(String text) {
+    _append(
+      ChatMsg(
+        kind: ChatMsgKind.text,
+        mine: true,
+        time: _nowLabel(),
+        text: text,
       ),
     );
   }
@@ -173,7 +199,7 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
         bottom: false,
         child: Column(
           children: [
-            _Header(contact: _contact),
+            _Header(contact: _contact, typing: _typing),
             Expanded(
               child: ListView.builder(
                 controller: _scroll,
@@ -189,6 +215,10 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                         ChatMsgKind.roundVideo => _RoundVideoMessage(
                           msg: m,
                           color: _contact.color,
+                          onTap: m.mediaUrl == null
+                              ? null
+                              : () => showRoundVideoPlayer(
+                                  context, m.mediaUrl!),
                         ),
                         ChatMsgKind.voice => _VoiceBubble(
                           msg: m,
@@ -203,7 +233,11 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
                 },
               ),
             ),
-            _InputBar(onCamera: _sendVideo, onSendVoice: _sendVoice),
+            _InputBar(
+              onCamera: _sendVideo,
+              onSendVoice: _sendVoice,
+              onSendText: _sendText,
+            ),
           ],
         ),
       ),
@@ -214,18 +248,26 @@ class _ChatDetailScreenState extends State<ChatDetailScreen> {
 // ════════════ Header ════════════
 
 class _Header extends StatelessWidget {
-  const _Header({required this.contact});
+  const _Header({required this.contact, required this.typing});
 
   final ChatContact contact;
+  final bool typing;
 
   @override
   Widget build(BuildContext context) {
+    // Yozayotganda "Yozmoqda..." (ko'k), aks holda onlayn/oxirgi ko'rilgan.
+    final statusText = typing
+        ? 'chat.typing'.tr()
+        : (contact.online ? 'chat.online'.tr() : 'chat.lastSeen'.tr());
+    final statusColor = typing
+        ? _blue
+        : (contact.online ? const Color(0xFF34C759) : _dim);
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
       child: Row(
         children: [
           _RoundIconButton(
-            icon: SolarIconsOutline.altArrowLeft,
+            icon: SolarIconsOutline.arrowLeft,
             onTap: () {
               if (context.canPop()) {
                 context.pop();
@@ -241,8 +283,8 @@ class _Header extends StatelessWidget {
                 Text(contact.name, style: _unb(18)),
                 const SizedBox(height: 2),
                 Text(
-                  'chat.typing'.tr(),
-                  style: _pop(13, w: FontWeight.w500, c: _blue),
+                  statusText,
+                  style: _pop(13, w: FontWeight.w500, c: statusColor),
                 ),
               ],
             ),
@@ -475,16 +517,22 @@ class _Waveform extends StatelessWidget {
 // ════════════ Dumaloq video xabar ════════════
 
 class _RoundVideoMessage extends StatelessWidget {
-  const _RoundVideoMessage({required this.msg, required this.color});
+  const _RoundVideoMessage({
+    required this.msg,
+    required this.color,
+    this.onTap,
+  });
 
   final ChatMsg msg;
   final Color color;
+  final VoidCallback? onTap;
 
   static const double _d = 190;
 
   @override
   Widget build(BuildContext context) {
     final mine = msg.mine;
+    final hasVideo = msg.mediaUrl != null;
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
@@ -494,23 +542,29 @@ class _RoundVideoMessage extends StatelessWidget {
               ? CrossAxisAlignment.end
               : CrossAxisAlignment.start,
           children: [
-            Container(
-              width: _d,
-              height: _d,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [color.withValues(alpha: 0.85), _chipBg],
+            GestureDetector(
+              onTap: onTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: _d,
+                height: _d,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [color.withValues(alpha: 0.85), _chipBg],
+                  ),
+                  border: Border.all(color: const Color(0x22FFFFFF), width: 2),
                 ),
-                border: Border.all(color: const Color(0x22FFFFFF), width: 2),
-              ),
-              child: const Center(
-                child: Icon(
-                  SolarIconsBold.videocameraRecord,
-                  size: 44,
-                  color: Colors.white,
+                child: Center(
+                  child: Icon(
+                    hasVideo
+                        ? Icons.play_arrow_rounded
+                        : SolarIconsBold.videocameraRecord,
+                    size: hasVideo ? 56 : 44,
+                    color: Colors.white,
+                  ),
                 ),
               ),
             ),
@@ -542,10 +596,15 @@ class _RoundVideoMessage extends StatelessWidget {
 // ════════════ Kirish paneli (matn / ovoz / video) ════════════
 
 class _InputBar extends StatefulWidget {
-  const _InputBar({required this.onCamera, required this.onSendVoice});
+  const _InputBar({
+    required this.onCamera,
+    required this.onSendVoice,
+    required this.onSendText,
+  });
 
   final VoidCallback onCamera;
   final void Function(String? url, int secs) onSendVoice;
+  final ValueChanged<String> onSendText;
 
   @override
   State<_InputBar> createState() => _InputBarState();
@@ -553,6 +612,7 @@ class _InputBar extends StatefulWidget {
 
 class _InputBarState extends State<_InputBar> {
   final _recorder = AudioRecorder();
+  final _textCtrl = TextEditingController();
   bool _recording = false;
   bool _starting = false;
   int _elapsed = 0;
@@ -562,7 +622,16 @@ class _InputBarState extends State<_InputBar> {
   void dispose() {
     _timer?.cancel();
     _recorder.dispose();
+    _textCtrl.dispose();
     super.dispose();
+  }
+
+  void _sendText() {
+    final t = _textCtrl.text.trim();
+    if (t.isEmpty) return;
+    widget.onSendText(t);
+    _textCtrl.clear();
+    setState(() {});
   }
 
   Future<void> _startVoice() async {
@@ -630,25 +699,62 @@ class _InputBarState extends State<_InputBar> {
   }
 
   Widget _buildIdle() {
+    final hasText = _textCtrl.text.trim().isNotEmpty;
     return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
       children: [
         Expanded(
           child: Container(
-            height: 52,
+            constraints: const BoxConstraints(minHeight: 52),
             padding: const EdgeInsets.symmetric(horizontal: 18),
-            alignment: Alignment.centerLeft,
+            alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _chipBg,
               borderRadius: BorderRadius.circular(26),
               border: Border.all(color: _fieldBorder),
             ),
-            child: Text('chat.inputHint'.tr(), style: _pop(15, c: _dim)),
+            // Global teal fill'ni o'chiramiz + ko'k belgilash.
+            child: TextSelectionTheme(
+              data: const TextSelectionThemeData(
+                cursorColor: _blue,
+                selectionHandleColor: _blue,
+                selectionColor: Color(0x5C216BFF),
+              ),
+              child: TextField(
+                controller: _textCtrl,
+                style: _pop(15),
+                cursorColor: _blue,
+                minLines: 1,
+                maxLines: 4,
+                onChanged: (_) => setState(() {}),
+                onSubmitted: (_) => _sendText(),
+                textInputAction: TextInputAction.send,
+                decoration: InputDecoration(
+                  filled: false,
+                  isCollapsed: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  hintText: 'chat.inputHint'.tr(),
+                  hintStyle: _pop(15, c: _dim),
+                ),
+              ),
+            ),
           ),
         ),
         const SizedBox(width: 10),
-        _CircleAction(icon: SolarIconsBold.microphone, onTap: _startVoice),
-        const SizedBox(width: 10),
-        _CircleAction(icon: SolarIconsBold.camera, onTap: widget.onCamera),
+        if (hasText)
+          _CircleAction(
+            icon: Icons.send_rounded,
+            blue: true,
+            onTap: _sendText,
+          )
+        else ...[
+          _CircleAction(icon: SolarIconsBold.microphone, onTap: _startVoice),
+          const SizedBox(width: 10),
+          _CircleAction(icon: SolarIconsBold.camera, onTap: widget.onCamera),
+        ],
       ],
     );
   }

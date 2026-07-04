@@ -450,7 +450,7 @@ class _Header extends StatelessWidget {
             child: Padding(
               padding: const EdgeInsets.all(AppDimensions.sm),
               child: Icon(
-                SolarIconsBold.altArrowLeft,
+                SolarIconsOutline.arrowLeft,
                 color: AppColors.textPrimary,
                 size: AppDimensions.iconM,
               ),
