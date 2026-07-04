@@ -817,8 +817,16 @@
   },
   "premium": {
     "subscribers": "+1k obunachi",
-    "title": "Parvoz Premium",
-    "subtitle": "Ilovaning yangi versiyasi chiqti",
+    "title": "Tariflar",
+    "subtitle": "Har qanday vaqtda obunani bekor qilishingiz mumkin",
+    "startName": "Start",
+    "standartName": "Standart",
+    "premiumName": "Premium",
+    "startPrice": "Tekin",
+    "standartPrice": "$5 / oy",
+    "premiumPrice": "$10 / oy",
+    "standartCta": "Standart ulanish",
+    "premiumCta": "Premiumga ulanish",
     "benefitsTitle": "Afzalliklar",
     "benefit1": "+2 ta bola qo'shish",
     "benefit2": "Ko'proq nazorat",
@@ -831,7 +839,7 @@
   },
   "settings": {
     "title": "Sozlamalar",
-    "systemTitle": "Tizim so'zlamalari",
+    "systemTitle": "Tizim sozlamalari",
     "premiumBanner": {
       "badge": "Tariflar",
       "description": "Kattaroq tarif, ko'proq imkoniyatlar. Farzandingiz kelajagi sizning qo'lingizda.",
