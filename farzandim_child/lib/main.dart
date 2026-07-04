@@ -64,20 +64,7 @@ Future<void> main() async {
   // Future.wait ichida (lekin Firebase bilan parallel).
   await Future.wait<void>([
     EasyLocalization.ensureInitialized(),
-    // DEV: Firebase config'siz ham ishga tushsin (catchError bilan no-op).
-    Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform)
-        .then((_) {
-      // Data-only FCM background handler ('location_wake'). Web'da yo'q.
-      if (!kIsWeb) {
-        try {
-          FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
-        } catch (e) {
-          debugPrint('[DEV] FCM background handler skipped: $e');
-        }
-      }
-    }).catchError((Object e) {
-      debugPrint('[DEV] Firebase init skipped: $e');
-    }),
+    _initFirebase(),
     // Locale data — DateFormat('d MMMM','uz') uchun (LocaleDataException oldini).
     initializeDateFormatting('uz_UZ', null),
     initializeDateFormatting('ru_RU', null),
@@ -93,19 +80,56 @@ Future<void> main() async {
 
   runApp(
     EasyLocalization(
-      supportedLocales: const [
-        Locale('uz'),
-        Locale('ru'),
-        Locale('en'),
-      ],
+      supportedLocales: const [Locale('uz'), Locale('ru'), Locale('en')],
       path: 'assets/translations',
       fallbackLocale: const Locale('uz'),
       startLocale: const Locale('uz'),
-      child: const ProviderScope(
-        child: ChildApp(),
-      ),
+      child: const ProviderScope(child: ChildApp()),
     ),
   );
+}
+
+/// Web uchun Firebase config. `firebase_options.dart` `.gitignore`da (deploy'ga
+/// bormaydi) va web'da `currentPlatform` SINXRON throw qiladi. Shuning uchun
+/// web konfiguratsiyani SHU YERDA (git kuzatadigan faylda) beramiz — deploy'da
+/// ham ishlashi uchun. To'liq web push/auth uchun keyin `flutterfire configure`
+/// bilan rasmiy web appId olinadi.
+const _webFirebaseOptions = FirebaseOptions(
+  apiKey: 'AIzaSyCVQqj1-NIQwp9G566CS65ruw53Nzx6pDE',
+  appId: '1:163835260058:web:bc9bac1f0fc5e301d30323',
+  messagingSenderId: '163835260058',
+  projectId: 'farzandim-mvp',
+  authDomain: 'farzandim-mvp.firebaseapp.com',
+  databaseURL:
+      'https://farzandim-mvp-default-rtdb.asia-southeast1.firebasedatabase.app',
+  storageBucket: 'farzandim-mvp.firebasestorage.app',
+);
+
+/// Firebase init — barcha platformalarda. Butun blok try/catch bilan: init
+/// muvaffaqiyatsiz bo'lsa ham (masalan tarmoqsiz) ilova baribir ishga tushadi.
+/// MUHIM: web'da `DefaultFirebaseOptions.currentPlatform` SINXRON throw qilardi
+/// va u `initializeApp` argumenti bo'lgani uchun `.catchError` uni tutmasdi →
+/// `main()` yiqilib, web app umuman yuklanmasdi. Endi web'da `_webFirebaseOptions`
+/// ishlatiladi (currentPlatform umuman chaqirilmaydi).
+Future<void> _initFirebase() async {
+  try {
+    await Firebase.initializeApp(
+      options: kIsWeb
+          ? _webFirebaseOptions
+          : DefaultFirebaseOptions.currentPlatform,
+    );
+    // Data-only FCM background handler ('location_wake') — mobil'da. Web'da
+    // service worker + VAPID kerak, hozircha o'tkazib yuboramiz.
+    if (!kIsWeb) {
+      try {
+        FirebaseMessaging.onBackgroundMessage(fcmBackgroundHandler);
+      } catch (e) {
+        debugPrint('[DEV] FCM background handler skipped: $e');
+      }
+    }
+  } catch (e) {
+    debugPrint('[DEV] Firebase init skipped: $e');
+  }
 }
 
 class ChildApp extends ConsumerWidget {
@@ -141,19 +165,19 @@ class ChildApp extends ConsumerWidget {
         }
       });
     }
-    ref.listen<AsyncValue<AppUpdateStatus>>(
-      appUpdateProvider,
-      (previous, next) {
-        final status = next.valueOrNull;
-        if (status == null) return;
-        if (status.state != UpdateState.forceUpdateRequired) return;
-        final navContext = router.routerDelegate.navigatorKey.currentContext;
-        if (navContext == null) return;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          ForceUpdateDialog.show(navContext, status);
-        });
-      },
-    );
+    ref.listen<AsyncValue<AppUpdateStatus>>(appUpdateProvider, (
+      previous,
+      next,
+    ) {
+      final status = next.valueOrNull;
+      if (status == null) return;
+      if (status.state != UpdateState.forceUpdateRequired) return;
+      final navContext = router.routerDelegate.navigatorKey.currentContext;
+      if (navContext == null) return;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        ForceUpdateDialog.show(navContext, status);
+      });
+    });
 
     // Sprint UI.4: theme mode Settings'dan keladi (light/dark/system).
     final themeMode = ref.watch(themeModeProvider);

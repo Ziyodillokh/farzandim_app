@@ -2,10 +2,11 @@
 // PairingScreen — bola 5 raqamli oila kodini kiritadi (Parvoz ko'k redizayn)
 // ─────────────────────────────────────────────────────────────────────
 //
-// 5 ta doira katak — har biriga 1 raqam (bo'sh bo'lsa o'rin raqami ko'rinadi).
-// Avtomatik: raqam kiritilsa keyingi katak; backspace → oldingi; 5-chi
-// raqamda avto-pairing. Muvaffaqiyat → /splash; 409 → /pair-waiting; xato →
-// SnackBar + tozalash. "Kirish" (QR) → /qr-scan; "Bu qanday ishlaydi?" → help.
+// 5 ta oval katak — har biriga 1 raqam (bo'sh bo'lsa o'rin raqami ko'rinadi).
+// Kataklar ekran kengligiga moslashadi (hamma telefonda bir xil, overflow yo'q).
+// Avtomatik: raqam kiritilsa keyingi katak; backspace → oldingi; 5-chi raqamda
+// avto-pairing. Muvaffaqiyat → /splash; 409 → /pair-waiting; xato → SnackBar +
+// tozalash. "Kirish" (QR) → /qr-scan; "Bu qanday ishlaydi?" → help.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
@@ -99,85 +100,90 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
       backgroundColor: _bg,
       body: Stack(
         children: [
+          // Yog'du — YUQORIDA (markazda).
           const Positioned(
-            right: -90,
-            bottom: -110,
-            child: IgnorePointer(child: _CornerGlow()),
+            top: -150,
+            left: 0,
+            right: 0,
+            child: IgnorePointer(child: Center(child: _TopGlow())),
           ),
           SafeArea(
             child: LayoutBuilder(
-              builder: (context, constraints) => SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: ConstrainedBox(
-                  constraints: BoxConstraints(minHeight: constraints.maxHeight),
-                  child: IntrinsicHeight(
-                    child: Column(
-                      children: [
-                        const Spacer(flex: 2),
-                        Text(
-                          'pairing.enterCodeTitle'.tr(),
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.unbounded(
-                            fontSize: 24,
-                            fontWeight: FontWeight.w700,
-                            color: Colors.white,
-                            letterSpacing: -0.6,
-                            height: 1.3,
-                          ),
-                        ),
-                        const SizedBox(height: 10),
-                        Text(
-                          'pairing.enterCodeSubtitle'.tr(),
-                          textAlign: TextAlign.center,
-                          style: GoogleFonts.poppins(
-                            fontSize: 14,
-                            height: 1.5,
-                            color: _dim,
-                          ),
-                        ),
-                        const SizedBox(height: 40),
-                        // FittedBox — tor ekranlarda (≤320dp) kataklarni
-                        // proporsional kichraytiradi (overflow bo'lmaydi).
-                        FittedBox(
-                          fit: BoxFit.scaleDown,
-                          child: SizedBox(
-                            width: 300,
-                            child: Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: List.generate(5, _buildCodeBox),
+              builder: (context, constraints) {
+                // Katak o'lchamini kenglikka moslashtiramiz (hamma telefonda
+                // bir xil, overflow/siqilish yo'q). 24*2 padding hisobga olinadi.
+                final contentW = constraints.maxWidth - 48;
+                final side = ((contentW - 40) / 5).clamp(40.0, 58.0);
+                return SingleChildScrollView(
+                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(
+                      minHeight: constraints.maxHeight,
+                    ),
+                    child: IntrinsicHeight(
+                      child: Column(
+                        children: [
+                          const Spacer(flex: 2),
+                          Text(
+                            'pairing.enterCodeTitle'.tr(),
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.unbounded(
+                              fontSize: 24,
+                              fontWeight: FontWeight.w700,
+                              color: Colors.white,
+                              letterSpacing: -0.6,
+                              height: 1.3,
                             ),
                           ),
-                        ),
-                        const SizedBox(height: 44),
-                        _GlassButton(
-                          icon: Icons.qr_code_2_rounded,
-                          label: 'pairing.enterButton'.tr(),
-                          onTap: () => context.push('/qr-scan'),
-                        ),
-                        const SizedBox(height: 12),
-                        _GlassButton(
-                          icon: Icons.help_outline_rounded,
-                          label: 'pairing.howItWorks'.tr(),
-                          onTap: _showHelp,
-                        ),
-                        const Spacer(flex: 3),
-                        if (_isPairing)
-                          const Padding(
-                            padding: EdgeInsets.only(bottom: 8),
-                            child: SizedBox(
-                              width: 24,
-                              height: 24,
-                              child: CircularProgressIndicator(
-                                strokeWidth: 2.4,
-                                color: _blue,
+                          const SizedBox(height: 10),
+                          Text(
+                            'pairing.enterCodeSubtitle'.tr(),
+                            textAlign: TextAlign.center,
+                            style: GoogleFonts.poppins(
+                              fontSize: 14,
+                              height: 1.5,
+                              color: _dim,
+                            ),
+                          ),
+                          const SizedBox(height: 40),
+                          Row(
+                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                            children: List.generate(
+                              5,
+                              (i) => _buildCodeBox(i, side),
+                            ),
+                          ),
+                          const SizedBox(height: 44),
+                          _GlassButton(
+                            icon: Icons.qr_code_2_rounded,
+                            label: 'pairing.enterButton'.tr(),
+                            onTap: () => context.push('/qr-scan'),
+                          ),
+                          const SizedBox(height: 12),
+                          _GlassButton(
+                            icon: Icons.help_outline_rounded,
+                            label: 'pairing.howItWorks'.tr(),
+                            onTap: _showHelp,
+                          ),
+                          const Spacer(flex: 3),
+                          if (_isPairing)
+                            const Padding(
+                              padding: EdgeInsets.only(bottom: 8),
+                              child: SizedBox(
+                                width: 24,
+                                height: 24,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2.4,
+                                  color: _blue,
+                                ),
                               ),
                             ),
-                          ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
-                ),
-              ),
+                );
+              },
             ),
           ),
         ],
@@ -185,60 +191,65 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
     );
   }
 
-  Widget _buildCodeBox(int index) {
+  Widget _buildCodeBox(int index, double side) {
     final hasValue = _controllers[index].text.isNotEmpty;
-    return Container(
-      width: 56,
-      height: 56,
-      alignment: Alignment.center,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        color: Colors.white.withValues(alpha: hasValue ? 0.06 : 0.03),
-        border: Border.all(
-          color: hasValue ? _blue : Colors.white.withValues(alpha: 0.16),
-          width: 1.5,
-        ),
-      ),
-      child: TextField(
-        controller: _controllers[index],
-        focusNode: _focusNodes[index],
-        keyboardType: TextInputType.number,
-        textAlign: TextAlign.center,
-        textAlignVertical: TextAlignVertical.center,
-        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-        maxLength: 1,
-        cursorColor: Colors.white,
-        style: GoogleFonts.unbounded(
-          fontSize: 22,
-          fontWeight: FontWeight.w700,
-          color: Colors.white,
-          height: 1,
-        ),
-        decoration: InputDecoration(
-          counterText: '',
-          border: InputBorder.none,
-          enabledBorder: InputBorder.none,
-          focusedBorder: InputBorder.none,
-          filled: true,
-          fillColor: Colors.transparent,
-          contentPadding: EdgeInsets.zero,
-          hintText: '${index + 1}',
-          hintStyle: GoogleFonts.unbounded(
-            fontSize: 20,
-            fontWeight: FontWeight.w600,
-            color: Colors.white.withValues(alpha: 0.22),
-            height: 1,
+    final height = side * 1.18; // sal oval (bo'yi eniga nisbatan uzunroq)
+    return SizedBox(
+      width: side,
+      height: height,
+      child: DecoratedBox(
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: hasValue ? 0.06 : 0.03),
+          borderRadius: BorderRadius.all(
+            Radius.elliptical(side / 2, height / 2),
+          ),
+          border: Border.all(
+            color: hasValue ? _blue : Colors.white.withValues(alpha: 0.16),
+            width: 1.5,
           ),
         ),
-        onChanged: (value) {
-          if (value.isNotEmpty && index < 4) {
-            _focusNodes[index + 1].requestFocus();
-          } else if (value.isEmpty && index > 0) {
-            _focusNodes[index - 1].requestFocus();
-          }
-          if (_isFull) _onCodeComplete();
-          setState(() {});
-        },
+        child: TextField(
+          controller: _controllers[index],
+          focusNode: _focusNodes[index],
+          keyboardType: TextInputType.number,
+          textAlign: TextAlign.center,
+          textAlignVertical: TextAlignVertical.center,
+          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+          maxLength: 1,
+          cursorColor: Colors.white,
+          style: GoogleFonts.poppins(
+            fontSize: 26,
+            fontWeight: FontWeight.w600,
+            color: Colors.white,
+            height: 1,
+          ),
+          decoration: InputDecoration(
+            counterText: '',
+            border: InputBorder.none,
+            enabledBorder: InputBorder.none,
+            focusedBorder: InputBorder.none,
+            filled: true,
+            fillColor: Colors.transparent,
+            isCollapsed: true,
+            contentPadding: EdgeInsets.zero,
+            hintText: '${index + 1}',
+            hintStyle: GoogleFonts.poppins(
+              fontSize: 22,
+              fontWeight: FontWeight.w500,
+              color: Colors.white.withValues(alpha: 0.28),
+              height: 1,
+            ),
+          ),
+          onChanged: (value) {
+            if (value.isNotEmpty && index < 4) {
+              _focusNodes[index + 1].requestFocus();
+            } else if (value.isEmpty && index > 0) {
+              _focusNodes[index - 1].requestFocus();
+            }
+            if (_isFull) _onCodeComplete();
+            setState(() {});
+          },
+        ),
       ),
     );
   }
@@ -281,7 +292,7 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
   }
 }
 
-// ════════════ Shisha tugma (ikon + matn) ════════════
+// ════════════ Shisha tugma (yozuv MARKAZDA, ikon chapda) ════════════
 class _GlassButton extends StatelessWidget {
   const _GlassButton({
     required this.icon,
@@ -309,17 +320,25 @@ class _GlassButton extends StatelessWidget {
           ),
           border: Border.all(color: const Color(0x1FFFFFFF), width: 1.2),
         ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
+        child: Stack(
           children: [
-            Icon(icon, size: 20, color: Colors.white),
-            const SizedBox(width: 12),
-            Text(
-              label,
-              style: GoogleFonts.poppins(
-                fontSize: 16,
-                fontWeight: FontWeight.w500,
-                color: Colors.white,
+            // Yozuv — tugma markazida.
+            Center(
+              child: Text(
+                label,
+                style: GoogleFonts.poppins(
+                  fontSize: 16,
+                  fontWeight: FontWeight.w500,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            // Ikon — chap tomonda (yozuvni markazdan siljitmaydi).
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Padding(
+                padding: const EdgeInsets.only(left: 28),
+                child: Icon(icon, size: 20, color: Colors.white),
               ),
             ),
           ],
@@ -329,20 +348,20 @@ class _GlassButton extends StatelessWidget {
   }
 }
 
-// ════════════ Burchak ko'k yog'du ════════════
-class _CornerGlow extends StatelessWidget {
-  const _CornerGlow();
+// ════════════ Yuqori ko'k yog'du ════════════
+class _TopGlow extends StatelessWidget {
+  const _TopGlow();
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 320,
-      height: 320,
+      width: 360,
+      height: 360,
       decoration: const BoxDecoration(
         shape: BoxShape.circle,
         gradient: RadialGradient(
-          colors: [Color(0x40216BFF), Color(0x00216BFF)],
-          stops: [0, 0.7],
+          colors: [Color(0x4D216BFF), Color(0x00216BFF)],
+          stops: [0, 0.72],
         ),
       ),
     );
