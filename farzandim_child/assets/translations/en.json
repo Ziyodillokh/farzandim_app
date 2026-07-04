@@ -91,7 +91,11 @@
     "helpTitle": "Where do I get the code?",
     "helpContent": "Ask your parents to open the Farzandim app and find the code next to your name. The code is 5 digits and is valid for 24 hours.",
     "helpClose": "Got it",
-    "errorFallback": "Invalid code"
+    "errorFallback": "Invalid code",
+    "enterCodeTitle": "Enter the code from your parent's app",
+    "enterCodeSubtitle": "The code is 5 digits and valid for 24 hours",
+    "enterButton": "Enter",
+    "howItWorks": "How does this work?"
   },
   "permissions": {
     "title": "Permissions",
@@ -108,8 +112,16 @@
     "progress": "{current} / {total}"
   },
   "permissionSetup": {
-    "title": "Settings",
-    "subtitle": "Parvoz needs 4 permissions to work. Enable each one.",
+    "title": "Permissions",
+    "subtitle": "Enable these permissions for Farzandim to work correctly",
+    "next": "Next",
+    "groupMain": "Main",
+    "groupHelper": "Helper",
+    "locName": "Location",
+    "notifName": "Notifications",
+    "usageName": "App statistics",
+    "overlayName": "Display over other apps",
+    "batteryName": "Disable battery optimization",
     "step1Title": "Location",
     "step1Subtitle": "For real-time location tracking",
     "step2Title": "Battery optimization",
