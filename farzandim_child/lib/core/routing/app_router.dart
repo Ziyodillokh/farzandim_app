@@ -2,19 +2,19 @@
 // AppRouter — go_router konfiguratsiyasi
 // ─────────────────────────────────────────────────────────────────────
 //
-// Initial route: /splash. SplashScreen pairing+permissions tekshirib
-// /welcome, /permission-setup yoki /dashboard ga yo'naltiradi.
+// Initial route: /splash. SplashScreen consent+til+pairing+permissions
+// tekshirib to'g'ri ekranga yo'naltiradi.
 //
 // Asosiy ekranlar:
 //   /splash           — startup tekshiruvi
-//   /welcome          — pairing yo'q ekan birinchi ekran
+//   /welcome          — til tanlash (yangi foydalanuvchi birinchi ekrani)
 //   /pairing          — 5 raqamli kod kiritish
 //   /permissions      — runtime perms (location/notification/camera)
 //   /permission-setup — sistema-darajadagi 4 ta perm
 //   /dashboard        — paired + barcha permissions yoqilgach
 //
 // Redirect mantiqi:
-//   - Pair bo'lmagan + himoyalangan ekran → /welcome
+//   - Pair bo'lmagan + himoyalangan ekran → /pairing
 //   - Pair bo'lgan + /welcome|/pairing'da → /splash (re-route)
 //
 // Pairing state o'zgarganda router redirect qayta ishga tushadi
@@ -63,7 +63,7 @@ import 'package:farzandim_child/features/video_message/presentation/screens/vide
 import 'package:farzandim_child/features/video_message/presentation/screens/video_recording_screen.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/voice_message/presentation/screens/voice_chat_screen.dart';
-import 'package:farzandim_child/features/welcome/presentation/screens/welcome_screen.dart';
+import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -103,16 +103,10 @@ final routerProvider = Provider<GoRouter>((ref) {
   // qayta ishga tushiramiz.
   final refresh = ValueNotifier<int>(0);
   ref.onDispose(refresh.dispose);
-  ref.listen<AppPairingState>(
-    pairingStateProvider,
-    (_, __) => refresh.value++,
-  );
+  ref.listen<AppPairingState>(pairingStateProvider, (_, __) => refresh.value++);
   // Parent Consent state (Store compliance) — rozilik berilgach
   // router avtomatik /consent dan /splash ga o'tkazadi.
-  ref.listen<ConsentState>(
-    consentStateProvider,
-    (_, __) => refresh.value++,
-  );
+  ref.listen<ConsentState>(consentStateProvider, (_, __) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -140,9 +134,9 @@ final routerProvider = Provider<GoRouter>((ref) {
         return '/splash';
       }
 
-      // Splash va pairing — har doim ruxsat (pairing oqimi).
-      // Welcome ekran olib tashlandi — bola ilovasi to'g'ridan-to'g'ri kodni
-      // so'raydi. Eski deep-link'lar /welcome ga kelsa ham /pairing ga.
+      // Splash, til va pairing — har doim ruxsat (onboarding oqimi).
+      // /welcome — til tanlash (yangi foydalanuvchi); Splash til tanlanmagan
+      // va hali pair bo'lmagan holatda shu yerga yo'naltiradi.
       // /onboarding — qiziqishlar ekrani; endi faqat KOD kiritilgandan
       // (pair) keyin Splash yo'naltiradi, bir martalik.
       // /qr-scan — pairing oqimining bir qismi: bola hali pair bo'lmagan
@@ -156,12 +150,8 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/qr-scan',
         '/consent',
         '/onboarding',
+        '/welcome',
       };
-
-      // Eski /welcome URL'lari → /pairing.
-      if (loc == '/welcome') {
-        return '/pairing';
-      }
 
       // Pairing yo'q va himoyalangan ekran → /pairing
       if (!isPaired && !publicPaths.contains(loc)) {
@@ -171,6 +161,11 @@ final routerProvider = Provider<GoRouter>((ref) {
       // Pairing endigina tugadi (kullanici hali /pairing'da).
       // Splash permission'larni tekshirib to'g'ri ekranga yo'naltiradi.
       if (isPaired && loc == '/pairing') {
+        return '/splash';
+      }
+
+      // Pair bo'lgan foydalanuvchi til sahifasiga (deep-link) tushsa — splash'ga.
+      if (isPaired && loc == '/welcome') {
         return '/splash';
       }
 
@@ -197,19 +192,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       return null;
     },
     routes: [
-      GoRoute(
-        path: '/splash',
-        builder: (_, __) => const SplashScreen(),
-      ),
+      GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
       // Parent Consent — birinchi ochilishda ko'rsatiladi (Store compliance).
       // SharedPreferences `parent_consent_v1 = true` saqlangach ko'rsatilmaydi.
-      GoRoute(
-        path: '/consent',
-        builder: (_, __) => const ConsentScreen(),
-      ),
+      GoRoute(path: '/consent', builder: (_, __) => const ConsentScreen()),
       GoRoute(
         path: '/welcome',
-        builder: (_, __) => const WelcomeScreen(),
+        builder: (_, __) => const LanguageSelectScreen(),
       ),
       // 3 ta slaydli onboarding — birinchi ochilishda Splash yo'naltiradi.
       // SharedPreferences `onboarding_seen_v1` tugagach qayta ko'rsatilmaydi.
@@ -217,19 +206,13 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/onboarding',
         builder: (_, __) => const OnboardingScreen(),
       ),
-      GoRoute(
-        path: '/pairing',
-        builder: (_, __) => const PairingScreen(),
-      ),
+      GoRoute(path: '/pairing', builder: (_, __) => const PairingScreen()),
       GoRoute(
         path: '/pair-waiting',
         builder: (_, __) => const PairWaitingScreen(),
       ),
       // QR kod orqali qayta ulanish — pairing_screen'dan ochiladi.
-      GoRoute(
-        path: '/qr-scan',
-        builder: (_, __) => const QrScannerScreen(),
-      ),
+      GoRoute(path: '/qr-scan', builder: (_, __) => const QrScannerScreen()),
       GoRoute(
         path: '/permissions',
         builder: (_, __) => const PermissionsScreen(),
@@ -240,29 +223,35 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/account-edit',
-        pageBuilder: (context, state) => _slidePage(state, const AccountEditScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const AccountEditScreen()),
       ),
       GoRoute(
         path: '/settings',
-        pageBuilder: (context, state) => _slidePage(state, const SettingsScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const SettingsScreen()),
       ),
       GoRoute(
         path: '/profile',
-        pageBuilder: (context, state) => _slidePage(state, const ProfileScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ProfileScreen()),
       ),
       GoRoute(
         path: '/notifications',
-        pageBuilder: (context, state) => _slidePage(state, const NotificationsScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const NotificationsScreen()),
       ),
       // Sprint 4.4.40: "Hammasini ko'rish" tugmasi tap → bola statistika
       // ekrani (Date navigator + ScreenTimeChart + barcha ilovalar).
       GoRoute(
         path: '/analytics',
-        pageBuilder: (context, state) => _slidePage(state, const AnalyticsScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const AnalyticsScreen()),
       ),
       GoRoute(
         path: '/videos',
-        pageBuilder: (context, state) => _slidePage(state, const VideosFeedScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const VideosFeedScreen()),
       ),
       GoRoute(
         path: '/video-player',
@@ -280,7 +269,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/audiobooks',
-        pageBuilder: (context, state) => _slidePage(state, const AudiobooksFeedScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const AudiobooksFeedScreen()),
       ),
       // Content hub — audiokitoblar + kitoblar + konkurslar bitta ekranda.
       // Bottom nav endi shu yagona tabga olib boradi (avval 2 ta alohida edi).
@@ -291,12 +281,14 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/audio-player',
-        pageBuilder: (context, state) => _slidePage(state, const AudioPlayerScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const AudioPlayerScreen()),
       ),
       // Sprint 5.x — Books feature
       GoRoute(
         path: '/books',
-        pageBuilder: (context, state) => _slidePage(state, const BooksFeedScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const BooksFeedScreen()),
       ),
       GoRoute(
         path: '/books/pdf',
@@ -320,7 +312,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/contests',
-        pageBuilder: (context, state) => _slidePage(state, const ContestsScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ContestsScreen()),
       ),
       // #56 — Sertifikat (g'olib uchun)
       GoRoute(
@@ -346,13 +339,15 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/ranking',
-        pageBuilder: (context, state) => _slidePage(state, const RankingScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const RankingScreen()),
       ),
       GoRoute(
         path: '/video-recording',
         builder: (context, state) {
           // Banner query param orqali yuboradi; test tugmasi extra orqali.
-          final requestId = state.uri.queryParameters['requestId'] ??
+          final requestId =
+              state.uri.queryParameters['requestId'] ??
               (state.extra as String?);
           return VideoRecordingScreen(requestId: requestId);
         },
@@ -366,11 +361,13 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/voice-chat',
-        pageBuilder: (context, state) => _slidePage(state, const VoiceChatScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const VoiceChatScreen()),
       ),
       GoRoute(
         path: '/schedules',
-        pageBuilder: (context, state) => _slidePage(state, const SchedulesScreen()),
+        pageBuilder: (context, state) =>
+            _slidePage(state, const SchedulesScreen()),
       ),
       GoRoute(
         path: '/permission-setup',

@@ -28,10 +28,15 @@
     "startButton": "Get started",
     "codeHint": "Get the code from your parents"
   },
+  "language": {
+    "selectTitle": "Choose your language",
+    "selectSubtitle": "Which language do you want to use the app in?"
+  },
   "onboarding": {
     "skip": "Skip",
     "next": "Next",
     "start": "Get started",
+    "enter": "Enter",
     "startWithCount": "Get started ({count})",
     "minSelect": "Pick at least 1",
     "selectedCount": "{count} selected",

@@ -48,43 +48,50 @@ class InterestOption {
 /// Onboarding chip grid'da chiqadigan qat'iy ro'yxat.
 /// O'zgartirilsa `_v1` schema buziladi — yangi versiyaga `_v2` qo'shish.
 ///
-/// Ikonalar 2026 modern Material Symbols Rounded — bolaga tanish va
-/// jonli (auto_stories, theaters, biotech, flight_takeoff va h.k.).
+/// Tartib rasmga mos (Sayohat, Ovqat, ...). Ikonalar modern Material Symbols
+/// Rounded — bolaga tanish va jonli.
 const List<InterestOption> kInterestOptions = [
   InterestOption(
-    id: 'book',
-    labelKey: 'interests.book',
-    icon: Icons.auto_stories_rounded,
-    accent: Color(0xFF3B82F6), // blue
-    contentTags: ['book', 'adabiyot', 'tarjima', 'school'],
+    id: 'travel',
+    labelKey: 'interests.travel',
+    icon: Icons.luggage_rounded,
+    accent: Color(0xFF0EA5E9), // sky
+    contentTags: ['travel', 'geography'],
   ),
   InterestOption(
-    id: 'cartoon',
-    labelKey: 'interests.cartoon',
-    icon: Icons.theaters_rounded,
-    accent: Color(0xFFA855F7), // purple
-    contentTags: ['cartoon', 'animation'],
+    id: 'food',
+    labelKey: 'interests.food',
+    icon: Icons.restaurant_rounded,
+    accent: Color(0xFFF59E0B), // amber
+    contentTags: ['food', 'cooking'],
   ),
   InterestOption(
-    id: 'sport',
-    labelKey: 'interests.sport',
-    icon: Icons.sports_basketball_rounded,
-    accent: Color(0xFFF97316), // orange
-    contentTags: ['sport'],
+    id: 'games',
+    labelKey: 'interests.games',
+    icon: Icons.sports_esports_rounded,
+    accent: Color(0xFF8B5CF6), // violet
+    contentTags: ['game', 'games'],
   ),
   InterestOption(
-    id: 'music',
-    labelKey: 'interests.music',
-    icon: Icons.headphones_rounded,
-    accent: Color(0xFFEC4899), // pink
-    contentTags: ['music'],
+    id: 'science',
+    labelKey: 'interests.science',
+    icon: Icons.school_rounded,
+    accent: Color(0xFF06B6D4), // cyan
+    contentTags: ['science', 'fan', 'school'],
   ),
   InterestOption(
-    id: 'animals',
-    labelKey: 'interests.animals',
-    icon: Icons.pets_rounded,
-    accent: Color(0xFF10B981), // emerald
-    contentTags: ['animals', 'nature'],
+    id: 'art',
+    labelKey: 'interests.art',
+    icon: Icons.palette_rounded,
+    accent: Color(0xFFF43F5E), // rose
+    contentTags: ['art', 'culture'],
+  ),
+  InterestOption(
+    id: 'tech',
+    labelKey: 'interests.tech',
+    icon: Icons.memory_rounded,
+    accent: Color(0xFF14B8A6), // teal
+    contentTags: ['tech', 'it', 'science'],
   ),
   InterestOption(
     id: 'space',
@@ -94,46 +101,39 @@ const List<InterestOption> kInterestOptions = [
     contentTags: ['space', 'science'],
   ),
   InterestOption(
-    id: 'tech',
-    labelKey: 'interests.tech',
-    icon: Icons.smart_toy_rounded,
-    accent: Color(0xFF14B8A6), // teal
-    contentTags: ['tech', 'it', 'science'],
+    id: 'animals',
+    labelKey: 'interests.animals',
+    icon: Icons.pets_rounded,
+    accent: Color(0xFF10B981), // emerald
+    contentTags: ['animals', 'nature'],
   ),
   InterestOption(
-    id: 'art',
-    labelKey: 'interests.art',
-    icon: Icons.brush_rounded,
-    accent: Color(0xFFF43F5E), // rose
-    contentTags: ['art', 'culture'],
+    id: 'music',
+    labelKey: 'interests.music',
+    icon: Icons.headphones_rounded,
+    accent: Color(0xFFEC4899), // pink
+    contentTags: ['music'],
   ),
   InterestOption(
-    id: 'science',
-    labelKey: 'interests.science',
-    icon: Icons.biotech_rounded,
-    accent: Color(0xFF06B6D4), // cyan
-    contentTags: ['science', 'fan', 'school'],
+    id: 'sport',
+    labelKey: 'interests.sport',
+    icon: Icons.sports_basketball_rounded,
+    accent: Color(0xFFF97316), // orange
+    contentTags: ['sport'],
   ),
   InterestOption(
-    id: 'games',
-    labelKey: 'interests.games',
-    icon: Icons.videogame_asset_rounded,
-    accent: Color(0xFF8B5CF6), // violet
-    contentTags: ['game', 'games'],
+    id: 'cartoon',
+    labelKey: 'interests.cartoon',
+    icon: Icons.movie_rounded,
+    accent: Color(0xFFA855F7), // purple
+    contentTags: ['cartoon', 'animation'],
   ),
   InterestOption(
-    id: 'travel',
-    labelKey: 'interests.travel',
-    icon: Icons.flight_takeoff_rounded,
-    accent: Color(0xFF0EA5E9), // sky
-    contentTags: ['travel', 'geography'],
-  ),
-  InterestOption(
-    id: 'food',
-    labelKey: 'interests.food',
-    icon: Icons.cookie_rounded,
-    accent: Color(0xFFF59E0B), // amber
-    contentTags: ['food', 'cooking'],
+    id: 'book',
+    labelKey: 'interests.book',
+    icon: Icons.menu_book_rounded,
+    accent: Color(0xFF3B82F6), // blue
+    contentTags: ['book', 'adabiyot', 'tarjima', 'school'],
   ),
 ];
 
