@@ -36,7 +36,6 @@ const _barGold = Color(0xFFD9AA46);
 const _barBronze = Color(0xFFFF8951);
 
 const _rowExtent = 71.0; // qator 68 + 3 gap (scroll matematikasi uchun)
-const _listTopPad = 8.0; // ListView tepa padding'i (offset hisobi uchun)
 
 TextStyle _unb(
   double size, {
@@ -88,6 +87,11 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
   bool _showPill = false;
   bool _needScrollReset = false; // davr almashgach ro'yxatni tepaga qaytarish
 
+  // Scroll ichida yig'iluvchi header (tab + podium) — scroll paytida tepaga
+  // chiqib ketadi. Balandligi o'lchanadi (pill/jump matematikasi tayanadi).
+  final GlobalKey _headerKey = GlobalKey();
+  double _headerExtent = 330;
+
   static const _periods = ['weekly', 'monthly', 'all'];
 
   LeaderboardArgs get _args =>
@@ -127,6 +131,15 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (show != _showPill && mounted) setState(() => _showPill = show);
   }
 
+  /// Yig'iluvchi header (tab + podium) balandligini o'lchaydi — scroll
+  /// matematikasi (pill ko'rinishi, qatorga sakrash) shunga tayanadi.
+  void _measureHeader() {
+    final h = _headerKey.currentContext?.size?.height;
+    if (h != null && (h - _headerExtent).abs() > 0.5 && mounted) {
+      setState(() => _headerExtent = h);
+    }
+  }
+
   bool _childRowVisible(LeaderboardState st, LeaderboardEntry cc) {
     final listIndex = cc.rank - 4; // `rest` ichidagi 0-indeks
     final restLen = st.entries.length > 3 ? st.entries.length - 3 : 0;
@@ -134,7 +147,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     if (!_scroll.hasClients) return false;
     final off = _scroll.offset;
     final vp = _scroll.position.viewportDimension;
-    final top = _listTopPad + listIndex * _rowExtent;
+    final top = _headerExtent + listIndex * _rowExtent;
     final visTop = math.max(top, off);
     final visBottom = math.min(top + _rowExtent, off + vp);
     return (visBottom - visTop) / _rowExtent >= 0.6;
@@ -176,10 +189,8 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
 
     final vp = _scroll.position.viewportDimension;
     final target =
-        (_listTopPad + listIndex * _rowExtent - vp / 2 + _rowExtent / 2).clamp(
-          0.0,
-          _scroll.position.maxScrollExtent,
-        );
+        (_headerExtent + listIndex * _rowExtent - vp / 2 + _rowExtent / 2)
+            .clamp(0.0, _scroll.position.maxScrollExtent);
     await _scroll.animateTo(
       target,
       duration: const Duration(milliseconds: 550),
@@ -210,6 +221,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     ref.listen(leaderboardProvider(_args), (_, next) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
+        _measureHeader();
         // Davr almashib yangi ro'yxat yuklangach — tepaga qaytaramiz.
         if (_needScrollReset && !next.initialLoading && _scroll.hasClients) {
           _scroll.jumpTo(0);
@@ -224,6 +236,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
         : <LeaderboardEntry>[];
     final cc = st.currentChild;
 
+    // Header balandligini build'dan keyin o'lchaymiz (podium yuklangach);
+    // farq bo'lsagina setState qiladi.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) _measureHeader();
+    });
+
     return Scaffold(
       backgroundColor: _bg,
       body: Stack(
@@ -233,24 +251,7 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
             child: Column(
               children: [
                 _Header(onBack: () => context.pop(), onHelp: _showHelp),
-                const SizedBox(height: 6),
-                _PeriodTabs(
-                  periods: _periods,
-                  active: _period,
-                  onChanged: (p) {
-                    if (p == _period) return;
-                    setState(() {
-                      _period = p;
-                      _glow = false;
-                      _showPill = false;
-                      _needScrollReset = true;
-                    });
-                  },
-                ),
-                const SizedBox(height: 14),
-                _Podium(top3: top3),
-                const SizedBox(height: 12),
-                Expanded(child: _buildList(st, rest)),
+                Expanded(child: _buildScroll(st, top3, rest)),
               ],
             ),
           ),
@@ -287,99 +288,89 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
     );
   }
 
-  Widget _buildList(LeaderboardState st, List<LeaderboardEntry> rest) {
-    Widget inner;
+  Widget _buildScroll(
+    LeaderboardState st,
+    List<LeaderboardEntry> top3,
+    List<LeaderboardEntry> rest,
+  ) {
     if (st.initialLoading) {
-      inner = const Center(
+      return const Center(
         child: SizedBox(
           width: 26,
           height: 26,
           child: CircularProgressIndicator(strokeWidth: 2.4, color: _blue),
         ),
       );
-    } else if (st.error) {
-      inner = Center(
+    }
+    if (st.error) {
+      return Center(
         child: Text('leaderboard.loadFailed'.tr(), style: _pop(14, c: _dim)),
       );
-    } else if (st.entries.isEmpty) {
-      inner = Center(
+    }
+    if (st.entries.isEmpty) {
+      return Center(
         child: Text('leaderboard.noRatingYet'.tr(), style: _pop(14, c: _dim)),
       );
-    } else {
-      inner = ListView.builder(
-        controller: _scroll,
-        physics: const AlwaysScrollableScrollPhysics(),
-        padding: const EdgeInsets.fromLTRB(8, 8, 8, 20),
-        itemExtent: _rowExtent,
-        itemCount: rest.length + (st.hasMore ? 1 : 0),
-        itemBuilder: (context, i) {
-          if (i >= rest.length) {
-            return const Center(
-              child: SizedBox(
-                width: 20,
-                height: 20,
-                child: CircularProgressIndicator(strokeWidth: 2, color: _dim),
-              ),
-            );
-          }
-          final e = rest[i];
-          final isMe = e.childId == widget.childId;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 3),
-            child: _LeaderRow(entry: e, isMe: isMe, glowing: isMe && _glow),
-          );
-        },
-      );
     }
-
-    return Container(
-      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: _card,
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: const Color(0x0FFFFFFF)),
-      ),
-      child: Stack(
-        children: [
-          Positioned.fill(child: inner),
-          // Tepa/past yumshoq so'nish.
-          const Positioned(
-            top: 0,
-            left: 0,
-            right: 0,
-            height: 16,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [_card, Color(0x001A1F23)],
-                  ),
-                ),
+    return CustomScrollView(
+      controller: _scroll,
+      physics: const AlwaysScrollableScrollPhysics(),
+      slivers: [
+        // Yig'iluvchi header (davr tablari + podium) — scroll paytida tepaga
+        // chiqib ketadi (2-rasmdagi holat: faqat sarlavha + ro'yxat + pill).
+        SliverToBoxAdapter(
+          child: Column(
+            key: _headerKey,
+            children: [
+              const SizedBox(height: 14),
+              _PeriodTabs(
+                periods: _periods,
+                active: _period,
+                onChanged: (p) {
+                  if (p == _period) return;
+                  setState(() {
+                    _period = p;
+                    _glow = false;
+                    _showPill = false;
+                    _needScrollReset = true;
+                  });
+                },
               ),
-            ),
+              const SizedBox(height: 20),
+              _Podium(top3: top3),
+              const SizedBox(height: 16),
+            ],
           ),
-          const Positioned(
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: 40,
-            child: IgnorePointer(
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  gradient: LinearGradient(
-                    begin: Alignment.topCenter,
-                    end: Alignment.bottomCenter,
-                    colors: [Color(0x001A1F23), _card],
+        ),
+        SliverPadding(
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          sliver: SliverFixedExtentList(
+            itemExtent: _rowExtent,
+            delegate: SliverChildBuilderDelegate((context, i) {
+              if (i >= rest.length) {
+                return const Center(
+                  child: SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: _dim,
+                    ),
                   ),
-                ),
-              ),
-            ),
+                );
+              }
+              final e = rest[i];
+              final isMe = e.childId == widget.childId;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 3),
+                child: _LeaderRow(entry: e, isMe: isMe, glowing: isMe && _glow),
+              );
+            }, childCount: rest.length + (st.hasMore ? 1 : 0)),
           ),
-        ],
-      ),
+        ),
+        // Oxirgi qator pill ostida qolmasligi uchun bo'sh joy.
+        const SliverToBoxAdapter(child: SizedBox(height: 96)),
+      ],
     );
   }
 }
