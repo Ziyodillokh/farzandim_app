@@ -34,10 +34,10 @@ import 'package:farzandim_child/features/videos/presentation/providers/videos_pr
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Figma tokenlar ════════════
 const _bg = Color(0xFF00060A); // sahifa foni
@@ -50,6 +50,37 @@ const _amber = Color(0xFFFFAE00); // streak
 const _stepsBlue = Color(0xFF66B3FF); // qadamlar
 const _coinGreen = Color(0xFF41DD7A); // DON tanga
 const _panel = Color(0xFF173654); // banner / video thumbnail solid
+const _videoBg = Color(0xFF0E141C); // video yuklanayotgandagi neytral fon
+
+// ── Header ikonlari: Figma Make'dagi AYNAN SVG (Solar "Chat Round Line" /
+// "Bell Bing", Bold). Font glif o'rniga vektor — piksel-aniq mos keladi. ──
+const _chatRoundLineSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+    '<path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" '
+    'd="M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 '
+    '4.47715 0 10C0 11.5997 0.37562 13.1116 1.04346 14.4525C1.22094 14.8088 '
+    '1.28001 15.2161 1.17712 15.6006L0.58151 17.8267C0.32295 18.793 1.20701 '
+    '19.677 2.17335 19.4185L4.39939 18.8229C4.78393 18.72 5.19121 18.7791 '
+    '5.54753 18.9565C6.88837 19.6244 8.4003 20 10 20ZM6 11.25C5.58579 11.25 5.25 '
+    '11.5858 5.25 12C5.25 12.4142 5.58579 12.75 6 12.75H11.5C11.9142 12.75 12.25 '
+    '12.4142 12.25 12C12.25 11.5858 11.9142 11.25 11.5 11.25H6ZM5.25 8.5C5.25 '
+    '8.0858 5.58579 7.75 6 7.75H14C14.4142 7.75 14.75 8.0858 14.75 8.5C14.75 '
+    '8.9142 14.4142 9.25 14 9.25H6C5.58579 9.25 5.25 8.9142 5.25 8.5Z"/></svg>';
+
+const _bellBingSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 20">'
+    '<path fill="#FFFFFF" d="M5.35179 18.2418C6.19288 19.311 7.51418 20 9 '
+    '20C10.4858 20 11.8071 19.311 12.6482 18.2418C10.2264 18.57 7.77357 18.57 '
+    '5.35179 18.2418Z"/>'
+    '<path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" '
+    'd="M15.7491 7.7041V7C15.7491 3.13401 12.7274 0 9 0C5.27256 0 2.25087 '
+    '3.13401 2.25087 7V7.7041C2.25087 8.54909 2.00972 9.37517 1.5578 '
+    '10.0782L0.450359 11.8012C-0.561176 13.3749 0.211046 15.5139 1.97036 '
+    '16.0116C6.57274 17.3134 11.4273 17.3134 16.0296 16.0116C17.789 15.5139 '
+    '18.5612 13.3749 17.5496 11.8012L16.4422 10.0782C15.9903 9.37517 15.7491 '
+    '8.54909 15.7491 7.7041ZM9 3.25C9.41421 3.25 9.75 3.58579 9.75 4V8C9.75 '
+    '8.41421 9.41421 8.75 9 8.75C8.58579 8.75 8.25 8.41421 8.25 8V4C8.25 3.58579 '
+    '8.58579 3.25 9 3.25Z"/></svg>';
 
 TextStyle _unb(
   double s, {
@@ -208,15 +239,15 @@ class _Header extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: Text('Asosiy', style: _unb(24, w: FontWeight.w500, ls: -0.72)),
+          child: Text('Asosiy', style: _unb(24, w: FontWeight.w600, ls: -0.72)),
         ),
         _SquareIconButton(
-          icon: SolarIconsBold.chatRoundLine,
+          svg: _chatRoundLineSvg,
           onTap: () => context.push('/voice-chat'),
         ),
         const SizedBox(width: 12),
         _SquareIconButton(
-          icon: SolarIconsBold.bellBing,
+          svg: _bellBingSvg,
           showDot: unread > 0,
           onTap: () => context.push('/notifications'),
         ),
@@ -227,12 +258,12 @@ class _Header extends ConsumerWidget {
 
 class _SquareIconButton extends StatelessWidget {
   const _SquareIconButton({
-    required this.icon,
+    required this.svg,
     required this.onTap,
     this.showDot = false,
   });
 
-  final IconData icon;
+  final String svg;
   final VoidCallback onTap;
   final bool showDot;
 
@@ -252,7 +283,11 @@ class _SquareIconButton extends StatelessWidget {
               borderRadius: BorderRadius.circular(16),
             ),
             alignment: Alignment.center,
-            child: Icon(icon, size: 22, color: Colors.white),
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: SvgPicture.string(svg, fit: BoxFit.contain),
+            ),
           ),
           if (showDot)
             Positioned(
@@ -766,7 +801,7 @@ class _VideoCard extends StatelessWidget {
   }
 }
 
-/// Video thumbnail — 300×199 (360:239), #173654 fon + markazda play.
+/// Video thumbnail — 300×199, toza rounded karta (chegara yo'q, neytral fon).
 class _VideoThumb extends StatelessWidget {
   const _VideoThumb({required this.child});
 
@@ -779,14 +814,9 @@ class _VideoThumb extends StatelessWidget {
       height: 199,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        // Shisha fon (video yuklanmaguncha) + juda nozik chegara.
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF1C4066), Color(0xFF122A44)],
-        ),
-        borderRadius: BorderRadius.circular(22),
-        border: Border.all(color: const Color(0x14FFFFFF)),
+        // Neytral to'q fon (faqat rasm yuklanmaguncha ko'rinadi) — ko'k rim yo'q.
+        color: _videoBg,
+        borderRadius: BorderRadius.circular(24),
       ),
       child: Stack(
         fit: StackFit.expand,
