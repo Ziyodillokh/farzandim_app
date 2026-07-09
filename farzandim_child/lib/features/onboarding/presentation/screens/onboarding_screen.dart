@@ -60,9 +60,10 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
       await ref.read(interestsSyncServiceProvider).syncPendingInterests();
     }
     if (!mounted) return;
-    // /splash markaziy router: paired bo'lsa permission-setup yoki dashboard,
-    // aks holda pairing.
-    context.go('/splash');
+    // Onboarding'dan keyin RUXSATLAR ekrani (Figma oqimi). Ruxsatlar
+    // allaqachon berilgan bo'lsa ham ekran ko'rinadi — "Keyingisi" darhol
+    // dashboard'ga o'tkazadi (web preview'da ham shu oqim ko'rinadi).
+    context.go('/permission-setup');
   }
 
   void _toggleInterest(String id) {
@@ -90,13 +91,15 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
           ),
           SafeArea(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                const SizedBox(height: 20),
+                // Figma: tepada katta bo'shliq, sarlavha MARKAZDA.
+                const SizedBox(height: 96),
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 24),
                   child: Text(
                     'onboarding.interests.title'.tr(),
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.unbounded(
                       fontSize: 26,
                       fontWeight: FontWeight.w700,
@@ -106,11 +109,12 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 8),
+                const SizedBox(height: 10),
                 Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 24),
+                  padding: const EdgeInsets.symmetric(horizontal: 36),
                   child: Text(
                     'onboarding.interests.subtitle'.tr(),
+                    textAlign: TextAlign.center,
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       height: 1.45,
@@ -118,7 +122,7 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                     ),
                   ),
                 ),
-                const SizedBox(height: 20),
+                const SizedBox(height: 28),
                 Expanded(
                   child: GridView.count(
                     crossAxisCount: 2,

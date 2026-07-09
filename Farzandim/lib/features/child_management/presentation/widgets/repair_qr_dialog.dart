@@ -23,15 +23,35 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/core/realtime/socket_client.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import 'package:solar_icons/solar_icons.dart';
+
+// ════════════ Parvoz tokenlar ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _card = Color(0xFF12171E);
+const _chipBg = Color(0xFF1B2128);
+const _fieldBorder = Color(0x1FFFFFFF);
+const _dim = Color(0x8CFFFFFF);
+const _red = Color(0xFFFF5A5F);
+
+TextStyle _unb(
+  double s, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+}) => GoogleFonts.unbounded(fontSize: s, fontWeight: w, color: c, height: 1.25);
+
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.4);
 
 class RepairQrDialog extends ConsumerStatefulWidget {
   const RepairQrDialog({
@@ -160,77 +180,94 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: AppBar(
-        backgroundColor: AppColors.background,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(SolarIconsBold.closeCircle, color: AppColors.textPrimary),
-          onPressed: () => Navigator.pop(context, false),
-        ),
-        title: Text(
-          'repairQr.title'.tr(),
-          style: TextStyle(
-            color: AppColors.textPrimary,
-            fontWeight: FontWeight.w800,
-            fontSize: 20,
-          ),
-        ),
-      ),
+      backgroundColor: _bg,
       body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(
-                widget.childName,
-                textAlign: TextAlign.center,
-                style: AppTextStyles.headlineL.copyWith(
-                  color: AppColors.textPrimary,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                'repairQr.scanHint'.tr(),
-                textAlign: TextAlign.center,
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 24),
-              _buildQrArea(),
-              const SizedBox(height: 20),
-              _buildCountdown(),
-              const SizedBox(height: 12),
-              // Token nusxa olish — bola web/desktop ilovasida kamerasiz
-              // ulanish (QR scanner o'rniga matn joylash uchun). Mobil
-              // qurilmada ham foydali — yondagi qurilmaga jo'natish uchun.
-              _buildCopyTokenButton(),
-              const SizedBox(height: 24),
-              _buildHints(),
-              const SizedBox(height: 24),
-              OutlinedButton(
-                onPressed: () => Navigator.pop(context, false),
-                style: OutlinedButton.styleFrom(
-                  padding: const EdgeInsets.symmetric(vertical: 16),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
+        child: Column(
+          children: [
+            // ── Header: orqaga + sarlavha (Parvoz uslubi) ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 20, 20, 8),
+              child: Row(
+                children: [
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context, false),
+                    behavior: HitTestBehavior.opaque,
+                    child: Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: _chipBg,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: _fieldBorder),
+                      ),
+                      child: const Icon(
+                        SolarIconsOutline.arrowLeft,
+                        size: 22,
+                        color: Colors.white,
+                      ),
+                    ),
                   ),
-                  side: BorderSide(color: AppColors.border),
-                ),
-                child: Text(
-                  'repairQr.closeButton'.tr(),
-                  style: TextStyle(
-                    color: AppColors.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
+                  Expanded(
+                    child: Text(
+                      'repairQr.title'.tr(),
+                      textAlign: TextAlign.center,
+                      style: _unb(20),
+                    ),
                   ),
+                  const SizedBox(width: 44),
+                ],
+              ),
+            ),
+            Expanded(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(24, 8, 24, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(
+                      widget.childName,
+                      textAlign: TextAlign.center,
+                      style: _unb(22, w: FontWeight.w700),
+                    ),
+                    const SizedBox(height: 6),
+                    Text(
+                      'repairQr.scanHint'.tr(),
+                      textAlign: TextAlign.center,
+                      style: _pop(13, c: _dim),
+                    ),
+                    const SizedBox(height: 24),
+                    _buildQrArea(),
+                    const SizedBox(height: 20),
+                    _buildCountdown(),
+                    const SizedBox(height: 12),
+                    // Token nusxa olish — bola web/desktop ilovasida
+                    // kamerasiz ulanish (matn joylash uchun).
+                    _buildCopyTokenButton(),
+                    const SizedBox(height: 24),
+                    _buildHints(),
+                    const SizedBox(height: 24),
+                    GestureDetector(
+                      onTap: () => Navigator.pop(context, false),
+                      behavior: HitTestBehavior.opaque,
+                      child: Container(
+                        height: 56,
+                        alignment: Alignment.center,
+                        decoration: BoxDecoration(
+                          color: _chipBg,
+                          borderRadius: BorderRadius.circular(999),
+                          border: Border.all(color: _fieldBorder),
+                        ),
+                        child: Text(
+                          'repairQr.closeButton'.tr(),
+                          style: _pop(15, w: FontWeight.w500),
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
-            ],
-          ),
+            ),
+          ],
         ),
       ),
     );
@@ -241,11 +278,9 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
       return _ErrorBox(message: _error!, onRetry: _fetchNewToken);
     }
     if (_token == null) {
-      return SizedBox(
+      return const SizedBox(
         height: 320,
-        child: Center(
-          child: CircularProgressIndicator(color: AppColors.primary),
-        ),
+        child: Center(child: CircularProgressIndicator(color: _blue)),
       );
     }
     // Ekran kengligiga moslab kvadrat QR. Mobil/desktop'da to'liq joy oladi.
@@ -259,8 +294,8 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
           borderRadius: BorderRadius.circular(24),
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.15),
-              blurRadius: 24,
+              color: _blue.withValues(alpha: 0.22),
+              blurRadius: 28,
               spreadRadius: 2,
             ),
           ],
@@ -280,26 +315,35 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
   Widget _buildCopyTokenButton() {
     if (_token == null) return const SizedBox.shrink();
     return Center(
-      child: TextButton.icon(
-        onPressed: () async {
+      child: GestureDetector(
+        onTap: () async {
           await Clipboard.setData(
             ClipboardData(text: 'farzandim:repair:$_token'),
           );
           if (!mounted) return;
           AppToast.success(context, 'repairQr.copiedSnack'.tr());
         },
-        icon: const Icon(SolarIconsBold.copy, size: 18),
-        label: Text('repairQr.copyButton'.tr()),
-        style: TextButton.styleFrom(
-          foregroundColor: AppColors.primary,
+        behavior: HitTestBehavior.opaque,
+        child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(SolarIconsBold.copy, size: 18, color: _blue),
+              const SizedBox(width: 8),
+              Text(
+                'repairQr.copyButton'.tr(),
+                style: _pop(14, w: FontWeight.w500, c: _blue),
+              ),
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildCountdown() {
-    final color = _remainingSec <= 10 ? AppColors.error : AppColors.primary;
+    final color = _remainingSec <= 10 ? _red : _blue;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -307,10 +351,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
         const SizedBox(width: 6),
         Text(
           'repairQr.timeLeft'.tr(namedArgs: {'seconds': '$_remainingSec'}),
-          style: AppTextStyles.bodyS.copyWith(
-            color: color,
-            fontWeight: FontWeight.w600,
-          ),
+          style: _pop(14, w: FontWeight.w600, c: color),
         ),
       ],
     );
@@ -318,20 +359,18 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
 
   Widget _buildHints() {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(12),
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _fieldBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             'repairQr.hintsTitle'.tr(),
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.textSecondary,
-              fontWeight: FontWeight.w600,
-            ),
+            style: _pop(13, w: FontWeight.w600),
           ),
           const SizedBox(height: 6),
           _hintLine('repairQr.hint1'.tr()),
@@ -346,13 +385,7 @@ class _RepairQrDialogState extends ConsumerState<RepairQrDialog> {
   Widget _hintLine(String text) {
     return Padding(
       padding: const EdgeInsets.only(top: 2),
-      child: Text(
-        '• $text',
-        style: AppTextStyles.label.copyWith(
-          color: AppColors.textTertiary,
-          height: 1.3,
-        ),
-      ),
+      child: Text('• $text', style: _pop(12, c: _dim)),
     );
   }
 }
@@ -368,25 +401,29 @@ class _ErrorBox extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
+        color: _card,
         borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _fieldBorder),
       ),
       child: Column(
         children: [
-          Icon(SolarIconsBold.dangerCircle, color: AppColors.error, size: 32),
+          const Icon(SolarIconsBold.dangerCircle, color: _red, size: 32),
           const SizedBox(height: 8),
-          Text(
-            message,
-            textAlign: TextAlign.center,
-            style: AppTextStyles.bodyS.copyWith(color: AppColors.textPrimary),
-          ),
+          Text(message, textAlign: TextAlign.center, style: _pop(14)),
           const SizedBox(height: 12),
-          TextButton.icon(
-            onPressed: onRetry,
-            icon: Icon(SolarIconsBold.refresh, color: AppColors.primary),
-            label: Text(
-              'repairQr.retryButton'.tr(),
-              style: TextStyle(color: AppColors.primary),
+          GestureDetector(
+            onTap: onRetry,
+            behavior: HitTestBehavior.opaque,
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                const Icon(SolarIconsBold.refresh, size: 18, color: _blue),
+                const SizedBox(width: 8),
+                Text(
+                  'repairQr.retryButton'.tr(),
+                  style: _pop(14, w: FontWeight.w500, c: _blue),
+                ),
+              ],
             ),
           ),
         ],

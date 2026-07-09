@@ -277,9 +277,7 @@
     "scheduleTitle": "Kun tartibi",
     "comingSoon": "Tez kunda",
     "screenTimeLabel": "Ekran vaqti",
-
     "screenTimeEmpty": "Bola qurilmasi ulanganda ilovalar ko'rinadi",
-
     "leaderboardEmpty": "Reyting hali mavjud emas",
     "screenTimeTotal": "Umumiy ekran vaqti",
     "screenTimeVsYesterday": "kechadan",
@@ -860,12 +858,33 @@
       "details": "Batafsil"
     },
     "rows": {
-      "account": { "title": "Akkount", "subtitle": "Login, parol, telefon" },
-      "sessions": { "title": "Faol sessiyalar", "subtitle": "{count} ta faol sessiya" },
-      "notifications": { "title": "Bildirishnomalar", "subtitle": "Tizim haqida xabarlar" },
-      "language": { "title": "Ilova tili" },
-      "support": { "title": "Qo'llab quvvatlash", "subtitle": "Qayta aloqa" },
-      "about": { "title": "Biz haqimizda", "subtitle": "Kompaniya haqida" }
+      "account": {
+        "title": "Akkount",
+        "subtitle": "Login, parol, telefon"
+      },
+      "children": {
+        "title": "Bolalarim",
+        "subtitle": "{count} ta bola"
+      },
+      "sessions": {
+        "title": "Faol sessiyalar",
+        "subtitle": "{count} ta faol sessiya"
+      },
+      "notifications": {
+        "title": "Bildirishnomalar",
+        "subtitle": "Tizim haqida xabarlar"
+      },
+      "language": {
+        "title": "Ilova tili"
+      },
+      "support": {
+        "title": "Qo'llab quvvatlash",
+        "subtitle": "Qayta aloqa"
+      },
+      "about": {
+        "title": "Biz haqimizda",
+        "subtitle": "Kompaniya haqida"
+      }
     },
     "sections": {
       "profile": "PROFIL",

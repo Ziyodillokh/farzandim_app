@@ -760,9 +760,9 @@ class _StepsCard extends ConsumerWidget {
           Row(
             children: [
               Image.asset(
-                'assets/icons/badge_steps.png',
-                width: 52,
-                height: 52,
+                'assets/icons/ic_steps.png',
+                width: 44,
+                height: 44,
               ),
               const SizedBox(width: 12),
               Expanded(

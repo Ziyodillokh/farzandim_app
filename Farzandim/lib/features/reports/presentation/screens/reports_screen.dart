@@ -19,7 +19,6 @@ import 'package:farzandim/features/gamification/presentation/providers/gamificat
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -27,7 +26,6 @@ import 'package:solar_icons/solar_icons.dart';
 // ════════════ Parvoz tokenlar ════════════
 const _bg = Color(0xFF00060A);
 const _blue = Color(0xFF216BFF);
-const _green = Color(0xFF34C759);
 const _card = Color(0xFF12171E);
 const _chipBg = Color(0xFF1B2128);
 const _fieldBorder = Color(0x1FFFFFFF);
@@ -137,8 +135,11 @@ class _StatGrid extends ConsumerWidget {
             SizedBox(width: 12),
             Expanded(
               child: _StatCard(
-                icon: Icon(SolarIconsBold.questionCircle,
-                    size: 30, color: _green),
+                icon: Image(
+                  image: AssetImage('assets/icons/ic_tests.png'),
+                  width: 32,
+                  height: 32,
+                ),
                 value: '0',
                 label: 'Ishlangan testlar',
               ),
@@ -150,8 +151,8 @@ class _StatGrid extends ConsumerWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: SvgPicture.asset('assets/icons/ic_shoe.svg',
-                    width: 40, height: 40),
+                icon: Image.asset('assets/icons/ic_steps.png',
+                    width: 34, height: 34),
                 value: '0',
                 label: 'Kunlik qadamlar',
               ),

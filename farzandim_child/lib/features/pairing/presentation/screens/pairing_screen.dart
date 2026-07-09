@@ -208,47 +208,51 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
             width: 1.5,
           ),
         ),
-        child: TextField(
-          controller: _controllers[index],
-          focusNode: _focusNodes[index],
-          keyboardType: TextInputType.number,
-          textAlign: TextAlign.center,
-          textAlignVertical: TextAlignVertical.center,
-          inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-          maxLength: 1,
-          cursorColor: Colors.white,
-          style: GoogleFonts.poppins(
-            fontSize: 26,
-            fontWeight: FontWeight.w600,
-            color: Colors.white,
-            height: 1,
-          ),
-          decoration: InputDecoration(
-            counterText: '',
-            border: InputBorder.none,
-            enabledBorder: InputBorder.none,
-            focusedBorder: InputBorder.none,
-            filled: true,
-            fillColor: Colors.transparent,
-            isCollapsed: true,
-            contentPadding: EdgeInsets.zero,
-            hintText: '${index + 1}',
-            hintStyle: GoogleFonts.poppins(
-              fontSize: 22,
-              fontWeight: FontWeight.w500,
-              color: Colors.white.withValues(alpha: 0.28),
+        // Center — collapsed TextField qutining TEPASIGA yopishmasin,
+        // raqam oval markazida tursin.
+        child: Center(
+          child: TextField(
+            controller: _controllers[index],
+            focusNode: _focusNodes[index],
+            keyboardType: TextInputType.number,
+            textAlign: TextAlign.center,
+            textAlignVertical: TextAlignVertical.center,
+            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+            maxLength: 1,
+            cursorColor: Colors.white,
+            style: GoogleFonts.poppins(
+              fontSize: 26,
+              fontWeight: FontWeight.w600,
+              color: Colors.white,
               height: 1,
             ),
+            decoration: InputDecoration(
+              counterText: '',
+              border: InputBorder.none,
+              enabledBorder: InputBorder.none,
+              focusedBorder: InputBorder.none,
+              filled: true,
+              fillColor: Colors.transparent,
+              isCollapsed: true,
+              contentPadding: EdgeInsets.zero,
+              hintText: '${index + 1}',
+              hintStyle: GoogleFonts.poppins(
+                fontSize: 22,
+                fontWeight: FontWeight.w500,
+                color: Colors.white.withValues(alpha: 0.28),
+                height: 1,
+              ),
+            ),
+            onChanged: (value) {
+              if (value.isNotEmpty && index < 4) {
+                _focusNodes[index + 1].requestFocus();
+              } else if (value.isEmpty && index > 0) {
+                _focusNodes[index - 1].requestFocus();
+              }
+              if (_isFull) _onCodeComplete();
+              setState(() {});
+            },
           ),
-          onChanged: (value) {
-            if (value.isNotEmpty && index < 4) {
-              _focusNodes[index + 1].requestFocus();
-            } else if (value.isEmpty && index > 0) {
-              _focusNodes[index - 1].requestFocus();
-            }
-            if (_isFull) _onCodeComplete();
-            setState(() {});
-          },
         ),
       ),
     );

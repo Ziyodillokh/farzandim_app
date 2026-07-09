@@ -17,6 +17,7 @@ import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
@@ -62,10 +63,11 @@ TextStyle _pop(
 /// Bola profilini tahrirlash ekrani ("Shaxsi ma'lumotlar").
 class EditChildScreen extends ConsumerStatefulWidget {
   /// `EditChildScreen` konstruktor.
-  const EditChildScreen({required this.childId, super.key, this.initialChild});
+  const EditChildScreen({super.key, this.childId, this.initialChild});
 
-  /// Tahrirlanadigan bola id'si.
-  final String childId;
+  /// Tahrirlanadigan bola id'si. `null` bo'lsa — YANGI bola qo'shish rejimi
+  /// (o'chirish tugmasi yo'q; saqlangach ulanish varag'i ochiladi).
+  final String? childId;
 
   /// `state.extra` orqali kelgan Child — provider race'ni chetlash uchun.
   final Child? initialChild;
@@ -84,6 +86,8 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
   int? _initialAge; // backenddagi asliy yosh
   bool _birthDateChanged = false; // sana qo'lda o'zgartirildimi
 
+  bool get _isEdit => widget.childId != null;
+
   bool get _isFormValid =>
       _nameController.text.trim().length >= 2 &&
       _selectedGender != null &&
@@ -92,8 +96,9 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
   @override
   void initState() {
     super.initState();
+    if (!_isEdit) return; // add rejimi — forma bo'sh boshlanadi
     final child =
-        ref.read(childByIdProvider(widget.childId)) ?? widget.initialChild;
+        ref.read(childByIdProvider(widget.childId!)) ?? widget.initialChild;
     if (child != null) {
       _nameController.text = child.name;
       _phoneController.text = child.phoneNumber ?? '';
@@ -250,7 +255,11 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
 
   Future<void> _onSave() async {
     if (!_isFormValid || _isSaving) return;
-    final existing = ref.read(childByIdProvider(widget.childId));
+    if (!_isEdit) {
+      await _createChild();
+      return;
+    }
+    final existing = ref.read(childByIdProvider(widget.childId!));
     if (existing == null) {
       context.pop();
       return;
@@ -275,7 +284,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
     );
     final result = await ref
         .read(childActionsProvider.notifier)
-        .updateChild(widget.childId, updated, newPhotoBytes: _photoBytes);
+        .updateChild(widget.childId!, updated, newPhotoBytes: _photoBytes);
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (result.isSuccess) {
@@ -290,8 +299,51 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
     }
   }
 
+  /// YANGI bola yaratish (add rejimi) — muvaffaqiyatda ulanish varag'i
+  /// ochiladi (oila kodi), bola ulanib "Keyingi" bosilsa nazorat sahifasi.
+  Future<void> _createChild() async {
+    setState(() => _isSaving = true);
+    final result = await ref
+        .read(childActionsProvider.notifier)
+        .addChild(
+          name: _nameController.text.trim(),
+          age: _ageFromBirth(_birthDate!),
+          gender: _selectedGender!,
+          region: '',
+          phoneNumber: _phoneController.text.trim(),
+          photoBytes: _photoBytes,
+        );
+    if (!mounted) return;
+    setState(() => _isSaving = false);
+    if (!result.isSuccess) {
+      AppToast.error(
+        context,
+        'childManagement.addEdit.errorPrefix'.tr(
+          namedArgs: {'error': result.error ?? ''},
+        ),
+      );
+      return;
+    }
+    final child = result.data;
+    if (child == null) {
+      context.pop();
+      return;
+    }
+    final proceed = await showConnectChildSheet(
+      context,
+      childId: child.id,
+      initialChild: child,
+    );
+    if (!mounted) return;
+    if (proceed ?? false) {
+      context.go(AppRoutes.controlsSetupPath(child.id), extra: child);
+    } else {
+      context.pop();
+    }
+  }
+
   Future<void> _confirmDelete() async {
-    final child = ref.read(childByIdProvider(widget.childId));
+    final child = ref.read(childByIdProvider(widget.childId!));
     final name = child?.name ?? _nameController.text.trim();
     final confirmed = await showDialog<bool>(
       context: context,
@@ -329,7 +381,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
     setState(() => _isSaving = true);
     final result = await ref
         .read(childActionsProvider.notifier)
-        .deleteChild(widget.childId);
+        .deleteChild(widget.childId!);
     if (!mounted) return;
     setState(() => _isSaving = false);
     if (result.isSuccess) {
@@ -350,7 +402,9 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final existing = ref.watch(childByIdProvider(widget.childId));
+    final existing = _isEdit
+        ? ref.watch(childByIdProvider(widget.childId!))
+        : null;
     final genderLabel = _selectedGender?.label;
     final birthText = _birthDate != null ? _fmtDate(_birthDate!) : null;
 
@@ -362,7 +416,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
           children: [
             // ── Header ──
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 40, 20, 12),
+              padding: const EdgeInsets.fromLTRB(20, 56, 20, 12),
               child: Row(
                 children: [
                   _BackButton(onTap: () {
@@ -374,7 +428,9 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
                   }),
                   const SizedBox(width: 14),
                   Text(
-                    'childManagement.addEdit.personalInfoTitle'.tr(),
+                    _isEdit
+                        ? 'childManagement.addEdit.personalInfoTitle'.tr()
+                        : 'childManagement.addEdit.addTitle'.tr(),
                     style: _unb(22),
                   ),
                 ],
@@ -419,8 +475,10 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
                     hint: 'childManagement.addEdit.phoneHint'.tr(),
                     keyboardType: TextInputType.phone,
                   ),
-                  const SizedBox(height: 24),
-                  _DeleteButton(onTap: _isSaving ? null : _confirmDelete),
+                  if (_isEdit) ...[
+                    const SizedBox(height: 24),
+                    _DeleteButton(onTap: _isSaving ? null : _confirmDelete),
+                  ],
                 ],
               ),
             ),

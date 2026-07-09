@@ -1,29 +1,51 @@
+// ─────────────────────────────────────────────────────────────────────
+// ChildrenManagementScreen — "Bolalarim" (Parvoz dizayn)
+// ─────────────────────────────────────────────────────────────────────
+//
+// Sozlamalar → "Bolalarim" bosilganda ochiladi. Har bola karta: avatar +
+// ism + qurilma • batareya + chevron. Pastda "+ Bola qo'shish". Karta
+// bosilsa "Akkount" varag'i: ism / telefon / tug'ilgan yili (qalam →
+// tahrirlash ekrani) + "Bolani qayta ulash" (ulanish varag'i).
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/features/child_management/presentation/widgets/repair_qr_dialog.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
-import 'package:farzandim/shared/widgets/gradient_background.dart';
-import 'package:farzandim/shared/widgets/primary_button.dart';
-import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-/// Bolalarni boshqarish — ro'yxat, qo'shish, tahrirlash, o'chirish.
-///
-/// Sozlamalar → Bolalarni boshqarish orqali ochiladi.
-///
-/// **List state**: bolalar kartochkalari (avatar, ism, yosh, hudud,
-/// oila kodi pill, popup menu — Tahrirlash/O'chirish), pastdagi
-/// FAB orqali yangi qo'shish.
-/// **Empty state**: markazda hint + "Bola qo'shish" PrimaryButton.
+// ════════════ Parvoz tokenlar ════════════
+const _bg = Color(0xFF00060A);
+const _card = Color(0xFF12171E);
+const _chipBg = Color(0xFF1B2128);
+const _sheetBg = Color(0xFF0E1319);
+const _fieldBorder = Color(0x1FFFFFFF);
+const _dim = Color(0x8CFFFFFF);
+
+TextStyle _unb(
+  double s, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+}) => GoogleFonts.unbounded(fontSize: s, fontWeight: w, color: c, height: 1.25);
+
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.4);
+
+IconData _batteryIcon(int level) {
+  if (level >= 60) return SolarIconsBold.batteryFull;
+  return SolarIconsBold.batteryHalf;
+}
+
+/// Bolalar ro'yxati — sozlamalardagi "Bolalarim" bo'limi.
 class ChildrenManagementScreen extends ConsumerWidget {
   /// `ChildrenManagementScreen` konstruktor.
   const ChildrenManagementScreen({super.key});
@@ -34,122 +56,60 @@ class ChildrenManagementScreen extends ConsumerWidget {
     final children = childrenAsync.valueOrNull ?? const <Child>[];
 
     return Scaffold(
-      backgroundColor: Colors.transparent,
-      body: GradientBackground(
-        child: SafeArea(
-          child: Column(
-            children: [
-              const _Header(),
-              Expanded(
-                child: childrenAsync.when(
-                  data: (children) => children.isEmpty
-                      ? const _EmptyState()
-                      : _ChildrenList(children: children),
-                  loading: () => Center(
-                    child: CircularProgressIndicator(color: AppColors.accent),
-                  ),
-                  error: (e, _) => _ErrorState(
-                    error: e,
-                    onRetry: () => ref.invalidate(childrenProvider),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
-      floatingActionButton: children.isEmpty
-          ? null
-          : FloatingActionButton.extended(
-              onPressed: () => context.push(AppRoutes.addChild),
-              backgroundColor: AppColors.primary,
-              foregroundColor: AppColors.onPrimary,
-              icon: const Icon(SolarIconsBold.addCircle),
-              label: Text(
-                'childManagement.list.addChildFab'.tr(),
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.onPrimary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ),
-    );
-  }
-}
-
-// ════════════════════════ HEADER ════════════════════════
-
-class _Header extends StatelessWidget {
-  const _Header();
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.md,
-        vertical: AppDimensions.sm,
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 48,
-            height: 48,
-            child: IconButton(
-              icon: Icon(
-                SolarIconsOutline.arrowLeft,
-                color: AppColors.textPrimary,
-              ),
-              onPressed: () => context.pop(),
-            ),
-          ),
-          Expanded(
-            child: Center(
-              child: Text(
-                'childManagement.list.title'.tr(),
-                style: AppTextStyles.headlineL.copyWith(fontSize: 20),
-              ),
-            ),
-          ),
-          const SizedBox(width: 48),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════════════════ EMPTY STATE ════════════════════════
-
-class _EmptyState extends StatelessWidget {
-  const _EmptyState();
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: AppDimensions.xl),
+      backgroundColor: _bg,
+      body: SafeArea(
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Icon(
-              SolarIconsBold.smileCircle,
-              size: 80,
-              color: AppColors.textSecondary,
-            ),
-            const SizedBox(height: AppDimensions.md),
-            Text(
-              'childManagement.list.emptyTitle'.tr(),
-              style: AppTextStyles.headlineL.copyWith(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
+            // ── Header ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
+              child: Row(
+                children: [
+                  _BackButton(onTap: () {
+                    if (context.canPop()) {
+                      context.pop();
+                    } else {
+                      context.go(AppRoutes.settings);
+                    }
+                  }),
+                  Expanded(
+                    child: Text(
+                      'settings.rows.children.title'.tr(),
+                      textAlign: TextAlign.center,
+                      style: _unb(22),
+                    ),
+                  ),
+                  const SizedBox(width: 44),
+                ],
               ),
-              textAlign: TextAlign.center,
             ),
-            const SizedBox(height: AppDimensions.lg),
-            PrimaryButton(
-              label: 'childManagement.list.emptyAddButton'.tr(),
-              icon: SolarIconsBold.addCircle,
-              expanded: false,
-              onPressed: () => context.push(AppRoutes.addChild),
+            Expanded(
+              child: ListView(
+                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                children: [
+                  for (final c in children) ...[
+                    _ChildCard(
+                      child: c,
+                      onTap: () => _showAccountSheet(context, c),
+                    ),
+                    const SizedBox(height: 10),
+                  ],
+                  if (children.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 40),
+                      child: Text(
+                        'dashboard.emptyState.message'.tr(),
+                        textAlign: TextAlign.center,
+                        style: _pop(14, c: _dim),
+                      ),
+                    ),
+                  const SizedBox(height: 8),
+                  _AddChildButton(
+                    onTap: () => context.push(AppRoutes.addChild),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
@@ -158,348 +118,339 @@ class _EmptyState extends StatelessWidget {
   }
 }
 
-// ════════════════════════ LIST ════════════════════════
+// ════════════ Bola kartasi ════════════
 
-class _ChildrenList extends StatelessWidget {
-  const _ChildrenList({required this.children});
+class _ChildCard extends StatelessWidget {
+  const _ChildCard({required this.child, required this.onTap});
 
-  final List<Child> children;
+  final Child child;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(
-        AppDimensions.lg,
-        AppDimensions.sm,
-        AppDimensions.lg,
-        // FAB ostidan elementlar ko'rinishi uchun pastdan ko'p padding.
-        96,
+    final battery = child.deviceInfo?.batteryLevel;
+    final rawDevice = (child.deviceModel?.isNotEmpty ?? false)
+        ? child.deviceModel!
+        : (child.deviceInfo?.deviceModel ?? '');
+    final clean = rawDevice.trim();
+    final device = (clean.isEmpty || clean.toLowerCase().contains('null'))
+        ? 'Qurilma ulanmagan'
+        : clean;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: _card,
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: Row(
+          children: [
+            ChildAvatar(child: child, size: 48, showBorder: false),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    child.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(16),
+                  ),
+                  const SizedBox(height: 3),
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          device,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _pop(13, c: _dim),
+                        ),
+                      ),
+                      if (battery != null) ...[
+                        const SizedBox(width: 6),
+                        Text('•', style: _pop(13, c: _dim)),
+                        const SizedBox(width: 6),
+                        Icon(_batteryIcon(battery), size: 15, color: _dim),
+                        const SizedBox(width: 2),
+                        Text('$battery%', style: _pop(13, c: _dim)),
+                      ],
+                    ],
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(SolarIconsOutline.altArrowRight, size: 20, color: _dim),
+          ],
+        ),
       ),
-      itemCount: children.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 12),
-      itemBuilder: (context, index) {
-        return _ChildCard(child: children[index]);
-      },
     );
   }
 }
 
-class _ChildCard extends ConsumerWidget {
-  const _ChildCard({required this.child});
+// ════════════ "+ Bola qo'shish" ════════════
+
+class _AddChildButton extends StatelessWidget {
+  const _AddChildButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: _chipBg,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.add_rounded, size: 22, color: Colors.white),
+            const SizedBox(width: 10),
+            Text("Bola qo'shish", style: _pop(15, w: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════ "Akkount" varag'i (bola kartasi bosilganda) ════════════
+
+void _showAccountSheet(BuildContext context, Child child) {
+  showModalBottomSheet<void>(
+    context: context,
+    isScrollControlled: true,
+    backgroundColor: Colors.transparent,
+    barrierColor: Colors.black.withValues(alpha: 0.55),
+    builder: (_) => _AccountSheet(child: child),
+  );
+}
+
+class _AccountSheet extends StatelessWidget {
+  const _AccountSheet({required this.child});
 
   final Child child;
 
+  /// Backend faqat yoshni saqlaydi — taxminiy tug'ilgan yil ko'rsatiladi.
+  String get _birthLabel {
+    if (child.age <= 0) return '—';
+    final now = DateTime.now();
+    return '01.01.${now.year - child.age}';
+  }
+
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SettingsCard(
-      accent: AppColors.accent,
-      onTap: () => context.push(AppRoutes.editChildPath(child.id)),
-      child: Row(
-        children: [
-          ChildAvatar(child: child, size: 56),
-          const SizedBox(width: AppDimensions.md),
-          Expanded(
+  Widget build(BuildContext context) {
+    final phone = (child.phoneNumber?.isNotEmpty ?? false)
+        ? child.phoneNumber!
+        : '—';
+
+    void openEdit() {
+      Navigator.of(context).pop();
+      context.push(AppRoutes.editChildPath(child.id), extra: child);
+    }
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(28)),
+      child: ColoredBox(
+        color: _sheetBg,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  child.name,
-                  style: AppTextStyles.bodyM.copyWith(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(99),
+                    ),
                   ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 4),
-                Text(
-                  'childManagement.list.ageAndRegion'.tr(
-                    namedArgs: {'age': '${child.age}', 'region': child.region},
+                const SizedBox(height: 16),
+                Center(
+                  child: Text(
+                    'settings.rows.account.title'.tr(),
+                    style: _unb(18, w: FontWeight.w700),
                   ),
-                  style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.textSecondary,
-                    fontSize: 13,
-                  ),
-                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 8),
-                _ConnectionBadge(isConnected: child.isConnected),
-                const SizedBox(height: 8),
-                _FamilyCodePill(code: child.familyCode),
+                const SizedBox(height: 22),
+                _InfoRow(
+                  label: 'Bola ismi',
+                  value: child.name,
+                  onEdit: openEdit,
+                ),
+                const SizedBox(height: 18),
+                _InfoRow(
+                  label: 'Telefon nomeri',
+                  value: phone,
+                  onEdit: openEdit,
+                ),
+                const SizedBox(height: 18),
+                _InfoRow(
+                  label: "Tug'ilgan yili",
+                  value: _birthLabel,
+                  onEdit: openEdit,
+                ),
+                const SizedBox(height: 70),
+                _SheetPillButton(
+                  icon: SolarIconsOutline.qrCode,
+                  label: 'QR kod generatsiya',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    RepairQrDialog.show(
+                      context,
+                      childId: child.id,
+                      childName: child.name,
+                    );
+                  },
+                ),
+                const SizedBox(height: 10),
+                _SheetPillButton(
+                  icon: SolarIconsOutline.restart,
+                  label: 'Bolani qayta ulash',
+                  onTap: () {
+                    Navigator.of(context).pop();
+                    showConnectChildSheet(
+                      context,
+                      childId: child.id,
+                      initialChild: child,
+                    );
+                  },
+                ),
               ],
             ),
           ),
-          _ActionMenu(child: child),
-        ],
+        ),
       ),
     );
   }
 }
 
-/// Yashil/kulrang nuqta + matn — bola qurilmasi (Child App) pairing
-/// qilinganmi yo'qmi. Familiya kodi pill yonida ko'rsatiladi.
-class _ConnectionBadge extends StatelessWidget {
-  const _ConnectionBadge({required this.isConnected});
-  final bool isConnected;
+/// Sarlavha + qiymat + qalam (tahrirlash) qatori.
+class _InfoRow extends StatelessWidget {
+  const _InfoRow({
+    required this.label,
+    required this.value,
+    required this.onEdit,
+  });
+
+  final String label;
+  final String value;
+  final VoidCallback onEdit;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
-      mainAxisSize: MainAxisSize.min,
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          width: 8,
-          height: 8,
-          decoration: BoxDecoration(
-            color: isConnected ? AppColors.success : AppColors.textTertiary,
-            shape: BoxShape.circle,
-            boxShadow: isConnected
-                ? [
-                    BoxShadow(
-                      color: AppColors.success.withValues(alpha: 0.4),
-                      blurRadius: 8,
-                      spreadRadius: 1,
-                    ),
-                  ]
-                : null,
-          ),
-        ),
-        const SizedBox(width: 6),
-        Text(
-          isConnected
-              ? 'childManagement.list.connected'.tr()
-              : 'childManagement.list.disconnected'.tr(),
-          style: AppTextStyles.bodyS.copyWith(
-            fontSize: 13,
-            color: isConnected ? AppColors.success : AppColors.textSecondary,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _FamilyCodePill extends StatelessWidget {
-  const _FamilyCodePill({required this.code});
-  final String code;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.primary,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusPill),
-      ),
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(SolarIconsBold.tag, size: 12, color: AppColors.onPrimary),
-          const SizedBox(width: 4),
-          Text(
-            code,
-            style: AppTextStyles.label.copyWith(
-              color: AppColors.onPrimary,
-              fontWeight: FontWeight.w700,
-              fontFamily: 'monospace',
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ActionMenu extends ConsumerWidget {
-  const _ActionMenu({required this.child});
-
-  final Child child;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return PopupMenuButton<String>(
-      icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
-      color: AppColors.surfaceVariant,
-      onSelected: (action) async {
-        switch (action) {
-          case 'edit':
-            await context.push(AppRoutes.editChildPath(child.id));
-          case 'repair':
-            await RepairQrDialog.show(
-              context,
-              childId: child.id,
-              childName: child.name,
-            );
-          case 'delete':
-            await _confirmDelete(context, ref, child);
-        }
-      },
-      itemBuilder: (context) => [
-        PopupMenuItem<String>(
-          value: 'edit',
-          child: Row(
-            children: [
-              Icon(SolarIconsBold.pen, size: 20, color: AppColors.textPrimary),
-              const SizedBox(width: 12),
-              Text(
-                'childManagement.list.editAction'.tr(),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.textPrimary,
-                ),
-              ),
-            ],
-          ),
-        ),
-        // Qayta ulash — bola telefoni o'zgargan / app o'chgan holatlar
-        // uchun. QR kod 45 sek amal qiladi.
-        PopupMenuItem<String>(
-          value: 'repair',
-          child: Row(
-            children: [
-              Icon(SolarIconsBold.qrCode, size: 20, color: AppColors.primary),
-              const SizedBox(width: 12),
-              Text(
-                'childManagement.list.repairAction'.tr(),
-                style: AppTextStyles.bodyS.copyWith(
-                  color: AppColors.primary,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-        ),
-        PopupMenuItem<String>(
-          value: 'delete',
-          child: Row(
-            children: [
-              Icon(
-                SolarIconsBold.trashBinMinimalistic,
-                size: 20,
-                color: AppColors.error,
-              ),
-              const SizedBox(width: 12),
-              Text(
-                'childManagement.list.deleteAction'.tr(),
-                style: AppTextStyles.bodyS.copyWith(color: AppColors.error),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Future<void> _confirmDelete(
-    BuildContext context,
-    WidgetRef ref,
-    Child child,
-  ) async {
-    final confirmed = await showDialog<bool>(
-      context: context,
-      builder: (_) => AlertDialog(
-        backgroundColor: AppColors.surface,
-        title: Text(
-          'childManagement.list.deleteDialog.title'.tr(),
-          style: AppTextStyles.headlineL.copyWith(fontSize: 18),
-        ),
-        content: Text(
-          'childManagement.list.deleteDialog.content'.tr(
-            namedArgs: {'name': child.name},
-          ),
-          style: AppTextStyles.bodyS.copyWith(
-            color: AppColors.textSecondary,
-            height: 1.4,
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: Text(
-              'childManagement.list.deleteDialog.cancel'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: Text(
-              'childManagement.list.deleteDialog.delete'.tr(),
-              style: AppTextStyles.bodyM.copyWith(
-                color: AppColors.error,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-
-    if (!(confirmed ?? false)) return;
-    final result = await ref
-        .read(childActionsProvider.notifier)
-        .deleteChild(child.id);
-    if (!context.mounted) return;
-
-    if (result.isSuccess) {
-      AppToast.success(
-        context,
-        'childManagement.list.deletedSnack'.tr(namedArgs: {'name': child.name}),
-      );
-    } else {
-      AppToast.error(
-        context,
-        'childManagement.list.errorPrefix'.tr(
-          namedArgs: {'error': result.error ?? ''},
-        ),
-      );
-    }
-  }
-}
-
-/// Firestore xato bo'lganda ko'rsatiladigan retry UI.
-class _ErrorState extends StatelessWidget {
-  const _ErrorState({required this.error, required this.onRetry});
-
-  final Object error;
-  final VoidCallback onRetry;
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(AppDimensions.lg),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+        Text(label, style: _pop(13, c: _dim)),
+        const SizedBox(height: 4),
+        Row(
           children: [
-            Icon(SolarIconsBold.dangerCircle, size: 56, color: AppColors.error),
-            const SizedBox(height: AppDimensions.md),
-            Text(
-              'childManagement.list.errorTitle'.tr(),
-              style: AppTextStyles.bodyM.copyWith(fontWeight: FontWeight.w600),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: 4),
-            Text(
-              error.toString(),
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textSecondary,
-              ),
-              textAlign: TextAlign.center,
-            ),
-            const SizedBox(height: AppDimensions.md),
-            TextButton(
-              onPressed: onRetry,
+            Expanded(
               child: Text(
-                'common.retry'.tr(),
-                style: AppTextStyles.bodyM.copyWith(
-                  color: AppColors.accent,
-                  fontWeight: FontWeight.w600,
-                ),
+                value,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _unb(17, w: FontWeight.w700),
+              ),
+            ),
+            GestureDetector(
+              onTap: onEdit,
+              behavior: HitTestBehavior.opaque,
+              child: const Padding(
+                padding: EdgeInsets.all(4),
+                child: Icon(SolarIconsBold.pen, size: 20, color: Colors.white),
               ),
             ),
           ],
+        ),
+        const SizedBox(height: 12),
+        const Divider(height: 1, thickness: 1, color: Color(0x14FFFFFF)),
+      ],
+    );
+  }
+}
+
+/// Varaq pastidagi pill tugma (QR generatsiya / qayta ulash).
+class _SheetPillButton extends StatelessWidget {
+  const _SheetPillButton({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 56,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: _chipBg,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 20, color: Colors.white),
+            const SizedBox(width: 10),
+            Text(label, style: _pop(15, w: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════ Orqaga tugmasi ════════════
+
+class _BackButton extends StatelessWidget {
+  const _BackButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: _chipBg,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: const Icon(
+          SolarIconsOutline.arrowLeft,
+          size: 22,
+          color: Colors.white,
         ),
       ),
     );

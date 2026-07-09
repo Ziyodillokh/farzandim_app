@@ -27,7 +27,6 @@ import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart
 import 'package:farzandim/features/chat/presentation/screens/chat_detail_screen.dart';
 import 'package:farzandim/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
-import 'package:farzandim/features/child_management/presentation/screens/add_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/child_settings_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/children_management_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/controls_setup_screen.dart';
@@ -283,7 +282,7 @@ List<RouteBase> buildAppRoutes() {
     // Yangi bola qo'shish formasi.
     GoRoute(
       path: AppRoutes.addChild,
-      pageBuilder: (context, state) => _slidePage(const AddChildScreen()),
+      pageBuilder: (context, state) => _slidePage(const EditChildScreen()),
     ),
 
     // Bolani tahrirlash — "Shaxsi ma'lumotlar" ekrani.
@@ -291,7 +290,7 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.editChildPattern,
       pageBuilder: (context, state) => _slidePage(
         EditChildScreen(
-          childId: state.pathParameters['id']!,
+          childId: state.pathParameters['id'],
           initialChild: state.extra is Child ? state.extra! as Child : null,
         ),
       ),

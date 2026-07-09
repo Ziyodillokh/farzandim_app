@@ -277,9 +277,7 @@
     "scheduleTitle": "Daily routine",
     "comingSoon": "Coming soon",
     "screenTimeLabel": "Screen time",
-
     "screenTimeEmpty": "Apps will appear once the device connects",
-
     "leaderboardEmpty": "Leaderboard not available yet",
     "screenTimeTotal": "Total screen time",
     "screenTimeVsYesterday": "vs yesterday",
@@ -860,12 +858,33 @@
       "details": "Learn more"
     },
     "rows": {
-      "account": { "title": "Account", "subtitle": "Login, password, phone" },
-      "sessions": { "title": "Active sessions", "subtitle": "{count} active sessions" },
-      "notifications": { "title": "Notifications", "subtitle": "System messages" },
-      "language": { "title": "App language" },
-      "support": { "title": "Support", "subtitle": "Feedback" },
-      "about": { "title": "About us", "subtitle": "About the company" }
+      "account": {
+        "title": "Account",
+        "subtitle": "Login, password, phone"
+      },
+      "children": {
+        "title": "My children",
+        "subtitle": "{count} children"
+      },
+      "sessions": {
+        "title": "Active sessions",
+        "subtitle": "{count} active sessions"
+      },
+      "notifications": {
+        "title": "Notifications",
+        "subtitle": "System messages"
+      },
+      "language": {
+        "title": "App language"
+      },
+      "support": {
+        "title": "Support",
+        "subtitle": "Feedback"
+      },
+      "about": {
+        "title": "About us",
+        "subtitle": "About the company"
+      }
     },
     "sections": {
       "profile": "PROFILE",

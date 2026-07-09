@@ -159,7 +159,8 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const SizedBox(height: 8),
+                  // Figma: sarlavha tepadan aniq pastroqda boshlanadi.
+                  const SizedBox(height: 56),
                   Text(
                     'permissionSetup.title'.tr(),
                     style: GoogleFonts.unbounded(
@@ -169,7 +170,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                       letterSpacing: -0.6,
                     ),
                   ),
-                  const SizedBox(height: 8),
+                  const SizedBox(height: 12),
                   Text(
                     'permissionSetup.subtitle'.tr(),
                     style: GoogleFonts.poppins(
@@ -178,7 +179,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                       color: _dim,
                     ),
                   ),
-                  const SizedBox(height: 22),
+                  const SizedBox(height: 26),
                   Expanded(
                     child: ListView(
                       padding: EdgeInsets.zero,

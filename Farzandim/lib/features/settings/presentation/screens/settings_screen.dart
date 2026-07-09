@@ -9,6 +9,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/profile/presentation/screens/profile_screen.dart';
 import 'package:farzandim/features/settings/presentation/providers/language_provider.dart';
 import 'package:farzandim/features/settings/presentation/providers/sessions_provider.dart';
@@ -56,6 +57,9 @@ class SettingsScreen extends ConsumerWidget {
     final sessionCount = ref
         .watch(sessionsProvider)
         .maybeWhen(data: (list) => list.length, orElse: () => 0);
+    final childCount = ref
+        .watch(childrenProvider)
+        .maybeWhen(data: (list) => list.length, orElse: () => 0);
     final langLabel = AppLanguage.fromCode(context.locale.languageCode).label;
 
     return Scaffold(
@@ -78,6 +82,15 @@ class SettingsScreen extends ConsumerWidget {
                       title: 'settings.rows.account.title'.tr(),
                       subtitle: 'settings.rows.account.subtitle'.tr(),
                       onTap: () => showAccountSheet(context),
+                    ),
+                    const SizedBox(height: 4),
+                    _SettingRow(
+                      icon: SolarIconsBold.usersGroupRounded,
+                      title: 'settings.rows.children.title'.tr(),
+                      subtitle: 'settings.rows.children.subtitle'.tr(
+                        namedArgs: {'count': '$childCount'},
+                      ),
+                      onTap: () => context.push(AppRoutes.settingsChildren),
                     ),
                     const SizedBox(height: 4),
                     _SettingRow(

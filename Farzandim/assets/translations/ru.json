@@ -277,9 +277,7 @@
     "scheduleTitle": "Распорядок дня",
     "comingSoon": "Скоро",
     "screenTimeLabel": "Экранное время",
-
     "screenTimeEmpty": "Приложения появятся после подключения устройства",
-
     "leaderboardEmpty": "Рейтинг пока недоступен",
     "screenTimeTotal": "Общее экранное время",
     "screenTimeVsYesterday": "со вчера",
@@ -860,12 +858,33 @@
       "details": "Подробнее"
     },
     "rows": {
-      "account": { "title": "Аккаунт", "subtitle": "Логин, пароль, телефон" },
-      "sessions": { "title": "Активные сессии", "subtitle": "{count} активных сессий" },
-      "notifications": { "title": "Уведомления", "subtitle": "Системные сообщения" },
-      "language": { "title": "Язык приложения" },
-      "support": { "title": "Поддержка", "subtitle": "Обратная связь" },
-      "about": { "title": "О нас", "subtitle": "О компании" }
+      "account": {
+        "title": "Аккаунт",
+        "subtitle": "Логин, пароль, телефон"
+      },
+      "children": {
+        "title": "Мои дети",
+        "subtitle": "Детей: {count}"
+      },
+      "sessions": {
+        "title": "Активные сессии",
+        "subtitle": "{count} активных сессий"
+      },
+      "notifications": {
+        "title": "Уведомления",
+        "subtitle": "Системные сообщения"
+      },
+      "language": {
+        "title": "Язык приложения"
+      },
+      "support": {
+        "title": "Поддержка",
+        "subtitle": "Обратная связь"
+      },
+      "about": {
+        "title": "О нас",
+        "subtitle": "О компании"
+      }
     },
     "sections": {
       "profile": "ПРОФИЛЬ",

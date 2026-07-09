@@ -9,6 +9,7 @@ import 'package:farzandim_child/features/app_restrictions/data/services/step_cou
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_sync_service.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 final usageStatsServiceProvider = Provider<UsageStatsService>((ref) {
   return UsageStatsService();
@@ -56,4 +57,16 @@ final stepCounterServiceProvider = Provider<StepCounterService?>((ref) {
   );
   ref.onDispose(service.dispose);
   return service;
+});
+
+/// Bugungi qadamlar soni — StepCounterService yozgan SharedPreferences
+/// keshidan o'qiladi (dashboard stat chipi uchun). Sana UTC+5 bo'yicha
+/// tekshiriladi: kesh boshqa kunniki bo'lsa 0 qaytadi.
+final todayStepsProvider = FutureProvider<int>((ref) async {
+  final prefs = await SharedPreferences.getInstance();
+  final d = DateTime.now().toUtc().add(const Duration(hours: 5));
+  String two(int v) => v.toString().padLeft(2, '0');
+  final todayKey = '${d.year}-${two(d.month)}-${two(d.day)}';
+  if (prefs.getString('step.todayDate.v1') != todayKey) return 0;
+  return prefs.getInt('step.todaySteps.v1') ?? 0;
 });
