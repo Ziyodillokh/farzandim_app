@@ -21,8 +21,9 @@ import 'dart:ui' show ImageFilter;
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
-import 'package:farzandim_child/features/books/data/models/book_model.dart';
-import 'package:farzandim_child/features/books/presentation/providers/books_providers.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
+import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
@@ -36,6 +37,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Figma tokenlar ════════════
 const _bg = Color(0xFF00060A); // sahifa foni
@@ -175,17 +177,17 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
           onRefresh: () async => _refresh(),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(16, 10, 16, 122 + bottomInset),
+            padding: EdgeInsets.fromLTRB(16, 18, 16, 122 + bottomInset),
             children: const [
               UpdateBanner(),
               _Header(),
-              SizedBox(height: 16),
+              SizedBox(height: 14),
               _StatChipsRow(),
-              SizedBox(height: 12),
+              SizedBox(height: 8),
               _Banner(),
-              SizedBox(height: 16),
-              _BooksSection(),
-              SizedBox(height: 20),
+              SizedBox(height: 10),
+              _AudiobooksSection(),
+              SizedBox(height: 14),
               _VideosSection(),
             ],
           ),
@@ -209,12 +211,12 @@ class _Header extends ConsumerWidget {
           child: Text('Asosiy', style: _unb(24, w: FontWeight.w500, ls: -0.72)),
         ),
         _SquareIconButton(
-          icon: Icons.chat_bubble_rounded,
+          icon: SolarIconsBold.chatRoundLine,
           onTap: () => context.push('/voice-chat'),
         ),
         const SizedBox(width: 12),
         _SquareIconButton(
-          icon: Icons.notifications_rounded,
+          icon: SolarIconsBold.bellBing,
           showDot: unread > 0,
           onTap: () => context.push('/notifications'),
         ),
@@ -523,14 +525,15 @@ class _Banner extends ConsumerWidget {
   }
 }
 
-// ════════════ "Yangi kitoblar" ════════════
+// ════════════ "Yangi audiokitoblar" ════════════
 
-class _BooksSection extends ConsumerWidget {
-  const _BooksSection();
+class _AudiobooksSection extends ConsumerWidget {
+  const _AudiobooksSection();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final books = ref.watch(recommendedBooksProvider).take(3).toList();
+    // Admin paneldan yuklangan eng oxirgi 3 ta audiokitob (dinamik).
+    final books = ref.watch(newestAudiobooksProvider).take(3).toList();
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
@@ -542,12 +545,12 @@ class _BooksSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(
-            title: 'Yangi kitoblar',
-            onTap: () => context.push('/books'),
+            title: 'Yangi audiokitoblar',
+            onTap: () => context.push('/audiobooks'),
           ),
           const SizedBox(height: 16),
           if (books.isEmpty)
-            // PREVIEW: backend'da kitob yo'q — namunaviy muqovalar.
+            // PREVIEW: backend'da audiokitob yo'q — namunaviy muqovalar.
             const Row(
               children: [
                 Expanded(
@@ -576,7 +579,7 @@ class _BooksSection extends ConsumerWidget {
             Row(
               children: [
                 for (var i = 0; i < books.length; i++) ...[
-                  Expanded(child: _BookCard(book: books[i])),
+                  Expanded(child: _AudiobookCard(book: books[i])),
                   if (i < books.length - 1) const SizedBox(width: 12),
                 ],
               ],
@@ -587,15 +590,16 @@ class _BooksSection extends ConsumerWidget {
   }
 }
 
-class _BookCard extends StatelessWidget {
-  const _BookCard({required this.book});
+class _AudiobookCard extends ConsumerWidget {
+  const _AudiobookCard({required this.book});
 
-  final BookModel book;
+  final AudiobookModel book;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push('/books/pdf', extra: book),
+      // Bosilsa audiokitob o'ynatiladi (MiniAudioPlayer chiqadi).
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       behavior: HitTestBehavior.opaque,
       child: Column(
         children: [
@@ -603,13 +607,16 @@ class _BookCard extends StatelessWidget {
             aspectRatio: 0.74,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: book.hasCover
+              child: book.coverUrl.isNotEmpty
                   ? Image.network(
                       book.coverUrl,
                       fit: BoxFit.cover,
-                      errorBuilder: (_, __, ___) => _CoverFallback(book: book),
+                      errorBuilder: (_, __, ___) => _CoverFallback(
+                        title: book.title,
+                        color: book.coverColor,
+                      ),
                     )
-                  : _CoverFallback(book: book),
+                  : _CoverFallback(title: book.title, color: book.coverColor),
             ),
           ),
           const SizedBox(height: 8),
@@ -638,18 +645,19 @@ class _PricePill extends StatelessWidget {
 }
 
 class _CoverFallback extends StatelessWidget {
-  const _CoverFallback({required this.book});
+  const _CoverFallback({required this.title, required this.color});
 
-  final BookModel book;
+  final String title;
+  final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      color: book.coverColor,
+      color: color,
       alignment: Alignment.center,
       padding: const EdgeInsets.all(8),
       child: Text(
-        book.title,
+        title,
         maxLines: 3,
         overflow: TextOverflow.ellipsis,
         textAlign: TextAlign.center,
@@ -771,9 +779,14 @@ class _VideoThumb extends StatelessWidget {
       height: 199,
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: _panel,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _glassBorder),
+        // Shisha fon (video yuklanmaguncha) + juda nozik chegara.
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [Color(0xFF1C4066), Color(0xFF122A44)],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: const Color(0x14FFFFFF)),
       ),
       child: Stack(
         fit: StackFit.expand,
