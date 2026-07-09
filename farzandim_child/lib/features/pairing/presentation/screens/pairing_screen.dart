@@ -193,67 +193,57 @@ class _PairingScreenState extends ConsumerState<PairingScreen> {
 
   Widget _buildCodeBox(int index, double side) {
     final hasValue = _controllers[index].text.isNotEmpty;
-    final height = side * 1.18; // sal oval (bo'yi eniga nisbatan uzunroq)
-    return SizedBox(
+    final height = side * 1.2; // sal oval (bo'yi eniga nisbatan uzunroq)
+    return Container(
       width: side,
       height: height,
-      child: DecoratedBox(
-        decoration: BoxDecoration(
-          color: Colors.white.withValues(alpha: hasValue ? 0.06 : 0.03),
-          borderRadius: BorderRadius.all(
-            Radius.elliptical(side / 2, height / 2),
-          ),
-          border: Border.all(
-            color: hasValue ? _blue : Colors.white.withValues(alpha: 0.16),
-            width: 1.5,
-          ),
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: hasValue ? 0.06 : 0.03),
+        borderRadius: BorderRadius.all(Radius.elliptical(side / 2, height / 2)),
+        border: Border.all(
+          color: hasValue ? _blue : Colors.white.withValues(alpha: 0.16),
+          width: 1.5,
         ),
-        // Center — collapsed TextField qutining TEPASIGA yopishmasin,
-        // raqam oval markazida tursin.
-        child: Center(
-          child: TextField(
-            controller: _controllers[index],
-            focusNode: _focusNodes[index],
-            keyboardType: TextInputType.number,
-            textAlign: TextAlign.center,
-            textAlignVertical: TextAlignVertical.center,
-            inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-            maxLength: 1,
-            cursorColor: Colors.white,
-            style: GoogleFonts.poppins(
-              fontSize: 26,
-              fontWeight: FontWeight.w600,
-              color: Colors.white,
-              height: 1,
-            ),
-            decoration: InputDecoration(
-              counterText: '',
-              border: InputBorder.none,
-              enabledBorder: InputBorder.none,
-              focusedBorder: InputBorder.none,
-              filled: true,
-              fillColor: Colors.transparent,
-              isCollapsed: true,
-              contentPadding: EdgeInsets.zero,
-              hintText: '${index + 1}',
-              hintStyle: GoogleFonts.poppins(
-                fontSize: 22,
-                fontWeight: FontWeight.w500,
-                color: Colors.white.withValues(alpha: 0.28),
-                height: 1,
-              ),
-            ),
-            onChanged: (value) {
-              if (value.isNotEmpty && index < 4) {
-                _focusNodes[index + 1].requestFocus();
-              } else if (value.isEmpty && index > 0) {
-                _focusNodes[index - 1].requestFocus();
-              }
-              if (_isFull) _onCodeComplete();
-              setState(() {});
-            },
-          ),
+      ),
+      // TextField butun ovalni to'ldiradi (hamma joyi bosiladi) + matn aniq
+      // markazda (expands + textAlignVertical.center). Default raqam yo'q.
+      child: TextField(
+        controller: _controllers[index],
+        focusNode: _focusNodes[index],
+        keyboardType: TextInputType.number,
+        textAlign: TextAlign.center,
+        textAlignVertical: TextAlignVertical.center,
+        expands: true,
+        maxLines: null,
+        minLines: null,
+        inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+        maxLength: 1,
+        cursorColor: Colors.white,
+        style: GoogleFonts.poppins(
+          fontSize: 26,
+          fontWeight: FontWeight.w600,
+          color: Colors.white,
+          height: 1,
         ),
+        decoration: const InputDecoration(
+          counterText: '',
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          filled: true,
+          fillColor: Colors.transparent,
+          isCollapsed: true,
+          contentPadding: EdgeInsets.zero,
+        ),
+        onChanged: (value) {
+          if (value.isNotEmpty && index < 4) {
+            _focusNodes[index + 1].requestFocus();
+          } else if (value.isEmpty && index > 0) {
+            _focusNodes[index - 1].requestFocus();
+          }
+          if (_isFull) _onCodeComplete();
+          setState(() {});
+        },
       ),
     );
   }
@@ -324,11 +314,14 @@ class _GlassButton extends StatelessWidget {
           ),
           border: Border.all(color: const Color(0x1FFFFFFF), width: 1.2),
         ),
-        child: Stack(
-          children: [
-            // Yozuv — tugma markazida.
-            Center(
-              child: Text(
+        // Ikon + yozuv guruh sifatida markazda (ikon yozuv YONIDA).
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: Colors.white),
+              const SizedBox(width: 10),
+              Text(
                 label,
                 style: GoogleFonts.poppins(
                   fontSize: 16,
@@ -336,16 +329,8 @@ class _GlassButton extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-            ),
-            // Ikon — chap tomonda (yozuvni markazdan siljitmaydi).
-            Align(
-              alignment: Alignment.centerLeft,
-              child: Padding(
-                padding: const EdgeInsets.only(left: 28),
-                child: Icon(icon, size: 20, color: Colors.white),
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
