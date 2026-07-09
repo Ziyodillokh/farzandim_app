@@ -120,20 +120,37 @@ class _OnboardingScreenState extends ConsumerState<OnboardingScreen> {
                 ),
                 const SizedBox(height: 20),
                 Expanded(
-                  child: GridView.count(
-                    crossAxisCount: 2,
-                    childAspectRatio: 2.9,
-                    crossAxisSpacing: 12,
-                    mainAxisSpacing: 12,
-                    padding: const EdgeInsets.fromLTRB(24, 2, 24, 8),
-                    children: [
-                      for (final o in kInterestOptions)
-                        _InterestChip(
-                          option: o,
-                          selected: _selectedInterests.contains(o.id),
-                          onTap: () => _toggleInterest(o.id),
-                        ),
-                    ],
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 24),
+                    child: LayoutBuilder(
+                      builder: (context, c) {
+                        const cols = 2;
+                        const crossGap = 12.0;
+                        const pillH = 56.0;
+                        final rows = (kInterestOptions.length / cols).ceil();
+                        final pillW = (c.maxWidth - crossGap) / cols;
+                        // Qatorlarni mavjud balandlikka taqsimlaymiz — dizayndagidek
+                        // ixcham kataklar bo'shliqni to'ldiradi (ortiqcha bo'sh joy yo'q).
+                        final free = c.maxHeight - rows * pillH;
+                        final mainGap = (free / (rows - 1)).clamp(14.0, 30.0);
+                        return GridView.count(
+                          crossAxisCount: cols,
+                          childAspectRatio: pillW / pillH,
+                          crossAxisSpacing: crossGap,
+                          mainAxisSpacing: mainGap,
+                          physics: const ClampingScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          children: [
+                            for (final o in kInterestOptions)
+                              _InterestChip(
+                                option: o,
+                                selected: _selectedInterests.contains(o.id),
+                                onTap: () => _toggleInterest(o.id),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
                   ),
                 ),
                 Padding(

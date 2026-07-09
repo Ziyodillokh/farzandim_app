@@ -17,6 +17,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 class InterestOption {
   const InterestOption({
@@ -48,90 +49,90 @@ class InterestOption {
 /// Onboarding chip grid'da chiqadigan qat'iy ro'yxat.
 /// O'zgartirilsa `_v1` schema buziladi — yangi versiyaga `_v2` qo'shish.
 ///
-/// Tartib rasmga mos (Sayohat, Ovqat, ...). Ikonalar modern Material Symbols
-/// Rounded — bolaga tanish va jonli.
+/// Tartib rasmga mos (Sayohat, Ovqat, ...). Ikonalar — Solar Icon Set (Bold),
+/// dizayn shu oiladan foydalangan (Parent App bilan bir xil).
 const List<InterestOption> kInterestOptions = [
   InterestOption(
     id: 'travel',
     labelKey: 'interests.travel',
-    icon: Icons.luggage_rounded,
+    icon: SolarIconsBold.suitcase,
     accent: Color(0xFF0EA5E9), // sky
     contentTags: ['travel', 'geography'],
   ),
   InterestOption(
     id: 'food',
     labelKey: 'interests.food',
-    icon: Icons.restaurant_rounded,
+    icon: SolarIconsBold.chefHat,
     accent: Color(0xFFF59E0B), // amber
     contentTags: ['food', 'cooking'],
   ),
   InterestOption(
     id: 'games',
     labelKey: 'interests.games',
-    icon: Icons.sports_esports_rounded,
+    icon: SolarIconsBold.gamepad,
     accent: Color(0xFF8B5CF6), // violet
     contentTags: ['game', 'games'],
   ),
   InterestOption(
     id: 'science',
     labelKey: 'interests.science',
-    icon: Icons.school_rounded,
+    icon: SolarIconsBold.squareAcademicCap,
     accent: Color(0xFF06B6D4), // cyan
     contentTags: ['science', 'fan', 'school'],
   ),
   InterestOption(
     id: 'art',
     labelKey: 'interests.art',
-    icon: Icons.palette_rounded,
+    icon: SolarIconsBold.palette,
     accent: Color(0xFFF43F5E), // rose
     contentTags: ['art', 'culture'],
   ),
   InterestOption(
     id: 'tech',
     labelKey: 'interests.tech',
-    icon: Icons.memory_rounded,
+    icon: SolarIconsBold.cpu,
     accent: Color(0xFF14B8A6), // teal
     contentTags: ['tech', 'it', 'science'],
   ),
   InterestOption(
     id: 'space',
     labelKey: 'interests.space',
-    icon: Icons.rocket_launch_rounded,
+    icon: SolarIconsBold.rocket,
     accent: Color(0xFF6366F1), // indigo
     contentTags: ['space', 'science'],
   ),
   InterestOption(
     id: 'animals',
     labelKey: 'interests.animals',
-    icon: Icons.pets_rounded,
+    icon: SolarIconsBold.cat,
     accent: Color(0xFF10B981), // emerald
     contentTags: ['animals', 'nature'],
   ),
   InterestOption(
     id: 'music',
     labelKey: 'interests.music',
-    icon: Icons.headphones_rounded,
+    icon: SolarIconsBold.headphonesRound,
     accent: Color(0xFFEC4899), // pink
     contentTags: ['music'],
   ),
   InterestOption(
     id: 'sport',
     labelKey: 'interests.sport',
-    icon: Icons.sports_basketball_rounded,
+    icon: SolarIconsBold.basketball,
     accent: Color(0xFFF97316), // orange
     contentTags: ['sport'],
   ),
   InterestOption(
     id: 'cartoon',
     labelKey: 'interests.cartoon',
-    icon: Icons.movie_rounded,
+    icon: SolarIconsBold.clapperboard,
     accent: Color(0xFFA855F7), // purple
     contentTags: ['cartoon', 'animation'],
   ),
   InterestOption(
     id: 'book',
     labelKey: 'interests.book',
-    icon: Icons.menu_book_rounded,
+    icon: SolarIconsBold.book,
     accent: Color(0xFF3B82F6), // blue
     contentTags: ['book', 'adabiyot', 'tarjima', 'school'],
   ),

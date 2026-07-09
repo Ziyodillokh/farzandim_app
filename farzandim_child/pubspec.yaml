@@ -116,6 +116,10 @@ dependencies:
   shimmer: ^3.0.0
   flutter_svg: ^2.0.10+1
 
+  # solar_icons — onboarding mavzu (interests) ikonlari (Parent App bilan
+  # bir xil Solar Icon Set; dizayn shu oiladan foydalangan).
+  solar_icons: ^0.1.0
+
   # flutter_local_notifications — Parent voice/video push'larida
   # foreground ovoz/vibratsiya (FCM o'zi foreground'da UI ko'rsatmaydi).
   # Sprint 4.4.23.
