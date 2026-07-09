@@ -1,16 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChildBottomNavigation — suzuvchi pill nav (Figma: Asosiy dizayn)
+// ChildBottomNavigation — suzuvchi pill nav (Figma "Main" 1:1)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Tab'lar (chap→o'ng, Figma bilan 1:1):
+// Tab'lar (chap→o'ng):
 //   🏠 Asosiy        — /dashboard
 //   ▶️ Videolar      — /videos
 //   📝 Testlar       — /contests
 //   📖 Audiokitoblar — /audiobooks
 //   👤 Profil        — /profile
 //
-// Faol element — KO'K ikon + label; nofaol — xira. MiniAudioPlayer pill
-// ustida suzadi (audio o'ynayotganda).
+// Bar: frosted #1A1F23@90% + blur, radius 24, chegara #313639, inset 20.
+// Faol tab: OQ ikon + ko'k (#216BFF) glow ortida; nofaol: #A6A8A9.
+// MiniAudioPlayer pill ustida suzadi (audio o'ynayotganda).
+
+import 'dart:ui' show ImageFilter;
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
@@ -21,9 +24,10 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 const _blue = Color(0xFF216BFF);
-const _surface = Color(0xFF10161F);
-const _border = Color(0x1FFFFFFF);
-const _inactive = Color(0x8CFFFFFF);
+const _navBar = Color(0xE61A1F23); // #1A1F23 @ 90%
+const _navBorder = Color(0xFF313639);
+const _inactive = Color(0xFFA6A8A9);
+const _activeIcon = Color(0xFFF9F9F9);
 
 class ChildBottomNavigation extends ConsumerWidget {
   const ChildBottomNavigation({super.key});
@@ -52,61 +56,64 @@ class ChildBottomNavigation extends ConsumerWidget {
       children: [
         const MiniAudioPlayer(),
         Padding(
-          // Suzuvchi: yon 14, pastdan 10 + safe-area (home indikator).
-          padding: EdgeInsets.fromLTRB(14, 0, 14, 10 + bottomInset),
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-            decoration: BoxDecoration(
-              color: _surface,
-              borderRadius: BorderRadius.circular(28),
-              border: Border.all(color: _border),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withValues(alpha: 0.4),
-                  blurRadius: 32,
-                  offset: const Offset(0, 10),
+          // Suzuvchi: yon 14, pastdan 12 + safe-area (home indikator).
+          // "Audiokitoblar" label tor telefonlarda ham to'liq sig'ishi uchun
+          // inset/padding qisqartirilgan.
+          padding: EdgeInsets.fromLTRB(14, 0, 14, 12 + bottomInset),
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(24),
+            child: BackdropFilter(
+              filter: ImageFilter.blur(sigmaX: 10, sigmaY: 10),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
+                decoration: BoxDecoration(
+                  color: _navBar,
+                  borderRadius: BorderRadius.circular(24),
+                  border: Border.all(color: _navBorder),
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                _NavItem(
-                  icon: Icons.home_outlined,
-                  activeIcon: Icons.home_rounded,
-                  label: 'Asosiy',
-                  active: location == '/dashboard',
-                  onTap: () => go('/dashboard'),
+                child: Row(
+                  children: [
+                    _NavItem(
+                      icon: Icons.home_outlined,
+                      activeIcon: Icons.home_rounded,
+                      label: 'Asosiy',
+                      active: location == '/dashboard',
+                      onTap: () => go('/dashboard'),
+                    ),
+                    _NavItem(
+                      icon: Icons.play_circle_outline_rounded,
+                      activeIcon: Icons.play_circle_rounded,
+                      label: 'Videolar',
+                      active:
+                          location == '/videos' || location == '/video-player',
+                      onTap: () => go('/videos'),
+                    ),
+                    _NavItem(
+                      icon: Icons.fact_check_outlined,
+                      activeIcon: Icons.fact_check_rounded,
+                      label: 'Testlar',
+                      active: location == '/contests',
+                      onTap: () => go('/contests'),
+                    ),
+                    _NavItem(
+                      icon: Icons.menu_book_outlined,
+                      activeIcon: Icons.menu_book_rounded,
+                      label: 'Audiokitoblar',
+                      active:
+                          location == '/audiobooks' ||
+                          location == '/audio-player',
+                      onTap: () => go('/audiobooks'),
+                    ),
+                    _NavItem(
+                      icon: Icons.person_outline_rounded,
+                      activeIcon: Icons.person_rounded,
+                      label: 'Profil',
+                      active: location == '/profile',
+                      onTap: () => go('/profile'),
+                    ),
+                  ],
                 ),
-                _NavItem(
-                  icon: Icons.play_circle_outline_rounded,
-                  activeIcon: Icons.play_circle_rounded,
-                  label: 'Videolar',
-                  active: location == '/videos' || location == '/video-player',
-                  onTap: () => go('/videos'),
-                ),
-                _NavItem(
-                  icon: Icons.fact_check_outlined,
-                  activeIcon: Icons.fact_check_rounded,
-                  label: 'Testlar',
-                  active: location == '/contests',
-                  onTap: () => go('/contests'),
-                ),
-                _NavItem(
-                  icon: Icons.menu_book_outlined,
-                  activeIcon: Icons.menu_book_rounded,
-                  label: 'Audiokitoblar',
-                  active:
-                      location == '/audiobooks' || location == '/audio-player',
-                  onTap: () => go('/audiobooks'),
-                ),
-                _NavItem(
-                  icon: Icons.person_outline_rounded,
-                  activeIcon: Icons.person_rounded,
-                  label: 'Profil',
-                  active: location == '/profile',
-                  onTap: () => go('/profile'),
-                ),
-              ],
+              ),
             ),
           ),
         ),
@@ -132,7 +139,6 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = active ? _blue : _inactive;
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -140,27 +146,51 @@ class _NavItem extends StatelessWidget {
           onTap();
         },
         behavior: HitTestBehavior.opaque,
-        child: Container(
-          padding: const EdgeInsets.symmetric(vertical: 8),
-          decoration: active
-              ? BoxDecoration(
-                  color: _blue.withValues(alpha: 0.12),
-                  borderRadius: BorderRadius.circular(20),
-                )
-              : null,
+        child: SizedBox(
+          height: 56,
           child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(active ? (activeIcon ?? icon) : icon, color: color, size: 24),
+              SizedBox(
+                height: 28,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    // Faol tab ortida ko'k glow.
+                    if (active)
+                      ImageFiltered(
+                        imageFilter: ImageFilter.blur(sigmaX: 9, sigmaY: 9),
+                        child: Container(
+                          width: 30,
+                          height: 30,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: _blue.withValues(alpha: 0.65),
+                          ),
+                        ),
+                      ),
+                    Icon(
+                      active ? (activeIcon ?? icon) : icon,
+                      color: active ? _activeIcon : _inactive,
+                      size: 24,
+                    ),
+                  ],
+                ),
+              ),
               const SizedBox(height: 3),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: GoogleFonts.poppins(
-                  fontSize: 9.5,
-                  fontWeight: active ? FontWeight.w600 : FontWeight.w500,
-                  color: color,
+              // FittedBox — tor telefonlarda "Audiokitoblar" kesilmasdan
+              // ozgina kichrayadi (ellipsis o'rniga).
+              FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(
+                  label,
+                  maxLines: 1,
+                  style: GoogleFonts.poppins(
+                    fontSize: 10,
+                    fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                    color: active ? Colors.white : _inactive,
+                  ),
                 ),
               ),
             ],

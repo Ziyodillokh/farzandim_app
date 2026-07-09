@@ -1,19 +1,22 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChildDashboardScreen — "Asosiy" (Figma redizayn, Parvoz ko'k)
+// ChildDashboardScreen — "Asosiy" (Figma "Main" 1:1, Parvoz ko'k)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Tuzilishi (Figma 1:1):
-//   • Header: "Asosiy" + chat + bildirishnoma (qizil nuqta)
-//   • 3 stat chip: 🔥 streak | 👟 qadamlar | 💎 DON balans
-//   • "Yangi testlar" ko'k banner → /contests
-//   • "Yangi kitoblar" karta (3 muqova) → /books
-//   • "Trend videolar" gorizontal lenta → /video-player
+// Tuzilishi (Figma Design6):
+//   • Header: "Asosiy" (Unbounded Medium 24) + chat + bildirishnoma (rounded
+//     kvadrat tugmalar, oq 10% fon)
+//   • 3 stat chip GURUHLANGAN pill (assimetrik burchak) + rangli glow:
+//     🔥 streak (amber) | 👟 qadamlar (ko'k) | 🪙 DON (yashil)
+//   • "Yangi testlar" banner — solid #173654 + "Batafsil" + test rasmi
+//   • "Yangi kitoblar" karta (3 muqova + 250 DON)
+//   • "Trend videolar" gorizontal lenta (thumbnail #173654)
 //
 // Real ma'lumot: gamificationProfileProvider (don/streak), todayStepsProvider,
 // recommendedBooksProvider, topVideosProvider, activeContestsProvider,
-// unreadNotificationsCountProvider. Router/permission guard'lar saqlangan.
+// unreadNotificationsCountProvider. Backend bo'sh bo'lsa PREVIEW kartalar.
 
 import 'dart:async';
+import 'dart:ui' show ImageFilter;
 
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
@@ -34,25 +37,28 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
 
-// ════════════ Parvoz tokenlar (ko'k, pairing/onboarding bilan mos) ════════════
-const _bg = Color(0xFF02060D);
-const _blue = Color(0xFF216BFF);
-const _card = Color(0xFF10161F);
-const _chipBg = Color(0xFF1B2128);
-const _fieldBorder = Color(0x1FFFFFFF);
-const _dim = Color(0x99FFFFFF);
-const _amber = Color(0xFFFF9F1C);
-const _green = Color(0xFF34C759);
+// ════════════ Figma tokenlar ════════════
+const _bg = Color(0xFF00060A); // sahifa foni
+const _blue = Color(0xFF216BFF); // brend / DON badge / glow
+const _glass = Color(0x14FFFFFF); // karta foni — oq ~8%
+const _glassBorder = Color(0x24FFFFFF); // karta chegarasi — oq ~14%
+const _dim = Color(0x99FFFFFF); // oq 60%
+const _muted = Color(0xFFA6A8A9); // xira kulrang (ko'rishlar)
+const _amber = Color(0xFFFFAE00); // streak
+const _stepsBlue = Color(0xFF66B3FF); // qadamlar
+const _coinGreen = Color(0xFF41DD7A); // DON tanga
+const _panel = Color(0xFF173654); // banner / video thumbnail solid
 
 TextStyle _unb(
   double s, {
   FontWeight w = FontWeight.w700,
   Color c = Colors.white,
+  double ls = -0.5,
 }) => GoogleFonts.unbounded(
   fontSize: s,
   fontWeight: w,
   color: c,
-  letterSpacing: -0.4,
+  letterSpacing: ls,
   height: 1.2,
 );
 
@@ -60,7 +66,7 @@ TextStyle _pop(
   double s, {
   FontWeight w = FontWeight.w400,
   Color c = Colors.white,
-}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.4);
 
 String _fmtNum(int v) {
   final s = v.toString();
@@ -165,21 +171,21 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
         bottom: false,
         child: RefreshIndicator(
           color: _blue,
-          backgroundColor: _card,
+          backgroundColor: _panel,
           onRefresh: () async => _refresh(),
           child: ListView(
             physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(20, 12, 20, 120 + bottomInset),
+            padding: EdgeInsets.fromLTRB(16, 10, 16, 122 + bottomInset),
             children: const [
               UpdateBanner(),
               _Header(),
-              SizedBox(height: 18),
+              SizedBox(height: 16),
               _StatChipsRow(),
-              SizedBox(height: 14),
-              _TestsBanner(),
-              SizedBox(height: 18),
+              SizedBox(height: 12),
+              _Banner(),
+              SizedBox(height: 16),
               _BooksSection(),
-              SizedBox(height: 22),
+              SizedBox(height: 20),
               _VideosSection(),
             ],
           ),
@@ -196,17 +202,18 @@ class _Header extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final unread =
-        ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
+    final unread = ref.watch(unreadNotificationsCountProvider).valueOrNull ?? 0;
     return Row(
       children: [
-        Expanded(child: Text('Asosiy', style: _unb(26))),
-        _RoundIconButton(
+        Expanded(
+          child: Text('Asosiy', style: _unb(24, w: FontWeight.w500, ls: -0.72)),
+        ),
+        _SquareIconButton(
           icon: Icons.chat_bubble_rounded,
           onTap: () => context.push('/voice-chat'),
         ),
-        const SizedBox(width: 10),
-        _RoundIconButton(
+        const SizedBox(width: 12),
+        _SquareIconButton(
           icon: Icons.notifications_rounded,
           showDot: unread > 0,
           onTap: () => context.push('/notifications'),
@@ -216,8 +223,8 @@ class _Header extends ConsumerWidget {
   }
 }
 
-class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({
+class _SquareIconButton extends StatelessWidget {
+  const _SquareIconButton({
     required this.icon,
     required this.onTap,
     this.showDot = false,
@@ -233,27 +240,29 @@ class _RoundIconButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
-              color: _chipBg,
-              shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              color: _glass,
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, size: 20, color: Colors.white),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 22, color: Colors.white),
           ),
           if (showDot)
             Positioned(
-              right: 3,
-              top: 3,
+              right: 10,
+              top: 8,
               child: Container(
-                width: 10,
-                height: 10,
+                width: 9,
+                height: 9,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF4D4F),
+                  color: const Color(0xFFFF1616),
                   shape: BoxShape.circle,
-                  border: Border.all(color: _bg, width: 2),
+                  border: Border.all(color: _bg, width: 1.5),
                 ),
               ),
             ),
@@ -263,7 +272,7 @@ class _RoundIconButton extends StatelessWidget {
   }
 }
 
-// ════════════ 3 stat chip (streak / qadamlar / DON) ════════════
+// ════════════ 3 stat chip GURUHLANGAN (streak / qadamlar / DON) ════════════
 
 class _StatChipsRow extends ConsumerWidget {
   const _StatChipsRow();
@@ -271,53 +280,66 @@ class _StatChipsRow extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
-    // PREVIEW: real qiymat 0 bo'lsa Figma'dagi namuna ko'rsatiladi
-    // (bola faollik boshlagach realga avtomatik almashadi).
+    // PREVIEW: real qiymat 0 bo'lsa Figma'dagi namuna (bola faollik boshlagach
+    // avtomatik realga almashadi).
     final rawStreak = profile?.streak ?? 0;
     final rawDon = profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 7;
     final don = rawDon > 0 ? rawDon : 1250;
     final steps = rawSteps > 0 ? rawSteps : 10000;
+
+    const outer = Radius.circular(24);
+    const inner = Radius.circular(12);
     return Row(
       children: [
         Expanded(
           child: _StatChip(
             tint: _amber,
+            radii: const BorderRadius.only(
+              topLeft: outer,
+              bottomLeft: outer,
+              topRight: inner,
+              bottomRight: inner,
+            ),
             icon: const Icon(
               Icons.local_fire_department_rounded,
-              size: 22,
+              size: 26,
               color: _amber,
             ),
             value: '$streak kun',
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         Expanded(
           child: _StatChip(
-            tint: _blue,
+            tint: _stepsBlue,
+            radii: const BorderRadius.all(inner),
             icon: Image.asset(
               'assets/icons/ic_steps.png',
-              width: 22,
-              height: 22,
+              width: 26,
+              height: 26,
             ),
             value: _fmtNum(steps),
           ),
         ),
-        const SizedBox(width: 10),
+        const SizedBox(width: 6),
         Expanded(
           child: _StatChip(
-            tint: _green,
-            icon: const Icon(Icons.token_rounded, size: 22, color: _green),
-            value: _fmtNum(don),
-            trailing: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
-              decoration: BoxDecoration(
-                color: _blue,
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: _DonLabel(),
+            tint: _coinGreen,
+            radii: const BorderRadius.only(
+              topRight: outer,
+              bottomRight: outer,
+              topLeft: inner,
+              bottomLeft: inner,
             ),
+            icon: const Icon(
+              Icons.monetization_on_rounded,
+              size: 26,
+              color: _coinGreen,
+            ),
+            value: _fmtNum(don),
+            trailing: const _DonBadge(),
           ),
         ),
       ],
@@ -325,22 +347,33 @@ class _StatChipsRow extends ConsumerWidget {
   }
 }
 
-class _DonLabel extends StatelessWidget {
+class _DonBadge extends StatelessWidget {
+  const _DonBadge();
+
   @override
   Widget build(BuildContext context) {
-    return Text('DON', style: _pop(9, w: FontWeight.w700));
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 1),
+      decoration: BoxDecoration(
+        color: _blue,
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Text('DON', style: _pop(9, w: FontWeight.w700)),
+    );
   }
 }
 
 class _StatChip extends StatelessWidget {
   const _StatChip({
     required this.tint,
+    required this.radii,
     required this.icon,
     required this.value,
     this.trailing,
   });
 
   final Color tint;
+  final BorderRadius radii;
   final Widget icon;
   final String value;
   final Widget? trailing;
@@ -348,32 +381,46 @@ class _StatChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
+      height: 90,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: Color.alphaBlend(tint.withValues(alpha: 0.10), _card),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: tint.withValues(alpha: 0.25)),
+        color: _glass,
+        borderRadius: radii,
+        border: Border.all(color: _glassBorder),
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Stack(
         children: [
-          icon,
-          const SizedBox(height: 10),
-          Row(
-            children: [
-              Flexible(
-                child: Text(
-                  value,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _unb(15, w: FontWeight.w700),
+          // Rangli glow orb (ikon ortida).
+          Positioned(left: -4, top: -4, child: _GlowOrb(color: tint)),
+          Positioned(right: -10, bottom: -12, child: _GlowOrb(color: tint)),
+          Padding(
+            padding: const EdgeInsets.all(12),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                icon,
+                Row(
+                  children: [
+                    Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        alignment: Alignment.centerLeft,
+                        child: Text(
+                          value,
+                          maxLines: 1,
+                          style: _unb(15, w: FontWeight.w600, ls: -0.48),
+                        ),
+                      ),
+                    ),
+                    if (trailing != null) ...[
+                      const SizedBox(width: 4),
+                      trailing!,
+                    ],
+                  ],
                 ),
-              ),
-              if (trailing != null) ...[
-                const SizedBox(width: 5),
-                trailing!,
               ],
-            ],
+            ),
           ),
         ],
       ),
@@ -381,10 +428,32 @@ class _StatChip extends StatelessWidget {
   }
 }
 
-// ════════════ "Yangi testlar" banner ════════════
+/// Yumshoq rangli glow (stat ikon / banner bezagi ortida).
+class _GlowOrb extends StatelessWidget {
+  const _GlowOrb({required this.color});
 
-class _TestsBanner extends ConsumerWidget {
-  const _TestsBanner();
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return ImageFiltered(
+      imageFilter: ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+      child: Container(
+        width: 34,
+        height: 34,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: color.withValues(alpha: 0.45),
+        ),
+      ),
+    );
+  }
+}
+
+// ════════════ "Yangi testlar" banner (solid #173654) ════════════
+
+class _Banner extends ConsumerWidget {
+  const _Banner();
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -396,45 +465,53 @@ class _TestsBanner extends ConsumerWidget {
       onTap: () => context.push('/contests'),
       behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 150,
+        height: 164,
+        clipBehavior: Clip.antiAlias,
         decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E4FBF), Color(0xFF12294F)],
-          ),
-          border: Border.all(color: const Color(0x33FFFFFF)),
+          color: _panel,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _glassBorder),
         ),
         child: Stack(
-          clipBehavior: Clip.none,
           children: [
-            // O'ngdagi olti burchakli test belgisi.
+            // O'ngdagi test rasmi (dekorativ, chekkadan chiqadi).
             Positioned(
-              right: 14,
+              right: -8,
               top: 18,
-              child: _HexBadge(),
+              child: Opacity(
+                opacity: 0.9,
+                child: Image.asset(
+                  'assets/icons/ic_tests.png',
+                  width: 128,
+                  height: 128,
+                ),
+              ),
             ),
             Padding(
-              padding: const EdgeInsets.fromLTRB(18, 18, 130, 16),
+              padding: const EdgeInsets.fromLTRB(16, 14, 120, 14),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Yangi testlar', style: _unb(20)),
+                  Text(
+                    'Yangi testlar',
+                    style: _unb(20, w: FontWeight.w600, ls: -0.6),
+                  ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: _pop(13, c: _dim)),
+                  Text(subtitle, style: _pop(14, c: _dim)),
                   const Spacer(),
                   Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 16,
-                      vertical: 8,
-                    ),
+                    height: 32,
+                    padding: const EdgeInsets.symmetric(horizontal: 18),
+                    alignment: Alignment.center,
                     decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.14),
+                      color: _glass,
                       borderRadius: BorderRadius.circular(999),
-                      border: Border.all(color: const Color(0x40FFFFFF)),
+                      border: Border.all(color: _glassBorder),
                     ),
-                    child: Text('Batafsil', style: _pop(13, w: FontWeight.w500)),
+                    child: Text(
+                      'Batafsil',
+                      style: _pop(12, w: FontWeight.w500),
+                    ),
                   ),
                 ],
               ),
@@ -446,56 +523,6 @@ class _TestsBanner extends ConsumerWidget {
   }
 }
 
-/// Olti burchakli ko'k nishon + test-qalam ikoni (banner bezagi).
-class _HexBadge extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: 112,
-      height: 118,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          ClipPath(
-            clipper: _HexClipper(),
-            child: Container(
-              width: 108,
-              height: 116,
-              decoration: const BoxDecoration(
-                gradient: LinearGradient(
-                  begin: Alignment.topCenter,
-                  end: Alignment.bottomCenter,
-                  colors: [Color(0xFF4D8DFF), Color(0xFF1B54D9)],
-                ),
-              ),
-            ),
-          ),
-          Image.asset('assets/icons/ic_tests.png', width: 46, height: 46),
-        ],
-      ),
-    );
-  }
-}
-
-class _HexClipper extends CustomClipper<Path> {
-  @override
-  Path getClip(Size s) {
-    final w = s.width;
-    final h = s.height;
-    return Path()
-      ..moveTo(w * 0.5, 0)
-      ..lineTo(w, h * 0.25)
-      ..lineTo(w, h * 0.75)
-      ..lineTo(w * 0.5, h)
-      ..lineTo(0, h * 0.75)
-      ..lineTo(0, h * 0.25)
-      ..close();
-  }
-
-  @override
-  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
-}
-
 // ════════════ "Yangi kitoblar" ════════════
 
 class _BooksSection extends ConsumerWidget {
@@ -505,11 +532,11 @@ class _BooksSection extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final books = ref.watch(recommendedBooksProvider).take(3).toList();
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: _card,
+        color: _glass,
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: _fieldBorder),
+        border: Border.all(color: _glassBorder),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -518,7 +545,7 @@ class _BooksSection extends ConsumerWidget {
             title: 'Yangi kitoblar',
             onTap: () => context.push('/books'),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
           if (books.isEmpty)
             // PREVIEW: backend'da kitob yo'q — namunaviy muqovalar.
             const Row(
@@ -529,14 +556,14 @@ class _BooksSection extends ConsumerWidget {
                     color: Color(0xFFD96C2C),
                   ),
                 ),
-                SizedBox(width: 10),
+                SizedBox(width: 12),
                 Expanded(
                   child: _MockBookCard(
                     title: 'Oy sari\nparvoz',
                     color: Color(0xFF1F3A5F),
                   ),
                 ),
-                SizedBox(width: 10),
+                SizedBox(width: 12),
                 Expanded(
                   child: _MockBookCard(
                     title: 'Oltin\nertaklar',
@@ -550,7 +577,7 @@ class _BooksSection extends ConsumerWidget {
               children: [
                 for (var i = 0; i < books.length; i++) ...[
                   Expanded(child: _BookCard(book: books[i])),
-                  if (i < books.length - 1) const SizedBox(width: 10),
+                  if (i < books.length - 1) const SizedBox(width: 12),
                 ],
               ],
             ),
@@ -573,9 +600,9 @@ class _BookCard extends StatelessWidget {
       child: Column(
         children: [
           AspectRatio(
-            aspectRatio: 0.72,
+            aspectRatio: 0.74,
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               child: book.hasCover
                   ? Image.network(
                       book.coverUrl,
@@ -586,17 +613,26 @@ class _BookCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          // TODO(backend): kitob narxi backend'dan kelganda shu yerga ulanadi.
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-            decoration: BoxDecoration(
-              color: _blue,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text('250 DON', style: _pop(10, w: FontWeight.w700)),
-          ),
+          const _PricePill(),
         ],
       ),
+    );
+  }
+}
+
+/// "250 DON" narx pill (Unbounded 250 + ko'k DON badge).
+class _PricePill extends StatelessWidget {
+  const _PricePill();
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text('250', style: _unb(12, w: FontWeight.w600, ls: -0.36)),
+        const SizedBox(width: 4),
+        const _DonBadge(),
+      ],
     );
   }
 }
@@ -631,6 +667,11 @@ class _VideosSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final videos = ref.watch(topVideosProvider);
+    // Karta balandligi shrift-masshtabga moslashadi (katta masshtabda meta
+    // qatori o'sganda overflow bo'lmasin): thumbnail 199 + oraliq 10 + meta.
+    final ts = MediaQuery.textScalerOf(context);
+    final stripH =
+        209 + (ts.scale(16) * 1.4 + ts.scale(13) * 1.4 + 4).clamp(44.0, 110.0);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -642,13 +683,13 @@ class _VideosSection extends ConsumerWidget {
         if (videos.isEmpty)
           // PREVIEW: backend'da video yo'q — namunaviy kartalar.
           SizedBox(
-            height: 236,
+            height: stripH,
             child: ListView(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
               children: const [
                 _MockVideoCard(
-                  title: 'Jump challenge',
+                  title: 'Jamp challenge',
                   views: '169K',
                   color: Color(0xFFD64B12),
                 ),
@@ -669,7 +710,7 @@ class _VideosSection extends ConsumerWidget {
           )
         else
           SizedBox(
-            height: 236,
+            height: stripH,
             child: ListView.separated(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
@@ -698,91 +739,120 @@ class _VideoCard extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            ClipRRect(
-              borderRadius: BorderRadius.circular(20),
-              child: SizedBox(
-                width: 300,
-                height: 168,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    if (video.thumbnailUrl.isNotEmpty)
-                      Image.network(
-                        video.thumbnailUrl,
-                        fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) =>
-                            ColoredBox(color: video.thumbnailColor),
-                      )
-                    else
-                      ColoredBox(color: video.thumbnailColor),
-                    Center(
-                      child: Container(
-                        width: 46,
-                        height: 46,
-                        decoration: BoxDecoration(
-                          color: Colors.black.withValues(alpha: 0.45),
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.play_arrow_rounded,
-                          size: 28,
-                          color: Colors.white,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+            _VideoThumb(
+              child: video.thumbnailUrl.isNotEmpty
+                  ? Image.network(
+                      video.thumbnailUrl,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, __, ___) =>
+                          ColoredBox(color: video.thumbnailColor),
+                    )
+                  : ColoredBox(color: video.thumbnailColor),
             ),
             const SizedBox(height: 10),
-            Row(
+            _VideoMeta(title: video.title, views: _fmtViews(video.views)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Video thumbnail — 300×199 (360:239), #173654 fon + markazda play.
+class _VideoThumb extends StatelessWidget {
+  const _VideoThumb({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 300,
+      height: 199,
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: _panel,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _glassBorder),
+      ),
+      child: Stack(
+        fit: StackFit.expand,
+        children: [
+          child,
+          Center(
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.6),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                Icons.play_arrow_rounded,
+                size: 24,
+                color: Color(0xFFF9F9F9),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// Video meta — oq avatar + Poppins sarlavha + ko'z + ko'rishlar (#A6A8A9).
+class _VideoMeta extends StatelessWidget {
+  const _VideoMeta({required this.title, required this.views});
+
+  final String title;
+  final String views;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: const BoxDecoration(
+              color: Colors.white,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Text(
+              title.isNotEmpty ? title[0].toUpperCase() : '?',
+              style: _pop(16, w: FontWeight.w700, c: _bg),
+            ),
+          ),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
-                Container(
-                  width: 40,
-                  height: 40,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.circle,
-                  ),
-                  alignment: Alignment.center,
-                  child: Text(
-                    video.title.isNotEmpty ? video.title[0].toUpperCase() : '?',
-                    style: _pop(16, w: FontWeight.w700, c: _bg),
-                  ),
+                Text(
+                  title,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: _pop(16, w: FontWeight.w600),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        video.title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _unb(14, w: FontWeight.w600),
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        children: [
-                          const Icon(
-                            Icons.visibility_outlined,
-                            size: 14,
-                            color: _dim,
-                          ),
-                          const SizedBox(width: 4),
-                          Text(
-                            _fmtViews(video.views),
-                            style: _pop(12, c: _dim),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
+                const SizedBox(height: 2),
+                Row(
+                  children: [
+                    const Icon(
+                      Icons.visibility_outlined,
+                      size: 16,
+                      color: _muted,
+                    ),
+                    const SizedBox(width: 4),
+                    Text(views, style: _pop(13, c: _muted)),
+                  ],
                 ),
               ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
@@ -802,10 +872,10 @@ class _MockBookCard extends StatelessWidget {
     return Column(
       children: [
         AspectRatio(
-          aspectRatio: 0.72,
+          aspectRatio: 0.74,
           child: Container(
             decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(8),
               gradient: LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
@@ -822,14 +892,7 @@ class _MockBookCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
-          decoration: BoxDecoration(
-            color: _blue,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Text('250 DON', style: _pop(10, w: FontWeight.w700)),
-        ),
+        const _PricePill(),
       ],
     );
   }
@@ -854,11 +917,8 @@ class _MockVideoCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: Container(
-              width: 300,
-              height: 168,
+          _VideoThumb(
+            child: DecoratedBox(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   begin: Alignment.topLeft,
@@ -866,67 +926,10 @@ class _MockVideoCard extends StatelessWidget {
                   colors: [color, Color.lerp(color, Colors.black, 0.4)!],
                 ),
               ),
-              child: Center(
-                child: Container(
-                  width: 46,
-                  height: 46,
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.45),
-                    shape: BoxShape.circle,
-                  ),
-                  child: const Icon(
-                    Icons.play_arrow_rounded,
-                    size: 28,
-                    color: Colors.white,
-                  ),
-                ),
-              ),
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                alignment: Alignment.center,
-                child: Text(
-                  title[0].toUpperCase(),
-                  style: _pop(16, w: FontWeight.w700, c: _bg),
-                ),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _unb(14, w: FontWeight.w600),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        const Icon(
-                          Icons.visibility_outlined,
-                          size: 14,
-                          color: _dim,
-                        ),
-                        const SizedBox(width: 4),
-                        Text(views, style: _pop(12, c: _dim)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-            ],
-          ),
+          _VideoMeta(title: title, views: views),
         ],
       ),
     );
@@ -948,8 +951,14 @@ class _SectionHeader extends StatelessWidget {
       behavior: HitTestBehavior.opaque,
       child: Row(
         children: [
-          Expanded(child: Text(title, style: _unb(19))),
-          const Icon(Icons.chevron_right_rounded, size: 26, color: Colors.white),
+          Expanded(
+            child: Text(title, style: _unb(20, w: FontWeight.w600, ls: -0.6)),
+          ),
+          Icon(
+            Icons.chevron_right_rounded,
+            size: 24,
+            color: Colors.white.withValues(alpha: 0.7),
+          ),
         ],
       ),
     );
