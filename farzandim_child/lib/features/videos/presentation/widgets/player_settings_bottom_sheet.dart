@@ -27,8 +27,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: context.adaptive.bgCard,
-        borderRadius:
-            const BorderRadius.vertical(top: Radius.circular(24)),
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       ),
       child: SafeArea(
         child: Column(
@@ -51,11 +50,13 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               context: context,
               icon: Icons.lock_outline,
               title: 'videos.player.screenLock'.tr(),
-              trailing: Icon(AppIcons.chevronRight,
-                  color: context.adaptive.textSecondary),
+              trailing: Icon(
+                AppIcons.chevronRight,
+                color: context.adaptive.textSecondary,
+              ),
               onTap: () {
-                ref.read(playerSettingsProvider.notifier).state =
-                    settings.copyWith(screenLocked: true);
+                ref.read(playerSettingsProvider.notifier).state = settings
+                    .copyWith(screenLocked: true);
                 Navigator.pop(context);
               },
             ),
@@ -67,8 +68,8 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
                 value: settings.repeat,
                 activeThumbColor: AppColors.primary,
                 onChanged: (val) {
-                  ref.read(playerSettingsProvider.notifier).state =
-                      settings.copyWith(repeat: val);
+                  ref.read(playerSettingsProvider.notifier).state = settings
+                      .copyWith(repeat: val);
                 },
               ),
             ),
@@ -77,8 +78,10 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               icon: Icons.speed,
               title: 'videos.player.speed'.tr(),
               subtitle: '${settings.speed}x',
-              trailing: Icon(AppIcons.chevronRight,
-                  color: context.adaptive.textSecondary),
+              trailing: Icon(
+                AppIcons.chevronRight,
+                color: context.adaptive.textSecondary,
+              ),
               onTap: () => _openSpeedPicker(context, ref),
             ),
             _tile(
@@ -86,8 +89,10 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               icon: Icons.high_quality,
               title: 'videos.player.quality'.tr(),
               subtitle: settings.quality,
-              trailing: Icon(AppIcons.chevronRight,
-                  color: context.adaptive.textSecondary),
+              trailing: Icon(
+                AppIcons.chevronRight,
+                color: context.adaptive.textSecondary,
+              ),
               onTap: () => _openQualityPicker(context, ref),
             ),
             _tile(
@@ -96,13 +101,13 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
               title: 'videos.player.sleepTimer'.tr(),
               subtitle: settings.sleepTimerMinutes != null
                   ? 'videos.player.sleepMinShort'.tr(
-                      namedArgs: {
-                        'min': '${settings.sleepTimerMinutes}',
-                      },
+                      namedArgs: {'min': '${settings.sleepTimerMinutes}'},
                     )
                   : 'videos.player.sleepOff'.tr(),
-              trailing: Icon(AppIcons.chevronRight,
-                  color: context.adaptive.textSecondary),
+              trailing: Icon(
+                AppIcons.chevronRight,
+                color: context.adaptive.textSecondary,
+              ),
               onTap: () => _openSleepTimerPicker(context, ref),
             ),
             const SizedBox(height: 16),
@@ -122,8 +127,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
   }) {
     return ListTile(
       leading: Icon(icon, color: AppColors.primary),
-      title: Text(title,
-          style: TextStyle(color: context.adaptive.textPrimary)),
+      title: Text(title, style: TextStyle(color: context.adaptive.textPrimary)),
       subtitle: subtitle != null
           ? Text(
               subtitle,
@@ -147,8 +151,9 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       currentValue: '${ref.read(playerSettingsProvider).speed}x',
       onSelect: (value) {
         final speed = double.parse(value.replaceAll('x', ''));
-        ref.read(playerSettingsProvider.notifier).state =
-            ref.read(playerSettingsProvider).copyWith(speed: speed);
+        ref.read(playerSettingsProvider.notifier).state = ref
+            .read(playerSettingsProvider)
+            .copyWith(speed: speed);
       },
     );
   }
@@ -160,8 +165,9 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       options: const ['1080p', '720p', '480p', '360p', '240p'],
       currentValue: ref.read(playerSettingsProvider).quality,
       onSelect: (value) {
-        ref.read(playerSettingsProvider.notifier).state =
-            ref.read(playerSettingsProvider).copyWith(quality: value);
+        ref.read(playerSettingsProvider.notifier).state = ref
+            .read(playerSettingsProvider)
+            .copyWith(quality: value);
         // Eslatma: hozirgi mock videolarda bitta URL. Real adaptive
         // quality switching admin panelidan ko'p resolution yuklanganda
         // ishga tushadi (video.qualityUrls map).
@@ -178,8 +184,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: ctx.adaptive.bgCard,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
@@ -207,26 +212,23 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
                     ? const Icon(AppIcons.check, color: AppColors.primary)
                     : null,
                 onTap: () {
-                  ref.read(playerSettingsProvider.notifier).state =
-                      settings.copyWith(clearSleepTimer: true);
+                  ref.read(playerSettingsProvider.notifier).state = settings
+                      .copyWith(clearSleepTimer: true);
                   Navigator.pop(ctx);
                 },
               ),
               for (final min in const [5, 10, 15, 20, 30, 45])
                 ListTile(
                   title: Text(
-                    'videos.player.sleepMinutes'.tr(
-                      namedArgs: {'min': '$min'},
-                    ),
+                    'videos.player.sleepMinutes'.tr(namedArgs: {'min': '$min'}),
                     style: TextStyle(color: ctx.adaptive.textPrimary),
                   ),
                   trailing: settings.sleepTimerMinutes == min
-                      ? const Icon(AppIcons.check,
-                          color: AppColors.primary)
+                      ? const Icon(AppIcons.check, color: AppColors.primary)
                       : null,
                   onTap: () {
-                    ref.read(playerSettingsProvider.notifier).state =
-                        settings.copyWith(sleepTimerMinutes: min);
+                    ref.read(playerSettingsProvider.notifier).state = settings
+                        .copyWith(sleepTimerMinutes: min);
                     Navigator.pop(ctx);
                   },
                 ),
@@ -251,8 +253,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
       builder: (ctx) => Container(
         decoration: BoxDecoration(
           color: ctx.adaptive.bgCard,
-          borderRadius:
-              const BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
         ),
         child: SafeArea(
           child: Column(
@@ -278,8 +279,7 @@ class PlayerSettingsBottomSheet extends ConsumerWidget {
                     style: TextStyle(color: ctx.adaptive.textPrimary),
                   ),
                   trailing: option == currentValue
-                      ? const Icon(AppIcons.check,
-                          color: AppColors.primary)
+                      ? const Icon(AppIcons.check, color: AppColors.primary)
                       : null,
                   onTap: () {
                     onSelect(option);

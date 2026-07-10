@@ -2,9 +2,10 @@
 // videos_providers — Riverpod state va computed providerlar
 // ─────────────────────────────────────────────────────────────────────
 //
-// `videoSearchQueryProvider`, `videoFilterProvider` — foydalanuvchi
-// inputi. `filteredVideosProvider` ulardan computed; `topVideos`,
-// `recommendedVideos`, `heroVideo` esa filtered'dan derive bo'ladi.
+// `videoSearchQueryProvider`, `videoFilterProvider` — dashboard'ning
+// "Trend videolar" bo'limi uchun (topVideosProvider zanjiri). Feed ekrani
+// esa `videoCategoryProvider` + `videoFeedProvider` bilan janr bo'yicha
+// filtrlaydi (kategoriya chip'lari).
 //
 // Videolar real backend `/api/content/videos` dan keladi. Backend bola
 // yoshi (child.age) bo'yicha filtrlaydi — bu yerda mock yo'q, bo'sh kelsa
@@ -20,11 +21,9 @@ import 'package:farzandim_child/features/videos/data/repositories/videos_backend
 
 final videoSearchQueryProvider = StateProvider<String>((ref) => '');
 
-final videoFilterProvider =
-    StateProvider<VideoFilterState>((ref) => const VideoFilterState());
-
-/// 0 — Following, 1 — Siz uchun. Default: Siz uchun.
-final videoActiveTabProvider = StateProvider<int>((ref) => 1);
+final videoFilterProvider = StateProvider<VideoFilterState>(
+  (ref) => const VideoFilterState(),
+);
 
 /// Real backend'dan video ro'yxat. Bola hali pair qilinmagan bo'lsa
 /// yoki 401/timeout bo'lsa exception qaytaradi → UI mock fallback ishlatadi.
@@ -40,9 +39,7 @@ final videoActiveTabProvider = StateProvider<int>((ref) => 1);
 /// `.future`/`.valueOrNull` FutureProvider bilan bir xil — eski consumerlar
 /// (pull-to-refresh `ref.read(...future)`) o'zgartirishsiz ishlaydi.
 final backendVideosProvider =
-    AsyncNotifierProvider<VideosNotifier, List<VideoModel>>(
-  VideosNotifier.new,
-);
+    AsyncNotifierProvider<VideosNotifier, List<VideoModel>>(VideosNotifier.new);
 
 class VideosNotifier extends AsyncNotifier<List<VideoModel>> {
   bool _disposed = false;
@@ -101,8 +98,7 @@ final filteredVideosProvider = Provider<List<VideoModel>>((ref) {
   }
 
   if (filter.sohalar.isNotEmpty) {
-    videos =
-        videos.where((v) => filter.sohalar.contains(v.soha)).toList();
+    videos = videos.where((v) => filter.sohalar.contains(v.soha)).toList();
   }
   if (filter.yonalishlar.isNotEmpty) {
     videos = videos
@@ -110,12 +106,10 @@ final filteredVideosProvider = Provider<List<VideoModel>>((ref) {
         .toList();
   }
   if (filter.fanlar.isNotEmpty) {
-    videos =
-        videos.where((v) => filter.fanlar.contains(v.category)).toList();
+    videos = videos.where((v) => filter.fanlar.contains(v.category)).toList();
   }
   if (filter.yoshGuruhi != null) {
-    videos =
-        videos.where((v) => v.yoshGuruhi == filter.yoshGuruhi).toList();
+    videos = videos.where((v) => v.yoshGuruhi == filter.yoshGuruhi).toList();
   }
 
   return videos;
@@ -127,12 +121,41 @@ final topVideosProvider = Provider<List<VideoModel>>((ref) {
   return sorted.take(5).toList();
 });
 
-final recommendedVideosProvider = Provider<List<VideoModel>>((ref) {
-  final videos = ref.watch(filteredVideosProvider);
-  return videos.reversed.take(5).toList();
+// ── Feed ekrani (kategoriya chip'lari) ──────────────────────────────────
+
+/// Feed kategoriya chip'lari — yuklangan videolardagi mavjud yo'nalishlar
+/// (janr), birinchi uchrash tartibida. UI oldiga "Barchasi" chip qo'shadi.
+/// Videolarda yo'nalish bo'lmasa ro'yxat bo'sh (chip qatori ko'rsatilmaydi).
+final videoCategoriesProvider = Provider<List<String>>((ref) {
+  final videos = ref.watch(effectiveVideosProvider);
+  final seen = <String>{};
+  final result = <String>[];
+  for (final v in videos) {
+    final g = v.yonalish.trim();
+    if (g.isNotEmpty && seen.add(g)) result.add(g);
+  }
+  return result;
 });
 
-final heroVideoProvider = Provider<VideoModel?>((ref) {
-  final videos = ref.watch(filteredVideosProvider);
-  return videos.isNotEmpty ? videos.first : null;
+/// Tanlangan feed kategoriyasi (`null` = Barchasi). Chip bosilganda yoziladi.
+final videoCategoryProvider = StateProvider<String?>((ref) => null);
+
+/// Tanlangan kategoriya, mavjud chip'lar bilan solishtirilgan. Videolar qayta
+/// yuklanib tanlangan janr yo'qolsa `null`ga (Barchasi) tushadi — aks holda
+/// feed bo'sh qolib, hech chip yonmagan nomuvofiq holat yuzaga kelardi.
+final effectiveVideoCategoryProvider = Provider<String?>((ref) {
+  final selected = ref.watch(videoCategoryProvider);
+  if (selected == null) return null;
+  return ref.watch(videoCategoriesProvider).contains(selected)
+      ? selected
+      : null;
+});
+
+/// Feed'da ko'rsatiladigan videolar — tanlangan (mavjud) kategoriya bo'yicha
+/// filtrlangan (null bo'lsa hammasi). Search/murakkab filtr bu ekranda yo'q.
+final videoFeedProvider = Provider<List<VideoModel>>((ref) {
+  final selected = ref.watch(effectiveVideoCategoryProvider);
+  final videos = ref.watch(effectiveVideosProvider);
+  if (selected == null) return videos;
+  return videos.where((v) => v.yonalish.trim() == selected).toList();
 });

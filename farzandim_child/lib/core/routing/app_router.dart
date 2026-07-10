@@ -59,6 +59,7 @@ import 'package:farzandim_child/features/videos/presentation/screens/classic_vid
 import 'package:farzandim_child/features/videos/presentation/screens/reels_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/youtube_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/videos_feed_screen.dart';
+import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_recording_screen.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
@@ -93,6 +94,41 @@ CustomTransitionPage<T> _slidePage<T>(GoRouterState state, Widget child) {
       );
     },
   );
+}
+
+/// `/video-player` uchun wrapper — ochilgan videoni "Ko'rish tarixi"ga yozadi,
+/// so'ng havola turiga qarab kerakli player'ni ochadi (YouTube / reels /
+/// klassik landscape). Tarix markazlashtirilgan: feed, dashboard yoki content
+/// hub — qayerdan ochilmasin bir joyda yoziladi.
+class _VideoPlayerRoute extends ConsumerStatefulWidget {
+  const _VideoPlayerRoute({required this.video});
+
+  final VideoModel video;
+
+  @override
+  ConsumerState<_VideoPlayerRoute> createState() => _VideoPlayerRouteState();
+}
+
+class _VideoPlayerRouteState extends ConsumerState<_VideoPlayerRoute> {
+  @override
+  void initState() {
+    super.initState();
+    // build paytida provider'ni o'zgartirmaslik uchun microtask'da.
+    Future.microtask(
+      () => ref.read(watchHistoryIdsProvider.notifier).record(widget.video.id),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final video = widget.video;
+    if (video.isYouTube) {
+      return YoutubePlayerScreen(video: video);
+    }
+    return video.isReels
+        ? ReelsPlayerScreen(initialVideo: video)
+        : ClassicVideoPlayerScreen(video: video);
+  }
 }
 
 final routerProvider = Provider<GoRouter>((ref) {
@@ -255,17 +291,8 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       GoRoute(
         path: '/video-player',
-        builder: (context, state) {
-          final video = state.extra as VideoModel;
-          // YouTube havolasi -> YouTube player; qisqa (reels) -> vertikal;
-          // qolgani -> klassik landscape player.
-          if (video.isYouTube) {
-            return YoutubePlayerScreen(video: video);
-          }
-          return video.isReels
-              ? ReelsPlayerScreen(initialVideo: video)
-              : ClassicVideoPlayerScreen(video: video);
-        },
+        builder: (context, state) =>
+            _VideoPlayerRoute(video: state.extra! as VideoModel),
       ),
       GoRoute(
         path: '/audiobooks',
