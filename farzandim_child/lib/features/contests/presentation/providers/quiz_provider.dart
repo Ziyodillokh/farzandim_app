@@ -60,7 +60,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
     final repo = _ref.read(contestsBackendRepositoryProvider);
     final questions = await _safeLoadQuestions(repo);
     if (!mounted) return;
-    final n = questions.isNotEmpty ? questions.length : MockQuestions.all.length;
+    final n = questions.isNotEmpty
+        ? questions.length
+        : MockQuestions.all.length;
     state = state.copyWith(
       status: QuizStatus.intro,
       questions: questions,
@@ -117,7 +119,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
     if (parentUid == null || childId == null) return;
 
     try {
-      await _ref.read(xpServiceProvider).awardXp(
+      await _ref
+          .read(xpServiceProvider)
+          .awardXp(
             parentUid: parentUid,
             childId: childId,
             type: XpEventType.contestJoined,
@@ -162,8 +166,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
   void _startQuestionTimer() {
     _questionTimer?.cancel();
-    _questionTimer =
-        Timer.periodic(const Duration(seconds: 1), (timer) {
+    _questionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) {
         timer.cancel();
         return;
@@ -198,7 +201,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
     // chaqiramiz va backend javobiga qarab feedback ko'rsatamiz.
     final qid = state.currentQuestion.id;
     final qLooksLikeUuid = qid.length >= 32;
-    if (_attemptId != null && qLooksLikeUuid && state.currentQuestion.correctIndex < 0) {
+    if (_attemptId != null &&
+        qLooksLikeUuid &&
+        state.currentQuestion.correctIndex < 0) {
       unawaited(_selectAnswerBackend(index));
       return;
     }
@@ -219,10 +224,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
     // javobidan keyin keladi.
     final answers = [...state.answers];
     answers[state.currentIndex] = index;
-    state = state.copyWith(
-      selectedAnswer: index,
-      answers: answers,
-    );
+    state = state.copyWith(selectedAnswer: index, answers: answers);
 
     final repo = _ref.read(contestsBackendRepositoryProvider);
     final feedback = await repo.submitSingleAnswer(
@@ -312,8 +314,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
     );
 
     _feedbackTimer?.cancel();
-    _feedbackTimer =
-        Timer(const Duration(milliseconds: 1500), _nextQuestion);
+    _feedbackTimer = Timer(const Duration(milliseconds: 1500), _nextQuestion);
   }
 
   void _nextQuestion() {
@@ -404,5 +405,5 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
 final quizProvider =
     StateNotifierProvider.family<QuizNotifier, QuizState, ContestModel>(
-  (ref, contest) => QuizNotifier(ref, contest),
-);
+      (ref, contest) => QuizNotifier(ref, contest),
+    );

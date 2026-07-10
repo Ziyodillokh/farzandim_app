@@ -50,8 +50,18 @@ class _CertificateScreenState extends State<CertificateScreen> {
   bool _sharing = false;
 
   static const _months = [
-    'yanvar', 'fevral', 'mart', 'aprel', 'may', 'iyun',
-    'iyul', 'avgust', 'sentabr', 'oktabr', 'noyabr', 'dekabr',
+    'yanvar',
+    'fevral',
+    'mart',
+    'aprel',
+    'may',
+    'iyun',
+    'iyul',
+    'avgust',
+    'sentabr',
+    'oktabr',
+    'noyabr',
+    'dekabr',
   ];
 
   String get _dateText {
@@ -63,8 +73,9 @@ class _CertificateScreenState extends State<CertificateScreen> {
     if (_sharing) return;
     setState(() => _sharing = true);
     try {
-      final boundary = _boundaryKey.currentContext!.findRenderObject()
-          as RenderRepaintBoundary;
+      final boundary =
+          _boundaryKey.currentContext!.findRenderObject()
+              as RenderRepaintBoundary;
       final image = await boundary.toImage(pixelRatio: 3);
       final byteData = await image.toByteData(format: ui.ImageByteFormat.png);
       if (byteData == null) return;
@@ -98,10 +109,7 @@ class _CertificateScreenState extends State<CertificateScreen> {
       backgroundColor: pv.pvBg,
       body: Column(
         children: [
-          ParvozHeader(
-            title: 'Sertifikat',
-            onBack: () => context.pop(),
-          ),
+          ParvozHeader(title: 'Sertifikat', onBack: () => context.pop()),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -166,8 +174,7 @@ class _ShareButton extends StatelessWidget {
                 ),
               )
             else
-              Icon(Icons.ios_share_rounded,
-                  size: 20, color: pv.pvOnGreen),
+              Icon(Icons.ios_share_rounded, size: 20, color: pv.pvOnGreen),
             const SizedBox(width: 10),
             Text(
               sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish',
@@ -269,8 +276,11 @@ class _Certificate extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.flight_takeoff_rounded,
-                          color: _kAqua, size: 22),
+                      const Icon(
+                        Icons.flight_takeoff_rounded,
+                        color: _kAqua,
+                        size: 22,
+                      ),
                       const SizedBox(width: 7),
                       Text(
                         'PARVOZ',
@@ -308,8 +318,11 @@ class _Certificate extends StatelessWidget {
                         ),
                       ],
                     ),
-                    child: const Icon(Icons.emoji_events_rounded,
-                        color: _kGold, size: 50),
+                    child: const Icon(
+                      Icons.emoji_events_rounded,
+                      color: _kGold,
+                      size: 50,
+                    ),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -337,8 +350,12 @@ class _Certificate extends StatelessWidget {
                   const SizedBox(height: 22),
                   Text(
                     'Ushbu sertifikat',
-                    style: cjak(CP(true),
-                        size: 13, weight: FontWeight.w500, color: _kMuted),
+                    style: cjak(
+                      CP(true),
+                      size: 13,
+                      weight: FontWeight.w500,
+                      color: _kMuted,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -367,14 +384,14 @@ class _Certificate extends StatelessWidget {
                   const SizedBox(height: 22),
                   // ── Natija paneli ──
                   Container(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 14,
+                      vertical: 14,
+                    ),
                     decoration: BoxDecoration(
                       color: _kCertCard,
                       borderRadius: BorderRadius.circular(16),
-                      border: Border.all(
-                        color: _kAqua.withValues(alpha: 0.18),
-                      ),
+                      border: Border.all(color: _kAqua.withValues(alpha: 0.18)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -394,24 +411,31 @@ class _Certificate extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          const Icon(Icons.calendar_today_rounded,
-                              size: 12, color: _kFaint),
+                          const Icon(
+                            Icons.calendar_today_rounded,
+                            size: 12,
+                            color: _kFaint,
+                          ),
                           const SizedBox(width: 5),
                           Text(
                             dateText,
-                            style: cjak(CP(true),
-                                size: 11,
-                                weight: FontWeight.w500,
-                                color: _kFaint),
+                            style: cjak(
+                              CP(true),
+                              size: 11,
+                              weight: FontWeight.w500,
+                              color: _kFaint,
+                            ),
                           ),
                         ],
                       ),
                       Text(
                         data.certificateId,
-                        style: cjak(CP(true),
-                            size: 10,
-                            weight: FontWeight.w500,
-                            color: _kFaint.withValues(alpha: 0.8)),
+                        style: cjak(
+                          CP(true),
+                          size: 10,
+                          weight: FontWeight.w500,
+                          color: _kFaint.withValues(alpha: 0.8),
+                        ),
                       ),
                     ],
                   ),
@@ -463,8 +487,12 @@ class _Stat extends StatelessWidget {
         const SizedBox(height: 3),
         Text(
           label,
-          style: cjak(CP(true),
-              size: 10, weight: FontWeight.w500, color: _kMuted),
+          style: cjak(
+            CP(true),
+            size: 10,
+            weight: FontWeight.w500,
+            color: _kMuted,
+          ),
         ),
       ],
     );

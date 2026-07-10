@@ -46,6 +46,7 @@ import 'package:farzandim_child/features/contests/data/models/contest_model.dart
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_start_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contests_screen.dart';
+import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
 import 'package:farzandim_child/features/schedules/presentation/screens/schedules_screen.dart';
 import 'package:farzandim_child/features/dashboard/presentation/screens/child_dashboard_screen.dart';
@@ -224,6 +225,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/contests',
           '/contest-start',
           '/contest-quiz',
+          '/liked-tests',
           '/ranking',
         };
         if (contentPaths.contains(loc)) {
@@ -357,6 +359,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/contests',
         pageBuilder: (context, state) =>
             _slidePage(state, const ContestsScreen()),
+      ),
+      GoRoute(
+        path: '/liked-tests',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const LikedTestsScreen()),
       ),
       // #56 — Sertifikat (g'olib uchun)
       GoRoute(

@@ -22,7 +22,9 @@ import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
 
-final contestsBackendRepositoryProvider = Provider<ContestsBackendRepository>((ref) {
+final contestsBackendRepositoryProvider = Provider<ContestsBackendRepository>((
+  ref,
+) {
   return ContestsBackendRepository(dio: ref.watch(dioClientProvider));
 });
 
@@ -44,7 +46,9 @@ class ContestsBackendRepository {
 
   Future<ContestBundle> fetchContests() async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/content/olympiads');
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/content/olympiads',
+      );
       final items = (response.data?['items'] as List<dynamic>?) ?? const [];
       final active = <ContestModel>[];
       final finished = <ContestModel>[];
@@ -60,29 +64,35 @@ class ContestsBackendRepository {
       }
       return ContestBundle(active: active, finished: finished);
     } on DioException catch (e) {
-      debugPrint('ContestsBackend.fetch: ${e.response?.statusCode} ${e.message}');
+      debugPrint(
+        'ContestsBackend.fetch: ${e.response?.statusCode} ${e.message}',
+      );
       rethrow;
     }
   }
 
   Future<List<QuestionModel>> fetchQuestions(String olympiadId) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>('/content/olympiads/$olympiadId');
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/content/olympiads/$olympiadId',
+      );
       final qs = (response.data?['questions'] as List<dynamic>?) ?? const [];
       return qs
           .whereType<Map<String, dynamic>>()
-          .map((raw) => QuestionModel(
-                id: (raw['id'] as String?) ?? '',
-                text: (raw['text'] as String?) ?? '',
-                options: ((raw['options'] as List<dynamic>?) ?? const [])
-                    .map((e) => e.toString())
-                    .toList(),
-                // Sprint 5.7e: correctIndex backend tomonida sir.
-                // Lokal feedback uchun -1 (qarang QuizNotifier.selectAnswer).
-                correctIndex: (raw['correctIndex'] as num?)?.toInt() ?? -1,
-                timeSeconds: 40,
-                bonus: (raw['points'] as num?)?.toInt() ?? 50,
-              ))
+          .map(
+            (raw) => QuestionModel(
+              id: (raw['id'] as String?) ?? '',
+              text: (raw['text'] as String?) ?? '',
+              options: ((raw['options'] as List<dynamic>?) ?? const [])
+                  .map((e) => e.toString())
+                  .toList(),
+              // Sprint 5.7e: correctIndex backend tomonida sir.
+              // Lokal feedback uchun -1 (qarang QuizNotifier.selectAnswer).
+              correctIndex: (raw['correctIndex'] as num?)?.toInt() ?? -1,
+              timeSeconds: 40,
+              bonus: (raw['points'] as num?)?.toInt() ?? 50,
+            ),
+          )
           .toList();
     } on DioException catch (e) {
       debugPrint('ContestsBackend.fetchQuestions: ${e.message}');
@@ -112,10 +122,12 @@ class ContestsBackendRepository {
         '/content/olympiads/attempts/$attemptId/submit',
         data: {
           'answers': answers
-              .map((a) => {
-                    'questionId': a.questionId,
-                    'selectedIndex': a.selectedIndex,
-                  })
+              .map(
+                (a) => {
+                  'questionId': a.questionId,
+                  'selectedIndex': a.selectedIndex,
+                },
+              )
               .toList(),
           'timeSec': timeSec,
         },
@@ -151,7 +163,9 @@ class ContestsBackendRepository {
       if (data == null) return null;
       return AnswerFeedback.fromJson(data);
     } on DioException catch (e) {
-      debugPrint('ContestsBackend.answer: ${e.response?.statusCode} ${e.message}');
+      debugPrint(
+        'ContestsBackend.answer: ${e.response?.statusCode} ${e.message}',
+      );
       // 408 (vaqt) yoki 409 (duplicate) → autoFinished signal
       if (e.response?.statusCode == 408) {
         return const AnswerFeedback(
@@ -175,7 +189,8 @@ class ContestsBackendRepository {
     final id = (raw['id'] as String?) ?? '';
     final subject = (raw['subject'] as String?) ?? 'Aralash';
     final lifecycle = (raw['lifecycle'] as String?) ?? 'finished';
-    final endTime = DateTime.tryParse((raw['endTime'] as String?) ?? '') ?? DateTime.now();
+    final endTime =
+        DateTime.tryParse((raw['endTime'] as String?) ?? '') ?? DateTime.now();
     final participants = (raw['participantCount'] as num?)?.toInt() ?? 0;
     final questions = (raw['questionCount'] as num?)?.toInt() ?? 0;
     return ContestModel(

@@ -16,8 +16,10 @@ class CP {
 
   Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF6F8FC);
   Color get card => dark ? const Color(0xFF213145) : Colors.white;
-  Color get cardHigh => dark ? const Color(0xFF2A3C54) : const Color(0xFFEEF3FB);
-  Color get border => dark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFDCE6F2);
+  Color get cardHigh =>
+      dark ? const Color(0xFF2A3C54) : const Color(0xFFEEF3FB);
+  Color get border =>
+      dark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFDCE6F2);
   Color get tabBg => dark ? const Color(0xFF18283D) : const Color(0xFFE9EFF8);
 
   Color get text => dark ? const Color(0xFFEAF1F2) : const Color(0xFF0B1C30);
@@ -51,14 +53,13 @@ TextStyle cjak(
   Color? color,
   double? height,
   double? spacing,
-}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      fontWeight: weight,
-      color: color ?? p.text,
-      height: height,
-      letterSpacing: spacing,
-    );
+}) => GoogleFonts.plusJakartaSans(
+  fontSize: size,
+  fontWeight: weight,
+  color: color ?? p.text,
+  height: height,
+  letterSpacing: spacing,
+);
 
 /// "1.2k" / "850" — ishtirokchi sonini ixcham format.
 String compactCount(int n) =>
@@ -66,7 +67,12 @@ String compactCount(int n) =>
 
 /// Subject badge — to'q-shisha fon + rangli border/matn (Stitch premium).
 class SubjectBadge extends StatelessWidget {
-  const SubjectBadge({required this.label, required this.color, required this.icon, super.key});
+  const SubjectBadge({
+    required this.label,
+    required this.color,
+    required this.icon,
+    super.key,
+  });
   final String label;
   final Color color;
   final IconData icon;
@@ -76,7 +82,10 @@ class SubjectBadge extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: Color.alphaBlend(color.withValues(alpha: 0.22), const Color(0xFF0B1C30)).withValues(alpha: 0.82),
+        color: Color.alphaBlend(
+          color.withValues(alpha: 0.22),
+          const Color(0xFF0B1C30),
+        ).withValues(alpha: 0.82),
         borderRadius: BorderRadius.circular(99),
         border: Border.all(color: color.withValues(alpha: 0.40), width: 1),
       ),
@@ -85,9 +94,15 @@ class SubjectBadge extends StatelessWidget {
         children: [
           Icon(icon, size: 14, color: color),
           const SizedBox(width: 5),
-          Text(label,
-              style: GoogleFonts.plusJakartaSans(
-                  fontSize: 12, fontWeight: FontWeight.w700, color: color, letterSpacing: 0.2)),
+          Text(
+            label,
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 12,
+              fontWeight: FontWeight.w700,
+              color: color,
+              letterSpacing: 0.2,
+            ),
+          ),
         ],
       ),
     );

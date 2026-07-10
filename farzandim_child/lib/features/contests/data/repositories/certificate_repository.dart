@@ -14,8 +14,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
 
-final certificateRepositoryProvider =
-    Provider<CertificateRepository>((ref) {
+final certificateRepositoryProvider = Provider<CertificateRepository>((ref) {
   return CertificateRepository(dio: ref.watch(dioClientProvider));
 });
 
@@ -60,7 +59,8 @@ class CertificateData {
       subject: json['subject'] as String? ?? '',
       score: (json['score'] as num?)?.toInt() ?? 0,
       percent: (json['percent'] as num?)?.toInt() ?? 0,
-      date: DateTime.tryParse(json['date'] as String? ?? '')?.toLocal() ??
+      date:
+          DateTime.tryParse(json['date'] as String? ?? '')?.toLocal() ??
           DateTime.now(),
     );
   }

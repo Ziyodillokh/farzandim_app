@@ -13,8 +13,7 @@ class MockQuestions {
       text: 'Quyosh tizimida nechta sayyora bor?',
       options: ['7', '8', '9', '10'],
       correctIndex: 1,
-      explanation:
-          'Pluto sayyora emas deb tan olingach 8 ta sayyora qoldi.',
+      explanation: 'Pluto sayyora emas deb tan olingach 8 ta sayyora qoldi.',
     ),
     QuestionModel(
       id: 'q2',
@@ -65,14 +64,8 @@ class MockQuestions {
     ),
     QuestionModel(
       id: 'q9',
-      text:
-          'Eng tez sport mashinasi qaysi mamlakatlarda ishlab chiqariladi?',
-      options: [
-        'Germaniya',
-        'Italiya',
-        'Yaponiya',
-        'Italiya, Germaniya, AQSh'
-      ],
+      text: 'Eng tez sport mashinasi qaysi mamlakatlarda ishlab chiqariladi?',
+      options: ['Germaniya', 'Italiya', 'Yaponiya', 'Italiya, Germaniya, AQSh'],
       correctIndex: 3,
       explanation:
           'Bugatti, Lamborghini, Ferrari, Koenigsegg, SSC va boshqalar.',

@@ -1,18 +1,16 @@
 // ─────────────────────────────────────────────────────────────────────
-// contests_providers — tab state + active/finished lists
+// contests_providers — testlar ro'yxati + featured + sevimlilar
 // ─────────────────────────────────────────────────────────────────────
 //
-// Sprint 5.7c: real backend `/api/content/olympiads` ulanishi.
-// `backendContestsProvider` fetch qiladi, muvaffaqiyatli bo'lsa shu
-// ro'yxat ishlatiladi. Yosh filtri backend tomonida (child.age).
+// Real backend `/api/content/olympiads` (yosh filtri backend'da). Grid
+// `allTestsProvider` (faol + yakunlangan), hero `featuredContestProvider`.
+// Sevimlilar — lokal (SharedPreferences), header ♡ tugmasi uchun.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
-
-/// 0 — Aktiv, 1 — Yakunlangan
-final contestsActiveTabProvider = StateProvider<int>((ref) => 0);
 
 final backendContestsProvider = FutureProvider<ContestBundle>((ref) async {
   final repo = ref.watch(contestsBackendRepositoryProvider);
@@ -20,28 +18,96 @@ final backendContestsProvider = FutureProvider<ContestBundle>((ref) async {
 });
 
 final activeContestsProvider = Provider<List<ContestModel>>((ref) {
-  final async = ref.watch(backendContestsProvider);
-  return async.maybeWhen(
-    data: (bundle) => bundle.active,
-    orElse: () => const <ContestModel>[],
-  );
+  return ref
+      .watch(backendContestsProvider)
+      .maybeWhen(
+        data: (bundle) => bundle.active,
+        orElse: () => const <ContestModel>[],
+      );
 });
 
 final finishedContestsProvider = Provider<List<ContestModel>>((ref) {
-  final async = ref.watch(backendContestsProvider);
-  return async.maybeWhen(
-    data: (bundle) => bundle.finished,
-    orElse: () => const <ContestModel>[],
-  );
+  return ref
+      .watch(backendContestsProvider)
+      .maybeWhen(
+        data: (bundle) => bundle.finished,
+        orElse: () => const <ContestModel>[],
+      );
 });
 
-/// Yuklanmoqdami — UI spinner ko'rsatish uchun.
+/// Grid uchun barcha testlar — faol (avval), keyin yakunlangan.
+final allTestsProvider = Provider<List<ContestModel>>((ref) {
+  return [
+    ...ref.watch(activeContestsProvider),
+    ...ref.watch(finishedContestsProvider),
+  ];
+});
+
+/// Hero karta uchun tanlangan test — birinchi faol (bo'lmasa null).
+final featuredContestProvider = Provider<ContestModel?>((ref) {
+  final active = ref.watch(activeContestsProvider);
+  return active.isNotEmpty ? active.first : null;
+});
+
+/// Yuklanmoqdami — UI spinner uchun.
 final contestsLoadingProvider = Provider<bool>((ref) {
   return ref.watch(backendContestsProvider).isLoading;
 });
 
-/// Tarmoq/server xatosi bo'ldimi — jim bo'sh ro'yxat o'rniga xato+qayta urinish
-/// ko'rsatish uchun (avval xato sukut bilan "konkurs yo'q" deb ko'rinardi).
+/// Tarmoq/server xatosi — xato+qayta urinish ko'rsatish uchun.
 final contestsErrorProvider = Provider<bool>((ref) {
   return ref.watch(backendContestsProvider).hasError;
+});
+
+// ════════════ Sevimli testlar (lokal, SharedPreferences) ════════════
+
+const String _favKey = 'favorite_contest_ids_v1';
+
+/// Sevimli test ID'lari (header ♡ / long-press). Lokal — testlar cheklangan
+/// to'plam, backend shart emas (bookmark).
+final favoriteContestIdsProvider =
+    NotifierProvider<FavoriteContestIdsNotifier, Set<String>>(
+      FavoriteContestIdsNotifier.new,
+    );
+
+/// Sevimlilar to'plami — toggle + disk persist (restore tugagach mutatsiya).
+class FavoriteContestIdsNotifier extends Notifier<Set<String>> {
+  Future<void>? _ready;
+
+  @override
+  Set<String> build() {
+    _ready = _restore();
+    return const {};
+  }
+
+  Future<void> _restore() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      state = (prefs.getStringList(_favKey) ?? const <String>[]).toSet();
+    } catch (_) {
+      // Xato — bo'sh qoladi.
+    }
+  }
+
+  /// Sevimliga qo'shish/olib tashlash. `true` — qo'shildi.
+  Future<bool> toggle(String id) async {
+    await _ready;
+    final next = {...state};
+    final added = next.add(id);
+    if (!added) next.remove(id);
+    state = next;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setStringList(_favKey, next.toList());
+    } catch (_) {
+      // Saqlash xatosi — state sessiya davomida baribir o'zgardi.
+    }
+    return added;
+  }
+}
+
+/// Sevimli testlar — hozir mavjudlari (allTests ichidan), allTests tartibida.
+final favoriteContestsProvider = Provider<List<ContestModel>>((ref) {
+  final ids = ref.watch(favoriteContestIdsProvider);
+  return ref.watch(allTestsProvider).where((c) => ids.contains(c.id)).toList();
 });

@@ -104,11 +104,7 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 8, 16, 10),
       child: Row(
         children: [
-          _GlassIconButton(
-            icon: AppIcons.back,
-            onTap: onBack,
-            p: p,
-          ),
+          _GlassIconButton(icon: AppIcons.back, onTap: onBack, p: p),
           const SizedBox(width: 8),
           Expanded(
             child: Row(
@@ -194,10 +190,7 @@ class _GlassIconButton extends StatelessWidget {
 // ─── Step 1: Info ────────────────────────────────────────────────────
 
 class _ContestInfoStep extends StatelessWidget {
-  const _ContestInfoStep({
-    required this.contest,
-    required this.onContinue,
-  });
+  const _ContestInfoStep({required this.contest, required this.onContinue});
 
   final ContestModel contest;
   final VoidCallback onContinue;
@@ -266,32 +259,53 @@ class _ContestInfoStep extends StatelessWidget {
                   const SizedBox(height: 20),
                   Text(
                     contest.title,
-                    style: cjak(p,
-                        size: 26,
-                        weight: FontWeight.w800,
-                        color: p.text,
-                        height: 1.15),
+                    style: cjak(
+                      p,
+                      size: 26,
+                      weight: FontWeight.w800,
+                      color: p.text,
+                      height: 1.15,
+                    ),
                   ),
                   const SizedBox(height: 10),
                   Text(
                     contest.description,
-                    style: cjak(p,
-                        size: 14, color: p.muted, height: 1.5),
+                    style: cjak(p, size: 14, color: p.muted, height: 1.5),
                   ),
                   const SizedBox(height: 20),
                   _StatGroup(
                     p: p,
                     rows: [
-                      _StatData(AppIcons.star, 'Sovrin',
-                          '${contest.bonus} ball', p.gold),
-                      _StatData(Icons.help_outline_rounded, 'Savollar soni',
-                          '${contest.savollarSoni} ta', p.accent),
-                      _StatData(AppIcons.schedule, 'Vaqt chegarasi',
-                          '${contest.vaqtChegarasiDaq} daqiqa', p.warn),
-                      _StatData(Icons.people_alt_rounded, 'Ishtirokchilar',
-                          '${contest.ishtirokchilarSoni} ta', p.accentSoft),
-                      _StatData(Icons.event_rounded, 'Tugash vaqti',
-                          contest.remainingFormatted, p.danger),
+                      _StatData(
+                        AppIcons.star,
+                        'Sovrin',
+                        '${contest.bonus} ball',
+                        p.gold,
+                      ),
+                      _StatData(
+                        Icons.help_outline_rounded,
+                        'Savollar soni',
+                        '${contest.savollarSoni} ta',
+                        p.accent,
+                      ),
+                      _StatData(
+                        AppIcons.schedule,
+                        'Vaqt chegarasi',
+                        '${contest.vaqtChegarasiDaq} daqiqa',
+                        p.warn,
+                      ),
+                      _StatData(
+                        Icons.people_alt_rounded,
+                        'Ishtirokchilar',
+                        '${contest.ishtirokchilarSoni} ta',
+                        p.accentSoft,
+                      ),
+                      _StatData(
+                        Icons.event_rounded,
+                        'Tugash vaqti',
+                        contest.remainingFormatted,
+                        p.danger,
+                      ),
                     ],
                   ),
                   const SizedBox(height: 28),
@@ -386,10 +400,7 @@ class _StatGroup extends StatelessWidget {
           ),
           const SizedBox(width: 14),
           Expanded(
-            child: Text(
-              d.label,
-              style: cjak(p, size: 14, color: p.muted),
-            ),
+            child: Text(d.label, style: cjak(p, size: 14, color: p.muted)),
           ),
           Text(
             d.value,
@@ -471,8 +482,12 @@ class _ContestRulesStep extends StatelessWidget {
                   const SizedBox(height: 12),
                   Text(
                     'Konkurs qoidalari',
-                    style: cjak(p,
-                        size: 26, weight: FontWeight.w800, color: p.text),
+                    style: cjak(
+                      p,
+                      size: 26,
+                      weight: FontWeight.w800,
+                      color: p.text,
+                    ),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -528,8 +543,12 @@ class _RuleCard extends StatelessWidget {
               children: [
                 Text(
                   rule.title,
-                  style: cjak(p,
-                      size: 16, weight: FontWeight.w700, color: p.text),
+                  style: cjak(
+                    p,
+                    size: 16,
+                    weight: FontWeight.w700,
+                    color: p.text,
+                  ),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -646,8 +665,9 @@ class _ContestReadyStepState extends State<_ContestReadyStep>
                                 shape: BoxShape.circle,
                                 boxShadow: [
                                   BoxShadow(
-                                    color: p.accent
-                                        .withValues(alpha: 0.35 + t * 0.25),
+                                    color: p.accent.withValues(
+                                      alpha: 0.35 + t * 0.25,
+                                    ),
                                     blurRadius: 30 + t * 16,
                                     spreadRadius: 2,
                                   ),
@@ -667,8 +687,12 @@ class _ContestReadyStepState extends State<_ContestReadyStep>
                   const SizedBox(height: 40),
                   Text(
                     'Tayyormisiz?',
-                    style: cjak(p,
-                        size: 34, weight: FontWeight.w800, color: p.text),
+                    style: cjak(
+                      p,
+                      size: 34,
+                      weight: FontWeight.w800,
+                      color: p.text,
+                    ),
                   ),
                   const SizedBox(height: 12),
                   Padding(
@@ -728,8 +752,12 @@ class _Countdown extends StatelessWidget {
               child: Center(
                 child: Text(
                   '$countdown',
-                  style: cjak(p,
-                      size: 100, weight: FontWeight.w800, color: p.onAccent),
+                  style: cjak(
+                    p,
+                    size: 100,
+                    weight: FontWeight.w800,
+                    color: p.onAccent,
+                  ),
                 ),
               ),
             ),
@@ -785,11 +813,13 @@ class _ContinueButton extends StatelessWidget {
             ),
             child: Text(
               label,
-              style: cjak(p,
-                  size: big ? 18 : 16,
-                  weight: big ? FontWeight.w800 : FontWeight.w700,
-                  color: p.onAccent,
-                  spacing: big ? 1.4 : 0.2),
+              style: cjak(
+                p,
+                size: big ? 18 : 16,
+                weight: big ? FontWeight.w800 : FontWeight.w700,
+                color: p.onAccent,
+                spacing: big ? 1.4 : 0.2,
+              ),
             ),
           ),
         ),

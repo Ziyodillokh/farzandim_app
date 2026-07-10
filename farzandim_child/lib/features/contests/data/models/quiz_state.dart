@@ -59,8 +59,7 @@ class QuizState {
 
   QuestionModel get currentQuestion => effectiveQuestions[currentIndex];
 
-  bool get isLastQuestion =>
-      currentIndex >= effectiveQuestions.length - 1;
+  bool get isLastQuestion => currentIndex >= effectiveQuestions.length - 1;
 
   double get accuracy {
     final total = correctCount + wrongCount;
@@ -90,8 +89,9 @@ class QuizState {
     return QuizState(
       status: status ?? this.status,
       currentIndex: currentIndex ?? this.currentIndex,
-      selectedAnswer:
-          clearSelected ? null : (selectedAnswer ?? this.selectedAnswer),
+      selectedAnswer: clearSelected
+          ? null
+          : (selectedAnswer ?? this.selectedAnswer),
       answerState: answerState ?? this.answerState,
       totalScore: totalScore ?? this.totalScore,
       correctCount: correctCount ?? this.correctCount,
