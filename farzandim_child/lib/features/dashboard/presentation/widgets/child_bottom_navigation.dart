@@ -7,21 +7,26 @@
 //   ▶️ Videolar      — /videos
 //   📝 Testlar       — /contests
 //   📖 Audiokitoblar — /audiobooks
-//   👤 Profil        — /profile
+//   👤 Profil        — /profile (bolaning HAQIQIY avatari)
 //
-// Bar: frosted #1A1F23@90% + blur, radius 24, chegara #313639, inset 20.
-// Faol tab: OQ ikon + ko'k (#216BFF) glow ortida; nofaol: #A6A8A9.
-// MiniAudioPlayer pill ustida suzadi (audio o'ynayotganda).
+// Ikonlar — Solar to'plami (dizayn spetsifikatsiyasi bo'yicha):
+//   Asosiy: Bold/Home Smile · Videolar: Linear/Play ·
+//   Testlar: Linear/Checklist Minimalistic · Audiokitoblar: Linear/Notebook
+//   Minimalistic · Profil: bolaning haqiqiy avatari.
+// Faol tab yumaloq-kvadrat yorug' fon + ko'k glow ichida.
 
 import 'dart:ui' show ImageFilter;
 
 import 'package:farzandim_child/core/feature_flags.dart';
+import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
+import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/shared/widgets/mini_audio_player.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 const _blue = Color(0xFF216BFF);
 const _navBar = Color(0xE61A1F23); // #1A1F23 @ 90%
@@ -56,9 +61,6 @@ class ChildBottomNavigation extends ConsumerWidget {
       children: [
         const MiniAudioPlayer(),
         Padding(
-          // Suzuvchi: yon 14, pastdan 12 + safe-area (home indikator).
-          // "Audiokitoblar" label tor telefonlarda ham to'liq sig'ishi uchun
-          // inset/padding qisqartirilgan.
           padding: EdgeInsets.fromLTRB(14, 0, 14, 12 + bottomInset),
           child: ClipRRect(
             borderRadius: BorderRadius.circular(24),
@@ -74,40 +76,33 @@ class ChildBottomNavigation extends ConsumerWidget {
                 child: Row(
                   children: [
                     _NavItem(
-                      icon: Icons.home_outlined,
-                      activeIcon: Icons.home_rounded,
+                      icon: SolarIconsBold.homeSmile,
                       label: 'Asosiy',
                       active: location == '/dashboard',
                       onTap: () => go('/dashboard'),
                     ),
                     _NavItem(
-                      icon: Icons.play_circle_outline_rounded,
-                      activeIcon: Icons.play_circle_rounded,
+                      icon: SolarIconsOutline.play,
                       label: 'Videolar',
                       active:
                           location == '/videos' || location == '/video-player',
                       onTap: () => go('/videos'),
                     ),
                     _NavItem(
-                      icon: Icons.fact_check_outlined,
-                      activeIcon: Icons.fact_check_rounded,
+                      icon: SolarIconsOutline.checklistMinimalistic,
                       label: 'Testlar',
                       active: location == '/contests',
                       onTap: () => go('/contests'),
                     ),
                     _NavItem(
-                      icon: Icons.menu_book_outlined,
-                      activeIcon: Icons.menu_book_rounded,
+                      icon: SolarIconsOutline.notebookMinimalistic,
                       label: 'Audiokitoblar',
                       active:
                           location == '/audiobooks' ||
                           location == '/audio-player',
                       onTap: () => go('/audiobooks'),
                     ),
-                    _NavItem(
-                      icon: Icons.person_outline_rounded,
-                      activeIcon: Icons.person_rounded,
-                      label: 'Profil',
+                    _ProfileNavItem(
                       active: location == '/profile',
                       onTap: () => go('/profile'),
                     ),
@@ -122,23 +117,51 @@ class ChildBottomNavigation extends ConsumerWidget {
   }
 }
 
+/// Faol tab foni — yumaloq-kvadrat (squircle) + ko'k glow (Figma).
+class _ActiveHalo extends StatelessWidget {
+  const _ActiveHalo({required this.child});
+
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 44,
+      height: 34,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: Colors.white.withValues(alpha: 0.10),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: _blue.withValues(alpha: 0.55),
+            blurRadius: 18,
+            spreadRadius: -2,
+          ),
+        ],
+      ),
+      child: child,
+    );
+  }
+}
+
 class _NavItem extends StatelessWidget {
   const _NavItem({
     required this.icon,
     required this.label,
     required this.active,
     required this.onTap,
-    this.activeIcon,
   });
 
   final IconData icon;
-  final IconData? activeIcon;
   final String label;
   final bool active;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
+    final tint = active ? _activeIcon : _inactive;
+    final Widget iconWidget = Icon(icon, size: 24, color: tint);
     return Expanded(
       child: GestureDetector(
         onTap: () {
@@ -147,40 +170,18 @@ class _NavItem extends StatelessWidget {
         },
         behavior: HitTestBehavior.opaque,
         child: SizedBox(
-          height: 56,
+          height: 58,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             mainAxisSize: MainAxisSize.min,
             children: [
               SizedBox(
-                height: 28,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    // Faol tab ortida ko'k glow.
-                    if (active)
-                      ImageFiltered(
-                        imageFilter: ImageFilter.blur(sigmaX: 9, sigmaY: 9),
-                        child: Container(
-                          width: 30,
-                          height: 30,
-                          decoration: BoxDecoration(
-                            shape: BoxShape.circle,
-                            color: _blue.withValues(alpha: 0.65),
-                          ),
-                        ),
-                      ),
-                    Icon(
-                      active ? (activeIcon ?? icon) : icon,
-                      color: active ? _activeIcon : _inactive,
-                      size: 24,
-                    ),
-                  ],
+                height: 34,
+                child: Center(
+                  child: active ? _ActiveHalo(child: iconWidget) : iconWidget,
                 ),
               ),
               const SizedBox(height: 3),
-              // FittedBox — tor telefonlarda "Audiokitoblar" kesilmasdan
-              // ozgina kichrayadi (ellipsis o'rniga).
               FittedBox(
                 fit: BoxFit.scaleDown,
                 child: Text(
@@ -197,6 +198,82 @@ class _NavItem extends StatelessWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Profil tab — bolaning HAQIQIY avatari (dumaloq); rasm bo'lmasa person.
+class _ProfileNavItem extends ConsumerWidget {
+  const _ProfileNavItem({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final childId = ref.watch(pairingStateProvider).childId;
+    final avatarUrl = childId == null
+        ? null
+        : ref.watch(childAvatarUrlProvider(childId)).valueOrNull;
+
+    final Widget face = avatarUrl != null
+        ? ClipOval(
+            child: Image.network(
+              avatarUrl,
+              width: 26,
+              height: 26,
+              fit: BoxFit.cover,
+              errorBuilder: (_, __, ___) => const _PersonFallback(),
+            ),
+          )
+        : const _PersonFallback();
+
+    return Expanded(
+      child: GestureDetector(
+        onTap: () {
+          if (!active) HapticFeedback.selectionClick();
+          onTap();
+        },
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          height: 58,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              SizedBox(
+                height: 34,
+                child: Center(
+                  child: active ? _ActiveHalo(child: face) : face,
+                ),
+              ),
+              const SizedBox(height: 3),
+              Text(
+                'Profil',
+                maxLines: 1,
+                style: GoogleFonts.poppins(
+                  fontSize: 10,
+                  fontWeight: active ? FontWeight.w600 : FontWeight.w400,
+                  color: active ? Colors.white : _inactive,
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _PersonFallback extends StatelessWidget {
+  const _PersonFallback();
+
+  @override
+  Widget build(BuildContext context) {
+    return const Icon(
+      Icons.person_outline_rounded,
+      size: 24,
+      color: _inactive,
     );
   }
 }
