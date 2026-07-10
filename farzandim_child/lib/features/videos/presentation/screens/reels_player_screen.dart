@@ -22,8 +22,7 @@ class ReelsPlayerScreen extends ConsumerStatefulWidget {
   final VideoModel initialVideo;
 
   @override
-  ConsumerState<ReelsPlayerScreen> createState() =>
-      _ReelsPlayerScreenState();
+  ConsumerState<ReelsPlayerScreen> createState() => _ReelsPlayerScreenState();
 }
 
 class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
@@ -42,8 +41,7 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
     // VideoPlayerController ularni o'ynay olmaydi.
     _reels = effective.where((v) => v.isReels && !v.isYouTube).toList();
     if (_reels.isEmpty) _reels = [widget.initialVideo];
-    _currentIndex =
-        _reels.indexWhere((v) => v.id == widget.initialVideo.id);
+    _currentIndex = _reels.indexWhere((v) => v.id == widget.initialVideo.id);
     if (_currentIndex < 0) _currentIndex = 0;
     _pageController = PageController(initialPage: _currentIndex);
     // Birinchi reel ko'rildi.
@@ -78,10 +76,7 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
               _markViewed(_reels[i].id);
             },
             itemBuilder: (_, i) {
-              return _ReelItem(
-                video: _reels[i],
-                isActive: i == _currentIndex,
-              );
+              return _ReelItem(video: _reels[i], isActive: i == _currentIndex);
             },
           ),
           SafeArea(
@@ -95,8 +90,7 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
                     color: Colors.black.withOpacity(0.4),
                     shape: BoxShape.circle,
                   ),
-                  child: const Icon(AppIcons.back,
-                      color: Colors.white),
+                  child: const Icon(AppIcons.back, color: Colors.white),
                 ),
                 onPressed: () => Navigator.pop(context),
               ),
@@ -174,8 +168,7 @@ class _ReelItemState extends State<_ReelItem> {
                     aspectRatio: _controller.value.aspectRatio,
                     child: VideoPlayer(_controller),
                   )
-                : const CircularProgressIndicator(
-                    color: AppColors.parvozGreen),
+                : const CircularProgressIndicator(color: AppColors.parvozGreen),
           ),
           if (!_isPlaying)
             Center(

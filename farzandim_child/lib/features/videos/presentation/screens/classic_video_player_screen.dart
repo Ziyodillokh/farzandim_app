@@ -69,28 +69,28 @@ class _ClassicVideoPlayerScreenState
     // listenManual — `ref.listen` `build()` ichida ba'zan tartibsiz
     // ishlaydi (registratsiya o'zgargandan keyin). listenManual darhol
     // ro'yxatdan o'tadi va widget life uchun saqlanadi.
-    ref.listenManual<PlayerSettings>(
-      playerSettingsProvider,
-      (prev, next) async {
-        if (!_controller.value.isInitialized) return;
-        if (prev?.speed != next.speed) {
-          await _controller.setPlaybackSpeed(next.speed);
+    ref.listenManual<PlayerSettings>(playerSettingsProvider, (
+      prev,
+      next,
+    ) async {
+      if (!_controller.value.isInitialized) return;
+      if (prev?.speed != next.speed) {
+        await _controller.setPlaybackSpeed(next.speed);
+      }
+      if (prev?.repeat != next.repeat) {
+        await _controller.setLooping(next.repeat);
+      }
+      if (prev?.sleepTimerMinutes != next.sleepTimerMinutes) {
+        if (next.sleepTimerMinutes != null) {
+          _startSleepTimer(next.sleepTimerMinutes!);
+        } else {
+          _sleepTimer?.cancel();
+          _sleepTimer = null;
+          _sleepTimerRemaining = Duration.zero;
+          if (mounted) setState(() {});
         }
-        if (prev?.repeat != next.repeat) {
-          await _controller.setLooping(next.repeat);
-        }
-        if (prev?.sleepTimerMinutes != next.sleepTimerMinutes) {
-          if (next.sleepTimerMinutes != null) {
-            _startSleepTimer(next.sleepTimerMinutes!);
-          } else {
-            _sleepTimer?.cancel();
-            _sleepTimer = null;
-            _sleepTimerRemaining = Duration.zero;
-            if (mounted) setState(() {});
-          }
-        }
-      },
-    );
+      }
+    });
   }
 
   @override
@@ -102,8 +102,7 @@ class _ClassicVideoPlayerScreenState
       _controller.dispose();
     }
 
-    SystemChrome.setPreferredOrientations(
-        [DeviceOrientation.portraitUp]);
+    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     super.dispose();
@@ -183,9 +182,8 @@ class _ClassicVideoPlayerScreenState
   void _onControllerUpdate() {
     if (!mounted) return;
     final v = _controller.value;
-    final ended = v.duration > Duration.zero &&
-        v.position >= v.duration &&
-        !v.isPlaying;
+    final ended =
+        v.duration > Duration.zero && v.position >= v.duration && !v.isPlaying;
     if (ended && !_showControls) {
       _hideControlsTimer?.cancel();
       setState(() => _showControls = true);
@@ -291,8 +289,7 @@ class _ClassicVideoPlayerScreenState
             if (_controller.value.isInitialized &&
                 _controller.value.isBuffering)
               const Center(
-                child:
-                    CircularProgressIndicator(color: AppColors.parvozGreen),
+                child: CircularProgressIndicator(color: AppColors.parvozGreen),
               ),
             if (_showControls && !settings.screenLocked) _buildControls(),
             if (settings.screenLocked) _buildLockIndicator(),
@@ -314,8 +311,7 @@ class _ClassicVideoPlayerScreenState
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(Icons.error_outline,
-                color: Colors.white70, size: 48),
+            const Icon(Icons.error_outline, color: Colors.white70, size: 48),
             const SizedBox(height: 12),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -370,9 +366,8 @@ class _ClassicVideoPlayerScreenState
   ///   3. Tepa (back/title/settings) + past (slider/vaqt/lock) panellar —
   ///      SafeArea ichida, Spacer bilan tepaga va pastga taqaladi.
   Widget _buildControls() {
-    final showCenter = !_initializing &&
-        _controller.value.isInitialized &&
-        _initError == null;
+    final showCenter =
+        !_initializing && _controller.value.isInitialized && _initError == null;
 
     return Stack(
       fit: StackFit.expand,
@@ -496,9 +491,7 @@ class _ClassicVideoPlayerScreenState
                   ),
                 ),
                 child: Slider(
-                  value: value.position.inSeconds
-                      .toDouble()
-                      .clamp(0.0, maxSec),
+                  value: value.position.inSeconds.toDouble().clamp(0.0, maxSec),
                   max: maxSec,
                   activeColor: AppColors.parvozGreen,
                   inactiveColor: Colors.white.withValues(alpha: 0.3),
@@ -519,10 +512,7 @@ class _ClassicVideoPlayerScreenState
                   builder: (_, value, __) {
                     return Text(
                       '${_formatDuration(value.position)} / ${_formatDuration(value.duration)}',
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                      ),
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
                     );
                   },
                 ),
@@ -560,8 +550,7 @@ class _ClassicVideoPlayerScreenState
             color: Colors.black.withOpacity(0.5),
             borderRadius: BorderRadius.circular(40),
           ),
-          child: const Icon(Icons.lock,
-              color: Colors.white, size: 32),
+          child: const Icon(Icons.lock, color: Colors.white, size: 32),
         ),
       ),
     );
@@ -572,8 +561,7 @@ class _ClassicVideoPlayerScreenState
       top: 60,
       right: 16,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
         decoration: BoxDecoration(
           // ignore: deprecated_member_use
           color: Colors.black.withOpacity(0.6),
@@ -586,8 +574,7 @@ class _ClassicVideoPlayerScreenState
             const SizedBox(width: 6),
             Text(
               _formatDuration(_sleepTimerRemaining),
-              style:
-                  const TextStyle(color: Colors.white, fontSize: 13),
+              style: const TextStyle(color: Colors.white, fontSize: 13),
             ),
           ],
         ),
