@@ -13,6 +13,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/features/child_management/presentation/widgets/repair_qr_dialog.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +92,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                   for (final c in children) ...[
                     _ChildCard(
                       child: c,
-                      onTap: () => _showAccountSheet(context, c),
+                      onTap: () => _showAccountSheet(context, ref, c),
                     ),
                     const SizedBox(height: 10),
                   ],
@@ -228,14 +229,48 @@ class _AddChildButton extends StatelessWidget {
 
 // ════════════ "Akkount" varag'i (bola kartasi bosilganda) ════════════
 
-void _showAccountSheet(BuildContext context, Child child) {
-  showModalBottomSheet<void>(
+Future<void> _showAccountSheet(
+  BuildContext context,
+  WidgetRef ref,
+  Child child,
+) async {
+  // Sheet natija qaytaradi: 'qr' | 'reconnect' — ishlov TASHQI kontekstda
+  // (sheet yopilgach uning contexti o'lik bo'ladi).
+  final action = await showModalBottomSheet<String>(
     context: context,
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.55),
     builder: (_) => _AccountSheet(child: child),
   );
+  if (action == null || !context.mounted) return;
+
+  if (action == 'qr') {
+    await RepairQrDialog.show(
+      context,
+      childId: child.id,
+      childName: child.name,
+    );
+    return;
+  }
+  if (action == 'reconnect') {
+    // Oila kodi BIR MARTALIK — bola avval ulangan bo'lsa eski kod backend
+    // tomonidan rad etiladi. Shuning uchun avval YANGI kod generatsiya
+    // qilamiz, keyin ulanish varag'ini yangi kod bilan ochamiz.
+    final result = await ref
+        .read(childActionsProvider.notifier)
+        .regenerateFamilyCode(child.id);
+    if (!context.mounted) return;
+    if (!result.isSuccess || result.data == null) {
+      AppToast.error(context, "Yangi kod yaratib bo'lmadi. Qayta urining.");
+      return;
+    }
+    await showConnectChildSheet(
+      context,
+      childId: child.id,
+      initialChild: child.copyWith(familyCode: result.data),
+    );
+  }
 }
 
 class _AccountSheet extends StatelessWidget {
@@ -312,27 +347,13 @@ class _AccountSheet extends StatelessWidget {
                 _SheetPillButton(
                   icon: SolarIconsOutline.qrCode,
                   label: 'QR kod generatsiya',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    RepairQrDialog.show(
-                      context,
-                      childId: child.id,
-                      childName: child.name,
-                    );
-                  },
+                  onTap: () => Navigator.of(context).pop('qr'),
                 ),
                 const SizedBox(height: 10),
                 _SheetPillButton(
                   icon: SolarIconsOutline.restart,
                   label: 'Bolani qayta ulash',
-                  onTap: () {
-                    Navigator.of(context).pop();
-                    showConnectChildSheet(
-                      context,
-                      childId: child.id,
-                      initialChild: child,
-                    );
-                  },
+                  onTap: () => Navigator.of(context).pop('reconnect'),
                 ),
               ],
             ),
