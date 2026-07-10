@@ -173,6 +173,10 @@ model Child {
   // Sprint 5.4 — admin Olympiad attempts
   olympiadAttempts OlympiadAttempt[]
 
+  // Videolar: ko'rish tarixi + yoqtirilgan (bola ilovasi feed header'i)
+  videoViews     ChildVideoView[]
+  videoFavorites ChildVideoFavorite[]
+
   @@map("children")
   @@index([parentId])
   @@index([familyCode])
@@ -876,11 +880,50 @@ model Video {
   createdAt   DateTime @default(now()) @map("created_at")
   updatedAt   DateTime @updatedAt @map("updated_at")
 
+  // Bola-scoped ko'rish tarixi + yoqtirilganlar (cascade — video o'chsa tozalanadi)
+  childViews     ChildVideoView[]
+  childFavorites ChildVideoFavorite[]
+
   @@map("videos")
   @@index([status])
   @@index([categoryId])
   @@index([planRequired])
   @@index([featured])
+}
+
+// ============================================
+// BOLA VIDEO ENGAGEMENT — ko'rish tarixi + yoqtirilgan (child app feed header)
+// ============================================
+
+// Bola qaysi videoni ko'rgani — "Ko'rish tarixi". Har (bola, video) juftligi
+// bitta yozuv (qayta ko'rilsa viewedAt yangilanadi → ro'yxat boshiga chiqadi).
+model ChildVideoView {
+  id       String   @id @default(uuid())
+  childId  String   @map("child_id")
+  videoId  String   @map("video_id")
+  viewedAt DateTime @default(now()) @map("viewed_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, videoId])
+  @@index([childId, viewedAt(sort: Desc)])
+  @@map("child_video_views")
+}
+
+// Bola yoqtirgan videolar — "Yoqtirilgan videolar". Har juftlik bitta yozuv.
+model ChildVideoFavorite {
+  id        String   @id @default(uuid())
+  childId   String   @map("child_id")
+  videoId   String   @map("video_id")
+  createdAt DateTime @default(now()) @map("created_at")
+
+  child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
+  video Video @relation(fields: [videoId], references: [id], onDelete: Cascade)
+
+  @@unique([childId, videoId])
+  @@index([childId, createdAt(sort: Desc)])
+  @@map("child_video_favorites")
 }
 
 model Audiobook {

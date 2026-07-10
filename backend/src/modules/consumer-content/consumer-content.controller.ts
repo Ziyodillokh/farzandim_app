@@ -3,6 +3,8 @@ import {
   Controller,
   Get,
   Post,
+  Put,
+  Delete,
   Param,
   Query,
   Req,
@@ -273,5 +275,58 @@ export class ConsumerContentController {
   @ApiOperation({ summary: 'Record an article read (views++)' })
   recordArticleRead(@Param('id') id: string) {
     return this.service.recordArticleRead(id);
+  }
+
+  // ── Bola video engagement: ko'rish tarixi + yoqtirilganlar ────────────────
+
+  @Post('videos/:id/history')
+  @ApiOperation({ summary: 'Record that the current child watched this video' })
+  recordVideoHistory(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.service.recordVideoHistory(user.userId, id);
+  }
+
+  @Get('history/videos')
+  @ApiOperation({ summary: "Current child's watch history (newest first)" })
+  getVideoHistory(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.service.getVideoHistory(user.userId, requestOrigin(req));
+  }
+
+  @Put('videos/:id/favorite')
+  @ApiOperation({ summary: 'Add a video to the current child favorites' })
+  addVideoFavorite(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.service.addVideoFavorite(user.userId, id);
+  }
+
+  @Delete('videos/:id/favorite')
+  @ApiOperation({ summary: 'Remove a video from the current child favorites' })
+  removeVideoFavorite(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.service.removeVideoFavorite(user.userId, id);
+  }
+
+  @Get('favorites/videos')
+  @ApiOperation({ summary: "Current child's favorite videos (newest first)" })
+  getFavoriteVideos(
+    @CurrentUser() user: JwtPayload,
+    @Req() req: FastifyRequest,
+  ) {
+    return this.service.getFavoriteVideos(user.userId, requestOrigin(req));
+  }
+
+  @Get('favorites/ids')
+  @ApiOperation({ summary: "Current child's favorite video ids (feed sync)" })
+  getFavoriteVideoIds(@CurrentUser() user: JwtPayload) {
+    return this.service.getFavoriteVideoIds(user.userId);
   }
 }

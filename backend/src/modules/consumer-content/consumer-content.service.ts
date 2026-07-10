@@ -4,7 +4,7 @@ import {
   ForbiddenException,
   NotFoundException,
 } from '@nestjs/common';
-import { Prisma } from '@prisma/client';
+import { Prisma, Video } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { mediaProxyUrl, MediaSegment } from './media-proxy';
@@ -110,6 +110,19 @@ export class ConsumerContentService {
       .map(([slug]) => slug);
   }
 
+  // Feed bilan bir xil huquq predikati: approved + yosh + tarif. History va
+  // favorites ro'yxatlari ham SHU filtrdan o'tadi — obuna tugagach premium
+  // kontent tarixdan/yoqtirilgandan qayta o'ynatilmasin (entitlement leak).
+  private entitledVideoWhere(ctx: ChildContext): Prisma.VideoWhereInput {
+    const a = ctx.age ?? 8;
+    return {
+      status: 'approved',
+      ageFrom: { lte: a },
+      ageTo: { gte: a },
+      planRequired: { in: this.allowedPlans(ctx.parentPlan) },
+    };
+  }
+
   async getMe(userId: string) {
     const ctx = await this.loadChildContext(userId);
     return {
@@ -122,14 +135,7 @@ export class ConsumerContentService {
 
   async getVideos(userId: string, origin: string, page: number, limit: number) {
     const ctx = await this.loadChildContext(userId);
-    const a = ctx.age ?? 8;
-
-    const where: Prisma.VideoWhereInput = {
-      status: 'approved',
-      ageFrom: { lte: a },
-      ageTo: { gte: a },
-      planRequired: { in: this.allowedPlans(ctx.parentPlan) },
-    };
+    const where = this.entitledVideoWhere(ctx);
 
     const [total, rows] = await Promise.all([
       this.prisma.video.count({ where }),
@@ -143,7 +149,23 @@ export class ConsumerContentService {
 
     // Proxy URL (telefonga yetadi); storageKey yo'q bo'lsa (YouTube/link)
     // asl tashqi url ishlatiladi.
-    const items = rows.map((v) => ({
+    const items = rows.map((v) => this.mapVideo(v, origin));
+
+    return {
+      items,
+      pagination: {
+        page,
+        totalPages: Math.max(1, Math.ceil(total / limit)),
+        total,
+        limit,
+      },
+    };
+  }
+
+  // Video → telefon feed DTO (proxy URL). getVideos / history / favorites
+  // uchun bitta manba — barcha ro'yxatlar bir xil shaklda qaytadi.
+  private mapVideo(v: Video, origin: string) {
+    return {
       id: v.id,
       title: v.title,
       description: v.description,
@@ -160,16 +182,6 @@ export class ConsumerContentService {
       views: v.views,
       likes: v.likes,
       createdAt: v.createdAt.toISOString(),
-    }));
-
-    return {
-      items,
-      pagination: {
-        page,
-        totalPages: Math.max(1, Math.ceil(total / limit)),
-        total,
-        limit,
-      },
     };
   }
 
@@ -468,5 +480,95 @@ export class ConsumerContentService {
       }
       throw err;
     }
+  }
+
+  // ── Bola video engagement: ko'rish tarixi + yoqtirilganlar ────────────────
+
+  /** Bola videoni ochganda tarixga yozadi (upsert — qayta ko'rilsa boshiga). */
+  async recordVideoHistory(userId: string, videoId: string) {
+    const ctx = await this.loadChildContext(userId);
+    try {
+      await this.prisma.childVideoView.upsert({
+        where: { childId_videoId: { childId: ctx.childId, videoId } },
+        create: { childId: ctx.childId, videoId },
+        update: { viewedAt: new Date() },
+      });
+      return { ok: true };
+    } catch (err: unknown) {
+      // Video mavjud emas (P2003 FK) — jimgina o'tkazamiz (fire-and-forget).
+      if ((err as { code?: string }).code === 'P2003') return { ok: false };
+      throw err;
+    }
+  }
+
+  /** Bola ko'rish tarixi — yangi → eski, faqat hali approved videolar. */
+  async getVideoHistory(userId: string, origin: string, limit = 100) {
+    const ctx = await this.loadChildContext(userId);
+    const rows = await this.prisma.childVideoView.findMany({
+      where: { childId: ctx.childId, video: this.entitledVideoWhere(ctx) },
+      orderBy: { viewedAt: 'desc' },
+      take: limit,
+      include: { video: true },
+    });
+    return {
+      items: rows.map((r) => ({
+        ...this.mapVideo(r.video, origin),
+        viewedAt: r.viewedAt.toISOString(),
+      })),
+    };
+  }
+
+  /** Videoni yoqtirilganlarga qo'shadi (idempotent). */
+  async addVideoFavorite(userId: string, videoId: string) {
+    const ctx = await this.loadChildContext(userId);
+    try {
+      await this.prisma.childVideoFavorite.upsert({
+        where: { childId_videoId: { childId: ctx.childId, videoId } },
+        create: { childId: ctx.childId, videoId },
+        update: {},
+      });
+      return { ok: true, favorited: true };
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'P2003') {
+        throw new NotFoundException('Video not found');
+      }
+      throw err;
+    }
+  }
+
+  /** Videoni yoqtirilganlardan olib tashlaydi (idempotent). */
+  async removeVideoFavorite(userId: string, videoId: string) {
+    const ctx = await this.loadChildContext(userId);
+    await this.prisma.childVideoFavorite.deleteMany({
+      where: { childId: ctx.childId, videoId },
+    });
+    return { ok: true, favorited: false };
+  }
+
+  /** Yoqtirilgan videolar — yangi → eski, faqat approved. */
+  async getFavoriteVideos(userId: string, origin: string) {
+    const ctx = await this.loadChildContext(userId);
+    const rows = await this.prisma.childVideoFavorite.findMany({
+      where: { childId: ctx.childId, video: this.entitledVideoWhere(ctx) },
+      orderBy: { createdAt: 'desc' },
+      include: { video: true },
+    });
+    return {
+      items: rows.map((r) => ({
+        ...this.mapVideo(r.video, origin),
+        favoritedAt: r.createdAt.toISOString(),
+      })),
+    };
+  }
+
+  /** Yoqtirilgan video ID'lari — feed'dagi ♡ holatini sinxronlash uchun.
+   *  List endpointlar bilan bir xil: faqat huquqli (approved+yosh+tarif). */
+  async getFavoriteVideoIds(userId: string) {
+    const ctx = await this.loadChildContext(userId);
+    const rows = await this.prisma.childVideoFavorite.findMany({
+      where: { childId: ctx.childId, video: this.entitledVideoWhere(ctx) },
+      select: { videoId: true },
+    });
+    return { ids: rows.map((r) => r.videoId) };
   }
 }

@@ -123,16 +123,17 @@ final topVideosProvider = Provider<List<VideoModel>>((ref) {
 
 // ── Feed ekrani (kategoriya chip'lari) ──────────────────────────────────
 
-/// Feed kategoriya chip'lari — yuklangan videolardagi mavjud yo'nalishlar
-/// (janr), birinchi uchrash tartibida. UI oldiga "Barchasi" chip qo'shadi.
-/// Videolarda yo'nalish bo'lmasa ro'yxat bo'sh (chip qatori ko'rsatilmaydi).
+/// Feed kategoriya chip'lari — yuklangan videolardagi mavjud janrlar
+/// (`category`, backend slug'i humanlashtirilgan), birinchi uchrash tartibida.
+/// UI oldiga "Barchasi" chip qo'shadi. "Boshqa" (kategoriyasiz) chip
+/// ko'rsatilmaydi. Janr topilmasa ro'yxat bo'sh (chip qatori chiqmaydi).
 final videoCategoriesProvider = Provider<List<String>>((ref) {
   final videos = ref.watch(effectiveVideosProvider);
   final seen = <String>{};
   final result = <String>[];
   for (final v in videos) {
-    final g = v.yonalish.trim();
-    if (g.isNotEmpty && seen.add(g)) result.add(g);
+    final g = v.category.trim();
+    if (g.isNotEmpty && g != 'Boshqa' && seen.add(g)) result.add(g);
   }
   return result;
 });
@@ -157,5 +158,5 @@ final videoFeedProvider = Provider<List<VideoModel>>((ref) {
   final selected = ref.watch(effectiveVideoCategoryProvider);
   final videos = ref.watch(effectiveVideosProvider);
   if (selected == null) return videos;
-  return videos.where((v) => v.yonalish.trim() == selected).toList();
+  return videos.where((v) => v.category.trim() == selected).toList();
 });

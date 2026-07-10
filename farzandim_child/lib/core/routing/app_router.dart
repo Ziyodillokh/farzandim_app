@@ -59,7 +59,8 @@ import 'package:farzandim_child/features/videos/presentation/screens/classic_vid
 import 'package:farzandim_child/features/videos/presentation/screens/reels_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/youtube_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/videos_feed_screen.dart';
-import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
+import 'package:farzandim_child/features/videos/presentation/screens/video_engagement_screens.dart';
+import 'package:farzandim_child/features/videos/data/repositories/video_engagement_repository.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_recording_screen.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
@@ -113,9 +114,12 @@ class _VideoPlayerRouteState extends ConsumerState<_VideoPlayerRoute> {
   @override
   void initState() {
     super.initState();
-    // build paytida provider'ni o'zgartirmaslik uchun microtask'da.
+    // Ko'rish tarixiga yozamiz (backend, fire-and-forget). build paytida
+    // provider'ni o'zgartirmaslik uchun microtask'da.
     Future.microtask(
-      () => ref.read(watchHistoryIdsProvider.notifier).record(widget.video.id),
+      () => ref
+          .read(videoEngagementRepositoryProvider)
+          .recordHistory(widget.video.id),
     );
   }
 
@@ -213,6 +217,8 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/analytics',
           '/videos',
           '/video-player',
+          '/watch-history',
+          '/liked-videos',
           '/audiobooks',
           '/audio-player',
           '/contests',
@@ -293,6 +299,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/video-player',
         builder: (context, state) =>
             _VideoPlayerRoute(video: state.extra! as VideoModel),
+      ),
+      GoRoute(
+        path: '/watch-history',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const WatchHistoryScreen()),
+      ),
+      GoRoute(
+        path: '/liked-videos',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const LikedVideosScreen()),
       ),
       GoRoute(
         path: '/audiobooks',
