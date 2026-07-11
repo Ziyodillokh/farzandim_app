@@ -109,7 +109,7 @@ class _BottomPanel extends StatelessWidget {
 
   /// Trek bo'ylab kirilgan ko'cha nomlari (birinchi kirish tartibida).
   final List<String> streets;
-  final void Function(LatLng target) onPlaceTap;
+  final void Function(double lat, double lng) onPlaceTap;
   final double distanceKm;
 
   String _formatDate(DateTime dt) =>
@@ -194,7 +194,8 @@ class _BottomPanel extends StatelessWidget {
                 itemBuilder: (_, i) => _PlaceCard(
                   index: i,
                   stop: stops[i],
-                  onTap: () => onPlaceTap(stops[i].latLng),
+                  onTap: () =>
+                      onPlaceTap(stops[i].latitude, stops[i].longitude),
                 ),
               ),
             ),
