@@ -328,58 +328,63 @@ class _StatChipsRow extends ConsumerWidget {
 
     const outer = Radius.circular(24);
     const inner = Radius.circular(12);
-    return Row(
-      children: [
-        Expanded(
-          child: _StatChip(
-            tint: _amber,
-            radii: const BorderRadius.only(
-              topLeft: outer,
-              bottomLeft: outer,
-              topRight: inner,
-              bottomRight: inner,
+    // Chiplar bosilsa Statistika sahifasi ochiladi.
+    return GestureDetector(
+      onTap: () => context.push('/statistics'),
+      behavior: HitTestBehavior.opaque,
+      child: Row(
+        children: [
+          Expanded(
+            child: _StatChip(
+              tint: _amber,
+              radii: const BorderRadius.only(
+                topLeft: outer,
+                bottomLeft: outer,
+                topRight: inner,
+                bottomRight: inner,
+              ),
+              icon: const Icon(
+                Icons.local_fire_department_rounded,
+                size: 26,
+                color: _amber,
+              ),
+              value: '$streak kun',
             ),
-            icon: const Icon(
-              Icons.local_fire_department_rounded,
-              size: 26,
-              color: _amber,
-            ),
-            value: '$streak kun',
           ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: _StatChip(
-            tint: _stepsBlue,
-            radii: const BorderRadius.all(inner),
-            icon: Image.asset(
-              'assets/icons/ic_steps.png',
-              width: 26,
-              height: 26,
+          const SizedBox(width: 6),
+          Expanded(
+            child: _StatChip(
+              tint: _stepsBlue,
+              radii: const BorderRadius.all(inner),
+              icon: Image.asset(
+                'assets/icons/ic_steps.png',
+                width: 26,
+                height: 26,
+              ),
+              value: _fmtNum(steps),
             ),
-            value: _fmtNum(steps),
           ),
-        ),
-        const SizedBox(width: 6),
-        Expanded(
-          child: _StatChip(
-            tint: _coinGreen,
-            radii: const BorderRadius.only(
-              topRight: outer,
-              bottomRight: outer,
-              topLeft: inner,
-              bottomLeft: inner,
+          const SizedBox(width: 6),
+          Expanded(
+            child: _StatChip(
+              tint: _coinGreen,
+              radii: const BorderRadius.only(
+                topRight: outer,
+                bottomRight: outer,
+                topLeft: inner,
+                bottomLeft: inner,
+              ),
+              icon: const Icon(
+                Icons.monetization_on_rounded,
+                size: 26,
+                color: _coinGreen,
+              ),
+              value: _fmtNum(don),
+              trailing: const _DonBadge(),
             ),
-            icon: const Icon(
-              Icons.monetization_on_rounded,
-              size: 26,
-              color: _coinGreen,
-            ),
-            value: _fmtNum(don),
-            trailing: const _DonBadge(),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 }

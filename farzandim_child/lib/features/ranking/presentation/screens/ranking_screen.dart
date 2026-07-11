@@ -1,163 +1,363 @@
 // ─────────────────────────────────────────────────────────────────────
-// RankingScreen — "Reyting" (Parvoz Premium / Stitch dark-navy redizayn)
+// RankingScreen — "DON reytingi" (Figma 1:1, Parvoz ko'k)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Ilova umumiy UI'siga (Bosh sahifa / Bildirishnoma) moslangan: deep navy
-// fon, glass kartalar, aqua aksent, Plus Jakarta Sans. Logika o'zgarmagan —
-// filteredUsersProvider / timeRangeProvider / selectedRegionProvider va
-// scoreFor o'sha-o'sha ishlatiladi.
+// Statistika'dagi "DON balansi" bosilganda ochiladi. Tuzilishi (Figma):
+//   • Header: ← + "DON reytingi" + ? (yordam)
+//   • Filtr: ko'k pill "Viloyat bo'yicha ✕" + chevron (viloyat tanlash)
+//   • Podium top-3: markazda 1-o'rin (toj) + 2/3 yon tomonlarda, medal
+//     ustunlari (oltin/kumush/bronza gradient)
+//   • Ro'yxat: 4+ qatorlar (avatar + ism + "N DON" pill)
+//   • Pastda yopishgan: bolaning O'Z qatori (yorug' karta)
+//
+// Real: filteredUsersProvider (+ viloyat filtri). Bo'sh bo'lsa PREVIEW.
 
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
-import 'package:farzandim_child/features/ranking/data/models/ranking_user.dart';
+import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
-import 'package:farzandim_child/shared/widgets/empty_state_mascot.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
-// ─────────────── Stitch palette (bosh sahifa bilan bir xil) ───────────────
+// ════════════ Figma tokenlar ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _glass = Color(0x14FFFFFF);
+const _glassBorder = Color(0x24FFFFFF);
+const _dim = Color(0x99FFFFFF);
+const _gold = Color(0xFFF2B233);
+const _silver = Color(0xFFB7C3D6);
+const _bronze = Color(0xFFE0703A);
 
-class _P {
-  _P(this.dark);
-  final bool dark;
+TextStyle _unb(
+  double s, {
+  FontWeight w = FontWeight.w700,
+  Color c = Colors.white,
+  double ls = -0.4,
+}) => GoogleFonts.unbounded(
+  fontSize: s,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.2,
+);
 
-  Color get bg => dark ? const Color(0xFF0B1C30) : const Color(0xFFF8F9FF);
-  Color get card => dark ? const Color(0xFF213145) : Colors.white;
-  Color get cardAlt => dark ? const Color(0xFF18283D) : const Color(0xFFEEF3FF);
-  Color get text => dark ? const Color(0xFFF8F9FF) : const Color(0xFF0B1C30);
-  Color get muted => dark ? const Color(0xFFCBDBF5) : const Color(0xFF5A6B66);
-  Color get aqua => dark ? const Color(0xFF22D3EE) : const Color(0xFF0E7490);
-  Color get border =>
-      dark ? Colors.white.withValues(alpha: 0.08) : const Color(0xFFD3E4FE);
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
 
-  static const Color gold = Color(0xFFFFC83D);
-  static const Color silver = Color(0xFFB7C3D6);
-  static const Color bronze = Color(0xFFE08A4B);
-
-  Color medalColor(int rank) => switch (rank) {
-        1 => gold,
-        2 => silver,
-        3 => bronze,
-        _ => aqua,
-      };
+String _fmtNum(int v) {
+  final s = v.toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
+    b.write(s[i]);
+  }
+  return b.toString();
 }
 
-TextStyle _jak(
-  _P p, {
-  double size = 14,
-  FontWeight weight = FontWeight.w600,
-  Color? color,
-  double? height,
-  double? spacing,
-}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      fontWeight: weight,
-      color: color ?? p.text,
-      height: height,
-      letterSpacing: spacing,
-    );
+/// Ro'yxat elementi (real yoki preview).
+class _Row {
+  const _Row(this.rank, this.name, this.don, this.color, {this.me = false});
+  final int rank;
+  final String name;
+  final int don;
+  final Color color;
+  final bool me;
+}
 
-String _rangeLabel(TimeRange r) => switch (r) {
-      TimeRange.kunlik => 'Kunlik',
-      TimeRange.haftalik => 'Haftalik',
-      TimeRange.oylik => 'Oylik',
-      TimeRange.butunDavr => 'Butun davr',
-    };
+// ~100 ta PREVIEW qator (real ro'yxat bo'sh bo'lganda). 67-o'rin — bolaning
+// o'zi (Figma'dagi "67. Akmal"); DON ballari yuqoridan pastga kamayib boradi.
+final List<_Row> _previewRows = _buildPreviewRows();
+final _Row _previewMe = _previewRows.firstWhere((r) => r.me);
 
-// ─────────────── SCREEN ───────────────
+List<_Row> _buildPreviewRows() {
+  const names = [
+    'Muahmmad', 'Mahliyo', 'Kamol', 'Nodira', 'Akmal', 'Dilnoza', 'Jasur',
+    'Malika', 'Sardor', 'Zilola', 'Bekzod', 'Gulnora', 'Otabek', 'Sevinch',
+    'Ulugbek', 'Shahzoda', 'Javohir', 'Madina', 'Temur', 'Kamila', 'Aziz',
+    'Laylo', 'Botir', 'Ruxshona', 'Sanjar', 'Mohira', 'Doston', 'Yulduz',
+    'Farrux', 'Nilufar', //
+  ];
+  const colors = [
+    Color(0xFF7B61FF),
+    Color(0xFFEF7DA0),
+    Color(0xFF41DD7A),
+    Color(0xFF66B3FF),
+    Color(0xFFF2B233),
+    Color(0xFF4ECDC4),
+    Color(0xFFFF8A5C),
+    Color(0xFF9B8CFF),
+  ];
+  return [
+    for (var i = 0; i < 100; i++)
+      _Row(
+        i + 1,
+        i == 66
+            ? 'Akmal'
+            : (i < names.length ? names[i] : names[(i * 7 + 3) % names.length]),
+        12500 - i * 95 - (i * 13) % 47,
+        // Podium (1-3) ranglari Figma bo'yicha: binafsha/pushti/yashil.
+        i == 66
+            ? const Color(0xFF66B3FF)
+            : colors[(i < 3 ? i : (i * 5 + 2)) % colors.length],
+        me: i == 66,
+      ),
+  ];
+}
 
-class RankingScreen extends ConsumerWidget {
+/// "DON reytingi" sahifasi.
+class RankingScreen extends ConsumerStatefulWidget {
+  /// `RankingScreen` konstruktor.
   const RankingScreen({super.key});
 
-  // Screenshotdagi 3 ta pill.
-  static const _ranges = [
-    TimeRange.haftalik,
-    TimeRange.oylik,
-    TimeRange.butunDavr,
-  ];
+  @override
+  ConsumerState<RankingScreen> createState() => _RankingScreenState();
+}
+
+class _RankingScreenState extends ConsumerState<RankingScreen> {
+  final _scroll = ScrollController();
+
+  // Bitta qator balandligi: tile (10+38+10) + oraliq 8.
+  static const double _rowExtent = 66;
+  // Yig'ilgan holatdagi ro'yxat geometriyasi: list tepa padding (8) +
+  // panel ichki padding (12) + panel ichidagi top-3 blok (3 qator).
+  static const double _collapsedListTop = 8 + 12 + 3 * _rowExtent;
+
+  /// Scroll boshlanganda podium YIG'ILIB 1/2/3 oddiy qatorga aylanadi;
+  /// tepaga qaytilganda yana podium ochiladi.
+  bool _collapsed = false;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final p = _P(context.adaptive.isDark);
+  void initState() {
+    super.initState();
+    _scroll.addListener(() {
+      final off = _scroll.offset;
+      // Histerezis: ozgina scroll bo'lishi bilanoq yig'iladi — shunda
+      // 1-o'rin qatori ekranda ko'rinib qoladi; podium faqat eng tepaga
+      // to'liq qaytilgandagina ochiladi.
+      if (!_collapsed && off > 10) {
+        setState(() => _collapsed = true);
+      } else if (_collapsed && off <= 2) {
+        setState(() => _collapsed = false);
+      }
+    });
+  }
+
+  @override
+  void dispose() {
+    _scroll.dispose();
+    super.dispose();
+  }
+
+  /// Pastdagi O'Z qatori bosilganda ro'yxatda o'z atrofiga scroll qiladi
+  /// (o'z qatori ekran markazida bo'ladi). Ro'yxatda bo'lmasa — oxiriga.
+  void _jumpToMe(int? myIndex) {
+    if (!_scroll.hasClients) return;
+    // Scroll paytida podium yig'ilgan bo'ladi — hisob shu (oxirgi) holat
+    // geometriyasi bo'yicha (podium balandligi 0).
+    setState(() => _collapsed = true);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!_scroll.hasClients) return;
+      final viewport = _scroll.position.viewportDimension;
+      double target;
+      if (myIndex == null) {
+        target = _scroll.position.maxScrollExtent;
+      } else {
+        target = _collapsedListTop + myIndex * _rowExtent - viewport / 2;
+        target = target.clamp(0, _scroll.position.maxScrollExtent);
+      }
+      _scroll.animateTo(
+        target,
+        duration: const Duration(milliseconds: 450),
+        curve: Curves.easeOutCubic,
+      );
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final users = ref.watch(filteredUsersProvider);
     final range = ref.watch(timeRangeProvider);
     final region = ref.watch(selectedRegionProvider);
-    final currentRank = ref.watch(currentUserRankProvider);
+    final childId = ref.watch(pairingStateProvider).childId;
+
+    // Real ro'yxat → _Row'larga; bo'sh bo'lsa PREVIEW.
+    List<_Row> rows;
+    _Row? meRow;
+    if (users.isEmpty) {
+      rows = _previewRows;
+      meRow = _previewMe;
+    } else {
+      rows = [
+        for (var i = 0; i < users.length; i++)
+          _Row(
+            i + 1,
+            users[i].name,
+            scoreFor(users[i], range),
+            users[i].avatarColor,
+            me: users[i].id == childId,
+          ),
+      ];
+      final meIdx = rows.indexWhere((r) => r.me);
+      if (meIdx >= 0) meRow = rows[meIdx];
+    }
+    final top3 = rows.take(3).toList();
+    final rest = rows.length > 3 ? rows.sublist(3) : const <_Row>[];
+    // O'z o'rnining `rest` ichidagi indeksi (scroll hisobi uchun).
+    final myIdxInRest = rest.indexWhere((r) => r.me);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: p.bg,
-      extendBody: true,
+      backgroundColor: _bg,
       body: SafeArea(
-        bottom: false,
-        child: Column(
+        child: Stack(
           children: [
-            _Header(p: p, subtitle: _rangeLabel(range)),
-            const SizedBox(height: 14),
-            _RangePills(p: p, ranges: _ranges, active: range, ref: ref),
-            const SizedBox(height: 12),
-            _RegionFilter(p: p, region: region),
-            const SizedBox(height: 6),
-            Expanded(
-              child: users.length < 3
-                  ? _EmptyState(p: p)
-                  : _List(
-                      p: p,
-                      users: users,
-                      range: range,
-                      currentRank: currentRank,
-                      ref: ref,
+            Column(
+              children: [
+                // ── Header ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 12),
+                  child: Row(
+                    children: [
+                      _RoundBtn(
+                        icon: Icons.arrow_back_rounded,
+                        onTap: () {
+                          if (context.canPop()) {
+                            context.pop();
+                          } else {
+                            context.go('/dashboard');
+                          }
+                        },
+                      ),
+                      Expanded(
+                        child: Text(
+                          'DON reytingi',
+                          textAlign: TextAlign.center,
+                          style: _unb(20),
+                        ),
+                      ),
+                      _RoundBtn(
+                        icon: Icons.question_mark_rounded,
+                        onTap: () => _showHelp(context),
+                      ),
+                    ],
+                  ),
+                ),
+                // ── Viloyat filtri ──
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(20, 0, 20, 4),
+                  child: _RegionFilter(region: region),
+                ),
+                Expanded(
+                  child: ListView(
+                    controller: _scroll,
+                    padding: EdgeInsets.fromLTRB(
+                      10,
+                      8,
+                      10,
+                      // Pastdagi yopishgan o'z qatori uchun joy.
+                      90 + bottomInset,
                     ),
+                    children: [
+                      // Podium bo'limi (naqshli to'q-ko'k fon, Figma) —
+                      // scroll boshlanganda butunlay yig'iladi, top-3 esa
+                      // pastdagi panel ichida oddiy qator bo'lib chiqadi.
+                      if (top3.isNotEmpty)
+                        AnimatedCrossFade(
+                          duration: const Duration(milliseconds: 260),
+                          sizeCurve: Curves.easeOutCubic,
+                          crossFadeState: _collapsed
+                              ? CrossFadeState.showSecond
+                              : CrossFadeState.showFirst,
+                          firstChild: _PodiumSection(top3: top3),
+                          secondChild: const SizedBox(width: double.infinity),
+                        ),
+                      // Qatorlar paneli — yumaloq burchakli katta karta.
+                      Container(
+                        padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF0A0F16),
+                          borderRadius: BorderRadius.circular(28),
+                        ),
+                        child: Column(
+                          children: [
+                            // Yig'ilganda 1/2/3 ham panel ichida qator.
+                            if (top3.isNotEmpty)
+                              AnimatedCrossFade(
+                                duration: const Duration(milliseconds: 260),
+                                sizeCurve: Curves.easeOutCubic,
+                                crossFadeState: _collapsed
+                                    ? CrossFadeState.showSecond
+                                    : CrossFadeState.showFirst,
+                                firstChild: const SizedBox(
+                                  width: double.infinity,
+                                ),
+                                secondChild: Column(
+                                  children: [
+                                    for (final r in top3) ...[
+                                      _RankTile(row: r, highlight: r.me),
+                                      const SizedBox(height: 8),
+                                    ],
+                                  ],
+                                ),
+                              ),
+                            // O'z qatori (r.me) ro'yxatda ham ko'k bilan
+                            // ajralib turadi — scroll qilinganda topiladi.
+                            for (final r in rest) ...[
+                              _RankTile(row: r, highlight: r.me),
+                              const SizedBox(height: 8),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
             ),
+            // ── Pastga yopishgan O'Z qatori (bosilsa o'z atrofiga scroll) ──
+            if (meRow != null)
+              Positioned(
+                left: 20,
+                right: 20,
+                bottom: 10 + bottomInset,
+                child: GestureDetector(
+                  onTap: () => _jumpToMe(myIdxInRest >= 0 ? myIdxInRest : null),
+                  behavior: HitTestBehavior.opaque,
+                  child: _RankTile(row: meRow, highlight: true),
+                ),
+              ),
           ],
         ),
       ),
-      bottomNavigationBar: const ChildBottomNavigation(),
     );
   }
-}
 
-// ─────────────── Header ───────────────
-
-class _Header extends StatelessWidget {
-  const _Header({required this.p, required this.subtitle});
-  final _P p;
-  final String subtitle;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(8, 6, 8, 0),
-      child: Row(
-        children: [
-          IconButton(
-            icon: Icon(Icons.arrow_back_rounded, color: p.text),
-            onPressed: () => Navigator.maybeOf(context)?.maybePop(),
-          ),
-          Expanded(
-            child: Column(
-              children: [
-                Text('Reyting',
-                    style: _jak(p, size: 22, weight: FontWeight.w800)),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: _jak(p, size: 13, color: p.muted)),
-              ],
-            ),
-          ),
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: p.aqua.withValues(alpha: 0.14),
-              shape: BoxShape.circle,
-            ),
-            child: Icon(Icons.emoji_events_rounded, color: p.aqua, size: 22),
+  void _showHelp(BuildContext context) {
+    showDialog<void>(
+      context: context,
+      builder: (_) => AlertDialog(
+        backgroundColor: const Color(0xFF12171E),
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(20),
+          side: const BorderSide(color: _glassBorder),
+        ),
+        title: Text('DON reytingi', style: _unb(16)),
+        content: Text(
+          "Kitob o'qish, test ishlash va kunlik faollik uchun DON ball "
+          "to'planadi. Reyting viloyat yoki butun O'zbekiston bo'yicha "
+          'hisoblanadi.',
+          style: _pop(13.5, c: _dim),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context),
+            child: Text('Tushunarli', style: _pop(14, c: _blue)),
           ),
         ],
       ),
@@ -165,186 +365,71 @@ class _Header extends StatelessWidget {
   }
 }
 
-// ─────────────── Time-range pills (sliding aqua indicator) ───────────────
-
-class _RangePills extends StatelessWidget {
-  const _RangePills({
-    required this.p,
-    required this.ranges,
-    required this.active,
-    required this.ref,
-  });
-  final _P p;
-  final List<TimeRange> ranges;
-  final TimeRange active;
-  final WidgetRef ref;
-
-  @override
-  Widget build(BuildContext context) {
-    final idx = ranges.indexOf(active).clamp(0, ranges.length - 1);
-    return Container(
-      height: 46,
-      margin: const EdgeInsets.symmetric(horizontal: 16),
-      padding: const EdgeInsets.all(4),
-      decoration: BoxDecoration(
-        color: p.cardAlt,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: p.border),
-      ),
-      child: LayoutBuilder(
-        builder: (context, c) {
-          final w = c.maxWidth / ranges.length;
-          return Stack(
-            children: [
-              AnimatedAlign(
-                alignment: Alignment(-1 + 2 * (idx / (ranges.length - 1)), 0),
-                duration: const Duration(milliseconds: 320),
-                curve: const Cubic(0.34, 1.4, 0.5, 1),
-                child: Container(
-                  width: w,
-                  height: double.infinity,
-                  decoration: BoxDecoration(
-                    color: p.aqua,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-              Row(
-                children: [
-                  for (final r in ranges)
-                    Expanded(
-                      child: GestureDetector(
-                        behavior: HitTestBehavior.opaque,
-                        onTap: () {
-                          HapticFeedback.selectionClick();
-                          ref.read(timeRangeProvider.notifier).state = r;
-                        },
-                        child: Center(
-                          child: Text(
-                            _rangeLabel(r),
-                            style: _jak(
-                              p,
-                              size: 14,
-                              weight: r == active
-                                  ? FontWeight.w800
-                                  : FontWeight.w600,
-                              color: r == active
-                                  ? const Color(0xFF06222B)
-                                  : p.muted,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                ],
-              ),
-            ],
-          );
-        },
-      ),
-    );
-  }
-}
-
-// ─────────────── Region filter pill ───────────────
+// ════════════ Viloyat filtri ════════════
 
 class _RegionFilter extends ConsumerWidget {
-  const _RegionFilter({required this.p, required this.region});
-  final _P p;
+  const _RegionFilter({required this.region});
+
   final String? region;
 
-  void _open(BuildContext context, WidgetRef ref) {
-    HapticFeedback.selectionClick();
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      isScrollControlled: true,
-      builder: (_) => _RegionSheet(p: p),
-    );
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    return Center(
-      child: GestureDetector(
-        behavior: HitTestBehavior.opaque,
-        onTap: () => _open(context, ref),
-        child: Container(
-          padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-          decoration: BoxDecoration(
-            color: p.cardAlt,
-            borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: p.border),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.place_rounded, size: 18, color: p.aqua),
-              const SizedBox(width: 8),
-              Text(
-                region ?? "Viloyatlar bo'yicha",
-                style: _jak(p, size: 14, weight: FontWeight.w700),
-              ),
-              const SizedBox(width: 6),
-              Icon(Icons.keyboard_arrow_down_rounded, size: 20, color: p.muted),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _RegionSheet extends ConsumerWidget {
-  const _RegionSheet({required this.p});
-  final _P p;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final selected = ref.watch(selectedRegionProvider);
-    void pick(String? region) {
-      ref.read(selectedRegionProvider.notifier).state = region;
-      ref.read(rankingTabProvider.notifier).state =
-          region == null ? RankingTab.umumiy : RankingTab.hudud;
-      Navigator.pop(context);
-    }
-
-    return DraggableScrollableSheet(
-      initialChildSize: 0.7,
-      maxChildSize: 0.92,
-      expand: false,
-      builder: (_, controller) => Container(
+    return GestureDetector(
+      onTap: () => _pickRegion(context, ref),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 48,
+        padding: const EdgeInsets.symmetric(horizontal: 8),
         decoration: BoxDecoration(
-          color: p.bg,
-          borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-          border: Border(top: BorderSide(color: p.border)),
+          color: _glass,
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _glassBorder),
         ),
-        child: Column(
+        child: Row(
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: p.border,
-                borderRadius: BorderRadius.circular(2),
+            if (region != null)
+              Container(
+                padding: const EdgeInsets.fromLTRB(14, 7, 8, 7),
+                decoration: BoxDecoration(
+                  color: _blue,
+                  borderRadius: BorderRadius.circular(999),
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Viloyat bo\'yicha',
+                      style: _pop(13, w: FontWeight.w600),
+                    ),
+                    const SizedBox(width: 6),
+                    GestureDetector(
+                      onTap: () =>
+                          ref.read(selectedRegionProvider.notifier).state =
+                              null,
+                      child: const Icon(
+                        Icons.cancel_rounded,
+                        size: 18,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              )
+            else
+              Padding(
+                padding: const EdgeInsets.only(left: 12),
+                child: Text(
+                  "Butun O'zbekiston",
+                  style: _pop(13.5, w: FontWeight.w500),
+                ),
               ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Text('Hududni tanlang',
-                  style: _jak(p, size: 18, weight: FontWeight.w800)),
-            ),
-            Expanded(
-              child: ListView(
-                controller: controller,
-                children: [
-                  _regionTile(p, "Barchasi (Viloyatlar bo'yicha)",
-                      selected == null, () => pick(null)),
-                  for (final r in UzbekistanRegions.all)
-                    _regionTile(p, r, r == selected, () => pick(r)),
-                  const SizedBox(height: 12),
-                ],
+            const Spacer(),
+            const Padding(
+              padding: EdgeInsets.only(right: 8),
+              child: Icon(
+                Icons.keyboard_arrow_down_rounded,
+                size: 24,
+                color: Colors.white,
               ),
             ),
           ],
@@ -353,349 +438,401 @@ class _RegionSheet extends ConsumerWidget {
     );
   }
 
-  Widget _regionTile(_P p, String label, bool sel, VoidCallback onTap) {
-    return ListTile(
-      onTap: onTap,
-      title: Text(label,
-          style: _jak(p,
-              size: 15,
-              weight: sel ? FontWeight.w800 : FontWeight.w500,
-              color: sel ? p.aqua : p.text)),
-      trailing:
-          sel ? Icon(Icons.check_rounded, color: p.aqua, size: 20) : null,
+  Future<void> _pickRegion(BuildContext context, WidgetRef ref) async {
+    final picked = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF0E1319),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        child: ListView(
+          shrinkWrap: true,
+          padding: const EdgeInsets.symmetric(vertical: 12),
+          children: [
+            ListTile(
+              title: Text("Butun O'zbekiston", style: _pop(15)),
+              onTap: () => Navigator.pop(ctx, ''),
+            ),
+            for (final r in UzbekistanRegions.all)
+              ListTile(
+                title: Text(r, style: _pop(15)),
+                onTap: () => Navigator.pop(ctx, r),
+              ),
+          ],
+        ),
+      ),
     );
+    if (picked == null) return;
+    ref.read(selectedRegionProvider.notifier).state = picked.isEmpty
+        ? null
+        : picked;
   }
 }
 
-// ─────────────── List (podium + tiles + sticky current user) ───────────────
+// ════════════ Podium (top-3) ════════════
 
-class _List extends StatelessWidget {
-  const _List({
-    required this.p,
-    required this.users,
-    required this.range,
-    required this.currentRank,
-    required this.ref,
-  });
-  final _P p;
-  final List<RankingUser> users;
-  final TimeRange range;
-  final int currentRank;
-  final WidgetRef ref;
+/// Podium bo'limi — Figma'dagidek to'q-ko'k gradient fon ustida xira
+/// skuter naqshlari va top-3 podium.
+class _PodiumSection extends StatelessWidget {
+  const _PodiumSection({required this.top3});
+
+  final List<_Row> top3;
 
   @override
   Widget build(BuildContext context) {
-    // Sticky: joriy user ro'yxatda (ko'rinmaydigan joyda) bo'lsa pastda pin.
-    final showSticky = currentRank > 3 && currentRank <= users.length;
-
-    return Stack(
-      children: [
-        RefreshIndicator(
-          color: p.aqua,
-          backgroundColor: p.card,
-          onRefresh: () async {
-            HapticFeedback.mediumImpact();
-            ref.invalidate(backendRankingProvider);
-            await ref.read(backendRankingProvider.future);
-          },
-          child: ListView(
-            physics: const AlwaysScrollableScrollPhysics(),
-            padding: EdgeInsets.fromLTRB(16, 12, 16, showSticky ? 180 : 120),
-            children: [
-              _Podium(p: p, users: users, range: range),
-              const SizedBox(height: 20),
-              for (int i = 3; i < users.length; i++)
-                _RankTile(
-                  p: p,
-                  user: users[i],
-                  rank: i + 1,
-                  range: range,
-                )
-                    .animate()
-                    .fadeIn(duration: 260.ms, delay: (45 * (i - 3)).ms)
-                    .moveY(
-                      begin: 14,
-                      end: 0,
-                      duration: 260.ms,
-                      delay: (45 * (i - 3)).ms,
-                      curve: Curves.easeOutCubic,
-                    ),
-            ],
-          ),
+    return Container(
+      padding: const EdgeInsets.only(top: 14),
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF0B1A2E), Color(0xFF040A12)],
         ),
-        if (showSticky)
-          Positioned(
-            left: 16,
-            right: 16,
-            bottom: 12,
-            child: _StickyCurrentUser(
-              p: p,
-              user: users[currentRank - 1],
-              rank: currentRank,
-              range: range,
-            ),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+      ),
+      child: Stack(
+        children: [
+          // Xira skuter naqshlari (Figma fonidagi kabi).
+          const Positioned(top: 6, left: 20, child: _BgScooter(angle: -0.3)),
+          const Positioned(
+            top: 2,
+            right: 64,
+            child: _BgScooter(angle: 0.25, size: 20),
           ),
-      ],
+          const Positioned(
+            top: 96,
+            left: 92,
+            child: _BgScooter(angle: 0.15, size: 22),
+          ),
+          const Positioned(top: 72, right: 16, child: _BgScooter(angle: -0.2)),
+          const Positioned(
+            bottom: 44,
+            left: 44,
+            child: _BgScooter(angle: 0.3, size: 20),
+          ),
+          const Positioned(
+            bottom: 20,
+            right: 100,
+            child: _BgScooter(angle: -0.35, size: 24),
+          ),
+          const Positioned(
+            top: 40,
+            left: 150,
+            child: _BgScooter(angle: 0.1, size: 18),
+          ),
+          _Podium(top3: top3),
+        ],
+      ),
     );
   }
 }
 
-// ─────────────── Podium (2 - 1 - 3) ───────────────
+/// Fon uchun xira, biroz burilgan skuter ikonchasi.
+class _BgScooter extends StatelessWidget {
+  const _BgScooter({required this.angle, this.size = 26});
+
+  final double angle;
+  final double size;
+
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: angle,
+      child: Icon(
+        SolarIconsOutline.scooter,
+        size: size,
+        color: const Color(0x14FFFFFF),
+      ),
+    );
+  }
+}
 
 class _Podium extends StatelessWidget {
-  const _Podium({required this.p, required this.users, required this.range});
-  final _P p;
-  final List<RankingUser> users;
-  final TimeRange range;
+  const _Podium({required this.top3});
+
+  final List<_Row> top3;
 
   @override
   Widget build(BuildContext context) {
+    final first = top3.isNotEmpty ? top3[0] : null;
+    final second = top3.length > 1 ? top3[1] : null;
+    final third = top3.length > 2 ? top3[2] : null;
     return Row(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        Expanded(child: _PodiumSlot(p: p, user: users[1], rank: 2, range: range)),
-        Expanded(child: _PodiumSlot(p: p, user: users[0], rank: 1, range: range)),
-        Expanded(child: _PodiumSlot(p: p, user: users[2], rank: 3, range: range)),
+        Expanded(
+          child: second == null
+              ? const SizedBox.shrink()
+              : _PodiumColumn(
+                  row: second,
+                  place: 2,
+                  medal: _silver,
+                  columnH: 96,
+                  avatarSize: 76,
+                ),
+        ),
+        Expanded(
+          child: first == null
+              ? const SizedBox.shrink()
+              : _PodiumColumn(
+                  row: first,
+                  place: 1,
+                  medal: _gold,
+                  columnH: 128,
+                  avatarSize: 92,
+                  crown: true,
+                ),
+        ),
+        Expanded(
+          child: third == null
+              ? const SizedBox.shrink()
+              : _PodiumColumn(
+                  row: third,
+                  place: 3,
+                  medal: _bronze,
+                  columnH: 80,
+                  avatarSize: 76,
+                ),
+        ),
       ],
     );
   }
 }
 
-class _PodiumSlot extends StatelessWidget {
-  const _PodiumSlot({
-    required this.p,
-    required this.user,
-    required this.rank,
-    required this.range,
+class _PodiumColumn extends StatelessWidget {
+  const _PodiumColumn({
+    required this.row,
+    required this.place,
+    required this.medal,
+    required this.columnH,
+    required this.avatarSize,
+    this.crown = false,
   });
-  final _P p;
-  final RankingUser user;
-  final int rank;
-  final TimeRange range;
+
+  final _Row row;
+  final int place;
+  final Color medal;
+  final double columnH;
+  final double avatarSize;
+  final bool crown;
 
   @override
   Widget build(BuildContext context) {
-    final isFirst = rank == 1;
-    final medal = p.medalColor(rank);
-    final size = isFirst ? 88.0 : 68.0;
-
-    return Padding(
-      padding: EdgeInsets.only(bottom: isFirst ? 0 : 14),
-      child: Column(
-        children: [
-          if (isFirst)
-            const Padding(
-              padding: EdgeInsets.only(bottom: 6),
-              child: Icon(Icons.emoji_events_rounded,
-                  color: _P.gold, size: 28),
-            ),
-          Stack(
-            alignment: Alignment.bottomCenter,
-            clipBehavior: Clip.none,
-            children: [
-              Container(
-                width: size,
-                height: size,
-                padding: const EdgeInsets.all(3),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  border: Border.all(color: medal, width: 3),
-                  boxShadow: [
-                    BoxShadow(
-                      color: medal.withValues(alpha: 0.35),
-                      blurRadius: 18,
-                      spreadRadius: -2,
-                    ),
-                  ],
-                ),
-                child: _Avatar(user: user, size: size - 6),
-              ),
-              Positioned(
-                bottom: -10,
-                child: Container(
-                  width: 24,
-                  height: 24,
-                  decoration: BoxDecoration(
-                    color: medal,
-                    shape: BoxShape.circle,
-                    border: Border.all(color: p.bg, width: 2),
-                  ),
-                  alignment: Alignment.center,
-                  child: Text('$rank',
-                      style: _jak(p,
-                          size: 12,
-                          weight: FontWeight.w800,
-                          color: const Color(0xFF06222B))),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          Text(
-            user.name,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
-            style: _jak(p, size: 14, weight: FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          _ScorePill(p: p, score: scoreFor(user, range)),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────── Rank tile (4+) ───────────────
-
-class _RankTile extends StatelessWidget {
-  const _RankTile({
-    required this.p,
-    required this.user,
-    required this.rank,
-    required this.range,
-  });
-  final _P p;
-  final RankingUser user;
-  final int rank;
-  final TimeRange range;
-
-  @override
-  Widget build(BuildContext context) {
-    final me = user.isCurrentUser;
-    return Container(
-      margin: const EdgeInsets.only(bottom: 10),
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
-      decoration: BoxDecoration(
-        color: me ? p.aqua.withValues(alpha: 0.12) : p.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(
-          color: me ? p.aqua.withValues(alpha: 0.55) : p.border,
-          width: me ? 1.4 : 1,
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        if (crown) Text('👑', style: _pop(20)),
+        const SizedBox(height: 4),
+        _Avatar(name: row.name, color: row.color, size: avatarSize),
+        const SizedBox(height: 8),
+        Text(
+          row.name,
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: _unb(place == 1 ? 15 : 13, w: FontWeight.w600),
         ),
-      ),
-      child: Row(
-        children: [
-          SizedBox(
-            width: 26,
-            child: Text('$rank',
-                textAlign: TextAlign.center,
-                style: _jak(p,
-                    size: 15, weight: FontWeight.w800, color: p.muted)),
+        const SizedBox(height: 6),
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          decoration: BoxDecoration(
+            color: medal,
+            borderRadius: BorderRadius.circular(999),
           ),
-          const SizedBox(width: 8),
-          _Avatar(user: user, size: 44),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Flexible(
-                      child: Text(user.name,
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: _jak(p, size: 15, weight: FontWeight.w700)),
-                    ),
-                    if (me) ...[
-                      const SizedBox(width: 6),
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: p.aqua,
-                          borderRadius: BorderRadius.circular(6),
-                        ),
-                        child: Text('SIZ',
-                            style: _jak(p,
-                                size: 9,
-                                weight: FontWeight.w800,
-                                color: const Color(0xFF06222B))),
-                      ),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 2),
-                Text(
-                  user.region.isEmpty ? '—' : user.region,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _jak(p, size: 12, color: p.muted),
-                ),
+          child: Text(
+            '${_fmtNum(row.don)} DON',
+            style: _pop(
+              11,
+              w: FontWeight.w700,
+              c: place == 2 ? const Color(0xFF2A3340) : Colors.white,
+            ),
+          ),
+        ),
+        const SizedBox(height: 8),
+        // Medal ustuni — yorqin oltin/kumush/bronza gradient (Figma).
+        Container(
+          height: columnH,
+          margin: const EdgeInsets.symmetric(horizontal: 6),
+          decoration: BoxDecoration(
+            gradient: LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [
+                Color.lerp(medal, Colors.white, 0.20)!,
+                Color.lerp(medal, Colors.black, 0.30)!,
               ],
             ),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
           ),
-          const SizedBox(width: 8),
-          _ScorePill(p: p, score: scoreFor(user, range)),
+          alignment: Alignment.topCenter,
+          padding: const EdgeInsets.only(top: 6),
+          child: _Medal(place: place, base: medal),
+        ),
+      ],
+    );
+  }
+}
+
+/// Lentali dumaloq medal — ustun tepasida (Figma'dagi 🥇 uslubida).
+class _Medal extends StatelessWidget {
+  const _Medal({required this.place, required this.base});
+
+  final int place;
+  final Color base;
+
+  @override
+  Widget build(BuildContext context) {
+    final dark = Color.lerp(base, Colors.black, 0.35)!;
+    final light = Color.lerp(base, Colors.white, 0.45)!;
+    final numColor = place == 2 ? const Color(0xFF39424E) : Colors.white;
+    return SizedBox(
+      width: 58,
+      height: 62,
+      child: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          // Lentalar (medal orqasida, ikki tomonga qiya).
+          Positioned(
+            top: 0,
+            left: 13,
+            child: Transform.rotate(
+              angle: 0.45,
+              child: Container(
+                width: 11,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: dark,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: 0,
+            right: 13,
+            child: Transform.rotate(
+              angle: -0.45,
+              child: Container(
+                width: 11,
+                height: 26,
+                decoration: BoxDecoration(
+                  color: dark,
+                  borderRadius: BorderRadius.circular(3),
+                ),
+              ),
+            ),
+          ),
+          // Medal doirasi.
+          Positioned(
+            top: 14,
+            child: Container(
+              width: 46,
+              height: 46,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [light, base, dark],
+                ),
+                border: Border.all(color: light, width: 2),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: Container(
+                width: 32,
+                height: 32,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: base.withValues(alpha: 0.55),
+                  border: Border.all(
+                    color: light.withValues(alpha: 0.85),
+                    width: 1.2,
+                  ),
+                ),
+                child: Text(
+                  '$place',
+                  style: _unb(15, w: FontWeight.w800, c: numColor),
+                ),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
 
-// ─────────────── Sticky current user ───────────────
+// ════════════ Ro'yxat qatori ════════════
 
-class _StickyCurrentUser extends StatelessWidget {
-  const _StickyCurrentUser({
-    required this.p,
-    required this.user,
-    required this.rank,
-    required this.range,
-  });
-  final _P p;
-  final RankingUser user;
-  final int rank;
-  final TimeRange range;
+class _RankTile extends StatelessWidget {
+  const _RankTile({required this.row, this.highlight = false});
+
+  final _Row row;
+  final bool highlight;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 11),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
       decoration: BoxDecoration(
-        color: p.aqua,
-        borderRadius: BorderRadius.circular(18),
-        boxShadow: [
-          BoxShadow(
-            color: p.aqua.withValues(alpha: 0.4),
-            blurRadius: 22,
-            offset: const Offset(0, 8),
-          ),
-        ],
+        // "Siz" qatori ko'k bilan aniq ajralib turadi.
+        color: highlight ? const Color(0xFF102A4F) : _glass,
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(
+          color: highlight ? const Color(0xB3216BFF) : _glassBorder,
+          width: highlight ? 1.4 : 1,
+        ),
+        boxShadow: highlight
+            ? [
+                BoxShadow(
+                  color: _blue.withValues(alpha: 0.35),
+                  blurRadius: 18,
+                  offset: const Offset(0, 4),
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 26,
-            child: Text('$rank',
-                textAlign: TextAlign.center,
-                style: _jak(p,
-                    size: 15,
-                    weight: FontWeight.w800,
-                    color: const Color(0xFF06222B))),
-          ),
-          const SizedBox(width: 8),
-          _Avatar(user: user, size: 42),
+          _Avatar(name: row.name, color: row.color, size: 38),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('Siz — ${user.name}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: _jak(p,
-                    size: 15,
-                    weight: FontWeight.w800,
-                    color: const Color(0xFF06222B))),
+            child: Text(
+              '${row.rank}. ${row.name}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _unb(15, w: FontWeight.w600, ls: -0.2),
+            ),
           ),
-          Row(
-            children: [
-              const Icon(Icons.star_rounded,
-                  color: Color(0xFF06222B), size: 18),
-              const SizedBox(width: 3),
-              Text('${scoreFor(user, range)}',
-                  style: _jak(p,
-                      size: 16,
-                      weight: FontWeight.w800,
-                      color: const Color(0xFF06222B))),
-            ],
+          if (highlight) ...[
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 2),
+              decoration: BoxDecoration(
+                color: _blue.withValues(alpha: 0.28),
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: _blue),
+              ),
+              child: Text('Siz', style: _pop(10, w: FontWeight.w700)),
+            ),
+            const SizedBox(width: 8),
+          ],
+          Text(_fmtNum(row.don), style: _unb(15, w: FontWeight.w700)),
+          const SizedBox(width: 8),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 3),
+            decoration: BoxDecoration(
+              color: _blue,
+              borderRadius: BorderRadius.circular(999),
+            ),
+            child: Text('DON', style: _pop(10, w: FontWeight.w700)),
           ),
         ],
       ),
@@ -703,11 +840,13 @@ class _StickyCurrentUser extends StatelessWidget {
   }
 }
 
-// ─────────────── Shared bits ───────────────
+// ════════════ Umumiy ════════════
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.user, required this.size});
-  final RankingUser user;
+  const _Avatar({required this.name, required this.color, required this.size});
+
+  final String name;
+  final Color color;
   final double size;
 
   @override
@@ -715,67 +854,40 @@ class _Avatar extends StatelessWidget {
     return Container(
       width: size,
       height: size,
-      decoration: BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            user.avatarColor,
-            user.avatarColor.withValues(alpha: 0.7),
-          ],
-        ),
-        shape: BoxShape.circle,
-      ),
       alignment: Alignment.center,
-      child: Text(
-        user.name.isEmpty ? '?' : user.name[0].toUpperCase(),
-        style: GoogleFonts.plusJakartaSans(
-          color: Colors.white,
-          fontSize: size * 0.42,
-          fontWeight: FontWeight.w800,
-        ),
-      ),
-    );
-  }
-}
-
-class _ScorePill extends StatelessWidget {
-  const _ScorePill({required this.p, required this.score});
-  final _P p;
-  final int score;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 11, vertical: 5),
       decoration: BoxDecoration(
-        color: p.cardAlt,
-        borderRadius: BorderRadius.circular(999),
-        border: Border.all(color: p.border),
+        color: color,
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0x33FFFFFF), width: 2),
       ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.star_rounded, color: _P.gold, size: 16),
-          const SizedBox(width: 4),
-          Text('$score', style: _jak(p, size: 14, weight: FontWeight.w800)),
-        ],
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: _unb(size * 0.36, w: FontWeight.w700),
       ),
     );
   }
 }
 
-class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.p});
-  final _P p;
+class _RoundBtn extends StatelessWidget {
+  const _RoundBtn({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return EmptyStateMascot(
-      faroVariant: FaroVariant.faceExcited,
-      accentColor: p.aqua,
-      title: "Reyting hozircha bo'sh",
-      subtitle: 'Konkurslarda ishtirok eting va reytingda joy oling!',
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: const Color(0x1AFFFFFF),
+          borderRadius: BorderRadius.circular(14),
+        ),
+        child: Icon(icon, size: 20, color: Colors.white),
+      ),
     );
   }
 }
