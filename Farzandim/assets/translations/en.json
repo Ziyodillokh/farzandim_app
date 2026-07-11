@@ -372,6 +372,13 @@
     "addressLoading": "Detecting…",
     "placeNameLabel": "Place name",
     "chooseIconLabel": "Choose icon",
+    "addressTapHint": "Tap to search an address",
+    "search": {
+      "title": "Search address",
+      "hint": "Mosque, school, street...",
+      "prompt": "Type a place name — nearest ones show first",
+      "noResults": "Nothing found"
+    },
     "cancelButton": "Cancel",
     "mapHint": "Tap on the map to set the center, or drag the marker",
     "nameLabel": "Name",

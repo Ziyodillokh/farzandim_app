@@ -16,8 +16,23 @@ class ApiKeys {
     'MAPBOX_PUBLIC_TOKEN',
   );
 
+  static String _yandexMapsKey = const String.fromEnvironment(
+    'YANDEX_MAPS_KEY',
+  );
+
   /// Google Maps + Places API kaliti.
   static String get googleMapsKey => _googleMapsKey;
+
+  /// Yandex Maps API kaliti — Geocoder (manzil qidiruv + koordinata→ko'cha).
+  /// Runtime `assets/env.json` ustun; bo'lmasa compile-time (`--dart-define`).
+  /// Placeholder (`BU_YERGA...`) yoki bo'sh → '' → qidiruv jimgina o'chiq.
+  static String get yandexMapsKey =>
+      _isRealKey(_yandexMapsKey) ? _yandexMapsKey : '';
+
+  /// Kalit haqiqiymi — bo'sh emas va placeholder marker (`BU_YERGA`/`YOUR`)
+  /// tutmaydi (aks holda API 403 → jim ishlamaslik o'rniga o'chirамiz).
+  static bool _isRealKey(String k) =>
+      k.isNotEmpty && !k.contains('BU_YERGA') && !k.contains('YOUR');
 
   /// Mapbox public token (`pk.…`) — OQ xarita render (raster plitka).
   /// Runtime `assets/env.json` ustun; bo'lmasa compile-time (`--dart-define`);
@@ -44,6 +59,10 @@ class ApiKeys {
       final mapbox = (map['MAPBOX_PUBLIC_TOKEN'] as String?) ?? '';
       if (mapbox.startsWith('pk.eyJ')) {
         _mapboxPublicToken = mapbox;
+      }
+      final yandex = (map['YANDEX_MAPS_KEY'] as String?) ?? '';
+      if (_isRealKey(yandex)) {
+        _yandexMapsKey = yandex;
       }
       debugPrint('ApiKeys: runtime env.json loaded');
     } catch (e) {
