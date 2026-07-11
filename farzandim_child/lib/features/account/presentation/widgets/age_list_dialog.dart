@@ -18,9 +18,7 @@ class AgeListDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return Dialog(
       backgroundColor: AppColors.surface,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(16),
-      ),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 400),
         child: Column(
@@ -57,8 +55,7 @@ class AgeListDialog extends StatelessWidget {
                       ),
                     ),
                     trailing: isSelected
-                        ? const Icon(AppIcons.check,
-                            color: AppColors.primary)
+                        ? const Icon(AppIcons.check, color: AppColors.primary)
                         : null,
                     onTap: () => Navigator.pop(context, age),
                   );

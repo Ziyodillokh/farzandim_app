@@ -89,6 +89,20 @@ export class ChildrenController {
     return this.childrenService.findOne(id, user.userId);
   }
 
+  @Get(':id/parent')
+  @ApiOperation({
+    summary: "Bog'langan ota-ona profili (ism) — bola yoki ota-ona o'qiydi",
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Parent public profile' })
+  @ApiResponse({ status: 403, description: 'Forbidden' })
+  async getParentProfile(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.childrenService.getParentProfile(id, user.userId);
+  }
+
   @Get(':id/device-policy')
   @ApiOperation({
     summary: 'Qurilma siyosati (blockUnknownSources) — ota-ona yoki bola o\'qiydi',

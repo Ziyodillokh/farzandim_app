@@ -16,6 +16,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/video_message/presentation/providers/video_message_provider.dart';
 import 'package:farzandim_child/features/voice_message/data/repositories/backend_voice_message_repository.dart';
@@ -554,15 +555,18 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 // ← kvadrat tugma + markazda ism/holat + o'ngda avatar (bosilsa sozlamalar)
 // ─────────────────────────────────────────────────────────────────────
 
-class _ChatHeader extends StatelessWidget {
+class _ChatHeader extends ConsumerWidget {
   const _ChatHeader({required this.onSettings});
 
   final VoidCallback onSettings;
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    // Bog'langan ota-onaning PROFILDAGI ismi (backend'dan, bo'lmasa fallback).
+    final parentName = ref.watch(parentNameProvider).valueOrNull;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
+      // Boshqa sahifalar bilan bir xil: header tepaga yopishmasin.
+      padding: const EdgeInsets.fromLTRB(16, 54, 16, 10),
       child: Row(
         children: [
           GestureDetector(
@@ -592,7 +596,9 @@ class _ChatHeader extends StatelessWidget {
             child: Column(
               children: [
                 Text(
-                  'voiceChat.headerParent'.tr(),
+                  (parentName != null && parentName.trim().isNotEmpty)
+                      ? parentName.trim()
+                      : 'voiceChat.headerParent'.tr(),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                   style: GoogleFonts.unbounded(

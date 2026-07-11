@@ -23,11 +23,7 @@ class ChildRepository {
   /// Bola o'z ism/yosh/hududini yangilaydi. `null` qiymatlar payloadga
   /// qo'shilmaydi — qisman update. Backend `childUserId` (CHILD JWT) orqali
   /// bolani topadi.
-  Future<void> updateMyProfile({
-    String? name,
-    int? age,
-    String? region,
-  }) async {
+  Future<void> updateMyProfile({String? name, int? age, String? region}) async {
     final data = <String, dynamic>{};
     if (name != null) data['name'] = name;
     if (age != null) data['age'] = age;
@@ -57,5 +53,14 @@ class ChildRepository {
     });
 
     await _dio.post<Map<String, dynamic>>('/children/me/avatar', data: form);
+  }
+
+  /// Bog'langan ota-onaning ismi — GET /children/:id/parent.
+  /// "Chatlar" ro'yxati va chat header'ida ko'rsatiladi.
+  Future<String?> getParentName(String childId) async {
+    final res = await _dio.get<Map<String, dynamic>>(
+      '/children/$childId/parent',
+    );
+    return res.data?['name'] as String?;
   }
 }

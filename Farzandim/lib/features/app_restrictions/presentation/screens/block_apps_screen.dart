@@ -16,7 +16,6 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -170,33 +169,6 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
   }
 
   Future<void> _loadCategories() async {
-    // MOCK (UI preview): soxta kategoriyalar.
-    if (kLocationMock) {
-      setState(() {
-        _categories = const [
-          AppCategoryInfo(
-            category: 'social',
-            label: 'Ijtimoiy tarmoqlar',
-            appCount: 12,
-            blocked: true,
-          ),
-          AppCategoryInfo(
-            category: 'games',
-            label: "O'yinlar",
-            appCount: 24,
-            blocked: true,
-          ),
-          AppCategoryInfo(
-            category: 'other',
-            label: 'Boshqa',
-            appCount: 36,
-            blocked: true,
-          ),
-        ];
-        _catLoading = false;
-      });
-      return;
-    }
     try {
       final cats = await ref
           .read(backendAppLimitRepositoryProvider)

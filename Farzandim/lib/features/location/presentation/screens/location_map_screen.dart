@@ -18,7 +18,6 @@ import 'package:farzandim/features/location/data/repositories/backend_location_r
 import 'package:farzandim/features/location/data/services/parent_location_service.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/features/location/presentation/providers/road_route_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';

@@ -13,7 +13,6 @@ import 'dart:async';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/data/repositories/backend_geo_zone_repository.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/shared/models/result.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -26,11 +25,6 @@ final geoZonesProvider = StreamProvider.family<List<GeoZone>, String>((
   ref,
   childId,
 ) async* {
-  // MOCK (UI preview): soxta Uy/Maktab zonalari.
-  if (kLocationMock) {
-    yield mockZones(childId);
-    return;
-  }
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) {
     yield const <GeoZone>[];

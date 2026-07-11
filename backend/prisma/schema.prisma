@@ -741,6 +741,8 @@ model AppUsage {
   foregroundMs BigInt    @default(0) @map("foreground_ms")
   lastUsedAt   DateTime? @map("last_used_at")
   openCount    Int       @default(0) @map("open_count")
+  // Soatlik taqsimot [24 ta ms] — sync deltalaridan backend o'zi hisoblaydi.
+  hourlyMs     Json      @default("[]") @map("hourly_ms")
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 

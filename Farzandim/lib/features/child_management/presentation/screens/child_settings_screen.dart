@@ -22,7 +22,6 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/data/repositories/backend_child_repository.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/features/schedules/presentation/screens/rejimlar_sheet.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
@@ -244,15 +243,14 @@ class _ProfileCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final battery =
-        child.deviceInfo?.batteryLevel ?? (kLocationMock ? 67 : null);
+    final battery = child.deviceInfo?.batteryLevel;
     final rawDevice = (child.deviceModel?.isNotEmpty ?? false)
         ? child.deviceModel!
         : (child.deviceInfo?.deviceModel ?? '');
     final clean = rawDevice.trim();
-    // "null null" kabi buzuq qiymatlarni yashiramiz (mock'da chiroyli nom).
+    // "null null" kabi buzuq qiymatlarni yashiramiz.
     final device = (clean.isEmpty || clean.toLowerCase().contains('null'))
-        ? (kLocationMock ? 'Samsung Galaxy A54' : '—')
+        ? '—'
         : clean;
     return _CardShell(
       child: Row(
@@ -478,14 +476,14 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
               children: [
                 Text(
                   'controlsSetup.unknownSources.title'.tr(),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _unb(16, ls: -0.3),
                 ),
                 const SizedBox(height: 3),
                 Text(
                   'controlsSetup.unknownSources.subtitle'.tr(),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _pop(13, c: _dim),
                 ),

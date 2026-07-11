@@ -9,7 +9,6 @@ import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// `locationHistoryProvider.family` argumenti — `(childId, fromMs, toMs)`
@@ -20,7 +19,6 @@ typedef LocationHistoryQuery = ({String childId, int fromMs, int toMs});
 /// Bola harakat tarixini Backend'dan oladi.
 final locationHistoryProvider = FutureProvider.autoDispose
     .family<List<ChildLocation>, LocationHistoryQuery>((ref, query) async {
-      if (kLocationMock) return mockTrack(); // MOCK (UI preview)
       final auth = ref.watch(backendAuthProvider);
       if (auth is! AuthAuthenticated) return const [];
       // autoDispose + qisqa kesh — aks holda har sana-oralig'i kaliti
@@ -54,7 +52,6 @@ final locationHistoryProvider = FutureProvider.autoDispose
 /// Bir xil `LocationHistoryQuery` kaliti bilan (sana oralig'i).
 final locationStopsProvider = FutureProvider.autoDispose
     .family<List<LocationStop>, LocationHistoryQuery>((ref, query) async {
-      if (kLocationMock) return mockStops(); // MOCK (UI preview)
       final auth = ref.watch(backendAuthProvider);
       if (auth is! AuthAuthenticated) return const [];
       keepAliveFor(ref, const Duration(minutes: 2)); // qisqa kesh

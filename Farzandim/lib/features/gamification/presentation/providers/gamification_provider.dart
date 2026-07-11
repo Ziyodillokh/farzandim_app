@@ -7,6 +7,17 @@ import 'package:farzandim/features/gamification/data/repositories/backend_gamifi
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola gamification profili — Backend fetch + WS real-time refresh.
+/// Haftalik kitoblar/testlar REAL soni (hisobotlar 2x2 grid uchun).
+final developmentSummaryProvider = FutureProvider.autoDispose
+    .family<({int booksRead, int testsCompleted})?, String>((
+      ref,
+      childId,
+    ) async {
+      return ref
+          .read(backendGamificationRepositoryProvider)
+          .getDevelopmentSummary(childId);
+    });
+
 final childProfileProvider = StreamProvider.family<ChildProfile?, String>((
   ref,
   childId,

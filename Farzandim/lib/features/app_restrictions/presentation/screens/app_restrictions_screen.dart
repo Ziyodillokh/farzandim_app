@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:math' as math;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
@@ -243,15 +242,9 @@ class _BarChart extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final hasData = days.isNotEmpty;
-    final maxMs = hasData
-        ? days.map((d) => d.totalMs).fold<int>(0, math.max)
-        : 0;
-    // Y-o'qi tepasi — soatlarda, juft songa yaxlitlanadi (toza yorliq).
-    var maxH = (maxMs / 3600000).ceil();
-    if (maxH < 2) maxH = 2;
-    if (maxH.isOdd) maxH += 1;
-    final maxMsRounded = maxH * 3600000;
+    // Y-o'qi QAT'IY 24 soat — kun to'liq shkalada ko'rinadi.
+    const maxH = 24;
+    const maxMsRounded = maxH * 3600000;
 
     // O'rtacha (qizil ishora chizig'i) — ma'lumotli kunlar bo'yicha.
     final withData = days.where((d) => d.totalMs > 0).toList();

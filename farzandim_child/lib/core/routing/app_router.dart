@@ -68,6 +68,7 @@ import 'package:farzandim_child/features/videos/data/repositories/video_engageme
 import 'package:farzandim_child/features/video_message/presentation/screens/video_preview_screen.dart';
 import 'package:farzandim_child/features/video_message/presentation/screens/video_recording_screen.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
+import 'package:farzandim_child/features/voice_message/presentation/screens/chats_list_screen.dart';
 import 'package:farzandim_child/features/voice_message/presentation/screens/voice_chat_screen.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart';
 import 'package:flutter/widgets.dart';
@@ -423,6 +424,11 @@ final routerProvider = Provider<GoRouter>((ref) {
           final args = state.extra as VideoPreviewArgs;
           return VideoPreviewScreen(args: args);
         },
+      ),
+      GoRoute(
+        path: '/chats',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ChatsListScreen()),
       ),
       GoRoute(
         path: '/voice-chat',

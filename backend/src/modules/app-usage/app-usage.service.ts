@@ -110,8 +110,47 @@ export class AppUsageService {
   ) {
     await this.validateChildAccess(childId, userId);
 
+    // Soatlik taqsimot: sync har ~60s keladi — oldingi jami bilan farq
+    // (delta) JORIY Toshkent soati bucket'iga yoziladi. Shu bilan hech
+    // qanday qurilma o'zgarishisiz real soatlik grafik hosil bo'ladi.
+    const nowTk = new Date(Date.now() + 5 * 3600 * 1000);
+    const todayTk = nowTk.toISOString().slice(0, 10);
+    const hourTk = nowTk.getUTCHours();
+
+    const existing = await this.prisma.appUsage.findMany({
+      where: {
+        childId,
+        OR: dto.entries.map((e) => ({
+          packageName: e.packageName,
+          date: new Date(`${e.date}T00:00:00.000Z`),
+        })),
+      },
+    });
+    const prevMap = new Map(
+      existing.map((r) => [
+        `${r.packageName}|${r.date.toISOString().slice(0, 10)}`,
+        r,
+      ]),
+    );
+
     const ops = dto.entries.map((entry) => {
       const dateObj = new Date(`${entry.date}T00:00:00.000Z`);
+
+      // Faqat bugungi (Toshkent) yozuvlar uchun soatlik delta yoziladi.
+      let hourly: number[] | undefined;
+      if (entry.date === todayTk) {
+        const prev = prevMap.get(`${entry.packageName}|${entry.date}`);
+        const prevMs = prev ? Number(prev.foregroundMs) : 0;
+        const raw = prev && Array.isArray(prev.hourlyMs)
+          ? (prev.hourlyMs as unknown[]).map((v) => Number(v) || 0)
+          : [];
+        const base = new Array<number>(24).fill(0);
+        for (let i = 0; i < Math.min(24, raw.length); i++) base[i] = raw[i];
+        const delta = entry.foregroundMs - prevMs;
+        if (delta > 0) base[hourTk] += delta;
+        hourly = base;
+      }
+
       return this.prisma.appUsage.upsert({
         where: {
           childId_packageName_date: {
@@ -126,6 +165,7 @@ export class AppUsageService {
             ? new Date(entry.lastUsedAt)
             : undefined,
           openCount: entry.openCount,
+          ...(hourly ? { hourlyMs: hourly } : {}),
         },
         create: {
           childId,
@@ -136,6 +176,7 @@ export class AppUsageService {
             ? new Date(entry.lastUsedAt)
             : undefined,
           openCount: entry.openCount,
+          hourlyMs: hourly ?? new Array<number>(24).fill(0),
         },
       });
     });
@@ -152,6 +193,30 @@ export class AppUsageService {
     );
 
     return { ok: true, upserted: dto.entries.length };
+  }
+
+  /**
+   * Kunlik soatlik taqsimot — barcha ilovalar bo'yicha yig'ilgan [24] ms.
+   * `date` YYYY-MM-DD (Toshkent kuni); berilmasa bugungi kun.
+   */
+  async hourly(childId: string, userId: string, date?: string) {
+    await this.validateChildAccess(childId, userId);
+    const day =
+      date ??
+      new Date(Date.now() + 5 * 3600 * 1000).toISOString().slice(0, 10);
+    const rows = await this.prisma.appUsage.findMany({
+      where: { childId, date: new Date(`${day}T00:00:00.000Z`) },
+      select: { hourlyMs: true },
+    });
+    const hours = new Array<number>(24).fill(0);
+    for (const r of rows) {
+      if (!Array.isArray(r.hourlyMs)) continue;
+      const arr = r.hourlyMs as unknown[];
+      for (let i = 0; i < Math.min(24, arr.length); i++) {
+        hours[i] += Number(arr[i]) || 0;
+      }
+    }
+    return { date: day, hours };
   }
 
   async list(childId: string, userId: string, query: ListAppUsageDto) {

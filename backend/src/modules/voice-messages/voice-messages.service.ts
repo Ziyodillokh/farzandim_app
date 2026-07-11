@@ -401,6 +401,38 @@ export class VoiceMessagesService {
     return { ok: true, updated: result.count };
   }
 
+  /**
+   * Matnli xabarni tahrirlash (faqat YUBORUVCHI, faqat text xabar).
+   * Qabul qiluvchiga `voice:updated` real-time event ketadi.
+   */
+  async updateText(userId: string, messageId: string, text: string) {
+    const message = await this.prisma.voiceMessage.findUnique({
+      where: { id: messageId },
+    });
+    if (!message) {
+      throw new NotFoundException('Voice message not found');
+    }
+    if (message.senderId !== userId) {
+      throw new ForbiddenException('Faqat yuboruvchi tahrirlaydi');
+    }
+    if (!message.text || message.storagePath || message.mediaKey) {
+      throw new BadRequestException('Faqat matnli xabar tahrirlanadi');
+    }
+
+    const updated = await this.prisma.voiceMessage.update({
+      where: { id: messageId },
+      data: { text },
+      include: {
+        sender: { select: USER_SELECT },
+        receiver: { select: USER_SELECT },
+      },
+    });
+
+    this.realtime.emitToUser(message.receiverId, 'voice:updated', updated);
+
+    return updated;
+  }
+
   async remove(userId: string, messageId: string) {
     const message = await this.prisma.voiceMessage.findUnique({
       where: { id: messageId },
@@ -431,6 +463,11 @@ export class VoiceMessagesService {
     }
 
     await this.prisma.voiceMessage.delete({ where: { id: messageId } });
+
+    // Ikkinchi tomonga real-time xabar — ro'yxatdan darhol yo'qoladi.
+    const other =
+      message.senderId === userId ? message.receiverId : message.senderId;
+    this.realtime.emitToUser(other, 'voice:deleted', { id: messageId });
 
     return { ok: true };
   }

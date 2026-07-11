@@ -11,6 +11,8 @@
 
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
+import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart'
+    show DailySteps;
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
@@ -72,16 +74,21 @@ class ReportsScreen extends StatelessWidget {
               padding: const EdgeInsets.fromLTRB(20, 20, 20, 10),
               child: Row(
                 children: [
-                  _BackButton(onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(AppRoutes.dashboard);
-                    }
-                  }),
+                  _BackButton(
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.dashboard);
+                      }
+                    },
+                  ),
                   Expanded(
-                    child: Text('Hisobotlar',
-                        textAlign: TextAlign.center, style: _unb(22)),
+                    child: Text(
+                      'Hisobotlar',
+                      textAlign: TextAlign.center,
+                      style: _unb(22),
+                    ),
                   ),
                   const SizedBox(width: 44),
                 ],
@@ -119,28 +126,46 @@ class _StatGrid extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(childProfileProvider(childId)).valueOrNull;
     final streak = profile?.streakDays ?? 0;
-    // Kitob/test/qadam backend'da hali yo'q — 0.
+    // REAL: haftalik kitoblar/testlar (backend dev-summary) + bugungi qadam.
+    final summary = ref.watch(developmentSummaryProvider(childId)).valueOrNull;
+    final books = summary?.booksRead ?? 0;
+    final tests = summary?.testsCompleted ?? 0;
+    final weeklySteps = ref.watch(weeklyStepsProvider(childId)).valueOrNull;
+    final todayKey = DateTime.now()
+        .toUtc()
+        .add(const Duration(hours: 5))
+        .toIso8601String()
+        .substring(0, 10);
+    var todaySteps = 0;
+    for (final d in weeklySteps?.days ?? const <DailySteps>[]) {
+      if (d.date.toIso8601String().substring(0, 10) == todayKey) {
+        todaySteps = d.steps;
+      }
+    }
     return Column(
       children: [
-        const Row(
+        Row(
           children: [
             Expanded(
               child: _StatCard(
-                icon: Icon(SolarIconsBold.notebookMinimalistic,
-                    size: 30, color: Color(0xFFA78BFA)),
-                value: '0',
+                icon: const Icon(
+                  SolarIconsBold.notebookMinimalistic,
+                  size: 30,
+                  color: Color(0xFFA78BFA),
+                ),
+                value: '$books',
                 label: "O'qilgan kitoblar",
               ),
             ),
-            SizedBox(width: 12),
+            const SizedBox(width: 12),
             Expanded(
               child: _StatCard(
-                icon: Image(
+                icon: const Image(
                   image: AssetImage('assets/icons/ic_tests.png'),
                   width: 32,
                   height: 32,
                 ),
-                value: '0',
+                value: '$tests',
                 label: 'Ishlangan testlar',
               ),
             ),
@@ -151,17 +176,23 @@ class _StatGrid extends ConsumerWidget {
           children: [
             Expanded(
               child: _StatCard(
-                icon: Image.asset('assets/icons/ic_steps.png',
-                    width: 34, height: 34),
-                value: '0',
+                icon: Image.asset(
+                  'assets/icons/ic_steps.png',
+                  width: 34,
+                  height: 34,
+                ),
+                value: _fmtSteps(todaySteps),
                 label: 'Kunlik qadamlar',
               ),
             ),
             const SizedBox(width: 12),
             Expanded(
               child: _StatCard(
-                icon: const Icon(SolarIconsBold.flame,
-                    size: 34, color: Color(0xFFFF7A1A)),
+                icon: const Icon(
+                  SolarIconsBold.flame,
+                  size: 34,
+                  color: Color(0xFFFF7A1A),
+                ),
                 value: '$streak kun',
                 label: 'Kunlik rivojlanish',
               ),
@@ -171,6 +202,16 @@ class _StatGrid extends ConsumerWidget {
       ],
     );
   }
+}
+
+String _fmtSteps(int v) {
+  final s = v.toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
+    b.write(s[i]);
+  }
+  return b.toString();
 }
 
 class _StatCard extends StatelessWidget {
@@ -204,10 +245,12 @@ class _StatCard extends StatelessWidget {
           const Spacer(),
           Text(value, style: _unb(22, w: FontWeight.w700)),
           const SizedBox(height: 4),
-          Text(label,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: _pop(13, c: _dim)),
+          Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: _pop(13, c: _dim),
+          ),
         ],
       ),
     );
@@ -246,8 +289,10 @@ class _DonCard extends ConsumerWidget {
               Text('$don', style: _unb(24, w: FontWeight.w700)),
               const SizedBox(width: 10),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: _blue,
                   borderRadius: BorderRadius.circular(999),
@@ -286,12 +331,17 @@ class _RankRow extends StatelessWidget {
           _LetterAvatar(letter: entry.name, size: 28),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('${entry.rank}. ${entry.name}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: _pop(15, w: FontWeight.w600, c: color)),
+            child: Text(
+              '${entry.rank}. ${entry.name}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _pop(15, w: FontWeight.w600, c: color),
+            ),
           ),
-          Text('${entry.xp}', style: _pop(13, w: FontWeight.w600, c: _dim)),
+          Text(
+            '${entry.xp}',
+            style: _pop(13, w: FontWeight.w600, c: _dim),
+          ),
         ],
       ),
     );
@@ -299,10 +349,7 @@ class _RankRow extends StatelessWidget {
 }
 
 /// Dashboard bilan bir xil 3-qatorli reyting oynasi.
-List<LeaderboardEntry> _leaderboardWindow(
-  LeaderboardState lb,
-  String childId,
-) {
+List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
   if (lb.initialLoading || lb.error) return const [];
   final all = lb.entries;
   if (all.isEmpty) {
@@ -367,8 +414,10 @@ class _ScreenTimeSection extends ConsumerWidget {
         const SizedBox(height: 2),
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text(avgMs == 0 ? '—' : _fmtHm(avgMs),
-              style: _unb(26, w: FontWeight.w700)),
+          child: Text(
+            avgMs == 0 ? '—' : _fmtHm(avgMs),
+            style: _unb(26, w: FontWeight.w700),
+          ),
         ),
         const SizedBox(height: 12),
         Container(
@@ -381,8 +430,10 @@ class _ScreenTimeSection extends ConsumerWidget {
           ),
           child: maxMs == 0
               ? Center(
-                  child: Text("Ekran vaqti ma'lumoti yo'q",
-                      style: _pop(13, c: _dim)),
+                  child: Text(
+                    "Ekran vaqti ma'lumoti yo'q",
+                    style: _pop(13, c: _dim),
+                  ),
                 )
               : _WeekBars(days: days, maxMs: maxMs),
         ),
@@ -399,8 +450,9 @@ class _WeekBars extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final maxHours = (maxMs / 3600000).ceil().clamp(1, 24);
-    final topMs = maxHours * 3600000;
+    // Y-o'qi QAT'IY 24 soat (foydalanuvchi talabi).
+    const maxHours = 24;
+    const topMs = maxHours * 3600000;
     return Column(
       children: [
         Expanded(
@@ -414,8 +466,10 @@ class _WeekBars extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
                     Text('${maxHours}s', style: _pop(11, c: _dim)),
-                    Text('${(maxHours / 2).round()}s',
-                        style: _pop(11, c: _dim)),
+                    Text(
+                      '${(maxHours / 2).round()}s',
+                      style: _pop(11, c: _dim),
+                    ),
                     Text('0', style: _pop(11, c: _dim)),
                   ],
                 ),
@@ -453,8 +507,11 @@ class _WeekBars extends StatelessWidget {
             children: [
               for (final d in days)
                 Expanded(
-                  child: Text(d.label,
-                      textAlign: TextAlign.center, style: _pop(10, c: _dim)),
+                  child: Text(
+                    d.label,
+                    textAlign: TextAlign.center,
+                    style: _pop(10, c: _dim),
+                  ),
                 ),
             ],
           ),
@@ -474,8 +531,9 @@ class _TopAppsCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final usage = ref.watch(todayUsageProvider(childId)).valueOrNull;
-    final apps =
-        (usage?.displayApps ?? const <AppUsageEntry>[]).take(5).toList();
+    final apps = (usage?.displayApps ?? const <AppUsageEntry>[])
+        .take(5)
+        .toList();
     return Container(
       decoration: BoxDecoration(
         color: _card,
@@ -486,8 +544,11 @@ class _TopAppsCard extends ConsumerWidget {
           ? Padding(
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               child: Center(
-                child: Text("Ilovalar ma'lumoti yo'q",
-                    textAlign: TextAlign.center, style: _pop(13, c: _dim)),
+                child: Text(
+                  "Ilovalar ma'lumoti yo'q",
+                  textAlign: TextAlign.center,
+                  style: _pop(13, c: _dim),
+                ),
               ),
             )
           : Column(
@@ -535,10 +596,12 @@ class _AppTile extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text('$rank. ${app.appName}',
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: _unb(15)),
+            child: Text(
+              '$rank. ${app.appName}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: _unb(15),
+            ),
           ),
           Text(_fmtHm(app.totalTimeMs), style: _pop(13, c: _dim)),
         ],
@@ -587,8 +650,11 @@ class _BackButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _fieldBorder),
         ),
-        child: const Icon(SolarIconsOutline.arrowLeft,
-            size: 22, color: Colors.white),
+        child: const Icon(
+          SolarIconsOutline.arrowLeft,
+          size: 22,
+          color: Colors.white,
+        ),
       ),
     );
   }

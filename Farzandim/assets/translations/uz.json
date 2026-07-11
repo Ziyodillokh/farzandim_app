@@ -1085,8 +1085,8 @@
   },
   "blockApps": {
     "title": "Ilovalarni bloklash",
-    "tabApps": "Ilovlarni bloklash",
-    "tabCategories": "Kategoriyalarni bloklash",
+    "tabApps": "Ilovalar",
+    "tabCategories": "Kategoriyalar",
     "appsCount": "{count} ta ilova",
     "save": "Saqlash",
     "saved": "Saqlandi",
@@ -1122,8 +1122,8 @@
       "count": "{count} ta rejim"
     },
     "unknownSources": {
-      "title": "Notanish manbaalar",
-      "subtitle": "Notanish manbaalarni bloklash",
+      "title": "Notanish manbalar",
+      "subtitle": "Notanish manbalarni bloklash",
       "errorSnack": "Saqlashda xatolik. Qaytadan urinib ko'ring"
     },
     "next": "Keyingisi"

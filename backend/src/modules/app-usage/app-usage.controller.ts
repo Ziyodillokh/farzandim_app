@@ -53,6 +53,18 @@ export class AppUsageController {
     return this.service.list(childId, user.userId, query);
   }
 
+  @Get('children/:childId/app-usage/hourly')
+  @ApiOperation({
+    summary: "Kunlik soatlik ekran vaqti [24 ta ms] (ota-ona yoki bola)",
+  })
+  hourly(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+    @Query('date') date?: string,
+  ) {
+    return this.service.hourly(childId, user.userId, date);
+  }
+
   @Get('children/:childId/app-usage/weekly')
   @ApiOperation({ summary: 'Get 7-day usage chart data for a child' })
   weekly(

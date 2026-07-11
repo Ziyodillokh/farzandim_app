@@ -244,7 +244,7 @@ class _Header extends ConsumerWidget {
         ),
         _SquareIconButton(
           svg: _chatRoundLineSvg,
-          onTap: () => context.push('/voice-chat'),
+          onTap: () => context.push('/chats'),
         ),
         const SizedBox(width: 12),
         _SquareIconButton(

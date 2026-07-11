@@ -16,17 +16,12 @@ class RegionPickerBottomSheet extends StatelessWidget {
 
   final String? selectedRegion;
 
-  static Future<String?> show(
-    BuildContext context, {
-    String? selectedRegion,
-  }) {
+  static Future<String?> show(BuildContext context, {String? selectedRegion}) {
     return showModalBottomSheet<String>(
       context: context,
       backgroundColor: Colors.transparent,
       isScrollControlled: true,
-      builder: (_) => RegionPickerBottomSheet(
-        selectedRegion: selectedRegion,
-      ),
+      builder: (_) => RegionPickerBottomSheet(selectedRegion: selectedRegion),
     );
   }
 
@@ -66,8 +61,10 @@ class RegionPickerBottomSheet extends StatelessWidget {
                   ),
                 ),
                 IconButton(
-                  icon: const Icon(AppIcons.close,
-                      color: AppColors.textSecondary),
+                  icon: const Icon(
+                    AppIcons.close,
+                    color: AppColors.textSecondary,
+                  ),
                   onPressed: () => Navigator.pop(context),
                 ),
               ],
@@ -79,10 +76,8 @@ class RegionPickerBottomSheet extends StatelessWidget {
               shrinkWrap: true,
               padding: const EdgeInsets.symmetric(vertical: 8),
               itemCount: UzbekistanRegions.all.length,
-              separatorBuilder: (_, __) => const Divider(
-                color: AppColors.border,
-                height: 1,
-              ),
+              separatorBuilder: (_, __) =>
+                  const Divider(color: AppColors.border, height: 1),
               itemBuilder: (context, index) {
                 final region = UzbekistanRegions.all[index];
                 final isSelected = region == selectedRegion;
@@ -92,8 +87,9 @@ class RegionPickerBottomSheet extends StatelessWidget {
                     region,
                     style: TextStyle(
                       color: AppColors.textPrimary,
-                      fontWeight:
-                          isSelected ? FontWeight.w600 : FontWeight.normal,
+                      fontWeight: isSelected
+                          ? FontWeight.w600
+                          : FontWeight.normal,
                     ),
                   ),
                   trailing: Container(
@@ -112,8 +108,11 @@ class RegionPickerBottomSheet extends StatelessWidget {
                           : Colors.transparent,
                     ),
                     child: isSelected
-                        ? const Icon(AppIcons.check,
-                            size: 16, color: Colors.black)
+                        ? const Icon(
+                            AppIcons.check,
+                            size: 16,
+                            color: Colors.black,
+                          )
                         : null,
                   ),
                   onTap: () => Navigator.pop(context, region),

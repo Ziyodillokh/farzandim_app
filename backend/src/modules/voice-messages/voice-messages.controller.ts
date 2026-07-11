@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Put,
+  Patch,
   Delete,
   Param,
   Query,
@@ -240,6 +241,33 @@ export class VoiceMessagesController {
     @Body() body: ReadAllVoiceMessagesDto,
   ) {
     return this.voiceMessagesService.readAll(user.userId, body.fromUserId);
+  }
+
+  @Patch(':id/text')
+  @ApiOperation({ summary: 'Edit own text message (Telegram-style)' })
+  @ApiParam({ name: 'id', description: 'Voice message UUID' })
+  @ApiBody({
+    schema: {
+      type: 'object',
+      required: ['text'],
+      properties: { text: { type: 'string', maxLength: 4000 } },
+    },
+  })
+  @ApiResponse({ status: 200, description: 'Message text updated' })
+  async updateText(
+    @CurrentUser() user: JwtPayload,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: { text?: string },
+  ) {
+    const rawText = body?.text;
+    if (!rawText || rawText.trim().length === 0) {
+      throw new BadRequestException("text bo'sh bo'lishi mumkin emas");
+    }
+    const text = rawText.trim();
+    if (text.length > 4000) {
+      throw new BadRequestException('text maksimum 4000 belgi');
+    }
+    return this.voiceMessagesService.updateText(user.userId, id, text);
   }
 
   @Delete(':id')

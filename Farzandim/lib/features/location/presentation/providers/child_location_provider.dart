@@ -9,7 +9,6 @@ import 'package:farzandim/features/auth/presentation/providers/backend_auth_prov
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
-import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:flutter/widgets.dart' show AppLifecycleState;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -22,11 +21,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 ///   4. socket uzuq bo'lsa 30s polling fallback + ilova resume'ida resync.
 final childLocationProvider = StreamProvider.autoDispose
     .family<ChildLocation?, String>((ref, childId) async* {
-      // MOCK (UI preview): haqiqiy data o'rniga soxta joylashuv.
-      if (kLocationMock) {
-        yield mockChildLocation();
-        return;
-      }
       final isAuthed = ref.watch(
         backendAuthProvider.select((s) => s is AuthAuthenticated),
       );
@@ -114,7 +108,6 @@ final childAddressProvider = FutureProvider.family<String?, String>((
   ref,
   childId,
 ) async {
-  if (kLocationMock) return mockAddress; // MOCK (UI preview)
   final loc = ref.watch(childLocationProvider(childId)).valueOrNull;
   if (loc == null) return null;
   return ref

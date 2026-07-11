@@ -257,6 +257,22 @@ class BackendVoiceMessageRepository {
   }
 
   /// Xabarni o'chirish.
+  /// O'z matnli xabarini tahrirlash (Telegram-style) —
+  /// `PATCH /api/voice-messages/:id/text` { text }.
+  Future<bool> updateText(String messageId, String text) async {
+    final trimmed = text.trim();
+    if (trimmed.isEmpty) return false;
+    try {
+      await _dio.patch<Map<String, dynamic>>(
+        '/voice-messages/$messageId/text',
+        data: <String, dynamic>{'text': trimmed},
+      );
+      return true;
+    } on DioException {
+      return false;
+    }
+  }
+
   Future<bool> deleteMessage(String messageId) async {
     try {
       await _dio.delete<void>('/voice-messages/$messageId');

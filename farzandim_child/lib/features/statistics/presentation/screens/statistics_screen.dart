@@ -24,6 +24,7 @@ import 'package:farzandim_child/features/gamification/presentation/providers/gam
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
+import 'package:farzandim_child/features/statistics/presentation/providers/stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -91,6 +92,10 @@ class StatisticsScreen extends ConsumerWidget {
     final streak = rawStreak > 0 ? rawStreak : 30;
     final don = rawDon > 0 ? rawDon : 1250;
     final steps = rawSteps > 0 ? rawSteps : 8837;
+    // REAL: haftalik o'qilgan kitoblar / ishlangan testlar (backend).
+    final summary = ref.watch(developmentSummaryProvider).valueOrNull;
+    final books = summary?.booksRead ?? 0;
+    final tests = summary?.testsCompleted ?? 0;
 
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
@@ -105,7 +110,7 @@ class StatisticsScreen extends ConsumerWidget {
           children: [
             const _Header(),
             const SizedBox(height: 18),
-            _StatGrid(steps: steps, streak: streak),
+            _StatGrid(steps: steps, streak: streak, books: books, tests: tests),
             const SizedBox(height: 12),
             _StreakCard(streak: streak),
             const SizedBox(height: 12),
@@ -174,7 +179,7 @@ class _Header extends ConsumerWidget {
         Expanded(child: Text('Statistika', style: _unb(24))),
         _SvgIconButton(
           svg: _chatRoundLineSvg,
-          onTap: () => context.push('/voice-chat'),
+          onTap: () => context.push('/chats'),
         ),
         const SizedBox(width: 10),
         _SvgIconButton(
@@ -268,10 +273,19 @@ class _RoundIconButton extends StatelessWidget {
 // ════════════ 2x2 stat kartalar ════════════
 
 class _StatGrid extends StatelessWidget {
-  const _StatGrid({required this.steps, required this.streak});
+  const _StatGrid({
+    required this.steps,
+    required this.streak,
+    required this.books,
+    required this.tests,
+  });
 
   final int steps;
   final int streak;
+
+  /// Haftalik REAL sonlar (0 bo'lsa 0 ko'rinadi — endi backend'dan keladi).
+  final int books;
+  final int tests;
 
   @override
   Widget build(BuildContext context) {
@@ -279,11 +293,15 @@ class _StatGrid extends StatelessWidget {
       children: [
         Row(
           children: [
-            const Expanded(
+            Expanded(
               child: _BigStatCard(
                 tint: _purple,
-                icon: Icon(Icons.menu_book_rounded, size: 26, color: _purple),
-                value: '2ta',
+                icon: const Icon(
+                  Icons.menu_book_rounded,
+                  size: 26,
+                  color: _purple,
+                ),
+                value: '$books ta',
                 label: "O'qilgan kitoblar",
               ),
             ),
@@ -301,7 +319,7 @@ class _StatGrid extends StatelessWidget {
                   ),
                   child: Text('?', style: _unb(15, w: FontWeight.w700)),
                 ),
-                value: '102 ta',
+                value: '$tests ta',
                 label: 'Ishlangan testlar',
               ),
             ),
@@ -719,6 +737,8 @@ class _ScreenTimeSection extends ConsumerWidget {
     final day = ref.watch(dailyUsageProvider).valueOrNull;
     final hasReal = day != null && day.apps.isNotEmpty;
     final title = hasReal ? day.formattedTotal : '2s 44 min';
+    // REAL soatlik taqsimot (backend sync deltalaridan) — bo'lsa grafikda.
+    final hours = ref.watch(hourlyUsageProvider).valueOrNull;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -726,7 +746,7 @@ class _ScreenTimeSection extends ConsumerWidget {
         const SizedBox(height: 2),
         Text(title, style: _unb(26)),
         const SizedBox(height: 12),
-        const _HourChart(),
+        _HourChart(hours: hours),
         const SizedBox(height: 12),
         _TopApps(apps: hasReal ? day.apps : const []),
       ],
@@ -734,28 +754,28 @@ class _ScreenTimeSection extends ConsumerWidget {
   }
 }
 
-/// Soatlik ustunlar (preview shakl — soatlik real ma'lumot hali yo'q).
+/// Soatlik ustunlar — real [24] ms bo'lsa shundan, aks holda preview.
+/// Y-o'qi 60 daqiqalik shkala, X-o'qi 24 soat.
 class _HourChart extends StatelessWidget {
-  const _HourChart();
+  const _HourChart({this.hours});
 
+  /// Bugungi soatlik ekran vaqti (ms) — backend'dan; null/bo'sh -> preview.
+  final List<int>? hours;
+
+  // 24 soat — har ustun bir soat, balandlik 60 daqiqaga nisbatan ulush.
   static const _bars = <double>[
-    0.10,
-    0.16,
-    0.22,
-    0.30,
-    0.42,
-    0.55,
-    0.68,
-    0.82,
-    0.95,
-    0.60,
-    0.45,
-    0.66,
-    0.50,
-    0.36,
-    0.44,
-    1.0,
+    0.02, 0.0, 0.0, 0.0, 0.0, 0.03, 0.08, 0.18,
+    0.30, 0.42, 0.55, 0.68, 0.82, 0.95, 0.60, 0.45,
+    0.66, 0.50, 0.36, 0.44, 0.75, 0.55, 0.25, 0.10, //
   ];
+
+  /// Ustun balandliklari (0..1, 60 daqiqaga nisbatan).
+  List<double> _heights() {
+    final real = hours;
+    final hasReal = real != null && real.any((m) => m > 0);
+    if (!hasReal) return _bars;
+    return [for (final ms in real) (ms.clamp(0, 3600000)) / 3600000];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -774,15 +794,15 @@ class _HourChart extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 SizedBox(
-                  width: 24,
+                  width: 30,
                   child: Column(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     crossAxisAlignment: CrossAxisAlignment.end,
                     children: [
-                      Text('4s', style: _pop(10.5, c: _dim)),
-                      Text('3s', style: _pop(10.5, c: _red)),
-                      Text('2s', style: _pop(10.5, c: _dim)),
-                      Text('0s', style: _pop(10.5, c: _dim)),
+                      Text('60m', style: _pop(10.5, c: _dim)),
+                      Text('45m', style: _pop(10.5, c: _red)),
+                      Text('30m', style: _pop(10.5, c: _dim)),
+                      Text('0m', style: _pop(10.5, c: _dim)),
                     ],
                   ),
                 ),
@@ -801,11 +821,11 @@ class _HourChart extends StatelessWidget {
                           Row(
                             crossAxisAlignment: CrossAxisAlignment.end,
                             children: [
-                              for (final h in _bars)
+                              for (final h in _heights())
                                 Expanded(
                                   child: Padding(
                                     padding: const EdgeInsets.symmetric(
-                                      horizontal: 2,
+                                      horizontal: 1.2,
                                     ),
                                     child: FractionallySizedBox(
                                       heightFactor: h,
@@ -832,13 +852,15 @@ class _HourChart extends StatelessWidget {
           ),
           const SizedBox(height: 6),
           Padding(
-            padding: const EdgeInsets.only(left: 32),
+            padding: const EdgeInsets.only(left: 38),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text('00:00', style: _pop(10.5, c: _dim)),
-                Text('06:00', style: _pop(10.5, c: _dim)),
-                Text('12:00', style: _pop(10.5, c: _dim)),
+                Text('00:00', style: _pop(10, c: _dim)),
+                Text('06:00', style: _pop(10, c: _dim)),
+                Text('12:00', style: _pop(10, c: _dim)),
+                Text('18:00', style: _pop(10, c: _dim)),
+                Text('24:00', style: _pop(10, c: _dim)),
               ],
             ),
           ),

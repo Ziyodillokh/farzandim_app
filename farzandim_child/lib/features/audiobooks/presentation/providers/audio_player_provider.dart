@@ -17,6 +17,7 @@ import 'package:just_audio/just_audio.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
+import 'package:farzandim_child/features/statistics/presentation/providers/stats_providers.dart';
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   AudioPlayerNotifier(this._ref) : super(const AudioPlayerState()) {
@@ -43,6 +44,15 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
     _playerStateSub = _player.playerStateStream.listen((s) {
       state = state.copyWith(isPlaying: s.playing);
+      // Kitob OXIRIGACHA tinglandi -> BOOK_READ XP (+50) — "O'qilgan
+      // kitoblar" real soniga kiradi. Har kitob uchun bir marta.
+      final book = state.currentBook;
+      if (s.processingState == ProcessingState.completed &&
+          book != null &&
+          _bookReadReportedFor != book.id) {
+        _bookReadReportedFor = book.id;
+        _ref.read(bookReadEventProvider)();
+      }
     });
   }
 
@@ -54,6 +64,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   Timer? _sleepTimer;
   // Qaysi kitob uchun duration backend'ga yuborilgan (bir marta).
   String? _reportedDurationFor;
+  // Qaysi kitob uchun BOOK_READ yuborilgan (bir marta).
+  String? _bookReadReportedFor;
 
   Future<void> play(AudiobookModel book) async {
     // Tinglashlar hisoblagichi (backend analitikasi) — yangi kitob qo'yilganda.

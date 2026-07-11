@@ -1085,8 +1085,8 @@
   },
   "blockApps": {
     "title": "Block apps",
-    "tabApps": "Block apps",
-    "tabCategories": "Block categories",
+    "tabApps": "Apps",
+    "tabCategories": "Categories",
     "appsCount": "{count} apps",
     "save": "Save",
     "saved": "Saved",

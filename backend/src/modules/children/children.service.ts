@@ -108,6 +108,28 @@ export class ChildrenService {
     return child;
   }
 
+  /**
+   * Bog'langan ota-onaning ochiq profili (id + ism) — bolaning o'zi yoki
+   * ota-onaning o'zi o'qiy oladi. Bola ilovasidagi "Chatlar" ro'yxati uchun.
+   */
+  async getParentProfile(id: string, userId: string) {
+    const child = await this.prisma.child.findUnique({ where: { id } });
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+    if (child.parentId !== userId && child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    const parent = await this.prisma.user.findUnique({
+      where: { id: child.parentId },
+      select: { id: true, name: true },
+    });
+    if (!parent) {
+      throw new NotFoundException('Parent not found');
+    }
+    return parent;
+  }
+
   /* ------------------------------------------------------------------ */
   /*  GET /children/:id                                                  */
   /* ------------------------------------------------------------------ */

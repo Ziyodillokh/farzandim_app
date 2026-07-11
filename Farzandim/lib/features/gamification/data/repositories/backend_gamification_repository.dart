@@ -88,6 +88,27 @@ class BackendGamificationRepository {
 
   /// XP event yaratish (parent qo'lda XP qo'shishi mumkin, masalan
   /// "topshiriqni bajardi"). Bola ham yozadi (achievement uchun).
+  /// Haftalik rivojlanish yig'indisi — o'qilgan kitoblar / ishlangan
+  /// testlar REAL soni (`GET /children/:id/development-summary`).
+  Future<({int booksRead, int testsCompleted})?> getDevelopmentSummary(
+    String childId,
+  ) async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/children/$childId/development-summary',
+        queryParameters: {'range': 'weekly'},
+      );
+      final d = response.data ?? const {};
+      return (
+        booksRead: (d['booksRead'] as num?)?.toInt() ?? 0,
+        testsCompleted: (d['testsCompleted'] as num?)?.toInt() ?? 0,
+      );
+    } catch (e) {
+      debugPrint('BackendGamificationRepository.devSummary: $e');
+      return null;
+    }
+  }
+
   Future<Map<String, dynamic>?> addXpEvent({
     required String childId,
     required String type,

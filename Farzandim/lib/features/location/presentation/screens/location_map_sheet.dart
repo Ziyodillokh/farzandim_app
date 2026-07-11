@@ -208,8 +208,6 @@ class _HistoryTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // MOCK (UI preview) — rasmga 1:1: joy nomi / ko'cha / "Kechikdi".
-    final mock = kLocationMock ? mockStopDisplay(stop.id) : null;
     return IntrinsicHeight(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -267,7 +265,7 @@ class _HistoryTile extends StatelessWidget {
                               const SizedBox(width: 6),
                               Flexible(
                                 child: Text(
-                                  mock?.place ?? _place,
+                                  _place,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: _lpop(14, w: FontWeight.w600),
@@ -277,39 +275,22 @@ class _HistoryTile extends StatelessWidget {
                           ),
                           const SizedBox(height: 3),
                           Text(
-                            mock?.subtitle ??
-                                (stop.isOngoing
-                                    ? 'Hozir shu yerda'
-                                    : stop.durationLabel),
+                            stop.isOngoing
+                                ? 'Hozir shu yerda'
+                                : stop.durationLabel,
                             style: _lpop(12, c: _dim),
                           ),
                         ],
                       ),
                     ),
-                    if (mock != null) ...[
-                      const SizedBox(width: 8),
-                      if (mock.late)
-                        const _StatusBadge(
-                          label: 'Kechikdi',
-                          color: _warning,
-                          icon: SolarIconsBold.clockCircle,
-                        )
-                      else
-                        const _StatusBadge(
-                          label: 'Bordi',
-                          color: _success,
-                          icon: SolarIconsBold.checkCircle,
-                        ),
-                    ] else ...[
-                      // Real rejim: har to'xtash "Bordi" oladi (zonadan
-                      // tashqari "Noma'lum" ham).
-                      const SizedBox(width: 8),
-                      const _StatusBadge(
-                        label: 'Bordi',
-                        color: _success,
-                        icon: SolarIconsBold.checkCircle,
-                      ),
-                    ],
+                    // Har tugagan to'xtash uchun yashil "Bordi" belgisi
+                    // (zonadan tashqari "Noma'lum" ham).
+                    const SizedBox(width: 8),
+                    const _StatusBadge(
+                      label: 'Bordi',
+                      color: _success,
+                      icon: SolarIconsBold.checkCircle,
+                    ),
                   ],
                 ),
               ),
