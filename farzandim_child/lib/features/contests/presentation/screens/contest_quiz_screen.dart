@@ -269,41 +269,52 @@ class _QuestionScreen extends ConsumerWidget {
               current: state.currentIndex,
             ),
             const SizedBox(height: 22),
-            // Savol kartasi (shisha) + ko'k "?" doira
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(18),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0x1FFFFFFF), Color(0x0AFFFFFF)],
-                ),
-                borderRadius: BorderRadius.circular(20),
-                border: Border.all(color: tGlassBorder),
+            // Savol kartasi (shisha) + ko'k "?" doira. Uzun savolda overflow
+            // bo'lmasin — balandligi cheklangan + ichida scroll.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.28,
               ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Container(
-                    width: 34,
-                    height: 34,
-                    decoration: const BoxDecoration(
-                      color: tBlue,
-                      shape: BoxShape.circle,
-                    ),
-                    alignment: Alignment.center,
-                    child: const Icon(
-                      Icons.question_mark_rounded,
-                      size: 18,
-                      color: Colors.white,
-                    ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0x1FFFFFFF), Color(0x0AFFFFFF)],
                   ),
-                  const SizedBox(width: 14),
-                  Expanded(
-                    child: Text(q.text, style: tPop(16, w: FontWeight.w600)),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: tGlassBorder),
+                ),
+                child: SingleChildScrollView(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(
+                          color: tBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.question_mark_rounded,
+                          size: 18,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          q.text,
+                          style: tPop(16, w: FontWeight.w600),
+                        ),
+                      ),
+                    ],
                   ),
-                ],
+                ),
               ),
             ),
             const SizedBox(height: 18),

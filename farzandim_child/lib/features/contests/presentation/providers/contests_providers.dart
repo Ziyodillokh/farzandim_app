@@ -6,6 +6,8 @@
 // `allTestsProvider` (faol + yakunlangan), hero `featuredContestProvider`.
 // Sevimlilar — lokal (SharedPreferences), header ♡ tugmasi uchun.
 
+import 'dart:convert';
+
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -67,55 +69,64 @@ final contestsErrorProvider = Provider<bool>((ref) {
   return ref.watch(backendContestsProvider).hasError;
 });
 
-// ════════════ Sevimli testlar (lokal, SharedPreferences) ════════════
+// ════════════ Sevimli testlar (lokal, TO'LIQ MODEL saqlanadi) ════════════
 
-const String _favKey = 'favorite_contest_ids_v1';
+// MUHIM: sevimlilar to'liq ContestModel bilan saqlanadi (JSON), jonli
+// backendContestsProvider snapshot'iga BOG'LIQ EMAS. Avval faqat ID saqlanib,
+// ro'yxat allTests'dan filtrlanardi — dashboard har 60s + resume'da
+// invalidate qilgani uchun reload paytida allTests bo'sh bo'lib, sevimlilar
+// "yo'qolib" ko'rinardi ("sevimlilarga to'g'ri qo'shilmayapti").
+const String _favContestsKey = 'favorite_contests_v1';
 
-/// Sevimli test ID'lari (header ♡ / long-press). Lokal — testlar cheklangan
-/// to'plam, backend shart emas (bookmark).
-final favoriteContestIdsProvider =
-    NotifierProvider<FavoriteContestIdsNotifier, Set<String>>(
-      FavoriteContestIdsNotifier.new,
+final favoriteContestsProvider =
+    NotifierProvider<FavoriteContestsNotifier, List<ContestModel>>(
+      FavoriteContestsNotifier.new,
     );
 
-/// Sevimlilar to'plami — toggle + disk persist (restore tugagach mutatsiya).
-class FavoriteContestIdsNotifier extends Notifier<Set<String>> {
+/// Sevimli testlar — model bilan persist, eng oxirgi qo'shilgan birinchi.
+class FavoriteContestsNotifier extends Notifier<List<ContestModel>> {
   Future<void>? _ready;
 
   @override
-  Set<String> build() {
+  List<ContestModel> build() {
     _ready = _restore();
-    return const {};
+    return const [];
   }
 
   Future<void> _restore() async {
     try {
       final prefs = await SharedPreferences.getInstance();
-      state = (prefs.getStringList(_favKey) ?? const <String>[]).toSet();
+      final raw = prefs.getString(_favContestsKey);
+      if (raw == null) return;
+      state = (jsonDecode(raw) as List<dynamic>)
+          .whereType<Map<String, dynamic>>()
+          .map(ContestModel.fromJson)
+          .where((c) => c.id.isNotEmpty)
+          .toList();
     } catch (_) {
-      // Xato — bo'sh qoladi.
+      // Buzuq JSON — bo'sh qoladi.
     }
   }
 
-  /// Sevimliga qo'shish/olib tashlash. `true` — qo'shildi.
-  Future<bool> toggle(String id) async {
+  bool contains(String id) => state.any((c) => c.id == id);
+
+  /// Toggle — qo'shilsa `true`. Yangi sevimli ro'yxat BOSHIGA.
+  Future<bool> toggle(ContestModel contest) async {
     await _ready;
-    final next = {...state};
-    final added = next.add(id);
-    if (!added) next.remove(id);
+    final exists = state.any((c) => c.id == contest.id);
+    final next = exists
+        ? state.where((c) => c.id != contest.id).toList()
+        : <ContestModel>[contest, ...state];
     state = next;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setStringList(_favKey, next.toList());
+      await prefs.setString(
+        _favContestsKey,
+        jsonEncode(next.map((c) => c.toJson()).toList()),
+      );
     } catch (_) {
       // Saqlash xatosi — state sessiya davomida baribir o'zgardi.
     }
-    return added;
+    return !exists;
   }
 }
-
-/// Sevimli testlar — hozir mavjudlari (allTests ichidan), allTests tartibida.
-final favoriteContestsProvider = Provider<List<ContestModel>>((ref) {
-  final ids = ref.watch(favoriteContestIdsProvider);
-  return ref.watch(allTestsProvider).where((c) => ids.contains(c.id)).toList();
-});

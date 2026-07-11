@@ -161,7 +161,7 @@ class LikedTestsScreen extends ConsumerWidget {
     WidgetRef ref,
     ContestModel c,
   ) async {
-    await ref.read(favoriteContestIdsProvider.notifier).toggle(c.id);
+    await ref.read(favoriteContestsProvider.notifier).toggle(c);
     await HapticFeedback.mediumImpact();
     if (!context.mounted) return;
     ScaffoldMessenger.of(context)
