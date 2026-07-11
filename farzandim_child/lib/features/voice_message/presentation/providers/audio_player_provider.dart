@@ -11,8 +11,9 @@ import 'package:just_audio/just_audio.dart';
 
 import 'package:farzandim_child/features/voice_message/data/services/audio_player_manager.dart';
 
-final audioPlayerManagerProvider =
-    Provider<AudioPlayerManager>((ref) => AudioPlayerManager.instance);
+final audioPlayerManagerProvider = Provider<AudioPlayerManager>(
+  (ref) => AudioPlayerManager.instance,
+);
 
 /// Hozirgi play bo'layotgan xabar id'si — null bo'lsa hech narsa o'ynamayapti.
 final currentlyPlayingIdProvider = StreamProvider<String?>((ref) {

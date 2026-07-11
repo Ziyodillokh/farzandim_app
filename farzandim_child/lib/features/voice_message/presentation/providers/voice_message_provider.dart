@@ -11,7 +11,6 @@ import 'dart:io';
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/video_message/data/models/video_message.dart';
 import 'package:farzandim_child/features/video_message/presentation/providers/video_message_provider.dart';
@@ -51,12 +50,12 @@ class VoiceUploadState {
 
 /// Legacy service — eski code (audio recorder, playback) hali ishlatadi.
 /// Sprint 4.4.5 davomida Backend repository'ga to'liq ko'chiramiz.
-final voiceMessageServiceProvider =
-    Provider<VoiceMessageService>((ref) => VoiceMessageService());
+final voiceMessageServiceProvider = Provider<VoiceMessageService>(
+  (ref) => VoiceMessageService(),
+);
 
 /// Voice xabarlar ro'yxati — Backend fetch + WS `voice:received` listen.
-final voiceMessagesProvider =
-    StreamProvider<List<VoiceMessage>>((ref) async* {
+final voiceMessagesProvider = StreamProvider<List<VoiceMessage>>((ref) async* {
   final pairing = ref.watch(pairingStateProvider);
   if (!pairing.isPaired) {
     yield const <VoiceMessage>[];
@@ -68,10 +67,10 @@ final voiceMessagesProvider =
 
   // faqat ota-ona bilan oxirgi 100 ta xabar — to'liq tarix tortilmaydi
   Future<List<VoiceMessage>> fetch() => repo.getMessages(
-        currentUserId: currentUserId,
-        peerId: parentUid,
-        limit: 100,
-      );
+    currentUserId: currentUserId,
+    peerId: parentUid,
+    limit: 100,
+  );
 
   yield await fetch();
 
@@ -92,36 +91,35 @@ final voiceMessagesProvider =
 /// `AsyncValue` qaytaradi — UI'da `.when(data/loading/error)` ishlatadi.
 final latestVoiceMessageProvider =
     Provider.family<AsyncValue<VoiceMessage?>, String>((ref, childId) {
-  return ref.watch(voiceMessagesProvider).whenData(
-    (all) {
-      if (all.isEmpty) return null;
-      // Backend default sort — eng yangisi birinchi (createdAt DESC).
-      return all.first;
-    },
-  );
-});
+      return ref.watch(voiceMessagesProvider).whenData((all) {
+        if (all.isEmpty) return null;
+        // Backend default sort — eng yangisi birinchi (createdAt DESC).
+        return all.first;
+      });
+    });
 
 /// Ota-ona yuborgan ko'rilmagan xabarlar soni (Dashboard badge uchun).
 final unreadVoiceMessagesCountProvider =
     Provider.family<AsyncValue<int>, String>((ref, childId) {
-  return ref.watch(voiceMessagesProvider).whenData(
-    (all) => all
-        .where(
-          (m) =>
-              m.sender == 'parent' &&
-              m.status == VoiceMessageStatus.sent,
-        )
-        .length,
-  );
-});
+      return ref
+          .watch(voiceMessagesProvider)
+          .whenData(
+            (all) => all
+                .where(
+                  (m) =>
+                      m.sender == 'parent' &&
+                      m.status == VoiceMessageStatus.sent,
+                )
+                .length,
+          );
+    });
 
 final voiceMessageUploadProvider =
     StateNotifierProvider<VoiceMessageUploadNotifier, VoiceUploadState>(
-  (ref) => VoiceMessageUploadNotifier(ref),
-);
+      (ref) => VoiceMessageUploadNotifier(ref),
+    );
 
-class VoiceMessageUploadNotifier
-    extends StateNotifier<VoiceUploadState> {
+class VoiceMessageUploadNotifier extends StateNotifier<VoiceUploadState> {
   VoiceMessageUploadNotifier(this._ref) : super(const VoiceUploadState());
 
   final Ref _ref;
@@ -206,7 +204,8 @@ class VoiceItem extends ChatItem {
   final VoiceMessage message;
 
   @override
-  DateTime get createdAt => message.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime get createdAt =>
+      message.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   String get id => 'v_${message.id ?? message.hashCode}';
@@ -219,7 +218,8 @@ class VideoItem extends ChatItem {
   final VideoMessage message;
 
   @override
-  DateTime get createdAt => message.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime get createdAt =>
+      message.createdAt ?? DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
   String get id => 'r_${message.id ?? message.hashCode}';
@@ -230,8 +230,7 @@ class VideoItem extends ChatItem {
 /// Ikkala manba ham `StreamProvider` — har biri yangilanganda combined
 /// ro'yxat avtomatik qayta hisoblanadi (`whenData`). ASC sortlangan
 /// (chronological — eski tepada, yangi pastda — voice ekrani kabi).
-final chatMessagesProvider =
-    Provider<AsyncValue<List<ChatItem>>>((ref) {
+final chatMessagesProvider = Provider<AsyncValue<List<ChatItem>>>((ref) {
   final voiceAsync = ref.watch(voiceMessagesProvider);
   final videoAsync = ref.watch(videoMessagesProvider);
 

@@ -19,9 +19,15 @@
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+
+// Parvoz tokenlar — ota-ona ilovasidagi chat input bilan BIR XIL.
+const _pBlue = Color(0xFF216BFF);
+const _pChipBg = Color(0xFF1B2128);
+const _pFieldBorder = Color(0x1FFFFFFF);
+const _pDim = Color(0x8CFFFFFF);
+const _pSheetBg = Color(0xFF15181E);
 
 /// Mic/video tugma rejimi.
 enum ChatRecordMode { voice, video }
@@ -158,14 +164,16 @@ class _ChatInputBarState extends State<ChatInputBar> {
               filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
               child: Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 18, vertical: 12),
+                  horizontal: 18,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   // ignore: deprecated_member_use
                   color: Colors.black.withOpacity(0.55),
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(
                     // ignore: deprecated_member_use
-                    color: AppColors.primary.withOpacity(0.4),
+                    color: _pBlue.withValues(alpha: 0.4),
                     width: 1,
                   ),
                   boxShadow: [
@@ -221,7 +229,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     setState(() => _showEmoji = false);
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: context.adaptive.bgCard,
+      backgroundColor: _pSheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -271,9 +279,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     // Orqa fon YO'Q — input wallpaper ustida suzib turadi (iPhone/Telegram).
     // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
     return Container(
-      color: _showEmoji && !widget.isRecording
-          ? context.adaptive.bgCard
-          : Colors.transparent,
+      color: _showEmoji && !widget.isRecording ? _pSheetBg : Colors.transparent,
       child: SafeArea(
         top: false,
         child: Column(
@@ -312,10 +318,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
                   // [2] Oxirgi child: mic/video toggle yoki send.
                   if (hasText && !widget.isRecording)
-                    _SendButton(
-                      onTap: _sendText,
-                      disabled: _anyUploading,
-                    )
+                    _SendButton(onTap: _sendText, disabled: _anyUploading)
                   else
                     _buildActionButton(),
                 ],
@@ -335,11 +338,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
       constraints: const BoxConstraints(minHeight: 46, maxHeight: 132),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
+        color: _pChipBg,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: context.adaptive.border.withValues(alpha: 0.6),
-        ),
+        border: Border.all(color: _pFieldBorder),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withValues(alpha: 0.10),
@@ -361,7 +362,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               _showEmoji
                   ? Icons.keyboard_rounded
                   : Icons.emoji_emotions_outlined,
-              color: context.adaptive.textSecondary,
+              color: _pDim,
               size: 23,
             ),
           ),
@@ -374,20 +375,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
               maxLines: 5,
               textInputAction: TextInputAction.newline,
               keyboardType: TextInputType.multiline,
-              cursorColor: AppColors.primary,
+              cursorColor: _pBlue,
               onTap: () {
                 if (_showEmoji) setState(() => _showEmoji = false);
               },
-              style: TextStyle(
-                color: context.adaptive.textPrimary,
-                fontSize: 15,
-              ),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
               decoration: InputDecoration(
                 hintText: 'voiceChat.messageHint'.tr(),
-                hintStyle: TextStyle(
-                  color: context.adaptive.textSecondary,
-                  fontSize: 15,
-                ),
+                hintStyle: const TextStyle(color: _pDim, fontSize: 15),
                 filled: false,
                 border: InputBorder.none,
                 enabledBorder: InputBorder.none,
@@ -410,14 +405,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
                     height: 21,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: _pBlue,
                     ),
                   )
                 : Transform.rotate(
                     angle: -0.7,
                     child: Icon(
                       Icons.attach_file_rounded,
-                      color: context.adaptive.textSecondary,
+                      color: _pDim,
                       size: 22,
                     ),
                   ),
@@ -466,33 +461,9 @@ class _ChatInputBarState extends State<ChatInputBar> {
         width: 46,
         height: 46,
         decoration: BoxDecoration(
-          gradient: isRecording
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                )
-              : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: disabled
-                      ? [
-                          AppColors.primary.withValues(alpha: 0.6),
-                          AppColors.primaryDark.withValues(alpha: 0.6),
-                        ]
-                      : const [AppColors.primary, AppColors.primaryDark],
-                ),
+          color: isRecording ? const Color(0xFFFF4D4F) : _pChipBg,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: (isRecording
-                      ? const Color(0xFFFF5252)
-                      : AppColors.primary)
-                  .withValues(alpha: isRecording ? 0.4 : 0.28),
-              blurRadius: isRecording ? 18 : 12,
-              spreadRadius: 1,
-            ),
-          ],
+          border: isRecording ? null : Border.all(color: _pFieldBorder),
         ),
         child: disabled
             ? const Center(
@@ -513,14 +484,14 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   isRecording
                       ? Icons.stop_rounded
                       : isVideoMode
-                          ? Icons.videocam_rounded
-                          : Icons.mic_rounded,
+                      ? Icons.videocam_rounded
+                      : Icons.mic_rounded,
                   key: ValueKey(
                     isRecording
                         ? 'stop'
                         : isVideoMode
-                            ? 'video'
-                            : 'mic',
+                        ? 'video'
+                        : 'mic',
                   ),
                   color: Colors.white,
                   size: 24,
@@ -546,28 +517,10 @@ class _SendButton extends StatelessWidget {
       child: Container(
         width: 46,
         height: 46,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.primaryDark],
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
-              blurRadius: 12,
-              spreadRadius: 1,
-            ),
-          ],
-        ),
+        decoration: const BoxDecoration(color: _pBlue, shape: BoxShape.circle),
         child: const Padding(
           padding: EdgeInsets.only(left: 2),
-          child: Icon(
-            Icons.send_rounded,
-            color: Colors.white,
-            size: 22,
-          ),
+          child: Icon(Icons.send_rounded, color: Colors.white, size: 22),
         ),
       ),
     );
@@ -607,10 +560,7 @@ class _AttachOption extends StatelessWidget {
           const SizedBox(height: 8),
           Text(
             label,
-            style: TextStyle(
-              color: context.adaptive.textPrimary,
-              fontSize: 13,
-            ),
+            style: const TextStyle(color: Colors.white, fontSize: 13),
           ),
         ],
       ),
@@ -636,11 +586,9 @@ class _RecordingIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: context.adaptive.bgCard,
+        color: _pChipBg,
         borderRadius: BorderRadius.circular(26),
-        border: Border.all(
-          color: context.adaptive.border.withValues(alpha: 0.6),
-        ),
+        border: Border.all(color: _pFieldBorder),
       ),
       child: Row(
         children: [
@@ -655,11 +603,11 @@ class _RecordingIndicator extends StatelessWidget {
           const SizedBox(width: 8),
           Text(
             '$m:$s',
-            style: TextStyle(
-              color: context.adaptive.textPrimary,
+            style: const TextStyle(
+              color: Colors.white,
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
+              fontFeatures: [FontFeature.tabularFigures()],
             ),
           ),
           const SizedBox(width: 12),
@@ -677,14 +625,13 @@ class _RecordingIndicator extends StatelessWidget {
                         final amp = amplitudes[amplitudes.length - 1 - i];
                         final h = (amp * 26).clamp(2.0, 26.0);
                         return Padding(
-                          padding:
-                              const EdgeInsets.symmetric(horizontal: 1),
+                          padding: const EdgeInsets.symmetric(horizontal: 1),
                           child: Center(
                             child: Container(
                               width: 2.5,
                               height: h,
                               decoration: BoxDecoration(
-                                color: AppColors.primary,
+                                color: _pBlue,
                                 borderRadius: BorderRadius.circular(2),
                               ),
                             ),
@@ -720,73 +667,406 @@ class _EmojiPanelState extends State<_EmojiPanel> {
     (
       icon: Icons.emoji_emotions_outlined,
       emojis: [
-        '😀', '😃', '😄', '😁', '😆', '😅', '😂', '🤣', '🙂', '🙃',
-        '😉', '😊', '😇', '🥰', '😍', '🤩', '😘', '😗', '😚', '😙',
-        '😋', '😛', '😜', '🤪', '😝', '🤑', '🤗', '🤭', '🤫', '🤔',
-        '🤐', '😐', '😑', '😶', '😏', '😒', '🙄', '😬', '😌', '😔',
-        '😪', '🤤', '😴', '😷', '🤒', '🤕', '🥵', '🥶', '😵', '🤯',
-        '🥳', '😎', '🤓', '🧐', '😕', '😟', '🙁', '😮', '😲', '😳',
-        '🥺', '😦', '😨', '😰', '😢', '😭', '😱', '😖', '😣', '😞',
-        '😤', '😡', '😠', '🤬', '😈', '👿', '💀', '😺', '😸', '😹',
+        '😀',
+        '😃',
+        '😄',
+        '😁',
+        '😆',
+        '😅',
+        '😂',
+        '🤣',
+        '🙂',
+        '🙃',
+        '😉',
+        '😊',
+        '😇',
+        '🥰',
+        '😍',
+        '🤩',
+        '😘',
+        '😗',
+        '😚',
+        '😙',
+        '😋',
+        '😛',
+        '😜',
+        '🤪',
+        '😝',
+        '🤑',
+        '🤗',
+        '🤭',
+        '🤫',
+        '🤔',
+        '🤐',
+        '😐',
+        '😑',
+        '😶',
+        '😏',
+        '😒',
+        '🙄',
+        '😬',
+        '😌',
+        '😔',
+        '😪',
+        '🤤',
+        '😴',
+        '😷',
+        '🤒',
+        '🤕',
+        '🥵',
+        '🥶',
+        '😵',
+        '🤯',
+        '🥳',
+        '😎',
+        '🤓',
+        '🧐',
+        '😕',
+        '😟',
+        '🙁',
+        '😮',
+        '😲',
+        '😳',
+        '🥺',
+        '😦',
+        '😨',
+        '😰',
+        '😢',
+        '😭',
+        '😱',
+        '😖',
+        '😣',
+        '😞',
+        '😤',
+        '😡',
+        '😠',
+        '🤬',
+        '😈',
+        '👿',
+        '💀',
+        '😺',
+        '😸',
+        '😹',
       ],
     ),
     (
       icon: Icons.front_hand_outlined,
       emojis: [
-        '👍', '👎', '👌', '🤌', '🤏', '✌️', '🤞', '🤟', '🤘', '🤙',
-        '👈', '👉', '👆', '👇', '☝️', '✋', '🤚', '🖐️', '🖖', '👋',
-        '🤝', '🙏', '✍️', '💅', '🤳', '💪', '👏', '🙌', '👐', '🤲',
-        '🫶', '👊', '✊', '🤛', '🤜', '🫰', '🫵', '🦾', '🖕', '✔️',
+        '👍',
+        '👎',
+        '👌',
+        '🤌',
+        '🤏',
+        '✌️',
+        '🤞',
+        '🤟',
+        '🤘',
+        '🤙',
+        '👈',
+        '👉',
+        '👆',
+        '👇',
+        '☝️',
+        '✋',
+        '🤚',
+        '🖐️',
+        '🖖',
+        '👋',
+        '🤝',
+        '🙏',
+        '✍️',
+        '💅',
+        '🤳',
+        '💪',
+        '👏',
+        '🙌',
+        '👐',
+        '🤲',
+        '🫶',
+        '👊',
+        '✊',
+        '🤛',
+        '🤜',
+        '🫰',
+        '🫵',
+        '🦾',
+        '🖕',
+        '✔️',
       ],
     ),
     (
       icon: Icons.favorite_border_rounded,
       emojis: [
-        '❤️', '🧡', '💛', '💚', '💙', '💜', '🖤', '🤍', '🤎', '💔',
-        '❣️', '💕', '💞', '💓', '💗', '💖', '💘', '💝', '💟', '♥️',
-        '💋', '💯', '💢', '💥', '💫', '💦', '💨', '🕳️', '💬', '🗯️',
-        '⭐', '🌟', '✨', '⚡', '🔥', '🌈', '☀️', '🌙', '🎉', '🎊',
+        '❤️',
+        '🧡',
+        '💛',
+        '💚',
+        '💙',
+        '💜',
+        '🖤',
+        '🤍',
+        '🤎',
+        '💔',
+        '❣️',
+        '💕',
+        '💞',
+        '💓',
+        '💗',
+        '💖',
+        '💘',
+        '💝',
+        '💟',
+        '♥️',
+        '💋',
+        '💯',
+        '💢',
+        '💥',
+        '💫',
+        '💦',
+        '💨',
+        '🕳️',
+        '💬',
+        '🗯️',
+        '⭐',
+        '🌟',
+        '✨',
+        '⚡',
+        '🔥',
+        '🌈',
+        '☀️',
+        '🌙',
+        '🎉',
+        '🎊',
       ],
     ),
     (
       icon: Icons.pets_outlined,
       emojis: [
-        '🐶', '🐱', '🐭', '🐹', '🐰', '🦊', '🐻', '🐼', '🐨', '🐯',
-        '🦁', '🐮', '🐷', '🐸', '🐵', '🐔', '🐧', '🐦', '🐤', '🦆',
-        '🦅', '🦉', '🐺', '🐗', '🐴', '🦄', '🐝', '🐛', '🦋', '🐌',
-        '🐢', '🐍', '🐙', '🐠', '🐟', '🐬', '🐳', '🐋', '🦈', '🌸',
-        '🌹', '🌻', '🌼', '🌷', '🌲', '🌳', '🌴', '🌵', '🍀', '🍁',
+        '🐶',
+        '🐱',
+        '🐭',
+        '🐹',
+        '🐰',
+        '🦊',
+        '🐻',
+        '🐼',
+        '🐨',
+        '🐯',
+        '🦁',
+        '🐮',
+        '🐷',
+        '🐸',
+        '🐵',
+        '🐔',
+        '🐧',
+        '🐦',
+        '🐤',
+        '🦆',
+        '🦅',
+        '🦉',
+        '🐺',
+        '🐗',
+        '🐴',
+        '🦄',
+        '🐝',
+        '🐛',
+        '🦋',
+        '🐌',
+        '🐢',
+        '🐍',
+        '🐙',
+        '🐠',
+        '🐟',
+        '🐬',
+        '🐳',
+        '🐋',
+        '🦈',
+        '🌸',
+        '🌹',
+        '🌻',
+        '🌼',
+        '🌷',
+        '🌲',
+        '🌳',
+        '🌴',
+        '🌵',
+        '🍀',
+        '🍁',
       ],
     ),
     (
       icon: Icons.restaurant_outlined,
       emojis: [
-        '🍏', '🍎', '🍐', '🍊', '🍋', '🍌', '🍉', '🍇', '🍓', '🫐',
-        '🍈', '🍒', '🍑', '🥭', '🍍', '🥥', '🥝', '🍅', '🍆', '🥑',
-        '🥦', '🥕', '🌽', '🌶️', '🥔', '🍠', '🥐', '🍞', '🥖', '🧀',
-        '🥚', '🍳', '🥞', '🧇', '🥓', '🍔', '🍟', '🍕', '🌭', '🥪',
-        '🌮', '🌯', '🍜', '🍲', '🍛', '🍣', '🍱', '🍦', '🍩', '🍪',
-        '🎂', '🍰', '🧁', '🍫', '🍬', '🍭', '☕', '🍵', '🥤', '🧃',
+        '🍏',
+        '🍎',
+        '🍐',
+        '🍊',
+        '🍋',
+        '🍌',
+        '🍉',
+        '🍇',
+        '🍓',
+        '🫐',
+        '🍈',
+        '🍒',
+        '🍑',
+        '🥭',
+        '🍍',
+        '🥥',
+        '🥝',
+        '🍅',
+        '🍆',
+        '🥑',
+        '🥦',
+        '🥕',
+        '🌽',
+        '🌶️',
+        '🥔',
+        '🍠',
+        '🥐',
+        '🍞',
+        '🥖',
+        '🧀',
+        '🥚',
+        '🍳',
+        '🥞',
+        '🧇',
+        '🥓',
+        '🍔',
+        '🍟',
+        '🍕',
+        '🌭',
+        '🥪',
+        '🌮',
+        '🌯',
+        '🍜',
+        '🍲',
+        '🍛',
+        '🍣',
+        '🍱',
+        '🍦',
+        '🍩',
+        '🍪',
+        '🎂',
+        '🍰',
+        '🧁',
+        '🍫',
+        '🍬',
+        '🍭',
+        '☕',
+        '🍵',
+        '🥤',
+        '🧃',
       ],
     ),
     (
       icon: Icons.sports_soccer_outlined,
       emojis: [
-        '⚽', '🏀', '🏈', '⚾', '🥎', '🎾', '🏐', '🏉', '🎱', '🏓',
-        '🏸', '🥅', '🏒', '🏑', '🥍', '🏏', '⛳', '🏹', '🎣', '🥊',
-        '🥋', '🎽', '⛸️', '🥌', '🛷', '🎿', '⛷️', '🏂', '🏋️', '🤸',
-        '🤼', '🤽', '🤾', '🚴', '🚵', '🏆', '🥇', '🥈', '🥉', '🎮',
-        '🎯', '🎲', '🎸', '🎹', '🎺', '🎻', '🥁', '🎤', '🎧', '🎬',
+        '⚽',
+        '🏀',
+        '🏈',
+        '⚾',
+        '🥎',
+        '🎾',
+        '🏐',
+        '🏉',
+        '🎱',
+        '🏓',
+        '🏸',
+        '🥅',
+        '🏒',
+        '🏑',
+        '🥍',
+        '🏏',
+        '⛳',
+        '🏹',
+        '🎣',
+        '🥊',
+        '🥋',
+        '🎽',
+        '⛸️',
+        '🥌',
+        '🛷',
+        '🎿',
+        '⛷️',
+        '🏂',
+        '🏋️',
+        '🤸',
+        '🤼',
+        '🤽',
+        '🤾',
+        '🚴',
+        '🚵',
+        '🏆',
+        '🥇',
+        '🥈',
+        '🥉',
+        '🎮',
+        '🎯',
+        '🎲',
+        '🎸',
+        '🎹',
+        '🎺',
+        '🎻',
+        '🥁',
+        '🎤',
+        '🎧',
+        '🎬',
       ],
     ),
     (
       icon: Icons.lightbulb_outline_rounded,
       emojis: [
-        '⌚', '📱', '💻', '⌨️', '🖥️', '🖨️', '🖱️', '💽', '💾', '📷',
-        '📸', '📹', '🎥', '📞', '☎️', '📟', '📠', '📺', '📻', '🔋',
-        '🔌', '💡', '🔦', '🕯️', '🧯', '🛢️', '💸', '💵', '💴', '💶',
-        '💷', '💰', '💳', '💎', '⚖️', '🔧', '🔨', '⚙️', '🔑', '🔒',
-        '📚', '📖', '📝', '✏️', '🖊️', '📌', '📎', '✂️', '📅', '⏰',
+        '⌚',
+        '📱',
+        '💻',
+        '⌨️',
+        '🖥️',
+        '🖨️',
+        '🖱️',
+        '💽',
+        '💾',
+        '📷',
+        '📸',
+        '📹',
+        '🎥',
+        '📞',
+        '☎️',
+        '📟',
+        '📠',
+        '📺',
+        '📻',
+        '🔋',
+        '🔌',
+        '💡',
+        '🔦',
+        '🕯️',
+        '🧯',
+        '🛢️',
+        '💸',
+        '💵',
+        '💴',
+        '💶',
+        '💷',
+        '💰',
+        '💳',
+        '💎',
+        '⚖️',
+        '🔧',
+        '🔨',
+        '⚙️',
+        '🔑',
+        '🔒',
+        '📚',
+        '📖',
+        '📝',
+        '✏️',
+        '🖊️',
+        '📌',
+        '📎',
+        '✂️',
+        '📅',
+        '⏰',
       ],
     ),
   ];
@@ -796,7 +1076,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
     final emojis = _categories[_category].emojis;
     return Container(
       height: 256,
-      color: context.adaptive.bgCard,
+      color: _pSheetBg,
       child: Column(
         children: [
           // Kategoriya tablari.
@@ -813,9 +1093,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
                       decoration: BoxDecoration(
                         border: Border(
                           bottom: BorderSide(
-                            color: selected
-                                ? AppColors.primary
-                                : Colors.transparent,
+                            color: selected ? _pBlue : Colors.transparent,
                             width: 2,
                           ),
                         ),
@@ -823,9 +1101,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
                       child: Icon(
                         _categories[i].icon,
                         size: 22,
-                        color: selected
-                            ? AppColors.primary
-                            : context.adaptive.textSecondary,
+                        color: selected ? _pBlue : _pDim,
                       ),
                     ),
                   ),
@@ -835,10 +1111,8 @@ class _EmojiPanelState extends State<_EmojiPanel> {
           ),
           Expanded(
             child: GridView.builder(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-              gridDelegate:
-                  const SliverGridDelegateWithFixedCrossAxisCount(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                 crossAxisCount: 8,
                 mainAxisSpacing: 2,
                 crossAxisSpacing: 2,

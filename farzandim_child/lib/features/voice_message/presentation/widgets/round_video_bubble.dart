@@ -14,7 +14,6 @@
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/video_message/data/models/video_message.dart';
 import 'package:farzandim_child/features/video_message/data/repositories/backend_video_message_repository.dart';
 import 'package:flutter/material.dart';
@@ -159,15 +158,17 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(),
           Flexible(
             flex: 5,
             child: Column(
-              crossAxisAlignment:
-                  isOwn ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+              crossAxisAlignment: isOwn
+                  ? CrossAxisAlignment.end
+                  : CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 GestureDetector(
@@ -177,7 +178,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     height: _bubbleDiameter,
                     child: ClipOval(
                       child: ColoredBox(
-                        color: AppColors.surface,
+                        color: const Color(0xFF1C232B),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -188,8 +189,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                 fit: BoxFit.cover,
                                 child: SizedBox(
                                   width: _thumbController!.value.size.width,
-                                  height:
-                                      _thumbController!.value.size.height,
+                                  height: _thumbController!.value.size.height,
                                   child: VideoPlayer(_thumbController!),
                                 ),
                               )
@@ -200,7 +200,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                   height: 28,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    color: AppColors.primary,
+                                    color: Color(0xFF216BFF),
                                   ),
                                 ),
                               )
@@ -208,7 +208,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                               const Center(
                                 child: Icon(
                                   Icons.videocam_off,
-                                  color: AppColors.textTertiary,
+                                  color: Color(0x8CFFFFFF),
                                   size: 36,
                                 ),
                               ),
@@ -234,12 +234,12 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                   width: 54,
                                   height: 54,
                                   decoration: BoxDecoration(
-                                    color:
-                                        Colors.black.withValues(alpha: 0.45),
+                                    color: Colors.black.withValues(alpha: 0.45),
                                     shape: BoxShape.circle,
                                     border: Border.all(
-                                      color: Colors.white
-                                          .withValues(alpha: 0.85),
+                                      color: Colors.white.withValues(
+                                        alpha: 0.85,
+                                      ),
                                       width: 2,
                                     ),
                                   ),
@@ -263,10 +263,8 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                     vertical: 3,
                                   ),
                                   decoration: BoxDecoration(
-                                    color:
-                                        Colors.black.withValues(alpha: 0.55),
-                                    borderRadius:
-                                        BorderRadius.circular(999),
+                                    color: Colors.black.withValues(alpha: 0.55),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     _formatDuration(msg.durationSeconds),
@@ -295,8 +293,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     Text(
                       _formatTime(createdAt),
                       style: TextStyle(
-                        color:
-                            AppColors.textSecondary.withValues(alpha: 0.9),
+                        color: const Color(0x8CFFFFFF),
                         fontSize: 11,
                       ),
                     ),
@@ -309,8 +306,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                         size: 14,
                         color: msg.status == VideoMessageStatus.seen
                             ? Colors.blue.shade400
-                            : AppColors.textSecondary
-                                .withValues(alpha: 0.7),
+                            : const Color(0x8CFFFFFF),
                       ),
                     ],
                   ],
@@ -332,8 +328,7 @@ class _FullscreenVideoDialog extends StatefulWidget {
   final String videoUrl;
 
   @override
-  State<_FullscreenVideoDialog> createState() =>
-      _FullscreenVideoDialogState();
+  State<_FullscreenVideoDialog> createState() => _FullscreenVideoDialogState();
 }
 
 class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
@@ -363,7 +358,8 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
   Widget build(BuildContext context) {
     final screenSize = MediaQuery.of(context).size;
     // Round player diameter — ekran kichik tomoni ~85%.
-    final diameter = (screenSize.width < screenSize.height
+    final diameter =
+        (screenSize.width < screenSize.height
             ? screenSize.width
             : screenSize.height) *
         0.85;
@@ -402,9 +398,7 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                   const SizedBox(
                     width: 48,
                     height: 48,
-                    child: CircularProgressIndicator(
-                      color: AppColors.primary,
-                    ),
+                    child: CircularProgressIndicator(color: Color(0xFF216BFF)),
                   ),
                 Positioned(
                   top: 40,

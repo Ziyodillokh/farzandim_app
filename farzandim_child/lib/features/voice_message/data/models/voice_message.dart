@@ -124,7 +124,8 @@ class VoiceMessage {
       sender: data['sender'] as String? ?? 'child',
       audioUrl: data['audioUrl'] as String? ?? '',
       durationSeconds: data['durationSeconds'] as int? ?? 0,
-      waveform: (data['waveform'] as List<dynamic>?)
+      waveform:
+          (data['waveform'] as List<dynamic>?)
               ?.map((e) => (e as num).toDouble())
               .toList() ??
           const [],

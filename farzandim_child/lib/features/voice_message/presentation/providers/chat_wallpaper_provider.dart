@@ -62,8 +62,8 @@ class ChatWallpaperNotifier extends StateNotifier<String> {
 
 final chatWallpaperProvider =
     StateNotifierProvider<ChatWallpaperNotifier, String>((ref) {
-  return ChatWallpaperNotifier();
-});
+      return ChatWallpaperNotifier();
+    });
 
 /// Wallpaper kalitidan preset indeksini ajratadi (yo'q bo'lsa `null`).
 int? chatWallpaperPresetIndex(String key) {

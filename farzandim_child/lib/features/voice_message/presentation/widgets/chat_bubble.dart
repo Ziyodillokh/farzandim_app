@@ -9,21 +9,22 @@
 // Real-time waveform progress + position display.
 
 import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim_child/features/voice_message/data/repositories/backend_voice_message_repository.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/voice_message_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 
+// Parvoz tokenlar — ota-ona ilovasidagi chat bilan BIR XIL.
+const _pBlue = Color(0xFF216BFF);
+const _recvBubble = Color(0xFF1C232B);
+const _pDim = Color(0x8CFFFFFF);
+
 class ChatBubble extends ConsumerWidget {
-  const ChatBubble({
-    required this.message,
-    required this.isOwn,
-    super.key,
-  });
+  const ChatBubble({required this.message, required this.isOwn, super.key});
 
   final VoiceMessage message;
   final bool isOwn;
@@ -54,54 +55,35 @@ class ChatBubble extends ConsumerWidget {
     return result;
   }
 
-  // Telegram-style text bubble — audio playback'ga aloqasi yo'q.
-  // Own bubble — Telegram brand blue gradient + oq matn.
-  // Receiver bubble — oq fonda qora matn (Telegram receiver).
+  // Matn bubble — Parvoz (ota-ona ilovasi bilan bir xil):
+  // own — ko'k (#216BFF), receiver — to'q kulrang (#1C232B), matn oq.
   Widget _buildTextBubble(BuildContext context) {
-    const tgBlue1 = Color(0xFF37AEE2);
-    const tgBlue2 = Color(0xFF1E96C8);
-    final textColor = isOwn ? Colors.white : AppColors.textPrimary;
-    final metaColor = isOwn
-        // ignore: deprecated_member_use
-        ? Colors.white.withOpacity(0.75)
-        : AppColors.textTertiary;
+    final metaColor = isOwn ? Colors.white70 : _pDim;
     final isSeen = message.status == VoiceMessageStatus.seen;
-    final time =
-        message.createdAt != null ? _formatTime(message.createdAt!) : '';
+    final time = message.createdAt != null
+        ? _formatTime(message.createdAt!)
+        : '';
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(flex: 1),
           Flexible(
             flex: 5,
             child: Container(
               constraints: const BoxConstraints(minWidth: 80),
-              padding: const EdgeInsets.fromLTRB(14, 10, 14, 8),
+              padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
               decoration: BoxDecoration(
-                color: isOwn ? null : Colors.white,
-                gradient: isOwn
-                    ? const LinearGradient(
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                        colors: [tgBlue1, tgBlue2],
-                      )
-                    : null,
+                color: isOwn ? _pBlue : _recvBubble,
                 borderRadius: BorderRadius.only(
                   topLeft: const Radius.circular(18),
                   topRight: const Radius.circular(18),
                   bottomLeft: Radius.circular(isOwn ? 18 : 4),
                   bottomRight: Radius.circular(isOwn ? 4 : 18),
                 ),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Color(0x14000000),
-                    blurRadius: 6,
-                    offset: Offset(0, 1),
-                  ),
-                ],
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.end,
@@ -111,27 +93,30 @@ class ChatBubble extends ConsumerWidget {
                     alignment: Alignment.centerLeft,
                     child: Text(
                       message.text ?? '',
-                      style: TextStyle(
-                        color: textColor,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
                         fontSize: 15,
                         height: 1.35,
                       ),
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 3),
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
                         time,
-                        style: TextStyle(color: metaColor, fontSize: 11),
+                        style: GoogleFonts.poppins(
+                          color: metaColor,
+                          fontSize: 11,
+                        ),
                       ),
                       if (isOwn) ...[
                         const SizedBox(width: 4),
                         Icon(
-                          isSeen ? Icons.done_all : Icons.check,
+                          isSeen ? Icons.done_all_rounded : Icons.done_rounded,
                           color: Colors.white,
-                          size: 14,
+                          size: 15,
                         ),
                       ],
                     ],
@@ -160,37 +145,39 @@ class ChatBubble extends ConsumerWidget {
     final durationAsync = ref.watch(audioDurationProvider);
     final playerState = ref.watch(audioPlayerStateProvider).value;
 
-    final position =
-        isCurrent ? (positionAsync.value ?? Duration.zero) : Duration.zero;
+    final position = isCurrent
+        ? (positionAsync.value ?? Duration.zero)
+        : Duration.zero;
     final duration = isCurrent
-        ? (durationAsync.value ??
-            Duration(seconds: message.durationSeconds))
+        ? (durationAsync.value ?? Duration(seconds: message.durationSeconds))
         : Duration(seconds: message.durationSeconds);
 
     final progress = duration.inMilliseconds > 0
         ? (position.inMilliseconds / duration.inMilliseconds)
-            .clamp(0.0, 1.0)
-            .toDouble()
+              .clamp(0.0, 1.0)
+              .toDouble()
         : 0.0;
     final isPlaying = isCurrent && (playerState?.playing ?? false);
     final processing = playerState?.processingState;
-    final isLoading = isCurrent &&
+    final isLoading =
+        isCurrent &&
         (processing == ProcessingState.loading ||
             processing == ProcessingState.buffering);
-    final displayDuration =
-        isPlaying ? position.inSeconds : message.durationSeconds;
+    final displayDuration = isPlaying
+        ? position.inSeconds
+        : message.durationSeconds;
     final speed = ref.watch(audioSpeedProvider).value ?? 1.0;
     final speedLabel = speed == 1.0
         ? '1×'
         : speed == 1.5
-            ? '1.5×'
-            : '2×';
+        ? '1.5×'
+        : '2×';
 
-    // Telegram-style: own — blue gradient, receiver — oq.
-    final bubbleColor = isOwn ? const Color(0xFF1E96C8) : Colors.white;
-    final textColor = isOwn ? Colors.white : AppColors.textPrimary;
-    final waveformColor =
-        isOwn ? Colors.white : const Color(0xFF37AEE2);
+    // Parvoz: own — ko'k, receiver — to'q kulrang; matn har doim oq.
+    final bubbleColor = isOwn ? _pBlue : _recvBubble;
+    const textColor = Colors.white;
+    final waveformColor = isOwn ? Colors.white : _pBlue;
+    final playTint = isOwn ? Colors.white : _pBlue;
     final isSeen = message.status == VoiceMessageStatus.seen;
     // Premium: 36 ta rounded pill — Parent bubble bilan parallel.
     const barCount = 36;
@@ -202,8 +189,9 @@ class ChatBubble extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       child: Row(
-        mainAxisAlignment:
-            isOwn ? MainAxisAlignment.end : MainAxisAlignment.start,
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
         children: [
           if (isOwn) const Spacer(flex: 1),
           Flexible(
@@ -216,7 +204,8 @@ class ChatBubble extends ConsumerWidget {
                 // audioUrl bo'sh bo'lsa — Backend'dan olamiz.
                 var url = message.audioUrl;
                 if (url.isEmpty) {
-                  url = await ref
+                  url =
+                      await ref
                           .read(backendVoiceMessageRepositoryProvider)
                           .getFileUrl(id) ??
                       '';
@@ -235,14 +224,10 @@ class ChatBubble extends ConsumerWidget {
                 try {
                   await ref
                       .read(audioPlayerManagerProvider)
-                      .playOrToggle(
-                        messageId: id,
-                        audioUrl: url,
-                      );
+                      .playOrToggle(messageId: id, audioUrl: url);
                   // Sprint 4.4.5: read receipt — boshqa tomondan kelgan
                   // va hali tinglanmagan xabar bo'lsa Backend'ga belgi.
-                  if (!isOwn &&
-                      message.status == VoiceMessageStatus.sent) {
+                  if (!isOwn && message.status == VoiceMessageStatus.sent) {
                     await ref
                         .read(backendVoiceMessageRepositoryProvider)
                         .markAsRead(id);
@@ -281,8 +266,7 @@ class ChatBubble extends ConsumerWidget {
                       width: 36,
                       height: 36,
                       decoration: BoxDecoration(
-                        // ignore: deprecated_member_use
-                        color: textColor.withOpacity(0.15),
+                        color: playTint.withValues(alpha: isOwn ? 0.22 : 0.18),
                         shape: BoxShape.circle,
                       ),
                       child: isLoading
@@ -290,14 +274,12 @@ class ChatBubble extends ConsumerWidget {
                               padding: const EdgeInsets.all(8),
                               child: CircularProgressIndicator(
                                 strokeWidth: 2,
-                                color: textColor,
+                                color: playTint,
                               ),
                             )
                           : Icon(
-                              isPlaying
-                                  ? AppIcons.pause
-                                  : AppIcons.play,
-                              color: textColor,
+                              isPlaying ? AppIcons.pause : AppIcons.play,
+                              color: playTint,
                               size: 22,
                             ),
                     ),
@@ -313,8 +295,7 @@ class ChatBubble extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: List.generate(visibleBars, (i) {
                               final amp = waveformAmps[i];
-                              final isPlayed =
-                                  progress > (i / visibleBars);
+                              final isPlayed = progress > (i / visibleBars);
                               // Premium: rounded pill bars, 1.5px gap,
                               // played qism solid, unplayed 32% alpha.
                               return Expanded(
@@ -328,10 +309,9 @@ class ChatBubble extends ConsumerWidget {
                                       color: isPlayed
                                           ? waveformColor
                                           : waveformColor
-                                              // ignore: deprecated_member_use
-                                              .withOpacity(0.32),
-                                      borderRadius:
-                                          BorderRadius.circular(3),
+                                            // ignore: deprecated_member_use
+                                            .withOpacity(0.32),
+                                      borderRadius: BorderRadius.circular(3),
                                     ),
                                   ),
                                 ),
@@ -367,12 +347,11 @@ class ChatBubble extends ConsumerWidget {
                             if (isOwn) ...[
                               const SizedBox(width: 4),
                               Icon(
-                                isSeen ? AppIcons.success : Icons.done,
+                                isSeen
+                                    ? Icons.done_all_rounded
+                                    : Icons.done_rounded,
                                 size: 14,
-                                color: isSeen
-                                    ? Colors.blue.shade300
-                                    // ignore: deprecated_member_use
-                                    : textColor.withOpacity(0.5),
+                                color: Colors.white,
                               ),
                             ],
                             if (isCurrent) ...[
@@ -383,12 +362,13 @@ class ChatBubble extends ConsumerWidget {
                                     .toggleSpeed(),
                                 child: Container(
                                   padding: const EdgeInsets.symmetric(
-                                      horizontal: 8, vertical: 3),
+                                    horizontal: 8,
+                                    vertical: 3,
+                                  ),
                                   decoration: BoxDecoration(
                                     // ignore: deprecated_member_use
                                     color: textColor.withOpacity(0.15),
-                                    borderRadius:
-                                        BorderRadius.circular(999),
+                                    borderRadius: BorderRadius.circular(999),
                                   ),
                                   child: Text(
                                     speedLabel,

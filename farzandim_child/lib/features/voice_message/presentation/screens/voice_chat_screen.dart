@@ -16,7 +16,6 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/video_message/presentation/providers/video_message_provider.dart';
 import 'package:farzandim_child/features/voice_message/data/repositories/backend_voice_message_repository.dart';
@@ -24,7 +23,6 @@ import 'package:farzandim_child/features/voice_message/data/services/audio_playe
 import 'package:farzandim_child/features/voice_message/data/services/audio_recorder_service.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/voice_message_provider.dart';
 import 'package:farzandim_child/features/voice_message/presentation/screens/chat_settings_screen.dart';
-import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_background.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_bubble.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_input_bar.dart';
 import 'package:farzandim_child/features/voice_message/presentation/widgets/chat_top_toast.dart';
@@ -34,10 +32,18 @@ import 'package:file_picker/file_picker.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:video_compress/video_compress.dart';
+
+// Parvoz tokenlar — ota-ona ilovasidagi chat detali bilan BIR XIL.
+const _pBg = Color(0xFF00060A);
+const _pBlue = Color(0xFF216BFF);
+const _pChipBg = Color(0xFF1B2128);
+const _pFieldBorder = Color(0x1FFFFFFF);
+const _pDim = Color(0x8CFFFFFF);
 
 class VoiceChatScreen extends ConsumerStatefulWidget {
   const VoiceChatScreen({super.key});
@@ -125,8 +131,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       );
 
       _amplitudeSub = _service.amplitudeStream.listen((amp) {
-        final normalized =
-            ((amp.current + 60) / 60).clamp(0.0, 1.0).toDouble();
+        final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0).toDouble();
         if (!mounted) return;
         setState(() {
           _amplitudes.add(normalized);
@@ -183,12 +188,13 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       return;
     }
 
-    final ok =
-        await ref.read(voiceMessageUploadProvider.notifier).send(
-              audioFile: File(filePath),
-              durationSeconds: (elapsed / 1000).round(),
-              waveform: waveformSnapshot,
-            );
+    final ok = await ref
+        .read(voiceMessageUploadProvider.notifier)
+        .send(
+          audioFile: File(filePath),
+          durationSeconds: (elapsed / 1000).round(),
+          waveform: waveformSnapshot,
+        );
 
     if (!mounted) return;
     if (ok) {
@@ -299,14 +305,12 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     }
     setState(() => _isMediaUploading = true);
     try {
-      await ref.read(backendVoiceMessageRepositoryProvider).sendMedia(
-            receiverId: parentUid,
-            file: file,
-          );
+      await ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .sendMedia(receiverId: parentUid, file: file);
       ref.invalidate(voiceMessagesProvider);
       if (!mounted) return;
-      WidgetsBinding.instance
-          .addPostFrameCallback((_) => _scrollToBottom());
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (_) {
       _showError('Faylni yuborishda xato');
     } finally {
@@ -356,11 +360,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         final rawName = xfile.name;
         final hasExt = RegExp(r'\.[a-zA-Z0-9]{2,5}$').hasMatch(rawName);
         final filename = hasExt ? rawName : '$rawName.webm';
-        ok = await ref.read(videoMessageUploadProvider.notifier).sendBytes(
-              bytes: bytes,
-              durationSeconds: 0,
-              filename: filename,
-            );
+        ok = await ref
+            .read(videoMessageUploadProvider.notifier)
+            .sendBytes(bytes: bytes, durationSeconds: 0, filename: filename);
       } catch (e) {
         if (!mounted) return;
         videoToast.dismiss();
@@ -394,10 +396,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       if (!mounted) return;
       videoToast.dismiss();
 
-      ok = await ref.read(videoMessageUploadProvider.notifier).send(
-            videoFile: fileToUpload,
-            durationSeconds: durationSeconds ?? 0,
-          );
+      ok = await ref
+          .read(videoMessageUploadProvider.notifier)
+          .send(videoFile: fileToUpload, durationSeconds: durationSeconds ?? 0);
     }
 
     if (!mounted) return;
@@ -456,97 +457,92 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final isVideoUploading = videoUpload == UploadStatus.uploading;
 
     return Scaffold(
-      backgroundColor: AppColors.parvozBg,
-      body: ChatBackground(
-        child: SafeArea(
-          bottom: false,
-          child: Column(
-        children: [
-          _ChatHeader(
-            onSettings: () {
-              Navigator.of(context).push(
-                MaterialPageRoute<void>(
-                  builder: (_) => const ChatSettingsScreen(),
-                ),
-              );
-            },
-          ),
-          Expanded(
-            child: messagesAsync.when(
-              data: (messages) {
-                if (messages.isEmpty) return const _EmptyState();
-
-                // auto-scroll faqat ro'yxat oxiriga yangi xabar
-                // qo'shilganda — har rebuild'da pastga tortmaymiz
-                final bottomId = messages.last.id;
-                if (bottomId != _lastBottomItemId) {
-                  _lastBottomItemId = bottomId;
-                  WidgetsBinding.instance.addPostFrameCallback((_) {
-                    _scrollToBottom();
-                  });
-                }
-
-                return ListView.builder(
-                  controller: _scrollController,
-                  padding: const EdgeInsets.symmetric(vertical: 12),
-                  itemCount: messages.length,
-                  itemBuilder: (context, i) {
-                    final item = messages[i];
-                    // Sealed switch — exhaustive (yangi tip qo'shilsa
-                    // compiler xato beradi).
-                    return switch (item) {
-                      VoiceItem(:final message) => ChatBubble(
-                          key: ValueKey(item.id),
-                          message: message,
-                          isOwn: message.sender == 'child',
-                        ),
-                      VideoItem(:final message) => RoundVideoBubble(
-                          key: ValueKey(item.id),
-                          message: message,
-                          isOwn: message.sender == 'child',
-                        ),
-                    };
-                  },
+      backgroundColor: _pBg,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _ChatHeader(
+              onSettings: () {
+                Navigator.of(context).push(
+                  MaterialPageRoute<void>(
+                    builder: (_) => const ChatSettingsScreen(),
+                  ),
                 );
               },
-              loading: () => const Center(
-                child:
-                    CircularProgressIndicator(color: AppColors.parvozGreen),
-              ),
-              error: (e, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'voiceChat.errorPrefix'.tr(
-                      namedArgs: {'error': '$e'},
+            ),
+            Expanded(
+              child: messagesAsync.when(
+                data: (messages) {
+                  if (messages.isEmpty) return const _EmptyState();
+
+                  // auto-scroll faqat ro'yxat oxiriga yangi xabar
+                  // qo'shilganda — har rebuild'da pastga tortmaymiz
+                  final bottomId = messages.last.id;
+                  if (bottomId != _lastBottomItemId) {
+                    _lastBottomItemId = bottomId;
+                    WidgetsBinding.instance.addPostFrameCallback((_) {
+                      _scrollToBottom();
+                    });
+                  }
+
+                  return ListView.builder(
+                    controller: _scrollController,
+                    padding: const EdgeInsets.symmetric(vertical: 12),
+                    itemCount: messages.length,
+                    itemBuilder: (context, i) {
+                      final item = messages[i];
+                      // Sealed switch — exhaustive (yangi tip qo'shilsa
+                      // compiler xato beradi).
+                      return switch (item) {
+                        VoiceItem(:final message) => ChatBubble(
+                          key: ValueKey(item.id),
+                          message: message,
+                          isOwn: message.sender == 'child',
+                        ),
+                        VideoItem(:final message) => RoundVideoBubble(
+                          key: ValueKey(item.id),
+                          message: message,
+                          isOwn: message.sender == 'child',
+                        ),
+                      };
+                    },
+                  );
+                },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: _pBlue),
+                ),
+                error: (e, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'voiceChat.errorPrefix'.tr(namedArgs: {'error': '$e'}),
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(color: Color(0xFFE74C4C)),
                     ),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.error),
                   ),
                 ),
               ),
             ),
-          ),
-          ChatInputBar(
-            isRecording: _isRecording,
-            isVoiceUploading: isVoiceUploading,
-            isVideoUploading: isVideoUploading,
-            isMediaUploading: _isMediaUploading,
-            elapsedSeconds: _elapsedSeconds,
-            amplitudes: _amplitudes,
-            onLongPressStart: () => unawaited(_onLongPressStart()),
-            onLongPressEnd: _onLongPressEnd,
-            onCancel: () => unawaited(_abortRecording()),
-            onVideoPressed: isVoiceUploading || isVideoUploading
-                ? null
-                : () => unawaited(_onVideoRecordPressed()),
-            onSendText: (text) => unawaited(_sendTextMessage(text)),
-            onPickGallery: () => unawaited(_pickGallery()),
-            onPickCamera: () => unawaited(_pickCamera()),
-            onPickFile: () => unawaited(_pickFile()),
-          ),
-        ],
-          ),
+            ChatInputBar(
+              isRecording: _isRecording,
+              isVoiceUploading: isVoiceUploading,
+              isVideoUploading: isVideoUploading,
+              isMediaUploading: _isMediaUploading,
+              elapsedSeconds: _elapsedSeconds,
+              amplitudes: _amplitudes,
+              onLongPressStart: () => unawaited(_onLongPressStart()),
+              onLongPressEnd: _onLongPressEnd,
+              onCancel: () => unawaited(_abortRecording()),
+              onVideoPressed: isVoiceUploading || isVideoUploading
+                  ? null
+                  : () => unawaited(_onVideoRecordPressed()),
+              onSendText: (text) => unawaited(_sendTextMessage(text)),
+              onPickGallery: () => unawaited(_pickGallery()),
+              onPickCamera: () => unawaited(_pickCamera()),
+              onPickFile: () => unawaited(_pickFile()),
+            ),
+          ],
         ),
       ),
     );
@@ -554,7 +550,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Chat header — Parvoz NIGHT (avatar + ota-ona nomi/holati + sozlamalar)
+// Chat header — ota-ona ilovasidagi chat detali bilan BIR XIL (Parvoz):
+// ← kvadrat tugma + markazda ism/holat + o'ngda avatar (bosilsa sozlamalar)
 // ─────────────────────────────────────────────────────────────────────
 
 class _ChatHeader extends StatelessWidget {
@@ -564,69 +561,75 @@ class _ChatHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 60,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: const BoxDecoration(
-        color: AppColors.parvozBg,
-        border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
-      ),
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(16, 18, 16, 10),
       child: Row(
         children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(
-              color: AppColors.parvozGreen.withValues(alpha: 0.18),
-              shape: BoxShape.circle,
-              border: Border.all(color: AppColors.parvozBorderStrong),
-            ),
-            child: const Icon(
-              AppIcons.profile,
-              color: AppColors.parvozGreen,
-              size: 22,
+          GestureDetector(
+            onTap: () {
+              if (Navigator.of(context).canPop()) {
+                Navigator.of(context).pop();
+              }
+            },
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _pChipBg,
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: _pFieldBorder),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                size: 22,
+                color: Colors.white,
+              ),
             ),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   'voiceChat.headerParent'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.parvozText,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.unbounded(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    color: Colors.white,
+                    height: 1.2,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'voiceChat.headerSubtitle'.tr(),
-                  style: const TextStyle(
-                    color: AppColors.parvozTextDim,
-                    fontSize: 12,
-                  ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.poppins(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
+                    color: _pDim,
+                  ),
                 ),
               ],
             ),
           ),
+          const SizedBox(width: 12),
+          // Avatar — bosilsa chat sozlamalari ochiladi.
           GestureDetector(
             onTap: onSettings,
             behavior: HitTestBehavior.opaque,
             child: Container(
-              width: 40,
-              height: 40,
-              alignment: Alignment.center,
-              child: const Icon(
-                Icons.more_vert,
-                color: AppColors.parvozTextDim,
-                size: 24,
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: _pBlue.withValues(alpha: 0.18),
+                shape: BoxShape.circle,
+                border: Border.all(color: _pFieldBorder),
               ),
+              child: const Icon(AppIcons.profile, color: _pBlue, size: 22),
             ),
           ),
         ],
@@ -636,7 +639,7 @@ class _ChatHeader extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────────────────────────────
-// Empty state — Parent App uslubidagi markazlashtirilgan mic ikona
+// Empty state — ota-ona ilovasidagi kabi minimal matn
 // ─────────────────────────────────────────────────────────────────────
 
 class _EmptyState extends StatelessWidget {
@@ -645,46 +648,9 @@ class _EmptyState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Center(
-      child: Padding(
-        padding: const EdgeInsets.all(32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 100,
-              height: 100,
-              decoration: BoxDecoration(
-                color: AppColors.parvozGreen.withValues(alpha: 0.15),
-                shape: BoxShape.circle,
-                border: Border.all(color: AppColors.parvozBorderStrong),
-              ),
-              child: const Icon(
-                Icons.mic_outlined,
-                size: 50,
-                color: AppColors.parvozGreen,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'voiceChat.emptyTitle'.tr(),
-              style: const TextStyle(
-                color: AppColors.parvozText,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'voiceChat.emptySubtitle'.tr(),
-              textAlign: TextAlign.center,
-              style: const TextStyle(
-                color: AppColors.parvozTextDim,
-                fontSize: 14,
-                height: 1.4,
-              ),
-            ),
-          ],
-        ),
+      child: Text(
+        'Suhbatni boshlang',
+        style: GoogleFonts.poppins(fontSize: 14, color: _pDim),
       ),
     );
   }

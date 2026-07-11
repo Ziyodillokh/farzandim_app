@@ -180,10 +180,12 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
     if (c != null) {
       // Recording aktiv bo'lsa stop (file ignore).
       if (_isRecording) {
-        unawaited(c.stopVideoRecording().catchError((_) {
-          // Stop xatosi — controllerni baribir dispose qilamiz.
-          return XFile('');
-        }));
+        unawaited(
+          c.stopVideoRecording().catchError((_) {
+            // Stop xatosi — controllerni baribir dispose qilamiz.
+            return XFile('');
+          }),
+        );
       }
       unawaited(c.dispose());
     }
@@ -236,9 +238,9 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           await File(xfile.path).delete();
         } catch (_) {}
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('voiceChat.tooShort'.tr())),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('voiceChat.tooShort'.tr())));
         Navigator.of(context).pop();
         return;
       }
@@ -392,11 +394,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(
-            Icons.videocam_off,
-            color: Colors.white70,
-            size: 56,
-          ),
+          const Icon(Icons.videocam_off, color: Colors.white70, size: 56),
           const SizedBox(height: 16),
           Text(
             msg,
@@ -418,8 +416,10 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
 
   Widget _buildPreviewWithControls() {
     final progress =
-        (_elapsed.inMilliseconds / _maxRecordingDuration.inMilliseconds)
-            .clamp(0.0, 1.0);
+        (_elapsed.inMilliseconds / _maxRecordingDuration.inMilliseconds).clamp(
+          0.0,
+          1.0,
+        );
     final c = _controller!;
 
     return Column(
@@ -499,10 +499,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
             ],
           ),
         ),
-        if (!_isLocked) ...[
-          const SizedBox(height: 36),
-          _buildRecordButton(),
-        ],
+        if (!_isLocked) ...[const SizedBox(height: 36), _buildRecordButton()],
       ],
     );
   }

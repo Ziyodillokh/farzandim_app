@@ -30,8 +30,7 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final latestAsync = ref.watch(latestVoiceMessageProvider(childId));
-    final unreadAsync =
-        ref.watch(unreadVoiceMessagesCountProvider(childId));
+    final unreadAsync = ref.watch(unreadVoiceMessagesCountProvider(childId));
 
     return GestureDetector(
       onTap: () => context.push('/voice-chat'),
@@ -88,7 +87,9 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
                       right: -4,
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 6, vertical: 2),
+                          horizontal: 6,
+                          vertical: 2,
+                        ),
                         decoration: BoxDecoration(
                           color: Colors.red,
                           borderRadius: BorderRadius.circular(999),
@@ -146,19 +147,13 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
                     ),
                     error: (_, __) => const Text(
                       'Xato',
-                      style: TextStyle(
-                        color: Colors.red,
-                        fontSize: 12,
-                      ),
+                      style: TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
                 ],
               ),
             ),
-            const Icon(
-              AppIcons.chevronRight,
-              color: AppColors.textSecondary,
-            ),
+            const Icon(AppIcons.chevronRight, color: AppColors.textSecondary),
           ],
         ),
       ),
@@ -195,7 +190,8 @@ class _TelegramPlanePainter extends CustomPainter {
 
     // Ichki "fold" chizig'i (qog'ozning ichki burchagi).
     final foldPaint = Paint()
-      ..color = const Color(0xFFD0EAF7) // ozgina yengil ko'k tus
+      ..color =
+          const Color(0xFFD0EAF7) // ozgina yengil ko'k tus
       ..style = PaintingStyle.fill;
     final fold = Path()
       ..moveTo(7.8 * scale, 13.9 * scale)
@@ -211,10 +207,7 @@ class _TelegramPlanePainter extends CustomPainter {
 }
 
 class _PreviewLine extends StatelessWidget {
-  const _PreviewLine({
-    required this.latest,
-    required this.relativeTime,
-  });
+  const _PreviewLine({required this.latest, required this.relativeTime});
 
   final VoiceMessage? latest;
   final String Function(DateTime) relativeTime;
@@ -224,18 +217,13 @@ class _PreviewLine extends StatelessWidget {
     if (latest == null || latest!.createdAt == null) {
       return const Text(
         "Hali xabarlar yo'q",
-        style: TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 12,
-        ),
+        style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
       );
     }
-    final senderText =
-        latest!.sender == 'child' ? 'Siz' : 'Ota-ona';
+    final senderText = latest!.sender == 'child' ? 'Siz' : 'Ota-ona';
     return Row(
       children: [
-        const Icon(AppIcons.mic,
-            size: 12, color: AppColors.textSecondary),
+        const Icon(AppIcons.mic, size: 12, color: AppColors.textSecondary),
         const SizedBox(width: 4),
         Expanded(
           child: Text(

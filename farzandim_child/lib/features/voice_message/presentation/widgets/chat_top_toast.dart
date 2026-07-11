@@ -96,8 +96,7 @@ class _ToastView extends StatelessWidget {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
             child: Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
               decoration: BoxDecoration(
                 color: Colors.black.withValues(alpha: 0.58),
                 borderRadius: BorderRadius.circular(999),

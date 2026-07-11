@@ -53,9 +53,8 @@ class ChatBackground extends ConsumerWidget {
           Image.file(
             File(filePath),
             fit: BoxFit.cover,
-            errorBuilder: (_, __, ___) => const GradientBackground(
-              child: SizedBox.expand(),
-            ),
+            errorBuilder: (_, __, ___) =>
+                const GradientBackground(child: SizedBox.expand()),
           ),
           // O'qilishi uchun yengil to'q scrim (yuqori + past quyuqroq).
           DecoratedBox(

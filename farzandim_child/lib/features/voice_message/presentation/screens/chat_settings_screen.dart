@@ -60,9 +60,9 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       await ref.read(chatWallpaperProvider.notifier).setImage(dest);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rasmni yuklashda xato')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Rasmni yuklashda xato')));
       }
     } finally {
       if (mounted) setState(() => _picking = false);
@@ -150,8 +150,9 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
                     for (var i = 0; i < chatWallpaperPresets.length; i++)
                       _WallpaperTile(
                         selected: presetIndex == i,
-                        onTap: () =>
-                            ref.read(chatWallpaperProvider.notifier).setPreset(i),
+                        onTap: () => ref
+                            .read(chatWallpaperProvider.notifier)
+                            .setPreset(i),
                         preview: DecoratedBox(
                           decoration: BoxDecoration(
                             gradient: LinearGradient(
@@ -231,9 +232,7 @@ class _ThemeOption extends StatelessWidget {
         padding: const EdgeInsets.symmetric(vertical: 18),
         decoration: parvozGlassFlat().copyWith(
           border: Border.all(
-            color: selected
-                ? AppColors.parvozGreen
-                : AppColors.parvozGlassRim,
+            color: selected ? AppColors.parvozGreen : AppColors.parvozGlassRim,
             width: selected ? 2 : 1,
           ),
         ),
@@ -241,9 +240,7 @@ class _ThemeOption extends StatelessWidget {
           children: [
             Icon(
               icon,
-              color: selected
-                  ? AppColors.parvozGreen
-                  : AppColors.parvozTextDim,
+              color: selected ? AppColors.parvozGreen : AppColors.parvozTextDim,
               size: 28,
             ),
             const SizedBox(height: 8),
