@@ -74,8 +74,12 @@ class QuizNotifier extends StateNotifier<QuizState> {
       results: List<AnswerState>.filled(n, AnswerState.none),
       correctIndices: List<int?>.filled(n, null),
     );
-    // "Konkurs shartlari" sheet allaqachon ko'rsatildi — alohida intro ekran
-    // yo'q, to'g'ridan-to'g'ri boshlaymiz.
+    // Backend attempt AVVAL boshlanadi — savolga javob berishdan oldin
+    // _attemptId tayyor bo'lsin. Aks holda backend savol (correctIndex sir)
+    // mock -1 yo'liga tushib HAR DOIM xato hisoblanardi. "Konkurs shartlari"
+    // sheet allaqachon ko'rsatildi — alohida intro ekran yo'q.
+    await _startBackendAttempt();
+    if (!mounted) return;
     startPlaying();
   }
 
@@ -97,8 +101,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
     final budget = _perQuestionSeconds * state.effectiveQuestions.length;
     state = state.copyWith(status: QuizStatus.playing, timeRemaining: budget);
     _startTotalTimer();
-    // Backend attempt yaratish (idempotent — bola bir konkursda 1 attempt)
-    unawaited(_startBackendAttempt());
+    // Backend attempt _start()da AVVAL boshlangan (idempotent).
     // Boshlangach darhol "contestJoined" XP — Konsept v2 4.2: +30 XP, +5 DON
     unawaited(_awardJoinedXp());
   }
@@ -190,36 +193,45 @@ class QuizNotifier extends StateNotifier<QuizState> {
     if (state.answerState != AnswerState.none) return;
     if (state.status != QuizStatus.playing) return;
 
-    // Sprint 5.7e: Backend mode — correctIndex backend tomonida sir.
-    // _attemptId mavjud va correctIndex < 0 bo'lsa per-question validation
-    // chaqiramiz va backend javobiga qarab feedback ko'rsatamiz.
-    final qid = state.currentQuestion.id;
-    final qLooksLikeUuid = qid.length >= 32;
-    if (_attemptId != null &&
-        qLooksLikeUuid &&
-        state.currentQuestion.correctIndex < 0) {
+    final q = state.currentQuestion;
+    // Backend savol = UUID id (>=32) + correctIndex sir (-1). Bunday savol
+    // HAR DOIM backend orqali tekshiriladi (attempt hali tayyor bo'lmasa
+    // _selectAnswerBackend uni kutadi). Avval "_attemptId != null" sharti bor
+    // edi — attempt tayyor bo'lmaguncha mock -1 yo'liga tushib HAMMA javob
+    // xato hisoblanardi.
+    final isBackendQuestion = q.id.length >= 32 && q.correctIndex < 0;
+    if (isBackendQuestion) {
       unawaited(_selectAnswerBackend(index));
       return;
     }
 
-    // Mock mode — lokal correctIndex bilan tekshirish (eski xulq).
+    // Mock savol — lokal correctIndex bilan tekshiriladi.
     _applyAnswer(
       selectedIndex: index,
-      isCorrect: index == state.currentQuestion.correctIndex,
-      bonus: state.currentQuestion.bonus,
-      correctIndex: state.currentQuestion.correctIndex,
+      isCorrect: index == q.correctIndex,
+      bonus: q.bonus,
+      correctIndex: q.correctIndex,
     );
   }
 
   Future<void> _selectAnswerBackend(int index) async {
-    final attemptId = _attemptId;
-    if (attemptId == null) return;
+    // Attempt hali tayyor emas — kutamiz (auto-start race'ini yopadi).
+    if (_attemptId == null) await _startBackendAttempt();
+    if (!mounted) return;
 
     // Optimistic "selected" feedback (neutral) — feedback rangi backend
     // javobidan keyin keladi.
     final answers = [...state.answers];
     answers[state.currentIndex] = index;
     state = state.copyWith(selectedAnswer: index, answers: answers);
+
+    final attemptId = _attemptId;
+    if (attemptId == null) {
+      // Attempt boshlanmadi (offline/xato) — final submit'ga qoldiramiz.
+      // Javob berilgan deb belgilaymiz (natija noaniq).
+      _applyAnswer(selectedIndex: index, isCorrect: false, bonus: 0);
+      return;
+    }
 
     final repo = _ref.read(contestsBackendRepositoryProvider);
     final feedback = await repo.submitSingleAnswer(
