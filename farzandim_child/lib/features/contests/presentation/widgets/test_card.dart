@@ -4,11 +4,12 @@
 //
 // ContestsScreen (grid) va Sevimli testlar sahifasi bir xil premium kartani
 // ishlatadi: soha ikoni (rangli kvadrat + glow) + "N DON" bonus + sarlavha +
-// "N ta test". Faol → /contest-start, yakunlangan → xira + snackbar.
+// "N ta test" + qiyinlik yorlig'i. Faol → shartlar sheet, yakunlangan → xira.
 
 import 'dart:ui' show ImageFilter;
 
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
+import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -52,6 +53,41 @@ class DonBadge extends StatelessWidget {
         borderRadius: BorderRadius.circular(999),
       ),
       child: Text('DON', style: tPop(9, w: FontWeight.w700)),
+    );
+  }
+}
+
+/// Kartadagi kichik qiyinlik yorlig'i — "● Qiyin" (rangli).
+class _DiffLabel extends StatelessWidget {
+  const _DiffLabel({required this.difficulty});
+
+  final TestDifficulty difficulty;
+
+  @override
+  Widget build(BuildContext context) {
+    final col = difficulty.color;
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+      decoration: BoxDecoration(
+        color: col.withValues(alpha: 0.16),
+        borderRadius: BorderRadius.circular(999),
+        border: Border.all(color: col.withValues(alpha: 0.35)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 6,
+            height: 6,
+            decoration: BoxDecoration(shape: BoxShape.circle, color: col),
+          ),
+          const SizedBox(width: 5),
+          Text(
+            difficulty.label,
+            style: tPop(10.5, w: FontWeight.w600, c: col),
+          ),
+        ],
+      ),
     );
   }
 }
@@ -166,12 +202,22 @@ class TestCard extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: tUnb(16, w: FontWeight.w600, ls: -0.4),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      '${c.savollarSoni} ta test',
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: tPop(12.5, c: tMuted),
+                    const SizedBox(height: 6),
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            '${c.savollarSoni} ta test',
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: tPop(12.5, c: tMuted),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        _DiffLabel(
+                          difficulty: inherentDifficulty(c.savollarSoni),
+                        ),
+                      ],
                     ),
                   ],
                 ),

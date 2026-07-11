@@ -14,8 +14,10 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/map/map_tiles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
+import 'package:farzandim/features/geo_zones/presentation/widgets/geo_zone_address_search.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
 import 'package:farzandim/shared/models/result.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
@@ -38,10 +40,6 @@ const _iconBtnBg = Color(0xFF21262A);
 const _border = Color(0x1AFFFFFF); // oq 10%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 const _defaultCenter = LatLng(41.2995, 69.2401); // Toshkent markazi
-
-// Kalitsiz CARTO dark plitkalar (Google Maps kaliti shart emas).
-const String _darkTileUrl =
-    'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 
 /// Zona belgisi kaliti → SVG asset yo'li (marker uchun).
 String _assetForKey(String key) {
@@ -120,6 +118,11 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
   GeoZoneType _type = GeoZoneType.custom;
 
   bool _mapReady = false;
+  // Xarita tayyor bo'lmasa nishon shu yerда kutadi (onMapReady qo'llaydi).
+  // `initialCenter` bir marta o'qiladi — keyingi `_center` o'zgarishlari
+  // (masalan qidiruv) kamerani o'zi ko'chirmaydi.
+  LatLng? _pendingCamera;
+  double _pendingZoom = 16;
   Timer? _idleTimer; // kamera to'xtaganini aniqlash uchun debounce
   String? _address;
   bool _addrLoading = false;
@@ -161,7 +164,7 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
         );
         if (z != null) {
           setState(() => _applyZone(z));
-          if (_mapReady) _mapController.move(_toLL(_center), 15);
+          _moveCamera(_center, 15);
           unawaited(_reverseGeocode(_center));
         }
       });
@@ -183,7 +186,23 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
 
   void _onMapReady() {
     _mapReady = true;
+    final pending = _pendingCamera;
+    if (pending != null) {
+      _mapController.move(_toLL(pending), _pendingZoom);
+      _pendingCamera = null;
+    }
     unawaited(_reverseGeocode(_center));
+  }
+
+  /// Kamerani [target]ga olib boradi. Xarita hali tayyor bo'lmasa — nishonni
+  /// saqlab, `_onMapReady`да qo'llaymiz (kamera yo'qolmasин).
+  void _moveCamera(LatLng target, double zoom) {
+    if (_mapReady) {
+      _mapController.move(_toLL(target), zoom);
+    } else {
+      _pendingCamera = target;
+      _pendingZoom = zoom;
+    }
   }
 
   void _onCameraIdle() {
@@ -210,6 +229,36 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
     });
   }
 
+  /// Manzil qidirish varag'ini ochadi. Foydalanuvchi joy tanlasa — xaritani
+  /// o'sha joyga olib boradi, markazni yangilaydi, nom bo'sh bo'lsa joy nomini
+  /// oldindan to'ldiradi va aniq manzilni (reverse-geocode) yangilaydi.
+  Future<void> _openSearch() async {
+    final picked = await showAddressSearch(
+      context,
+      // Jonli kamera markazi — `_center` faqat idle'да yangilanadi, pan qilib
+      // darhol qidirса eskirган nuqtaga bias bo'lardi.
+      centerLat: _camTarget.latitude,
+      centerLng: _camTarget.longitude,
+    );
+    if (picked == null || !mounted) return;
+    final target = LatLng(picked.latitude, picked.longitude);
+    setState(() {
+      _center = target;
+      _camTarget = target;
+      // Uchувчi reverse-geocode'ни bekor qilamiz — aks holda u (Google kaliti
+      // bo'lmasa null qaytarib) tanlangan Photon manzilini o'chirib yuborardi.
+      _geoReq++;
+      _addrLoading = false;
+      // Photon natijasi aniq nom + manzil beradi — reverse-geocode shart emas.
+      _address = picked.address.isNotEmpty ? picked.address : picked.name;
+      // Nom bo'sh bo'lsa — joy nomini taklif qilamiz (foydalanuvchi tahrirlashi
+      // mumkin). Yozib qo'yilgan nomni buzmaymiz.
+      if (_nameController.text.trim().isEmpty) {
+        _nameController.text = picked.name;
+      }
+    });
+    _moveCamera(target, 16);
+  }
 
   Future<void> _onSave() async {
     final name = _nameController.text.trim();
@@ -360,8 +409,8 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: _darkTileUrl,
-                            userAgentPackageName: 'uz.farzandim.app',
+                            urlTemplate: whiteMapTileUrl,
+                            userAgentPackageName: kMapUserAgent,
                           ),
                           if (otherZones.isNotEmpty) ...[
                             CircleLayer(
@@ -446,7 +495,7 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                   bottomPad: bottomPad,
                   address: _address,
                   addrLoading: _addrLoading,
-                  center: _center,
+                  onAddressTap: _openSearch,
                   nameController: _nameController,
                   onNameChanged: (_) => setState(() {}),
                   selectedIcon: _selectedIcon,
@@ -612,7 +661,7 @@ class _BottomSheet extends StatelessWidget {
     required this.bottomPad,
     required this.address,
     required this.addrLoading,
-    required this.center,
+    required this.onAddressTap,
     required this.nameController,
     required this.onNameChanged,
     required this.selectedIcon,
@@ -626,7 +675,7 @@ class _BottomSheet extends StatelessWidget {
   final double bottomPad;
   final String? address;
   final bool addrLoading;
-  final LatLng center;
+  final VoidCallback onAddressTap;
   final TextEditingController nameController;
   final ValueChanged<String> onNameChanged;
   final String selectedIcon;
@@ -640,8 +689,7 @@ class _BottomSheet extends StatelessWidget {
     final addr = address;
     if (addr != null && addr.isNotEmpty) return addr;
     if (addrLoading) return 'geoZoneEdit.addressLoading'.tr();
-    return '${center.latitude.toStringAsFixed(5)}, '
-        '${center.longitude.toStringAsFixed(5)}';
+    return 'geoZoneEdit.addressTapHint'.tr();
   }
 
   @override
@@ -668,7 +716,11 @@ class _BottomSheet extends StatelessWidget {
                 children: [
                   _FieldLabel('geoZoneEdit.addressLabel'.tr()),
                   const SizedBox(height: 8),
-                  _DisplayPill(text: _addressText, dim: address == null),
+                  _DisplayPill(
+                    text: _addressText,
+                    dim: address == null,
+                    onTap: onAddressTap,
+                  ),
                   const SizedBox(height: 16),
                   _FieldLabel('geoZoneEdit.placeNameLabel'.tr()),
                   const SizedBox(height: 8),
@@ -763,30 +815,47 @@ class _FieldLabel extends StatelessWidget {
   }
 }
 
-/// Faqat ko'rsatish uchun (reverse-geocode manzil) — qora pill.
+/// Manzil qatori — bosilsa qidiruv varag'i ochiladi (o'ng chetда qidiruv
+/// ikoni). Matn: joriy manzil (reverse-geocode / tanlangan joy) yoki yo'riq.
 class _DisplayPill extends StatelessWidget {
-  const _DisplayPill({required this.text, required this.dim});
+  const _DisplayPill({
+    required this.text,
+    required this.dim,
+    required this.onTap,
+  });
 
   final String text;
   final bool dim;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 54,
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 20),
-      decoration: BoxDecoration(
-        color: _sheetBg,
-        borderRadius: BorderRadius.circular(60),
-        border: Border.all(color: _border),
-      ),
-      alignment: Alignment.centerLeft,
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: _pop(14, c: dim ? _dim : Colors.white),
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 54,
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        decoration: BoxDecoration(
+          color: _sheetBg,
+          borderRadius: BorderRadius.circular(60),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                text,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _pop(14, c: dim ? _dim : Colors.white),
+              ),
+            ),
+            const SizedBox(width: 10),
+            const Icon(SolarIconsOutline.magnifier, size: 20, color: _blue),
+          ],
+        ),
       ),
     );
   }

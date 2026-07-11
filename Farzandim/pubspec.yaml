@@ -144,6 +144,12 @@ dependencies:
   # latlong2 — flutter_map koordinatalari (LatLng) uchun.
   latlong2: ^0.9.1
 
+  # Mapbox — xarita render. Hozir: OQ raster plitka (light-v11) flutter_map
+  # ичida ishlatiladi (map_tiles.dart). Native SDK (kelajakda GPU vektor)
+  # uchun ham tayyor. Token: MAPBOX_PUBLIC_TOKEN (runtime env.json /
+  # dart-define) + MAPBOX_DOWNLOADS_TOKEN (build). Web'da qo'llanmaydi.
+  mapbox_maps_flutter: ^2.6.0
+
   # QR skaner (kamera) — kirish sahifasida "Akkauntga qo'shilish" → 2-qurilma.
   mobile_scanner: ^6.0.7
 

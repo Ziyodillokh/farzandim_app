@@ -1,38 +1,41 @@
 // ─────────────────────────────────────────────────────────────────────
-// ContestQuizScreen — savol-javob to'liq tajriba (PDF p18+)
+// ContestQuizScreen — test ichi (Parvoz dark redizayn, Figma "test ichi")
 // ─────────────────────────────────────────────────────────────────────
 //
-// 4 ta sub-ekran (status'ga qarab):
-//   loading  → _LoadingScreen
-//   intro    → _IntroScreen
-//   playing/paused → _QuestionScreen (+ pause dialog)
+// Status'ga qarab:
+//   loading/intro → _LoadingScreen (intro yo'q — "Konkurs shartlari" sheet'dan
+//                   keyin auto-start)
+//   playing/paused → _QuestionScreen (header fan + ? / N/total + umumiy vaqt /
+//                    rangli natija nuqtalari / shisha savol / shisha javoblar /
+//                    Oldingi · ♡ · Keyingi)
 //   finished → _ResultScreen
 //
-// Yon UX:
-//   - Confetti (streak 3, 6, 9... + final 80%+)
-//   - Haptic feedback (light/heavy/medium)
-//   - Sound effects (placeholder)
-//   - Share natija
-//
-// Dizayn: "Parvoz Premium" (Stitch) — deep navy fon, glass kartalar,
-// aqua aksent + glow. CP palitra + cjak() matn helper.
+// Backend integratsiyasi saqlangan (per-savol validatsiya, XP, sertifikat).
+// Navigatsiya MANUAL (Oldingi/Keyingi), timer UMUMIY (quiz byudjeti).
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:confetti/confetti.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
-import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/data/sound_service.dart';
-import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
+import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
+import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
+
+const _green = Color(0xFF41DD7A);
+const _red = Color(0xFFFF5A6E);
+
+String _fmtTime(int sec) {
+  final s = sec < 0 ? 0 : sec;
+  return '${s ~/ 60}:${(s % 60).toString().padLeft(2, '0')}';
+}
 
 class ContestQuizScreen extends ConsumerStatefulWidget {
   const ContestQuizScreen({required this.contest, super.key});
@@ -63,11 +66,15 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(quizProvider(widget.contest));
-    final p = CP(true);
 
     ref.listen<QuizState>(quizProvider(widget.contest), (prev, next) {
-      // Answer feedback hooks
-      if (prev?.answerState != next.answerState) {
+      // Faqat YANGI javob berilganda tovush/haptika (Oldingi/Keyingi bilan
+      // review qilinganda EMAS): bir xil savol + none → javob.
+      final fresh =
+          prev?.currentIndex == next.currentIndex &&
+          prev?.answerState == AnswerState.none &&
+          next.answerState != AnswerState.none;
+      if (fresh) {
         if (next.answerState == AnswerState.correct) {
           HapticFeedback.lightImpact();
           SoundService.playCorrect();
@@ -77,12 +84,8 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
         } else if (next.answerState == AnswerState.wrong) {
           HapticFeedback.heavyImpact();
           SoundService.playWrong();
-        } else if (next.answerState == AnswerState.timeout) {
-          HapticFeedback.mediumImpact();
-          SoundService.playTimeout();
         }
       }
-      // Final hook
       if (prev?.status != next.status &&
           next.status == QuizStatus.finished &&
           next.isWinner) {
@@ -92,7 +95,7 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
     });
 
     return Scaffold(
-      backgroundColor: p.bg,
+      backgroundColor: tBg,
       body: Stack(
         children: [
           SafeArea(child: _buildContent(state)),
@@ -123,13 +126,9 @@ class _ContestQuizScreenState extends ConsumerState<ContestQuizScreen> {
   Widget _buildContent(QuizState state) {
     switch (state.status) {
       case QuizStatus.loading:
-        return _LoadingScreen(contest: widget.contest);
       case QuizStatus.intro:
-        return _IntroScreen(
-          contest: widget.contest,
-          onStart: () =>
-              ref.read(quizProvider(widget.contest).notifier).startPlaying(),
-        );
+        // Intro yo'q — "Konkurs shartlari" sheet'dan keyin auto-start.
+        return _LoadingScreen(contest: widget.contest);
       case QuizStatus.playing:
       case QuizStatus.paused:
         return _QuestionScreen(contest: widget.contest, state: state);
@@ -148,59 +147,32 @@ class _LoadingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(true);
+    final col = contest.placeholderColor;
     return Center(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
           Container(
-            width: 132,
-            height: 132,
+            width: 120,
+            height: 120,
             decoration: BoxDecoration(
-              color: p.card,
+              color: col.withValues(alpha: 0.16),
               shape: BoxShape.circle,
-              border: Border.all(
-                color: p.accent.withValues(alpha: 0.35),
-                width: 1.4,
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: p.accent.withValues(alpha: 0.30),
-                  blurRadius: 40,
-                  spreadRadius: 2,
-                ),
-              ],
+              border: Border.all(color: col.withValues(alpha: 0.4), width: 1.4),
             ),
-            child: Center(
-              child: Container(
-                width: 96,
-                height: 96,
-                decoration: BoxDecoration(
-                  color: contest.placeholderColor.withValues(alpha: 0.95),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(
-                  contest.placeholderIcon,
-                  color: Colors.white,
-                  size: 52,
-                ),
-              ),
-            ),
+            alignment: Alignment.center,
+            child: Icon(contest.placeholderIcon, color: col, size: 52),
           ),
-          const SizedBox(height: 36),
-          SizedBox(
-            width: 30,
-            height: 30,
-            child: CircularProgressIndicator(
-              strokeWidth: 3,
-              color: p.accent,
-              backgroundColor: p.border,
-            ),
+          const SizedBox(height: 34),
+          const SizedBox(
+            width: 28,
+            height: 28,
+            child: CircularProgressIndicator(strokeWidth: 3, color: tBlue),
           ),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
           Text(
             'Savollar tayyorlanmoqda...',
-            style: cjak(p, size: 15, weight: FontWeight.w600, color: p.muted),
+            style: tPop(14, w: FontWeight.w500, c: tMuted),
           ),
         ],
       ),
@@ -208,211 +180,7 @@ class _LoadingScreen extends StatelessWidget {
   }
 }
 
-// ─── Intro ──────────────────────────────────────────────────────────
-
-class _IntroScreen extends StatefulWidget {
-  const _IntroScreen({required this.contest, required this.onStart});
-
-  final ContestModel contest;
-  final VoidCallback onStart;
-
-  @override
-  State<_IntroScreen> createState() => _IntroScreenState();
-}
-
-class _IntroScreenState extends State<_IntroScreen>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _pulse;
-
-  @override
-  void initState() {
-    super.initState();
-    _pulse = AnimationController(
-      duration: const Duration(seconds: 2),
-      vsync: this,
-    )..repeat(reverse: true);
-  }
-
-  @override
-  void dispose() {
-    _pulse.dispose();
-    super.dispose();
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final p = CP(true);
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          Expanded(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  AnimatedBuilder(
-                    animation: _pulse,
-                    builder: (_, __) => Transform.scale(
-                      scale: 1.0 + (_pulse.value * 0.08),
-                      child: Container(
-                        width: 168,
-                        height: 168,
-                        decoration: BoxDecoration(
-                          color: p.accent.withValues(alpha: 0.10),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: p.accent.withValues(
-                                alpha: 0.18 + _pulse.value * 0.22,
-                              ),
-                              blurRadius: 48,
-                              spreadRadius: 4,
-                            ),
-                          ],
-                        ),
-                        child: Center(
-                          child: Container(
-                            width: 120,
-                            height: 120,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                                colors: [p.accentSoft, p.accent],
-                              ),
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              Icons.quiz_rounded,
-                              color: p.onAccent,
-                              size: 60,
-                            ),
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 36),
-                  Text(
-                    'Konkurs boshlanmoqda!',
-                    textAlign: TextAlign.center,
-                    style: cjak(
-                      p,
-                      size: 28,
-                      weight: FontWeight.w800,
-                      height: 1.15,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 18,
-                    ),
-                    decoration: BoxDecoration(
-                      color: p.card,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: p.border),
-                    ),
-                    child: Column(
-                      children: [
-                        const _StatRow(
-                          icon: Icons.quiz_rounded,
-                          text: '10 ta savol',
-                        ),
-                        const SizedBox(height: 14),
-                        const _StatRow(
-                          icon: AppIcons.schedule,
-                          text: 'Har savol uchun 40 sek',
-                        ),
-                        const SizedBox(height: 14),
-                        _StatRow(
-                          icon: AppIcons.star,
-                          text: '${widget.contest.bonus} ball sovrin',
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 16),
-            child: SizedBox(
-              width: double.infinity,
-              child: DecoratedBox(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(999),
-                  boxShadow: [
-                    BoxShadow(
-                      color: p.accent.withValues(alpha: 0.34),
-                      blurRadius: 26,
-                      offset: const Offset(0, 8),
-                    ),
-                  ],
-                ),
-                child: ElevatedButton(
-                  onPressed: widget.onStart,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: p.accent,
-                    foregroundColor: p.onAccent,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 20),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  child: Text(
-                    'BOSHLASH',
-                    style: cjak(
-                      p,
-                      size: 18,
-                      weight: FontWeight.w800,
-                      color: p.onAccent,
-                      spacing: 1.5,
-                    ),
-                  ),
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _StatRow extends StatelessWidget {
-  const _StatRow({required this.icon, required this.text});
-
-  final IconData icon;
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = CP(true);
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.center,
-      children: [
-        Container(
-          width: 34,
-          height: 34,
-          decoration: BoxDecoration(
-            color: p.accent.withValues(alpha: 0.12),
-            shape: BoxShape.circle,
-          ),
-          child: Icon(icon, color: p.accent, size: 18),
-        ),
-        const SizedBox(width: 12),
-        Text(text, style: cjak(p, size: 15, weight: FontWeight.w600)),
-      ],
-    );
-  }
-}
-
-// ─── Question ───────────────────────────────────────────────────────
+// ─── Question (Parvoz — Figma "test ichi") ──────────────────────────
 
 class _QuestionScreen extends ConsumerWidget {
   const _QuestionScreen({required this.contest, required this.state});
@@ -422,270 +190,386 @@ class _QuestionScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(true);
-    final question = state.currentQuestion;
+    final q = state.currentQuestion;
+    final total = state.effectiveQuestions.length;
+    final answered = state.answerState != AnswerState.none;
+    final isFav = ref.watch(favoriteQuestionsProvider).any((f) => f.id == q.id);
+    final bottomInset = MediaQuery.paddingOf(context).bottom;
+    final notifier = ref.read(quizProvider(contest).notifier);
+    final low = state.timeRemaining <= 30;
+    // Ochilgan to'g'ri javob indeksi (noto'g'ri belgilanganda yashil ko'rsatish).
+    final revealed = state.currentIndex < state.correctIndices.length
+        ? state.correctIndices[state.currentIndex]
+        : null;
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      child: Column(
-        children: [
-          _QuestionTopBar(
-            currentIndex: state.currentIndex,
-            onClose: () => _showPauseDialog(context, ref),
-          ),
-          const SizedBox(height: 14),
-          if (state.currentStreak >= 3)
-            Padding(
-              padding: const EdgeInsets.only(bottom: 12),
-              child: _StreakBadge(streak: state.currentStreak),
-            ),
-          _ScoreTimerRow(state: state),
-          const SizedBox(height: 22),
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                children: [
-                  Container(
-                    width: double.infinity,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 20,
-                      vertical: 24,
-                    ),
-                    decoration: BoxDecoration(
-                      color: p.card,
-                      borderRadius: BorderRadius.circular(18),
-                      border: Border.all(color: p.border),
-                    ),
-                    child: Text(
-                      question.text,
-                      textAlign: TextAlign.center,
-                      style: cjak(
-                        p,
-                        size: 20,
-                        weight: FontWeight.w700,
-                        height: 1.4,
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _showMenu(context, ref);
+      },
+      child: Padding(
+        padding: const EdgeInsets.fromLTRB(16, 8, 16, 0),
+        child: Column(
+          children: [
+            // Header: fan nomi + "?"
+            Row(
+              children: [
+                Expanded(
+                  child: Align(
+                    alignment: Alignment.centerLeft,
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: Alignment.centerLeft,
+                      child: Text(
+                        contest.title,
+                        maxLines: 1,
+                        style: tUnb(24, w: FontWeight.w700, ls: -0.6),
                       ),
                     ),
                   ),
-                  const SizedBox(height: 24),
-                  // Variantlar soni bo'yicha (avval qat'iy `i < 4` edi — savolda
-                  // 4 tadan kam variant bo'lsa options[i] RangeError berardi).
-                  for (int i = 0; i < question.options.length; i++)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 6),
-                      child: _OptionCard(
-                        letter: String.fromCharCode(65 + i),
-                        text: question.options[i],
-                        isSelected: state.selectedAnswer == i,
-                        isCorrect: i == question.correctIndex,
-                        answerState: state.answerState,
-                        onTap: () => ref
-                            .read(quizProvider(contest).notifier)
-                            .selectAnswer(i),
-                      ),
-                    ),
-                  if (state.answerState != AnswerState.none &&
-                      question.explanation != null) ...[
-                    const SizedBox(height: 16),
-                    Container(
-                      padding: const EdgeInsets.all(14),
-                      decoration: BoxDecoration(
-                        color: p.accent.withValues(alpha: 0.10),
-                        borderRadius: BorderRadius.circular(14),
-                        border: Border.all(
-                          color: p.accent.withValues(alpha: 0.32),
+                ),
+                _RoundIconBtn(
+                  icon: Icons.question_mark_rounded,
+                  onTap: () => _showMenu(context, ref),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            // "N / total" + umumiy vaqt
+            Row(
+              children: [
+                Text(
+                  '${state.currentIndex + 1} / $total',
+                  style: tPop(14, w: FontWeight.w600, c: tDim),
+                ),
+                const Spacer(),
+                Icon(
+                  Icons.access_time_rounded,
+                  size: 16,
+                  color: low ? _red : tDim,
+                ),
+                const SizedBox(width: 6),
+                Text(
+                  _fmtTime(state.timeRemaining),
+                  style: tPop(
+                    14,
+                    w: FontWeight.w600,
+                    c: low ? _red : Colors.white,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _ProgressDots(
+              results: state.results,
+              total: total,
+              current: state.currentIndex,
+            ),
+            const SizedBox(height: 22),
+            // Savol kartasi (shisha) + ko'k "?" doira. Uzun savolda overflow
+            // bo'lmasin — balandligi cheklangan + ichida scroll.
+            ConstrainedBox(
+              constraints: BoxConstraints(
+                maxHeight: MediaQuery.sizeOf(context).height * 0.28,
+              ),
+              child: Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(18),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [Color(0x1FFFFFFF), Color(0x0AFFFFFF)],
+                  ),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: tGlassBorder),
+                ),
+                child: SingleChildScrollView(
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Container(
+                        width: 34,
+                        height: 34,
+                        decoration: const BoxDecoration(
+                          color: tBlue,
+                          shape: BoxShape.circle,
+                        ),
+                        alignment: Alignment.center,
+                        child: const Icon(
+                          Icons.question_mark_rounded,
+                          size: 18,
+                          color: Colors.white,
                         ),
                       ),
-                      child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Icon(
-                            Icons.lightbulb_rounded,
-                            color: p.accent,
-                            size: 20,
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Text(
-                              question.explanation!,
-                              style: cjak(
-                                p,
-                                size: 13,
-                                weight: FontWeight.w500,
-                                height: 1.45,
-                              ),
-                            ),
-                          ),
-                        ],
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          q.text,
+                          style: tPop(16, w: FontWeight.w600),
+                        ),
                       ),
-                    ),
-                  ],
-                  const SizedBox(height: 24),
-                ],
+                    ],
+                  ),
+                ),
               ),
             ),
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showPauseDialog(BuildContext context, WidgetRef ref) {
-    ref.read(quizProvider(contest).notifier).pause();
-
-    final p = CP(true);
-    showDialog<void>(
-      context: context,
-      barrierDismissible: false,
-      builder: (ctx) => Dialog(
-        backgroundColor: p.card,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(22),
-          side: BorderSide(color: p.border),
-        ),
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 72,
-                height: 72,
-                decoration: BoxDecoration(
-                  color: p.warn.withValues(alpha: 0.15),
-                  shape: BoxShape.circle,
-                ),
-                child: Icon(AppIcons.pause, color: p.warn, size: 38),
+            const SizedBox(height: 18),
+            // Javoblar (shisha secondary)
+            Expanded(
+              child: ListView.separated(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.only(bottom: 8),
+                itemCount: q.options.length,
+                separatorBuilder: (_, __) => const SizedBox(height: 12),
+                itemBuilder: (_, i) {
+                  final isSelected = state.selectedAnswer == i;
+                  // To'g'ri variant yashil: backend/mock ochgan indeks, yoki
+                  // reveal yo'q bo'lsa foydalanuvchi to'g'ri belgilagani.
+                  final showCorrect =
+                      answered &&
+                      ((revealed != null && i == revealed) ||
+                          (revealed == null &&
+                              isSelected &&
+                              state.answerState == AnswerState.correct));
+                  // Foydalanuvchining NOTO'G'RI tanlovi qizil.
+                  final showWrong = answered && isSelected && !showCorrect;
+                  return _QuizOption(
+                    text: q.options[i],
+                    showCorrect: showCorrect,
+                    showWrong: showWrong,
+                    onTap: answered ? null : () => notifier.selectAnswer(i),
+                  );
+                },
               ),
-              const SizedBox(height: 18),
-              Text(
-                "Konkursni to'xtatasizmi?",
-                textAlign: TextAlign.center,
-                style: cjak(p, size: 18, weight: FontWeight.w800),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Chiqsangiz progress saqlanmaydi',
-                textAlign: TextAlign.center,
-                style: cjak(
-                  p,
-                  size: 13,
-                  weight: FontWeight.w500,
-                  color: p.muted,
-                ),
-              ),
-              const SizedBox(height: 24),
-              Row(
+            ),
+            // Oldingi · ♡ · Keyingi
+            Padding(
+              padding: EdgeInsets.only(top: 8, bottom: 12 + bottomInset),
+              child: Row(
                 children: [
                   Expanded(
-                    child: OutlinedButton(
-                      onPressed: () {
-                        ref.read(quizProvider(contest).notifier).quit();
-                        Navigator.pop(ctx);
-                        if (context.mounted) {
-                          context.go('/contests');
-                        }
-                      },
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: p.danger,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                        side: BorderSide(
-                          color: p.danger.withValues(alpha: 0.55),
-                        ),
-                      ),
-                      child: Text(
-                        'Chiqish',
-                        style: cjak(
-                          p,
-                          size: 14,
-                          weight: FontWeight.w700,
-                          color: p.danger,
-                        ),
-                      ),
+                    child: _NavPill(
+                      label: 'Oldingi',
+                      icon: Icons.chevron_left_rounded,
+                      leading: true,
+                      enabled: state.currentIndex > 0,
+                      onTap: notifier.goPrevious,
                     ),
                   ),
                   const SizedBox(width: 12),
+                  _QuizHeart(
+                    active: isFav,
+                    onTap: () async {
+                      await ref
+                          .read(favoriteQuestionsProvider.notifier)
+                          .toggle(q.id, q.text);
+                      await HapticFeedback.selectionClick();
+                    },
+                  ),
+                  const SizedBox(width: 12),
                   Expanded(
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.pop(ctx);
-                        ref.read(quizProvider(contest).notifier).resume();
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: p.accent,
-                        foregroundColor: p.onAccent,
-                        elevation: 0,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(999),
-                        ),
-                      ),
-                      child: Text(
-                        'Davom etish',
-                        style: cjak(
-                          p,
-                          size: 14,
-                          weight: FontWeight.w700,
-                          color: p.onAccent,
-                        ),
-                      ),
+                    child: _NavPill(
+                      label: state.isLastQuestion ? 'Yakunlash' : 'Keyingi',
+                      icon: Icons.chevron_right_rounded,
+                      leading: false,
+                      enabled: true,
+                      primary: state.isLastQuestion,
+                      onTap: notifier.goNext,
                     ),
                   ),
                 ],
               ),
-            ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // "?" tugma / orqaga bosish — qoidalar + chiqish sheet'i. Ochilganda pause,
+  // yopilganda (chiqmasa) resume.
+  void _showMenu(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(quizProvider(contest).notifier);
+    notifier.pause();
+    var exiting = false;
+
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (ctx) => Container(
+        decoration: const BoxDecoration(
+          color: Color(0xFF0B1119),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
+          border: Border(top: BorderSide(color: tGlassBorder)),
+        ),
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 12, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 44,
+                  height: 4,
+                  decoration: BoxDecoration(
+                    color: tGlassBorder,
+                    borderRadius: BorderRadius.circular(2),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                Text('Test qoidalari', style: tUnb(18, w: FontWeight.w700)),
+                const SizedBox(height: 18),
+                const _MenuRow(
+                  icon: Icons.touch_app_rounded,
+                  text: "Javobni tanlang — to'g'ri yashil, xato qizil bo'ladi",
+                ),
+                const _MenuRow(
+                  icon: Icons.swap_horiz_rounded,
+                  text:
+                      'Oldingi / Keyingi bilan savollar orasida harakatlaning',
+                ),
+                const _MenuRow(
+                  icon: Icons.access_time_rounded,
+                  text: 'Umumiy vaqt tugasa test avtomatik yakunlanadi',
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push('/liked-questions');
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: tGlass,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: tGlassBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.favorite_rounded,
+                          size: 20,
+                          color: _red,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Tanlangan savollar',
+                            style: tPop(15, w: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 22,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 18),
+                GestureDetector(
+                  onTap: () {
+                    exiting = true;
+                    notifier.quit();
+                    Navigator.pop(ctx);
+                    if (context.mounted) context.go('/contests');
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _red.withValues(alpha: 0.14),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: _red.withValues(alpha: 0.5)),
+                    ),
+                    child: Text(
+                      'Testdan chiqish',
+                      style: tPop(15, w: FontWeight.w600, c: _red),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                GestureDetector(
+                  onTap: () => Navigator.pop(ctx),
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 52,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: tBlue,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    child: Text(
+                      'Davom etish',
+                      style: tPop(15, w: FontWeight.w600),
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
+      ),
+    ).then((_) {
+      if (!exiting && context.mounted) notifier.resume();
+    });
+  }
+}
+
+class _RoundIconBtn extends StatelessWidget {
+  const _RoundIconBtn({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 42,
+        height: 42,
+        decoration: const BoxDecoration(color: tGlass, shape: BoxShape.circle),
+        alignment: Alignment.center,
+        child: Icon(icon, size: 20, color: Colors.white),
       ),
     );
   }
 }
 
-class _QuestionTopBar extends StatelessWidget {
-  const _QuestionTopBar({required this.currentIndex, required this.onClose});
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({required this.icon, required this.text});
 
-  final int currentIndex;
-  final VoidCallback onClose;
+  final IconData icon;
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(true);
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8),
+      padding: const EdgeInsets.only(bottom: 14),
       child: Row(
         children: [
-          Material(
-            color: p.card,
-            shape: CircleBorder(side: BorderSide(color: p.border)),
-            clipBehavior: Clip.antiAlias,
-            child: InkWell(
-              onTap: onClose,
-              child: Padding(
-                padding: const EdgeInsets.all(9),
-                child: Icon(AppIcons.close, color: p.text, size: 22),
-              ),
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: tBlue.withValues(alpha: 0.14),
+              borderRadius: BorderRadius.circular(11),
             ),
+            alignment: Alignment.center,
+            child: Icon(icon, size: 19, color: tBlue),
           ),
+          const SizedBox(width: 12),
           Expanded(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 14),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(999),
-                child: LinearProgressIndicator(
-                  value: (currentIndex + 1) / 10,
-                  minHeight: 8,
-                  backgroundColor: p.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(p.accent),
-                ),
-              ),
-            ),
-          ),
-          Text(
-            '${currentIndex + 1}/10',
-            style: cjak(p, size: 14, weight: FontWeight.w700),
+            child: Text(text, style: tPop(13.5, c: tDim)),
           ),
         ],
       ),
@@ -693,209 +577,209 @@ class _QuestionTopBar extends StatelessWidget {
   }
 }
 
-class _StreakBadge extends StatelessWidget {
-  const _StreakBadge({required this.streak});
+/// Rangli natija nuqtalari — to'g'ri (yashil) / xato (qizil) / joriy (ko'k) /
+/// kelgusi (kulrang).
+class _ProgressDots extends StatelessWidget {
+  const _ProgressDots({
+    required this.results,
+    required this.total,
+    required this.current,
+  });
 
-  final int streak;
-
-  @override
-  Widget build(BuildContext context) {
-    final p = CP(true);
-    return AnimatedContainer(
-      duration: const Duration(milliseconds: 300),
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 9),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [AppColors.catOrangeLight, AppColors.catPinkRose],
-        ),
-        borderRadius: BorderRadius.circular(999),
-        boxShadow: [
-          BoxShadow(
-            color: AppColors.catOrangeLight.withValues(alpha: 0.40),
-            blurRadius: 18,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(AppIcons.streak, color: Colors.white, size: 20),
-          const SizedBox(width: 7),
-          Text(
-            'Streak: $streak',
-            style: cjak(
-              p,
-              size: 14,
-              weight: FontWeight.w800,
-              color: Colors.white,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _ScoreTimerRow extends StatelessWidget {
-  const _ScoreTimerRow({required this.state});
-
-  final QuizState state;
+  final List<AnswerState> results;
+  final int total;
+  final int current;
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(true);
-    final isLow = state.timeRemaining <= 10;
-    final timeColor = isLow ? p.danger : p.text;
+    Color colorFor(int i) {
+      final r = i < results.length ? results[i] : AnswerState.none;
+      if (r == AnswerState.correct) return _green;
+      if (r == AnswerState.wrong || r == AnswerState.timeout) return _red;
+      if (i == current) return tBlue;
+      return Colors.white.withValues(alpha: 0.16);
+    }
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+    return Wrap(
+      spacing: 5,
+      runSpacing: 5,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: p.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: p.border),
-          ),
-          child: Row(
-            children: [
-              Icon(AppIcons.star, color: p.accent, size: 20),
-              const SizedBox(width: 7),
-              Text(
-                '${state.totalScore}',
-                style: cjak(p, size: 16, weight: FontWeight.w800),
-              ),
-            ],
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-          decoration: BoxDecoration(
-            color: isLow ? p.danger.withValues(alpha: 0.15) : p.card,
-            borderRadius: BorderRadius.circular(14),
-            border: Border.all(
-              color: isLow ? p.danger.withValues(alpha: 0.45) : p.border,
+        for (var i = 0; i < total; i++)
+          Container(
+            width: i == current ? 9 : 7,
+            height: i == current ? 9 : 7,
+            decoration: BoxDecoration(
+              color: colorFor(i),
+              shape: BoxShape.circle,
             ),
           ),
-          child: Row(
-            children: [
-              Icon(Icons.timer_rounded, color: timeColor, size: 20),
-              const SizedBox(width: 7),
-              Text(
-                '0:${state.timeRemaining.toString().padLeft(2, '0')}',
-                style: cjak(
-                  p,
-                  size: 16,
-                  weight: FontWeight.w800,
-                  color: timeColor,
-                ),
-              ),
-            ],
-          ),
-        ),
       ],
     );
   }
 }
 
-class _OptionCard extends StatelessWidget {
-  const _OptionCard({
-    required this.letter,
+/// Shisha "secondary" javob tugmasi. Javob berilgach tanlangani yashil
+/// (to'g'ri) yoki qizil (xato) bo'ladi.
+class _QuizOption extends StatelessWidget {
+  const _QuizOption({
     required this.text,
-    required this.isSelected,
-    required this.isCorrect,
-    required this.answerState,
+    required this.showCorrect,
+    required this.showWrong,
     required this.onTap,
   });
 
-  final String letter;
   final String text;
-  final bool isSelected;
-  final bool isCorrect;
-  final AnswerState answerState;
+
+  /// To'g'ri javob — yashil + ✓ (belgilangan yoki ochilgan to'g'ri variant).
+  final bool showCorrect;
+
+  /// Foydalanuvchining noto'g'ri tanlovi — qizil + ✗.
+  final bool showWrong;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    var bg = tGlass;
+    var border = tGlassBorder;
+    var txt = Colors.white;
+    IconData? mark;
+
+    if (showCorrect) {
+      bg = _green.withValues(alpha: 0.16);
+      border = _green;
+      txt = _green;
+      mark = Icons.check_rounded;
+    } else if (showWrong) {
+      bg = _red.withValues(alpha: 0.16);
+      border = _red;
+      txt = _red;
+      mark = Icons.close_rounded;
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 220),
+        height: 58,
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: border, width: mark != null ? 1.6 : 1),
+        ),
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 44),
+                child: Text(
+                  text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: tPop(15.5, w: FontWeight.w600, c: txt),
+                ),
+              ),
+            ),
+            if (mark != null)
+              Positioned(
+                right: 16,
+                top: 0,
+                bottom: 0,
+                child: Center(child: Icon(mark, size: 22, color: txt)),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Oldingi / Keyingi shisha pill (o'chirilgan bo'lsa xira).
+class _NavPill extends StatelessWidget {
+  const _NavPill({
+    required this.label,
+    required this.icon,
+    required this.leading,
+    required this.enabled,
+    required this.onTap,
+    this.primary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final bool leading;
+  final bool enabled;
+  final bool primary;
   final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(true);
-    final correctColor = AppColors.catMint;
+    final iconW = Icon(
+      icon,
+      size: 22,
+      color: enabled ? Colors.white : Colors.white.withValues(alpha: 0.35),
+    );
+    final textW = Text(
+      label,
+      style: tPop(
+        15,
+        w: FontWeight.w600,
+        c: enabled ? Colors.white : Colors.white.withValues(alpha: 0.35),
+      ),
+    );
 
-    Color bgColor = p.card;
-    Color borderColor = p.border;
-    Color textColor = p.text;
-    Color badgeColor = p.accent;
-    Widget? trailingIcon;
-
-    if (answerState != AnswerState.none) {
-      if (isCorrect) {
-        bgColor = correctColor.withValues(alpha: 0.14);
-        borderColor = correctColor;
-        textColor = correctColor;
-        badgeColor = correctColor;
-        trailingIcon = Icon(AppIcons.success, color: correctColor, size: 24);
-      } else if (isSelected) {
-        bgColor = p.danger.withValues(alpha: 0.14);
-        borderColor = p.danger;
-        textColor = p.danger;
-        badgeColor = p.danger;
-        trailingIcon = Icon(Icons.cancel_rounded, color: p.danger, size: 24);
-      } else {
-        textColor = p.muted;
-        badgeColor = p.muted;
-      }
-    }
-
-    return GestureDetector(
-      onTap: answerState == AnswerState.none ? onTap : null,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 300),
-        padding: const EdgeInsets.all(15),
-        decoration: BoxDecoration(
-          color: bgColor,
-          border: Border.all(color: borderColor, width: 1.6),
-          borderRadius: BorderRadius.circular(16),
+    return Opacity(
+      opacity: enabled ? 1 : 0.6,
+      child: GestureDetector(
+        onTap: enabled ? onTap : null,
+        behavior: HitTestBehavior.opaque,
+        child: Container(
+          height: 54,
+          alignment: Alignment.center,
+          decoration: BoxDecoration(
+            color: primary ? tBlue : tGlass,
+            borderRadius: BorderRadius.circular(999),
+            border: primary ? null : Border.all(color: tGlassBorder),
+          ),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            mainAxisSize: MainAxisSize.min,
+            children: leading
+                ? [iconW, const SizedBox(width: 4), textW]
+                : [textW, const SizedBox(width: 4), iconW],
+          ),
         ),
-        child: Row(
-          children: [
-            Container(
-              width: 36,
-              height: 36,
-              decoration: BoxDecoration(
-                color: badgeColor.withValues(alpha: 0.16),
-                shape: BoxShape.circle,
-                border: Border.all(
-                  color: badgeColor.withValues(alpha: 0.45),
-                  width: 1,
-                ),
-              ),
-              child: Center(
-                child: Text(
-                  letter,
-                  style: cjak(
-                    p,
-                    size: 15,
-                    weight: FontWeight.w800,
-                    color: badgeColor,
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(width: 13),
-            Expanded(
-              child: Text(
-                text,
-                style: cjak(
-                  p,
-                  size: 15,
-                  weight: FontWeight.w600,
-                  color: textColor,
-                  height: 1.3,
-                ),
-              ),
-            ),
-            if (trailingIcon != null) trailingIcon,
-          ],
+      ),
+    );
+  }
+}
+
+/// Sevimli (♡) — testni yoqtirilganlarga qo'shadi/oladi.
+class _QuizHeart extends StatelessWidget {
+  const _QuizHeart({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 54,
+        height: 54,
+        decoration: BoxDecoration(
+          color: active ? _red.withValues(alpha: 0.16) : tGlass,
+          shape: BoxShape.circle,
+          border: Border.all(color: active ? _red : tGlassBorder),
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          active ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          size: 24,
+          color: active ? _red : Colors.white,
         ),
       ),
     );
@@ -912,273 +796,308 @@ class _ResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(true);
-    final isWinner = state.isWinner;
-    final percent = (state.accuracy * 100).round();
+    final total = state.effectiveQuestions.length;
+    final correct = state.correctCount;
+    final record = (state.recordCorrect ?? correct).clamp(0, total);
+    final stars = _starsFor(state.accuracy);
+    final yutuq = state.isWinner ? contest.bonus : 0;
+    final cardW = (MediaQuery.sizeOf(context).width - 32).clamp(0.0, 380.0);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-          Container(
-            width: 124,
-            height: 124,
-            decoration: BoxDecoration(
-              gradient: isWinner
-                  ? LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [p.accentSoft, p.accent],
-                    )
-                  : null,
-              color: isWinner ? null : p.warn.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-              border: isWinner
-                  ? null
-                  : Border.all(
-                      color: p.warn.withValues(alpha: 0.5),
-                      width: 1.4,
-                    ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isWinner ? p.accent : p.warn).withValues(alpha: 0.34),
-                  blurRadius: 40,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Icon(
-              isWinner ? AppIcons.trophy : Icons.psychology_rounded,
-              color: isWinner ? p.onAccent : p.warn,
-              size: 62,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            isWinner ? 'Tabriklaymiz!' : 'Yaxshi urinish!',
-            style: cjak(p, size: 32, weight: FontWeight.w800),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isWinner
-                ? 'Konkursni muvaffaqiyatli yakunladingiz'
-                : "Keyingi safar yanada yaxshi natija ko'rsatasiz",
-            textAlign: TextAlign.center,
-            style: cjak(p, size: 14, weight: FontWeight.w500, color: p.muted),
-          ),
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: p.card,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: p.border),
-            ),
-            child: Column(
-              children: [
-                _ResultStat(
-                  label: "To'g'ri javoblar",
-                  value: '${state.correctCount}/10',
-                  color: AppColors.catMint,
-                ),
-                _ResultDivider(p: p),
-                _ResultStat(
-                  label: 'Yiqqan ball',
-                  value: '${state.totalScore}',
-                  color: p.accent,
-                ),
-                _ResultDivider(p: p),
-                _ResultStat(
-                  label: 'Aniqlik',
-                  value: '$percent%',
-                  color: AppColors.catLavenderDark,
-                ),
-                _ResultDivider(p: p),
-                _ResultStat(
-                  label: 'Maksimal streak',
-                  value: '${state.maxStreak}',
-                  color: AppColors.catOrangeLight,
-                ),
-                _ResultDivider(p: p),
-                _ResultStat(
-                  label: 'Vaqt',
-                  value: _formatDuration(state.totalElapsed),
-                  color: AppColors.catPinkRose,
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          // Sertifikat (#56) — faqat g'olib (chegaradan yuqori) va real
-          // attempt bo'lsa. Tugma bosilganda backend haqdorligini tekshiradi.
-          if (isWinner && state.attemptId != null) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _openCertificate(context, ref),
-                icon: Icon(
-                  Icons.workspace_premium_rounded,
-                  size: 20,
-                  color: p.onAccent,
-                ),
-                label: Text(
-                  'Sertifikat',
-                  style: cjak(
-                    p,
-                    size: 15,
-                    weight: FontWeight.w800,
-                    color: p.onAccent,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: p.gold,
-                  foregroundColor: p.onAccent,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _onShare(context),
-                  icon: Icon(Icons.share_rounded, size: 18, color: p.text),
-                  label: Text(
-                    'Ulashish',
-                    style: cjak(p, size: 14, weight: FontWeight.w700),
-                  ),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: p.text,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    side: BorderSide(color: p.border),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () => context.go('/contests'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: p.accent,
-                    foregroundColor: p.onAccent,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  child: Text(
-                    'Yopish',
-                    style: cjak(
-                      p,
-                      size: 15,
-                      weight: FontWeight.w800,
-                      color: p.onAccent,
-                    ),
-                  ),
-                ),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Container(
+          width: cardW,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1F23),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF313639)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 40,
+                spreadRadius: -8,
+                offset: const Offset(0, 20),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StarsRow(stars: stars),
+              const SizedBox(height: 22),
+              Text('Natija', style: tPop(14, c: Colors.white)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1487FA),
+                  borderRadius: BorderRadius.circular(60),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Text(
+                  '$correct / $total',
+                  style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const _CardDivider(),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _StatColumn(
+                      label: 'Rekord',
+                      value: Text(
+                        '$record / $total ta',
+                        style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatColumn(
+                      label: 'Yutuq',
+                      value: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$yutuq',
+                            style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                          ),
+                          const SizedBox(width: 6),
+                          const DonBadge(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const _CardDivider(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SecondaryGlassButton(
+                      label: 'Asosiyga',
+                      onTap: () => context.go('/dashboard'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _PremiumBlueButton(
+                      label: 'Revansh',
+                      // Qayta yechish — quiz notifier'ini yangilaymiz (backend
+                      // tugagan urinishni reset qilib qaytadan boshlaydi).
+                      onTap: () => ref.invalidate(quizProvider(contest)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Aniqlikdan yulduz soni (0–3).
+int _starsFor(double accuracy) {
+  if (accuracy >= 0.9) return 3;
+  if (accuracy >= 0.7) return 2;
+  if (accuracy >= 0.5) return 1;
+  return 0;
+}
+
+/// 3 yulduz (o'rtadagi katta) + amber yog'du. Yiqqan yulduzlar to'ldirilgan
+/// (o'rta → chap → o'ng tartibida).
+class _StarsRow extends StatelessWidget {
+  const _StarsRow({required this.stars});
+
+  final int stars;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget star(bool filled, double size) => Icon(
+      filled ? Icons.star_rounded : Icons.star_border_rounded,
+      size: size,
+      color: const Color(0xFFFFC400),
+    );
+
+    return SizedBox(
+      height: 92,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: 6,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+              child: Container(
+                width: 180,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFAE00).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              star(stars >= 2, 46),
+              const SizedBox(width: 12),
+              star(stars >= 1, 70),
+              const SizedBox(width: 12),
+              star(stars >= 3, 46),
+            ],
+          ),
         ],
       ),
     );
   }
-
-  Future<void> _onShare(BuildContext context) async {
-    final text =
-        "Men Parvoz ilovasida '${contest.title}' konkursida "
-        "${state.correctCount}/10 to'g'ri javob berdim! 🏆\n"
-        'Yiqqan ball: ${state.totalScore}\n\n'
-        'Sen ham qatnash!';
-    await Share.share(text);
-  }
-
-  /// Sertifikat ma'lumotini backend'dan oladi (haqdorlikni tekshiradi) va
-  /// sertifikat ekranini ochadi. Haqli bo'lmasa — xabar.
-  Future<void> _openCertificate(BuildContext context, WidgetRef ref) async {
-    final attemptId = state.attemptId;
-    if (attemptId == null) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final data = await ref.read(certificateRepositoryProvider).fetch(attemptId);
-    if (!context.mounted) return;
-    if (data == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Sertifikat hozircha mavjud emas.')),
-      );
-      return;
-    }
-    if (context.mounted) {
-      context.push('/certificate', extra: data);
-    }
-  }
-
-  String _formatDuration(Duration d) {
-    final m = d.inMinutes;
-    final s = d.inSeconds.remainder(60);
-    return '$m:${s.toString().padLeft(2, '0')}';
-  }
 }
 
-class _ResultDivider extends StatelessWidget {
-  const _ResultDivider({required this.p});
-
-  final CP p;
-
-  @override
-  Widget build(BuildContext context) {
-    return Divider(color: p.border, height: 24, thickness: 1);
-  }
-}
-
-class _ResultStat extends StatelessWidget {
-  const _ResultStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+/// Rekord/Yutuq ustuni — markazlashgan yorliq + qiymat.
+class _StatColumn extends StatelessWidget {
+  const _StatColumn({required this.label, required this.value});
 
   final String label;
-  final String value;
-  final Color color;
+  final Widget value;
 
   @override
   Widget build(BuildContext context) {
-    final p = CP(true);
-    return Row(
+    return Column(
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8),
+        Text(label, style: tPop(14, c: Colors.white)),
+        const SizedBox(height: 6),
+        value,
+      ],
+    );
+  }
+}
+
+class _CardDivider extends StatelessWidget {
+  const _CardDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 1, color: const Color(0xFF313639));
+  }
+}
+
+/// "Asosiyga" — ota-ona onboarding SECONDARY shisha (oq gradient + rim + soya).
+class _SecondaryGlassButton extends StatelessWidget {
+  const _SecondaryGlassButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Colors.white.withValues(alpha: 0.11),
+              Colors.white.withValues(alpha: 0.025),
             ],
           ),
-        ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Text(
-            label,
-            style: cjak(p, size: 14, weight: FontWeight.w500, color: p.muted),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14),
+            width: 1.2,
           ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 18,
+              spreadRadius: -6,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        Text(value, style: cjak(p, size: 16, weight: FontWeight.w800)),
-      ],
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chevron_left_rounded,
+              size: 22,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: 4),
+            Text(label, style: tPop(16, w: FontWeight.w500)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// "Revansh" — ota-ona onboarding PREMIUM ko'k shisha (ko'k gradient + rim +
+/// ko'k yog'du soya).
+class _PremiumBlueButton extends StatelessWidget {
+  const _PremiumBlueButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF3C82FF), tBlue],
+          ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.22),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: tBlue.withValues(alpha: 0.5),
+              blurRadius: 24,
+              spreadRadius: -2,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: tPop(16, w: FontWeight.w500)),
+            const SizedBox(width: 6),
+            const Icon(Icons.refresh_rounded, size: 22, color: Colors.white),
+          ],
+        ),
+      ),
     );
   }
 }

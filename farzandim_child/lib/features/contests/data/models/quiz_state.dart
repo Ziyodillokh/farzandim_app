@@ -31,11 +31,25 @@ class QuizState {
   final int timeRemaining;
   final Duration totalElapsed;
   final List<int?> answers;
+
+  /// Har savol natijasi (nuqtalar uchun): none=javob berilmagan,
+  /// correct=to'g'ri, wrong/timeout=noto'g'ri. `answers` bilan bir o'lchamda.
+  final List<AnswerState> results;
+
+  /// Ochilgan to'g'ri javob indeksi (javob berilgach backend/mock beradi) —
+  /// noto'g'ri belgilanganda TO'G'RI variantni yashil ko'rsatish uchun.
+  /// null = hali ochilmagan / noma'lum (tarmoq xatosi).
+  final List<int?> correctIndices;
+
   final List<QuestionModel> questions;
 
   /// Backend attempt ID (sertifikat endpoint'iga kerak — #56). Real attempt
   /// boshlanganda o'rnatiladi; mock/offline rejimda null.
   final String? attemptId;
+
+  /// Bu test bo'yicha shaxsiy REKORD (eng ko'p to'g'ri javob) — lokal.
+  /// Yakunlanganda hisoblanadi ("Natija" kartasidagi "Rekord").
+  final int? recordCorrect;
 
   const QuizState({
     this.status = QuizStatus.loading,
@@ -50,8 +64,11 @@ class QuizState {
     this.timeRemaining = 40,
     this.totalElapsed = Duration.zero,
     this.answers = const [],
+    this.results = const [],
+    this.correctIndices = const [],
     this.questions = const [],
     this.attemptId,
+    this.recordCorrect,
   });
 
   List<QuestionModel> get effectiveQuestions =>
@@ -83,8 +100,11 @@ class QuizState {
     int? timeRemaining,
     Duration? totalElapsed,
     List<int?>? answers,
+    List<AnswerState>? results,
+    List<int?>? correctIndices,
     List<QuestionModel>? questions,
     String? attemptId,
+    int? recordCorrect,
   }) {
     return QuizState(
       status: status ?? this.status,
@@ -101,8 +121,11 @@ class QuizState {
       timeRemaining: timeRemaining ?? this.timeRemaining,
       totalElapsed: totalElapsed ?? this.totalElapsed,
       answers: answers ?? this.answers,
+      results: results ?? this.results,
+      correctIndices: correctIndices ?? this.correctIndices,
       questions: questions ?? this.questions,
       attemptId: attemptId ?? this.attemptId,
+      recordCorrect: recordCorrect ?? this.recordCorrect,
     );
   }
 }

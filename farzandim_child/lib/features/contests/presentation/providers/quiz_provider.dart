@@ -3,31 +3,31 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // `family` ContestModel asosida — har konkurs uchun alohida instance.
-// Auto-tarmoq:
-//   loading 1.5s → backend questions fetch + startAttempt
-//   intro → playing → (answer feedback 1.5s → next yoki finished)
+// Oqim: loading → (auto) playing. Navigatsiya MANUAL (goNext/goPrevious),
+// javob berilganda auto-advance YO'Q. Timer UMUMIY (byudjet = per-savol vaqti
+// × savollar soni); `timeRemaining` = umumiy qolgan vaqt, 0 da yakunlaydi.
 //
-// Sprint 5.7d: real backend ulanishi
-//   - _start() — fetchQuestions(contest.id) → state.questions
-//   - startPlaying() — startAttempt() → _attemptId
-//   - _finish() — submitAttempt() → backend score (canonical) o'rnatadi
-//   - MockQuestions fallback agar backend yetkazib bera olmasa
+// Backend: _start() fetchQuestions → startPlaying() startAttempt →
+// selectAnswer() per-savol validatsiya → _finish() submitAttempt (canonical
+// score). MockQuestions fallback agar backend yetkazib bera olmasa.
 //
 // Timer'lar:
-//   _questionTimer — har savol uchun (40 sek default)
-//   _totalTimer    — umumiy elapsed
-//   _feedbackTimer — javobdan keyingi 1.5 sek delay
+//   _totalTimer    — umumiy vaqt (elapsed + qolgan)
+//   _feedbackTimer — backend attemptFinished bo'lsa yakunlash delay'i
 
 import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/contests/data/mock_questions.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
+import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
+import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -41,7 +41,13 @@ class QuizNotifier extends StateNotifier<QuizState> {
   final Ref _ref;
 
   final ContestModel contest;
-  Timer? _questionTimer;
+
+  /// Tanlangan qiyinlikdan per-savol soniya ("Konkurs shartlari" sheet).
+  /// Boshlashdan oldin sheet `selectedTestDifficultyProvider`ni yozadi.
+  late final int _perQuestionSeconds = _ref
+      .read(selectedTestDifficultyProvider)
+      .secondsPerQuestion;
+
   Timer? _totalTimer;
   Timer? _feedbackTimer;
 
@@ -64,10 +70,18 @@ class QuizNotifier extends StateNotifier<QuizState> {
         ? questions.length
         : MockQuestions.all.length;
     state = state.copyWith(
-      status: QuizStatus.intro,
       questions: questions,
       answers: List<int?>.filled(n, null),
+      results: List<AnswerState>.filled(n, AnswerState.none),
+      correctIndices: List<int?>.filled(n, null),
     );
+    // Backend attempt AVVAL boshlanadi — savolga javob berishdan oldin
+    // _attemptId tayyor bo'lsin. Aks holda backend savol (correctIndex sir)
+    // mock -1 yo'liga tushib HAR DOIM xato hisoblanardi. "Konkurs shartlari"
+    // sheet allaqachon ko'rsatildi — alohida intro ekran yo'q.
+    await _startBackendAttempt();
+    if (!mounted) return;
+    startPlaying();
   }
 
   Future<List<QuestionModel>> _safeLoadQuestions(
@@ -83,14 +97,12 @@ class QuizNotifier extends StateNotifier<QuizState> {
   }
 
   void startPlaying() {
-    state = state.copyWith(
-      status: QuizStatus.playing,
-      timeRemaining: state.currentQuestion.timeSeconds,
-    );
-    _startQuestionTimer();
+    // `timeRemaining` endi UMUMIY qolgan vaqt (har savol vaqti × savollar
+    // soni). Header'da 12:32 ko'rinishida sanaydi, 0 da yakunlaydi.
+    final budget = _perQuestionSeconds * state.effectiveQuestions.length;
+    state = state.copyWith(status: QuizStatus.playing, timeRemaining: budget);
     _startTotalTimer();
-    // Backend attempt yaratish (idempotent — bola bir konkursda 1 attempt)
-    unawaited(_startBackendAttempt());
+    // Backend attempt _start()da AVVAL boshlangan (idempotent).
     // Boshlangach darhol "contestJoined" XP — Konsept v2 4.2: +30 XP, +5 DON
     unawaited(_awardJoinedXp());
   }
@@ -164,29 +176,17 @@ class QuizNotifier extends StateNotifier<QuizState> {
     }
   }
 
-  void _startQuestionTimer() {
-    _questionTimer?.cancel();
-    _questionTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      if (!mounted) {
-        timer.cancel();
-        return;
-      }
-      if (state.timeRemaining <= 1) {
-        timer.cancel();
-        _onTimeout();
-      } else {
-        state = state.copyWith(timeRemaining: state.timeRemaining - 1);
-      }
-    });
-  }
-
+  // Umumiy quiz timeri — `timeRemaining` (byudjet) 0 ga yetsa yakunlaydi.
   void _startTotalTimer() {
     _totalTimer?.cancel();
     _totalTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (!mounted) return;
+      final remaining = state.timeRemaining - 1;
       state = state.copyWith(
         totalElapsed: state.totalElapsed + const Duration(seconds: 1),
+        timeRemaining: remaining < 0 ? 0 : remaining,
       );
+      if (remaining <= 0) _finish();
     });
   }
 
@@ -194,37 +194,45 @@ class QuizNotifier extends StateNotifier<QuizState> {
     if (state.answerState != AnswerState.none) return;
     if (state.status != QuizStatus.playing) return;
 
-    _questionTimer?.cancel();
-
-    // Sprint 5.7e: Backend mode — correctIndex backend tomonida sir.
-    // _attemptId mavjud va correctIndex < 0 bo'lsa per-question validation
-    // chaqiramiz va backend javobiga qarab feedback ko'rsatamiz.
-    final qid = state.currentQuestion.id;
-    final qLooksLikeUuid = qid.length >= 32;
-    if (_attemptId != null &&
-        qLooksLikeUuid &&
-        state.currentQuestion.correctIndex < 0) {
+    final q = state.currentQuestion;
+    // Backend savol = UUID id (>=32) + correctIndex sir (-1). Bunday savol
+    // HAR DOIM backend orqali tekshiriladi (attempt hali tayyor bo'lmasa
+    // _selectAnswerBackend uni kutadi). Avval "_attemptId != null" sharti bor
+    // edi — attempt tayyor bo'lmaguncha mock -1 yo'liga tushib HAMMA javob
+    // xato hisoblanardi.
+    final isBackendQuestion = q.id.length >= 32 && q.correctIndex < 0;
+    if (isBackendQuestion) {
       unawaited(_selectAnswerBackend(index));
       return;
     }
 
-    // Mock mode — lokal correctIndex bilan tekshirish (eski xulq).
+    // Mock savol — lokal correctIndex bilan tekshiriladi.
     _applyAnswer(
       selectedIndex: index,
-      isCorrect: index == state.currentQuestion.correctIndex,
-      bonus: state.currentQuestion.bonus,
+      isCorrect: index == q.correctIndex,
+      bonus: q.bonus,
+      correctIndex: q.correctIndex,
     );
   }
 
   Future<void> _selectAnswerBackend(int index) async {
-    final attemptId = _attemptId;
-    if (attemptId == null) return;
+    // Attempt hali tayyor emas — kutamiz (auto-start race'ini yopadi).
+    if (_attemptId == null) await _startBackendAttempt();
+    if (!mounted) return;
 
     // Optimistic "selected" feedback (neutral) — feedback rangi backend
     // javobidan keyin keladi.
     final answers = [...state.answers];
     answers[state.currentIndex] = index;
     state = state.copyWith(selectedAnswer: index, answers: answers);
+
+    final attemptId = _attemptId;
+    if (attemptId == null) {
+      // Attempt boshlanmadi (offline/xato) — final submit'ga qoldiramiz.
+      // Javob berilgan deb belgilaymiz (natija noaniq).
+      _applyAnswer(selectedIndex: index, isCorrect: false, bonus: 0);
+      return;
+    }
 
     final repo = _ref.read(contestsBackendRepositoryProvider);
     final feedback = await repo.submitSingleAnswer(
@@ -253,6 +261,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
       selectedIndex: index,
       isCorrect: feedback.isCorrect,
       bonus: feedback.points,
+      // Backend ochgan to'g'ri variant (>=0 bo'lsa) — noto'g'ri belgilanganda
+      // yashil ko'rsatiladi.
+      correctIndex: feedback.correctIndex >= 0 ? feedback.correctIndex : null,
       // Backend canonical scoreSoFar ham ishlatamiz (totalScore'ni
       // increment qilish o'rniga to'g'ridan-to'g'ri o'rnatamiz).
       overrideTotalScore: feedback.scoreSoFar,
@@ -265,14 +276,27 @@ class QuizNotifier extends StateNotifier<QuizState> {
   }
 
   /// Common feedback applier — mock va backend ikkalasi shu yerga keladi.
+  /// `correctIndex` — ochilgan to'g'ri variant (noto'g'ri belgilanganda uni
+  /// yashil ko'rsatish uchun); noma'lum bo'lsa null.
   void _applyAnswer({
     required int selectedIndex,
     required bool isCorrect,
     required int bonus,
+    int? correctIndex,
     int? overrideTotalScore,
   }) {
     final answers = [...state.answers];
     answers[state.currentIndex] = selectedIndex;
+    final results = [...state.results];
+    results[state.currentIndex] = isCorrect
+        ? AnswerState.correct
+        : AnswerState.wrong;
+    final correctIndices = [...state.correctIndices];
+    // To'g'ri belgilangan bo'lsa to'g'ri = tanlangan; aks holda backend/mock
+    // bergan indeks (null bo'lsa ochilmaydi).
+    correctIndices[state.currentIndex] = isCorrect
+        ? selectedIndex
+        : correctIndex;
 
     if (isCorrect) {
       final newStreak = state.currentStreak + 1;
@@ -284,6 +308,8 @@ class QuizNotifier extends StateNotifier<QuizState> {
         currentStreak: newStreak,
         maxStreak: newStreak > state.maxStreak ? newStreak : state.maxStreak,
         answers: answers,
+        results: results,
+        correctIndices: correctIndices,
       );
     } else {
       state = state.copyWith(
@@ -293,51 +319,46 @@ class QuizNotifier extends StateNotifier<QuizState> {
         wrongCount: state.wrongCount + 1,
         currentStreak: 0,
         answers: answers,
+        results: results,
+        correctIndices: correctIndices,
       );
     }
-
-    // Har javobda fresh timer — avval `??=` ishlatilgani uchun 1-savoldan
-    // keyin `_feedbackTimer` non-null qolib, quiz 2-savolда qotardi.
-    _feedbackTimer?.cancel();
-    _feedbackTimer = Timer(const Duration(milliseconds: 1500), _nextQuestion);
+    // Auto-advance YO'Q — foydalanuvchi "Keyingi" tugmasi bilan o'tadi.
   }
 
-  void _onTimeout() {
-    final answers = [...state.answers];
-    answers[state.currentIndex] = null;
-
-    state = state.copyWith(
-      answerState: AnswerState.timeout,
-      wrongCount: state.wrongCount + 1,
-      currentStreak: 0,
-      answers: answers,
-    );
-
-    _feedbackTimer?.cancel();
-    _feedbackTimer = Timer(const Duration(milliseconds: 1500), _nextQuestion);
-  }
-
-  void _nextQuestion() {
+  /// Keyingi savol — oxirgisida yakunlaydi. Javob berilgan savolga qaytilsa
+  /// (Oldingi) o'sha holat (to'g'ri/noto'g'ri) tiklanadi (faqat o'qish).
+  void goNext() {
     if (!mounted) return;
-    if (state.isLastQuestion) {
+    if (state.currentIndex >= state.effectiveQuestions.length - 1) {
       _finish();
       return;
     }
+    _goTo(state.currentIndex + 1);
+  }
 
-    final nextIndex = state.currentIndex + 1;
+  /// Oldingi savol (ko'rib chiqish).
+  void goPrevious() {
+    if (!mounted || state.currentIndex <= 0) return;
+    _goTo(state.currentIndex - 1);
+  }
+
+  void _goTo(int index) {
+    final sel = index < state.answers.length ? state.answers[index] : null;
+    final res = index < state.results.length
+        ? state.results[index]
+        : AnswerState.none;
     state = state.copyWith(
-      currentIndex: nextIndex,
-      clearSelected: true,
-      answerState: AnswerState.none,
-      timeRemaining: state.effectiveQuestions[nextIndex].timeSeconds,
+      currentIndex: index,
+      answerState: res,
+      selectedAnswer: sel,
+      clearSelected: sel == null,
     );
-
-    _startQuestionTimer();
   }
 
   void _finish() {
-    _questionTimer?.cancel();
     _totalTimer?.cancel();
+    _feedbackTimer?.cancel();
     state = state.copyWith(status: QuizStatus.finished);
 
     // Backend submit (canonical score)
@@ -346,6 +367,24 @@ class QuizNotifier extends StateNotifier<QuizState> {
     // G'olib bonus XP — UI bilan AYNI chegara (QuizState.winnerThreshold).
     if (state.isWinner) {
       unawaited(_awardWinnerXp());
+    }
+
+    // Shaxsiy rekord (lokal) — "Natija" kartasidagi "Rekord".
+    unawaited(_persistRecord());
+  }
+
+  /// Bu test bo'yicha eng ko'p to'g'ri javob (lokal) — yangilaydi + state'ga.
+  Future<void> _persistRecord() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'test_record_${contest.id}';
+      final prev = prefs.getInt(key) ?? 0;
+      final best = state.correctCount > prev ? state.correctCount : prev;
+      if (best != prev) await prefs.setInt(key, best);
+      if (!mounted) return;
+      state = state.copyWith(recordCorrect: best);
+    } catch (_) {
+      // Xato — rekord ko'rsatilmaydi (correctCount fallback).
     }
   }
 
@@ -377,26 +416,22 @@ class QuizNotifier extends StateNotifier<QuizState> {
   }
 
   void pause() {
-    _questionTimer?.cancel();
     _totalTimer?.cancel();
     state = state.copyWith(status: QuizStatus.paused);
   }
 
   void resume() {
     state = state.copyWith(status: QuizStatus.playing);
-    _startQuestionTimer();
     _startTotalTimer();
   }
 
   void quit() {
-    _questionTimer?.cancel();
     _totalTimer?.cancel();
     _feedbackTimer?.cancel();
   }
 
   @override
   void dispose() {
-    _questionTimer?.cancel();
     _totalTimer?.cancel();
     _feedbackTimer?.cancel();
     super.dispose();

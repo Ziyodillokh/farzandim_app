@@ -372,6 +372,13 @@
     "addressLoading": "Aniqlanmoqda…",
     "placeNameLabel": "Manzil nomi",
     "chooseIconLabel": "Belgi tanlang",
+    "addressTapHint": "Manzil qidirish uchun bosing",
+    "search": {
+      "title": "Manzil qidirish",
+      "hint": "Masjid, maktab, ko'cha nomi...",
+      "prompt": "Joy nomini yozing — eng yaqinlaridan boshlab chiqadi",
+      "noResults": "Hech narsa topilmadi"
+    },
     "cancelButton": "Bekor qilish",
     "mapHint": "Xaritada bosib markazni belgilang yoki markerni torting",
     "nameLabel": "Nom",

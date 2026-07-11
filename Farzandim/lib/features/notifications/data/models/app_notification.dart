@@ -326,6 +326,8 @@ class AppNotification {
         return NotificationType.lowBattery;
       case 'connection_lost':
         return NotificationType.offline;
+      case 'connection_restored':
+        return NotificationType.online;
       case 'unlock_request':
         return NotificationType.unlockRequest;
       case 'permission_changed':

@@ -1,3 +1,7 @@
+# API kalitlar (Mapbox runtime pk + Yandex) — HECH QACHON commit qilinmaydi
+env.json
+*.env
+
 # Miscellaneous
 *.class
 *.hprof

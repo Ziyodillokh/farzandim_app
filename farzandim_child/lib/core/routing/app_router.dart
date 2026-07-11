@@ -47,9 +47,9 @@ import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobo
 import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
-import 'package:farzandim_child/features/contests/presentation/screens/contest_start_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contests_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
+import 'package:farzandim_child/features/contests/presentation/screens/liked_questions_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
 import 'package:farzandim_child/features/schedules/presentation/screens/schedules_screen.dart';
 import 'package:farzandim_child/features/dashboard/presentation/screens/child_dashboard_screen.dart';
@@ -227,9 +227,9 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/audiobook-detail',
           '/audio-player',
           '/contests',
-          '/contest-start',
           '/contest-quiz',
           '/liked-tests',
+          '/liked-questions',
           '/ranking',
         };
         if (contentPaths.contains(loc)) {
@@ -382,19 +382,17 @@ final routerProvider = Provider<GoRouter>((ref) {
         pageBuilder: (context, state) =>
             _slidePage(state, const LikedTestsScreen()),
       ),
+      GoRoute(
+        path: '/liked-questions',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const LikedQuestionsScreen()),
+      ),
       // #56 — Sertifikat (g'olib uchun)
       GoRoute(
         path: '/certificate',
         builder: (context, state) {
           final data = state.extra as CertificateData;
           return CertificateScreen(data: data);
-        },
-      ),
-      GoRoute(
-        path: '/contest-start',
-        builder: (context, state) {
-          final contest = state.extra as ContestModel;
-          return ContestStartScreen(contest: contest);
         },
       ),
       GoRoute(

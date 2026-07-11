@@ -196,10 +196,30 @@ export class ConsumerOlympiadsService {
       },
     });
     if (existing) {
-      // Tugagan urinishni qayta "resume" qilib bo'lmaydi (answerQuestion 409
-      // berib UX'ni buzardi). Faqat davom etayotgan urinish qaytariladi.
+      // Testlar QAYTA yechilishi mumkin (praktika): tugagan urinishni
+      // xato bilan bloklamaymiz (avval 409 berib "hammasi xato" ko'rinardi —
+      // bola qayta yechganda attemptId olmasdi). Tugagan urinishni TOZALAB
+      // (score/answers reset) qaytadan boshlaymiz. Davom etayotgani resume.
       if (existing.status === 'finished') {
-        throw new ConflictException('Bu konkursni allaqachon yakunlagansiz');
+        const reset = await this.prisma.olympiadAttempt.update({
+          where: { id: existing.id },
+          data: {
+            status: 'in_progress',
+            score: 0,
+            correctAnswers: 0,
+            timeSec: 0,
+            answers: [],
+            finishedAt: null,
+            startedAt: new Date(),
+          },
+        });
+        return {
+          attemptId: reset.id,
+          startedAt: reset.startedAt.toISOString(),
+          status: reset.status,
+          score: 0,
+          resumed: false,
+        };
       }
       return {
         attemptId: existing.id,

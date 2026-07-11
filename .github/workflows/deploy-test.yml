@@ -256,11 +256,15 @@ jobs:
         working-directory: Farzandim
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          # Web'da xarita flutter_map (Mapbox emas), lekin Yandex qidiruv/geocoding
+          # web'da ham ishlaydi — kalitni uzatamiz.
+          YANDEX_MAPS_KEY: ${{ secrets.YANDEX_MAPS_KEY }}
         run: |
           flutter pub get
           flutter build web --release --base-href /app/ \
             --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+            --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
+            --dart-define=YANDEX_MAPS_KEY=${YANDEX_MAPS_KEY}
           # Google Maps JS kalitini build chiqishiga inject (web'da xarita uchun).
           sed -i "s|__MAPS_API_KEY__|${MAPS_API_KEY}|g" build/web/index.html
 
@@ -383,13 +387,24 @@ jobs:
           # AndroidManifest'dagi ${MAPS_API_KEY} placeholder'iga yozadi. Busiz xarita
           # plitkalari chiqmaydi (bo'sh kalit → bo'm-bo'sh kulrang xarita).
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          # Mapbox: sk (native SDK yuklash — gradle.properties) + pk (runtime,
+          # dart-define) + Yandex kalit (qidiruv/ko'cha, dart-define).
+          MAPBOX_DOWNLOADS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          YANDEX_MAPS_KEY: ${{ secrets.YANDEX_MAPS_KEY }}
         run: |
+          # Mapbox maven auth uchun downloads token'ni gradle.properties'ga yozamiz.
+          mkdir -p ~/.gradle
+          grep -q MAPBOX_DOWNLOADS_TOKEN ~/.gradle/gradle.properties 2>/dev/null || \
+            echo "MAPBOX_DOWNLOADS_TOKEN=${MAPBOX_DOWNLOADS_TOKEN}" >> ~/.gradle/gradle.properties
           flutter pub get
           build() {
             flutter build apk --release --no-shrink \
               --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
               --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
+              --dart-define=MAPBOX_PUBLIC_TOKEN=${MAPBOX_PUBLIC_TOKEN} \
+              --dart-define=YANDEX_MAPS_KEY=${YANDEX_MAPS_KEY}
           }
           # Maven Central vaqtinchalik 403 (rate-limit) berishi mumkin —
           # 60s kutib bir marta qayta urinamiz.
