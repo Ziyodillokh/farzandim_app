@@ -21,12 +21,13 @@ VideoModel videoFromApiJson(Map<String, dynamic> raw) {
   final category = (raw['category'] as String?)?.trim();
   final videoUrl = EnvConfig.resolveMediaUrl((raw['url'] as String?) ?? '');
   final rawThumb = ((raw['thumbnail'] as String?) ?? '').trim();
-  // Thumbnail: backend bergan → bo'lmasa YouTube link'dan AVTOMATIK hqdefault.
-  // (Backend ham shu fallback'ni beradi; bola tomoni deploy'siz ham ishlashi
-  // uchun bu yerda ham bor — link orqali videoda rasm ko'rinadi.)
-  final thumbnailUrl = rawThumb.isNotEmpty
-      ? EnvConfig.resolveMediaUrl(rawThumb)
-      : (VideoModel.youtubeThumbnailFrom(videoUrl) ?? '');
+  // Thumbnail: YouTube video bo'lsa DOIM fresh hqdefault (backend eski/buzuq
+  // thumbnail bergan bo'lsa ham banner ishonchli chiqadi); aks holda backend
+  // bergan (MinIO proxy yoki tashqi muqova). Backend deploy'siz ham ishlaydi.
+  final ytThumb = VideoModel.youtubeThumbnailFrom(videoUrl);
+  final thumbnailUrl =
+      ytThumb ??
+      (rawThumb.isNotEmpty ? EnvConfig.resolveMediaUrl(rawThumb) : '');
   return VideoModel(
     id: id,
     title: (raw['title'] as String?) ?? '—',

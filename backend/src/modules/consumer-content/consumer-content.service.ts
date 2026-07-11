@@ -172,13 +172,15 @@ export class ConsumerContentService {
       title: v.title,
       description: v.description,
       url: mediaProxyUrl(origin, 'video', v.storageKey) ?? v.url,
-      // Thumbnail: yuklangan (MinIO) → admin bergan URL → YouTube link'dan
-      // AVTOMATIK hqdefault. Link orqali (YouTube) videoda banner bo'lmasa
-      // ham bola feed'ida rasm ko'rinadi.
+      // Thumbnail prioriteti: yuklangan MinIO thumb → YouTube link'dan FRESH
+      // hqdefault → tashqi (non-YouTube) muqova. YouTube uchun hqdefault
+      // saqlangan v.thumbnail'DAN OLDIN keladi — eski videolarda buzuq/eskirgan
+      // v.thumbnail bo'lsa ham banner ishonchli chiqadi (YouTube muqovasi doim
+      // yangi va mavjud).
       thumbnail:
         mediaProxyUrl(origin, 'thumb', v.thumbStorageKey) ??
-        v.thumbnail ??
-        youtubeThumbnail(v.url),
+        youtubeThumbnail(v.url) ??
+        v.thumbnail,
       durationSec: v.durationSec,
       ageFrom: v.ageFrom,
       ageTo: v.ageTo,
