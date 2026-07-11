@@ -72,6 +72,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       questions: questions,
       answers: List<int?>.filled(n, null),
       results: List<AnswerState>.filled(n, AnswerState.none),
+      correctIndices: List<int?>.filled(n, null),
     );
     // "Konkurs shartlari" sheet allaqachon ko'rsatildi — alohida intro ekran
     // yo'q, to'g'ridan-to'g'ri boshlaymiz.
@@ -206,6 +207,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       selectedIndex: index,
       isCorrect: index == state.currentQuestion.correctIndex,
       bonus: state.currentQuestion.bonus,
+      correctIndex: state.currentQuestion.correctIndex,
     );
   }
 
@@ -246,6 +248,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
       selectedIndex: index,
       isCorrect: feedback.isCorrect,
       bonus: feedback.points,
+      // Backend ochgan to'g'ri variant (>=0 bo'lsa) — noto'g'ri belgilanganda
+      // yashil ko'rsatiladi.
+      correctIndex: feedback.correctIndex >= 0 ? feedback.correctIndex : null,
       // Backend canonical scoreSoFar ham ishlatamiz (totalScore'ni
       // increment qilish o'rniga to'g'ridan-to'g'ri o'rnatamiz).
       overrideTotalScore: feedback.scoreSoFar,
@@ -258,10 +263,13 @@ class QuizNotifier extends StateNotifier<QuizState> {
   }
 
   /// Common feedback applier — mock va backend ikkalasi shu yerga keladi.
+  /// `correctIndex` — ochilgan to'g'ri variant (noto'g'ri belgilanganda uni
+  /// yashil ko'rsatish uchun); noma'lum bo'lsa null.
   void _applyAnswer({
     required int selectedIndex,
     required bool isCorrect,
     required int bonus,
+    int? correctIndex,
     int? overrideTotalScore,
   }) {
     final answers = [...state.answers];
@@ -270,6 +278,12 @@ class QuizNotifier extends StateNotifier<QuizState> {
     results[state.currentIndex] = isCorrect
         ? AnswerState.correct
         : AnswerState.wrong;
+    final correctIndices = [...state.correctIndices];
+    // To'g'ri belgilangan bo'lsa to'g'ri = tanlangan; aks holda backend/mock
+    // bergan indeks (null bo'lsa ochilmaydi).
+    correctIndices[state.currentIndex] = isCorrect
+        ? selectedIndex
+        : correctIndex;
 
     if (isCorrect) {
       final newStreak = state.currentStreak + 1;
@@ -282,6 +296,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
         maxStreak: newStreak > state.maxStreak ? newStreak : state.maxStreak,
         answers: answers,
         results: results,
+        correctIndices: correctIndices,
       );
     } else {
       state = state.copyWith(
@@ -292,6 +307,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
         currentStreak: 0,
         answers: answers,
         results: results,
+        correctIndices: correctIndices,
       );
     }
     // Auto-advance YO'Q — foydalanuvchi "Keyingi" tugmasi bilan o'tadi.

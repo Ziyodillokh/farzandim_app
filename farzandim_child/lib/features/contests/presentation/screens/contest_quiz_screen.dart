@@ -23,7 +23,7 @@ import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/data/sound_service.dart';
 import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
-import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
+import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
 import 'package:flutter/material.dart';
@@ -196,10 +196,14 @@ class _QuestionScreen extends ConsumerWidget {
     final q = state.currentQuestion;
     final total = state.effectiveQuestions.length;
     final answered = state.answerState != AnswerState.none;
-    final isFav = ref.watch(favoriteContestIdsProvider).contains(contest.id);
+    final isFav = ref.watch(favoriteQuestionsProvider).any((f) => f.id == q.id);
     final bottomInset = MediaQuery.paddingOf(context).bottom;
     final notifier = ref.read(quizProvider(contest).notifier);
     final low = state.timeRemaining <= 30;
+    // Ochilgan to'g'ri javob indeksi (noto'g'ri belgilanganda yashil ko'rsatish).
+    final revealed = state.currentIndex < state.correctIndices.length
+        ? state.correctIndices[state.currentIndex]
+        : null;
 
     return PopScope(
       canPop: false,
@@ -310,12 +314,25 @@ class _QuestionScreen extends ConsumerWidget {
                 padding: const EdgeInsets.only(bottom: 8),
                 itemCount: q.options.length,
                 separatorBuilder: (_, __) => const SizedBox(height: 12),
-                itemBuilder: (_, i) => _QuizOption(
-                  text: q.options[i],
-                  selected: state.selectedAnswer == i,
-                  answerState: state.answerState,
-                  onTap: answered ? null : () => notifier.selectAnswer(i),
-                ),
+                itemBuilder: (_, i) {
+                  final isSelected = state.selectedAnswer == i;
+                  // To'g'ri variant yashil: backend/mock ochgan indeks, yoki
+                  // reveal yo'q bo'lsa foydalanuvchi to'g'ri belgilagani.
+                  final showCorrect =
+                      answered &&
+                      ((revealed != null && i == revealed) ||
+                          (revealed == null &&
+                              isSelected &&
+                              state.answerState == AnswerState.correct));
+                  // Foydalanuvchining NOTO'G'RI tanlovi qizil.
+                  final showWrong = answered && isSelected && !showCorrect;
+                  return _QuizOption(
+                    text: q.options[i],
+                    showCorrect: showCorrect,
+                    showWrong: showWrong,
+                    onTap: answered ? null : () => notifier.selectAnswer(i),
+                  );
+                },
               ),
             ),
             // Oldingi · ♡ · Keyingi
@@ -337,8 +354,8 @@ class _QuestionScreen extends ConsumerWidget {
                     active: isFav,
                     onTap: () async {
                       await ref
-                          .read(favoriteContestIdsProvider.notifier)
-                          .toggle(contest.id);
+                          .read(favoriteQuestionsProvider.notifier)
+                          .toggle(q.id, q.text);
                       await HapticFeedback.selectionClick();
                     },
                   ),
@@ -408,6 +425,44 @@ class _QuestionScreen extends ConsumerWidget {
                 const _MenuRow(
                   icon: Icons.access_time_rounded,
                   text: 'Umumiy vaqt tugasa test avtomatik yakunlanadi',
+                ),
+                const SizedBox(height: 6),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.pop(ctx);
+                    context.push('/liked-questions');
+                  },
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 52,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    decoration: BoxDecoration(
+                      color: tGlass,
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(color: tGlassBorder),
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(
+                          Icons.favorite_rounded,
+                          size: 20,
+                          color: _red,
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Tanlangan savollar',
+                            style: tPop(15, w: FontWeight.w600),
+                          ),
+                        ),
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 22,
+                          color: Colors.white.withValues(alpha: 0.6),
+                        ),
+                      ],
+                    ),
+                  ),
                 ),
                 const SizedBox(height: 18),
                 GestureDetector(
@@ -560,14 +615,18 @@ class _ProgressDots extends StatelessWidget {
 class _QuizOption extends StatelessWidget {
   const _QuizOption({
     required this.text,
-    required this.selected,
-    required this.answerState,
+    required this.showCorrect,
+    required this.showWrong,
     required this.onTap,
   });
 
   final String text;
-  final bool selected;
-  final AnswerState answerState;
+
+  /// To'g'ri javob — yashil + ✓ (belgilangan yoki ochilgan to'g'ri variant).
+  final bool showCorrect;
+
+  /// Foydalanuvchining noto'g'ri tanlovi — qizil + ✗.
+  final bool showWrong;
   final VoidCallback? onTap;
 
   @override
@@ -575,36 +634,53 @@ class _QuizOption extends StatelessWidget {
     var bg = tGlass;
     var border = tGlassBorder;
     var txt = Colors.white;
+    IconData? mark;
 
-    if (answerState != AnswerState.none && selected) {
-      final ok = answerState == AnswerState.correct;
-      final c = ok ? _green : _red;
-      bg = c.withValues(alpha: 0.16);
-      border = c;
-      txt = c;
+    if (showCorrect) {
+      bg = _green.withValues(alpha: 0.16);
+      border = _green;
+      txt = _green;
+      mark = Icons.check_rounded;
+    } else if (showWrong) {
+      bg = _red.withValues(alpha: 0.16);
+      border = _red;
+      txt = _red;
+      mark = Icons.close_rounded;
     }
 
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
-        duration: const Duration(milliseconds: 200),
+        duration: const Duration(milliseconds: 220),
         height: 58,
-        alignment: Alignment.center,
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: border, width: selected ? 1.6 : 1),
+          border: Border.all(color: border, width: mark != null ? 1.6 : 1),
         ),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          child: Text(
-            text,
-            maxLines: 2,
-            overflow: TextOverflow.ellipsis,
-            textAlign: TextAlign.center,
-            style: tPop(15.5, w: FontWeight.w600, c: txt),
-          ),
+        child: Stack(
+          children: [
+            Center(
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 44),
+                child: Text(
+                  text,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: tPop(15.5, w: FontWeight.w600, c: txt),
+                ),
+              ),
+            ),
+            if (mark != null)
+              Positioned(
+                right: 16,
+                top: 0,
+                bottom: 0,
+                child: Center(child: Icon(mark, size: 22, color: txt)),
+              ),
+          ],
         ),
       ),
     );

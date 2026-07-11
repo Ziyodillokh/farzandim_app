@@ -36,6 +36,11 @@ class QuizState {
   /// correct=to'g'ri, wrong/timeout=noto'g'ri. `answers` bilan bir o'lchamda.
   final List<AnswerState> results;
 
+  /// Ochilgan to'g'ri javob indeksi (javob berilgach backend/mock beradi) —
+  /// noto'g'ri belgilanganda TO'G'RI variantni yashil ko'rsatish uchun.
+  /// null = hali ochilmagan / noma'lum (tarmoq xatosi).
+  final List<int?> correctIndices;
+
   final List<QuestionModel> questions;
 
   /// Backend attempt ID (sertifikat endpoint'iga kerak — #56). Real attempt
@@ -56,6 +61,7 @@ class QuizState {
     this.totalElapsed = Duration.zero,
     this.answers = const [],
     this.results = const [],
+    this.correctIndices = const [],
     this.questions = const [],
     this.attemptId,
   });
@@ -90,6 +96,7 @@ class QuizState {
     Duration? totalElapsed,
     List<int?>? answers,
     List<AnswerState>? results,
+    List<int?>? correctIndices,
     List<QuestionModel>? questions,
     String? attemptId,
   }) {
@@ -109,6 +116,7 @@ class QuizState {
       totalElapsed: totalElapsed ?? this.totalElapsed,
       answers: answers ?? this.answers,
       results: results ?? this.results,
+      correctIndices: correctIndices ?? this.correctIndices,
       questions: questions ?? this.questions,
       attemptId: attemptId ?? this.attemptId,
     );
