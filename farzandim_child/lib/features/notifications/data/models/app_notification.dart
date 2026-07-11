@@ -17,15 +17,15 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 
 enum NotificationType {
-  achievement,    // Yutuq unlock
-  contest,        // Konkurs natija / boshlash
-  schedule,       // Jadval eslatma
-  parentRequest,  // Photo/video so'rov
-  voice,          // Yangi voice xabar
-  geoZone,        // Geo-zone kirish/chiqish
-  system,         // Yangi feature, app update
-  studyNudge,     // Dars/test eslatmasi (📚)
-  healthNudge,    // Harakat/sport eslatmasi (🏃)
+  achievement, // Yutuq unlock
+  contest, // Konkurs natija / boshlash
+  schedule, // Jadval eslatma
+  parentRequest, // Photo/video so'rov
+  voice, // Yangi voice xabar
+  geoZone, // Geo-zone kirish/chiqish
+  system, // Yangi feature, app update
+  studyNudge, // Dars/test eslatmasi (📚)
+  healthNudge, // Harakat/sport eslatmasi (🏃)
   contentReminder, // Yangi kontent eslatmasi (🎬)
 }
 
@@ -203,13 +203,13 @@ class AppNotification {
   }
 
   Map<String, dynamic> toFirestore() => {
-        'type': type.firestoreCode,
-        'title': title,
-        'body': body,
-        'createdAt': FieldValue.serverTimestamp(),
-        'isRead': isRead,
-        if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
-        if (relatedRoute != null) 'relatedRoute': relatedRoute,
-        if (relatedId != null) 'relatedId': relatedId,
-      };
+    'type': type.firestoreCode,
+    'title': title,
+    'body': body,
+    'createdAt': FieldValue.serverTimestamp(),
+    'isRead': isRead,
+    if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
+    if (relatedRoute != null) 'relatedRoute': relatedRoute,
+    if (relatedId != null) 'relatedId': relatedId,
+  };
 }

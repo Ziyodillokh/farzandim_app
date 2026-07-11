@@ -13,6 +13,7 @@
 // Real: todayStepsProvider, gamificationProfile (don/streak), allUsers
 // (reyting), dailyUsage (ekran vaqti + top ilovalar). Bo'sh bo'lsa PREVIEW.
 
+import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'dart:convert';
 
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
@@ -25,6 +26,7 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -121,6 +123,35 @@ class StatisticsScreen extends ConsumerWidget {
 
 // ════════════ Header ════════════
 
+// Dashboard header'idagi bilan BIR XIL ikonlar (Chat Round Line / Bell Bing).
+const _chatRoundLineSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">'
+    '<path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" '
+    'd="M10 20C15.5228 20 20 15.5228 20 10C20 4.47715 15.5228 0 10 0C4.47715 0 0 '
+    '4.47715 0 10C0 11.5997 0.37562 13.1116 1.04346 14.4525C1.22094 14.8088 '
+    '1.28001 15.2161 1.17712 15.6006L0.58151 17.8267C0.32295 18.793 1.20701 '
+    '19.677 2.17335 19.4185L4.39939 18.8229C4.78393 18.72 5.19121 18.7791 '
+    '5.54753 18.9565C6.88837 19.6244 8.4003 20 10 20ZM6 11.25C5.58579 11.25 5.25 '
+    '11.5858 5.25 12C5.25 12.4142 5.58579 12.75 6 12.75H11.5C11.9142 12.75 12.25 '
+    '12.4142 12.25 12C12.25 11.5858 11.9142 11.25 11.5 11.25H6ZM5.25 8.5C5.25 '
+    '8.0858 5.58579 7.75 6 7.75H14C14.4142 7.75 14.75 8.0858 14.75 8.5C14.75 '
+    '8.9142 14.4142 9.25 14 9.25H6C5.58579 9.25 5.25 8.9142 5.25 8.5Z"/></svg>';
+
+const _bellBingSvg =
+    '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 18 20">'
+    '<path fill="#FFFFFF" d="M5.35179 18.2418C6.19288 19.311 7.51418 20 9 '
+    '20C10.4858 20 11.8071 19.311 12.6482 18.2418C10.2264 18.57 7.77357 18.57 '
+    '5.35179 18.2418Z"/>'
+    '<path fill-rule="evenodd" clip-rule="evenodd" fill="#FFFFFF" '
+    'd="M15.7491 7.7041V7C15.7491 3.13401 12.7274 0 9 0C5.27256 0 2.25087 '
+    '3.13401 2.25087 7V7.7041C2.25087 8.54909 2.00972 9.37517 1.5578 '
+    '10.0782L0.450359 11.8012C-0.561176 13.3749 0.211046 15.5139 1.97036 '
+    '16.0116C6.57274 17.3134 11.4273 17.3134 16.0296 16.0116C17.789 15.5139 '
+    '18.5612 13.3749 17.5496 11.8012L16.4422 10.0782C15.9903 9.37517 15.7491 '
+    '8.54909 15.7491 7.7041ZM9 3.25C9.41421 3.25 9.75 3.58579 9.75 4V8C9.75 '
+    '8.41421 9.41421 8.75 9 8.75C8.58579 8.75 8.25 8.41421 8.25 8V4C8.25 3.58579 '
+    '8.58579 3.25 9 3.25Z"/></svg>';
+
 class _Header extends ConsumerWidget {
   const _Header();
 
@@ -141,29 +172,30 @@ class _Header extends ConsumerWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: Text('Statistika', style: _unb(24))),
-        _RoundIconButton(
-          icon: Icons.chat_bubble_rounded,
+        _SvgIconButton(
+          svg: _chatRoundLineSvg,
           onTap: () => context.push('/voice-chat'),
         ),
         const SizedBox(width: 10),
-        _RoundIconButton(
-          icon: Icons.notifications_rounded,
+        _SvgIconButton(
+          svg: _bellBingSvg,
           showDot: unread > 0,
-          onTap: () => context.push('/notifications'),
+          onTap: () => showNotificationsSheet(context),
         ),
       ],
     );
   }
 }
 
-class _RoundIconButton extends StatelessWidget {
-  const _RoundIconButton({
-    required this.icon,
+/// Dashboard'dagi `_SquareIconButton` bilan bir xil SVG tugma.
+class _SvgIconButton extends StatelessWidget {
+  const _SvgIconButton({
+    required this.svg,
     required this.onTap,
     this.showDot = false,
   });
 
-  final IconData icon;
+  final String svg;
   final VoidCallback onTap;
   final bool showDot;
 
@@ -173,31 +205,61 @@ class _RoundIconButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Stack(
+        clipBehavior: Clip.none,
         children: [
           Container(
             width: 44,
             height: 44,
-            decoration: const BoxDecoration(
-              color: Color(0x1AFFFFFF),
-              shape: BoxShape.circle,
+            decoration: BoxDecoration(
+              color: _glass,
+              borderRadius: BorderRadius.circular(16),
             ),
-            child: Icon(icon, size: 20, color: Colors.white),
+            alignment: Alignment.center,
+            child: SizedBox(
+              width: 22,
+              height: 22,
+              child: SvgPicture.string(svg, fit: BoxFit.contain),
+            ),
           ),
           if (showDot)
             Positioned(
-              right: 3,
-              top: 3,
+              right: 10,
+              top: 8,
               child: Container(
-                width: 10,
-                height: 10,
+                width: 9,
+                height: 9,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFF4D4F),
+                  color: const Color(0xFFFF1616),
                   shape: BoxShape.circle,
-                  border: Border.all(color: _bg, width: 2),
+                  border: Border.all(color: _bg, width: 1.5),
                 ),
               ),
             ),
         ],
+      ),
+    );
+  }
+}
+
+class _RoundIconButton extends StatelessWidget {
+  const _RoundIconButton({required this.icon, required this.onTap});
+
+  final IconData icon;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 44,
+        height: 44,
+        decoration: const BoxDecoration(
+          color: Color(0x1AFFFFFF),
+          shape: BoxShape.circle,
+        ),
+        child: Icon(icon, size: 20, color: Colors.white),
       ),
     );
   }

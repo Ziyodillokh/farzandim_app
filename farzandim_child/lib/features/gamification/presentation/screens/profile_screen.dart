@@ -1,54 +1,237 @@
 // ─────────────────────────────────────────────────────────────────────
-// ProfileScreen — Parvoz "Profil" (aqua night, boshqa sahifalar bilan kogerent)
+// ProfileScreen — "Profil" (Figma 1:1, Parvoz night)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Hero (avatar + aqua ring + Daraja badge + ism/status) → 3 stat
-// (Daraja / Umumiy XP / Kunlik Seriya) → Keyingi Darajaga progress →
-// Yutuqlar grid'i. Night asosiy; light — sodda. Ma'lumotlar:
-// gamificationProfileProvider (xp/streak/level/status/yutuqlar) — LOGIKA SAQLANGAN.
+// Tuzilishi (Figma):
+//   • Header: ← kvadrat tugma + markazda katta avatar + ⚙ sozlamalar;
+//     orqa fonda xira skuter naqshlari (reyting sahifasidagi kabi)
+//   • Ism (Unbounded) + "Qurilma • 🔋 N%" qatori
+//   • 3 stat chip: 🔥 N kun / 👟 qadamlar / 💎 DON (ko'k DON pill bilan)
+//   • "Yutuqlar" paneli: sarlavha + "NN/100", 3 ustunli grid —
+//     olti burchakli medal (ochilgan) yoki rangli qulf (yopiq)
+//
+// Real: gamificationProfileProvider (don/streak/yutuqlar), todayStepsProvider,
+// pairing (ism), childAvatarUrlProvider. Bo'sh bo'lsa PREVIEW (Figma raqamlari).
+// LOGIKA SAQLANGAN: yangi yutuq unlock bo'lsa confetti + toast.
 
+import 'dart:ui' show ImageFilter;
+
+import 'package:battery_plus/battery_plus.dart';
 import 'package:confetti/confetti.dart';
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
+import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/gamification/data/models/achievement.dart';
-import 'package:farzandim_child/features/gamification/data/models/gamification_profile.dart';
-import 'package:farzandim_child/features/gamification/data/models/gamification_status.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:flutter/foundation.dart'
+    show defaultTargetPlatform, kIsWeb, TargetPlatform;
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:solar_icons/solar_icons.dart';
 
-// ─────────────── Palette (Parvoz NIGHT — barcha sahifalar bilan izchil) ───────────────
+// ════════════ Figma tokenlar (yangi Parvoz sahifalari bilan izchil) ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _glass = Color(0x14FFFFFF);
+const _glassBorder = Color(0x24FFFFFF);
+const _dim = Color(0x99FFFFFF);
+const _panel = Color(0xFF10151C);
+const _tile = Color(0xFF0B1017);
 
-class _P {
-  _P();
+const _amber = Color(0xFFF2B233);
+const _stepBlue = Color(0xFF3B82F6);
+const _green = Color(0xFF22C55E);
+const _purple = Color(0xFF8B5CF6);
+const _orange = Color(0xFFF2811D);
+const _red = Color(0xFFE23F32);
 
-  Color get bg => AppColors.parvozBg;
-  Color get card => AppColors.parvozSurface;
-  Color get cardHigh => AppColors.parvozSurfaceHigh;
-  Color get text => AppColors.parvozText;
-  Color get muted => AppColors.parvozTextDim;
-  Color get border => AppColors.parvozBorder;
-  Color get track => AppColors.parvozBg;
+TextStyle _unb(
+  double s, {
+  FontWeight w = FontWeight.w700,
+  Color c = Colors.white,
+  double ls = -0.4,
+}) => GoogleFonts.unbounded(
+  fontSize: s,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.2,
+);
 
-  Color get aqua => AppColors.parvozGreen;
-  Color get onAqua => AppColors.parvozOnGreen;
-  Color get gold => const Color(0xFFFFC83D);
-  Color get fire => const Color(0xFFFF7A45);
-  Color get locked => const Color(0xFF5C6B78);
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
+
+String _fmtNum(int v) {
+  final s = v.toString();
+  final b = StringBuffer();
+  for (var i = 0; i < s.length; i++) {
+    if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
+    b.write(s[i]);
+  }
+  return b.toString();
 }
 
-TextStyle _jak(_P p, {double size = 14, FontWeight weight = FontWeight.w600, Color? color, double? height, double? spacing}) =>
-    GoogleFonts.plusJakartaSans(fontSize: size, fontWeight: weight, color: color ?? p.text, height: height, letterSpacing: spacing);
+/// Qurilma nomi + batareya foizi. Aniqlab bo'lmasa PREVIEW (Figma).
+final _deviceLineProvider = FutureProvider<(String, int)>((ref) async {
+  var model = 'Iphone 16 pro'; // PREVIEW (Figma)
+  var battery = 98; // PREVIEW (Figma)
+  try {
+    if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
+      final a = await DeviceInfoPlugin().androidInfo;
+      model = '${a.brand} ${a.model}';
+    }
+  } catch (_) {}
+  try {
+    battery = await Battery().batteryLevel;
+  } catch (_) {}
+  return (model, battery);
+});
 
-String _fmtXp(int n) => n >= 1000 ? '${(n / 1000).toStringAsFixed(n % 1000 == 0 ? 0 : 1)}k' : '$n';
+/// Yutuqlar grid'i elementi (real yoki preview).
+class _BadgeSpec {
+  const _BadgeSpec(
+    this.label,
+    this.color, {
+    this.icon,
+    this.asset,
+    this.unlocked = false,
+    this.title,
+    this.desc,
+  });
+  final String label;
+  final Color color;
+  final IconData? icon;
 
-// ─────────────── SCREEN ───────────────
+  /// Foydalanuvchi bergan tayyor medal PNG (bo'lsa, hex chizilmaydi).
+  final String? asset;
+  final bool unlocked;
+
+  /// Bosilganda ochiladigan oynadagi sarlavha/tavsif.
+  final String? title;
+  final String? desc;
+}
+
+// PREVIEW yutuqlar — Figma'dagi 12 katak (6 ochilgan + 6 yopiq), 06/100.
+// Ochilganlar — foydalanuvchi bergan tayyor medal PNG'lari.
+const _previewBadges = [
+  _BadgeSpec(
+    '1-kitob',
+    _purple,
+    asset: 'assets/icons/badge_book1.png',
+    unlocked: true,
+    title: 'Birinchi kitob yakunlandi!',
+    desc:
+        "Tabriklaymiz! Siz birinchi kitobingizni oxirigacha o'qib, "
+        "yangi yutuqni qo'lga kiritdingiz.",
+  ),
+  _BadgeSpec(
+    '7 kun uzluksiz',
+    _orange,
+    asset: 'assets/icons/badge_7kun.png',
+    unlocked: true,
+    title: '7 kun uzluksiz!',
+    desc:
+        "Tabriklaymiz! Siz 7 kun uzluksiz shug'ullanib, "
+        "yangi yutuqni qo'lga kiritdingiz.",
+  ),
+  _BadgeSpec(
+    'Math TOP-100',
+    _green,
+    asset: 'assets/icons/badge_top100.png',
+    unlocked: true,
+    title: 'Math TOP-100!',
+    desc:
+        "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
+        '100 talik ichiga kirdingiz.',
+  ),
+  _BadgeSpec(
+    '10-kitob',
+    _red,
+    asset: 'assets/icons/badge_book10.png',
+    unlocked: true,
+    title: '10 ta kitob yakunlandi!',
+    desc:
+        "Tabriklaymiz! Siz 10 ta kitobni oxirigacha o'qib, "
+        "yangi yutuqni qo'lga kiritdingiz.",
+  ),
+  _BadgeSpec(
+    '100 kun',
+    _amber,
+    asset: 'assets/icons/badge_100kun.png',
+    unlocked: true,
+    title: '100 kun uzluksiz!',
+    desc:
+        "Tabriklaymiz! Siz 100 kun uzluksiz shug'ullanib, "
+        "yangi yutuqni qo'lga kiritdingiz.",
+  ),
+  _BadgeSpec(
+    'Math TOP-10',
+    _stepBlue,
+    asset: 'assets/icons/badge_top10.png',
+    unlocked: true,
+    title: 'Math TOP-10!',
+    desc:
+        "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
+        '10 talik ichiga kirdingiz.',
+  ),
+  _BadgeSpec(
+    '7 kun uzluksiz',
+    _orange,
+    title: "7 kun yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz 7 kun uzluksiz "
+        "shug'ullanishingiz kerak",
+  ),
+  _BadgeSpec(
+    'Math TOP-100',
+    _green,
+    title: "Math TOP-100 yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha "
+        'TOP-100 ga kirishingiz kerak',
+  ),
+  _BadgeSpec(
+    '1-kitob',
+    _purple,
+    title: "1 - kitob yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz bitta kitobni "
+        'yakunlashingiz kerak',
+  ),
+  _BadgeSpec(
+    'Math TOP-10',
+    _stepBlue,
+    title: "Math TOP-10 yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha "
+        'TOP-10 ga kirishingiz kerak',
+  ),
+  _BadgeSpec(
+    '10-kitob',
+    _purple,
+    title: "10 - kitob yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz 10 ta kitobni "
+        'yakunlashingiz kerak',
+  ),
+  _BadgeSpec(
+    '100 kun',
+    _orange,
+    title: "100 - kun yutug'i",
+    desc:
+        "Bu yutuqni qo'lga kiritish uchun siz 100 kun uzluksiz "
+        "shug'ullanishingiz kerak",
+  ),
+];
 
 class ProfileScreen extends ConsumerStatefulWidget {
   const ProfileScreen({super.key});
@@ -59,7 +242,9 @@ class ProfileScreen extends ConsumerStatefulWidget {
 class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   List<String> _previousAchievementIds = const [];
   bool _initialLoaded = false;
-  late final ConfettiController _confetti = ConfettiController(duration: const Duration(seconds: 2));
+  late final ConfettiController _confetti = ConfettiController(
+    duration: const Duration(seconds: 2),
+  );
 
   @override
   void dispose() {
@@ -78,7 +263,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         _initialLoaded = true;
         return;
       }
-      final newIds = profile.unlockedAchievements.where((id) => !_previousAchievementIds.contains(id)).toList();
+      final newIds = profile.unlockedAchievements
+          .where((id) => !_previousAchievementIds.contains(id))
+          .toList();
       if (newIds.isNotEmpty) {
         _previousAchievementIds = profile.unlockedAchievements;
         _confetti.play();
@@ -90,27 +277,194 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       }
     });
 
-    final p = _P();
     final pairing = ref.watch(pairingStateProvider);
-    final profileAsync = ref.watch(gamificationProfileProvider);
-    final childName = pairing.childName ?? 'common.fallbackChildName'.tr();
+    final profile = ref.watch(gamificationProfileProvider).valueOrNull;
+    final childName = pairing.childName ?? 'Akmal'; // PREVIEW (Figma)
+    final avatarUrl = (pairing.childId != null && pairing.childId!.isNotEmpty)
+        ? ref.watch(childAvatarUrlProvider(pairing.childId!)).valueOrNull
+        : null;
+    final device =
+        ref.watch(_deviceLineProvider).valueOrNull ??
+        ('Iphone 16 pro', 98); // PREVIEW (Figma)
+
+    // Real bo'lsa real, bo'sh bo'lsa PREVIEW (Figma raqamlari).
+    final streak = (profile?.streak ?? 0) > 0 ? profile!.streak : 7;
+    final don = (profile?.don ?? 0) > 0 ? profile!.don : 1250;
+    final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
+    final steps = rawSteps > 0 ? rawSteps : 10000;
+
+    // Yutuqlar: real unlock bo'lsa katalogdan, bo'lmasa PREVIEW grid.
+    final unlockedIds = profile?.unlockedAchievements ?? const <String>[];
+    final List<_BadgeSpec> badges;
+    final String countText;
+    if (unlockedIds.isEmpty) {
+      badges = _previewBadges;
+      countText = '06/100';
+    } else {
+      final all = Achievements.all;
+      badges = [
+        for (final a in all)
+          _BadgeSpec(
+            a.titleKey.tr(),
+            a.color,
+            icon: a.icon,
+            unlocked: unlockedIds.contains(a.id),
+            title: a.titleKey.tr(),
+            desc: a.descriptionKey.tr(),
+          ),
+      ];
+      final n = badges.where((b) => b.unlocked).length;
+      countText = '${n.toString().padLeft(2, '0')}/${all.length}';
+    }
+
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: p.bg,
+      backgroundColor: _bg,
       extendBody: true,
       body: Stack(
         children: [
           SafeArea(
             bottom: false,
-            child: profileAsync.when(
-              data: (profile) => _buildContent(context, p, profile, childName, pairing.childId),
-              loading: () => Center(child: CircularProgressIndicator(color: p.aqua)),
-              error: (e, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text('common.errorPrefix'.tr(namedArgs: {'error': '$e'}),
-                      textAlign: TextAlign.center, style: _jak(p, color: const Color(0xFFFF4B4B))),
-                ),
+            child: SingleChildScrollView(
+              // Boshqa sahifalar bilan bir xil: kontent tepaga yopishmasin.
+              padding: EdgeInsets.fromLTRB(16, 54, 16, 130 + bottomInset),
+              child: Column(
+                children: [
+                  _Header(
+                    avatarUrl: avatarUrl,
+                    name: childName,
+                    onBack: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go('/dashboard');
+                      }
+                    },
+                    onSettings: () => context.push('/settings'),
+                    onAvatarTap: () => context.push('/account-edit'),
+                  ),
+                  const SizedBox(height: 14),
+                  Text(
+                    childName,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(24),
+                  ),
+                  const SizedBox(height: 6),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Text(device.$1, style: _pop(13, c: _dim)),
+                      Text('  •  ', style: _pop(13, c: _dim)),
+                      const Icon(
+                        Icons.battery_full_rounded,
+                        size: 15,
+                        color: _dim,
+                      ),
+                      const SizedBox(width: 2),
+                      Text('${device.$2}%', style: _pop(13, c: _dim)),
+                    ],
+                  ),
+                  const SizedBox(height: 20),
+                  // ── 3 stat chip (Figma) ──
+                  Row(
+                    children: [
+                      Expanded(
+                        child: _StatChip(
+                          tint: _amber,
+                          icon: const Icon(
+                            Icons.local_fire_department_rounded,
+                            color: _amber,
+                            size: 26,
+                          ),
+                          value: '$streak kun',
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatChip(
+                          tint: _stepBlue,
+                          icon: Image.asset(
+                            'assets/icons/ic_steps.png',
+                            width: 26,
+                            height: 26,
+                          ),
+                          value: _fmtNum(steps),
+                        ),
+                      ),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: _StatChip(
+                          tint: _green,
+                          // Foydalanuvchi bergan DON ikoni.
+                          icon: Image.asset(
+                            'assets/icons/ic_don.png',
+                            width: 26,
+                            height: 26,
+                          ),
+                          value: _fmtNum(don),
+                          trailing: Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 8,
+                              vertical: 2,
+                            ),
+                            decoration: BoxDecoration(
+                              color: _blue,
+                              borderRadius: BorderRadius.circular(999),
+                            ),
+                            child: Text(
+                              'DON',
+                              style: _pop(9, w: FontWeight.w700),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 16),
+                  // ── Yutuqlar paneli ──
+                  Container(
+                    padding: const EdgeInsets.fromLTRB(14, 16, 14, 14),
+                    decoration: BoxDecoration(
+                      color: _panel,
+                      borderRadius: BorderRadius.circular(24),
+                    ),
+                    child: Column(
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Yutuqlar', style: _unb(16)),
+                            Text(
+                              countText,
+                              style: _unb(14, w: FontWeight.w600),
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 14),
+                        GridView.builder(
+                          shrinkWrap: true,
+                          physics: const NeverScrollableScrollPhysics(),
+                          padding: EdgeInsets.zero,
+                          itemCount: badges.length,
+                          gridDelegate:
+                              const SliverGridDelegateWithFixedCrossAxisCount(
+                                crossAxisCount: 3,
+                                mainAxisSpacing: 10,
+                                crossAxisSpacing: 10,
+                                childAspectRatio: 0.86,
+                              ),
+                          itemBuilder: (_, i) => GestureDetector(
+                            onTap: () => _showBadgeSheet(context, badges[i]),
+                            behavior: HitTestBehavior.opaque,
+                            child: _BadgeTile(spec: badges[i]),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
               ),
             ),
           ),
@@ -125,47 +479,12 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               numberOfParticles: 25,
               gravity: 0.3,
               shouldLoop: false,
-              colors: const [Color(0xFF22D3EE), Color(0xFFFFC83D), Color(0xFFFF7A45), Color(0xFF2170E4), Color(0xFFADC6FF)],
+              colors: const [_blue, _amber, _orange, _green, _purple],
             ),
           ),
         ],
       ),
       bottomNavigationBar: const ChildBottomNavigation(),
-    );
-  }
-
-  Widget _buildContent(BuildContext context, _P p, GamificationProfile profile, String childName, String? childId) {
-    final avatarUrl = (childId != null && childId.isNotEmpty)
-        ? ref.watch(childAvatarUrlProvider(childId)).valueOrNull
-        : null;
-    final level = profile.level;
-    final xpInLevel = profile.xp % 100;
-    final remaining = 100 - xpInLevel;
-    final frac = xpInLevel / 100.0;
-    final unlocked = profile.unlockedAchievements;
-
-    return SingleChildScrollView(
-      padding: EdgeInsets.fromLTRB(20, 6, 20, 150 + MediaQuery.viewPaddingOf(context).bottom),
-      child: Column(
-        children: [
-          _TopBar(p: p),
-          const SizedBox(height: 6),
-          _Hero(
-            p: p,
-            name: childName,
-            status: profile.status.translationKey.tr(),
-            level: level,
-            avatarUrl: avatarUrl,
-            onEdit: () => context.push('/account-edit'),
-          ),
-          const SizedBox(height: 26),
-          _StatsRow(p: p, level: level, xp: profile.xp, streak: profile.streak),
-          const SizedBox(height: 14),
-          _ProgressCard(p: p, remaining: remaining, frac: frac, level: level),
-          const SizedBox(height: 26),
-          _Achievements(p: p, unlockedIds: unlocked),
-        ],
-      ),
     );
   }
 
@@ -179,13 +498,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             Container(
               width: 36,
               height: 36,
-              decoration: const BoxDecoration(color: Colors.white24, shape: BoxShape.circle),
+              decoration: const BoxDecoration(
+                color: Colors.white24,
+                shape: BoxShape.circle,
+              ),
               child: Icon(achievement.icon, color: Colors.white, size: 20),
             ),
             const SizedBox(width: 12),
             Expanded(
-              child: Text('gamification.achievementUnlockedTitle'.tr(),
-                  style: const TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600)),
+              child: Text(
+                'gamification.achievementUnlockedTitle'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
             ),
           ],
         ),
@@ -194,251 +522,200 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 }
 
-// ─────────────── TOP BAR ───────────────
+// ════════════ Header: ← + avatar + ⚙ (fonda xira skuterlar) ════════════
 
-class _TopBar extends StatelessWidget {
-  const _TopBar({required this.p});
-  final _P p;
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Text('Profil', style: _jak(p, size: 17, weight: FontWeight.w700)),
-        const Spacer(),
-        GestureDetector(
-          onTap: () => context.push('/settings'),
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: p.card, border: Border.all(color: p.border, width: 1)),
-            child: Icon(Icons.settings_outlined, color: p.muted, size: 21),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-// ─────────────── HERO (avatar + ism + daraja) ───────────────
-
-class _Hero extends StatelessWidget {
-  const _Hero({
-    required this.p,
-    required this.name,
-    required this.status,
-    required this.level,
+class _Header extends StatelessWidget {
+  const _Header({
     required this.avatarUrl,
-    required this.onEdit,
+    required this.name,
+    required this.onBack,
+    required this.onSettings,
+    required this.onAvatarTap,
   });
-  final _P p;
-  final String name;
-  final String status;
-  final int level;
+
   final String? avatarUrl;
-  final VoidCallback onEdit;
+  final String name;
+  final VoidCallback onBack;
+  final VoidCallback onSettings;
+  final VoidCallback onAvatarTap;
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        GestureDetector(
-          onTap: onEdit,
-          behavior: HitTestBehavior.opaque,
-          child: SizedBox(
-            width: 130,
-            height: 138,
-            child: Stack(
-              clipBehavior: Clip.none,
-              alignment: Alignment.topCenter,
-              children: [
-                // Aqua glow.
-                Positioned(
-                  top: 6,
-                  child: Container(
-                    width: 116,
-                    height: 116,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: p.aqua.withValues(alpha: 0.35), blurRadius: 34, spreadRadius: 2)],
+    return SizedBox(
+      height: 128,
+      child: Stack(
+        children: [
+          // Xira skuter naqshlari (Figma fonidagi kabi).
+          const Positioned(top: 4, left: 66, child: _BgScooter(angle: -0.3)),
+          const Positioned(
+            top: 0,
+            right: 84,
+            child: _BgScooter(angle: 0.25, size: 20),
+          ),
+          const Positioned(
+            bottom: 8,
+            left: 24,
+            child: _BgScooter(angle: 0.2, size: 22),
+          ),
+          const Positioned(
+            bottom: 0,
+            right: 30,
+            child: _BgScooter(angle: -0.25, size: 24),
+          ),
+          const Positioned(
+            top: 58,
+            right: 116,
+            child: _BgScooter(angle: 0.1, size: 18),
+          ),
+          // ← va ⚙ tugmalar.
+          Align(
+            alignment: Alignment.topLeft,
+            child: _SquareBtn(icon: Icons.arrow_back_rounded, onTap: onBack),
+          ),
+          Align(
+            alignment: Alignment.topRight,
+            child: _SquareBtn(icon: SolarIconsBold.settings, onTap: onSettings),
+          ),
+          // Markazda avatar.
+          Align(
+            child: GestureDetector(
+              onTap: onAvatarTap,
+              behavior: HitTestBehavior.opaque,
+              child: Container(
+                width: 108,
+                height: 108,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  border: Border.all(color: const Color(0x1FFFFFFF), width: 3),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _blue.withValues(alpha: 0.20),
+                      blurRadius: 30,
                     ),
-                  ),
+                  ],
                 ),
-                // Avatar + aqua ring.
-                Container(
-                  width: 116,
-                  height: 116,
-                  margin: const EdgeInsets.only(top: 6),
-                  decoration: BoxDecoration(shape: BoxShape.circle, border: Border.all(color: p.aqua, width: 3.5)),
-                  clipBehavior: Clip.antiAlias,
-                  child: (avatarUrl != null && avatarUrl!.isNotEmpty)
-                      ? Image.network(avatarUrl!, fit: BoxFit.cover,
-                          errorBuilder: (_, __, ___) => _fallback(), loadingBuilder: (_, c, pr) => pr == null ? c : _fallback())
-                      : _fallback(),
-                ),
-                // Edit camera badge.
-                Positioned(
-                  top: 8,
-                  right: 6,
-                  child: Container(
-                    width: 32,
-                    height: 32,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: p.aqua,
-                      border: Border.all(color: p.bg, width: 2.5),
-                    ),
-                    child: Icon(Icons.photo_camera_rounded, color: p.onAqua, size: 16),
-                  ),
-                ),
-                // "Daraja N" badge.
-                Positioned(
-                  bottom: 0,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-                    decoration: BoxDecoration(
-                      color: p.aqua,
-                      borderRadius: BorderRadius.circular(99),
-                      border: Border.all(color: p.bg, width: 2.5),
-                      boxShadow: [BoxShadow(color: p.aqua.withValues(alpha: 0.45), blurRadius: 14)],
-                    ),
-                    child: Text('Daraja $level', style: _jak(p, size: 13, weight: FontWeight.w800, color: p.onAqua, spacing: -0.2)),
-                  ),
-                ),
-              ],
+                clipBehavior: Clip.antiAlias,
+                child: (avatarUrl != null && avatarUrl!.isNotEmpty)
+                    ? Image.network(
+                        avatarUrl!,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => _Fallback(name: name),
+                      )
+                    : _Fallback(name: name),
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 14),
-        Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: _jak(p, size: 25, weight: FontWeight.w800, spacing: -0.5)),
-        const SizedBox(height: 3),
-        Text(status, style: _jak(p, size: 15, weight: FontWeight.w500, color: p.muted)),
-      ],
-    );
-  }
-
-  Widget _fallback() => Container(
-        color: p.cardHigh,
-        alignment: Alignment.center,
-        child: Icon(Icons.person_rounded, color: p.muted, size: 54),
-      );
-}
-
-// ─────────────── STATS (Daraja / Umumiy XP / Kunlik Seriya) ───────────────
-
-class _StatsRow extends StatelessWidget {
-  const _StatsRow({required this.p, required this.level, required this.xp, required this.streak});
-  final _P p;
-  final int level;
-  final int xp;
-  final int streak;
-  @override
-  Widget build(BuildContext context) {
-    return Row(
-      children: [
-        Expanded(child: _StatCard(p: p, icon: Icons.workspace_premium_rounded, tint: p.aqua, value: '$level', label: 'Daraja')),
-        const SizedBox(width: 12),
-        Expanded(child: _StatCard(p: p, icon: Icons.star_rounded, tint: p.gold, value: _fmtXp(xp), label: 'Umumiy XP')),
-        const SizedBox(width: 12),
-        Expanded(child: _StatCard(p: p, icon: Icons.local_fire_department_rounded, tint: p.fire, value: '$streak', label: 'Kunlik Seriya')),
-      ],
-    );
-  }
-}
-
-class _StatCard extends StatelessWidget {
-  const _StatCard({required this.p, required this.icon, required this.tint, required this.value, required this.label});
-  final _P p;
-  final IconData icon;
-  final Color tint;
-  final String value;
-  final String label;
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
-      decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: p.border, width: 1),
-      ),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 42,
-            height: 42,
-            decoration: BoxDecoration(shape: BoxShape.circle, color: tint.withValues(alpha: 0.15)),
-            child: Icon(icon, color: tint, size: 23),
-          ),
-          const SizedBox(height: 10),
-          FittedBox(child: Text(value, maxLines: 1, style: _jak(p, size: 22, weight: FontWeight.w800, spacing: -0.5))),
-          const SizedBox(height: 2),
-          Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: _jak(p, size: 11.5, weight: FontWeight.w600, color: p.muted)),
         ],
       ),
     );
   }
 }
 
-// ─────────────── KEYINGI DARAJAGA ───────────────
-
-class _ProgressCard extends StatelessWidget {
-  const _ProgressCard({required this.p, required this.remaining, required this.frac, required this.level});
-  final _P p;
-  final int remaining;
-  final double frac;
-  final int level;
+class _Fallback extends StatelessWidget {
+  const _Fallback({required this.name});
+  final String name;
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(18),
+      color: const Color(0xFF66B3FF),
+      alignment: Alignment.center,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: _unb(38, w: FontWeight.w800),
+      ),
+    );
+  }
+}
+
+class _SquareBtn extends StatelessWidget {
+  const _SquareBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: _glass,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: _glassBorder),
+        ),
+        child: Icon(icon, color: Colors.white, size: 21),
+      ),
+    );
+  }
+}
+
+/// Fon uchun xira, biroz burilgan skuter ikonchasi.
+class _BgScooter extends StatelessWidget {
+  const _BgScooter({required this.angle, this.size = 26});
+  final double angle;
+  final double size;
+  @override
+  Widget build(BuildContext context) {
+    return Transform.rotate(
+      angle: angle,
+      child: Icon(
+        SolarIconsOutline.scooter,
+        size: size,
+        color: const Color(0x12FFFFFF),
+      ),
+    );
+  }
+}
+
+// ════════════ Stat chip (🔥 / 👟 / 💎) ════════════
+
+class _StatChip extends StatelessWidget {
+  const _StatChip({
+    required this.tint,
+    required this.icon,
+    required this.value,
+    this.trailing,
+  });
+
+  final Color tint;
+  final Widget icon;
+  final String value;
+  final Widget? trailing;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(14, 14, 12, 14),
       decoration: BoxDecoration(
-        color: p.card,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.border, width: 1),
+        // Figma: chap-yuqoridan rang tusi kuchliroq, pastga so'nadi.
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color.alphaBlend(tint.withValues(alpha: 0.26), _tile),
+            Color.alphaBlend(tint.withValues(alpha: 0.06), _tile),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(22),
+        border: Border.all(color: tint.withValues(alpha: 0.15)),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          icon,
+          const SizedBox(height: 12),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text('Keyingi darajaga', style: _jak(p, size: 16, weight: FontWeight.w700)),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(color: p.aqua.withValues(alpha: 0.14), borderRadius: BorderRadius.circular(99)),
-                child: Text('$remaining XP qoldi', style: _jak(p, size: 12.5, weight: FontWeight.w700, color: p.aqua)),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Container(
-            height: 12,
-            decoration: BoxDecoration(
-              color: p.track,
-              borderRadius: BorderRadius.circular(99),
-              border: Border.all(color: Colors.white.withValues(alpha: 0.04)),
-            ),
-            clipBehavior: Clip.antiAlias,
-            child: Align(
-              alignment: Alignment.centerLeft,
-              child: FractionallySizedBox(
-                widthFactor: frac.clamp(0.03, 1.0),
-                child: Container(
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(colors: [p.aqua.withValues(alpha: 0.85), p.aqua]),
-                    borderRadius: BorderRadius.circular(99),
-                    boxShadow: [BoxShadow(color: p.aqua.withValues(alpha: 0.55), blurRadius: 12)],
-                  ),
+              Expanded(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: Alignment.centerLeft,
+                  child: Text(value, maxLines: 1, style: _unb(16)),
                 ),
               ),
-            ),
-          ),
-          const SizedBox(height: 12),
-          Text(
-            'Yana $remaining XP to\'plab, ${level + 1}-darajaga ko\'taril!',
-            style: _jak(p, size: 13, weight: FontWeight.w400, color: p.muted, height: 1.4),
+              if (trailing != null) trailing!,
+            ],
           ),
         ],
       ),
@@ -446,87 +723,281 @@ class _ProgressCard extends StatelessWidget {
   }
 }
 
-// ─────────────── YUTUQLAR (grid) ───────────────
+// ════════════ Yutuq oynasi (bosilganda, Figma) ════════════
 
-class _Achievements extends StatelessWidget {
-  const _Achievements({required this.p, required this.unlockedIds});
-  final _P p;
-  final List<String> unlockedIds;
+/// Nishon bosilganda EKRAN O'RTASIDA ochiladigan oyna (Figma): ochilgan
+/// yutuq — tabrik, yopiq yutuq — shart matni.
+void _showBadgeSheet(BuildContext context, _BadgeSpec spec) {
+  HapticFeedback.selectionClick();
+  showDialog<void>(
+    context: context,
+    barrierColor: Colors.black54,
+    builder: (ctx) => Dialog(
+      backgroundColor: const Color(0xFF10151C),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(28)),
+      child: _BadgeSheet(spec: spec),
+    ),
+  );
+}
+
+class _BadgeSheet extends StatelessWidget {
+  const _BadgeSheet({required this.spec});
+  final _BadgeSpec spec;
+
   @override
   Widget build(BuildContext context) {
-    final all = Achievements.all;
-    final unlockedCount = all.where((a) => unlockedIds.contains(a.id)).length;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text('Yutuqlar', style: _jak(p, size: 18, weight: FontWeight.w700)),
-            Text('$unlockedCount / ${all.length}', style: _jak(p, size: 13.5, weight: FontWeight.w700, color: p.aqua)),
-          ],
-        ),
-        const SizedBox(height: 14),
-        GridView.builder(
-          shrinkWrap: true,
-          physics: const NeverScrollableScrollPhysics(),
-          padding: EdgeInsets.zero,
-          itemCount: all.length,
-          gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-            crossAxisCount: 3,
-            mainAxisSpacing: 12,
-            crossAxisSpacing: 12,
-            childAspectRatio: 0.84,
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 24, 24, 22),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          // ── Katta nishon + rangli nur ──
+          SizedBox(
+            height: 200,
+            child: Stack(
+              alignment: Alignment.center,
+              children: [
+                // Orqadagi yumshoq rangli tuman (Figma).
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: BoxDecoration(
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: spec.color.withValues(alpha: 0.50),
+                        blurRadius: 90,
+                        spreadRadius: 26,
+                      ),
+                    ],
+                  ),
+                ),
+                if (spec.unlocked && spec.asset != null)
+                  Image.asset(spec.asset!, width: 150, height: 150)
+                else if (spec.unlocked)
+                  SizedBox(
+                    width: 140,
+                    height: 140,
+                    child: FittedBox(
+                      child: _HexBadge(color: spec.color, icon: spec.icon),
+                    ),
+                  )
+                else ...[
+                  // Yopiq: xira rangli geksagon + oq qulf (Figma).
+                  ImageFiltered(
+                    imageFilter: ImageFilter.blur(sigmaX: 16, sigmaY: 16),
+                    child: ClipPath(
+                      clipper: _HexClipper(),
+                      child: Container(
+                        width: 120,
+                        height: 132,
+                        color: spec.color.withValues(alpha: 0.85),
+                      ),
+                    ),
+                  ),
+                  const Icon(Icons.lock_rounded, color: Colors.white, size: 44),
+                ],
+              ],
+            ),
           ),
-          itemBuilder: (_, i) {
-            final a = all[i];
-            return _BadgeTile(p: p, achievement: a, unlocked: unlockedIds.contains(a.id));
-          },
-        ),
-      ],
+          const SizedBox(height: 10),
+          Text(
+            spec.title ?? spec.label,
+            textAlign: TextAlign.center,
+            style: _unb(20),
+          ),
+          const SizedBox(height: 10),
+          Text(
+            spec.desc ?? '',
+            textAlign: TextAlign.center,
+            style: _pop(13.5, c: _dim),
+          ),
+          const SizedBox(height: 22),
+          // ── Tugma: Qabul qilish / OK ──
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: double.infinity,
+              height: 56,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: _glass,
+                borderRadius: BorderRadius.circular(999),
+                border: Border.all(color: _glassBorder),
+              ),
+              child: Text(
+                spec.unlocked ? 'Qabul qilish' : 'OK',
+                style: _pop(15, w: FontWeight.w600),
+              ),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
 
+// ════════════ Yutuq kataklari ════════════
+
 class _BadgeTile extends StatelessWidget {
-  const _BadgeTile({required this.p, required this.achievement, required this.unlocked});
-  final _P p;
-  final Achievement achievement;
-  final bool unlocked;
+  const _BadgeTile({required this.spec});
+  final _BadgeSpec spec;
+
   @override
   Widget build(BuildContext context) {
-    final color = achievement.color;
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 6),
+      padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
       decoration: BoxDecoration(
-        color: p.card,
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: unlocked ? color.withValues(alpha: 0.30) : p.border, width: 1),
+        // Katak ichida yutuq rangidagi YAQQOL nur (Figma) — markazdan
+        // burchaklarga so'nadi, har katak o'z rangida ajralib turadi.
+        gradient: RadialGradient(
+          center: const Alignment(0, -0.25),
+          radius: 1.05,
+          colors: [
+            Color.alphaBlend(spec.color.withValues(alpha: 0.34), _tile),
+            Color.alphaBlend(spec.color.withValues(alpha: 0.05), _tile),
+          ],
+        ),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          Container(
-            width: 54,
-            height: 54,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: unlocked ? color.withValues(alpha: 0.16) : p.track,
-              border: unlocked ? null : Border.all(color: Colors.white.withValues(alpha: 0.08)),
-              boxShadow: unlocked ? [BoxShadow(color: color.withValues(alpha: 0.40), blurRadius: 14)] : null,
-            ),
-            child: Icon(unlocked ? achievement.icon : Icons.lock_rounded, color: unlocked ? color : p.locked, size: 26),
-          ),
+          if (spec.unlocked && spec.asset != null)
+            // Foydalanuvchi bergan tayyor medal rasmi.
+            Image.asset(spec.asset!, width: 64, height: 64)
+          else if (spec.unlocked)
+            _HexBadge(color: spec.color, icon: spec.icon)
+          else
+            _LockBadge(color: spec.color),
           const SizedBox(height: 8),
           Text(
-            achievement.titleKey.tr(),
-            maxLines: 2,
+            spec.label,
+            maxLines: 1,
             textAlign: TextAlign.center,
             overflow: TextOverflow.ellipsis,
-            style: _jak(p, size: 11, weight: FontWeight.w600, color: unlocked ? p.text : p.muted, height: 1.2),
+            style: _pop(
+              10.5,
+              w: FontWeight.w500,
+              c: spec.unlocked ? _dim : const Color(0x66FFFFFF),
+            ),
           ),
         ],
       ),
     );
   }
+}
+
+/// Olti burchakli medal — gradient + ichki kontur + ikon (Figma uslubi).
+/// Tayyor PNG bo'lmagan (real katalog) yutuqlar uchun.
+class _HexBadge extends StatelessWidget {
+  const _HexBadge({required this.color, this.icon});
+  final Color color;
+  final IconData? icon;
+
+  @override
+  Widget build(BuildContext context) {
+    final light = Color.lerp(color, Colors.white, 0.35)!;
+    final dark = Color.lerp(color, Colors.black, 0.35)!;
+    return SizedBox(
+      width: 58,
+      height: 58,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          // Rangli nur.
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              boxShadow: [
+                BoxShadow(
+                  color: color.withValues(alpha: 0.55),
+                  blurRadius: 20,
+                  spreadRadius: 1,
+                ),
+              ],
+            ),
+          ),
+          // Tashqi geksagon (gradient).
+          ClipPath(
+            clipper: _HexClipper(),
+            child: Container(
+              width: 54,
+              height: 58,
+              decoration: BoxDecoration(
+                gradient: LinearGradient(
+                  begin: Alignment.topLeft,
+                  end: Alignment.bottomRight,
+                  colors: [light, color, dark],
+                ),
+              ),
+            ),
+          ),
+          // Ichki geksagon (to'qroq) — kontur effekti.
+          ClipPath(
+            clipper: _HexClipper(),
+            child: Container(
+              width: 44,
+              height: 47,
+              color: Color.lerp(color, Colors.black, 0.18),
+            ),
+          ),
+          // Ikon.
+          if (icon != null) Icon(icon, color: Colors.white, size: 24),
+        ],
+      ),
+    );
+  }
+}
+
+/// Yopiq yutuq — rangli yumaloq-kvadrat ichida qulf (Figma).
+class _LockBadge extends StatelessWidget {
+  const _LockBadge({required this.color});
+  final Color color;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 54,
+      height: 54,
+      margin: const EdgeInsets.symmetric(vertical: 5),
+      decoration: BoxDecoration(
+        color: color,
+        borderRadius: BorderRadius.circular(16),
+        // Figma: qulf atrofida kuchli rangli bloom.
+        boxShadow: [
+          BoxShadow(
+            color: color.withValues(alpha: 0.60),
+            blurRadius: 28,
+            spreadRadius: 3,
+          ),
+        ],
+      ),
+      child: const Icon(Icons.lock_rounded, color: Colors.white, size: 24),
+    );
+  }
+}
+
+/// Uchi tepada bo'lgan (pointy-top) olti burchak.
+class _HexClipper extends CustomClipper<Path> {
+  @override
+  Path getClip(Size size) {
+    final w = size.width;
+    final h = size.height;
+    return Path()
+      ..moveTo(w / 2, 0)
+      ..lineTo(w, h * 0.25)
+      ..lineTo(w, h * 0.75)
+      ..lineTo(w / 2, h)
+      ..lineTo(0, h * 0.75)
+      ..lineTo(0, h * 0.25)
+      ..close();
+  }
+
+  @override
+  bool shouldReclip(covariant CustomClipper<Path> oldClipper) => false;
 }

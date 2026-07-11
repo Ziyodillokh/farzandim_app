@@ -237,8 +237,9 @@ class _NotificationCardState extends State<NotificationCard>
     final diff = DateTime.now().difference(dt);
     if (diff.inMinutes < 1) return 'notifications.justNow'.tr();
     if (diff.inMinutes < 60) {
-      return 'notifications.minutesAgo'
-          .tr(namedArgs: {'min': '${diff.inMinutes}'});
+      return 'notifications.minutesAgo'.tr(
+        namedArgs: {'min': '${diff.inMinutes}'},
+      );
     }
     if (diff.inHours < 24) {
       return 'notifications.hoursAgo'.tr(namedArgs: {'h': '${diff.inHours}'});

@@ -16,6 +16,7 @@
 // `AppColors.parvoz*` (Premium: surface #162B45, green #2ECC71, badge #F39C12).
 // Real data: effectiveVideosProvider + audiobooks/books (mock yo'q).
 
+import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -70,10 +71,7 @@ class _ContentHubScreenState extends ConsumerState<ContentHubScreen>
               child: TabBarView(
                 controller: _tab,
                 physics: const BouncingScrollPhysics(),
-                children: const [
-                  _VideosTab(),
-                  _AudiobooksTab(),
-                ],
+                children: const [_VideosTab(), _AudiobooksTab()],
               ),
             ),
           ],
@@ -110,7 +108,7 @@ class _ParvozHeader extends StatelessWidget {
           const Spacer(),
           _ParvozIconButton(
             icon: Icons.notifications_none_rounded,
-            onTap: () => context.push('/notifications'),
+            onTap: () => showNotificationsSheet(context),
           ),
           const SizedBox(width: 8),
           _ParvozIconButton(
@@ -137,10 +135,7 @@ class _ParvozIconButton extends StatelessWidget {
       child: Container(
         width: 40,
         height: 40,
-        decoration: BoxDecoration(
-          color: pv.pvSurface,
-          shape: BoxShape.circle,
-        ),
+        decoration: BoxDecoration(color: pv.pvSurface, shape: BoxShape.circle),
         child: Icon(icon, color: pv.pvText, size: 22),
       ),
     );
@@ -236,8 +231,9 @@ class _VideosTab extends ConsumerWidget {
         : all.where((v) => v.category == selectedCat).toList();
 
     final hero = filtered.isNotEmpty ? filtered.first : null;
-    final recommended =
-        filtered.length > 1 ? filtered.skip(1).take(4).toList() : <VideoModel>[];
+    final recommended = filtered.length > 1
+        ? filtered.skip(1).take(4).toList()
+        : <VideoModel>[];
     final mostViewed = [...filtered]
       ..sort((a, b) => b.views.compareTo(a.views));
     final topViewed = mostViewed.take(6).toList();
@@ -257,7 +253,9 @@ class _VideosTab extends ConsumerWidget {
                 child: Text(
                   "Bu kategoriyada video yo'q",
                   style: TextStyle(
-                      color: context.adaptive.pvTextDim, fontSize: 14),
+                    color: context.adaptive.pvTextDim,
+                    fontSize: 14,
+                  ),
                 ),
               ),
             ),
@@ -311,8 +309,7 @@ class _ParvozChips extends ConsumerWidget {
           final cat = items[i];
           final isSel = cat == selected;
           return GestureDetector(
-            onTap: () =>
-                ref.read(_parvozCategoryProvider.notifier).state = cat,
+            onTap: () => ref.read(_parvozCategoryProvider.notifier).state = cat,
             child: AnimatedContainer(
               duration: const Duration(milliseconds: 200),
               padding: const EdgeInsets.symmetric(horizontal: 20),
@@ -320,9 +317,7 @@ class _ParvozChips extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isSel ? pv.pvGreen : pv.pvSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: isSel
-                    ? null
-                    : Border.all(color: pv.pvBorder, width: 1),
+                border: isSel ? null : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
                 cat ?? 'Barchasi',
@@ -382,7 +377,10 @@ class _ParvozHeroCard extends StatelessWidget {
           child: Stack(
             fit: StackFit.expand,
             children: [
-              _NetImage(url: video.thumbnailUrl, fallback: video.thumbnailColor),
+              _NetImage(
+                url: video.thumbnailUrl,
+                fallback: video.thumbnailColor,
+              ),
               // Rasm ustidagi skrim — matn o'qilishi uchun har doim to'q
               // (rasm — media, tegilmaydi).
               const DecoratedBox(
@@ -404,8 +402,10 @@ class _ParvozHeroCard extends StatelessWidget {
                 top: 16,
                 left: 16,
                 child: Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 12,
+                    vertical: 6,
+                  ),
                   decoration: BoxDecoration(
                     color: pv.pvBadge,
                     borderRadius: BorderRadius.circular(8),
@@ -545,9 +545,7 @@ class _ParvozSectionHeader extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: pv.pvGreen.withValues(alpha: 0.12),
                   borderRadius: BorderRadius.circular(999),
-                  border: Border.all(
-                    color: pv.pvGreen.withValues(alpha: 0.25),
-                  ),
+                  border: Border.all(color: pv.pvGreen.withValues(alpha: 0.25)),
                 ),
                 child: Row(
                   mainAxisSize: MainAxisSize.min,
@@ -591,10 +589,8 @@ class _ParvozVideoHList extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 20),
         itemCount: videos.length,
         separatorBuilder: (_, __) => const SizedBox(width: 16),
-        itemBuilder: (_, i) => SizedBox(
-          width: 160,
-          child: _ParvozGridCard(video: videos[i]),
-        ),
+        itemBuilder: (_, i) =>
+            SizedBox(width: 160, child: _ParvozGridCard(video: videos[i])),
       ),
     );
   }
@@ -842,13 +838,7 @@ class _ParvozEmpty extends StatelessWidget {
         children: [
           Icon(icon, size: 64, color: pv.pvTextDim),
           const SizedBox(height: 16),
-          Text(
-            text,
-            style: TextStyle(
-              color: pv.pvTextDim,
-              fontSize: 16,
-            ),
-          ),
+          Text(text, style: TextStyle(color: pv.pvTextDim, fontSize: 16)),
         ],
       ),
     );
@@ -893,8 +883,9 @@ class _AudiobooksTab extends ConsumerWidget {
     }
 
     final featured = forYou.isNotEmpty ? forYou.first : null;
-    final recommended =
-        forYou.length > 1 ? forYou.skip(1).toList() : <AudiobookModel>[];
+    final recommended = forYou.length > 1
+        ? forYou.skip(1).toList()
+        : <AudiobookModel>[];
 
     final schoolBooks = books.where((b) => b.category == 'school').toList();
     final adabiyotBooks = books.where((b) => b.category == 'adabiyot').toList();
@@ -937,7 +928,8 @@ class _AudiobooksTab extends ConsumerWidget {
                 children: [
                   for (var i = 0; i < mostListened.length; i++) ...[
                     _ParvozAudioRow(book: mostListened[i], rank: i + 1),
-                    if (i != mostListened.length - 1) const SizedBox(height: 12),
+                    if (i != mostListened.length - 1)
+                      const SizedBox(height: 12),
                   ],
                 ],
               ),
@@ -1013,9 +1005,7 @@ class _ParvozAudioChips extends ConsumerWidget {
               decoration: BoxDecoration(
                 color: isSel ? pv.pvGreen : pv.pvSurface,
                 borderRadius: BorderRadius.circular(12),
-                border: isSel
-                    ? null
-                    : Border.all(color: pv.pvBorder, width: 1),
+                border: isSel ? null : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
                 cat ?? 'Barchasi',
@@ -1065,10 +1055,7 @@ class _ParvozAudioHero extends ConsumerWidget {
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
                           end: Alignment.topCenter,
-                          colors: [
-                            Color(0xD90B1C30),
-                            Colors.transparent,
-                          ],
+                          colors: [Color(0xD90B1C30), Colors.transparent],
                           stops: [0.0, 0.6],
                         ),
                       ),
@@ -1101,10 +1088,7 @@ class _ParvozAudioHero extends ConsumerWidget {
                   : '${book.author} • ${book.category}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: pv.pvTextDim,
-                fontSize: 14,
-              ),
+              style: TextStyle(color: pv.pvTextDim, fontSize: 14),
             ),
             const SizedBox(height: 16),
             Row(
@@ -1191,8 +1175,11 @@ class _AudioDurationPill extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const Icon(Icons.headphones_rounded,
-              color: AppColors.parvozGreen, size: 14),
+          const Icon(
+            Icons.headphones_rounded,
+            color: AppColors.parvozGreen,
+            size: 14,
+          ),
           const SizedBox(width: 5),
           Text(
             text,
@@ -1358,15 +1345,15 @@ class _ParvozAudioRow extends ConsumerWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(Icons.headphones_rounded,
-                          size: 14, color: pv.pvTextDim),
+                      Icon(
+                        Icons.headphones_rounded,
+                        size: 14,
+                        color: pv.pvTextDim,
+                      ),
                       const SizedBox(width: 5),
                       Text(
                         '${_formatViews(book.listenCount)} marta eshitildi',
-                        style: TextStyle(
-                          color: pv.pvTextDim,
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: pv.pvTextDim, fontSize: 12),
                       ),
                     ],
                   ),

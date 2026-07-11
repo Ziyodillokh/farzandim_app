@@ -107,6 +107,7 @@ class AudiobooksBackendRepository {
       hashtags: ['#$ageFrom-${ageTo}yosh'],
       listenCount: (raw['listens'] as num?)?.toInt() ?? 0,
       coverColor: _coverColorFor(id),
+      partsCount: (raw['partsCount'] as num?)?.toInt() ?? 1,
     );
   }
 

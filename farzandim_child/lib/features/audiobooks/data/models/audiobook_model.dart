@@ -21,6 +21,10 @@ class AudiobookModel {
   final int listenCount;
   final Color coverColor;
 
+  /// Qismlar soni (backend: `partsCount`). 0/1 bo'lsa yagona qism sifatida
+  /// ko'rsatiladi. UI qismlar ro'yxati va navigatsiya uchun ishlatadi.
+  final int partsCount;
+
   const AudiobookModel({
     required this.id,
     required this.title,
@@ -34,5 +38,6 @@ class AudiobookModel {
     required this.hashtags,
     required this.listenCount,
     required this.coverColor,
+    this.partsCount = 1,
   });
 }

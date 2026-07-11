@@ -13,8 +13,9 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 /// Bola notifications + unreadCount — Backend fetch + polling.
-final notificationsProvider =
-    StreamProvider<List<AppNotification>>((ref) async* {
+final notificationsProvider = StreamProvider<List<AppNotification>>((
+  ref,
+) async* {
   final pairing = ref.watch(pairingStateProvider);
   if (!pairing.isPaired || pairing.childId == null) {
     yield const [];
@@ -31,10 +32,7 @@ final notificationsProvider =
   }
 
   await fetch(); // initial
-  final timer = Timer.periodic(
-    const Duration(seconds: 15),
-    (_) => fetch(),
-  );
+  final timer = Timer.periodic(const Duration(seconds: 15), (_) => fetch());
 
   ref.onDispose(() {
     timer.cancel();
@@ -44,11 +42,10 @@ final notificationsProvider =
 });
 
 /// O'qilmagan soni (Backend `/notifications` response unreadCount).
-final unreadNotificationsCountProvider =
-    Provider<AsyncValue<int>>((ref) {
-  return ref.watch(notificationsProvider).whenData(
-        (list) => list.where((n) => !n.isRead).length,
-      );
+final unreadNotificationsCountProvider = Provider<AsyncValue<int>>((ref) {
+  return ref
+      .watch(notificationsProvider)
+      .whenData((list) => list.where((n) => !n.isRead).length);
 });
 
 /// Tab filter.
@@ -59,8 +56,7 @@ final notificationTabProvider = StateProvider<NotificationTab>(
 );
 
 /// Filtrlangan notifications (UI derived).
-final filteredNotificationsProvider =
-    Provider<List<AppNotification>>((ref) {
+final filteredNotificationsProvider = Provider<List<AppNotification>>((ref) {
   final tab = ref.watch(notificationTabProvider);
   final all = ref.watch(notificationsProvider).valueOrNull ?? const [];
   switch (tab) {

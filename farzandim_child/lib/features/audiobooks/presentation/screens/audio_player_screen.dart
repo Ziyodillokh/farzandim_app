@@ -1,27 +1,47 @@
 // ─────────────────────────────────────────────────────────────────────
-// AudioPlayerScreen — Parvoz NIGHT/GLASS audio pleer (Premium Edition)
+// AudioPlayerScreen — to'liq audio pleer (screenshot 1:1)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Fon: AppColors.parvozBg (solid navy — GradientBackground olib tashlandi).
-// Cover: parvozGlass() bilan o'ralgan, glow soyasi aqua.
-// Top bar: ParvozHeader orqaga + sleep timer glass chip + menu.
-// Slider: aqua aktiv iz, oq thumb.
-// Play tugmasi: aqua (#22D3EE) doira, ustida to'q navy icon.
-// Tezlik/seek: parvozText/parvozTextDim.
-// BottomSheet'lar: parvozSurface fon, parvozBorder ajratuvchi.
+// Layout:
+//   ┌ SafeArea ─────────────────────────────────────────────────
+//   │ [←]      "1-qism"                            [↑ share]
+//   │          "A kite for a moon · Jane Yolen"
+//   │
+//   │                ┌────────────────┐
+//   │                │                │
+//   │                │     COVER      │  (240 × 320, radius 14)
+//   │                │                │
+//   │                └────────────────┘
+//   │
+//   │  ━━━━━━━━━━●━━━━━━━━━━━━━━━━━━━━━━━━━━  (blue → gray)
+//   │  09:40                                 40:12
+//   │
+//   │   1.5x   ⟲15   [▶]   ⟳15   ⏱
+//   │
+//   └───────────────────────────────────────────────────────────
 //
-// LOGIKA SAQLANADI: ref.watch(audioPlayerProvider), ref.listen(error),
-// hasAudio guard, seek/play/pause/resume/setSpeed/sleepTimer — barchasi
-// o'zgarishsiz.
+// Ranglar:
+//   - Sahifa fon: #0B0F14
+//   - Cover glow: yumshoq navy
+//   - Progress aktiv: #216BFF (ko'k)
+//   - Play tugma: tund kul-qora doira (#2A2F38)
+//   - Ikon rangi: oq / #B6BCC5
 
-import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_icons.dart';
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
-import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:solar_icons/solar_icons.dart';
+
+const _pageBg = Color(0xFF0B0F14);
+const _tileBg = Color(0xFF1A2029);
+const _blue = Color(0xFF216BFF);
+const _trackInactive = Color(0xFF2A323D);
+const _textMuted = Color(0xFF9CA3AF);
+const _iconMuted = Color(0xFFB6BCC5);
+const _playBg = Color(0xFF2A2F38);
 
 class AudioPlayerScreen extends ConsumerWidget {
   const AudioPlayerScreen({super.key});
@@ -30,7 +50,7 @@ class AudioPlayerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(audioPlayerProvider);
 
-    // Audio yuklab/ijro etib bo'lmasa — snackbar xabar.
+    // Audio xatosi bo'lsa foydalanuvchiga bildirish (jim qolmaslik).
     ref.listen<String?>(
       audioPlayerProvider.select((s) => s.error),
       (prev, err) {
@@ -56,61 +76,108 @@ class AudioPlayerScreen extends ConsumerWidget {
     final book = state.currentBook!;
 
     return Scaffold(
-      backgroundColor: AppColors.parvozBg,
-      body: Column(
-        children: [
-          // ── Top bar: orqaga + sleep timer + menu ──
-          _PlayerTopBar(book: book, state: state),
-          // ── Qolgan kontent ──
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 24),
-                child: Column(
-                  children: [
-                    const SizedBox(height: 24),
-                    // ── Cover ──
-                    _Cover(book: book),
-                    const SizedBox(height: 24),
-                    // ── Muallif ──
-                    Text(
-                      book.author,
-                      textAlign: TextAlign.center,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        letterSpacing: 0.3,
-                        color: AppColors.parvozTextDim,
-                      ),
+      backgroundColor: _pageBg,
+      body: SafeArea(
+        bottom: false,
+        child: Column(
+          children: [
+            _TopBar(
+              title: '1-qism',
+              subtitle: '${book.title} · ${book.author}',
+              onBack: () => Navigator.of(context).maybePop(),
+              onShare: () => _showShareInfo(context),
+            ),
+            Expanded(
+              child: Column(
+                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                children: [
+                  _Cover(book: book),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 20),
+                    child: Column(
+                      children: [
+                        _ProgressBar(state: state),
+                        const SizedBox(height: 32),
+                        _Controls(state: state),
+                      ],
                     ),
-                    const SizedBox(height: 6),
-                    // ── Sarlavha ──
-                    Text(
-                      book.title,
-                      textAlign: TextAlign.center,
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.parvozText,
-                        height: 1.2,
-                      ),
-                    ),
-                    const SizedBox(height: 28),
-                    // ── Slider + vaqt ──
-                    _SliderRow(state: state),
-                    const SizedBox(height: 20),
-                    // ── Boshqaruv tugmalari ──
-                    _Controls(state: state, book: book),
-                    const SizedBox(height: 32),
-                  ],
-                ),
+                  ),
+                ],
               ),
             ),
+            SizedBox(height: MediaQuery.of(context).padding.bottom + 12),
+          ],
+        ),
+      ),
+    );
+  }
+
+  void _showShareInfo(BuildContext context) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Ulashish tez orada qo\'shiladi'),
+        duration: Duration(seconds: 2),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// Top bar — ← [Title/Subtitle] [↑ share]
+// ═════════════════════════════════════════════════════════════════════
+class _TopBar extends StatelessWidget {
+  const _TopBar({
+    required this.title,
+    required this.subtitle,
+    required this.onBack,
+    required this.onShare,
+  });
+
+  final String title;
+  final String subtitle;
+  final VoidCallback onBack;
+  final VoidCallback onShare;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      // Boshqa sahifalar bilan bir xil: header tepaga yopishmasin.
+      padding: const EdgeInsets.fromLTRB(16, 54, 16, 8),
+      child: Row(
+        children: [
+          _IconTile(
+            icon: SolarIconsOutline.arrowLeft,
+            onTap: onBack,
+          ),
+          Expanded(
+            child: Column(
+              children: [
+                Text(
+                  title,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 17,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  subtitle,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  textAlign: TextAlign.center,
+                  style: const TextStyle(
+                    color: _textMuted,
+                    fontSize: 12,
+                    fontWeight: FontWeight.w500,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          _IconTile(
+            icon: SolarIconsOutline.uploadMinimalistic,
+            onTap: onShare,
           ),
         ],
       ),
@@ -118,108 +185,34 @@ class AudioPlayerScreen extends ConsumerWidget {
   }
 }
 
-// ─── Top bar ─────────────────────────────────────────────────────────
+class _IconTile extends StatelessWidget {
+  const _IconTile({required this.icon, required this.onTap});
 
-class _PlayerTopBar extends ConsumerWidget {
-  const _PlayerTopBar({required this.book, required this.state});
-
-  final AudiobookModel book;
-  final AudioPlayerState state;
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    return SafeArea(
-      bottom: false,
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
       child: Container(
-        height: 56,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: const BoxDecoration(
-          border: Border(bottom: BorderSide(color: AppColors.parvozBorder)),
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: _tileBg,
+          borderRadius: BorderRadius.circular(14),
         ),
-        child: Row(
-          children: [
-            // Orqaga tugma
-            GestureDetector(
-              onTap: () => Navigator.pop(context),
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(
-                  Icons.keyboard_arrow_down_rounded,
-                  color: AppColors.parvozText,
-                  size: 28,
-                ),
-              ),
-            ),
-            // ── Sleep timer chip (markazda) ──
-            Expanded(
-              child: Center(
-                child: state.hasSleepTimer
-                    ? Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 12, vertical: 6),
-                        decoration: BoxDecoration(
-                          color: AppColors.parvozSurface,
-                          borderRadius: BorderRadius.circular(20),
-                          border: Border.all(
-                              color: AppColors.parvozBorderStrong),
-                        ),
-                        child: Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            const Icon(AppIcons.hourglass,
-                                color: AppColors.parvozGreen, size: 14),
-                            const SizedBox(width: 6),
-                            Text(
-                              _formatDuration(state.sleepTimerRemaining),
-                              style: const TextStyle(
-                                color: AppColors.parvozText,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ],
-                        ),
-                      )
-                    : const SizedBox.shrink(),
-              ),
-            ),
-            // Menu tugmasi
-            GestureDetector(
-              onTap: () => _openMenu(context, book),
-              behavior: HitTestBehavior.opaque,
-              child: Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.parvozSurface,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.more_horiz_rounded,
-                  color: AppColors.parvozText,
-                  size: 22,
-                ),
-              ),
-            ),
-          ],
-        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: Colors.white, size: 20),
       ),
-    );
-  }
-
-  void _openMenu(BuildContext context, AudiobookModel book) {
-    showModalBottomSheet<void>(
-      context: context,
-      backgroundColor: Colors.transparent,
-      builder: (_) => _AudioMenuSheet(book: book),
     );
   }
 }
 
-// ─── Cover (glass card) ──────────────────────────────────────────────
-
+// ═════════════════════════════════════════════════════════════════════
+// Cover — o'rtada katta muqova (yumshoq soya bilan)
+// ═════════════════════════════════════════════════════════════════════
 class _Cover extends StatelessWidget {
   const _Cover({required this.book});
 
@@ -227,64 +220,65 @@ class _Cover extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // 3:4 kitob muqovasi proporsiyasi, glass frame
-    return ConstrainedBox(
-      constraints: const BoxConstraints(maxWidth: 260, maxHeight: 352),
-      child: AspectRatio(
-        aspectRatio: 3 / 4,
-        child: Container(
-          decoration: parvozGlass(radius: 20).copyWith(
-            image: book.coverUrl.isNotEmpty
-                ? DecorationImage(
-                    image: NetworkImage(book.coverUrl),
-                    fit: BoxFit.cover,
-                  )
-                : null,
-            color: book.coverUrl.isEmpty ? book.coverColor : null,
-            // parvozGreen glow soyasi — cover pastida
-            boxShadow: [
-              BoxShadow(
-                // ignore: deprecated_member_use
-                color: AppColors.parvozGreen.withOpacity(0.18),
-                blurRadius: 40,
-                spreadRadius: 4,
-                offset: const Offset(0, 18),
-              ),
-              const BoxShadow(
-                color: Color(0x80000000),
-                blurRadius: 28,
-                offset: Offset(0, 12),
-              ),
-            ],
+    return Center(
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxWidth: 240, maxHeight: 320),
+        child: AspectRatio(
+          aspectRatio: 3 / 4,
+          child: DecoratedBox(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withValues(alpha: 0.55),
+                  blurRadius: 34,
+                  offset: const Offset(0, 14),
+                ),
+              ],
+            ),
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(14),
+              child: book.coverUrl.isNotEmpty
+                  ? CachedNetworkImage(
+                      imageUrl: book.coverUrl,
+                      fit: BoxFit.cover,
+                      placeholder: (_, __) => Container(color: book.coverColor),
+                      errorWidget: (_, __, ___) => _fallback(book),
+                    )
+                  : _fallback(book),
+            ),
           ),
-          clipBehavior: Clip.antiAlias,
-          child: book.coverUrl.isEmpty
-              ? Center(
-                  child: Container(
-                    width: 80,
-                    height: 80,
-                    decoration: const BoxDecoration(
-                      color: AppColors.parvozSurface,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      AppIcons.speaker,
-                      color: AppColors.parvozTextDim,
-                      size: 44,
-                    ),
-                  ),
-                )
-              : null,
+        ),
+      ),
+    );
+  }
+
+  Widget _fallback(AudiobookModel book) {
+    return Container(
+      color: book.coverColor,
+      alignment: Alignment.center,
+      child: Container(
+        width: 72,
+        height: 72,
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.28),
+          shape: BoxShape.circle,
+        ),
+        child: const Icon(
+          SolarIconsBold.headphonesRound,
+          color: Colors.white,
+          size: 34,
         ),
       ),
     );
   }
 }
 
-// ─── Slider + vaqt ───────────────────────────────────────────────────
-
-class _SliderRow extends ConsumerWidget {
-  const _SliderRow({required this.state});
+// ═════════════════════════════════════════════════════════════════════
+// Progress bar — aktiv qism ko'k, pozitsiya + davomiylik pastda
+// ═════════════════════════════════════════════════════════════════════
+class _ProgressBar extends ConsumerWidget {
+  const _ProgressBar({required this.state});
 
   final AudioPlayerState state;
 
@@ -293,54 +287,49 @@ class _SliderRow extends ConsumerWidget {
     final maxSec = state.duration.inSeconds == 0
         ? 1.0
         : state.duration.inSeconds.toDouble();
+    final position = state.position.inSeconds
+        .toDouble()
+        .clamp(0.0, maxSec);
 
     return Column(
       children: [
         SliderTheme(
           data: SliderThemeData(
-            trackHeight: 3,
-            thumbShape:
-                const RoundSliderThumbShape(enabledThumbRadius: 7),
-            overlayShape:
-                const RoundSliderOverlayShape(overlayRadius: 16),
-            activeTrackColor: AppColors.parvozGreen,
-            // ignore: deprecated_member_use
-            inactiveTrackColor: AppColors.parvozBorderStrong,
-            thumbColor: AppColors.parvozText,
-            // ignore: deprecated_member_use
-            overlayColor: AppColors.parvozGreen.withOpacity(0.15),
+            trackHeight: 4,
+            thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 7),
+            overlayShape: const RoundSliderOverlayShape(overlayRadius: 16),
+            activeTrackColor: _blue,
+            inactiveTrackColor: _trackInactive,
+            thumbColor: _blue,
+            overlayColor: _blue.withValues(alpha: 0.15),
           ),
           child: Slider(
-            value: state.position.inSeconds
-                .toDouble()
-                .clamp(0.0, maxSec),
+            value: position,
             max: maxSec,
-            onChanged: (val) {
-              ref
-                  .read(audioPlayerProvider.notifier)
-                  .seek(Duration(seconds: val.toInt()));
-            },
+            onChanged: (v) => ref
+                .read(audioPlayerProvider.notifier)
+                .seek(Duration(seconds: v.toInt())),
           ),
         ),
         Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 6),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                _formatDuration(state.position),
+                _fmt(state.position),
                 style: const TextStyle(
+                  color: _textMuted,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.parvozTextDim,
                 ),
               ),
               Text(
-                _formatDuration(state.duration),
+                _fmt(state.duration),
                 style: const TextStyle(
+                  color: _textMuted,
                   fontSize: 12,
                   fontWeight: FontWeight.w500,
-                  color: AppColors.parvozTextDim,
                 ),
               ),
             ],
@@ -349,111 +338,89 @@ class _SliderRow extends ConsumerWidget {
       ],
     );
   }
+
+  String _fmt(Duration d) {
+    String two(int n) => n.toString().padLeft(2, '0');
+    final h = d.inHours;
+    final m = two(d.inMinutes.remainder(60));
+    final s = two(d.inSeconds.remainder(60));
+    return h > 0 ? '$h:$m:$s' : '$m:$s';
+  }
 }
 
-// ─── Controls ────────────────────────────────────────────────────────
-
+// ═════════════════════════════════════════════════════════════════════
+// Controls — [1.5x] ⟲15 [▶] ⟳15 [⏱]
+// ═════════════════════════════════════════════════════════════════════
 class _Controls extends ConsumerWidget {
-  const _Controls({required this.state, required this.book});
+  const _Controls({required this.state});
 
   final AudioPlayerState state;
-  final AudiobookModel book;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final speed = ref.watch(audioSpeedProvider);
+    final hasSleepTimer = state.hasSleepTimer;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      crossAxisAlignment: CrossAxisAlignment.center,
       children: [
-        // Tezlik chip (chap)
-        GestureDetector(
-          onTap: () {
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const _SpeedPickerSheet(),
-            );
-          },
-          behavior: HitTestBehavior.opaque,
-          child: Container(
-            width: 52,
-            height: 40,
-            alignment: Alignment.center,
-            decoration: BoxDecoration(
-              color: AppColors.parvozSurface,
-              borderRadius: BorderRadius.circular(10),
-              border:
-                  Border.all(color: AppColors.parvozBorderStrong),
-            ),
-            child: Text(
-              '${_formatSpeed(speed)}x',
-              style: const TextStyle(
-                color: AppColors.parvozText,
-                fontSize: 14,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
+        _SpeedButton(
+          speed: speed,
+          onTap: () => _openSpeedSheet(context),
         ),
-        // 10s ortga
         _SeekButton(
-          icon: Icons.replay_10_rounded,
+          seconds: 15,
+          direction: _SeekDirection.back,
           onTap: () =>
               ref.read(audioPlayerProvider.notifier).seekBackward(),
         ),
-        // Play/Pause — aqua doira, to'q navy icon
-        GestureDetector(
+        _PlayButton(
+          isPlaying: state.isPlaying,
           onTap: () {
-            final notifier = ref.read(audioPlayerProvider.notifier);
+            final n = ref.read(audioPlayerProvider.notifier);
             if (state.isPlaying) {
-              notifier.pause();
+              n.pause();
             } else {
-              notifier.resume();
+              n.resume();
             }
           },
-          child: Container(
-            width: 76,
-            height: 76,
-            decoration: BoxDecoration(
-              color: AppColors.parvozGreen,
-              shape: BoxShape.circle,
-              boxShadow: [
-                BoxShadow(
-                  // ignore: deprecated_member_use
-                  color: AppColors.parvozGreen.withOpacity(0.35),
-                  blurRadius: 24,
-                  spreadRadius: 2,
-                  offset: const Offset(0, 6),
-                ),
-              ],
-            ),
-            child: Icon(
-              state.isPlaying
-                  ? Icons.pause_rounded
-                  : Icons.play_arrow_rounded,
-              color: AppColors.parvozOnGreen,
-              size: 44,
-            ),
-          ),
         ),
-        // 10s oldinga
         _SeekButton(
-          icon: Icons.forward_10_rounded,
+          seconds: 15,
+          direction: _SeekDirection.forward,
           onTap: () =>
               ref.read(audioPlayerProvider.notifier).seekForward(),
         ),
-        // O'ng bo'sh joy — simmetriya (tezlik chip bilan)
-        const SizedBox(width: 52, height: 40),
+        _SleepTimerButton(
+          active: hasSleepTimer,
+          onTap: () => _openSleepSheet(context),
+        ),
       ],
+    );
+  }
+
+  void _openSpeedSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _SpeedSheet(),
+    );
+  }
+
+  void _openSleepSheet(BuildContext context) {
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      builder: (_) => const _SleepSheet(),
     );
   }
 }
 
-class _SeekButton extends StatelessWidget {
-  const _SeekButton({required this.icon, required this.onTap});
+// ─── Speed button ("1.5x" matn) ──────────────────────────────────────
+class _SpeedButton extends StatelessWidget {
+  const _SpeedButton({required this.speed, required this.onTap});
 
-  final IconData icon;
+  final double speed;
   final VoidCallback onTap;
 
   @override
@@ -464,365 +431,58 @@ class _SeekButton extends StatelessWidget {
       child: SizedBox(
         width: 52,
         height: 52,
-        child: Icon(
-          icon,
-          color: AppColors.parvozText,
-          size: 36,
+        child: Center(
+          child: Text(
+            '${_fmt(speed)}x',
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
         ),
       ),
     );
   }
-}
 
-String _formatSpeed(double speed) {
-  if (speed == speed.roundToDouble()) return speed.toInt().toString();
-  return speed.toString();
-}
-
-// ─── Speed picker sheet ─────────────────────────────────────────────
-
-class _SpeedPickerSheet extends ConsumerWidget {
-  const _SpeedPickerSheet();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final currentSpeed = ref.watch(audioSpeedProvider);
-    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
-
-    return _SheetContainer(
-      title: 'Tezlik',
-      children: [
-        for (final speed in speeds)
-          ListTile(
-            title: Text(
-              '${speed}x',
-              style: const TextStyle(color: AppColors.parvozText),
-            ),
-            trailing: speed == currentSpeed
-                ? const Icon(AppIcons.check, color: AppColors.parvozGreen)
-                : null,
-            onTap: () {
-              ref.read(audioSpeedProvider.notifier).state = speed;
-              ref.read(audioPlayerProvider.notifier).setSpeed(speed);
-              Navigator.pop(context);
-            },
-          ),
-      ],
-    );
+  String _fmt(double s) {
+    if (s == s.roundToDouble()) return s.toInt().toString();
+    return s.toString();
   }
 }
 
-// ─── Audio menu sheet ───────────────────────────────────────────────
+// ─── Seek button (⟲15 / ⟳15 — Solar Bold ikon + son ustida) ──────────
+enum _SeekDirection { back, forward }
 
-class _AudioMenuSheet extends ConsumerWidget {
-  const _AudioMenuSheet({required this.book});
+class _SeekButton extends StatelessWidget {
+  const _SeekButton({
+    required this.seconds,
+    required this.direction,
+    required this.onTap,
+  });
 
-  final AudiobookModel book;
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final speed = ref.watch(audioSpeedProvider);
-    final hasSleepTimer = ref.watch(audioPlayerProvider).hasSleepTimer;
-
-    return _SheetContainer(
-      children: [
-        ListTile(
-          leading: const Icon(Icons.speed, color: AppColors.parvozGreen),
-          title: const Text('Tezlik',
-              style: TextStyle(color: AppColors.parvozText)),
-          subtitle: Text(
-            '${speed}x',
-            style: const TextStyle(
-                color: AppColors.parvozTextDim, fontSize: 12),
-          ),
-          trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.parvozTextDim),
-          onTap: () {
-            Navigator.pop(context);
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const _SpeedPickerSheet(),
-            );
-          },
-        ),
-        ListTile(
-          leading:
-              const Icon(AppIcons.hourglass, color: AppColors.parvozGreen),
-          title: const Text(
-            'Uyqu taymeri',
-            style: TextStyle(color: AppColors.parvozText),
-          ),
-          subtitle: Text(
-            hasSleepTimer ? 'Faol' : "O'chirilgan",
-            style: const TextStyle(
-                color: AppColors.parvozTextDim, fontSize: 12),
-          ),
-          trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.parvozTextDim),
-          onTap: () {
-            Navigator.pop(context);
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              builder: (_) => const _SleepTimerSheet(),
-            );
-          },
-        ),
-        ListTile(
-          leading: const Icon(Icons.info_outline,
-              color: AppColors.parvozGreen),
-          title: const Text(
-            'Tafsilotlar',
-            style: TextStyle(color: AppColors.parvozText),
-          ),
-          trailing: const Icon(AppIcons.chevronRight,
-              color: AppColors.parvozTextDim),
-          onTap: () {
-            Navigator.pop(context);
-            showModalBottomSheet<void>(
-              context: context,
-              backgroundColor: Colors.transparent,
-              isScrollControlled: true,
-              builder: (_) => _DetailsSheet(book: book),
-            );
-          },
-        ),
-      ],
-    );
-  }
-}
-
-// ─── Sleep timer sheet ───────────────────────────────────────────────
-
-class _SleepTimerSheet extends ConsumerWidget {
-  const _SleepTimerSheet();
-
-  @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final hasTimer = ref.watch(audioPlayerProvider).hasSleepTimer;
-    final notifier = ref.read(audioPlayerProvider.notifier);
-
-    return _SheetContainer(
-      title: 'Uyqu taymeri',
-      children: [
-        ListTile(
-          title: const Text(
-            "O'chirish",
-            style: TextStyle(color: AppColors.parvozText),
-          ),
-          trailing: !hasTimer
-              ? const Icon(AppIcons.check, color: AppColors.parvozGreen)
-              : null,
-          onTap: () {
-            notifier.cancelSleepTimer();
-            Navigator.pop(context);
-          },
-        ),
-        for (final min in const [5, 10, 15, 20, 30, 45])
-          ListTile(
-            title: Text(
-              '$min daqiqa',
-              style: const TextStyle(color: AppColors.parvozText),
-            ),
-            onTap: () {
-              notifier.startSleepTimer(min);
-              Navigator.pop(context);
-              ScaffoldMessenger.of(context).showSnackBar(
-                SnackBar(
-                  content: Text('Uyqu taymeri: $min daqiqa'),
-                  duration: const Duration(seconds: 2),
-                ),
-              );
-            },
-          ),
-      ],
-    );
-  }
-}
-
-// ─── Details sheet ──────────────────────────────────────────────────
-
-class _DetailsSheet extends StatelessWidget {
-  const _DetailsSheet({required this.book});
-
-  final AudiobookModel book;
+  final int seconds;
+  final _SeekDirection direction;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.parvozSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        child: Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Center(
-                child: Container(
-                  margin: const EdgeInsets.only(bottom: 16),
-                  width: 40,
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: AppColors.parvozBorderStrong,
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                ),
-              ),
-              const Text(
-                'Tafsilotlar',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.parvozText,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _row('Nomi', book.title),
-              _row('Muallif', book.author),
-              _row('Kategoriya', book.category),
-              _row('Davomiyligi', book.duration),
-              _row('Tinglashlar', '${book.listenCount}'),
-              const SizedBox(height: 16),
-              const Text(
-                'Tavsif',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                  color: AppColors.parvozTextDim,
-                ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                book.description,
-                style: const TextStyle(
-                  fontSize: 14,
-                  color: AppColors.parvozText,
-                  height: 1.5,
-                ),
-              ),
-              if (book.hashtags.isNotEmpty) ...[
-                const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final tag in book.hashtags)
-                      Container(
-                        padding: const EdgeInsets.symmetric(
-                            horizontal: 10, vertical: 4),
-                        decoration: BoxDecoration(
-                          // ignore: deprecated_member_use
-                          color: AppColors.parvozGreen.withOpacity(0.12),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(
-                            // ignore: deprecated_member_use
-                            color: AppColors.parvozGreen.withOpacity(0.25),
-                          ),
-                        ),
-                        child: Text(
-                          tag,
-                          style: const TextStyle(
-                            color: AppColors.parvozGreen,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-              ],
-              const SizedBox(height: 16),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _row(String label, String value) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 4),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          SizedBox(
-            width: 110,
-            child: Text(
-              label,
-              style: const TextStyle(
-                fontSize: 13,
-                color: AppColors.parvozTextDim,
-              ),
-            ),
-          ),
-          Expanded(
-            child: Text(
-              value,
-              style: const TextStyle(
-                fontSize: 14,
-                color: AppColors.parvozText,
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─── Sheet container shared shell ───────────────────────────────────
-
-class _SheetContainer extends StatelessWidget {
-  const _SheetContainer({required this.children, this.title});
-
-  final String? title;
-  final List<Widget> children;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      decoration: const BoxDecoration(
-        color: AppColors.parvozSurface,
-        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
-      ),
-      child: SafeArea(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 56,
+        height: 56,
+        child: Stack(
+          alignment: Alignment.center,
           children: [
-            Container(
-              margin: const EdgeInsets.only(top: 12),
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.parvozBorderStrong,
-                borderRadius: BorderRadius.circular(2),
-              ),
+            Icon(
+              direction == _SeekDirection.back
+                  ? SolarIconsOutline.rewind15SecondsBack
+                  : SolarIconsOutline.rewind15SecondsForward,
+              color: _iconMuted,
+              size: 44,
             ),
-            if (title != null)
-              Padding(
-                padding: const EdgeInsets.all(16),
-                child: Text(
-                  title!,
-                  style: const TextStyle(
-                    fontSize: 18,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.parvozText,
-                  ),
-                ),
-              )
-            else
-              const SizedBox(height: 16),
-            if (title != null)
-              const Divider(
-                  color: AppColors.parvozBorder, height: 1),
-            ...children,
-            const SizedBox(height: 16),
           ],
         ),
       ),
@@ -830,12 +490,210 @@ class _SheetContainer extends StatelessWidget {
   }
 }
 
-// ─── Helpers ────────────────────────────────────────────────────────
+// ─── Play / Pause tugma (katta dumaloq, oq ikon) ─────────────────────
+class _PlayButton extends StatelessWidget {
+  const _PlayButton({required this.isPlaying, required this.onTap});
 
-String _formatDuration(Duration d) {
-  String two(int n) => n.toString().padLeft(2, '0');
-  final h = d.inHours;
-  final m = two(d.inMinutes.remainder(60));
-  final s = two(d.inSeconds.remainder(60));
-  return h > 0 ? '$h:$m:$s' : '$m:$s';
+  final bool isPlaying;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 64,
+        height: 64,
+        decoration: BoxDecoration(
+          color: _playBg,
+          shape: BoxShape.circle,
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.4),
+              blurRadius: 20,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        alignment: Alignment.center,
+        child: Icon(
+          isPlaying
+              ? Icons.pause_rounded
+              : Icons.play_arrow_rounded,
+          color: Colors.white,
+          size: 34,
+        ),
+      ),
+    );
+  }
 }
+
+// ─── Sleep timer tugma ───────────────────────────────────────────────
+class _SleepTimerButton extends StatelessWidget {
+  const _SleepTimerButton({required this.active, required this.onTap});
+
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: SizedBox(
+        width: 52,
+        height: 52,
+        child: Center(
+          child: Icon(
+            active
+                ? SolarIconsBold.stopwatch
+                : SolarIconsOutline.stopwatch,
+            color: active ? _blue : _iconMuted,
+            size: 26,
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// Bottom sheet — tezlik tanlash
+// ═════════════════════════════════════════════════════════════════════
+class _SpeedSheet extends ConsumerWidget {
+  const _SpeedSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final current = ref.watch(audioSpeedProvider);
+    const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
+
+    return _Sheet(
+      title: 'Tezlik',
+      children: [
+        for (final s in speeds)
+          _SheetTile(
+            label: '${s}x',
+            selected: s == current,
+            onTap: () {
+              ref.read(audioSpeedProvider.notifier).state = s;
+              ref.read(audioPlayerProvider.notifier).setSpeed(s);
+              Navigator.pop(context);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// Bottom sheet — uyqu taymeri
+// ═════════════════════════════════════════════════════════════════════
+class _SleepSheet extends ConsumerWidget {
+  const _SleepSheet();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final notifier = ref.read(audioPlayerProvider.notifier);
+    final hasTimer = ref.watch(audioPlayerProvider).hasSleepTimer;
+
+    return _Sheet(
+      title: 'Uyqu taymeri',
+      children: [
+        _SheetTile(
+          label: "O'chirish",
+          selected: !hasTimer,
+          onTap: () {
+            notifier.cancelSleepTimer();
+            Navigator.pop(context);
+          },
+        ),
+        for (final m in const [5, 10, 15, 20, 30, 45])
+          _SheetTile(
+            label: '$m daqiqa',
+            selected: false,
+            onTap: () {
+              notifier.startSleepTimer(m);
+              Navigator.pop(context);
+            },
+          ),
+      ],
+    );
+  }
+}
+
+class _Sheet extends StatelessWidget {
+  const _Sheet({required this.title, required this.children});
+
+  final String title;
+  final List<Widget> children;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: _tileBg,
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(top: 10, bottom: 12),
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: _trackInactive,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            Text(
+              title,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 8),
+            ...children,
+            const SizedBox(height: 12),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _SheetTile extends StatelessWidget {
+  const _SheetTile({
+    required this.label,
+    required this.selected,
+    required this.onTap,
+  });
+
+  final String label;
+  final bool selected;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return ListTile(
+      onTap: onTap,
+      title: Text(
+        label,
+        style: TextStyle(
+          color: selected ? _blue : Colors.white,
+          fontSize: 15,
+          fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
+        ),
+      ),
+      trailing: selected
+          ? const Icon(Icons.check_rounded, color: _blue, size: 22)
+          : null,
+    );
+  }
+}
+

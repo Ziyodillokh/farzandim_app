@@ -45,8 +45,11 @@ void _handleUnlockDecision(Ref ref, RemoteMessage message) {
   // Limit darhol yangilansin (server effektiv limitga grantni qo'shgan).
   unawaited(ref.read(restrictionsSyncServiceProvider).sync());
 
-  final ctx =
-      ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+  final ctx = ref
+      .read(routerProvider)
+      .routerDelegate
+      .navigatorKey
+      .currentContext;
   if (ctx == null || !ctx.mounted) return;
   final approved = message.data['approved'] == 'true';
   if (approved) {

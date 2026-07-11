@@ -1,25 +1,56 @@
 // ─────────────────────────────────────────────────────────────────────
-// AccountEditScreen — bola profili tahrirlash (Parvoz NIGHT/GLASS redizayn)
+// AccountEditScreen — "Akkount sozlamalari" (Figma 1:1, Parvoz night)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Maydonlar: foto (galereya), ism, yosh (5-18), hudud, til. Saqlash backend
-// orqali (uploadMyAvatar + updateMyProfile). LOGIKA SAQLANGAN — faqat ko'rinish
-// night/glass (parvoz tokenlar + parvozGlass). Light keyin alohida.
+// Sozlamalar'dagi "Akkount" va profildagi avatar bosilganda ochiladi.
+// Tuzilishi (Figma):
+//   • Header: ← kvadrat tugma + "Akkount sozlamalari" (chapga)
+//   • Profil rasm qatori: kichik avatar + "Profil rasm" + "Rasm yuklash" pill
+//   • "Ism familiya" input
+//   • "Farzandingizning tug'ilgan kuni" input (KK.OO.YYYY)
+//   • Pastda ko'k "Saqlash"
+//
+// LOGIKA SAQLANGAN: uploadMyAvatar + updateMyProfile (backend). Tug'ilgan
+// kundan yosh hisoblanadi; region avvalgi qiymatida saqlanadi.
 
-import 'dart:typed_data';
-
-import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
-import 'package:farzandim_child/features/account/presentation/widgets/age_list_dialog.dart';
-import 'package:farzandim_child/features/account/presentation/widgets/region_picker_bottom_sheet.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
-import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
+
+// ════════════ Figma tokenlar ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _field = Color(0xFF060B12);
+const _fieldBorder = Color(0x1FFFFFFF);
+const _glass = Color(0x14FFFFFF);
+const _glassBorder = Color(0x24FFFFFF);
+const _red = Color(0xFFE74C4C);
+const _green = Color(0xFF22C55E);
+
+TextStyle _unb(
+  double s, {
+  FontWeight w = FontWeight.w700,
+  Color c = Colors.white,
+  double ls = -0.3,
+}) => GoogleFonts.unbounded(
+  fontSize: s,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.25,
+);
+
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.4);
 
 class AccountEditScreen extends ConsumerStatefulWidget {
   const AccountEditScreen({super.key});
@@ -29,9 +60,10 @@ class AccountEditScreen extends ConsumerStatefulWidget {
 }
 
 class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
-  final TextEditingController _nameController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _birthController = TextEditingController();
 
-  int? _selectedAge;
+  int? _loadedAge;
   String? _selectedRegion;
   Uint8List? _selectedPhotoBytes;
   String? _existingPhotoUrl;
@@ -42,6 +74,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   @override
   void dispose() {
     _nameController.dispose();
+    _birthController.dispose();
     super.dispose();
   }
 
@@ -50,8 +83,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     _hasLoaded = true;
 
     _nameController.text = (childData['name'] as String?) ?? '';
-    _selectedAge = childData['age'] as int?;
+    _loadedAge = childData['age'] as int?;
     _selectedRegion = childData['region'] as String?;
+    // Yosh ma'lum bo'lsa taxminiy tug'ilgan yil ko'rsatiladi (01.01.YYYY).
+    if (_loadedAge != null) {
+      _birthController.text = '01.01.${DateTime.now().year - _loadedAge!}';
+    }
     final childId = childData['id'] as String?;
     final photoPath = childData['photoPath'] as String?;
     final bust = DateTime.now().millisecondsSinceEpoch;
@@ -74,40 +111,38 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     }
   }
 
-  Future<void> _selectRegion() async {
-    final result = await RegionPickerBottomSheet.show(
-      context,
-      selectedRegion: _selectedRegion,
-    );
-    if (result != null && mounted) {
-      setState(() => _selectedRegion = result);
-    }
-  }
-
-  Future<void> _selectAge() async {
-    final result = await showDialog<int>(
-      context: context,
-      builder: (_) => AgeListDialog(selectedAge: _selectedAge),
-    );
-    if (result != null && mounted) {
-      setState(() => _selectedAge = result);
-    }
+  /// "KK.OO.YYYY" dan yoshni hisoblaydi; xato format bo'lsa null.
+  int? _ageFromBirthText(String text) {
+    final m = RegExp(r'^(\d{2})\.(\d{2})\.(\d{4})$').firstMatch(text.trim());
+    if (m == null) return null;
+    final day = int.parse(m.group(1)!);
+    final month = int.parse(m.group(2)!);
+    final year = int.parse(m.group(3)!);
+    if (day < 1 || day > 31 || month < 1 || month > 12) return null;
+    final now = DateTime.now();
+    if (year < now.year - 25 || year > now.year) return null;
+    var age = now.year - year;
+    if (now.month < month || (now.month == month && now.day < day)) age--;
+    return age;
   }
 
   Future<void> _onSave() async {
     final name = _nameController.text.trim();
-
     if (name.isEmpty) {
-      _showSnack('account.errorNameEmpty'.tr(), AppColors.error);
+      _showSnack("Ism familiyani kiriting", _red);
       return;
     }
-    if (_selectedAge == null) {
-      _showSnack('account.errorAgeEmpty'.tr(), AppColors.error);
-      return;
-    }
-    if (_selectedRegion == null) {
-      _showSnack('account.errorRegionEmpty'.tr(), AppColors.error);
-      return;
+
+    // Tug'ilgan kun kiritilgan bo'lsa — yosh shu yerdan; bo'sh bo'lsa eski.
+    int? age = _loadedAge;
+    final birthText = _birthController.text.trim();
+    if (birthText.isNotEmpty) {
+      final parsed = _ageFromBirthText(birthText);
+      if (parsed == null) {
+        _showSnack("Sana KK.OO.YYYY formatida bo'lsin", _red);
+        return;
+      }
+      age = parsed;
     }
 
     final pairing = ref.read(pairingStateProvider);
@@ -122,36 +157,31 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
         await repo.uploadMyAvatar(bytes: _selectedPhotoBytes!);
       }
 
-      await repo.updateMyProfile(
-        name: name,
-        age: _selectedAge,
-        region: _selectedRegion,
-      );
+      await repo.updateMyProfile(name: name, age: age, region: _selectedRegion);
 
-      ref.invalidate(childDataStreamProvider((
-        parentUid: pairing.parentUid!,
-        childId: pairing.childId!,
-      )));
+      ref.invalidate(
+        childDataStreamProvider((
+          parentUid: pairing.parentUid!,
+          childId: pairing.childId!,
+        )),
+      );
       ref.invalidate(childAvatarUrlProvider(pairing.childId!));
 
       if (!mounted) return;
-      _showSnack('account.savedSnack'.tr(), AppColors.success);
+      _showSnack('Saqlandi!', _green);
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      _showSnack(
-        'account.errorPrefix'.tr(namedArgs: {'error': '$e'}),
-        AppColors.error,
-      );
+      _showSnack('Xatolik: $e', _red);
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
   void _showSnack(String text, Color bg) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(text), backgroundColor: bg),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(text), backgroundColor: bg));
   }
 
   @override
@@ -162,237 +192,145 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
         pairing.parentUid == null ||
         pairing.childId == null) {
       return const Scaffold(
-        backgroundColor: AppColors.parvozBg,
-        body: Center(
-          child: CircularProgressIndicator(color: AppColors.parvozGreen),
-        ),
+        backgroundColor: _bg,
+        body: Center(child: CircularProgressIndicator(color: Colors.white38)),
       );
     }
 
-    final childDataAsync = ref.watch(childDataStreamProvider((
-      parentUid: pairing.parentUid!,
-      childId: pairing.childId!,
-    )));
+    final childDataAsync = ref.watch(
+      childDataStreamProvider((
+        parentUid: pairing.parentUid!,
+        childId: pairing.childId!,
+      )),
+    );
+
+    final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
 
     return Scaffold(
-      backgroundColor: AppColors.parvozBg,
-      body: Column(
-        children: [
-          ParvozHeader(
-            title: 'account.title'.tr(),
-            onBack: () => Navigator.pop(context),
-          ),
-          Expanded(
-            child: childDataAsync.when(
-              data: (data) {
-                if (data != null) _loadCurrentData(data);
-                return _buildForm(context);
-              },
-              loading: () => const Center(
-                child: CircularProgressIndicator(color: AppColors.parvozGreen),
+      backgroundColor: _bg,
+      body: SafeArea(
+        child: Column(
+          children: [
+            // ── Header (Figma: ← + sarlavha chapda) ──
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 54, 16, 24),
+              child: Row(
+                children: [
+                  _SquareBtn(
+                    icon: Icons.arrow_back_rounded,
+                    onTap: () => Navigator.pop(context),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(child: Text('Akkount sozlamalari', style: _unb(19))),
+                ],
               ),
-              error: (e, _) => Center(
-                child: Padding(
-                  padding: const EdgeInsets.all(24),
-                  child: Text(
-                    'account.errorPrefix'.tr(namedArgs: {'error': '$e'}),
-                    textAlign: TextAlign.center,
-                    style: const TextStyle(color: AppColors.error),
+            ),
+            Expanded(
+              child: childDataAsync.when(
+                data: (data) {
+                  if (data != null) _loadCurrentData(data);
+                  return _buildForm(context);
+                },
+                loading: () => const Center(
+                  child: CircularProgressIndicator(color: Colors.white38),
+                ),
+                error: (e, _) => Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(24),
+                    child: Text(
+                      'Xatolik: $e',
+                      textAlign: TextAlign.center,
+                      style: _pop(13.5, c: _red),
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-        ],
+            // ── Saqlash (Figma: to'liq enli ko'k pill) ──
+            Padding(
+              padding: EdgeInsets.fromLTRB(16, 8, 16, 14 + bottomInset),
+              child: GestureDetector(
+                onTap: _isLoading ? null : _onSave,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  width: double.infinity,
+                  height: 56,
+                  alignment: Alignment.center,
+                  decoration: BoxDecoration(
+                    color: _blue.withValues(alpha: _isLoading ? 0.6 : 1),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: _isLoading
+                      ? const SizedBox(
+                          width: 22,
+                          height: 22,
+                          child: CircularProgressIndicator(
+                            color: Colors.white,
+                            strokeWidth: 2.4,
+                          ),
+                        )
+                      : Text('Saqlash', style: _pop(15, w: FontWeight.w600)),
+                ),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
   Widget _buildForm(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Expanded(
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: 8),
-                  Center(
-                    child: GestureDetector(
-                      onTap: _pickPhoto,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: parvozGlass(radius: 24),
-                        clipBehavior: Clip.antiAlias,
-                        child: _buildPhoto(),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 10),
-                  Center(
-                    child: TextButton.icon(
-                      onPressed: _pickPhoto,
-                      icon: const Icon(Icons.photo_camera_rounded,
-                          color: AppColors.parvozGreen, size: 18),
-                      label: Text(
-                        'account.photoLabel'.tr(),
-                        style: const TextStyle(
-                          color: AppColors.parvozGreen,
-                          fontWeight: FontWeight.w600,
-                        ),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  _buildLabel('account.nameLabel'.tr()),
-                  const SizedBox(height: 8),
-                  Container(
-                    decoration: parvozGlassFlat(radius: 14),
-                    child: TextField(
-                      controller: _nameController,
-                      style: const TextStyle(color: AppColors.parvozText),
-                      decoration: InputDecoration(
-                        hintText: 'account.nameHint'.tr(),
-                        hintStyle:
-                            const TextStyle(color: AppColors.parvozTextDim),
-                        border: InputBorder.none,
-                        contentPadding: const EdgeInsets.all(16),
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabel('account.ageLabel'.tr()),
-                  const SizedBox(height: 8),
-                  _buildPicker(
-                    icon: Icons.cake_rounded,
-                    text: _selectedAge != null
-                        ? 'account.ageValue'
-                            .tr(namedArgs: {'age': '$_selectedAge'})
-                        : 'account.agePlaceholder'.tr(),
-                    onTap: _selectAge,
-                    isPlaceholder: _selectedAge == null,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabel('account.regionLabel'.tr()),
-                  const SizedBox(height: 8),
-                  _buildPicker(
-                    icon: Icons.location_on_rounded,
-                    text: _selectedRegion ?? 'account.regionPlaceholder'.tr(),
-                    onTap: _selectRegion,
-                    isPlaceholder: _selectedRegion == null,
-                  ),
-                  const SizedBox(height: 16),
-                  _buildLabel('account.languageLabel'.tr()),
-                  const SizedBox(height: 8),
-                  _buildPicker(
-                    icon: Icons.translate_rounded,
-                    text: _currentLanguageLabel(context),
-                    onTap: _selectLanguage,
-                    isPlaceholder: false,
-                  ),
-                  const SizedBox(height: 24),
-                ],
-              ),
-            ),
-          ),
+          // ── Profil rasm qatori ──
           Row(
             children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: _isLoading ? null : () => Navigator.pop(context),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
-                    side: const BorderSide(color: AppColors.parvozGlassRim),
-                  ),
-                  child: Text(
-                    'account.backButton'.tr(),
-                    style: const TextStyle(color: AppColors.parvozText),
-                  ),
-                ),
+              Container(
+                width: 42,
+                height: 42,
+                decoration: const BoxDecoration(shape: BoxShape.circle),
+                clipBehavior: Clip.antiAlias,
+                child: _buildPhoto(),
               ),
               const SizedBox(width: 12),
-              Expanded(
-                child: ElevatedButton(
-                  onPressed: _isLoading ? null : _onSave,
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.parvozGreen,
-                    foregroundColor: AppColors.parvozOnGreen,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 16),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(14),
-                    ),
+              Expanded(child: Text('Profil rasm', style: _pop(14))),
+              GestureDetector(
+                onTap: _pickPhoto,
+                behavior: HitTestBehavior.opaque,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 10,
                   ),
-                  child: _isLoading
-                      ? const SizedBox(
-                          width: 20,
-                          height: 20,
-                          child: CircularProgressIndicator(
-                            color: AppColors.parvozOnGreen,
-                            strokeWidth: 2,
-                          ),
-                        )
-                      : Text(
-                          'account.saveButton'.tr(),
-                          style: const TextStyle(fontWeight: FontWeight.w700),
-                        ),
+                  decoration: BoxDecoration(
+                    color: _glass,
+                    borderRadius: BorderRadius.circular(999),
+                    border: Border.all(color: _glassBorder),
+                  ),
+                  child: Text(
+                    'Rasm yuklash',
+                    style: _pop(12.5, w: FontWeight.w600),
+                  ),
                 ),
               ),
             ],
           ),
+          const SizedBox(height: 26),
+          Text('Ism familiya', style: _pop(13.5)),
+          const SizedBox(height: 10),
+          _Field(controller: _nameController, hint: 'Ism familiya'),
+          const SizedBox(height: 18),
+          Text("Farzandingizning tug'ilgan kuni", style: _pop(13.5)),
+          const SizedBox(height: 10),
+          _Field(
+            controller: _birthController,
+            hint: 'KK.OO.YYYY',
+            keyboardType: TextInputType.datetime,
+          ),
         ],
-      ),
-    );
-  }
-
-  Widget _buildLabel(String text) {
-    return Text(
-      text,
-      style: const TextStyle(
-        fontSize: 14,
-        fontWeight: FontWeight.w600,
-        color: AppColors.parvozText,
-      ),
-    );
-  }
-
-  Widget _buildPicker({
-    required IconData icon,
-    required String text,
-    required VoidCallback onTap,
-    bool isPlaceholder = false,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: parvozGlassFlat(radius: 14),
-        child: Row(
-          children: [
-            Icon(icon, color: AppColors.parvozGreen, size: 20),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Text(
-                text,
-                style: TextStyle(
-                  color: isPlaceholder
-                      ? AppColors.parvozTextDim
-                      : AppColors.parvozText,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ),
-            const Icon(Icons.keyboard_arrow_down_rounded,
-                color: AppColors.parvozTextDim),
-          ],
-        ),
       ),
     );
   }
@@ -405,83 +343,87 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       return Image.network(
         _existingPhotoUrl!,
         fit: BoxFit.cover,
-        errorBuilder: (_, __, ___) => _buildPhotoPlaceholder(),
+        errorBuilder: (_, __, ___) => _photoPlaceholder(),
       );
     }
-    return _buildPhotoPlaceholder();
+    return _photoPlaceholder();
   }
 
-  Widget _buildPhotoPlaceholder() {
-    return const Center(
-      child: Icon(
-        Icons.photo_camera_rounded,
-        color: AppColors.parvozTextDim,
-        size: 32,
+  Widget _photoPlaceholder() {
+    final name = _nameController.text.trim();
+    return Container(
+      color: const Color(0xFF66B3FF),
+      alignment: Alignment.center,
+      child: Text(
+        name.isNotEmpty ? name[0].toUpperCase() : '?',
+        style: _unb(18, w: FontWeight.w800),
       ),
     );
-  }
-
-  String _currentLanguageLabel(BuildContext context) {
-    final code = context.locale.languageCode;
-    return 'languages.$code'.tr();
-  }
-
-  Future<void> _selectLanguage() async {
-    final selected = await showModalBottomSheet<Locale>(
-      context: context,
-      backgroundColor: AppColors.parvozSurface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (_) => _LanguagePickerSheet(current: context.locale),
-    );
-
-    if (selected != null && mounted && selected != context.locale) {
-      await context.setLocale(selected);
-    }
   }
 }
 
-class _LanguagePickerSheet extends StatelessWidget {
-  const _LanguagePickerSheet({required this.current});
+// ════════════ Widget'lar ════════════
 
-  final Locale current;
-
-  static const _options = [Locale('uz'), Locale('ru'), Locale('en')];
+class _SquareBtn extends StatelessWidget {
+  const _SquareBtn({required this.icon, required this.onTap});
+  final IconData icon;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.all(16),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'account.languagePickerTitle'.tr(),
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w700,
-                color: AppColors.parvozText,
-              ),
-            ),
-            const SizedBox(height: 12),
-            for (final locale in _options)
-              ListTile(
-                contentPadding: EdgeInsets.zero,
-                title: Text(
-                  'languages.${locale.languageCode}'.tr(),
-                  style: const TextStyle(color: AppColors.parvozText),
-                ),
-                trailing: locale == current
-                    ? const Icon(Icons.check_rounded,
-                        color: AppColors.parvozGreen)
-                    : const Icon(Icons.radio_button_unchecked,
-                        color: AppColors.parvozTextDim),
-                onTap: () => Navigator.pop(context, locale),
-              ),
-          ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 46,
+        height: 46,
+        decoration: BoxDecoration(
+          color: _glass,
+          borderRadius: BorderRadius.circular(15),
+          border: Border.all(color: _glassBorder),
+        ),
+        child: Icon(icon, color: Colors.white, size: 21),
+      ),
+    );
+  }
+}
+
+/// Figma input: to'q navy fon + nozik chegara + oq matn.
+class _Field extends StatelessWidget {
+  const _Field({
+    required this.controller,
+    required this.hint,
+    this.keyboardType,
+  });
+
+  final TextEditingController controller;
+  final String hint;
+  final TextInputType? keyboardType;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _field,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _fieldBorder),
+      ),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: _pop(14.5),
+        cursorColor: _blue,
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: _pop(14.5, c: const Color(0x4DFFFFFF)),
+          filled: false,
+          border: InputBorder.none,
+          enabledBorder: InputBorder.none,
+          focusedBorder: InputBorder.none,
+          contentPadding: const EdgeInsets.symmetric(
+            horizontal: 18,
+            vertical: 16,
+          ),
         ),
       ),
     );

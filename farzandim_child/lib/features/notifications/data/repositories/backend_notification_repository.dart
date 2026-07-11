@@ -21,8 +21,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendNotificationRepositoryProvider =
     Provider<BackendNotificationRepository>((ref) {
-  return BackendNotificationRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendNotificationRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendNotificationRepository {
   BackendNotificationRepository({required Dio dio}) : _dio = dio;
@@ -37,10 +37,7 @@ class BackendNotificationRepository {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/notifications',
-        queryParameters: {
-          if (isRead != null) 'isRead': isRead,
-          'limit': limit,
-        },
+        queryParameters: {if (isRead != null) 'isRead': isRead, 'limit': limit},
       );
       final data = response.data;
       if (data == null) {
@@ -48,8 +45,9 @@ class BackendNotificationRepository {
       }
       final list = data['notifications'] as List<dynamic>? ?? const [];
       final items = list
-          .map((e) =>
-              AppNotification.fromBackendJson(e as Map<String, dynamic>))
+          .map(
+            (e) => AppNotification.fromBackendJson(e as Map<String, dynamic>),
+          )
           .toList();
       final unread = (data['unreadCount'] as num?)?.toInt() ?? 0;
       return (items: items, unreadCount: unread);
@@ -70,8 +68,7 @@ class BackendNotificationRepository {
 
   Future<bool> markAllAsRead(String childId) async {
     try {
-      await _dio
-          .put<void>('/children/$childId/notifications/read-all');
+      await _dio.put<void>('/children/$childId/notifications/read-all');
       return true;
     } on DioException {
       return false;

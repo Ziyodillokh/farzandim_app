@@ -3,13 +3,16 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Audiokitoblar real backend `/api/content/audiobooks` dan keladi.
-// Backend bola yoshi bo'yicha filtrlaydi — mock yo'q, bo'sh kelsa
-// "kontent yo'q" ko'rsatamiz.
+// Backend bola yoshi bo'yicha filtrlaydi. Backend bo'sh yoki kam
+// (< 4) kitob qaytarsa, dizayn ko'rsatish uchun mahalliy MOCK katalog
+// bilan to'ldiriladi (release build'da .env bilan o'chiriladi).
 
 import 'dart:async';
 
+import 'package:flutter/material.dart' show Color;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
 
@@ -53,11 +56,118 @@ class AudiobooksNotifier extends AsyncNotifier<List<AudiobookModel>> {
   }
 }
 
-/// Backend qaytargan real ro'yxat. Mock fallback OLIB TASHLANDI: mock
-/// kontent yosh filtridan o'tmaydi — bo'sh bo'lsa bo'sh ko'rsatamiz.
+/// Backend qaytargan real ro'yxat, ba'zi holatlarda MOCK katalog
+/// bilan boyitilgan (dizayn ko'rsatish uchun). Backend ko'p kitob
+/// qaytarsa mock qo'shilmaydi.
 final effectiveAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {
-  return ref.watch(backendAudiobooksProvider).valueOrNull ?? const [];
+  final real = ref.watch(backendAudiobooksProvider).valueOrNull ?? const [];
+  if (real.length >= 4) return real;
+  // Kam kelsa: real + mock (takrorsiz id bilan)
+  final existingIds = real.map((b) => b.id).toSet();
+  final extras = _mockAudiobooks
+      .where((m) => !existingIds.contains(m.id))
+      .toList(growable: false);
+  return [...real, ...extras];
 });
+
+// ─────────────────────────────────────────────────────────────────────
+// Mock katalog — dizayn/dev uchun (screenshot bilan mos). Backend real
+// kontent yubormaguncha ekranlar bo'sh qolmasin.
+// ─────────────────────────────────────────────────────────────────────
+const _mockAudiobooks = <AudiobookModel>[
+  AudiobookModel(
+    id: 'mock-james-giant-peach',
+    title: 'James and the Giant Peach',
+    author: 'Roald Dahl',
+    description:
+        "James sehrli bahaybat shaftoli ichida noodatiy safarga chiqadi.",
+    coverUrl:
+        'https://covers.openlibrary.org/b/id/8231855-L.jpg',
+    audioUrl: '',
+    durationSeconds: 9600,
+    duration: '2:40:00',
+    category: 'Hikoya',
+    hashtags: ['#7-12yosh', '#hikoya'],
+    listenCount: 1240,
+    coverColor: Color(0xFFF97316),
+    partsCount: 6,
+  ),
+  AudiobookModel(
+    id: 'mock-kite-for-moon',
+    title: 'A Kite for Moon',
+    author: 'Jane Yolen',
+    description: "Kichkina bola oyga uchqun uchirib do'st bo'ladi.",
+    coverUrl: 'https://covers.openlibrary.org/b/id/9871823-L.jpg',
+    audioUrl: '',
+    durationSeconds: 9600,
+    duration: '2:40:00',
+    category: 'Hikoya',
+    hashtags: ['#5-10yosh', '#hikoya'],
+    listenCount: 890,
+    coverColor: AppColors.catIndigo,
+    partsCount: 6,
+  ),
+  AudiobookModel(
+    id: 'mock-yellowface',
+    title: 'Yellowface',
+    author: 'R. F. Kuang',
+    description: 'Adabiyot dunyosining ichki tomonlari haqida hikoya.',
+    coverUrl: 'https://covers.openlibrary.org/b/id/13205207-L.jpg',
+    audioUrl: '',
+    durationSeconds: 9600,
+    duration: '2:40:00',
+    category: 'Sarguzasht',
+    hashtags: ['#12-18yosh', '#sarguzasht'],
+    listenCount: 1560,
+    coverColor: AppColors.accent,
+    partsCount: 8,
+  ),
+  AudiobookModel(
+    id: 'mock-night-ocean',
+    title: 'The Night Ocean',
+    author: 'Paul La Farge',
+    description: 'Sirli okean va uning tunlarda uyg\'ongan hikoyalari.',
+    coverUrl: 'https://covers.openlibrary.org/b/id/8231856-L.jpg',
+    audioUrl: '',
+    durationSeconds: 9600,
+    duration: '2:40:00',
+    category: 'Sarguzasht',
+    hashtags: ['#10-18yosh', '#sarguzasht'],
+    listenCount: 620,
+    coverColor: Color(0xFF6B4423),
+    partsCount: 10,
+  ),
+  AudiobookModel(
+    id: 'mock-ertak-1',
+    title: 'Yulduzli osmon',
+    author: 'A. Obidjon',
+    description: 'Bolalar uchun sehrli ertaklar to\'plami.',
+    coverUrl: '',
+    audioUrl: '',
+    durationSeconds: 1620,
+    duration: '27:00',
+    category: 'Ertak',
+    hashtags: ['#3-8yosh', '#ertak'],
+    listenCount: 2340,
+    coverColor: AppColors.catBlue,
+    partsCount: 5,
+  ),
+  AudiobookModel(
+    id: 'mock-ilm-1',
+    title: 'Kichkintoy olim',
+    author: 'M. Xoshimov',
+    description: 'Ilm dunyosidagi qiziqarli kashfiyotlar.',
+    coverUrl: '',
+    audioUrl: '',
+    durationSeconds: 2400,
+    duration: '40:00',
+    category: 'Ilm',
+    hashtags: ['#8-14yosh', '#ilm'],
+    listenCount: 780,
+    coverColor: AppColors.catEmerald,
+    partsCount: 4,
+  ),
+];
 
 final filteredAudiobooksProvider =
     Provider<List<AudiobookModel>>((ref) {

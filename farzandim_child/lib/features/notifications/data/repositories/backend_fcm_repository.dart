@@ -34,18 +34,12 @@ class BackendFcmRepository {
     try {
       await _dio.post<Map<String, dynamic>>(
         '/fcm/tokens',
-        data: {
-          'token': token,
-          'deviceType': deviceType,
-          'deviceId': deviceId,
-        },
+        data: {'token': token, 'deviceType': deviceType, 'deviceId': deviceId},
       );
       debugPrint('BackendFcm: token registered ($deviceType)');
       return true;
     } on DioException catch (e) {
-      debugPrint(
-        'BackendFcm.registerToken xato ${e.response?.statusCode}',
-      );
+      debugPrint('BackendFcm.registerToken xato ${e.response?.statusCode}');
       return false;
     }
   }

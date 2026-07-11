@@ -15,6 +15,7 @@
 // recommendedBooksProvider, topVideosProvider, activeContestsProvider,
 // unreadNotificationsCountProvider. Backend bo'sh bo'lsa PREVIEW kartalar.
 
+import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
@@ -249,7 +250,7 @@ class _Header extends ConsumerWidget {
         _SquareIconButton(
           svg: _bellBingSvg,
           showDot: unread > 0,
-          onTap: () => context.push('/notifications'),
+          onTap: () => showNotificationsSheet(context),
         ),
       ],
     );

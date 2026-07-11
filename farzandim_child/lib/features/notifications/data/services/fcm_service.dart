@@ -51,8 +51,8 @@ class FcmService {
   FcmService({
     required BackendFcmRepository backendRepo,
     FirebaseMessaging? messaging,
-  })  : _backendRepo = backendRepo,
-        _messaging = messaging ?? FirebaseMessaging.instance;
+  }) : _backendRepo = backendRepo,
+       _messaging = messaging ?? FirebaseMessaging.instance;
 
   final BackendFcmRepository _backendRepo;
   final FirebaseMessaging _messaging;
@@ -102,8 +102,9 @@ class FcmService {
     });
 
     // 5. Background tap listener.
-    _onMessageOpenedAppSub =
-        FirebaseMessaging.onMessageOpenedApp.listen((message) {
+    _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((
+      message,
+    ) {
       debugPrint('FCM opened from background');
       onMessageTap?.call(message);
     });
@@ -137,8 +138,10 @@ class FcmService {
       playSound: true,
       enableVibration: true,
     );
-    final androidPlugin = _localNotifications.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>();
+    final androidPlugin = _localNotifications
+        .resolvePlatformSpecificImplementation<
+          AndroidFlutterLocalNotificationsPlugin
+        >();
     await androidPlugin?.createNotificationChannel(androidChannel);
   }
 
@@ -169,8 +172,8 @@ class FcmService {
       iOS: iosDetails,
     );
 
-    final id = (message.messageId ?? DateTime.now().toIso8601String())
-        .hashCode &
+    final id =
+        (message.messageId ?? DateTime.now().toIso8601String()).hashCode &
         0x7FFFFFFF;
     await _localNotifications.show(id, title, body, details);
   }
@@ -208,7 +211,9 @@ class FcmService {
   Future<void> clearTokens() async {
     try {
       await _backendRepo.deleteAllTokens();
-    } catch (_) {/* ignore */}
+    } catch (_) {
+      /* ignore */
+    }
   }
 
   Future<String> _getOrCreateDeviceId() async {
