@@ -19,6 +19,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/contests/data/mock_questions.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
@@ -366,6 +367,24 @@ class QuizNotifier extends StateNotifier<QuizState> {
     // G'olib bonus XP — UI bilan AYNI chegara (QuizState.winnerThreshold).
     if (state.isWinner) {
       unawaited(_awardWinnerXp());
+    }
+
+    // Shaxsiy rekord (lokal) — "Natija" kartasidagi "Rekord".
+    unawaited(_persistRecord());
+  }
+
+  /// Bu test bo'yicha eng ko'p to'g'ri javob (lokal) — yangilaydi + state'ga.
+  Future<void> _persistRecord() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final key = 'test_record_${contest.id}';
+      final prev = prefs.getInt(key) ?? 0;
+      final best = state.correctCount > prev ? state.correctCount : prev;
+      if (best != prev) await prefs.setInt(key, best);
+      if (!mounted) return;
+      state = state.copyWith(recordCorrect: best);
+    } catch (_) {
+      // Xato — rekord ko'rsatilmaydi (correctCount fallback).
     }
   }
 

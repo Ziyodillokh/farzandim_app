@@ -47,6 +47,10 @@ class QuizState {
   /// boshlanganda o'rnatiladi; mock/offline rejimda null.
   final String? attemptId;
 
+  /// Bu test bo'yicha shaxsiy REKORD (eng ko'p to'g'ri javob) — lokal.
+  /// Yakunlanganda hisoblanadi ("Natija" kartasidagi "Rekord").
+  final int? recordCorrect;
+
   const QuizState({
     this.status = QuizStatus.loading,
     this.currentIndex = 0,
@@ -64,6 +68,7 @@ class QuizState {
     this.correctIndices = const [],
     this.questions = const [],
     this.attemptId,
+    this.recordCorrect,
   });
 
   List<QuestionModel> get effectiveQuestions =>
@@ -99,6 +104,7 @@ class QuizState {
     List<int?>? correctIndices,
     List<QuestionModel>? questions,
     String? attemptId,
+    int? recordCorrect,
   }) {
     return QuizState(
       status: status ?? this.status,
@@ -119,6 +125,7 @@ class QuizState {
       correctIndices: correctIndices ?? this.correctIndices,
       questions: questions ?? this.questions,
       attemptId: attemptId ?? this.attemptId,
+      recordCorrect: recordCorrect ?? this.recordCorrect,
     );
   }
 }

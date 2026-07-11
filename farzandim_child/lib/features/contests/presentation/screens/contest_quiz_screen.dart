@@ -14,15 +14,13 @@
 // Navigatsiya MANUAL (Oldingi/Keyingi), timer UMUMIY (quiz byudjeti).
 
 import 'dart:math' as math;
+import 'dart:ui' show ImageFilter;
 
 import 'package:confetti/confetti.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
-import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/data/sound_service.dart';
-import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
@@ -30,7 +28,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
 
 const _green = Color(0xFF41DD7A);
 const _red = Color(0xFFFF5A6E);
@@ -799,250 +796,308 @@ class _ResultScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final p = CP(true);
-    final isWinner = state.isWinner;
     final total = state.effectiveQuestions.length;
-    final percent = (state.accuracy * 100).round();
+    final correct = state.correctCount;
+    final record = (state.recordCorrect ?? correct).clamp(0, total);
+    final stars = _starsFor(state.accuracy);
+    final yutuq = state.isWinner ? contest.bonus : 0;
+    final cardW = (MediaQuery.sizeOf(context).width - 32).clamp(0.0, 380.0);
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 24),
-      child: Column(
-        children: [
-          const SizedBox(height: 24),
-          Container(
-            width: 124,
-            height: 124,
-            decoration: BoxDecoration(
-              gradient: isWinner
-                  ? const LinearGradient(
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                      colors: [Color(0xFF3C82FF), tBlue],
-                    )
-                  : null,
-              color: isWinner ? null : p.warn.withValues(alpha: 0.16),
-              shape: BoxShape.circle,
-              border: isWinner
-                  ? null
-                  : Border.all(
-                      color: p.warn.withValues(alpha: 0.5),
-                      width: 1.4,
-                    ),
-              boxShadow: [
-                BoxShadow(
-                  color: (isWinner ? tBlue : p.warn).withValues(alpha: 0.34),
-                  blurRadius: 40,
-                  spreadRadius: 2,
-                ),
-              ],
-            ),
-            child: Icon(
-              isWinner ? AppIcons.trophy : Icons.psychology_rounded,
-              color: isWinner ? Colors.white : p.warn,
-              size: 62,
-            ),
-          ),
-          const SizedBox(height: 24),
-          Text(
-            isWinner ? 'Tabriklaymiz!' : 'Yaxshi urinish!',
-            style: tUnb(30, w: FontWeight.w700, ls: -0.6),
-          ),
-          const SizedBox(height: 8),
-          Text(
-            isWinner
-                ? 'Testni muvaffaqiyatli yakunladingiz'
-                : "Keyingi safar yanada yaxshi natija ko'rsatasiz",
-            textAlign: TextAlign.center,
-            style: tPop(14, c: tMuted),
-          ),
-          const SizedBox(height: 28),
-          Container(
-            padding: const EdgeInsets.all(20),
-            decoration: BoxDecoration(
-              color: tGlass,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: tGlassBorder),
-            ),
-            child: Column(
-              children: [
-                _ResultStat(
-                  label: "To'g'ri javoblar",
-                  value: '${state.correctCount}/$total',
-                  color: _green,
-                ),
-                const _ResultDivider(),
-                _ResultStat(
-                  label: 'Yiqqan ball',
-                  value: '${state.totalScore}',
-                  color: tBlue,
-                ),
-                const _ResultDivider(),
-                _ResultStat(
-                  label: 'Aniqlik',
-                  value: '$percent%',
-                  color: AppColors.catLavenderDark,
-                ),
-                const _ResultDivider(),
-                _ResultStat(
-                  label: 'Maksimal streak',
-                  value: '${state.maxStreak}',
-                  color: AppColors.catOrangeLight,
-                ),
-                const _ResultDivider(),
-                _ResultStat(
-                  label: 'Vaqt',
-                  value: _formatElapsed(state.totalElapsed),
-                  color: AppColors.catPinkRose,
-                ),
-              ],
-            ),
-          ),
-          const Spacer(),
-          if (isWinner && state.attemptId != null) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () => _openCertificate(context, ref),
-                icon: const Icon(
-                  Icons.workspace_premium_rounded,
-                  size: 20,
-                  color: Colors.white,
-                ),
-                label: Text('Sertifikat', style: tPop(15, w: FontWeight.w700)),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: p.gold,
-                  foregroundColor: Colors.white,
-                  elevation: 0,
-                  padding: const EdgeInsets.symmetric(vertical: 15),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-          ],
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: () => _onShare(context),
-                  icon: const Icon(
-                    Icons.share_rounded,
-                    size: 18,
-                    color: Colors.white,
-                  ),
-                  label: Text('Ulashish', style: tPop(14, w: FontWeight.w600)),
-                  style: OutlinedButton.styleFrom(
-                    foregroundColor: Colors.white,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                    side: const BorderSide(color: tGlassBorder),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton(
-                  onPressed: () => context.go('/contests'),
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: tBlue,
-                    foregroundColor: Colors.white,
-                    elevation: 0,
-                    padding: const EdgeInsets.symmetric(vertical: 15),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(999),
-                    ),
-                  ),
-                  child: Text('Yopish', style: tPop(15, w: FontWeight.w700)),
-                ),
+    return Center(
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(vertical: 24),
+        child: Container(
+          width: cardW,
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFF1A1F23),
+            borderRadius: BorderRadius.circular(24),
+            border: Border.all(color: const Color(0xFF313639)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.5),
+                blurRadius: 40,
+                spreadRadius: -8,
+                offset: const Offset(0, 20),
               ),
             ],
           ),
-          const SizedBox(height: 24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _StarsRow(stars: stars),
+              const SizedBox(height: 22),
+              Text('Natija', style: tPop(14, c: Colors.white)),
+              const SizedBox(height: 12),
+              Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 8,
+                ),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF1487FA),
+                  borderRadius: BorderRadius.circular(60),
+                  border: Border.all(color: Colors.black),
+                ),
+                child: Text(
+                  '$correct / $total',
+                  style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                ),
+              ),
+              const SizedBox(height: 18),
+              const _CardDivider(),
+              const SizedBox(height: 16),
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(
+                    child: _StatColumn(
+                      label: 'Rekord',
+                      value: Text(
+                        '$record / $total ta',
+                        style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: _StatColumn(
+                      label: 'Yutuq',
+                      value: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            '$yutuq',
+                            style: tUnb(16, w: FontWeight.w600, ls: -0.48),
+                          ),
+                          const SizedBox(width: 6),
+                          const DonBadge(),
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 16),
+              const _CardDivider(),
+              const SizedBox(height: 16),
+              Row(
+                children: [
+                  Expanded(
+                    child: _SecondaryGlassButton(
+                      label: 'Asosiyga',
+                      onTap: () => context.go('/dashboard'),
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: _PremiumBlueButton(
+                      label: 'Revansh',
+                      // Qayta yechish — quiz notifier'ini yangilaymiz (backend
+                      // tugagan urinishni reset qilib qaytadan boshlaydi).
+                      onTap: () => ref.invalidate(quizProvider(contest)),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Aniqlikdan yulduz soni (0–3).
+int _starsFor(double accuracy) {
+  if (accuracy >= 0.9) return 3;
+  if (accuracy >= 0.7) return 2;
+  if (accuracy >= 0.5) return 1;
+  return 0;
+}
+
+/// 3 yulduz (o'rtadagi katta) + amber yog'du. Yiqqan yulduzlar to'ldirilgan
+/// (o'rta → chap → o'ng tartibida).
+class _StarsRow extends StatelessWidget {
+  const _StarsRow({required this.stars});
+
+  final int stars;
+
+  @override
+  Widget build(BuildContext context) {
+    Widget star(bool filled, double size) => Icon(
+      filled ? Icons.star_rounded : Icons.star_border_rounded,
+      size: size,
+      color: const Color(0xFFFFC400),
+    );
+
+    return SizedBox(
+      height: 92,
+      child: Stack(
+        alignment: Alignment.center,
+        clipBehavior: Clip.none,
+        children: [
+          Positioned(
+            top: 6,
+            child: ImageFiltered(
+              imageFilter: ImageFilter.blur(sigmaX: 32, sigmaY: 32),
+              child: Container(
+                width: 180,
+                height: 54,
+                decoration: BoxDecoration(
+                  color: const Color(0xFFFFAE00).withValues(alpha: 0.5),
+                  borderRadius: BorderRadius.circular(999),
+                ),
+              ),
+            ),
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              star(stars >= 2, 46),
+              const SizedBox(width: 12),
+              star(stars >= 1, 70),
+              const SizedBox(width: 12),
+              star(stars >= 3, 46),
+            ],
+          ),
         ],
       ),
     );
   }
-
-  Future<void> _onShare(BuildContext context) async {
-    final total = state.effectiveQuestions.length;
-    final text =
-        "Men Parvoz ilovasida '${contest.title}' testida "
-        "${state.correctCount}/$total to'g'ri javob berdim! 🏆\n"
-        'Yiqqan ball: ${state.totalScore}\n\n'
-        'Sen ham qatnash!';
-    await Share.share(text);
-  }
-
-  Future<void> _openCertificate(BuildContext context, WidgetRef ref) async {
-    final attemptId = state.attemptId;
-    if (attemptId == null) return;
-    final messenger = ScaffoldMessenger.of(context);
-    final data = await ref.read(certificateRepositoryProvider).fetch(attemptId);
-    if (!context.mounted) return;
-    if (data == null) {
-      messenger.showSnackBar(
-        const SnackBar(content: Text('Sertifikat hozircha mavjud emas.')),
-      );
-      return;
-    }
-    if (context.mounted) {
-      context.push('/certificate', extra: data);
-    }
-  }
-
-  String _formatElapsed(Duration d) {
-    final m = d.inMinutes;
-    final s = d.inSeconds.remainder(60);
-    return '$m:${s.toString().padLeft(2, '0')}';
-  }
 }
 
-class _ResultDivider extends StatelessWidget {
-  const _ResultDivider();
-
-  @override
-  Widget build(BuildContext context) {
-    return const Divider(color: tGlassBorder, height: 24, thickness: 1);
-  }
-}
-
-class _ResultStat extends StatelessWidget {
-  const _ResultStat({
-    required this.label,
-    required this.value,
-    required this.color,
-  });
+/// Rekord/Yutuq ustuni — markazlashgan yorliq + qiymat.
+class _StatColumn extends StatelessWidget {
+  const _StatColumn({required this.label, required this.value});
 
   final String label;
-  final String value;
-  final Color color;
+  final Widget value;
 
   @override
   Widget build(BuildContext context) {
-    return Row(
+    return Column(
       children: [
-        Container(
-          width: 10,
-          height: 10,
-          decoration: BoxDecoration(
-            color: color,
-            shape: BoxShape.circle,
-            boxShadow: [
-              BoxShadow(color: color.withValues(alpha: 0.5), blurRadius: 8),
+        Text(label, style: tPop(14, c: Colors.white)),
+        const SizedBox(height: 6),
+        value,
+      ],
+    );
+  }
+}
+
+class _CardDivider extends StatelessWidget {
+  const _CardDivider();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(height: 1, color: const Color(0xFF313639));
+  }
+}
+
+/// "Asosiyga" — ota-ona onboarding SECONDARY shisha (oq gradient + rim + soya).
+class _SecondaryGlassButton extends StatelessWidget {
+  const _SecondaryGlassButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: LinearGradient(
+            begin: Alignment.topRight,
+            end: Alignment.bottomLeft,
+            colors: [
+              Colors.white.withValues(alpha: 0.11),
+              Colors.white.withValues(alpha: 0.025),
             ],
           ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.14),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 18,
+              spreadRadius: -6,
+              offset: const Offset(0, 10),
+            ),
+          ],
         ),
-        const SizedBox(width: 13),
-        Expanded(
-          child: Text(label, style: tPop(14, c: tMuted)),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.chevron_left_rounded,
+              size: 22,
+              color: Colors.white.withValues(alpha: 0.7),
+            ),
+            const SizedBox(width: 4),
+            Text(label, style: tPop(16, w: FontWeight.w500)),
+          ],
         ),
-        Text(value, style: tUnb(15, w: FontWeight.w700, ls: -0.3)),
-      ],
+      ),
+    );
+  }
+}
+
+/// "Revansh" — ota-ona onboarding PREMIUM ko'k shisha (ko'k gradient + rim +
+/// ko'k yog'du soya).
+class _PremiumBlueButton extends StatelessWidget {
+  const _PremiumBlueButton({required this.label, required this.onTap});
+
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 54,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(999),
+          gradient: const LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [Color(0xFF3C82FF), tBlue],
+          ),
+          border: Border.all(
+            color: Colors.white.withValues(alpha: 0.22),
+            width: 1.2,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: tBlue.withValues(alpha: 0.5),
+              blurRadius: 24,
+              spreadRadius: -2,
+              offset: const Offset(0, 10),
+            ),
+          ],
+        ),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(label, style: tPop(16, w: FontWeight.w500)),
+            const SizedBox(width: 6),
+            const Icon(Icons.refresh_rounded, size: 22, color: Colors.white),
+          ],
+        ),
+      ),
     );
   }
 }
