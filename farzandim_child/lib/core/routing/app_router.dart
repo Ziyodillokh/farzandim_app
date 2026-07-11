@@ -45,7 +45,6 @@ import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobo
 import 'package:farzandim_child/features/content/presentation/screens/content_hub_screen.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contest_quiz_screen.dart';
-import 'package:farzandim_child/features/contests/presentation/screens/contest_start_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/contests_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
@@ -224,7 +223,6 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/audiobooks',
           '/audio-player',
           '/contests',
-          '/contest-start',
           '/contest-quiz',
           '/liked-tests',
           '/ranking',
@@ -378,13 +376,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         builder: (context, state) {
           final data = state.extra as CertificateData;
           return CertificateScreen(data: data);
-        },
-      ),
-      GoRoute(
-        path: '/contest-start',
-        builder: (context, state) {
-          final contest = state.extra as ContestModel;
-          return ContestStartScreen(contest: contest);
         },
       ),
       GoRoute(

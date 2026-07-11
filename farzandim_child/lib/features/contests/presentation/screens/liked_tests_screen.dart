@@ -8,6 +8,7 @@
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
+import 'package:farzandim_child/features/contests/presentation/widgets/test_conditions_sheet.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -136,7 +137,11 @@ class LikedTestsScreen extends ConsumerWidget {
   void _openTest(BuildContext context, ContestModel c) {
     if (c.isActive) {
       HapticFeedback.selectionClick();
-      context.push('/contest-start', extra: c);
+      showTestConditionsSheet(
+        context,
+        c,
+        (contest) => context.push('/contest-quiz', extra: contest),
+      );
     } else {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()

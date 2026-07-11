@@ -10,7 +10,15 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
+import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
+
+/// Boshlanayotgan test uchun tanlangan qiyinlik ("Konkurs shartlari" sheet).
+/// Quiz `_start()` shu qiymatdan per-savol vaqtini oladi. Boshlashdan oldin
+/// sheet yozadi.
+final selectedTestDifficultyProvider = StateProvider<TestDifficulty>(
+  (ref) => TestDifficulty.orta,
+);
 
 final backendContestsProvider = FutureProvider<ContestBundle>((ref) async {
   final repo = ref.watch(contestsBackendRepositoryProvider);

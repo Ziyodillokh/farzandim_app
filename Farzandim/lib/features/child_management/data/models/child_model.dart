@@ -261,19 +261,23 @@ class Child {
   // ─── Jonli holat (heartbeat-aware) ──────────────────────────────────
   // Avval status har joyda har xil edi: dashboard/ro'yxat faqat `isConnected`
   // (pairing bayrog'i) ga qarardi → aloqa uzilsa ham "yashil" ko'rinardi.
-  // Endi YAGONA mantiq: "online" = ulangan VA oxirgi heartbeat 5 daqiqa ichida.
+  // Endi YAGONA mantiq: "online" = ulangan VA oxirgi heartbeat 3 daqiqa ichida.
+  // Ostona backend ConnectionMonitor (CONNECTION_LOST_SECONDS≈120s) bilan
+  // moslashtirilgan: dashboard "aloqa uzildi" holati va ota-onaga keladigan
+  // "aloqa uzildi" push deyarli bir vaqtda chiqadi (avval 5 daq edi — UI hali
+  // "online" ko'rsatib turganda push kelib nomuvofiqlik bo'lardi).
 
   /// Bola qurilmasi HOZIR jonli onlaynmi — `isConnected` (pairing) VA oxirgi
-  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 5 daqiqa ichida bo'lishi
+  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 3 daqiqa ichida bo'lishi
   /// shart. Heartbeat to'xtasa `false`.
   bool get isLiveOnline {
     final seen = lastSeenAt ?? deviceInfo?.lastSeen;
     return isConnected &&
         seen != null &&
-        DateTime.now().difference(seen) < const Duration(minutes: 5);
+        DateTime.now().difference(seen) < const Duration(minutes: 3);
   }
 
-  /// Ulangan, lekin heartbeat 5 daqiqadan beri jim — "Aloqa uzildi" holati
+  /// Ulangan, lekin heartbeat 3 daqiqadan beri jim — "Aloqa uzildi" holati
   /// (oddiy "Ulanmagan"dan farqli; PDF M11). `false` bo'lsa: yo jonli onlayn,
   /// yo umuman ulanmagan.
   bool get isConnectionLost => isConnected && !isLiveOnline;

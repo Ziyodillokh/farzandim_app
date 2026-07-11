@@ -27,7 +27,9 @@ import 'package:farzandim_child/features/contests/data/mock_questions.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
+import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
+import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -41,6 +43,13 @@ class QuizNotifier extends StateNotifier<QuizState> {
   final Ref _ref;
 
   final ContestModel contest;
+
+  /// Tanlangan qiyinlikdan per-savol soniya ("Konkurs shartlari" sheet).
+  /// Boshlashdan oldin sheet `selectedTestDifficultyProvider`ni yozadi.
+  late final int _perQuestionSeconds = _ref
+      .read(selectedTestDifficultyProvider)
+      .secondsPerQuestion;
+
   Timer? _questionTimer;
   Timer? _totalTimer;
   Timer? _feedbackTimer;
@@ -85,7 +94,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
   void startPlaying() {
     state = state.copyWith(
       status: QuizStatus.playing,
-      timeRemaining: state.currentQuestion.timeSeconds,
+      timeRemaining: _perQuestionSeconds,
     );
     _startQuestionTimer();
     _startTotalTimer();
@@ -329,7 +338,7 @@ class QuizNotifier extends StateNotifier<QuizState> {
       currentIndex: nextIndex,
       clearSelected: true,
       answerState: AnswerState.none,
-      timeRemaining: state.effectiveQuestions[nextIndex].timeSeconds,
+      timeRemaining: _perQuestionSeconds,
     );
 
     _startQuestionTimer();
