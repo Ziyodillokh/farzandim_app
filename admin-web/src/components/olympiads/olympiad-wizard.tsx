@@ -55,6 +55,25 @@ export function OlympiadWizard({
   const [subject, setSubject] = useState('Matematika');
   const [ageFrom, setAgeFrom] = useState(9);
   const [ageTo, setAgeTo] = useState(12);
+  const [coverKey, setCoverKey] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
+
+  const handleCoverImage = async (file?: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Rasm juda katta (maks 5 MB)');
+      return;
+    }
+    setUploadingCover(true);
+    try {
+      const { key } = await olympiadsApi.uploadQuestionImage(file);
+      setCoverKey(key);
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
+    } finally {
+      setUploadingCover(false);
+    }
+  };
 
   // Step 1
   const [durationMin, setDurationMin] = useState(30);
@@ -92,7 +111,7 @@ export function OlympiadWizard({
 
   const reset = () => {
     setStep(0); setTitle("Iste'dod Uchquni"); setDescription(''); setSubject('Matematika');
-    setAgeFrom(9); setAgeTo(12); setDurationMin(30); setQuestions([emptyQuestion()]);
+    setAgeFrom(9); setAgeTo(12); setCoverKey(null); setDurationMin(30); setQuestions([emptyQuestion()]);
     setType('test'); setDifficulty("o'rta"); setXpReward(50);
     setShuffleQuestions(true); setShuffleAnswers(true); setHideResults(false);
     setAllowBack(true); setCertificateEnabled(true);
@@ -112,6 +131,7 @@ export function OlympiadWizard({
       const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       const payload: OlympiadCreatePayload = {
         title, description, subject, ageFrom, ageTo, type, difficulty,
+        coverKey,
         startTime: start.toISOString(), endTime: end.toISOString(),
         durationMin, xpReward,
         shuffleQuestions, shuffleAnswers, hideResults, allowBack, certificateEnabled,
@@ -183,6 +203,50 @@ export function OlympiadWizard({
               </Field>
               <Field label="Tavsif">
                 <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
+              </Field>
+              <Field label="Banner rasmi (ixtiyoriy)">
+                <input
+                  type="file"
+                  accept="image/*"
+                  id="olympiad-cover"
+                  className="hidden"
+                  onChange={(e) => {
+                    void handleCoverImage(e.target.files?.[0]);
+                    e.target.value = '';
+                  }}
+                />
+                {coverKey ? (
+                  <div className="relative inline-block w-full">
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img
+                      src={questionImageUrl(coverKey)}
+                      alt="Banner"
+                      className="max-h-40 w-full rounded-lg border border-border object-cover"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setCoverKey(null)}
+                      className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white shadow-soft"
+                      title="Bannerni o'chirish"
+                    >
+                      <X className="h-3.5 w-3.5" />
+                    </button>
+                  </div>
+                ) : uploadingCover ? (
+                  <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                    <Loader2 className="h-4 w-4 animate-spin" /> Banner yuklanmoqda...
+                  </div>
+                ) : (
+                  <label
+                    htmlFor="olympiad-cover"
+                    className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-6 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                  >
+                    <ImagePlus className="h-4 w-4" /> Banner yuklash (ixtiyoriy)
+                  </label>
+                )}
+                <p className="mt-1 text-xs text-muted-foreground">
+                  Bola dashboard&apos;idagi test karuselida ko&apos;rinadi. Bo&apos;sh qoldirilsa fan ikonkasi ishlatiladi.
+                </p>
               </Field>
               <Field label="Fan">
                 <Select value={subject} onValueChange={setSubject}>

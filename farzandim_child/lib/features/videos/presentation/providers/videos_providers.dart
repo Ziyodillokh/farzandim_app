@@ -59,13 +59,13 @@ class VideosNotifier extends AsyncNotifier<List<VideoModel>> {
       Future.microtask(() => _refresh(repo));
       return cached;
     }
-    // Cache yo'q (birinchi marta) — network kutiladi.
-    return repo.fetchVideos();
+    // Cache yo'q (birinchi marta) — network kutiladi. Barcha sahifalar.
+    return repo.fetchAllVideos();
   }
 
   Future<void> _refresh(VideosBackendRepository repo) async {
     try {
-      final fresh = await repo.fetchVideos();
+      final fresh = await repo.fetchAllVideos();
       if (_disposed) return;
       state = AsyncData(fresh);
     } catch (_) {

@@ -19,16 +19,23 @@ VideoModel videoFromApiJson(Map<String, dynamic> raw) {
   final ageFrom = (raw['ageFrom'] as num?)?.toInt() ?? 0;
   final ageTo = (raw['ageTo'] as num?)?.toInt() ?? 18;
   final category = (raw['category'] as String?)?.trim();
+  final videoUrl = EnvConfig.resolveMediaUrl((raw['url'] as String?) ?? '');
+  final rawThumb = ((raw['thumbnail'] as String?) ?? '').trim();
+  // Thumbnail: YouTube video bo'lsa DOIM fresh hqdefault (backend eski/buzuq
+  // thumbnail bergan bo'lsa ham banner ishonchli chiqadi); aks holda backend
+  // bergan (MinIO proxy yoki tashqi muqova). Backend deploy'siz ham ishlaydi.
+  final ytThumb = VideoModel.youtubeThumbnailFrom(videoUrl);
+  final thumbnailUrl =
+      ytThumb ??
+      (rawThumb.isNotEmpty ? EnvConfig.resolveMediaUrl(rawThumb) : '');
   return VideoModel(
     id: id,
     title: (raw['title'] as String?) ?? '—',
     description: (raw['description'] as String?) ?? '',
-    thumbnailUrl: EnvConfig.resolveMediaUrl(
-      (raw['thumbnail'] as String?) ?? '',
-    ),
+    thumbnailUrl: thumbnailUrl,
     duration: _formatDuration(durationSec),
     durationSeconds: durationSec,
-    videoUrl: EnvConfig.resolveMediaUrl((raw['url'] as String?) ?? ''),
+    videoUrl: videoUrl,
     category: category?.isNotEmpty == true
         ? _humanCategory(category!)
         : 'Boshqa',

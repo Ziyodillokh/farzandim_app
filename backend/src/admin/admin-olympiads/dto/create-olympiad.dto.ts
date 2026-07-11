@@ -65,6 +65,14 @@ export class CreateOlympiadDto {
   @MaxLength(4000)
   description?: string | null;
 
+  // Banner rasmi kaliti (ixtiyoriy) — question-image upload endpoint qaytargan
+  // `key`. Bola dashboard test karuseli banneri.
+  @ApiProperty({ required: false })
+  @IsOptional()
+  @IsString()
+  @MaxLength(200)
+  coverKey?: string | null;
+
   @ApiProperty()
   @IsString()
   @IsNotEmpty()

@@ -2,12 +2,15 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus, Link as LinkIcon, Play } from 'lucide-react';
+import { Video as VideoIcon, MoreHorizontal, Check, X, Trash2, Eye, Star, Plus, Link as LinkIcon, Play, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  Select, SelectTrigger, SelectValue, SelectContent, SelectItem,
+} from '@/components/ui/select';
 import {
   DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger,
   DropdownMenuSeparator, DropdownMenuLabel,
@@ -19,6 +22,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { VideoUploadModal } from '@/components/content/video-upload-modal';
 import { VideoLinkModal } from '@/components/content/video-link-modal';
 import { VideoPreviewModal } from '@/components/content/video-preview-modal';
+import { VideoEditModal } from '@/components/content/video-edit-modal';
 import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatDuration, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
@@ -31,17 +35,33 @@ const STATUS_TABS = [
   { value: 'rejected', label: 'Rad etilgan' },
 ];
 
+const ALL_CATEGORIES = '__all__';
+
 export default function VideosPage() {
   const qc = useQueryClient();
   const [status, setStatus] = useState('');
+  const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
   const [page, setPage] = useState(1);
   const [uploadOpen, setUploadOpen] = useState(false);
   const [linkOpen, setLinkOpen] = useState(false);
   const limit = 12;
 
+  const { data: categories } = useQuery({
+    queryKey: ['categories', 'video'],
+    queryFn: () => contentApi.categories.list('video'),
+  });
+
+  const activeCategoryId = categoryId === ALL_CATEGORIES ? undefined : categoryId;
+
   const { data, isLoading, isFetching } = useQuery({
-    queryKey: ['videos', { status, page, limit }],
-    queryFn: () => contentApi.videos.list({ status, page, limit }),
+    queryKey: ['videos', { status, categoryId, page, limit }],
+    queryFn: () =>
+      contentApi.videos.list({
+        status,
+        categoryId: activeCategoryId,
+        page,
+        limit,
+      }),
     placeholderData: (p) => p,
   });
 
@@ -93,22 +113,40 @@ export default function VideosPage() {
         onSuccess={invalidate}
       />
 
-      {/* Status tabs */}
-      <div className="mb-4 flex flex-wrap gap-1.5">
-        {STATUS_TABS.map((tab) => (
-          <button
-            key={tab.value}
-            onClick={() => { setStatus(tab.value); setPage(1); }}
-            className={cn(
-              'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
-              status === tab.value
-                ? 'bg-primary text-primary-foreground shadow-soft'
-                : 'bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
-            )}
+      {/* Filtrlar: status tab'lari + kategoriya bo'yicha filter */}
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap gap-1.5">
+          {STATUS_TABS.map((tab) => (
+            <button
+              key={tab.value}
+              onClick={() => { setStatus(tab.value); setPage(1); }}
+              className={cn(
+                'rounded-lg px-3.5 py-1.5 text-sm font-medium transition-colors',
+                status === tab.value
+                  ? 'bg-primary text-primary-foreground shadow-soft'
+                  : 'bg-card text-muted-foreground hover:bg-accent hover:text-foreground',
+              )}
+            >
+              {tab.label}
+            </button>
+          ))}
+        </div>
+        <div className="w-full sm:w-56">
+          <Select
+            value={categoryId}
+            onValueChange={(v) => { setCategoryId(v); setPage(1); }}
           >
-            {tab.label}
-          </button>
-        ))}
+            <SelectTrigger>
+              <SelectValue placeholder="Kategoriya" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value={ALL_CATEGORIES}>Barcha kategoriyalar</SelectItem>
+              {categories?.map((cat) => (
+                <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
       </div>
 
       {isLoading ? (
@@ -140,6 +178,7 @@ export default function VideosPage() {
               onApprove={() => approve.mutate(video.id)}
               onReject={() => reject.mutate(video.id)}
               onRemove={() => remove.mutate(video.id)}
+              onEdited={invalidate}
             />
           ))}
         </div>
@@ -161,13 +200,16 @@ function VideoCard({
   onApprove,
   onReject,
   onRemove,
+  onEdited,
 }: {
   video: Video;
   onApprove: () => void;
   onReject: () => void;
   onRemove: () => void;
+  onEdited: () => void;
 }) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   return (
     <Card className="card-glow group overflow-hidden">
       <button
@@ -214,6 +256,7 @@ function VideoCard({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Amallar</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setPreviewOpen(true)}><Eye /> Ko&apos;rish</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}><Pencil /> Tahrirlash</DropdownMenuItem>
               {video.status !== 'approved' && (
                 <DropdownMenuItem onClick={onApprove} className="text-success focus:text-success">
                   <Check /> Tasdiqlash
@@ -250,6 +293,13 @@ function VideoCard({
         video={video}
         open={previewOpen}
         onOpenChange={setPreviewOpen}
+      />
+
+      <VideoEditModal
+        video={video}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={onEdited}
       />
     </Card>
   );

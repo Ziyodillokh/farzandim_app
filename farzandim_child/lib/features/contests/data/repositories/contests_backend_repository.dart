@@ -18,6 +18,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/question_model.dart';
@@ -193,6 +194,12 @@ class ContestsBackendRepository {
         DateTime.tryParse((raw['endTime'] as String?) ?? '') ?? DateTime.now();
     final participants = (raw['participantCount'] as num?)?.toInt() ?? 0;
     final questions = (raw['questionCount'] as num?)?.toInt() ?? 0;
+    // Banner (ixtiyoriy) — coverKey bo'lsa public proxy URL (bola dashboard
+    // test karuseli banneri); bo'sh bo'lsa ContestModel placeholder ishlatadi.
+    final coverKey = ((raw['coverKey'] as String?) ?? '').trim();
+    final imageUrl = coverKey.isEmpty
+        ? ''
+        : '${EnvConfig.apiUrl}/olympiad-images/$coverKey';
     return ContestModel(
       id: id,
       title: (raw['title'] as String?) ?? '—',
@@ -201,7 +208,7 @@ class ContestsBackendRepository {
       ishtirokchilarSoni: participants,
       deadline: endTime,
       isActive: lifecycle == 'active',
-      imageUrl: '',
+      imageUrl: imageUrl,
       placeholderColor: _colorForSubject(subject),
       placeholderIcon: _iconForSubject(subject),
       bonus: (raw['xpReward'] as num?)?.toInt() ?? 50,

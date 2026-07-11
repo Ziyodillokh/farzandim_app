@@ -36,6 +36,7 @@ function olympiadRow(o: {
   id: string;
   title: string;
   description: string | null;
+  coverKey: string | null;
   subject: string;
   ageFrom: number;
   ageTo: number;
@@ -53,6 +54,7 @@ function olympiadRow(o: {
     id: o.id,
     title: o.title,
     description: o.description,
+    coverKey: o.coverKey ?? null,
     subject: o.subject,
     ageFrom: o.ageFrom,
     ageTo: o.ageTo,

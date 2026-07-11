@@ -41,25 +41,35 @@ class VideosBackendRepository {
   VideosBackendRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;
 
-  Future<List<VideoModel>> fetchVideos({int page = 1, int limit = 50}) async {
+  /// BARCHA sahifalarni yuklaydi — hamma tasdiqlangan (yosh/plan mos) video
+  /// feed'da chiqsin, 1 sahifa (50) bilan cheklanmasin. Xavfsizlik: eng ko'pi
+  /// 20 sahifa (~1000 video). Birinchi sahifa offline cache'ga yoziladi.
+  Future<List<VideoModel>> fetchAllVideos({int limit = 50}) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/content/videos',
-        queryParameters: {'page': page, 'limit': limit},
-      );
-      final items = (response.data?['items'] as List<dynamic>?) ?? const [];
-      // PERF/offline: birinchi sahifani lokal cache'ga yozamiz — keyingi
-      // ochilishda darhol ko'rsatiladi (stale-while-revalidate).
-      if (page == 1) {
-        await ContentCache.save('videos', items);
-      }
-      return items
-          .whereType<Map<String, dynamic>>()
-          .map(videoFromApiJson)
-          .toList(growable: false);
+      final all = <VideoModel>[];
+      var page = 1;
+      var totalPages = 1;
+      do {
+        final response = await _dio.get<Map<String, dynamic>>(
+          '/content/videos',
+          queryParameters: {'page': page, 'limit': limit},
+        );
+        final data = response.data;
+        final items = (data?['items'] as List<dynamic>?) ?? const [];
+        if (page == 1) {
+          await ContentCache.save('videos', items);
+        }
+        all.addAll(
+          items.whereType<Map<String, dynamic>>().map(videoFromApiJson),
+        );
+        final pag = data?['pagination'] as Map<String, dynamic>?;
+        totalPages = (pag?['totalPages'] as num?)?.toInt() ?? 1;
+        page++;
+      } while (page <= totalPages && page <= 20);
+      return List.unmodifiable(all);
     } on DioException catch (e) {
       debugPrint(
-        'VideosBackend.fetchVideos: ${e.response?.statusCode} ${e.message}',
+        'VideosBackend.fetchAllVideos: ${e.response?.statusCode} ${e.message}',
       );
       rethrow;
     }

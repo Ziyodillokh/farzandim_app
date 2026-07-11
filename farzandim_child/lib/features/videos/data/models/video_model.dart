@@ -57,13 +57,22 @@ class VideoModel {
   /// Host-scoped: faqat youtube domeni oldidan kelgan ID olinadi —
   /// `.mp4?v=...` kabi to'g'ridan-to'g'ri havolalar (cache-buster `?v=`)
   /// xato YouTube deb topilmasligi uchun (admin formasi bilan bir xil mantiq).
-  String? get youtubeId {
-    final m = _youtubeRe.firstMatch(videoUrl.trim());
-    return m?.group(1);
-  }
+  String? get youtubeId => youtubeIdFrom(videoUrl);
 
   /// Havola YouTube videosimi (player tanlovi uchun).
   bool get isYouTube => youtubeId != null;
+
+  /// Havoladan 11 belgili YouTube ID (static — mapper thumbnail uchun ham
+  /// ishlatadi). YouTube emas bo'lsa `null`.
+  static String? youtubeIdFrom(String url) =>
+      _youtubeRe.firstMatch(url.trim())?.group(1);
+
+  /// YouTube havolasidan avtomatik thumbnail (banner). Backend bermasa bola
+  /// o'zi hqdefault yasaydi — link orqali videoda ham rasm ko'rinadi.
+  static String? youtubeThumbnailFrom(String url) {
+    final id = youtubeIdFrom(url);
+    return id == null ? null : 'https://img.youtube.com/vi/$id/hqdefault.jpg';
+  }
 }
 
 // youtu.be, youtube.com/watch?...v=, /embed/, /shorts/, /live/ — har xil

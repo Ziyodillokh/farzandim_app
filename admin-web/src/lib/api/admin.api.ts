@@ -105,6 +105,7 @@ export interface ContentListParams {
   limit?: number;
   status?: string;
   category?: string;
+  categoryId?: string;
 }
 
 export const contentApi = {
@@ -247,6 +248,7 @@ export interface OlympiadQuestionInput {
 export interface OlympiadCreatePayload {
   title: string;
   description?: string;
+  coverKey?: string | null;
   subject: string;
   ageFrom: number;
   ageTo: number;

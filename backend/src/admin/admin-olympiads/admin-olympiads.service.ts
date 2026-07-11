@@ -42,6 +42,7 @@ export class AdminOlympiadsService {
       id: o.id,
       title: o.title,
       description: o.description,
+      coverKey: o.coverKey ?? null,
       subject: o.subject,
       ageFrom: o.ageFrom,
       ageTo: o.ageTo,
@@ -175,6 +176,7 @@ export class AdminOlympiadsService {
       data: {
         title: dto.title,
         description: dto.description ?? null,
+        coverKey: dto.coverKey ?? null,
         subject: dto.subject,
         ageFrom: dto.ageFrom,
         ageTo: dto.ageTo,
@@ -242,6 +244,7 @@ export class AdminOlympiadsService {
     const updates: Prisma.OlympiadUpdateInput = {};
     if (dto.title !== undefined) updates.title = dto.title;
     if (dto.description !== undefined) updates.description = dto.description ?? null;
+    if (dto.coverKey !== undefined) updates.coverKey = dto.coverKey ?? null;
     if (dto.subject !== undefined) updates.subject = dto.subject;
     if (dto.ageFrom !== undefined) updates.ageFrom = dto.ageFrom;
     if (dto.ageTo !== undefined) updates.ageTo = dto.ageTo;
