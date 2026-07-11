@@ -10,6 +10,7 @@ import { PrismaService } from '../../../common/database/prisma.service';
 import { StorageService } from '../../../common/storage/storage.service';
 import { BUCKETS } from '../../../common/storage/storage.constants';
 import { CreateVideoDto, UpdateVideoDto } from './dto/create-video.dto';
+import { youtubeThumbnail } from '../../../common/youtube.util';
 
 const MAX_VIDEO_BYTES = 90 * 1024 * 1024;
 const MAX_THUMB_BYTES = 5 * 1024 * 1024;
@@ -118,7 +119,8 @@ export class VideosService {
         title: dto.title,
         description: dto.description ?? null,
         url: dto.url,
-        thumbnail: dto.thumbnail ?? null,
+        // Banner berilmasa YouTube link'dan AVTOMATIK hqdefault olinadi.
+        thumbnail: dto.thumbnail ?? youtubeThumbnail(dto.url) ?? null,
         durationSec: dto.durationSec ?? null,
         ageFrom: dto.ageFrom ?? 0,
         ageTo: dto.ageTo ?? 18,
@@ -264,7 +266,8 @@ export class VideosService {
         title: meta.title,
         description: meta.description ?? null,
         url: videoUrl,
-        thumbnail: thumbnailUrl ?? meta.thumbnail ?? null,
+        thumbnail:
+          thumbnailUrl ?? meta.thumbnail ?? youtubeThumbnail(meta.url) ?? null,
         storageKey: videoKey,
         thumbStorageKey,
         durationSec: meta.durationSec ?? null,

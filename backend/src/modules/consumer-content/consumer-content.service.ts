@@ -9,6 +9,7 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { mediaProxyUrl, MediaSegment } from './media-proxy';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
+import { youtubeThumbnail } from '../../common/youtube.util';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
@@ -148,8 +149,9 @@ export class ConsumerContentService {
     ]);
 
     // Proxy URL (telefonga yetadi); storageKey yo'q bo'lsa (YouTube/link)
-    // asl tashqi url ishlatiladi.
-    const items = rows.map((v) => this.mapVideo(v, origin));
+    // asl tashqi url ishlatiladi. Kategoriya nomlari bitta so'rovda resolve.
+    const catNames = await this.categoryNamesFor(rows);
+    const items = rows.map((v) => this.mapVideo(v, origin, catNames));
 
     return {
       items,
@@ -164,18 +166,29 @@ export class ConsumerContentService {
 
   // Video → telefon feed DTO (proxy URL). getVideos / history / favorites
   // uchun bitta manba — barcha ro'yxatlar bir xil shaklda qaytadi.
-  private mapVideo(v: Video, origin: string) {
+  private mapVideo(v: Video, origin: string, catNames?: Map<string, string>) {
     return {
       id: v.id,
       title: v.title,
       description: v.description,
       url: mediaProxyUrl(origin, 'video', v.storageKey) ?? v.url,
+      // Thumbnail: yuklangan (MinIO) → admin bergan URL → YouTube link'dan
+      // AVTOMATIK hqdefault. Link orqali (YouTube) videoda banner bo'lmasa
+      // ham bola feed'ida rasm ko'rinadi.
       thumbnail:
-        mediaProxyUrl(origin, 'thumb', v.thumbStorageKey) ?? v.thumbnail,
+        mediaProxyUrl(origin, 'thumb', v.thumbStorageKey) ??
+        v.thumbnail ??
+        youtubeThumbnail(v.url),
       durationSec: v.durationSec,
       ageFrom: v.ageFrom,
       ageTo: v.ageTo,
-      category: v.category,
+      // Kategoriya NOMI (ContentCategory.name) — categoryId'dan resolve
+      // qilinadi, eski denorm slug fallback. Admin faqat categoryId yozadi,
+      // shuning uchun read-time resolve shart (aks holda bola doim "Boshqa").
+      category:
+        (v.categoryId ? catNames?.get(v.categoryId) : undefined) ??
+        v.category ??
+        null,
       planRequired: v.planRequired,
       level: v.level,
       featured: v.featured,
@@ -183,6 +196,23 @@ export class ConsumerContentService {
       likes: v.likes,
       createdAt: v.createdAt.toISOString(),
     };
+  }
+
+  // Video qatorlaridagi categoryId'lar → ContentCategory.name xaritasi.
+  // Bola feed'i kategoriya NOMINI ko'rsatishi/chip qurishi uchun (Video↔
+  // ContentCategory relation yo'q — qo'lda resolve). N+1 yo'q: bitta so'rov.
+  private async categoryNamesFor(
+    rows: { categoryId: string | null }[],
+  ): Promise<Map<string, string>> {
+    const ids = [
+      ...new Set(rows.map((r) => r.categoryId).filter((x): x is string => !!x)),
+    ];
+    if (ids.length === 0) return new Map();
+    const cats = await this.prisma.contentCategory.findMany({
+      where: { id: { in: ids } },
+      select: { id: true, name: true },
+    });
+    return new Map(cats.map((c) => [c.id, c.name]));
   }
 
   async getAudiobooks(userId: string, origin: string, page: number, limit: number) {
@@ -510,9 +540,10 @@ export class ConsumerContentService {
       take: limit,
       include: { video: true },
     });
+    const catNames = await this.categoryNamesFor(rows.map((r) => r.video));
     return {
       items: rows.map((r) => ({
-        ...this.mapVideo(r.video, origin),
+        ...this.mapVideo(r.video, origin, catNames),
         viewedAt: r.viewedAt.toISOString(),
       })),
     };
@@ -553,9 +584,10 @@ export class ConsumerContentService {
       orderBy: { createdAt: 'desc' },
       include: { video: true },
     });
+    const catNames = await this.categoryNamesFor(rows.map((r) => r.video));
     return {
       items: rows.map((r) => ({
-        ...this.mapVideo(r.video, origin),
+        ...this.mapVideo(r.video, origin, catNames),
         favoritedAt: r.createdAt.toISOString(),
       })),
     };
