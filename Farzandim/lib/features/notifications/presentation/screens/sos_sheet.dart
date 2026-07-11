@@ -276,7 +276,7 @@ class _LiveMapState extends State<_LiveMap> {
       ),
       children: [
         TileLayer(
-          urlTemplate: whiteMapTileUrl,
+          urlTemplate: mapTileUrl,
           userAgentPackageName: kMapUserAgent,
         ),
         MarkerLayer(

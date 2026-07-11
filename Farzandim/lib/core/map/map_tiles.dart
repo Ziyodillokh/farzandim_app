@@ -3,10 +3,13 @@
 // shu yerdan oladi: joylashuv, geo-zona, tarix, SOS).
 // ─────────────────────────────────────────────────────────────────────
 //
-// Standart: Mapbox **light-v11** (OQ/kulrang, ko'chalar aniq — Yandex Go
-// uslubi, retina @2x bilan tiniq). Mapbox token yo'q bo'lsa — CARTO **light**
-// (kalitsiz, OQ). Har ikkisi ham OQ fon beradi, shuning uchun xarita hech
-// qачон "qora"ga tushmaydi.
+// Standart: Mapbox **streets-v12** — YORUG' fon + BOY tafsilot (POI ikonlari:
+// masjid, maktab, do'kon, park... — Google Maps uslubi). Mapbox token yo'q
+// bo'lsa CARTO **voyager** (kalitsiz, ham yorug', ham POI'li). Ikkisi ham
+// yorug' (qora emas), lekin faqat matn emas — ikonlar bilan tushunarli.
+//
+// (Ilgari light-v11/light_all ishlatilardi — juda minimal, faqat matn edi;
+// foydalanuvchi "Google/Yandex kabi ikonlar bilan" so'radi → boyroq uslub.)
 //
 // Token: `ApiKeys.mapboxPublicToken` (runtime assets/env.json ustun, keyin
 // compile-time --dart-define). Public `pk.…` token URL ичida bo'ladi — bu
@@ -14,29 +17,29 @@
 
 import 'package:farzandim/core/constants/api_keys.dart';
 
-/// Mapbox uslubi — `light-v11`: oq/kulrang fon, ko'chalar aniq o'qiladi.
-const String _mapboxLightStyle = 'mapbox/light-v11';
+/// Mapbox uslubi — `streets-v12`: yorug' fon, ko'chalar + POI ikonlari boy.
+const String _mapboxStyle = 'mapbox/streets-v12';
 
-/// CARTO light (kalitsiz zaxira) — Mapbox token bo'lmasa. OQ fon, OSM data.
-/// Prod attribution: © OpenStreetMap contributors, © CARTO.
-const String _cartoLightUrl =
-    'https://a.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png';
+/// CARTO Voyager (kalitsiz zaxira) — Mapbox token bo'lmasa. Yorug' fon + POI,
+/// OSM data. Prod attribution: © OpenStreetMap contributors, © CARTO.
+const String _cartoVoyagerUrl =
+    'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
 
 /// Xarita paketi nomi (User-Agent) — plitka serverlari talab qilishi mumkin.
 const String kMapUserAgent = 'uz.farzandim.app';
 
-/// OQ xarita plitka URL shabloni (flutter_map `TileLayer.urlTemplate`).
+/// Xarita plitka URL shabloni (flutter_map `TileLayer.urlTemplate`).
 ///
-/// Mapbox token bor → Mapbox `light-v11` (retina @2x, aniq ko'chalar).
-/// Token yo'q → CARTO light (kalitsiz). Har ikkisi OQ fon.
-String get whiteMapTileUrl {
+/// Mapbox token bor → Mapbox `streets-v12` (retina @2x, boy POI). Token yo'q →
+/// CARTO Voyager (kalitsiz). Har ikkisi yorug' fon + ikonlar.
+String get mapTileUrl {
   final token = ApiKeys.mapboxPublicToken;
-  if (token.isEmpty) return _cartoLightUrl;
-  return 'https://api.mapbox.com/styles/v1/$_mapboxLightStyle'
+  if (token.isEmpty) return _cartoVoyagerUrl;
+  return 'https://api.mapbox.com/styles/v1/$_mapboxStyle'
       '/tiles/256/{z}/{x}/{y}@2x?access_token=$token';
 }
 
-/// Plitkalar Mapbox'danmi (attribution matni to'g'ri chiqishi uchun).
+/// Plitkalar Mapbox'danmi (attribution matni + retina rejimi uchun).
 bool get isMapboxTiles => ApiKeys.mapboxPublicToken.isNotEmpty;
 
 /// Xarita pastida ko'rsatiladigan attribution matni (ToS talabi).

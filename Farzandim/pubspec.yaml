@@ -105,6 +105,10 @@ dependencies:
   # chetlab o'tadi. Web qo'llamaydi → u yerda HTTP fallback (GeocodingService).
   geocoding: ^3.0.0
 
+  # Ota-onaning O'Z joylashuvi — xaritada "mening joylashuvim" tugmasi
+  # (bola app bilan bir xil versiya).
+  geolocator: ^11.0.0
+
   # Routing — Flutter rasmiy tavsiyasi
   go_router: ^14.6.2
 

@@ -15,10 +15,12 @@ import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_pr
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
+import 'package:farzandim/features/location/data/services/parent_location_service.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/location_mock.dart';
 import 'package:farzandim/features/location/presentation/providers/road_route_provider.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -157,6 +159,9 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
   double _sheetExtent = _sheetInitial;
   // Qaysi bola uchun wake-push yuborilgan (har bola uchun bir marta).
   String? _wokeChildId;
+  // Ota-onaning O'Z joylashuvi (xaritada ko'k nuqta) + tugma yuklanish holati.
+  gmaps.LatLng? _myLocation;
+  bool _locating = false;
 
   @override
   void dispose() {
@@ -195,6 +200,38 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     _userMovedCamera = false;
     _lastAnimatedTo = loc;
     _mapController.move(_toLL(loc.latitude, loc.longitude), 16);
+  }
+
+  /// "Mening joylashuvim" — ota-ona qurilmasining GPS joyini oladi, xaritani
+  /// o'sha yerga olib boradi va ko'k nuqta ko'rsatadi. Ruxsat yo'q / GPS o'chiq
+  /// / xato bo'lsa mos toast chiqadi.
+  Future<void> _locateMe() async {
+    if (_locating) return;
+    setState(() => _locating = true);
+    final res = await ref.read(parentLocationServiceProvider).current();
+    if (!mounted) return;
+    if (res.isOk) {
+      final loc = gmaps.LatLng(res.latitude!, res.longitude!);
+      // Bola auto-follow'ini to'xtatamiz — aks holda keyingi bola yangilanishi
+      // kamerani bolага qaytarib, "mening joyim"ни bekor qilardi.
+      _userMovedCamera = true;
+      _lastAnimatedTo = loc;
+      setState(() {
+        _myLocation = loc;
+        _locating = false;
+      });
+      if (_mapReady) {
+        _mapController.move(_toLL(loc.latitude, loc.longitude), 16);
+      }
+    } else {
+      setState(() => _locating = false);
+      final msg = switch (res.status) {
+        MyLocationStatus.serviceOff => 'location.myLocation.serviceOff'.tr(),
+        MyLocationStatus.denied => 'location.myLocation.denied'.tr(),
+        _ => 'location.myLocation.error'.tr(),
+      };
+      AppToast.error(context, msg);
+    }
   }
 
   @override
@@ -285,6 +322,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                   child: child,
                   zones: zones,
                   route: routeLine,
+                  myLocation: _myLocation,
                   controller: _mapController,
                   onUserGesture: _onUserGesture,
                   onMapReady: () => _mapReady = true,
@@ -304,6 +342,23 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                         location: location,
                         zones: zones,
                         onRecenter: () => _recenter(location.latLng),
+                      ),
+                    ),
+                  ),
+                ),
+                // "Mening joylashuvim" tugmasi (Google Maps dumaloqчаsi) —
+                // status karta ustida, o'ng chetда. Sheet kengayганда so'nadi.
+                Positioned(
+                  right: AppDimensions.md,
+                  bottom: screenH * _sheetExtent + AppDimensions.sm + 76,
+                  child: IgnorePointer(
+                    ignoring: cardOpacity < 0.05,
+                    child: Opacity(
+                      opacity: cardOpacity,
+                      child: _MyLocationButton(
+                        loading: _locating,
+                        active: _myLocation != null,
+                        onTap: _locateMe,
                       ),
                     ),
                   ),
@@ -364,14 +419,15 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
 
 // ════════════════════════ MAP LAYER ════════════════════════
 
-/// Kalitsiz xarita qatlami — CARTO dark plitkalar + ko'k yo'l chizig'i +
-/// aniqlik/zona doiralari + bola avatar-pin markeri.
+/// OQ xarita qatlami — light plitkalar + ko'k yo'l chizig'i + aniqlik/zona
+/// doiralari + bola avatar-pin markeri + (ixtiyoriy) ota-ona ko'k nuqtasi.
 class _MapLayer extends StatelessWidget {
   const _MapLayer({
     required this.location,
     required this.child,
     required this.zones,
     required this.route,
+    required this.myLocation,
     required this.controller,
     required this.onUserGesture,
     required this.onMapReady,
@@ -383,6 +439,9 @@ class _MapLayer extends StatelessWidget {
 
   /// Ko'chalarga yopishtirilgan bugungi yo'l — ko'k uzuq-uzuq polyline.
   final List<ll.LatLng> route;
+
+  /// Ota-onaning O'Z joylashuvi (ko'k nuqta). `null` bo'lsa ko'rsatilmaydi.
+  final gmaps.LatLng? myLocation;
   final MapController controller;
   final VoidCallback onUserGesture;
   final VoidCallback onMapReady;
@@ -411,9 +470,9 @@ class _MapLayer extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          // OQ xarita — Mapbox light-v11 (token bor) yoki CARTO light
-          // (kalitsiz zaxira). @2x plitkalar retina ekranда tiniq.
-          urlTemplate: whiteMapTileUrl,
+          // Yorug' + POI'li xarita — Mapbox streets-v12 (token) yoki CARTO
+          // Voyager (kalitsiz). map_tiles.dart'да markazlashган.
+          urlTemplate: mapTileUrl,
           userAgentPackageName: kMapUserAgent,
         ),
         // Bugungi yo'l chizig'i (ko'chaga yopishган) — kamida 2 nuqta bo'lsa.
@@ -450,9 +509,18 @@ class _MapLayer extends StatelessWidget {
               ),
           ],
         ),
-        // Bola markeri — oq doira ichida avatar + pastga ishora "dumcha".
+        // Markerlar. Ota-ona ko'k nuqtasi AVVAL (bola avatari uning ustida
+        // qolsin — bola asosiy nishon).
         MarkerLayer(
           markers: [
+            if (myLocation != null)
+              Marker(
+                point: _toLL(myLocation!.latitude, myLocation!.longitude),
+                width: 28,
+                height: 28,
+                child: const _MyLocationDot(),
+              ),
+            // Bola markeri — oq doira ichida avatar + pastga ishora "dumcha".
             Marker(
               point: here,
               width: 58,
@@ -534,6 +602,82 @@ class _PinTailPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+}
+
+// ════════════════════════ MENING JOYLASHUVIM ════════════════════════
+
+/// Ota-onaning O'Z joylashuvi — Google Maps uslubidagi ko'k nuqta
+/// (oq halqa + ko'k glow).
+class _MyLocationDot extends StatelessWidget {
+  const _MyLocationDot();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: _blue,
+        shape: BoxShape.circle,
+        border: Border.all(color: Colors.white, width: 3),
+        boxShadow: [
+          BoxShadow(
+            color: _blue.withValues(alpha: 0.45),
+            blurRadius: 8,
+            spreadRadius: 1,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "Mening joylashuvim" tugmasi — Google Maps dumaloqчаsi (GPS ikoni).
+/// Bosilса ota-ona joyiga markazlashadi. [active] — joylashuv topilган (ko'k).
+class _MyLocationButton extends StatelessWidget {
+  const _MyLocationButton({
+    required this.loading,
+    required this.active,
+    required this.onTap,
+  });
+
+  final bool loading;
+  final bool active;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      // Status karta bilan bir xil solid-glass fon.
+      color: const Color(0xF20E1622),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: _cardBorder),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: loading ? null : onTap,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: loading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: _blue,
+                    ),
+                  )
+                : Icon(
+                    SolarIconsBold.gps,
+                    size: 22,
+                    color: active ? _blue : Colors.white,
+                  ),
+          ),
+        ),
+      ),
+    );
+  }
 }
 
 // ════════════════════════ STATUS CARD (Figma) ════════════════════════

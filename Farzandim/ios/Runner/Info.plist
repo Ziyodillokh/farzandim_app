@@ -72,6 +72,8 @@
 		<string>Bola fotosini tanlash uchun galereyaga kirish kerak</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Bola fotosini olish uchun kamera kerak</string>
+		<key>NSLocationWhenInUseUsageDescription</key>
+		<string>Xaritada o'z joylashuvingizni ko'rsatish uchun kerak</string>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
