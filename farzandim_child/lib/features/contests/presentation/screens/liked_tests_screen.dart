@@ -87,6 +87,8 @@ class LikedTestsScreen extends ConsumerWidget {
                           contest: c,
                           onTap: () => _openTest(context, c),
                           onLongPress: () => _unfavorite(context, ref, c),
+                          isFavorite: true,
+                          onFavoriteTap: () => _unfavorite(context, ref, c),
                         );
                       },
                     ),
