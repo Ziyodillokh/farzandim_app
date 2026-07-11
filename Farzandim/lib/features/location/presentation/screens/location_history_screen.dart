@@ -1,22 +1,25 @@
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/map/map_tiles.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/polling.dart' show keepAliveFor;
+import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/services/dwell_detector.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
-import 'package:farzandim/features/location/presentation/utils/avatar_marker_builder.dart';
+import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' as ll;
 import 'package:solar_icons/solar_icons.dart';
 
 part 'location_history_map.dart';
@@ -57,8 +60,9 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   late DateTime _fromDt;
   late DateTime _toDt;
 
-  GoogleMapController? _mapController;
-  BitmapDescriptor? _avatarMarker;
+  final MapController _mapController = MapController();
+  // onMapReady'да kamera sig'diriladigan (fit) nuqtalar — build'да yangilanadi.
+  List<ChildLocation> _shownForFit = const <ChildLocation>[];
   int? _openDwellIndex; // tap-to-toggle: null = barchasi yopiq
 
   // _cleanTrack va masofa hisobini memoize qilamiz — aks holda har
@@ -131,15 +135,13 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
 
   @override
   void dispose() {
-    _mapController?.dispose();
+    _mapController.dispose();
     super.dispose();
   }
 
   /// Joylar ro'yxatidan biror to'xtash bosilganda xaritani unga markazlash.
-  void _goToStop(LatLng target) {
-    _mapController?.animateCamera(
-      CameraUpdate.newCameraPosition(CameraPosition(target: target, zoom: 16)),
-    );
+  void _goToStop(double lat, double lng) {
+    _mapController.move(ll.LatLng(lat, lng), 16);
   }
 
   @override
@@ -171,18 +173,6 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
       historyAsync.valueOrNull ?? const <ChildLocation>[],
     );
 
-    // Oxirgi nuqta pin'i uchun avatar marker.
-    if (child != null && _avatarMarker == null) {
-      final avatarUrl = ref.watch(childAvatarUrlProvider(child.id)).valueOrNull;
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        final m = await AvatarMarkerBuilder.build(
-          avatarUrl: avatarUrl,
-          fallbackKey: child.name,
-        );
-        if (mounted) setState(() => _avatarMarker = m);
-      });
-    }
-
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -211,10 +201,12 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
                 if (points.isEmpty) return const _EmptyState();
                 // Tozalangan track (bo'sh bo'lib qolmasligi uchun fallback).
                 final shown = track.isNotEmpty ? track : points;
+                _shownForFit = shown; // onMapReady shuni fit qiladi
                 return _MapLayer(
                   points: shown,
                   stops: stops,
-                  avatarMarker: _avatarMarker,
+                  child: child,
+                  controller: _mapController,
                   openDwellIndex: _openDwellIndex,
                   onDwellTap: (idx) {
                     setState(() {
@@ -226,10 +218,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
                       setState(() => _openDwellIndex = null);
                     }
                   },
-                  onMapCreated: (c) {
-                    _mapController = c;
-                    _fitToBounds(shown);
-                  },
+                  onMapReady: () => _fitToBounds(_shownForFit),
                 );
               },
             ),
@@ -269,26 +258,22 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   /// Camera'ni barcha nuqtalarni o'z ichiga oladigan bounds'ga moslab
   /// joylashtirish.
   void _fitToBounds(List<ChildLocation> points) {
-    if (points.isEmpty || _mapController == null) return;
+    if (points.isEmpty) return;
     if (points.length == 1) {
       // Bitta nuqta — atrofida zoom 15.
-      _mapController!.animateCamera(
-        CameraUpdate.newCameraPosition(
-          CameraPosition(target: points.first.latLng, zoom: 15),
-        ),
+      _mapController.move(
+        ll.LatLng(points.first.latitude, points.first.longitude),
+        15,
       );
       return;
     }
-
-    final lats = points.map((p) => p.latitude);
-    final lngs = points.map((p) => p.longitude);
-    final bounds = LatLngBounds(
-      southwest: LatLng(lats.reduce(math.min), lngs.reduce(math.min)),
-      northeast: LatLng(lats.reduce(math.max), lngs.reduce(math.max)),
+    final bounds = LatLngBounds.fromPoints([
+      for (final p in points) ll.LatLng(p.latitude, p.longitude),
+    ]);
+    // Padding 80px — bottom panel ostida nuqtalar yashirib qolmasligi uchun.
+    _mapController.fitCamera(
+      CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(80)),
     );
-    // Padding 80px — bottom panel ostida nuqtalar yashirib qolmasligi
-    // uchun.
-    _mapController!.animateCamera(CameraUpdate.newLatLngBounds(bounds, 80));
   }
 
   /// Tarix nuqtalarini tozalaydi: aniqligi yomon (>100m) fix'lar

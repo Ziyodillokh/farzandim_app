@@ -115,18 +115,26 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-/// Test kartasi — soha ikoni + "N DON" + sarlavha + "N ta test".
+/// Test kartasi — soha ikoni + ♡ + "N DON" + sarlavha + "N ta test".
 class TestCard extends StatelessWidget {
   const TestCard({
     required this.contest,
     required this.onTap,
     this.onLongPress,
+    this.isFavorite = false,
+    this.onFavoriteTap,
     super.key,
   });
 
   final ContestModel contest;
   final VoidCallback onTap;
   final VoidCallback? onLongPress;
+
+  /// Bu test sevimlilarda-mi (♡ to'ldirilgan/kontur holatini belgilaydi).
+  final bool isFavorite;
+
+  /// ♡ bosilganda — sevimliga qo'shish/olib tashlash. null bo'lsa ♡ yashiriladi.
+  final VoidCallback? onFavoriteTap;
 
   @override
   Widget build(BuildContext context) {
@@ -174,23 +182,41 @@ class TestCard extends StatelessWidget {
                           alignment: Alignment.center,
                           child: Icon(c.placeholderIcon, size: 24, color: col),
                         ),
-                        const Spacer(),
-                        // "250 DON" — narx kesilmasin uchun FittedBox.
-                        Flexible(
-                          child: FittedBox(
-                            fit: BoxFit.scaleDown,
-                            alignment: Alignment.centerRight,
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                Text(
-                                  '${c.bonus}',
-                                  style: tUnb(15, w: FontWeight.w600, ls: -0.4),
+                        const SizedBox(width: 8),
+                        // O'ng-yuqori: ♡ (ustida) + "250 DON" (ostida).
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.end,
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (onFavoriteTap != null) ...[
+                                _HeartButton(
+                                  isFavorite: isFavorite,
+                                  onTap: onFavoriteTap!,
                                 ),
-                                const SizedBox(width: 4),
-                                const DonBadge(),
+                                const SizedBox(height: 6),
                               ],
-                            ),
+                              // Narx kesilmasin uchun FittedBox.
+                              FittedBox(
+                                fit: BoxFit.scaleDown,
+                                alignment: Alignment.centerRight,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      '${c.bonus}',
+                                      style: tUnb(
+                                        15,
+                                        w: FontWeight.w600,
+                                        ls: -0.4,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 4),
+                                    const DonBadge(),
+                                  ],
+                                ),
+                              ),
+                            ],
                           ),
                         ),
                       ],
@@ -224,6 +250,31 @@ class TestCard extends StatelessWidget {
               ),
             ],
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Kartadagi sevimli ♡ — bosilsa toggle. Katta tegish maydoni (padding),
+/// kartaning onTap'ini bosib ketmaydi (ichki GestureDetector arenani yutadi).
+class _HeartButton extends StatelessWidget {
+  const _HeartButton({required this.isFavorite, required this.onTap});
+
+  final bool isFavorite;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.all(3),
+        child: Icon(
+          isFavorite ? Icons.favorite_rounded : Icons.favorite_border_rounded,
+          size: 20,
+          color: isFavorite ? const Color(0xFFFF4D6D) : tMuted,
         ),
       ),
     );

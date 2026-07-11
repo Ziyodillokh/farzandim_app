@@ -409,7 +409,7 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: whiteMapTileUrl,
+                            urlTemplate: mapTileUrl,
                             userAgentPackageName: kMapUserAgent,
                           ),
                           if (otherZones.isNotEmpty) ...[

@@ -24,6 +24,8 @@ class ContestsScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final tests = ref.watch(allTestsProvider);
     final featured = ref.watch(featuredContestProvider);
+    // Sevimli ID'lar — kartadagi ♡ holatini reaktiv ko'rsatish uchun.
+    final favIds = ref.watch(favoriteContestsProvider).map((c) => c.id).toSet();
     final loading = ref.watch(contestsLoadingProvider) && tests.isEmpty;
     final hasError = ref.watch(contestsErrorProvider) && tests.isEmpty;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
@@ -80,6 +82,8 @@ class ContestsScreen extends ConsumerWidget {
                   contest: c,
                   onTap: () => _openTest(context, c),
                   onLongPress: () => _toggleFavorite(context, ref, c),
+                  isFavorite: favIds.contains(c.id),
+                  onFavoriteTap: () => _toggleFavorite(context, ref, c),
                 );
               }, childCount: tests.length),
             ),
