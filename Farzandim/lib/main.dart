@@ -7,7 +7,9 @@ import 'dart:ui' as ui;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/app.dart';
+import 'package:farzandim/core/config/env_config.dart';
 import 'package:farzandim/core/constants/api_keys.dart';
+import 'package:farzandim/core/map/map_bootstrap.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart'
     show kPendingNotificationsPrefsKey;
@@ -58,6 +60,9 @@ Future<void> main() async {
   await runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Mapbox access token (mobil). Web'da no-op (conditional import).
+      initMapbox(EnvConfig.mapboxPublicToken);
 
       // Mustaqil init'lar parallel ketadi — avval 4 ta ketma-ket await edi
       // va cold start shunga cho'zilardi. Har biri o'z catch'ida: bittasi

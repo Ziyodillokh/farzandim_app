@@ -34,6 +34,16 @@ class EnvConfig {
     defaultValue: 'wss://farzandimedu.uz',
   );
 
+  /// Mapbox public token (`pk.…`) — xarita render (runtime). env.json /
+  /// `--dart-define-from-file=env.json` yoki CI `--dart-define` orqali.
+  static const String mapboxPublicToken = String.fromEnvironment(
+    'MAPBOX_PUBLIC_TOKEN',
+  );
+
+  /// Yandex Maps API kalit — Geocoder (qidiruv + koordinata→ko'cha).
+  /// env.json / dart-define (Farzandim/env.json yoki CI secret).
+  static const String yandexMapsKey = String.fromEnvironment('YANDEX_MAPS_KEY');
+
   /// API path prefix — barcha REST endpoint'lar `/api` bilan boshlanadi
   /// (Backend NestJS global prefix: `/api/auth/*`, `/api/users/*`, ...).
   /// Production: https://farzandimedu.uz/api (test.* dan ko'chirildi).

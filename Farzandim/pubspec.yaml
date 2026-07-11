@@ -116,6 +116,13 @@ dependencies:
   # local.properties'dan in'ektsiya qilinadi — git'ga tushmaydi).
   google_maps_flutter: ^2.6.0
 
+  # Mapbox — GPU vektor xarita (Android/iOS). Real-time bola markerlari
+  # (GeoJSON source), geo-zona/tarix layerlar, klaster/heatmap, light-v11 (oq).
+  # Token: MAPBOX_PUBLIC_TOKEN (runtime, env.json/dart-define) +
+  # MAPBOX_DOWNLOADS_TOKEN (build, ~/.gradle/gradle.properties / CI secret).
+  # Web'da qo'llanmaydi (kIsWeb himoya — web flutter_map'da qoladi).
+  mapbox_maps_flutter: ^2.6.0
+
   # Places API autocomplete — manzilni qidirish uchun (Bosqich 4.2.2).
   # API kalit Dart'ga `--dart-define-from-file=env.json` orqali
   # uzatiladi (`api_keys.dart` String.fromEnvironment'dan o'qiydi).
