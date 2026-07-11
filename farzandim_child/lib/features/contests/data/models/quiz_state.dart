@@ -31,6 +31,11 @@ class QuizState {
   final int timeRemaining;
   final Duration totalElapsed;
   final List<int?> answers;
+
+  /// Har savol natijasi (nuqtalar uchun): none=javob berilmagan,
+  /// correct=to'g'ri, wrong/timeout=noto'g'ri. `answers` bilan bir o'lchamda.
+  final List<AnswerState> results;
+
   final List<QuestionModel> questions;
 
   /// Backend attempt ID (sertifikat endpoint'iga kerak — #56). Real attempt
@@ -50,6 +55,7 @@ class QuizState {
     this.timeRemaining = 40,
     this.totalElapsed = Duration.zero,
     this.answers = const [],
+    this.results = const [],
     this.questions = const [],
     this.attemptId,
   });
@@ -83,6 +89,7 @@ class QuizState {
     int? timeRemaining,
     Duration? totalElapsed,
     List<int?>? answers,
+    List<AnswerState>? results,
     List<QuestionModel>? questions,
     String? attemptId,
   }) {
@@ -101,6 +108,7 @@ class QuizState {
       timeRemaining: timeRemaining ?? this.timeRemaining,
       totalElapsed: totalElapsed ?? this.totalElapsed,
       answers: answers ?? this.answers,
+      results: results ?? this.results,
       questions: questions ?? this.questions,
       attemptId: attemptId ?? this.attemptId,
     );
