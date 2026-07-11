@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/map/map_tiles.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
@@ -44,13 +45,6 @@ const Color _warning = Color(0xFFEF9900); // ogohlantirish (ixtiyoriy)
 const double _radius = 24; // katta kartalar
 const double _radiusSm = 16; // kichik chip/plitkalar
 const double _sheetInitial = 0.36; // pastki varaqning boshlang'ich ulushi
-
-// Kalitsiz qora xarita plitkalari (CARTO dark — OpenStreetMap data).
-// Google Maps web/Android'da API kalit talab qiladi; kalit yo'q paytda
-// xarita ochilmaydi. CARTO bepul/kalitsiz, dizayn rasmiga (qora xarita)
-// mos. Prod uchun attribution (© OpenStreetMap, © CARTO) ko'rsatish shart.
-const String _darkTileUrl =
-    'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 
 /// Unbounded sarlavha stili.
 TextStyle _lunb(
@@ -417,8 +411,10 @@ class _MapLayer extends StatelessWidget {
       ),
       children: [
         TileLayer(
-          urlTemplate: _darkTileUrl,
-          userAgentPackageName: 'uz.farzandim.app',
+          // OQ xarita — Mapbox light-v11 (token bor) yoki CARTO light
+          // (kalitsiz zaxira). @2x plitkalar retina ekranда tiniq.
+          urlTemplate: whiteMapTileUrl,
+          userAgentPackageName: kMapUserAgent,
         ),
         // Bugungi yo'l chizig'i (ko'chaga yopishган) — kamida 2 nuqta bo'lsa.
         if (line.length >= 2)
@@ -470,6 +466,12 @@ class _MapLayer extends StatelessWidget {
               ),
             ),
           ],
+        ),
+        // Attribution (Mapbox/OSM ToS talabi) — kichik kengayadigan "i".
+        RichAttributionWidget(
+          alignment: AttributionAlignment.bottomLeft,
+          showFlutterMapAttribution: false,
+          attributions: [TextSourceAttribution(mapAttribution)],
         ),
       ],
     );

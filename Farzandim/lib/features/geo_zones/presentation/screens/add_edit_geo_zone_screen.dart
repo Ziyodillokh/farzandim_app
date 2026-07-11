@@ -14,6 +14,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/map/map_tiles.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
@@ -38,10 +39,6 @@ const _iconBtnBg = Color(0xFF21262A);
 const _border = Color(0x1AFFFFFF); // oq 10%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 const _defaultCenter = LatLng(41.2995, 69.2401); // Toshkent markazi
-
-// Kalitsiz CARTO dark plitkalar (Google Maps kaliti shart emas).
-const String _darkTileUrl =
-    'https://a.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png';
 
 /// Zona belgisi kaliti → SVG asset yo'li (marker uchun).
 String _assetForKey(String key) {
@@ -360,8 +357,8 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                         ),
                         children: [
                           TileLayer(
-                            urlTemplate: _darkTileUrl,
-                            userAgentPackageName: 'uz.farzandim.app',
+                            urlTemplate: whiteMapTileUrl,
+                            userAgentPackageName: kMapUserAgent,
                           ),
                           if (otherZones.isNotEmpty) ...[
                             CircleLayer(

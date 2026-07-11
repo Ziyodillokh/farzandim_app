@@ -3,6 +3,7 @@
 // SOS kartani bosganda ochiladi.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/map/map_tiles.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
@@ -28,10 +29,6 @@ const _cardBorder = Color(0x14FFFFFF);
 const _dim = Color(0x99FFFFFF); // oq 60%
 const _dim2 = Color(0x80FFFFFF); // oq 50% — yorliq
 const _divider = Color(0x14FFFFFF);
-
-// Kalitsiz och xarita plitkalari (CARTO Voyager — OpenStreetMap data).
-const String _tileUrl =
-    'https://a.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png';
 
 TextStyle _unb(
   double size, {
@@ -279,8 +276,8 @@ class _LiveMapState extends State<_LiveMap> {
       ),
       children: [
         TileLayer(
-          urlTemplate: _tileUrl,
-          userAgentPackageName: 'uz.farzandim.app',
+          urlTemplate: whiteMapTileUrl,
+          userAgentPackageName: kMapUserAgent,
         ),
         MarkerLayer(
           markers: [
