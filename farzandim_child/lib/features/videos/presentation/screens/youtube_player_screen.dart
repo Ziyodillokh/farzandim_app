@@ -14,6 +14,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
+import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 
@@ -21,6 +23,9 @@ import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
+import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
+import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
+import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
 
 class YoutubePlayerScreen extends ConsumerStatefulWidget {
@@ -134,15 +139,52 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     );
   }
 
-  // ── Portret: video 16:9 + sarlavha + "To'liq ekran" + tavsif ──
+  Future<void> _share() async {
+    try {
+      await Share.share('${widget.video.title}\n${widget.video.videoUrl}');
+    } catch (e) {
+      debugPrint('YoutubePlayer._share: $e');
+    }
+  }
+
+  String _fmtViews(int v) {
+    if (v >= 1000000) return '${(v / 1000000).toStringAsFixed(1)}M';
+    if (v >= 1000) return '${(v / 1000).toStringAsFixed(0)}K';
+    return '$v';
+  }
+
+  String _metaLine(VideoModel v) {
+    final parts = <String>[];
+    final cat = v.category.trim();
+    if (cat.isNotEmpty && cat != 'Boshqa') parts.add(cat);
+    parts.add("${_fmtViews(v.views)} ko'rish");
+    if (v.duration.trim().isNotEmpty) parts.add(v.duration.trim());
+    return parts.join('  ·  ');
+  }
+
+  // ── Portret (YouTube-simon): video 16:9 + info + like/share + SHU
+  //    turkumdagi videolar (pastda, bosilsa o'sha video ochiladi). ──
   Widget _buildPortrait(WebViewController controller) {
+    final video = widget.video;
+    final all = ref.watch(effectiveVideosProvider);
+    // Shu KATEGORIYADAGI boshqa videolar; bo'lmasa umumiy boshqa videolar.
+    var related = all
+        .where((v) => v.id != video.id && v.category == video.category)
+        .toList();
+    if (related.isEmpty) {
+      related = all.where((v) => v.id != video.id).toList();
+    }
+    if (related.length > 12) related = related.sublist(0, 12);
+    final favIds = ref.watch(favoriteVideoIdsProvider);
+    final isFav = favIds.contains(video.id);
+
     return Scaffold(
       backgroundColor: AppColors.parvozBg,
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           ParvozHeader(
-            title: widget.video.title,
+            title: video.title,
             onBack: () => Navigator.of(context).maybePop(),
             trailing: GestureDetector(
               onTap: _openInYoutube,
@@ -160,51 +202,107 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           ),
           _videoBox(controller, showFullscreenButton: true),
           Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 20, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    widget.video.title,
-                    style: const TextStyle(
-                      color: AppColors.parvozText,
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      height: 1.3,
-                    ),
+            child: ListView(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 28),
+              children: [
+                Text(
+                  video.title,
+                  style: const TextStyle(
+                    color: AppColors.parvozText,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w700,
+                    height: 1.3,
                   ),
-                  const SizedBox(height: 16),
-                  SizedBox(
-                    width: double.infinity,
-                    child: FilledButton.icon(
-                      onPressed: _enterFullscreen,
-                      icon: const Icon(Icons.fullscreen_rounded),
-                      label: const Text("To'liq ekranda ko'rish"),
-                      style: FilledButton.styleFrom(
-                        backgroundColor: AppColors.parvozGreen,
-                        foregroundColor: AppColors.parvozOnGreen,
-                        padding: const EdgeInsets.symmetric(vertical: 14),
-                        textStyle: const TextStyle(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w600,
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  _metaLine(video),
+                  style: const TextStyle(
+                    color: AppColors.parvozTextDim,
+                    fontSize: 13,
+                  ),
+                ),
+                const SizedBox(height: 16),
+                // Amallar: To'liq ekran (asosiy) + Yoqtirish + Ulashish.
+                Row(
+                  children: [
+                    Expanded(
+                      child: FilledButton.icon(
+                        onPressed: _enterFullscreen,
+                        icon: const Icon(Icons.fullscreen_rounded, size: 20),
+                        label: const Text("To'liq ekran"),
+                        style: FilledButton.styleFrom(
+                          backgroundColor: AppColors.parvozGreen,
+                          foregroundColor: AppColors.parvozOnGreen,
+                          padding: const EdgeInsets.symmetric(vertical: 13),
+                          textStyle: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                          ),
                         ),
                       ),
                     ),
-                  ),
-                  if (widget.video.description.isNotEmpty) ...[
-                    const SizedBox(height: 22),
-                    Text(
-                      widget.video.description,
-                      style: const TextStyle(
-                        color: AppColors.parvozTextDim,
-                        height: 1.5,
-                        fontSize: 14,
-                      ),
+                    const SizedBox(width: 10),
+                    _CircleAction(
+                      icon: isFav
+                          ? Icons.favorite_rounded
+                          : Icons.favorite_border_rounded,
+                      color: isFav
+                          ? const Color(0xFFFF4D6D)
+                          : AppColors.parvozText,
+                      onTap: () {
+                        HapticFeedback.selectionClick();
+                        ref
+                            .read(favoriteVideoIdsProvider.notifier)
+                            .toggle(video.id);
+                      },
+                    ),
+                    const SizedBox(width: 10),
+                    _CircleAction(
+                      icon: Icons.share_rounded,
+                      color: AppColors.parvozText,
+                      onTap: _share,
                     ),
                   ],
+                ),
+                if (video.description.isNotEmpty) ...[
+                  const SizedBox(height: 18),
+                  Text(
+                    video.description,
+                    style: const TextStyle(
+                      color: AppColors.parvozTextDim,
+                      height: 1.5,
+                      fontSize: 14,
+                    ),
+                  ),
                 ],
-              ),
+                if (related.isNotEmpty) ...[
+                  const SizedBox(height: 22),
+                  const Divider(color: Color(0x1FFFFFFF), height: 1),
+                  const SizedBox(height: 16),
+                  const Text(
+                    'Shu turkumdagi videolar',
+                    style: TextStyle(
+                      color: AppColors.parvozText,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 16),
+                  for (final v in related)
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 18),
+                      child: VideoFeedCard(
+                        video: v,
+                        isFavorite: favIds.contains(v.id),
+                        // Bosilsa o'sha video ochiladi (joriy o'rniga —
+                        // webview yopiladi, xotira tejaladi).
+                        onTap: () =>
+                            context.pushReplacement('/video-player', extra: v),
+                      ),
+                    ),
+                ],
+              ],
             ),
           ),
         ],
@@ -294,6 +392,38 @@ class _GlassIconButton extends StatelessWidget {
           padding: const EdgeInsets.all(8),
           child: Icon(icon, color: Colors.white, size: 24),
         ),
+      ),
+    );
+  }
+}
+
+// Dumaloq amal tugmasi (yoqtirish / ulashish) — shisha fon + rim.
+class _CircleAction extends StatelessWidget {
+  const _CircleAction({
+    required this.icon,
+    required this.color,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 48,
+        height: 48,
+        decoration: BoxDecoration(
+          color: const Color(0x14FFFFFF),
+          shape: BoxShape.circle,
+          border: Border.all(color: const Color(0x24FFFFFF)),
+        ),
+        alignment: Alignment.center,
+        child: Icon(icon, color: color, size: 22),
       ),
     );
   }
