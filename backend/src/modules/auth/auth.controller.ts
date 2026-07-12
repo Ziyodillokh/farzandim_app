@@ -5,6 +5,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   Req,
   HttpCode,
   HttpStatus,
@@ -35,6 +36,7 @@ import { LoginDto } from './dto/login.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
 import { RedeemRepairTokenDto } from './dto/redeem-repair-token.dto';
+import { RequestSessionAccessDto } from './dto/request-session-access.dto';
 import { Public } from '../../common/decorators';
 import { ConsumerJwtAuthGuard } from '../../common/guards';
 import { CurrentUser } from '../../common/decorators';
@@ -324,5 +326,80 @@ export class AuthController {
     @Param('id') id: string,
   ) {
     return this.authService.revokeSession(user.userId, id);
+  }
+
+  /* ──────────────── Session access (2-qurilma limit) ──────────────── */
+
+  @Post('session-access/request')
+  @Public()
+  @HttpCode(HttpStatus.CREATED)
+  @ApiOperation({
+    summary: "Ruxsat so'rash — 2 ta ulangan qurilmaga push, poll ma'lumoti",
+  })
+  @ApiResponse({
+    status: 201,
+    description: '{ requestId, pollToken, pollIntervalSec }',
+  })
+  @ApiResponse({ status: 401, description: 'pendingToken yaroqsiz/muddati tugagan' })
+  async requestSessionAccess(
+    @Body() dto: RequestSessionAccessDto,
+    @Req() req: Request,
+  ) {
+    return this.authService.requestSessionAccess(dto, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Get('session-access/status/:id')
+  @Public()
+  @ApiOperation({ summary: "Kirish so'rovi holatini poll qilish" })
+  @ApiParam({ name: 'id', description: 'Session access request ID' })
+  @ApiResponse({
+    status: 200,
+    description: "Holat (APPROVED bo'lib slot bo'shsa — tokenlar)",
+  })
+  @ApiResponse({ status: 404, description: "So'rov topilmadi" })
+  async sessionAccessStatus(
+    @Param('id') id: string,
+    @Query('token') token: string,
+    @Req() req: Request,
+  ) {
+    return this.authService.sessionAccessStatus(id, token, {
+      ip: req.ip,
+      headers: req.headers as Record<string, string | string[] | undefined>,
+    });
+  }
+
+  @Get('session-access/pending')
+  @ApiBearerAuth('consumer-jwt')
+  @ApiOperation({ summary: "Ochiq kirish so'rovlari (tasdiqlash uchun)" })
+  @ApiResponse({ status: 200, description: "PENDING so'rovlar ro'yxati" })
+  async sessionAccessPending(@CurrentUser() user: JwtPayload) {
+    return this.authService.listPendingSessionAccess(user.userId);
+  }
+
+  @Post('session-access/:id/approve')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'Session access request ID' })
+  @ApiOperation({ summary: "Kirish so'rovini tasdiqlash" })
+  async approveSessionAccess(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.authService.approveSessionAccess(user.userId, id);
+  }
+
+  @Post('session-access/:id/reject')
+  @ApiBearerAuth('consumer-jwt')
+  @HttpCode(HttpStatus.OK)
+  @ApiParam({ name: 'id', description: 'Session access request ID' })
+  @ApiOperation({ summary: "Kirish so'rovini rad etish" })
+  async rejectSessionAccess(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.authService.rejectSessionAccess(user.userId, id);
   }
 }

@@ -321,6 +321,9 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
       } else {
         open(AppRoutes.notifications);
       }
+    case NotificationType.sessionAccessRequest:
+      // Kirish so'rovi — tasdiqlash/rad etish ekraniga.
+      open(AppRoutes.sessionAccessApprove);
     case NotificationType.offline:
     case NotificationType.online:
       open(AppRoutes.notifications);

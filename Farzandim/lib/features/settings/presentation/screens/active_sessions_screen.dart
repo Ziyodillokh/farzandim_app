@@ -49,7 +49,11 @@ TextStyle _pop(
 /// Faol sessiyalar ekrani.
 class ActiveSessionsScreen extends ConsumerWidget {
   /// `ActiveSessionsScreen` konstruktor.
-  const ActiveSessionsScreen({super.key});
+  const ActiveSessionsScreen({this.needRemoval = false, super.key});
+
+  /// 3-qurilma kirish so'rovi tasdiqlangach — tepada "bitta qurilmani
+  /// chiqaring" banneri ko'rsatiladi.
+  final bool needRemoval;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -65,6 +69,7 @@ class ActiveSessionsScreen extends ConsumerWidget {
               children: [
                 _Header(onBack: () => context.pop()),
                 const SizedBox(height: 6),
+                if (needRemoval) const _RemovalBanner(),
                 Expanded(
                   child: sessionsAsync.when(
                     loading: () => const Center(
@@ -86,6 +91,68 @@ class ActiveSessionsScreen extends ConsumerWidget {
                 ),
                 _AddAccountButton(
                   onTap: () => context.push(AppRoutes.addAccount),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ════════════ "Bitta qurilmani chiqaring" banneri ════════════
+// 3-qurilma so'rovi tasdiqlangach ko'rsatiladi: seans bo'shatilishi kerak.
+class _RemovalBanner extends StatelessWidget {
+  const _RemovalBanner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 4, 16, 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: _blue.withValues(alpha: 0.12),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _blue.withValues(alpha: 0.4)),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 38,
+            height: 38,
+            decoration: BoxDecoration(
+              color: _blue.withValues(alpha: 0.18),
+              borderRadius: BorderRadius.circular(11),
+            ),
+            child: const Icon(
+              Icons.check_circle_rounded,
+              color: _blue,
+              size: 22,
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Yangi qurilma tasdiqlandi',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 14,
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Uning kirishi uchun quyidagilardan bitta '
+                  'qurilmani chiqarib yuboring.',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.65),
+                    fontSize: 12.5,
+                    height: 1.35,
+                  ),
                 ),
               ],
             ),

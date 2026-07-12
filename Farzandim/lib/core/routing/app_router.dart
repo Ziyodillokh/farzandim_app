@@ -20,6 +20,8 @@ import 'package:farzandim/features/app_restrictions/presentation/screens/app_res
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/add_account_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/forgot_password_screen.dart';
+import 'package:farzandim/features/auth/presentation/screens/session_access_approve_screen.dart';
+import 'package:farzandim/features/auth/presentation/screens/session_access_request_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/sign_in_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/telegram_login_screen.dart';
@@ -373,7 +375,24 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.settingsSessions,
-      pageBuilder: (context, state) => _slidePage(const ActiveSessionsScreen()),
+      pageBuilder: (context, state) => _slidePage(
+        ActiveSessionsScreen(
+          needRemoval: state.uri.queryParameters['remove'] == '1',
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.sessionAccessRequest,
+      pageBuilder: (context, state) => _slidePage(
+        SessionAccessRequestScreen(
+          pendingToken: state.extra as String? ?? '',
+        ),
+      ),
+    ),
+    GoRoute(
+      path: AppRoutes.sessionAccessApprove,
+      pageBuilder: (context, state) =>
+          _slidePage(const SessionAccessApproveScreen()),
     ),
     // Bolalar boshqaruvi. (Akkount/Profil endi bottom sheet — routsiz.)
     GoRoute(

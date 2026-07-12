@@ -7,6 +7,8 @@ import { EnvConfig } from '../config/env.schema';
 export interface PushPayload {
   title: string;
   body: string;
+  /** Bildirishnoma banner rasmi (URL) — Android/iOS'da ko'rsatiladi. */
+  image?: string;
   data?: Record<string, string>;
   /**
    * `true` bo'lsa `notification` bloki yuborilmaydi — sof DATA xabar.
@@ -90,10 +92,25 @@ export class FcmService {
         }
       : {
           tokens,
-          notification: { title: payload.title, body: payload.body },
+          notification: {
+            title: payload.title,
+            body: payload.body,
+            // Banner rasm (bo'lsa) — Android/iOS notification'da ko'rinadi.
+            ...(payload.image ? { imageUrl: payload.image } : {}),
+          },
           data: payload.data,
-          android: { priority: 'high' },
-          apns: { payload: { aps: { sound: 'default' } } },
+          android: {
+            priority: 'high',
+            ...(payload.image
+              ? { notification: { imageUrl: payload.image } }
+              : {}),
+          },
+          apns: {
+            payload: { aps: { sound: 'default', 'mutable-content': 1 } },
+            ...(payload.image
+              ? { fcmOptions: { imageUrl: payload.image } }
+              : {}),
+          },
         };
 
     const response = await admin.messaging().sendEachForMulticast(message);

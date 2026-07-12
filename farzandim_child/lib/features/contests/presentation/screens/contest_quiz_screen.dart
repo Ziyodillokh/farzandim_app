@@ -364,6 +364,7 @@ class _QuestionScreen extends ConsumerWidget {
                   final showWrong = answered && isSelected && !showCorrect;
                   return _QuizOption(
                     text: q.options[i],
+                    imageUrl: q.optionImageAt(i),
                     showCorrect: showCorrect,
                     showWrong: showWrong,
                     onTap: answered ? null : () => notifier.selectAnswer(i),
@@ -654,9 +655,13 @@ class _QuizOption extends StatelessWidget {
     required this.showCorrect,
     required this.showWrong,
     required this.onTap,
+    this.imageUrl = '',
   });
 
   final String text;
+
+  /// Variant rasmi (ixtiyoriy) — matematik formula/diagramma javoblar uchun.
+  final String imageUrl;
 
   /// To'g'ri javob — yashil + ✓ (belgilangan yoki ochilgan to'g'ri variant).
   final bool showCorrect;
@@ -684,12 +689,16 @@ class _QuizOption extends StatelessWidget {
       mark = Icons.close_rounded;
     }
 
+    final hasImage = imageUrl.isNotEmpty;
+    final hasText = text.trim().isNotEmpty;
+
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 220),
-        height: 58,
+        // Moslashuvchan balandlik — rasm yoki uzun matn sig'sin (avval 58 qat'iy).
+        constraints: const BoxConstraints(minHeight: 58),
         decoration: BoxDecoration(
           color: bg,
           borderRadius: BorderRadius.circular(16),
@@ -697,16 +706,48 @@ class _QuizOption extends StatelessWidget {
         ),
         child: Stack(
           children: [
-            Center(
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 44),
-                child: Text(
-                  text,
-                  maxLines: 2,
-                  overflow: TextOverflow.ellipsis,
-                  textAlign: TextAlign.center,
-                  style: tPop(15.5, w: FontWeight.w600, c: txt),
-                ),
+            Padding(
+              padding: EdgeInsets.fromLTRB(hasImage ? 12 : 44, 12, 44, 12),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (hasImage) ...[
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(10),
+                      child: ConstrainedBox(
+                        constraints: const BoxConstraints(maxHeight: 140),
+                        child: CachedNetworkImage(
+                          imageUrl: imageUrl,
+                          fit: BoxFit.contain,
+                          placeholder: (_, __) => const SizedBox(
+                            height: 60,
+                            child: Center(
+                              child: SizedBox(
+                                width: 20,
+                                height: 20,
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  color: tBlue,
+                                ),
+                              ),
+                            ),
+                          ),
+                          errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                        ),
+                      ),
+                    ),
+                    if (hasText) const SizedBox(height: 8),
+                  ],
+                  if (hasText)
+                    Text(
+                      text,
+                      // Rasm bilan qisqa; faqat matn bo'lsa uzun javoblar 5 satr.
+                      maxLines: hasImage ? 2 : 5,
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                      style: tPop(15.5, w: FontWeight.w600, c: txt),
+                    ),
+                ],
               ),
             ),
             if (mark != null)

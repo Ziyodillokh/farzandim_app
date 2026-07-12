@@ -47,6 +47,10 @@ enum NotificationType {
   /// Bola telefonida muhim ruxsat (joylashuv/bildirishnoma/fon/maxsus
   /// imkoniyatlar) o'chirildi — holat ogohlantirishi.
   permissionChanged,
+
+  /// Yangi (3-) qurilma akauntga kirmoqchi — 2-qurilma limiti. Ulangan
+  /// qurilma tasdiqlaydi/rad etadi.
+  sessionAccessRequest,
 }
 
 /// `NotificationType` uchun UI helper'lar (ikona, rang, label).
@@ -80,6 +84,8 @@ extension NotificationTypeX on NotificationType {
         return SolarIconsBold.lock;
       case NotificationType.permissionChanged:
         return SolarIconsBold.shield;
+      case NotificationType.sessionAccessRequest:
+        return SolarIconsBold.iPhone;
     }
   }
 
@@ -112,6 +118,8 @@ extension NotificationTypeX on NotificationType {
         return const Color(0xFFFBBF24); // sariq — diqqat (qaror kerak)
       case NotificationType.permissionChanged:
         return const Color(0xFFFB923C); // to'q sariq — ogohlantirish
+      case NotificationType.sessionAccessRequest:
+        return const Color(0xFF216BFF); // ko'k — qurilma kirishi
     }
   }
 
@@ -144,6 +152,8 @@ extension NotificationTypeX on NotificationType {
         return "Ruxsat so'rovi";
       case NotificationType.permissionChanged:
         return "Ruxsat o'zgardi";
+      case NotificationType.sessionAccessRequest:
+        return "Kirish so'rovi";
     }
   }
 }
@@ -249,6 +259,9 @@ class AppNotification {
   /// unlockRequest uchun — `data['unlockRequestId']` (decide API'siga kerak).
   String? get unlockRequestId => data?['unlockRequestId'] as String?;
 
+  /// sessionAccessRequest uchun — `data['sessionRequestId']`.
+  String? get sessionRequestId => data?['sessionRequestId'] as String?;
+
   /// unlockRequest turi — 'APP' yoki 'SCREEN_TIME'.
   String? get unlockKind => data?['kind'] as String?;
 
@@ -330,6 +343,8 @@ class AppNotification {
         return NotificationType.online;
       case 'unlock_request':
         return NotificationType.unlockRequest;
+      case 'session_access_request':
+        return NotificationType.sessionAccessRequest;
       case 'permission_changed':
         return NotificationType.permissionChanged;
       case 'app_limit':

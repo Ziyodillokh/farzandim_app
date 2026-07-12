@@ -76,6 +76,7 @@ function questionRow(q: {
   id: string;
   text: string;
   options: string[];
+  optionImages?: string[];
   points: number;
   orderIdx: number;
   imageKey?: string | null;
@@ -84,6 +85,8 @@ function questionRow(q: {
     id: q.id,
     text: q.text,
     options: q.options,
+    // Variant rasmlari (kalitlar) — `options` bilan parallel; child URL quradi.
+    optionImages: q.optionImages ?? [],
     points: q.points,
     orderIdx: q.orderIdx,
     imageKey: q.imageKey ?? null,

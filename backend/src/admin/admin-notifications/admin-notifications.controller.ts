@@ -10,11 +10,9 @@ import {
   Post,
   Query,
   Req,
-  UploadedFile,
   UseGuards,
-  UseInterceptors,
 } from '@nestjs/common';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FastifyRequest } from 'fastify';
 import {
   ApiBody,
   ApiConsumes,
@@ -51,7 +49,10 @@ export class AdminNotificationsController {
     @Query('from') from?: string,
     @Query('to') to?: string,
   ) {
-    return this.service.list({ q, status, audience, from, to });
+    // Frontend `{ items }` shaklini kutadi (avval massiv qaytarib, `data.items`
+    // undefined bo'lib TARIX ko'rinmasdi).
+    const items = await this.service.list({ q, status, audience, from, to });
+    return { items, total: items.length };
   }
 
   @Get('history')
@@ -81,7 +82,6 @@ export class AdminNotificationsController {
    */
   @Post('upload-image')
   @HttpCode(HttpStatus.OK)
-  @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data')
   @ApiBody({
     schema: {
@@ -90,12 +90,22 @@ export class AdminNotificationsController {
     },
   })
   @ApiOperation({ summary: 'Upload notification image (max 5 MB)' })
-  async uploadImage(@UploadedFile() file: Express.Multer.File) {
-    if (!file) throw new BadRequestException('file field required');
+  async uploadImage(@Req() req: FastifyRequest) {
+    // Fastify multipart — Multer (@nestjs/platform-express) Fastify adapter
+    // ostida ishlamaydi (500). Olympiad question-image bilan bir xil pattern.
+    const data = await (req as unknown as {
+      file: () => Promise<{
+        toBuffer: () => Promise<Buffer>;
+        mimetype: string;
+        filename: string;
+      } | null>;
+    }).file();
+    if (!data) throw new BadRequestException('file field required');
+    const buffer = await data.toBuffer();
     return this.service.uploadImage({
-      buffer: file.buffer,
-      mimetype: file.mimetype,
-      originalname: file.originalname,
+      buffer,
+      mimetype: data.mimetype,
+      originalname: data.filename,
     });
   }
 
