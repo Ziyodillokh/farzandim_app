@@ -141,6 +141,11 @@ final videoCategoriesProvider = Provider<List<String>>((ref) {
 /// Tanlangan feed kategoriyasi (`null` = Barchasi). Chip bosilganda yoziladi.
 final videoCategoryProvider = StateProvider<String?>((ref) => null);
 
+/// Feed ekrani QIDIRUV matni. `videoSearchQueryProvider`dan ALOHIDA —
+/// u dashboard "Trend videolar" (topVideosProvider→filteredVideosProvider)
+/// tomonidan ishlatiladi, feed qidiruvi u yerga sizmasin.
+final videoFeedSearchProvider = StateProvider<String>((ref) => '');
+
 /// Tanlangan kategoriya, mavjud chip'lar bilan solishtirilgan. Videolar qayta
 /// yuklanib tanlangan janr yo'qolsa `null`ga (Barchasi) tushadi — aks holda
 /// feed bo'sh qolib, hech chip yonmagan nomuvofiq holat yuzaga kelardi.
@@ -152,11 +157,20 @@ final effectiveVideoCategoryProvider = Provider<String?>((ref) {
       : null;
 });
 
-/// Feed'da ko'rsatiladigan videolar — tanlangan (mavjud) kategoriya bo'yicha
-/// filtrlangan (null bo'lsa hammasi). Search/murakkab filtr bu ekranda yo'q.
+/// Feed'da ko'rsatiladigan videolar. Qidiruv faol bo'lsa — kategoriyani
+/// E'TIBORSIZ qoldirib BARCHA videolardan qidiradi (sarlavha/tavsif/kategoriya);
+/// aks holda tanlangan (mavjud) kategoriya bo'yicha (null = hammasi).
 final videoFeedProvider = Provider<List<VideoModel>>((ref) {
-  final selected = ref.watch(effectiveVideoCategoryProvider);
+  final query = ref.watch(videoFeedSearchProvider).trim().toLowerCase();
   final videos = ref.watch(effectiveVideosProvider);
+  if (query.isNotEmpty) {
+    return videos.where((v) {
+      return v.title.toLowerCase().contains(query) ||
+          v.description.toLowerCase().contains(query) ||
+          v.category.toLowerCase().contains(query);
+    }).toList();
+  }
+  final selected = ref.watch(effectiveVideoCategoryProvider);
   if (selected == null) return videos;
   return videos.where((v) => v.category.trim() == selected).toList();
 });

@@ -18,6 +18,7 @@ import 'package:farzandim_child/features/videos/presentation/providers/video_eng
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
 import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -33,6 +34,7 @@ class VideosFeedScreen extends ConsumerWidget {
     final asyncVideos = ref.watch(backendVideosProvider);
     final feed = ref.watch(videoFeedProvider);
     final categories = ref.watch(videoCategoriesProvider);
+    final searching = ref.watch(videoFeedSearchProvider).trim().isNotEmpty;
     final bottomInset = MediaQuery.paddingOf(context).bottom;
 
     // Cache ham, network ham hali kelmagan — skeleton. Aks holda feed/empty.
@@ -52,14 +54,16 @@ class VideosFeedScreen extends ConsumerWidget {
         ],
       );
     } else if (feed.isEmpty) {
-      // effectiveVideoCategoryProvider tufayli bu yerga faqat umuman video
-      // bo'lmagan holatda kelamiz (tanlangan kategoriya doim video'li).
+      // Qidiruvda natija yo'q → "topilmadi"; aks holda umuman video yo'q.
       content = ListView(
         physics: const AlwaysScrollableScrollPhysics(),
         padding: EdgeInsets.fromLTRB(16, 8, 16, 120 + bottomInset),
         children: [
           SizedBox(height: MediaQuery.sizeOf(context).height * 0.08),
-          _EmptyState(onRefresh: () => ref.invalidate(backendVideosProvider)),
+          if (searching)
+            const _NoSearchResults()
+          else
+            _EmptyState(onRefresh: () => ref.invalidate(backendVideosProvider)),
         ],
       );
     } else {
@@ -86,7 +90,18 @@ class VideosFeedScreen extends ConsumerWidget {
               child: _VideosHeader(),
             ),
             const SizedBox(height: 16),
-            if (categories.isNotEmpty) ...[
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: ParvozSearchField(
+                queryProvider: videoFeedSearchProvider,
+                hintText: 'Video qidirish...',
+                accent: vBlue,
+              ),
+            ),
+            const SizedBox(height: 14),
+            // Qidiruv paytida kategoriya chiplari yashiriladi (qidiruv barcha
+            // videolardan qidiradi, kategoriya e'tiborsiz).
+            if (!searching && categories.isNotEmpty) ...[
               _CategoryChips(categories: categories),
               const SizedBox(height: 14),
             ],
@@ -409,6 +424,35 @@ class _SkeletonCard extends StatelessWidget {
 // ════════════ Bo'sh holat ════════════
 
 /// Bo'sh holat — FARO maskot + qat'iy ranglar (screen doim dark).
+// Qidiruv natijasi bo'sh — "topilmadi" holati.
+class _NoSearchResults extends StatelessWidget {
+  const _NoSearchResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 32),
+      child: Column(
+        children: [
+          const FaroMascot(variant: FaroVariant.faceSad, size: 120),
+          const SizedBox(height: 20),
+          Text(
+            'Hech narsa topilmadi',
+            textAlign: TextAlign.center,
+            style: vUnb(18, w: FontWeight.w600, ls: -0.4),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            "Boshqa so'z bilan qidirib ko'ring",
+            textAlign: TextAlign.center,
+            style: vPop(14, c: vDim),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _EmptyState extends StatelessWidget {
   const _EmptyState({required this.onRefresh});
 

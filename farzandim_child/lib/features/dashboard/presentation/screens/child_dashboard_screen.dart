@@ -25,7 +25,10 @@ import 'package:farzandim_child/features/app_update/presentation/widgets/update_
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
+import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
+import 'package:farzandim_child/features/contests/presentation/widgets/test_banner_carousel.dart';
+import 'package:farzandim_child/features/contests/presentation/widgets/test_conditions_sheet.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
@@ -34,6 +37,7 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -493,7 +497,7 @@ class _GlowOrb extends StatelessWidget {
   }
 }
 
-// ════════════ "Yangi testlar" banner (solid #173654) ════════════
+// ════════════ "Yangi testlar" — test banner karuseli ════════════
 
 class _Banner extends ConsumerWidget {
   const _Banner();
@@ -501,9 +505,31 @@ class _Banner extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final active = ref.watch(activeContestsProvider);
-    final subtitle = active.isEmpty
-        ? 'Tez orada yangi testlar'
-        : '${active.length} ta faol test';
+    if (active.isEmpty) return const _EmptyTestsBanner();
+    // Faol testlar karuseli — markazda bitta, chetlar peek, har 5s avto.
+    return TestBannerCarousel(
+      tests: active,
+      onTap: (t) => _openTest(context, t),
+    );
+  }
+
+  void _openTest(BuildContext context, ContestModel c) {
+    // Karuselda faqat FAOL testlar — shartlar sheet → quiz.
+    HapticFeedback.selectionClick();
+    showTestConditionsSheet(
+      context,
+      c,
+      (contest) => context.push('/contest-quiz', extra: contest),
+    );
+  }
+}
+
+/// Faol test yo'q — "tez orada" fallback banner (bosilsa Testlar sahifasi).
+class _EmptyTestsBanner extends StatelessWidget {
+  const _EmptyTestsBanner();
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () => context.push('/contests'),
       behavior: HitTestBehavior.opaque,
@@ -517,7 +543,6 @@ class _Banner extends ConsumerWidget {
         ),
         child: Stack(
           children: [
-            // O'ngdagi test rasmi (dekorativ, chekkadan chiqadi).
             Positioned(
               right: -8,
               top: 18,
@@ -540,7 +565,7 @@ class _Banner extends ConsumerWidget {
                     style: _unb(20, w: FontWeight.w600, ls: -0.6),
                   ),
                   const SizedBox(height: 4),
-                  Text(subtitle, style: _pop(14, c: _dim)),
+                  Text('Tez orada yangi testlar', style: _pop(14, c: _dim)),
                   const Spacer(),
                   Container(
                     height: 32,

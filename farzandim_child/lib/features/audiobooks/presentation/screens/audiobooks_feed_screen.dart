@@ -23,6 +23,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
+import 'package:farzandim_child/shared/widgets/parvoz_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -41,9 +42,10 @@ class AudiobooksFeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(effectiveAudiobooksProvider);
-    final filtered = ref.watch(filteredAudiobooksProvider);
+    final feed = ref.watch(audiobookFeedProvider);
     final newest = ref.watch(newestAudiobooksProvider);
     final selectedCategory = ref.watch(audiobookCategoryFilterProvider);
+    final searching = ref.watch(audiobookFeedSearchProvider).trim().isNotEmpty;
 
     // Chip ro'yxati — birinchi "Barchasi", keyin backend'dan kelgan
     // haqiqiy kategoriyalar (takrorsiz, kelish tartibida).
@@ -70,36 +72,54 @@ class AudiobooksFeedScreen extends ConsumerWidget {
                 padding: EdgeInsets.fromLTRB(20, 8, 20, 16),
                 sliver: SliverToBoxAdapter(child: _KitoblarTitle()),
               ),
-              if (newest.isNotEmpty)
+              SliverPadding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                sliver: SliverToBoxAdapter(
+                  child: ParvozSearchField(
+                    queryProvider: audiobookFeedSearchProvider,
+                    hintText: 'Kitob yoki muallif qidirish...',
+                    accent: _blue,
+                  ),
+                ),
+              ),
+              // Qidiruv paytida hero + kategoriya chiplari yashiriladi
+              // (qidiruv barcha kitoblardan qidiradi).
+              if (!searching && newest.isNotEmpty)
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 20),
                   sliver: SliverToBoxAdapter(
                     child: _YangiKitoblarHero(books: newest),
                   ),
                 ),
-              SliverPadding(
-                padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-                sliver: SliverToBoxAdapter(
-                  child: _CategoryChips(
-                    categories: categories,
-                    selected: selectedCategory,
-                    onSelected: (cat) => ref
-                        .read(audiobookCategoryFilterProvider.notifier)
-                        .state = cat,
+              if (!searching)
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                  sliver: SliverToBoxAdapter(
+                    child: _CategoryChips(
+                      categories: categories,
+                      selected: selectedCategory,
+                      onSelected: (cat) =>
+                          ref
+                                  .read(
+                                    audiobookCategoryFilterProvider.notifier,
+                                  )
+                                  .state =
+                              cat,
+                    ),
                   ),
                 ),
-              ),
-              if (filtered.isEmpty)
-                const SliverFillRemaining(
+              if (feed.isEmpty)
+                SliverFillRemaining(
                   hasScrollBody: false,
-                  child: _EmptyState(),
+                  child: searching
+                      ? const _NoSearchResults()
+                      : const _EmptyState(),
                 )
               else
                 SliverPadding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 200),
                   sliver: SliverGrid.builder(
-                    gridDelegate:
-                        const SliverGridDelegateWithFixedCrossAxisCount(
+                    gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                       crossAxisCount: 2,
                       mainAxisSpacing: 22,
                       crossAxisSpacing: 14,
@@ -107,8 +127,8 @@ class AudiobooksFeedScreen extends ConsumerWidget {
                       // childAspectRatio = W / H → 1 / 1.62 ≈ 0.62
                       childAspectRatio: 0.62,
                     ),
-                    itemCount: filtered.length,
-                    itemBuilder: (_, i) => _GridBookCard(book: filtered[i]),
+                    itemCount: feed.length,
+                    itemBuilder: (_, i) => _GridBookCard(book: feed[i]),
                   ),
                 ),
             ],
@@ -269,11 +289,7 @@ class _CategoryChips extends StatelessWidget {
 }
 
 class _Chip extends StatelessWidget {
-  const _Chip({
-    required this.label,
-    required this.active,
-    required this.onTap,
-  });
+  const _Chip({required this.label, required this.active, required this.onTap});
 
   final String label;
   final bool active;
@@ -532,6 +548,46 @@ class _EmptyState extends StatelessWidget {
             const SizedBox(height: 6),
             const Text(
               'Boshqa kategoriyani tanlab ko\'ring',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _textMuted, fontSize: 13),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// Qidiruv natijasi bo'sh — "topilmadi" holati.
+class _NoSearchResults extends StatelessWidget {
+  const _NoSearchResults();
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              Icons.search_off_rounded,
+              size: 56,
+              color: _textMuted.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: 14),
+            const Text(
+              'Hech narsa topilmadi',
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 6),
+            const Text(
+              "Boshqa so'z bilan qidirib ko'ring",
               textAlign: TextAlign.center,
               style: TextStyle(color: _textMuted, fontSize: 13),
             ),

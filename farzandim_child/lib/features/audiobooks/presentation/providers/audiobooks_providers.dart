@@ -18,15 +18,14 @@ import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks
 
 final audiobookSearchQueryProvider = StateProvider<String>((ref) => '');
 
-final audiobookCategoryFilterProvider =
-    StateProvider<String?>((ref) => null);
+final audiobookCategoryFilterProvider = StateProvider<String?>((ref) => null);
 
 /// Cache-first (stale-while-revalidate) — cold start'da cache'dagi audiokitoblar
 /// DARHOL, fon'da backend yangilaydi. Offline'da cache qoladi.
 final backendAudiobooksProvider =
     AsyncNotifierProvider<AudiobooksNotifier, List<AudiobookModel>>(
-  AudiobooksNotifier.new,
-);
+      AudiobooksNotifier.new,
+    );
 
 class AudiobooksNotifier extends AsyncNotifier<List<AudiobookModel>> {
   bool _disposed = false;
@@ -52,7 +51,9 @@ class AudiobooksNotifier extends AsyncNotifier<List<AudiobookModel>> {
       final fresh = await repo.fetchAudiobooks();
       if (_disposed) return;
       state = AsyncData(fresh);
-    } catch (_) {/* offline: cache qoladi */}
+    } catch (_) {
+      /* offline: cache qoladi */
+    }
   }
 }
 
@@ -81,8 +82,7 @@ const _mockAudiobooks = <AudiobookModel>[
     author: 'Roald Dahl',
     description:
         "James sehrli bahaybat shaftoli ichida noodatiy safarga chiqadi.",
-    coverUrl:
-        'https://covers.openlibrary.org/b/id/8231855-L.jpg',
+    coverUrl: 'https://covers.openlibrary.org/b/id/8231855-L.jpg',
     audioUrl: '',
     durationSeconds: 9600,
     duration: '2:40:00',
@@ -169,8 +169,7 @@ const _mockAudiobooks = <AudiobookModel>[
   ),
 ];
 
-final filteredAudiobooksProvider =
-    Provider<List<AudiobookModel>>((ref) {
+final filteredAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {
   final query = ref.watch(audiobookSearchQueryProvider).toLowerCase();
   final category = ref.watch(audiobookCategoryFilterProvider);
 
@@ -190,6 +189,29 @@ final filteredAudiobooksProvider =
   }
 
   return books;
+});
+
+/// Feed ekrani QIDIRUV matni — `audiobookSearchQueryProvider`dan ALOHIDA
+/// (u dashboard newest/for-you/most-listened tomonidan ishlatiladi, feed
+/// qidiruvi u yerlarga sizmasin).
+final audiobookFeedSearchProvider = StateProvider<String>((ref) => '');
+
+/// Feed grid'ida ko'rsatiladigan kitoblar. Qidiruv faol bo'lsa BARCHA
+/// kitoblardan (sarlavha/muallif/kategoriya) qidiradi (kategoriyani e'tiborsiz);
+/// aks holda tanlangan kategoriya bo'yicha (null = hammasi).
+final audiobookFeedProvider = Provider<List<AudiobookModel>>((ref) {
+  final query = ref.watch(audiobookFeedSearchProvider).trim().toLowerCase();
+  final books = ref.watch(effectiveAudiobooksProvider);
+  if (query.isNotEmpty) {
+    return books.where((b) {
+      return b.title.toLowerCase().contains(query) ||
+          b.author.toLowerCase().contains(query) ||
+          b.category.toLowerCase().contains(query);
+    }).toList();
+  }
+  final category = ref.watch(audiobookCategoryFilterProvider);
+  if (category == null) return books;
+  return books.where((b) => b.category == category).toList();
 });
 
 final forYouAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {

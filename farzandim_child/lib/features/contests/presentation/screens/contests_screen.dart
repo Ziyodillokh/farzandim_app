@@ -9,6 +9,7 @@
 
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
+import 'package:farzandim_child/features/contests/presentation/widgets/test_banner_carousel.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_conditions_sheet.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
@@ -23,7 +24,8 @@ class ContestsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final tests = ref.watch(allTestsProvider);
-    final featured = ref.watch(featuredContestProvider);
+    // Tepadagi banner karuseli — faqat FAOL testlar (o'tib turadi).
+    final activeTests = ref.watch(activeContestsProvider);
     // Sevimli ID'lar — kartadagi ♡ holatini reaktiv ko'rsatish uchun.
     final favIds = ref.watch(favoriteContestsProvider).map((c) => c.id).toSet();
     final loading = ref.watch(contestsLoadingProvider) && tests.isEmpty;
@@ -57,13 +59,13 @@ class ContestsScreen extends ConsumerWidget {
       content = CustomScrollView(
         physics: const AlwaysScrollableScrollPhysics(),
         slivers: [
-          if (featured != null)
+          if (activeTests.isNotEmpty)
             SliverToBoxAdapter(
               child: Padding(
-                padding: const EdgeInsets.fromLTRB(16, 2, 16, 18),
-                child: _HeroCard(
-                  contest: featured,
-                  onTap: () => _openTest(context, featured),
+                padding: const EdgeInsets.fromLTRB(0, 2, 0, 18),
+                child: TestBannerCarousel(
+                  tests: activeTests,
+                  onTap: (t) => _openTest(context, t),
                 ),
               ),
             ),
@@ -207,112 +209,6 @@ class _CircleIconButton extends StatelessWidget {
         decoration: const BoxDecoration(color: tGlass, shape: BoxShape.circle),
         alignment: Alignment.center,
         child: Icon(icon, size: 22, color: Colors.white),
-      ),
-    );
-  }
-}
-
-// ════════════ Hero (featured test) ════════════
-
-class _HeroCard extends StatelessWidget {
-  const _HeroCard({required this.contest, required this.onTap});
-
-  final ContestModel contest;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    // Katta OS shrift-masshtabida ichki matn sig'ishi uchun balandlik moslashadi.
-    final scale = MediaQuery.textScalerOf(context).scale(1);
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: Container(
-        height: (186 * scale).clamp(186.0, 268.0),
-        clipBehavior: Clip.antiAlias,
-        decoration: BoxDecoration(
-          borderRadius: BorderRadius.circular(24),
-          gradient: const LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [Color(0xFF1E57A6), Color(0xFF0C2544)],
-          ),
-          border: Border.all(color: Colors.white.withValues(alpha: 0.08)),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(18, 18, 4, 18),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Icon(
-                          contest.placeholderIcon,
-                          size: 22,
-                          color: Colors.white,
-                        ),
-                        const SizedBox(width: 8),
-                        Flexible(
-                          child: Text(
-                            contest.title,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: tUnb(20, w: FontWeight.w700, ls: -0.5),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 5,
-                      ),
-                      decoration: BoxDecoration(
-                        color: tBlue,
-                        borderRadius: BorderRadius.circular(999),
-                      ),
-                      child: Text(
-                        'Tanlov',
-                        style: tPop(12, w: FontWeight.w600),
-                      ),
-                    ),
-                    const Spacer(),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 18,
-                        vertical: 10,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.14),
-                        borderRadius: BorderRadius.circular(999),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.22),
-                        ),
-                      ),
-                      child: Text(
-                        'Batafsil',
-                        style: tPop(13, w: FontWeight.w600),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.only(right: 10),
-              child: Image.asset(
-                'assets/icons/ic_tests.png',
-                width: 118,
-                height: 118,
-                fit: BoxFit.contain,
-              ),
-            ),
-          ],
-        ),
       ),
     );
   }
