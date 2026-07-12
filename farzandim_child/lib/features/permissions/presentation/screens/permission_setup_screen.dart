@@ -10,6 +10,7 @@
 // Web preview'da permission API yo'q — mock toggle + tugma doim faol.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -42,6 +43,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
   bool _usage = false; // Ilova statistikasi (usage stats)
   bool _overlay = false; // Boshqa ilovalar ustida
   bool _battery = false; // Quvvat optimizatsiyasi
+  bool _uninstallGuard = false; // O'chirishni taqiqlash (Device Admin)
 
   bool _checking = false;
 
@@ -90,6 +92,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     final battery = await _safeStatus(
       () => Permission.ignoreBatteryOptimizations.status,
     );
+    final uninstallGuard = await _safe(uninstallProtectionService.isActive);
 
     if (!mounted) return;
     setState(() {
@@ -98,6 +101,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
       _usage = usage;
       _overlay = overlay;
       _battery = battery;
+      _uninstallGuard = uninstallGuard;
       _checking = false;
     });
   }
@@ -135,7 +139,8 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     if (w.isGranted) await Permission.locationAlways.request();
   }
 
-  bool get _allGranted => _location && _notif && _usage && _overlay && _battery;
+  bool get _allGranted =>
+      _location && _notif && _usage && _overlay && _battery && _uninstallGuard;
 
   void _onNext() {
     if (!kIsWeb && !_allGranted) return;
@@ -245,6 +250,19 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                     .ignoreBatteryOptimizations
                                     .request,
                                 setMock: (b) => _battery = b,
+                              ),
+                            ),
+                            // "O'chirishni taqiqlash" — Device Admin. Yoqilsa
+                            // bola ilovani ota-ona ruxsatisiz o'chira olmaydi.
+                            _PermRow(
+                              icon: Icons.shield_rounded,
+                              title: "O'chirishni taqiqlash",
+                              value: _uninstallGuard,
+                              onChanged: () => _toggle(
+                                current: _uninstallGuard,
+                                request: uninstallProtectionService
+                                    .requestActivation,
+                                setMock: (b) => _uninstallGuard = b,
                               ),
                             ),
                           ],
