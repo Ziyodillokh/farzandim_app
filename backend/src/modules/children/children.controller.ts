@@ -118,6 +118,19 @@ export class ChildrenController {
     return this.childrenService.getDevicePolicy(id, user.userId);
   }
 
+  @Post(':id/uninstall-guard-disabled')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Bola Device Admin (o\'chirish himoyasi)ni o\'chirdi — ota-onaga xabar',
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  async reportUninstallGuardDisabled(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.childrenService.reportUninstallGuardDisabled(id, user.userId);
+  }
+
   @Post(':id/device-info')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

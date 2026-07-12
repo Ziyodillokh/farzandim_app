@@ -53,4 +53,16 @@ class BackendDevicePolicyRepository {
       );
     }
   }
+
+  /// Bola "O'chirishni taqiqlash" (Device Admin)ni o'chirganini backend'ga
+  /// xabar qiladi → ota-onaga push (Play-mos deterrent). Xato yutiladi.
+  Future<void> reportUninstallGuardDisabled(String childId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/children/$childId/uninstall-guard-disabled',
+      );
+    } on DioException catch (e) {
+      debugPrint('reportUninstallGuardDisabled: $e');
+    }
+  }
 }

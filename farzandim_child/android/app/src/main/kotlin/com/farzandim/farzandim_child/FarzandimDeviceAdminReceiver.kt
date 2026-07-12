@@ -21,4 +21,20 @@ class FarzandimDeviceAdminReceiver : DeviceAdminReceiver() {
         return "Farzandim himoyasi yoqilgan. Ilovani o'chirish uchun avval " +
             "ota-onangizdan ruxsat so'rang."
     }
+
+    override fun onDisabled(context: Context, intent: Intent) {
+        super.onDisabled(context, intent)
+        // Bola himoyani (Device Admin) O'CHIRDI. SharedPreferences'ga bayroq
+        // qo'yamiz — Dart o'qib ota-onaga "himoya o'chirildi" push yuboradi
+        // (Play-mos: shunchaki xabar berish). Receiver o'zi tarmoqqa chiqmaydi.
+        try {
+            context.getSharedPreferences(
+                "FlutterSharedPreferences",
+                Context.MODE_PRIVATE,
+            ).edit()
+                .putBoolean("flutter.uninstall_guard.deactivated", true)
+                .apply()
+        } catch (_: Exception) {
+        }
+    }
 }

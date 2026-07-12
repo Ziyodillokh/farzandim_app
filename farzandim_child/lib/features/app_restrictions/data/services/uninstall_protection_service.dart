@@ -13,6 +13,7 @@
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class UninstallProtectionService {
   const UninstallProtectionService();
@@ -20,6 +21,10 @@ class UninstallProtectionService {
   static const MethodChannel _channel = MethodChannel(
     'farzandim_child/device_admin',
   );
+
+  // Native `onDisabled` (admin o'chirilganda) shu bayroqni qo'yadi. Dart o'qib
+  // ota-onaga xabar beradi, so'ng tozalaydi.
+  static const String _deactivatedKey = 'uninstall_guard.deactivated';
 
   bool get _isAndroid =>
       !kIsWeb && defaultTargetPlatform == TargetPlatform.android;
@@ -68,6 +73,20 @@ class UninstallProtectionService {
       if (allowPrompt) await requestActivation();
     } else if (!shouldProtect && active) {
       await removeAdmin();
+    }
+  }
+
+  /// Bola himoyani (admin'ni) o'chirgan bo'lsa `true` qaytaradi va bayroqni
+  /// TOZALAYDI (bir marta xabar berish uchun). Native `onDisabled` qo'ygan.
+  Future<bool> consumeDeactivatedFlag() async {
+    if (!_isAndroid) return false;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final v = prefs.getBool(_deactivatedKey) ?? false;
+      if (v) await prefs.remove(_deactivatedKey);
+      return v;
+    } catch (_) {
+      return false;
     }
   }
 }

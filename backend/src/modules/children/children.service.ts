@@ -177,6 +177,70 @@ export class ChildrenService {
     };
   }
 
+  /**
+   * Bola "O'chirishni taqiqlash" (Device Admin)ni O'CHIRDI — bola app native
+   * `onDisabled` bayrog'ini o'qib shu yerga xabar beradi. Himoya yoqilgan
+   * (`blockUninstall`) bo'lsa ota-onaga PUSH + notification (Play-mos deterrent:
+   * bloklamaymiz, faqat ogohlantiramiz).
+   */
+  async reportUninstallGuardDisabled(id: string, userId: string) {
+    const child = await this.prisma.child.findUnique({
+      where: { id },
+      select: {
+        id: true,
+        name: true,
+        parentId: true,
+        childUserId: true,
+        blockUninstall: true,
+      },
+    });
+    if (!child) throw new NotFoundException('Child not found');
+    if (child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    // Ota-ona himoyani xohlamasa (blockUninstall false) — xabar bermaymiz.
+    if (!child.blockUninstall) return { ok: true, notified: false };
+
+    const title = "Himoya o'chirildi";
+    const body =
+      `${child.name} "O'chirishni taqiqlash"ni o'chirdi — ilova endi ` +
+      'o\'chirilishi mumkin. Kerak bo\'lsa qayta yoqing.';
+
+    try {
+      await this.fcm.sendPushToUser(child.parentId, {
+        title,
+        body,
+        data: {
+          type: 'uninstall_guard_disabled',
+          childId: child.id,
+          childName: child.name,
+          priority: 'high',
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Uninstall-guard push failed for child ${id}`,
+        err as Error,
+      );
+    }
+    try {
+      await this.prisma.notification.create({
+        data: {
+          childId: child.id,
+          type: 'SYSTEM',
+          title,
+          body,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Uninstall-guard notification failed for child ${id}`,
+        err as Error,
+      );
+    }
+    return { ok: true, notified: true };
+  }
+
   /* ------------------------------------------------------------------ */
   /*  POST /children/:id/device-info — qurilma heartbeat (GPS'siz)        */
   /* ------------------------------------------------------------------ */
