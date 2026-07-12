@@ -1,15 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// ParvozSearchField — Parvoz dark uslubidagi qidiruv maydoni
+// ParvozSearchField — ota-ona chat input uslubidagi qidiruv maydoni
 // ─────────────────────────────────────────────────────────────────────
 //
-// Videolar + Audiokitoblar feed'ida ishlatiladi. Berilgan `StateProvider<String>`
-// ga yozadi/o'qiydi (controller provider'dan init bo'ladi — ekranga qaytganda
-// joriy qidiruv ko'rinadi). Shisha fon + qidiruv ikonka + tozalash (✕) tugma.
+// Videolar + Audiokitoblar feed'ida ishlatiladi. Ko'rinishi ota-ona chat
+// input formasidek: KATTA, OVAL (pill) toza input + o'ngda ALOHIDA dumaloq
+// qidiruv tugma (kamera o'rniga search ikonka). Berilgan `StateProvider<String>`
+// ga yozadi/o'qiydi (controller provider'dan init — ekranga qaytganda joriy
+// qidiruv ko'rinadi). Matn kiritilsa ichida ✕ (tozalash).
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+
+const _fieldBg = Color(0xFF161B22); // pill + tugma foni (chat input dark)
 
 class ParvozSearchField extends ConsumerStatefulWidget {
   const ParvozSearchField({
@@ -30,6 +34,7 @@ class ParvozSearchField extends ConsumerStatefulWidget {
 
 class _ParvozSearchFieldState extends ConsumerState<ParvozSearchField> {
   late final TextEditingController _controller;
+  final FocusNode _focusNode = FocusNode();
 
   @override
   void initState() {
@@ -41,73 +46,97 @@ class _ParvozSearchFieldState extends ConsumerState<ParvozSearchField> {
   @override
   void dispose() {
     _controller.dispose();
+    _focusNode.dispose();
     super.dispose();
   }
 
   void _clear() {
     _controller.clear();
     ref.read(widget.queryProvider.notifier).state = '';
-    FocusScope.of(context).unfocus();
+    _focusNode.unfocus();
   }
 
   @override
   Widget build(BuildContext context) {
     final hasText = ref.watch(widget.queryProvider).isNotEmpty;
-    return Container(
-      height: 48,
-      decoration: BoxDecoration(
-        color: const Color(0x14FFFFFF),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0x24FFFFFF)),
-      ),
-      child: Row(
-        children: [
-          const SizedBox(width: 14),
-          Icon(
-            Icons.search_rounded,
-            size: 20,
-            color: Colors.white.withValues(alpha: 0.6),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              onChanged: (v) =>
-                  ref.read(widget.queryProvider.notifier).state = v,
-              textInputAction: TextInputAction.search,
-              cursorColor: widget.accent,
-              style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
-              decoration: InputDecoration(
-                isCollapsed: true,
-                border: InputBorder.none,
-                hintText: widget.hintText,
-                hintStyle: GoogleFonts.poppins(
-                  fontSize: 14,
-                  color: Colors.white.withValues(alpha: 0.4),
+    return Row(
+      children: [
+        // Toza, oval (pill) input — chat input formasidek katta.
+        Expanded(
+          child: Container(
+            height: 54,
+            padding: const EdgeInsets.only(left: 20, right: 8),
+            decoration: BoxDecoration(
+              color: _fieldBg,
+              borderRadius: BorderRadius.circular(27),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    focusNode: _focusNode,
+                    onChanged: (v) =>
+                        ref.read(widget.queryProvider.notifier).state = v,
+                    textInputAction: TextInputAction.search,
+                    cursorColor: widget.accent,
+                    style: GoogleFonts.poppins(
+                      fontSize: 15,
+                      color: Colors.white,
+                    ),
+                    decoration: InputDecoration(
+                      isCollapsed: true,
+                      border: InputBorder.none,
+                      hintText: widget.hintText,
+                      hintStyle: GoogleFonts.poppins(
+                        fontSize: 15,
+                        color: Colors.white.withValues(alpha: 0.38),
+                      ),
+                    ),
+                  ),
                 ),
-              ),
+                // Matn bo'lsa — ichida ✕ (tozalash).
+                if (hasText)
+                  GestureDetector(
+                    onTap: () {
+                      HapticFeedback.selectionClick();
+                      _clear();
+                    },
+                    behavior: HitTestBehavior.opaque,
+                    child: Padding(
+                      padding: const EdgeInsets.all(8),
+                      child: Icon(
+                        Icons.close_rounded,
+                        size: 20,
+                        color: Colors.white.withValues(alpha: 0.55),
+                      ),
+                    ),
+                  ),
+              ],
             ),
           ),
-          if (hasText)
-            GestureDetector(
-              onTap: () {
-                HapticFeedback.selectionClick();
-                _clear();
-              },
-              behavior: HitTestBehavior.opaque,
-              child: Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 12),
-                child: Icon(
-                  Icons.close_rounded,
-                  size: 18,
-                  color: Colors.white.withValues(alpha: 0.6),
-                ),
-              ),
-            )
-          else
-            const SizedBox(width: 14),
-        ],
-      ),
+        ),
+        const SizedBox(width: 10),
+        // Alohida dumaloq qidiruv tugma (kamera o'rniga search ikonka).
+        GestureDetector(
+          onTap: () => FocusScope.of(context).requestFocus(_focusNode),
+          behavior: HitTestBehavior.opaque,
+          child: Container(
+            width: 54,
+            height: 54,
+            decoration: const BoxDecoration(
+              color: _fieldBg,
+              shape: BoxShape.circle,
+            ),
+            alignment: Alignment.center,
+            child: Icon(
+              Icons.search_rounded,
+              size: 24,
+              color: Colors.white.withValues(alpha: 0.85),
+            ),
+          ),
+        ),
+      ],
     );
   }
 }
