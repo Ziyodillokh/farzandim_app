@@ -10,7 +10,11 @@ import { PrismaService } from '../../../common/database/prisma.service';
 import { StorageService } from '../../../common/storage/storage.service';
 import { BUCKETS } from '../../../common/storage/storage.constants';
 import { CreateVideoDto, UpdateVideoDto } from './dto/create-video.dto';
-import { youtubeThumbnail } from '../../../common/youtube.util';
+import {
+  youtubeThumbnail,
+  youtubeId,
+  youtubeDuration,
+} from '../../../common/youtube.util';
 
 const MAX_VIDEO_BYTES = 90 * 1024 * 1024;
 const MAX_THUMB_BYTES = 5 * 1024 * 1024;
@@ -114,6 +118,12 @@ export class VideosService {
   }
 
   async create(dto: CreateVideoDto) {
+    // Davomiylik berilmasa VA YouTube link bo'lsa — watch sahifadan olamiz
+    // (best-effort; bola app aniq vaqtni ko'rsatsin, 0:00 emas).
+    let durationSec = dto.durationSec ?? null;
+    if (durationSec == null && youtubeId(dto.url)) {
+      durationSec = await youtubeDuration(dto.url);
+    }
     const created = await this.prisma.video.create({
       data: {
         title: dto.title,
@@ -121,7 +131,7 @@ export class VideosService {
         url: dto.url,
         // Banner berilmasa YouTube link'dan AVTOMATIK hqdefault olinadi.
         thumbnail: dto.thumbnail ?? youtubeThumbnail(dto.url) ?? null,
-        durationSec: dto.durationSec ?? null,
+        durationSec,
         ageFrom: dto.ageFrom ?? 0,
         ageTo: dto.ageTo ?? 18,
         categoryId: dto.categoryId ?? null,

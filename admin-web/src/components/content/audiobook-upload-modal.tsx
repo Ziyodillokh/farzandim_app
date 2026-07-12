@@ -56,6 +56,27 @@ export function AudiobookUploadModal({
   const [pointsReward, setPointsReward] = useState('10');
   const [categoryId, setCategoryId] = useState(NO_CATEGORY);
   const [progress, setProgress] = useState(0);
+  // Audio faylning REAL davomiyligi (soniya) — brauzerda fayl tanlanganda
+  // o'qiladi va backendga yuboriladi (bola app aniq vaqtni ko'rsatadi).
+  const [durationSec, setDurationSec] = useState(0);
+
+  // Audio fayl tanlanganda uning davomiyligini (metadata) o'qiymiz.
+  const handleAudioFile = (file: File | null) => {
+    setAudioFile(file);
+    setDurationSec(0);
+    if (!file) return;
+    const url = URL.createObjectURL(file);
+    const audio = new Audio();
+    audio.preload = 'metadata';
+    audio.onloadedmetadata = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDurationSec(Math.round(audio.duration));
+      }
+      URL.revokeObjectURL(url);
+    };
+    audio.onerror = () => URL.revokeObjectURL(url);
+    audio.src = url;
+  };
 
   const { data: categories } = useQuery({
     queryKey: ['categories', 'audiobook'],
@@ -76,6 +97,7 @@ export function AudiobookUploadModal({
     setPointsReward('10');
     setCategoryId(NO_CATEGORY);
     setProgress(0);
+    setDurationSec(0);
   };
 
   const upload = useMutation({
@@ -91,6 +113,7 @@ export function AudiobookUploadModal({
         categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
         partsCount: Number(partsCount) || 1,
         xpReward: Number(pointsReward) || 0,
+        durationSec: durationSec > 0 ? durationSec : undefined,
         status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
       };
       return contentApi.audiobooks.upload(audioFile, metadata, thumbnailFile, setProgress);
@@ -184,7 +207,7 @@ export function AudiobookUploadModal({
             accept={AUDIO_ACCEPT}
             maxSizeBytes={524288000}
             file={audioFile}
-            onFile={setAudioFile}
+            onFile={handleAudioFile}
             icon={<Headphones />}
             hint="MP3/M4A/AAC/WAV/OGG, maks 500 MB"
           />
