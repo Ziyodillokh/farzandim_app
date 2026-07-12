@@ -175,17 +175,23 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     unawaited(_syncUninstallProtection(allowPrompt: false));
   }
 
-  /// "O'chirishni taqiqlash" siyosatini backend'dan o'qib qo'llaydi.
+  /// "O'chirishni taqiqlash" siyosatini backend'dan o'qib qo'llaydi. Bola
+  /// admin'ni o'chirgan bo'lsa (native bayroq) — ota-onaga xabar yuboradi.
   Future<void> _syncUninstallProtection({required bool allowPrompt}) async {
     final childId = ref.read(pairingStateProvider).childId;
     if (childId == null) return;
-    final policy = await ref
-        .read(backendDevicePolicyRepositoryProvider)
-        .getDevicePolicy(childId);
+    final repo = ref.read(backendDevicePolicyRepositoryProvider);
+    final policy = await repo.getDevicePolicy(childId);
     await uninstallProtectionService.apply(
       policy.blockUninstall,
       allowPrompt: allowPrompt,
     );
+    // Bola himoyani o'chirgan bo'lsa → ota-onaga "himoya o'chirildi" push.
+    final deactivated = await uninstallProtectionService
+        .consumeDeactivatedFlag();
+    if (deactivated) {
+      unawaited(repo.reportUninstallGuardDisabled(childId));
+    }
   }
 
   Future<void> _updateStreak() async {

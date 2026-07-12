@@ -9,7 +9,11 @@ import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { mediaProxyUrl, MediaSegment } from './media-proxy';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
-import { youtubeThumbnail } from '../../common/youtube.util';
+import {
+  youtubeThumbnail,
+  youtubeId,
+  youtubeDuration,
+} from '../../common/youtube.util';
 
 const SIGNED_URL_TTL_SECONDS = 60 * 60; // 1 hour
 
@@ -155,6 +159,11 @@ export class ConsumerContentService {
     const catNames = await this.categoryNamesFor(rows);
     const items = rows.map((v) => this.mapVideo(v, origin, catNames));
 
+    // ESKI videolar duration'i (0:00) — YouTube link bo'lsa server watch
+    // sahifadan olib DB'ga yozadi (fon, feed'ni bloklamaydi). Feed yuklangan
+    // sari to'ldiriladi. Admin kiritgan qiymatni bosmaydi (updateMany 0/null).
+    void this.backfillMissingVideoDurations(rows);
+
     return {
       items,
       pagination: {
@@ -164,6 +173,38 @@ export class ConsumerContentService {
         limit,
       },
     };
+  }
+
+  // Bir vaqtda takror fetch bo'lmasin (feed qayta-qayta yuklanadi).
+  private readonly _durationBackfilling = new Set<string>();
+
+  /**
+   * Duration'i noma'lum (0/null) YOUTUBE videolarga watch sahifadan davomiylik
+   * olib yozadi. Har chaqiruvda eng ko'pi 4 ta (YouTube'ni spam qilmaymiz);
+   * feed qayta yuklangan sari qolganlari ham to'ladi. Fire-and-forget.
+   */
+  private async backfillMissingVideoDurations(
+    rows: { id: string; url: string; durationSec: number | null }[],
+  ): Promise<void> {
+    const missing = rows
+      .filter(
+        (v) =>
+          (v.durationSec === null || v.durationSec === 0) &&
+          youtubeId(v.url) !== null &&
+          !this._durationBackfilling.has(v.id),
+      )
+      .slice(0, 4);
+    for (const v of missing) {
+      this._durationBackfilling.add(v.id);
+      void youtubeDuration(v.url)
+        .then(async (sec) => {
+          if (sec && sec > 0) {
+            await this.reportVideoDuration(v.id, sec);
+          }
+        })
+        .catch(() => {})
+        .finally(() => this._durationBackfilling.delete(v.id));
+    }
   }
 
   // Video → telefon feed DTO (proxy URL). getVideos / history / favorites
