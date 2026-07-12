@@ -99,8 +99,7 @@ class _Card extends StatelessWidget {
             ),
           ),
           Container(
-            padding:
-                const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
               color: seen
                   // ignore: deprecated_member_use
@@ -115,15 +114,13 @@ class _Card extends StatelessWidget {
                 Icon(
                   seen ? AppIcons.success : AppIcons.schedule,
                   size: 12,
-                  color:
-                      seen ? AppColors.success : AppColors.warning,
+                  color: seen ? AppColors.success : AppColors.warning,
                 ),
                 const SizedBox(width: 4),
                 Text(
                   seen ? "Ko'rdi" : 'Kutilmoqda',
                   style: TextStyle(
-                    color:
-                        seen ? AppColors.success : AppColors.warning,
+                    color: seen ? AppColors.success : AppColors.warning,
                     fontSize: 11,
                     fontWeight: FontWeight.w600,
                   ),

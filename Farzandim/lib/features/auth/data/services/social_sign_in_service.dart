@@ -41,7 +41,9 @@ final socialSignInServiceProvider = Provider<SocialSignInService>((ref) {
 const String _googleServerClientId = String.fromEnvironment(
   'GOOGLE_SERVER_CLIENT_ID',
   defaultValue:
-      '883163096233-f4o6fk9lvl6srgj4al0lup2qci36hps3'
+      // "Parvoz" Google Cloud loyihasining Web Client ID'si (backend
+      // GOOGLE_CLIENT_IDS bilan bir xil bo'lishi shart).
+      '931495868029-b7keq7og9afennh7h3smfaunlf34tsuh'
       '.apps.googleusercontent.com',
 );
 

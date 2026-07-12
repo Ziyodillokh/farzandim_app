@@ -352,7 +352,8 @@ class _StatChipsRow extends ConsumerWidget {
     // DON — REAL qiymat (bola gamifikatsiyada yiqqan). Mock (1250) OLIB
     // TASHLANDI: bola app'da DON hamma joyda real ko'rinsin.
     final don = rawDon;
-    final steps = rawSteps > 0 ? rawSteps : 10000;
+    // Qadam REAL — preview yo'q (ota-ona bilan mos bo'lishi uchun).
+    final steps = rawSteps;
 
     const outer = Radius.circular(24);
     const inner = Radius.circular(12);

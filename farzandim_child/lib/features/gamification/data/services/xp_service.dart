@@ -17,32 +17,30 @@ import 'package:farzandim_child/features/gamification/data/models/xp_event.dart'
 
 class XpService {
   XpService({FirebaseFirestore? firestore})
-      : _firestore = firestore ?? FirebaseFirestore.instance;
+    : _firestore = firestore ?? FirebaseFirestore.instance;
 
   final FirebaseFirestore _firestore;
 
   CollectionReference<Map<String, dynamic>> _eventsRef({
     required String parentUid,
     required String childId,
-  }) =>
-      _firestore
-          .collection('users')
-          .doc(parentUid)
-          .collection('children')
-          .doc(childId)
-          .collection('xp_events');
+  }) => _firestore
+      .collection('users')
+      .doc(parentUid)
+      .collection('children')
+      .doc(childId)
+      .collection('xp_events');
 
   DocumentReference<Map<String, dynamic>> _profileRef({
     required String parentUid,
     required String childId,
-  }) =>
-      _firestore
-          .collection('users')
-          .doc(parentUid)
-          .collection('children')
-          .doc(childId)
-          .collection('profile')
-          .doc('gamification');
+  }) => _firestore
+      .collection('users')
+      .doc(parentUid)
+      .collection('children')
+      .doc(childId)
+      .collection('profile')
+      .doc('gamification');
 
   /// XP berish (asosiy API).
   ///
@@ -56,10 +54,7 @@ class XpService {
   }) async {
     // 1. Dedup tekshirish — bir konkurs uchun ikki marta XP bermaslik.
     if (relatedId != null) {
-      final existing = await _eventsRef(
-        parentUid: parentUid,
-        childId: childId,
-      )
+      final existing = await _eventsRef(parentUid: parentUid, childId: childId)
           .where('type', isEqualTo: type.firestoreCode)
           .where('relatedId', isEqualTo: relatedId)
           .limit(1)
@@ -90,16 +85,12 @@ class XpService {
         if (relatedId != null) 'relatedId': relatedId,
       });
 
-      tx.set(
-        profileRef,
-        {
-          'xp': currentProfile.xp + xp,
-          'don': currentProfile.don + don,
-          'streak': currentProfile.streak, // streak alohida funksiyada
-          'unlockedAchievements': currentProfile.unlockedAchievements,
-        },
-        SetOptions(merge: true),
-      );
+      tx.set(profileRef, {
+        'xp': currentProfile.xp + xp,
+        'don': currentProfile.don + don,
+        'streak': currentProfile.streak, // streak alohida funksiyada
+        'unlockedAchievements': currentProfile.unlockedAchievements,
+      }, SetOptions(merge: true));
     });
 
     return XpAwardResult.awarded(xp: xp, don: don);
@@ -138,14 +129,10 @@ class XpService {
         }
       }
 
-      tx.set(
-        profileRef,
-        {
-          'streak': newStreak,
-          'lastActiveDate': Timestamp.fromDate(todayDate),
-        },
-        SetOptions(merge: true),
-      );
+      tx.set(profileRef, {
+        'streak': newStreak,
+        'lastActiveDate': Timestamp.fromDate(todayDate),
+      }, SetOptions(merge: true));
 
       // Streak 7-7+ bo'lsa, haftalik bonus alohida `awardXp` orqali beriladi
       // (caller responsibility — caller streak qiymatini bilib chaqiradi).
@@ -182,8 +169,7 @@ class XpService {
           .count()
           .get(),
       eventsRef
-          .where('type',
-              isEqualTo: XpEventType.contentPublished.firestoreCode)
+          .where('type', isEqualTo: XpEventType.contentPublished.firestoreCode)
           .count()
           .get(),
     ]);
@@ -239,10 +225,9 @@ class XpService {
     }
 
     if (newlyUnlocked.isNotEmpty) {
-      await profileRef.set(
-        {'unlockedAchievements': updatedIds},
-        SetOptions(merge: true),
-      );
+      await profileRef.set({
+        'unlockedAchievements': updatedIds,
+      }, SetOptions(merge: true));
     }
 
     return newlyUnlocked;
@@ -258,10 +243,10 @@ class XpAwardResult {
   });
 
   const XpAwardResult.awarded({required int xp, required int don})
-      : this._(awarded: true, xp: xp, don: don);
+    : this._(awarded: true, xp: xp, don: don);
 
   const XpAwardResult.skippedDuplicate()
-      : this._(awarded: false, xp: 0, don: 0);
+    : this._(awarded: false, xp: 0, don: 0);
 
   final bool awarded;
   final int xp;

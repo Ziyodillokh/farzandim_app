@@ -34,12 +34,12 @@ class DashboardStatPanel extends ConsumerWidget {
     final childId = pairing.childId;
 
     // ─── XP — gamification provider ustun, keyin ranking ─────────────
-    final gamification =
-        ref.watch(gamificationProfileProvider).valueOrNull;
+    final gamification = ref.watch(gamificationProfileProvider).valueOrNull;
     final users = ref.watch(allUsersProvider);
-    final meInRanking = users
-        .cast<RankingUser?>()
-        .firstWhere((u) => u?.isCurrentUser ?? false, orElse: () => null);
+    final meInRanking = users.cast<RankingUser?>().firstWhere(
+      (u) => u?.isCurrentUser ?? false,
+      orElse: () => null,
+    );
 
     final xp = gamification?.xp ?? meInRanking?.totalScore ?? 0;
     final level = levelForXp(xp);
@@ -73,8 +73,7 @@ class DashboardStatPanel extends ConsumerWidget {
       // XP bo'yicha solishtirib o'rinni hisoblaymiz: bola xp'sidan
       // baland totalScore'ga ega bo'lganlar soni + 1.
       final regional = users.where((u) => u.region == region).toList();
-      final higherCount =
-          regional.where((u) => u.totalScore > xp).length;
+      final higherCount = regional.where((u) => u.totalScore > xp).length;
       regionRank = higherCount + 1;
     }
 

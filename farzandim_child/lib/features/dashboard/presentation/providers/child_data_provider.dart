@@ -25,27 +25,28 @@ typedef ChildKey = ({String parentUid, String childId});
 /// 404 yoki tarmoq xato → null (UI default fallback ko'rsatadi).
 final childDataStreamProvider =
     FutureProvider.family<Map<String, dynamic>?, ChildKey>((ref, params) async {
-  final dio = ref.watch(dioClientProvider);
-  try {
-    final response = await dio.get<Map<String, dynamic>>(
-      '/children/${params.childId}',
-    );
-    return response.data;
-  } on DioException {
-    return null;
-  }
-});
+      final dio = ref.watch(dioClientProvider);
+      try {
+        final response = await dio.get<Map<String, dynamic>>(
+          '/children/${params.childId}',
+        );
+        return response.data;
+      } on DioException {
+        return null;
+      }
+    });
 
 /// Ota-ona ma'lumotlari. Sprint 4.4.9'da Backend'da hali alohida
 /// `/api/users/:id` (parent) endpoint yo'q — fairy null qaytariladi.
 /// Kelajakda Backend `GET /api/users/:id` qo'shilsa shu yerga ulanadi.
-final parentInfoProvider =
-    FutureProvider.family<Map<String, dynamic>?, String>((ref, parentUid) async {
-  // Backend'da hozircha bola o'z parent ma'lumotini olishi uchun
-  // endpoint yo'q (faqat /users/me o'zining ma'lumoti). Null qaytaramiz —
-  // UI "Ota-ona" default label ko'rsatadi.
-  return null;
-});
+final parentInfoProvider = FutureProvider.family<Map<String, dynamic>?, String>(
+  (ref, parentUid) async {
+    // Backend'da hozircha bola o'z parent ma'lumotini olishi uchun
+    // endpoint yo'q (faqat /users/me o'zining ma'lumoti). Null qaytaramiz —
+    // UI "Ota-ona" default label ko'rsatadi.
+    return null;
+  },
+);
 
 /// Bola rasmi URL — Parent App yoki bola o'zi yuklagan
 /// (`POST /children/:id/avatar` yoki `/children/me/avatar`).
@@ -60,8 +61,10 @@ final parentInfoProvider =
 /// keshdan emas, yangi rasmni yuklaydi.
 ///
 /// 404 (photo yo'q) → null → fallback Icon.person.
-final childAvatarUrlProvider =
-    FutureProvider.family<String?, String>((ref, childId) async {
+final childAvatarUrlProvider = FutureProvider.family<String?, String>((
+  ref,
+  childId,
+) async {
   final dio = ref.watch(dioClientProvider);
   try {
     // Rasm mavjudligini tekshirish (auth bilan). 404 → DioException → null.

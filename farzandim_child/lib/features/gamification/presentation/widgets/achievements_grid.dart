@@ -38,10 +38,7 @@ class AchievementsGrid extends StatelessWidget {
 }
 
 class _AchievementTile extends StatelessWidget {
-  const _AchievementTile({
-    required this.achievement,
-    required this.unlocked,
-  });
+  const _AchievementTile({required this.achievement, required this.unlocked});
 
   final Achievement achievement;
   final bool unlocked;

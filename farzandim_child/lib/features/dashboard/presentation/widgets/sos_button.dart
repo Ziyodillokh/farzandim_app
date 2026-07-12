@@ -41,10 +41,7 @@ class _SosButtonState extends ConsumerState<SosButton>
   @override
   void initState() {
     super.initState();
-    _progress = AnimationController(
-      vsync: this,
-      duration: _holdDuration,
-    );
+    _progress = AnimationController(vsync: this, duration: _holdDuration);
   }
 
   @override
@@ -86,8 +83,8 @@ class _SosButtonState extends ConsumerState<SosButton>
   @override
   Widget build(BuildContext context) {
     final sos = ref.watch(sosStateProvider);
-    final disabled = sos.status == SosStatus.sending ||
-        sos.status == SosStatus.sent;
+    final disabled =
+        sos.status == SosStatus.sending || sos.status == SosStatus.sent;
 
     return GestureDetector(
       onTapDown: disabled ? null : (_) => _startHold(),
@@ -131,37 +128,30 @@ class _SosButtonState extends ConsumerState<SosButton>
   Widget _buttonSurface(SosState sos) {
     final (Color bg, Widget child) = switch (sos.status) {
       SosStatus.sending => (
-          AppColors.error,
-          _Content(
-            icon: null,
-            label: 'dashboard.sosSending'.tr(),
-            spinner: true,
-          ),
-        ),
+        AppColors.error,
+        _Content(icon: null, label: 'dashboard.sosSending'.tr(), spinner: true),
+      ),
       SosStatus.sent => (
-          AppColors.success,
-          _Content(
-            icon: AppIcons.success,
-            label: 'dashboard.sosSent'.tr(),
-          ),
-        ),
+        AppColors.success,
+        _Content(icon: AppIcons.success, label: 'dashboard.sosSent'.tr()),
+      ),
       SosStatus.error => (
-          AppColors.warning,
-          _Content(
-            icon: AppIcons.error,
-            label: 'dashboard.sosError'.tr(),
-            tooltip: sos.errorMessage,
-          ),
+        AppColors.warning,
+        _Content(
+          icon: AppIcons.error,
+          label: 'dashboard.sosError'.tr(),
+          tooltip: sos.errorMessage,
         ),
+      ),
       SosStatus.idle => (
-          AppColors.error,
-          _Content(
-            icon: Icons.emergency_share,
-            label: _holding
-                ? 'dashboard.sosHold'.tr(namedArgs: {'seconds': '3'})
-                : 'dashboard.sosIdle'.tr(),
-          ),
+        AppColors.error,
+        _Content(
+          icon: Icons.emergency_share,
+          label: _holding
+              ? 'dashboard.sosHold'.tr(namedArgs: {'seconds': '3'})
+              : 'dashboard.sosIdle'.tr(),
         ),
+      ),
     };
 
     return Container(

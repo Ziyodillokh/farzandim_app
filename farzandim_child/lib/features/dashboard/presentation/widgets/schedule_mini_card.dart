@@ -25,11 +25,11 @@ class ScheduleMiniCard extends ConsumerWidget {
 
     final String subtitle;
     if (current != null) {
-      subtitle = 'dashboard.scheduleNow'
-          .tr(namedArgs: {'title': current.title});
+      subtitle = 'dashboard.scheduleNow'.tr(
+        namedArgs: {'title': current.title},
+      );
     } else if (next != null) {
-      subtitle = 'dashboard.scheduleNext'
-          .tr(namedArgs: {'title': next.title});
+      subtitle = 'dashboard.scheduleNext'.tr(namedArgs: {'title': next.title});
     } else if (today.isEmpty) {
       subtitle = 'dashboard.scheduleEmpty'.tr();
     } else {

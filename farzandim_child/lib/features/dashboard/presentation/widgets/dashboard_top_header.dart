@@ -85,9 +85,7 @@ class DashboardTopHeader extends ConsumerWidget {
           ),
           const Spacer(),
           if (showSos) ...[
-            _SosPill(
-              onTap: onSosTap ?? () => context.push('/dashboard'),
-            ),
+            _SosPill(onTap: onSosTap ?? () => context.push('/dashboard')),
             const SizedBox(width: 8),
           ],
           if (onSettingsTap != null) ...[
@@ -100,10 +98,7 @@ class DashboardTopHeader extends ConsumerWidget {
               badgeCount: unreadCount,
             )
           else
-            _Avatar(
-              photoUrl: resolvedPhoto,
-              onTap: onAvatarTap ?? () {},
-            ),
+            _Avatar(photoUrl: resolvedPhoto, onTap: onAvatarTap ?? () {}),
         ],
       ),
     );
@@ -175,14 +170,8 @@ class _NotificationsButton extends StatelessWidget {
               top: -2,
               right: -2,
               child: Container(
-                constraints: const BoxConstraints(
-                  minWidth: 20,
-                  minHeight: 20,
-                ),
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 5,
-                  vertical: 2,
-                ),
+                constraints: const BoxConstraints(minWidth: 20, minHeight: 20),
+                padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                 decoration: BoxDecoration(
                   color: AppColors.error,
                   borderRadius: BorderRadius.circular(999),

@@ -34,12 +34,12 @@ class GamificationProfile {
 
   /// Bo'sh boshlovchi profil (yangi bola uchun).
   factory GamificationProfile.empty() => const GamificationProfile(
-        xp: 0,
-        don: 0,
-        streak: 0,
-        lastActiveDate: null,
-        unlockedAchievements: [],
-      );
+    xp: 0,
+    don: 0,
+    streak: 0,
+    lastActiveDate: null,
+    unlockedAchievements: [],
+  );
 
   // Hisoblangan qiymatlar
   GamificationStatus get status => statusForXp(xp);
@@ -69,21 +69,20 @@ class GamificationProfile {
       xp: (data['xp'] as num?)?.toInt() ?? 0,
       don: (data['don'] as num?)?.toInt() ?? 0,
       streak: (data['streak'] as num?)?.toInt() ?? 0,
-      lastActiveDate:
-          (data['lastActiveDate'] as Timestamp?)?.toDate(),
+      lastActiveDate: (data['lastActiveDate'] as Timestamp?)?.toDate(),
       unlockedAchievements:
           (data['unlockedAchievements'] as List?)?.cast<String>() ?? const [],
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-        'xp': xp,
-        'don': don,
-        'streak': streak,
-        if (lastActiveDate != null)
-          'lastActiveDate': Timestamp.fromDate(lastActiveDate!),
-        'unlockedAchievements': unlockedAchievements,
-      };
+    'xp': xp,
+    'don': don,
+    'streak': streak,
+    if (lastActiveDate != null)
+      'lastActiveDate': Timestamp.fromDate(lastActiveDate!),
+    'unlockedAchievements': unlockedAchievements,
+  };
 
   GamificationProfile copyWith({
     int? xp,

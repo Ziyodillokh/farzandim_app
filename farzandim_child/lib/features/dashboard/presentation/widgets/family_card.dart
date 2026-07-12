@@ -93,7 +93,9 @@ class FamilyCard extends StatelessWidget {
               ),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 6),
+                  horizontal: 10,
+                  vertical: 6,
+                ),
                 decoration: BoxDecoration(
                   // ignore: deprecated_member_use
                   color: AppColors.success.withOpacity(0.15),

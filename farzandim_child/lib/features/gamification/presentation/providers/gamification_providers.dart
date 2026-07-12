@@ -28,8 +28,7 @@ final xpServiceProvider = Provider<XpService>((ref) => XpService());
 /// Bola gamifikatsiya profili — real-time stream.
 /// Darhol `empty()` emit qiladi → UI bloklanmaydi. Firestore javobi kelsa
 /// ustiga yoziladi; xato (permission-denied) bo'lsa default saqlanadi.
-final gamificationProfileProvider =
-    StreamProvider<GamificationProfile>((ref) {
+final gamificationProfileProvider = StreamProvider<GamificationProfile>((ref) {
   final pairing = ref.watch(pairingStateProvider);
   final parentUid = pairing.parentUid;
   final childId = pairing.childId;
@@ -54,16 +53,20 @@ final gamificationProfileProvider =
       .doc('gamification')
       .snapshots()
       .listen(
-    (snap) {
-      if (controller.isClosed) return;
-      controller.add(snap.exists
-          ? GamificationProfile.fromFirestore(snap)
-          : GamificationProfile.empty());
-    },
-    onError: (Object error) {
-      debugPrint('gamificationProfile: Firestore error: $error (default saqlanadi)');
-    },
-  );
+        (snap) {
+          if (controller.isClosed) return;
+          controller.add(
+            snap.exists
+                ? GamificationProfile.fromFirestore(snap)
+                : GamificationProfile.empty(),
+          );
+        },
+        onError: (Object error) {
+          debugPrint(
+            'gamificationProfile: Firestore error: $error (default saqlanadi)',
+          );
+        },
+      );
 
   ref.onDispose(() {
     sub.cancel();
@@ -97,14 +100,16 @@ final recentXpEventsProvider = StreamProvider<List<XpEvent>>((ref) {
       .limit(20)
       .snapshots()
       .listen(
-    (snap) {
-      if (controller.isClosed) return;
-      controller.add(snap.docs.map(XpEvent.fromFirestore).toList());
-    },
-    onError: (Object error) {
-      debugPrint('recentXpEvents: Firestore error: $error (bo\'sh saqlanadi)');
-    },
-  );
+        (snap) {
+          if (controller.isClosed) return;
+          controller.add(snap.docs.map(XpEvent.fromFirestore).toList());
+        },
+        onError: (Object error) {
+          debugPrint(
+            'recentXpEvents: Firestore error: $error (bo\'sh saqlanadi)',
+          );
+        },
+      );
 
   ref.onDispose(() {
     sub.cancel();

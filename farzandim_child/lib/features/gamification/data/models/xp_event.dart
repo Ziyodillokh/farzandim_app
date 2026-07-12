@@ -9,14 +9,14 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 
 /// Bola qaysi harakat uchun XP olgani.
 enum XpEventType {
-  bookCompleted,        // +50 XP
-  contestJoined,        // +30 XP, +5 DON
-  contestWon,           // +200 XP, +50 DON
+  bookCompleted, // +50 XP
+  contestJoined, // +30 XP, +5 DON
+  contestWon, // +200 XP, +50 DON
   creativeContestJoined, // +25 XP, +5 DON
   courseLessonCompleted, // +20 XP
-  dailyGoalCompleted,   // +10 XP
-  weeklyStreak,         // +75 XP, +10 DON
-  contentPublished,     // +25 XP (moderatsiyadan keyin)
+  dailyGoalCompleted, // +10 XP
+  weeklyStreak, // +75 XP, +10 DON
+  contentPublished, // +25 XP (moderatsiyadan keyin)
 }
 
 extension XpEventTypeX on XpEventType {
@@ -138,17 +138,16 @@ class XpEvent {
       type: XpEventTypeX.fromCode(code) ?? XpEventType.dailyGoalCompleted,
       xpDelta: (data['xpDelta'] as num?)?.toInt() ?? 0,
       donDelta: (data['donDelta'] as num?)?.toInt() ?? 0,
-      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ??
-          DateTime.now(),
+      createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       relatedId: data['relatedId'] as String?,
     );
   }
 
   Map<String, dynamic> toFirestore() => {
-        'type': type.firestoreCode,
-        'xpDelta': xpDelta,
-        'donDelta': donDelta,
-        'createdAt': FieldValue.serverTimestamp(),
-        if (relatedId != null) 'relatedId': relatedId,
-      };
+    'type': type.firestoreCode,
+    'xpDelta': xpDelta,
+    'donDelta': donDelta,
+    'createdAt': FieldValue.serverTimestamp(),
+    if (relatedId != null) 'relatedId': relatedId,
+  };
 }

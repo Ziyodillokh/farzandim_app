@@ -91,7 +91,8 @@ class StatisticsScreen extends ConsumerWidget {
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 30;
     final don = rawDon > 0 ? rawDon : 1250;
-    final steps = rawSteps > 0 ? rawSteps : 8837;
+    // Qadam REAL — preview yo'q (ota-ona ilovasi bilan bir xil qiymat).
+    final steps = rawSteps;
     // REAL: haftalik o'qilgan kitoblar / ishlangan testlar (backend).
     final summary = ref.watch(developmentSummaryProvider).valueOrNull;
     final books = summary?.booksRead ?? 0;
@@ -336,7 +337,7 @@ class _StatGrid extends StatelessWidget {
                   width: 28,
                   height: 28,
                 ),
-                value: '~${_fmtNum(steps >= 10000 ? steps : 10000)}',
+                value: _fmtNum(steps),
                 label: 'Kunlik qadamlar',
               ),
             ),

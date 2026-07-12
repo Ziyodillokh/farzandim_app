@@ -36,8 +36,9 @@ class StatusBadge extends StatelessWidget {
           ),
           const SizedBox(width: 6),
           Text(
-            'gamification.levelRange'
-                .tr(namedArgs: {'range': status.levelRange}),
+            'gamification.levelRange'.tr(
+              namedArgs: {'range': status.levelRange},
+            ),
             style: TextStyle(
               // ignore: deprecated_member_use
               color: status.color.withOpacity(0.8),

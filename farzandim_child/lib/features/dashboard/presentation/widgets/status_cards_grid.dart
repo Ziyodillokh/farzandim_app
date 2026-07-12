@@ -53,8 +53,7 @@ class StatusCardsGrid extends StatelessWidget {
             label: 'dashboard.statusBattery'.tr(),
             value: _battery,
             trailing: _isCharging
-                ? const Icon(Icons.bolt,
-                    color: AppColors.warning, size: 16)
+                ? const Icon(Icons.bolt, color: AppColors.warning, size: 16)
                 : null,
           ),
         ),

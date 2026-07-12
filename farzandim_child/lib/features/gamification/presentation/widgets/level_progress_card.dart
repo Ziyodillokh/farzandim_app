@@ -65,11 +65,7 @@ class LevelProgressCard extends StatelessWidget {
                   color: status.color.withOpacity(0.15),
                   borderRadius: BorderRadius.circular(20),
                 ),
-                child: Icon(
-                  status.icon,
-                  color: status.color,
-                  size: 32,
-                ),
+                child: Icon(status.icon, color: status.color, size: 32),
               ),
             ],
           ),
@@ -90,8 +86,7 @@ class LevelProgressCard extends StatelessWidget {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                'gamification.xpTotal'
-                    .tr(namedArgs: {'xp': '${profile.xp}'}),
+                'gamification.xpTotal'.tr(namedArgs: {'xp': '${profile.xp}'}),
                 style: TextStyle(
                   color: context.adaptive.textPrimary,
                   fontSize: 13,
@@ -100,8 +95,7 @@ class LevelProgressCard extends StatelessWidget {
               ),
               Text(
                 xpToNext > 0
-                    ? 'gamification.xpToNext'
-                        .tr(namedArgs: {'xp': '$xpToNext'})
+                    ? 'gamification.xpToNext'.tr(namedArgs: {'xp': '$xpToNext'})
                     : 'gamification.xpMaxStatus'.tr(),
                 style: TextStyle(
                   color: context.adaptive.textSecondary,

@@ -9,11 +9,11 @@ import 'package:flutter/material.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 
 enum GamificationStatus {
-  beginner,    // Lv 1-3, 0-300 XP
-  explorer,    // Lv 4-7, 300-900 XP
-  knower,      // Lv 8-12, 900-2000 XP
-  leader,      // Lv 13-20, 2000-5000 XP
-  mentor,      // Lv 20+, 5000+ XP
+  beginner, // Lv 1-3, 0-300 XP
+  explorer, // Lv 4-7, 300-900 XP
+  knower, // Lv 8-12, 900-2000 XP
+  leader, // Lv 13-20, 2000-5000 XP
+  mentor, // Lv 20+, 5000+ XP
 }
 
 extension GamificationStatusX on GamificationStatus {

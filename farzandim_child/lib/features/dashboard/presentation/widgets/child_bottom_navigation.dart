@@ -243,9 +243,7 @@ class _ProfileNavItem extends ConsumerWidget {
             children: [
               SizedBox(
                 height: 34,
-                child: Center(
-                  child: active ? _ActiveHalo(child: face) : face,
-                ),
+                child: Center(child: active ? _ActiveHalo(child: face) : face),
               ),
               const SizedBox(height: 3),
               Text(
@@ -270,10 +268,6 @@ class _PersonFallback extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Icon(
-      Icons.person_outline_rounded,
-      size: 24,
-      color: _inactive,
-    );
+    return const Icon(Icons.person_outline_rounded, size: 24, color: _inactive);
   }
 }

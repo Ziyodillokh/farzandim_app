@@ -37,8 +37,9 @@ class TodaySummaryChips extends StatelessWidget {
     if (hours == 0) {
       return 'dashboard.todayMinutes'.tr(namedArgs: {'min': '$mins'});
     }
-    return 'dashboard.todayHoursMinutes'
-        .tr(namedArgs: {'h': '$hours', 'm': '$mins'});
+    return 'dashboard.todayHoursMinutes'.tr(
+      namedArgs: {'h': '$hours', 'm': '$mins'},
+    );
   }
 
   @override
@@ -60,8 +61,9 @@ class TodaySummaryChips extends StatelessWidget {
           child: _Chip(
             icon: Icons.apps,
             label: 'dashboard.summaryApps'.tr(),
-            value: 'dashboard.summaryAppCount'
-                .tr(namedArgs: {'count': '$appCount'}),
+            value: 'dashboard.summaryAppCount'.tr(
+              namedArgs: {'count': '$appCount'},
+            ),
             // Sky blue — neutral aksent (ikkinchi chip uchun)
             accentColor: AppColors.catBlue,
           ),

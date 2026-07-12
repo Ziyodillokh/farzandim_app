@@ -34,12 +34,12 @@ class WelcomeBanner extends StatelessWidget {
     };
     try {
       final fmt = DateFormat('EEEE, d MMMM', intlLocale);
-      return 'dashboard.todayDate'
-          .tr(namedArgs: {'date': fmt.format(now)});
+      return 'dashboard.todayDate'.tr(namedArgs: {'date': fmt.format(now)});
     } catch (_) {
       // Locale data yuklanmagan bo'lsa fallback default formatga.
-      return 'dashboard.todayDate'
-          .tr(namedArgs: {'date': DateFormat.yMMMMd().format(now)});
+      return 'dashboard.todayDate'.tr(
+        namedArgs: {'date': DateFormat.yMMMMd().format(now)},
+      );
     }
   }
 
@@ -60,10 +60,7 @@ class WelcomeBanner extends StatelessWidget {
         const SizedBox(height: 6),
         Text(
           _formattedDate(context),
-          style: const TextStyle(
-            color: AppColors.textSecondary,
-            fontSize: 14,
-          ),
+          style: const TextStyle(color: AppColors.textSecondary, fontSize: 14),
         ),
       ],
     );

@@ -291,7 +291,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final streak = (profile?.streak ?? 0) > 0 ? profile!.streak : 7;
     final don = (profile?.don ?? 0) > 0 ? profile!.don : 1250;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
-    final steps = rawSteps > 0 ? rawSteps : 10000;
+    // Qadam REAL — preview yo'q (ota-ona bilan mos bo'lishi uchun).
+    final steps = rawSteps;
 
     // Yutuqlar: real unlock bo'lsa katalogdan, bo'lmasa PREVIEW grid.
     final unlockedIds = profile?.unlockedAchievements ?? const <String>[];

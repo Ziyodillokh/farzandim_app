@@ -88,11 +88,7 @@ class _Banner extends StatelessWidget {
                   color: _orange.withOpacity(0.20),
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(
-                  AppIcons.camera,
-                  color: _orange,
-                  size: 22,
-                ),
+                child: const Icon(AppIcons.camera, color: _orange, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -155,7 +151,9 @@ class _Banner extends StatelessWidget {
                 style: TextButton.styleFrom(
                   foregroundColor: AppColors.textSecondary,
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 16, vertical: 12),
+                    horizontal: 16,
+                    vertical: 12,
+                  ),
                 ),
                 child: const Text('Rad etish'),
               ),
@@ -166,10 +164,7 @@ class _Banner extends StatelessWidget {
               padding: const EdgeInsets.only(top: 8),
               child: Text(
                 "Xato: ${captureState.errorMessage ?? 'noma\'lum'}",
-                style: const TextStyle(
-                  color: AppColors.error,
-                  fontSize: 12,
-                ),
+                style: const TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),
         ],

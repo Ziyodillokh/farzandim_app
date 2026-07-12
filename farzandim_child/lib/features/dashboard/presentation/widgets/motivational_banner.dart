@@ -37,8 +37,11 @@ class MotivationalBanner extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Icon(Icons.lightbulb_rounded,
-                  color: AppColors.primary, size: 18),
+              const Icon(
+                Icons.lightbulb_rounded,
+                color: AppColors.primary,
+                size: 18,
+              ),
               const SizedBox(width: 8),
               Text(
                 'dashboard.motivationalLabel'.tr(),

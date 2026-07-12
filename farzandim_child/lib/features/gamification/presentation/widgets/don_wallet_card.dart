@@ -47,11 +47,7 @@ class DonWalletCard extends StatelessWidget {
               color: _gold.withOpacity(0.2),
               shape: BoxShape.circle,
             ),
-            child: const Icon(
-              Icons.bolt_rounded,
-              color: _gold,
-              size: 28,
-            ),
+            child: const Icon(Icons.bolt_rounded, color: _gold, size: 28),
           ),
           const SizedBox(width: 10),
           Expanded(
