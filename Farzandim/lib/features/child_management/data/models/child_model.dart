@@ -32,6 +32,7 @@ class Child {
     this.phoneNumber,
     this.blockUnknownSources = false,
     this.blockAllApps = false,
+    this.blockUninstall = false,
     this.webFilterEnabled = false,
     this.blockedWebCategories = const [],
   });
@@ -127,6 +128,7 @@ class Child {
       createdAt: _parseIso8601(json['createdAt']) ?? DateTime.now(),
       blockUnknownSources: (json['blockUnknownSources'] as bool?) ?? false,
       blockAllApps: (json['blockAllApps'] as bool?) ?? false,
+      blockUninstall: (json['blockUninstall'] as bool?) ?? false,
       webFilterEnabled: (json['webFilterEnabled'] as bool?) ?? false,
       blockedWebCategories:
           (json['blockedWebCategories'] as List?)?.cast<String>() ?? const [],
@@ -223,6 +225,11 @@ class Child {
   /// qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi (Child App
   /// device-policy'ni o'qib enforce qiladi).
   final bool blockAllApps;
+
+  /// "O'chirishni taqiqlash" — `true` bo'lsa bola Farzandim ilovasini o'chira
+  /// olmaydi (Child App device-policy'ni o'qib Android Device Admin'ni yoqadi,
+  /// uninstall bloklanadi).
+  final bool blockUninstall;
 
   /// "Xavfsiz internet filtri" — ota-ona ixtiyoriy yoqadigan tashqi web
   /// filtri (Qurilma sozlamalari). `true` bo'lsa bola qurilmasi tanlangan
@@ -342,6 +349,7 @@ class Child {
     String? phoneNumber,
     bool? blockUnknownSources,
     bool? blockAllApps,
+    bool? blockUninstall,
     bool? webFilterEnabled,
     List<String>? blockedWebCategories,
   }) {
@@ -364,6 +372,7 @@ class Child {
       phoneNumber: phoneNumber ?? this.phoneNumber,
       blockUnknownSources: blockUnknownSources ?? this.blockUnknownSources,
       blockAllApps: blockAllApps ?? this.blockAllApps,
+      blockUninstall: blockUninstall ?? this.blockUninstall,
       webFilterEnabled: webFilterEnabled ?? this.webFilterEnabled,
       blockedWebCategories: blockedWebCategories ?? this.blockedWebCategories,
     );

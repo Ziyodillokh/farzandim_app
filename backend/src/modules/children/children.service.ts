@@ -161,6 +161,7 @@ export class ChildrenService {
         childUserId: true,
         blockUnknownSources: true,
         blockAllApps: true,
+        blockUninstall: true,
       },
     });
     if (!child) {
@@ -172,6 +173,7 @@ export class ChildrenService {
     return {
       blockUnknownSources: child.blockUnknownSources,
       blockAllApps: child.blockAllApps,
+      blockUninstall: child.blockUninstall,
     };
   }
 

@@ -114,6 +114,10 @@ model Child {
   // "Barcha ilovalarni bloklash" — ota-ona dashboard toggle'i. true = bola
   // qurilmasidagi barcha foydalanuvchi ilovalari bloklanadi.
   blockAllApps        Boolean @default(false) @map("block_all_apps")
+  // "O'chirishni taqiqlash" — ota-ona toggle'i. true = bola Farzandim ilovasini
+  // telefonidan o'chira olmaydi (Android Device Admin faollashadi, uninstall
+  // bloklanadi). Bola app device-policy'dan o'qib admin'ni yoqadi/o'chiradi.
+  blockUninstall      Boolean @default(false) @map("block_uninstall")
 
   // Xavfsiz internet filtri (ixtiyoriy, ota-ona yoqadi). Parvoz ichidagi
   // kontent allaqachon yoshga mos; bu esa tashqi web uchun ota-ona ixtiyoriy

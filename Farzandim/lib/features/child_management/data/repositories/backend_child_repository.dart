@@ -203,6 +203,16 @@ class BackendChildRepository {
     return Child.fromJson(response.data ?? <String, dynamic>{});
   }
 
+  /// "O'chirishni taqiqlash" — bola Farzandim'ni o'chira olmaydi (Device
+  /// Admin orqali uninstall bloklanadi).
+  Future<Child> setBlockUninstall(String childId, {required bool value}) async {
+    final response = await _dio.put<Map<String, dynamic>>(
+      '/children/$childId',
+      data: <String, dynamic>{'blockUninstall': value},
+    );
+    return Child.fromJson(response.data ?? <String, dynamic>{});
+  }
+
   /// "Xavfsiz internet filtri" — `PUT /children/:id`. `enabled` filtr holati,
   /// `categories` bloklangan kategoriyalar (ADULT | GAMBLING | SOCIAL).
   /// Yangilangan `Child` qaytadi (bola qurilmasi device-policy'ni o'qib

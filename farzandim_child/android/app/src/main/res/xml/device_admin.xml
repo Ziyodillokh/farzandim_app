@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Device Admin siyosati — "O'chirishni taqiqlash" uchun. Admin faol bo'lsa
+     ilovani o'chirib bo'lmaydi. Minimal siyosat: parol sifati (uninstall
+     bloklash faol admin bo'lishning o'zi bilan ta'minlanadi). -->
+<device-admin xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-policies>
+        <watch-login />
+    </uses-policies>
+</device-admin>

@@ -19,6 +19,8 @@ import 'package:farzandim_child/features/notifications/presentation/screens/noti
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
@@ -142,6 +144,9 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     WidgetsBinding.instance.addObserver(this);
     Future.microtask(_guardPermissions);
     Future.microtask(_updateStreak);
+    // "O'chirishni taqiqlash" — app ochilganda siyosatni qo'llaymiz (kerak
+    // bo'lsa Device Admin dialogini ko'rsatamiz — foreground shart).
+    Future.microtask(() => _syncUninstallProtection(allowPrompt: true));
     _autoRefreshTimer = Timer.periodic(
       const Duration(seconds: 60),
       (_) => _refresh(),
@@ -165,6 +170,22 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     ref
       ..invalidate(todayStepsProvider)
       ..invalidate(backendContestsProvider);
+    // Deaktivatsiya (ota-ona o'chirsa) darhol; faollashtirish dialogi YO'Q
+    // (loop bo'lmasin — dialog faqat app ochilganda, initState'da).
+    unawaited(_syncUninstallProtection(allowPrompt: false));
+  }
+
+  /// "O'chirishni taqiqlash" siyosatini backend'dan o'qib qo'llaydi.
+  Future<void> _syncUninstallProtection({required bool allowPrompt}) async {
+    final childId = ref.read(pairingStateProvider).childId;
+    if (childId == null) return;
+    final policy = await ref
+        .read(backendDevicePolicyRepositoryProvider)
+        .getDevicePolicy(childId);
+    await uninstallProtectionService.apply(
+      policy.blockUninstall,
+      allowPrompt: allowPrompt,
+    );
   }
 
   Future<void> _updateStreak() async {

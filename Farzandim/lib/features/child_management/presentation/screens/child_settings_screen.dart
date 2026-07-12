@@ -193,6 +193,13 @@ class ChildSettingsScreen extends ConsumerWidget {
                     childId: childId,
                     initialValue: child?.blockUnknownSources ?? false,
                   ),
+                  const SizedBox(height: 8),
+
+                  // ── O'chirishni taqiqlash (Device Admin toggle) ──
+                  _UninstallProtectionCard(
+                    childId: childId,
+                    initialValue: child?.blockUninstall ?? false,
+                  ),
                 ],
               ),
             ),
@@ -483,6 +490,96 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
                 const SizedBox(height: 3),
                 Text(
                   'controlsSetup.unknownSources.subtitle'.tr(),
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _pop(13, c: _dim),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 10),
+          AppSwitch(
+            value: _blocked,
+            onChanged: _saving ? null : _onChanged,
+            activeColor: _green,
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+/// "O'chirishni taqiqlash" — inline toggle (Device Admin). Yoqilsa bola
+/// Farzandim'ni telefonidan o'chira olmaydi. Optimistik + xato'da qaytarish.
+class _UninstallProtectionCard extends ConsumerStatefulWidget {
+  const _UninstallProtectionCard({
+    required this.childId,
+    required this.initialValue,
+  });
+
+  final String childId;
+  final bool initialValue;
+
+  @override
+  ConsumerState<_UninstallProtectionCard> createState() =>
+      _UninstallProtectionCardState();
+}
+
+class _UninstallProtectionCardState
+    extends ConsumerState<_UninstallProtectionCard> {
+  late bool _blocked = widget.initialValue;
+  bool _saving = false;
+
+  @override
+  void didUpdateWidget(_UninstallProtectionCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_saving && oldWidget.initialValue != widget.initialValue) {
+      _blocked = widget.initialValue;
+    }
+  }
+
+  Future<void> _onChanged(bool value) async {
+    if (_saving) return;
+    final previous = _blocked;
+    setState(() {
+      _blocked = value;
+      _saving = true;
+    });
+    try {
+      await ref
+          .read(backendChildRepositoryProvider)
+          .setBlockUninstall(widget.childId, value: value);
+      ref.read(childrenRefreshTickProvider.notifier).state++;
+    } catch (_) {
+      if (mounted) {
+        setState(() => _blocked = previous);
+        AppToast.error(context, "O'zgartirib bo'lmadi. Qayta urinib ko'ring.");
+      }
+    } finally {
+      if (mounted) setState(() => _saving = false);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _CardShell(
+      child: Row(
+        children: [
+          const _IconChip(icon: SolarIconsBold.shieldMinimalistic),
+          const SizedBox(width: 14),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  "O'chirishni taqiqlash",
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: _unb(16, ls: -0.3),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  "Bola Farzandim ilovasini telefonidan o'chira olmaydi",
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _pop(13, c: _dim),

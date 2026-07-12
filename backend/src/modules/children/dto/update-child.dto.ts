@@ -73,6 +73,16 @@ export class UpdateChildDto {
   @ApiPropertyOptional({
     example: true,
     description:
+      "O'chirishni taqiqlash — bola Farzandim ilovasini o'chira olmaydi " +
+      '(true = Android Device Admin yoqiladi, uninstall bloklanadi).',
+  })
+  @IsOptional()
+  @IsBoolean()
+  blockUninstall?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description:
       "Xavfsiz internet filtri — ota-ona ixtiyoriy yoqadigan tashqi web " +
       'filtri (true = yoqilsin). Faqat Android\'da enforce qilinadi.',
   })

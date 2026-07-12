@@ -20,20 +20,21 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 final backendDevicePolicyRepositoryProvider =
     Provider<BackendDevicePolicyRepository>((ref) {
-  return BackendDevicePolicyRepository(dio: ref.watch(dioClientProvider));
-});
+      return BackendDevicePolicyRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class BackendDevicePolicyRepository {
   BackendDevicePolicyRepository({required Dio dio}) : _dio = dio;
 
   final Dio _dio;
 
-  /// Qurilma siyosatini BITTA so'rovda oladi: `blockUnknownSources` va
-  /// `blockAllApps`. Xato bo'lsa ikkala maydon `null` — sync eski qiymatni
-  /// saqlaydi (tarmoq uzilishida bloklash o'chib qolmasin).
-  Future<({bool? blockUnknownSources, bool? blockAllApps})> getDevicePolicy(
-    String childId,
-  ) async {
+  /// Qurilma siyosatini BITTA so'rovda oladi: `blockUnknownSources`,
+  /// `blockAllApps`, `blockUninstall`. Xato bo'lsa maydonlar `null` — sync
+  /// eski qiymatni saqlaydi (tarmoq uzilishida bloklash o'chib qolmasin).
+  Future<
+    ({bool? blockUnknownSources, bool? blockAllApps, bool? blockUninstall})
+  >
+  getDevicePolicy(String childId) async {
     try {
       final res = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/device-policy',
@@ -41,10 +42,15 @@ class BackendDevicePolicyRepository {
       return (
         blockUnknownSources: res.data?['blockUnknownSources'] as bool?,
         blockAllApps: res.data?['blockAllApps'] as bool?,
+        blockUninstall: res.data?['blockUninstall'] as bool?,
       );
     } on DioException catch (e) {
       debugPrint('BackendDevicePolicyRepository: $e');
-      return (blockUnknownSources: null, blockAllApps: null);
+      return (
+        blockUnknownSources: null,
+        blockAllApps: null,
+        blockUninstall: null,
+      );
     }
   }
 }
