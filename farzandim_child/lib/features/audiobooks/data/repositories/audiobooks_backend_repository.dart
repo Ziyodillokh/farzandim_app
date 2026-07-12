@@ -27,14 +27,17 @@ import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.
 
 final audiobooksBackendRepositoryProvider =
     Provider<AudiobooksBackendRepository>((ref) {
-  return AudiobooksBackendRepository(dio: ref.watch(dioClientProvider));
-});
+      return AudiobooksBackendRepository(dio: ref.watch(dioClientProvider));
+    });
 
 class AudiobooksBackendRepository {
   AudiobooksBackendRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;
 
-  Future<List<AudiobookModel>> fetchAudiobooks({int page = 1, int limit = 50}) async {
+  Future<List<AudiobookModel>> fetchAudiobooks({
+    int page = 1,
+    int limit = 50,
+  }) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/content/audiobooks',
@@ -50,7 +53,9 @@ class AudiobooksBackendRepository {
           .map(_toAudiobookModel)
           .toList(growable: false);
     } on DioException catch (e) {
-      debugPrint('AudiobooksBackend.fetch: ${e.response?.statusCode} ${e.message}');
+      debugPrint(
+        'AudiobooksBackend.fetch: ${e.response?.statusCode} ${e.message}',
+      );
       rethrow;
     }
   }
@@ -68,7 +73,9 @@ class AudiobooksBackendRepository {
   /// Bola tinglashni boshlaganda listens counter++.
   Future<void> markPlayed(String audiobookId) async {
     try {
-      await _dio.post<Map<String, dynamic>>('/content/audiobooks/$audiobookId/play');
+      await _dio.post<Map<String, dynamic>>(
+        '/content/audiobooks/$audiobookId/play',
+      );
     } on DioException catch (e) {
       debugPrint('AudiobooksBackend.markPlayed: ${e.message}');
     }
@@ -103,11 +110,14 @@ class AudiobooksBackendRepository {
       audioUrl: EnvConfig.resolveMediaUrl((raw['audioUrl'] as String?) ?? ''),
       durationSeconds: durationSec,
       duration: _formatDuration(durationSec),
-      category: category?.isNotEmpty == true ? _humanCategory(category!) : 'Boshqa',
+      category: category?.isNotEmpty == true
+          ? _humanCategory(category!)
+          : 'Boshqa',
       hashtags: ['#$ageFrom-${ageTo}yosh'],
       listenCount: (raw['listens'] as num?)?.toInt() ?? 0,
       coverColor: _coverColorFor(id),
       partsCount: (raw['partsCount'] as num?)?.toInt() ?? 1,
+      xpReward: (raw['xpReward'] as num?)?.toInt() ?? 50,
     );
   }
 

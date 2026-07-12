@@ -25,6 +25,10 @@ class AudiobookModel {
   /// ko'rsatiladi. UI qismlar ro'yxati va navigatsiya uchun ishlatadi.
   final int partsCount;
 
+  /// DON mukofoti (backend: `xpReward`) — muqovada "N DON" pill'da ko'rsatiladi
+  /// (avval hardcode 250 edi; endi admin belgilagan real qiymat).
+  final int xpReward;
+
   const AudiobookModel({
     required this.id,
     required this.title,
@@ -39,5 +43,6 @@ class AudiobookModel {
     required this.listenCount,
     required this.coverColor,
     this.partsCount = 1,
+    this.xpReward = 50,
   });
 }

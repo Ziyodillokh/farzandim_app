@@ -90,7 +90,7 @@ export function AudiobookUploadModal({
         planRequired,
         categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
         partsCount: Number(partsCount) || 1,
-        pointsReward: Number(pointsReward) || 0,
+        xpReward: Number(pointsReward) || 0,
         status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
       };
       return contentApi.audiobooks.upload(audioFile, metadata, thumbnailFile, setProgress);
@@ -270,7 +270,7 @@ export function AudiobookUploadModal({
               />
             </div>
             <div className="space-y-1.5">
-              <Label htmlFor="audiobook-points">Ball mukofoti</Label>
+              <Label htmlFor="audiobook-points">DON mukofoti</Label>
               <Input
                 id="audiobook-points"
                 type="number"

@@ -255,6 +255,7 @@ export class ConsumerContentService {
       category: ab.category,
       planRequired: ab.planRequired,
       listens: ab.listens,
+      xpReward: ab.xpReward,
       createdAt: ab.createdAt.toISOString(),
     }));
 

@@ -240,7 +240,7 @@ class _HeroCoverCard extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const _DonPill(price: 250),
+          _DonPill(price: book.xpReward),
         ],
       ),
     );
@@ -413,7 +413,7 @@ class _GridBookCard extends StatelessWidget {
                 style: TextStyle(color: _textMuted, fontSize: 11),
               ),
               const SizedBox(width: 6),
-              const Flexible(child: _DonPill(price: 250)),
+              Flexible(child: _DonPill(price: book.xpReward)),
             ],
           ),
         ],

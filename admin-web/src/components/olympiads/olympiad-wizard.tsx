@@ -403,7 +403,7 @@ export function OlympiadWizard({
                     </SelectContent>
                   </Select>
                 </Field>
-                <Field label="XP mukofoti">
+                <Field label="DON mukofoti">
                   <Input type="number" min={0} max={1000} value={xpReward} onChange={(e) => setXpReward(+e.target.value)} />
                 </Field>
               </div>

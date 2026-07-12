@@ -349,7 +349,9 @@ class _StatChipsRow extends ConsumerWidget {
     final rawDon = profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 7;
-    final don = rawDon > 0 ? rawDon : 1250;
+    // DON — REAL qiymat (bola gamifikatsiyada yiqqan). Mock (1250) OLIB
+    // TASHLANDI: bola app'da DON hamma joyda real ko'rinsin.
+    final don = rawDon;
     final steps = rawSteps > 0 ? rawSteps : 10000;
 
     const outer = Radius.circular(24);
@@ -707,23 +709,25 @@ class _AudiobookCard extends ConsumerWidget {
             ),
           ),
           const SizedBox(height: 8),
-          const _PricePill(),
+          _PricePill(don: book.xpReward),
         ],
       ),
     );
   }
 }
 
-/// "250 DON" narx pill (Unbounded 250 + ko'k DON badge).
+/// "N DON" pill (real DON — book.xpReward) + ko'k DON badge.
 class _PricePill extends StatelessWidget {
-  const _PricePill();
+  const _PricePill({required this.don});
+
+  final int don;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text('250', style: _unb(12, w: FontWeight.w600, ls: -0.36)),
+        Text('$don', style: _unb(12, w: FontWeight.w600, ls: -0.36)),
         const SizedBox(width: 4),
         const _DonBadge(),
       ],
@@ -987,7 +991,8 @@ class _MockBookCard extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        const _PricePill(),
+        // PREVIEW namuna (backend kitob yo'q) — namunaviy DON.
+        const _PricePill(don: 250),
       ],
     );
   }

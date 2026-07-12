@@ -83,6 +83,12 @@ export class CreateAudiobookDto {
   @IsOptional()
   @IsEnum(CONTENT_STATUSES)
   status?: (typeof CONTENT_STATUSES)[number];
+
+  @ApiProperty({ default: 50, description: 'DON mukofoti (bola muqovada ko\'radi)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  xpReward?: number;
 }
 
 export class UpdateAudiobookDto {
@@ -98,4 +104,5 @@ export class UpdateAudiobookDto {
   @IsOptional() @IsUUID() categoryId?: string | null;
   @IsOptional() @IsEnum(['free', 'standard', 'premium', 'vip']) planRequired?: string;
   @IsOptional() @IsEnum(['hidden', 'pending', 'approved', 'rejected']) status?: string;
+  @IsOptional() @IsInt() @Min(0) xpReward?: number;
 }

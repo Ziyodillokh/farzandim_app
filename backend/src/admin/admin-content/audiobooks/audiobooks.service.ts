@@ -62,6 +62,7 @@ export class AudiobooksService {
       planRequired: a.planRequired,
       status: a.status,
       listens: a.listens,
+      xpReward: a.xpReward,
       createdAt: a.createdAt.toISOString(),
       updatedAt: a.updatedAt.toISOString(),
     };
@@ -122,6 +123,7 @@ export class AudiobooksService {
         categoryId: dto.categoryId ?? null,
         planRequired: dto.planRequired ?? 'free',
         status: dto.status ?? 'approved',
+        xpReward: dto.xpReward ?? 50,
       },
     });
     return this.rowOf(created);
@@ -141,6 +143,7 @@ export class AudiobooksService {
     if (dto.categoryId !== undefined) updates.categoryId = dto.categoryId ?? null;
     if (dto.planRequired !== undefined) updates.planRequired = dto.planRequired;
     if (dto.status !== undefined) updates.status = dto.status;
+    if (dto.xpReward !== undefined) updates.xpReward = dto.xpReward;
     try {
       const updated = await this.prisma.audiobook.update({ where: { id }, data: updates });
       return this.rowOf(updated);

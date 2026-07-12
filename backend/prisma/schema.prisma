@@ -951,6 +951,9 @@ model Audiobook {
   planRequired    String   @default("free") @map("plan_required")
   status          String   @default("pending") // pending | approved | rejected | hidden
   listens         Int      @default(0)
+  // DON mukofoti — bola audiokitobni tinglaganda oladigan DON (admin belgilaydi).
+  // Bola app muqovasida "N DON" ko'rsatiladi (avval hardcode 250 edi).
+  xpReward        Int      @default(50) @map("xp_reward")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 
