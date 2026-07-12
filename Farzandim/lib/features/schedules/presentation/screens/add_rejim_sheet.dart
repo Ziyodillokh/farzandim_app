@@ -10,6 +10,7 @@
 // Mock rejimda backendga bormasdan yopiladi (UI preview).
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
@@ -122,8 +123,22 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
     if (!mounted) return;
     setState(() => _saving = false);
     if (result.isSuccess) {
+      // Rejim yaratilgach — DARHOL "Ilovalarni bloklash" varag'i ochiladi
+      // (rejim davomida bloklanadigan ilovalarni tanlab saqlash — mantiqiy
+      // ketma-ketlik). Root context bilan (bu varaq pop bo'lgach ham yashaydi).
+      final rootContext = Navigator.of(context, rootNavigator: true).context;
+      final blockTitle = name;
       Navigator.of(context).pop();
-      AppToast.success(context, 'rejimlar.saved'.tr());
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!rootContext.mounted) return;
+        AppToast.success(rootContext, 'rejimlar.saved'.tr());
+        showBlockAppsSheet(
+          rootContext,
+          childId: widget.childId,
+          title: blockTitle,
+          showCategories: false,
+        );
+      });
     } else {
       AppToast.error(context, result.error ?? 'rejimlar.saved'.tr());
     }
