@@ -1095,6 +1095,10 @@ model OlympiadQuestion {
   olympiadId   String   @map("olympiad_id")
   text         String
   options      String[]
+  // Har variant uchun IXTIYORIY rasm (MinIO `olympiad` bucket kaliti) —
+  // `options` bilan bir xil uzunlikda, bo'sh ("") = faqat matn. Matematik
+  // formula/diagramma javoblar uchun. Proxy: GET /olympiad-images/:key.
+  optionImages String[] @default([]) @map("option_images")
   correctIndex Int      @map("correct_index")
   points       Int      @default(10)
   // Savol rasmi (ixtiyoriy) — MinIO `olympiad` bucket kaliti. Matematik

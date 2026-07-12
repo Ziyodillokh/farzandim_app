@@ -35,7 +35,14 @@ const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
 const questionImageUrl = (key: string) => `${API_BASE}/olympiad-images/${key}`;
 
 function emptyQuestion(): OlympiadQuestionInput {
-  return { text: '', options: ['', '', '', ''], correctIndex: 0, points: 10, imageKey: null };
+  return {
+    text: '',
+    options: ['', '', '', ''],
+    optionImages: ['', '', '', ''],
+    correctIndex: 0,
+    points: 10,
+    imageKey: null,
+  };
 }
 
 export function OlympiadWizard({
@@ -99,6 +106,37 @@ export function OlympiadWizard({
     }
   };
 
+  // Har VARIANT uchun ixtiyoriy rasm (matematik formula/diagramma javoblar).
+  const [uploadingOpt, setUploadingOpt] = useState<string | null>(null);
+
+  const handleOptionImage = async (qi: number, oi: number, file?: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Rasm juda katta (maks 5 MB)');
+      return;
+    }
+    setUploadingOpt(`${qi}-${oi}`);
+    try {
+      const { key } = await olympiadsApi.uploadQuestionImage(file);
+      setQuestions((qs) =>
+        qs.map((x, i) =>
+          i === qi
+            ? {
+                ...x,
+                optionImages: (x.optionImages ?? x.options.map(() => '')).map(
+                  (v, j) => (j === oi ? key : v),
+                ),
+              }
+            : x,
+        ),
+      );
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
+    } finally {
+      setUploadingOpt(null);
+    }
+  };
+
   // Step 3
   const [type, setType] = useState('test');
   const [difficulty, setDifficulty] = useState("o'rta");
@@ -158,7 +196,11 @@ export function OlympiadWizard({
           (q) =>
             q.text.trim().length > 0 &&
             q.options.length >= 2 &&
-            q.options.every((o) => o.trim().length > 0) &&
+            // Har variant MATN yoki RASM bilan to'ldirilgan bo'lishi kerak.
+            q.options.every(
+              (o, oi) =>
+                o.trim().length > 0 || (q.optionImages?.[oi] ?? '').length > 0,
+            ) &&
             q.correctIndex >= 0 &&
             q.correctIndex < q.options.length,
         )
@@ -342,27 +384,70 @@ export function OlympiadWizard({
                   </div>
 
                   <div className="space-y-2">
-                    {q.options.map((opt, oi) => (
-                      <div key={oi} className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, correctIndex: oi } : x))}
-                          className={cn(
-                            'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors',
-                            q.correctIndex === oi ? 'border-success bg-success text-success-foreground' : 'border-border text-muted-foreground',
+                    {q.options.map((opt, oi) => {
+                      const optImg = q.optionImages?.[oi] ?? '';
+                      return (
+                        <div key={oi} className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, correctIndex: oi } : x))}
+                            className={cn(
+                              'flex h-6 w-6 shrink-0 items-center justify-center rounded-full border-2 text-xs font-bold transition-colors',
+                              q.correctIndex === oi ? 'border-success bg-success text-success-foreground' : 'border-border text-muted-foreground',
+                            )}
+                            title="To'g'ri javob"
+                          >
+                            {q.correctIndex === oi ? <Check className="h-3.5 w-3.5" /> : String.fromCharCode(65 + oi)}
+                          </button>
+                          <Input
+                            placeholder={optImg ? '(rasm) — matn ixtiyoriy' : `Variant ${String.fromCharCode(65 + oi)}`}
+                            value={opt}
+                            onChange={(e) => setQuestions((qs) => qs.map((x, i) => i === qi
+                              ? { ...x, options: x.options.map((o, j) => j === oi ? e.target.value : o) } : x))}
+                          />
+                          {/* Variantga IXTIYORIY rasm (matematik javob) */}
+                          <input
+                            type="file"
+                            accept="image/*"
+                            id={`q-${qi}-opt-${oi}`}
+                            className="hidden"
+                            onChange={(e) => {
+                              void handleOptionImage(qi, oi, e.target.files?.[0]);
+                              e.target.value = '';
+                            }}
+                          />
+                          {optImg ? (
+                            <div className="relative shrink-0">
+                              {/* eslint-disable-next-line @next/next/no-img-element */}
+                              <img
+                                src={questionImageUrl(optImg)}
+                                alt="Variant rasmi"
+                                className="h-9 w-9 rounded border border-border object-cover"
+                              />
+                              <button
+                                type="button"
+                                title="Rasmni o'chirish"
+                                onClick={() => setQuestions((qs) => qs.map((x, i) => i === qi
+                                  ? { ...x, optionImages: (x.optionImages ?? x.options.map(() => '')).map((v, j) => j === oi ? '' : v) } : x))}
+                                className="absolute -right-1.5 -top-1.5 rounded-full bg-destructive p-0.5 text-white"
+                              >
+                                <X className="h-3 w-3" />
+                              </button>
+                            </div>
+                          ) : uploadingOpt === `${qi}-${oi}` ? (
+                            <Loader2 className="h-4 w-4 shrink-0 animate-spin text-muted-foreground" />
+                          ) : (
+                            <label
+                              htmlFor={`q-${qi}-opt-${oi}`}
+                              title="Variantga rasm (ixtiyoriy)"
+                              className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center rounded border border-dashed border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                            >
+                              <ImagePlus className="h-4 w-4" />
+                            </label>
                           )}
-                          title="To'g'ri javob"
-                        >
-                          {q.correctIndex === oi ? <Check className="h-3.5 w-3.5" /> : String.fromCharCode(65 + oi)}
-                        </button>
-                        <Input
-                          placeholder={`Variant ${String.fromCharCode(65 + oi)}`}
-                          value={opt}
-                          onChange={(e) => setQuestions((qs) => qs.map((x, i) => i === qi
-                            ? { ...x, options: x.options.map((o, j) => j === oi ? e.target.value : o) } : x))}
-                        />
-                      </div>
-                    ))}
+                        </div>
+                      );
+                    })}
                   </div>
                   <div className="mt-3 flex items-center gap-2">
                     <Label className="text-xs">Ball:</Label>

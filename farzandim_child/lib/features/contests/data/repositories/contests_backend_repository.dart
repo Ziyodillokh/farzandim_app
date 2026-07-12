@@ -84,6 +84,15 @@ class ContestsBackendRepository {
         final imageUrl = imageKey.isEmpty
             ? ''
             : '${EnvConfig.apiUrl}/olympiad-images/$imageKey';
+        // Variant rasmlari (kalitlar) → to'liq URL (bo'sh kalit = "").
+        final optionImages =
+            ((raw['optionImages'] as List<dynamic>?) ?? const [])
+                .map((e) => e.toString().trim())
+                .map(
+                  (k) =>
+                      k.isEmpty ? '' : '${EnvConfig.apiUrl}/olympiad-images/$k',
+                )
+                .toList();
         return QuestionModel(
           id: (raw['id'] as String?) ?? '',
           text: (raw['text'] as String?) ?? '',
@@ -96,6 +105,7 @@ class ContestsBackendRepository {
           timeSeconds: 40,
           bonus: (raw['points'] as num?)?.toInt() ?? 50,
           imageUrl: imageUrl,
+          optionImages: optionImages,
         );
       }).toList();
     } on DioException catch (e) {

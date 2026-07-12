@@ -243,6 +243,8 @@ export const olympiadsApi = {
 export interface OlympiadQuestionInput {
   text: string;
   options: string[];
+  /** Har variant uchun ixtiyoriy rasm kaliti (options bilan parallel, "" = matn). */
+  optionImages?: string[];
   correctIndex: number;
   points: number;
   imageKey?: string | null;

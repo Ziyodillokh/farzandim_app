@@ -30,8 +30,17 @@ export class QuestionDto {
   @IsArray()
   @ArrayMinSize(2, { message: 'Savol kamida 2 ta variantga ega bo\'lishi shart' })
   @IsString({ each: true })
-  @MaxLength(200, { each: true })
+  @MaxLength(600, { each: true })
   options: string[];
+
+  // Har variant uchun IXTIYORIY rasm kaliti — `options` bilan parallel
+  // (bo'sh "" = faqat matn). Matematik formula/diagramma javoblar uchun.
+  @ApiProperty({ type: [String], required: false })
+  @IsOptional()
+  @IsArray()
+  @IsString({ each: true })
+  @MaxLength(300, { each: true })
+  optionImages?: string[];
 
   @ApiProperty()
   @IsInt()

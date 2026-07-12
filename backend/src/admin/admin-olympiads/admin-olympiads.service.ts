@@ -72,6 +72,7 @@ export class AdminOlympiadsService {
       olympiadId: q.olympiadId,
       text: q.text,
       options: q.options,
+      optionImages: q.optionImages ?? [],
       correctIndex: q.correctIndex,
       points: q.points,
       orderIdx: q.orderIdx,
@@ -197,6 +198,7 @@ export class AdminOlympiadsService {
               create: dto.questions.map((q, idx) => ({
                 text: q.text,
                 options: q.options,
+                optionImages: q.optionImages ?? [],
                 correctIndex: q.correctIndex,
                 points: q.points ?? 10,
                 imageKey: q.imageKey ?? null,
@@ -413,6 +415,7 @@ export class AdminOlympiadsService {
           olympiadId,
           text: dto.text,
           options: dto.options,
+          optionImages: dto.optionImages ?? [],
           correctIndex: dto.correctIndex,
           points: dto.points ?? 10,
           imageKey: dto.imageKey ?? null,
@@ -433,6 +436,7 @@ export class AdminOlympiadsService {
     const updates: Prisma.OlympiadQuestionUpdateInput = {};
     if (dto.text !== undefined) updates.text = dto.text;
     if (dto.options !== undefined) updates.options = dto.options;
+    if (dto.optionImages !== undefined) updates.optionImages = dto.optionImages;
     if (dto.correctIndex !== undefined) updates.correctIndex = dto.correctIndex;
     if (dto.points !== undefined) updates.points = dto.points;
     if (dto.imageKey !== undefined) updates.imageKey = dto.imageKey ?? null;
