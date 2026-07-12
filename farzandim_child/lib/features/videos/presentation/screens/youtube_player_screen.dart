@@ -18,6 +18,9 @@ import 'package:go_router/go_router.dart';
 import 'package:share_plus/share_plus.dart';
 import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
+// Android fullscreen callback (setCustomWidgetCallbacks) uchun platform impl.
+// ignore: depend_on_referenced_packages
+import 'package:webview_flutter_android/webview_flutter_android.dart';
 
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -41,7 +44,11 @@ class YoutubePlayerScreen extends ConsumerStatefulWidget {
 class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
   WebViewController? _controller;
   bool _loading = true;
-  bool _fullscreen = false;
+  // NATIVE fullscreen — webview HTML5 fullscreen (YouTube tugmasi yoki bizning
+  // "To'liq ekran" JS orqali). Webview QAYTA YUKLANMAYDI → qotmaydi/qaytadan
+  // boshlanmaydi. `_fullscreenWidget` — webview bergan fullscreen ko'rinishi.
+  Widget? _fullscreenWidget;
+  VoidCallback? _hideFullscreen;
   // Pastdagi videolar kategoriya chip filtri (null = "Hammasi").
   String? _relatedChip;
 
@@ -75,6 +82,38 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
       )
       ..loadRequest(embedPage);
 
+    // NATIVE fullscreen callback (Android) — webview HTML5 fullscreen'ni
+    // (YouTube tugmasi/JS) qabul qiladi va webview'ni QAYTA YUKLAMASDAN
+    // fullscreen ko'rsatadi. Avval Scaffold almashtirilib qayta yuklanardi →
+    // qotish/qaytadan boshlash. Endi silliq.
+    final platform = _controller!.platform;
+    if (platform is AndroidWebViewController) {
+      platform.setMediaPlaybackRequiresUserGesture(false);
+      platform.setCustomWidgetCallbacks(
+        onShowCustomWidget: (Widget w, void Function() onHidden) {
+          if (!mounted) return;
+          setState(() {
+            _fullscreenWidget = w;
+            _hideFullscreen = onHidden;
+          });
+          SystemChrome.setPreferredOrientations([
+            DeviceOrientation.landscapeLeft,
+            DeviceOrientation.landscapeRight,
+          ]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+        },
+        onHideCustomWidget: () {
+          if (!mounted) return;
+          setState(() {
+            _fullscreenWidget = null;
+            _hideFullscreen = null;
+          });
+          SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+          SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+        },
+      );
+    }
+
     // Ko'rishlar hisoblagichi (backend analitikasi) — bir marta.
     ref.read(videosBackendRepositoryProvider).markViewed(widget.video.id);
   }
@@ -88,19 +127,16 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     super.dispose();
   }
 
-  void _enterFullscreen() {
-    setState(() => _fullscreen = true);
-    SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  }
-
-  void _exitFullscreen() {
-    setState(() => _fullscreen = false);
-    SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
+  // "To'liq ekran" — webview ICHIDAGI video/iframe'ni HTML5 fullscreen qiladi
+  // (JS). Buni webview onShowCustomWidget qabul qiladi → native fullscreen,
+  // QAYTA YUKLASH yo'q. (YouTube'ning o'z fullscreen tugmasi ham shu yo'l bilan.)
+  void _requestWebviewFullscreen() {
+    _controller?.runJavaScript(
+      "(function(){var e=document.querySelector('iframe')||"
+      "document.querySelector('video');if(!e)return;"
+      "if(e.requestFullscreen)e.requestFullscreen();"
+      "else if(e.webkitRequestFullscreen)e.webkitRequestFullscreen();})();",
+    );
   }
 
   Future<void> _openInYoutube() async {
@@ -128,15 +164,15 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
       );
     }
 
-    // To'liq ekran (landscape) — back tugmasi avval fullscreen'dan chiqaradi,
-    // keyin ekrandan.
+    // Fullscreen (native) ochiq bo'lsa — back tugmasi avval undan chiqaradi
+    // (webview'ga fullscreen'ni yopishni aytamiz), keyin ekrandan.
     return PopScope(
-      canPop: !_fullscreen,
+      canPop: _fullscreenWidget == null,
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop && _fullscreen) _exitFullscreen();
+        if (!didPop && _fullscreenWidget != null) _hideFullscreen?.call();
       },
-      child: _fullscreen
-          ? _buildFullscreen(controller)
+      child: _fullscreenWidget != null
+          ? _buildFullscreen()
           : _buildPortrait(controller),
     );
   }
@@ -243,7 +279,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                           children: [
                             Expanded(
                               child: _FullscreenGlassButton(
-                                onTap: _enterFullscreen,
+                                onTap: _requestWebviewFullscreen,
                               ),
                             ),
                             const SizedBox(width: 10),
@@ -324,30 +360,13 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
   }
 
   // ── To'liq ekran (landscape): webview butun ekranni qoplaydi ──
-  Widget _buildFullscreen(WebViewController controller) {
+  // Native fullscreen — webview bergan ko'rinishni (video + YouTube controllari)
+  // butun ekranda ko'rsatamiz. Webview QAYTA YUKLANMAYDI (o'sha player).
+  // Chiqish: YouTube'ning o'z fullscreen-exit tugmasi yoki back (→ _hideFullscreen).
+  Widget _buildFullscreen() {
     return Scaffold(
       backgroundColor: Colors.black,
-      body: Stack(
-        children: [
-          Positioned.fill(child: WebViewWidget(controller: controller)),
-          if (_loading)
-            const Center(
-              child: CircularProgressIndicator(color: AppColors.parvozGreen),
-            ),
-          SafeArea(
-            child: Align(
-              alignment: Alignment.topLeft,
-              child: Padding(
-                padding: const EdgeInsets.all(4),
-                child: _GlassIconButton(
-                  icon: Icons.fullscreen_exit_rounded,
-                  onPressed: _exitFullscreen,
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
+      body: SizedBox.expand(child: _fullscreenWidget),
     );
   }
 
@@ -375,7 +394,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                   padding: const EdgeInsets.all(8),
                   child: _GlassIconButton(
                     icon: Icons.fullscreen_rounded,
-                    onPressed: _enterFullscreen,
+                    onPressed: _requestWebviewFullscreen,
                   ),
                 ),
               ),

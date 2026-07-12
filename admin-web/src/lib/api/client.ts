@@ -38,6 +38,15 @@ class ApiClient {
     );
   }
 
+  // Login'ga yo'naltirish — basePath '/admin' bilan TO'G'RI yo'l (`/admin/login`,
+  // avval `/login` → domen ildizi = boshqa app'ga otvorardi). Allaqachon login
+  // sahifasida bo'lsak QAYTA yo'naltirmaymiz (tez-tez otvorish/loop yo'q).
+  private redirectToLogin() {
+    if (typeof window === 'undefined') return;
+    if (window.location.pathname.includes('/login')) return;
+    window.location.href = '/admin/login';
+  }
+
   private async handleResponseError(error: AxiosError) {
     const original = error.config as AxiosRequestConfig & { _retry?: boolean };
     if (!error.response) return Promise.reject(error);
@@ -57,14 +66,14 @@ class ApiClient {
         const newToken = await this.refreshAccessToken();
         if (!newToken) {
           useAuthStore.getState().logout();
-          if (typeof window !== 'undefined') window.location.href = '/login';
+          this.redirectToLogin();
           return Promise.reject(error);
         }
         if (original.headers) original.headers.Authorization = `Bearer ${newToken}`;
         return this.instance(original);
       } catch {
         useAuthStore.getState().logout();
-        if (typeof window !== 'undefined') window.location.href = '/login';
+        this.redirectToLogin();
         return Promise.reject(error);
       }
     }
