@@ -134,13 +134,13 @@ export class ConsumerOlympiadsService {
   }
 
   async listOlympiads(userId: string) {
-    // Auth tekshiruvi (bola profili shart). Yosh filtri OLIB TASHLANDI —
-    // admin NASHR qilgan BARCHA konkurs bola app'da ko'rinsin (avval
-    // ageFrom<=age<=ageTo yosh mos kelmagan konkurslarni yashirardi).
-    await this.loadChild(userId);
+    const child = await this.loadChild(userId);
+    const a = child.age ?? 8;
 
     const where: Prisma.OlympiadWhereInput = {
       status: 'published',
+      ageFrom: { lte: a },
+      ageTo: { gte: a },
     };
 
     const rows = await this.prisma.olympiad.findMany({

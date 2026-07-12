@@ -111,18 +111,17 @@ export class ConsumerContentService {
       .map(([slug]) => slug);
   }
 
-  // Feed bilan bir xil huquq predikati: approved + tarif. History va favorites
-  // ro'yxatlari ham SHU filtrdan o'tadi — obuna tugagach premium kontent
-  // tarixdan/yoqtirilgandan qayta o'ynatilmasin (entitlement leak).
-  //
-  // YOSH FILTRI OLIB TASHLANDI: admin tasdiqlagan BARCHA video bola app'da
-  // ko'rinsin (avval ageFrom<=age<=ageTo — admin narrow yosh qo'ygan kontent
-  // yoki bola yoshi mos kelmasa yashirinardi). Kontent markazlashgan
-  // (admin-curated), yoshga moslik admin zimmasida. Yosh oralig'i hamon
-  // saqlanadi (yorliq/kelajak uchun), lekin ko'rinishni cheklamaydi.
+  // Feed bilan bir xil huquq predikati: approved + yosh + tarif. History va
+  // favorites ro'yxatlari ham SHU filtrdan o'tadi — obuna tugagach premium
+  // kontent tarixdan/yoqtirilgandan qayta o'ynatilmasin (entitlement leak).
+  // Yosh: bola yoshi kontent oralig'ida (ageFrom<=age<=ageTo) — yoshga mos
+  // kontent. Bola yoshi kiritilmagan bo'lsa 8 (o'rta bolalik) taxmin qilinadi.
   private entitledVideoWhere(ctx: ChildContext): Prisma.VideoWhereInput {
+    const a = ctx.age ?? 8;
     return {
       status: 'approved',
+      ageFrom: { lte: a },
+      ageTo: { gte: a },
       planRequired: { in: this.allowedPlans(ctx.parentPlan) },
     };
   }
@@ -222,11 +221,12 @@ export class ConsumerContentService {
 
   async getAudiobooks(userId: string, origin: string, page: number, limit: number) {
     const ctx = await this.loadChildContext(userId);
+    const a = ctx.age ?? 8;
 
-    // Yosh filtri OLIB TASHLANDI (videolar bilan bir xil) — admin tasdiqlagan
-    // BARCHA audiokitob ko'rinsin. approved + tarif qoladi.
     const where: Prisma.AudiobookWhereInput = {
       status: 'approved',
+      ageFrom: { lte: a },
+      ageTo: { gte: a },
       planRequired: { in: this.allowedPlans(ctx.parentPlan) },
     };
 
