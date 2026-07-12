@@ -185,7 +185,11 @@ export function NotificationComposer({
               />
               <div className="space-y-1.5">
                 <Label>Deep link (ixtiyoriy)</Label>
-                <Input value={deepLink} onChange={(e) => setDeepLink(e.target.value)} placeholder="farzandim://video/123" />
+                <Input value={deepLink} onChange={(e) => setDeepLink(e.target.value)} placeholder="farzandim://videos" />
+                <p className="text-xs text-muted-foreground">
+                  Bola bosganda ochiladigan bo'lim: farzandim://videos ·
+                  farzandim://audiobooks · farzandim://tests · farzandim://profile
+                </p>
               </div>
             </div>
           )}

@@ -279,6 +279,7 @@ export class AdminNotificationsService {
         {
           title: dto.title,
           body: dto.message,
+          image: dto.imageUrl ?? undefined,
           data: dto.deepLink ? { deepLink: dto.deepLink } : undefined,
         },
       );
