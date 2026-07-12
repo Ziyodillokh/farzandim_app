@@ -84,9 +84,20 @@ class _ParvozSearchFieldState extends ConsumerState<ParvozSearchField> {
                       fontSize: 15,
                       color: Colors.white,
                     ),
+                    // App temasidagi InputDecorationTheme fokus/enabled bordi
+                    // (ko'k oval) chiqmasin — HAMMA holatni none qilamiz. Fon
+                    // ham to'ldirilmasin, ichki padding yo'q → matn to'liq
+                    // pill kengligida yoziladi.
                     decoration: InputDecoration(
                       isCollapsed: true,
+                      filled: false,
+                      contentPadding: EdgeInsets.zero,
                       border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
                       hintText: widget.hintText,
                       hintStyle: GoogleFonts.poppins(
                         fontSize: 15,
