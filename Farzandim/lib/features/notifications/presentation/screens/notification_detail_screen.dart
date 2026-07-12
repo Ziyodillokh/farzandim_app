@@ -151,6 +151,40 @@ class _Body extends StatelessWidget {
               style: _pop(14, c: _dim),
             ),
           ],
+          if (n.imageUrl != null && n.imageUrl!.trim().isNotEmpty) ...[
+            const SizedBox(height: 20),
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Image.network(
+                n.imageUrl!.trim(),
+                width: double.infinity,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, progress) {
+                  if (progress == null) return child;
+                  return Container(
+                    height: 180,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      color: _card,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: _cardBorder),
+                    ),
+                    child: const SizedBox(
+                      width: 26,
+                      height: 26,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.4,
+                        color: _dim,
+                      ),
+                    ),
+                  );
+                },
+                // Rasm yuklanmasa (buzuq URL / tarmoq) — jimgina yashiramiz.
+                errorBuilder: (context, error, stack) =>
+                    const SizedBox.shrink(),
+              ),
+            ),
+          ],
           const SizedBox(height: 16),
           Text(metaParts.join(' • '), style: _pop(12, c: _dim2)),
         ],

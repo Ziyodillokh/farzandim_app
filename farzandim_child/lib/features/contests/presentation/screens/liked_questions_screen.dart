@@ -8,6 +8,7 @@
 
 import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
+import 'package:farzandim_child/shared/widgets/math_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -181,7 +182,7 @@ class _QuestionRow extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           Expanded(
-            child: Text(
+            child: MathText(
               text,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,

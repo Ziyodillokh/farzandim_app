@@ -58,6 +58,15 @@ class NotificationRow extends StatelessWidget {
         ? notification.title.trim()
         : notification.message.trim();
     final sub = hasTitle ? notification.message.trim() : '';
+    final img = notification.imageUrl?.trim();
+    final hasImage = img != null && img.isNotEmpty;
+
+    // Ikon-tayl: rasm bo'lsa kichik banner thumbnail, aks holda tur ikoni.
+    final Widget iconChild = Icon(
+      notification.type.icon,
+      size: 22,
+      color: Colors.white,
+    );
 
     return GestureDetector(
       onTap: onTap,
@@ -70,16 +79,22 @@ class NotificationRow extends StatelessWidget {
               width: 46,
               height: 46,
               alignment: Alignment.center,
+              clipBehavior: hasImage ? Clip.antiAlias : Clip.none,
               decoration: BoxDecoration(
                 color: _row,
                 borderRadius: BorderRadius.circular(14),
                 border: Border.all(color: _cardBorder),
               ),
-              child: Icon(
-                notification.type.icon,
-                size: 22,
-                color: Colors.white,
-              ),
+              child: hasImage
+                  ? Image.network(
+                      img,
+                      width: 46,
+                      height: 46,
+                      fit: BoxFit.cover,
+                      // Rasm yuklanmasa tur ikoni ko'rinadi.
+                      errorBuilder: (context, error, stack) => iconChild,
+                    )
+                  : iconChild,
             ),
             const SizedBox(width: 14),
             Expanded(
