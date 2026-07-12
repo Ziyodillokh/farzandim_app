@@ -1,5 +1,7 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/auth/data/repositories/backend_session_access_repository.dart'
+    show DeviceLimitException;
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/scan_account_screen.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -44,21 +46,28 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       _error = null;
     });
 
-    final err = await ref
-        .read(backendAuthProvider.notifier)
-        .loginWithPassword(
-          identifier: _identifier.text.trim(),
-          password: _password.text,
-        );
+    try {
+      final err = await ref
+          .read(backendAuthProvider.notifier)
+          .loginWithPassword(
+            identifier: _identifier.text.trim(),
+            password: _password.text,
+          );
 
-    if (!mounted) return;
-    if (err != null) {
-      setState(() {
-        _loading = false;
-        _error = err;
-      });
+      if (!mounted) return;
+      if (err != null) {
+        setState(() {
+          _loading = false;
+          _error = err;
+        });
+      }
+      // Muvaffaqiyat: router redirect (Authenticated) dashboard'ga olib o'tadi.
+    } on DeviceLimitException catch (e) {
+      // 2-qurilma limiti — "ruxsat so'rash" ekraniga o'tamiz.
+      if (!mounted) return;
+      setState(() => _loading = false);
+      await context.push(AppRoutes.sessionAccessRequest, extra: e.pendingToken);
     }
-    // Muvaffaqiyat: router redirect (Authenticated) dashboard'ga olib o'tadi.
   }
 
   /// Google/Apple bilan kirish. Backend "yangi bo'lsa yarat, bor bo'lsa kirgiz"
@@ -70,13 +79,19 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
       _loading = true;
       _error = null;
     });
-    final err = await action();
-    if (!mounted) return;
-    if (err != null) {
-      setState(() {
-        _loading = false;
-        _error = err;
-      });
+    try {
+      final err = await action();
+      if (!mounted) return;
+      if (err != null) {
+        setState(() {
+          _loading = false;
+          _error = err;
+        });
+      }
+    } on DeviceLimitException catch (e) {
+      if (!mounted) return;
+      setState(() => _loading = false);
+      await context.push(AppRoutes.sessionAccessRequest, extra: e.pendingToken);
     }
   }
 

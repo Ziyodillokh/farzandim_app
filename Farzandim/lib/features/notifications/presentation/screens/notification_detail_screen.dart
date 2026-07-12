@@ -275,6 +275,13 @@ class _Actions extends ConsumerWidget {
             () => _denyUnlock(context, ref, n),
           ),
         ];
+      case NotificationType.sessionAccessRequest:
+        return [
+          primary(
+            'notifications.review'.tr(),
+            () => context.push(AppRoutes.sessionAccessApprove),
+          ),
+        ];
     }
   }
 

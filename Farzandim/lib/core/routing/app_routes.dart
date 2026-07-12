@@ -77,6 +77,12 @@ class AppRoutes {
   /// Faol sessiyalar — login qilingan qurilmalar.
   static const String settingsSessions = '/settings/sessions';
 
+  /// 3-qurilma kirish so'rovi (limit) — route `extra` = pendingToken.
+  static const String sessionAccessRequest = '/session-access-request';
+
+  /// Kirish so'rovini tasdiqlash/rad etish (ulangan qurilma ko'radi).
+  static const String sessionAccessApprove = '/session-access-approve';
+
   /// Bolalarni boshqarish ro'yxati.
   static const String settingsChildren = '/settings/children';
 

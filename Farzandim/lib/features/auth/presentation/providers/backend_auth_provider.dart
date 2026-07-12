@@ -11,6 +11,8 @@ import 'package:farzandim/core/network/dio_client.dart' show onSessionExpired;
 import 'package:farzandim/core/network/friendly_error.dart';
 import 'package:farzandim/features/auth/data/models/auth_models.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_auth_repository.dart';
+import 'package:farzandim/features/auth/data/repositories/backend_session_access_repository.dart'
+    show DeviceLimitException;
 import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -142,8 +144,20 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     }
   }
 
+  /// 2-qurilma limiti (409 DEVICE_LIMIT_REACHED) bo'lsa — DeviceLimitException
+  /// tashlaydi (ekran "ruxsat so'rash" oqimiga o'tkazadi). Aks holda hech nima.
+  void _throwIfDeviceLimit(DioException e) {
+    final data = e.response?.data;
+    if (e.response?.statusCode == 409 &&
+        data is Map &&
+        data['error'] == 'DEVICE_LIMIT_REACHED') {
+      throw DeviceLimitException((data['pendingToken'] as String?) ?? '');
+    }
+  }
+
   /// Email/telefon + parol bilan kirish.
   /// `null` qaytsa — muvaffaqiyat (router dashboard'ga o'tkazadi).
+  /// 2-qurilma limiti bo'lsa — DeviceLimitException tashlaydi.
   /// Aks holda — ko'rsatish uchun o'zbekcha xato xabari qaytaradi.
   Future<String?> loginWithPassword({
     required String identifier,
@@ -158,6 +172,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
       state = AuthAuthenticated(session.user);
       return null;
     } on DioException catch (e) {
+      _throwIfDeviceLimit(e);
       return friendlyError(e, fallback: 'auth.errors.signInFailed'.tr());
     } catch (_) {
       return 'auth.errors.unexpected'.tr();
@@ -203,6 +218,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null; // jim — foydalanuvchi o'zi yopdi
     } on DioException catch (e) {
+      _throwIfDeviceLimit(e);
       return friendlyError(e, fallback: 'auth.errors.googleFailed'.tr());
     } catch (e) {
       return 'auth.errors.googleFailedDetail'.tr(namedArgs: {'error': '$e'});
@@ -231,6 +247,7 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     } on SocialSignInCancelled {
       return null;
     } on DioException catch (e) {
+      _throwIfDeviceLimit(e);
       return friendlyError(e, fallback: 'auth.errors.appleFailed'.tr());
     } catch (e) {
       return 'auth.errors.appleFailedDetail'.tr(namedArgs: {'error': '$e'});

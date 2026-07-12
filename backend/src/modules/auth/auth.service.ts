@@ -33,6 +33,7 @@ import {
   verifyPassword,
 } from '../../admin/admin-auth/helpers/password';
 import { randomUUID } from 'crypto';
+import { Cron } from '@nestjs/schedule';
 import {
   ReqMeta,
   extractClientIp,
@@ -40,6 +41,8 @@ import {
 } from '../../common/helpers/geo-ip';
 
 const PAIR_REQUEST_TTL_MIN = 5;
+// Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
+const SESSION_ACCESS_TTL_MS = 15 * 60 * 1000;
 
 /** Qurilma ma'lumotlari (login DTO'laridan keladi). */
 interface DeviceMeta {
@@ -337,6 +340,68 @@ export class AuthService {
       audience: 'farzandim-consumer',
       issuer: 'farzandim-backend',
     });
+  }
+
+  /**
+   * Qisqa muddatli "pending auth" tokeni — 2-qurilma limiti to'lganda login
+   * javobida beriladi. Parolni qayta yubormasdan "session access" so'rovini
+   * yaratish uchun foydalanuvchini isbotlaydi (10 daqiqa amal qiladi).
+   */
+  private signPendingAuthToken(userId: string): string {
+    return this.jwtService.sign(
+      { userId, purpose: 'session-access-pending' },
+      {
+        secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
+        expiresIn: '10m',
+        audience: 'farzandim-consumer',
+        issuer: 'farzandim-backend',
+      },
+    );
+  }
+
+  private verifyPendingAuthToken(token: string): string {
+    let decoded: { userId?: string; purpose?: string };
+    try {
+      decoded = this.jwtService.verify<{ userId?: string; purpose?: string }>(
+        token,
+        {
+          secret: this.config.get('JWT_ACCESS_SECRET', { infer: true }),
+          audience: 'farzandim-consumer',
+          issuer: 'farzandim-backend',
+        },
+      );
+    } catch {
+      throw new UnauthorizedException(
+        "Ruxsat so'rovi muddati tugagan. Qaytadan kiring.",
+      );
+    }
+    if (decoded.purpose !== 'session-access-pending' || !decoded.userId) {
+      throw new UnauthorizedException("Yaroqsiz so'rov.");
+    }
+    return decoded.userId;
+  }
+
+  /**
+   * Ota-ona akaunti uchun 2-qurilma limitini tekshiradi. Faol sessiya >= 2
+   * bo'lsa — token bermay 409 DEVICE_LIMIT_REACHED + qisqa muddatli
+   * pendingToken qaytaradi (ilova "ruxsat so'rash" ekranini ko'rsatadi).
+   */
+  private async enforceParentDeviceLimit(user: {
+    id: string;
+    role: string;
+  }): Promise<void> {
+    if (user.role !== 'PARENT') return;
+    const active = await this.prisma.userSession.count({
+      where: { userId: user.id, revokedAt: null },
+    });
+    if (active >= AuthService.MAX_PARENT_DEVICES) {
+      throw new ConflictException({
+        error: 'DEVICE_LIMIT_REACHED',
+        message: "Bu akauntda 2 ta qurilma faol. Kirish uchun ruxsat so'rang.",
+        pendingToken: this.signPendingAuthToken(user.id),
+        maxDevices: AuthService.MAX_PARENT_DEVICES,
+      });
+    }
   }
 
   /* ------------------------------------------------------------------ */
@@ -770,6 +835,8 @@ export class AuthService {
     device: DeviceMeta = {},
     reqMeta?: ReqMeta,
   ) {
+    // 2-qurilma limiti — faol seans >= 2 bo'lsa token bermay 409 + pendingToken.
+    await this.enforceParentDeviceLimit(user);
     const { sid, rjti } = await this.createSession(user.id, device, reqMeta);
     const payload: JwtPayload = {
       userId: user.id,
@@ -1335,6 +1402,287 @@ export class AuthService {
     }
 
     return { status: pairRequest.status };
+  }
+
+  /* ------------------------------------------------------------------ */
+  /*  Session access — 2-qurilma limit (3-qurilma kirish so'rovi)         */
+  /* ------------------------------------------------------------------ */
+
+  private deviceLabel(
+    deviceModel?: string | null,
+    platform?: string | null,
+  ): string {
+    const m = deviceModel?.trim();
+    if (m) return m;
+    const p = platform?.trim().toLowerCase();
+    if (p === 'ios') return 'iPhone';
+    if (p === 'android') return 'Android qurilma';
+    if (p === 'web') return 'Brauzer';
+    return 'Yangi qurilma';
+  }
+
+  /**
+   * "Ruxsat so'rash" — pendingToken bilan isbotlangan foydalanuvchi uchun
+   * yangi kirish so'rovi yaratadi va 2 ta ulangan qurilmaga push + realtime
+   * yuboradi. Qaytaradi { requestId, pollToken } — so'rovchi shular bilan poll qiladi.
+   */
+  async requestSessionAccess(
+    dto: { pendingToken: string; deviceModel?: string; platform?: string },
+    reqMeta?: ReqMeta,
+  ): Promise<{
+    requestId: string;
+    pollToken: string;
+    pollIntervalSec: number;
+    expiresAt: string;
+  }> {
+    const userId = this.verifyPendingAuthToken(dto.pendingToken);
+    const user = await this.prisma.user.findUnique({ where: { id: userId } });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Hisob topilmadi yoki bloklangan.');
+    }
+
+    // Bir vaqtda bitta faol so'rov — eski ochiqlarni yopamiz.
+    await this.prisma.sessionAccessRequest.updateMany({
+      where: { userId, status: 'PENDING' },
+      data: { status: 'EXPIRED', decidedAt: new Date() },
+    });
+
+    const pollToken = randomUUID();
+    const ip = extractClientIp(reqMeta);
+    const userAgent =
+      (reqMeta?.headers?.['user-agent'] as string | undefined) ?? null;
+    const expiresAt = new Date(Date.now() + SESSION_ACCESS_TTL_MS);
+
+    const request = await this.prisma.sessionAccessRequest.create({
+      data: {
+        userId,
+        pollToken,
+        deviceModel: dto.deviceModel?.trim() || null,
+        platform: dto.platform?.trim() || null,
+        ipAddress: ip,
+        userAgent: userAgent ? userAgent.slice(0, 400) : null,
+        expiresAt,
+      },
+    });
+
+    const label = this.deviceLabel(dto.deviceModel, dto.platform);
+    const payload = {
+      id: request.id,
+      deviceModel: request.deviceModel,
+      platform: request.platform,
+      ipAddress: request.ipAddress,
+      createdAt: request.createdAt.toISOString(),
+      expiresAt: request.expiresAt.toISOString(),
+    };
+
+    // Ikkala ulangan qurilmaga jonli signal + push.
+    this.realtime.emitToUser(userId, 'session_access:created', payload);
+    void this.fcm
+      .sendPushToUser(userId, {
+        title: "Yangi qurilma kirish so'rovi",
+        body: `${label} akauntingizga kirmoqchi. Tasdiqlaysizmi?`,
+        data: {
+          type: 'session_access_request',
+          sessionRequestId: request.id,
+          deviceModel: request.deviceModel ?? '',
+          platform: request.platform ?? '',
+        },
+      })
+      .catch((err) =>
+        this.logger.warn(
+          { err, requestId: request.id },
+          'session_access push failed',
+        ),
+      );
+
+    await this.audit.log(
+      userId,
+      'auth',
+      'SESSION_ACCESS_REQUEST',
+      request.id,
+      { deviceModel: request.deviceModel },
+      reqMeta,
+    );
+
+    return {
+      requestId: request.id,
+      pollToken,
+      pollIntervalSec: 3,
+      expiresAt: expiresAt.toISOString(),
+    };
+  }
+
+  /**
+   * So'rovchi qurilma poll qiladi. APPROVED bo'lib slot bo'shagach (faol
+   * seans < 2) — sessiya yaratib token qaytaradi (doim max 2 saqlanadi).
+   */
+  async sessionAccessStatus(
+    requestId: string,
+    pollToken: string,
+    reqMeta?: ReqMeta,
+  ) {
+    const request = await this.prisma.sessionAccessRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request || request.pollToken !== pollToken) {
+      throw new NotFoundException("So'rov topilmadi.");
+    }
+
+    if (request.status === 'PENDING' && request.expiresAt < new Date()) {
+      await this.prisma.sessionAccessRequest.update({
+        where: { id: requestId },
+        data: { status: 'EXPIRED', decidedAt: new Date() },
+      });
+      return { status: 'EXPIRED' as const };
+    }
+
+    if (request.status !== 'APPROVED') {
+      return { status: request.status };
+    }
+    if (request.consumedAt) {
+      return { status: 'CONSUMED' as const };
+    }
+
+    // Approved — lekin slot bo'sh bo'lishi kerak (faol seans < 2).
+    const active = await this.prisma.userSession.count({
+      where: { userId: request.userId, revokedAt: null },
+    });
+    if (active >= AuthService.MAX_PARENT_DEVICES) {
+      return { status: 'APPROVED' as const, slotFree: false };
+    }
+
+    // Atomik "claim" — bir nechta poll bir vaqtda kelsa, bittasi yutadi.
+    const claim = await this.prisma.sessionAccessRequest.updateMany({
+      where: { id: requestId, status: 'APPROVED', consumedAt: null },
+      data: { consumedAt: new Date() },
+    });
+    if (claim.count === 0) {
+      return { status: 'CONSUMED' as const };
+    }
+
+    const user = await this.prisma.user.findUnique({
+      where: { id: request.userId },
+    });
+    if (!user || !user.isActive) {
+      throw new UnauthorizedException('Hisob topilmadi yoki bloklangan.');
+    }
+
+    const { sid, rjti } = await this.createSession(
+      user.id,
+      {
+        deviceModel: request.deviceModel ?? undefined,
+        platform: request.platform ?? undefined,
+      },
+      reqMeta,
+    );
+    const payload: JwtPayload = {
+      userId: user.id,
+      role: user.role as 'PARENT' | 'CHILD',
+      tokenVersion: user.tokenVersion,
+      sid,
+    };
+    const { accessToken, refreshToken } = this.issueTokens(payload, rjti);
+
+    return {
+      status: 'APPROVED' as const,
+      slotFree: true,
+      accessToken,
+      refreshToken,
+      user: {
+        id: user.id,
+        name: user.name,
+        role: user.role,
+        avatarUrl: user.avatarUrl,
+        telegramId: user.telegramId,
+        language: user.language,
+      },
+    };
+  }
+
+  /** Ulangan qurilma so'rovni tasdiqlaydi. */
+  async approveSessionAccess(userId: string, requestId: string) {
+    const request = await this.prisma.sessionAccessRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request || request.userId !== userId) {
+      throw new NotFoundException("So'rov topilmadi.");
+    }
+    if (request.status === 'APPROVED') {
+      return { status: 'APPROVED' as const };
+    }
+    if (request.status !== 'PENDING') {
+      throw new BadRequestException(`So'rov allaqachon ${request.status}.`);
+    }
+    if (request.expiresAt < new Date()) {
+      await this.prisma.sessionAccessRequest.update({
+        where: { id: requestId },
+        data: { status: 'EXPIRED', decidedAt: new Date() },
+      });
+      throw new BadRequestException("So'rov muddati tugagan.");
+    }
+    await this.prisma.sessionAccessRequest.update({
+      where: { id: requestId },
+      data: { status: 'APPROVED', decidedAt: new Date() },
+    });
+    this.realtime.emitToUser(userId, 'session_access:decided', {
+      id: requestId,
+      status: 'APPROVED',
+    });
+    return { status: 'APPROVED' as const };
+  }
+
+  /** Ulangan qurilma so'rovni rad etadi. */
+  async rejectSessionAccess(userId: string, requestId: string) {
+    const request = await this.prisma.sessionAccessRequest.findUnique({
+      where: { id: requestId },
+    });
+    if (!request || request.userId !== userId) {
+      throw new NotFoundException("So'rov topilmadi.");
+    }
+    if (request.status === 'REJECTED') {
+      return { status: 'REJECTED' as const };
+    }
+    if (request.status !== 'PENDING') {
+      throw new BadRequestException(`So'rov allaqachon ${request.status}.`);
+    }
+    await this.prisma.sessionAccessRequest.update({
+      where: { id: requestId },
+      data: { status: 'REJECTED', decidedAt: new Date() },
+    });
+    this.realtime.emitToUser(userId, 'session_access:decided', {
+      id: requestId,
+      status: 'REJECTED',
+    });
+    return { status: 'REJECTED' as const };
+  }
+
+  /** Ulangan qurilma uchun ochiq so'rovlar (tasdiqlash UI). */
+  async listPendingSessionAccess(userId: string) {
+    await this.prisma.sessionAccessRequest.updateMany({
+      where: { userId, status: 'PENDING', expiresAt: { lt: new Date() } },
+      data: { status: 'EXPIRED', decidedAt: new Date() },
+    });
+    const rows = await this.prisma.sessionAccessRequest.findMany({
+      where: { userId, status: 'PENDING' },
+      orderBy: { createdAt: 'desc' },
+    });
+    return rows.map((r) => ({
+      id: r.id,
+      deviceModel: r.deviceModel,
+      platform: r.platform,
+      ipAddress: r.ipAddress,
+      createdAt: r.createdAt.toISOString(),
+      expiresAt: r.expiresAt.toISOString(),
+    }));
+  }
+
+  /** Eskirgan PENDING so'rovlarni EXPIRED qiladi (har 5 daqiqada). */
+  @Cron('30 */5 * * * *', { name: 'session-access-expire' })
+  async expireStaleSessionAccess(): Promise<void> {
+    await this.prisma.sessionAccessRequest.updateMany({
+      where: { status: 'PENDING', expiresAt: { lt: new Date() } },
+      data: { status: 'EXPIRED', decidedAt: new Date() },
+    });
   }
 
   /* ------------------------------------------------------------------ */
