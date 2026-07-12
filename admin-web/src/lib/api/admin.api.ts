@@ -163,6 +163,9 @@ export const contentApi = {
     list: (kind?: string) =>
       api.get<ContentCategory[]>('/admin/categories', { params: kind ? { kind } : {} }),
     create: (data: Partial<ContentCategory>) => api.post<ContentCategory>('/admin/categories', data),
+    update: (id: string, data: Partial<ContentCategory>) =>
+      api.patch<ContentCategory>(`/admin/categories/${id}`, data),
+    remove: (id: string) => api.delete(`/admin/categories/${id}`),
   },
 };
 

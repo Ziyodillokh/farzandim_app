@@ -16,6 +16,7 @@
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:confetti/confetti.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
@@ -314,6 +315,33 @@ class _QuestionScreen extends ConsumerWidget {
                 ),
               ),
             ),
+            // Savol rasmi (ixtiyoriy) — admin savolga rasm yuklagan bo'lsa.
+            // Matematik funksiya kabi yozib bo'lmaydigan savollar uchun.
+            if (q.imageUrl.isNotEmpty) ...[
+              const SizedBox(height: 14),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(16),
+                child: CachedNetworkImage(
+                  imageUrl: q.imageUrl,
+                  width: double.infinity,
+                  height: MediaQuery.sizeOf(context).height * 0.17,
+                  fit: BoxFit.contain,
+                  placeholder: (_, __) => Container(
+                    height: MediaQuery.sizeOf(context).height * 0.17,
+                    decoration: BoxDecoration(
+                      color: tGlass,
+                      borderRadius: BorderRadius.circular(16),
+                    ),
+                    alignment: Alignment.center,
+                    child: const CircularProgressIndicator(
+                      color: tBlue,
+                      strokeWidth: 2,
+                    ),
+                  ),
+                  errorWidget: (_, __, ___) => const SizedBox.shrink(),
+                ),
+              ),
+            ],
             const SizedBox(height: 18),
             // Javoblar (shisha secondary)
             Expanded(

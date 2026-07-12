@@ -78,23 +78,26 @@ class ContestsBackendRepository {
         '/content/olympiads/$olympiadId',
       );
       final qs = (response.data?['questions'] as List<dynamic>?) ?? const [];
-      return qs
-          .whereType<Map<String, dynamic>>()
-          .map(
-            (raw) => QuestionModel(
-              id: (raw['id'] as String?) ?? '',
-              text: (raw['text'] as String?) ?? '',
-              options: ((raw['options'] as List<dynamic>?) ?? const [])
-                  .map((e) => e.toString())
-                  .toList(),
-              // Sprint 5.7e: correctIndex backend tomonida sir.
-              // Lokal feedback uchun -1 (qarang QuizNotifier.selectAnswer).
-              correctIndex: (raw['correctIndex'] as num?)?.toInt() ?? -1,
-              timeSeconds: 40,
-              bonus: (raw['points'] as num?)?.toInt() ?? 50,
-            ),
-          )
-          .toList();
+      return qs.whereType<Map<String, dynamic>>().map((raw) {
+        // Savol rasmi (ixtiyoriy) — imageKey bo'lsa public proxy URL.
+        final imageKey = ((raw['imageKey'] as String?) ?? '').trim();
+        final imageUrl = imageKey.isEmpty
+            ? ''
+            : '${EnvConfig.apiUrl}/olympiad-images/$imageKey';
+        return QuestionModel(
+          id: (raw['id'] as String?) ?? '',
+          text: (raw['text'] as String?) ?? '',
+          options: ((raw['options'] as List<dynamic>?) ?? const [])
+              .map((e) => e.toString())
+              .toList(),
+          // Sprint 5.7e: correctIndex backend tomonida sir.
+          // Lokal feedback uchun -1 (qarang QuizNotifier.selectAnswer).
+          correctIndex: (raw['correctIndex'] as num?)?.toInt() ?? -1,
+          timeSeconds: 40,
+          bonus: (raw['points'] as num?)?.toInt() ?? 50,
+          imageUrl: imageUrl,
+        );
+      }).toList();
     } on DioException catch (e) {
       debugPrint('ContestsBackend.fetchQuestions: ${e.message}');
       rethrow;
