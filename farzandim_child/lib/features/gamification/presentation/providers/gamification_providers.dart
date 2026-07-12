@@ -15,15 +15,64 @@
 import 'dart:async';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_profile.dart';
 import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
 import 'package:farzandim_child/features/gamification/data/services/xp_service.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 
 final xpServiceProvider = Provider<XpService>((ref) => XpService());
+
+/// Backend'dagi HAQIQIY gamifikatsiya qiymatlari (don/streak/xp).
+///
+/// Qadamdan kelgan don (`har 1000 qadam = 5 don`) va streak shu yerda —
+/// backend `ChildProfile` (Prisma), Firestore emas. Profil ekrani ochilganda
+/// yangilanadi. Backend javob bermasa `null` → UI Firestore/preview'ga tushadi.
+class BackendGamification {
+  const BackendGamification({
+    required this.xp,
+    required this.don,
+    required this.streak,
+    required this.level,
+    required this.status,
+  });
+
+  final int xp;
+  final int don;
+  final int streak;
+  final int level;
+  final String status;
+}
+
+final backendGamificationProvider =
+    FutureProvider.autoDispose<BackendGamification?>((ref) async {
+  final childId = ref.watch(pairingStateProvider).childId;
+  if (childId == null || childId.isEmpty) return null;
+  final dio = ref.watch(dioClientProvider);
+  try {
+    final res = await dio.get<Map<String, dynamic>>(
+      '/children/$childId/profile',
+    );
+    final d = res.data ?? const <String, dynamic>{};
+    return BackendGamification(
+      xp: (d['xp'] as num?)?.toInt() ?? 0,
+      don: (d['donBalance'] as num?)?.toInt() ?? 0,
+      streak: (d['streakDays'] as num?)?.toInt() ?? 0,
+      level: (d['level'] as num?)?.toInt() ?? 1,
+      status: (d['status'] as String?) ?? 'Boshlovchi',
+    );
+  } on DioException catch (e) {
+    debugPrint('backendGamification: ${e.response?.statusCode} ${e.message}');
+    return null;
+  } catch (e) {
+    debugPrint('backendGamification: $e');
+    return null;
+  }
+});
 
 /// Bola gamifikatsiya profili — real-time stream.
 /// Darhol `empty()` emit qiladi → UI bloklanmaydi. Firestore javobi kelsa

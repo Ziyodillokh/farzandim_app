@@ -4,9 +4,12 @@ import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/auth/presentation/widgets/google_web_sign_in_dialog.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -309,6 +312,23 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
     }
   }
 
+  /// Google bosilganda: web'da rasmiy render-tugma oynasi (signIn() web'da
+  /// idToken bermaydi), mobilda odatiy oqim.
+  Future<void> _googlePressed() async {
+    if (kIsWeb) {
+      await _social(() async {
+        final google = ref.read(socialSignInServiceProvider).google;
+        final idToken = await showGoogleWebSignInDialog(context, google);
+        if (idToken == null) return null; // bekor qilindi — jim
+        return ref
+            .read(backendAuthProvider.notifier)
+            .signInWithGoogleIdToken(idToken);
+      });
+    } else {
+      await _social(ref.read(backendAuthProvider.notifier).signInWithGoogle);
+    }
+  }
+
   // ──────────────────────────── NAV ────────────────────────────
 
   void _onBack() {
@@ -466,8 +486,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       width: 20,
       height: 20,
     ),
-    onPressed: () =>
-        _social(ref.read(backendAuthProvider.notifier).signInWithGoogle),
+    onPressed: _googlePressed,
   );
 
   // ─── 1-bosqich UI ───

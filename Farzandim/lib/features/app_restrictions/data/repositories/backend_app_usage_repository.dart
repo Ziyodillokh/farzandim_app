@@ -106,6 +106,25 @@ class BackendAppUsageRepository {
     return _mapWeekly(days);
   }
 
+  /// Bugungi (yoki berilgan kun) SOATLIK ekran vaqti — 24 ta ms qiymat.
+  /// Backend `/app-usage/hourly` barcha ilovalar `hourlyMs`ini yig'adi.
+  /// `date` — "YYYY-MM-DD" (berilmasa server bugungi Toshkent kunini oladi).
+  Future<List<int>> getHourlyTotals({
+    required String childId,
+    String? date,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/children/$childId/app-usage/hourly',
+      queryParameters: date != null ? {'date': date} : null,
+    );
+    final hours = response.data?['hours'] as List<dynamic>? ?? const [];
+    final result = List<int>.filled(24, 0);
+    for (var i = 0; i < hours.length && i < 24; i++) {
+      result[i] = (hours[i] as num?)?.toInt() ?? 0;
+    }
+    return result;
+  }
+
   /// Haftalik qadamlar — backend `/weekly-report` javobining `steps` bo'limi
   /// (`{days: [{date, steps}], weekTotal}`). Dashboard qadamlar kartasi uchun.
   Future<WeeklySteps> getWeeklySteps(String childId) async {

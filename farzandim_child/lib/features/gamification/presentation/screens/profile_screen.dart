@@ -287,9 +287,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
         ref.watch(_deviceLineProvider).valueOrNull ??
         ('Iphone 16 pro', 98); // PREVIEW (Figma)
 
-    // Real bo'lsa real, bo'sh bo'lsa PREVIEW (Figma raqamlari).
-    final streak = (profile?.streak ?? 0) > 0 ? profile!.streak : 7;
-    final don = (profile?.don ?? 0) > 0 ? profile!.don : 1250;
+    // DON va STREAK — HAQIQIY manba backend (`ChildProfile`): qadamdan kelgan
+    // don (har 1000 qadam = 5 don) va faollik streak'i shu yerda. Backend
+    // yuklanmagan bo'lsa (null) Firestore/preview'ga tushamiz.
+    final backend = ref.watch(backendGamificationProvider).valueOrNull;
+    final streak =
+        backend?.streak ?? ((profile?.streak ?? 0) > 0 ? profile!.streak : 7);
+    final don = backend?.don ?? ((profile?.don ?? 0) > 0 ? profile!.don : 1250);
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     // Qadam REAL — preview yo'q (ota-ona bilan mos bo'lishi uchun).
     final steps = rawSteps;

@@ -1,8 +1,11 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/auth/data/services/social_sign_in_service.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/auth/presentation/screens/scan_account_screen.dart';
+import 'package:farzandim/features/auth/presentation/widgets/google_web_sign_in_dialog.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -77,6 +80,23 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
         _loading = false;
         _error = err;
       });
+    }
+  }
+
+  /// Google bosilganda: web'da rasmiy render-tugma oynasi (signIn() web'da
+  /// idToken bermaydi), mobilda odatiy oqim.
+  Future<void> _googlePressed() async {
+    if (kIsWeb) {
+      await _social(() async {
+        final google = ref.read(socialSignInServiceProvider).google;
+        final idToken = await showGoogleWebSignInDialog(context, google);
+        if (idToken == null) return null; // bekor qilindi — jim
+        return ref
+            .read(backendAuthProvider.notifier)
+            .signInWithGoogleIdToken(idToken);
+      });
+    } else {
+      await _social(ref.read(backendAuthProvider.notifier).signInWithGoogle);
     }
   }
 
@@ -224,11 +244,7 @@ class _SignInScreenState extends ConsumerState<SignInScreen> {
                             width: 20,
                             height: 20,
                           ),
-                          onPressed: () => _social(
-                            ref
-                                .read(backendAuthProvider.notifier)
-                                .signInWithGoogle,
-                          ),
+                          onPressed: _googlePressed,
                         ),
                       ),
                     ],

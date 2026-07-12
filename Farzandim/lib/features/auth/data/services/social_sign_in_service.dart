@@ -59,6 +59,9 @@ class SocialSignInService {
     serverClientId: kIsWeb ? null : _googleServerClientId,
   );
 
+  /// Web dialog oqimi uchun plugin instansiyasi (renderButton + stream).
+  GoogleSignIn get google => _google;
+
   /// Google sign-in dialog'ini ochadi.
   /// Bekor qilinsa — [SocialSignInCancelled] tashlaydi.
   Future<GoogleSignInResult> signInWithGoogle() async {

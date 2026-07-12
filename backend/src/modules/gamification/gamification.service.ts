@@ -170,6 +170,62 @@ export class GamificationService {
     this.realtime.emitToChild(childId, 'profile:updated', updatedProfile);
   }
 
+  /**
+   * QADAM MUKOFOTI — bola pedometeridan don berish (har 1000 qadam = 5 don).
+   *
+   * `upsertSteps` chaqiradi: `donDelta` — shu sync'da yangi tegishli don
+   * (idempotent hisoblangan). `activeToday` — bugun bola faol yurdimi
+   * (qadam >= 1000) → yurish ham streak'ni oshiradi (real faollik).
+   *
+   * Idempotentlik chaqiruvchida (`ChildStepDaily.donAwarded`) — bu yerda
+   * shunchaki delta qo'shiladi. donDelta=0 bo'lsa ham activeToday uchun
+   * streak yangilanadi.
+   */
+  async awardStepDon(
+    childId: string,
+    donDelta: number,
+    activeToday: boolean,
+  ): Promise<void> {
+    if (donDelta <= 0 && !activeToday) return;
+
+    const profile = await this.getOrCreateProfile(childId);
+
+    // Yurish = faollik: bugun 1000+ qadam bo'lsa streak yangilanadi.
+    let streakDays = profile.streakDays;
+    let lastActivityDate = profile.lastActivityDate;
+    if (activeToday) {
+      const { newStreak } = calculateNewStreak(
+        profile.lastActivityDate,
+        profile.streakDays,
+      );
+      streakDays = newStreak;
+      lastActivityDate = new Date();
+    }
+
+    const add = Math.max(0, donDelta);
+    const newDon = profile.donBalance + add;
+
+    const ops: any[] = [];
+    // Faqat haqiqiy don berilganda ledger yozuvi (audit izi).
+    if (add > 0) {
+      ops.push(
+        this.prisma.xpEvent.create({
+          data: { childId, type: 'DAILY_GOAL', xpDelta: 0, donDelta: add },
+        }),
+      );
+    }
+    ops.push(
+      this.prisma.childProfile.update({
+        where: { childId },
+        data: { donBalance: newDon, streakDays, lastActivityDate },
+      }),
+    );
+
+    const results = await this.prisma.$transaction(ops);
+    const updatedProfile = results[results.length - 1];
+    this.realtime.emitToChild(childId, 'profile:updated', updatedProfile);
+  }
+
   async listXpEvents(
     childId: string,
     userId: string,

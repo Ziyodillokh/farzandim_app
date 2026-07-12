@@ -3,9 +3,11 @@ import 'dart:convert';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/core/utils/polling.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -52,12 +54,34 @@ TextStyle _pop(
   );
 }
 
-/// Bola ekran vaqti ekrani (Parvoz dizayni) — jami + trend + haftalik bar
-/// grafik + eng ko'p ishlatilgan ilovalar. "Nazorat siyosati" → ilova
+/// Bugungi SOATLIK ekran vaqti (24 ta ms) — detal ekran grafigi uchun.
+/// Backend `/app-usage/hourly` (barcha ilovalar `hourlyMs` yig'indisi).
+/// Haftalik provider bilan bir xil polling: ekran ochiq ekan har 30 sek.
+final hourlyChildUsageProvider = StreamProvider.autoDispose
+    .family<List<int>, String>((ref, childId) async* {
+      final isAuthed = ref.watch(
+        backendAuthProvider.select((s) => s is AuthAuthenticated),
+      );
+      if (!isAuthed) {
+        yield List<int>.filled(24, 0);
+        return;
+      }
+      keepAliveFor(ref, const Duration(minutes: 2));
+      final repo = ref.watch(backendAppUsageRepositoryProvider);
+      yield* pollFetchStream<List<int>>(
+        ref,
+        interval: const Duration(seconds: 30),
+        fetch: () => repo.getHourlyTotals(childId: childId),
+      );
+    });
+
+/// Bola ekran vaqti ekrani (Parvoz dizayni) — jami + trend + KUNLIK soatlik
+/// bar grafik + eng ko'p ishlatilgan ilovalar. "Nazorat siyosati" → ilova
 /// cheklovlari (app-limits). Route: `/app-restrictions/:childId`.
 ///
-/// DIQQAT: backend soatlik ma'lumot bermaydi — grafik HAFTALIK (7 kun) real
-/// totallar (`weeklyChildUsageProvider`). Trend = bugun vs kecha.
+/// Grafik KUNLIK: X o'qi 24 soat (0..24), Y o'qi 60 daqiqa — bugungi kun
+/// davomidagi soatlik taqsimot (`hourlyChildUsageProvider`). Trend = bugun
+/// vs kecha (haftalik totallardan).
 class AppRestrictionsScreen extends ConsumerWidget {
   const AppRestrictionsScreen({required this.childId, super.key});
 
@@ -68,6 +92,10 @@ class AppRestrictionsScreen extends ConsumerWidget {
     final todayMs = ref.watch(todayScreenTimeMsProvider(childId));
     final weekly = ref.watch(weeklyChildUsageProvider(childId)).valueOrNull;
     final days = [...?weekly]..sort((a, b) => a.date.compareTo(b.date));
+    // Bugungi soatlik taqsimot (24 ta ms) — kunlik grafik uchun.
+    final hourly =
+        ref.watch(hourlyChildUsageProvider(childId)).valueOrNull ??
+        List<int>.filled(24, 0);
     final apps =
         ref.watch(todayUsageProvider(childId)).valueOrNull?.filteredApps ??
         const <AppUsageEntry>[];
@@ -123,8 +151,8 @@ class AppRestrictionsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── Haftalik bar grafik ──
-              _BarChart(days: days, todayMs: todayMs),
+              // ── Kunlik soatlik bar grafik (X: 24 soat, Y: 60 daqiqa) ──
+              _HourlyChart(hourlyMs: hourly),
               const SizedBox(height: 4),
 
               // ── Eng ko'p ishlatilgan ilovalar ──
@@ -229,33 +257,35 @@ class _TrendChip extends StatelessWidget {
   }
 }
 
-// ════════════════════════ HAFTALIK BAR GRAFIK ════════════════════════
+// ════════════════════════ KUNLIK SOATLIK GRAFIK ════════════════════════
 
-class _BarChart extends StatelessWidget {
-  const _BarChart({required this.days, required this.todayMs});
+/// Bugungi ekran vaqti grafigi — **X o'qi 24 soat (0..24), Y o'qi 60 daqiqa**.
+/// Har bar = o'sha soatdagi ekran vaqti (daqiqa); joriy soat yorqin ko'k.
+class _HourlyChart extends StatelessWidget {
+  const _HourlyChart({required this.hourlyMs});
 
-  final List<DailyUsageTotal> days;
-  final int todayMs;
+  /// 24 ta ms qiymat (har soat uchun).
+  final List<int> hourlyMs;
 
   static const double _chartH = 180;
   static const double _yAxisW = 34;
+  static const int _maxMin = 60; // Y o'qi QAT'IY 60 daqiqa
+  static const int _maxMs = _maxMin * 60000;
 
   @override
   Widget build(BuildContext context) {
-    // Y-o'qi QAT'IY 24 soat — kun to'liq shkalada ko'rinadi.
-    const maxH = 24;
-    const maxMsRounded = maxH * 3600000;
+    // Joriy soat (Toshkent UTC+5) — shu bar yorqin ko'k bilan belgilanadi.
+    final nowHour = DateTime.now().toUtc().add(const Duration(hours: 5)).hour;
 
-    // O'rtacha (qizil ishora chizig'i) — ma'lumotli kunlar bo'yicha.
-    final withData = days.where((d) => d.totalMs > 0).toList();
-    final avgMs = withData.isEmpty
+    // O'rtacha (qizil ishora chizig'i) — faqat faol soatlar bo'yicha.
+    final active = hourlyMs.where((m) => m > 0).toList();
+    final avgMs = active.isEmpty
         ? 0.0
-        : withData.map((d) => d.totalMs).reduce((a, b) => a + b) /
-              withData.length;
-    final avgFromTop = _chartH * (1 - (avgMs / maxMsRounded));
+        : active.reduce((a, b) => a + b) / active.length;
+    final avgFromTop = (_chartH * (1 - (avgMs / _maxMs))).clamp(0.0, _chartH);
 
     return Container(
-      height: _chartH + 86,
+      height: _chartH + 78,
       padding: const EdgeInsets.fromLTRB(12, 20, 16, 14),
       decoration: BoxDecoration(
         color: _darkCard,
@@ -269,21 +299,21 @@ class _BarChart extends StatelessWidget {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                // Y-o'qi yorliqlari.
+                // Y-o'qi — daqiqa shkalasi (60 / 30 / 0).
                 SizedBox(
                   width: _yAxisW,
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.end,
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text('${maxH}s', style: _pop(12)),
-                      Text('${maxH ~/ 2}s', style: _pop(12)),
-                      Text('0s', style: _pop(12)),
+                      Text('${_maxMin}m', style: _pop(12)),
+                      Text('${_maxMin ~/ 2}m', style: _pop(12)),
+                      Text('0', style: _pop(12)),
                     ],
                   ),
                 ),
                 const SizedBox(width: 8),
-                // Grafik maydoni: grid + o'rtacha chiziq + barlar.
+                // Grafik maydoni: grid + o'rtacha chiziq + 24 ta soatlik bar.
                 Expanded(
                   child: Stack(
                     children: [
@@ -307,15 +337,15 @@ class _BarChart extends StatelessWidget {
                         child: _DashLine(color: Color(0x1AFFFFFF)),
                       ),
                       // O'rtacha (qizil) ishora chizig'i + yorlig'i.
-                      if (withData.isNotEmpty) ...[
+                      if (active.isNotEmpty) ...[
                         Positioned(
-                          top: avgFromTop.clamp(0, _chartH),
+                          top: avgFromTop,
                           left: 0,
                           right: 0,
                           child: const _DashLine(color: _red),
                         ),
                         Positioned(
-                          top: (avgFromTop - 16).clamp(0, _chartH),
+                          top: (avgFromTop - 16).clamp(0.0, _chartH),
                           right: 0,
                           child: Text(
                             _avgLabel(avgMs),
@@ -323,23 +353,24 @@ class _BarChart extends StatelessWidget {
                           ),
                         ),
                       ],
-                      // Barlar.
+                      // 24 ta soatlik bar (0..23).
                       Positioned.fill(
                         child: Row(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            for (final d in days)
+                            for (var h = 0; h < 24; h++)
                               Expanded(
                                 child: Padding(
                                   padding: const EdgeInsets.symmetric(
-                                    horizontal: 3,
+                                    horizontal: 1,
                                   ),
                                   child: _Bar(
-                                    heightFrac: maxMsRounded == 0
-                                        ? 0
-                                        : d.totalMs / maxMsRounded,
+                                    heightFrac: (hourlyMs[h] / _maxMs).clamp(
+                                      0.0,
+                                      1.0,
+                                    ),
                                     chartH: _chartH,
-                                    isToday: _isToday(d.date),
+                                    isToday: h == nowHour,
                                   ),
                                 ),
                               ),
@@ -353,12 +384,14 @@ class _BarChart extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 10),
-          // X-o'qi: hafta kunlari (barlar ostida).
+          // X-o'qi: 0 6 12 18 24 (soat).
           Padding(
             padding: const EdgeInsets.only(left: _yAxisW + 8),
             child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                for (final d in days) Expanded(child: _DayLabel(date: d.date)),
+                for (final h in const [0, 6, 12, 18, 24])
+                  Text('$h', style: _pop(11, c: _dim)),
               ],
             ),
           ),
@@ -368,40 +401,10 @@ class _BarChart extends StatelessWidget {
   }
 }
 
-/// Toshkent (UTC+5) bo'yicha bugungi kunmi.
-bool _isToday(DateTime date) {
-  final now = DateTime.now().toUtc().add(const Duration(hours: 5));
-  return date.year == now.year &&
-      date.month == now.month &&
-      date.day == now.day;
-}
-
 String _avgLabel(double avgMs) {
   final h = avgMs / 3600000;
   if (h >= 1) return '${h.toStringAsFixed(h >= 10 ? 0 : 1)}s';
   return '${(avgMs / 60000).round()}m';
-}
-
-/// X-o'qidagi hafta kuni belgisi (bugun bo'lsa oq + qalin).
-class _DayLabel extends StatelessWidget {
-  const _DayLabel({required this.date});
-
-  final DateTime date;
-
-  @override
-  Widget build(BuildContext context) {
-    final today = _isToday(date);
-    return Center(
-      child: Text(
-        'dashboard.chart.weekdays.${date.weekday}'.tr(),
-        style: _pop(
-          11,
-          w: today ? FontWeight.w700 : FontWeight.w400,
-          c: today ? Colors.white : _dim,
-        ),
-      ),
-    );
-  }
 }
 
 class _Bar extends StatelessWidget {
@@ -417,7 +420,8 @@ class _Bar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final h = (heightFrac * chartH).clamp(3.0, chartH);
+    // Bo'sh soat (0) — ko'rinmas; aks holda min 2px "ustun".
+    final h = heightFrac <= 0 ? 0.0 : (heightFrac * chartH).clamp(2.0, chartH);
     return Align(
       alignment: Alignment.bottomCenter,
       child: Container(

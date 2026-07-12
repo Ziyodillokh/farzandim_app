@@ -209,6 +209,20 @@ class BackendAuthNotifier extends StateNotifier<BackendAuthState> {
     }
   }
 
+  /// Web render-tugma oqimidan kelgan TAYYOR Google idToken bilan kirish.
+  Future<String?> signInWithGoogleIdToken(String idToken) async {
+    try {
+      final session = await _repo.loginWithGoogle(idToken: idToken);
+      await _repo.saveSession(session);
+      state = AuthAuthenticated(session.user);
+      return null;
+    } on DioException catch (e) {
+      return friendlyError(e, fallback: 'auth.errors.googleFailed'.tr());
+    } catch (e) {
+      return 'auth.errors.googleFailedDetail'.tr(namedArgs: {'error': '$e'});
+    }
+  }
+
   /// Apple bilan kirish/ro'yxatdan o'tish.
   /// [serviceId] va [redirectUri] — Android/web OAuth flow uchun, iOS'da
   /// kerak emas (nativ).

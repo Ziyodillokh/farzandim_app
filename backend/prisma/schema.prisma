@@ -762,6 +762,10 @@ model ChildStepDaily {
   childId   String   @map("child_id")
   date      DateTime @db.Date
   steps     Int      @default(0)
+  // Shu kun uchun qadamlardan ALLAQACHON berilgan don (idempotentlik uchun).
+  // Yangi don = floor(steps/1000)*5 − donAwarded. Takror sync don ikki
+  // marta bermasin.
+  donAwarded Int     @default(0) @map("don_awarded")
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

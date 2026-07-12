@@ -6,12 +6,17 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { GamificationService } from '../gamification/gamification.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
 
 // O'zbekiston (Toshkent) UTC+5 — DST yo'q. Kun chegarasi shu vaqt bilan.
 const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
+
+// Qadam → don konversiyasi: HAR 1000 QADAM = 5 DON.
+const STEPS_PER_DON_UNIT = 1000;
+const DON_PER_UNIT = 5;
 // Bir kun maksimal foreground vaqti (xato data'dan himoya).
 const MAX_DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -57,6 +62,7 @@ export class AppUsageService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly fcm: FcmService,
+    private readonly gamification: GamificationService,
   ) {}
 
   /**
@@ -383,23 +389,58 @@ export class AppUsageService {
     return { screenTime, steps, topApps };
   }
 
-  /** Bola Parvoz pedometeridan kunlik qadamlarni yuboradi (batch upsert). */
+  /**
+   * Bola Parvoz pedometeridan kunlik qadamlarni yuboradi (batch upsert).
+   *
+   * Qadamlarni saqlash bilan birga QADAM MUKOFOTI beriladi: har 1000 qadam
+   * = 5 don. `ChildStepDaily.donAwarded` orqali IDEMPOTENT — takroriy sync
+   * (har 5 daqiqada) don ikki marta bermaydi, faqat YANGI delta beriladi.
+   * Bugun 1000+ qadam bo'lsa streak ham yangilanadi (yurish = faollik).
+   */
   async upsertSteps(
     childId: string,
     userId: string,
     entries: Array<{ date: string; steps: number }>,
   ) {
     await this.validateChildAccess(childId, userId);
-    const ops = entries.map((e) => {
+
+    const todayKey = tashkentDayKey();
+    let totalDonDelta = 0;
+    let activeToday = false;
+
+    for (const e of entries) {
       const dateObj = new Date(`${e.date}T00:00:00.000Z`);
       const steps = Math.max(0, Math.min(200000, Math.round(e.steps)));
-      return this.prisma.childStepDaily.upsert({
+
+      // Shu kun uchun allaqachon berilgan don (idempotentlik).
+      const existing = await this.prisma.childStepDaily.findUnique({
         where: { childId_date: { childId, date: dateObj } },
-        update: { steps },
-        create: { childId, date: dateObj, steps },
+        select: { donAwarded: true },
       });
-    });
-    await this.prisma.$transaction(ops);
-    return { ok: true, upserted: entries.length };
+      const prevAwarded = existing?.donAwarded ?? 0;
+      const earnedDon =
+        Math.floor(steps / STEPS_PER_DON_UNIT) * DON_PER_UNIT;
+      // Faqat yangi qism (qadam kamaymaydi; reboot chekka holatda 0'ga clamp).
+      const delta = Math.max(0, earnedDon - prevAwarded);
+      const newAwarded = Math.max(prevAwarded, earnedDon);
+
+      await this.prisma.childStepDaily.upsert({
+        where: { childId_date: { childId, date: dateObj } },
+        update: { steps, donAwarded: newAwarded },
+        create: { childId, date: dateObj, steps, donAwarded: newAwarded },
+      });
+
+      totalDonDelta += delta;
+      if (e.date === todayKey && steps >= STEPS_PER_DON_UNIT) {
+        activeToday = true;
+      }
+    }
+
+    // Profilga don qo'shish + streak yangilash (real, backend'da).
+    if (totalDonDelta > 0 || activeToday) {
+      await this.gamification.awardStepDon(childId, totalDonDelta, activeToday);
+    }
+
+    return { ok: true, upserted: entries.length, donAwarded: totalDonDelta };
   }
 }
