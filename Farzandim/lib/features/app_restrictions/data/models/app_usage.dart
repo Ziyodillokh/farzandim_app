@@ -129,7 +129,7 @@ class AppUsageDay {
   /// ilova (masalan Chrome 40 soniya) umuman ko'rinmasdi.
   // 1 daqiqadan kam ishlatilgan ilova ro'yxatni shishirib yuboradi
   // (tasodifiy ochilishlar) — ko'rsatmaymiz.
-  static const int _minVisibleMs = 60000;
+  static const int _minVisibleMs = 10000;
 
   /// Faqat launcher, systemUI, klaviatura va pure-fon servislarni chiqaramiz.
   ///

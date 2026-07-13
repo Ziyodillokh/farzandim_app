@@ -171,22 +171,20 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
 
     /**
      * AppOps noaniq (MODE_DEFAULT/IGNORED) bo'lganda ruxsatni QAT'IY aniqlaydi:
-     * oxirgi 24 soat usage'ini so'raydi. Ruxsat yo'q bo'lsa `queryUsageStats`
-     * bo'sh ro'yxat qaytaradi (istisno tashlamaydi); ruxsat bor bo'lsa —
-     * ma'lumot keladi. Samsung kabi ruxsat berilgan-u AppOps MODE_ALLOWED
-     * bermaydigan qurilmalarda ham to'g'ri ishlaydi.
+     * oxirgi 24 soat HODISALARINI so'raydi. `queryEvents` — INTERVAL_DAILY
+     * agregatsiyasidan farqli — ruxsat BERILGAN zahoti (yangi grant'da ham)
+     * hodisalarni darhol qaytaradi (agregat bucket bir kungacha bo'sh bo'lishi
+     * mumkin edi → "yig'ilmoqda" darhol grant'dan keyin). Ruxsat yo'q → bo'sh
+     * (istisnosiz). Samsung kabi AppOps MODE_ALLOWED bermaydigan qurilmalarda
+     * ham to'g'ri ishlaydi.
      */
     private fun hasUsageDataAccess(): Boolean {
         return try {
             val usm =
                 context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
             val now = System.currentTimeMillis()
-            val stats = usm.queryUsageStats(
-                UsageStatsManager.INTERVAL_DAILY,
-                now - 24L * 60L * 60L * 1000L,
-                now,
-            )
-            !stats.isNullOrEmpty()
+            val events = usm.queryEvents(now - 24L * 60L * 60L * 1000L, now)
+            events != null && events.hasNextEvent()
         } catch (e: Exception) {
             false
         }
@@ -294,9 +292,14 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             when (ev.eventType) {
                 UsageEvents.Event.ACTIVITY_RESUMED -> {
                     val pkg = ev.packageName ?: continue
-                    // Ekran o'chiq paytdagi fon activity launch'larini
-                    // (masalan com.microsoft.appmanager) hisoblamaymiz.
-                    if (!screenInteractive) continue
+                    // Foreground activity RESUME = ekran ochiq, foydalanuvchi
+                    // ilovaga qarab turibdi (SELF-HEAL). Avval `screenInteractive`
+                    // latch bo'lib qotib qolar edi — Samsung/Xiaomi KEYGUARD_HIDDEN
+                    // yubormasa yoki re-enable timestamp startTime'dan oldin bo'lsa
+                    // flag abadiy false qolib, BUTUN ro'yxat bo'shab ketardi
+                    // ("ma'lumotlar yig'ilmoqda" abadiy). Endi haqiqiy resume
+                    // flag'ni tiklaydi.
+                    screenInteractive = true
                     if (currentPkg != pkg) {
                         closeCurrent(t) // oldingi foreground ilovani yopamiz
                         currentPkg = pkg
@@ -310,15 +313,16 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                     }
                 }
                 UsageEvents.Event.SCREEN_NON_INTERACTIVE,
-                UsageEvents.Event.KEYGUARD_SHOWN,
                 UsageEvents.Event.DEVICE_SHUTDOWN -> {
-                    // Ekran o'chdi / qulflandi / o'chirildi — sessiyani yopamiz
-                    // va ekran qayta yonguncha hisoblamaymiz.
+                    // FAQAT haqiqiy ekran o'chishi sessiyani yopadi. KEYGUARD_SHOWN
+                    // (qulf ekrani) ekran YONIQ bo'lsa ham chiqadi (uyg'otish,
+                    // bildirishnoma peek, AOD) va ba'zi OEM'larda KEYGUARD_HIDDEN
+                    // ishonchsiz — shuning uchun keyguard hisobga OLINMAYDI (aks
+                    // holda flag noto'g'ri false bo'lib ro'yxat bo'shardi).
                     closeCurrent(t)
                     screenInteractive = false
                 }
-                UsageEvents.Event.SCREEN_INTERACTIVE,
-                UsageEvents.Event.KEYGUARD_HIDDEN -> {
+                UsageEvents.Event.SCREEN_INTERACTIVE -> {
                     screenInteractive = true
                     // Bu yerda avtomatik sessiya ochmaymiz — keyingi haqiqiy
                     // ACTIVITY_RESUMED kutiladi.
