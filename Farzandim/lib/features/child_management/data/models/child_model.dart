@@ -407,6 +407,7 @@ class Child {
         other.phoneNumber == phoneNumber &&
         other.blockUnknownSources == blockUnknownSources &&
         other.blockAllApps == blockAllApps &&
+        other.blockUninstall == blockUninstall &&
         other.webFilterEnabled == webFilterEnabled &&
         listEquals(other.blockedWebCategories, blockedWebCategories);
   }
@@ -430,6 +431,7 @@ class Child {
     phoneNumber,
     blockUnknownSources,
     blockAllApps,
+    blockUninstall,
     webFilterEnabled,
     Object.hashAll(blockedWebCategories),
   );

@@ -499,6 +499,13 @@ export class AuthService {
       },
     });
 
+    // Bloklangan hisob Telegram orqali ham kira olmasin (email login bilan bir
+    // xil). Avval bu tekshiruv yo'q edi — banlangan foydalanuvchi /auth/telegram
+    // orqali qayta token olib ban'ni chetlab o'ta olardi.
+    if (!user.isActive) {
+      throw new UnauthorizedException('Hisob bloklangan');
+    }
+
     await this.audit.log(
       user.id,
       'auth',
@@ -508,31 +515,14 @@ export class AuthService {
       reqMeta,
     );
 
-    const { sid, rjti } = await this.createSession(
-      user.id,
+    // buildAuthResponse orqali: 2-qurilma limiti (enforceParentDeviceLimit) va
+    // yagona javob shakli. Avval createSession to'g'ridan-to'g'ri chaqirilardi —
+    // bu qurilma limitini butunlay chetlab o'tardi.
+    return this.buildAuthResponse(
+      user,
       { deviceModel: dto.deviceModel, platform: dto.platform ?? 'web' },
       reqMeta,
     );
-    const payload: JwtPayload = {
-      userId: user.id,
-      role: user.role as 'PARENT' | 'CHILD',
-      tokenVersion: user.tokenVersion,
-      sid,
-    };
-    const { accessToken, refreshToken } = this.issueTokens(payload, rjti);
-
-    return {
-      user: {
-        id: user.id,
-        name: user.name,
-        role: user.role,
-        avatarUrl: user.avatarUrl,
-        telegramId: user.telegramId,
-        language: user.language,
-      },
-      accessToken,
-      refreshToken,
-    };
   }
 
   /* ------------------------------------------------------------------ */

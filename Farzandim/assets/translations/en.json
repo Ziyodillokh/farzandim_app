@@ -977,6 +977,7 @@
       "endAllConfirmContent": "Do you confirm ending all other sessions?",
       "endedSnack": "Session ended",
       "endedAllSnack": "Other sessions ended",
+      "revokeError": "Could not end the session, please try again",
       "loadError": "Failed to load sessions",
       "retry": "Retry",
       "androidDevice": "Android device",

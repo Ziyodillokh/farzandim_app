@@ -130,6 +130,13 @@ class SocketClient {
     final socket = _socket;
     if (socket == null) return;
     _attachedEvents.add(event);
+    // socket.on() handler'ni ALMASHTIRMAY USTIGA qo'shadi. Reconnect'da
+    // _reattachAllListeners har event uchun qayta on() chaqirardi → N ta
+    // reconnect'dan keyin bitta backend emission handler'ni N+1 marta ishga
+    // tushirib, controller'ga takror .add() qilardi (voice:received,
+    // child:unpaired va h.k. ko'p marta bajarilardi). Eski handler'ni olib
+    // tashlaymiz — bizda har event uchun bitta handler.
+    socket.off(event);
     socket.on(event, (data) {
       final controller = _eventControllers[event];
       if (controller != null && !controller.isClosed) {

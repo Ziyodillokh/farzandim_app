@@ -236,7 +236,23 @@ export function NotificationComposer({
               Keyingi <ChevronRight className="h-4 w-4" />
             </Button>
           ) : (
-            <Button onClick={() => send.mutate()} disabled={send.isPending}>
+            <Button
+              onClick={() => {
+                // "Rejalashtirish" yoqilgan-u, lekin vaqt tanlanmagan bo'lsa —
+                // avval scheduledAt=undefined bo'lib backend xabarni DARHOL
+                // hammaga yuborardi (toast esa "Rejalashtirildi" derdi).
+                if (schedule && !scheduledAt) {
+                  toast.error('Rejalashtirish vaqtini tanlang');
+                  return;
+                }
+                if (schedule && scheduledAt && new Date(scheduledAt).getTime() <= Date.now()) {
+                  toast.error("Rejalashtirish vaqti kelajakda bo'lishi kerak");
+                  return;
+                }
+                send.mutate();
+              }}
+              disabled={send.isPending || (schedule && !scheduledAt)}
+            >
               {send.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Bell className="h-4 w-4" />}
               {schedule ? 'Rejalashtirish' : 'Yuborish'}
             </Button>

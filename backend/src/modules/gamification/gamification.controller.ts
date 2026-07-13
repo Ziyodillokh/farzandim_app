@@ -12,7 +12,7 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
-import { CurrentUser } from '../../common/decorators';
+import { CurrentUser, Roles } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { GamificationService } from './gamification.service';
 import { CreateXpEventDto } from './dto/create-xp-event.dto';
@@ -37,8 +37,13 @@ export class GamificationController {
   }
 
   @Post('children/:childId/xp-events')
+  // Faqat OTA-ONA qo'lda XP/don bera oladi. Avval rol cheklovi yo'q edi —
+  // bola o'z JWT'si bilan cheksiz XP (reyting) va don (valyuta) yasay olardi.
+  // Tizim mukofotlari (kontent tugatish, olympiad) alohida server-side
+  // `awardXp` orqali beriladi, bu endpoint orqali emas.
+  @Roles('PARENT')
   @HttpCode(HttpStatus.CREATED)
-  @ApiOperation({ summary: 'Create XP event' })
+  @ApiOperation({ summary: 'Create XP event (parent only)' })
   createXpEvent(
     @Param('childId') childId: string,
     @CurrentUser() user: JwtPayload,

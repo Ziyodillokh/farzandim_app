@@ -106,6 +106,11 @@ class _ClassicVideoPlayerScreenState
     if (_hasController) {
       _controller.removeListener(_onControllerUpdate);
       _controller.dispose();
+      // _hasController'ni false qilamiz — aks holda initialize() await orasida
+      // ekran yopilsa, _initController'ning `!mounted` bloki AYNI shu
+      // controller'ni ikkinchi marta dispose qilib (ChangeNotifier-after-dispose
+      // assert) qolardi. Endi ikki yo'l ham shu bayroq orqali muvofiqlashadi.
+      _hasController = false;
     }
 
     SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
@@ -149,8 +154,14 @@ class _ClassicVideoPlayerScreenState
       _hasController = true;
       await _controller.initialize().timeout(const Duration(seconds: 20));
       if (!mounted) {
-        await _controller.dispose();
-        _hasController = false;
+        // Widget dispose() shu await orasida ishga tushib controller'ni
+        // allaqachon dispose qilgan bo'lishi mumkin (u _hasController=false
+        // qo'yadi). Faqat hali tirik bo'lsa dispose qilamiz — ikki marta
+        // dispose ChangeNotifier assert'ini keltirib chiqaradi.
+        if (_hasController) {
+          await _controller.dispose();
+          _hasController = false;
+        }
         return;
       }
       // Video tugaganini aniqlash uchun (replay tugmasi + controls ko'rsatish).

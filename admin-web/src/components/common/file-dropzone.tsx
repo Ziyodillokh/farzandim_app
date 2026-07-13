@@ -1,5 +1,6 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { useDropzone, type Accept } from 'react-dropzone';
 import { UploadCloud, File as FileIcon, X, CheckCircle2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -42,7 +43,21 @@ export function FileDropzone({
   });
 
   const rejection = fileRejections[0]?.errors[0];
-  const previewUrl = preview && file ? URL.createObjectURL(file) : null;
+
+  // Object URL'ni har render'da yaratmaymiz — aks holda har render (upload
+  // progress, boshqa input o'zgarishi) yangi blob URL yaratib, eskisi hech
+  // qachon revoke qilinmasdan xotira sizib ketardi. Endi faqat `file`
+  // o'zgarganda yaratamiz va cleanup'da revoke qilamiz.
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  useEffect(() => {
+    if (!preview || !file) {
+      setPreviewUrl(null);
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setPreviewUrl(url);
+    return () => URL.revokeObjectURL(url);
+  }, [preview, file]);
 
   return (
     <div className="space-y-1.5">

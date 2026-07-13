@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, Download } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
@@ -164,6 +164,7 @@ export default function UsersPage() {
 /* ─── User row ─── */
 
 function UserRow({ user }: { user: AdminUserListItem }) {
+  const qc = useQueryClient();
   const isChild = user.kind === 'child' || user.role === 'CHILD';
   const isActive = user.status === 'active';
 
@@ -171,6 +172,9 @@ function UserRow({ user }: { user: AdminUserListItem }) {
     try {
       isActive ? await usersApi.block(user.id) : await usersApi.unblock(user.id);
       toast.success(isActive ? 'Bloklandi' : 'Blok olindi');
+      // Ro'yxatni yangilaymiz — aks holda qator eski statusda qolib, "Bloklash"
+      // menyusi ochiq turadi va qayta bosilganda takror bloklanadi.
+      await qc.invalidateQueries({ queryKey: ['users'] });
     } catch {
       toast.error("Amalni bajarib bo'lmadi");
     }

@@ -21,17 +21,22 @@ class ChildLocation {
   /// `accuracy`/`speed` ixtiyoriy; `batteryLevel`/`isCharging` bu modelga
   /// kerak emas. Backend'da `heading` yo'q — `null` qoladi.
   factory ChildLocation.fromBackendJson(Map<String, dynamic> json) {
+    // Himoyalangan parsing — avval `latitude/longitude` hard cast va
+    // `DateTime.parse(... as String)` edi: bitta buzuq yozuv (null koordinata
+    // yoki noto'g'ri sana) `on DioException` catch'idan o'tib ketib, BUTUN
+    // ro'yxatni (tarix/live) xato holatiga tushirardi. Sibling modellar
+    // (LocationStop/GeoZoneEvent) kabi endi hech qachon exception tashlamaydi.
+    final rawTs = json['capturedAt'] ?? json['createdAt'];
+    final parsedTs = rawTs is String ? DateTime.tryParse(rawTs) : null;
     return ChildLocation(
-      latitude: (json['latitude'] as num).toDouble(),
-      longitude: (json['longitude'] as num).toDouble(),
+      latitude: (json['latitude'] as num?)?.toDouble() ?? 0,
+      longitude: (json['longitude'] as num?)?.toDouble() ?? 0,
       accuracy: (json['accuracy'] as num?)?.toDouble() ?? 0,
       speed: (json['speed'] as num?)?.toDouble(),
       // Backend UTC ("Z") qaytaradi — .toLocal() qilmasak vaqtlar
       // Toshkentda 5 soat orqada ko'rinadi. capturedAt — nuqtaning haqiqiy
       // fix vaqti (offline flush'da createdAt server vaqti bo'lib qoladi).
-      updatedAt: DateTime.parse(
-        (json['capturedAt'] ?? json['createdAt']) as String,
-      ).toLocal(),
+      updatedAt: parsedTs?.toLocal() ?? DateTime.fromMillisecondsSinceEpoch(0),
     );
   }
 

@@ -977,6 +977,7 @@
       "endAllConfirmContent": "Boshqa barcha sessiyalarni yakunlashni tasdiqlaysizmi?",
       "endedSnack": "Sessiya tugatildi",
       "endedAllSnack": "Boshqa sessiyalar tugatildi",
+      "revokeError": "Sessiyani tugatib bo'lmadi, qayta urinib ko'ring",
       "loadError": "Sessiyalarni yuklab bo'lmadi",
       "retry": "Qayta urinish",
       "androidDevice": "Android qurilma",

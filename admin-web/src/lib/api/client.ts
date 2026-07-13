@@ -93,11 +93,17 @@ class ApiClient {
 
   private async doRefresh(): Promise<string | null> {
     const refreshToken = useAuthStore.getState().refreshToken;
-    if (!refreshToken) return null;
+    // Browser'da refresh token HttpOnly cookie'da keladi (backend body'da
+    // qaytarmaydi) → store'dagi refreshToken bo'sh bo'ladi. Shu sabab bo'sh
+    // token'da ham refresh'ni SINAB ko'ramiz: `withCredentials` cookie'ni
+    // yuboradi va backend `/admin/auth/refresh` uni o'qiydi. Native client'da
+    // esa token body'da yuboriladi. Avval `if (!refreshToken) return null`
+    // browser'da refresh'ni butunlay o'chirib qo'yardi → access token muddati
+    // tugashi bilan admin login'ga otvorardi.
     try {
       const { data } = await axios.post(
         `${API_URL}/admin/auth/refresh`,
-        { refreshToken },
+        refreshToken ? { refreshToken } : {},
         { withCredentials: true, timeout: 12000 },
       );
       const newAccess = (data.access_token ?? data.accessToken) as string;

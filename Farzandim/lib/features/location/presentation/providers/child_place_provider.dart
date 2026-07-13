@@ -14,7 +14,11 @@ typedef ChildPlace = ({String? zoneName, String? street});
 
 /// Bolaning joriy joyini hisoblaydi: geo-zona nomi → ko'cha → koordinata →
 /// "Ko'chada". Reaktiv — joylashuv/zona/manzil o'zgarsa avtomatik yangilanadi.
-final childPlaceProvider = Provider.family<ChildPlace, String>((ref, childId) {
+// autoDispose — bu provider `childLocationProvider` (autoDispose) ni watch
+// qiladi; keep-alive bo'lsa uni doimiy jonli tutib, 30s Timer + WS obunalari
+// hech qachon to'xtamaydi. Dashboard kartasi ko'rinmaganda dispose bo'lsin.
+final childPlaceProvider =
+    Provider.autoDispose.family<ChildPlace, String>((ref, childId) {
   final loc = ref.watch(childLocationProvider(childId)).valueOrNull;
   if (loc == null) {
     // Bola hali GPS yubormagan — UI "Ko'chada" default'ini ko'rsatadi.

@@ -104,7 +104,11 @@ final childLocationProvider = StreamProvider.autoDispose
 /// Bola joriy joylashuvi manzili (reverse geocoding) — joylashuv
 /// o'zgarganda avtomatik qayta hisoblanadi. Kalit yo'q / xato bo'lsa
 /// `null` (UI koordinata yoki "Noma'lum joylashuv" ko'rsatadi).
-final childAddressProvider = FutureProvider.family<String?, String>((
+// autoDispose — aks holda bu keep-alive provider `childLocationProvider`
+// (autoDispose) ni doimiy watch qilib, uning 30s Timer + WS obunalarini
+// hech qachon dispose bo'lmaydigan qilib qo'yardi (batareya/traffik sizishi).
+final childAddressProvider =
+    FutureProvider.autoDispose.family<String?, String>((
   ref,
   childId,
 ) async {

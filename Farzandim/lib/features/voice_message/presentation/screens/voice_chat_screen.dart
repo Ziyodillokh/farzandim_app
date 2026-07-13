@@ -117,6 +117,12 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         }
       }
 
+      // childUserId null bo'lsa (children ro'yxati hali populate bo'lmagan —
+      // masalan cold start / deep-link), markAllRead(fromUserId: null) BARCHA
+      // yuboruvchilarning unread xabarlarini tozalab yuborardi. Shu sabab faqat
+      // aniq childUserId bo'lgandagina bulk belgilaymiz (aks holda har bir
+      // xabarni tap qilganda markAsRead fallback ishlaydi).
+      if (childUserId == null) return;
       try {
         final ok = await ref
             .read(backendVoiceMessageRepositoryProvider)

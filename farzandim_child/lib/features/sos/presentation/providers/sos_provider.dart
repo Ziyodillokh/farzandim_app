@@ -100,22 +100,38 @@ class SosNotifier extends StateNotifier<SosState> {
   /// Joriy joylashuvni tezda olishga harakat qiladi.
   /// SOS — hayot/o'lim, sekundlar muhim → kesh birinchi, GPS keyin.
   Future<Position?> _resolveCurrentPosition() async {
-    // 1) Kesh — darhol javob.
+    // 1) Kesh — faqat YANGI bo'lsa (≤2 daqiqa) ishonamiz. Avval har qanday
+    //    (hatto soatlab eski) kesh darhol qaytarilardi → bola oxirgi fix'dan
+    //    keyin ancha yo'l bosgan bo'lsa, parent NOTO'G'RI joyga yuborilardi
+    //    (SOS — hayot/o'lim). LocationService.start() ham freshness guard
+    //    ishlatadi (u yerda 10 daqiqa).
     try {
       final last = await Geolocator.getLastKnownPosition();
-      if (last != null) return last;
+      if (last != null &&
+          DateTime.now().toUtc().difference(last.timestamp.toUtc()) <=
+              const Duration(minutes: 2)) {
+        return last;
+      }
     } catch (e) {
       debugPrint('SOS getLastKnownPosition xato: $e');
     }
     // 2) Fresh fix — 3 sek timeout (SOS push'ni kechiktirmasin).
     try {
-      return await Geolocator.getCurrentPosition(
+      final fresh = await Geolocator.getCurrentPosition(
         // ignore: deprecated_member_use
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 3),
       );
+      return fresh;
     } catch (e) {
       debugPrint('SOS getCurrentPosition xato: $e');
+    }
+    // 3) Fresh fix bo'lmadi (GPS o'chiq/timeout) — eski bo'lsa ham oxirgi
+    //    ma'lum joy hech nimadan yaxshiroq (SOS hech bo'lmasa taxminiy joyni
+    //    yuborsin).
+    try {
+      return await Geolocator.getLastKnownPosition();
+    } catch (_) {
       return null;
     }
   }

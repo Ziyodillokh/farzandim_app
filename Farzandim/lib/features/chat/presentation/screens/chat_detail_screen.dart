@@ -35,6 +35,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:video_player/video_player.dart';
@@ -286,12 +287,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                         VoiceItem(:final message) => _voiceItem(message),
                         VideoItem(:final message) => _RoundVideoMessage(
                           msg: message,
-                          // Imzolangan URL (auth headersiz ishlaydi — web
-                          // pleeri header yubora olmaydi, bola ilovasidagi
-                          // yechim bilan bir xil).
-                          getUrl: () => ref
+                          // Proxy stream URL (@Public, auth header'siz) —
+                          // imzolangan `getFileUrl` signed URL telefondan yetib
+                          // bo'lmaydi (repo izohiga qarang), shuning uchun
+                          // RoundVideoBubble kabi proxy'dan o'ynatamiz.
+                          getUrl: () async => ref
                               .read(backendVideoMessageRepositoryProvider)
-                              .getFileUrl(message.id),
+                              .videoStreamUrl(message.id),
                           onTap: (url) => showRoundVideoPlayer(context, url),
                         ),
                       };
@@ -592,13 +594,14 @@ class _RoundVideoMessageState extends State<_RoundVideoMessage> {
   }
 
   Future<void> _loadThumb() async {
+    VideoPlayerController? c;
     try {
       final url = await widget.getUrl();
       if (url == null || url.isEmpty) {
-        throw Exception("signed url yo'q");
+        throw Exception("stream url yo'q");
       }
       _signedUrl = url;
-      final c = VideoPlayerController.networkUrl(Uri.parse(url));
+      c = VideoPlayerController.networkUrl(Uri.parse(url));
       await c.initialize();
       await c.seekTo(Duration.zero);
       await c.setVolume(0);
@@ -611,6 +614,10 @@ class _RoundVideoMessageState extends State<_RoundVideoMessage> {
         _loading = false;
       });
     } catch (_) {
+      // c yaratilib initialize/seekTo/setVolume tashlagan bo'lsa — native
+      // pleer leak bo'lmasin uchun dispose qilamiz (avval faqat _failed=true
+      // edi, controller esa hech qachon ozod qilinmasdi).
+      await c?.dispose();
       if (!mounted) return;
       setState(() {
         _loading = false;
@@ -829,7 +836,12 @@ class _InputBarState extends State<_InputBar> {
       }
       var path = '';
       if (!kIsWeb) {
-        path = 'voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
+        // record paketi native'da ABSOLYUT, yozib bo'ladigan yo'l talab qiladi.
+        // Avval nisbiy 'voice_x.m4a' berilib, u qurilmada yozib bo'lmaydigan
+        // cwd'ga (Android'da '/') nisbatan hal qilinib, yozuv bo'sh bo'lardi.
+        // AudioRecorderService kabi vaqtinchalik papkadan absolyut yo'l.
+        final dir = await getTemporaryDirectory();
+        path = '${dir.path}/voice_${DateTime.now().millisecondsSinceEpoch}.m4a';
       }
       await _recorder.start(const RecordConfig(), path: path);
       if (!mounted) return;

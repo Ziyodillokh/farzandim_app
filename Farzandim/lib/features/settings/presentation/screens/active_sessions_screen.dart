@@ -326,7 +326,9 @@ class _SessionCard extends StatelessWidget {
   final UserSession session;
 
   /// `null` → asosiy sessiya (tugatish tugmasi yo'q).
-  final VoidCallback? onRevoke;
+  /// Future qaytaradi — revoke natijasini kutib, toast'ni shunga qarab
+  /// ko'rsatamiz (avval `VoidCallback` edi va natija e'tiborsiz qolardi).
+  final Future<void> Function()? onRevoke;
 
   @override
   Widget build(BuildContext context) {
@@ -387,8 +389,19 @@ class _SessionCard extends StatelessWidget {
       content: 'settings.sessions.revokeConfirmContent'.tr(),
     );
     if (ok && context.mounted) {
-      onRevoke!.call();
-      AppToast.success(context, 'settings.sessions.endedSnack'.tr());
+      // Avval `onRevoke` await qilinmasdan darhol "tugatildi" toast'i
+      // ko'rsatilardi — so'rov xato bo'lsa ham foydalanuvchi seans tugadi deb
+      // o'ylardi. Endi natijani kutamiz va faqat muvaffaqiyatda tasdiqlaymiz.
+      try {
+        await onRevoke!.call();
+        if (context.mounted) {
+          AppToast.success(context, 'settings.sessions.endedSnack'.tr());
+        }
+      } catch (_) {
+        if (context.mounted) {
+          AppToast.error(context, 'settings.sessions.revokeError'.tr());
+        }
+      }
     }
   }
 }
