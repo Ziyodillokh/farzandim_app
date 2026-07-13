@@ -252,8 +252,7 @@ class ChatBubble extends ConsumerWidget {
               // Telegram uslubi: uzoq bosilsa tahrirlash/o'chirish menyusi.
               onLongPress: () => _showMessageMenu(context, ref),
               child: Container(
-                constraints: const BoxConstraints(minWidth: 80),
-                padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
+                padding: const EdgeInsets.fromLTRB(12, 7, 9, 7),
                 decoration: BoxDecoration(
                   color: isOwn ? _pBlue : _recvBubble,
                   borderRadius: BorderRadius.only(
@@ -263,43 +262,45 @@ class ChatBubble extends ConsumerWidget {
                     bottomRight: Radius.circular(isOwn ? 4 : 18),
                   ),
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  mainAxisSize: MainAxisSize.min,
+                // Telegram kabi: vaqt + ✓ matn bilan BIR QATORDA (sig'sa
+                // yonida, sig'masa keyingi qatorda o'ngda).
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 8,
                   children: [
-                    Align(
-                      alignment: Alignment.centerLeft,
-                      child: Text(
-                        message.text ?? '',
-                        style: GoogleFonts.poppins(
-                          color: Colors.white,
-                          fontSize: 15,
-                          height: 1.35,
-                        ),
+                    Text(
+                      message.text ?? '',
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
+                        fontSize: 15,
+                        height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 3),
-                    Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(
-                          time,
-                          style: GoogleFonts.poppins(
-                            color: metaColor,
-                            fontSize: 11,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 1),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            time,
+                            style: GoogleFonts.poppins(
+                              color: metaColor,
+                              fontSize: 11,
+                            ),
                           ),
-                        ),
-                        if (isOwn) ...[
-                          const SizedBox(width: 4),
-                          Icon(
-                            isSeen
-                                ? Icons.done_all_rounded
-                                : Icons.done_rounded,
-                            color: Colors.white,
-                            size: 15,
-                          ),
+                          if (isOwn) ...[
+                            const SizedBox(width: 3),
+                            Icon(
+                              isSeen
+                                  ? Icons.done_all_rounded
+                                  : Icons.done_rounded,
+                              color: Colors.white,
+                              size: 14,
+                            ),
+                          ],
                         ],
-                      ],
+                      ),
                     ),
                   ],
                 ),

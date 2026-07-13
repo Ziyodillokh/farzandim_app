@@ -99,8 +99,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   void _scrollToBottom() {
     if (!_scrollController.hasClients) return;
+    // reverse:true ro'yxatda "past" = offset 0 (Telegram kabi).
     _scrollController.animateTo(
-      _scrollController.position.maxScrollExtent,
+      0,
       duration: const Duration(milliseconds: 300),
       curve: Curves.easeOut,
     );
@@ -489,10 +490,13 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
                   return ListView.builder(
                     controller: _scrollController,
+                    // Telegram kabi: ro'yxat PASTDAN boshlanadi — kam xabar
+                    // bo'lsa ham tepaga yopishmaydi, eng yangisi pastda.
+                    reverse: true,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                     itemCount: messages.length,
                     itemBuilder: (context, i) {
-                      final item = messages[i];
+                      final item = messages[messages.length - 1 - i];
                       // Sealed switch — exhaustive (yangi tip qo'shilsa
                       // compiler xato beradi).
                       return switch (item) {

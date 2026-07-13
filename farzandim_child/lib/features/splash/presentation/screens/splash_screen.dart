@@ -20,7 +20,6 @@
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
-import 'package:farzandim_child/features/consent/data/services/consent_storage.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart'
     show kLanguagePickedKey;
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
@@ -61,9 +60,7 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
   /// Qaysi ekranga o'tishni storage'dan to'g'ridan hal qiladi (tez, ishonchli).
   Future<String> _decideRoute() async {
-    // 1. Parent Consent (Store compliance) — storage'dan to'g'ridan.
-    final consentGiven = await ConsentStorage.isParentConsentGiven();
-    if (!consentGiven) return '/consent';
+    // Parent Consent sahifasi foydalanuvchi so'roviga ko'ra O'CHIRILGAN.
 
     final prefs = await SharedPreferences.getInstance();
 

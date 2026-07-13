@@ -100,6 +100,57 @@ class VoiceUploadNotifier extends StateNotifier<VoiceUploadState> {
     }
   }
 
+  /// Web: yozib olingan blob BAYTLARINI yuboradi (dart:io File yo'q).
+  Future<String?> sendBytes({
+    required String childId,
+    required Uint8List bytes,
+    required String filename,
+    required int durationSeconds,
+  }) async {
+    final child = _ref.read(childByIdProvider(childId));
+    if (child == null) {
+      state = state.copyWith(
+        status: UploadStatus.error,
+        errorMessage: 'voiceChat.childNotFound'.tr(),
+      );
+      return null;
+    }
+    final receiverId = child.linkedDeviceUid;
+    if (receiverId == null || receiverId.isEmpty) {
+      state = state.copyWith(
+        status: UploadStatus.error,
+        errorMessage: 'voiceChat.notPaired'.tr(),
+      );
+      return null;
+    }
+
+    state = state.copyWith(status: UploadStatus.uploading, progress: 0);
+
+    try {
+      final messageId = await _ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .sendMessageBytes(
+            receiverId: receiverId,
+            bytes: bytes,
+            filename: filename,
+            durationSeconds: durationSeconds,
+            onProgress: (progress) {
+              state = state.copyWith(progress: progress);
+            },
+          );
+
+      _ref.invalidate(rawVoiceMessagesProvider);
+      state = state.copyWith(status: UploadStatus.sent);
+      return messageId;
+    } catch (e) {
+      state = state.copyWith(
+        status: UploadStatus.error,
+        errorMessage: e.toString(),
+      );
+      return null;
+    }
+  }
+
   void reset() {
     state = const VoiceUploadState();
   }

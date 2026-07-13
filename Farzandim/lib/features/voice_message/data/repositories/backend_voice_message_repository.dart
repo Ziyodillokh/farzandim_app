@@ -97,6 +97,46 @@ class BackendVoiceMessageRepository {
     }
   }
 
+  /// Multipart audio upload BAYTLARDAN (web: blob -> bytes).
+  /// Brauzer yozuvi odatda `audio/webm` bo'ladi — backend qabul qiladi.
+  Future<String?> sendMessageBytes({
+    required String receiverId,
+    required Uint8List bytes,
+    required String filename,
+    required int durationSeconds,
+    void Function(double progress)? onProgress,
+  }) async {
+    try {
+      final ext = filename.split('.').last.toLowerCase();
+      final formData = FormData.fromMap({
+        'receiverId': receiverId,
+        'durationSeconds': durationSeconds,
+        'file': MultipartFile.fromBytes(
+          bytes,
+          filename: filename,
+          contentType: DioMediaType('audio', ext == 'm4a' ? 'mp4' : ext),
+        ),
+      });
+
+      final response = await _dio.post<Map<String, dynamic>>(
+        '/voice-messages',
+        data: formData,
+        onSendProgress: (count, total) {
+          if (total > 0 && onProgress != null) {
+            onProgress(count / total);
+          }
+        },
+      );
+      return response.data?['id'] as String?;
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendVoiceMessageRepository.sendMessageBytes xato '
+        '${e.response?.statusCode} — ${e.message}',
+      );
+      rethrow;
+    }
+  }
+
   /// Text xabar yuborish (Telegram-style chat).
   /// `POST /voice-messages/text` { receiverId, text } — audio yo'q.
   /// Backend Socket.io orqali receiver'ga real-time emit qiladi.

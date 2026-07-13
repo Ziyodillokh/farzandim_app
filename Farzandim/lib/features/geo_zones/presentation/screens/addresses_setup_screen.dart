@@ -14,7 +14,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
-import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -70,10 +69,8 @@ class AddressesSetupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final child = ref.watch(childByIdProvider(childId)) ?? initialChild;
     final zones =
-        ref.watch(geoZonesProvider(childId)).valueOrNull ??
-        const <GeoZone>[];
+        ref.watch(geoZonesProvider(childId)).valueOrNull ?? const <GeoZone>[];
 
     final scaffold = Scaffold(
       backgroundColor: _bg,
@@ -109,9 +106,8 @@ class AddressesSetupScreen extends ConsumerWidget {
                         ),
                         const SizedBox(height: 28),
                         _AddAddressButton(
-                          onTap: () => context.push(
-                            AppRoutes.geoZonesAddPath(childId),
-                          ),
+                          onTap: () =>
+                              context.push(AppRoutes.geoZonesAddPath(childId)),
                         ),
                         const SizedBox(height: 16),
                         for (final z in zones) ...[
@@ -131,16 +127,9 @@ class AddressesSetupScreen extends ConsumerWidget {
                 Padding(
                   padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
                   child: _TayyorButton(
-                    onTap: () {
-                      if (child != null) {
-                        context.go(
-                          AppRoutes.familyCodePath(child.id),
-                          extra: child,
-                        );
-                      } else {
-                        context.go(AppRoutes.familyCodePath(childId));
-                      }
-                    },
+                    // Eski "oila kodi" sahifasi olib tashlandi — kod bola
+                    // qo'shilganda Parvoz "ulash" oynasida ko'rsatiladi.
+                    onTap: () => context.go(AppRoutes.dashboard),
                   ),
                 ),
               ],
@@ -325,11 +314,7 @@ class _ZoneCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 10),
-            const Icon(
-              SolarIconsOutline.altArrowRight,
-              size: 20,
-              color: _dim,
-            ),
+            const Icon(SolarIconsOutline.altArrowRight, size: 20, color: _dim),
           ],
         ),
       ),

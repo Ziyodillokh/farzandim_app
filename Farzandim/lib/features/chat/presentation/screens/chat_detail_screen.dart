@@ -11,6 +11,8 @@
 
 import 'dart:async';
 
+import 'package:dio/dio.dart';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/chat/data/video/video_send.dart';
@@ -28,13 +30,14 @@ import 'package:farzandim/features/voice_message/presentation/providers/voice_me
 import 'package:farzandim/features/voice_message/presentation/providers/voice_upload_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show Uint8List, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:record/record.dart';
 import 'package:solar_icons/solar_icons.dart';
+import 'package:video_player/video_player.dart';
 
 // ════════════ Parvoz tokenlar ════════════
 const _bg = Color(0xFF00060A);
@@ -46,9 +49,30 @@ const _dim = Color(0x8CFFFFFF);
 const _rec = Color(0xFFFF4D4F);
 
 const _waveHeights = <double>[
-  0.3, 0.6, 0.9, 0.5, 0.75, 1, 0.45, 0.65, 0.35, 0.85,
-  0.5, 0.7, 0.4, 0.95, 0.55, 0.8, 0.35, 0.6, 0.9, 0.45,
-  0.7, 0.5, 0.8, 0.4,
+  0.3,
+  0.6,
+  0.9,
+  0.5,
+  0.75,
+  1,
+  0.45,
+  0.65,
+  0.35,
+  0.85,
+  0.5,
+  0.7,
+  0.4,
+  0.95,
+  0.55,
+  0.8,
+  0.35,
+  0.6,
+  0.9,
+  0.45,
+  0.7,
+  0.5,
+  0.8,
+  0.4,
 ];
 
 TextStyle _unb(
@@ -90,6 +114,16 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     _playSub = AudioPlayerManager.instance.currentIdStream.listen((id) {
       if (mounted) setState(() => _playingId = id);
     });
+    // Chat ochilganda boladan kelgan o'qilmagan xabarlarni "o'qildi" deb
+    // belgilaymiz — bola tomonida ✓✓ (ko'rildi) chiqadi.
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      final receiver = _child?.linkedDeviceUid;
+      if (receiver == null || receiver.isEmpty) return;
+      final ok = await ref
+          .read(backendVoiceMessageRepositoryProvider)
+          .markAllRead(fromUserId: receiver);
+      if (ok) ref.invalidate(rawVoiceMessagesProvider);
+    });
   }
 
   @override
@@ -102,8 +136,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scroll.hasClients) {
+        // reverse:true ro'yxatda "past" = offset 0 (Telegram kabi).
         _scroll.animateTo(
-          _scroll.position.maxScrollExtent,
+          0,
           duration: const Duration(milliseconds: 300),
           curve: Curves.easeOut,
         );
@@ -132,22 +167,46 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
 
   Future<void> _sendVoice(String path, int secs) async {
     final child = _child;
-    final id = await ref.read(voiceUploadProvider.notifier).send(
-      childId: widget.contactId,
-      childName: child?.name ?? '',
-      localFilePath: path,
-      durationSeconds: secs,
-      waveform: const [],
-    );
+    String? id;
+    if (kIsWeb) {
+      // Web: recorder blob URL qaytaradi — baytlarni olib yuboramiz.
+      try {
+        final res = await Dio().get<List<int>>(
+          path,
+          options: Options(responseType: ResponseType.bytes),
+        );
+        final bytes = Uint8List.fromList(res.data ?? const []);
+        if (bytes.isEmpty) {
+          throw Exception('blob boʻsh');
+        }
+        id = await ref
+            .read(voiceUploadProvider.notifier)
+            .sendBytes(
+              childId: widget.contactId,
+              bytes: bytes,
+              filename: 'voice.webm',
+              durationSeconds: secs,
+            );
+      } catch (_) {
+        id = null;
+      }
+    } else {
+      id = await ref
+          .read(voiceUploadProvider.notifier)
+          .send(
+            childId: widget.contactId,
+            childName: child?.name ?? '',
+            localFilePath: path,
+            durationSeconds: secs,
+            waveform: const [],
+          );
+    }
     if (!mounted) return;
     if (id != null) {
       ref.invalidate(rawVoiceMessagesProvider);
       _scrollToBottom();
     } else {
-      AppToast.error(
-        context,
-        kIsWeb ? 'chat.voiceDeviceOnly'.tr() : 'chat.sendError'.tr(),
-      );
+      AppToast.error(context, 'chat.sendError'.tr());
     }
   }
 
@@ -174,18 +233,13 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
   }
 
   Future<void> _togglePlayVoice(VoiceMessage m) async {
-    final url =
-        ref.read(backendVoiceMessageRepositoryProvider).audioStreamUrl(m.id);
+    final url = ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .audioStreamUrl(m.id);
     await AudioPlayerManager.instance.playOrToggle(
       messageId: m.id,
       audioUrl: url,
     );
-  }
-
-  void _playVideo(VideoMessage m) {
-    final url =
-        ref.read(backendVideoMessageRepositoryProvider).videoStreamUrl(m.id);
-    showRoundVideoPlayer(context, url);
   }
 
   @override
@@ -206,28 +260,39 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   child: CircularProgressIndicator(color: _blue),
                 ),
                 error: (_, __) => Center(
-                  child: Text('errors.loadFailed'.tr(),
-                      style: _pop(14, c: _dim)),
+                  child: Text(
+                    'errors.loadFailed'.tr(),
+                    style: _pop(14, c: _dim),
+                  ),
                 ),
                 data: (items) {
                   if (items.isEmpty) {
                     return Center(
-                      child: Text('Suhbatni boshlang',
-                          style: _pop(14, c: _dim)),
+                      child: Text(
+                        'Suhbatni boshlang',
+                        style: _pop(14, c: _dim),
+                      ),
                     );
                   }
                   return ListView.builder(
                     controller: _scroll,
+                    // Telegram kabi: pastdan boshlanadi, yangisi pastda.
+                    reverse: true,
                     padding: const EdgeInsets.fromLTRB(14, 12, 14, 12),
                     itemCount: items.length,
                     itemBuilder: (context, i) {
-                      final item = items[i];
+                      final item = items[items.length - 1 - i];
                       return switch (item) {
                         VoiceItem(:final message) => _voiceItem(message),
                         VideoItem(:final message) => _RoundVideoMessage(
                           msg: message,
-                          color: _blue,
-                          onTap: () => _playVideo(message),
+                          // Imzolangan URL (auth headersiz ishlaydi — web
+                          // pleeri header yubora olmaydi, bola ilovasidagi
+                          // yechim bilan bir xil).
+                          getUrl: () => ref
+                              .read(backendVideoMessageRepositoryProvider)
+                              .getFileUrl(message.id),
+                          onTap: (url) => showRoundVideoPlayer(context, url),
                         ),
                       };
                     },
@@ -294,9 +359,11 @@ class _Header extends StatelessWidget {
                 const SizedBox(height: 2),
                 Text(
                   online ? 'chat.online'.tr() : 'chat.lastSeen'.tr(),
-                  style: _pop(13,
-                      w: FontWeight.w500,
-                      c: online ? const Color(0xFF34C759) : _dim),
+                  style: _pop(
+                    13,
+                    w: FontWeight.w500,
+                    c: online ? const Color(0xFF34C759) : _dim,
+                  ),
                 ),
               ],
             ),
@@ -328,17 +395,22 @@ class _TextBubble extends StatelessWidget {
         constraints: BoxConstraints(
           maxWidth: MediaQuery.of(context).size.width * 0.74,
         ),
-        padding: const EdgeInsets.fromLTRB(14, 9, 12, 8),
+        padding: const EdgeInsets.fromLTRB(12, 7, 9, 7),
         decoration: BoxDecoration(
           color: mine ? _blue : _recvBubble,
           borderRadius: _radius(mine),
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        // Telegram kabi: vaqt + ✓ matn bilan bir qatorda (sig'masa pastda).
+        child: Wrap(
+          alignment: WrapAlignment.end,
+          crossAxisAlignment: WrapCrossAlignment.end,
+          spacing: 8,
           children: [
             Text(overrideText ?? msg.text ?? '', style: _pop(15)),
-            const SizedBox(height: 3),
-            _MetaRow(msg: msg, onLight: mine),
+            Padding(
+              padding: const EdgeInsets.only(bottom: 1),
+              child: _MetaRow(msg: msg, onLight: mine),
+            ),
           ],
         ),
       ),
@@ -435,9 +507,7 @@ class _VoiceBubble extends StatelessWidget {
                       shape: BoxShape.circle,
                     ),
                     child: Icon(
-                      playing
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
+                      playing ? Icons.pause_rounded : Icons.play_arrow_rounded,
                       size: 22,
                       color: mine ? Colors.white : _blue,
                     ),
@@ -446,8 +516,7 @@ class _VoiceBubble extends StatelessWidget {
                 const SizedBox(width: 10),
                 _Waveform(color: barColor),
                 const SizedBox(width: 10),
-                Text(_dur,
-                    style: _pop(12, c: mine ? Colors.white70 : _dim)),
+                Text(_dur, style: _pop(12, c: mine ? Colors.white70 : _dim)),
               ],
             ),
             const SizedBox(height: 4),
@@ -489,48 +558,196 @@ class _Waveform extends StatelessWidget {
 
 // ════════════ Dumaloq video ════════════
 
-class _RoundVideoMessage extends StatelessWidget {
+class _RoundVideoMessage extends StatefulWidget {
   const _RoundVideoMessage({
     required this.msg,
-    required this.color,
+    required this.getUrl,
     required this.onTap,
   });
 
   final VideoMessage msg;
-  final Color color;
-  final VoidCallback onTap;
 
+  /// Imzolangan (signed) video URL'ini oladi — 1 soat amal qiladi.
+  final Future<String?> Function() getUrl;
+  final void Function(String url) onTap;
+
+  @override
+  State<_RoundVideoMessage> createState() => _RoundVideoMessageState();
+}
+
+/// Bola ilovasidagi kabi: yumaloq video ichida REAL birinchi kadr
+/// (VideoPlayerController paused holatida) + play tugma + davomiylik.
+class _RoundVideoMessageState extends State<_RoundVideoMessage> {
   static const double _d = 190;
+
+  VideoPlayerController? _thumb;
+  String? _signedUrl;
+  bool _loading = true;
+  bool _failed = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadThumb());
+  }
+
+  Future<void> _loadThumb() async {
+    try {
+      final url = await widget.getUrl();
+      if (url == null || url.isEmpty) {
+        throw Exception("signed url yo'q");
+      }
+      _signedUrl = url;
+      final c = VideoPlayerController.networkUrl(Uri.parse(url));
+      await c.initialize();
+      await c.seekTo(Duration.zero);
+      await c.setVolume(0);
+      if (!mounted) {
+        await c.dispose();
+        return;
+      }
+      setState(() {
+        _thumb = c;
+        _loading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _loading = false;
+        _failed = true;
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _thumb?.dispose();
+    super.dispose();
+  }
+
+  String get _dur {
+    final secs = widget.msg.durationSeconds;
+    final m = secs ~/ 60;
+    final sec = (secs % 60).toString().padLeft(2, '0');
+    return '$m:$sec';
+  }
 
   @override
   Widget build(BuildContext context) {
+    final msg = widget.msg;
     final mine = msg.sender == 'parent';
     return Align(
       alignment: mine ? Alignment.centerRight : Alignment.centerLeft,
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 8),
         child: Column(
-          crossAxisAlignment:
-              mine ? CrossAxisAlignment.end : CrossAxisAlignment.start,
+          crossAxisAlignment: mine
+              ? CrossAxisAlignment.end
+              : CrossAxisAlignment.start,
           children: [
             GestureDetector(
-              onTap: onTap,
+              onTap: () async {
+                var url = _signedUrl;
+                url ??= await widget.getUrl();
+                if (url != null && url.isNotEmpty) widget.onTap(url);
+              },
               behavior: HitTestBehavior.opaque,
-              child: Container(
+              child: SizedBox(
                 width: _d,
                 height: _d,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: LinearGradient(
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                    colors: [color.withValues(alpha: 0.85), _chipBg],
+                child: ClipOval(
+                  child: ColoredBox(
+                    color: _recvBubble,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        // REAL birinchi kadr yoki holat belgisi.
+                        if (_thumb != null && _thumb!.value.isInitialized)
+                          FittedBox(
+                            fit: BoxFit.cover,
+                            child: SizedBox(
+                              width: _thumb!.value.size.width,
+                              height: _thumb!.value.size.height,
+                              child: VideoPlayer(_thumb!),
+                            ),
+                          )
+                        else if (_loading)
+                          const Center(
+                            child: SizedBox(
+                              width: 28,
+                              height: 28,
+                              child: CircularProgressIndicator(
+                                strokeWidth: 2.5,
+                                color: _blue,
+                              ),
+                            ),
+                          )
+                        else
+                          const Center(
+                            child: Icon(
+                              Icons.videocam_off_rounded,
+                              color: _dim,
+                              size: 36,
+                            ),
+                          ),
+                        // Pastki kontrast gradienti.
+                        DecoratedBox(
+                          decoration: BoxDecoration(
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.35),
+                              ],
+                            ),
+                          ),
+                        ),
+                        // Markazdagi play tugma.
+                        if (!_loading && !_failed)
+                          Center(
+                            child: Container(
+                              width: 54,
+                              height: 54,
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.45),
+                                shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.5),
+                                ),
+                              ),
+                              child: const Icon(
+                                Icons.play_arrow_rounded,
+                                size: 34,
+                                color: Colors.white,
+                              ),
+                            ),
+                          ),
+                        // Davomiylik belgisi (pastda markazda).
+                        Positioned(
+                          bottom: 12,
+                          left: 0,
+                          right: 0,
+                          child: Center(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 2,
+                              ),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.55),
+                                borderRadius: BorderRadius.circular(999),
+                              ),
+                              child: Text(
+                                _dur,
+                                style: _pop(11, w: FontWeight.w500),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
-                  border: Border.all(color: const Color(0x22FFFFFF), width: 2),
-                ),
-                child: const Center(
-                  child: Icon(Icons.play_arrow_rounded,
-                      size: 56, color: Colors.white),
                 ),
               ),
             ),
@@ -741,10 +958,12 @@ class _InputBarState extends State<_InputBar> {
                 Text(_elapsedLabel, style: _pop(15, w: FontWeight.w600)),
                 const SizedBox(width: 12),
                 Expanded(
-                  child: Text('chat.recording'.tr(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _pop(13, c: _dim)),
+                  child: Text(
+                    'chat.recording'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(13, c: _dim),
+                  ),
                 ),
               ],
             ),
@@ -752,7 +971,10 @@ class _InputBarState extends State<_InputBar> {
         ),
         const SizedBox(width: 10),
         _CircleAction(
-            icon: Icons.send_rounded, blue: true, onTap: _stopSendVoice),
+          icon: Icons.send_rounded,
+          blue: true,
+          onTap: _stopSendVoice,
+        ),
       ],
     );
   }

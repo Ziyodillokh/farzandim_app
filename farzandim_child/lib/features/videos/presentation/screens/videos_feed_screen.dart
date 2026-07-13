@@ -17,12 +17,12 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_search_field.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:solar_icons/solar_icons.dart';
 
 /// Bola videolar feed ekrani — "Videolar".
 class VideosFeedScreen extends ConsumerWidget {
@@ -423,7 +423,36 @@ class _SkeletonCard extends StatelessWidget {
 
 // ════════════ Bo'sh holat ════════════
 
-/// Bo'sh holat — FARO maskot + qat'iy ranglar (screen doim dark).
+/// Parvoz uslubidagi bo'sh-holat belgisi — shisha doirada ko'k ikon
+/// (robot maskot foydalanuvchi so'roviga ko'ra olib tashlangan).
+class _EmptyBadge extends StatelessWidget {
+  const _EmptyBadge({required this.icon});
+
+  final IconData icon;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 96,
+      height: 96,
+      alignment: Alignment.center,
+      decoration: BoxDecoration(
+        color: const Color(0x14FFFFFF),
+        shape: BoxShape.circle,
+        border: Border.all(color: const Color(0x24FFFFFF)),
+        boxShadow: [
+          BoxShadow(
+            color: vBlue.withValues(alpha: 0.25),
+            blurRadius: 34,
+            spreadRadius: 2,
+          ),
+        ],
+      ),
+      child: Icon(icon, size: 42, color: vBlue),
+    );
+  }
+}
+
 // Qidiruv natijasi bo'sh — "topilmadi" holati.
 class _NoSearchResults extends StatelessWidget {
   const _NoSearchResults();
@@ -434,7 +463,7 @@ class _NoSearchResults extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         children: [
-          const FaroMascot(variant: FaroVariant.faceSad, size: 120),
+          const _EmptyBadge(icon: SolarIconsOutline.magnifierZoomOut),
           const SizedBox(height: 20),
           Text(
             'Hech narsa topilmadi',
@@ -464,7 +493,7 @@ class _EmptyState extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 32),
       child: Column(
         children: [
-          const FaroMascot(variant: FaroVariant.faceSad, size: 130),
+          const _EmptyBadge(icon: SolarIconsOutline.play),
           const SizedBox(height: 20),
           Text(
             'Videolar hozircha yo\'q',
