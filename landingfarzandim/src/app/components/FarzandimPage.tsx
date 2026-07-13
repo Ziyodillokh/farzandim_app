@@ -226,7 +226,7 @@ function HeroSection() {
           color: "white",
         }}
       >
-        Bolalar uchun xavfsiz va foydali kontent platformasi
+        Bolalar uchun xavfsiz va foydali kontent, Ota-onalar uchun nazorat platformasi
       </h1>
       <p
         style={{
