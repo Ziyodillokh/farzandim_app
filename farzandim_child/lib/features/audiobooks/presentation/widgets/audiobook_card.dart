@@ -18,8 +18,7 @@ class AudiobookCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () =>
-          ref.read(audioPlayerProvider.notifier).play(book),
+      onTap: () => ref.read(audioPlayerProvider.notifier).play(book),
       child: SizedBox(
         width: 140,
         child: Column(
@@ -64,10 +63,7 @@ class AudiobookCard extends ConsumerWidget {
                           gradient: LinearGradient(
                             begin: Alignment.topCenter,
                             end: Alignment.bottomCenter,
-                            colors: [
-                              Colors.transparent,
-                              Color(0x66000000),
-                            ],
+                            colors: [Colors.transparent, Color(0x66000000)],
                             stops: [0.6, 1.0],
                           ),
                         ),
@@ -77,7 +73,9 @@ class AudiobookCard extends ConsumerWidget {
                         right: 8,
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 3),
+                            horizontal: 8,
+                            vertical: 3,
+                          ),
                           decoration: BoxDecoration(
                             // ignore: deprecated_member_use
                             color: Colors.black.withOpacity(0.75),
@@ -141,11 +139,7 @@ class AudiobookCard extends ConsumerWidget {
             color: Colors.white.withOpacity(0.3),
             shape: BoxShape.circle,
           ),
-          child: const Icon(
-            AppIcons.speaker,
-            color: Colors.white,
-            size: 28,
-          ),
+          child: const Icon(AppIcons.speaker, color: Colors.white, size: 28),
         ),
       ),
     );

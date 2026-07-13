@@ -67,10 +67,7 @@ class AudiobookSection extends StatelessWidget {
               ),
               const Text(
                 'Barchasi',
-                style: TextStyle(
-                  color: AppColors.primary,
-                  fontSize: 14,
-                ),
+                style: TextStyle(color: AppColors.primary, fontSize: 14),
               ),
             ],
           ),

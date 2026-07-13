@@ -46,8 +46,7 @@ class AudioPlayerState {
       isPlaying: isPlaying ?? this.isPlaying,
       position: position ?? this.position,
       duration: duration ?? this.duration,
-      sleepTimerRemaining:
-          sleepTimerRemaining ?? this.sleepTimerRemaining,
+      sleepTimerRemaining: sleepTimerRemaining ?? this.sleepTimerRemaining,
       error: clearError ? null : (error ?? this.error),
     );
   }

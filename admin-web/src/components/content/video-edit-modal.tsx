@@ -44,6 +44,7 @@ export function VideoEditModal({
   const [ageTo, setAgeTo] = useState('18');
   const [planRequired, setPlanRequired] = useState('free');
   const [categoryId, setCategoryId] = useState(NO_CATEGORY);
+  const [pointsReward, setPointsReward] = useState('0');
 
   const { data: categories } = useQuery({
     queryKey: ['categories', 'video'],
@@ -61,6 +62,7 @@ export function VideoEditModal({
       setAgeTo(String(video.ageTo ?? 18));
       setPlanRequired(video.planRequired ?? 'free');
       setCategoryId(video.categoryId ?? NO_CATEGORY);
+      setPointsReward(String(video.xpReward ?? 0));
     }
   }, [open, video]);
 
@@ -80,6 +82,7 @@ export function VideoEditModal({
         ageTo: Number(ageTo),
         planRequired,
         categoryId: categoryId === NO_CATEGORY ? null : categoryId,
+        xpReward: Number(pointsReward) || 0,
       });
     },
     onSuccess: () => {
@@ -196,6 +199,21 @@ export function VideoEditModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="video-edit-points">DON mukofoti</Label>
+            <Input
+              id="video-edit-points"
+              type="number"
+              min={0}
+              value={pointsReward}
+              onChange={(e) => setPointsReward(e.target.value)}
+              placeholder="10"
+            />
+            <p className="text-xs text-muted-foreground">
+              Bola videoni TO&apos;LIQ ko&apos;rgach shu miqdorda DON oladi (0 = mukofot yo&apos;q).
+            </p>
           </div>
 
           <DialogFooter className="gap-2 pt-2">

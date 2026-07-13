@@ -20,6 +20,7 @@ import 'package:farzandim_child/features/videos/presentation/widgets/player_sett
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:video_player/video_player.dart';
 
 class ClassicVideoPlayerScreen extends ConsumerStatefulWidget {
@@ -50,6 +51,11 @@ class _ClassicVideoPlayerScreenState
 
   /// Video init xato bo'lsa shu maydonga yoziladi → "Qaytadan" tugmasi.
   String? _initError;
+
+  /// Video TO'LIQ ko'rilib DON berildimi (bir marta). Qolgan joydan davom
+  /// uchun oxirgi saqlangan pozitsiya (5s throttle).
+  bool _completedReported = false;
+  Duration _lastSavedPos = Duration.zero;
 
   @override
   void initState() {
@@ -164,6 +170,17 @@ class _ClassicVideoPlayerScreenState
       await _controller.setLooping(s.repeat);
       if (!mounted) return;
       setState(() => _initializing = false);
+      // Qolgan joydan davom: saqlangan pozitsiya bo'lsa o'sha yerdan (juda
+      // boshi/oxiri bo'lsa — noldan). Aks holda 0dan boshlanadi.
+      final saved = await _loadSavedPosition(widget.video.id);
+      _lastSavedPos = saved ?? Duration.zero;
+      if (saved != null) {
+        final dur = _controller.value.duration;
+        if (saved > const Duration(seconds: 3) &&
+            saved < dur - const Duration(seconds: 5)) {
+          await _controller.seekTo(saved);
+        }
+      }
       await _controller.play();
       _startHideControlsTimer();
     } catch (e) {
@@ -182,12 +199,67 @@ class _ClassicVideoPlayerScreenState
   void _onControllerUpdate() {
     if (!mounted) return;
     final v = _controller.value;
+
+    // Qolgan joydan davom uchun pozitsiyani saqlaymiz (throttle 5s).
+    if (v.isInitialized && v.isPlaying) {
+      final pos = v.position;
+      if ((pos - _lastSavedPos).abs() >= const Duration(seconds: 5)) {
+        _lastSavedPos = pos;
+        unawaited(_saveSavedPosition(widget.video.id, pos));
+      }
+    }
+
     final ended =
         v.duration > Duration.zero && v.position >= v.duration && !v.isPlaying;
-    if (ended && !_showControls) {
-      _hideControlsTimer?.cancel();
-      setState(() => _showControls = true);
+    if (ended) {
+      // Video TO'LIQ ko'rildi → DON (bir marta; backend ham dedup qiladi).
+      if (!_completedReported) {
+        _completedReported = true;
+        unawaited(_onVideoCompleted());
+      }
+      if (!_showControls) {
+        _hideControlsTimer?.cancel();
+        setState(() => _showControls = true);
+      }
     }
+  }
+
+  // ── Qolgan joydan davom (SharedPreferences: video_pos_<id> = soniya) ──
+
+  static String _posKey(String id) => 'video_pos_$id';
+
+  Future<Duration?> _loadSavedPosition(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sec = prefs.getInt(_posKey(id));
+      if (sec == null || sec <= 0) return null;
+      return Duration(seconds: sec);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _saveSavedPosition(String id, Duration pos) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_posKey(id), pos.inSeconds);
+    } catch (_) {}
+  }
+
+  Future<void> _clearSavedPosition(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_posKey(id));
+    } catch (_) {}
+  }
+
+  /// Video to'liq ko'rildi: DON (backend, idempotent) + pozitsiyani tozalash.
+  Future<void> _onVideoCompleted() async {
+    _lastSavedPos = Duration.zero;
+    await _clearSavedPosition(widget.video.id);
+    await ref
+        .read(videosBackendRepositoryProvider)
+        .reportCompleted(widget.video.id);
   }
 
   void _toggleFit() {

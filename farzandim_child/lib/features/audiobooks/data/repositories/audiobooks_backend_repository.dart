@@ -81,6 +81,19 @@ class AudiobooksBackendRepository {
     }
   }
 
+  /// Audiokitob OXIRIGACHA tinglandi → backend DON beradi (idempotent,
+  /// `relatedId=audiobookId` bo'yicha bir marta). Faqat completion'da
+  /// chaqiriladi — chala chiqib ketishда umuman chaqirilmaydi.
+  Future<void> reportCompleted(String audiobookId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/content/audiobooks/$audiobookId/complete',
+      );
+    } on DioException catch (e) {
+      debugPrint('AudiobooksBackend.reportCompleted: ${e.message}');
+    }
+  }
+
   /// Player aniqlagan haqiqiy davomiylik (backend faqat 0/noma'lum bo'lsa
   /// yozadi). Admin upload paytida duration kiritmaydi.
   Future<void> reportDuration(String audiobookId, int durationSec) async {

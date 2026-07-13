@@ -67,6 +67,7 @@ export function VideoUploadModal({
   const [ageTo, setAgeTo] = useState('18');
   const [planRequired, setPlanRequired] = useState('free');
   const [categoryId, setCategoryId] = useState(NO_CATEGORY);
+  const [pointsReward, setPointsReward] = useState('10');
   const [progress, setProgress] = useState(0);
 
   const { data: categories } = useQuery({
@@ -87,6 +88,7 @@ export function VideoUploadModal({
     setAgeTo('18');
     setPlanRequired('free');
     setCategoryId(NO_CATEGORY);
+    setPointsReward('10');
     setProgress(0);
   };
 
@@ -99,6 +101,7 @@ export function VideoUploadModal({
     categoryId: categoryId === NO_CATEGORY ? undefined : categoryId,
     status: 'approved' as const, // yuklash = darhol bolaga ko'rinadi
     featured: false,
+    xpReward: Number(pointsReward) || 0,
   });
 
   const save = useMutation({
@@ -335,6 +338,21 @@ export function VideoUploadModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="video-points">DON mukofoti</Label>
+            <Input
+              id="video-points"
+              type="number"
+              min={0}
+              value={pointsReward}
+              onChange={(e) => setPointsReward(e.target.value)}
+              placeholder="10"
+            />
+            <p className="text-xs text-muted-foreground">
+              Bola videoni TO&apos;LIQ ko&apos;rgach shu miqdorda DON oladi (0 = mukofot yo&apos;q).
+            </p>
           </div>
 
           {showProgress && (

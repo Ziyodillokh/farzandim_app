@@ -55,6 +55,14 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
     ref.read(videosBackendRepositoryProvider).markViewed(videoId);
   }
 
+  // Reel TO'LIQ ko'rildi (oxiriga yetdi) → DON. Har reel bir marta (backend
+  // ham relatedId bo'yicha dedup qiladi). Chala ko'rilса chaqirilmaydi.
+  final _completed = <String>{};
+  void _markCompleted(String videoId) {
+    if (!_completed.add(videoId)) return;
+    ref.read(videosBackendRepositoryProvider).reportCompleted(videoId);
+  }
+
   @override
   void dispose() {
     _pageController.dispose();
@@ -76,7 +84,11 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
               _markViewed(_reels[i].id);
             },
             itemBuilder: (_, i) {
-              return _ReelItem(video: _reels[i], isActive: i == _currentIndex);
+              return _ReelItem(
+                video: _reels[i],
+                isActive: i == _currentIndex,
+                onCompleted: () => _markCompleted(_reels[i].id),
+              );
             },
           ),
           SafeArea(
@@ -103,10 +115,17 @@ class _ReelsPlayerScreenState extends ConsumerState<ReelsPlayerScreen> {
 }
 
 class _ReelItem extends StatefulWidget {
-  const _ReelItem({required this.video, required this.isActive});
+  const _ReelItem({
+    required this.video,
+    required this.isActive,
+    required this.onCompleted,
+  });
 
   final VideoModel video;
   final bool isActive;
+
+  /// Reel oxiriga yetganда (to'liq ko'rilganда) bir marta chaqiriladi.
+  final VoidCallback onCompleted;
 
   @override
   State<_ReelItem> createState() => _ReelItemState();
@@ -115,17 +134,33 @@ class _ReelItem extends StatefulWidget {
 class _ReelItemState extends State<_ReelItem> {
   late VideoPlayerController _controller;
   bool _isPlaying = true;
+  bool _completedReported = false;
 
   @override
   void initState() {
     super.initState();
     _controller = videoControllerFor(widget.video.videoUrl);
+    _controller.addListener(_onTick);
     _controller.initialize().then((_) {
       if (!mounted) return;
       _controller.setLooping(true);
       if (widget.isActive) _controller.play();
       setState(() {});
     });
+  }
+
+  // Reel loop qiladi — "to'liq ko'rildi" = pozitsiya oxiriga yetgani. Bir
+  // marta (dedup) → parent DON beradi.
+  void _onTick() {
+    if (!mounted || _completedReported) return;
+    final v = _controller.value;
+    if (!v.isInitialized) return;
+    final dur = v.duration;
+    if (dur > Duration.zero &&
+        v.position >= dur - const Duration(milliseconds: 400)) {
+      _completedReported = true;
+      widget.onCompleted();
+    }
   }
 
   @override
@@ -142,6 +177,7 @@ class _ReelItemState extends State<_ReelItem> {
 
   @override
   void dispose() {
+    _controller.removeListener(_onTick);
     _controller.dispose();
     super.dispose();
   }

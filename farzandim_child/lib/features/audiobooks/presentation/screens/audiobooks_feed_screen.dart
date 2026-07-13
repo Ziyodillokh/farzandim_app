@@ -21,6 +21,7 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_search_field.dart';
@@ -42,8 +43,9 @@ class AudiobooksFeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(effectiveAudiobooksProvider);
-    final feed = ref.watch(audiobookFeedProvider);
-    final newest = ref.watch(newestAudiobooksProvider);
+    // Qismlar ("Kitob nomi N") BITTA kitob kartasiga yig'iladi.
+    final feed = groupIntoSeries(ref.watch(audiobookFeedProvider));
+    final newest = groupIntoSeries(ref.watch(newestAudiobooksProvider));
     final selectedCategory = ref.watch(audiobookCategoryFilterProvider);
     final searching = ref.watch(audiobookFeedSearchProvider).trim().isNotEmpty;
 
@@ -128,7 +130,7 @@ class AudiobooksFeedScreen extends ConsumerWidget {
                       childAspectRatio: 0.62,
                     ),
                     itemCount: feed.length,
-                    itemBuilder: (_, i) => _GridBookCard(book: feed[i]),
+                    itemBuilder: (_, i) => _GridBookCard(series: feed[i]),
                   ),
                 ),
             ],
@@ -169,7 +171,7 @@ class _KitoblarTitle extends StatelessWidget {
 class _YangiKitoblarHero extends StatelessWidget {
   const _YangiKitoblarHero({required this.books});
 
-  final List<AudiobookModel> books;
+  final List<AudiobookSeries> books;
 
   @override
   Widget build(BuildContext context) {
@@ -208,7 +210,7 @@ class _YangiKitoblarHero extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (var i = 0; i < display.length; i++) ...[
-                Expanded(child: _HeroCoverCard(book: display[i])),
+                Expanded(child: _HeroCoverCard(series: display[i])),
                 if (i != display.length - 1) const SizedBox(width: 10),
               ],
             ],
@@ -220,14 +222,14 @@ class _YangiKitoblarHero extends StatelessWidget {
 }
 
 class _HeroCoverCard extends StatelessWidget {
-  const _HeroCoverCard({required this.book});
+  const _HeroCoverCard({required this.series});
 
-  final AudiobookModel book;
+  final AudiobookSeries series;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/audiobook-detail', extra: book),
+      onTap: () => context.push('/audiobook-detail', extra: series),
       behavior: HitTestBehavior.opaque,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -236,11 +238,11 @@ class _HeroCoverCard extends StatelessWidget {
             aspectRatio: 3 / 4,
             child: ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: _CoverImage(book: book),
+              child: _CoverImage(book: series.cover),
             ),
           ),
           const SizedBox(height: 8),
-          _DonPill(price: book.xpReward),
+          _DonPill(price: series.cover.xpReward),
         ],
       ),
     );
@@ -353,14 +355,14 @@ class _Chip extends StatelessWidget {
 // Grid karta — muqova + title + (⏱ duration · 250 DON)
 // ═════════════════════════════════════════════════════════════════════
 class _GridBookCard extends StatelessWidget {
-  const _GridBookCard({required this.book});
+  const _GridBookCard({required this.series});
 
-  final AudiobookModel book;
+  final AudiobookSeries series;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: () => context.push('/audiobook-detail', extra: book),
+      onTap: () => context.push('/audiobook-detail', extra: series),
       behavior: HitTestBehavior.opaque,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -373,13 +375,13 @@ class _GridBookCard extends StatelessWidget {
               aspectRatio: 3 / 4,
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(14),
-                child: _CoverImage(book: book),
+                child: _CoverImage(book: series.cover),
               ),
             ),
           ),
           const SizedBox(height: 10),
           Text(
-            book.title,
+            series.title,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
             style: const TextStyle(
@@ -400,7 +402,8 @@ class _GridBookCard extends StatelessWidget {
               ),
               const SizedBox(width: 4),
               Text(
-                _shortDuration(book.duration),
+                // REAL jami davomiylik (qismlar yig'indisi); noma'lum -> "—".
+                series.durationLabel,
                 style: const TextStyle(
                   color: _textMuted,
                   fontSize: 11,
@@ -413,22 +416,12 @@ class _GridBookCard extends StatelessWidget {
                 style: TextStyle(color: _textMuted, fontSize: 11),
               ),
               const SizedBox(width: 6),
-              Flexible(child: _DonPill(price: book.xpReward)),
+              Flexible(child: _DonPill(price: series.cover.xpReward)),
             ],
           ),
         ],
       ),
     );
-  }
-
-  /// "1:30" → "1:30", "1:23:45" → "1:23" (kartada ixcham ko'rsatish)
-  String _shortDuration(String raw) {
-    final parts = raw.split(':');
-    if (parts.length == 3) return '${parts[0]}:${parts[1]}';
-    if (parts.length == 2 && parts[0].length < 2) {
-      return '0${parts[0]}:${parts[1]}';
-    }
-    return raw;
   }
 }
 

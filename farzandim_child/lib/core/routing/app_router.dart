@@ -28,7 +28,7 @@ import 'package:farzandim_child/features/settings/presentation/screens/settings_
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/statistics_screen.dart';
-import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobook_detail_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audio_player_screen.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
@@ -339,7 +339,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/audiobook-detail',
         pageBuilder: (context, state) => _slidePage(
           state,
-          AudiobookDetailScreen(book: state.extra! as AudiobookModel),
+          AudiobookDetailScreen(series: state.extra! as AudiobookSeries),
         ),
       ),
       GoRoute(

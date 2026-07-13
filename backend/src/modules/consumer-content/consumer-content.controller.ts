@@ -265,6 +265,24 @@ export class ConsumerContentController {
     return this.service.recordAudiobookPlay(id);
   }
 
+  @Post('audiobooks/:id/complete')
+  @ApiOperation({ summary: 'Audiobook fully listened → award DON (idempotent)' })
+  completeAudiobook(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.service.completeAudiobook(user.userId, id);
+  }
+
+  @Post('videos/:id/complete')
+  @ApiOperation({ summary: 'Video fully watched → award DON (idempotent)' })
+  completeVideo(
+    @CurrentUser() user: JwtPayload,
+    @Param('id') id: string,
+  ) {
+    return this.service.completeVideo(user.userId, id);
+  }
+
   @Post('books/:id/read')
   @ApiOperation({ summary: 'Record a book read' })
   recordBookRead(@Param('id') id: string) {

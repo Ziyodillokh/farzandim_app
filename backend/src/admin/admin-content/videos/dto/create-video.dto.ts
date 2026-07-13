@@ -83,6 +83,12 @@ export class CreateVideoDto {
   @IsOptional()
   @IsBoolean()
   featured?: boolean;
+
+  @ApiProperty({ default: 0, description: 'DON mukofoti (bola to\'liq ko\'rgach)' })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  xpReward?: number;
 }
 
 export class UpdateVideoDto {
@@ -97,4 +103,5 @@ export class UpdateVideoDto {
   @IsOptional() @IsEnum(['beginner', 'intermediate', 'advanced']) level?: string | null;
   @IsOptional() @IsEnum(['hidden', 'pending', 'approved', 'rejected']) status?: string;
   @IsOptional() @IsBoolean() featured?: boolean;
+  @IsOptional() @IsInt() @Min(0) xpReward?: number;
 }

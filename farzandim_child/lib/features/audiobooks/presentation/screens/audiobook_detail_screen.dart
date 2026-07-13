@@ -1,32 +1,24 @@
 // ─────────────────────────────────────────────────────────────────────
-// AudiobookDetailScreen — kitob qismlari ro'yxati (screenshot 1:1)
+// AudiobookDetailScreen — kitob qismlari ro'yxati (REAL qismlar)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Layout:
+// Bitta kitob (seriya) — qismlari ichida:
 //   ┌─ SafeArea ────────────────────────────────────────────────
-//   │  [←]      "1-qism"           ·  (right slot free)
-//   │           "A kite for a moon • Jane Yolen"
-//   │  ┌────────────┐
-//   │  │            │
-//   │  │   COVER    │  (240 x 320, radius 12)
-//   │  │            │
-//   │  └────────────┘
-//   │  ┌──────────────────────────────────────┐
-//   │  │ 1-qism                       ⏱ 00:40 │  ← chapter row
-//   │  │ 2-qism                       ⏱ 01:02 │
+//   │  [←]      "11-qism"
+//   │           "Mehrobdan chayon • Abdulla Qodiriy"
+//   │  [ COVER 240x320 ]
+//   │  │ 11-qism                      ⏱ 30:21 │  ← REAL davomiylik
+//   │  │ 12-qism                      ⏱ 45:15 │
 //   │  │ …                                    │
-//   │  └──────────────────────────────────────┘
-//   │  ┌ mini play card ┐
-//   │  │ ▶  1-qism            ⏱ 00:40         │
-//   │  └──────────────────────────────────────┘
+//   │  [▶  11-qism            ⏱ 30:21]        ← mini play card
 //
-// Qismlar hozirgacha backend'da alohida audio URL sifatida yo'q — bitta
-// audio + partsCount bor. Shu bois barcha qism bir xil `book.audioUrl`
-// ijro qiladi (kelajakda `parts[]` qo'shilsa alohida URL bilan almashiladi).
-// Har qism uchun sun'iy davomiylik ko'rsatamiz (bir tekis bo'linishi).
+// Har qism — alohida audiokitob yozuvi (o'z audio URL'i bilan): bosilsa
+// AYNAN O'SHA qism ijro etiladi. Davomiylik backend'dagi REAL qiymat
+// (birinchi ijroda aniqlanib saqlanadi); hali noma'lum bo'lsa "—".
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,24 +32,23 @@ const _textMuted = Color(0xFF9CA3AF);
 const _iconMuted = Color(0xFFB6BCC5);
 
 class AudiobookDetailScreen extends ConsumerStatefulWidget {
-  const AudiobookDetailScreen({required this.book, super.key});
+  const AudiobookDetailScreen({required this.series, super.key});
 
-  final AudiobookModel book;
+  final AudiobookSeries series;
 
   @override
   ConsumerState<AudiobookDetailScreen> createState() =>
       _AudiobookDetailScreenState();
 }
 
-class _AudiobookDetailScreenState
-    extends ConsumerState<AudiobookDetailScreen> {
-  int _selectedPart = 0; // hozir tanlangan qism index
+class _AudiobookDetailScreenState extends ConsumerState<AudiobookDetailScreen> {
+  int _selectedPart = 0; // hozir tanlangan qism indeksi
+
+  String _partLabel(int i) => '${widget.series.partNumbers[i]}-qism';
 
   @override
   Widget build(BuildContext context) {
-    final book = widget.book;
-    final parts = _generateParts(book);
-    final activeTitle = '${_selectedPart + 1}-qism';
+    final series = widget.series;
 
     return Scaffold(
       backgroundColor: _pageBg,
@@ -66,8 +57,8 @@ class _AudiobookDetailScreenState
         child: Column(
           children: [
             _Header(
-              title: activeTitle,
-              subtitle: '${book.title} · ${book.author}',
+              title: _partLabel(_selectedPart),
+              subtitle: '${series.title} · ${series.author}',
               onBack: () => Navigator.of(context).maybePop(),
             ),
             Expanded(
@@ -76,17 +67,19 @@ class _AudiobookDetailScreenState
                 padding: const EdgeInsets.fromLTRB(20, 12, 20, 32),
                 child: Column(
                   children: [
-                    _BookCover(book: book),
+                    _BookCover(book: series.cover),
                     const SizedBox(height: 20),
                     Column(
                       children: [
-                        for (var i = 0; i < parts.length; i++) ...[
+                        for (var i = 0; i < series.parts.length; i++) ...[
                           _ChapterRow(
-                            index: i + 1,
-                            duration: parts[i],
+                            label: _partLabel(i),
+                            durationLabel: formatDuration(
+                              series.parts[i].durationSeconds,
+                            ),
                             onTap: () => _playPart(i),
                           ),
-                          if (i != parts.length - 1)
+                          if (i != series.parts.length - 1)
                             const SizedBox(height: 10),
                         ],
                       ],
@@ -96,9 +89,11 @@ class _AudiobookDetailScreenState
               ),
             ),
             _MiniPlayCard(
-              partTitle: activeTitle,
-              duration: parts[_selectedPart],
-              onTap: () => _playPart(_selectedPart, openFullScreen: true),
+              partTitle: _partLabel(_selectedPart),
+              durationLabel: formatDuration(
+                series.parts[_selectedPart].durationSeconds,
+              ),
+              onTap: () => _playPart(_selectedPart),
             ),
             SizedBox(height: MediaQuery.of(context).padding.bottom + 8),
           ],
@@ -109,31 +104,11 @@ class _AudiobookDetailScreenState
 
   void _playPart(int index, {bool openFullScreen = true}) {
     setState(() => _selectedPart = index);
-    ref.read(audioPlayerProvider.notifier).play(widget.book);
+    // Har qism ALOHIDA audiokitob — o'z URL'i ijro etiladi.
+    ref.read(audioPlayerProvider.notifier).play(widget.series.parts[index]);
     if (openFullScreen) {
       context.push('/audio-player');
     }
-  }
-
-  /// Backend hali `parts[]` bermaydi. `partsCount` va umumiy `durationSeconds`
-  /// bo'yicha teng bo'lingan sun'iy davomiyliklarni ko'rsatamiz —
-  /// screenshot bilan mos ko'rinish uchun.
-  List<Duration> _generateParts(AudiobookModel book) {
-    final count = book.partsCount <= 0 ? 1 : book.partsCount;
-    final total = book.durationSeconds;
-
-    if (total <= 0) {
-      // Backend duration bermagan — screenshot'dagi kabi progressiv qiymatlar
-      // (00:40, 01:02, 01:30, 02:15, 03:05, 04:00, ...)
-      const seed = [40, 62, 90, 135, 185, 240];
-      return List.generate(count, (i) {
-        final s = i < seed.length ? seed[i] : seed.last + (i - seed.length + 1) * 60;
-        return Duration(seconds: s);
-      });
-    }
-
-    final base = (total ~/ count).clamp(30, 3600);
-    return List.generate(count, (i) => Duration(seconds: base + i * 5));
   }
 }
 
@@ -262,17 +237,17 @@ class _BookCover extends StatelessWidget {
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// Chapter row — "N-qism    ⏱ MM:SS"
+// Chapter row — "N-qism    ⏱ MM:SS" (REAL davomiylik, noma'lum → "—")
 // ═════════════════════════════════════════════════════════════════════
 class _ChapterRow extends StatelessWidget {
   const _ChapterRow({
-    required this.index,
-    required this.duration,
+    required this.label,
+    required this.durationLabel,
     required this.onTap,
   });
 
-  final int index;
-  final Duration duration;
+  final String label;
+  final String durationLabel;
   final VoidCallback onTap;
 
   @override
@@ -291,7 +266,7 @@ class _ChapterRow extends StatelessWidget {
           children: [
             Expanded(
               child: Text(
-                '$index-qism',
+                label,
                 style: const TextStyle(
                   color: Colors.white,
                   fontSize: 15,
@@ -306,7 +281,7 @@ class _ChapterRow extends StatelessWidget {
             ),
             const SizedBox(width: 6),
             Text(
-              _fmt(duration),
+              durationLabel,
               style: const TextStyle(
                 color: _textMuted,
                 fontSize: 14,
@@ -318,27 +293,20 @@ class _ChapterRow extends StatelessWidget {
       ),
     );
   }
-
-  String _fmt(Duration d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    final m = two(d.inMinutes.remainder(60));
-    final s = two(d.inSeconds.remainder(60));
-    return '$m:$s';
-  }
 }
 
 // ═════════════════════════════════════════════════════════════════════
-// Mini play card — pastdagi kichik "▶  1-qism   ⏱ 00:40"
+// Mini play card — pastdagi kichik "▶  N-qism   ⏱ MM:SS"
 // ═════════════════════════════════════════════════════════════════════
 class _MiniPlayCard extends StatelessWidget {
   const _MiniPlayCard({
     required this.partTitle,
-    required this.duration,
+    required this.durationLabel,
     required this.onTap,
   });
 
   final String partTitle;
-  final Duration duration;
+  final String durationLabel;
   final VoidCallback onTap;
 
   @override
@@ -392,7 +360,7 @@ class _MiniPlayCard extends StatelessWidget {
               ),
               const SizedBox(width: 6),
               Text(
-                _fmt(duration),
+                durationLabel,
                 style: const TextStyle(
                   color: _textMuted,
                   fontSize: 14,
@@ -404,12 +372,5 @@ class _MiniPlayCard extends StatelessWidget {
         ),
       ),
     );
-  }
-
-  String _fmt(Duration d) {
-    String two(int n) => n.toString().padLeft(2, '0');
-    final m = two(d.inMinutes.remainder(60));
-    final s = two(d.inSeconds.remainder(60));
-    return '$m:$s';
   }
 }

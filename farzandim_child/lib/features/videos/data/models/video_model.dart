@@ -27,6 +27,9 @@ class VideoModel {
   final int views;
   final Color thumbnailColor;
 
+  /// Bola videoni TO'LIQ ko'rgach oladigan DON (admin kiritadi). 0 = yo'q.
+  final int xpReward;
+
   const VideoModel({
     required this.id,
     required this.title,
@@ -42,6 +45,7 @@ class VideoModel {
     required this.hashtags,
     required this.views,
     required this.thumbnailColor,
+    this.xpReward = 0,
   });
 
   // Reels = qisqa vertikal video. Duration noma'lum (0, masalan link orqali

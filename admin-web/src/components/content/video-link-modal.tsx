@@ -37,6 +37,7 @@ export function VideoLinkModal({
   const [ageTo, setAgeTo] = useState('18');
   const [planRequired, setPlanRequired] = useState('free');
   const [categoryId, setCategoryId] = useState(NO_CATEGORY);
+  const [pointsReward, setPointsReward] = useState('10');
 
   const { data: categories } = useQuery({
     queryKey: ['categories', 'video'],
@@ -53,6 +54,7 @@ export function VideoLinkModal({
     setAgeTo('18');
     setPlanRequired('free');
     setCategoryId(NO_CATEGORY);
+    setPointsReward('10');
   };
 
   const ytId = youtubeId(url.trim());
@@ -77,6 +79,7 @@ export function VideoLinkModal({
         categoryId: categoryId === NO_CATEGORY ? null : categoryId,
         // Qo'shilishi bilan bolaga (yoshiga mos bo'lsa) ko'rinadi.
         status: 'approved',
+        xpReward: Number(pointsReward) || 0,
       });
     },
     onSuccess: () => {
@@ -219,6 +222,21 @@ export function VideoLinkModal({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          <div className="space-y-1.5">
+            <Label htmlFor="video-link-points">DON mukofoti</Label>
+            <Input
+              id="video-link-points"
+              type="number"
+              min={0}
+              value={pointsReward}
+              onChange={(e) => setPointsReward(e.target.value)}
+              placeholder="10"
+            />
+            <p className="text-xs text-muted-foreground">
+              Bola videoni TO&apos;LIQ ko&apos;rgach shu miqdorda DON oladi (0 = mukofot yo&apos;q).
+            </p>
           </div>
 
           <DialogFooter className="gap-2 pt-2">

@@ -45,6 +45,7 @@ VideoModel videoFromApiJson(Map<String, dynamic> raw) {
     hashtags: const [],
     views: (raw['views'] as num?)?.toInt() ?? 0,
     thumbnailColor: _thumbnailColorFor(id),
+    xpReward: (raw['xpReward'] as num?)?.toInt() ?? 0,
   );
 }
 

@@ -161,6 +161,7 @@ export interface Video {
   featured: boolean;
   views: number;
   likes: number;
+  xpReward: number;
   storageKey?: string | null;
   thumbStorageKey?: string | null;
   createdAt: string;

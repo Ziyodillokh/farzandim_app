@@ -70,6 +70,7 @@ export class VideosService {
       featured: v.featured,
       views: v.views,
       likes: v.likes,
+      xpReward: v.xpReward,
       createdAt: v.createdAt.toISOString(),
       updatedAt: v.updatedAt.toISOString(),
     };
@@ -139,6 +140,7 @@ export class VideosService {
         level: dto.level ?? null,
         status: dto.status ?? 'approved',
         featured: dto.featured ?? false,
+        xpReward: dto.xpReward ?? 0,
       },
     });
     return this.rowOf(created);
@@ -157,6 +159,7 @@ export class VideosService {
     if (dto.level !== undefined) updates.level = dto.level ?? null;
     if (dto.status !== undefined) updates.status = dto.status;
     if (dto.featured !== undefined) updates.featured = dto.featured;
+    if (dto.xpReward !== undefined) updates.xpReward = dto.xpReward;
 
     try {
       const updated = await this.prisma.video.update({ where: { id }, data: updates });
@@ -288,6 +291,7 @@ export class VideosService {
         level: meta.level ?? null,
         status: meta.status ?? 'approved',
         featured: meta.featured ?? false,
+        xpReward: meta.xpReward ?? 0,
       },
     });
     return {

@@ -95,6 +95,19 @@ class VideosBackendRepository {
     }
   }
 
+  /// Video OXIRIGACHA ko'rildi → backend DON beradi (idempotent,
+  /// `relatedId=videoId` bo'yicha bir marta). Faqat completion'da chaqiriladi
+  /// — chala chiqib ketishда umuman chaqirilmaydi.
+  Future<void> reportCompleted(String videoId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/content/videos/$videoId/complete',
+      );
+    } on DioException catch (e) {
+      debugPrint('VideosBackend.reportCompleted: ${e.message}');
+    }
+  }
+
   /// Player aniqlagan haqiqiy davomiylikni backend'ga yuboradi (fire-and-
   /// forget). Backend faqat duration hozir noma'lum (0) bo'lsa yozadi —
   /// link orqali qo'shilgan YouTube videolari ro'yxatda to'g'ri vaqt bilan

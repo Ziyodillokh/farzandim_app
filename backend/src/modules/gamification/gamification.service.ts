@@ -124,7 +124,9 @@ export class GamificationService {
       donDelta?: number;
     },
   ): Promise<void> {
-    if (opts.xpDelta <= 0) return;
+    // Bo'sh chaqiruvni to'xtatamiz, lekin DON-only (xpDelta=0, donDelta>0)
+    // ruxsat — video to'liq ko'rilganda XP bermay faqat don beramiz.
+    if (opts.xpDelta <= 0 && (opts.donDelta ?? 0) <= 0) return;
     if (opts.relatedId) {
       const existing = await this.prisma.xpEvent.findFirst({
         where: { childId, type: opts.type, relatedId: opts.relatedId },

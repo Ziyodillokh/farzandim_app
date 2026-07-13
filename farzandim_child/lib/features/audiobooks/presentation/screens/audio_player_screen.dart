@@ -30,6 +30,7 @@
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
+import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -51,20 +52,20 @@ class AudioPlayerScreen extends ConsumerWidget {
     final state = ref.watch(audioPlayerProvider);
 
     // Audio xatosi bo'lsa foydalanuvchiga bildirish (jim qolmaslik).
-    ref.listen<String?>(
-      audioPlayerProvider.select((s) => s.error),
-      (prev, err) {
-        if (err != null && err.isNotEmpty) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text(err),
-              backgroundColor: Colors.red.shade700,
-              duration: const Duration(seconds: 6),
-            ),
-          );
-        }
-      },
-    );
+    ref.listen<String?>(audioPlayerProvider.select((s) => s.error), (
+      prev,
+      err,
+    ) {
+      if (err != null && err.isNotEmpty) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(err),
+            backgroundColor: Colors.red.shade700,
+            duration: const Duration(seconds: 6),
+          ),
+        );
+      }
+    });
 
     if (!state.hasAudio) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -74,6 +75,8 @@ class AudioPlayerScreen extends ConsumerWidget {
     }
 
     final book = state.currentBook!;
+    // Sarlavhadagi qism raqami: "Mehrobdan chayon 14" -> "14-qism".
+    final (seriesTitle, partNo) = splitSeriesTitle(book.title);
 
     return Scaffold(
       backgroundColor: _pageBg,
@@ -82,8 +85,10 @@ class AudioPlayerScreen extends ConsumerWidget {
         child: Column(
           children: [
             _TopBar(
-              title: '1-qism',
-              subtitle: '${book.title} · ${book.author}',
+              title: partNo != null ? '$partNo-qism' : book.title,
+              subtitle: partNo != null
+                  ? '$seriesTitle · ${book.author}'
+                  : book.author,
               onBack: () => Navigator.of(context).maybePop(),
               onShare: () => _showShareInfo(context),
             ),
@@ -145,10 +150,7 @@ class _TopBar extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(16, 54, 16, 8),
       child: Row(
         children: [
-          _IconTile(
-            icon: SolarIconsOutline.arrowLeft,
-            onTap: onBack,
-          ),
+          _IconTile(icon: SolarIconsOutline.arrowLeft, onTap: onBack),
           Expanded(
             child: Column(
               children: [
@@ -175,10 +177,7 @@ class _TopBar extends StatelessWidget {
               ],
             ),
           ),
-          _IconTile(
-            icon: SolarIconsOutline.uploadMinimalistic,
-            onTap: onShare,
-          ),
+          _IconTile(icon: SolarIconsOutline.uploadMinimalistic, onTap: onShare),
         ],
       ),
     );
@@ -287,9 +286,7 @@ class _ProgressBar extends ConsumerWidget {
     final maxSec = state.duration.inSeconds == 0
         ? 1.0
         : state.duration.inSeconds.toDouble();
-    final position = state.position.inSeconds
-        .toDouble()
-        .clamp(0.0, maxSec);
+    final position = state.position.inSeconds.toDouble().clamp(0.0, maxSec);
 
     return Column(
       children: [
@@ -364,15 +361,11 @@ class _Controls extends ConsumerWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        _SpeedButton(
-          speed: speed,
-          onTap: () => _openSpeedSheet(context),
-        ),
+        _SpeedButton(speed: speed, onTap: () => _openSpeedSheet(context)),
         _SeekButton(
           seconds: 15,
           direction: _SeekDirection.back,
-          onTap: () =>
-              ref.read(audioPlayerProvider.notifier).seekBackward(),
+          onTap: () => ref.read(audioPlayerProvider.notifier).seekBackward(),
         ),
         _PlayButton(
           isPlaying: state.isPlaying,
@@ -388,8 +381,7 @@ class _Controls extends ConsumerWidget {
         _SeekButton(
           seconds: 15,
           direction: _SeekDirection.forward,
-          onTap: () =>
-              ref.read(audioPlayerProvider.notifier).seekForward(),
+          onTap: () => ref.read(audioPlayerProvider.notifier).seekForward(),
         ),
         _SleepTimerButton(
           active: hasSleepTimer,
@@ -518,9 +510,7 @@ class _PlayButton extends StatelessWidget {
         ),
         alignment: Alignment.center,
         child: Icon(
-          isPlaying
-              ? Icons.pause_rounded
-              : Icons.play_arrow_rounded,
+          isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
           color: Colors.white,
           size: 34,
         ),
@@ -546,9 +536,7 @@ class _SleepTimerButton extends StatelessWidget {
         height: 52,
         child: Center(
           child: Icon(
-            active
-                ? SolarIconsBold.stopwatch
-                : SolarIconsOutline.stopwatch,
+            active ? SolarIconsBold.stopwatch : SolarIconsOutline.stopwatch,
             color: active ? _blue : _iconMuted,
             size: 26,
           ),
@@ -696,4 +684,3 @@ class _SheetTile extends StatelessWidget {
     );
   }
 }
-

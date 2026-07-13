@@ -26,8 +26,10 @@ class AudiobooksSearchBar extends ConsumerWidget {
           decoration: InputDecoration(
             hintText: 'Audiokitob qidirish...',
             hintStyle: TextStyle(color: context.adaptive.textTertiary),
-            prefixIcon:
-                Icon(Icons.search, color: context.adaptive.textSecondary),
+            prefixIcon: Icon(
+              Icons.search,
+              color: context.adaptive.textSecondary,
+            ),
             border: InputBorder.none,
             enabledBorder: InputBorder.none,
             focusedBorder: InputBorder.none,

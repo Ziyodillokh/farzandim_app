@@ -924,6 +924,9 @@ model Video {
   featured        Boolean  @default(false)
   views           Int      @default(0)
   likes           Int      @default(0)
+  // DON mukofoti — bola videoni TO'LIQ ko'rgach beriladi (admin kiritadi).
+  // Audiobook.xpReward bilan bir xil uslub. 0 = mukofot yo'q.
+  xpReward        Int      @default(0) @map("xp_reward")
   createdAt       DateTime @default(now()) @map("created_at")
   updatedAt       DateTime @updatedAt @map("updated_at")
 

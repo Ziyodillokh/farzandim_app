@@ -7,6 +7,8 @@ import {
 import { Prisma, Video } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
+import { GamificationService } from '../gamification/gamification.service';
+import { XpEventType } from '../gamification/dto/create-xp-event.dto';
 import { mediaProxyUrl, MediaSegment } from './media-proxy';
 import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import {
@@ -38,6 +40,7 @@ export class ConsumerContentService {
   constructor(
     private readonly prisma: PrismaService,
     private readonly storage: StorageService,
+    private readonly gamification: GamificationService,
   ) {}
 
   private async resignOrFallback(
@@ -239,6 +242,7 @@ export class ConsumerContentService {
       featured: v.featured,
       views: v.views,
       likes: v.likes,
+      xpReward: v.xpReward,
       createdAt: v.createdAt.toISOString(),
     };
   }
@@ -526,6 +530,62 @@ export class ConsumerContentService {
       }
       throw err;
     }
+  }
+
+  /**
+   * Audiokitob TO'LIQ tinglandi → DON mukofoti (idempotent).
+   *
+   * Faqat oxirigacha eshitilganda chaqiriladi (client `ProcessingState.
+   * completed`). Don miqdori serverdagi `audiobook.xpReward` (feed'dagi
+   * "N DON" yorlig'i bilan bir xil). `awardXp` `relatedId`(audiobookId)
+   * bo'yicha DEDUP qiladi — chala chiqib qayta kirsa yoki qayta eshitilса
+   * ikki marta berilmaydi. Chala tinglashda bu umuman chaqirilmaydi.
+   */
+  async completeAudiobook(userId: string, audiobookId: string) {
+    const ctx = await this.loadChildContext(userId);
+    const book = await this.prisma.audiobook.findUnique({
+      where: { id: audiobookId },
+      select: { xpReward: true },
+    });
+    if (!book) throw new NotFoundException('Audiobook not found');
+
+    const don = Math.max(0, book.xpReward ?? 0);
+    await this.gamification.awardXp(ctx.childId, {
+      type: XpEventType.BOOK_READ,
+      xpDelta: 50,
+      donDelta: don,
+      relatedId: audiobookId,
+    });
+    return { ok: true, don };
+  }
+
+  /**
+   * Video TO'LIQ ko'rildi → DON mukofoti (idempotent).
+   *
+   * Faqat oxirigacha ko'rilganda chaqiriladi (client player position>=duration).
+   * Don = `video.xpReward` (admin video yuklaganda kiritadi). XP berilmaydi
+   * (xpDelta 0) — leaderboard'ga ta'sir qilmasin. `relatedId`(videoId) bo'yicha
+   * DEDUP — chala chiqib qayta ko'rsa ikki marta berilmaydi. xpReward=0 bo'lsa
+   * (mukofot belgilanmagan) hech narsa berilmaydi.
+   */
+  async completeVideo(userId: string, videoId: string) {
+    const ctx = await this.loadChildContext(userId);
+    const video = await this.prisma.video.findUnique({
+      where: { id: videoId },
+      select: { xpReward: true },
+    });
+    if (!video) throw new NotFoundException('Video not found');
+
+    const don = Math.max(0, video.xpReward ?? 0);
+    if (don > 0) {
+      await this.gamification.awardXp(ctx.childId, {
+        type: XpEventType.OTHER,
+        xpDelta: 0,
+        donDelta: don,
+        relatedId: videoId,
+      });
+    }
+    return { ok: true, don };
   }
 
   async recordBookRead(id: string) {

@@ -13,6 +13,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -23,6 +24,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   AudioPlayerNotifier(this._ref) : super(const AudioPlayerState()) {
     _positionSub = _player.positionStream.listen((pos) {
       state = state.copyWith(position: pos);
+      // Qolgan joydan davom etish uchun pozitsiyani saqlaymiz (throttle 5s).
+      unawaited(_maybeSavePosition(pos));
     });
 
     _durationSub = _player.durationStream.listen((dur) {
@@ -44,14 +47,15 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
     _playerStateSub = _player.playerStateStream.listen((s) {
       state = state.copyWith(isPlaying: s.playing);
-      // Kitob OXIRIGACHA tinglandi -> BOOK_READ XP (+50) — "O'qilgan
-      // kitoblar" real soniga kiradi. Har kitob uchun bir marta.
+      // Kitob OXIRIGACHA tinglandi -> DON mukofoti (feed'dagi "N DON").
+      // Faqat completion'da — chala chiqib ketsa berilmaydi. Har kitob
+      // uchun bir marta (backend ham relatedId bo'yicha dedup qiladi).
       final book = state.currentBook;
       if (s.processingState == ProcessingState.completed &&
           book != null &&
           _bookReadReportedFor != book.id) {
         _bookReadReportedFor = book.id;
-        _ref.read(bookReadEventProvider)();
+        unawaited(_onBookCompleted(book));
       }
     });
   }
@@ -86,12 +90,68 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     // tushmasdi). Lock-screen controls o'rniga ishonchli ijroni tanladik.
     // Xato bo'lsa jim qolmasdan UI'ga chiqaramiz.
     try {
-      await _player.setUrl(url);
+      final dur = await _player.setUrl(url);
+      // Qolgan joydan davom: saqlangan pozitsiya bo'lsa o'sha yerga o'tamiz
+      // (juda boshi/oxiri bo'lsa — noldan). Aks holda 0dan boshlanadi.
+      final saved = await _loadSavedPosition(book.id);
+      _lastSavedPos = saved ?? Duration.zero;
+      if (saved != null &&
+          saved > const Duration(seconds: 3) &&
+          (dur == null || saved < dur - const Duration(seconds: 5))) {
+        await _player.seek(saved);
+      }
       await _player.play();
     } catch (e, st) {
       debugPrint('[AudioPlayer] yuklab bo\'lmadi url=$url\n$e\n$st');
       state = state.copyWith(error: "Audioni ijro etib bo'lmadi: $e");
     }
+  }
+
+  // ── Qolgan joydan davom (SharedPreferences: audiobook_pos_<id> = soniya) ──
+
+  static String _posKey(String id) => 'audiobook_pos_$id';
+
+  /// Oxirgi saqlangan pozitsiya (5 sekunddan kam farqда qayta yozmaymiz).
+  Duration _lastSavedPos = Duration.zero;
+
+  Future<void> _maybeSavePosition(Duration pos) async {
+    final book = state.currentBook;
+    if (book == null) return;
+    if ((pos - _lastSavedPos).abs() < const Duration(seconds: 5)) return;
+    _lastSavedPos = pos;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setInt(_posKey(book.id), pos.inSeconds);
+    } catch (_) {}
+  }
+
+  Future<Duration?> _loadSavedPosition(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final sec = prefs.getInt(_posKey(id));
+      if (sec == null || sec <= 0) return null;
+      return Duration(seconds: sec);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<void> _clearSavedPosition(String id) async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_posKey(id));
+    } catch (_) {}
+  }
+
+  /// Kitob to'liq tinglandi: DON (backend, idempotent) + pozitsiyani tozalash
+  /// (keyingi safar noldan) + statistikani yangilash.
+  Future<void> _onBookCompleted(AudiobookModel book) async {
+    _lastSavedPos = Duration.zero;
+    await _clearSavedPosition(book.id);
+    await _ref
+        .read(audiobooksBackendRepositoryProvider)
+        .reportCompleted(book.id);
+    _ref.invalidate(developmentSummaryProvider);
   }
 
   Future<void> pause() => _player.pause();
@@ -120,11 +180,9 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
   void startSleepTimer(int minutes) {
     _sleepTimer?.cancel();
-    state =
-        state.copyWith(sleepTimerRemaining: Duration(minutes: minutes));
+    state = state.copyWith(sleepTimerRemaining: Duration(minutes: minutes));
 
-    _sleepTimer =
-        Timer.periodic(const Duration(seconds: 1), (timer) async {
+    _sleepTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
       final remaining = state.sleepTimerRemaining;
       if (remaining.inSeconds <= 1) {
         timer.cancel();
@@ -133,8 +191,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
         state = state.copyWith(sleepTimerRemaining: Duration.zero);
       } else {
         state = state.copyWith(
-          sleepTimerRemaining:
-              Duration(seconds: remaining.inSeconds - 1),
+          sleepTimerRemaining: Duration(seconds: remaining.inSeconds - 1),
         );
       }
     });
@@ -159,8 +216,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
 final audioPlayerProvider =
     StateNotifierProvider<AudioPlayerNotifier, AudioPlayerState>(
-  (ref) => AudioPlayerNotifier(ref),
-);
+      (ref) => AudioPlayerNotifier(ref),
+    );
 
 /// Hozirgi tezlik (UI ko'rsatish uchun). `setSpeed` chaqirilganda
 /// shu provider ham yangilanadi.
