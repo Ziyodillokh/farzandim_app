@@ -1,7 +1,7 @@
-import rasm1 from "../../imports/Main/rasm1.png";
-import rasm2 from "../../imports/Main/rasm2.png";
-import rasm3 from "../../imports/Main/rasm3.png";
-import logoFarzandim from "../../imports/Main/logo_farzandim.png";
+import main1 from "../../assets/main1.png";
+import main2 from "../../assets/main2.png";
+import main3 from "../../assets/main3.png";
+import logoApp from "../../imports/Main/logo_parvoz_app.png";
 import svgPaths from "../../imports/Main/svg-35b9599amp";
 import { QRCodeSVG } from "qrcode.react";
 
@@ -23,8 +23,8 @@ function LogoIcon() {
       }}
     >
       <img
-        src={logoFarzandim}
-        alt="Farzandim logo"
+        src={logoApp}
+        alt="Parvoz logo"
         style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
       />
     </div>
@@ -270,7 +270,7 @@ function PhoneMockups() {
           }}
         >
           <img
-            src={rasm2}
+            src={main2}
             alt="Bola ilovasi — videolar va audiokitoblar"
             style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
           />
@@ -286,7 +286,7 @@ function PhoneMockups() {
           }}
         >
           <img
-            src={rasm1}
+            src={main1}
             alt="Ota-ona paneli — nazorat va reyting"
             style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
           />
@@ -305,7 +305,7 @@ function PhoneMockups() {
           }}
         >
           <img
-            src={rasm3}
+            src={main3}
             alt="Faollik statistikasi — vaqt va ilovalar"
             style={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }}
           />
