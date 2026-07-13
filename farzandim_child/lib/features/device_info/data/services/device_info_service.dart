@@ -99,6 +99,9 @@ class DeviceInfoService {
         if (perms.background != null) 'backgroundAllowed': perms.background,
         if (perms.accessibility != null)
           'accessibilityEnabled': perms.accessibility,
+        // Ekran vaqti / ilova statistikasi shu ruxsatsiz yig'ilmaydi —
+        // ota-onaga aniq sabab ("ulanmagan" emas, "ruxsat yo'q").
+        if (perms.usage != null) 'usagePermission': perms.usage,
       };
       await dio.post<void>('/children/$childId/device-info', data: body);
     } catch (e) {
@@ -174,6 +177,7 @@ class DeviceInfoService {
       bool? notification,
       bool? background,
       bool? accessibility,
+      bool? usage,
     })
   >
   _collectPermissions() async {
@@ -196,6 +200,8 @@ class DeviceInfoService {
         () => Permission.ignoreBatteryOptimizations.isGranted,
       ),
       accessibility: await safe(_usageStats.isAccessibilityEnabled),
+      // PACKAGE_USAGE_STATS — ekran vaqti manbasi.
+      usage: await safe(_usageStats.hasPermission),
     );
   }
 

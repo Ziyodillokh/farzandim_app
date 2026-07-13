@@ -286,6 +286,9 @@ export class ChildrenService {
     if (dto.accessibilityEnabled !== undefined) {
       data.accessibilityEnabled = dto.accessibilityEnabled;
     }
+    if (dto.usagePermission !== undefined) {
+      data.usagePermission = dto.usagePermission;
+    }
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz.
     if (!child.isConnected) data.isConnected = true;
     // Qayta-online aniqlash (connectionLostNotifiedAt tozalash) va "aloqa

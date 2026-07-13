@@ -25,6 +25,7 @@ class ChildDeviceInfo {
     this.notificationPermission,
     this.backgroundAllowed,
     this.accessibilityEnabled,
+    this.usagePermission,
   });
 
   /// Qurilma modeli (`samsung SM-N950F`, `Redmi Note 12`, va h.k.).
@@ -65,6 +66,10 @@ class ChildDeviceInfo {
 
   /// Accessibility xizmati (ilovani bloklash uchun) yoqilganmi.
   final bool? accessibilityEnabled;
+
+  /// PACKAGE_USAGE_STATS ("Foydalanish ma'lumotlari") ruxsati — ekran vaqti /
+  /// ilova statistikasi manbasi. `false` bo'lsa ota-onada ekran vaqti bo'sh.
+  final bool? usagePermission;
 
   // ═══════════════════════ DISPLAY HELPERS ═══════════════════════
 
@@ -117,7 +122,8 @@ class ChildDeviceInfo {
         other.locationPermission == locationPermission &&
         other.notificationPermission == notificationPermission &&
         other.backgroundAllowed == backgroundAllowed &&
-        other.accessibilityEnabled == accessibilityEnabled;
+        other.accessibilityEnabled == accessibilityEnabled &&
+        other.usagePermission == usagePermission;
   }
 
   @override
@@ -134,5 +140,6 @@ class ChildDeviceInfo {
     notificationPermission,
     backgroundAllowed,
     accessibilityEnabled,
+    usagePermission,
   );
 }

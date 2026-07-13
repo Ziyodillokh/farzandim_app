@@ -418,6 +418,10 @@ class _ScreenTimeCard extends ConsumerWidget {
     final apps = (usage?.filteredApps ?? const <AppUsageEntry>[])
         .take(3)
         .toList();
+    // Bo'sh holatning ANIQ sababini ko'rsatish uchun bola holati (ulangan +
+    // foydalanish ruxsati). "Ulanganda ko'rinadi" xabari bola allaqachon
+    // ulangan bo'lsa noto'g'ri edi — endi haqiqiy sabab ko'rsatiladi.
+    final child = ref.watch(childByIdProvider(childId));
 
     return _Card(
       minHeight: 220,
@@ -439,7 +443,7 @@ class _ScreenTimeCard extends ConsumerWidget {
           const SizedBox(height: 12),
           if (apps.isEmpty)
             Text(
-              'dashboard.screenTimeEmpty'.tr(),
+              _screenTimeEmptyMsg(child),
               style: _pop(13, c: _dim),
             )
           else
@@ -469,6 +473,19 @@ class _ScreenTimeCard extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// Ekran vaqti kartasi bo'sh bo'lganda ANIQ sababni qaytaradi.
+/// Ulanmagan → "Qurilma ulanmagan"; ulangan+ruxsatsiz → ruxsat so'rovi;
+/// ulangan+ruxsat bor/noma'lum → "Ma'lumot yig'ilmoqda".
+String _screenTimeEmptyMsg(Child? child) {
+  if (child == null || !child.isConnected) {
+    return 'dashboard.noDevice'.tr();
+  }
+  if (child.deviceInfo?.usagePermission == false) {
+    return 'dashboard.screenTimeNoUsagePerm'.tr();
+  }
+  return 'dashboard.screenTimeCollecting'.tr();
 }
 
 String _fmtScreenTime(int ms) {
