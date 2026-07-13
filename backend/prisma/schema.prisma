@@ -1052,6 +1052,7 @@ model Article {
   category  String?
   status    String   @default("approved") // pending | approved | rejected | hidden
   views     Int      @default(0)
+  likes     Int      @default(0)
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 

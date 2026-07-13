@@ -13,6 +13,7 @@ import type {
   Audiobook,
   AuditLogEntry,
   Book,
+  Article,
   ContentCategory,
   DashboardData,
   LoginResponse,
@@ -158,6 +159,16 @@ export const contentApi = {
     approve: (id: string) => api.post(`/admin/books/${id}/approve`),
     reject: (id: string) => api.post(`/admin/books/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/books/${id}`),
+  },
+  articles: {
+    list: (params: ContentListParams = {}) =>
+      api.get<RawPaginated<Article>>('/admin/articles', { params }).then(normalizePagination),
+    detail: (id: string) => api.get<Article>(`/admin/articles/${id}`),
+    create: (data: Partial<Article>) => api.post<Article>('/admin/articles', data),
+    update: (id: string, data: Partial<Article>) => api.patch<Article>(`/admin/articles/${id}`, data),
+    approve: (id: string) => api.post(`/admin/articles/${id}/approve`),
+    reject: (id: string) => api.post(`/admin/articles/${id}/reject`),
+    remove: (id: string) => api.delete(`/admin/articles/${id}`),
   },
   categories: {
     list: (kind?: string) =>

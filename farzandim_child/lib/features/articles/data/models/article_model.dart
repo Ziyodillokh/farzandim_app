@@ -20,6 +20,7 @@ class ArticleModel {
     required this.ageTo,
     required this.views,
     required this.coverColor,
+    this.likes = 0,
   });
 
   final String id;
@@ -34,6 +35,9 @@ class ArticleModel {
   final int ageFrom;
   final int ageTo;
   final int views;
+
+  /// Yoqtirishlar soni (backend global hisoblagichi).
+  final int likes;
 
   /// Muqovasiz maqola uchun barqaror fallback rang.
   final Color coverColor;

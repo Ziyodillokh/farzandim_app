@@ -22,6 +22,9 @@ class ArticleViewScreen extends ConsumerStatefulWidget {
 }
 
 class _ArticleViewScreenState extends ConsumerState<ArticleViewScreen> {
+  late int _likes = widget.article.likes;
+  bool _liked = false;
+
   @override
   void initState() {
     super.initState();
@@ -29,6 +32,19 @@ class _ArticleViewScreenState extends ConsumerState<ArticleViewScreen> {
     ref
         .read(articlesBackendRepositoryProvider)
         .markRead(widget.article.id);
+  }
+
+  Future<void> _onLike() async {
+    if (_liked) return;
+    setState(() {
+      _liked = true;
+      _likes += 1; // optimistik
+    });
+    final newLikes =
+        await ref.read(articlesBackendRepositoryProvider).like(widget.article.id);
+    if (newLikes != null && mounted) {
+      setState(() => _likes = newLikes);
+    }
   }
 
   @override
@@ -150,6 +166,55 @@ class _ArticleViewScreenState extends ConsumerState<ArticleViewScreen> {
                           color: AppColors.parvozTextDim,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 14),
+                  // Ko'rishlar + yoqtirish (like tugmasi).
+                  Row(
+                    children: [
+                      const Icon(
+                        Icons.remove_red_eye_outlined,
+                        size: 16,
+                        color: AppColors.parvozTextDim,
+                      ),
+                      const SizedBox(width: 5),
+                      Text(
+                        '${a.views}',
+                        style: const TextStyle(
+                          color: AppColors.parvozTextDim,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                      const SizedBox(width: 18),
+                      GestureDetector(
+                        onTap: _onLike,
+                        behavior: HitTestBehavior.opaque,
+                        child: Row(
+                          children: [
+                            Icon(
+                              _liked
+                                  ? Icons.favorite_rounded
+                                  : Icons.favorite_border_rounded,
+                              size: 18,
+                              color: _liked
+                                  ? AppColors.catPinkVibrant
+                                  : AppColors.parvozTextDim,
+                            ),
+                            const SizedBox(width: 5),
+                            Text(
+                              '$_likes',
+                              style: TextStyle(
+                                color: _liked
+                                    ? AppColors.catPinkVibrant
+                                    : AppColors.parvozTextDim,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ],

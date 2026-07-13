@@ -87,6 +87,20 @@ class ArticleCard extends StatelessWidget {
                               fontSize: 12,
                             ),
                           ),
+                          const SizedBox(width: 10),
+                          const Icon(
+                            Icons.favorite_border_rounded,
+                            size: 14,
+                            color: AppColors.parvozTextDim,
+                          ),
+                          const SizedBox(width: 3),
+                          Text(
+                            '${article.likes}',
+                            style: const TextStyle(
+                              color: AppColors.parvozTextDim,
+                              fontSize: 12,
+                            ),
+                          ),
                         ],
                       ),
                     ],

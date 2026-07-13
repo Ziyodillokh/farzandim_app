@@ -39,6 +39,7 @@ export class ArticlesService {
       category: a.category,
       status: a.status,
       views: a.views,
+      likes: a.likes,
       createdAt: a.createdAt.toISOString(),
       updatedAt: a.updatedAt.toISOString(),
     };

@@ -206,6 +206,20 @@ export interface Book {
   createdAt: string;
 }
 
+export interface Article {
+  id: string;
+  title: string;
+  body: string;
+  coverPath: string | null;
+  ageFrom: number;
+  ageTo: number;
+  category: string | null;
+  status: ContentStatus;
+  views: number;
+  likes: number;
+  createdAt: string;
+}
+
 export interface ContentCategory {
   id: string;
   kind: 'video' | 'audiobook' | 'book';

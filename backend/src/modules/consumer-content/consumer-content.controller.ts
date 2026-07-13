@@ -289,6 +289,12 @@ export class ConsumerContentController {
     return this.service.recordBookRead(id);
   }
 
+  @Post('articles/:id/like')
+  @ApiOperation({ summary: 'Like an article (likes++)' })
+  recordArticleLike(@Param('id') id: string) {
+    return this.service.recordArticleLike(id);
+  }
+
   @Post('articles/:id/read')
   @ApiOperation({ summary: 'Record an article read (views++)' })
   recordArticleRead(@Param('id') id: string) {

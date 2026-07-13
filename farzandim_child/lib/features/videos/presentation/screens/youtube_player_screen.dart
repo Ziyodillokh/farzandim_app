@@ -28,8 +28,21 @@ import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/data/repositories/videos_backend_repository.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
+import 'package:farzandim_child/features/articles/data/models/article_model.dart';
+import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
+import 'package:farzandim_child/features/articles/presentation/widgets/article_card.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
 import 'package:farzandim_child/shared/widgets/parvoz_glass.dart';
+
+/// Barqaror (deterministik) hash — video id → maqola tanlovi/o'rni uchun.
+/// Random emas: scroll/rebuild'da maqola sakramaydi.
+int _stableHash(String s) {
+  var h = 0;
+  for (final c in s.codeUnits) {
+    h = (h * 31 + c) & 0x7fffffff;
+  }
+  return h;
+}
 
 class YoutubePlayerScreen extends ConsumerStatefulWidget {
   const YoutubePlayerScreen({required this.video, super.key});
@@ -224,6 +237,25 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final favIds = ref.watch(favoriteVideoIdsProvider);
     final isFav = favIds.contains(video.id);
 
+    // ── Tavsiya ichига SHU kategoriyadagi maqola (random o'rin) ──
+    // Maqola shu videoning kategoriyasiga mos bo'lsa, tavsiya ro'yxati ichida
+    // random o'rinda (2..6) ko'rinadi. Tanlov video id'ga bog'liq (barqaror —
+    // scroll'da sakramaydi).
+    final vcat = video.category.trim().toLowerCase();
+    final catArticles = ref
+        .watch(effectiveArticlesProvider)
+        .where((a) => a.category.trim().toLowerCase() == vcat && vcat.isNotEmpty)
+        .toList();
+    final vHash = _stableHash(video.id);
+    final ArticleModel? injectedArticle =
+        catArticles.isEmpty ? null : catArticles[vHash % catArticles.length];
+    // Random-ish o'rin: 2..6 orasида (related qisqa bo'lsa oxiriga clamp).
+    final int articleSlot = related.isEmpty
+        ? 0
+        : 1 + (vHash % (related.length < 5 ? related.length : 5));
+    final int suggestedCount =
+        related.length + (injectedArticle != null ? 1 : 0);
+
     return Scaffold(
       backgroundColor: AppColors.parvozBg,
       body: Column(
@@ -334,7 +366,24 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                   padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
                   sliver: SliverList(
                     delegate: SliverChildBuilderDelegate((_, i) {
-                      final v = related[i];
+                      // Random o'rinда — SHU kategoriyadagi maqola kartasi.
+                      if (injectedArticle != null && i == articleSlot) {
+                        return Padding(
+                          padding: const EdgeInsets.only(bottom: 18),
+                          child: ArticleCard(
+                            article: injectedArticle,
+                            onTap: () => context.push(
+                              '/articles/view',
+                              extra: injectedArticle,
+                            ),
+                          ),
+                        );
+                      }
+                      // Maqola qo'shilgan o'rindan keyingi indekslar 1ga siljiydi.
+                      final vi = (injectedArticle != null && i > articleSlot)
+                          ? i - 1
+                          : i;
+                      final v = related[vi];
                       return Padding(
                         padding: const EdgeInsets.only(bottom: 18),
                         child: VideoFeedCard(
@@ -348,7 +397,7 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                           ),
                         ),
                       );
-                    }, childCount: related.length),
+                    }, childCount: suggestedCount),
                   ),
                 ),
               ],

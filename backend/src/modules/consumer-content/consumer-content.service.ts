@@ -399,6 +399,7 @@ export class ConsumerContentService {
       ageTo: r.ageTo,
       category: r.category,
       views: r.views,
+      likes: r.likes,
       createdAt: r.createdAt.toISOString(),
     }));
 
@@ -610,6 +611,22 @@ export class ConsumerContentService {
         data: { views: { increment: 1 } },
       });
       return { ok: true };
+    } catch (err: unknown) {
+      if ((err as { code?: string }).code === 'P2025') {
+        throw new NotFoundException('Article not found');
+      }
+      throw err;
+    }
+  }
+
+  /** Maqola like counter++ (video like bilan bir xil — global hisoblagich). */
+  async recordArticleLike(id: string) {
+    try {
+      const updated = await this.prisma.article.update({
+        where: { id },
+        data: { likes: { increment: 1 } },
+      });
+      return { ok: true, likes: updated.likes };
     } catch (err: unknown) {
       if ((err as { code?: string }).code === 'P2025') {
         throw new NotFoundException('Article not found');

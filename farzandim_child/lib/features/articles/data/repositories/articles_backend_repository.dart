@@ -55,6 +55,20 @@ class ArticlesBackendRepository {
     }
   }
 
+  /// Maqola yoqtirildi → likes++ (backend global hisoblagichi). Yangi
+  /// likes sonini qaytaradi (UI darhol yangilashi uchun), xato'da null.
+  Future<int?> like(String id) async {
+    try {
+      final res = await _dio.post<Map<String, dynamic>>(
+        '/content/articles/$id/like',
+      );
+      return (res.data?['likes'] as num?)?.toInt();
+    } on DioException catch (e) {
+      debugPrint('ArticlesBackend.like: ${e.message}');
+      return null;
+    }
+  }
+
   ArticleModel _toModel(Map<String, dynamic> raw) {
     final id = raw['id']?.toString() ?? '';
     return ArticleModel(
@@ -66,6 +80,7 @@ class ArticlesBackendRepository {
       ageFrom: (raw['ageFrom'] as num?)?.toInt() ?? 0,
       ageTo: (raw['ageTo'] as num?)?.toInt() ?? 18,
       views: (raw['views'] as num?)?.toInt() ?? 0,
+      likes: (raw['likes'] as num?)?.toInt() ?? 0,
       coverColor: _coverColorFor(id),
     );
   }
