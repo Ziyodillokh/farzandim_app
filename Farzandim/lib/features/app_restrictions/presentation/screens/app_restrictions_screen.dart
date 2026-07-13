@@ -159,9 +159,10 @@ class AppRestrictionsScreen extends ConsumerWidget {
               if (apps.isNotEmpty) _AppListCard(apps: apps),
               if (apps.isNotEmpty) const SizedBox(height: 4),
 
-              // ── Nazorat siyosati → ilova cheklovlari ──
+              // ── Nazorat siyosati → 4 nazorat kartasi hub ──
               _PolicyButton(
-                onTap: () => context.push(AppRoutes.appLimitsPath(childId)),
+                onTap: () =>
+                    context.push(AppRoutes.controlPolicyPath(childId)),
               ),
             ],
           ),
