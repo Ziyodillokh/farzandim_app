@@ -85,6 +85,15 @@ export class AppLimitsService {
    * `sendPushToUser` user'ning barcha qurilma tokenlariga boradi; xato
    * bo'lsa asosiy oqim buzilmaydi (fire-and-forget + try/catch).
    */
+  // Bir nechta ilova BIRDAN cheklanganda (masalan rejim + bir necha ilova) HAR
+  // biriga alohida push kelmasin — qisqa oynada (debounce) yig'ib BITTA
+  // consolidated push. childId → { yig'ilgan ilovalar + taymer }.
+  private readonly _pendingLimitNotif = new Map<
+    string,
+    { parentId: string; labels: string[]; timer: NodeJS.Timeout }
+  >();
+  private static readonly LIMIT_NOTIF_DEBOUNCE_MS = 4000;
+
   private async notifyOtherDevices(
     child: { id: string; parentId: string },
     packageName: string,
@@ -97,23 +106,66 @@ export class AppLimitsService {
         select: { appName: true },
       });
       const appLabel = installed?.appName ?? packageName;
-      const ms = Number(dailyLimitMs);
-      const limitText = !isActive
-        ? "o'chirildi"
-        : ms <= 0
-          ? 'cheksiz qilindi'
-          : `${this.formatDuration(ms)} qilindi`;
-      await this.fcm.sendPushToUser(child.parentId, {
-        title: "Cheklov o'zgartirildi",
-        body: `${appLabel}: kunlik ${limitText}`,
-        data: {
-          type: 'app_limit',
-          childId: child.id,
-          packageName,
-        },
-      });
+      this.enqueueLimitNotif(child.id, child.parentId, appLabel);
     } catch {
       // push xatosi cheklov saqlanishiga ta'sir qilmaydi
+    }
+  }
+
+  /** Ilova cheklov o'zgarishini debounce navbatiga qo'shadi (BITTA push). */
+  private enqueueLimitNotif(
+    childId: string,
+    parentId: string,
+    appLabel: string,
+  ): void {
+    const existing = this._pendingLimitNotif.get(childId);
+    if (existing) {
+      clearTimeout(existing.timer);
+      existing.labels.push(appLabel);
+      existing.timer = setTimeout(
+        () => void this.flushLimitNotif(childId),
+        AppLimitsService.LIMIT_NOTIF_DEBOUNCE_MS,
+      );
+      return;
+    }
+    this._pendingLimitNotif.set(childId, {
+      parentId,
+      labels: [appLabel],
+      timer: setTimeout(
+        () => void this.flushLimitNotif(childId),
+        AppLimitsService.LIMIT_NOTIF_DEBOUNCE_MS,
+      ),
+    });
+  }
+
+  /** Yig'ilgan ilova cheklovlarini BITTA consolidated push qilib yuboradi. */
+  private async flushLimitNotif(childId: string): Promise<void> {
+    const entry = this._pendingLimitNotif.get(childId);
+    if (!entry) return;
+    this._pendingLimitNotif.delete(childId);
+    // Takrorlarni olib tashlaymiz (bir ilova bir necha marta o'zgargan bo'lsa).
+    const labels = [...new Set(entry.labels)];
+    let title: string;
+    let body: string;
+    if (labels.length === 1) {
+      title = "Cheklov o'zgartirildi";
+      body = `${labels[0]} cheklovi yangilandi`;
+    } else {
+      title = "Cheklovlar o'zgartirildi";
+      const shown = labels.slice(0, 3).join(', ');
+      body =
+        labels.length <= 3
+          ? `${shown} cheklovi yangilandi`
+          : `${shown} va yana ${labels.length - 3} ta ilova cheklovi yangilandi`;
+    }
+    try {
+      await this.fcm.sendPushToUser(entry.parentId, {
+        title,
+        body,
+        data: { type: 'app_limit', childId, count: String(labels.length) },
+      });
+    } catch {
+      // push xatosi limitга ta'sir qilmaydi
     }
   }
 

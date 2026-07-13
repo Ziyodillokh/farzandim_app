@@ -110,6 +110,10 @@ model Child {
   notificationPermission Boolean? @map("notification_permission")
   backgroundAllowed      Boolean? @map("background_allowed")
   accessibilityEnabled   Boolean? @map("accessibility_enabled")
+  // PACKAGE_USAGE_STATS ("Foydalanish ma'lumotlari") ruxsati — ekran vaqti /
+  // ilova statistikasi shu ruxsatsiz yig'ilmaydi. Ota-onaga aniq sabab
+  // ko'rsatish uchun ("ulanmagan" emas, "ruxsat yo'q").
+  usagePermission        Boolean? @map("usage_permission")
 
   // Qurilma siyosati — "Notanish manbalardan ilovalar" (Play'dan boshqa
   // manbadan o'rnatilgan ilovalarni bloklash). Ota-ona yoqadi/o'chiradi.

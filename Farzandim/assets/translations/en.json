@@ -278,6 +278,8 @@
     "comingSoon": "Coming soon",
     "screenTimeLabel": "Screen time",
     "screenTimeEmpty": "Apps will appear once the device connects",
+    "screenTimeNoUsagePerm": "Enable \"Usage access\" permission on the child's device",
+    "screenTimeCollecting": "Collecting data…",
     "leaderboardEmpty": "Leaderboard not available yet",
     "screenTimeTotal": "Total screen time",
     "screenTimeVsYesterday": "vs yesterday",

@@ -278,6 +278,8 @@
     "comingSoon": "Скоро",
     "screenTimeLabel": "Экранное время",
     "screenTimeEmpty": "Приложения появятся после подключения устройства",
+    "screenTimeNoUsagePerm": "Включите разрешение «Доступ к данным об использовании» на устройстве ребёнка",
+    "screenTimeCollecting": "Данные собираются…",
     "leaderboardEmpty": "Рейтинг пока недоступен",
     "screenTimeTotal": "Общее экранное время",
     "screenTimeVsYesterday": "со вчера",

@@ -52,6 +52,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
             .cast<Map<String, dynamic>>()
             .map(AppNotification.fromJson)
             .whereType<AppNotification>()
+            // Bo'sh (sarlavhasiz+matnsiz) eski yozuvlar ro'yxatdan tushsin.
+            .where((n) => n.isDisplayable)
             .toList();
         if (list.isNotEmpty) {
           // To'g'ridan almashtirmaymiz: _load tugaguncha addFromFcm kelgan
@@ -134,6 +136,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
       final seen = state.map((n) => n.id).toSet();
       final fresh = <AppNotification>[];
       for (final n in parsed) {
+        // Bo'sh (dataOnly/silent) push'lar ro'yxatga qo'shilmaydi.
+        if (!n.isDisplayable) continue;
         if (seen.add(n.id)) fresh.add(n);
       }
       if (fresh.isEmpty) return;
@@ -193,6 +197,8 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
 
   /// FCM dan kelgan xabarni ro'yxatga qo'shadi.
   void addFromFcm(AppNotification notification) {
+    // Bo'sh (sarlavhasiz+matnsiz) silent push'lar ro'yxatga tushmasin.
+    if (!notification.isDisplayable) return;
     if (state.any((n) => n.id == notification.id)) return;
     state = [notification, ...state];
     if (state.length > _maxStored) {

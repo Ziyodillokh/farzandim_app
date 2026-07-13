@@ -122,6 +122,7 @@ class AppNotification {
     required this.createdAt,
     required this.isRead,
     this.thumbnailUrl,
+    this.imageUrl,
     this.relatedRoute,
     this.relatedId,
   });
@@ -135,6 +136,10 @@ class AppNotification {
 
   /// Optional thumbnail (parent request photo, achievement icon).
   final String? thumbnailUrl;
+
+  /// Ilova ichida ko'rsatiladigan banner rasm URL'i (admin bildirishnomani
+  /// rasm bilan yuborsa). `null` = rasmsiz.
+  final String? imageUrl;
 
   /// Tap qilingach qaerga olib boradi (`/contests`, `/profile`, ...).
   final String? relatedRoute;
@@ -169,6 +174,7 @@ class AppNotification {
       createdAt: _parseIso(json['createdAt'] as String?) ?? DateTime.now(),
       isRead: json['isRead'] as bool? ?? false,
       thumbnailUrl: data['thumbnailUrl'] as String?,
+      imageUrl: data['imageUrl'] as String? ?? data['image'] as String?,
       relatedRoute: data['relatedRoute'] as String?,
       relatedId: data['relatedId'] as String?,
     );
@@ -197,6 +203,7 @@ class AppNotification {
       createdAt: (data['createdAt'] as Timestamp?)?.toDate() ?? DateTime.now(),
       isRead: data['isRead'] as bool? ?? false,
       thumbnailUrl: data['thumbnailUrl'] as String?,
+      imageUrl: data['imageUrl'] as String? ?? data['image'] as String?,
       relatedRoute: data['relatedRoute'] as String?,
       relatedId: data['relatedId'] as String?,
     );
@@ -209,6 +216,7 @@ class AppNotification {
     'createdAt': FieldValue.serverTimestamp(),
     'isRead': isRead,
     if (thumbnailUrl != null) 'thumbnailUrl': thumbnailUrl,
+    if (imageUrl != null) 'imageUrl': imageUrl,
     if (relatedRoute != null) 'relatedRoute': relatedRoute,
     if (relatedId != null) 'relatedId': relatedId,
   };

@@ -176,6 +176,7 @@ class AppNotification {
     required this.timestamp,
     this.isRead = false,
     this.data,
+    this.imageUrl,
   });
 
   /// FCM `RemoteMessage`'dan yaratish.
@@ -205,6 +206,16 @@ class AppNotification {
           (t) => t.name == rawType,
           orElse: () => NotificationType.online,
         );
+    // Banner rasm — FCM `notification.imageUrl` (Android/iOS) yoki data'da
+    // (`image`/`imageUrl`). Admin bildirishnomasi rasm bilan yuborsa keladi.
+    final rawImage =
+        message.notification?.android?.imageUrl ??
+        message.notification?.apple?.imageUrl ??
+        (data['image'] as String?) ??
+        (data['imageUrl'] as String?);
+    final image = (rawImage != null && rawImage.trim().isNotEmpty)
+        ? rawImage.trim()
+        : null;
     return AppNotification(
       id: message.messageId ?? 'fcm-${DateTime.now().millisecondsSinceEpoch}',
       type: type,
@@ -214,6 +225,7 @@ class AppNotification {
       message: message.notification?.body ?? (data['message'] as String?) ?? '',
       timestamp: DateTime.now(),
       data: data,
+      imageUrl: image,
     );
   }
 
@@ -245,6 +257,15 @@ class AppNotification {
   /// kelajakda Firestore mapping uchun ishlatamiz, hozircha
   /// to'ldirilmaydi.
   final Map<String, dynamic>? data;
+
+  /// Ilova ichida ko'rsatiladigan banner rasm URL'i (admin bildirishnomani
+  /// rasm bilan yuborsa). `null` = rasmsiz.
+  final String? imageUrl;
+
+  /// Ro'yxatda ko'rsatishga arziydigan xabarmi — sarlavha yoki matn bo'lishi
+  /// shart. Bo'sh (dataOnly/silent sync) push'lar ro'yxatga tushmasin.
+  bool get isDisplayable =>
+      title.trim().isNotEmpty || message.trim().isNotEmpty;
 
   /// Parent qaror qabul qilishi kerak bo'lgan xabarmi — kartochkada
   /// "Tekshirish" / "Rad etish" tugmalari ko'rsatiladi. Hozircha faqat
@@ -307,6 +328,7 @@ class AppNotification {
       timestamp: timestamp,
       isRead: isRead ?? this.isRead,
       data: data,
+      imageUrl: imageUrl,
     );
   }
 
@@ -321,6 +343,7 @@ class AppNotification {
     'timestamp': timestamp.toIso8601String(),
     'isRead': isRead,
     if (data != null) 'data': data,
+    if (imageUrl != null) 'imageUrl': imageUrl,
   };
 
   static NotificationType? _mapBackendType(String? raw) {
@@ -380,6 +403,7 @@ class AppNotification {
         timestamp: ts,
         isRead: json['isRead'] as bool? ?? false,
         data: (json['data'] as Map?)?.cast<String, dynamic>(),
+        imageUrl: json['imageUrl'] as String?,
       );
     } catch (_) {
       return null;

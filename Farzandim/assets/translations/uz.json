@@ -278,6 +278,8 @@
     "comingSoon": "Tez kunda",
     "screenTimeLabel": "Ekran vaqti",
     "screenTimeEmpty": "Bola qurilmasi ulanganda ilovalar ko'rinadi",
+    "screenTimeNoUsagePerm": "Bola qurilmasida \"Foydalanish ma'lumotlari\" ruxsatini yoqing",
+    "screenTimeCollecting": "Ma'lumot yig'ilmoqda…",
     "leaderboardEmpty": "Reyting hali mavjud emas",
     "screenTimeTotal": "Umumiy ekran vaqti",
     "screenTimeVsYesterday": "kechadan",

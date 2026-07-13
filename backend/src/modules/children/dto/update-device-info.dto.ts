@@ -72,4 +72,12 @@ export class UpdateDeviceInfoDto {
   @IsOptional()
   @IsBoolean()
   accessibilityEnabled?: boolean;
+
+  @ApiPropertyOptional({
+    example: true,
+    description: "PACKAGE_USAGE_STATS (Foydalanish ma'lumotlari) ruxsati berilganmi",
+  })
+  @IsOptional()
+  @IsBoolean()
+  usagePermission?: boolean;
 }

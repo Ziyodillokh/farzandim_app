@@ -79,6 +79,8 @@ class Child {
     final notificationPermission = json['notificationPermission'] as bool?;
     final backgroundAllowed = json['backgroundAllowed'] as bool?;
     final accessibilityEnabled = json['accessibilityEnabled'] as bool?;
+    // Ekran vaqti manbasi — PACKAGE_USAGE_STATS ruxsati.
+    final usagePermission = json['usagePermission'] as bool?;
     // Backend top-level fields'dan deviceInfo wrapper yaratamiz.
     final hasDeviceData =
         batteryLevel != null ||
@@ -90,7 +92,8 @@ class Child {
         locationPermission != null ||
         notificationPermission != null ||
         backgroundAllowed != null ||
-        accessibilityEnabled != null;
+        accessibilityEnabled != null ||
+        usagePermission != null;
     return Child(
       id: json['id'] as String,
       name: (json['name'] as String?) ?? '',
@@ -122,6 +125,7 @@ class Child {
               notificationPermission: notificationPermission,
               backgroundAllowed: backgroundAllowed,
               accessibilityEnabled: accessibilityEnabled,
+              usagePermission: usagePermission,
             )
           : null,
       lastSeenAt: _parseIso8601(json['lastSeenAt']),

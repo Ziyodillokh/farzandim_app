@@ -25,6 +25,7 @@ import 'package:farzandim_child/features/contests/data/sound_service.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/quiz_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
+import 'package:farzandim_child/shared/widgets/math_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -305,7 +306,7 @@ class _QuestionScreen extends ConsumerWidget {
                       ),
                       const SizedBox(width: 14),
                       Expanded(
-                        child: Text(
+                        child: MathText(
                           q.text,
                           style: tPop(16, w: FontWeight.w600),
                         ),
@@ -739,7 +740,7 @@ class _QuizOption extends StatelessWidget {
                     if (hasText) const SizedBox(height: 8),
                   ],
                   if (hasText)
-                    Text(
+                    MathText(
                       text,
                       // Rasm bilan qisqa; faqat matn bo'lsa uzun javoblar 5 satr.
                       maxLines: hasImage ? 2 : 5,

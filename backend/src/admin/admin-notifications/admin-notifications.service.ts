@@ -319,9 +319,15 @@ export class AdminNotificationsService {
               type: 'SYSTEM' as const,
               title: dto.title,
               body: dto.message,
-              data: dto.deepLink
-                ? ({ deepLink: dto.deepLink } as Prisma.InputJsonValue)
-                : Prisma.JsonNull,
+              // In-app inbox: rasm (imageUrl) + deepLink saqlaymiz — bola/ota-ona
+              // ilova ichida xabar ustiga bosganda rasm ko'rinsin.
+              data:
+                dto.imageUrl || dto.deepLink
+                  ? ({
+                      ...(dto.imageUrl ? { imageUrl: dto.imageUrl } : {}),
+                      ...(dto.deepLink ? { deepLink: dto.deepLink } : {}),
+                    } as Prisma.InputJsonValue)
+                  : Prisma.JsonNull,
             })),
           });
         }
