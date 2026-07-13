@@ -31,7 +31,7 @@
         tools:node="remove"/>
 
     <application
-        android:label="Farzandim"
+        android:label="Parvoz Parents"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <meta-data

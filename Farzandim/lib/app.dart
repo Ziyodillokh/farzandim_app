@@ -228,7 +228,7 @@ class FarzandimApp extends ConsumerWidget {
     });
 
     return MaterialApp.router(
-      title: 'Farzandim',
+      title: 'Parvoz Parents',
       debugShowCheckedModeBanner: false,
       scrollBehavior: const _AppScrollBehavior(),
       theme: AppTheme.build(),
