@@ -105,9 +105,17 @@ const _authRoutes = <String>[
   AppRoutes.signIn,
   AppRoutes.signUp,
   AppRoutes.forgotPassword,
+  // 3-qurilma kirish so'rovi — login MUVAFFAQIYATSIZ (409 limit) bo'lgan
+  // qurilma ochadi, ya'ni foydalanuvchi hali "kirmagan". Shu sabab bu ekran
+  // auth-route hisoblanadi: aks holda redirect uni darhol welcome'ga otib
+  // yuborardi ("ruxsat so'rash" ekrani ko'rinmasdan login'ga qaytardi).
+  AppRoutes.sessionAccessRequest,
   // DIQQAT: addAccount auth route EMAS — u mas'ul (kirgan) qurilmada
   // "Faol seanslar → Boshqa hisob qo'shish" orqali QR yaratish uchun
   // ochiladi. _authRoutes'da bo'lsa, kirgan user dashboard'ga otib ketardi.
+  // DIQQAT: sessionAccessApprove ham auth route EMAS — uni KIRGAN qurilma
+  // (2 tadan biri) push orqali ochadi; _authRoutes'da bo'lsa dashboard'ga
+  // otib ketardi.
 ];
 
 /// Ommaviy (public) routelar — auth holatidan QAT'I NAZAR ochiladi: login
