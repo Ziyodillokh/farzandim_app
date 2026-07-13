@@ -238,7 +238,7 @@ function HeroSection() {
           color: "rgba(255,255,255,0.8)",
         }}
       >
-        Videolar, audiokitoblar va bilim konkurslari - barchasi nazorat ostida
+        Videolar, audiokitoblar va konkurslar — farzandingiz bilim olishi uchun
       </p>
     </div>
   );

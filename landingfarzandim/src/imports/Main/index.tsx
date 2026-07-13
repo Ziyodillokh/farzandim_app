@@ -32,7 +32,7 @@ function Frame() {
   return (
     <div className="[word-break:break-word] content-stretch flex flex-col gap-[20px] items-center not-italic relative shrink-0 text-center w-full">
       <p className="font-['Inter:semibold',sans-serif] leading-[48px] min-w-full relative shrink-0 text-[40px] text-white tracking-[-0.4px] w-[min-content]">Bolalar uchun xavfsiz va foydali kontent platformasi</p>
-      <p className="font-['Inter:medium',sans-serif] leading-[26px] relative shrink-0 text-[18px] text-[rgba(255,255,255,0.8)] tracking-[-0.04px] whitespace-nowrap">Videolar, audiokitoblar va bilim konkurslari - barchasi nazorat ostida</p>
+      <p className="font-['Inter:medium',sans-serif] leading-[26px] relative shrink-0 text-[18px] text-[rgba(255,255,255,0.8)] tracking-[-0.04px] whitespace-nowrap">Videolar, audiokitoblar va konkurslar — farzandingiz bilim olishi uchun</p>
     </div>
   );
 }
