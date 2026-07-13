@@ -81,7 +81,14 @@ class BootReceiver : BroadcastReceiver() {
                     ctx.packageName,
                 )
             }
-            mode == AppOpsManager.MODE_ALLOWED
+            // MODE_DEFAULT — AppOps sozlanmagan; haqiqiy ruxsatga qaraymiz.
+            if (mode == AppOpsManager.MODE_DEFAULT) {
+                ctx.checkCallingOrSelfPermission(
+                    android.Manifest.permission.PACKAGE_USAGE_STATS,
+                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            } else {
+                mode == AppOpsManager.MODE_ALLOWED
+            }
         } catch (e: Exception) {
             false
         }

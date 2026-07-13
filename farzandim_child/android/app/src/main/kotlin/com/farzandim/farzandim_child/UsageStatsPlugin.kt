@@ -139,14 +139,38 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun hasUsageStatsPermission(): Boolean {
-        val appOpsManager =
-            context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
-        val mode = appOpsManager.checkOpNoThrow(
-            AppOpsManager.OPSTR_GET_USAGE_STATS,
-            Process.myUid(),
-            context.packageName,
-        )
-        return mode == AppOpsManager.MODE_ALLOWED
+        return try {
+            val appOpsManager =
+                context.getSystemService(Context.APP_OPS_SERVICE) as AppOpsManager
+            // Android 10+ (Q): checkOpNoThrow eskirgan va jarayon qayta ishga
+            // tushgach BERILGAN ruxsatga ham MODE_DEFAULT qaytarishi mumkin.
+            // Shuning uchun unsafeCheckOpNoThrow (BootReceiver bilan izchil).
+            val mode = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                appOpsManager.unsafeCheckOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    context.packageName,
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                appOpsManager.checkOpNoThrow(
+                    AppOpsManager.OPSTR_GET_USAGE_STATS,
+                    Process.myUid(),
+                    context.packageName,
+                )
+            }
+            // MODE_DEFAULT — AppOps sozlanmagan; haqiqiy ruxsat holatiga
+            // qaraymiz (aks holda berilgan ruxsat "yo'q" ko'rinardi).
+            if (mode == AppOpsManager.MODE_DEFAULT) {
+                context.checkCallingOrSelfPermission(
+                    android.Manifest.permission.PACKAGE_USAGE_STATS,
+                ) == PackageManager.PERMISSION_GRANTED
+            } else {
+                mode == AppOpsManager.MODE_ALLOWED
+            }
+        } catch (e: Exception) {
+            false
+        }
     }
 
     private fun openUsageAccessSettings() {
