@@ -1,5 +1,4 @@
-import logoFarzandim from "../../imports/Main/logo_farzandim.png";
-import logoParvoz from "../../imports/Main/logo_parvoz.png";
+import logoApp from "../../imports/Main/logo_parvoz_app.png";
 
 // APK yuklab olish linklari (asosiy domen).
 const PARENT_APK = "https://farzandimedu.uz/app/farzandim-parent.apk";
@@ -107,13 +106,13 @@ export function DownloadPage() {
       {/* Orqa fon glow */}
       <div
         className="absolute inset-0 pointer-events-none"
-        style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(138,98,249,0.18) 0%, transparent 70%)" }}
+        style={{ background: "radial-gradient(ellipse 70% 50% at 50% 0%, rgba(79,134,255,0.18) 0%, transparent 70%)" }}
       />
 
       {/* Header */}
       <div className="relative w-full max-w-3xl px-6 pt-8 flex items-center justify-between">
         <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 20, letterSpacing: "-0.28px", color: "white" }}>
-          Farzandim
+          Parvoz
         </span>
         <a
           href="#"
@@ -144,19 +143,19 @@ export function DownloadPage() {
       {/* 2 ta ilova kartasi */}
       <div className="relative w-full max-w-3xl px-6 mt-8 mb-12 grid grid-cols-1 md:grid-cols-2 gap-4">
         <AppCard
-          logo={logoFarzandim}
-          name="Farzandim"
+          logo={logoApp}
+          name="Parvoz Parents"
           tagline="Ota-onalar uchun"
-          desc="Farzandingizni kuzating: kontent va vaqtni nazorat qiling, joylashuvni ko'ring, bildirishnoma oling."
+          desc="Farzandingizni bir ilovadan kuzating: real vaqtda joylashuv va geo-zonalar, ekran vaqti hamda ilovalar nazorati, SOS signal va bildirishnomalar."
           apk={PARENT_APK}
-          accent="#c6ff7f"
-          accentText="#0b1505"
+          accent="#4f86ff"
+          accentText="#ffffff"
         />
         <AppCard
-          logo={logoParvoz}
-          name="Parvoz"
+          logo={logoApp}
+          name="Parvoz Growth"
           tagline="Bolalar uchun"
-          desc="Bolangiz uchun xavfsiz multfilm, audiokitob, o'yin va konkurslar — barchasi nazorat ostida."
+          desc="Bolangizga xavfsiz ta'limiy kontent — videolar, audiokitoblar va bilim konkurslari. Hammasi yoshiga mos va ota-ona nazoratida."
           apk={CHILD_APK}
           accent="#22d3ee"
           accentText="#04222b"

@@ -1,0 +1,67 @@
+name: Deploy Landing → farzandimedu.uz
+
+# ─────────────────────────────────────────────────────────────────────────────
+# landingfarzandim (Vite React) o'zgarganda AVTOMATIK build + deploy qiladi:
+#   npm ci + npm run build → dist → serverga rsync → /var/www/farzandim-landing.
+# Serverda landing manba/CI yo'q edi — shu sabab push qilinsa ham qo'lda deploy
+# kerak edi. Endi push = jonli.
+#
+# Secretlar (deploy-test.yml bilan BIR XIL — allaqachon sozlangan):
+#   SSH_HOST     – server IP (95.182.118.39)
+#   SSH_USER     – SSH foydalanuvchi (farzandim)
+#   SSH_PASSWORD – SSH + sudo paroli
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'landingfarzandim/**'
+      - '.github/workflows/deploy-landing.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-landing
+  cancel-in-progress: false
+
+env:
+  SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
+  WEB_ROOT: /var/www/farzandim-landing
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    env:
+      SSHPASS: ${{ secrets.SSH_PASSWORD }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Build landing
+        working-directory: landingfarzandim
+        run: |
+          npm ci
+          npm run build
+          # Guard — build muvaffaqiyatsiz bo'lsa jonli saytni --delete bilan buzmaymiz.
+          test -f dist/index.html || { echo "dist/index.html yo'q — build buzilgan, deploy to'xtatildi"; exit 1; }
+
+      - name: Install sshpass + rsync
+        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+
+      - name: Upload build → staging (~/landing-new)
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "rm -rf ~/landing-new && mkdir -p ~/landing-new"
+          sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" landingfarzandim/dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:landing-new/"
+
+      - name: Publish → web root (sudo)
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "echo '$SSHPASS' | sudo -S rsync -a --delete /home/${{ secrets.SSH_USER }}/landing-new/ ${WEB_ROOT}/ && echo '$SSHPASS' | sudo -S chown -R www-data:www-data ${WEB_ROOT} && echo PUBLISHED"
+
+      - name: Verify (HTTPS)
+        run: |
+          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
+            "curl -sk -o /dev/null -w 'farzandimedu.uz → HTTP %{http_code}\n' https://farzandimedu.uz/" || true

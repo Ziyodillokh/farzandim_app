@@ -195,6 +195,13 @@ class AppRoutes {
   /// Berilgan bola id'si uchun App Limits path.
   static String appLimitsPath(String childId) => '/app-limits/$childId';
 
+  /// "Nazorat siyosati" hub (4 nazorat kartasi). Ekran vaqti sahifasidan.
+  static const String controlPolicyPattern = '/control-policy/:childId';
+
+  /// Berilgan bola id'si uchun Nazorat siyosati path.
+  static String controlPolicyPath(String childId) =>
+      '/control-policy/$childId';
+
   /// Bola jadvali (Schedules feature — Firestore CRUD).
   /// `:childId` — qaysi bolaning jadvallari (per-child).
   static const String schedulesPattern = '/schedules/:childId';

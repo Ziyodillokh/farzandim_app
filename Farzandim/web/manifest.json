@@ -1,6 +1,6 @@
 {
-    "name": "Farzandim — Ota-ona",
-    "short_name": "Farzandim",
+    "name": "Parvoz Parents",
+    "short_name": "Parvoz Parents",
     "description": "Farzandingiz xavfsizligi va ta'limi uchun oilaviy nazorat ilovasi: real-time joylashuv, geo-zonalar, jadvallar, faollik statistikasi va SOS xabarlari.",
     "start_url": ".",
     "scope": ".",
@@ -9,8 +9,12 @@
     "lang": "uz",
     "dir": "ltr",
     "background_color": "#0A0A12",
-    "theme_color": "#C5F562",
-    "categories": ["education", "lifestyle", "parenting"],
+    "theme_color": "#508AFF",
+    "categories": [
+        "education",
+        "lifestyle",
+        "parenting"
+    ],
     "prefer_related_applications": false,
     "icons": [
         {
