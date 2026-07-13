@@ -159,15 +159,34 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                     context.packageName,
                 )
             }
-            // MODE_DEFAULT — AppOps sozlanmagan; haqiqiy ruxsat holatiga
-            // qaraymiz (aks holda berilgan ruxsat "yo'q" ko'rinardi).
-            if (mode == AppOpsManager.MODE_DEFAULT) {
-                context.checkCallingOrSelfPermission(
-                    android.Manifest.permission.PACKAGE_USAGE_STATS,
-                ) == PackageManager.PERMISSION_GRANTED
-            } else {
-                mode == AppOpsManager.MODE_ALLOWED
-            }
+            // MODE_ALLOWED — aniq ruxsat bor. Aks holda (MODE_DEFAULT/IGNORED)
+            // ba'zi OEM'lar (Samsung One UI) ruxsat BERILGANDA ham MODE_ALLOWED
+            // bermaydi — AppOps'ga ishonmay, HAQIQIY usage so'rovi bilan
+            // aniqlaymiz: ma'lumot qaytsa ruxsat amalda bor.
+            if (mode == AppOpsManager.MODE_ALLOWED) true else hasUsageDataAccess()
+        } catch (e: Exception) {
+            false
+        }
+    }
+
+    /**
+     * AppOps noaniq (MODE_DEFAULT/IGNORED) bo'lganda ruxsatni QAT'IY aniqlaydi:
+     * oxirgi 24 soat usage'ini so'raydi. Ruxsat yo'q bo'lsa `queryUsageStats`
+     * bo'sh ro'yxat qaytaradi (istisno tashlamaydi); ruxsat bor bo'lsa —
+     * ma'lumot keladi. Samsung kabi ruxsat berilgan-u AppOps MODE_ALLOWED
+     * bermaydigan qurilmalarda ham to'g'ri ishlaydi.
+     */
+    private fun hasUsageDataAccess(): Boolean {
+        return try {
+            val usm =
+                context.getSystemService(Context.USAGE_STATS_SERVICE) as UsageStatsManager
+            val now = System.currentTimeMillis()
+            val stats = usm.queryUsageStats(
+                UsageStatsManager.INTERVAL_DAILY,
+                now - 24L * 60L * 60L * 1000L,
+                now,
+            )
+            !stats.isNullOrEmpty()
         } catch (e: Exception) {
             false
         }

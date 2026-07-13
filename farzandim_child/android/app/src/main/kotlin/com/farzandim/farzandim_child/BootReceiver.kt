@@ -81,13 +81,20 @@ class BootReceiver : BroadcastReceiver() {
                     ctx.packageName,
                 )
             }
-            // MODE_DEFAULT — AppOps sozlanmagan; haqiqiy ruxsatga qaraymiz.
-            if (mode == AppOpsManager.MODE_DEFAULT) {
-                ctx.checkCallingOrSelfPermission(
-                    android.Manifest.permission.PACKAGE_USAGE_STATS,
-                ) == android.content.pm.PackageManager.PERMISSION_GRANTED
+            // MODE_ALLOWED — aniq ruxsat. Aks holda (OEM: Samsung ruxsat
+            // berilgan-u MODE_ALLOWED bermaydi) — haqiqiy usage so'rovi bilan.
+            if (mode == AppOpsManager.MODE_ALLOWED) {
+                true
             } else {
-                mode == AppOpsManager.MODE_ALLOWED
+                val usm = ctx.getSystemService(Context.USAGE_STATS_SERVICE)
+                    as android.app.usage.UsageStatsManager
+                val now = System.currentTimeMillis()
+                val stats = usm.queryUsageStats(
+                    android.app.usage.UsageStatsManager.INTERVAL_DAILY,
+                    now - 24L * 60L * 60L * 1000L,
+                    now,
+                )
+                !stats.isNullOrEmpty()
             }
         } catch (e: Exception) {
             false
