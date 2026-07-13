@@ -43,13 +43,15 @@ void main() {
   });
 
   group('filteredApps (ko`rinish qoidalari)', () {
-    test('1 daqiqadan KAM (40s) — ko`rinmaydi (ro`yxat shishmasin)', () {
+    test('40 soniya (haqiqiy foydalanish) — KO`RINADI (10s chegara)', () {
+      // Avval chegara 60s edi va Chrome'ning 40s sessiyasi umuman ko`rinmasdi
+      // (ekran vaqti bug`i). 10s chegarasida haqiqiy foydalanish ko`rinadi.
       final day = _day([_entry('com.android.chrome', 40000)]);
-      expect(day.filteredApps, isEmpty);
+      expect(day.filteredApps, hasLength(1));
     });
 
-    test('roppa-rosa 1 daqiqa — KO`RINADI (chegara inclusive)', () {
-      final day = _day([_entry('com.android.chrome', 60000)]);
+    test('roppa-rosa 10 soniya — KO`RINADI (chegara inclusive)', () {
+      final day = _day([_entry('com.android.chrome', 10000)]);
       expect(day.filteredApps, hasLength(1));
     });
 
