@@ -112,7 +112,7 @@ export function DownloadPage() {
       {/* Header */}
       <div className="relative w-full max-w-3xl px-6 pt-8 flex items-center justify-between">
         <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 20, letterSpacing: "-0.28px", color: "white" }}>
-          Farzandim
+          Parvoz
         </span>
         <a
           href="#"

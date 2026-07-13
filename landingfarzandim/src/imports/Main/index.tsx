@@ -23,7 +23,7 @@ function LogoWrap() {
       <div className="-translate-x-1/2 -translate-y-1/2 absolute content-stretch flex items-start left-[calc(50%-55px)] top-1/2" data-name="Logomark">
         <LogoIcon />
       </div>
-      <p className="[text-box-edge:cap_alphabetic] [text-box-trim:trim-both] [word-break:break-word] absolute font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[36.506px] left-[39px] not-italic text-[28px] text-white top-[calc(50%-11.5px)] tracking-[-0.28px] whitespace-nowrap">Farzandim</p>
+      <p className="[text-box-edge:cap_alphabetic] [text-box-trim:trim-both] [word-break:break-word] absolute font-['Inter:Semi_Bold',sans-serif] font-semibold leading-[36.506px] left-[39px] not-italic text-[28px] text-white top-[calc(50%-11.5px)] tracking-[-0.28px] whitespace-nowrap">Parvoz</p>
     </div>
   );
 }
@@ -32,7 +32,7 @@ function Frame() {
   return (
     <div className="[word-break:break-word] content-stretch flex flex-col gap-[20px] items-center not-italic relative shrink-0 text-center w-full">
       <p className="font-['Inter:semibold',sans-serif] leading-[48px] min-w-full relative shrink-0 text-[40px] text-white tracking-[-0.4px] w-[min-content]">Bolalar uchun xavfsiz va foydali kontent platformasi</p>
-      <p className="font-['Inter:medium',sans-serif] leading-[26px] relative shrink-0 text-[18px] text-[rgba(255,255,255,0.8)] tracking-[-0.04px] whitespace-nowrap">Multfilmlar, audiokitoblar va o‘yinlar - barchasi nazorat ostida</p>
+      <p className="font-['Inter:medium',sans-serif] leading-[26px] relative shrink-0 text-[18px] text-[rgba(255,255,255,0.8)] tracking-[-0.04px] whitespace-nowrap">Videolar, audiokitoblar va bilim konkurslari - barchasi nazorat ostida</p>
     </div>
   );
 }

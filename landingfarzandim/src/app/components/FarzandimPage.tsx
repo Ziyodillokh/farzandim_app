@@ -38,7 +38,7 @@ function Logo() {
       <span
         style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 24, letterSpacing: "-0.28px", color: "white" }}
       >
-        Farzandim
+        Parvoz
       </span>
     </div>
   );
@@ -238,7 +238,7 @@ function HeroSection() {
           color: "rgba(255,255,255,0.8)",
         }}
       >
-        Multfilmlar, audiokitoblar va o'yinlar - barchasi nazorat ostida
+        Videolar, audiokitoblar va bilim konkurslari - barchasi nazorat ostida
       </p>
     </div>
   );
