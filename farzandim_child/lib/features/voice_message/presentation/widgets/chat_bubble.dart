@@ -388,11 +388,10 @@ class ChatBubble extends ConsumerWidget {
                 // audioUrl bo'sh bo'lsa — Backend'dan olamiz.
                 var url = message.audioUrl;
                 if (url.isEmpty) {
-                  url =
-                      await ref
-                          .read(backendVoiceMessageRepositoryProvider)
-                          .getFileUrl(id) ??
-                      '';
+                  // Proxy stream — signed URL telefondan yetib bo'lmaydi.
+                  url = ref
+                      .read(backendVoiceMessageRepositoryProvider)
+                      .audioStreamUrl(id);
                 }
                 if (url.isEmpty) {
                   if (!context.mounted) return;

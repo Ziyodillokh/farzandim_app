@@ -31,10 +31,11 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
       // bo'yicha dedup bor, bg handler pending'i bilan takrorlanmaydi.
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
       final router = ref.read(routerProvider);
-      // Chat xabari (ovozli/video/matn — backend `type:'voice'`) bosilsa —
+      // Chat xabari (ovozli `voice` / video `video` / matn) bosilsa —
       // to'g'ridan-to'g'ri o'sha bola bilan chatga kiradi. senderId = bola
       // userId (ota-ona faqat bolalardan xabar oladi) → childId topamiz.
-      if (notif.data?['type'] == 'voice') {
+      final chatType = notif.data?['type'];
+      if (chatType == 'voice' || chatType == 'video') {
         final senderId = notif.data?['senderId'] as String?;
         for (final c in ref.read(childrenListProvider)) {
           if (c.linkedDeviceUid == senderId) {

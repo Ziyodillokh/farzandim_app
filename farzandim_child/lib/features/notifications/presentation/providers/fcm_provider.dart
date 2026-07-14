@@ -83,7 +83,8 @@ String? _deepLinkToRoute(String link) {
 /// Chat xabari (ovozli/video/matn — backend `type:'voice'`) push BOSILGANDA —
 /// ota-ona bilan chat ekraniga kiradi (bola bitta ota-ona bilan chatlashadi).
 void _handleChatTap(Ref ref, RemoteMessage message) {
-  if (message.data['type'] != 'voice') return;
+  final type = message.data['type'];
+  if (type != 'voice' && type != 'video') return;
   ref.read(routerProvider).go('/voice-chat');
 }
 

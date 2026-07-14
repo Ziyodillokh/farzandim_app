@@ -199,7 +199,13 @@ class BackendVoiceMessageRepository {
   String mediaUrl(String key) =>
       '${_dio.options.baseUrl}/voice-messages/media/$key';
 
-  /// Audio fayl signed URL (1 soat amal qiladi).
+  /// Audio proxy stream URL — `just_audio` shu URL'dan to'g'ridan o'ynaydi
+  /// (auth header'siz, @Public). Signed URL telefondan yetib bo'lmaydi —
+  /// shuning uchun proxy (ota-ona ilovasi bilan bir xil).
+  String audioStreamUrl(String messageId) =>
+      '${_dio.options.baseUrl}/voice-messages/$messageId/stream';
+
+  /// Audio fayl signed URL (1 soat) — eski; proxy stream bilan almashtirildi.
   Future<String?> getFileUrl(String messageId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(

@@ -67,10 +67,10 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
       return;
     }
     try {
-      final url = await ref
+      final url = ref
           .read(backendVideoMessageRepositoryProvider)
-          .getFileUrl(id);
-      if (url == null || url.isEmpty) {
+          .videoStreamUrl(id);
+      if (url.isEmpty) {
         if (!mounted) return;
         setState(() {
           _loadingThumb = false;
@@ -120,16 +120,16 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
   }
 
   Future<void> _openFullscreen() async {
-    // Signed URL hali bo'lmasa — fetch (thumbnail xato bergan bo'lsa).
+    // Proxy stream URL (thumbnail xato bergan bo'lsa qayta quramiz).
     var url = _signedUrl;
     if (url == null || url.isEmpty) {
       final id = widget.message.id;
       if (id == null) return;
-      url = await ref
+      url = ref
           .read(backendVideoMessageRepositoryProvider)
-          .getFileUrl(id);
+          .videoStreamUrl(id);
     }
-    if (url == null || url.isEmpty) {
+    if (url.isEmpty) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
