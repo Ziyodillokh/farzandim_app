@@ -1,4 +1,6 @@
 import 'package:farzandim/core/routing/app_router.dart';
+import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim/features/notifications/data/services/fcm_service.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
@@ -29,6 +31,20 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
       // bo'yicha dedup bor, bg handler pending'i bilan takrorlanmaydi.
       ref.read(notificationsProvider.notifier).addFromFcm(notif);
       final router = ref.read(routerProvider);
+      // Chat xabari (ovozli/video/matn — backend `type:'voice'`) bosilsa —
+      // to'g'ridan-to'g'ri o'sha bola bilan chatga kiradi. senderId = bola
+      // userId (ota-ona faqat bolalardan xabar oladi) → childId topamiz.
+      if (notif.data?['type'] == 'voice') {
+        final senderId = notif.data?['senderId'] as String?;
+        for (final c in ref.read(childrenListProvider)) {
+          if (c.linkedDeviceUid == senderId) {
+            router
+              ..go(AppRoutes.dashboard)
+              ..push(AppRoutes.qaVoicePath(c.id));
+            return;
+          }
+        }
+      }
       handleFcmTap(notif, router);
     };
 

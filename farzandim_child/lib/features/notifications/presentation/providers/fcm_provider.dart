@@ -80,6 +80,13 @@ String? _deepLinkToRoute(String link) {
   }
 }
 
+/// Chat xabari (ovozli/video/matn — backend `type:'voice'`) push BOSILGANDA —
+/// ota-ona bilan chat ekraniga kiradi (bola bitta ota-ona bilan chatlashadi).
+void _handleChatTap(Ref ref, RemoteMessage message) {
+  if (message.data['type'] != 'voice') return;
+  ref.read(routerProvider).go('/voice-chat');
+}
+
 /// `unlock_decision` push kelganda — limit qayta sync + bolaga snackbar.
 /// APPROVED → success ("X daqiqa ruxsat"); DENIED → info ("rad etildi").
 void _handleUnlockDecision(Ref ref, RemoteMessage message) {
@@ -119,6 +126,7 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
     _handleUnlockDecision(ref, msg);
     _handleRestrictionsSync(ref, msg);
     _handleNudgeTap(ref, msg);
+    _handleChatTap(ref, msg);
     _handleDeepLink(ref, msg);
   };
   await service.init();
