@@ -17,12 +17,12 @@ const _line = Color(0x14FFFFFF); // ajratgich (oq 8%)
 const _dim = Color(0x99FFFFFF); // oq 60%
 
 // ════════════ Support kanallari (konstantalar) ════════════
-const _telegramHandle = '@parvoz_bot';
-const _telegramUrl = 'https://t.me/parvoz_bot';
-const _phoneDisplay = '+998 94 064 00 13';
-const _phoneUrl = 'tel:+998940640013';
-const _emailAddress = 'parvoz_support@gmail.com';
-const _emailUrl = 'mailto:parvoz_support@gmail.com';
+const _telegramHandle = '@parvozyordambot';
+const _telegramUrl = 'https://t.me/parvozyordambot';
+const _phoneDisplay = '+998907551508';
+const _phoneUrl = 'tel:+998907551508';
+const _emailAddress = 'support@farzandimedu.uz';
+const _emailUrl = 'mailto:support@farzandimedu.uz';
 
 TextStyle _unb(
   double size, {

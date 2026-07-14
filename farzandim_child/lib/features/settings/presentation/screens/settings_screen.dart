@@ -296,17 +296,17 @@ class _SettingsScreenState extends State<SettingsScreen> {
       builder: (_) => [
         const _ContactRow(
           label: 'Telegram',
-          value: '@parvoz_bot',
+          value: '@parvozyordambot',
           icon: SolarIconsBold.plain,
         ),
         const _ContactRow(
           label: 'Telefon',
-          value: '+998 94 064 00 13',
+          value: '+998 90 755 15 08',
           icon: SolarIconsBold.phone,
         ),
         const _ContactRow(
           label: 'Email',
-          value: 'parvoz_support@gmail.com',
+          value: 'support@farzandimedu.uz',
           icon: SolarIconsBold.letter,
           last: true,
         ),
