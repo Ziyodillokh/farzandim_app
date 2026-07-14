@@ -17,6 +17,7 @@
 
 import 'dart:ui' show ImageFilter;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -77,26 +78,26 @@ class ChildBottomNavigation extends ConsumerWidget {
                   children: [
                     _NavItem(
                       icon: SolarIconsBold.homeSmile,
-                      label: 'Asosiy',
+                      label: 'nav.home'.tr(),
                       active: location == '/dashboard',
                       onTap: () => go('/dashboard'),
                     ),
                     _NavItem(
                       icon: SolarIconsOutline.play,
-                      label: 'Videolar',
+                      label: 'nav.videos'.tr(),
                       active:
                           location == '/videos' || location == '/video-player',
                       onTap: () => go('/videos'),
                     ),
                     _NavItem(
                       icon: SolarIconsOutline.checklistMinimalistic,
-                      label: 'Testlar',
+                      label: 'nav.quizzes'.tr(),
                       active: location == '/contests',
                       onTap: () => go('/contests'),
                     ),
                     _NavItem(
                       icon: SolarIconsOutline.notebookMinimalistic,
-                      label: 'Audiokitoblar',
+                      label: 'nav.audiobooks'.tr(),
                       active:
                           location == '/audiobooks' ||
                           location == '/audio-player',

@@ -22,6 +22,12 @@
     "ru": "Russian",
     "en": "English"
   },
+  "nav": {
+    "home": "Home",
+    "videos": "Videos",
+    "quizzes": "Quizzes",
+    "audiobooks": "Audiobooks"
+  },
   "welcome": {
     "appName": "Parvoz",
     "tagline": "Safe connection with your family",
@@ -373,6 +379,25 @@
     "privacyValue": "ZRU-547 compliant",
     "unpair": "Disconnect",
     "unpairConfirmTitle": "Disconnect?",
-    "unpairConfirmBody": "The connection with your parent will be removed. A new family code will be needed to reconnect."
+    "unpairConfirmBody": "The connection with your parent will be removed. A new family code will be needed to reconnect.",
+    "systemTitle": "System settings",
+    "rowAccount": "Account",
+    "rowAccountSub": "Login, password, phone",
+    "rowSessions": "Active sessions",
+    "rowSessionsSub": "Signed-in devices",
+    "rowNotif": "Notifications",
+    "rowNotifSub": "Which messages arrive",
+    "rowLanguage": "App language",
+    "rowSupport": "Support",
+    "rowSupportSub": "Feedback",
+    "rowAbout": "About us",
+    "rowAboutSub": "About the company",
+    "notifImportant": "Most important",
+    "notifAll": "All",
+    "currentDevice": "Current device",
+    "webBrowser": "Web browser",
+    "aboutBody": "Parvoz — a safe learning and family connection app for children.",
+    "version": "Version",
+    "copied": "Copied"
   }
 }

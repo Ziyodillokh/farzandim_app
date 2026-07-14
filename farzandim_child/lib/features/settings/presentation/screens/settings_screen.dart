@@ -117,7 +117,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   Expanded(
                     child: Text(
-                      'Tizim sozlamalari',
+                      'settings.systemTitle'.tr(),
                       textAlign: TextAlign.center,
                       style: _unb(18),
                     ),
@@ -132,38 +132,38 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 children: [
                   _SettingsRow(
                     icon: SolarIconsBold.userCircle,
-                    title: 'Akkount',
-                    subtitle: 'Login, parol, telefon',
+                    title: 'settings.rowAccount'.tr(),
+                    subtitle: 'settings.rowAccountSub'.tr(),
                     onTap: () => context.push('/account-edit'),
                   ),
                   _SettingsRow(
                     icon: SolarIconsBold.devices,
-                    title: 'Faol sessiyalar',
-                    subtitle: 'Kirilgan qurilmalar',
+                    title: 'settings.rowSessions'.tr(),
+                    subtitle: 'settings.rowSessionsSub'.tr(),
                     onTap: _showSessionsSheet,
                   ),
                   _SettingsRow(
                     icon: SolarIconsBold.bell,
-                    title: 'Bildirishnomalar',
-                    subtitle: 'Qaysi xabarlar kelishi',
+                    title: 'settings.rowNotif'.tr(),
+                    subtitle: 'settings.rowNotifSub'.tr(),
                     onTap: _showNotifPrefSheet,
                   ),
                   _SettingsRow(
                     icon: SolarIconsBold.global,
-                    title: 'Ilova tili',
+                    title: 'settings.rowLanguage'.tr(),
                     subtitle: _langName,
                     onTap: _showLanguageSheet,
                   ),
                   _SettingsRow(
                     icon: SolarIconsBold.handHeart,
-                    title: "Qo'llab quvvatlash",
-                    subtitle: 'Qayta aloqa',
+                    title: 'settings.rowSupport'.tr(),
+                    subtitle: 'settings.rowSupportSub'.tr(),
                     onTap: _showSupportSheet,
                   ),
                   _SettingsRow(
                     icon: SolarIconsBold.smileCircle,
-                    title: 'Biz haqimizda',
-                    subtitle: 'Kompaniya haqida',
+                    title: 'settings.rowAbout'.tr(),
+                    subtitle: 'settings.rowAboutSub'.tr(),
                     onTap: _showAboutDialog,
                   ),
                 ],
@@ -182,20 +182,20 @@ class _SettingsScreenState extends State<SettingsScreen> {
     var selected = prefs.getString(kNotifPrefKey) ?? 'important';
     if (!mounted) return;
     await _showParvozSheet(
-      title: 'Bildirishnomalar',
+      title: 'settings.rowNotif'.tr(),
       builder: (setSheetState) => [
         _OptionRow(
-          label: 'Eng muhimlar',
+          label: 'settings.notifImportant'.tr(),
           selected: selected == 'important',
           onTap: () => setSheetState(() => selected = 'important'),
         ),
         _OptionRow(
-          label: 'Barchasi',
+          label: 'settings.notifAll'.tr(),
           selected: selected == 'all',
           onTap: () => setSheetState(() => selected = 'all'),
         ),
       ],
-      buttonLabel: 'Saqlash',
+      buttonLabel: 'common.save'.tr(),
       buttonBlue: true,
       onButton: () async {
         await prefs.setString(kNotifPrefKey, selected);
@@ -208,7 +208,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     HapticFeedback.selectionClick();
     var selected = context.locale.languageCode;
     await _showParvozSheet(
-      title: 'Ilova tili',
+      title: 'settings.rowLanguage'.tr(),
       builder: (setSheetState) => [
         _OptionRow(
           label: "O'zbek",
@@ -229,7 +229,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           onTap: () => setSheetState(() => selected = 'en'),
         ),
       ],
-      buttonLabel: 'Saqlash',
+      buttonLabel: 'common.save'.tr(),
       buttonBlue: true,
       onButton: () async {
         await context.setLocale(Locale(selected));
@@ -241,7 +241,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   // ── Faol sessiyalar — joriy qurilma ──
   Future<void> _showSessionsSheet() async {
     HapticFeedback.selectionClick();
-    var device = 'Web brauzer';
+    var device = 'settings.webBrowser'.tr();
     try {
       if (!kIsWeb && defaultTargetPlatform == TargetPlatform.android) {
         final a = await DeviceInfoPlugin().androidInfo;
@@ -250,7 +250,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     } catch (_) {}
     if (!mounted) return;
     await _showParvozSheet(
-      title: 'Faol sessiyalar',
+      title: 'settings.rowSessions'.tr(),
       builder: (_) => [
         Container(
           padding: const EdgeInsets.all(16),
@@ -267,7 +267,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(device, style: _pop(14.5, w: FontWeight.w600)),
-                    Text('Hozirgi qurilma', style: _pop(12, c: _dim)),
+                    Text('settings.currentDevice'.tr(), style: _pop(12, c: _dim)),
                   ],
                 ),
               ),
@@ -283,7 +283,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
         ),
       ],
-      buttonLabel: 'Yopish',
+      buttonLabel: 'common.close'.tr(),
       buttonBlue: false,
     );
   }
@@ -292,7 +292,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Future<void> _showSupportSheet() async {
     HapticFeedback.selectionClick();
     await _showParvozSheet(
-      title: "Qo'llab quvvatlash",
+      title: 'settings.rowSupport'.tr(),
       builder: (_) => [
         const _ContactRow(
           label: 'Telegram',
@@ -311,7 +311,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           last: true,
         ),
       ],
-      buttonLabel: 'Yopish',
+      buttonLabel: 'common.close'.tr(),
       buttonBlue: false,
     );
   }
@@ -321,10 +321,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showDialog<void>(
       context: context,
       builder: (_) => _InfoDialog(
-        title: 'Biz haqimizda',
+        title: 'settings.rowAbout'.tr(),
         body:
-            "Parvoz — bolalar uchun xavfsiz ta'lim va oilaviy aloqa ilovasi."
-            '${_version.isNotEmpty ? '\n\nVersiya: $_version' : ''}',
+            'settings.aboutBody'.tr() +
+            (_version.isNotEmpty
+                ? '\n\n${'settings.version'.tr()}: $_version'
+                : ''),
       ),
     );
   }
@@ -560,7 +562,7 @@ class _ContactRow extends StatelessWidget {
         Clipboard.setData(ClipboardData(text: value));
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('Nusxalandi: $value'),
+            content: Text('${'settings.copied'.tr()}: $value'),
             backgroundColor: const Color(0xFF23303F),
             duration: const Duration(seconds: 2),
           ),
@@ -632,7 +634,10 @@ class _InfoDialog extends StatelessWidget {
                   borderRadius: BorderRadius.circular(999),
                   border: Border.all(color: _glassBorder),
                 ),
-                child: Text('Yopish', style: _pop(14.5, w: FontWeight.w600)),
+                child: Text(
+                  'common.close'.tr(),
+                  style: _pop(14.5, w: FontWeight.w600),
+                ),
               ),
             ),
           ],

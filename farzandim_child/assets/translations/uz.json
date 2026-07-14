@@ -22,6 +22,12 @@
     "ru": "Ruscha",
     "en": "Inglizcha"
   },
+  "nav": {
+    "home": "Asosiy",
+    "videos": "Videolar",
+    "quizzes": "Testlar",
+    "audiobooks": "Audiokitoblar"
+  },
   "welcome": {
     "appName": "Parvoz",
     "tagline": "Oilangiz bilan xavfsiz aloqa",
@@ -384,6 +390,25 @@
     "privacyValue": "ZRU-547 talablariga mos",
     "unpair": "Ulanishni uzish",
     "unpairConfirmTitle": "Ulanishni uzasizmi?",
-    "unpairConfirmBody": "Ota-onangiz bilan ulanish uziladi. Qaytadan ulanish uchun yangi oila kodi kerak bo'ladi."
+    "unpairConfirmBody": "Ota-onangiz bilan ulanish uziladi. Qaytadan ulanish uchun yangi oila kodi kerak bo'ladi.",
+    "systemTitle": "Tizim sozlamalari",
+    "rowAccount": "Akkount",
+    "rowAccountSub": "Login, parol, telefon",
+    "rowSessions": "Faol sessiyalar",
+    "rowSessionsSub": "Kirilgan qurilmalar",
+    "rowNotif": "Bildirishnomalar",
+    "rowNotifSub": "Qaysi xabarlar kelishi",
+    "rowLanguage": "Ilova tili",
+    "rowSupport": "Qo'llab quvvatlash",
+    "rowSupportSub": "Qayta aloqa",
+    "rowAbout": "Biz haqimizda",
+    "rowAboutSub": "Kompaniya haqida",
+    "notifImportant": "Eng muhimlar",
+    "notifAll": "Barchasi",
+    "currentDevice": "Hozirgi qurilma",
+    "webBrowser": "Web brauzer",
+    "aboutBody": "Parvoz — bolalar uchun xavfsiz ta'lim va oilaviy aloqa ilovasi.",
+    "version": "Versiya",
+    "copied": "Nusxalandi"
   }
 }
