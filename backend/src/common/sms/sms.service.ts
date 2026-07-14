@@ -105,9 +105,11 @@ export class SmsService {
   /* ------------------------------------------------------------------ */
   // Har bir matn AYNAN shu shaklda yuborilishi shart — Eskiz strict
   // template check qiladi, mos kelmasa "message is not in template"
-  // xato qaytaradi. `{code}` faqat raqamga almashtiriladi.
+  // xato qaytaradi. Kod matndagi `%d` o'rniga qo'yiladi.
+  // Tasdiqlangan shablon ID'lari (my.eskiz.uz, status=service):
+  //   74886 — parol tiklash, 74885 — register, 74884 — login.
 
-  /** ID 77251 — parolni tiklash flow uchun. */
+  /** ID 74886 — parolni tiklash flow uchun. */
   async sendResetCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,
@@ -115,7 +117,7 @@ export class SmsService {
     );
   }
 
-  /** ID 77252 — ro'yxatdan o'tish (register) flow uchun. */
+  /** ID 74885 — ro'yxatdan o'tish (register) flow uchun. */
   async sendRegisterCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,
@@ -123,7 +125,7 @@ export class SmsService {
     );
   }
 
-  /** ID 77253 — login flow uchun. */
+  /** ID 74884 — login flow uchun. */
   async sendLoginCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,

@@ -90,12 +90,17 @@ export class AppLimitsService {
   // consolidated push. childId → { yig'ilgan ilovalar + taymer }.
   private readonly _pendingLimitNotif = new Map<
     string,
-    { parentId: string; labels: string[]; timer: NodeJS.Timeout }
+    {
+      parentId: string;
+      childUserId: string | null;
+      labels: string[];
+      timer: NodeJS.Timeout;
+    }
   >();
   private static readonly LIMIT_NOTIF_DEBOUNCE_MS = 4000;
 
   private async notifyOtherDevices(
-    child: { id: string; parentId: string },
+    child: { id: string; parentId: string; childUserId: string | null },
     packageName: string,
     dailyLimitMs: bigint,
     isActive: boolean,
@@ -106,7 +111,12 @@ export class AppLimitsService {
         select: { appName: true },
       });
       const appLabel = installed?.appName ?? packageName;
-      this.enqueueLimitNotif(child.id, child.parentId, appLabel);
+      this.enqueueLimitNotif(
+        child.id,
+        child.parentId,
+        child.childUserId,
+        appLabel,
+      );
     } catch {
       // push xatosi cheklov saqlanishiga ta'sir qilmaydi
     }
@@ -116,6 +126,7 @@ export class AppLimitsService {
   private enqueueLimitNotif(
     childId: string,
     parentId: string,
+    childUserId: string | null,
     appLabel: string,
   ): void {
     const existing = this._pendingLimitNotif.get(childId);
@@ -130,6 +141,7 @@ export class AppLimitsService {
     }
     this._pendingLimitNotif.set(childId, {
       parentId,
+      childUserId,
       labels: [appLabel],
       timer: setTimeout(
         () => void this.flushLimitNotif(childId),
@@ -166,6 +178,27 @@ export class AppLimitsService {
       });
     } catch {
       // push xatosi limitга ta'sir qilmaydi
+    }
+
+    // Bolaga ham KO'RINADIGAN bildirishnoma — avval bolaga faqat jim
+    // `restrictions_sync` sync push borardi (pushChildResync), bola cheklov
+    // o'zgarganini ko'rmasdi. Endi bola ham xabardor bo'ladi.
+    if (entry.childUserId) {
+      const childBody =
+        labels.length === 1
+          ? `${labels[0]} uchun vaqt chegarasi yangilandi`
+          : labels.length <= 3
+            ? `${labels.slice(0, 3).join(', ')} cheklovlari yangilandi`
+            : `${labels.slice(0, 3).join(', ')} va yana ${labels.length - 3} ta ilova cheklovi yangilandi`;
+      try {
+        await this.fcm.sendPushToUser(entry.childUserId, {
+          title: 'Ota-onangiz cheklovni yangiladi',
+          body: childBody,
+          data: { type: 'app_limit', childId, count: String(labels.length) },
+        });
+      } catch {
+        // push xatosi limitга ta'sir qilmaydi
+      }
     }
   }
 
