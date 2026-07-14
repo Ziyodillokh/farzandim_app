@@ -84,10 +84,14 @@ class StatisticsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // DON/STREAK — HAQIQIY manba backend (real-time, WS `profile:updated`).
+    // Firestore (`gamificationProfileProvider`) faqat fallback — qadam/
+    // audiokitob/test kabi real mukofotlar u yerga hech qachon yozilmaydi.
+    final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
     // PREVIEW: real 0 bo'lsa Figma namunasi.
-    final rawStreak = profile?.streak ?? 0;
-    final rawDon = profile?.don ?? 0;
+    final rawStreak = backend?.streak ?? profile?.streak ?? 0;
+    final rawDon = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 30;
     final don = rawDon > 0 ? rawDon : 1250;

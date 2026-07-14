@@ -12,8 +12,12 @@
 // Lifecycle provider'ni app'ning bootstrap qatlamida bir marta `watch`
 // qilish kifoya (`main.dart` yoki app shell). Side-effect ishlatadi.
 
+import 'dart:async';
+
 import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/child_management/data/models/child_model.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -47,6 +51,24 @@ final socketConnectionProvider = StreamProvider<SocketConnectionState>((ref) {
 final socketLifecycleProvider = Provider<void>((ref) {
   final client = ref.watch(socketClientProvider);
 
+  // Bolalar room'iga qo'shilish — avval HECH QAERDA chaqirilmagan edi
+  // (faqat `joinChildRoom` metodi yozilgan, lekin ishlatilmagan). Natijada
+  // backend `emitToChild` (gamification profile:updated, app_limit,
+  // geo_zone, notification, routine, unlock_request, schedule, sos,
+  // location) — bittasi ham WS orqali yetib kelmasdi, faqat ekran qayta
+  // ochilganda (HTTP refetch) ko'rinardi. DON/XP "real-time kelmayapti"
+  // shikoyatining asosiy sababi shu edi.
+  final joinedRooms = <String>{};
+
+  void joinAllChildRooms() {
+    if (client.state != SocketConnectionState.connected) return;
+    for (final c in ref.read(childrenListProvider)) {
+      if (joinedRooms.add(c.id)) {
+        unawaited(client.joinChildRoom(c.id));
+      }
+    }
+  }
+
   ref.listen<BackendAuthState>(backendAuthProvider, (previous, next) {
     final wasAuthenticated = previous is AuthAuthenticated;
     final isAuthenticated = next is AuthAuthenticated;
@@ -56,7 +78,24 @@ final socketLifecycleProvider = Provider<void>((ref) {
       client.connect();
     } else if (wasAuthenticated && !isAuthenticated) {
       debugPrint('SocketLifecycle: logout → disconnect');
+      joinedRooms.clear();
       client.disconnect();
     }
   }, fireImmediately: true);
+
+  // Har CONNECT/RECONNECT'da qaytadan join — socket.io reconnect yangi
+  // session (yangi socket.id) yaratadi, eski room a'zoligi saqlanmaydi.
+  final connSub = client.stateStream.listen((state) {
+    if (state == SocketConnectionState.connected) {
+      joinedRooms.clear();
+      joinAllChildRooms();
+    }
+  });
+
+  // Yangi bola qo'shilsa (yoki ro'yxat yangilansa) — shu bola room'iga ham.
+  ref
+    ..listen<List<Child>>(childrenListProvider, (previous, next) {
+      joinAllChildRooms();
+    })
+    ..onDispose(connSub.cancel);
 });

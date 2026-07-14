@@ -348,11 +348,17 @@ class _StatChipsRow extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // DON/STREAK — HAQIQIY manba backend `ChildProfile` (Prisma), Firestore
+    // EMAS. `gamificationProfileProvider` (Firestore) — qadam/audiokitob/
+    // test kabi real mukofotlar hech qachon yozilmaydigan eski/o'lik oqim,
+    // shu sababli bu yerda DON deyarli doim noto'g'ri/0 ko'rinardi. Backend
+    // real-time (WS `profile:updated`) — `backendGamificationProvider`.
+    final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final profile = ref.watch(gamificationProfileProvider).valueOrNull;
     // PREVIEW: real qiymat 0 bo'lsa Figma'dagi namuna (bola faollik boshlagach
     // avtomatik realga almashadi).
-    final rawStreak = profile?.streak ?? 0;
-    final rawDon = profile?.don ?? 0;
+    final rawStreak = backend?.streak ?? profile?.streak ?? 0;
+    final rawDon = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 7;
     // DON — REAL qiymat (bola gamifikatsiyada yiqqan). Mock (1250) OLIB

@@ -102,8 +102,13 @@ export class ConsumerOlympiadsService {
 
   private readonly logger = new Logger(ConsumerOlympiadsService.name);
 
-  /// Test (olympiad) tugatilganda XP beradi. Idempotent (relatedId=attemptId).
-  /// Xato submit/answer javobini buzmasligi uchun try/catch (faqat log).
+  /// Test (olympiad) tugatilganda XP + DON beradi. Idempotent
+  /// (relatedId=attemptId). DON miqdori `olympiad.xpReward` bilan bir xil —
+  /// test kartasida ko'rsatilgan "N DON" va'dasi shu (audiobook/video'dagi
+  /// `xpReward`=DON konvensiyasi bilan bir xil). Avval faqat XP berilardi,
+  /// DON umuman berilmasdi — bola/ota-ona "test uchun DON kelmayapti" deb
+  /// shikoyat qilardi. Xato submit/answer javobini buzmasligi uchun
+  /// try/catch (faqat log).
   private async grantOlympiadXp(
     childId: string,
     attemptId: string,
@@ -113,6 +118,7 @@ export class ConsumerOlympiadsService {
       await this.gamification.awardXp(childId, {
         type: XpEventType.CONTEST_WIN,
         xpDelta: xpReward,
+        donDelta: xpReward,
         relatedId: attemptId,
       });
     } catch (e) {

@@ -79,6 +79,18 @@ final socketLifecycleProvider = Provider<void>((ref) {
     }));
   }
 
+  // O'ZINING room'iga qo'shilish — avval HECH QAERDA chaqirilmagan edi
+  // (faqat `joinChildRoom` metodi yozilgan, lekin ishlatilmagan). Natijada
+  // backend `emitToChild` (gamification profile:updated va h.k.) WS orqali
+  // hech qachon yetib kelmasdi — faqat ekran qayta ochilganda (HTTP
+  // refetch) ko'rinardi. DON "real-time kelmayapti" shikoyatining asosiy
+  // sababi shu edi.
+  void joinOwnRoom() {
+    final childId = ref.read(pairingStateProvider).childId;
+    if (childId == null || childId.isEmpty) return;
+    unawaited(client.joinChildRoom(childId));
+  }
+
   ref.listen<AppPairingState>(pairingStateProvider, (previous, next) {
     final wasPaired = previous?.status == PairingStatus.paired;
     final isPaired = next.status == PairingStatus.paired;
@@ -94,5 +106,18 @@ final socketLifecycleProvider = Provider<void>((ref) {
     }
   }, fireImmediately: true);
 
-  ref.onDispose(cancelAll);
+  // Har CONNECT/RECONNECT'da qaytadan join — socket.io reconnect yangi
+  // session yaratadi, eski room a'zoligi saqlanmaydi. Bu subscription
+  // `subs`ga QO'SHILMAYDI — unpair/re-pair davomida ham (cancelAll butun
+  // umr davomida faqat restriction listener'larni tozalaydi) tirik qolishi
+  // kerak, aks holda qayta pairing'dan keyin join-on-reconnect ishlamay
+  // qoladi.
+  final connSub = client.stateStream.listen((state) {
+    if (state == SocketConnectionState.connected) joinOwnRoom();
+  });
+
+  ref.onDispose(() {
+    cancelAll();
+    connSub.cancel();
+  });
 });

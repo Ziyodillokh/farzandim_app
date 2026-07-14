@@ -33,7 +33,11 @@ class DashboardStatPanel extends ConsumerWidget {
     final parentUid = pairing.parentUid;
     final childId = pairing.childId;
 
-    // ─── XP — gamification provider ustun, keyin ranking ─────────────
+    // ─── XP — backend (real) ustun, keyin ranking, keyin Firestore ────
+    // `gamificationProfileProvider.xp` — Firestore, doim `0` (default,
+    // hech qachon null emas) — shu sababli eski kod haqiqiy XP'ni HECH
+    // QACHON ko'rsatmasdi (`?? meInRanking` ishlamasdi, chunki 0 != null).
+    final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final gamification = ref.watch(gamificationProfileProvider).valueOrNull;
     final users = ref.watch(allUsersProvider);
     final meInRanking = users.cast<RankingUser?>().firstWhere(
@@ -41,7 +45,10 @@ class DashboardStatPanel extends ConsumerWidget {
       orElse: () => null,
     );
 
-    final xp = gamification?.xp ?? meInRanking?.totalScore ?? 0;
+    final xp =
+        backend?.xp ??
+        meInRanking?.totalScore ??
+        (gamification?.xp ?? 0);
     final level = levelForXp(xp);
 
     // ─── Region — childData (Backend REST) ───────────────────────────

@@ -20,6 +20,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/realtime/socket_client.dart';
 import 'package:farzandim_child/features/gamification/data/models/gamification_profile.dart';
 import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
 import 'package:farzandim_child/features/gamification/data/services/xp_service.dart';
@@ -48,11 +49,11 @@ class BackendGamification {
   final String status;
 }
 
-final backendGamificationProvider =
-    FutureProvider.autoDispose<BackendGamification?>((ref) async {
-  final childId = ref.watch(pairingStateProvider).childId;
-  if (childId == null || childId.isEmpty) return null;
-  final dio = ref.watch(dioClientProvider);
+Future<BackendGamification?> _fetchBackendGamification(
+  Ref ref,
+  String childId,
+) async {
+  final dio = ref.read(dioClientProvider);
   try {
     final res = await dio.get<Map<String, dynamic>>(
       '/children/$childId/profile',
@@ -72,6 +73,43 @@ final backendGamificationProvider =
     debugPrint('backendGamification: $e');
     return null;
   }
+}
+
+/// Backend'dagi HAQIQIY don/xp/streak — REAL-TIME.
+///
+/// Avval `FutureProvider` edi — faqat widget birinchi marta watch qilganda
+/// bir marta so'rov yuborardi (masalan qadam/audiokitob/test tugab DON
+/// qo'shilgach, ekran qayta ochilmaguncha eski qiymat ko'rinardi). Endi WS
+/// `profile:updated` (backend `emitToChild` orqali yuboradi — child o'z
+/// room'iga `socketLifecycleProvider`da qo'shiladi) kelganda darhol qayta
+/// so'raladi — DON/XP har doim aniq va tezkor ko'rinadi.
+final backendGamificationProvider =
+    StreamProvider.autoDispose<BackendGamification?>((ref) {
+  final childId = ref.watch(pairingStateProvider).childId;
+  final controller = StreamController<BackendGamification?>();
+  if (childId == null || childId.isEmpty) {
+    controller.add(null);
+    ref.onDispose(controller.close);
+    return controller.stream;
+  }
+
+  Future<void> refetch() async {
+    if (controller.isClosed) return;
+    controller.add(await _fetchBackendGamification(ref, childId));
+  }
+
+  unawaited(refetch());
+
+  final client = ref.watch(socketClientProvider);
+  final sub = client.eventStream('profile:updated').listen((_) {
+    unawaited(refetch());
+  });
+
+  ref.onDispose(() {
+    sub.cancel();
+    controller.close();
+  });
+  return controller.stream;
 });
 
 /// Bola gamifikatsiya profili — real-time stream.
