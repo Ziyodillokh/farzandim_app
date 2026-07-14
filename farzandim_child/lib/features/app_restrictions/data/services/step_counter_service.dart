@@ -32,6 +32,16 @@ class StepCounterService {
   static const _kTodaySteps = 'step.todaySteps.v1';
   static const _kTodayDate = 'step.todayDate.v1';
 
+  /// Bir kunlik maqbul qadam shifti (backend clamp bilan bir xil) — qadam
+  /// RAQAMI shundan oshib ketmaydi.
+  static const int _dayStepMax = 200000;
+
+  /// Sensor "kamaydi" (reboot/glitch) holatida BITTA o'qishda qo'shiladigan
+  /// maksimum. Haqiqiy reboot'da `cumulative` = boot'dan beri qadam (kichik).
+  /// Glitch'da esa `cumulative` hali katta bo'lishi mumkin — uni butunlay
+  /// qo'shsak qadam soni keskin noto'g'ri sakrardi.
+  static const int _rebootAddMax = 60000;
+
   StreamSubscription<StepCount>? _sub;
   Timer? _syncTimer;
   int _lastCumulative = -1;
@@ -106,9 +116,15 @@ class StepCounterService {
     } else if (cumulative >= _lastCumulative) {
       delta = cumulative - _lastCumulative;
     } else {
-      delta = cumulative; // reboot — sensor noldan boshladi
+      // Sensor kamaydi: reboot (0'dan boshladi) YOKI glitch. Reboot'da
+      // `cumulative` = boot'dan beri qadam (kichik) → qo'shamiz. Glitch'da
+      // `cumulative` hali katta bo'lishi mumkin — butunlay qo'shsak qadam
+      // RAQAMI keskin noto'g'ri sakrardi, shuning uchun maqbul chegaradan
+      // oshsa qo'shmaymiz, faqat baseline'ni tiklaymiz.
+      delta = cumulative <= _rebootAddMax ? cumulative : 0;
     }
-    _todaySteps += delta;
+    // Kunlik shift — glitch/xatolar qadam RAQAMINI 96k+ ga sakratmasin.
+    _todaySteps = (_todaySteps + delta).clamp(0, _dayStepMax);
     _lastCumulative = cumulative;
     await _persist();
 
