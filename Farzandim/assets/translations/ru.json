@@ -787,7 +787,13 @@
     "login": "Логин",
     "password": "Пароль",
     "editSoon": "Редактирование скоро появится",
-    "manageChildren": "Управление детьми"
+    "manageChildren": "Управление детьми",
+    "changePhoto": "Изменить фото",
+    "fromGallery": "Выбрать из галереи",
+    "fromCamera": "Сделать фото",
+    "removePhoto": "Удалить фото",
+    "photoUpdated": "Фото профиля обновлено",
+    "photoError": "Не удалось загрузить фото, попробуйте снова"
   },
   "contactEdit": {
     "phoneTitle": "Изменить телефон",

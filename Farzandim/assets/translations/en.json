@@ -787,7 +787,13 @@
     "login": "Login",
     "password": "Password",
     "editSoon": "Editing coming soon",
-    "manageChildren": "Manage children"
+    "manageChildren": "Manage children",
+    "changePhoto": "Change photo",
+    "fromGallery": "Choose from gallery",
+    "fromCamera": "Take a photo",
+    "removePhoto": "Remove photo",
+    "photoUpdated": "Profile photo updated",
+    "photoError": "Could not upload photo, please try again"
   },
   "contactEdit": {
     "phoneTitle": "Edit phone",

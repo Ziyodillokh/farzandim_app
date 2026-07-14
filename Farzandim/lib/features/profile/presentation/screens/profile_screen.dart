@@ -14,19 +14,23 @@
 // tahriri dizaynda yo'q; provider metodlari (updateProfile/uploadAvatar)
 // backend infratuzilmasi sifatida saqlanadi.
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
+import 'package:farzandim/features/profile/data/models/parent_profile.dart';
 import 'package:farzandim/features/profile/presentation/providers/profile_provider.dart';
 import 'package:farzandim/features/profile/presentation/screens/contact_edit_sheet.dart';
 import 'package:farzandim/features/profile/presentation/screens/login_edit_sheet.dart';
 import 'package:farzandim/features/profile/presentation/screens/password_edit_sheet.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 // ════════════ Tokenlar (lokal) ════════════
@@ -75,6 +79,9 @@ class _AccountSheet extends ConsumerStatefulWidget {
 }
 
 class _AccountSheetState extends ConsumerState<_AccountSheet> {
+  /// Avatar yuklanayotgan payt — ustiga spinner ko'rsatiladi.
+  bool _uploading = false;
+
   /// Telefonni tahrirlash — OTP varag'i (POST /users/me/phone).
   void _editPhone() => showPhoneEditSheet(context);
 
@@ -143,6 +150,150 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
     await auth.logout();
   }
 
+  /// Profil rasmini tanlab (galereya/kamera) backend'ga yuklaydi.
+  /// Provider `uploadAvatar` → `/users/me/avatar` (POST) → profil qayta yuklanadi.
+  Future<void> _pickAndUploadAvatar() async {
+    if (_uploading) return;
+    // Manba tanlash (galereya / kamera).
+    final source = await showModalBottomSheet<ImageSource>(
+      context: context,
+      backgroundColor: _bg,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (ctx) => SafeArea(
+        top: false,
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(12, 12, 12, 8),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _SourceRow(
+                icon: SolarIconsOutline.gallery,
+                label: 'account.fromGallery'.tr(),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.gallery),
+              ),
+              _SourceRow(
+                icon: SolarIconsOutline.camera,
+                label: 'account.fromCamera'.tr(),
+                onTap: () => Navigator.of(ctx).pop(ImageSource.camera),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    if (source == null || !mounted) return;
+
+    try {
+      // maxWidth/quality — 5 MB backend limitidan xotirjam pastda turish uchun.
+      final picked = await ImagePicker().pickImage(
+        source: source,
+        maxWidth: 1024,
+        maxHeight: 1024,
+        imageQuality: 85,
+      );
+      if (picked == null || !mounted) return;
+      final bytes = await picked.readAsBytes();
+      if (!mounted) return;
+      setState(() => _uploading = true);
+      await ref.read(profileProvider.notifier).uploadAvatar(bytes);
+      if (mounted) AppToast.success(context, 'account.photoUpdated'.tr());
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'account.photoError'.tr());
+    } finally {
+      if (mounted) setState(() => _uploading = false);
+    }
+  }
+
+  /// Ismdan bosh harflar (rasm bo'lmaganda ko'rsatiladi).
+  String _initials(String name) {
+    final parts = name.trim().split(RegExp(r'\s+')).where((s) => s.isNotEmpty);
+    if (parts.isEmpty) return '';
+    final letters = parts.take(2).map((s) => s.substring(0, 1).toUpperCase());
+    return letters.join();
+  }
+
+  /// Profil rasmi bloki — doira avatar + kamera belgisi, tegilsa yuklaydi.
+  Widget _avatarSection(ParentProfile p) {
+    final photo = (p.photoUrl ?? '').trim();
+    final initials = _initials(p.name);
+    Widget fallback() => Center(
+      child: initials.isNotEmpty
+          ? Text(initials, style: _unb(26, w: FontWeight.w700))
+          : const Icon(SolarIconsBold.user, color: _dim, size: 40),
+    );
+
+    return Center(
+      child: GestureDetector(
+        onTap: _pickAndUploadAvatar,
+        behavior: HitTestBehavior.opaque,
+        child: SizedBox(
+          width: 96,
+          height: 96,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Container(
+                width: 96,
+                height: 96,
+                decoration: BoxDecoration(
+                  color: _card,
+                  shape: BoxShape.circle,
+                  border: Border.all(color: _cardBorder),
+                ),
+                child: ClipOval(
+                  child: _uploading
+                      ? const Center(
+                          child: SizedBox(
+                            width: 26,
+                            height: 26,
+                            child: CircularProgressIndicator(
+                              strokeWidth: 2.4,
+                              color: Colors.white,
+                            ),
+                          ),
+                        )
+                      : (photo.startsWith('http')
+                            ? CachedNetworkImage(
+                                imageUrl: photo,
+                                fit: BoxFit.cover,
+                                width: 96,
+                                height: 96,
+                                memCacheWidth: 240,
+                                errorWidget: (_, __, ___) => fallback(),
+                                placeholder: (_, __) => fallback(),
+                              )
+                            : fallback()),
+                ),
+              ),
+              // Kamera belgisi — pastki o'ngda.
+              Positioned(
+                right: -2,
+                bottom: -2,
+                child: Container(
+                  width: 32,
+                  height: 32,
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF216BFF),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: _bg, width: 3),
+                  ),
+                  child: const Icon(
+                    SolarIconsBold.camera,
+                    color: Colors.white,
+                    size: 15,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = ref.watch(profileProvider);
@@ -174,6 +325,15 @@ class _AccountSheetState extends ConsumerState<_AccountSheet> {
                   ),
                 ),
                 const SizedBox(height: 18),
+                _avatarSection(p),
+                const SizedBox(height: 10),
+                // Rasmni o'zgartirish uchun yo'l-yo'riq matni.
+                Text(
+                  'account.changePhoto'.tr(),
+                  textAlign: TextAlign.center,
+                  style: _pop(12.5, c: _dim),
+                ),
+                const SizedBox(height: 16),
                 Text(
                   'account.title'.tr(),
                   textAlign: TextAlign.center,
@@ -280,6 +440,37 @@ class _Field extends StatelessWidget {
         const SizedBox(height: 12),
         const Divider(height: 1, thickness: 1, color: _line),
       ],
+    );
+  }
+}
+
+/// Rasm manbasi qatori (galereya / kamera) — avatar tanlash varag'ida.
+class _SourceRow extends StatelessWidget {
+  const _SourceRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 16),
+        child: Row(
+          children: [
+            Icon(icon, size: 22, color: Colors.white),
+            const SizedBox(width: 14),
+            Text(label, style: _pop(15, w: FontWeight.w500)),
+          ],
+        ),
+      ),
     );
   }
 }

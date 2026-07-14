@@ -787,7 +787,13 @@
     "login": "Login",
     "password": "Parol",
     "editSoon": "Tahrirlash tez kunda qo'shiladi",
-    "manageChildren": "Farzandlarni boshqarish"
+    "manageChildren": "Farzandlarni boshqarish",
+    "changePhoto": "Rasmni o'zgartirish",
+    "fromGallery": "Galereyadan tanlash",
+    "fromCamera": "Kameradan olish",
+    "removePhoto": "Rasmni o'chirish",
+    "photoUpdated": "Profil rasmi yangilandi",
+    "photoError": "Rasmni yuklab bo'lmadi, qayta urinib ko'ring"
   },
   "contactEdit": {
     "phoneTitle": "Telefonni tahrirlash",
