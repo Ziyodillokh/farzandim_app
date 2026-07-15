@@ -78,9 +78,8 @@ Future<void> _openChatForSender(
   }
   for (final c in children) {
     if (c.linkedDeviceUid == senderId) {
-      router
-        ..go(AppRoutes.dashboard)
-        ..push(AppRoutes.qaVoicePath(c.id));
+      router.go(AppRoutes.dashboard);
+      unawaited(router.push(AppRoutes.qaVoicePath(c.id)));
       return;
     }
   }
