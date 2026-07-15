@@ -166,6 +166,11 @@ export class SosAlertsService {
       request,
     );
 
+    // `sos:received` ota-onaga ham, bolaga ham boradi — `sos:resolved` esa
+    // faqat bolaga borardi. Shu sabab ota-ona tomonida SOS "hal qilindi"
+    // xabari hech qachon kelmasdi: global qizil banner o'z-o'zidan yopilmasdi
+    // va ikkinchi qurilmadagi SOS ro'yxati eski holatda qolardi.
+    this.realtime.emitToUser(alert.child.parentId, 'sos:resolved', updated);
     if (alert.child.childUserId) {
       this.realtime.emitToUser(
         alert.child.childUserId,

@@ -67,13 +67,28 @@ final resolvedSosAlertsProvider =
     );
 
 /// SOS alert WS push stream — Parent App'da global notification banner.
-/// Payload: `{ sosAlertId, childId, lat, lng, ... }`.
+/// Payload: `{ alert: {id, childId, latitude, ...}, childId, childName }`.
 final sosReceivedAlertProvider = StreamProvider<Map<String, dynamic>>((ref) {
   final auth = ref.watch(backendAuthProvider);
   if (auth is! AuthAuthenticated) return const Stream.empty();
   final repo = ref.watch(backendSosRepositoryProvider);
   return repo
       .receivedStream()
+      .map((data) => data is Map<String, dynamic> ? data : <String, dynamic>{})
+      .where((m) => m.isNotEmpty);
+});
+
+/// SOS "hal qilindi" WS stream — global qizil banner'ni yopish uchun.
+/// Payload — yangilangan `SosAlert` qatori: `{ id, childId, status, ... }`.
+///
+/// Alert boshqa qurilmada (yoki ikkinchi ota-ona tomonidan) hal qilinsa ham
+/// shu event keladi, shuning uchun banner har qanday holatda yopiladi.
+final sosResolvedAlertProvider = StreamProvider<Map<String, dynamic>>((ref) {
+  final auth = ref.watch(backendAuthProvider);
+  if (auth is! AuthAuthenticated) return const Stream.empty();
+  final repo = ref.watch(backendSosRepositoryProvider);
+  return repo
+      .resolvedStream()
       .map((data) => data is Map<String, dynamic> ? data : <String, dynamic>{})
       .where((m) => m.isNotEmpty);
 });

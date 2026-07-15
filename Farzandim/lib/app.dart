@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/realtime/socket_providers.dart';
 import 'package:farzandim/core/routing/app_router.dart';
@@ -35,6 +37,175 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
   @override
   ScrollPhysics getScrollPhysics(BuildContext context) =>
       const BouncingScrollPhysics(parent: AlwaysScrollableScrollPhysics());
+}
+
+/// Hozir ekranda turgan SOS banner'ining alert id'si (yo'q bo'lsa `null`).
+///
+/// Ikki vazifasi bor: bir xil alert uchun banner takrorlanmasin va
+/// `sos:resolved` kelganda AYNAN o'sha banner yopilsin.
+///
+/// `late` mos emas — "banner yo'q" holati aynan `null` bilan ifodalanadi va
+/// banner yopilgach qiymat qayta `null` ga qaytadi.
+// ignore: use_late_for_private_fields_and_variables
+String? _shownSosAlertId;
+
+/// SOS WS payload'idan alert id'sini oladi.
+///
+/// `sos:received` → `{ alert: {id, ...}, childId, childName }`
+/// `sos:resolved` → `{ id, childId, status, ... }` (yangilangan qator)
+String? _sosAlertIdOf(Map<String, dynamic> payload) {
+  final nested = (payload['alert'] as Map?)?['id'];
+  if (nested is String && nested.isNotEmpty) return nested;
+  final flat = payload['id'] ?? payload['sosAlertId'];
+  return flat is String && flat.isNotEmpty ? flat : null;
+}
+
+/// Global SOS banner — qizil gradient karta, pulsatsiyalanuvchi ikona,
+/// bola ismi va oq "Ko'rish" tugmasi.
+class _SosBanner extends StatefulWidget {
+  const _SosBanner({
+    required this.onView,
+    required this.onDismiss,
+    this.childName,
+  });
+
+  final String? childName;
+  final VoidCallback onView;
+  final VoidCallback onDismiss;
+
+  @override
+  State<_SosBanner> createState() => _SosBannerState();
+}
+
+class _SosBannerState extends State<_SosBanner>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 900),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final name = widget.childName;
+    return Container(
+      decoration: BoxDecoration(
+        gradient: const LinearGradient(
+          colors: [Color(0xFFDC2626), Color(0xFFF05252)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFEF4444).withValues(alpha: 0.45),
+            blurRadius: 24,
+            offset: const Offset(0, 8),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
+      child: Row(
+        children: [
+          // Pulsatsiya — SOS shoshilinchligini bildiradi.
+          ScaleTransition(
+            scale: Tween<double>(begin: 0.9, end: 1.08).animate(
+              CurvedAnimation(parent: _pulse, curve: Curves.easeInOut),
+            ),
+            child: Container(
+              width: 42,
+              height: 42,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.2),
+                shape: BoxShape.circle,
+              ),
+              child: const Icon(
+                SolarIconsBold.dangerTriangle,
+                color: Colors.white,
+                size: 23,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'sos.wsBanner'.tr(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontWeight: FontWeight.w700,
+                    fontSize: 15,
+                    height: 1.2,
+                  ),
+                ),
+                if (name != null && name.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: Colors.white.withValues(alpha: 0.85),
+                      fontWeight: FontWeight.w500,
+                      fontSize: 13,
+                      height: 1.2,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Material(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(999),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(999),
+              onTap: widget.onView,
+              child: Padding(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 9,
+                ),
+                child: Text(
+                  'sos.viewAction'.tr(),
+                  style: const TextStyle(
+                    color: Color(0xFFDC2626),
+                    fontWeight: FontWeight.w700,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+            ),
+          ),
+          // Yopish — ota-ona SOS'ni ko'rgan bo'lsa banner'ni qo'lda olib
+          // tashlashi mumkin (avval faqat 10 soniya kutish kerak edi).
+          IconButton(
+            onPressed: widget.onDismiss,
+            icon: Icon(
+              SolarIconsBold.closeCircle,
+              color: Colors.white.withValues(alpha: 0.8),
+              size: 20,
+            ),
+            visualDensity: VisualDensity.compact,
+            constraints: const BoxConstraints(minWidth: 32, minHeight: 32),
+            padding: EdgeInsets.zero,
+            tooltip: MaterialLocalizations.of(context).closeButtonTooltip,
+          ),
+        ],
+      ),
+    );
+  }
 }
 
 /// Ildiz widget — router, FCM init va socket lifecycle provider'lariga
@@ -95,36 +266,62 @@ class FarzandimApp extends ConsumerWidget {
         if (payload == null || payload.isEmpty) return;
         final messenger = _scaffoldMessengerKey.currentState;
         if (messenger == null) return;
-        messenger.showSnackBar(
+
+        final alertId = _sosAlertIdOf(payload);
+        // Bir xil alert takror kelsa (WS qayta ulanishi, bola tugmani qayta
+        // bosishi) banner'ni QAYTA navbatga qo'ymaymiz. Avval har event yangi
+        // SnackBar qo'shardi — navbat yig'ilib, bittasi yopilgach darhol
+        // keyingisi chiqardi va banner "umuman ketmayapti"dek ko'rinardi.
+        if (alertId != null && alertId == _shownSosAlertId) return;
+        _shownSosAlertId = alertId;
+
+        final childName =
+            payload['childName'] as String? ??
+            (payload['child'] as Map?)?['name'] as String?;
+
+        // SOS eng yuqori prioritet — navbatdagi past prioritetli banner'lar
+        // (pair-request, geo-zona) SOS'ni kutib turmasin.
+        messenger.clearSnackBars();
+        final controller = messenger.showSnackBar(
           SnackBar(
-            content: Row(
-              children: [
-                const Icon(SolarIconsBold.dangerTriangle, color: Colors.white),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '🚨 ${'sos.wsBanner'.tr()}',
-                    style: const TextStyle(
-                      fontWeight: FontWeight.w700,
-                      fontSize: 16,
-                    ),
-                  ),
-                ),
-              ],
-            ),
-            backgroundColor: const Color(0xFFEF4444),
-            duration: const Duration(seconds: 10),
+            // Fon/padding'ni `_SosBanner` o'zi boshqaradi.
+            backgroundColor: Colors.transparent,
+            elevation: 0,
+            padding: EdgeInsets.zero,
+            duration: const Duration(seconds: 12),
             behavior: SnackBarBehavior.floating,
-            // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
-            // "hal qilindi"). Pair-request banner bilan bir xil pattern.
-            action: SnackBarAction(
-              label: 'sos.viewAction'.tr(),
-              textColor: Colors.white,
-              onPressed: () =>
-                  ref.read(routerProvider).push(AppRoutes.sosAlerts),
+            content: _SosBanner(
+              childName: childName,
+              // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
+              // "hal qilindi").
+              onView: () {
+                messenger.hideCurrentSnackBar();
+                ref.read(routerProvider).push(AppRoutes.sosAlerts);
+              },
+              onDismiss: messenger.hideCurrentSnackBar,
             ),
           ),
         );
+        // Yopilgach id'ni bo'shatamiz — o'sha bola keyinchalik YANGI SOS
+        // yuborsa banner yana ko'rinishi kerak.
+        unawaited(
+          controller.closed.then((_) {
+            if (_shownSosAlertId == alertId) _shownSosAlertId = null;
+          }),
+        );
+      })
+      // SOS hal qilindi — qizil banner darhol yopilsin. Alert boshqa
+      // qurilmada hal qilingan bo'lsa ham shu event keladi.
+      ..listen<AsyncValue<Map<String, dynamic>>>(sosResolvedAlertProvider, (
+        _,
+        next,
+      ) {
+        final payload = next.valueOrNull;
+        if (payload == null || payload.isEmpty) return;
+        final resolvedId = _sosAlertIdOf(payload);
+        if (resolvedId == null || resolvedId != _shownSosAlertId) return;
+        _shownSosAlertId = null;
+        _scaffoldMessengerKey.currentState?.hideCurrentSnackBar();
       })
       // Pair request yaratildi WS event'i — sariq banner.
       ..listen<AsyncValue<Map<String, dynamic>>>(pairRequestCreatedProvider, (
