@@ -31,11 +31,17 @@ class StepCounterService {
   StepCounterService({
     required BackendInstalledAppsRepository backendRepo,
     required String childId,
+    this.onStepsUpdated,
   })  : _backendRepo = backendRepo,
         _childId = childId;
 
   final BackendInstalledAppsRepository _backendRepo;
   final String _childId;
+
+  /// Bugungi qadam soni o'zgarganda chaqiriladi — UI (todayStepsProvider)
+  /// keshini yangilash uchun. Aks holda Health Connect'dan kelgan haqiqiy son
+  /// yozilsa ham ekranda eski (yangi o'rnatishda 0) qiymat turib qolardi.
+  final void Function()? onStepsUpdated;
 
   static const _kLastCumulative = 'step.lastCumulative.v1';
   static const _kTodaySteps = 'step.todaySteps.v1';
@@ -81,31 +87,39 @@ class StepCounterService {
       return;
     }
 
-    final status = await Permission.activityRecognition.request();
-    if (!status.isGranted) {
-      debugPrint('StepCounter: ACTIVITY_RECOGNITION ruxsati yo\'q');
-      _started = false;
-      return;
-    }
-
     final prefs = await SharedPreferences.getInstance();
     _lastCumulative = prefs.getInt(_kLastCumulative) ?? -1;
     _todaySteps = prefs.getInt(_kTodaySteps) ?? 0;
     _todayKey = prefs.getString(_kTodayDate) ?? _tashkentDayKey();
 
-    // Health Connect ruxsatini BIR MARTA so'raymiz (keyin qayta bezovta
-    // qilmaymiz). Berilsa — bugungi jami telefonникi bilan mos bo'ladi.
+    // ─── 1) HEALTH CONNECT (asosiy manba) ───
+    // MUHIM: bu ACTIVITY_RECOGNITION'dan MUSTAQIL. Avval pedometer ruxsati
+    // tekshirilib, yo'q bo'lsa butun servis `return` qilardi → Health Connect
+    // umuman ishlamay, YANGI O'RNATISHDA qadam 0 bo'lib qolardi. Endi HC
+    // birinchi va mustaqil ishga tushadi.
     await _ensureHealthPermission(prefs);
-    // Darhol bugungi HAQIQIY jamini olamiz — pedometer baseline sababli
-    // yo'qolgan (ilovagacha yurilgan) qadamlar shu yerda tiklanadi.
+    // Bugungi HAQIQIY jamini darhol olamiz — pedometer baseline sababli
+    // yo'qolgan (ilovagacha yurilgan) qadamlar shu yerda tiklanadi. Yangi
+    // o'rnatishda ham darhol to'g'ri son ko'rinadi.
     await _syncFromHealth();
+    await _sync();
 
-    await _sub?.cancel();
-    _sub = Pedometer.stepCountStream.listen(
-      _onStep,
-      onError: (Object e) => debugPrint('StepCounter stream xato: $e'),
-      cancelOnError: false,
-    );
+    // ─── 2) PEDOMETER (jonli qo'shimcha / HC bo'lmasa fallback) ───
+    // Faqat shu qism ACTIVITY_RECOGNITION talab qiladi. Ruxsat bo'lmasa
+    // servis TO'XTAMAYDI — Health Connect va davriy sync ishlayveradi.
+    final status = await Permission.activityRecognition.request();
+    if (status.isGranted) {
+      await _sub?.cancel();
+      _sub = Pedometer.stepCountStream.listen(
+        _onStep,
+        onError: (Object e) => debugPrint('StepCounter stream xato: $e'),
+        cancelOnError: false,
+      );
+    } else {
+      debugPrint(
+        "StepCounter: ACTIVITY_RECOGNITION yo'q — faqat Health Connect",
+      );
+    }
 
     // Stream jim bo'lsa ham (harakatsiz) 5 daqiqada bir: Health Connect'dan
     // haqiqiy jamini olib, keyin backendga yangilaymiz.
@@ -194,6 +208,9 @@ class StepCounterService {
       await prefs.setInt(_kLastCumulative, _lastCumulative);
       await prefs.setInt(_kTodaySteps, _todaySteps);
       await prefs.setString(_kTodayDate, _todayKey);
+      // UI keshini yangilaymiz — aks holda ekranda eski son (yangi
+      // o'rnatishda 0) turib qolardi.
+      onStepsUpdated?.call();
     } catch (_) {}
   }
 

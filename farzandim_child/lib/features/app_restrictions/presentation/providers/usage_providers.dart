@@ -54,6 +54,10 @@ final stepCounterServiceProvider = Provider<StepCounterService?>((ref) {
   final service = StepCounterService(
     backendRepo: backendRepo,
     childId: pairing.childId!,
+    // Qadam soni yangilanganda (Health Connect sync yoki sensor) UI keshini
+    // yangilaymiz — aks holda `todayStepsProvider` keshlangan eski qiymatni
+    // (yangi o'rnatishda 0) ko'rsatib turardi.
+    onStepsUpdated: () => ref.invalidate(todayStepsProvider),
   );
   ref.onDispose(service.dispose);
   return service;
