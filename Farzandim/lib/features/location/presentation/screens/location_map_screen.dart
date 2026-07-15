@@ -175,10 +175,16 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     if (!_mapReady) return;
     if (!force && _userMovedCamera) return;
     final prev = _lastAnimatedTo;
+    // Dead-zone KATTALASHTIRILDI (~1m → ~20m): uy ICHIDA GPS "jitter" (har
+    // fix'da 5–50m sakraydi) kamerani doim qayta markazlashtirib butun
+    // xaritani sakratardi ("atrofga sochilish" effekti). Endi faqat SEZILARLI
+    // siljishda (bola haqiqatan boshqa joyga yurganda) kamera markazga
+    // qaytadi; kichik jitter e'tiborsiz qoladi — xarita tinch turadi.
+    const deadZoneDeg = 0.0002; // ~20–22 metr
     if (!force &&
         prev != null &&
-        (prev.latitude - target.latitude).abs() < 0.00001 &&
-        (prev.longitude - target.longitude).abs() < 0.00001) {
+        (prev.latitude - target.latitude).abs() < deadZoneDeg &&
+        (prev.longitude - target.longitude).abs() < deadZoneDeg) {
       return;
     }
     _lastAnimatedTo = target;
