@@ -37,19 +37,20 @@ void main() {
           lastSeenAt: seen,
         );
 
-    test('heartbeat 5 daqiqa ICHIDA + ulangan → ONLINE', () {
+    test('heartbeat 2 daqiqa ICHIDA + ulangan → ONLINE', () {
+      // Ostona backend ConnectionMonitor (120s) bilan moslashtirildi (3→2 daq).
       final c = child(
         connected: true,
-        seen: DateTime.now().subtract(const Duration(minutes: 2)),
+        seen: DateTime.now().subtract(const Duration(minutes: 1)),
       );
       expect(c.isLiveOnline, isTrue);
       expect(c.isConnectionLost, isFalse);
     });
 
-    test('heartbeat 5 daqiqadan ESKI + ulangan → ALOQA UZILDI', () {
+    test('heartbeat 2 daqiqadan ESKI + ulangan → ALOQA UZILDI', () {
       final c = child(
         connected: true,
-        seen: DateTime.now().subtract(const Duration(minutes: 10)),
+        seen: DateTime.now().subtract(const Duration(minutes: 3)),
       );
       expect(c.isLiveOnline, isFalse);
       expect(c.isConnectionLost, isTrue);
