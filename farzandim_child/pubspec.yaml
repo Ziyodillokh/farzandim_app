@@ -139,6 +139,7 @@ dependencies:
   flutter_markdown: ^0.7.4
   cached_network_image: ^3.4.1
   flutter_math_fork: ^0.7.4
+  health: ^13.1.4
 
 # `record_linux 0.7.2` + `record_platform_interface 1.5.0` orasida API
 # nomutanosibligi (RecordLinux.startStream signature). Eski stable

@@ -1,11 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// StepCounterService — Parvoz qadam sanagich (pedometer → backend)
+// StepCounterService — Parvoz qadam sanagich (Health Connect + pedometer)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Android TYPE_STEP_COUNTER sensori reboot'dan beri KUMULYATIV qadamni
-// beradi. Bu yerda undan KUNLIK qadamni hisoblaymiz:
-//   delta = joriy_kumulyativ - oxirgi_kumulyativ  (reboot bo'lsa = joriy)
-//   bugungi_qadam += delta
+// MANBALAR (muhimlik tartibida):
+//  1. HEALTH CONNECT — bugungi JAMI qadam (telefon o'zi ko'rsatadigan son;
+//     Samsung Health ham shu yerga yozadi). Har sync'da haqiqat manbai
+//     sifatida olinadi → ilovadagi son telefondagi son bilan MOS keladi.
+//  2. PEDOMETER (TYPE_STEP_COUNTER) — reboot'dan beri kumulyativ. Health
+//     Connect o'qishlari orasida JONLI qo'shimcha beradi (delta), va HC
+//     bo'lmagan/ruxsat berilmagan qurilmada yagona manba (fallback).
+//
+// NEGA: pedometer faqat "yoqilgandan beri jami"ni beradi — ilova kuzatuvni
+// boshlagunga qadar bugun yurilgan qadamlarni tiklab bo'lmaydi (telefonda
+// 932, ilovada 200 ko'rinardi). Health Connect butun kunni beradi.
+//
 // Kun chegarasi Toshkent (UTC+5). Holat SharedPreferences'da saqlanadi —
 // ilova qayta ochilganda yo'qolgan qadamlar delta orqali tiklanadi
 // (sensor fon'da ham sanaydi). Kunlik qadam backendga periodik yuboriladi.
@@ -13,6 +21,7 @@
 import 'dart:async';
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/health_steps_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:pedometer/pedometer.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -31,6 +40,10 @@ class StepCounterService {
   static const _kLastCumulative = 'step.lastCumulative.v1';
   static const _kTodaySteps = 'step.todaySteps.v1';
   static const _kTodayDate = 'step.todayDate.v1';
+
+  /// Health Connect ruxsati bir marta so'ralgani — har start'da qayta
+  /// so'rab foydalanuvchini bezovta qilmaslik uchun.
+  static const _kHcAsked = 'step.hcAsked.v1';
 
   /// Bir kunlik maqbul qadam shifti (backend clamp bilan bir xil) — qadam
   /// RAQAMI shundan oshib ketmaydi.
@@ -80,6 +93,13 @@ class StepCounterService {
     _todaySteps = prefs.getInt(_kTodaySteps) ?? 0;
     _todayKey = prefs.getString(_kTodayDate) ?? _tashkentDayKey();
 
+    // Health Connect ruxsatini BIR MARTA so'raymiz (keyin qayta bezovta
+    // qilmaymiz). Berilsa — bugungi jami telefonникi bilan mos bo'ladi.
+    await _ensureHealthPermission(prefs);
+    // Darhol bugungi HAQIQIY jamini olamiz — pedometer baseline sababli
+    // yo'qolgan (ilovagacha yurilgan) qadamlar shu yerda tiklanadi.
+    await _syncFromHealth();
+
     await _sub?.cancel();
     _sub = Pedometer.stepCountStream.listen(
       _onStep,
@@ -87,14 +107,47 @@ class StepCounterService {
       cancelOnError: false,
     );
 
-    // Stream jim bo'lsa ham (harakatsiz) 5 daqiqada bir backendga yangilaymiz.
+    // Stream jim bo'lsa ham (harakatsiz) 5 daqiqada bir: Health Connect'dan
+    // haqiqiy jamini olib, keyin backendga yangilaymiz.
     _syncTimer?.cancel();
-    _syncTimer = Timer.periodic(
-      const Duration(minutes: 5),
-      (_) => unawaited(_sync()),
-    );
+    _syncTimer = Timer.periodic(const Duration(minutes: 5), (_) async {
+      await _syncFromHealth();
+      await _sync();
+    });
 
     debugPrint('=== StepCounterService.start childId=$_childId ===');
+  }
+
+  /// Health Connect ruxsatini bir marta so'raydi (`_kHcAsked` bayrog'i bilan).
+  /// Rad etilsa/HC bo'lmasa — jim, pedometer fallback ishlaydi.
+  Future<void> _ensureHealthPermission(SharedPreferences prefs) async {
+    final hc = HealthStepsService.instance;
+    try {
+      if (!await hc.isAvailable()) return;
+      if (await hc.hasPermission()) return;
+      if (prefs.getBool(_kHcAsked) ?? false) return;
+      await prefs.setBool(_kHcAsked, true);
+      await hc.requestPermission();
+    } catch (e) {
+      debugPrint('StepCounter: Health ruxsat xato: $e');
+    }
+  }
+
+  /// Health Connect'dagi BUGUNGI jamini `_todaySteps`ga yozadi — bu telefon
+  /// (Samsung) ko'rsatadigan son. HC yo'q/ruxsat yo'q bo'lsa hech nima
+  /// qilmaydi va pedometer hisobi saqlanadi (fallback).
+  Future<void> _syncFromHealth() async {
+    try {
+      final hcSteps = await HealthStepsService.instance.stepsForToday();
+      if (hcSteps == null) return;
+      // Kun almashgan bo'lsa kalitni ham yangilaymiz (HC allaqachon yangi
+      // kunning jamini beradi).
+      _todayKey = _tashkentDayKey();
+      _todaySteps = hcSteps.clamp(0, _dayStepMax);
+      await _persist();
+    } catch (e) {
+      debugPrint('StepCounter: Health sync xato: $e');
+    }
   }
 
   Future<void> _onStep(StepCount event) async {

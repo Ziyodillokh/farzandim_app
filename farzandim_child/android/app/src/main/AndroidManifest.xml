@@ -45,6 +45,18 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK"/>
 
+    <!-- Health Connect — bugungi QADAM jamini telefonning o'z sog'liq
+         ma'lumotidan o'qish (Samsung Health ham shu yerga yozadi). Pedometer
+         faqat ilova ishga tushgandan keyingi qadamni sanaydi; Health Connect
+         esa butun kunni beradi → ota-ona/bola ilovasidagi son telefondagi
+         (Samsung) son bilan mos bo'ladi. -->
+    <uses-permission android:name="android.permission.health.READ_STEPS"/>
+
+    <!-- Health Connect ilovasini ko'rish (Android 13 va undan past). -->
+    <queries>
+        <package android:name="com.google.android.apps.healthdata"/>
+    </queries>
+
     <application
         android:label="Parvoz Growth"
         android:name="${applicationName}"
@@ -73,7 +85,24 @@
                 <action android:name="android.intent.action.MAIN"/>
                 <category android:name="android.intent.category.LAUNCHER"/>
             </intent-filter>
+            <!-- Health Connect ruxsati nima uchun kerakligini tushuntirish
+                 ekrani (Android 13 va past). -->
+            <intent-filter>
+                <action android:name="androidx.health.ACTION_SHOW_PERMISSIONS_RATIONALE"/>
+            </intent-filter>
         </activity>
+        <!-- Health Connect ruxsat tushuntirishi — Android 14+ (targetSdk 35)
+             uchun majburiy alias. -->
+        <activity-alias
+            android:name="ViewPermissionUsageActivity"
+            android:exported="true"
+            android:targetActivity=".MainActivity"
+            android:permission="android.permission.START_VIEW_PERMISSION_USAGE">
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW_PERMISSION_USAGE"/>
+                <category android:name="android.intent.category.HEALTH_PERMISSIONS"/>
+            </intent-filter>
+        </activity-alias>
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

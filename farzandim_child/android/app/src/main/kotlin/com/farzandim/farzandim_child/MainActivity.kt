@@ -4,11 +4,14 @@ import android.app.admin.DevicePolicyManager
 import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
-import io.flutter.embedding.android.FlutterActivity
+import io.flutter.embedding.android.FlutterFragmentActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-class MainActivity : FlutterActivity() {
+// FlutterFragmentActivity (FlutterActivity emas) — Health Connect ruxsat
+// so'rovi (`health` paketi) FragmentActivity talab qiladi. Qolgan hamma narsa
+// bir xil ishlaydi (configureFlutterEngine / onNewIntent / startActivity).
+class MainActivity : FlutterFragmentActivity() {
     private val unlockChannelName = "farzandim_child/unlock"
     private var unlockChannel: MethodChannel? = null
 
