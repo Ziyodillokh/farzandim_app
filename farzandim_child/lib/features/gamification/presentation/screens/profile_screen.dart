@@ -120,14 +120,15 @@ class _BadgeSpec {
   final String? desc;
 }
 
-// PREVIEW yutuqlar — Figma'dagi 12 katak (6 ochilgan + 6 yopiq), 06/100.
-// Ochilganlar — foydalanuvchi bergan tayyor medal PNG'lari.
+// PREVIEW yutuqlar — 12 katak. Bola hali hech narsa yutmagan bo'lsa HAMMASI
+// QULFLANGAN ko'rinadi (avval 6 tasi hardcode `unlocked: true` edi → "hamma
+// yutuq ochiq bo'lib qolgan" bug'i). Real yutuq unlock bo'lganda `else`
+// shoxida katalogdan chinakam holat bilan ko'rsatiladi.
 const _previewBadges = [
   _BadgeSpec(
     '1-kitob',
     _purple,
     asset: 'assets/icons/badge_book1.png',
-    unlocked: true,
     title: 'Birinchi kitob yakunlandi!',
     desc:
         "Tabriklaymiz! Siz birinchi kitobingizni oxirigacha o'qib, "
@@ -137,7 +138,6 @@ const _previewBadges = [
     '7 kun uzluksiz',
     _orange,
     asset: 'assets/icons/badge_7kun.png',
-    unlocked: true,
     title: '7 kun uzluksiz!',
     desc:
         "Tabriklaymiz! Siz 7 kun uzluksiz shug'ullanib, "
@@ -147,7 +147,6 @@ const _previewBadges = [
     'Math TOP-100',
     _green,
     asset: 'assets/icons/badge_top100.png',
-    unlocked: true,
     title: 'Math TOP-100!',
     desc:
         "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
@@ -157,7 +156,6 @@ const _previewBadges = [
     '10-kitob',
     _red,
     asset: 'assets/icons/badge_book10.png',
-    unlocked: true,
     title: '10 ta kitob yakunlandi!',
     desc:
         "Tabriklaymiz! Siz 10 ta kitobni oxirigacha o'qib, "
@@ -167,7 +165,6 @@ const _previewBadges = [
     '100 kun',
     _amber,
     asset: 'assets/icons/badge_100kun.png',
-    unlocked: true,
     title: '100 kun uzluksiz!',
     desc:
         "Tabriklaymiz! Siz 100 kun uzluksiz shug'ullanib, "
@@ -177,7 +174,6 @@ const _previewBadges = [
     'Math TOP-10',
     _stepBlue,
     asset: 'assets/icons/badge_top10.png',
-    unlocked: true,
     title: 'Math TOP-10!',
     desc:
         "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
@@ -304,7 +300,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final String countText;
     if (unlockedIds.isEmpty) {
       badges = _previewBadges;
-      countText = '06/100';
+      countText = '00/100';
     } else {
       final all = Achievements.all;
       badges = [

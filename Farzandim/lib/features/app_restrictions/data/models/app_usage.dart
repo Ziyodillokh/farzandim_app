@@ -64,10 +64,15 @@ class AppUsageEntry {
   Duration get totalTime => Duration(milliseconds: totalTimeMs);
 
   /// `2 soat 30 daq` / `5 daq` / `< 1 daq` formatda matn.
+  ///
+  /// Daqiqa ROUND qilinadi (floor emas) — backend jami vaqtni `Math.round`
+  /// bilan hisoblaydi, shuning uchun per-ilova daqiqalari ham shu bilan mos
+  /// bo'lishi kerak (avval soniyalar tashlanib "daqiqalar to'g'ri kelmasdi").
   String get formattedTime {
-    final h = totalTime.inHours;
-    final m = totalTime.inMinutes % 60;
-    if (h == 0 && m == 0) return '< 1 daq';
+    final totalMin = (totalTimeMs / 60000).round();
+    if (totalMin <= 0) return '< 1 daq';
+    final h = totalMin ~/ 60;
+    final m = totalMin % 60;
     if (h == 0) return '$m daq';
     if (m == 0) return '$h soat';
     return '$h soat $m daq';

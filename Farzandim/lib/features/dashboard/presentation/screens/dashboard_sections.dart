@@ -13,6 +13,11 @@ class _Header extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unread = ref.watch(unreadCountProvider);
+    // Har 30s "puls" — `isLiveOnline` (DateTime.now() asosli getter) vaqt
+    // o'tishi bilan qayta hisoblansin. Avval hech kim bu tick'ni watch
+    // qilmasdi → bola offline bo'lganda ham nuqta yashil "muzlab" qolardi
+    // (list o'zgarmagani uchun rebuild bo'lmasdi).
+    ref.watch(statusTickProvider);
     final online = child.isLiveOnline;
     final battery = child.deviceInfo?.batteryLevel;
     final device = (child.deviceModel != null && child.deviceModel!.isNotEmpty)
@@ -598,9 +603,10 @@ class _XpCard extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profile = ref.watch(childProfileProvider(child.id)).valueOrNull;
-    // Target dizayn "DON balansi" deydi. Backend hozircha `xp` sifatida
-    // saqlaydi — shu qiymat DON deb ko'rsatiladi (faqat real).
-    final xp = profile?.xp ?? 0;
+    // "DON balansi" kartasi — HAQIQIY DON (donBalance), `xp` EMAS. Avval `xp`
+    // o'qilardi, shuning uchun qadam/video kabi DON-only mukofotlar (xpDelta=0)
+    // bu yerda ko'rinmasdi ("DON qo'shilmayapti" shikoyati). Endi donBalance.
+    final xp = profile?.donBalance ?? 0;
     final lb = ref.watch(
       leaderboardProvider((childId: child.id, period: 'all', region: null)),
     );

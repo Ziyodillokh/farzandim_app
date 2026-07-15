@@ -28,9 +28,6 @@ import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
 import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:farzandim_child/features/contests/data/repositories/contests_backend_repository.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
-import 'package:farzandim_child/features/gamification/data/models/xp_event.dart';
-import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
-import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 
 class QuizNotifier extends StateNotifier<QuizState> {
   QuizNotifier(this._ref, this.contest) : super(const QuizState()) {
@@ -53,12 +50,6 @@ class QuizNotifier extends StateNotifier<QuizState> {
 
   /// Backend OlympiadAttempt id. _start() paytida olinadi.
   String? _attemptId;
-
-  /// XP yutilganmi yo'qmi — har konkursga bir martagacha cheklash uchun
-  /// dedup `relatedId: contest.id` orqali ham qilinadi (XpService dedup),
-  /// lekin local flag chaqirishni qisqartirish uchun.
-  bool _joinedXpAwarded = false;
-  bool _winnerXpAwarded = false;
 
   Future<void> _start() async {
     state = state.copyWith(status: QuizStatus.loading);
@@ -102,9 +93,9 @@ class QuizNotifier extends StateNotifier<QuizState> {
     final budget = _perQuestionSeconds * state.effectiveQuestions.length;
     state = state.copyWith(status: QuizStatus.playing, timeRemaining: budget);
     _startTotalTimer();
-    // Backend attempt _start()da AVVAL boshlangan (idempotent).
-    // Boshlangach darhol "contestJoined" XP — Konsept v2 4.2: +30 XP, +5 DON
-    unawaited(_awardJoinedXp());
+    // Backend attempt _start()da AVVAL boshlangan (idempotent). Ishtirok
+    // bonusi (30 XP / 5 DON) endi BACKEND startAttempt'da beriladi —
+    // ChildProfile.donBalance'da saqlanadi (avval o'lik Firestore'ga ketardi).
   }
 
   Future<void> _startBackendAttempt() async {
@@ -118,61 +109,6 @@ class QuizNotifier extends StateNotifier<QuizState> {
       debugPrint('Quiz: attempt started id=$id');
     } catch (e) {
       debugPrint('Quiz: startAttempt failed: $e');
-    }
-  }
-
-  Future<void> _awardJoinedXp() async {
-    if (_joinedXpAwarded) return;
-    _joinedXpAwarded = true;
-
-    final pairing = _ref.read(pairingStateProvider);
-    final parentUid = pairing.parentUid;
-    final childId = pairing.childId;
-    if (parentUid == null || childId == null) return;
-
-    try {
-      await _ref
-          .read(xpServiceProvider)
-          .awardXp(
-            parentUid: parentUid,
-            childId: childId,
-            type: XpEventType.contestJoined,
-            relatedId: contest.id,
-          );
-    } catch (e) {
-      // XP yutuq fail bo'lsa quiz davom etadi — log + ignore.
-      debugPrint('XP award (contest_joined) error: $e');
-    }
-  }
-
-  Future<void> _awardWinnerXp() async {
-    if (_winnerXpAwarded) return;
-    _winnerXpAwarded = true;
-
-    final pairing = _ref.read(pairingStateProvider);
-    final parentUid = pairing.parentUid;
-    final childId = pairing.childId;
-    if (parentUid == null || childId == null) return;
-
-    try {
-      final xpService = _ref.read(xpServiceProvider);
-
-      await xpService.awardXp(
-        parentUid: parentUid,
-        childId: childId,
-        type: XpEventType.contestWon,
-        relatedId: contest.id,
-      );
-
-      // XP yutilgach achievement check — yangi unlock'lar bo'lsa
-      // notifier'dan oqib chiqadi (gamification profile stream'da
-      // unlockedAchievements ro'yxati o'sganda UI snackbar ko'rsatadi).
-      await xpService.buildContextAndCheck(
-        parentUid: parentUid,
-        childId: childId,
-      );
-    } catch (e) {
-      debugPrint('XP award (contest_won) error: $e');
     }
   }
 
@@ -361,13 +297,11 @@ class QuizNotifier extends StateNotifier<QuizState> {
     _feedbackTimer?.cancel();
     state = state.copyWith(status: QuizStatus.finished);
 
-    // Backend submit (canonical score)
+    // Backend submit (canonical score) — test yakunlanganda backend
+    // `grantOlympiadXp` orqali DON+XP mukofoti beriladi (persist). G'olib
+    // bonusi endi shu completion mukofotiga qo'shilgan (avval o'lik
+    // Firestore'ga yozilardi).
     unawaited(_submitBackendAttempt());
-
-    // G'olib bonus XP — UI bilan AYNI chegara (QuizState.winnerThreshold).
-    if (state.isWinner) {
-      unawaited(_awardWinnerXp());
-    }
 
     // Shaxsiy rekord (lokal) — "Natija" kartasidagi "Rekord".
     unawaited(_persistRecord());

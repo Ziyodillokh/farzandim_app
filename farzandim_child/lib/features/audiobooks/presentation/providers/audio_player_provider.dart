@@ -172,6 +172,11 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   Future<void> _maybeSavePosition(Duration pos) async {
     final book = state.currentBook;
     if (book == null) return;
+    // FAQAT haqiqatan IJRO paytida va boshidan uzoqda saqlaymiz. Aks holda
+    // `setUrl`/`stop`/`seek` chiqargan 0-pozitsiya saqlangan "davom" nuqtasini
+    // o'chirib yuborardi → audio har safar boshidan boshlanardi (bir sessiyada
+    // ikkinchi marta o'ynatilganda). Bu 0-emission'lardan himoya.
+    if (!_player.playing || pos.inSeconds <= 3) return;
     if ((pos - _lastSavedPos).abs() < const Duration(seconds: 5)) return;
     _lastSavedPos = pos;
     try {

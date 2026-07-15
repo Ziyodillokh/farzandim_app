@@ -200,6 +200,22 @@ export class ConsumerOlympiadsService {
       throw new ForbiddenException('Konkurs hozir faol emas');
     }
 
+    // Konkursda ISHTIROK bonusi (30 XP / 5 DON) — BIR olympiad uchun bir marta
+    // (idempotent, relatedId=olympiadId). Avval bu bonus BOLA ilovasida
+    // Firestore'ga yozilardi (o'lik oqim: dashboard ko'rmasdi, ilova qayta
+    // o'rnatilganda yo'qolardi). Endi backend beradi → ChildProfile.donBalance
+    // (childId bo'yicha saqlanadi, reinstall'da ham turadi).
+    try {
+      await this.gamification.awardXp(child.childId, {
+        type: XpEventType.CONTEST_JOIN,
+        xpDelta: 30,
+        donDelta: 5,
+        relatedId: olympiadId,
+      });
+    } catch (e) {
+      this.logger.error('contest join bonus failed', e as Error);
+    }
+
     // Check existing attempt (unique constraint: olympiadId + childId)
     const existing = await this.prisma.olympiadAttempt.findUnique({
       where: {

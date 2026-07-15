@@ -279,13 +279,15 @@ class Child {
   // "online" ko'rsatib turganda push kelib nomuvofiqlik bo'lardi).
 
   /// Bola qurilmasi HOZIR jonli onlaynmi — `isConnected` (pairing) VA oxirgi
-  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 3 daqiqa ichida bo'lishi
-  /// shart. Heartbeat to'xtasa `false`.
+  /// heartbeat (`lastSeenAt`/`deviceInfo.lastSeen`) 2 daqiqa ichida bo'lishi
+  /// shart. Heartbeat to'xtasa `false`. Ostona backend ConnectionMonitor
+  /// (CONNECTION_LOST_SECONDS=120s) bilan AYNAN mos — avval 3 daqiqa edi va
+  /// backend "aloqa uzildi" push yuborganda UI hali "online" ko'rsatib turardi.
   bool get isLiveOnline {
     final seen = lastSeenAt ?? deviceInfo?.lastSeen;
     return isConnected &&
         seen != null &&
-        DateTime.now().difference(seen) < const Duration(minutes: 3);
+        DateTime.now().difference(seen) < const Duration(minutes: 2);
   }
 
   /// Ulangan, lekin heartbeat 3 daqiqadan beri jim — "Aloqa uzildi" holati
