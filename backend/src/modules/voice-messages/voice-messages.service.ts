@@ -10,6 +10,7 @@ import {
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
 import { extname } from 'path';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { FcmService } from '../../common/fcm/fcm.service';
@@ -45,6 +46,46 @@ export class VoiceMessagesService {
     private readonly audit: AuditService,
     private readonly realtime: RealtimeGateway,
   ) {}
+
+  /**
+   * Chat xabari kelganda `Notification` jadvaliga ham yoziladi — avval
+   * FAQAT push (FCM) yuborilardi, tarix hech qayerda saqlanmasdi (bola
+   * bildirishnomalar ekranida chat xabari umuman ko'rinmasdi). `data.
+   * relatedRoute` bola ilovasidagi UMUMIY route-based tap mexanizmini
+   * ishlatadi (`AppNotification.relatedRoute` → `context.push`) — bola
+   * tomonda qo'shimcha kod o'zgarishi shart emas. `data.senderId`
+   * `listByChild`da o'zi yuborgan xabarini o'ziga qaytarib
+   * ko'rsatmaslik uchun filtrlanadi. Xato bo'lsa chat oqimini
+   * buzmasligi uchun best-effort (faqat log).
+   */
+  private async createChatNotification(opts: {
+    childId: string;
+    senderId: string;
+    title: string;
+    body: string;
+    messageId: string;
+    chatType: 'voice' | 'video';
+  }): Promise<void> {
+    try {
+      const notification = await this.prisma.notification.create({
+        data: {
+          childId: opts.childId,
+          type: NotificationType.VOICE,
+          title: opts.title,
+          body: opts.body,
+          data: {
+            type: opts.chatType,
+            messageId: opts.messageId,
+            senderId: opts.senderId,
+            relatedRoute: '/voice-chat',
+          },
+        },
+      });
+      this.realtime.emitToChild(opts.childId, 'notification:created', notification);
+    } catch (err) {
+      this.logger.warn(`Chat notification create failed: ${err}`);
+    }
+  }
 
   async send(
     senderId: string,
@@ -110,10 +151,12 @@ export class VoiceMessagesService {
 
     this.realtime.emitToUser(receiverId, 'voice:received', voiceMessage);
 
+    const title = voiceMessage.sender.name ?? 'Yangi xabar';
+    const body = 'Ovozli xabar yubordi';
     try {
       await this.fcm.sendPushToUser(receiverId, {
-        title: voiceMessage.sender.name ?? 'Yangi xabar',
-        body: 'Ovozli xabar yubordi',
+        title,
+        body,
         data: {
           type: 'voice',
           messageId: voiceMessage.id,
@@ -123,6 +166,14 @@ export class VoiceMessagesService {
     } catch (err) {
       this.logger.warn(`Voice push failed for message ${voiceMessage.id}`, err);
     }
+    await this.createChatNotification({
+      childId: link.childId,
+      senderId,
+      title,
+      body,
+      messageId: voiceMessage.id,
+      chatType: 'voice',
+    });
 
     return voiceMessage;
   }
@@ -142,6 +193,15 @@ export class VoiceMessagesService {
       throw new BadRequestException('Qabul qiluvchi topilmadi');
     }
 
+    // Oila bog'lanishini tekshirish (send/sendMedia bilan bir xil) —
+    // avval bu yerda tekshiruv yo'q edi + notification uchun childId kerak.
+    const link = await findFamilyLink(this.prisma, senderId, receiverId);
+    if (!link) {
+      throw new ForbiddenException(
+        'Sender and receiver are not in the same family',
+      );
+    }
+
     const voiceMessage = await this.prisma.voiceMessage.create({
       data: {
         senderId,
@@ -158,10 +218,12 @@ export class VoiceMessagesService {
 
     this.realtime.emitToUser(receiverId, 'voice:received', voiceMessage);
 
+    const title = voiceMessage.sender.name ?? 'Yangi xabar';
+    const body = text.length > 80 ? `${text.slice(0, 80)}…` : text;
     try {
       await this.fcm.sendPushToUser(receiverId, {
-        title: voiceMessage.sender.name ?? 'Yangi xabar',
-        body: text.length > 80 ? `${text.slice(0, 80)}…` : text,
+        title,
+        body,
         data: {
           type: 'voice',
           messageId: voiceMessage.id,
@@ -171,6 +233,14 @@ export class VoiceMessagesService {
     } catch (err) {
       this.logger.warn(`Text push failed for message ${voiceMessage.id}`, err);
     }
+    await this.createChatNotification({
+      childId: link.childId,
+      senderId,
+      title,
+      body,
+      messageId: voiceMessage.id,
+      chatType: 'voice',
+    });
 
     return voiceMessage;
   }
@@ -256,10 +326,12 @@ export class VoiceMessagesService {
 
     this.realtime.emitToUser(receiverId, 'voice:received', voiceMessage);
 
+    const title = voiceMessage.sender.name ?? 'Yangi xabar';
+    const body = isImage ? '🖼 Rasm yubordi' : '📎 Hujjat yubordi';
     try {
       await this.fcm.sendPushToUser(receiverId, {
-        title: voiceMessage.sender.name ?? 'Yangi xabar',
-        body: isImage ? '🖼 Rasm yubordi' : '📎 Hujjat yubordi',
+        title,
+        body,
         data: {
           type: 'voice',
           messageId: voiceMessage.id,
@@ -269,6 +341,14 @@ export class VoiceMessagesService {
     } catch (err) {
       this.logger.warn(`Media push failed for message ${voiceMessage.id}`, err);
     }
+    await this.createChatNotification({
+      childId: link.childId,
+      senderId,
+      title,
+      body,
+      messageId: voiceMessage.id,
+      chatType: 'voice',
+    });
 
     return voiceMessage;
   }

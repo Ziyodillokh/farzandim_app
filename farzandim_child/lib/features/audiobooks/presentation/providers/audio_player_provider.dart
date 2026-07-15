@@ -10,6 +10,7 @@
 
 import 'dart:async';
 
+import 'package:audio_service/audio_service.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -18,6 +19,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
+import 'package:farzandim_child/features/audiobooks/data/services/audiobook_audio_handler.dart';
 import 'package:farzandim_child/features/statistics/presentation/providers/stats_providers.dart';
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
@@ -43,6 +45,9 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
             .read(audiobooksBackendRepositoryProvider)
             .reportDuration(book.id, dur.inSeconds);
       }
+      // Lock-screen/bildirishnoma kartochkasidagi davomiylikni ham
+      // yangilaymiz (boshida noma'lum bo'lishi mumkin — stream orqali).
+      if (book != null) _updateMediaItem(book, duration: dur);
     });
 
     _playerStateSub = _player.playerStateStream.listen((s) {
@@ -71,6 +76,52 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
   // Qaysi kitob uchun BOOK_READ yuborilgan (bir marta).
   String? _bookReadReportedFor;
 
+  // Background audio (lock-screen/bildirishnoma) — FAQAT shu player'ga
+  // ulangan custom handler (sabab: `audiobook_audio_handler.dart` fayl
+  // boshidagi izoh — `just_audio_background` global almashtirish chat
+  // player'ini sindiradi). Init muvaffaqiyatsiz bo'lsa `null` qoladi —
+  // audio baribir oddiy (faqat foreground) rejimda ishlayveradi.
+  AudiobookAudioHandler? _audioHandler;
+  bool _audioServiceInitAttempted = false;
+
+  Future<void> _ensureAudioService() async {
+    if (_audioServiceInitAttempted) return;
+    _audioServiceInitAttempted = true;
+    try {
+      _audioHandler = await AudioService.init(
+        builder: () => AudiobookAudioHandler(_player),
+        config: const AudioServiceConfig(
+          androidNotificationChannelId:
+              'com.farzandim.farzandim_child.audiobook',
+          androidNotificationChannelName: 'Audiokitob',
+          // `androidNotificationOngoing` faqat `androidStopForegroundOnPause:
+          // true` (default) bilan birga ishlaydi (paket o'zi shart qo'yadi) —
+          // shu kombinatsiya bildirishnomani pauza paytida ham ko'rsatadi.
+          androidNotificationOngoing: true,
+        ),
+      );
+    } catch (e) {
+      debugPrint(
+        '[AudioPlayer] Background audio init xato (foreground rejimda '
+        'davom etadi): $e',
+      );
+    }
+  }
+
+  void _updateMediaItem(AudiobookModel book, {Duration? duration}) {
+    final handler = _audioHandler;
+    if (handler == null) return;
+    handler.setMediaItem(
+      MediaItem(
+        id: book.id,
+        title: book.title,
+        artist: book.author,
+        duration: duration ?? state.duration,
+        artUri: Uri.tryParse(book.coverUrl),
+      ),
+    );
+  }
+
   Future<void> play(AudiobookModel book) async {
     // Tinglashlar hisoblagichi (backend analitikasi) — yangi kitob qo'yilganda.
     if (state.currentBook?.id != book.id) {
@@ -84,13 +135,17 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       return;
     }
 
-    // ODDIY just_audio — ovozli xabarlar bilan BIR XIL (isbotlangan, ishonchli).
-    // Avval just_audio_background + MediaItem tag ishlatilgan edi; release
-    // APK'da audio JIM qolib duration 0 bo'lardi (background media servis ishga
-    // tushmasdi). Lock-screen controls o'rniga ishonchli ijroni tanladik.
+    // Background audio — ilova fondan/ekran o'chsa ham davom etishi uchun
+    // (bir martalik, best-effort — xato bo'lsa ham audio foreground'da
+    // ishlayveradi, pastdagi asosiy try/catch buzilmaydi).
+    await _ensureAudioService();
+
     // Xato bo'lsa jim qolmasdan UI'ga chiqaramiz.
     try {
       final dur = await _player.setUrl(url);
+      // Lock-screen/bildirishnoma kartochkasi — darhol (duration hali
+      // noma'lum bo'lsa keyin `_durationSub` orqali yangilanadi).
+      _updateMediaItem(book, duration: dur);
       // Qolgan joydan davom: saqlangan pozitsiya bo'lsa o'sha yerga o'tamiz
       // (juda boshi/oxiri bo'lsa — noldan). Aks holda 0dan boshlanadi.
       final saved = await _loadSavedPosition(book.id);

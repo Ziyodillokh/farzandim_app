@@ -83,9 +83,14 @@ dependencies:
 
   # Audio player
   just_audio: ^0.9.42
-  # Background audio — telefon qulflanganda ham audio davom etadi
-  # (Android: foreground service + media notification, iOS: AVAudioSession).
-  just_audio_background: ^0.0.1-beta.13
+  # Background audio (audiokitob) — telefon qulflanganda/fondan ham davom
+  # etadi (Android: foreground service + media notification). MUHIM:
+  # `just_audio_background` EMAS — o'sha paket global platformani
+  # almashtirib boshqa `just_audio` player'larni (ovozli xabar chat)
+  # sindiradi. Custom handler (`audiobooks/data/services/
+  # audiobook_audio_handler.dart`) `audio_service`ning o'zini to'g'ridan-
+  # to'g'ri, faqat SHU player uchun ishlatadi.
+  audio_service: ^0.18.15
 
   # Quiz / contest UX
   confetti: ^0.7.0

@@ -12,6 +12,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -128,7 +129,24 @@ class FcmService {
       android: androidInit,
       iOS: iosInit,
     );
-    await _localNotifications.initialize(initSettings);
+    await _localNotifications.initialize(
+      initSettings,
+      // Foreground'da ko'rsatilgan lokal banner bosilganda — avval BU
+      // callback umuman yo'q edi, shu sababli chat push'i (salom xabari)
+      // banner'ga tegib hech qayerga navigatsiya qilmasdi. Payload'dagi
+      // FCM `data`ni tiklab xuddi background tap bilan bir xil yo'lga
+      // (`onMessageTap` → `_handleChatTap` va h.k.) yuboramiz.
+      onDidReceiveNotificationResponse: (response) {
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          final data = (jsonDecode(payload) as Map).cast<String, dynamic>();
+          onMessageTap?.call(RemoteMessage(data: data));
+        } catch (e) {
+          debugPrint('Local notification payload decode xato: $e');
+        }
+      },
+    );
 
     const androidChannel = AndroidNotificationChannel(
       _defaultChannelId,
@@ -175,7 +193,16 @@ class FcmService {
     final id =
         (message.messageId ?? DateTime.now().toIso8601String()).hashCode &
         0x7FFFFFFF;
-    await _localNotifications.show(id, title, body, details);
+    // Payload — banner bosilganda `onDidReceiveNotificationResponse`da
+    // asl FCM `data`ni tiklash uchun (chat type/senderId/messageId va h.k.).
+    final payload = message.data.isEmpty ? null : jsonEncode(message.data);
+    await _localNotifications.show(
+      id,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
   }
 
   /// Pair/login MUVAFFAQIYATIDAN KEYIN chaqiriladi — token backend'ga

@@ -51,10 +51,17 @@ Future<void> main() async {
   // (Roboto) ishlatamiz. Mobil'da ham xavfsiz: offline holatda crash yo'q.
   GoogleFonts.config.allowRuntimeFetching = false;
 
-  // ESLATMA: just_audio_background (background media servis) OLIB TASHLANDI —
-  // release APK'da audiokitob JIM qolib duration 0 bo'lardi. Endi audiokitob
-  // oddiy just_audio bilan ishlaydi (ovozli xabarlar kabi, ishonchli). Telefon
-  // qulflanganda davom etish keyin alohida, sinab ko'rilgan holda qo'shiladi.
+  // ESLATMA: audiokitob background audio endi `audio_service`ning o'zi bilan
+  // (custom `AudiobookAudioHandler`, `audiobooks/data/services/`) — LAZY,
+  // `AudioPlayerNotifier` ichida birinchi `play()`da ishga tushadi, shu
+  // sababli bu yerda global init shart emas. Avval `just_audio_background`
+  // ishlatilgan edi va OLIB TASHLANGAN edi — sabab: o'sha paket global
+  // `JustAudioPlatform.instance`ni almashtirib, BUTUN ilova bo'yicha faqat
+  // BITTA `just_audio.AudioPlayer()`ga ruxsat beradi, bu esa ovozli xabar
+  // chat player'ini (alohida instansiya) PlatformException bilan sindirgan
+  // edi ("audio JIM qolib duration 0"). Custom handler faqat audiokitob
+  // player'iga bog'langani uchun bu muammo endi yo'q (tafsilot: handler
+  // faylidagi izoh).
 
   // ── PERF: init'lar PARALLEL (ketma-ket await o'rniga) ──────────────
   // Avval EasyLocalization → Firebase → date×2 KETMA-KET kutilardi (sekin

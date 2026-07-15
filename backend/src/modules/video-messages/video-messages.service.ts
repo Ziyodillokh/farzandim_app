@@ -9,6 +9,7 @@ import {
   Logger,
 } from '@nestjs/common';
 import { randomUUID } from 'crypto';
+import { NotificationType } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { FcmService } from '../../common/fcm/fcm.service';
@@ -47,6 +48,39 @@ export class VideoMessagesService {
     private readonly fcm: FcmService,
     private readonly realtime: RealtimeGateway,
   ) {}
+
+  /**
+   * Voice-messages.service.ts'dagi bir xil nomli metod bilan parallel —
+   * chat xabari `Notification` jadvaliga ham yoziladi (avval faqat push
+   * yuborilardi, tarix saqlanmasdi). Xato chat oqimini buzmasin — log.
+   */
+  private async createChatNotification(opts: {
+    childId: string;
+    senderId: string;
+    title: string;
+    body: string;
+    messageId: string;
+  }): Promise<void> {
+    try {
+      const notification = await this.prisma.notification.create({
+        data: {
+          childId: opts.childId,
+          type: NotificationType.VOICE,
+          title: opts.title,
+          body: opts.body,
+          data: {
+            type: 'video',
+            messageId: opts.messageId,
+            senderId: opts.senderId,
+            relatedRoute: '/voice-chat',
+          },
+        },
+      });
+      this.realtime.emitToChild(opts.childId, 'notification:created', notification);
+    } catch (err) {
+      this.logger.warn(`Chat notification create failed: ${err}`);
+    }
+  }
 
   async send(
     senderId: string,
@@ -112,10 +146,12 @@ export class VideoMessagesService {
 
     this.realtime.emitToUser(receiverId, 'video:received', videoMessage);
 
+    const title = videoMessage.sender.name ?? 'Yangi xabar';
+    const body = 'Video xabar yubordi';
     try {
       await this.fcm.sendPushToUser(receiverId, {
-        title: videoMessage.sender.name ?? 'Yangi xabar',
-        body: 'Video xabar yubordi',
+        title,
+        body,
         data: {
           type: 'video',
           messageId: videoMessage.id,
@@ -125,6 +161,13 @@ export class VideoMessagesService {
     } catch (err) {
       this.logger.warn(`Video push failed for message ${videoMessage.id}`, err);
     }
+    await this.createChatNotification({
+      childId: link.childId,
+      senderId,
+      title,
+      body,
+      messageId: videoMessage.id,
+    });
 
     return videoMessage;
   }

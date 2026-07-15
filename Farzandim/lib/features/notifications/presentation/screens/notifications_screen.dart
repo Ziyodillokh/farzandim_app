@@ -5,6 +5,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
@@ -46,6 +47,21 @@ class NotificationsScreen extends ConsumerWidget {
 
   void _onTap(BuildContext context, WidgetRef ref, AppNotification n) {
     ref.read(notificationsProvider.notifier).markAsRead(n.id);
+    // Chat xabari (ovozli/matn/video) — avval bu holat umuman
+    // ko'rilmagan edi, generik "detal" ekraniga ochilardi. `senderId`
+    // (bola userId) bo'yicha bolani topib to'g'ridan-to'g'ri chatga.
+    final chatType = n.data?['type'];
+    if (chatType == 'voice' || chatType == 'video') {
+      final senderId = n.data?['senderId'] as String?;
+      for (final c in ref.read(childrenListProvider)) {
+        if (c.linkedDeviceUid == senderId) {
+          context
+            ..go(AppRoutes.dashboard)
+            ..push(AppRoutes.qaVoicePath(c.id));
+          return;
+        }
+      }
+    }
     if (n.type == NotificationType.sos) {
       SosSheet.show(context, n);
     } else {

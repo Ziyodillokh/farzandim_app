@@ -46,7 +46,12 @@ export class NotificationsService {
 
     const limit = query.limit ?? 100;
 
-    const notifications = await this.prisma.notification.findMany({
+    // Chat xabar notification'lari (VOICE turi, `data.senderId`) — o'zi
+    // yuborgan xabarini o'ziga "kelgan bildirishnoma" sifatida qaytarib
+    // ko'rsatmaslik uchun buffer bilan olib keyin filtrlaymiz (JSON path
+    // filtri Prisma'da ishonchsiz — `null`/mavjud bo'lmagan holatlarni
+    // noto'g'ri chetlab qo'yishi mumkin).
+    const rawNotifications = await this.prisma.notification.findMany({
       where: {
         childId,
         ...audienceFilter,
@@ -54,13 +59,24 @@ export class NotificationsService {
         ...(query.isRead !== undefined ? { isRead: query.isRead === 'true' } : {}),
       },
       orderBy: { createdAt: 'desc' },
-      take: limit,
+      take: limit + 20,
     });
+    const notifications = rawNotifications
+      .filter((n) => {
+        const senderId = (n.data as { senderId?: string } | null)?.senderId;
+        return !senderId || senderId !== userId;
+      })
+      .slice(0, limit);
 
-    // Unread badge ham yashirilgan turlarni sanamasin.
-    const unreadCount = await this.prisma.notification.count({
+    // Unread badge ham yashirilgan turlarni va o'z xabarlarini sanamasin.
+    const unreadRaw = await this.prisma.notification.findMany({
       where: { childId, isRead: false, ...audienceFilter },
+      select: { data: true },
     });
+    const unreadCount = unreadRaw.filter((n) => {
+      const senderId = (n.data as { senderId?: string } | null)?.senderId;
+      return !senderId || senderId !== userId;
+    }).length;
 
     return { notifications, count: notifications.length, unreadCount };
   }

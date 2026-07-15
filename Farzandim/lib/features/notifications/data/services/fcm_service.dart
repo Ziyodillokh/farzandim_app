@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -175,9 +176,24 @@ class FcmService {
     );
     await _localNotifications.initialize(
       initSettings,
+      // Foreground'da ko'rsatilgan lokal banner bosilganda — avval bu
+      // callback BO'SH edi ("FCM tap callback baribir ishlaydi" degan
+      // noto'g'ri faraz bilan). Aslida bu lokal notification — OS/FCM tray
+      // emas — bosilganda `FirebaseMessaging.onMessageOpenedApp` UMUMAN
+      // chaqirilmaydi, shu sababli chat push (masalan "salom" xabari)
+      // banner'ga tegib hech qayerga navigatsiya qilmasdi. Payload'dagi
+      // FCM `data`ni tiklab xuddi background tap bilan bir xil yo'lga
+      // (`_navigateForMessage` → `onMessageTap` → chat navigatsiyasi)
+      // yuboramiz.
       onDidReceiveNotificationResponse: (response) {
-        // Local notification bosildi — payload'dan AppNotification yarata
-        // olmaymiz, ammo FCM tap callback baribir ishlaydi.
+        final payload = response.payload;
+        if (payload == null || payload.isEmpty) return;
+        try {
+          final data = (jsonDecode(payload) as Map).cast<String, dynamic>();
+          _navigateForMessage(RemoteMessage(data: data));
+        } catch (e) {
+          debugPrint('Local notification payload decode xato: $e');
+        }
       },
     );
 
@@ -223,7 +239,22 @@ class FcmService {
     final id =
         (message.messageId ?? DateTime.now().toIso8601String()).hashCode &
         0x7FFFFFFF;
-    await _localNotifications.show(id, title, body, details);
+    // Payload — banner bosilganda `onDidReceiveNotificationResponse`da
+    // `RemoteMessage.data` tiklash uchun. `title`/`message` kalitlari ham
+    // qo'shiladi — `AppNotification.fromRemoteMessage` shu kalitlarga
+    // fallback qiladi (chunki tiklangan xabarda `.notification` bo'lmaydi).
+    final payload = jsonEncode({
+      ...message.data,
+      if (title != null) 'title': title,
+      if (body != null) 'message': body,
+    });
+    await _localNotifications.show(
+      id,
+      title,
+      body,
+      details,
+      payload: payload,
+    );
   }
 
   Future<String> _getOrCreateDeviceId() async {
