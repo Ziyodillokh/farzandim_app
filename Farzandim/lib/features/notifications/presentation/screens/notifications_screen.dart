@@ -8,7 +8,6 @@ import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -63,7 +62,9 @@ class NotificationsScreen extends ConsumerWidget {
       }
     }
     if (n.type == NotificationType.sos) {
-      SosSheet.show(context, n);
+      // Yagona SOS UI — push/banner bilan bir xil ekran (avval bu yerda
+      // SosSheet, boshqa joyda SosAlertsListScreen ochilardi → "ikki xil").
+      context.push(AppRoutes.sosAlerts);
     } else {
       context.push(AppRoutes.notificationDetail, extra: n);
     }

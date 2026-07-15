@@ -308,6 +308,11 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
 
   switch (notif.type) {
     case NotificationType.sos:
+      // SOS bosilganda SOS ekrani ochiladi (tasdiqlash + xarita bilan) —
+      // avval joylashuv xaritasiga o'tardi va SOS umuman ochilmasdi (BUG-7).
+      // Barcha SOS kirish nuqtalari (push/ro'yxat/banner) endi SHU ekranga
+      // boradi → yagona UI (BUG-6, avval "ikki xil" edi).
+      open(AppRoutes.sosAlerts);
     case NotificationType.enterZone:
     case NotificationType.exitZone:
       if (notif.childId.isEmpty) {

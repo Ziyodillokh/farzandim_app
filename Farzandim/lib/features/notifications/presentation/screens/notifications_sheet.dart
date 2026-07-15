@@ -6,7 +6,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
-import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -54,7 +53,8 @@ class NotificationsSheet extends ConsumerWidget {
     );
     if (tapped == null || !context.mounted) return;
     if (tapped.type == NotificationType.sos) {
-      await SosSheet.show(context, tapped);
+      // Yagona SOS UI — push/ro'yxat/banner bilan bir xil ekran.
+      await context.push(AppRoutes.sosAlerts);
     } else {
       await context.push(AppRoutes.notificationDetail, extra: tapped);
     }
