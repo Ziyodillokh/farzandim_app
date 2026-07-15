@@ -35,6 +35,10 @@ class UsageSyncService {
   Timer? _usageTimer;
   Timer? _installedTimer;
 
+  /// O'rnatilgan ilovalar (nom + ikon) hech bo'lmasa bir marta backendga
+  /// yetib bordimi. `false` bo'lsa sinxron tez-tez qayta urinadi.
+  bool _installedSynced = false;
+
   void start() {
     debugPrint('=== UsageSyncService.start (Backend) childId=$_childId ===');
 
@@ -59,16 +63,28 @@ class UsageSyncService {
     // Installed-apps (har ilova ikoni — ENG OG'IR ish) startup'ni bloklamasin:
     // birinchi sync ~4s keyin (native background queue bilan main thread
     // baribir bloklanmaydi, lekin startup paytida behuda ish qilmaymiz).
-    // Keyin har 24 soatda (ro'yxat kam o'zgaradi).
     _installedTimer = Timer(const Duration(seconds: 4), () {
       unawaited(_syncInstalledApps());
-      _installedTimer = Timer.periodic(
-        const Duration(hours: 24),
-        (_) => unawaited(_syncInstalledApps()),
-      );
+      _scheduleInstalledSync();
     });
 
     debugPrint('UsageSync: Backend timer\'lar boshlandi');
+  }
+
+  /// O'rnatilgan ilovalar sinxroni: birinchi muvaffaqiyatgacha har 2 daqiqada,
+  /// keyin sutkasiga bir marta.
+  ///
+  /// Yangi o'rnatishda `start()` paytida Usage Access ruxsati hali berilmagan
+  /// bo'ladi → `_syncInstalledApps` bo'sh qaytadi. Avval keyingi urinish faqat
+  /// 24 soatdan keyin edi, shuning uchun ota-onada ilova nomi paket nomidan
+  /// yasalgan ("Clockpackage", "Taxi") va ikon o'rniga harf ko'rinardi —
+  /// backendda `installed_apps` bo'sh bo'lgani uchun.
+  void _scheduleInstalledSync() {
+    _installedTimer?.cancel();
+    _installedTimer = Timer.periodic(
+      _installedSynced ? const Duration(hours: 24) : const Duration(minutes: 2),
+      (_) => unawaited(_syncInstalledApps()),
+    );
   }
 
   Future<void> _syncUsage() async {
@@ -151,6 +167,10 @@ class UsageSyncService {
         apps: batch,
       );
       debugPrint('UsageSync: installed ${batch.length} ta upsert — ok=$ok');
+      if (ok && !_installedSynced) {
+        _installedSynced = true;
+        _scheduleInstalledSync(); // 2 daqiqa → 24 soat
+      }
     } catch (e) {
       debugPrint('UsageSync installed xato: $e');
     }
