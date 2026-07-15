@@ -4,6 +4,7 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
@@ -186,13 +187,7 @@ class _LogoBadge extends StatelessWidget {
         ],
       ),
       padding: const EdgeInsets.all(18),
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(16),
-        child: Image.asset(
-          'assets/icons/parent_logo_icon.png',
-          fit: BoxFit.contain,
-        ),
-      ),
+      child: SvgPicture.asset('assets/icons/parvoz_logo_mark.svg'),
     );
   }
 }

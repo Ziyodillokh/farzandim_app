@@ -27,6 +27,7 @@ import 'package:farzandim_child/features/onboarding/presentation/screens/onboard
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -107,13 +108,10 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            ClipOval(
-              child: Image.asset(
-                'assets/icons/child_logo_icon.png',
-                width: 112,
-                height: 112,
-                fit: BoxFit.cover,
-              ),
+            SvgPicture.asset(
+              'assets/icons/parvoz_logo_mark.svg',
+              width: 112,
+              height: 112,
             ),
             const SizedBox(height: 24),
             const Text(

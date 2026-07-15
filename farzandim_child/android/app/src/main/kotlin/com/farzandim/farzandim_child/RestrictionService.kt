@@ -13,6 +13,7 @@ import android.content.SharedPreferences
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import android.content.pm.ServiceInfo
+import android.content.res.Configuration
 import android.graphics.Color
 import android.graphics.PixelFormat
 import android.graphics.Typeface
@@ -29,6 +30,7 @@ import android.view.View
 import android.view.WindowManager
 import android.widget.Button
 import android.widget.FrameLayout
+import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import androidx.core.app.NotificationCompat
@@ -255,10 +257,7 @@ class RestrictionService : Service() {
         //    "*" wildcard — Schedule whole-window BLOCK (Sprint 4.4.25).
         //    Har qanday foreground'ga overlay.
         if (foreground in blocked || "*" in blocked) {
-            if (currentBlockedPackage != foreground) {
-                showOverlay(foreground)
-                currentBlockedPackage = foreground
-            }
+            ensureOverlay(foreground)
             return
         }
 
@@ -268,15 +267,14 @@ class RestrictionService : Service() {
             val usageMs = getTodayUsageMs(foreground)
             val limitMs = limitMinutes * 60L * 1000L
             if (usageMs >= limitMs) {
-                if (currentBlockedPackage != foreground) {
+                if (currentBlockedPackage != foreground || overlayView == null) {
                     Log.d(
                         TAG,
                         "Limit oshdi: $foreground ${usageMs / 60000} min " +
                             ">= $limitMinutes min",
                     )
-                    showOverlay(foreground, REASON_LIMIT)
-                    currentBlockedPackage = foreground
                 }
+                ensureOverlay(foreground, REASON_LIMIT)
                 return
             }
             // Limitga PRE_WARNING_MS (10 daqiqa) yoki kamroq qoldi — bir marta
@@ -290,11 +288,10 @@ class RestrictionService : Service() {
         // 2b. "Notanish manbalardan ilovalar" — Play/rasmiy do'kondan
         //     bo'lmagan (sideload APK) ilova bo'lsa bloklash.
         if (blockUnknown && isUnknownSource(foreground)) {
-            if (currentBlockedPackage != foreground) {
+            if (currentBlockedPackage != foreground || overlayView == null) {
                 Log.d(TAG, "Notanish manba bloklandi: $foreground")
-                showOverlay(foreground)
-                currentBlockedPackage = foreground
             }
+            ensureOverlay(foreground)
             return
         }
 
@@ -663,6 +660,20 @@ class RestrictionService : Service() {
     }
 
     /**
+     * Overlay bloklangan ilova ustida TURISHINI kafolatlaydi (maksimal
+     * to'siq). Ilova hali o'sha bo'lsa-yu overlay tushib qolgan bo'lsa
+     * (`overlayView == null` — sistema olib tashlagan) qayta ko'rsatadi.
+     * Har poll'da (1s) chaqiriladi — shuning uchun bloklangan ilovadan
+     * qutulib bo'lmaydi.
+     */
+    private fun ensureOverlay(pkg: String, reason: String = REASON_BLOCKED) {
+        if (currentBlockedPackage != pkg || overlayView == null) {
+            showOverlay(pkg, reason)
+            currentBlockedPackage = pkg
+        }
+    }
+
+    /**
      * To'liq ekran overlay ko'rsatish. SYSTEM_ALERT_WINDOW permission
      * kerak. Permission yo'q bo'lsa jim chiqadi.
      */
@@ -676,15 +687,7 @@ class RestrictionService : Service() {
             hideOverlay()
         }
 
-        val appLabel = try {
-            val pm = packageManager
-            val info = pm.getApplicationInfo(packageName, 0)
-            pm.getApplicationLabel(info).toString()
-        } catch (_: PackageManager.NameNotFoundException) {
-            packageName
-        }
-
-        val view = buildOverlayView(appLabel, packageName, reason)
+        val view = buildOverlayView(packageName, reason)
         val params = WindowManager.LayoutParams(
             WindowManager.LayoutParams.MATCH_PARENT,
             WindowManager.LayoutParams.MATCH_PARENT,
@@ -702,7 +705,7 @@ class RestrictionService : Service() {
         try {
             windowManager?.addView(view, params)
             overlayView = view
-            Log.d(TAG, "Overlay ko'rsatildi: $packageName ($appLabel)")
+            Log.d(TAG, "Overlay ko'rsatildi: $packageName (reason=$reason)")
         } catch (e: Exception) {
             Log.e(TAG, "Overlay qo'shishda xato", e)
         }
@@ -720,148 +723,195 @@ class RestrictionService : Service() {
     }
 
     /**
-     * Overlay UI dasturiy quriladi (XML resource shart emas).
-     * Qora fon, markazda lock icon + matn + "Yopish" tugma.
+     * Overlay UI dasturiy quriladi (XML resource shart emas) — professional
+     * "Ilova bloklangan" sahifasi. Telefon TEMASIga qarab (tungi/kunduzgi)
+     * to'liq OQ yoki QORA fonda, mos "bolakay" rasmi bilan. Tugmalar ota-ona
+     * onboardingidagi primary (ko'k "OK") + secondary ("Ruxsat so'rash").
+     * Fon TO'LIQ OPAQUE — bloklangan ilova umuman ko'rinmaydi.
      */
     private fun buildOverlayView(
-        appLabel: String,
         blockedPackage: String,
         reason: String,
     ): View {
         val isLimit = reason == REASON_LIMIT
         val ctx = this
-        val container = FrameLayout(ctx).apply {
-            // Deyarli shaffof scrim — bloklangan ilova orqada xira ko'rinib
-            // turadi. Oyna baribir teginishni yutadi, shuning uchun ilova
-            // ishlatib bo'lmaydi (bloklash kuchda qoladi).
-            setBackgroundColor(Color.parseColor("#260A0A12"))
-        }
 
-        // Markazdagi xabar o'qiladigan bo'lishi uchun alohida qoraroq karta —
-        // shaffof scrim ustida matn yo'qolmaydi.
-        val column = LinearLayout(ctx).apply {
+        // Telefon tungi rejimda ekanmi? (kunduzgi = oq, tungi = qora).
+        val isNight = (resources.configuration.uiMode and
+            Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        // ── Tema ranglari ─────────────────────────────────────────────
+        val pageBg = if (isNight) Color.parseColor("#0B0D12") else Color.WHITE
+        val titleColor =
+            if (isNight) Color.WHITE else Color.parseColor("#0F1720")
+        val subColor =
+            if (isNight) Color.parseColor("#98A2B3") else Color.parseColor("#667085")
+        val primaryBlue = Color.parseColor("#216BFF")
+        val secondaryBg =
+            if (isNight) Color.parseColor("#232936") else Color.parseColor("#EEF0F3")
+        val secondaryText =
+            if (isNight) Color.parseColor("#E6EAF2") else Color.parseColor("#3A4150")
+        val imgName = if (isNight) "bolakay_dark" else "bolakay_light"
+
+        // Root — butun ekranni to'ldiruvchi OPAQUE fon (maksimal to'siq).
+        val root = FrameLayout(ctx).apply { setBackgroundColor(pageBg) }
+
+        val col = LinearLayout(ctx).apply {
             orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER
-            setPadding(dp(28), dp(36), dp(28), dp(36))
-            background = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(28).toFloat()
-                setColor(Color.parseColor("#F21C1C24")) // surface, ~95%
-                setStroke(dp(1), Color.parseColor("#2A2A35")) // nozik chegara
-            }
+            gravity = Gravity.CENTER_HORIZONTAL
+            // Yuqorida status bar, pastda navigatsiya paneli uchun joy.
+            setPadding(dp(28), dp(56), dp(28), dp(40))
         }
 
-        // Sabab bo'yicha ikona/sarlavha/izoh (#12): vaqt tugasa 🌙, blok bo'lsa 🔒.
-        val icon = TextView(ctx).apply {
-            text = if (isLimit) "🌙" else "🔒"
-            setTextColor(Color.parseColor("#C5F562")) // AppColors.primary lime
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 64f)
-            gravity = Gravity.CENTER
+        // Yuqori bo'sh joy — mazmunni biroz pastga suradi (markazroq).
+        col.addView(
+            View(ctx),
+            LinearLayout.LayoutParams(0, 0, 1.1f),
+        )
+
+        // "Bolakay" rasmi (qo'l ko'targan bola) — temaga mos.
+        val image = ImageView(ctx).apply {
+            val id = resources.getIdentifier(imgName, "drawable", packageName)
+            if (id != 0) setImageResource(id)
+            scaleType = ImageView.ScaleType.FIT_CENTER
+            adjustViewBounds = true
         }
+        col.addView(
+            image,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dp(190),
+            ),
+        )
 
         val title = TextView(ctx).apply {
-            text = if (isLimit) "Bugungi vaqt tugadi" else "Bu ilova bloklangan"
-            setTextColor(Color.WHITE)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 24f)
-            typeface = Typeface.create("sans-serif-medium", Typeface.BOLD)
+            text = if (isLimit) "Bugungi vaqt tugadi" else "Ilova bloklangan"
+            setTextColor(titleColor)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
+            typeface = Typeface.create("sans-serif", Typeface.BOLD)
             gravity = Gravity.CENTER
-            setPadding(0, dp(24), 0, dp(8))
+            setPadding(0, dp(24), 0, dp(10))
         }
+        col.addView(title)
 
         val subtitle = TextView(ctx).apply {
-            text = appLabel
-            setTextColor(Color.parseColor("#9999A8")) // AppColors.textSecondary
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
-            gravity = Gravity.CENTER
-        }
-
-        val hint = TextView(ctx).apply {
             text = if (isLimit) {
-                "Bu ilova uchun bugungi vaqting tugadi. Ko'proq vaqt uchun " +
-                    "ota-onangdan ruxsat so'rashing mumkin."
+                "Bu ilova uchun bugungi vaqting tugadi.\n" +
+                    "Ko'proq vaqt uchun ota-onangdan so'ra."
             } else {
-                "Ota-onangiz tomonidan bloklangan"
+                "Bu ilovadan foydalanish hozircha cheklangan.\n" +
+                    "Ruxsat olish uchun ota-onangizga murojaat qiling."
             }
-            setTextColor(Color.parseColor("#6B6B78")) // AppColors.textTertiary
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+            setTextColor(subColor)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
             gravity = Gravity.CENTER
-            setPadding(0, dp(16), 0, dp(32))
+            setLineSpacing(dp(4).toFloat(), 1f)
+        }
+        col.addView(
+            subtitle,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+
+        // Pastki bo'sh joy — tugmalarni ekran pastiga suradi.
+        col.addView(
+            View(ctx),
+            LinearLayout.LayoutParams(0, 0, 1.5f),
+        )
+
+        // ── Tugmalar qatori: [OK ko'k] [Ruxsat so'rash kulrang] ──────
+        val okButton = makeOverlayButton(
+            label = "OK",
+            bgColor = primaryBlue,
+            textColor = Color.WHITE,
+        ) {
+            // HOME — bola bloklangan ilovadan chiqib ketadi (auto-exit).
+            val home = Intent(Intent.ACTION_MAIN).apply {
+                addCategory(Intent.CATEGORY_HOME)
+                flags = Intent.FLAG_ACTIVITY_NEW_TASK
+            }
+            ctx.startActivity(home)
+            hideOverlay()
+        }
+        val requestButton = makeOverlayButton(
+            label = "Ruxsat so'rash",
+            bgColor = secondaryBg,
+            textColor = secondaryText,
+        ) {
+            try {
+                val open = Intent(ctx, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                        Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra("unlock_request_package", blockedPackage)
+                }
+                ctx.startActivity(open)
+            } catch (e: Exception) {
+                Log.e(TAG, "Ruxsat so'rash: Parvoz'ni ochishda xato", e)
+            }
+            hideOverlay()
         }
 
-        // "Ruxsat so'rash" — Parvoz'ni ochib, bloklangan paket uchun
-        // ota-onaga qo'shimcha vaqt so'rovi yuboradi (Flutter POST qiladi).
-        val requestButton = Button(ctx).apply {
-            text = "Ruxsat so'rash"
-            setTextColor(Color.parseColor("#C5F562")) // lime matn
-            setPadding(dp(40), dp(12), dp(40), dp(12))
-            // Outline pill — asosiy "Yopish" tugmadan vizual farqlanadi.
+        val buttonRow = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+        }
+        buttonRow.addView(
+            okButton,
+            LinearLayout.LayoutParams(0, dp(56), 1f),
+        )
+        buttonRow.addView(
+            requestButton,
+            LinearLayout.LayoutParams(0, dp(56), 1f).apply {
+                marginStart = dp(12)
+            },
+        )
+        col.addView(
+            buttonRow,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+
+        root.addView(
+            col,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        return root
+    }
+
+    /** Onboarding uslubidagi tekis, dumaloq-burchak tugma (soyasiz). */
+    private fun makeOverlayButton(
+        label: String,
+        bgColor: Int,
+        textColor: Int,
+        onClick: () -> Unit,
+    ): Button {
+        return Button(this).apply {
+            text = label
+            setTextColor(textColor)
+            isAllCaps = false
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
+            typeface = Typeface.create("sans-serif-medium", Typeface.NORMAL)
+            minWidth = 0
+            minimumWidth = 0
+            minHeight = 0
+            minimumHeight = 0
+            setPadding(dp(10), 0, dp(10), 0)
+            // Android tugmasidagi standart ko'tarilish (elevation) soyasini
+            // olib tashlaymiz — tekis, zamonaviy ko'rinish.
+            stateListAnimator = null
             background = GradientDrawable().apply {
                 shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(28).toFloat()
-                setColor(Color.TRANSPARENT)
-                setStroke(dp(2), Color.parseColor("#C5F562"))
+                cornerRadius = dp(16).toFloat()
+                setColor(bgColor)
             }
-            setOnClickListener {
-                try {
-                    val open = Intent(ctx, MainActivity::class.java).apply {
-                        flags = Intent.FLAG_ACTIVITY_NEW_TASK or
-                            Intent.FLAG_ACTIVITY_SINGLE_TOP
-                        putExtra("unlock_request_package", blockedPackage)
-                    }
-                    ctx.startActivity(open)
-                } catch (e: Exception) {
-                    Log.e(TAG, "Ruxsat so'rash: Parvoz'ni ochishda xato", e)
-                }
-                hideOverlay()
-            }
+            setOnClickListener { onClick() }
         }
-
-        val closeButton = Button(ctx).apply {
-            text = "Yopish"
-            setTextColor(Color.BLACK)
-            setBackgroundColor(Color.parseColor("#C5F562")) // primary lime
-            setPadding(dp(48), dp(12), dp(48), dp(12))
-            // Pill shape:
-            val bg = GradientDrawable().apply {
-                shape = GradientDrawable.RECTANGLE
-                cornerRadius = dp(28).toFloat()
-                setColor(Color.parseColor("#C5F562"))
-            }
-            background = bg
-            setOnClickListener {
-                // HOME ekrani Intent — bola bloklangan ilovadan chiqib ketadi.
-                val home = Intent(Intent.ACTION_MAIN).apply {
-                    addCategory(Intent.CATEGORY_HOME)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                }
-                ctx.startActivity(home)
-                hideOverlay()
-            }
-        }
-
-        // "Ruxsat so'rash" tugmasi uchun pastki bo'sh joy (close bilan orasida).
-        val requestParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-            LinearLayout.LayoutParams.WRAP_CONTENT,
-        ).apply { setMargins(0, 0, 0, dp(12)) }
-
-        column.addView(icon)
-        column.addView(title)
-        column.addView(subtitle)
-        column.addView(hint)
-        column.addView(requestButton, requestParams)
-        column.addView(closeButton)
-
-        val params = FrameLayout.LayoutParams(
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-            FrameLayout.LayoutParams.WRAP_CONTENT,
-        ).apply {
-            gravity = Gravity.CENTER
-            setMargins(dp(32), 0, dp(32), 0)
-        }
-        container.addView(column, params)
-
-        return container
     }
 
     private fun dp(value: Int): Int {
