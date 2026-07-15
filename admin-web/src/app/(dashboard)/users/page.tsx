@@ -1,11 +1,19 @@
 'use client';
 
 import { useState } from 'react';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, Download } from 'lucide-react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogFooter,
+  DialogTitle,
+  DialogDescription,
+} from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
@@ -167,6 +175,7 @@ function UserRow({ user }: { user: AdminUserListItem }) {
   const qc = useQueryClient();
   const isChild = user.kind === 'child' || user.role === 'CHILD';
   const isActive = user.status === 'active';
+  const [confirmOpen, setConfirmOpen] = useState(false);
 
   const handleBlock = async () => {
     try {
@@ -179,6 +188,18 @@ function UserRow({ user }: { user: AdminUserListItem }) {
       toast.error("Amalni bajarib bo'lmadi");
     }
   };
+
+  // Foydalanuvchini + BARCHA ma'lumotini butunlay o'chirish (qaytarib
+  // bo'lmaydi) — tasdiqlash oynasidan keyin.
+  const remove = useMutation({
+    mutationFn: () => usersApi.remove(user.id),
+    onSuccess: async () => {
+      toast.success("Foydalanuvchi va barcha ma'lumoti o'chirildi");
+      setConfirmOpen(false);
+      await qc.invalidateQueries({ queryKey: ['users'] });
+    },
+    onError: () => toast.error("O'chirib bo'lmadi"),
+  });
 
   return (
     <tr className="border-b border-border last:border-0 transition-colors hover:bg-accent/40">
@@ -236,8 +257,46 @@ function UserRow({ user }: { user: AdminUserListItem }) {
             <DropdownMenuItem onClick={handleBlock} className={isActive ? 'text-destructive focus:text-destructive' : ''}>
               <Ban /> {isActive ? 'Bloklash' : 'Blokdan chiqarish'}
             </DropdownMenuItem>
+            <DropdownMenuItem
+              onClick={() => setConfirmOpen(true)}
+              className="text-destructive focus:text-destructive"
+            >
+              <Trash2 /> O&apos;chirish
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        {/* Tasdiqlash oynasi — qaytarib bo'lmaydigan to'liq o'chirish */}
+        <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Foydalanuvchini o&apos;chirish</DialogTitle>
+              <DialogDescription>
+                <span className="font-semibold text-foreground">{user.name}</span> va unga tegishli{' '}
+                <span className="font-semibold text-foreground">barcha ma&apos;lumot</span> (bolalar,
+                joylashuv, xabarlar, cheklovlar, DON/yutuqlar, to&apos;lov/obuna) serverdan butunlay
+                o&apos;chiriladi. Bu amalni <span className="font-semibold text-destructive">qaytarib
+                bo&apos;lmaydi</span>.
+              </DialogDescription>
+            </DialogHeader>
+            <DialogFooter>
+              <Button
+                variant="outline"
+                onClick={() => setConfirmOpen(false)}
+                disabled={remove.isPending}
+              >
+                Bekor qilish
+              </Button>
+              <Button
+                variant="destructive"
+                onClick={() => remove.mutate()}
+                disabled={remove.isPending}
+              >
+                {remove.isPending ? "O'chirilmoqda..." : "Butunlay o'chirish"}
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </td>
     </tr>
   );

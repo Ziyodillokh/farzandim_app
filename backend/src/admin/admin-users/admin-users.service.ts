@@ -303,4 +303,36 @@ export class AdminUsersService {
       throw err;
     }
   }
+
+  /**
+   * Foydalanuvchini VA UNGA TEGISHLI BARCHA MA'LUMOTNI serverdan butunlay
+   * o'chiradi (qaytarib bo'lmaydi).
+   *
+   * Bitta `user.delete` yetarli — schema'dagi FK'lar `onDelete: Cascade`
+   * bo'lgani uchun DB darajasida kaskad o'chadi:
+   *   - bolalar (parentId) → ularning app-usage / app-limit / location /
+   *     geo-zone / schedule / routine / notification / sos-alert /
+   *     gamification (ChildProfile, XpEvent, ChildStepDaily) / olympiad
+   *     attempt / installed-apps;
+   *   - ovozli + video xabarlar (sender/receiver), foto so'rovlari;
+   *   - FCM tokenlar, sessiyalar, session-access so'rovlari;
+   *   - to'lov / obuna yozuvlari.
+   * Bola-qurilma sifatida ulangan boshqa oilaning `Child.childUserId` esa
+   * `onDelete: SetNull` bilan faqat uziladi (o'sha bola ota-onasida qoladi).
+   */
+  async deleteUser(id: string) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, name: true, role: true, phone: true, email: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    try {
+      await this.prisma.user.delete({ where: { id } });
+      return { ok: true, deletedId: id };
+    } catch (err: any) {
+      if (err?.code === 'P2025')
+        throw new NotFoundException('User not found');
+      throw err;
+    }
+  }
 }

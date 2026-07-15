@@ -83,6 +83,9 @@ export const usersApi = {
   block: (id: string) => api.post(`/admin/users/${id}/block`),
   unblock: (id: string) => api.post(`/admin/users/${id}/unblock`),
   warn: (id: string, message: string) => api.post(`/admin/users/${id}/warn`, { message }),
+  // Foydalanuvchini VA barcha ma'lumotini serverdan butunlay o'chiradi
+  // (qaytarib bo'lmaydi) — backend DB'da kaskad o'chiradi.
+  remove: (id: string) => api.delete(`/admin/users/${id}`),
 };
 
 // ───────────────────────── MODERATORS ─────────────────────────

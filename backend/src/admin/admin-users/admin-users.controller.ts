@@ -1,5 +1,6 @@
 import {
   Controller,
+  Delete,
   Get,
   HttpCode,
   HttpStatus,
@@ -71,5 +72,17 @@ export class AdminUsersController {
   @ApiOperation({ summary: 'Unblock a parent user' })
   async unblock(@Param('id') id: string) {
     return this.service.unblockUser(id);
+  }
+
+  // Halokatli amal — faqat `manage_users` ruxsatiga ega admin (method-level
+  // @Permissions class-level'ni override qiladi).
+  @Delete(':id')
+  @HttpCode(HttpStatus.OK)
+  @Permissions('manage_users')
+  @ApiOperation({
+    summary: 'Delete a user and ALL their data from the server (cascade)',
+  })
+  async remove(@Param('id') id: string) {
+    return this.service.deleteUser(id);
   }
 }
