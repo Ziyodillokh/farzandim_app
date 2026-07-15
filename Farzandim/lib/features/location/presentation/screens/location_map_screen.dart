@@ -512,6 +512,16 @@ class _MapLayer extends StatelessWidget {
         // qolsin — bola asosiy nishon).
         MarkerLayer(
           markers: [
+            // Geo-zona nishonlari ("qo'yilgan tochkalar") — zona ikoni + nomi.
+            // Avval zonalar faqat XIRA DOIRA bo'lib chizilardi, marker/nom
+            // yo'q edi → "Uy"/"Maktab" tochkasi ko'rinmasdi.
+            for (final zone in zones)
+              Marker(
+                point: _toLL(zone.latitude, zone.longitude),
+                width: 96,
+                height: 60,
+                child: _ZonePin(zone: zone),
+              ),
             if (myLocation != null)
               Marker(
                 point: _toLL(myLocation!.latitude, myLocation!.longitude),
@@ -607,6 +617,69 @@ class _PinTailPainter extends CustomPainter {
 
 /// Ota-onaning O'Z joylashuvi — Google Maps uslubidagi ko'k nuqta
 /// (oq halqa + ko'k glow).
+/// Geo-zona nishoni — doira ichida zona ikoni (Uy/Maktab/...) va ostida nomi.
+///
+/// Avval xaritada zonalar FAQAT xira ko'k doira bo'lib chizilardi: "qo'yilgan
+/// tochka" ko'zga tashlanmasdi. Endi har zona aniq nishon + nom bilan
+/// ko'rinadi (ikon `GeoZone.iconFromString` — model allaqachon bergan).
+class _ZonePin extends StatelessWidget {
+  const _ZonePin({required this.zone});
+
+  final GeoZone zone;
+
+  @override
+  Widget build(BuildContext context) {
+    final name = zone.name.trim();
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Container(
+          width: 34,
+          height: 34,
+          decoration: BoxDecoration(
+            color: _blue,
+            shape: BoxShape.circle,
+            border: Border.all(color: Colors.white, width: 2.5),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 6,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Icon(
+            GeoZone.iconFromString(zone.icon ?? zone.type.defaultIconName),
+            size: 17,
+            color: Colors.white,
+          ),
+        ),
+        if (name.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+            decoration: BoxDecoration(
+              color: Colors.black.withValues(alpha: 0.62),
+              borderRadius: BorderRadius.circular(6),
+            ),
+            child: Text(
+              name,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 10.5,
+                fontWeight: FontWeight.w600,
+                height: 1.2,
+              ),
+            ),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 class _MyLocationDot extends StatelessWidget {
   const _MyLocationDot();
 
