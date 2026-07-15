@@ -20,7 +20,7 @@ export interface MailResult {
  *   SMTP_PORT=587
  *   SMTP_USER=sizning@gmail.com
  *   SMTP_PASS=<16-belgili App Password>   (oddiy parol EMAS)
- *   MAIL_FROM=Farzandim Edu <sizning@gmail.com>
+ *   MAIL_FROM=Parvoz <sizning@gmail.com>
  *
  * Sozlanmagan bo'lsa: email yuborilmaydi, kod faqat log'ga chiqadi (dev qulay),
  * `sent:false` qaytadi — chaqiruvchi (auth.service) 503 beradi.
@@ -56,13 +56,18 @@ export class MailService {
     return this.transporter;
   }
 
+  // Brend "Farzandim Edu" → "Parvoz" (2026-07-15). SMS shablonlari bilan bir
+  // xil brend — foydalanuvchi SMS'da "Parvoz", email'da boshqa nom ko'rmasin.
+  // Email'da Eskiz kabi shablon cheklovi yo'q — matnni erkin o'zgartirsa
+  // bo'ladi.
+
   /** Ro'yxatdan o'tish (register) tasdiqlash kodi. */
   async sendRegisterCode(email: string, code: string): Promise<MailResult> {
     return this.sendCode(
       email,
       code,
-      "Farzandim Edu — ro'yxatdan o'tish kodi",
-      "Farzandim Edu ilovasiga ro'yxatdan o'tishni yakunlash uchun tasdiqlash kodi",
+      "Parvoz — ro'yxatdan o'tish kodi",
+      "Parvoz ilovasiga ro'yxatdan o'tishni yakunlash uchun tasdiqlash kodi",
     );
   }
 
@@ -71,8 +76,8 @@ export class MailService {
     return this.sendCode(
       email,
       code,
-      'Farzandim Edu — parolni tiklash kodi',
-      'Farzandim Edu ilovasida parolni tiklash uchun tasdiqlash kodi',
+      'Parvoz — parolni tiklash kodi',
+      'Parvoz ilovasida parolni tiklash uchun tasdiqlash kodi',
     );
   }
 
@@ -81,8 +86,8 @@ export class MailService {
     return this.sendCode(
       email,
       code,
-      'Farzandim Edu — email tasdiqlash kodi',
-      'Farzandim Edu ilovasida yangi email manzilingizni tasdiqlash uchun kod',
+      'Parvoz — email tasdiqlash kodi',
+      'Parvoz ilovasida yangi email manzilingizni tasdiqlash uchun kod',
     );
   }
 

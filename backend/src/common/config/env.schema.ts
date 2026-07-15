@@ -123,7 +123,10 @@ const envSchema = z.object({
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),
   ),
-  MAIL_FROM: z.string().default('Farzandim Edu <no-reply@farzandimedu.uz>'),
+  // Brend "Parvoz" (SMS shablonlari bilan bir xil). DIQQAT: server `.env`da
+  // MAIL_FROM aniq berilgan bo'lsa, bu default ISHLAMAYDI — u yerda ham
+  // qo'lda yangilash kerak.
+  MAIL_FROM: z.string().default('Parvoz <no-reply@farzandimedu.uz>'),
 
   // ─── Google Sign In (ixtiyoriy) ────────────────────────────────────
   // Vergul bilan ajratilgan Google OAuth client ID'lar (Web/Android/iOS).
