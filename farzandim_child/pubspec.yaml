@@ -186,11 +186,11 @@ flutter_launcher_icons:
   remove_alpha_ios: true
   background_color_ios: "#305399"
 
-# Splash screen (flutter_native_splash) — yangi qalqon logo, OQ fon (logo
-# oq fonli + bola ilovasi light-theme; parent splash bilan izchil).
+# Splash screen (flutter_native_splash) — yangi PATLI logo (Logo.svg'dan
+# render, dumaloq burchakli ko'k kvadrat), OQ fon; parent splash bilan izchil.
 flutter_native_splash:
   color: "#FBFBFB"
-  image: assets/icons/child_app_icon_white.png
+  image: assets/icons/splash_logo.png
   android_12:
     color: "#FBFBFB"
-    image: assets/icons/child_app_icon_white.png
+    image: assets/icons/splash_logo.png

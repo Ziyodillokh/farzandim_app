@@ -277,10 +277,10 @@ flutter_launcher_icons:
 # ─── flutter_native_splash konfiguratsiyasi ─────────────────────────
 flutter_native_splash:
   color: "#FBFBFB"
-  image: assets/icons/parent_logo_icon.png
+  image: assets/icons/splash_logo.png
   android_12:
     color: "#FBFBFB"
-    image: assets/icons/parent_logo_icon.png
+    image: assets/icons/splash_logo.png
 
 # For information on the generic Dart part of this file, see the
 # following page: https://dart.dev/tools/pub/pubspec
