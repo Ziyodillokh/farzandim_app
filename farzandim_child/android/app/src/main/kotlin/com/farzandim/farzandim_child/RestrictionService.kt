@@ -133,7 +133,16 @@ class RestrictionService : Service() {
 
     // O'yin aniqlash keshlari: paket → o'yinmi; paket → oxirgi queue vaqti;
     // oxirgi foreground paket (edge-trigger — faqat YANGI ochilganda queue).
-    private val gameCache = HashMap<String, Boolean>()
+    // gameCache — 2 oqimdan o'qiladi/yoziladi (poll + background executor) →
+    // ConcurrentHashMap.
+    private val gameCache = java.util.concurrent.ConcurrentHashMap<String, Boolean>()
+    // Hozir background'da hisoblanayotgan paketlar (takror ish yo'q).
+    private val gameComputing =
+        java.util.Collections.synchronizedSet(HashSet<String>())
+    // O'yin aniqlash (APK ZIP skani — OG'IR) uchun alohida oqim: poll
+    // (main looper) bloklanmasin.
+    private val gameExecutor =
+        java.util.concurrent.Executors.newSingleThreadExecutor()
     private val lastGameQueued = HashMap<String, Long>()
     private var lastForegroundForGame: String? = null
 
@@ -182,6 +191,7 @@ class RestrictionService : Service() {
         super.onDestroy()
         Log.d(TAG, "Service destroyed")
         stopMonitoring()
+        gameExecutor.shutdownNow()
     }
 
     private fun startMonitoring() {
@@ -532,12 +542,30 @@ class RestrictionService : Service() {
         return false
     }
 
-    private fun isGamePkg(pkg: String): Boolean = gameCache.getOrPut(pkg) {
-        try {
-            isGame(packageManager.getApplicationInfo(pkg, 0))
-        } catch (e: Exception) {
-            false
+    /**
+     * Paket o'yinmi — KESHDAN sinxron. Hali hisoblanmagan bo'lsa, og'ir
+     * aniqlashni (APK ZIP skani, `hasGameEngineLibs`) BACKGROUND oqimga
+     * yuboradi va hozircha `false` qaytaradi (keyingi poll'da kesh to'ladi).
+     *
+     * MUHIM (ANR tuzatildi): avval bu birinchi chaqiruvda ZIP skanini POLL
+     * (main looper) oqimida bajarardi — katta o'yin (split APK, 100MB+)
+     * ochilganda yuzlab ms–sekund main thread'ni bloklab "javob bermayapti"
+     * chiqarardi.
+     */
+    private fun isGamePkg(pkg: String): Boolean {
+        gameCache[pkg]?.let { return it }
+        if (gameComputing.add(pkg)) {
+            gameExecutor.execute {
+                val res = try {
+                    isGame(packageManager.getApplicationInfo(pkg, 0))
+                } catch (e: Exception) {
+                    false
+                }
+                gameCache[pkg] = res
+                gameComputing.remove(pkg)
+            }
         }
+        return false
     }
 
     /**

@@ -21,6 +21,7 @@ import io.flutter.plugin.common.MethodCall
 import io.flutter.plugin.common.MethodChannel
 import io.flutter.plugin.common.MethodChannel.MethodCallHandler
 import io.flutter.plugin.common.MethodChannel.Result
+import io.flutter.plugin.common.StandardMethodCodec
 import java.io.ByteArrayOutputStream
 
 class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
@@ -28,9 +29,23 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     private lateinit var context: Context
 
     override fun onAttachedToEngine(binding: FlutterPlugin.FlutterPluginBinding) {
-        channel = MethodChannel(binding.binaryMessenger, "farzandim/usage_stats")
-        channel.setMethodCallHandler(this)
         context = binding.applicationContext
+        // MUHIM (ANR/qotish tuzatildi): kanal BACKGROUND task queue'da ishlaydi.
+        // Avval `getInstalledApps`/`getUsageStats` — har o'rnatilgan ilova
+        // ikonasini 96x96 ga scale + PNG + base64 (60-150 ilova!) — Android
+        // MAIN thread'ida bajarilardi va UI'ni 1-3s bloklab "javob bermayapti"
+        // (ANR) chiqarardi. Endi bu og'ir ish alohida oqimda; natija Dart'ga
+        // MethodChannel orqali xavfsiz qaytadi. Activity/service ochish
+        // (openSettings/startRestrictionService) applicationContext + NEW_TASK
+        // bilan background'dan ham xavfsiz.
+        val taskQueue = binding.binaryMessenger.makeBackgroundTaskQueue()
+        channel = MethodChannel(
+            binding.binaryMessenger,
+            "farzandim/usage_stats",
+            StandardMethodCodec.INSTANCE,
+            taskQueue,
+        )
+        channel.setMethodCallHandler(this)
     }
 
     override fun onDetachedFromEngine(binding: FlutterPlugin.FlutterPluginBinding) {

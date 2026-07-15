@@ -86,17 +86,16 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // 4. Web preview — permission/UsageStats yo'q.
     if (kIsWeb) return '/dashboard';
 
-    // 5. 4 ta sistema ruxsati.
+    // 5. 4 ta sistema ruxsati — PARALLEL (avval ketma-ket await edi, ~0.3-0.6s
+    //    startup'ni sekinlashtirardi).
     final usageService = UsageStatsService();
-    final locStatus = await Permission.locationAlways.status;
-    final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
-    final usageGranted = await usageService.hasPermission();
-    final overlayGranted = await usageService.hasOverlayPermission();
-    final allGranted =
-        locStatus.isGranted &&
-        batteryStatus.isGranted &&
-        usageGranted &&
-        overlayGranted;
+    final checks = await Future.wait<bool>([
+      Permission.locationAlways.status.then((s) => s.isGranted),
+      Permission.ignoreBatteryOptimizations.status.then((s) => s.isGranted),
+      usageService.hasPermission(),
+      usageService.hasOverlayPermission(),
+    ]);
+    final allGranted = checks.every((granted) => granted);
     return allGranted ? '/dashboard' : '/permission-setup';
   }
 

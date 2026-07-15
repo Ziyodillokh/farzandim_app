@@ -24,9 +24,9 @@ class UsageSyncService {
     required BackendInstalledAppsRepository backendRepo,
     required UsageStatsService statsService,
     required String childId,
-  })  : _backendRepo = backendRepo,
-        _statsService = statsService,
-        _childId = childId;
+  }) : _backendRepo = backendRepo,
+       _statsService = statsService,
+       _childId = childId;
 
   final BackendInstalledAppsRepository _backendRepo;
   final UsageStatsService _statsService;
@@ -38,11 +38,14 @@ class UsageSyncService {
   void start() {
     debugPrint('=== UsageSyncService.start (Backend) childId=$_childId ===');
 
+    // Timer'larni qayta o'rnatamiz — `start()` startup'da bir necha marta
+    // chaqiriladi (pairing loader + restriction-ready). `cancel()` avvalgi
+    // deferred installed-apps timer'ini bekor qiladi → og'ir ikon sync FAQAT
+    // BIR MARTA (oxirgi start'dan ~4s keyin) ishlaydi, takror emas.
     _usageTimer?.cancel();
     _installedTimer?.cancel();
 
     unawaited(_syncUsage());
-    unawaited(_syncInstalledApps());
 
     // Sync interval 60 sek — Parent UI 30 sek polling bilan birga foydalanish
     // vaqti ~1 daqiqa ichida yangilanadi. Background isolate'da ham ishlaydi
@@ -53,10 +56,17 @@ class UsageSyncService {
       (_) => unawaited(_syncUsage()),
     );
 
-    _installedTimer = Timer.periodic(
-      const Duration(hours: 24),
-      (_) => unawaited(_syncInstalledApps()),
-    );
+    // Installed-apps (har ilova ikoni — ENG OG'IR ish) startup'ni bloklamasin:
+    // birinchi sync ~4s keyin (native background queue bilan main thread
+    // baribir bloklanmaydi, lekin startup paytida behuda ish qilmaymiz).
+    // Keyin har 24 soatda (ro'yxat kam o'zgaradi).
+    _installedTimer = Timer(const Duration(seconds: 4), () {
+      unawaited(_syncInstalledApps());
+      _installedTimer = Timer.periodic(
+        const Duration(hours: 24),
+        (_) => unawaited(_syncInstalledApps()),
+      );
+    });
 
     debugPrint('UsageSync: Backend timer\'lar boshlandi');
   }
@@ -78,7 +88,8 @@ class UsageSyncService {
       // Toshkent (UTC+5) kun chegarasi — backend agregatsiyasi va haftalik
       // hisobot bilan mos (qurilma vaqt zonasi boshqa bo'lsa ham to'g'ri sana).
       final now = DateTime.now().toUtc().add(const Duration(hours: 5));
-      final dayKey = '${now.year}-'
+      final dayKey =
+          '${now.year}-'
           '${now.month.toString().padLeft(2, '0')}-'
           '${now.day.toString().padLeft(2, '0')}';
 
@@ -139,9 +150,7 @@ class UsageSyncService {
         childId: _childId,
         apps: batch,
       );
-      debugPrint(
-        'UsageSync: installed ${batch.length} ta upsert — ok=$ok',
-      );
+      debugPrint('UsageSync: installed ${batch.length} ta upsert — ok=$ok');
     } catch (e) {
       debugPrint('UsageSync installed xato: $e');
     }
