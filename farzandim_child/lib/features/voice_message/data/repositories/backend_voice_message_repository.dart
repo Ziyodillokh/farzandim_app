@@ -117,6 +117,12 @@ class BackendVoiceMessageRepository {
       final response = await _dio.post<Map<String, dynamic>>(
         '/voice-messages',
         data: formData,
+        // Umumiy `sendTimeout` = 30s — sekin tarmoqda ovoz fayli ham
+        // sig'masligi mumkin. Yuklash uchun uzunroq muddat (video bilan bir xil).
+        options: Options(
+          sendTimeout: const Duration(minutes: 10),
+          receiveTimeout: const Duration(minutes: 2),
+        ),
         onSendProgress: (count, total) {
           if (total > 0 && onProgress != null) {
             onProgress(count / total);
@@ -177,6 +183,12 @@ class BackendVoiceMessageRepository {
       final response = await _dio.post<Map<String, dynamic>>(
         '/voice-messages/media',
         data: formData,
+        // Rasm/hujjat bir necha MB bo'lishi mumkin — umumiy 30s `sendTimeout`
+        // sekin tarmoqda uzib qo'yardi. Yuklash uchun uzunroq muddat.
+        options: Options(
+          sendTimeout: const Duration(minutes: 10),
+          receiveTimeout: const Duration(minutes: 2),
+        ),
         onSendProgress: (count, total) {
           if (total > 0 && onProgress != null) {
             onProgress(count / total);

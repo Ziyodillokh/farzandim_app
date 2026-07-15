@@ -89,6 +89,14 @@ class BackendVideoMessageRepository {
       final response = await _dio.post<Map<String, dynamic>>(
         '/video-messages',
         data: formData,
+        // Dio'ning umumiy `sendTimeout` = 30s — VIDEO uchun juda kam (30
+        // soniyalik dumaloq video ~5-15 MB; mobil internetda 30 soniyada
+        // yuklanmaydi → timeout → "video ketmadi"). Backend 100 MB ruxsat
+        // beradi, shuning uchun yuklashga alohida uzun muddat.
+        options: Options(
+          sendTimeout: const Duration(minutes: 10),
+          receiveTimeout: const Duration(minutes: 2),
+        ),
         onSendProgress: (count, total) {
           if (total > 0 && onProgress != null) {
             onProgress(count / total);
