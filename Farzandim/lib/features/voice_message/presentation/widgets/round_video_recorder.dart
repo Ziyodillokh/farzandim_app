@@ -29,7 +29,6 @@ import 'dart:io';
 import 'package:camera/camera.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/permission_service.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -357,11 +356,11 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   if (_initializing)
-                    SizedBox(
+                    const SizedBox(
                       width: 48,
                       height: 48,
                       child: CircularProgressIndicator(
-                        color: AppColors.primary,
+                        color: Color(0xFF216BFF),
                       ),
                     )
                   else if (_initError != null)
@@ -430,14 +429,14 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
               onPressed: openAppSettings,
               child: Text(
                 'permissions.openSettings'.tr(),
-                style: TextStyle(color: AppColors.primary, fontSize: 14),
+                style: const TextStyle(color: Color(0xFF216BFF), fontSize: 14),
               ),
             ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
             child: Text(
               'common.close'.tr(),
-              style: TextStyle(color: AppColors.primary, fontSize: 14),
+              style: const TextStyle(color: Color(0xFF216BFF), fontSize: 14),
             ),
           ),
         ],
@@ -485,7 +484,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 child: CircularProgressIndicator(
                   value: _isRecording ? progress : 0,
                   strokeWidth: 5,
-                  color: AppColors.primary,
+                  color: const Color(0xFF216BFF),
                   backgroundColor: Colors.white.withValues(alpha: 0.12),
                 ),
               ),
@@ -591,7 +590,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                   end: Alignment.bottomRight,
                   colors: isActive
                       ? const [Color(0xFFFF5252), Color(0xFFE53935)]
-                      : [AppColors.primary, AppColors.primaryDark],
+                      : [const Color(0xFF216BFF), const Color(0xFF1B4FD0)],
                 ),
                 border: Border.all(
                   color: Colors.white.withValues(alpha: 0.85),
@@ -599,7 +598,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
                 ),
                 boxShadow: [
                   BoxShadow(
-                    color: (isActive ? Colors.red : AppColors.primary)
+                    color: (isActive ? Colors.red : const Color(0xFF216BFF))
                         .withValues(alpha: 0.45),
                     blurRadius: 24,
                     spreadRadius: isActive ? 6 : 2,

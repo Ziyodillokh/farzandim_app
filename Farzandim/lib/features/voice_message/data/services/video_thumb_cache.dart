@@ -24,6 +24,31 @@ class VideoThumbCache {
   /// ketma-ketlik zanjiri (navbat).
   static Future<void> _queue = Future<void>.value();
 
+  /// App cache papkasi — bir marta aniqlanib keshlanadi, keyin `existsSync`
+  /// tekshiruvi SINXRON bo'ladi (chatga qayta kirganda spinnersiz).
+  static Directory? _cacheDir;
+
+  /// Cache papkasini oldindan tayyorlaydi (chat ekrani ochilishida chaqiring)
+  /// — shunda `cachedThumbSync` birinchi kadrdanoq ishlaydi.
+  static Future<void> warmUp() async {
+    _cacheDir ??= await getApplicationCacheDirectory();
+  }
+
+  /// Kesh MAVJUD bo'lsa thumbnail faylini DARHOL (sinxron) qaytaradi — aks
+  /// holda `null` (chaqiruvchi async `getThumb`ga tushadi). Telegram kabi:
+  /// keshlangan video xabar spinnersiz, darhol ko'rinadi.
+  static File? cachedThumbSync(String messageId) {
+    final dir = _cacheDir;
+    if (dir == null) return null;
+    final safeId = messageId.replaceAll(RegExp(r'[^\w\-]'), '_');
+    final f = File('${dir.path}/video_thumbs/$safeId.jpg');
+    try {
+      return (f.existsSync() && f.lengthSync() > 0) ? f : null;
+    } catch (_) {
+      return null;
+    }
+  }
+
   /// Xabar uchun thumbnail faylini qaytaradi (keshdan yoki yaratib).
   /// Xato bo'lsa `null` — chaqiruvchi fallback ko'rsatadi.
   static Future<File?> getThumb({
@@ -56,6 +81,7 @@ class VideoThumbCache {
     Dio dio,
   ) async {
     final dir = await getApplicationCacheDirectory();
+    _cacheDir = dir; // keyingi sinxron tekshiruvlar uchun keshlaymiz
     final thumbDir = Directory('${dir.path}/video_thumbs');
     final safeId = messageId.replaceAll(RegExp(r'[^\w\-]'), '_');
     final thumbFile = File('${thumbDir.path}/$safeId.jpg');

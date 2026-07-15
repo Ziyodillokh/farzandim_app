@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/network/dio_client.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/audio_player_provider.dart';
@@ -111,11 +110,13 @@ class VoiceChatBubble extends ConsumerWidget {
         ? (ref.watch(audioSpeedProvider).value ?? 1.0)
         : 1.0;
 
-    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
-    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
+    final bubbleColor = isOwn
+        ? const Color(0xFF216BFF)
+        : const Color(0xFF12171E);
+    final textColor = isOwn ? Colors.black : const Color(0xFFFFFFFF);
     final waveformColor = isOwn
         ? Colors.black.withValues(alpha: 0.6)
-        : AppColors.accent;
+        : const Color(0xFF508AFF);
 
     final displayDuration = isPlaying
         ? position

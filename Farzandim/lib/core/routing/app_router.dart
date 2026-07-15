@@ -27,7 +27,6 @@ import 'package:farzandim/features/auth/presentation/screens/sign_in_screen.dart
 import 'package:farzandim/features/auth/presentation/screens/sign_up_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/telegram_login_screen.dart';
 import 'package:farzandim/features/auth/presentation/screens/welcome_screen.dart';
-import 'package:farzandim/features/chat/presentation/screens/chat_detail_screen.dart';
 import 'package:farzandim/features/chat/presentation/screens/chat_list_screen.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/presentation/screens/child_settings_screen.dart';
@@ -508,8 +507,13 @@ List<RouteBase> buildAppRoutes() {
     ),
     GoRoute(
       path: AppRoutes.chatDetailPattern,
+      // YAGONA chat ekrani — messenger ro'yxati ham, bildirishnoma/quick-
+      // action ham AYNI VoiceChatScreen'ni ochadi (Parvoz ko'k dizayn, to'liq
+      // funksiya: ovoz/matn/video/rasm/hujjat). Avval bu yerda ChatDetailScreen
+      // (kamroq imkoniyatli) ochilib, boshqa joyda VoiceChatScreen — "ikki xil
+      // UI (biri yashil)" edi.
       pageBuilder: (context, state) =>
-          _slidePage(ChatDetailScreen(contactId: state.pathParameters['id']!)),
+          _slidePage(VoiceChatScreen(childId: state.pathParameters['id']!)),
     ),
     GoRoute(
       path: AppRoutes.appRestrictionsPattern,

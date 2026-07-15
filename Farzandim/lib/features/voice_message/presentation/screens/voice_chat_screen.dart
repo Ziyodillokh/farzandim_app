@@ -4,7 +4,6 @@ import 'dart:io';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
 import 'package:farzandim/core/services/permission_service.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_shadows.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -13,6 +12,7 @@ import 'package:farzandim/features/video_message/presentation/providers/video_me
 import 'package:farzandim/features/voice_message/data/repositories/backend_voice_message_repository.dart';
 import 'package:farzandim/features/voice_message/data/services/audio_player_manager.dart';
 import 'package:farzandim/features/voice_message/data/services/audio_recorder_service.dart';
+import 'package:farzandim/features/voice_message/data/services/video_thumb_cache.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
 import 'package:farzandim/features/voice_message/presentation/providers/voice_upload_provider.dart';
 import 'package:farzandim/features/voice_message/presentation/screens/chat_settings_screen.dart';
@@ -90,6 +90,9 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    // Video thumbnail kesh papkasini oldindan tayyorlaymiz — chatga kirganda
+    // keshlangan video xabarlar spinnersiz, darhol ko'rinsin (Telegram kabi).
+    unawaited(VideoThumbCache.warmUp());
     // Tepaga yetganda eski sahifani yuklaymiz (notifier o'zi loading va
     // tarix-tugadi holatlarini tekshiradi, shuning uchun har scroll'da
     // chaqiraversa bo'ladi).
@@ -594,8 +597,8 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                     }
 
                     return RefreshIndicator(
-                      color: AppColors.primary,
-                      backgroundColor: AppColors.surface,
+                      color: const Color(0xFF216BFF),
+                      backgroundColor: const Color(0xFF12171E),
                       onRefresh: _onRefresh,
                       child: Stack(
                         children: [
@@ -634,16 +637,16 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                                 child: Container(
                                   padding: const EdgeInsets.all(6),
                                   decoration: BoxDecoration(
-                                    color: AppColors.surface,
+                                    color: const Color(0xFF12171E),
                                     shape: BoxShape.circle,
                                     boxShadow: AppShadows.card,
                                   ),
-                                  child: SizedBox(
+                                  child: const SizedBox(
                                     width: 16,
                                     height: 16,
                                     child: CircularProgressIndicator(
                                       strokeWidth: 2,
-                                      color: AppColors.accent,
+                                      color: Color(0xFF508AFF),
                                     ),
                                   ),
                                 ),
@@ -661,7 +664,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                         'voiceChat.errorPrefix'.tr(namedArgs: {'error': '$e'}),
                         textAlign: TextAlign.center,
                         style: AppTextStyles.bodyS.copyWith(
-                          color: AppColors.textSecondary,
+                          color: const Color(0x8CFFFFFF),
                         ),
                       ),
                     ),

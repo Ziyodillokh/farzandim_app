@@ -17,7 +17,6 @@
 import 'dart:io';
 
 import 'package:farzandim/core/network/dio_client.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/video_message/data/models/video_message.dart';
 import 'package:farzandim/features/video_message/data/repositories/backend_video_message_repository.dart';
 import 'package:farzandim/features/voice_message/data/services/video_thumb_cache.dart';
@@ -56,8 +55,17 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
   @override
   void initState() {
     super.initState();
-    // Build paytida ishlamaymiz — lifecycle/ref tayyor bo'lgach.
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadThumbnail());
+    // Kesh MAVJUD bo'lsa DARHOL (spinnersiz) ko'rsatamiz — Telegram kabi
+    // "shunchaki turadi". Avval har chatga kirganda `_loadingThumb=true` bilan
+    // boshlanib, keshdan o'qish async bo'lgani uchun spinner "bir marta
+    // aylanardi". Endi keshlangan thumbnail sinxron topilsa aylanmaydi.
+    final cached = VideoThumbCache.cachedThumbSync(widget.message.id);
+    if (cached != null) {
+      _thumbFile = cached;
+      _loadingThumb = false;
+    } else {
+      WidgetsBinding.instance.addPostFrameCallback((_) => _loadThumbnail());
+    }
   }
 
   Future<void> _loadThumbnail() async {
@@ -148,7 +156,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     height: _bubbleDiameter,
                     child: ClipOval(
                       child: ColoredBox(
-                        color: AppColors.surface,
+                        color: const Color(0xFF12171E),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
@@ -158,30 +166,30 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                                 _thumbFile!,
                                 fit: BoxFit.cover,
                                 gaplessPlayback: true,
-                                errorBuilder: (_, __, ___) => Center(
+                                errorBuilder: (_, __, ___) => const Center(
                                   child: Icon(
                                     SolarIconsBold.videocamera,
-                                    color: AppColors.textTertiary,
+                                    color: Color(0x66FFFFFF),
                                     size: 36,
                                   ),
                                 ),
                               )
                             else if (_loadingThumb)
-                              Center(
+                              const Center(
                                 child: SizedBox(
                                   width: 28,
                                   height: 28,
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2.5,
-                                    color: AppColors.primary,
+                                    color: Color(0xFF216BFF),
                                   ),
                                 ),
                               )
                             else
-                              Center(
+                              const Center(
                                 child: Icon(
                                   SolarIconsBold.videocamera,
-                                  color: AppColors.textTertiary,
+                                  color: Color(0x66FFFFFF),
                                   size: 36,
                                 ),
                               ),
@@ -266,7 +274,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     Text(
                       _formatTime(msg.createdAt),
                       style: TextStyle(
-                        color: AppColors.textSecondary.withValues(alpha: 0.9),
+                        color: const Color(0x8CFFFFFF).withValues(alpha: 0.9),
                         fontSize: 11,
                       ),
                     ),
@@ -279,7 +287,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                         size: 14,
                         color: msg.status == VideoMessageStatus.seen
                             ? Colors.blue.shade400
-                            : AppColors.textSecondary.withValues(alpha: 0.7),
+                            : const Color(0x8CFFFFFF).withValues(alpha: 0.7),
                       ),
                     ],
                   ],
@@ -368,10 +376,10 @@ class _FullscreenVideoDialogState extends State<_FullscreenVideoDialog> {
                     ),
                   )
                 else
-                  SizedBox(
+                  const SizedBox(
                     width: 48,
                     height: 48,
-                    child: CircularProgressIndicator(color: AppColors.primary),
+                    child: CircularProgressIndicator(color: Color(0xFF216BFF)),
                   ),
                 Positioned(
                   top: 40,

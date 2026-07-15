@@ -422,13 +422,15 @@ final chatMessagesProvider =
 /// List ekrani uchun eng oxirgi chat elementi — VOICE YOKI VIDEO (preview +
 /// saralash). Avval faqat voice hisobga olinardi → video xabar list'da "yangi
 /// xabar" sifatida ko'rinmasdi, tepaga chiqmasdi.
-final latestChatItemProvider =
-    Provider.family<AsyncValue<ChatItem?>, String>((ref, childId) {
-      return ref.watch(chatMessagesProvider(childId)).whenData((all) {
-        if (all.isEmpty) return null;
-        return all.last; // ASC — eng yangisi oxirida
-      });
-    });
+final latestChatItemProvider = Provider.family<AsyncValue<ChatItem?>, String>((
+  ref,
+  childId,
+) {
+  return ref.watch(chatMessagesProvider(childId)).whenData((all) {
+    if (all.isEmpty) return null;
+    return all.last; // ASC — eng yangisi oxirida
+  });
+});
 
 /// O'qilmagan (bola yuborgan, hali seen bo'lmagan) VOICE + VIDEO xabarlar
 /// soni — qizil badge. Avval faqat voice sanalardi → video "yangi xabar"
@@ -466,9 +468,7 @@ final sortedChildrenForVoiceProvider = Provider<List<Child>>((ref) {
 
   final pairs =
       children.map((child) {
-        final latest = ref
-            .watch(latestChatItemProvider(child.id))
-            .valueOrNull;
+        final latest = ref.watch(latestChatItemProvider(child.id)).valueOrNull;
         return (child: child, latest: latest);
       }).toList()..sort((a, b) {
         if (a.latest == null && b.latest == null) return 0;

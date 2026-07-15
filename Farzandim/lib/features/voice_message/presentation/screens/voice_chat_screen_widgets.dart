@@ -24,9 +24,9 @@ class _ChatHeader extends StatelessWidget {
       child: Row(
         children: [
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               SolarIconsOutline.arrowLeft,
-              color: AppColors.textPrimary,
+              color: Color(0xFFFFFFFF),
             ),
             onPressed: onBack,
           ),
@@ -49,7 +49,7 @@ class _ChatHeader extends StatelessWidget {
                 Text(
                   'voiceChat.headerSubtitle'.tr(),
                   style: AppTextStyles.bodyS.copyWith(
-                    color: AppColors.textSecondary,
+                    color: const Color(0x8CFFFFFF),
                     fontSize: 12,
                   ),
                 ),
@@ -57,7 +57,7 @@ class _ChatHeader extends StatelessWidget {
             ),
           ),
           IconButton(
-            icon: Icon(SolarIconsBold.menuDots, color: AppColors.textPrimary),
+            icon: const Icon(SolarIconsBold.menuDots, color: Color(0xFFFFFFFF)),
             onPressed: onInfo,
             tooltip: 'chatSettings.title'.tr(),
           ),
@@ -76,10 +76,14 @@ class _FallbackAvatar extends StatelessWidget {
       width: 40,
       height: 40,
       decoration: BoxDecoration(
-        color: AppColors.primary.withValues(alpha: 0.2),
+        color: const Color(0xFF216BFF).withValues(alpha: 0.2),
         shape: BoxShape.circle,
       ),
-      child: Icon(SolarIconsBold.user, color: AppColors.accent, size: 22),
+      child: const Icon(
+        SolarIconsBold.user,
+        color: Color(0xFF508AFF),
+        size: 22,
+      ),
     );
   }
 }
@@ -96,8 +100,8 @@ class _EmptyChat extends StatelessWidget {
     // empty holatda ham swipe ishlashi uchun SingleChildScrollView'ga
     // o'rab qo'yamiz (always-scrollable physics bilan).
     return RefreshIndicator(
-      color: AppColors.primary,
-      backgroundColor: AppColors.surface,
+      color: const Color(0xFF216BFF),
+      backgroundColor: const Color(0xFF12171E),
       onRefresh: onRefresh,
       child: LayoutBuilder(
         builder: (_, constraints) => SingleChildScrollView(
@@ -113,13 +117,13 @@ class _EmptyChat extends StatelessWidget {
                     width: 100,
                     height: 100,
                     decoration: BoxDecoration(
-                      color: AppColors.primary.withValues(alpha: 0.15),
+                      color: const Color(0xFF216BFF).withValues(alpha: 0.15),
                       shape: BoxShape.circle,
                     ),
-                    child: Icon(
+                    child: const Icon(
                       SolarIconsBold.microphone,
                       size: 50,
-                      color: AppColors.accent,
+                      color: Color(0xFF508AFF),
                     ),
                   ),
                   const SizedBox(height: AppDimensions.lg),
@@ -137,7 +141,7 @@ class _EmptyChat extends StatelessWidget {
                     ),
                     textAlign: TextAlign.center,
                     style: AppTextStyles.bodyS.copyWith(
-                      color: AppColors.textSecondary,
+                      color: const Color(0x8CFFFFFF),
                       fontSize: 14,
                       height: 1.4,
                     ),
@@ -178,7 +182,7 @@ class _ChatLoadingSkeleton extends StatelessWidget {
                 child: Container(
                   height: 60,
                   decoration: BoxDecoration(
-                    color: AppColors.surface.withValues(alpha: 0.5),
+                    color: const Color(0xFF12171E).withValues(alpha: 0.5),
                     borderRadius: BorderRadius.circular(20),
                   ),
                 ),

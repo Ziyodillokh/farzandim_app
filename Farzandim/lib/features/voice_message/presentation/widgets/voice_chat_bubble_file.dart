@@ -81,13 +81,13 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
   Widget build(BuildContext context) {
     final isOwn = widget.isOwn;
     final message = widget.message;
-    final fg = isOwn ? Colors.black : AppColors.textPrimary;
+    final fg = isOwn ? Colors.black : const Color(0xFFFFFFFF);
     final subColor = isOwn
         ? Colors.black.withValues(alpha: 0.55)
-        : AppColors.textSecondary;
+        : const Color(0x8CFFFFFF);
     final iconBg = isOwn
         ? Colors.black.withValues(alpha: 0.12)
-        : AppColors.primary;
+        : const Color(0xFF216BFF);
     final iconFg = isOwn ? Colors.black : Colors.black;
     final caption = message.text;
     final hasCaption = caption != null && caption.isNotEmpty;
@@ -107,7 +107,9 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
               child: Container(
                 padding: const EdgeInsets.fromLTRB(10, 10, 12, 8),
                 decoration: BoxDecoration(
-                  color: isOwn ? AppColors.primary : AppColors.surface,
+                  color: isOwn
+                      ? const Color(0xFF216BFF)
+                      : const Color(0xFF12171E),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),

@@ -9,11 +9,13 @@ class _TextBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleColor = isOwn ? AppColors.primary : AppColors.surface;
-    final textColor = isOwn ? Colors.black : AppColors.textPrimary;
+    final bubbleColor = isOwn
+        ? const Color(0xFF216BFF)
+        : const Color(0xFF12171E);
+    final textColor = isOwn ? Colors.black : const Color(0xFFFFFFFF);
     final metaColor = isOwn
         ? Colors.black.withValues(alpha: 0.55)
-        : AppColors.textSecondary;
+        : const Color(0x8CFFFFFF);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -139,19 +141,19 @@ class _ImageBubble extends ConsumerWidget {
           placeholder: (_, __) => Container(
             height: 200,
             color: Colors.black.withValues(alpha: 0.08),
-            child: Center(
+            child: const Center(
               child: CircularProgressIndicator(
                 strokeWidth: 2,
-                color: AppColors.primary,
+                color: Color(0xFF216BFF),
               ),
             ),
           ),
           errorWidget: (_, __, ___) => Container(
             height: 160,
             color: Colors.black.withValues(alpha: 0.08),
-            child: Icon(
+            child: const Icon(
               SolarIconsBold.galleryRemove,
-              color: AppColors.textSecondary,
+              color: Color(0x8CFFFFFF),
               size: 40,
             ),
           ),
@@ -164,7 +166,7 @@ class _ImageBubble extends ConsumerWidget {
     final Widget content = hasCaption
         ? DecoratedBox(
             decoration: BoxDecoration(
-              color: isOwn ? AppColors.primary : AppColors.surface,
+              color: isOwn ? const Color(0xFF216BFF) : const Color(0xFF12171E),
               borderRadius: radius,
               boxShadow: _bubbleShadow,
             ),
@@ -184,7 +186,9 @@ class _ImageBubble extends ConsumerWidget {
                         Text(
                           caption,
                           style: TextStyle(
-                            color: isOwn ? Colors.black : AppColors.textPrimary,
+                            color: isOwn
+                                ? Colors.black
+                                : const Color(0xFFFFFFFF),
                             fontSize: 15,
                             height: 1.35,
                           ),
@@ -195,7 +199,7 @@ class _ImageBubble extends ConsumerWidget {
                           isOwn: isOwn,
                           color: isOwn
                               ? Colors.black.withValues(alpha: 0.55)
-                              : AppColors.textSecondary,
+                              : const Color(0x8CFFFFFF),
                         ),
                       ],
                     ),
