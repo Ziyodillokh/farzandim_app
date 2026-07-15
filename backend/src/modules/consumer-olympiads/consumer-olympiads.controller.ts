@@ -32,7 +32,9 @@ export class ConsumerOlympiadsController {
   }
 
   @Get('ranking')
-  @ApiOperation({ summary: 'Global olympiad ranking' })
+  @ApiOperation({
+    summary: 'Olympiad ranking (global yoki viloyat bo\'yicha)',
+  })
   ranking(
     @CurrentUser() user: JwtPayload,
     @Query() query: RankingQueryDto,
@@ -41,6 +43,7 @@ export class ConsumerOlympiadsController {
       user.userId,
       query.range ?? 'all',
       query.limit ?? 50,
+      query.region,
     );
   }
 

@@ -12,6 +12,7 @@ import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { GamificationService } from '../gamification/gamification.service';
 import { XpEventType } from '../gamification/dto/create-xp-event.dto';
+import { RANKING_REGION_ME } from './dto/ranking-query.dto';
 
 // Javob vaqti chegarasi grace (sekund) — answerQuestion VA submitAttempt
 // AYNI shu qiymatdan foydalanadi (ikki endpoint bir xil vaqt xulqi).
@@ -131,7 +132,7 @@ export class ConsumerOlympiadsService {
 
   private async loadChild(
     userId: string,
-  ): Promise<{ childId: string; age: number | null }> {
+  ): Promise<{ childId: string; age: number | null; region: string | null }> {
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { childRecord: true },
@@ -139,7 +140,12 @@ export class ConsumerOlympiadsService {
     if (!u || u.role !== 'CHILD' || !u.childRecord) {
       throw new ForbiddenException('Child profile required');
     }
-    return { childId: u.childRecord.id, age: u.childRecord.age };
+    // `region` — reytingdagi "o'z viloyatim" filtri uchun (`region=me`).
+    return {
+      childId: u.childRecord.id,
+      age: u.childRecord.age,
+      region: u.childRecord.region,
+    };
   }
 
   async listOlympiads(userId: string) {
@@ -510,6 +516,7 @@ export class ConsumerOlympiadsService {
     userId: string,
     range: string,
     limit: number,
+    region?: string,
   ) {
     const child = await this.loadChild(userId);
 
@@ -522,11 +529,22 @@ export class ConsumerOlympiadsService {
             ? new Date(Date.now() - 30 * 86_400_000)
             : null;
 
+    // Viloyat filtri SERVER tomonda. `region=me` → bolaning o'z viloyati.
+    // Avval filtr faqat klientda, global top-N ustida ishlardi — boshqa
+    // viloyat bolasi top-N ga kirmasa ro'yxat bo'sh chiqib, filtr
+    // ishlamayotgandek ko'rinardi. Endi top-N O'SHA viloyat ichidan olinadi.
+    const effectiveRegion =
+      region === RANKING_REGION_ME ? (child.region ?? undefined) : region;
+    const regionWhere = effectiveRegion
+      ? { child: { is: { region: effectiveRegion } } }
+      : {};
+
     const grouped = await this.prisma.olympiadAttempt.groupBy({
       by: ['childId'],
       where: {
         status: 'finished',
         ...(since ? { finishedAt: { gte: since } } : {}),
+        ...regionWhere,
       },
       _sum: { score: true },
       _count: { _all: true },
@@ -564,9 +582,13 @@ export class ConsumerOlympiadsService {
       };
     });
 
-    // If current user not in top, add them separately
+    // If current user not in top, add them separately.
+    // MUHIM: viloyat filtri yoqilgan va bola BOSHQA viloyatdan bo'lsa, "Siz"
+    // qatorini ko'rsatmaymiz — u bu viloyat reytingiga umuman kirmaydi.
+    const childInScope =
+      !effectiveRegion || child.region === effectiveRegion;
     let currentUserRow = items.find((x) => x.isCurrentUser) ?? null;
-    if (!currentUserRow) {
+    if (!currentUserRow && childInScope) {
       const all = await this.prisma.olympiadAttempt.aggregate({
         where: {
           childId: child.childId,
@@ -581,11 +603,14 @@ export class ConsumerOlympiadsService {
         const c = await this.prisma.child.findUnique({
           where: { id: child.childId },
         });
+        // Viloyat filtri bu yerda ham qo'llanadi — aks holda "Siz" qatoridagi
+        // o'rin GLOBAL bo'yicha hisoblanib, viloyat ro'yxatiga mos kelmasdi.
         const higher = await this.prisma.olympiadAttempt.groupBy({
           by: ['childId'],
           where: {
             status: 'finished',
             ...(since ? { finishedAt: { gte: since } } : {}),
+            ...regionWhere,
           },
           _sum: { score: true },
           having: { score: { _sum: { gt: score } } },

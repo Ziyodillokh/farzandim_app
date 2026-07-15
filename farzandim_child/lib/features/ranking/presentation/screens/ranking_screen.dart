@@ -70,44 +70,42 @@ class _Row {
   final bool me;
 }
 
-// ~100 ta PREVIEW qator (real ro'yxat bo'sh bo'lganda). 67-o'rin — bolaning
-// o'zi (Figma'dagi "67. Akmal"); DON ballari yuqoridan pastga kamayib boradi.
-final List<_Row> _previewRows = _buildPreviewRows();
-final _Row _previewMe = _previewRows.firstWhere((r) => r.me);
+/// Ro'yxat bo'sh bo'lgandagi HALOL holat.
+///
+/// Avval bu yerda ~100 ta SOXTA "preview" qator bor edi (o'ylab topilgan
+/// ismlar va DON ballari). Natijada viloyat tanlanganda ro'yxat bo'sh
+/// chiqsa ham ekran o'sha soxta ro'yxatni ko'rsatardi — foydalanuvchi
+/// "viloyat filtri ishlamayapti" deb o'ylardi. Endi real holat ko'rsatiladi.
+class _EmptyRanking extends StatelessWidget {
+  const _EmptyRanking();
 
-List<_Row> _buildPreviewRows() {
-  const names = [
-    'Muahmmad', 'Mahliyo', 'Kamol', 'Nodira', 'Akmal', 'Dilnoza', 'Jasur',
-    'Malika', 'Sardor', 'Zilola', 'Bekzod', 'Gulnora', 'Otabek', 'Sevinch',
-    'Ulugbek', 'Shahzoda', 'Javohir', 'Madina', 'Temur', 'Kamila', 'Aziz',
-    'Laylo', 'Botir', 'Ruxshona', 'Sanjar', 'Mohira', 'Doston', 'Yulduz',
-    'Farrux', 'Nilufar', //
-  ];
-  const colors = [
-    Color(0xFF7B61FF),
-    Color(0xFFEF7DA0),
-    Color(0xFF41DD7A),
-    Color(0xFF66B3FF),
-    Color(0xFFF2B233),
-    Color(0xFF4ECDC4),
-    Color(0xFFFF8A5C),
-    Color(0xFF9B8CFF),
-  ];
-  return [
-    for (var i = 0; i < 100; i++)
-      _Row(
-        i + 1,
-        i == 66
-            ? 'Akmal'
-            : (i < names.length ? names[i] : names[(i * 7 + 3) % names.length]),
-        12500 - i * 95 - (i * 13) % 47,
-        // Podium (1-3) ranglari Figma bo'yicha: binafsha/pushti/yashil.
-        i == 66
-            ? const Color(0xFF66B3FF)
-            : colors[(i < 3 ? i : (i * 5 + 2)) % colors.length],
-        me: i == 66,
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(24, 48, 24, 24),
+      child: Column(
+        children: [
+          Icon(
+            Icons.emoji_events_outlined,
+            size: 56,
+            color: Colors.white.withValues(alpha: 0.28),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'Bu yerda hali reyting yo\'q',
+            textAlign: TextAlign.center,
+            style: _unb(16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'Test ishlab DON to\'plang — reytingda paydo bo\'lasiz.',
+            textAlign: TextAlign.center,
+            style: _pop(13, c: Colors.white.withValues(alpha: 0.6)),
+          ),
+        ],
       ),
-  ];
+    );
+  }
 }
 
 /// "DON reytingi" sahifasi.
@@ -186,26 +184,23 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
     final region = ref.watch(selectedRegionProvider);
     final childId = ref.watch(pairingStateProvider).childId;
 
-    // Real ro'yxat → _Row'larga; bo'sh bo'lsa PREVIEW.
-    List<_Row> rows;
-    _Row? meRow;
-    if (users.isEmpty) {
-      rows = _previewRows;
-      meRow = _previewMe;
-    } else {
-      rows = [
-        for (var i = 0; i < users.length; i++)
-          _Row(
-            i + 1,
-            users[i].name,
-            scoreFor(users[i], range),
-            users[i].avatarColor,
-            me: users[i].id == childId,
-          ),
-      ];
-      final meIdx = rows.indexWhere((r) => r.me);
-      if (meIdx >= 0) meRow = rows[meIdx];
-    }
+    // Real ro'yxat → _Row'lar. MOCK PREVIEW OLIB TASHLANDI: avval ro'yxat
+    // bo'sh bo'lsa 100 ta SOXTA qator ko'rsatilardi. Natijada viloyat
+    // tanlanganda (ro'yxat bo'sh chiqsa) ekran o'sha soxta ro'yxatni
+    // ko'rsatib turardi va "viloyat filtri ishlamayapti" deb tushunilardi.
+    // Endi bo'sh bo'lsa — HALOL bo'sh holat (`_EmptyRanking`).
+    final rows = [
+      for (var i = 0; i < users.length; i++)
+        _Row(
+          i + 1,
+          users[i].name,
+          scoreFor(users[i], range),
+          users[i].avatarColor,
+          me: users[i].id == childId,
+        ),
+    ];
+    final meIdx = rows.indexWhere((r) => r.me);
+    final _Row? meRow = meIdx >= 0 ? rows[meIdx] : null;
     final top3 = rows.take(3).toList();
     final rest = rows.length > 3 ? rows.sublist(3) : const <_Row>[];
     // O'z o'rnining `rest` ichidagi indeksi (scroll hisobi uchun).
@@ -264,6 +259,8 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                       90 + bottomInset,
                     ),
                     children: [
+                      // Ro'yxat bo'sh — halol xabar (soxta preview o'rniga).
+                      if (rows.isEmpty) const _EmptyRanking(),
                       // Podium bo'limi (naqshli to'q-ko'k fon, Figma) —
                       // scroll boshlanganda butunlay yig'iladi, top-3 esa
                       // pastdagi panel ichida oddiy qator bo'lib chiqadi.
@@ -278,7 +275,9 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                           secondChild: const SizedBox(width: double.infinity),
                         ),
                       // Qatorlar paneli — yumaloq burchakli katta karta.
-                      Container(
+                      // Ro'yxat bo'sh bo'lsa bo'sh karta chiqmasin.
+                      if (rows.isNotEmpty)
+                        Container(
                         padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
                         decoration: BoxDecoration(
                           color: const Color(0xFF0A0F16),

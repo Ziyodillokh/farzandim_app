@@ -38,11 +38,27 @@ class RankingBackendRepository {
   final Dio _dio;
 
   /// `range` — 'all', 'daily', 'weekly', 'monthly'.
-  Future<RankingResult> fetchRanking({String range = 'all', int limit = 50}) async {
+  ///
+  /// `region` — viloyat filtri. Backend SERVER tomonda filtrlaydi (top-N
+  /// o'sha viloyat ichidan olinadi). `'me'` → bolaning o'z viloyati.
+  /// `null` → global reyting.
+  ///
+  /// Avval filtr faqat klientda, global top-50 ustida ishlardi — boshqa
+  /// viloyat bolasi top-50 ga kirmasa ro'yxat bo'sh chiqar va ekran soxta
+  /// "preview" ko'rsatardi → "viloyat filtri ishlamayapti".
+  Future<RankingResult> fetchRanking({
+    String range = 'all',
+    int limit = 50,
+    String? region,
+  }) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/content/olympiads/ranking',
-        queryParameters: {'range': range, 'limit': limit},
+        queryParameters: {
+          'range': range,
+          'limit': limit,
+          if (region != null && region.isNotEmpty) 'region': region,
+        },
       );
       final items = (response.data?['items'] as List<dynamic>?) ?? const [];
       final currentUserId = response.data?['currentUserId'] as String?;

@@ -33,7 +33,22 @@ final backendRankingProvider = FutureProvider<RankingResult>((ref) async {
     TimeRange.oylik => 'monthly',
     TimeRange.butunDavr => 'all',
   };
-  return ref.watch(rankingBackendRepositoryProvider).fetchRanking(range: apiRange);
+
+  // Viloyat filtri SERVER tomonda. "Hudud" tab'ida top-N o'sha viloyat
+  // ichidan olinadi; viloyat tanlanmagan bo'lsa `'me'` — bolaning o'z
+  // viloyati (klient o'z viloyatini mustaqil bilmaydi). Boshqa tab'larda
+  // region yuborilmaydi → global reyting.
+  //
+  // Avval region umuman yuborilmasdi va klient global top-50 ni o'zi
+  // filtrlardi → boshqa viloyat bolasi ro'yxatga tushmasa natija bo'sh
+  // bo'lib, "filtr ishlamayapti" holati kelib chiqardi.
+  final tab = ref.watch(rankingTabProvider);
+  final selectedRegion = ref.watch(selectedRegionProvider);
+  final region = tab == RankingTab.hudud ? (selectedRegion ?? 'me') : null;
+
+  return ref
+      .watch(rankingBackendRepositoryProvider)
+      .fetchRanking(range: apiRange, region: region);
 });
 
 /// Real backend ma'lumotidan foydalanadi. Backend bo'sh bo'lsa —
@@ -50,7 +65,6 @@ final filteredUsersProvider = Provider<List<RankingUser>>((ref) {
   final users = ref.watch(allUsersProvider);
   final tab = ref.watch(rankingTabProvider);
   final timeRange = ref.watch(timeRangeProvider);
-  final region = ref.watch(selectedRegionProvider);
   final yoshGuruhi = ref.watch(selectedYoshGuruhiProvider);
 
   final currentUser = users
@@ -59,10 +73,12 @@ final filteredUsersProvider = Provider<List<RankingUser>>((ref) {
 
   var filtered = users;
 
-  if (tab == RankingTab.hudud) {
-    final r = region ?? currentUser?.region;
-    filtered = filtered.where((u) => u.region == r).toList();
-  } else if (tab == RankingTab.yoshGuruhi) {
+  // HUDUD: filtr SERVER tomonda qo'llangan (`backendRankingProvider` region
+  // yuboradi) — bu yerda QAYTA filtrlamaymiz. Avval global top-50 ustida
+  // klient filtri ishlab, ro'yxat bo'sh chiqardi.
+  if (tab == RankingTab.yoshGuruhi) {
+    // YOSH: backend yosh filtrini qo'llamaydi (javobda `age` bor) →
+    // klientda filtrlaymiz.
     final y = yoshGuruhi ?? currentUser?.yoshGuruhi;
     filtered = filtered.where((u) => u.yoshGuruhi == y).toList();
   }
