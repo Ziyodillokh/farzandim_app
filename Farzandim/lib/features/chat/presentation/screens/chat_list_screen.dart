@@ -52,8 +52,15 @@ String _timeLabel(DateTime d) {
   return '$diff kun';
 }
 
-String _preview(VoiceMessage? m) {
-  if (m == null) return 'Suhbatni boshlang';
+String _preview(ChatItem? item) {
+  if (item == null) return 'Suhbatni boshlang';
+  return switch (item) {
+    VideoItem() => '📹 Video xabar',
+    VoiceItem(:final message) => _voicePreview(message),
+  };
+}
+
+String _voicePreview(VoiceMessage m) {
   if (m.isText) return m.text ?? '';
   if (m.isImage) return '📷 Rasm';
   if (m.isFile) return '📎 Fayl';
@@ -138,9 +145,9 @@ class _ChatTile extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final latest = ref.watch(latestVoiceMessageProvider(child.id)).valueOrNull;
+    final latest = ref.watch(latestChatItemProvider(child.id)).valueOrNull;
     final unread =
-        ref.watch(unreadVoiceMessagesProvider(child.id)).valueOrNull ?? 0;
+        ref.watch(unreadChatCountProvider(child.id)).valueOrNull ?? 0;
     final online = child.isLiveOnline;
     return GestureDetector(
       onTap: () => context.push(AppRoutes.chatDetailPath(child.id)),

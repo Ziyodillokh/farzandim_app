@@ -76,11 +76,11 @@ final videoMessagesProvider =
     yield const <VideoMessage>[];
     return;
   }
+  // `currentUserId` bo'sh bo'lsa ham chiqaramiz (VOICE provider bilan bir xil)
+  // — avval bu yerda bo'sh bo'lsa EMPTY qaytarilardi, shuning uchun legacy
+  // pair'da (currentUserId saqlanmagan) ovoz ko'rinib, VIDEO umuman
+  // ko'rinmasdi. Yo'nalish (chap/o'ng) senderId orqali baribir aniqlanadi.
   final currentUserId = pairing.currentUserId ?? '';
-  if (currentUserId.isEmpty) {
-    yield const <VideoMessage>[];
-    return;
-  }
   final repo = ref.watch(backendVideoMessageRepositoryProvider);
 
   // faqat ota-ona bilan oxirgi 100 ta xabar — to'liq tarix tortilmaydi

@@ -419,9 +419,47 @@ final chatMessagesProvider =
       return AsyncValue.data(items);
     });
 
+/// List ekrani uchun eng oxirgi chat elementi — VOICE YOKI VIDEO (preview +
+/// saralash). Avval faqat voice hisobga olinardi → video xabar list'da "yangi
+/// xabar" sifatida ko'rinmasdi, tepaga chiqmasdi.
+final latestChatItemProvider =
+    Provider.family<AsyncValue<ChatItem?>, String>((ref, childId) {
+      return ref.watch(chatMessagesProvider(childId)).whenData((all) {
+        if (all.isEmpty) return null;
+        return all.last; // ASC — eng yangisi oxirida
+      });
+    });
+
+/// O'qilmagan (bola yuborgan, hali seen bo'lmagan) VOICE + VIDEO xabarlar
+/// soni — qizil badge. Avval faqat voice sanalardi → video "yangi xabar"
+/// belgisi umuman ko'rinmasdi.
+final unreadChatCountProvider = Provider.family<AsyncValue<int>, String>((
+  ref,
+  childId,
+) {
+  return ref.watch(chatMessagesProvider(childId)).whenData((all) {
+    var n = 0;
+    for (final item in all) {
+      switch (item) {
+        case VoiceItem(:final message):
+          if (message.sender == 'child' &&
+              message.status == VoiceMessageStatus.sent) {
+            n++;
+          }
+        case VideoItem(:final message):
+          if (message.sender == 'child' &&
+              message.status == VideoMessageStatus.sent) {
+            n++;
+          }
+      }
+    }
+    return n;
+  });
+});
+
 /// List ekrani uchun bolalarni saralangan ro'yxat sifatida qaytaradi:
-/// yuqorida — eng yangi xabar bo'lgan bolalar (yangidan eskiga),
-/// pastda — hech qachon ovozli xabar yo'q bolalar.
+/// yuqorida — eng yangi xabar (voice YOKI video) bo'lgan bolalar (yangidan
+/// eskiga), pastda — hech qachon xabar yo'q bolalar.
 final sortedChildrenForVoiceProvider = Provider<List<Child>>((ref) {
   final children = ref.watch(childrenListProvider);
   if (children.isEmpty) return const [];
@@ -429,7 +467,7 @@ final sortedChildrenForVoiceProvider = Provider<List<Child>>((ref) {
   final pairs =
       children.map((child) {
         final latest = ref
-            .watch(latestVoiceMessageProvider(child.id))
+            .watch(latestChatItemProvider(child.id))
             .valueOrNull;
         return (child: child, latest: latest);
       }).toList()..sort((a, b) {

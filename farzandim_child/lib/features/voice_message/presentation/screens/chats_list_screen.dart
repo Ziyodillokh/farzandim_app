@@ -16,6 +16,7 @@
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/sos/presentation/providers/sos_provider.dart';
+import 'package:farzandim_child/features/video_message/data/models/video_message.dart';
 import 'package:farzandim_child/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim_child/features/voice_message/presentation/providers/voice_message_provider.dart';
 import 'package:flutter/material.dart';
@@ -76,8 +77,10 @@ class ChatsListScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final pairing = ref.watch(pairingStateProvider);
-    final msgs =
-        ref.watch(voiceMessagesProvider).valueOrNull ?? const <VoiceMessage>[];
+    // VOICE + VIDEO birlashtirilgan lenta — video xabar ham "yangi xabar"
+    // (unread/preview) sifatida ko'rinsin (avval faqat voice hisobga olinardi).
+    final items =
+        ref.watch(chatMessagesProvider).valueOrNull ?? const <ChatItem>[];
     // Bog'langan ota-onaning PROFILDAGI ismi (backend'dan).
     final parentName = ref.watch(parentNameProvider).valueOrNull;
     final bottomInset = MediaQuery.viewPaddingOf(context).bottom;
@@ -131,7 +134,7 @@ class ChatsListScreen extends ConsumerWidget {
               child: ListView(
                 padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
                 children: pairing.isPaired
-                    ? _realRows(context, msgs, parentName)
+                    ? _realRows(context, items, parentName)
                     : _previewRows(context),
               ),
             ),
@@ -163,23 +166,35 @@ class ChatsListScreen extends ConsumerWidget {
   // ── REAL: ota-ona qatori (profildagi ism + oxirgi xabar + o'qilmaganlar) ──
   List<Widget> _realRows(
     BuildContext context,
-    List<VoiceMessage> msgs,
+    List<ChatItem> items,
     String? parentName,
   ) {
-    final last = msgs.isNotEmpty ? msgs.last : null;
-    final unread = msgs
-        .where(
-          (m) => m.sender == 'parent' && m.status != VoiceMessageStatus.seen,
-        )
-        .length;
+    final last = items.isNotEmpty ? items.last : null;
+    // O'qilmagan (ota-onadan kelgan, hali seen bo'lmagan) VOICE + VIDEO soni.
+    var unread = 0;
+    for (final item in items) {
+      switch (item) {
+        case VoiceItem(:final message):
+          if (message.sender == 'parent' &&
+              message.status != VoiceMessageStatus.seen) {
+            unread++;
+          }
+        case VideoItem(:final message):
+          if (message.sender == 'parent' &&
+              message.status != VideoMessageStatus.seen) {
+            unread++;
+          }
+      }
+    }
     final String preview;
-    if (last == null) {
-      // Default neytral — "yozmoqda" degan taassurot bermasin.
-      preview = 'Suhbatni boshlang';
-    } else if (last.isText) {
-      preview = last.text!;
-    } else {
-      preview = 'Ovozli xabar';
+    switch (last) {
+      case null:
+        // Default neytral — "yozmoqda" degan taassurot bermasin.
+        preview = 'Suhbatni boshlang';
+      case VideoItem():
+        preview = '📹 Video xabar';
+      case VoiceItem(:final message):
+        preview = message.isText ? (message.text ?? '') : 'Ovozli xabar';
     }
     final name = (parentName != null && parentName.trim().isNotEmpty)
         ? parentName.trim()
