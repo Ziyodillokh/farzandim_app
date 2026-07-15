@@ -23,7 +23,9 @@ class _Header extends ConsumerWidget {
         : 'assets/icons/scatter_moto.svg';
 
     return SizedBox(
-      height: 300,
+      // Balandlik kamaytirildi (300→250) — profil bilan pastdagi widgetlar
+      // orasidagi bo'shliq ~28px bo'lib, ekranga ko'proq ma'lumot sig'adi.
+      height: 250,
       width: double.infinity,
       child: Stack(
         children: [
@@ -32,18 +34,39 @@ class _Header extends ConsumerWidget {
             alignment: Alignment(0, -0.45),
             child: IgnorePointer(child: _HeaderGlow()),
           ),
-          // Tarqoq dekorativ ikonalar (jinsga qarab) — fraksion joylashuv,
-          // barcha telefonlarda bir xil ko'rinadi.
-          for (final s in _scatterSpots)
-            Align(
-              alignment: s.$1,
-              child: IgnorePointer(
-                child: Opacity(
-                  opacity: s.$2,
-                  child: SvgPicture.asset(scatter, width: 16, height: 16),
+          // Tarqoq dekorativ ikonalar (jinsga qarab) — MARKAZDA (avatar
+          // atrofida) ko'rinadi, chetlarga tomon radial fade bilan asta-sekin
+          // YO'Q bo'ladi (dizayner: "pattern avatar atrofida bo'lsa yetadi,
+          // chetlari qorayib yo'qolsin").
+          Positioned.fill(
+            child: IgnorePointer(
+              child: ShaderMask(
+                blendMode: BlendMode.dstIn,
+                shaderCallback: (rect) => const RadialGradient(
+                  center: Alignment(0, -0.28),
+                  radius: 0.72,
+                  colors: [Colors.white, Colors.white, Colors.transparent],
+                  stops: [0.0, 0.34, 1.0],
+                ).createShader(rect),
+                child: Stack(
+                  children: [
+                    for (final s in _scatterSpots)
+                      Align(
+                        alignment: s.$1,
+                        child: Opacity(
+                          opacity: s.$2,
+                          child: SvgPicture.asset(
+                            scatter,
+                            width: 16,
+                            height: 16,
+                          ),
+                        ),
+                      ),
+                  ],
                 ),
               ),
             ),
+          ),
           // Messenger (chap-tepa).
           Positioned(
             top: 26,
@@ -79,9 +102,11 @@ class _Header extends ConsumerWidget {
             child: Column(
               children: [
                 // Qora dumaloq border (gradientli) + uning ustida avatar.
+                // Kichraytirildi (avatar 116→104, ramka 134→120) — dizayner
+                // talabi (~100–110px).
                 Container(
-                  width: 134,
-                  height: 134,
+                  width: 120,
+                  height: 120,
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     color: Color(0xFF1A1F26),
@@ -89,19 +114,19 @@ class _Header extends ConsumerWidget {
                   child: Center(
                     child: Stack(
                       children: [
-                        ChildAvatar(child: child, size: 116, showBorder: false),
+                        ChildAvatar(child: child, size: 104, showBorder: false),
                         Positioned(
-                          right: 6,
-                          bottom: 6,
+                          right: 5,
+                          bottom: 5,
                           child: Container(
-                            width: 22,
-                            height: 22,
+                            width: 20,
+                            height: 20,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: online ? _online : _dim,
                               border: Border.all(
                                 color: const Color(0xFF0B1119),
-                                width: 3.5,
+                                width: 3,
                               ),
                             ),
                           ),
@@ -554,9 +579,11 @@ class _Divider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Ko'rinarli ajratuvchi (dizayner: qatorlar orasi aniq ajralsin,
+    // "rowlarda adashmaslik uchun"). Oq ~8% → ~14%.
     return const Padding(
       padding: EdgeInsets.symmetric(vertical: 8),
-      child: SizedBox(height: 1, child: ColoredBox(color: Color(0x14FFFFFF))),
+      child: SizedBox(height: 1, child: ColoredBox(color: Color(0x24FFFFFF))),
     );
   }
 }
@@ -714,9 +741,11 @@ class _LeaderboardRow extends StatelessWidget {
             ),
           ),
         ),
+        // Bola qatorini belgilovchi ko'rsatkich — CHAPGA, bola ismiga qarab
+        // ("sizning bolangiz shu yerda" degani). Dizayner talabi.
         if (isMe)
           Icon(
-            SolarIconsBold.altArrowRight,
+            SolarIconsBold.altArrowLeft,
             size: 16,
             color: const Color(0xFF508AFF).withValues(alpha: 0.8),
           ),

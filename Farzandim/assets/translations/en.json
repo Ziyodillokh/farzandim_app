@@ -781,7 +781,7 @@
     "unexpectedError": "Unexpected error: {error}"
   },
   "account": {
-    "title": "Account",
+    "title": "My account",
     "email": "Email",
     "phone": "Phone",
     "login": "Login",
@@ -879,7 +879,7 @@
     },
     "rows": {
       "account": {
-        "title": "Account",
+        "title": "My account",
         "subtitle": "Login, password, phone"
       },
       "children": {

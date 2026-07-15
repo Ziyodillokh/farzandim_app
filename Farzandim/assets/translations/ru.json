@@ -781,7 +781,7 @@
     "unexpectedError": "Непредвиденная ошибка: {error}"
   },
   "account": {
-    "title": "Аккаунт",
+    "title": "Мой аккаунт",
     "email": "Email",
     "phone": "Телефон",
     "login": "Логин",
@@ -879,7 +879,7 @@
     },
     "rows": {
       "account": {
-        "title": "Аккаунт",
+        "title": "Мой аккаунт",
         "subtitle": "Логин, пароль, телефон"
       },
       "children": {

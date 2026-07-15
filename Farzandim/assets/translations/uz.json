@@ -781,7 +781,7 @@
     "unexpectedError": "Kutilmagan xato: {error}"
   },
   "account": {
-    "title": "Akkount",
+    "title": "Mening hisobim",
     "email": "Email",
     "phone": "Telefon",
     "login": "Login",
@@ -879,7 +879,7 @@
     },
     "rows": {
       "account": {
-        "title": "Akkount",
+        "title": "Mening hisobim",
         "subtitle": "Login, parol, telefon"
       },
       "children": {
