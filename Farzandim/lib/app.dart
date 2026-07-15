@@ -137,9 +137,11 @@ class _SosBannerState extends State<_SosBanner>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
+                // 2 qator — tor ekranda (360dp) matnga ~135dp qoladi va
+                // "SOS! Bola yordam so'ramoqda" bir qatorga sig'maydi.
                 Text(
                   'sos.wsBanner'.tr(),
-                  maxLines: 1,
+                  maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: const TextStyle(
                     color: Colors.white,
