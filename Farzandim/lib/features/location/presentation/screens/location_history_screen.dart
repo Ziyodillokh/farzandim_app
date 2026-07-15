@@ -13,7 +13,9 @@ import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/services/dwell_detector.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
+import 'package:farzandim/features/location/data/services/track_cleaner.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
+import 'package:farzandim/features/location/presentation/providers/road_route_provider.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
@@ -76,7 +78,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   List<ChildLocation> _memoizedTrack(List<ChildLocation> raw) {
     if (!identical(raw, _trackMemoInput)) {
       _trackMemoInput = raw;
-      _trackMemo = _cleanTrack(raw);
+      _trackMemo = TrackCleaner.clean(raw);
       _distanceKmMemo = _calculateDistanceKm(_trackMemo);
     }
     return _trackMemo;
@@ -172,6 +174,10 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     final track = _memoizedTrack(
       historyAsync.valueOrNull ?? const <ChildLocation>[],
     );
+    // Ko'chalarга yopishtirilган (road-matched) yo'l — polyline uchun.
+    // Tayyor bo'lmasa `_MapLayer` tozalанган trekдан to'g'ri chiziq chizadi.
+    final routeLine =
+        ref.watch(roadRouteProvider(query)).valueOrNull ?? const <ll.LatLng>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -206,6 +212,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
                   points: shown,
                   stops: stops,
                   child: child,
+                  routeLine: routeLine,
                   controller: _mapController,
                   openDwellIndex: _openDwellIndex,
                   onDwellTap: (idx) {
@@ -274,41 +281,6 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     _mapController.fitCamera(
       CameraFit.bounds(bounds: bounds, padding: const EdgeInsets.all(80)),
     );
-  }
-
-  /// Tarix nuqtalarini tozalaydi: aniqligi yomon (>100m) fix'lar
-  /// tashlanadi, oxirgi nuqtadan <25m masofadagilar yutiladi (statsionar
-  /// GPS jitter — soxta zigzag va shishgan masofa oldini oladi). Backend
-  /// yangi data'ni o'zi filtrlaydi; bu eski data'ni ham toza ko'rsatadi.
-  List<ChildLocation> _cleanTrack(List<ChildLocation> points) {
-    // Trek chizig'i uchun aniqlik talabi qattiqroq (60m) — past aniqlikdagi
-    // nuqtalar chiziqni yon-veriga "sochib" yuboradi.
-    const maxAccuracyM = 60.0;
-    const minGapM = 8.0;
-    final cleaned = <ChildLocation>[];
-    for (final p in points) {
-      // accuracy == 0 → noma'lum (backend bermagan) → o'tkazamiz.
-      if (p.accuracy > maxAccuracyM) continue;
-      if (cleaned.isEmpty) {
-        cleaned.add(p);
-        continue;
-      }
-      if (_haversineKm(cleaned.last, p) * 1000 >= minGapM) {
-        cleaned.add(p);
-      }
-    }
-    // GPS "spike" (A→B→A sakrash) chiziqlarni ko'paytirib ko'rsatadi:
-    // o'rtadagi nuqta chetga otilib qaytgan bo'lsa olib tashlaymiz.
-    if (cleaned.length < 3) return cleaned;
-    final smoothed = <ChildLocation>[cleaned.first];
-    for (var i = 1; i < cleaned.length - 1; i++) {
-      final outM = _haversineKm(smoothed.last, cleaned[i]) * 1000;
-      final backM = _haversineKm(smoothed.last, cleaned[i + 1]) * 1000;
-      final isSpike = outM > 40 && backM < 15;
-      if (!isSpike) smoothed.add(cleaned[i]);
-    }
-    smoothed.add(cleaned.last);
-    return smoothed;
   }
 
   /// Polyline bo'ylab jami masofani km'da hisoblash (haversine).

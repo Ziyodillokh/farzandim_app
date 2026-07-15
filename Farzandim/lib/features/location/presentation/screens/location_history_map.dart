@@ -11,6 +11,7 @@ class _MapLayer extends StatefulWidget {
     required this.points,
     required this.stops,
     required this.child,
+    required this.routeLine,
     required this.controller,
     required this.openDwellIndex,
     required this.onDwellTap,
@@ -23,6 +24,10 @@ class _MapLayer extends StatefulWidget {
 
   /// Oxirgi nuqta pin'i uchun bola (avatar). `null` bo'lsa fallback pin.
   final Child? child;
+
+  /// Ko'chalarга yopishtirilган (road-matched) yo'l. Bo'sh bo'lsa — nuqtalar
+  /// orasida to'g'ri chiziq.
+  final List<ll.LatLng> routeLine;
   final MapController controller;
   final int? openDwellIndex;
   final void Function(int idx) onDwellTap;
@@ -57,9 +62,11 @@ class _MapLayerState extends State<_MapLayer> {
     final chronological = widget.points;
     final start = chronological.first;
     final end = chronological.last;
-    final linePoints = [
-      for (final p in chronological) _ll(p.latitude, p.longitude),
-    ];
+    // Polyline: road-matched yo'l bor bo'lsa uni, aks holda tozalанган
+    // nuqtalar orasidagi to'g'ri chiziq.
+    final linePoints = widget.routeLine.length >= 2
+        ? widget.routeLine
+        : [for (final p in chronological) _ll(p.latitude, p.longitude)];
 
     final circles = <CircleMarker>[];
     final markers = <Marker>[];

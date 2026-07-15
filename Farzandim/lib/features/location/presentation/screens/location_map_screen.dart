@@ -16,6 +16,7 @@ import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/models/location_stop.dart';
 import 'package:farzandim/features/location/data/repositories/backend_location_repository.dart';
 import 'package:farzandim/features/location/data/services/parent_location_service.dart';
+import 'package:farzandim/features/location/data/services/track_cleaner.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/location_history_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/road_route_provider.dart';
@@ -269,9 +270,13 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     // Ko'chalarga yopishtirilgan yo'l (OSRM). Tayyor bo'lmasa — xom trek
     // (to'g'ri chiziq) bilan ko'rsatamiz.
     final roadRoute = ref.watch(roadRouteProvider(todayQuery)).valueOrNull;
+    // roadRoute tayyor bo'lmasa — tozalanган xom trek (sochilishsiz).
     final routeLine = (roadRoute != null && roadRoute.length >= 2)
         ? roadRoute
-        : [for (final p in track) ll.LatLng(p.latitude, p.longitude)];
+        : [
+            for (final p in TrackCleaner.clean(track))
+              ll.LatLng(p.latitude, p.longitude),
+          ];
 
     final locationAsync = ref.watch(childLocationProvider(child.id));
 

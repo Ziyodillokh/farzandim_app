@@ -53,12 +53,21 @@ class LocationService {
   /// shu sample'larga tayanadi; <10m dedup bloat'ni oldini oladi.
   static const Duration _heartbeatInterval = Duration(seconds: 60);
 
+  // Yomon-aniqlik guard: uy/cafe ichida (multipath) accuracy 35–70m bo'lib
+  // nuqta ko'chага "sochiladi" (aslida chiqmagansiz). Bundan yomon fix, agar
+  // yaqinда (_sendGuardWindow) yaxshi fix yuborilган bo'lsa, YUBORILMAYDI —
+  // marker/tarix oxirgi yaxshi joyда qoladi. Uzoq yaxshi fix bo'lmasa
+  // yuboramiz (liveness aniqlikдан muhim — bola "yo'qolib" qolmasin).
+  static const double _maxGoodAccuracyM = 35;
+  static const Duration _sendGuardWindow = Duration(seconds: 90);
+
   StreamSubscription<Position>? _positionSub;
   Timer? _heartbeatTimer;
   // Ruxsat/GPS yo'qligida start()ni davriy qayta urinish (60s) — bola GPS'ni
   // keyin yoqsa joylashuv o'z-o'zidan tiklanadi (servis restart kutmaydi).
   Timer? _startRetryTimer;
   Position? _lastPosition;
+  DateTime? _lastSentAt; // guard: oxirgi joylashuv yuborilган vaqt
   String? _parentUid;
   String? _childId;
 
@@ -305,14 +314,27 @@ class LocationService {
   Future<void> _writeToFirestore(Position position) async {
     if (_parentUid == null || _childId == null) return;
 
-    // Oxirgi pozitsiyani saqlash — heartbeat tick'da qayta yozish uchun.
+    // Yomon-aniqlik guard — indoor multipath sochilishini kamaytiradi. Yaqinда
+    // yaxshi fix yuborilган bo'lsa, yomon accuracy'ли nuqtani o'tkazib
+    // yuboramiz (oxirgi yaxshi joy saqlanadi; marker ko'chага sakramaydi).
+    // Uzoq yaxshi fix bo'lmasa yuboramiz (liveness — bola yo'qolmasin).
+    final acc = position.accuracy;
+    final recentlySent = _lastSentAt != null &&
+        DateTime.now().difference(_lastSentAt!) < _sendGuardWindow;
+    if (acc > _maxGoodAccuracyM && acc > 0 && recentlySent) {
+      debugPrint(
+        'LocationService: yomon aniqlik (${acc.round()}m) — yuborilmadi',
+      );
+      return;
+    }
+
+    // Oxirgi (qabul qilingan) pozitsiyani saqlash — heartbeat qayta yozadi.
     _lastPosition = position;
 
     // Sprint 4.4: Backend POST /api/location ishlatamiz (JWT auth).
     // Backend Postgres'ga yozadi, geofence check qiladi, parent push.
-    // Eski Firestore yo'l olib tashlandi — fairlanesh ishlamaydi
-    // (child Backend'da pair'lashgan, Firestore'da yo'q).
     await _postToBackend(position);
+    _lastSentAt = DateTime.now();
   }
 
   /// Backend POST /api/location — JWT auth (TokenStorage'dan).
