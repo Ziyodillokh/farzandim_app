@@ -9,10 +9,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/utils/formatters.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/data/repositories/backend_unlock_request_repository.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:farzandim/features/notifications/presentation/widgets/notification_row.dart'
+    show appIconProxyUrl;
 import 'package:farzandim/features/notifications/presentation/widgets/unlock_decision_sheet.dart';
 import 'package:farzandim/features/pair_requests/data/repositories/backend_pair_request_repository.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
@@ -106,6 +109,13 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// O'yin xabarida ("O'yin o'ynayapti") o'yinning haqiqiy logosi ko'rsatiladimi
+/// — buning uchun push data'da `packageName` va `childId` bo'lishi kerak.
+bool _showGameIcon(AppNotification n) {
+  final pkg = n.packageName?.trim();
+  return n.isGame && pkg != null && pkg.isNotEmpty && n.childId.isNotEmpty;
+}
+
 // ════════════ Tana (ikon + sarlavha + matn + meta) ════════════
 class _Body extends StatelessWidget {
   const _Body({required this.notification});
@@ -134,12 +144,22 @@ class _Body extends StatelessWidget {
             width: 84,
             height: 84,
             alignment: Alignment.center,
+            // O'yin logosi tayl chegarasidan chiqmasin.
+            clipBehavior: _showGameIcon(n) ? Clip.antiAlias : Clip.none,
             decoration: BoxDecoration(
               color: color.withValues(alpha: 0.15),
               borderRadius: BorderRadius.circular(24),
               border: Border.all(color: color.withValues(alpha: 0.28)),
             ),
-            child: Icon(n.type.icon, size: 40, color: color),
+            // O'yin xabarida — o'yinning HAQIQIY logosi (backend ikon proxy);
+            // topilmasa brend rangli harf. Boshqa turlarda — tur ikoni.
+            child: _showGameIcon(n)
+                ? AppIconWidget(
+                    packageName: n.packageName!.trim(),
+                    iconUrl: appIconProxyUrl(n.childId, n.packageName!.trim()),
+                    size: 84,
+                  )
+                : Icon(n.type.icon, size: 40, color: color),
           ),
           const SizedBox(height: 22),
           Text(title, textAlign: TextAlign.center, style: _unb(20)),

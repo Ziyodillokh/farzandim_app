@@ -1,8 +1,17 @@
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/config/env_config.dart';
+import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
+
+/// Ilova (o'yin) ikonasi proxy URL — backend MinIO'dan rasmni stream qiladi
+/// (`@Public`, auth header kerak emas). "O'yin o'ynayapti" xabarida o'yinning
+/// HAQIQIY logosini ko'rsatish uchun.
+String appIconProxyUrl(String childId, String packageName) =>
+    '${EnvConfig.apiUrl}/children/$childId/installed-apps/'
+    '${Uri.encodeComponent(packageName)}/icon';
 
 // ════════════ Tokenlar (lokal, Parvoz) ════════════
 const _row = Color(0xFF21262A); // ikon-tayl foni
@@ -61,12 +70,24 @@ class NotificationRow extends StatelessWidget {
     final img = notification.imageUrl?.trim();
     final hasImage = img != null && img.isNotEmpty;
 
+    // O'yin xabari ("O'yin o'ynayapti") — o'yinning HAQIQIY logosi backend
+    // ikon proxy'sidan. Avval faqat umumiy gamepad ikoni ko'rinardi (logo
+    // yo'q edi). Logo topilmasa AppIconWidget brend rangli harf beradi.
+    final gamePkg = notification.packageName?.trim();
+    final showGameIcon =
+        notification.isGame &&
+        gamePkg != null &&
+        gamePkg.isNotEmpty &&
+        notification.childId.isNotEmpty;
+
     // Ikon-tayl: rasm bo'lsa kichik banner thumbnail, aks holda tur ikoni.
-    final Widget iconChild = Icon(
-      notification.type.icon,
-      size: 22,
-      color: Colors.white,
-    );
+    final iconChild = showGameIcon
+        ? AppIconWidget(
+            packageName: gamePkg,
+            iconUrl: appIconProxyUrl(notification.childId, gamePkg),
+            size: 46,
+          )
+        : Icon(notification.type.icon, size: 22, color: Colors.white);
 
     return GestureDetector(
       onTap: onTap,
@@ -79,7 +100,10 @@ class NotificationRow extends StatelessWidget {
               width: 46,
               height: 46,
               alignment: Alignment.center,
-              clipBehavior: hasImage ? Clip.antiAlias : Clip.none,
+              // Logo/rasm tayl chegarasidan chiqmasin.
+              clipBehavior: (hasImage || showGameIcon)
+                  ? Clip.antiAlias
+                  : Clip.none,
               decoration: BoxDecoration(
                 color: _row,
                 borderRadius: BorderRadius.circular(14),
