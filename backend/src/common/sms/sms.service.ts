@@ -105,31 +105,35 @@ export class SmsService {
   /* ------------------------------------------------------------------ */
   // Har bir matn AYNAN shu shaklda yuborilishi shart — Eskiz strict
   // template check qiladi, mos kelmasa "message is not in template"
-  // xato qaytaradi. Kod matndagi `%d` o'rniga qo'yiladi.
-  // Tasdiqlangan shablon ID'lari (my.eskiz.uz, status=service):
-  //   74886 — parol tiklash, 74885 — register, 74884 — login.
+  // xato qaytaradi. Kod matn oxiridagi raqam o'rniga qo'yiladi.
+  //
+  // Tasdiqlangan shablon ID'lari (my.eskiz.uz, "Tasdiqlangan", sender 4546):
+  //   81885 — login, 81886 — register, 81887 — parol tiklash.
+  // Brend "Farzandim Edu" → "Parvoz" ga o'zgartirildi (2026-07-15 yangilangan
+  // shablonlar). Matnni o'zgartirsangiz Eskiz panelida ham yangi shablon
+  // tasdiqlanishi SHART, aks holda SMS yuborilmaydi.
 
-  /** ID 74886 — parolni tiklash flow uchun. */
+  /** ID 81887 — parolni tiklash flow uchun (61 belgi). */
   async sendResetCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,
-      `Farzandim Edu ilovasida parolni tiklash uchun tasdiqlash kodi: ${code}`,
+      `Parvoz ilovasida parolni tiklash uchun tasdiqlash kodi: ${code}`,
     );
   }
 
-  /** ID 74885 — ro'yxatdan o'tish (register) flow uchun. */
+  /** ID 81886 — ro'yxatdan o'tish (register) flow uchun (63 belgi). */
   async sendRegisterCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,
-      `Farzandim Edu ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
+      `Parvoz ilovasiga ro'yxatdan o'tish uchun tasdiqlash kodi: ${code}`,
     );
   }
 
-  /** ID 74884 — login flow uchun. */
+  /** ID 81885 — login flow uchun (52 belgi). */
   async sendLoginCode(phone: string, code: string): Promise<SmsResult> {
     return this.sendSms(
       phone,
-      `Farzandim Edu ilovasiga kirish uchun tasdiqlash kodi: ${code}`,
+      `Parvoz ilovasiga kirish uchun tasdiqlash kodi: ${code}`,
     );
   }
 
