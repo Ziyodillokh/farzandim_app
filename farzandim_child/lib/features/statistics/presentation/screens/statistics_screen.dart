@@ -94,7 +94,10 @@ class StatisticsScreen extends ConsumerWidget {
     final rawDon = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     final streak = rawStreak > 0 ? rawStreak : 30;
-    final don = rawDon > 0 ? rawDon : 1250;
+    // DON — REAL qiymat. Mock (1250) OLIB TASHLANDI: avval bola 0 DON'da
+    // soxta 1250 ko'rardi va "don balansi statistikaga o'tmayapti" deb
+    // tushunilardi. Dashboard'da bu allaqachon real edi — endi bu yerda ham.
+    final don = rawDon;
     // Qadam REAL — preview yo'q (ota-ona ilovasi bilan bir xil qiymat).
     final steps = rawSteps;
     // REAL: haftalik o'qilgan kitoblar / ishlangan testlar (backend).

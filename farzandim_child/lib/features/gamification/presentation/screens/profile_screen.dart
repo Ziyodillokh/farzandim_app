@@ -289,7 +289,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final backend = ref.watch(backendGamificationProvider).valueOrNull;
     final streak =
         backend?.streak ?? ((profile?.streak ?? 0) > 0 ? profile!.streak : 7);
-    final don = backend?.don ?? ((profile?.don ?? 0) > 0 ? profile!.don : 1250);
+    // DON — REAL qiymat. Mock (1250) OLIB TASHLANDI: bola 0 DON'da soxta
+    // 1250 ko'rardi. Backend yuklanmagan bo'lsa Firestore fallback, u ham
+    // bo'lmasa 0 (haqiqiy holat) — hech qachon o'ylab topilgan son emas.
+    final don = backend?.don ?? profile?.don ?? 0;
     final rawSteps = ref.watch(todayStepsProvider).valueOrNull ?? 0;
     // Qadam REAL — preview yo'q (ota-ona bilan mos bo'lishi uchun).
     final steps = rawSteps;
