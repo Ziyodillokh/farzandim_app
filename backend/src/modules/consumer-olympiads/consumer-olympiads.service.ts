@@ -21,6 +21,34 @@ const GRACE_SEC = 30;
 /** Sertifikat (#56) uchun minimal natija foizi — bundan past bo'lsa berilmaydi. */
 const CERT_THRESHOLD_PERCENT = 80;
 
+/** Mukofot uchun minimal natija foizi — bundan past bo'lsa DON/XP berilmaydi. */
+const REWARD_THRESHOLD_PERCENT = 30;
+
+/**
+ * Test mukofoti (DON = XP) — to'g'ri javoblarga PROPORSIONAL.
+ *
+ * `pool` — testga ajratilgan to'liq mukofot (`Olympiad.xpReward`; admin
+ * panelda "DON mukofoti"). Har bir savol shu fonddan teng ulush oladi:
+ *
+ *   natija < 30%  → 0 (mukofot yo'q)
+ *   natija >= 30% → to'g'ri javoblar × (pool / jami savollar)
+ *
+ * Masalan 20 talik testga 20 DON ajratilgan: 8 ta topgan bola 8 DON, 20 ta
+ * topgan 20 DON, 5 ta topgan (25%) esa 0 DON oladi.
+ *
+ * `correct <= total` bo'lgani uchun natija hech qachon `pool` dan oshmaydi.
+ */
+export function rewardFor(
+  pool: number,
+  correct: number,
+  total: number,
+): number {
+  if (pool <= 0 || total <= 0 || correct <= 0) return 0;
+  const percent = (correct / total) * 100;
+  if (percent < REWARD_THRESHOLD_PERCENT) return 0;
+  return Math.round(correct * (pool / total));
+}
+
 function lifecycleOf(o: {
   status: string;
   startTime: Date;
@@ -104,22 +132,37 @@ export class ConsumerOlympiadsService {
   private readonly logger = new Logger(ConsumerOlympiadsService.name);
 
   /// Test (olympiad) tugatilganda XP + DON beradi. Idempotent
-  /// (relatedId=attemptId). DON miqdori `olympiad.xpReward` bilan bir xil —
-  /// test kartasida ko'rsatilgan "N DON" va'dasi shu (audiobook/video'dagi
-  /// `xpReward`=DON konvensiyasi bilan bir xil). Avval faqat XP berilardi,
-  /// DON umuman berilmasdi — bola/ota-ona "test uchun DON kelmayapti" deb
-  /// shikoyat qilardi. Xato submit/answer javobini buzmasligi uchun
+  /// (relatedId=attemptId). Xato submit/answer javobini buzmasligi uchun
   /// try/catch (faqat log).
+  ///
+  /// MUKOFOT NATIJAGA BOG'LIQ:
+  ///   - natija < 30%  → mukofot YO'Q (0 DON, 0 XP)
+  ///   - natija >= 30% → har bir to'g'ri javob uchun ulush:
+  ///       don = to'g'ri javoblar × (olympiad.xpReward / jami savollar)
+  ///     Masalan 20 talik testga 20 DON ajratilgan bo'lsa, 8 ta topgan bola
+  ///     8 DON oladi.
+  ///
+  /// `olympiad.xpReward` — testga ajratilgan TO'LIQ fond (admin panelda
+  /// "DON mukofoti" deb yozilgan, bola kartasida "N DON gacha" ko'rinadi).
+  ///
+  /// Avval mukofot natijadan QAT'I NAZAR to'liq berilardi — bola bitta ham
+  /// topmasa ham butun fondni olardi.
   private async grantOlympiadXp(
     childId: string,
     attemptId: string,
     xpReward: number,
+    correctAnswers: number,
+    questionsTotal: number,
   ): Promise<void> {
+    const reward = rewardFor(xpReward, correctAnswers, questionsTotal);
+    // Hech nima berilmasa XpEvent ham yaratmaymiz — reytingdagi davrli
+    // hisob (donDelta yig'indisi) bo'sh yozuvlar bilan to'lmasin.
+    if (reward <= 0) return;
     try {
       await this.gamification.awardXp(childId, {
         type: XpEventType.CONTEST_WIN,
-        xpDelta: xpReward,
-        donDelta: xpReward,
+        xpDelta: reward,
+        donDelta: reward,
         relatedId: attemptId,
       });
     } catch (e) {
@@ -381,6 +424,8 @@ export class ConsumerOlympiadsService {
         child.childId,
         updated.id,
         attempt.olympiad.xpReward,
+        updated.correctAnswers,
+        updated.questionsTotal,
       );
     }
 
@@ -493,12 +538,15 @@ export class ConsumerOlympiadsService {
       },
     });
 
-    // XP berish — test tugatildi → reyting shu XP'dan. Idempotent
-    // (relatedId=attemptId) + xato submit'ni buzmaydi (try/catch helper'da).
+    // Mukofot — natijaga proporsional (30% dan past bo'lsa berilmaydi).
+    // Idempotent (relatedId=attemptId) + xato submit'ni buzmaydi
+    // (try/catch helper'da).
     await this.grantOlympiadXp(
       child.childId,
       updated.id,
       attempt.olympiad.xpReward,
+      updated.correctAnswers,
+      updated.questionsTotal,
     );
 
     return {

@@ -16,14 +16,12 @@
  * uchun o'chirish SHART EMAS — arxivlash yetadi (natijalar saqlanadi).
  */
 
-import { useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Loader2 } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { olympiadsApi } from '@/lib/api/admin.api';
 import type { Olympiad } from '@/types/api.types';
 
 export function OlympiadDeleteDialog({
@@ -38,15 +36,9 @@ export function OlympiadDeleteDialog({
   onConfirm: () => void;
   pending: boolean;
 }) {
-  // Nechta bola ishlaganini ko'rsatamiz — o'chirish ularning natijasini ham
-  // yo'q qiladi, admin buni bilib turib tasdiqlasin.
-  const { data: participants, isLoading } = useQuery({
-    queryKey: ['olympiad-participants', olympiad?.id],
-    queryFn: () => olympiadsApi.participants(olympiad!.id),
-    enabled: olympiad !== null,
-  });
-
-  const count = participants?.length ?? 0;
+  // Nechta bola ishlagani ro'yxat javobida allaqachon bor
+  // (`participantCount`) — alohida so'rov kerak emas.
+  const count = olympiad?.participantCount ?? 0;
 
   return (
     <Dialog open={olympiad !== null} onOpenChange={onOpenChange}>
@@ -64,12 +56,7 @@ export function OlympiadDeleteDialog({
             o&apos;chiriladi. Bu amalni qaytarib bo&apos;lmaydi.
           </p>
 
-          {isLoading ? (
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Loader2 className="h-4 w-4 animate-spin" />
-              Ishtirokchilar tekshirilmoqda...
-            </div>
-          ) : count > 0 ? (
+          {count > 0 ? (
             <div className="rounded-lg border border-destructive/40 bg-destructive/10 px-3 py-2.5">
               <p className="font-medium text-destructive">
                 {count} ta bola bu konkursni ishlagan.

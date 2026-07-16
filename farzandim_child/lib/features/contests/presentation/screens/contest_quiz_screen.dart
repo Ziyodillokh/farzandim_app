@@ -870,7 +870,15 @@ class _ResultScreen extends ConsumerWidget {
     final correct = state.correctCount;
     final record = (state.recordCorrect ?? correct).clamp(0, total);
     final stars = _starsFor(state.accuracy);
-    final yutuq = state.isWinner ? contest.bonus : 0;
+    // Backend bilan AYNAN bir xil formula — ekrandagi son bola balansiga
+    // tushadigan son bilan mos bo'lishi shart. Avval `isWinner ? bonus : 0`
+    // edi (80% dan to'liq fond), backend esa 30% dan proporsional beradi →
+    // 40% topgan bola ekranda "0 DON" ko'rib, balansiga 8 DON tushardi.
+    final yutuq = rewardFor(
+      pool: contest.bonus,
+      correct: correct,
+      total: total,
+    );
     final cardW = (MediaQuery.sizeOf(context).width - 32).clamp(0.0, 380.0);
 
     return Center(

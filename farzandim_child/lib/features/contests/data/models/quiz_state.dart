@@ -13,10 +13,34 @@ enum QuizStatus { loading, intro, playing, paused, finished }
 
 enum AnswerState { none, correct, wrong, timeout }
 
+/// Mukofot uchun minimal natija — bundan past bo'lsa DON berilmaydi (30%).
+///
+/// MUHIM: backend'dagi `REWARD_THRESHOLD_PERCENT` bilan AYNAN bir xil
+/// bo'lishi shart (`consumer-olympiads.service.ts`).
+const double kRewardThreshold = 0.30;
+
+/// Test mukofoti (DON) — to'g'ri javoblarga PROPORSIONAL.
+///
+/// Backend `rewardFor()` bilan AYNAN bir xil formula — ekranda ko'rsatilgan
+/// son bolaning balansiga tushadigan son bilan mos bo'lishi uchun. Avval
+/// ekranda `isWinner ? bonus : 0` turardi (80% dan to'liq fond), backend esa
+/// boshqacha hisoblaydi → ekran yolg'on son ko'rsatardi.
+///
+/// `pool` — testga ajratilgan to'liq mukofot (`Olympiad.xpReward`).
+/// Masalan 20 talik testga 20 DON: 8 ta topgan bola 8 DON oladi.
+int rewardFor({required int pool, required int correct, required int total}) {
+  if (pool <= 0 || total <= 0 || correct <= 0) return 0;
+  if (correct / total < kRewardThreshold) return 0;
+  return (correct * (pool / total)).round();
+}
+
 class QuizState {
   /// G'olib chegarasi — YAGONA manba (UI, provider, XP bir xil ishlatadi).
   /// Avval UI 0.7, provider/XP 0.8 edi: 70-79% bola "Tabriklaymiz" ko'rib,
   /// g'olib XP olmasdi (nomuvofiqlik).
+  ///
+  /// DIQQAT: bu FAQAT tabrik/konfetti uchun. DON mukofoti boshqa qoida bilan
+  /// beriladi — `rewardFor()` (30% dan boshlab, proporsional).
   static const double winnerThreshold = 0.80;
 
   final QuizStatus status;

@@ -272,6 +272,8 @@ export interface Olympiad {
   id: string;
   title: string;
   description: string | null;
+  /** Banner rasmi kaliti (MinIO). Proxy: `GET /olympiad-images/:key`. */
+  coverKey: string | null;
   subject: string;
   ageFrom: number;
   ageTo: number;
@@ -280,23 +282,13 @@ export interface Olympiad {
   startTime: string;
   endTime: string;
   durationMin: number;
+  /** Testga ajratilgan TO'LIQ DON fondi (admin UI: "DON mukofoti"). */
+  xpReward: number;
   status: 'draft' | 'published' | 'archived';
+  /** Nechta bola ishlagan — o'chirish ogohlantirishi shundan. */
+  participantCount: number;
+  questionCount: number;
   createdAt: string;
-}
-
-/** `GET /admin/olympiads/:id/participants` — bitta bolaning urinishi. */
-export interface OlympiadParticipant {
-  attemptId: string;
-  childId: string;
-  childName: string;
-  age: number | null;
-  /** "3/10" — to'g'ri javoblar / jami savollar. */
-  progress: string;
-  score: number;
-  status: string;
-  startedAt: string;
-  finishedAt: string | null;
-  timeSec: number | null;
 }
 
 // ─── Notifications ──────────────────────────────────────────────

@@ -129,6 +129,11 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
               ),
             ),
             const _SheetDivider(),
+            // Sovrin — bu MAKSIMAL fond, hammasini to'g'ri topgandagina to'liq
+            // beriladi. Har to'g'ri javob shu fonddan teng ulush oladi, 30% dan
+            // past natijada esa umuman berilmaydi (backend `rewardFor`).
+            // Avval shunchaki "20 DON" deb turardi — bola hammasini oladi deb
+            // o'ylardi.
             _InfoBlock(
               label: 'Sovrin',
               value: Row(
@@ -140,8 +145,19 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
                   ),
                   const SizedBox(width: 6),
                   const DonBadge(),
+                  const SizedBox(width: 6),
+                  Text(
+                    'gacha',
+                    style: tUnb(13, w: FontWeight.w500, ls: -0.2),
+                  ),
                 ],
               ),
+            ),
+            const SizedBox(height: 10),
+            Text(
+              'Har bir to\'g\'ri javob uchun ulush beriladi. '
+              'Natija 30% dan past bo\'lsa sovrin berilmaydi.',
+              style: tPop(12, c: tMuted),
             ),
             const SizedBox(height: 26),
             _StartButton(onTap: _start),

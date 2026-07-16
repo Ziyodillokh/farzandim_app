@@ -14,7 +14,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
-import { Loader2 } from 'lucide-react';
+import { ImagePlus, Loader2, X } from 'lucide-react';
 
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle,
@@ -39,6 +39,10 @@ const TYPE_LABELS: Record<string, string> = {
   creative: 'Ijodiy',
   mixed: 'Aralash',
 };
+
+const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
+/** Banner/savol rasmlari bitta proxy orqali beriladi (sehrgarda ham shunday). */
+const imageUrl = (key: string) => `${API_BASE}/olympiad-images/${key}`;
 
 /** ISO → `datetime-local` input formati (mahalliy vaqt, sekundsiz). */
 function toLocalInput(iso: string | null | undefined): string {
@@ -69,6 +73,8 @@ export function OlympiadEditDialog({
   const [durationMin, setDurationMin] = useState(30);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
+  const [coverKey, setCoverKey] = useState<string | null>(null);
+  const [uploadingCover, setUploadingCover] = useState(false);
 
   // Boshqa konkurs tanlansa maydonlarni qayta to'ldiramiz.
   useEffect(() => {
@@ -83,7 +89,26 @@ export function OlympiadEditDialog({
     setDurationMin(olympiad.durationMin);
     setStartTime(toLocalInput(olympiad.startTime));
     setEndTime(toLocalInput(olympiad.endTime));
+    setCoverKey(olympiad.coverKey);
   }, [olympiad]);
+
+  // Banner — sehrgardagi bilan bir xil oqim: MinIO'ga yuklanib `key` qaytadi.
+  const handleCoverImage = async (file?: File | null) => {
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast.error('Rasm juda katta (maks 5 MB)');
+      return;
+    }
+    setUploadingCover(true);
+    try {
+      const { key } = await olympiadsApi.uploadQuestionImage(file);
+      setCoverKey(key);
+    } catch (e) {
+      toast.error(getApiErrorMessage(e));
+    } finally {
+      setUploadingCover(false);
+    }
+  };
 
   const save = useMutation({
     mutationFn: () => {
@@ -91,6 +116,8 @@ export function OlympiadEditDialog({
       return olympiadsApi.update(olympiad.id, {
         title: title.trim(),
         description: description.trim() || null,
+        // `null` — bannerni olib tashlash.
+        coverKey,
         subject,
         ageFrom,
         ageTo,
@@ -133,6 +160,55 @@ export function OlympiadEditDialog({
 
           <Field label="Tavsif">
             <Textarea value={description} onChange={(e) => setDescription(e.target.value)} maxLength={500} />
+          </Field>
+
+          <Field label="Banner rasmi">
+            <input
+              type="file"
+              accept="image/*"
+              id="olympiad-edit-cover"
+              className="hidden"
+              onChange={(e) => {
+                void handleCoverImage(e.target.files?.[0]);
+                // Bir xil faylni qayta tanlash ham `change` bersin.
+                e.target.value = '';
+              }}
+            />
+            {coverKey ? (
+              <div className="relative inline-block w-full">
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
+                  src={imageUrl(coverKey)}
+                  alt="Banner"
+                  className="max-h-40 w-full rounded-lg border border-border object-cover"
+                />
+                <button
+                  type="button"
+                  onClick={() => setCoverKey(null)}
+                  className="absolute -right-2 -top-2 rounded-full bg-destructive p-1 text-white shadow-soft"
+                  title="Bannerni o'chirish"
+                >
+                  <X className="h-3.5 w-3.5" />
+                </button>
+                <label
+                  htmlFor="olympiad-edit-cover"
+                  className="mt-2 inline-flex cursor-pointer items-center gap-2 text-sm text-muted-foreground transition-colors hover:text-primary"
+                >
+                  <ImagePlus className="h-4 w-4" /> Boshqa rasm tanlash
+                </label>
+              </div>
+            ) : uploadingCover ? (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Loader2 className="h-4 w-4 animate-spin" /> Banner yuklanmoqda...
+              </div>
+            ) : (
+              <label
+                htmlFor="olympiad-edit-cover"
+                className="flex cursor-pointer items-center justify-center gap-2 rounded-lg border border-dashed border-border px-3 py-6 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+              >
+                <ImagePlus className="h-4 w-4" /> Banner yuklash
+              </label>
+            )}
           </Field>
 
           <div className="grid grid-cols-2 gap-4">
