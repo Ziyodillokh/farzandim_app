@@ -15,8 +15,15 @@ export interface LeaderboardEntry {
   /** Reyting SONI — DON. Ekranlarda ko'rsatiladigan yagona qiymat. */
   don: number;
   /**
-   * XP — endi reytingda ko'rsatilmaydi (daraja/status uchun ichki qiymat).
-   * Eski APK'lar `xp` ni o'qiydi, shuning uchun javobda saqlanmoqda.
+   * ESKIRGAN — `don` ning eski nomi, qiymati AYNAN `don` bilan bir xil.
+   *
+   * Bu endpoint faqat DON reytingini beradi; haqiqiy XP (daraja/status uchun)
+   * `/children/:id/profile` dan keladi. Eski APK'lar reyting sonini shu `xp`
+   * maydonidan o'qiydi — bu yerga haqiqiy XP qo'yilsa, ular yana XP ko'rsatib
+   * (Ali 260), panel'dagi DON (210) bilan mos kelmasdi. Alias qilib qo'ysak
+   * eski APK'lar ham to'g'ri DON ko'rsatadi.
+   *
+   * Barcha klientlar `don` ga o'tgach olib tashlansin.
    */
   xp: number;
 }
@@ -117,7 +124,7 @@ export class LeaderboardService {
       region: p.child.region ?? '',
       age: p.child.age,
       don: p.donBalance,
-      xp: p.xp,
+      xp: p.donBalance, // eskirgan alias — `don` bilan bir xil
     }));
 
     let currentChild: LeaderboardEntry | null = null;
@@ -149,7 +156,7 @@ export class LeaderboardService {
           region: my.child.region ?? '',
           age: my.child.age,
           don: my.donBalance,
-          xp: my.xp,
+          xp: my.donBalance, // eskirgan alias — `don` bilan bir xil
         };
       }
     }
@@ -184,7 +191,7 @@ export class LeaderboardService {
     const grouped = await this.prisma.xpEvent.groupBy({
       by: ['childId'],
       where: { createdAt: { gte: since } },
-      _sum: { xpDelta: true, donDelta: true },
+      _sum: { donDelta: true },
       orderBy: { _sum: { donDelta: 'desc' } },
     });
 
@@ -206,7 +213,7 @@ export class LeaderboardService {
           region: c.region ?? '',
           age: c.age,
           don: g._sum.donDelta ?? 0,
-          xp: g._sum.xpDelta ?? 0,
+          xp: g._sum.donDelta ?? 0, // eskirgan alias — `don` bilan bir xil
         };
       });
 
