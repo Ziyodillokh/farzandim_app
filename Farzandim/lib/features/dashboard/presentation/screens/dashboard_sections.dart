@@ -606,7 +606,7 @@ class _XpCard extends ConsumerWidget {
     // "DON balansi" kartasi — HAQIQIY DON (donBalance), `xp` EMAS. Avval `xp`
     // o'qilardi, shuning uchun qadam/video kabi DON-only mukofotlar (xpDelta=0)
     // bu yerda ko'rinmasdi ("DON qo'shilmayapti" shikoyati). Endi donBalance.
-    final xp = profile?.donBalance ?? 0;
+    final don = profile?.donBalance ?? 0;
     final lb = ref.watch(
       leaderboardProvider((childId: child.id, period: 'all', region: null)),
     );
@@ -630,7 +630,7 @@ class _XpCard extends ConsumerWidget {
                 children: [
                   Flexible(
                     child: Text(
-                      _fmtNumber(xp),
+                      _fmtNumber(don),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: _unb(22, ls: -0.6),

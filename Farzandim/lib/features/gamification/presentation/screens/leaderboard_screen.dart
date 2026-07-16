@@ -1,7 +1,9 @@
 // "DON reytingi" — Parvoz dizayn. Tepada orqa/yordam tugmalari, davr
 // tablari, top-3 podium (medallar), paginated ro'yxat va pastda yopishqoq
 // "Siz" pill'i. Pill'ni bossa bola qatoriga silliq scroll + porlash.
-// Reyting XP'dan hisoblanadi — UI'da "DON" deb ko'rsatiladi (qiymat = xp).
+// Reyting DON'dan hisoblanadi (ChildProfile.donBalance) — panel'dagi "DON
+// balansi" bilan AYNAN bir xil son. Avval qiymat XP edi, lekin "DON" deb
+// yozilardi → bitta bola panelda 210, shu ekranda 260 ko'rinardi.
 
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
@@ -640,7 +642,7 @@ class _PodiumCard extends StatelessWidget {
               stops: const [0.04, 0.39, 0.96],
             ),
           ),
-          child: Text('${_fmtDon(entry.xp)} DON', style: _unb(10, ls: -0.3)),
+          child: Text('${_fmtDon(entry.don)} DON', style: _unb(10, ls: -0.3)),
         ),
         const SizedBox(height: 8),
         Container(
@@ -708,7 +710,7 @@ class _LeaderRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 8),
-          Text(_fmtDon(entry.xp), style: _unb(15)),
+          Text(_fmtDon(entry.don), style: _unb(15)),
           const SizedBox(width: 6),
           const _DonTag(),
         ],
@@ -827,7 +829,7 @@ class _StickyPill extends StatelessWidget {
                     ),
                   )
                 else ...[
-                  Text(_fmtDon(entry.xp), style: _unb(15)),
+                  Text(_fmtDon(entry.don), style: _unb(15)),
                   const SizedBox(width: 6),
                   const _DonTag(),
                 ],

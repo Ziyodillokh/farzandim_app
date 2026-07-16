@@ -2,12 +2,16 @@
 // ranking_providers — tab/range/filter state + computed users
 // ─────────────────────────────────────────────────────────────────────
 //
-// Sprint 5.7c: real backend `/api/content/olympiads/ranking` ulanishi.
-// `backendRankingProvider` tanlangan TimeRange asosida fetch qiladi;
-// xato bo'lsa ro'yxat bo'sh ko'rinadi (mock fallback yo'q).
+// Yagona DON reytingi — `/api/leaderboard`. `backendRankingProvider` tanlangan
+// TimeRange asosida fetch qiladi; xato bo'lsa ro'yxat bo'sh ko'rinadi (mock
+// fallback yo'q).
+//
+// Avval bu ekran `/api/content/olympiads/ranking` dan olimpiada ballarini olib
+// "DON" deb ko'rsatardi — ota-ona ilovasidagi DON bilan mos kelmasdi.
 
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/ranking/data/models/ranking_user.dart';
 import 'package:farzandim_child/features/ranking/data/repositories/ranking_backend_repository.dart';
 
@@ -46,9 +50,13 @@ final backendRankingProvider = FutureProvider<RankingResult>((ref) async {
   final selectedRegion = ref.watch(selectedRegionProvider);
   final region = tab == RankingTab.hudud ? (selectedRegion ?? 'me') : null;
 
+  // "Siz" qatorini backend emas, childId taqqoslash orqali aniqlaymiz —
+  // `/leaderboard` har qatorda `isCurrentUser` bermaydi.
+  final childId = ref.watch(pairingStateProvider).childId;
+
   return ref
       .watch(rankingBackendRepositoryProvider)
-      .fetchRanking(range: apiRange, region: region);
+      .fetchRanking(childId: childId, range: apiRange, region: region);
 });
 
 /// Real backend ma'lumotidan foydalanadi. Backend bo'sh bo'lsa —

@@ -11,6 +11,7 @@ import {
 } from 'class-validator';
 
 export enum LeaderboardPeriod {
+  daily = 'daily',
   weekly = 'weekly',
   monthly = 'monthly',
   all = 'all',

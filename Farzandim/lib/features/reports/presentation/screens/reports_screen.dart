@@ -339,7 +339,7 @@ class _RankRow extends StatelessWidget {
             ),
           ),
           Text(
-            '${entry.xp}',
+            '${entry.don}',
             style: _pop(13, w: FontWeight.w600, c: _dim),
           ),
         ],
