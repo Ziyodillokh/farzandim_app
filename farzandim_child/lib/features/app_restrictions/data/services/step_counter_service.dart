@@ -19,6 +19,7 @@
 // (sensor fon'da ham sanaydi). Kunlik qadam backendga periodik yuboriladi.
 
 import 'dart:async';
+import 'dart:math' as math;
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/health_steps_service.dart';
@@ -46,10 +47,6 @@ class StepCounterService {
   static const _kLastCumulative = 'step.lastCumulative.v1';
   static const _kTodaySteps = 'step.todaySteps.v1';
   static const _kTodayDate = 'step.todayDate.v1';
-
-  /// Health Connect ruxsati bir marta so'ralgani — har start'da qayta
-  /// so'rab foydalanuvchini bezovta qilmaslik uchun.
-  static const _kHcAsked = 'step.hcAsked.v1';
 
   /// Bir kunlik maqbul qadam shifti (backend clamp bilan bir xil) — qadam
   /// RAQAMI shundan oshib ketmaydi.
@@ -97,7 +94,7 @@ class StepCounterService {
     // tekshirilib, yo'q bo'lsa butun servis `return` qilardi → Health Connect
     // umuman ishlamay, YANGI O'RNATISHDA qadam 0 bo'lib qolardi. Endi HC
     // birinchi va mustaqil ishga tushadi.
-    await _ensureHealthPermission(prefs);
+    await _ensureHealthPermission();
     // Bugungi HAQIQIY jamini darhol olamiz — pedometer baseline sababli
     // yo'qolgan (ilovagacha yurilgan) qadamlar shu yerda tiklanadi. Yangi
     // o'rnatishda ham darhol to'g'ri son ko'rinadi.
@@ -132,15 +129,23 @@ class StepCounterService {
     debugPrint('=== StepCounterService.start childId=$_childId ===');
   }
 
-  /// Health Connect ruxsatini bir marta so'raydi (`_kHcAsked` bayrog'i bilan).
-  /// Rad etilsa/HC bo'lmasa — jim, pedometer fallback ishlaydi.
-  Future<void> _ensureHealthPermission(SharedPreferences prefs) async {
+  /// Health Connect qadam o'qish ruxsatini ta'minlaydi.
+  ///
+  /// Ruxsat berilmagunicha HAR ishga tushishda so'raladi. Avval `_kHcAsked`
+  /// bayrog'i bor edi va u so'rashdan OLDIN yoqilardi: foydalanuvchi ruxsatni
+  /// bir marta rad etsa (yoki oyna ochilmay qolsa) Health Connect ABADIY
+  /// o'chib qolardi — qayta so'raydigan yo'l umuman yo'q edi. Natijada qadam
+  /// doim pedometerdan kelardi va telefondagi sondan kam ko'rinardi
+  /// (telefonda 932, ilovada ~200).
+  ///
+  /// `start()` ilova ishga tushganda bir marta chaqiriladi, shuning uchun bu
+  /// eng ko'pi bilan sessiyaga bitta so'rov. Ruxsat berilgach Health Connect
+  /// oynasi umuman chiqmaydi (`hasPermission` darhol `true`).
+  Future<void> _ensureHealthPermission() async {
     final hc = HealthStepsService.instance;
     try {
       if (!await hc.isAvailable()) return;
       if (await hc.hasPermission()) return;
-      if (prefs.getBool(_kHcAsked) ?? false) return;
-      await prefs.setBool(_kHcAsked, true);
       await hc.requestPermission();
     } catch (e) {
       debugPrint('StepCounter: Health ruxsat xato: $e');
@@ -154,10 +159,19 @@ class StepCounterService {
     try {
       final hcSteps = await HealthStepsService.instance.stepsForToday();
       if (hcSteps == null) return;
+      final hc = hcSteps.clamp(0, _dayStepMax);
+      final today = _tashkentDayKey();
+      final sameDay = today == _todayKey;
       // Kun almashgan bo'lsa kalitni ham yangilaymiz (HC allaqachon yangi
       // kunning jamini beradi).
-      _todayKey = _tashkentDayKey();
-      _todaySteps = hcSteps.clamp(0, _dayStepMax);
+      _todayKey = today;
+      // Kun ICHIDA qadam faqat oshadi. Samsung Health ma'lumotni Health
+      // Connect'ga kechikib yozadi (~10 daqiqa), shuning uchun HC soni
+      // pedometer qo'shib ulgurgan jonli qadamdan ORQADA bo'lishi mumkin —
+      // to'g'ridan-to'g'ri yozsak ekrandagi son kamayib, keyin yana oshib
+      // sakrardi. Kun ALMASHGANDA esa HC yangi kunning (kichik) sonini
+      // beradi — o'shanda to'g'ridan-to'g'ri yozamiz.
+      _todaySteps = sameDay ? math.max(hc, _todaySteps) : hc;
       await _persist();
     } catch (e) {
       debugPrint('StepCounter: Health sync xato: $e');
