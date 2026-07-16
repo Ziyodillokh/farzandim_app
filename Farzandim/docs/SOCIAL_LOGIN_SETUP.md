@@ -4,6 +4,33 @@ Kod tomonida hammasi tayyor: backend endpoint'lar, Flutter UI tugmalari, Prisma 
 
 ---
 
+## ⚡ HOZIRGI HOLAT (2026-07-16) — Google uchun qiladigan YAGONA ish
+
+Kod, web va backend allaqachon **"Parvoz" GCP loyihasiga** (`931495868029`) sozlangan va bir xil:
+
+| Joy | Qiymat |
+|---|---|
+| Android `serverClientId` | `931495868029-b7keq7og9afennh7h3smfaunlf34tsuh.apps.googleusercontent.com` |
+| `web/index.html` meta | ayni shu |
+| Prod `.env` `GOOGLE_CLIENT_IDS` | ayni shu (2026-07-16 da tuzatildi — avval eski loyiha + kesilgan qiymat edi) |
+
+**Qolgan yagona qadam** — Google Cloud Console → loyiha **Parvoz** (`931495868029`) → *APIs & Services → Credentials → Create Credentials → OAuth client ID → Android*:
+
+```
+Package name:  com.farzandim.parent
+SHA-1:         F0:E5:65:42:7E:87:7E:78:B2:E6:00:6E:65:86:39:D5:41:25:8C:E3
+```
+
+Busiz ilovada `PlatformException(sign_in_failed, ..., 10, ...)` chiqadi — **10 = DEVELOPER_ERROR**, ya'ni "bu paket+SHA-1 ushbu loyihada ro'yxatdan o'tmagan".
+
+SHA-1 qayerdan: bu **release keystore** (CI siri `ANDROID_SIGNING_B64`) — serverga chiqadigan `farzandim-parent.apk` shu bilan imzolangan (`O=Farzandim, CN=Farzandim`, 2053-yilgacha). Har build bir xil imzo, ya'ni bu qiymat o'zgarmaydi. SHA-1 sir emas — har qanday o'rnatilgan APK'dan o'qib olsa bo'ladi.
+
+> **Eslatma:** OAuth consent screen hali **Testing** rejimida — faqat "Test users" ro'yxatidagi akkauntlar kira oladi. Boshqa akkaunt `403 access_denied` beradi (bu xato 10 dan boshqa narsa). Hammaga ochish uchun consent screen'ni **Publish** qiling.
+
+> **Bola ilovasida Google kirish YO'Q** — faqat ota-onada. `com.farzandim.child` uchun OAuth client kerak emas.
+
+---
+
 ## Google Sign In (bepul)
 
 ### 1) Google Cloud Console'da loyiha yarating
@@ -22,8 +49,10 @@ Kod tomonida hammasi tayyor: backend endpoint'lar, Flutter UI tugmalari, Prisma 
 | Platform | Sozlama |
 |---|---|
 | **Web application** | Authorized JavaScript origins: `https://farzandimedu.uz`, `http://localhost:5173`, `http://localhost:8081` (Flutter web). Redirect URI kerak emas (frontend SDK). |
-| **Android** | Package name: `com.farzandim.app` (yoki AndroidManifest'dagi). SHA-1 fingerprint: `cd android && ./gradlew signingReport` chiqishidan ko'chiring. |
-| **iOS** | Bundle ID: `com.farzandim.app`. |
+| **Android** | Package name: **`com.farzandim.parent`** (ota-ona ilovasi — `android/app/build.gradle.kts` dagi `applicationId`). SHA-1: yuqoridagi release qiymat, yoki debug uchun `cd android && ./gradlew signingReport`. |
+| **iOS** | Bundle ID: `com.farzandim.parent`. |
+
+> ⚠️ Paket nomi AYNAN mos bo'lishi shart. Bu jadvalda avval `com.farzandim.app` yozilgan edi — bunday paket loyihada YO'Q, va u bilan ro'yxatdan o'tkazilsa Google xato 10 (DEVELOPER_ERROR) beradi.
 
 Har birining `Client ID`'ni nusxa oling.
 
@@ -34,6 +63,16 @@ GOOGLE_CLIENT_IDS=WEB_ID.apps.googleusercontent.com,ANDROID_ID.apps.googleuserco
 ```
 
 Backend `aud` (audience)'ni shu ro'yxat bo'yicha tekshiradi — qaysi platform'dan kelgan token kelishidan qat'i nazar to'g'ri ishlaydi.
+
+Amalda Android/iOS uchun **faqat WEB Client ID** yetadi: kod `serverClientId` sifatida shuni beradi, ya'ni idToken'ning `aud`'i doim Web Client ID bo'ladi.
+
+> ⚠️ **PROD .env QO'LDA YANGILANADI.** Deploy `.env`ni `--exclude` qiladi, shuning uchun bu yerni o'zgartirsangiz **serverda ham qo'lda** o'zgartiring:
+> ```
+> ssh farzandim@95.182.118.39
+> cd ~/new-platform/backend && nano .env
+> sudo systemctl restart farzandim-v2-backend.service
+> ```
+> 2026-07-16 gacha prod'da AYNAN shu sabab eski loyihaning ID'si turgan va u yarmida kesilgan edi (`...apps.goog`) → Google kirish hech qachon ishlamagan. Qiymat `.apps.googleusercontent.com` bilan tugashini tekshiring.
 
 ### 4) Flutter Web — `web/index.html`'ga qo'shing
 
