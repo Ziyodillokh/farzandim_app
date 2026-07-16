@@ -1070,7 +1070,6 @@
   },
   "dailyLimit": {
     "title": "Kunlik vaqt limiti",
-    "subtitle": "Barcha ilovalar",
     "setLimit": "Limit qo'yish",
     "save": "Saqlash",
     "saved": "Saqlandi",
@@ -1084,7 +1083,12 @@
     "removeLimit": "Limitni olib tashlash",
     "perDayMinutes": "{minutes} daqiqa / kun",
     "perDayHours": "{hours} soat / kun",
-    "perDayHoursMinutes": "{hours} soat {minutes} daqiqa / kun"
+    "perDayHoursMinutes": "{hours} soat {minutes} daqiqa / kun",
+    "searchHint": "Ilova qidirish",
+    "searchEmpty": "Ilova topilmadi",
+    "searchEmptyHint": "Boshqa nom bilan qidirib ko'ring",
+    "limitedSection": "Limit qo'yilgan",
+    "allSection": "Barcha ilovalar"
   },
   "connectChild": {
     "title": "Bolani ilovasini ulash",
@@ -1110,7 +1114,9 @@
     "emptyApps": "Bola qurilmasi ulanib, ilovalar ro'yxati kelgach shu yerda ko'rinadi",
     "emptyCategories": "Bola qurilmasi ulangach kategoriyalar ko'rinadi",
     "blockedSection": "Bloklangan ilovalar",
-    "allSection": "Barcha ilovalar"
+    "allSection": "Barcha ilovalar",
+    "searchHint": "Ilova qidirish",
+    "searchEmpty": "Ilova topilmadi"
   },
   "addressesSetup": {
     "title": "Bolangiz manzillarini kiriting",

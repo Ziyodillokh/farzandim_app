@@ -1070,7 +1070,6 @@
   },
   "dailyLimit": {
     "title": "Daily time limit",
-    "subtitle": "All apps",
     "setLimit": "Set limit",
     "save": "Save",
     "saved": "Saved",
@@ -1084,7 +1083,12 @@
     "removeLimit": "Remove limit",
     "perDayMinutes": "{minutes} min / day",
     "perDayHours": "{hours} h / day",
-    "perDayHoursMinutes": "{hours} h {minutes} min / day"
+    "perDayHoursMinutes": "{hours} h {minutes} min / day",
+    "searchHint": "Search apps",
+    "searchEmpty": "No apps found",
+    "searchEmptyHint": "Try a different name",
+    "limitedSection": "With a limit",
+    "allSection": "All apps"
   },
   "connectChild": {
     "title": "Connect child's app",
@@ -1110,7 +1114,9 @@
     "emptyApps": "Apps will appear here once the child's device connects",
     "emptyCategories": "Categories will appear once the child's device connects",
     "blockedSection": "Blocked apps",
-    "allSection": "All apps"
+    "allSection": "All apps",
+    "searchHint": "Search apps",
+    "searchEmpty": "No apps found"
   },
   "addressesSetup": {
     "title": "Enter your child's addresses",

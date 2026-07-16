@@ -18,6 +18,7 @@ import 'package:farzandim/features/app_restrictions/presentation/providers/app_u
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/parvoz_search_field.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,6 +51,10 @@ TextStyle _pop(
   FontWeight w = FontWeight.w400,
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// Alifbo tartibi (registrsiz) — "WhatsApp" va "asos" tabiiy joylashsin.
+int _byAppName(AppUsageEntry a, AppUsageEntry b) =>
+    a.appName.toLowerCase().compareTo(b.appName.toLowerCase());
 
 /// "Ilovalarni bloklash"ni tortiladigan modal sheet sifatida ochadi.
 ///
@@ -104,28 +109,37 @@ class _BlockAppsSheetState extends State<_BlockAppsSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<DraggableScrollableNotification>(
-      onNotification: (n) {
-        if (n.extent >= 0.85) _opened = true;
-        // Ochilgandan keyin minimumga yaqin tortilsa — yopamiz.
-        if (_opened && !_dismissing && n.extent <= 0.46) {
-          _dismissing = true;
-          Navigator.of(context).maybePop();
-        }
-        return false;
-      },
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.45,
-        maxChildSize: 0.96,
-        snap: true,
-        snapSizes: const [0.9],
-        expand: false,
-        builder: (ctx, scrollController) => _BlockAppsBody(
-          childId: widget.childId,
-          scrollController: scrollController,
-          title: widget.title,
-          showCategories: widget.showCategories,
+    // Klaviatura (qidiruv) ochilganda varaq uning USTIDA qolsin: bo'y endi
+    // qolgan joyning 0.9 qismi. `showModalBottomSheet` viewInsets'ni o'zi
+    // hisobga olmaydi — padding'siz pastdagi "Saqlash" klaviatura ortida
+    // ko'rinmay qolardi (ilovadagi boshqa matnli varaqlar ham shunday
+    // qiladi, masalan app_limit_modal.dart).
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: NotificationListener<DraggableScrollableNotification>(
+        onNotification: (n) {
+          if (n.extent >= 0.85) _opened = true;
+          // Ochilgandan keyin minimumga yaqin tortilsa — yopamiz.
+          if (_opened && !_dismissing && n.extent <= 0.46) {
+            _dismissing = true;
+            Navigator.of(context).maybePop();
+          }
+          return false;
+        },
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.45,
+          maxChildSize: 0.96,
+          snap: true,
+          snapSizes: const [0.9],
+          expand: false,
+          builder: (ctx, scrollController) => _BlockAppsBody(
+            childId: widget.childId,
+            scrollController: scrollController,
+            title: widget.title,
+            showCategories: widget.showCategories,
+          ),
         ),
       ),
     );
@@ -162,10 +176,31 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
   final Map<String, bool> _appLocal = {}; // packageName -> bloklanganmi
   final Map<String, bool> _catLocal = {}; // category -> bloklanganmi
 
+  // Qidiruv — ro'yxat lokal filtrlanadi (tarmoq so'rovi yo'q).
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
   @override
   void initState() {
     super.initState();
     _loadCategories();
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Qidiruv matni o'zgardi — filtrlab, ro'yxat TEPASIGA qaytamiz.
+  ///
+  /// Aks holda avvalgi scroll o'rni saqlanib qolardi va qisqargan ro'yxat
+  /// o'rtasidan/oxiridan ochilib, "Bloklangan ilovalar" sarlavhasi
+  /// ko'rinmay qolardi.
+  void _onQueryChanged(String v) {
+    setState(() => _query = v);
+    final c = widget.scrollController;
+    if (c.hasClients) c.jumpTo(0);
   }
 
   Future<void> _loadCategories() async {
@@ -210,16 +245,18 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
       // ── Ilovalar diff ──
       if (_appLocal.isNotEmpty) {
         final facade = ref.read(appRestrictionRepositoryProvider);
-        final restr =
-            ref.read(restrictionsProvider(widget.childId)).valueOrNull;
+        final restr = ref
+            .read(restrictionsProvider(widget.childId))
+            .valueOrNull;
         final orig = <String, bool>{};
         if (restr != null) {
           for (final r in restr) {
             orig[r.packageName] = r.isBlocked;
           }
         }
-        final installed =
-            ref.read(installedAppsProvider(widget.childId)).valueOrNull;
+        final installed = ref
+            .read(installedAppsProvider(widget.childId))
+            .valueOrNull;
         final names = <String, String>{};
         if (installed != null) {
           for (final e in installed) {
@@ -237,10 +274,7 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
               appName: names[pkg] ?? pkg,
             );
           } else {
-            await facade.removeLimit(
-              childId: widget.childId,
-              packageName: pkg,
-            );
+            await facade.removeLimit(childId: widget.childId, packageName: pkg);
           }
         }
       }
@@ -302,6 +336,18 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
                 ),
                 const SizedBox(height: 14),
               ],
+              // Qidiruv — faqat ilovalar tabida (kategoriyalar 5 ta, kerakmas).
+              if (!(widget.showCategories && _tab == 1)) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: ParvozSearchField(
+                    controller: _searchCtrl,
+                    hint: 'blockApps.searchHint'.tr(),
+                    onChanged: _onQueryChanged,
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ],
               Expanded(
                 child: (widget.showCategories && _tab == 1)
                     ? _buildCategories()
@@ -339,14 +385,25 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
     }
     bool isBlocked(AppUsageEntry e) =>
         _appLocal[e.packageName] ?? (orig[e.packageName] ?? false);
+
+    // Qidiruv filtri (nom yoki paket nomi bo'yicha, registrsiz).
+    final q = _query.trim().toLowerCase();
+    final visible = [
+      for (final e in apps)
+        if (appMatchesQuery(e.appName, e.packageName, q)) e,
+    ];
+    if (visible.isEmpty) return _fill(_Empty('blockApps.searchEmpty'.tr()));
+
+    // Bloklanganlar HAR DOIM yuqorida; har guruh ichida alifbo tartibida
+    // (backend ro'yxati tasodifiy tartibda kelardi — topish qiyin edi).
     final blocked = [
-      for (final e in apps)
+      for (final e in visible)
         if (isBlocked(e)) e,
-    ];
+    ]..sort(_byAppName);
     final unblocked = [
-      for (final e in apps)
+      for (final e in visible)
         if (!isBlocked(e)) e,
-    ];
+    ]..sort(_byAppName);
 
     return ListView(
       controller: widget.scrollController,
@@ -363,33 +420,27 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
                 _AppRow(
                   entry: e,
                   blocked: true,
-                  onTap: () =>
-                      setState(() => _appLocal[e.packageName] = false),
+                  onTap: () => setState(() => _appLocal[e.packageName] = false),
                 ),
             ],
           ),
-          const SizedBox(height: 22),
+          if (unblocked.isNotEmpty) const SizedBox(height: 22),
         ],
         // ── Barcha ilovalar (yashil plus → bloklash) ──
-        _SectionTitle('blockApps.allSection'.tr()),
-        const SizedBox(height: 10),
-        if (unblocked.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 24),
-            child: _Empty('blockApps.allSection'.tr()),
-          )
-        else
+        if (unblocked.isNotEmpty) ...[
+          _SectionTitle('blockApps.allSection'.tr()),
+          const SizedBox(height: 10),
           _GroupCard(
             children: [
               for (final e in unblocked)
                 _AppRow(
                   entry: e,
                   blocked: false,
-                  onTap: () =>
-                      setState(() => _appLocal[e.packageName] = true),
+                  onTap: () => setState(() => _appLocal[e.packageName] = true),
                 ),
             ],
           ),
+        ],
       ],
     );
   }

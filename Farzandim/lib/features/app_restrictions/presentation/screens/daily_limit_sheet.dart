@@ -11,10 +11,12 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/parvoz_search_field.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -50,6 +52,23 @@ TextStyle _pop(
   FontWeight w = FontWeight.w400,
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
+
+/// Alifbo tartibi (registrsiz) — "WhatsApp" va "asos" tabiiy joylashsin.
+int _byAppName(AppUsageEntry a, AppUsageEntry b) =>
+    a.appName.toLowerCase().compareTo(b.appName.toLowerCase());
+
+/// Ro'yxat elementi — bo'lim sarlavhasi YOKI ilova qatori.
+///
+/// Bo'limlar (limitlilar / qolganlar) bo'lsa ham ro'yxat LAZY qolishi
+/// uchun (100+ ilova) tekis ro'yxatga aylantiriladi va `ListView.builder`
+/// bilan chiziladi.
+class _ListItem {
+  const _ListItem.header(String this.title) : app = null;
+  const _ListItem.app(AppUsageEntry this.app) : title = null;
+
+  final String? title;
+  final AppUsageEntry? app;
+}
 
 /// Daqiqani "30 daqiqa / kun" ko'rinishida formatlaydi.
 String _formatPerDay(int minutes) {
@@ -105,26 +124,33 @@ class _DailyLimitSheetState extends State<_DailyLimitSheet> {
 
   @override
   Widget build(BuildContext context) {
-    return NotificationListener<DraggableScrollableNotification>(
-      onNotification: (n) {
-        if (n.extent >= 0.85) _opened = true;
-        if (_opened && !_dismissing && n.extent <= 0.46) {
-          _dismissing = true;
-          Navigator.of(context).maybePop();
-        }
-        return false;
-      },
-      child: DraggableScrollableSheet(
-        initialChildSize: 0.9,
-        minChildSize: 0.45,
-        maxChildSize: 0.96,
-        snap: true,
-        snapSizes: const [0.9],
-        expand: false,
-        builder: (ctx, scrollController) => _DailyLimitBody(
-          childId: widget.childId,
-          scrollController: scrollController,
-          title: widget.title,
+    // Klaviatura (qidiruv) ochilganda varaq uning USTIDA qolsin — aks holda
+    // pastdagi "Saqlash" klaviatura ortida ko'rinmay qolardi. Qarang:
+    // block_apps_screen.dart / app_limit_modal.dart — bir xil naqsh.
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return Padding(
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: NotificationListener<DraggableScrollableNotification>(
+        onNotification: (n) {
+          if (n.extent >= 0.85) _opened = true;
+          if (_opened && !_dismissing && n.extent <= 0.46) {
+            _dismissing = true;
+            Navigator.of(context).maybePop();
+          }
+          return false;
+        },
+        child: DraggableScrollableSheet(
+          initialChildSize: 0.9,
+          minChildSize: 0.45,
+          maxChildSize: 0.96,
+          snap: true,
+          snapSizes: const [0.9],
+          expand: false,
+          builder: (ctx, scrollController) => _DailyLimitBody(
+            childId: widget.childId,
+            scrollController: scrollController,
+            title: widget.title,
+          ),
         ),
       ),
     );
@@ -152,6 +178,26 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
   // Map'da bo'lmasa — o'zgarmagan (asl holat ishlatiladi).
   final Map<String, int?> _local = {};
   bool _saving = false;
+
+  // Qidiruv — ro'yxat lokal filtrlanadi (tarmoq so'rovi yo'q).
+  final _searchCtrl = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  /// Qidiruv matni o'zgardi — filtrlab, ro'yxat TEPASIGA qaytamiz.
+  ///
+  /// Aks holda avvalgi scroll o'rni saqlanib qolardi va qisqargan ro'yxat
+  /// o'rtasidan ochilib, "Limit qo'yilgan" bo'limi ko'rinmay qolardi.
+  void _onQueryChanged(String v) {
+    setState(() => _query = v);
+    final c = widget.scrollController;
+    if (c.hasClients) c.jumpTo(0);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -182,17 +228,16 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
                 style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),
               const SizedBox(height: 18),
+              // Qidiruv — 100+ ilovani scroll qilib topish o'rniga.
               Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 18),
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Text(
-                    'dailyLimit.subtitle'.tr(),
-                    style: _pop(13, c: _dim),
-                  ),
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                child: ParvozSearchField(
+                  controller: _searchCtrl,
+                  hint: 'dailyLimit.searchHint'.tr(),
+                  onChanged: _onQueryChanged,
                 ),
               ),
-              const SizedBox(height: 10),
+              const SizedBox(height: 14),
               Expanded(child: _buildList()),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -228,23 +273,78 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
       );
     }
     final orig = _origLimits(restr);
-    return ListView.separated(
+    // Joriy limit: lokal tahrir bo'lsa o'sha, aks holda backend qiymati.
+    int? limitOf(String pkg) =>
+        _local.containsKey(pkg) ? _local[pkg] : orig[pkg];
+
+    // Qidiruv filtri (nom yoki paket nomi bo'yicha, registrsiz).
+    final q = _query.trim().toLowerCase();
+    final visible = [
+      for (final e in apps)
+        if (appMatchesQuery(e.appName, e.packageName, q)) e,
+    ];
+    if (visible.isEmpty) {
+      return _fill(
+        _Empty(
+          title: 'dailyLimit.searchEmpty'.tr(),
+          hint: 'dailyLimit.searchEmptyHint'.tr(),
+        ),
+      );
+    }
+
+    // Limit qo'yilganlar HAR DOIM yuqorida; har guruh ichida alifbo
+    // tartibida (avval backend ro'yxati tasodifiy tartibda kelardi va
+    // limitlilar ro'yxat bo'ylab sochilib ketardi).
+    final limited = <AppUsageEntry>[];
+    final others = <AppUsageEntry>[];
+    for (final e in visible) {
+      if (limitOf(e.packageName) != null) {
+        limited.add(e);
+      } else {
+        others.add(e);
+      }
+    }
+    limited.sort(_byAppName);
+    others.sort(_byAppName);
+
+    final items = <_ListItem>[
+      if (limited.isNotEmpty) ...[
+        _ListItem.header('dailyLimit.limitedSection'.tr()),
+        for (final e in limited) _ListItem.app(e),
+      ],
+      if (others.isNotEmpty) ...[
+        _ListItem.header('dailyLimit.allSection'.tr()),
+        for (final e in others) _ListItem.app(e),
+      ],
+    ];
+
+    return ListView.builder(
       controller: widget.scrollController,
       physics: const AlwaysScrollableScrollPhysics(),
-      padding: const EdgeInsets.symmetric(horizontal: 16),
-      itemCount: apps.length,
-      separatorBuilder: (_, __) => const SizedBox(height: 10),
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
+      itemCount: items.length,
       itemBuilder: (context, i) {
-        final e = apps[i];
+        final item = items[i];
+        final title = item.title;
+        if (title != null) {
+          return Padding(
+            padding: EdgeInsets.only(left: 4, top: i == 0 ? 0 : 12, bottom: 10),
+            child: Text(title, style: _pop(14, c: _dim)),
+          );
+        }
+        final e = item.app!;
         final pkg = e.packageName;
-        final minutes = _local.containsKey(pkg) ? _local[pkg] : orig[pkg];
-        return _AppLimitRow(
-          appName: e.appName,
-          packageName: pkg,
-          iconUrl: e.iconUrl,
-          iconBase64: e.iconBase64,
-          minutes: minutes,
-          onTap: () => _editApp(pkg, minutes),
+        final minutes = limitOf(pkg);
+        return Padding(
+          padding: const EdgeInsets.only(bottom: 10),
+          child: _AppLimitRow(
+            appName: e.appName,
+            packageName: pkg,
+            iconUrl: e.iconUrl,
+            iconBase64: e.iconBase64,
+            minutes: minutes,
+            onTap: () => _editApp(pkg, minutes),
+          ),
         );
       },
     );
@@ -448,7 +548,11 @@ class _Empty extends StatelessWidget {
             style: _pop(15, w: FontWeight.w500),
           ),
           const SizedBox(height: 8),
-          Text(hint, textAlign: TextAlign.center, style: _pop(13, c: _dim)),
+          Text(
+            hint,
+            textAlign: TextAlign.center,
+            style: _pop(13, c: _dim),
+          ),
         ],
       ),
     );
@@ -505,10 +609,8 @@ Future<_LimitChoice?> _showDurationPicker(
     isScrollControlled: true,
     backgroundColor: Colors.transparent,
     barrierColor: Colors.black.withValues(alpha: 0.55),
-    builder: (_) => _DurationPicker(
-      initialMinutes: initialMinutes,
-      canRemove: canRemove,
-    ),
+    builder: (_) =>
+        _DurationPicker(initialMinutes: initialMinutes, canRemove: canRemove),
   );
 }
 

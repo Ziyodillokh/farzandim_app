@@ -1070,7 +1070,6 @@
   },
   "dailyLimit": {
     "title": "Дневной лимит времени",
-    "subtitle": "Все приложения",
     "setLimit": "Установить лимит",
     "save": "Сохранить",
     "saved": "Сохранено",
@@ -1084,7 +1083,12 @@
     "removeLimit": "Убрать лимит",
     "perDayMinutes": "{minutes} мин / день",
     "perDayHours": "{hours} ч / день",
-    "perDayHoursMinutes": "{hours} ч {minutes} мин / день"
+    "perDayHoursMinutes": "{hours} ч {minutes} мин / день",
+    "searchHint": "Поиск приложения",
+    "searchEmpty": "Приложение не найдено",
+    "searchEmptyHint": "Попробуйте другое название",
+    "limitedSection": "С лимитом",
+    "allSection": "Все приложения"
   },
   "connectChild": {
     "title": "Подключение приложения ребёнка",
@@ -1110,7 +1114,9 @@
     "emptyApps": "Список приложений появится, когда устройство ребёнка подключится",
     "emptyCategories": "Категории появятся, когда устройство ребёнка подключится",
     "blockedSection": "Заблокированные приложения",
-    "allSection": "Все приложения"
+    "allSection": "Все приложения",
+    "searchHint": "Поиск приложения",
+    "searchEmpty": "Приложение не найдено"
   },
   "addressesSetup": {
     "title": "Введите адреса ребёнка",
