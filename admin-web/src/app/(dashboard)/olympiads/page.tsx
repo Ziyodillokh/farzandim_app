@@ -2,7 +2,9 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Trophy, MoreHorizontal, Eye, Send, BarChart3, Plus } from 'lucide-react';
+import {
+  Trophy, MoreHorizontal, Send, Plus, Pencil, Trash2, Archive, Undo2,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +25,8 @@ import { olympiadsApi } from '@/lib/api/admin.api';
 import { cn, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { OlympiadWizard } from '@/components/olympiads/olympiad-wizard';
+import { OlympiadEditDialog } from '@/components/olympiads/olympiad-edit-dialog';
+import { OlympiadDeleteDialog } from '@/components/olympiads/olympiad-delete-dialog';
 import type { Olympiad } from '@/types/api.types';
 
 const STATUS_TABS = [
@@ -49,6 +53,9 @@ export default function OlympiadsPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [wizardOpen, setWizardOpen] = useState(false);
+  // `null` — oyna yopiq; aks holda qaysi konkurs tahrirlanmoqda/o'chirilmoqda.
+  const [editing, setEditing] = useState<Olympiad | null>(null);
+  const [deleting, setDeleting] = useState<Olympiad | null>(null);
   const limit = 20;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -57,11 +64,43 @@ export default function OlympiadsPage() {
     placeholderData: (prev) => prev,
   });
 
+  const refresh = () => qc.invalidateQueries({ queryKey: ['olympiads'] });
+
   const publish = useMutation({
     mutationFn: (id: string) => olympiadsApi.publish(id),
     onSuccess: () => {
       toast.success('Chop etildi');
-      qc.invalidateQueries({ queryKey: ['olympiads'] });
+      refresh();
+    },
+    onError: (e) => toast.error(getApiErrorMessage(e)),
+  });
+
+  // Arxivlash / chop etishni bekor qilish — bola ro'yxatidan yo'qoladi
+  // (u faqat `published` konkursni ko'radi), natijalar esa saqlanadi.
+  const archive = useMutation({
+    mutationFn: (id: string) => olympiadsApi.archive(id),
+    onSuccess: () => {
+      toast.success('Arxivlandi');
+      refresh();
+    },
+    onError: (e) => toast.error(getApiErrorMessage(e)),
+  });
+
+  const unpublish = useMutation({
+    mutationFn: (id: string) => olympiadsApi.unpublish(id),
+    onSuccess: () => {
+      toast.success('Qoralamaga qaytarildi');
+      refresh();
+    },
+    onError: (e) => toast.error(getApiErrorMessage(e)),
+  });
+
+  const remove = useMutation({
+    mutationFn: (id: string) => olympiadsApi.remove(id),
+    onSuccess: () => {
+      toast.success("O'chirildi");
+      setDeleting(null);
+      refresh();
     },
     onError: (e) => toast.error(getApiErrorMessage(e)),
   });
@@ -82,7 +121,20 @@ export default function OlympiadsPage() {
       <OlympiadWizard
         open={wizardOpen}
         onOpenChange={setWizardOpen}
-        onSuccess={() => qc.invalidateQueries({ queryKey: ['olympiads'] })}
+        onSuccess={refresh}
+      />
+
+      <OlympiadEditDialog
+        olympiad={editing}
+        onOpenChange={(v) => !v && setEditing(null)}
+        onSuccess={refresh}
+      />
+
+      <OlympiadDeleteDialog
+        olympiad={deleting}
+        onOpenChange={(v) => !v && setDeleting(null)}
+        onConfirm={() => deleting && remove.mutate(deleting.id)}
+        pending={remove.isPending}
       />
 
       {/* Status tabs */}
@@ -135,7 +187,15 @@ export default function OlympiadsPage() {
                 </tr>
               ) : (
                 data.items.map((o) => (
-                  <OlympiadRow key={o.id} olympiad={o} onPublish={() => publish.mutate(o.id)} />
+                  <OlympiadRow
+                    key={o.id}
+                    olympiad={o}
+                    onPublish={() => publish.mutate(o.id)}
+                    onEdit={() => setEditing(o)}
+                    onArchive={() => archive.mutate(o.id)}
+                    onUnpublish={() => unpublish.mutate(o.id)}
+                    onDelete={() => setDeleting(o)}
+                  />
                 ))
               )}
             </tbody>
@@ -158,7 +218,21 @@ export default function OlympiadsPage() {
 
 /* ─── Olympiad row ─── */
 
-function OlympiadRow({ olympiad, onPublish }: { olympiad: Olympiad; onPublish: () => void }) {
+function OlympiadRow({
+  olympiad,
+  onPublish,
+  onEdit,
+  onArchive,
+  onUnpublish,
+  onDelete,
+}: {
+  olympiad: Olympiad;
+  onPublish: () => void;
+  onEdit: () => void;
+  onArchive: () => void;
+  onUnpublish: () => void;
+  onDelete: () => void;
+}) {
   const statusCfg = STATUS_CFG[olympiad.status] ?? { label: olympiad.status, variant: 'secondary' as const };
 
   return (
@@ -201,20 +275,35 @@ function OlympiadRow({ olympiad, onPublish }: { olympiad: Olympiad; onPublish: (
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-            <DropdownMenuItem>
-              <Eye /> Ko&apos;rish
+
+            <DropdownMenuItem onClick={onEdit}>
+              <Pencil /> Tahrirlash
             </DropdownMenuItem>
-            <DropdownMenuItem>
-              <BarChart3 /> Reyting
-            </DropdownMenuItem>
+
             {olympiad.status !== 'published' && (
-              <>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={onPublish} className="text-success focus:text-success">
-                  <Send /> Chop etish
-                </DropdownMenuItem>
-              </>
+              <DropdownMenuItem onClick={onPublish} className="text-success focus:text-success">
+                <Send /> Chop etish
+              </DropdownMenuItem>
             )}
+
+            {/* Bola faqat `published` konkursni ko'radi — yashirish uchun
+                o'chirish shart emas, arxiv/qoralama yetadi (natijalar qoladi). */}
+            {olympiad.status === 'published' && (
+              <DropdownMenuItem onClick={onUnpublish}>
+                <Undo2 /> Qoralamaga qaytarish
+              </DropdownMenuItem>
+            )}
+
+            {olympiad.status !== 'archived' && (
+              <DropdownMenuItem onClick={onArchive}>
+                <Archive /> Arxivlash
+              </DropdownMenuItem>
+            )}
+
+            <DropdownMenuSeparator />
+            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
+              <Trash2 /> O&apos;chirish
+            </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </td>

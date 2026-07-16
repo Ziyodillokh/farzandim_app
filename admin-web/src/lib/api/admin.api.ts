@@ -19,6 +19,7 @@ import type {
   LoginResponse,
   Moderator,
   Olympiad,
+  OlympiadParticipant,
   Paginated,
   Payment,
   Plan,
@@ -243,7 +244,20 @@ export const olympiadsApi = {
   update: (id: string, data: Partial<OlympiadCreatePayload>) =>
     api.patch<Olympiad>(`/admin/olympiads/${id}`, data),
   publish: (id: string) => api.post(`/admin/olympiads/${id}/publish`),
+  /** Arxivlash — bola ro'yxatidan yo'qoladi, natijalar SAQLANADI. */
   archive: (id: string) => api.post(`/admin/olympiads/${id}/archive`),
+  /** Chop etishni bekor qilish → qoralama. Bola ko'rmaydi, natijalar saqlanadi. */
+  unpublish: (id: string) => api.post(`/admin/olympiads/${id}/unpublish`),
+  /**
+   * BUTUNLAY o'chirish. DIQQAT: `OlympiadAttempt` va `OlympiadQuestion`
+   * `onDelete: Cascade` bilan bog'langan — bolalarning ishlagan natijalari
+   * ham yo'q bo'ladi. Yig'ilgan DON/XP saqlanadi (`XpEvent` olympiadga FK
+   * bilan bog'lanmagan). Yashirish kerak bo'lsa `archive` ishlating.
+   */
+  remove: (id: string) => api.delete(`/admin/olympiads/${id}`),
+  /** Ishtirokchilar ro'yxati (massiv) — o'chirishdan oldin ogohlantirish uchun. */
+  participants: (id: string) =>
+    api.get<OlympiadParticipant[]>(`/admin/olympiads/${id}/participants`),
   leaderboard: (id: string, limit = 100) =>
     api.get(`/admin/olympiads/${id}/leaderboard`, { params: { limit } }),
   // Savol rasmini MinIO'ga yuklaydi, `key` qaytaradi (savol payloadiga qo'shiladi).
@@ -266,7 +280,8 @@ export interface OlympiadQuestionInput {
 
 export interface OlympiadCreatePayload {
   title: string;
-  description?: string;
+  /** `null` — tavsifni tozalash (backend DTO: `string | null`). */
+  description?: string | null;
   coverKey?: string | null;
   subject: string;
   ageFrom: number;

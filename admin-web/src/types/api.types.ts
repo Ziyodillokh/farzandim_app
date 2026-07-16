@@ -284,6 +284,21 @@ export interface Olympiad {
   createdAt: string;
 }
 
+/** `GET /admin/olympiads/:id/participants` — bitta bolaning urinishi. */
+export interface OlympiadParticipant {
+  attemptId: string;
+  childId: string;
+  childName: string;
+  age: number | null;
+  /** "3/10" — to'g'ri javoblar / jami savollar. */
+  progress: string;
+  score: number;
+  status: string;
+  startedAt: string;
+  finishedAt: string | null;
+  timeSec: number | null;
+}
+
 // ─── Notifications ──────────────────────────────────────────────
 export interface AdminNotification {
   id: string;
