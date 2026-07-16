@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { olympiadsApi, type OlympiadCreatePayload, type OlympiadQuestionInput } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
+import { toSuperscript } from '@/lib/superscript';
 import { cn } from '@/lib/utils';
 
 const SUBJECTS = ['Matematika', 'Ona tili', 'Ingliz tili', 'Fizika', 'Kimyo', 'IT / Mantiq'];
@@ -333,11 +334,19 @@ export function OlympiadWizard({
                     )}
                   </div>
                   <Textarea
-                    placeholder="Savol matni"
+                    placeholder="Savol matni — daraja uchun: x^2"
                     value={q.text}
                     onChange={(e) => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, text: e.target.value } : x))}
-                    className="mb-3"
+                    // Daraja aylantirish CHIQQANDA — yozayotganda qilinsa
+                    // kursor matn oxiriga sakrab, o'rtasini tahrirlash buzilardi.
+                    onBlur={() => setQuestions((qs) => qs.map((x, i) => i === qi ? { ...x, text: toSuperscript(x.text) } : x))}
+                    className="mb-1"
                   />
+                  <p className="mb-3 text-xs text-muted-foreground">
+                    Daraja: <code className="rounded bg-muted px-1">x^2</code> yozing → maydondan chiqqanda{' '}
+                    <span className="font-medium text-foreground">x²</span> bo&apos;ladi.
+                    Word/PDF&apos;dan nusxa olinganda daraja yo&apos;qoladi.
+                  </p>
 
                   {/* Savol rasmi (ixtiyoriy) — matematik funksiyalar kabi
                       yozib bo'lmaydigan savollar uchun. Avtomatik MinIO. */}
@@ -404,6 +413,9 @@ export function OlympiadWizard({
                             value={opt}
                             onChange={(e) => setQuestions((qs) => qs.map((x, i) => i === qi
                               ? { ...x, options: x.options.map((o, j) => j === oi ? e.target.value : o) } : x))}
+                            // Variantda ham daraja bo'lishi mumkin ("x² = 4").
+                            onBlur={() => setQuestions((qs) => qs.map((x, i) => i === qi
+                              ? { ...x, options: x.options.map((o, j) => j === oi ? toSuperscript(o) : o) } : x))}
                           />
                           {/* Variantga IXTIYORIY rasm (matematik javob) */}
                           <input
