@@ -703,7 +703,13 @@
     "tapToFinish": "Tap to finish",
     "holdToRecord": "Hold to record",
     "childNotFound": "Child not found",
-    "notPaired": "The child hasn't paired the Child App yet — you can't send voice messages"
+    "notPaired": "The child hasn't paired the Child App yet — you can't send voice messages",
+    "menuEdit": "Edit",
+    "menuDelete": "Delete",
+    "editTitle": "Edit message",
+    "editSave": "Save",
+    "editError": "Could not edit the message",
+    "deleteError": "Could not delete the message"
   },
   "chatSettings": {
     "title": "Chat settings",

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:io';
 
 import 'package:cached_network_image/cached_network_image.dart';
@@ -9,6 +10,7 @@ import 'package:farzandim/features/voice_message/presentation/providers/audio_pl
 import 'package:farzandim/features/voice_message/presentation/providers/voice_message_providers.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
@@ -64,17 +66,114 @@ class VoiceChatBubble extends ConsumerWidget {
     return '$m:${s.toString().padLeft(2, '0')}';
   }
 
+  // ── Telegram uslubidagi xabar menyusi (uzoq bosilganda) ──
+  //
+  // Bola ilovasida bu ancha oldin bor edi (`chat_bubble.dart`), ota-onada esa
+  // umuman yo'q edi: repozitoriyada `deleteMessage` tursa ham uni chaqiradigan
+  // UI bo'lmagan, `updateText` esa butunlay yo'q edi. Natijada ota-ona o'z
+  // xabarini na tahrirlay, na o'chira olardi.
+  //
+  // Tahrirlash faqat O'Z MATNLI xabari uchun (media matnini backend
+  // tahrirlamaydi); o'chirish har qanday xabar uchun — bola ilovasidagi
+  // menyu bilan bir xil qoida.
+  void _showMessageMenu(BuildContext context, WidgetRef ref) {
+    HapticFeedback.mediumImpact();
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: const Color(0xFF15181E),
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const SizedBox(height: 10),
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+            const SizedBox(height: 6),
+            if (isOwn && message.isText)
+              _MenuRow(
+                icon: SolarIconsBold.pen,
+                label: 'voiceChat.menuEdit'.tr(),
+                onTap: () {
+                  Navigator.of(sheetCtx).pop();
+                  unawaited(_editMessage(context, ref));
+                },
+              ),
+            _MenuRow(
+              icon: SolarIconsBold.trashBinTrash,
+              label: 'voiceChat.menuDelete'.tr(),
+              destructive: true,
+              onTap: () {
+                Navigator.of(sheetCtx).pop();
+                unawaited(_deleteMessage(context, ref));
+              },
+            ),
+            const SizedBox(height: 6),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _deleteMessage(BuildContext context, WidgetRef ref) async {
+    final ok = await ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .deleteMessage(message.id);
+    // Butun chat shu manbadan hosil bo'ladi (chatMessagesProvider ham).
+    ref.invalidate(rawVoiceMessagesProvider);
+    if (!ok && context.mounted) {
+      AppToast.error(context, 'voiceChat.deleteError'.tr());
+    }
+  }
+
+  Future<void> _editMessage(BuildContext context, WidgetRef ref) async {
+    final newText = await showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: const Color(0xFF15181E),
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (sheetCtx) => _EditMessageSheet(initialText: message.text ?? ''),
+    );
+    final trimmed = newText?.trim();
+    if (trimmed == null || trimmed.isEmpty || trimmed == message.text) return;
+    final ok = await ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .updateText(message.id, trimmed);
+    ref.invalidate(rawVoiceMessagesProvider);
+    if (!ok && context.mounted) {
+      AppToast.error(context, 'voiceChat.editError'.tr());
+    }
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Har bir bubble turi uzoq bosilganda bir xil menyuni ochadi (menyu
+    // ichida tahrirlash faqat o'z matnli xabari uchun chiqadi).
+    void openMenu() => _showMessageMenu(context, ref);
+
     // ─── Telegram-style matn / media bubble'lari ───
     if (message.isText) {
-      return _TextBubble(message: message, isOwn: isOwn);
+      return _TextBubble(message: message, isOwn: isOwn, onLongPress: openMenu);
     }
     if (message.isImage) {
-      return _ImageBubble(message: message, isOwn: isOwn);
+      return _ImageBubble(
+        message: message,
+        isOwn: isOwn,
+        onLongPress: openMenu,
+      );
     }
     if (message.isFile) {
-      return _FileBubble(message: message, isOwn: isOwn);
+      return _FileBubble(message: message, isOwn: isOwn, onLongPress: openMenu);
     }
 
     // ─── Audio (ovozli) bubble — mavjud dizayn ───
@@ -133,6 +232,8 @@ class VoiceChatBubble extends ConsumerWidget {
           Flexible(
             flex: 4,
             child: GestureDetector(
+              // Uzoq bosilsa — o'chirish menyusi (bola ilovasida ham shunday).
+              onLongPress: openMenu,
               onTap: () async {
                 // Audio proxy stream URL — signed URL telefondan yetib
                 // bo'lmaydi (ichki MinIO manzili); just_audio shu @Public

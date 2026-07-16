@@ -2,10 +2,17 @@
 part of 'voice_chat_bubble.dart';
 
 class _FileBubble extends ConsumerStatefulWidget {
-  const _FileBubble({required this.message, required this.isOwn});
+  const _FileBubble({
+    required this.message,
+    required this.isOwn,
+    this.onLongPress,
+  });
 
   final VoiceMessage message;
   final bool isOwn;
+
+  /// Uzoq bosilganda — o'chirish menyusi.
+  final VoidCallback? onLongPress;
 
   @override
   ConsumerState<_FileBubble> createState() => _FileBubbleState();
@@ -81,14 +88,16 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
   Widget build(BuildContext context) {
     final isOwn = widget.isOwn;
     final message = widget.message;
-    final fg = isOwn ? Colors.black : const Color(0xFFFFFFFF);
-    final subColor = isOwn
-        ? Colors.black.withValues(alpha: 0.55)
-        : const Color(0x8CFFFFFF);
+    // O'z bubble'i KO'K (#216BFF) — matn/ikona OQ. Avval hammasi qora edi
+    // (bubble yashil bo'lgan davrdan qolgan): ko'k ustida qora matn deyarli
+    // o'qilmasdi, `iconFg` esa har ikki holatda ham qora bo'lib, kelgan
+    // xabarda ko'k doira ustida qora ikona chiqardi.
+    const fg = Color(0xFFFFFFFF);
+    final subColor = isOwn ? Colors.white70 : const Color(0x8CFFFFFF);
     final iconBg = isOwn
-        ? Colors.black.withValues(alpha: 0.12)
+        ? Colors.white.withValues(alpha: 0.2)
         : const Color(0xFF216BFF);
-    final iconFg = isOwn ? Colors.black : Colors.black;
+    const iconFg = Color(0xFFFFFFFF);
     final caption = message.text;
     final hasCaption = caption != null && caption.isNotEmpty;
 
@@ -104,6 +113,8 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
             flex: 5,
             child: GestureDetector(
               onTap: _openFile,
+              // Uzoq bosilsa — o'chirish menyusi.
+              onLongPress: widget.onLongPress,
               child: Container(
                 padding: const EdgeInsets.fromLTRB(10, 10, 12, 8),
                 decoration: BoxDecoration(
@@ -133,8 +144,8 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                             shape: BoxShape.circle,
                           ),
                           child: _busy
-                              ? Padding(
-                                  padding: const EdgeInsets.all(11),
+                              ? const Padding(
+                                  padding: EdgeInsets.all(11),
                                   child: CircularProgressIndicator(
                                     strokeWidth: 2,
                                     color: iconFg,
@@ -157,7 +168,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                                     'voiceChat.fileGeneric'.tr(),
                                 maxLines: 2,
                                 overflow: TextOverflow.ellipsis,
-                                style: TextStyle(
+                                style: const TextStyle(
                                   color: fg,
                                   fontSize: 14,
                                   fontWeight: FontWeight.w600,
@@ -177,7 +188,11 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                       const SizedBox(height: 8),
                       Text(
                         caption,
-                        style: TextStyle(color: fg, fontSize: 15, height: 1.35),
+                        style: const TextStyle(
+                          color: fg,
+                          fontSize: 15,
+                          height: 1.35,
+                        ),
                       ),
                     ],
                     const SizedBox(height: 2),

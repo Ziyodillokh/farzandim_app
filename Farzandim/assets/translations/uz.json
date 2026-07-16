@@ -703,7 +703,13 @@
     "tapToFinish": "Tugatish uchun bosing",
     "holdToRecord": "Bosib turib yozing",
     "childNotFound": "Bola topilmadi",
-    "notPaired": "Bola hali Child App'da pair qilmagan — voice yubora olmaysiz"
+    "notPaired": "Bola hali Child App'da pair qilmagan — voice yubora olmaysiz",
+    "menuEdit": "Tahrirlash",
+    "menuDelete": "O'chirish",
+    "editTitle": "Xabarni tahrirlash",
+    "editSave": "Saqlash",
+    "editError": "Xabar tahrirlanmadi",
+    "deleteError": "Xabar o'chirilmadi"
   },
   "chatSettings": {
     "title": "Chat sozlamalari",

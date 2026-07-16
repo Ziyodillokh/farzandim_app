@@ -1,21 +1,169 @@
 // Matn va rasm bubble'lari + meta (vaqt, o'qildi belgisi) widget'lari.
 part of 'voice_chat_bubble.dart';
 
+/// Xabar menyusidagi bitta qator (tahrirlash / o'chirish).
+class _MenuRow extends StatelessWidget {
+  const _MenuRow({
+    required this.icon,
+    required this.label,
+    required this.onTap,
+    this.destructive = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final VoidCallback onTap;
+  final bool destructive;
+
+  @override
+  Widget build(BuildContext context) {
+    final color = destructive ? const Color(0xFFFF5A5A) : Colors.white;
+    return InkWell(
+      onTap: onTap,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 15),
+        child: Row(
+          children: [
+            Icon(icon, color: color, size: 22),
+            const SizedBox(width: 14),
+            Text(label, style: TextStyle(color: color, fontSize: 15)),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Xabar matnini tahrirlash varag'i — "Saqlash" bosilsa yangi matnni
+/// `Navigator.pop` orqali qaytaradi.
+///
+/// Alohida StatefulWidget: `TextEditingController` shu yerda yaratilib
+/// `dispose()` da tozalanadi (varaq yopilganda oqib qolmasin).
+class _EditMessageSheet extends StatefulWidget {
+  const _EditMessageSheet({required this.initialText});
+
+  final String initialText;
+
+  @override
+  State<_EditMessageSheet> createState() => _EditMessageSheetState();
+}
+
+class _EditMessageSheetState extends State<_EditMessageSheet> {
+  late final TextEditingController _ctrl = TextEditingController(
+    text: widget.initialText,
+  );
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+        16,
+        14,
+        16,
+        16 + MediaQuery.viewInsetsOf(context).bottom,
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 40,
+            height: 4,
+            decoration: BoxDecoration(
+              color: Colors.white24,
+              borderRadius: BorderRadius.circular(999),
+            ),
+          ),
+          const SizedBox(height: 14),
+          Text(
+            'voiceChat.editTitle'.tr(),
+            style: const TextStyle(
+              color: Colors.white,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          const SizedBox(height: 14),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            decoration: BoxDecoration(
+              color: const Color(0xFF1B2128),
+              borderRadius: BorderRadius.circular(18),
+              border: Border.all(color: const Color(0x1FFFFFFF)),
+            ),
+            child: TextField(
+              controller: _ctrl,
+              autofocus: true,
+              minLines: 1,
+              maxLines: 5,
+              cursorColor: const Color(0xFF216BFF),
+              style: const TextStyle(color: Colors.white, fontSize: 15),
+              decoration: const InputDecoration(
+                filled: false,
+                border: InputBorder.none,
+                enabledBorder: InputBorder.none,
+                focusedBorder: InputBorder.none,
+                contentPadding: EdgeInsets.symmetric(vertical: 14),
+              ),
+            ),
+          ),
+          const SizedBox(height: 14),
+          GestureDetector(
+            onTap: () => Navigator.of(context).pop(_ctrl.text),
+            behavior: HitTestBehavior.opaque,
+            child: Container(
+              width: double.infinity,
+              height: 52,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: const Color(0xFF216BFF),
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'voiceChat.editSave'.tr(),
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 15,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
 class _TextBubble extends StatelessWidget {
-  const _TextBubble({required this.message, required this.isOwn});
+  const _TextBubble({
+    required this.message,
+    required this.isOwn,
+    this.onLongPress,
+  });
 
   final VoiceMessage message;
   final bool isOwn;
+
+  /// Uzoq bosilganda — tahrirlash/o'chirish menyusi.
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context) {
     final bubbleColor = isOwn
         ? const Color(0xFF216BFF)
         : const Color(0xFF12171E);
-    final textColor = isOwn ? Colors.black : const Color(0xFFFFFFFF);
-    final metaColor = isOwn
-        ? Colors.black.withValues(alpha: 0.55)
-        : const Color(0x8CFFFFFF);
+    // O'z bubble'i KO'K (#216BFF) — matn OQ. Avval qora edi: bu bubble yashil
+    // bo'lgan davrdan qolgan (yashil ustida qora to'g'ri edi), yashil→ko'k
+    // ko'chishida yangilanmay qolgan va ko'k ustida matn deyarli o'qilmasdi.
+    // Bola ilovasidagi chat ham ko'k ustiga oq yozadi.
+    const textColor = Color(0xFFFFFFFF);
+    final metaColor = isOwn ? Colors.white70 : const Color(0x8CFFFFFF);
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
@@ -27,34 +175,42 @@ class _TextBubble extends StatelessWidget {
           if (isOwn) const Spacer(),
           Flexible(
             flex: 5,
-            child: Container(
-              constraints: const BoxConstraints(minWidth: 72),
-              padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
-              decoration: BoxDecoration(
-                color: bubbleColor,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(18),
-                  topRight: const Radius.circular(18),
-                  bottomLeft: Radius.circular(isOwn ? 18 : 4),
-                  bottomRight: Radius.circular(isOwn ? 4 : 18),
-                ),
-                boxShadow: _bubbleShadow,
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Text(
-                    message.text ?? '',
-                    style: TextStyle(
-                      color: textColor,
-                      fontSize: 15,
-                      height: 1.35,
-                    ),
+            child: GestureDetector(
+              // Telegram uslubi: uzoq bosilsa tahrirlash/o'chirish menyusi.
+              onLongPress: onLongPress,
+              child: Container(
+                constraints: const BoxConstraints(minWidth: 72),
+                padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
+                decoration: BoxDecoration(
+                  color: bubbleColor,
+                  borderRadius: BorderRadius.only(
+                    topLeft: const Radius.circular(18),
+                    topRight: const Radius.circular(18),
+                    bottomLeft: Radius.circular(isOwn ? 18 : 4),
+                    bottomRight: Radius.circular(isOwn ? 4 : 18),
                   ),
-                  const SizedBox(height: 2),
-                  _BubbleMeta(message: message, isOwn: isOwn, color: metaColor),
-                ],
+                  boxShadow: _bubbleShadow,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      message.text ?? '',
+                      style: const TextStyle(
+                        color: textColor,
+                        fontSize: 15,
+                        height: 1.35,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    _BubbleMeta(
+                      message: message,
+                      isOwn: isOwn,
+                      color: metaColor,
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -94,7 +250,11 @@ class _BubbleMeta extends StatelessWidget {
                 ? SolarIconsBold.checkSquare
                 : SolarIconsBold.checkCircle,
             size: 14,
-            color: message.isSeen ? Colors.blue.shade700 : color,
+            // Bu belgi faqat O'Z (ko'k) bubble'ida chiqadi. Avval "o'qildi"
+            // holati `Colors.blue.shade700` edi — bubble yashil bo'lgan
+            // davrda ko'rinardi, ko'k bo'lgach ko'k ustida ko'k bo'lib
+            // yo'qoldi. Endi oq (o'qildi) / meta rangi (yuborildi).
+            color: message.isSeen ? Colors.white : color,
           ),
         ],
       ],
@@ -107,10 +267,17 @@ class _BubbleMeta extends StatelessWidget {
 // ─────────────────────────────────────────────────────────────────────
 
 class _ImageBubble extends ConsumerWidget {
-  const _ImageBubble({required this.message, required this.isOwn});
+  const _ImageBubble({
+    required this.message,
+    required this.isOwn,
+    this.onLongPress,
+  });
 
   final VoiceMessage message;
   final bool isOwn;
+
+  /// Uzoq bosilganda — o'chirish menyusi.
+  final VoidCallback? onLongPress;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -131,6 +298,8 @@ class _ImageBubble extends ConsumerWidget {
       onTap: () => Navigator.of(context).push(
         MaterialPageRoute<void>(builder: (_) => _FullScreenImage(url: url)),
       ),
+      // Uzoq bosilsa — o'chirish menyusi (matn bubble bilan bir xil).
+      onLongPress: onLongPress,
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
         // Disk kesh + memCacheWidth bilan cheklangan dekod.
@@ -185,10 +354,10 @@ class _ImageBubble extends ConsumerWidget {
                       children: [
                         Text(
                           caption,
-                          style: TextStyle(
-                            color: isOwn
-                                ? Colors.black
-                                : const Color(0xFFFFFFFF),
+                          // Ko'k bubble ustida OQ matn (matn bubble bilan bir
+                          // xil) — qora yashil davridan qolgan edi.
+                          style: const TextStyle(
+                            color: Color(0xFFFFFFFF),
                             fontSize: 15,
                             height: 1.35,
                           ),
@@ -198,7 +367,7 @@ class _ImageBubble extends ConsumerWidget {
                           message: message,
                           isOwn: isOwn,
                           color: isOwn
-                              ? Colors.black.withValues(alpha: 0.55)
+                              ? Colors.white70
                               : const Color(0x8CFFFFFF),
                         ),
                       ],
