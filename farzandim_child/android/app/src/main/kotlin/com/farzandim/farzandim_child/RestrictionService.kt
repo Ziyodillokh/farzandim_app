@@ -126,6 +126,19 @@ class RestrictionService : Service() {
     private var overlayView: View? = null
     private var currentBlockedPackage: String? = null
 
+    /** Overlay qaysi sabab bilan qurilgan — aylanganda qayta qurish uchun. */
+    private var currentReason: String? = null
+
+    /**
+     * Overlay qurilgan paytdagi ekran orientatsiyasi.
+     *
+     * Layout portret/landshaftda TURLICHA (landshaftda rasm chapda, matn
+     * o'ngda) va u dasturiy quriladi — ya'ni telefon aylanganda o'zi
+     * moslashmaydi. `ensureOverlay` har poll'da (1s) shu qiymatni solishtirib,
+     * o'zgargan bo'lsa overlay'ni qayta quradi.
+     */
+    private var currentOrientation: Int = Configuration.ORIENTATION_UNDEFINED
+
     // Install-source kesh (paket → noma'lum manbami). O'rnatish manbasi
     // o'zgarmaydi, shuning uchun bir marta hisoblab keshlaymiz (har 3s
     // PackageManager chaqirmaslik uchun).
@@ -695,9 +708,20 @@ class RestrictionService : Service() {
      * qutulib bo'lmaydi.
      */
     private fun ensureOverlay(pkg: String, reason: String = REASON_BLOCKED) {
-        if (currentBlockedPackage != pkg || overlayView == null) {
+        // Orientatsiya o'zgargan bo'lsa ham qayta quramiz: layout portret va
+        // landshaftda TURLICHA (dasturiy qurilgani uchun o'zi moslashmaydi).
+        // Aks holda telefon yonbosh burilganda vertikal layout siqilib, matn
+        // ekranga sig'may kesilib qolardi.
+        val orientation = resources.configuration.orientation
+        if (currentBlockedPackage != pkg ||
+            overlayView == null ||
+            currentOrientation != orientation ||
+            currentReason != reason
+        ) {
             showOverlay(pkg, reason)
             currentBlockedPackage = pkg
+            currentReason = reason
+            currentOrientation = orientation
         }
     }
 
@@ -748,6 +772,8 @@ class RestrictionService : Service() {
         }
         overlayView = null
         currentBlockedPackage = null
+        currentReason = null
+        currentOrientation = Configuration.ORIENTATION_UNDEFINED
     }
 
     /**
@@ -756,6 +782,14 @@ class RestrictionService : Service() {
      * to'liq OQ yoki QORA fonda, mos "bolakay" rasmi bilan. Tugmalar ota-ona
      * onboardingidagi primary (ko'k "OK") + secondary ("Ruxsat so'rash").
      * Fon TO'LIQ OPAQUE — bloklangan ilova umuman ko'rinmaydi.
+     *
+     * LAYOUT ORIENTATSIYAGA QARAB:
+     *   - Portret   — ustma-ust: rasm, sarlavha, matn, tugmalar.
+     *   - Landshaft — yonma-yon: rasm CHAPDA, matn+tugmalar O'NGDA.
+     *
+     * Avval landshaftda ham vertikal layout ishlatilardi: balandlik ~360dp,
+     * kontent esa ~450dp talab qilardi (padding 96 + rasm 190 + sarlavha 68 +
+     * matn 40 + tugma 56) → matn va tugmalar ekranga sig'may kesilardi.
      */
     private fun buildOverlayView(
         blockedPackage: String,
@@ -767,6 +801,10 @@ class RestrictionService : Service() {
         // Telefon tungi rejimda ekanmi? (kunduzgi = oq, tungi = qora).
         val isNight = (resources.configuration.uiMode and
             Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+
+        // Yonbosh (landshaft) — balandlik kam, kenglik ko'p.
+        val isLandscape = resources.configuration.orientation ==
+            Configuration.ORIENTATION_LANDSCAPE
 
         // ── Tema ranglari ─────────────────────────────────────────────
         val pageBg = if (isNight) Color.parseColor("#0B0D12") else Color.WHITE
@@ -784,18 +822,7 @@ class RestrictionService : Service() {
         // Root — butun ekranni to'ldiruvchi OPAQUE fon (maksimal to'siq).
         val root = FrameLayout(ctx).apply { setBackgroundColor(pageBg) }
 
-        val col = LinearLayout(ctx).apply {
-            orientation = LinearLayout.VERTICAL
-            gravity = Gravity.CENTER_HORIZONTAL
-            // Yuqorida status bar, pastda navigatsiya paneli uchun joy.
-            setPadding(dp(28), dp(56), dp(28), dp(40))
-        }
-
-        // Yuqori bo'sh joy — mazmunni biroz pastga suradi (markazroq).
-        col.addView(
-            View(ctx),
-            LinearLayout.LayoutParams(0, 0, 1.1f),
-        )
+        // ── Bo'laklar — pastda orientatsiyaga qarab yig'iladi ─────────
 
         // "Bolakay" rasmi (qo'l ko'targan bola) — temaga mos.
         val image = ImageView(ctx).apply {
@@ -804,23 +831,20 @@ class RestrictionService : Service() {
             scaleType = ImageView.ScaleType.FIT_CENTER
             adjustViewBounds = true
         }
-        col.addView(
-            image,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-                dp(190),
-            ),
-        )
+
+        // Landshaftda matn CHAPGA tekislanadi (rasm yonida ustun bo'lgani
+        // uchun markaz g'alati ko'rinadi), portretda MARKAZDA.
+        val textGravity = if (isLandscape) Gravity.START else Gravity.CENTER
 
         val title = TextView(ctx).apply {
             text = if (isLimit) "Bugungi vaqt tugadi" else "Ilova bloklangan"
             setTextColor(titleColor)
-            setTextSize(TypedValue.COMPLEX_UNIT_SP, 26f)
+            // Landshaftda balandlik kam — sarlavha biroz kichikroq.
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, if (isLandscape) 22f else 26f)
             typeface = Typeface.create("sans-serif", Typeface.BOLD)
-            gravity = Gravity.CENTER
-            setPadding(0, dp(24), 0, dp(10))
+            gravity = textGravity
+            setPadding(0, if (isLandscape) 0 else dp(24), 0, dp(10))
         }
-        col.addView(title)
 
         val subtitle = TextView(ctx).apply {
             text = if (isLimit) {
@@ -832,22 +856,9 @@ class RestrictionService : Service() {
             }
             setTextColor(subColor)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
-            gravity = Gravity.CENTER
+            gravity = textGravity
             setLineSpacing(dp(4).toFloat(), 1f)
         }
-        col.addView(
-            subtitle,
-            LinearLayout.LayoutParams(
-                LinearLayout.LayoutParams.MATCH_PARENT,
-                LinearLayout.LayoutParams.WRAP_CONTENT,
-            ),
-        )
-
-        // Pastki bo'sh joy — tugmalarni ekran pastiga suradi.
-        col.addView(
-            View(ctx),
-            LinearLayout.LayoutParams(0, 0, 1.5f),
-        )
 
         // ── Tugmalar qatori: [OK ko'k] [Ruxsat so'rash kulrang] ──────
         val okButton = makeOverlayButton(
@@ -894,6 +905,61 @@ class RestrictionService : Service() {
                 marginStart = dp(12)
             },
         )
+
+        // ── Yig'ish ──────────────────────────────────────────────────
+        val content: View = if (isLandscape) {
+            buildLandscapeContent(image, title, subtitle, buttonRow)
+        } else {
+            buildPortraitContent(image, title, subtitle, buttonRow)
+        }
+
+        root.addView(
+            content,
+            FrameLayout.LayoutParams(
+                FrameLayout.LayoutParams.MATCH_PARENT,
+                FrameLayout.LayoutParams.MATCH_PARENT,
+            ),
+        )
+        return root
+    }
+
+    /** Portret: ustma-ust — rasm, sarlavha, matn, (bo'sh joy), tugmalar. */
+    private fun buildPortraitContent(
+        image: ImageView,
+        title: TextView,
+        subtitle: TextView,
+        buttonRow: LinearLayout,
+    ): View {
+        val ctx = this
+        val col = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_HORIZONTAL
+            // Yuqorida status bar, pastda navigatsiya paneli uchun joy.
+            setPadding(dp(28), dp(56), dp(28), dp(40))
+        }
+
+        // Yuqori bo'sh joy — mazmunni biroz pastga suradi (markazroq).
+        col.addView(View(ctx), LinearLayout.LayoutParams(0, 0, 1.1f))
+
+        col.addView(
+            image,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                dp(190),
+            ),
+        )
+        col.addView(title)
+        col.addView(
+            subtitle,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+
+        // Pastki bo'sh joy — tugmalarni ekran pastiga suradi.
+        col.addView(View(ctx), LinearLayout.LayoutParams(0, 0, 1.5f))
+
         col.addView(
             buttonRow,
             LinearLayout.LayoutParams(
@@ -901,15 +967,73 @@ class RestrictionService : Service() {
                 LinearLayout.LayoutParams.WRAP_CONTENT,
             ),
         )
+        return col
+    }
 
-        root.addView(
-            col,
-            FrameLayout.LayoutParams(
-                FrameLayout.LayoutParams.MATCH_PARENT,
-                FrameLayout.LayoutParams.MATCH_PARENT,
+    /**
+     * Landshaft: yonma-yon — rasm CHAPDA, matn+tugmalar O'NGDA.
+     *
+     * Yonbosh holatda balandlik kam (~360dp), shuning uchun vertikal layout
+     * sig'masdi. Rasm balandlikni to'ldiradi (MATCH_PARENT + FIT_CENTER —
+     * nisbati saqlanadi), matn ustuni esa qolgan kenglikda markazlashadi.
+     */
+    private fun buildLandscapeContent(
+        image: ImageView,
+        title: TextView,
+        subtitle: TextView,
+        buttonRow: LinearLayout,
+    ): View {
+        val ctx = this
+        val row = LinearLayout(ctx).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(32), dp(20), dp(32), dp(20))
+        }
+
+        row.addView(
+            image,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                1f,
             ),
         )
-        return root
+
+        val textCol = LinearLayout(ctx).apply {
+            orientation = LinearLayout.VERTICAL
+            gravity = Gravity.CENTER_VERTICAL
+        }
+        textCol.addView(
+            title,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        textCol.addView(
+            subtitle,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ),
+        )
+        textCol.addView(
+            buttonRow,
+            LinearLayout.LayoutParams(
+                LinearLayout.LayoutParams.MATCH_PARENT,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+            ).apply { topMargin = dp(20) },
+        )
+
+        row.addView(
+            textCol,
+            LinearLayout.LayoutParams(
+                0,
+                LinearLayout.LayoutParams.WRAP_CONTENT,
+                1.15f,
+            ).apply { marginStart = dp(28) },
+        )
+        return row
     }
 
     /** Onboarding uslubidagi tekis, dumaloq-burchak tugma (soyasiz). */
