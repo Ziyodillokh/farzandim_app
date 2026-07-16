@@ -185,6 +185,24 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     );
   }
 
+  /// Bolaning ismini yangilaydi (profil tahrirlangandan keyin).
+  ///
+  /// NEGA KERAK: ekranlarda ism `pairingState.childName` dan o'qiladi
+  /// (`profile_screen.dart`), u esa SharedPreferences'da saqlanib, FAQAT
+  /// juftlashuv paytida yozilardi — keyin yangilaydigan yo'l umuman yo'q edi.
+  /// Shu sabab bola profilda ismini o'zgartirsa, backend (`PUT /children/me`)
+  /// to'g'ri yangilanardi-yu, ilovada eski ism qolaverardi.
+  ///
+  /// Faqat mahalliy holatni yangilaydi — backendga yozish chaqiruvchida
+  /// (`ChildRepository.updateMyProfile`).
+  Future<void> updateChildName(String name) async {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty || trimmed == state.childName) return;
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('childName', trimmed);
+    state = state.copyWith(childName: trimmed);
+  }
+
   /// Auth UID bo'yicha topilgan bola hujjatidan pairing'ni tiklash.
   ///
   /// SharedPreferences yoziladi, state `paired` ga ko'tariladi va

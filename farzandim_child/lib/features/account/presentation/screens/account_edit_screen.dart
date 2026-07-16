@@ -159,6 +159,12 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
 
       await repo.updateMyProfile(name: name, age: age, region: _selectedRegion);
 
+      // Ism ekranlarda `pairingState.childName` dan o'qiladi (profil, dashboard)
+      // va u qurilmada saqlanadi — backendni yangilashning o'zi yetmaydi.
+      // Avval bu qilinmasdi: backend yangilanardi-yu, ilovada eski ism
+      // qolaverardi.
+      await ref.read(pairingStateProvider.notifier).updateChildName(name);
+
       ref.invalidate(
         childDataStreamProvider((
           parentUid: pairing.parentUid!,
