@@ -71,11 +71,26 @@ class ParvozSearchField extends StatelessWidget {
                 cursorColor: _blue,
                 textInputAction: TextInputAction.search,
                 style: GoogleFonts.poppins(fontSize: 15, color: Colors.white),
+                // Global `inputDecorationTheme` (app_theme.dart) HAR QANDAY
+                // TextField'ga yashil-ko'kimtir fon (surfaceVariant #2A4A55)
+                // va FOKUSDA brend yashil 2px ramka beradi. Bu Parvoz
+                // qidiruvida yot yashil maydon bo'lib ko'rinardi.
+                //
+                // MUHIM: `border: none` O'ZI YETARLI EMAS — Flutter holatga
+                // qarab `enabledBorder`/`focusedBorder`ni ishlatadi va ular
+                // `border`dan ustun turadi; ular temadan kelaverardi.
+                // Shuning uchun HAR BIR holat alohida o'chiriladi.
+                // Ko'rinishni (fon, ramka, radius) tashqi Container beradi.
                 decoration: InputDecoration(
                   isCollapsed: true,
-                  border: InputBorder.none,
-                  // Global teal fill'ni o'chiramiz.
+                  contentPadding: EdgeInsets.zero,
                   filled: false,
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  errorBorder: InputBorder.none,
+                  focusedErrorBorder: InputBorder.none,
                   hintText: hint,
                   hintStyle: GoogleFonts.poppins(fontSize: 15, color: _hint),
                 ),
