@@ -1,13 +1,19 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChatBubble — Telegram-style ovozli xabar bubble (real audio)
+// ChatBubble — Telegram-style chat bubble (matn / rasm / hujjat / audio)
 // ─────────────────────────────────────────────────────────────────────
 //
-// `isOwn=true` (bola yuborgan) → o'ngda lime green bubble.
-// `isOwn=false` (Parent yuborgan) → chapda surface bubble.
+// `isOwn=true` (bola yuborgan) → o'ngda ko'k bubble.
+// `isOwn=false` (Parent yuborgan) → chapda to'q kulrang bubble.
 // Bubble bossa AudioPlayerManager.playOrToggle ishga tushadi —
 // boshqa bubble'lar avtomatik to'xtaydi (singleton).
 // Real-time waveform progress + position display.
+//
+// Rasm/hujjat: ota-ona chati bilan bir xil (avval bola bu turlarni
+// render qilmasdi — audio bubble bo'lib buzuq chiqardi).
 
+import 'dart:async';
+
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim_child/features/voice_message/data/repositories/backend_voice_message_repository.dart';
@@ -18,6 +24,7 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // Parvoz tokenlar — ota-ona ilovasidagi chat bilan BIR XIL.
 const _pBlue = Color(0xFF216BFF);
@@ -313,8 +320,254 @@ class ChatBubble extends ConsumerWidget {
     );
   }
 
+  // ── Vaqt + o'qildi belgisi (rasm/hujjat bubble uchun) ──
+  Widget _metaRow(Color color) {
+    final isSeen = message.status == VoiceMessageStatus.seen;
+    final time = message.createdAt != null
+        ? _formatTime(message.createdAt!)
+        : '';
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(time, style: GoogleFonts.poppins(color: color, fontSize: 11)),
+        if (isOwn) ...[
+          const SizedBox(width: 3),
+          Icon(
+            isSeen ? Icons.done_all_rounded : Icons.done_rounded,
+            color: Colors.white,
+            size: 14,
+          ),
+        ],
+      ],
+    );
+  }
+
+  // Rasm bubble — ota-ona chati bilan bir xil. Caption bo'lsa rasm + matn;
+  // bo'lmasa sof rasm + vaqt overlay. Bosilsa to'liq ekran.
+  Widget _buildImageBubble(BuildContext context, WidgetRef ref) {
+    final url = ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .mediaUrl(message.mediaKey!);
+    final caption = message.text;
+    final hasCaption = caption != null && caption.isNotEmpty;
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(18),
+      bottomLeft: Radius.circular(isOwn ? 18 : 4),
+      bottomRight: Radius.circular(isOwn ? 4 : 18),
+    );
+
+    final image = GestureDetector(
+      onTap: () => Navigator.of(context).push(
+        MaterialPageRoute<void>(builder: (_) => _FullScreenImage(url: url)),
+      ),
+      onLongPress: () => _showMessageMenu(context, ref),
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(maxHeight: 300, minHeight: 120),
+        child: CachedNetworkImage(
+          imageUrl: url,
+          fit: BoxFit.cover,
+          memCacheWidth: 720,
+          placeholder: (_, __) => Container(
+            height: 200,
+            color: Colors.black.withValues(alpha: 0.08),
+            child: const Center(
+              child: CircularProgressIndicator(strokeWidth: 2, color: _pBlue),
+            ),
+          ),
+          errorWidget: (_, __, ___) => Container(
+            height: 160,
+            color: Colors.black.withValues(alpha: 0.08),
+            child: const Icon(Icons.broken_image_rounded, color: _pDim, size: 40),
+          ),
+        ),
+      ),
+    );
+
+    final Widget content = hasCaption
+        ? DecoratedBox(
+            decoration: BoxDecoration(
+              color: isOwn ? _pBlue : _recvBubble,
+              borderRadius: radius,
+            ),
+            child: ClipRRect(
+              borderRadius: radius,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  image,
+                  Padding(
+                    padding: const EdgeInsets.fromLTRB(12, 8, 10, 6),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          caption,
+                          style: GoogleFonts.poppins(
+                            color: Colors.white,
+                            fontSize: 15,
+                            height: 1.35,
+                          ),
+                        ),
+                        const SizedBox(height: 2),
+                        _metaRow(isOwn ? Colors.white70 : _pDim),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          )
+        : Stack(
+            children: [
+              ClipRRect(borderRadius: radius, child: image),
+              Positioned(
+                right: 8,
+                bottom: 6,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.45),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: _metaRow(Colors.white),
+                ),
+              ),
+            ],
+          );
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(),
+          Flexible(flex: 5, child: content),
+          if (!isOwn) const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  // Hujjat bubble — ikona + nom + hajm. Bosilsa tashqi ilovada ochiladi.
+  Widget _buildFileBubble(BuildContext context, WidgetRef ref) {
+    final url = ref
+        .read(backendVoiceMessageRepositoryProvider)
+        .mediaUrl(message.mediaKey!);
+    final name = message.fileName ?? 'Hujjat';
+    final size = message.fileSize;
+    final radius = BorderRadius.only(
+      topLeft: const Radius.circular(18),
+      topRight: const Radius.circular(18),
+      bottomLeft: Radius.circular(isOwn ? 18 : 4),
+      bottomRight: Radius.circular(isOwn ? 4 : 18),
+    );
+    final metaColor = isOwn ? Colors.white70 : _pDim;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      child: Row(
+        mainAxisAlignment: isOwn
+            ? MainAxisAlignment.end
+            : MainAxisAlignment.start,
+        children: [
+          if (isOwn) const Spacer(),
+          Flexible(
+            flex: 5,
+            child: GestureDetector(
+              onLongPress: () => _showMessageMenu(context, ref),
+              onTap: () => unawaited(
+                launchUrl(Uri.parse(url), mode: LaunchMode.externalApplication),
+              ),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(10, 10, 12, 8),
+                decoration: BoxDecoration(
+                  color: isOwn ? _pBlue : _recvBubble,
+                  borderRadius: radius,
+                ),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Container(
+                      width: 42,
+                      height: 42,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.18),
+                        borderRadius: BorderRadius.circular(10),
+                      ),
+                      child: const Icon(
+                        Icons.insert_drive_file_rounded,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    const SizedBox(width: 10),
+                    Flexible(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            name,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: GoogleFonts.poppins(
+                              color: Colors.white,
+                              fontSize: 14,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (size != null) ...[
+                                Text(
+                                  _fmtFileSize(size),
+                                  style: GoogleFonts.poppins(
+                                    color: metaColor,
+                                    fontSize: 11,
+                                  ),
+                                ),
+                                const SizedBox(width: 6),
+                              ],
+                              _metaRow(metaColor),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+          if (!isOwn) const Spacer(),
+        ],
+      ),
+    );
+  }
+
+  String _fmtFileSize(int bytes) {
+    if (bytes < 1024) return '$bytes B';
+    if (bytes < 1024 * 1024) return '${(bytes / 1024).toStringAsFixed(0)} KB';
+    return '${(bytes / (1024 * 1024)).toStringAsFixed(1)} MB';
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // Media (rasm/hujjat) — ota-ona chati bilan bir xil. Avval bu turlar
+    // umuman render qilinmasdi va audio bubble bo'lib buzuq chiqardi.
+    if (message.isImage) {
+      return _buildImageBubble(context, ref);
+    }
+    if (message.isFile) {
+      return _buildFileBubble(context, ref);
+    }
     // Telegram-style text xabar — alohida bubble.
     if (message.isText) {
       return _buildTextBubble(context, ref);
@@ -616,6 +869,50 @@ class _MenuRow extends StatelessWidget {
             const Spacer(),
           ],
         ),
+      ),
+    );
+  }
+}
+
+/// Rasm to'liq ekranда — zoom (InteractiveViewer) + yopish tugmasi.
+class _FullScreenImage extends StatelessWidget {
+  const _FullScreenImage({required this.url});
+
+  final String url;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: Stack(
+        children: [
+          Center(
+            child: InteractiveViewer(
+              minScale: 0.8,
+              maxScale: 4,
+              child: CachedNetworkImage(
+                imageUrl: url,
+                fit: BoxFit.contain,
+                placeholder: (_, __) => const Center(
+                  child: CircularProgressIndicator(color: _pBlue),
+                ),
+                errorWidget: (_, __, ___) => const Icon(
+                  Icons.broken_image_rounded,
+                  color: Colors.white38,
+                  size: 64,
+                ),
+              ),
+            ),
+          ),
+          Positioned(
+            top: MediaQuery.paddingOf(context).top + 8,
+            left: 8,
+            child: IconButton(
+              icon: const Icon(Icons.close_rounded, color: Colors.white),
+              onPressed: () => Navigator.of(context).pop(),
+            ),
+          ),
+        ],
       ),
     );
   }

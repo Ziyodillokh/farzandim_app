@@ -25,7 +25,19 @@ class VoiceMessage {
   // Text xabar (Telegram-style chat). Audio xabarda null.
   final String? text;
 
+  // Media (rasm/hujjat) — ota-ona ilovasidagi model bilan bir xil. Avval bu
+  // maydonlar bola modelida YO'Q edi: rasm/hujjat kelsa u audio bubble bo'lib
+  // buzuq chiqardi. Endi bola ham rasm/hujjatni to'g'ri ko'rsatadi.
+  final String? mediaKey; // MinIO storage kaliti (proxy URL uchun)
+  final String? mediaType; // 'image' | 'file'
+  final String? mimeType;
+  final String? fileName;
+  final int? fileSize;
+
   bool get isText => text != null && text!.isNotEmpty;
+  bool get hasMedia => mediaKey != null && mediaKey!.isNotEmpty;
+  bool get isImage => hasMedia && mediaType == 'image';
+  bool get isFile => hasMedia && mediaType != 'image';
 
   const VoiceMessage({
     this.id,
@@ -40,6 +52,11 @@ class VoiceMessage {
     this.createdAt,
     this.seenAt,
     this.text,
+    this.mediaKey,
+    this.mediaType,
+    this.mimeType,
+    this.fileName,
+    this.fileSize,
   });
 
   Map<String, dynamic> toFirestore() {
@@ -98,6 +115,11 @@ class VoiceMessage {
       // (toLocal() effekti yo'q) — Z'ni majburlab qo'shamiz.
       createdAt: _parseBackendIso(json['createdAt'] as String?),
       text: json['text'] as String?,
+      mediaKey: json['mediaKey'] as String?,
+      mediaType: json['mediaType'] as String?,
+      mimeType: json['mimeType'] as String?,
+      fileName: json['fileName'] as String?,
+      fileSize: (json['fileSize'] as num?)?.toInt(),
     );
   }
 
