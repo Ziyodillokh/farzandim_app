@@ -662,7 +662,6 @@ class _XpCard extends ConsumerWidget {
                   _LeaderboardRow(
                     entry: rows[i],
                     isMe: rows[i].childId == child.id,
-                    me: child,
                   ),
                   if (i < rows.length - 1) const _Divider(),
                 ],
@@ -705,35 +704,18 @@ List<LeaderboardEntry> _leaderboardWindow(LeaderboardState lb, String childId) {
 }
 
 class _LeaderboardRow extends StatelessWidget {
-  const _LeaderboardRow({required this.entry, required this.isMe, this.me});
+  const _LeaderboardRow({required this.entry, required this.isMe});
 
   final LeaderboardEntry entry;
   final bool isMe;
 
-  /// Joriy bola (faqat o'z qatorida haqiqiy avatar ko'rsatish uchun).
-  final Child? me;
-
   @override
   Widget build(BuildContext context) {
-    final Widget avatar;
-    if (isMe && me != null) {
-      avatar = ChildAvatar(child: me!, size: 24, showBorder: false);
-    } else {
-      final ch = entry.name.isNotEmpty ? entry.name[0].toUpperCase() : '?';
-      avatar = Container(
-        width: 24,
-        height: 24,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: isMe ? _blue.withValues(alpha: 0.25) : _cardBg,
-        ),
-        child: Text(ch, style: _pop(11, w: FontWeight.w600)),
-      );
-    }
+    // Har bola uchun rasm (proxy) → default avatar (jingalak). Avval faqat
+    // joriy bola avatar ko'rsatardi, boshqalari HARF edi (nomuvofiq).
     return Row(
       children: [
-        avatar,
+        RankingAvatar(childId: entry.childId, size: 24),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

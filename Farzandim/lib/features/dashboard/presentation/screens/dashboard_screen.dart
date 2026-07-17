@@ -17,6 +17,7 @@ import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_ch
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
+import 'package:farzandim/features/gamification/presentation/widgets/ranking_avatar.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';

@@ -16,6 +16,7 @@ import 'package:farzandim/features/gamification/presentation/providers/leaderboa
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -751,7 +752,6 @@ class _Avatar extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final url = ref.read(leaderboardRepositoryProvider).avatarUrl(childId);
-    final letter = name.isNotEmpty ? name.substring(0, 1).toUpperCase() : '?';
     return ClipOval(
       child: SizedBox(
         width: size,
@@ -760,17 +760,22 @@ class _Avatar extends ConsumerWidget {
           imageUrl: url,
           fit: BoxFit.cover,
           memCacheWidth: 200,
-          placeholder: (_, __) => _fallback(letter),
-          errorWidget: (_, __, ___) => _fallback(letter),
+          placeholder: (_, __) => _fallback(),
+          errorWidget: (_, __, ___) => _fallback(),
         ),
       ),
     );
   }
 
-  Widget _fallback(String letter) {
+  // Rasm yo'q/yuklanmagan — HARF emas, DEFAULT AVATAR (jingalak-ko'zoynak).
+  // Dashboard mini-reyting bilan bir xil (ChildAvatar'dagi kabi asset SVG).
+  Widget _fallback() {
     return ColoredBox(
       color: const Color(0xFF2A3038),
-      child: Center(child: Text(letter, style: _unb(size * 0.34, ls: 0))),
+      child: SvgPicture.asset(
+        'assets/stickers/default_avatar.svg',
+        fit: BoxFit.cover,
+      ),
     );
   }
 }
