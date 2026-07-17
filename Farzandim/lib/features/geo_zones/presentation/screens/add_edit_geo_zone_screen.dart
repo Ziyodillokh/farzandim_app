@@ -19,6 +19,7 @@ import 'package:farzandim/features/geo_zones/data/models/geo_zone.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/widgets/geo_zone_address_search.dart';
 import 'package:farzandim/features/location/data/services/geocoding_service.dart';
+import 'package:farzandim/features/location/data/services/parent_location_service.dart';
 import 'package:farzandim/shared/models/result.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -118,6 +119,8 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
   GeoZoneType _type = GeoZoneType.custom;
 
   bool _mapReady = false;
+  // "Mening joyim" tugmasi yuklanish holati (GPS o'qilyapti).
+  bool _locating = false;
   // Xarita tayyor bo'lmasa nishon shu yerда kutadi (onMapReady qo'llaydi).
   // `initialCenter` bir marta o'qiladi — keyingi `_center` o'zgarishlari
   // (masalan qidiruv) kamerani o'zi ko'chirmaydi.
@@ -209,6 +212,35 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
     if (!mounted) return;
     setState(() => _center = _camTarget);
     unawaited(_reverseGeocode(_center));
+  }
+
+  /// "Mening joyim" — GPS'dan ota-onaning joriy joyini olib, kamerani o'sha
+  /// yerga markazlaydi. Marker pin xarita MARKAZIDA turgani uchun zona
+  /// avtomatik shu nuqtaga qo'yiladi (manzil ham yangilanadi).
+  ///
+  /// Joylashuv (Joylashuvi) ekranidagi `_locateMe` bilan bir xil mantiq —
+  /// mavjud `parentLocationService`ni qayta ishlatadi (kalitsiz, ruxsat +
+  /// xizmat holatini o'zi tekshiradi).
+  Future<void> _locateMe() async {
+    if (_locating) return;
+    setState(() => _locating = true);
+    final res = await ref.read(parentLocationServiceProvider).current();
+    if (!mounted) return;
+    setState(() => _locating = false);
+    if (res.isOk) {
+      final target = LatLng(res.latitude!, res.longitude!);
+      _camTarget = target;
+      setState(() => _center = target);
+      _moveCamera(target, 16);
+      unawaited(_reverseGeocode(target));
+    } else {
+      final msg = switch (res.status) {
+        MyLocationStatus.serviceOff => 'location.myLocation.serviceOff'.tr(),
+        MyLocationStatus.denied => 'location.myLocation.denied'.tr(),
+        _ => 'location.myLocation.error'.tr(),
+      };
+      AppToast.error(context, msg);
+    }
   }
 
   Future<void> _reverseGeocode(LatLng pos) async {
@@ -472,6 +504,16 @@ class _AddEditGeoZoneScreenState extends ConsumerState<AddEditGeoZoneScreen> {
                         ),
                       ),
                     ),
+                    // "Mening joyim" tugmasi — Joylashuvi ekranidagidek ◎.
+                    // Xarita o'ng-past burchagida (pastki varaq ustida).
+                    Positioned(
+                      right: 16,
+                      bottom: 16,
+                      child: _MyLocationButton(
+                        loading: _locating,
+                        onTap: _locateMe,
+                      ),
+                    ),
                     // Header — web/emulyatorda topPad=0, shuning uchun aniq
                     // bo'shliq (tepaga yopishib qolmasin).
                     Positioned(
@@ -550,6 +592,46 @@ class _ZoneMarkerBubble extends StatelessWidget {
 }
 
 // ════════════ Markaz pin ════════════
+
+/// "Mening joyim" tugmasi — Joylashuvi (location) ekranidagi bilan bir xil
+/// ko'rinish: solid-glass fon, ko'k GPS ikoni, yuklanishda spinner.
+class _MyLocationButton extends StatelessWidget {
+  const _MyLocationButton({required this.loading, required this.onTap});
+
+  final bool loading;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: const Color(0xF20E1622),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(14),
+        side: const BorderSide(color: Color(0x1FFFFFFF)),
+      ),
+      clipBehavior: Clip.antiAlias,
+      child: InkWell(
+        onTap: loading ? null : onTap,
+        child: SizedBox(
+          width: 48,
+          height: 48,
+          child: Center(
+            child: loading
+                ? const SizedBox(
+                    width: 20,
+                    height: 20,
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2.2,
+                      color: _blue,
+                    ),
+                  )
+                : const Icon(SolarIconsBold.gps, size: 22, color: _blue),
+          ),
+        ),
+      ),
+    );
+  }
+}
 
 class _CenterPin extends StatelessWidget {
   const _CenterPin();
