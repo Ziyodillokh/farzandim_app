@@ -111,7 +111,7 @@ class _LanguageSelectScreenState extends ConsumerState<LanguageSelectScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
-                      'Version - 1.0',
+                      'onboarding.version'.tr(),
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.2),

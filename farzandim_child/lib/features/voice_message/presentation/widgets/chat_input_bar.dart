@@ -14,6 +14,7 @@
 //
 // Vizual tokenlar ota-ona ilovasidagi chat_detail_screen bilan bir xil.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -144,7 +145,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               _AttachOption(
                 icon: Icons.photo_library_rounded,
                 color: const Color(0xFF7E5BEF),
-                label: 'Galereya',
+                label: 'voiceChat.attachGallery'.tr(),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   widget.onPickGallery();
@@ -153,7 +154,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               _AttachOption(
                 icon: Icons.photo_camera_rounded,
                 color: const Color(0xFFEF5DA8),
-                label: 'Kamera',
+                label: 'voiceChat.attachCamera'.tr(),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   widget.onPickCamera();
@@ -162,7 +163,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               _AttachOption(
                 icon: Icons.insert_drive_file_rounded,
                 color: const Color(0xFF2D9CDB),
-                label: 'Fayl',
+                label: 'voiceChat.attachFile'.tr(),
                 onTap: () {
                   Navigator.of(sheetContext).pop();
                   widget.onPickFile();
@@ -223,7 +224,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   disabledBorder: InputBorder.none,
-                  hintText: 'Xabar...',
+                  hintText: 'voiceChat.inputHint'.tr(),
                   hintStyle: _pop(15, c: _pDim),
                 ),
               ),
@@ -292,7 +293,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Yozilmoqda...',
+                    'voiceChat.recording'.tr(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _pop(13, c: _pDim),

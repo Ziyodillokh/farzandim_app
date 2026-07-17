@@ -503,10 +503,7 @@ class _ScreenTimeCard extends ConsumerWidget {
           ),
           const SizedBox(height: 12),
           if (apps.isEmpty)
-            Text(
-              _screenTimeEmptyMsg(child),
-              style: _pop(13, c: _dim),
-            )
+            Text(_screenTimeEmptyMsg(child), style: _pop(13, c: _dim))
           else
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -655,7 +652,7 @@ class _XpCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             mainAxisSize: MainAxisSize.min,
             children: [
-              Text('DON balansi', style: _pop(14, c: _dim)),
+              Text('dashboard.donBalance'.tr(), style: _pop(14, c: _dim)),
               const SizedBox(height: 2),
               Row(
                 children: [
@@ -824,17 +821,13 @@ class _StepsCard extends ConsumerWidget {
         children: [
           Row(
             children: [
-              Image.asset(
-                'assets/icons/ic_steps.png',
-                width: 44,
-                height: 44,
-              ),
+              Image.asset('assets/icons/ic_steps.png', width: 44, height: 44),
               const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kunlik qadamlar', style: _pop(14, c: _dim)),
+                    Text('dashboard.dailySteps'.tr(), style: _pop(14, c: _dim)),
                     const SizedBox(height: 2),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -898,9 +891,17 @@ class _StreakCard extends ConsumerWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kunlik rivojlanish', style: _pop(14, c: _dim)),
+                    Text(
+                      'dashboard.dailyStreak'.tr(),
+                      style: _pop(14, c: _dim),
+                    ),
                     const SizedBox(height: 2),
-                    Text('$streak kun', style: _unb(22, ls: -0.6)),
+                    Text(
+                      'dashboard.streakDays'.tr(
+                        namedArgs: {'count': '$streak'},
+                      ),
+                      style: _unb(22, ls: -0.6),
+                    ),
                   ],
                 ),
               ),

@@ -16,6 +16,7 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/firebase_options.dart';
@@ -27,9 +28,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// AndroidManifest'dagi default channel ID bilan mos kelishi shart.
 const String _defaultChannelId = 'farzandim_child_default';
-const String _defaultChannelName = 'Parvoz xabarlari';
-const String _defaultChannelDesc =
-    'Ota-onadan ovozli/video xabar, foto so\'rovi, va boshqalar';
+String _defaultChannelName = 'notifications.channel.name'.tr();
+String _defaultChannelDesc = 'notifications.channel.desc'.tr();
 
 /// Data-only FCM background handler — app fon/yopiq holatda keladi.
 /// 'location_wake': ota-ona xaritani ochdi, bitta yangi fix yuboriladi.
@@ -148,7 +148,7 @@ class FcmService {
       },
     );
 
-    const androidChannel = AndroidNotificationChannel(
+    final androidChannel = AndroidNotificationChannel(
       _defaultChannelId,
       _defaultChannelName,
       description: _defaultChannelDesc,
@@ -170,7 +170,7 @@ class FcmService {
     final body = notification?.body ?? message.data['body'] as String?;
     if (title == null && body == null) return;
 
-    const androidDetails = AndroidNotificationDetails(
+    final androidDetails = AndroidNotificationDetails(
       _defaultChannelId,
       _defaultChannelName,
       channelDescription: _defaultChannelDesc,
@@ -185,7 +185,7 @@ class FcmService {
       presentBadge: true,
       presentSound: true,
     );
-    const details = NotificationDetails(
+    final details = NotificationDetails(
       android: androidDetails,
       iOS: iosDetails,
     );
@@ -196,13 +196,7 @@ class FcmService {
     // Payload — banner bosilganda `onDidReceiveNotificationResponse`da
     // asl FCM `data`ni tiklash uchun (chat type/senderId/messageId va h.k.).
     final payload = message.data.isEmpty ? null : jsonEncode(message.data);
-    await _localNotifications.show(
-      id,
-      title,
-      body,
-      details,
-      payload: payload,
-    );
+    await _localNotifications.show(id, title, body, details, payload: payload);
   }
 
   /// Pair/login MUVAFFAQIYATIDAN KEYIN chaqiriladi — token backend'ga

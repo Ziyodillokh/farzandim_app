@@ -8,6 +8,7 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart'
     show DailySteps;
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
+import 'package:farzandim/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/child_management/data/models/child_model.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
@@ -273,6 +274,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
             child: Column(
               children: [
                 _Header(child: child),
+                // Yangi versiya mavjud bo'lsa (soft-update) — header ostida
+                // yumshoq taklif banneri. upToDate/force holatida ko'rinmaydi.
+                const UpdateBanner(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Column(

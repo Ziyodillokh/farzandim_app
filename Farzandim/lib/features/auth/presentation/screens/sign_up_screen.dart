@@ -164,8 +164,8 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
         _error = _readDioError(
           e,
           fallback: _isPhone
-              ? "SMS yuborib bo'lmadi"
-              : "Email yuborib bo'lmadi",
+              ? 'auth.signUp.sendCodeError'.tr()
+              : 'auth.signUp.sendEmailError'.tr(),
         );
       });
     }
@@ -245,7 +245,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       if (!mounted) return;
       setState(() {
         _loading = false;
-        _error = _readDioError(e, fallback: "Noto'g'ri kod");
+        _error = _readDioError(e, fallback: 'auth.signUp.verifyCodeError'.tr());
       });
     }
   }

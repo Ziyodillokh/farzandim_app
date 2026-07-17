@@ -6,6 +6,7 @@
 // / Boshqa) bir tugma bilan bloklaydi yoki ochadi. Backend o'sha kategoriyadagi
 // barcha o'rnatilgan ilovalarni dinamik blok sifatida bolaga uzatadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -109,7 +110,7 @@ class _CategoryBlockSheetState extends ConsumerState<CategoryBlockSheet> {
               ),
             ),
             Text(
-              "Kategoriya bo'yicha bloklash",
+              'categoryBlock.title'.tr(),
               style: AppTextStyles.headlineL.copyWith(fontSize: 20),
             ),
             const SizedBox(height: 6),

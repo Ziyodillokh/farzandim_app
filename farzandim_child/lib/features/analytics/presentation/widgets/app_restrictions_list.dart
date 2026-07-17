@@ -12,6 +12,7 @@
 //
 // LOGIKA SAQLANGAN — faqat ko'rinish parvoz night/glass tokenlar
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
@@ -50,10 +51,13 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
         final blocked = limits
             .where((l) => l.isActive && l.isFullBlock)
             .toList();
-        final limited = limits
-            .where((l) => l.isActive && !l.isFullBlock && l.dailyLimitMs > 0)
-            .toList()
-          ..sort((a, b) => a.dailyLimitMs.compareTo(b.dailyLimitMs));
+        final limited =
+            limits
+                .where(
+                  (l) => l.isActive && !l.isFullBlock && l.dailyLimitMs > 0,
+                )
+                .toList()
+              ..sort((a, b) => a.dailyLimitMs.compareTo(b.dailyLimitMs));
 
         if (blocked.isEmpty && limited.isEmpty) {
           return const SizedBox.shrink();
@@ -64,14 +68,13 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
           children: [
             if (blocked.isNotEmpty) ...[
               _ExpandableSection(
-                title: 'Bloklangan ilovalar',
+                title: 'analytics.blockedSection'.tr(),
                 count: blocked.length,
                 icon: AppIcons.block,
                 color: AppColors.error,
                 expanded: _blockedExpanded,
-                onTap: () => setState(
-                  () => _blockedExpanded = !_blockedExpanded,
-                ),
+                onTap: () =>
+                    setState(() => _blockedExpanded = !_blockedExpanded),
                 body: _RestrictionCard(
                   accent: AppColors.error,
                   children: [
@@ -95,14 +98,13 @@ class _AppRestrictionsListState extends ConsumerState<AppRestrictionsList> {
             ],
             if (limited.isNotEmpty)
               _ExpandableSection(
-                title: 'Vaqt cheklovi',
+                title: 'analytics.limitedSection'.tr(),
                 count: limited.length,
                 icon: AppIcons.hourglass,
                 color: AppColors.warning,
                 expanded: _limitedExpanded,
-                onTap: () => setState(
-                  () => _limitedExpanded = !_limitedExpanded,
-                ),
+                onTap: () =>
+                    setState(() => _limitedExpanded = !_limitedExpanded),
                 body: _RestrictionCard(
                   accent: AppColors.warning,
                   children: [
@@ -170,10 +172,8 @@ class _ExpandableSection extends StatelessWidget {
               duration: const Duration(milliseconds: 180),
               switchInCurve: Curves.easeOut,
               switchOutCurve: Curves.easeIn,
-              transitionBuilder: (child, anim) => FadeTransition(
-                opacity: anim,
-                child: child,
-              ),
+              transitionBuilder: (child, anim) =>
+                  FadeTransition(opacity: anim, child: child),
               child: expanded
                   ? Padding(
                       key: const ValueKey('expanded'),
@@ -243,8 +243,10 @@ class _SectionHeader extends StatelessWidget {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: color.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(999),
@@ -285,9 +287,9 @@ class _RestrictionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      decoration: parvozGlassFlat(radius: 16).copyWith(
-        border: Border.all(color: accent.withValues(alpha: 0.28)),
-      ),
+      decoration: parvozGlassFlat(
+        radius: 16,
+      ).copyWith(border: Border.all(color: accent.withValues(alpha: 0.28))),
       child: Column(children: children),
     );
   }
@@ -331,13 +333,13 @@ class _BlockedTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(AppIcons.block, color: AppColors.error, size: 13),
                 SizedBox(width: 4),
                 Text(
-                  'Bloklangan',
+                  'analytics.blockedBadge'.tr(),
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: 11,
@@ -366,7 +368,7 @@ class _LimitedTile extends StatelessWidget {
     final hours = minutes ~/ 60;
     final mm = minutes % 60;
     final label = hours == 0
-        ? '$minutes daq/kun'
+        ? 'analytics.limitPerDayMinutes'.tr(namedArgs: {'minutes': '$minutes'})
         : (mm == 0 ? '$hours soat/kun' : '${hours}s ${mm}m/kun');
 
     return Padding(
@@ -397,13 +399,17 @@ class _LimitedTile extends StatelessWidget {
               color: AppColors.warning.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(999),
               border: Border.all(
-                  color: AppColors.warning.withValues(alpha: 0.3)),
+                color: AppColors.warning.withValues(alpha: 0.3),
+              ),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Icon(AppIcons.scheduleActive,
-                    color: AppColors.warning, size: 13),
+                const Icon(
+                  AppIcons.scheduleActive,
+                  color: AppColors.warning,
+                  size: 13,
+                ),
                 const SizedBox(width: 4),
                 Text(
                   label,
@@ -423,11 +429,7 @@ class _LimitedTile extends StatelessWidget {
 }
 
 class _Icon extends StatelessWidget {
-  const _Icon({
-    required this.packageName,
-    this.iconBase64,
-    this.iconUrl,
-  });
+  const _Icon({required this.packageName, this.iconBase64, this.iconUrl});
 
   final String packageName;
   final String? iconBase64;
@@ -462,10 +464,15 @@ class _Icon extends StatelessWidget {
   }
 
   Widget _fallback() {
-    final color = _palette[
-        packageName.codeUnits.fold<int>(0, (a, b) => a + b) % _palette.length];
-    final initials =
-        packageName.split('.').last.padRight(2).substring(0, 2).toUpperCase();
+    final color =
+        _palette[packageName.codeUnits.fold<int>(0, (a, b) => a + b) %
+            _palette.length];
+    final initials = packageName
+        .split('.')
+        .last
+        .padRight(2)
+        .substring(0, 2)
+        .toUpperCase();
     return Container(
       width: _size,
       height: _size,

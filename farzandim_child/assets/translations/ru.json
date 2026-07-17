@@ -15,7 +15,23 @@
     "errorPrefix": "Ошибка: {error}",
     "retry": "Повторить",
     "close": "Закрыть",
-    "fallbackChildName": "Ребёнок"
+    "fallbackChildName": "Ребёнок",
+    "weekdaysShort": "Пн,Вт,Ср,Чт,Пт,Сб,Вс",
+    "details": "Подробнее",
+    "enable": "Включить",
+    "later": "Позже",
+    "open": "Открыть",
+    "errorWithMessage": "Ошибка: {error}",
+    "networkError": "Ошибка сети. Попробуйте снова.",
+    "grantPermission": "Разрешить",
+    "openSettings": "Открыть настройки",
+    "connect": "Подключиться",
+    "saved": "Сохранено!",
+    "today": "Сегодня",
+    "yesterday": "Вчера",
+    "daysAgo": "{days} дн. назад",
+    "cancelShort": "Отмена",
+    "notPaired": "Не подключено"
   },
   "languages": {
     "uz": "Узбекский",
@@ -26,7 +42,8 @@
     "home": "Главная",
     "videos": "Видео",
     "quizzes": "Тесты",
-    "audiobooks": "Аудиокниги"
+    "audiobooks": "Аудиокниги",
+    "profile": "Профиль"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -36,7 +53,8 @@
   },
   "language": {
     "selectTitle": "Выберите язык",
-    "selectSubtitle": "На каком языке использовать приложение?"
+    "selectSubtitle": "На каком языке использовать приложение?",
+    "version": "Версия - 1.0"
   },
   "onboarding": {
     "skip": "Пропустить",
@@ -101,7 +119,42 @@
     "enterCodeTitle": "Введите код из приложения родителей",
     "enterCodeSubtitle": "Код состоит из 5 цифр и действует 24 часа",
     "enterButton": "Войти",
-    "howItWorks": "Как это работает?"
+    "howItWorks": "Как это работает?",
+    "qr": {
+      "errorPermissionDenied": "Доступ к камере запрещён. Нажмите на значок замка в адресной строке браузера и включите доступ к камере.",
+      "errorNoCamera": "На вашем устройстве не найдена камера. Вы можете ввести QR-код вручную.",
+      "errorCameraBusy": "Камера занята другим приложением. Закройте другое приложение (Zoom, Meet, приложение «Камера») и попробуйте снова.",
+      "errorNoSuitableCamera": "Подходящая камера не найдена. Перейдите в режим ручного ввода.",
+      "errorInsecure": "Требуется безопасное соединение (HTTPS или localhost).",
+      "errorCameraGeneric": "Не удалось открыть камеру. Попробуйте снова или введите QR-код вручную.",
+      "notRecognized": "QR-код не распознан. Отсканируйте правильный код.",
+      "connecting": "Подключение...",
+      "dataLoadFailed": "Подключено, но данные не загрузились. Попробуйте снова.",
+      "manualTitle": "Введите токен вручную",
+      "scanWithCameraTooltip": "Сканировать камерой",
+      "scanTitle": "Отсканируйте QR-код",
+      "manualEntry": "Ввести токен вручную",
+      "cameraOpenFailed": "Не удалось открыть камеру",
+      "cameraOpenFailedCode": "Не удалось открыть камеру: {code}",
+      "scanHint": "Наведите рамку на QR-код на телефоне родителя.",
+      "cameraStarting": "Открытие камеры...",
+      "permissionTitle": "Требуется доступ к камере",
+      "permissionBody": "Разрешите доступ к камере, чтобы отсканировать QR-код. Если вы отказали ранее, включите доступ вручную в Настройках.",
+      "pasteHelp": "Если камера не работает, вы можете вставить сюда текст QR из приложения родителя и подключиться.",
+      "pasteButton": "Вставить",
+      "tokenHint": "farzandim:repair:... или сам токен",
+      "successTitle": "Вы успешно подключились!",
+      "successSubtitle": "Ваш телефон привязан к аккаунту родителя."
+    },
+    "wait": {
+      "timeLeft": "Осталось времени: {time}",
+      "rejectedTitle": "Отклонено",
+      "expiredTitle": "Срок истёк",
+      "waitingTitle": "Ждём подтверждения от ваших родителей",
+      "rejectedBody": "Родители отклонили ваш запрос на подключение.\nВведите новый код или свяжитесь с родителями.",
+      "expiredBody": "Подтверждение не получено в течение 5 минут.\nПопробуйте снова.",
+      "waitingBody": "Ваши родители должны увидеть уведомление в приложении Parent и подтвердить. Этот экран обновится автоматически."
+    }
   },
   "permissions": {
     "title": "Разрешения",
@@ -118,6 +171,17 @@
     "progress": "{current} / {total}"
   },
   "permissionSetup": {
+    "p_overlay": "Показ поверх других приложений",
+    "p_overlayHint": "Найдите «Ota-onam» и включите «Разрешить»",
+    "p_location": "Разрешите доступ к геолокации",
+    "p_battery": "Отключите оптимизацию батареи",
+    "p_mic": "Разрешите доступ к микрофону",
+    "p_usage": "Разрешите доступ к статистике приложений",
+    "p_backgroundData": "Разрешите передачу данных в фоновом режиме без ограничений",
+    "p_notif": "Включите уведомления",
+    "p_autostart": "Включите автозапуск приложения",
+    "p_other": "Включите остальные разрешения",
+    "p_notifListener": "Разрешите доступ к уведомлениям",
     "title": "Разрешения",
     "subtitle": "Включите эти разрешения, чтобы Farzandim работал правильно",
     "next": "Далее",
@@ -138,7 +202,8 @@
     "step4Subtitle": "Чтобы показывать, когда время закончилось",
     "stepNumber": "{number}. {title}",
     "grantButton": "Включить",
-    "autoContinueHint": "Когда всё будет включено, продолжится автоматически"
+    "autoContinueHint": "Когда всё будет включено, продолжится автоматически",
+    "uninstallProtectionName": "Запрет удаления"
   },
   "dashboard": {
     "greeting": "Привет, {name}!",
@@ -183,7 +248,11 @@
     "motivationalLabel": "Совет дня",
     "scheduleButton": "Моё расписание",
     "voiceTestButton": "Голосовое сообщение (тест)",
-    "videoTestButton": "Записать видео (тест)"
+    "videoTestButton": "Записать видео (тест)",
+    "newTests": "Новые тесты",
+    "newTestsSoon": "Скоро новые тесты",
+    "newAudiobooks": "Новые аудиокниги",
+    "trendVideos": "Популярные видео"
   },
   "voiceChat": {
     "title": "Голосовое сообщение",
@@ -206,7 +275,22 @@
     "attachFile": "Файл",
     "voiceMode": "Голосовой режим",
     "videoMode": "Видео-режим",
-    "mediaSendError": "Ошибка отправки файла"
+    "mediaSendError": "Ошибка отправки файла",
+    "cameraNotFound": "Камера не найдена",
+    "recordFailed": "Не удалось записать: {error}",
+    "lock": "Заблокировать",
+    "tapToFinish": "Нажмите, чтобы завершить",
+    "pressToRecord": "Нажмите и удерживайте для записи",
+    "inputHint": "Сообщение...",
+    "recording": "Запись...",
+    "voiceSent": "Голосовое сообщение отправлено",
+    "parentNotFound": "Родитель не определён",
+    "messageSendFailed": "Сообщение не отправлено: {error}",
+    "fileSendError": "Ошибка при отправке файла",
+    "videoPreparing": "Видео готовится…",
+    "videoSendFailed": "Видео не отправлено: {error}",
+    "videoSent": "Видео отправлено",
+    "startConversationEmpty": "Начните разговор"
   },
   "videoRecording": {
     "title": "Видео-сообщение",
@@ -239,7 +323,12 @@
       "tabFollowing": "Подписки",
       "tabForYou": "Для вас",
       "searchHint": "Поиск...",
-      "viewAll": "Все"
+      "viewAll": "Все",
+      "headerTitle": "Видео",
+      "categoryAll": "Все",
+      "noVideosTitle": "Пока нет видео",
+      "noVideosSubtitle": "Скоро появятся новые видео",
+      "refresh": "Обновить"
     },
     "filter": {
       "title": "Фильтр",
@@ -260,8 +349,29 @@
       "sleepOff": "Выключено",
       "sleepOffButton": "Выключить",
       "sleepMinutes": "{min} минут",
-      "sleepMinShort": "{min} мин"
-    }
+      "sleepMinShort": "{min} мин",
+      "retry": "Повторить попытку"
+    },
+    "history": {
+      "title": "История просмотров",
+      "emptyTitle": "История пуста",
+      "emptySubtitle": "Просмотренные видео появятся здесь"
+    },
+    "liked": {
+      "title": "Понравившиеся видео",
+      "emptyTitle": "Пока нет понравившихся видео",
+      "emptySubtitle": "Добавьте, удерживая видео или нажав ♥"
+    },
+    "engagement": {
+      "loadFailed": "Не удалось загрузить данные",
+      "loadFailedSubtitle": "Проверьте интернет и потяните ещё раз"
+    },
+    "youtube": {
+      "invalidLink": "Неверная ссылка на видео",
+      "fullscreen": "Во весь экран"
+    },
+    "viewsCount": "{count} просмотров",
+    "categoryAllAlt": "Все"
   },
   "account": {
     "title": "Редактирование профиля",
@@ -281,7 +391,24 @@
     "savedSnack": "Данные сохранены ✅",
     "errorPrefix": "Ошибка: {error}",
     "backButton": "Назад",
-    "saveButton": "Сохранить"
+    "saveButton": "Сохранить",
+    "edit": {
+      "errNameRequired": "Введите имя и фамилию",
+      "errDateFormat": "Дата должна быть в формате ДД.ММ.ГГГГ",
+      "title": "Настройки аккаунта",
+      "profilePhoto": "Фото профиля",
+      "uploadPhoto": "Загрузить фото",
+      "nameLabel": "Имя и фамилия",
+      "birthLabel": "Дата рождения вашего ребёнка",
+      "birthHint": "ДД.ММ.ГГГГ"
+    },
+    "ageDialog": {
+      "title": "Выберите возраст",
+      "ageValue": "{age} лет"
+    },
+    "regionPicker": {
+      "title": "Выберите регион"
+    }
   },
   "social": {
     "tabFollowing": "Подписки",
@@ -305,7 +432,14 @@
     "justNow": "только что",
     "minutesAgo": "{min} мин назад",
     "hoursAgo": "{h} ч назад",
-    "daysAgo": "{d} дн назад"
+    "daysAgo": "{d} дн назад",
+    "fallbackTitle": "Уведомление",
+    "sectionToday": "Сегодня",
+    "sectionYesterday": "Вчера",
+    "channel": {
+      "name": "Уведомления Parvoz",
+      "desc": "Голосовые/видео сообщения от родителей, запросы фото и другое"
+    }
   },
   "gamification": {
     "statusBeginner": "Начинающий",
@@ -344,7 +478,11 @@
     "achievementContentCreatorTitle": "Создатель контента",
     "achievementContentCreatorDesc": "5 постов прошли модерацию",
     "achievementHelperTitle": "Помощник",
-    "achievementHelperDesc": "Верный ответ другому ребёнку"
+    "achievementHelperDesc": "Верный ответ другому ребёнку",
+    "achievementStreak7Title": "7 дней подряд",
+    "achievementMathTop100Title": "Math ТОП-100",
+    "achievementTenBooksTitle": "10-я книга",
+    "achievementStreak100Title": "100 дней"
   },
   "schedules": {
     "title": "Моё расписание",
@@ -363,7 +501,8 @@
     "allDone": "Сегодняшние события завершены",
     "todayList": "Расписание на сегодня",
     "emptyTitle": "Сегодня событий нет",
-    "emptySubtitle": "Отдыхайте!"
+    "emptySubtitle": "Отдыхайте!",
+    "nowBadge": "СЕЙЧАС"
   },
   "settings": {
     "title": "Настройки",
@@ -398,6 +537,291 @@
     "webBrowser": "Веб-браузер",
     "aboutBody": "Parvoz — приложение для безопасного обучения детей и семейной связи.",
     "version": "Версия",
-    "copied": "Скопировано"
+    "copied": "Скопировано",
+    "contactPhone": "Телефон"
+  },
+  "analytics": {
+    "title": "Приложения",
+    "tabAll": "Все",
+    "tabLimited": "Ограничение времени",
+    "tabBlocked": "Заблокировано",
+    "limitsLoadError": "Не удалось загрузить ограничения",
+    "noLimits": "Ограничения по времени не заданы",
+    "noBlocked": "Нет заблокированных приложений",
+    "timeUp": "Закончилось",
+    "remaining": "Осталось",
+    "blockedBadge": "Заблокировано",
+    "blockedSection": "Заблокированные приложения",
+    "limitedSection": "Ограничение времени",
+    "limitPerDayMinutes": "{minutes} мин/день",
+    "dataLoadError": "Не удалось загрузить данные",
+    "noUsageToday": "Сегодня приложения не использовались",
+    "sysHome": "Главный экран",
+    "sysGoogleServices": "Сервисы Google",
+    "sysSettings": "Настройки",
+    "sysSystem": "Система",
+    "sysPhone": "Телефон",
+    "sysCamera": "Камера",
+    "sysGallery": "Галерея",
+    "prevDayTooltip": "Предыдущий день",
+    "nextDayTooltip": "Следующий день",
+    "dateToday": "Сегодня · {date}",
+    "dateYesterday": "Вчера · {date}",
+    "last7Days": "Последние 7 дней"
+  },
+  "time": {
+    "lessThanMinute": "< 1 мин",
+    "minutes": "{m} мин",
+    "hours": "{h} ч",
+    "hoursMinutes": "{h} ч {m} мин",
+    "hoursMinutesShort": "{h} ч {m} мин"
+  },
+  "statistics": {
+    "title": "Статистика",
+    "booksRead": "Прочитанные книги",
+    "itemsCount": "{count} шт",
+    "testsCompleted": "Пройденные тесты",
+    "dailySteps": "Шаги за день",
+    "dailyProgress": "Ежедневный прогресс",
+    "daysCount": "{days} дн.",
+    "donBalance": "Баланс DON",
+    "avgScreenTime": "Среднее экранное время за день"
+  },
+  "ranking": {
+    "emptyTitle": "Здесь пока нет рейтинга",
+    "emptySubtitle": "Проходите тесты и набирайте DON — и вы появитесь в рейтинге.",
+    "title": "Рейтинг DON",
+    "helpTitle": "Рейтинг DON",
+    "helpContent": "За чтение книг, прохождение тестов и ежедневную активность начисляются баллы DON. Рейтинг рассчитывается по региону или по всему Узбекистану.",
+    "helpClose": "Понятно",
+    "byRegion": "По региону",
+    "allUzbekistan": "Весь Узбекистан",
+    "you": "Вы"
+  },
+  "profile": {
+    "savedVideos": "Сохранённые видео",
+    "achievements": "Достижения",
+    "accept": "Принять"
+  },
+  "contests": {
+    "loadError": "Не удалось загрузить тесты",
+    "checkInternet": "Проверьте интернет и потяните ещё раз",
+    "emptyTitle": "Пока нет тестов",
+    "emptySubtitle": "Скоро добавятся новые тесты",
+    "finishedSnack": "Тест завершён — результаты в Рейтинге",
+    "favAdded": "Добавлено в избранное",
+    "favRemoved": "Удалено из избранного",
+    "preparingQuestions": "Вопросы готовятся...",
+    "previous": "Назад",
+    "finish": "Завершить",
+    "next": "Далее",
+    "rulesTitle": "Правила теста",
+    "rule1": "Выберите ответ — правильный станет зелёным, неправильный красным",
+    "rule2": "Перемещайтесь между вопросами кнопками Назад / Далее",
+    "rule3": "Когда общее время истечёт, тест завершится автоматически",
+    "selectedQuestions": "Выбранные вопросы",
+    "exitTest": "Выйти из теста",
+    "continueTest": "Продолжить",
+    "result": "Результат",
+    "record": "Рекорд",
+    "reward": "Награда",
+    "toHome": "На главную",
+    "rematch": "Реванш",
+    "conditionsTitle": "Условия конкурса",
+    "difficultyLabel": "Уровень сложности",
+    "questionsCount": "Количество вопросов",
+    "timePerQuestion": "Время на каждый вопрос",
+    "secondsEach": "по {seconds} секунд",
+    "prize": "Приз",
+    "upTo": "до",
+    "prizeNote": "За каждый правильный ответ начисляется доля. Если результат ниже 30%, приз не выдаётся.",
+    "difficultyEasy": "Лёгкий",
+    "difficultyMedium": "Средний",
+    "difficultyHard": "Сложный",
+    "testsCount": "{count} тестов",
+    "bannerMeta": "{soha} · {count} вопросов",
+    "likedQuestionsEmptyTitle": "Пока нет выбранных вопросов",
+    "likedQuestionsEmptySubtitle": "Во время теста нажмите ♥, чтобы сохранить вопрос",
+    "likedTestsTitle": "Избранные тесты",
+    "likedTestsEmptyTitle": "Пока нет избранных тестов",
+    "likedTestsEmptySubtitle": "Удерживайте тест, чтобы добавить в избранное",
+    "certificateTitle": "Сертификат",
+    "preparing": "Подготовка…",
+    "saveShare": "Сохранить / Поделиться",
+    "certificateShareText": "Я получил сертификат олимпиады «{title}» в приложении Parvoz! 🏆",
+    "certificateHeading": "СЕРТИФИКАТ",
+    "certificateThis": "Этот сертификат",
+    "certificateBody": "выдаётся за успешное завершение олимпиады «{title}»",
+    "score": "Балл",
+    "subject": "Предмет",
+    "certificateMonths": "январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь"
+  },
+  "consent": {
+    "title": "Это приложение работает с разрешения ваших родителей",
+    "subtitle": "Прежде чем начать пользоваться приложением, ваши родители должны согласиться со следующими условиями.",
+    "locationTitle": "Местоположение",
+    "locationText": "Приложение показывает родителям текущее местоположение и историю перемещений ребёнка.",
+    "usageTitle": "Использование приложений",
+    "usageText": "Отслеживает, сколько времени проведено в каждом приложении, и отправляет отчёт родителям.",
+    "notificationsTitle": "Уведомления",
+    "notificationsText": "Получает сообщения, напоминания и SOS push-уведомления, отправленные родителем.",
+    "securityTitle": "Безопасность",
+    "securityText": "Данные устройства ребёнка (заряд батареи, модель) отправляются родителю.",
+    "privacyTitle": "Конфиденциальность",
+    "privacyText": "Данные хранятся в зашифрованном виде и не передаются третьим лицам.",
+    "holdHint": "Удерживайте кнопку 3 секунды — это подтвердит, что вы родитель.",
+    "confirming": "Подтверждается...",
+    "confirmButton": "Родитель подтверждает"
+  },
+  "unlockRequest": {
+    "title": "Запросить дополнительное время",
+    "subtitleWithApp": "Сколько времени попросишь у родителей для «{app}»?",
+    "subtitle": "Сколько дополнительного времени попросишь у родителей?",
+    "timeLabel": "Время",
+    "reasonLabel": "Причина (необязательно)",
+    "reasonHint": "Например: готовлюсь к урокам",
+    "submit": "ЗАПРОСИТЬ",
+    "minutes": "{minutes} мин.",
+    "sent": "Запрос отправлен. Дождитесь решения родителей…",
+    "sendError": "Не удалось отправить запрос. Попробуйте ещё раз.",
+    "approvedSnack": "Родители дали вам {minutes} минут дополнительного времени!",
+    "deniedSnack": "Ваш запрос отклонён."
+  },
+  "appUpdate": {
+    "forceTitle": "Обновите приложение",
+    "forceMessage": "Требуется новая версия. Продолжить со старой версией невозможно.",
+    "openAppStore": "Открыть App Store",
+    "openPlayMarket": "Открыть Play Маркет",
+    "downloadApk": "Скачать с сайта (APK)",
+    "currentVersion": "Текущая",
+    "latestVersion": "Новая",
+    "available": "Доступна новая версия ({version})",
+    "updateButton": "Обновить",
+    "dismissTooltip": "Закрыть (24 часа)"
+  },
+  "background": {
+    "channelName": "Служба Parvoz",
+    "channelDescription": "Для постоянного отслеживания местоположения и состояния ребёнка",
+    "notificationTitle": "Parvoz работает",
+    "notificationText": "Вы на связи со своей семьёй",
+    "lastUpdate": "Последнее обновление: {time}"
+  },
+  "location": {
+    "enableModal": {
+      "title": "Родители просят вас включить геолокацию",
+      "body": "Если вы включите геолокацию, родители смогут видеть вас на карте и знать, что вы в безопасности."
+    }
+  },
+  "audiobooks": {
+    "partLabel": "Часть {number}",
+    "shareComingSoon": "Функция «Поделиться» скоро появится",
+    "player": {
+      "speed": "Скорость",
+      "sleepTimer": "Таймер сна",
+      "sleepOff": "Выключить",
+      "sleepMinutes": "{min} минут"
+    },
+    "feed": {
+      "searchHint": "Поиск книги или автора...",
+      "title": "Книги",
+      "newBooks": "Новые книги",
+      "categoryAll": "Все",
+      "emptyTitle": "Контент не найден",
+      "emptySubtitle": "Выберите другую категорию",
+      "searchEmptyTitle": "Ничего не найдено",
+      "searchEmptySubtitle": "Попробуйте другое слово"
+    },
+    "searchBarHint": "Поиск аудиокниги...",
+    "section": {
+      "viewAll": "Все"
+    }
+  },
+  "books": {
+    "section": {
+      "viewAll": "Все"
+    },
+    "title": "Книги",
+    "categoryAll": "Все",
+    "categorySchool": "Школьные учебники",
+    "categoryLiterature": "Литература",
+    "categoryOthers": "Другое",
+    "empty": "Пока нет книг.",
+    "loadFailed": "Не удалось загрузить.",
+    "pdf": {
+      "noLink": "Нет ссылки на PDF",
+      "goToPage": "Перейти к странице",
+      "pageNumberLabel": "Номер страницы (1–{total})",
+      "totalPages": "Всего: {total} страниц",
+      "go": "Перейти",
+      "searchTitle": "Поиск",
+      "searchUnsupported": "Поиск по тексту пока не поддерживается. Будет добавлен в следующей версии.",
+      "openFailed": "Не удалось открыть PDF",
+      "loading": "Книга загружается...",
+      "firstPage": "Первая страница",
+      "lastPage": "Последняя страница"
+    }
+  },
+  "articles": {
+    "title": "Статьи",
+    "loadFailed": "Не удалось загрузить статьи.",
+    "empty": "Пока нет статей. Скоро появятся!"
+  },
+  "content": {
+    "tabAudiobooks": "Аудиокниги",
+    "videosEmpty": "Пока нет видео",
+    "categoryVideosEmpty": "В этой категории нет видео",
+    "recommendedTitle": "Рекомендации для вас",
+    "mostViewed": "Самые просматриваемые",
+    "categoryAll": "Все",
+    "newLessonBadge": "НОВЫЙ УРОК",
+    "start": "Начать",
+    "viewAll": "Все",
+    "viewsCount": "{count} просмотров",
+    "audiobooksEmpty": "Аудиокниги не найдены",
+    "mostListened": "Самые прослушиваемые",
+    "booksTitle": "Книги",
+    "listen": "Слушать"
+  },
+  "videoMessage": {
+    "requestTitle": "Папа попросил видео",
+    "requestSubtitle": "Нажмите, чтобы записать"
+  },
+  "voice": {
+    "quickCard": {
+      "justNow": "только что",
+      "title": "Сообщения",
+      "empty": "Пока нет сообщений"
+    },
+    "senderYou": "Вы",
+    "senderParent": "Родитель",
+    "deleteFailed": "Сообщение не удалено",
+    "editTitle": "Редактировать сообщение",
+    "editFailed": "Сообщение не изменено",
+    "documentFallback": "Документ",
+    "audioUrlFailed": "Не удалось получить URL аудио"
+  },
+  "chats": {
+    "title": "Чаты",
+    "sosButton": "SOS сообщение",
+    "startConversation": "Начните разговор",
+    "voiceMessagePreview": "Голосовое сообщение",
+    "sosFailed": "Не удалось отправить SOS",
+    "sosConfirmTitle": "ВНИМАНИЕ! Вы отправляете SOS!",
+    "sosSentBody": "SOS отправлен — родителям сразу придёт уведомление.",
+    "sosConfirmBody": "Вы действительно хотите отправить SOS?",
+    "sosSent": "Отправлено!",
+    "sosSlider": "Отправить SOS"
+  },
+  "chatSettings": {
+    "galleryMobileOnly": "Выбор изображения из галереи доступен только в мобильном приложении",
+    "imageLoadError": "Ошибка при загрузке изображения"
+  },
+  "development": {
+    "title": "Показатель развития",
+    "tests": "Тесты",
+    "books": "Книги",
+    "streak": "Серия",
+    "steps": "Шаги",
+    "motivation": "Начни путешествие на этой неделе — реши тест, почитай книгу, будь активным! 🚀"
   }
 }

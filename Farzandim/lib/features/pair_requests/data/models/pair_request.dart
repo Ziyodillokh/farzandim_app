@@ -29,7 +29,7 @@ class PairRequest {
       childName:
           (json['childName'] as String?) ??
           (json['child'] as Map?)?['name'] as String? ??
-          'Bola',
+          'pairRequests.fallbackChildName'.tr(),
       status: _parseStatus(json['status'] as String?),
       createdAt: _parseIso(json['createdAt']) ?? DateTime.now(),
       expiresAt:

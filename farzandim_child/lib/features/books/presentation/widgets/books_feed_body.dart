@@ -43,7 +43,8 @@ class BooksFeedBody extends ConsumerWidget {
             await ref.read(backendBooksProvider.future);
           },
           child: ListView(
-            padding: contentPadding ?? const EdgeInsets.only(bottom: 180, top: 8),
+            padding:
+                contentPadding ?? const EdgeInsets.only(bottom: 180, top: 8),
             children: [
               if (recommended.isNotEmpty) ...[
                 BookSection(
@@ -54,14 +55,14 @@ class BooksFeedBody extends ConsumerWidget {
                 const SizedBox(height: 20),
               ],
               BookSection(
-                title: 'Hammasi',
+                title: 'books.categoryAll'.tr(),
                 books: books,
                 onTap: (b) => _openPdf(context, b),
               ),
               if (school.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 BookSection(
-                  title: 'Maktab darsliklari',
+                  title: 'books.categorySchool'.tr(),
                   books: school,
                   onTap: (b) => _openPdf(context, b),
                 ),
@@ -69,7 +70,7 @@ class BooksFeedBody extends ConsumerWidget {
               if (adabiyot.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 BookSection(
-                  title: 'Adabiyot',
+                  title: 'books.categoryLiterature'.tr(),
                   books: adabiyot,
                   onTap: (b) => _openPdf(context, b),
                 ),
@@ -77,7 +78,7 @@ class BooksFeedBody extends ConsumerWidget {
               if (other.isNotEmpty) ...[
                 const SizedBox(height: 20),
                 BookSection(
-                  title: 'Boshqalar',
+                  title: 'books.categoryOthers'.tr(),
                   books: other,
                   onTap: (b) => _openPdf(context, b),
                 ),
@@ -99,17 +100,16 @@ class _EmptyView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Padding(
         padding: EdgeInsets.all(40),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(AppIcons.menu,
-                size: 64, color: AppColors.textSecondary),
+            Icon(AppIcons.menu, size: 64, color: AppColors.textSecondary),
             SizedBox(height: 16),
             Text(
-              'Hozircha kitoblar mavjud emas.',
+              'books.empty'.tr(),
               style: TextStyle(color: AppColors.textSecondary),
             ),
           ],
@@ -132,11 +132,14 @@ class _ErrorView extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Icon(AppIcons.error,
-                size: 48, color: AppColors.textSecondary),
+            const Icon(
+              AppIcons.error,
+              size: 48,
+              color: AppColors.textSecondary,
+            ),
             const SizedBox(height: 16),
-            const Text(
-              'Yuklab bo\'lmadi.',
+            Text(
+              'books.loadFailed'.tr(),
               style: TextStyle(color: AppColors.textPrimary, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -151,7 +154,10 @@ class _ErrorView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 16),
-            FilledButton(onPressed: onRetry, child: const Text('Qayta urinish')),
+            FilledButton(
+              onPressed: onRetry,
+              child: Text('common.retry'.tr()),
+            ),
           ],
         ),
       ),

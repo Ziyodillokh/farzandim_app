@@ -13,6 +13,7 @@
 // Real: pairing bo'lsa "Ota-ona" qatori voiceMessagesProvider'dan oxirgi
 // xabar/o'qilmaganlar bilan. Pairing yo'q bo'lsa PREVIEW (Figma qatorlar).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/sos/presentation/providers/sos_provider.dart';
@@ -121,7 +122,7 @@ class ChatsListScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'Chatlar',
+                      'chats.title'.tr(),
                       textAlign: TextAlign.center,
                       style: _unb(20),
                     ),
@@ -153,7 +154,10 @@ class ChatsListScreen extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(999),
                     border: Border.all(color: _glassBorder),
                   ),
-                  child: Text('SOS xabar', style: _pop(15, w: FontWeight.w600)),
+                  child: Text(
+                    'chats.sosButton'.tr(),
+                    style: _pop(15, w: FontWeight.w600),
+                  ),
                 ),
               ),
             ),
@@ -190,15 +194,17 @@ class ChatsListScreen extends ConsumerWidget {
     switch (last) {
       case null:
         // Default neytral — "yozmoqda" degan taassurot bermasin.
-        preview = 'Suhbatni boshlang';
+        preview = 'chats.startConversation'.tr();
       case VideoItem():
         preview = '📹 Video xabar';
       case VoiceItem(:final message):
-        preview = message.isText ? (message.text ?? '') : 'Ovozli xabar';
+        preview = message.isText
+            ? (message.text ?? '')
+            : 'chats.voiceMessagePreview'.tr();
     }
     final name = (parentName != null && parentName.trim().isNotEmpty)
         ? parentName.trim()
-        : 'Ota-ona';
+        : 'voice.senderParent'.tr();
     return [
       _ChatRow(
         name: name,
@@ -414,7 +420,7 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
     } else {
       setState(() {
         _sending = false;
-        _error = s.errorMessage ?? 'SOS yuborilmadi';
+        _error = s.errorMessage ?? 'chats.sosFailed'.tr();
       });
       ref.read(sosStateProvider.notifier).reset();
     }
@@ -450,7 +456,7 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
           ),
           const SizedBox(height: 20),
           Text(
-            'DIQQAT! Siz SOS xabar!',
+            'chats.sosConfirmTitle'.tr(),
             textAlign: TextAlign.center,
             style: _unb(21, w: FontWeight.w700),
           ),
@@ -459,7 +465,7 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
             _sent
                 ? 'SOS xabar yuborildi — ota-onangizga darhol '
                       'bildirishnoma boradi.'
-                : 'Siz haqiqatdan SOS xabar yubormoqchimisiz?',
+                : 'chats.sosConfirmBody'.tr(),
             textAlign: TextAlign.center,
             style: _pop(13, c: _sent ? _online : _dim),
           ),
@@ -488,7 +494,7 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
                   const Icon(Icons.check_rounded, color: _online),
                   const SizedBox(width: 8),
                   Text(
-                    'Yuborildi!',
+                    'chats.sosSent'.tr(),
                     style: _pop(15, w: FontWeight.w600, c: _online),
                   ),
                 ],
@@ -575,7 +581,7 @@ class _SlideToSendState extends State<_SlideToSend> {
                           const _Chevrons(),
                           const SizedBox(width: 10),
                           Text(
-                            'SOS xabar yuborish',
+                            'chats.sosSlider'.tr(),
                             style: _unb(13, w: FontWeight.w600, ls: 0),
                           ),
                           const SizedBox(width: 10),

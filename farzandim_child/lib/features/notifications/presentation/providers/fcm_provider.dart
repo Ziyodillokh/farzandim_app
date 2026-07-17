@@ -4,6 +4,7 @@
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
@@ -107,10 +108,10 @@ void _handleUnlockDecision(Ref ref, RemoteMessage message) {
     final mins = message.data['grantedMinutes'] ?? '';
     AppSnackBar.success(
       ctx,
-      'Ota-onangiz $mins daqiqa qo\'shimcha vaqt berdi!',
+      'unlockRequest.approvedSnack'.tr(namedArgs: {'minutes': '$mins'}),
     );
   } else {
-    AppSnackBar.info(ctx, "So'rovingiz rad etildi.");
+    AppSnackBar.info(ctx, 'unlockRequest.deniedSnack'.tr());
   }
 }
 

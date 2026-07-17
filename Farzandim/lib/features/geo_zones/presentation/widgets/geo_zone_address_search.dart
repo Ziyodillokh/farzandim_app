@@ -64,16 +64,33 @@ class _CategoryShortcut {
   final String query;
 }
 
-const _kShortcuts = <_CategoryShortcut>[
-  _CategoryShortcut(SolarIconsBold.buildings, 'Masjid', 'masjid'),
-  _CategoryShortcut(SolarIconsBold.mapPointSchool, 'Maktab', 'maktab'),
-  _CategoryShortcut(SolarIconsBold.leaf, "Bog'", "bog'"),
+// Getter (const emas) — `.tr()` metod chaqiruvi + til almashganда yangilanadi.
+List<_CategoryShortcut> get _kShortcuts => <_CategoryShortcut>[
+  _CategoryShortcut(
+    SolarIconsBold.buildings,
+    'geoZoneEdit.search.category.mosque'.tr(),
+    'masjid',
+  ),
+  _CategoryShortcut(
+    SolarIconsBold.mapPointSchool,
+    'geoZoneEdit.search.category.school'.tr(),
+    'maktab',
+  ),
+  _CategoryShortcut(
+    SolarIconsBold.leaf,
+    'geoZoneEdit.search.category.park'.tr(),
+    "bog'",
+  ),
   _CategoryShortcut(
     SolarIconsBold.mapPointHospital,
-    'Kasalxona',
+    'geoZoneEdit.search.category.hospital'.tr(),
     'kasalxona',
   ),
-  _CategoryShortcut(SolarIconsBold.shop, "Do'kon", "do'kon"),
+  _CategoryShortcut(
+    SolarIconsBold.shop,
+    'geoZoneEdit.search.category.shop'.tr(),
+    "do'kon",
+  ),
 ];
 
 /// Manzil qidirish varag'ini ochadi. Foydalanuvchi joy tanlasa
@@ -88,10 +105,8 @@ Future<PlaceSuggestion?> showAddressSearch(
     isScrollControlled: true,
     useSafeArea: true,
     backgroundColor: Colors.transparent,
-    builder: (_) => _AddressSearchSheet(
-      centerLat: centerLat,
-      centerLng: centerLng,
-    ),
+    builder: (_) =>
+        _AddressSearchSheet(centerLat: centerLat, centerLng: centerLng),
   );
 }
 
@@ -164,7 +179,9 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
   }
 
   Future<void> _runSearch(String query, int gen) async {
-    final results = await ref.read(placeSearchServiceProvider).search(
+    final results = await ref
+        .read(placeSearchServiceProvider)
+        .search(
           query: query,
           centerLat: widget.centerLat,
           centerLng: widget.centerLng,
@@ -298,7 +315,8 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
       return _Hint(
         icon: SolarIconsOutline.mapArrowSquare,
         title: 'geoZoneEdit.search.prompt'.tr(),
-        subtitle: 'Yaqin joylarni chiqarish uchun manzilni yozing yoki '
+        subtitle:
+            'Yaqin joylarni chiqarish uchun manzilni yozing yoki '
             'yuqoridagi tugmalarni bosing.',
       );
     }
@@ -353,7 +371,7 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
       return _Hint(
         icon: SolarIconsOutline.mapPointRemove,
         title: 'geoZoneEdit.search.noResults'.tr(),
-        subtitle: "Boshqa so'z bilan urinib ko'ring.",
+        subtitle: 'geoZoneEdit.search.noResultsSubtitle'.tr(),
       );
     }
     return const SizedBox.shrink();
@@ -508,10 +526,7 @@ class _ShortcutChip extends StatelessWidget {
           children: [
             Icon(shortcut.icon, size: 16, color: _blue),
             const SizedBox(width: 6),
-            Text(
-              shortcut.label,
-              style: _pop(13, w: FontWeight.w600),
-            ),
+            Text(shortcut.label, style: _pop(13, w: FontWeight.w600)),
           ],
         ),
       ),
@@ -631,11 +646,7 @@ class _ResultTile extends StatelessWidget {
 // ════════════ Yo'riqnoma / bo'sh holat ════════════
 
 class _Hint extends StatelessWidget {
-  const _Hint({
-    required this.icon,
-    required this.title,
-    this.subtitle,
-  });
+  const _Hint({required this.icon, required this.title, this.subtitle});
 
   final IconData icon;
   final String title;

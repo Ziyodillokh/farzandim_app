@@ -4,7 +4,7 @@
 //
 // Bloklangan ilova overlay'idagi "Ruxsat so'rash" tugmasi yoki "vaqting
 // tugayapti" ogohlantirish notification'i Parvoz'ni ochganda shu modal
-// chiqadi. Bola qancha vaqt (5..60 daqiqa) va sababini kiritadi, "SO'RASH"
+// chiqadi. Bola qancha vaqt (5..60 daqiqa) va sababini kiritadi, SO'RASH
 // bossa ota-onaga so'rov ketadi.
 //
 // Foydalanish:
@@ -14,6 +14,7 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/shared/widgets/primary_button.dart';
 import 'package:flutter/material.dart';
@@ -81,7 +82,9 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
     final appName = widget.appName?.trim();
     return Padding(
       // Klaviatura ko'tarilganda input ko'rinib tursin.
-      padding: EdgeInsets.only(bottom: MediaQuery.of(context).viewInsets.bottom),
+      padding: EdgeInsets.only(
+        bottom: MediaQuery.of(context).viewInsets.bottom,
+      ),
       child: Container(
         decoration: BoxDecoration(
           color: adaptive.bgPrimary,
@@ -110,7 +113,7 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    "Qo'shimcha vaqt so'rash",
+                    'unlockRequest.title'.tr(),
                     style: TextStyle(
                       fontSize: 20,
                       fontWeight: FontWeight.w800,
@@ -123,8 +126,10 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
             const SizedBox(height: 8),
             Text(
               (appName != null && appName.isNotEmpty)
-                  ? '"$appName" uchun ota-onangdan qancha vaqt so\'raysan?'
-                  : "Ota-onangdan qancha qo'shimcha vaqt so'raysan?",
+                  ? 'unlockRequest.subtitleWithApp'.tr(
+                      namedArgs: {'app': appName},
+                    )
+                  : 'unlockRequest.subtitle'.tr(),
               style: TextStyle(
                 fontSize: 14,
                 color: adaptive.textSecondary,
@@ -132,7 +137,10 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
               ),
             ),
             const SizedBox(height: 18),
-            _Label('Vaqt', color: adaptive.textTertiary),
+            _Label(
+              'unlockRequest.timeLabel'.tr(),
+              color: adaptive.textTertiary,
+            ),
             const SizedBox(height: 10),
             Wrap(
               spacing: 10,
@@ -151,7 +159,10 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
               ],
             ),
             const SizedBox(height: 18),
-            _Label('Sabab (ixtiyoriy)', color: adaptive.textTertiary),
+            _Label(
+              'unlockRequest.reasonLabel'.tr(),
+              color: adaptive.textTertiary,
+            ),
             const SizedBox(height: 10),
             TextField(
               controller: _reasonController,
@@ -161,7 +172,7 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
               textInputAction: TextInputAction.done,
               style: TextStyle(color: adaptive.textPrimary),
               decoration: InputDecoration(
-                hintText: 'Masalan: darsga tayyorlanyapman',
+                hintText: 'unlockRequest.reasonHint'.tr(),
                 hintStyle: TextStyle(color: adaptive.textTertiary),
                 counterText: '',
                 filled: true,
@@ -180,7 +191,10 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
                 ),
                 focusedBorder: OutlineInputBorder(
                   borderRadius: BorderRadius.circular(14),
-                  borderSide: const BorderSide(color: AppColors.primary, width: 2),
+                  borderSide: const BorderSide(
+                    color: AppColors.primary,
+                    width: 2,
+                  ),
                 ),
               ),
             ),
@@ -248,7 +262,7 @@ class _MinuteChoice extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 11),
           child: Text(
-            '$minutes daqiqa',
+            'unlockRequest.minutes'.tr(namedArgs: {'minutes': '$minutes'}),
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w700,

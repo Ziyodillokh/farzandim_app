@@ -5,6 +5,7 @@
 // Ota-ona bola uchun dars/test, sport/sog'lom va kontent eslatmalarini
 // yoqadi/o'chiradi va tinch soatlarni (tun) belgilaydi. GET/PUT orqali.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -82,7 +83,7 @@ class _NotificationPreferencesScreenState
       );
       if (mounted) setState(() => _prefs = updated);
     } catch (_) {
-      if (mounted) AppToast.error(context, 'Saqlashda xatolik');
+      if (mounted) AppToast.error(context, 'notificationPrefs.saveError'.tr());
     } finally {
       if (mounted) setState(() => _saving = false);
     }
@@ -94,13 +95,13 @@ class _NotificationPreferencesScreenState
     final from = await showTimePicker(
       context: context,
       initialTime: _parse(p.quietFrom) ?? const TimeOfDay(hour: 22, minute: 0),
-      helpText: 'Tinch soat boshi',
+      helpText: 'notificationPrefs.quietStartHelp'.tr(),
     );
     if (from == null || !mounted) return;
     final to = await showTimePicker(
       context: context,
       initialTime: _parse(p.quietTo) ?? const TimeOfDay(hour: 8, minute: 0),
-      helpText: 'Tinch soat oxiri',
+      helpText: 'notificationPrefs.quietEndHelp'.tr(),
     );
     if (to == null) return;
     await _saveQuiet(_fmt(from), _fmt(to));
@@ -175,24 +176,24 @@ class _NotificationPreferencesScreenState
           _ToggleCard(
             icon: SolarIconsBold.book,
             color: const Color(0xFF60A5FA),
-            title: 'Dars / test eslatmasi',
-            subtitle: '"Bugun bitta test yechib ko\'rchi 📚"',
+            title: 'notificationPrefs.studyTitle'.tr(),
+            subtitle: 'notificationPrefs.studySubtitle'.tr(),
             value: p.studyNudge,
             onChanged: _saving ? null : (v) => _save(study: v),
           ),
           _ToggleCard(
             icon: SolarIconsBold.running,
             color: const Color(0xFF4ADE80),
-            title: "Sport / sog'lom eslatma",
-            subtitle: '"Biroz harakat qilsang-chi 🏃"',
+            title: 'notificationPrefs.healthTitle'.tr(),
+            subtitle: 'notificationPrefs.healthSubtitle'.tr(),
             value: p.healthNudge,
             onChanged: _saving ? null : (v) => _save(health: v),
           ),
           _ToggleCard(
             icon: SolarIconsBold.clapperboard,
             color: const Color(0xFF7C6FE0),
-            title: 'Yangi kontent eslatmasi',
-            subtitle: '"Yangi videolar seni kutyapti 🎬"',
+            title: 'notificationPrefs.contentTitle'.tr(),
+            subtitle: 'notificationPrefs.contentSubtitle'.tr(),
             value: p.contentReminder,
             onChanged: _saving ? null : (v) => _save(content: v),
           ),
@@ -237,7 +238,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'Eslatmalar',
+                'notificationPrefs.headerTitle'.tr(),
                 style: AppTextStyles.headlineL.copyWith(fontSize: 20),
               ),
             ),
@@ -327,7 +328,7 @@ class _QuietCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final label = prefs.hasQuietHours
         ? '${prefs.quietFrom} – ${prefs.quietTo}'
-        : 'Belgilanmagan';
+        : 'notificationPrefs.notSet'.tr();
     return SettingsCard(
       onTap: onEdit,
       child: Row(
@@ -352,7 +353,7 @@ class _QuietCard extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tinch soatlar',
+                  'notificationPrefs.quietHours'.tr(),
                   style: AppTextStyles.bodyM.copyWith(
                     fontWeight: FontWeight.w700,
                   ),

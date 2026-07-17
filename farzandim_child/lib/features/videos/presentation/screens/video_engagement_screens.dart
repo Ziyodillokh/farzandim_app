@@ -8,6 +8,7 @@
 //
 // Ma'lumot backend'dan (VideoEngagementRepository, offline kesh bilan).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/videos/data/repositories/video_engagement_repository.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
@@ -16,7 +17,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 
-/// "Ko'rishlar tarixi" — feed header ⟲.
+/// Ko'rishlar tarixi — feed header ⟲.
 class WatchHistoryScreen extends ConsumerWidget {
   /// `WatchHistoryScreen` konstruktor.
   const WatchHistoryScreen({super.key});
@@ -28,8 +29,8 @@ class WatchHistoryScreen extends ConsumerWidget {
       value: ref.watch(watchHistoryPageProvider),
       onRefresh: () => ref.read(watchHistoryPageProvider.notifier).refresh(),
       emptyIcon: Icons.history_rounded,
-      emptyText: "Tarix bo'sh",
-      emptySubtext: "Ko'rgan videolaringiz shu yerda chiqadi",
+      emptyText: 'videos.history.emptyTitle'.tr(),
+      emptySubtext: 'videos.history.emptySubtitle'.tr(),
     );
   }
 }
@@ -42,14 +43,14 @@ class LikedVideosScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _EngagementListView(
-      title: 'Yoqtirilgan videolar',
+      title: 'videos.liked.title'.tr(),
       value: ref.watch(likedVideosPageProvider),
       onRefresh: () => ref.read(likedVideosPageProvider.notifier).refresh(),
       onUnfavorite: (id) =>
           ref.read(likedVideosPageProvider.notifier).unfavorite(id),
       emptyIcon: Icons.favorite_border_rounded,
-      emptyText: "Hali yoqtirilgan video yo'q",
-      emptySubtext: 'Videoni bosib turib yoki ♥ bosib qo\'shing',
+      emptyText: 'videos.liked.emptyTitle'.tr(),
+      emptySubtext: 'videos.liked.emptySubtitle'.tr(),
     );
   }
 }
@@ -111,8 +112,8 @@ class _EngagementListView extends StatelessWidget {
                   error: (_, __) => _ScrollCenter(
                     child: _Empty(
                       icon: Icons.wifi_off_rounded,
-                      text: 'Ma\'lumot yuklanmadi',
-                      subtext: 'Internetni tekshirib, qayta torting',
+                      text: 'videos.engagement.loadFailed'.tr(),
+                      subtext: 'videos.engagement.loadFailedSubtitle'.tr(),
                     ),
                   ),
                 ),
@@ -327,8 +328,8 @@ String _dayLabel(DateTime at, DateTime now) {
   final d = DateTime(at.year, at.month, at.day);
   final today = DateTime(now.year, now.month, now.day);
   final diff = today.difference(d).inDays;
-  if (diff <= 0) return 'Bugun';
-  if (diff == 1) return 'Kecha';
-  if (diff < 7) return '$diff kun oldin';
+  if (diff <= 0) return 'common.today'.tr();
+  if (diff == 1) return 'common.yesterday'.tr();
+  if (diff < 7) return 'common.daysAgo'.tr(namedArgs: {'days': '$diff'});
   return '${at.day}-${_months[at.month - 1]}';
 }

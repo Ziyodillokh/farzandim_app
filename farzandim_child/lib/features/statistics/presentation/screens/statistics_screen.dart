@@ -8,11 +8,12 @@
 //   • "Kunlik rivojlanish" — badge + N kun + hafta trekeri (olov/muz)
 //   • "Kunlik qadamlar" — badge + bugungi/10 000 + hafta trekeri (✓)
 //   • "DON balansi" + reyting (bola atrofida 3 qator)
-//   • "Kunlik o'rtacha ekran vaqti" + grafik + top ilovalar
+//   • Kunlik o'rtacha ekran vaqti + grafik + top ilovalar
 //
 // Real: todayStepsProvider, gamificationProfile (don/streak), allUsers
 // (reyting), dailyUsage (ekran vaqti + top ilovalar). Bo'sh bo'lsa PREVIEW.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'dart:convert';
 
@@ -184,7 +185,7 @@ class _Header extends ConsumerWidget {
           },
         ),
         const SizedBox(width: 12),
-        Expanded(child: Text('Statistika', style: _unb(24))),
+        Expanded(child: Text('statistics.title'.tr(), style: _unb(24))),
         _SvgIconButton(
           svg: _chatRoundLineSvg,
           onTap: () => context.push('/chats'),
@@ -309,8 +310,10 @@ class _StatGrid extends StatelessWidget {
                   size: 26,
                   color: _purple,
                 ),
-                value: '$books ta',
-                label: "O'qilgan kitoblar",
+                value: 'statistics.itemsCount'.tr(
+                  namedArgs: {'count': '$books'},
+                ),
+                label: 'statistics.booksRead'.tr(),
               ),
             ),
             const SizedBox(width: 12),
@@ -328,7 +331,7 @@ class _StatGrid extends StatelessWidget {
                   child: Text('?', style: _unb(15, w: FontWeight.w700)),
                 ),
                 value: '$tests ta',
-                label: 'Ishlangan testlar',
+                label: 'statistics.testsCompleted'.tr(),
               ),
             ),
           ],
@@ -345,7 +348,7 @@ class _StatGrid extends StatelessWidget {
                   height: 28,
                 ),
                 value: _fmtNum(steps),
-                label: 'Kunlik qadamlar',
+                label: 'statistics.dailySteps'.tr(),
               ),
             ),
             const SizedBox(width: 12),
@@ -357,8 +360,10 @@ class _StatGrid extends StatelessWidget {
                   size: 28,
                   color: _amber,
                 ),
-                value: '$streak kun',
-                label: 'Kunlik rivojlanish',
+                value: 'statistics.daysCount'.tr(
+                  namedArgs: {'days': '$streak'},
+                ),
+                label: 'statistics.dailyProgress'.tr(),
               ),
             ),
           ],
@@ -621,7 +626,7 @@ class _DonCard extends ConsumerWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('DON balansi', style: _pop(13, c: _dim)),
+            Text('statistics.donBalance'.tr(), style: _pop(13, c: _dim)),
             const SizedBox(height: 4),
             Row(
               children: [

@@ -9,6 +9,7 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
@@ -63,7 +64,7 @@ class _Chart extends StatelessWidget {
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             Text(
-              'Oxirgi 7 kun',
+              'analytics.last7Days'.tr(),
               style: TextStyle(
                 color: context.adaptive.textSecondary,
                 fontSize: 13,
@@ -88,7 +89,14 @@ class _Chart extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               for (var i = 0; i < days.length; i++)
-                Expanded(child: _bar(context, days[i], maxMs, isLast: i == days.length - 1)),
+                Expanded(
+                  child: _bar(
+                    context,
+                    days[i],
+                    maxMs,
+                    isLast: i == days.length - 1,
+                  ),
+                ),
             ],
           ),
         ),

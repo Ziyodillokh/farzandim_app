@@ -2,6 +2,7 @@
 // AppUsageEntry — bitta ilova foydalanish (Sprint 4.4.32)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 
 @immutable
@@ -49,33 +50,30 @@ class AppUsageEntry {
   String get formattedTime {
     final h = totalTime.inHours;
     final m = totalTime.inMinutes % 60;
-    if (h == 0 && m == 0) return '< 1 daq';
-    if (h == 0) return '$m daq';
-    if (m == 0) return '$h soat';
-    return '$h soat $m daq';
+    if (h == 0 && m == 0) return 'time.lessThanMinute'.tr();
+    if (h == 0) return 'time.minutes'.tr(namedArgs: {'m': '$m'});
+    if (m == 0) return 'time.hours'.tr(namedArgs: {'h': '$h'});
+    return 'time.hoursMinutes'.tr(namedArgs: {'h': '$h', 'm': '$m'});
   }
 }
 
 @immutable
 class AppUsageDay {
-  const AppUsageDay({
-    required this.date,
-    required this.apps,
-  });
+  const AppUsageDay({required this.date, required this.apps});
 
   final String date; // YYYY-MM-DD
   final List<AppUsageEntry> apps;
 
   /// Jami foydalanish vaqti.
   Duration get totalTime => Duration(
-        milliseconds: apps.fold<int>(0, (sum, a) => sum + a.totalTimeMs),
-      );
+    milliseconds: apps.fold<int>(0, (sum, a) => sum + a.totalTimeMs),
+  );
 
   /// `5 st 16 daq` formatda.
   String get formattedTotal {
     final h = totalTime.inHours;
     final m = totalTime.inMinutes % 60;
     if (h == 0) return '$m daq';
-    return '$h st $m daq';
+    return 'time.hoursMinutesShort'.tr(namedArgs: {'h': '$h', 'm': '$m'});
   }
 }

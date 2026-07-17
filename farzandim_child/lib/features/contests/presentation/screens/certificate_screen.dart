@@ -14,6 +14,7 @@
 import 'dart:io';
 import 'dart:ui' as ui;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/repositories/certificate_repository.dart';
 import 'package:farzandim_child/features/contests/presentation/contests_theme.dart';
@@ -109,7 +110,10 @@ class _CertificateScreenState extends State<CertificateScreen> {
       backgroundColor: pv.pvBg,
       body: Column(
         children: [
-          ParvozHeader(title: 'Sertifikat', onBack: () => context.pop()),
+          ParvozHeader(
+            title: 'contests.certificateTitle'.tr(),
+            onBack: () => context.pop(),
+          ),
           Expanded(
             child: Center(
               child: SingleChildScrollView(
@@ -177,7 +181,7 @@ class _ShareButton extends StatelessWidget {
               Icon(Icons.ios_share_rounded, size: 20, color: pv.pvOnGreen),
             const SizedBox(width: 10),
             Text(
-              sharing ? 'Tayyorlanmoqda…' : 'Saqlash / Ulashish',
+              sharing ? 'contests.preparing'.tr() : 'contests.saveShare'.tr(),
               style: cjak(
                 CP(pv.isDark),
                 size: 16,
@@ -326,7 +330,7 @@ class _Certificate extends StatelessWidget {
                   ),
                   const SizedBox(height: 18),
                   Text(
-                    'SERTIFIKAT',
+                    'contests.certificateHeading'.tr(),
                     style: cjak(
                       CP(true),
                       size: 26,
@@ -349,7 +353,7 @@ class _Certificate extends StatelessWidget {
                   ),
                   const SizedBox(height: 22),
                   Text(
-                    'Ushbu sertifikat',
+                    'contests.certificateThis'.tr(),
                     style: cjak(
                       CP(true),
                       size: 13,
@@ -398,9 +402,15 @@ class _Certificate extends StatelessWidget {
                       children: [
                         _Stat(label: 'Natija', value: '${data.percent}%'),
                         const _Divider(),
-                        _Stat(label: 'Ball', value: '${data.score}'),
+                        _Stat(
+                          label: 'contests.score'.tr(),
+                          value: '${data.score}',
+                        ),
                         const _Divider(),
-                        _Stat(label: 'Fan', value: data.subject),
+                        _Stat(
+                          label: 'contests.subject'.tr(),
+                          value: data.subject,
+                        ),
                       ],
                     ),
                   ),

@@ -14,6 +14,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/voice_message/data/models/voice_message.dart';
 import 'package:farzandim_child/features/voice_message/data/repositories/backend_voice_message_repository.dart';
@@ -90,7 +91,7 @@ class ChatBubble extends ConsumerWidget {
             if (isOwn && message.isText)
               _MenuRow(
                 icon: Icons.edit_rounded,
-                label: 'Tahrirlash',
+                label: 'common.edit'.tr(),
                 onTap: () {
                   Navigator.of(sheetCtx).pop();
                   _editMessage(context, ref);
@@ -98,7 +99,7 @@ class ChatBubble extends ConsumerWidget {
               ),
             _MenuRow(
               icon: Icons.delete_outline_rounded,
-              label: "O'chirish",
+              label: 'common.delete'.tr(),
               destructive: true,
               onTap: () {
                 Navigator.of(sheetCtx).pop();
@@ -121,8 +122,8 @@ class ChatBubble extends ConsumerWidget {
     ref.invalidate(voiceMessagesProvider);
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text("Xabar o'chirilmadi"),
+        SnackBar(
+          content: Text('voice.deleteFailed'.tr()),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),
@@ -161,7 +162,7 @@ class ChatBubble extends ConsumerWidget {
             ),
             const SizedBox(height: 14),
             Text(
-              'Xabarni tahrirlash',
+              'voice.editTitle'.tr(),
               style: GoogleFonts.unbounded(
                 fontSize: 15,
                 fontWeight: FontWeight.w600,
@@ -205,7 +206,7 @@ class ChatBubble extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(999),
                 ),
                 child: Text(
-                  'Saqlash',
+                  'common.save'.tr(),
                   style: GoogleFonts.poppins(
                     color: Colors.white,
                     fontSize: 15,
@@ -228,8 +229,8 @@ class ChatBubble extends ConsumerWidget {
     ref.invalidate(voiceMessagesProvider);
     if (!ok && context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Xabar tahrirlanmadi'),
+        SnackBar(
+          content: Text('voice.editFailed'.tr()),
           backgroundColor: Colors.red,
           duration: Duration(seconds: 2),
         ),
@@ -378,7 +379,11 @@ class ChatBubble extends ConsumerWidget {
           errorWidget: (_, __, ___) => Container(
             height: 160,
             color: Colors.black.withValues(alpha: 0.08),
-            child: const Icon(Icons.broken_image_rounded, color: _pDim, size: 40),
+            child: const Icon(
+              Icons.broken_image_rounded,
+              color: _pDim,
+              size: 40,
+            ),
           ),
         ),
       ),
@@ -427,7 +432,10 @@ class ChatBubble extends ConsumerWidget {
                 right: 8,
                 bottom: 6,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 3,
+                  ),
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.45),
                     borderRadius: BorderRadius.circular(12),
@@ -458,7 +466,7 @@ class ChatBubble extends ConsumerWidget {
     final url = ref
         .read(backendVoiceMessageRepositoryProvider)
         .mediaUrl(message.mediaKey!);
-    final name = message.fileName ?? 'Hujjat';
+    final name = message.fileName ?? 'voice.documentFallback'.tr();
     final size = message.fileSize;
     final radius = BorderRadius.only(
       topLeft: const Radius.circular(18),
@@ -649,8 +657,8 @@ class ChatBubble extends ConsumerWidget {
                 if (url.isEmpty) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Audio URL olinmadi'),
+                    SnackBar(
+                      content: Text('voice.audioUrlFailed'.tr()),
                       backgroundColor: Colors.red,
                       duration: Duration(seconds: 2),
                     ),
@@ -673,8 +681,8 @@ class ChatBubble extends ConsumerWidget {
                 } catch (_) {
                   if (!context.mounted) return;
                   ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Ovozli xabar yuklanmadi'),
+                    SnackBar(
+                      content: Text('voiceChat.loadFailed'.tr()),
                       backgroundColor: Colors.red,
                       duration: Duration(seconds: 2),
                     ),

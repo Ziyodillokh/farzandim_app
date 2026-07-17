@@ -18,6 +18,7 @@
 // markAsRead + relatedRoute, swipe → o'chirish.
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_notification_repository.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
@@ -26,7 +27,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:intl/intl.dart' show DateFormat;
 
 // ════════════ Figma tokenlar ════════════
 const _bg = Color(0xFF00060A);
@@ -117,13 +117,17 @@ void showNotifDetailSheet(BuildContext context, AppNotification n) {
                 decoration: BoxDecoration(
                   color: n.type.color.withValues(alpha: 0.15),
                   borderRadius: BorderRadius.circular(22),
-                  border: Border.all(color: n.type.color.withValues(alpha: 0.3)),
+                  border: Border.all(
+                    color: n.type.color.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Icon(n.type.icon, size: 34, color: n.type.color),
               ),
               const SizedBox(height: 18),
               Text(
-                n.title.isNotEmpty ? n.title : 'Bildirishnoma',
+                n.title.isNotEmpty
+                    ? n.title
+                    : 'notifications.fallbackTitle'.tr(),
                 textAlign: TextAlign.center,
                 style: _unb(18),
               ),
@@ -176,7 +180,7 @@ void showNotifDetailSheet(BuildContext context, AppNotification n) {
               const SizedBox(height: 22),
               if (hasRoute) ...[
                 _PillButton(
-                  label: 'Ochish',
+                  label: 'common.open'.tr(),
                   primary: true,
                   onTap: () {
                     Navigator.of(ctx).pop();
@@ -186,7 +190,7 @@ void showNotifDetailSheet(BuildContext context, AppNotification n) {
                 const SizedBox(height: 10),
               ],
               _PillButton(
-                label: 'Yopish',
+                label: 'common.close'.tr(),
                 onTap: () => Navigator.of(ctx).pop(),
               ),
             ],
@@ -201,10 +205,18 @@ void showNotifDetailSheet(BuildContext context, AppNotification n) {
 /// yoki sana.
 String _relativeTime(DateTime dt) {
   final diff = DateTime.now().difference(dt);
-  if (diff.inMinutes < 1) return 'hozir';
-  if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-  if (diff.inHours < 24) return '${diff.inHours} soat oldin';
-  if (diff.inDays < 7) return '${diff.inDays} kun oldin';
+  if (diff.inMinutes < 1) return 'notifications.justNow'.tr();
+  if (diff.inMinutes < 60) {
+    return 'notifications.minutesAgo'.tr(
+      namedArgs: {'min': '${diff.inMinutes}'},
+    );
+  }
+  if (diff.inHours < 24) {
+    return 'notifications.hoursAgo'.tr(namedArgs: {'h': '${diff.inHours}'});
+  }
+  if (diff.inDays < 7) {
+    return 'notifications.daysAgo'.tr(namedArgs: {'d': '${diff.inDays}'});
+  }
   return DateFormat('dd.MM.yyyy').format(dt);
 }
 
@@ -247,7 +259,7 @@ class _NotifContent extends ConsumerWidget {
           ),
         ],
         const SizedBox(height: 16),
-        Text('Bildirishnomalar', style: _unb(17)),
+        Text('notifications.title'.tr(), style: _unb(17)),
         const SizedBox(height: 8),
         Expanded(
           child: itemsAsync.isLoading
@@ -284,7 +296,10 @@ class _NotifContent extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: _glassBorder),
               ),
-              child: Text('Yopish', style: _pop(15, w: FontWeight.w600)),
+              child: Text(
+                'common.close'.tr(),
+                style: _pop(15, w: FontWeight.w600),
+              ),
             ),
           ),
         ),
@@ -303,12 +318,12 @@ class _NotifContent extends ConsumerWidget {
     String? lastSection;
     for (final n in items) {
       final section = DateUtils.isSameDay(n.createdAt, now)
-          ? 'Bugun'
+          ? 'notifications.sectionToday'.tr()
           : DateUtils.isSameDay(
               n.createdAt,
               now.subtract(const Duration(days: 1)),
             )
-          ? 'Kecha'
+          ? 'notifications.sectionYesterday'.tr()
           : DateFormat('dd.MM.yyyy').format(n.createdAt);
       if (section != lastSection) {
         lastSection = section;
@@ -333,7 +348,9 @@ class _NotifContent extends ConsumerWidget {
           child: _NotifRow(
             icon: n.type.icon,
             imageUrl: n.imageUrl,
-            title: n.title.isNotEmpty ? n.title : 'Bildirishnoma',
+            title: n.title.isNotEmpty
+                ? n.title
+                : 'notifications.fallbackTitle'.tr(),
             subtitle: n.body,
             dimmed: n.isRead,
             onTap: () {

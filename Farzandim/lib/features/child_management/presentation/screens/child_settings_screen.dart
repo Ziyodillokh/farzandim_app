@@ -111,15 +111,17 @@ class ChildSettingsScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 54, 20, 12),
               child: Row(
                 children: [
-                  _BackButton(onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(AppRoutes.dashboard);
-                    }
-                  }),
+                  _BackButton(
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.dashboard);
+                      }
+                    },
+                  ),
                   const SizedBox(width: 14),
-                  Text('Bola sozlamalari', style: _unb(22)),
+                  Text('childSettings.headerTitle'.tr(), style: _unb(22)),
                 ],
               ),
             ),
@@ -141,10 +143,12 @@ class ChildSettingsScreen extends ConsumerWidget {
                   // ── Manzillar ──
                   _NavCard(
                     icon: SolarIconsBold.map,
-                    title: 'Manzillar',
+                    title: 'geoZones.headerTitle'.tr(),
                     subtitle: zoneCount == 0
-                        ? "Hali manzil qo'shilmagan"
-                        : '$zoneCount ta manzil',
+                        ? 'childSettings.noZones'.tr()
+                        : 'childSettings.zonesCount'.tr(
+                            namedArgs: {'count': '$zoneCount'},
+                          ),
                     onTap: () => context.push(AppRoutes.geoZonesPath(childId)),
                   ),
                   const SizedBox(height: 8),
@@ -509,7 +513,7 @@ class _UnknownSourcesCardState extends ConsumerState<_UnknownSourcesCard> {
   }
 }
 
-/// "O'chirishni taqiqlash" — inline toggle (Device Admin). Yoqilsa bola
+/// O'chirishni taqiqlash — inline toggle (Device Admin). Yoqilsa bola
 /// Farzandim'ni telefonidan o'chira olmaydi. Optimistik + xato'da qaytarish.
 class _UninstallProtectionCard extends ConsumerStatefulWidget {
   const _UninstallProtectionCard({
@@ -553,7 +557,10 @@ class _UninstallProtectionCardState
     } catch (_) {
       if (mounted) {
         setState(() => _blocked = previous);
-        AppToast.error(context, "O'zgartirib bo'lmadi. Qayta urinib ko'ring.");
+        AppToast.error(
+          context,
+          'childSettings.uninstallProtection.errorSnack'.tr(),
+        );
       }
     } finally {
       if (mounted) setState(() => _saving = false);
@@ -579,7 +586,7 @@ class _UninstallProtectionCardState
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  "Bola Farzandim ilovasini telefonidan o'chira olmaydi",
+                  'childSettings.uninstallProtection.subtitle'.tr(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _pop(13, c: _dim),

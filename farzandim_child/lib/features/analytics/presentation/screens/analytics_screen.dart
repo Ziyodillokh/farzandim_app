@@ -10,6 +10,7 @@
 // LOGIKA SAQLANGAN: provider'lar, navigatsiya, cheklov/bloklash mantiq
 // FAQAT KO'RINISH o'zgargan: parvoz night/glass tokenlar
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/repositories/backend_analytics_repository.dart';
@@ -32,8 +33,10 @@ class AnalyticsScreen extends ConsumerStatefulWidget {
 
 class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
     with SingleTickerProviderStateMixin {
-  late final TabController _tabController =
-      TabController(length: 3, vsync: this);
+  late final TabController _tabController = TabController(
+    length: 3,
+    vsync: this,
+  );
 
   @override
   void dispose() {
@@ -52,15 +55,12 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         scrolledUnderElevation: 0,
         surfaceTintColor: Colors.transparent,
         leading: IconButton(
-          icon: const Icon(
-            AppIcons.back,
-            color: AppColors.parvozText,
-          ),
+          icon: const Icon(AppIcons.back, color: AppColors.parvozText),
           onPressed: () =>
               context.canPop() ? context.pop() : context.go('/dashboard'),
         ),
-        title: const Text(
-          'Ilovalar',
+        title: Text(
+          'analytics.title'.tr(),
           style: TextStyle(
             color: AppColors.parvozText,
             fontSize: 18,
@@ -96,10 +96,10 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
                 fontWeight: FontWeight.w500,
               ),
               dividerColor: Colors.transparent,
-              tabs: const [
-                Tab(text: 'Barchasi'),
-                Tab(text: 'Vaqt cheklovi'),
-                Tab(text: 'Bloklangan'),
+              tabs: [
+                Tab(text: 'analytics.tabAll'.tr()),
+                Tab(text: 'analytics.tabLimited'.tr()),
+                Tab(text: 'analytics.tabBlocked'.tr()),
               ],
             ),
           ),
@@ -110,11 +110,7 @@ class _AnalyticsScreenState extends ConsumerState<AnalyticsScreen>
         bottom: false,
         child: TabBarView(
           controller: _tabController,
-          children: const [
-            _AllAppsTab(),
-            _LimitedAppsTab(),
-            _BlockedAppsTab(),
-          ],
+          children: const [_AllAppsTab(), _LimitedAppsTab(), _BlockedAppsTab()],
         ),
       ),
       bottomNavigationBar: const ChildBottomNavigation(),
@@ -149,16 +145,19 @@ class _LimitedAppsTab extends ConsumerWidget {
 
     return limitsAsync.when(
       loading: () => const _Loading(),
-      error: (_, __) => const _Empty(text: "Cheklovlar yuklanmadi"),
+      error: (_, __) => _Empty(text: 'analytics.limitsLoadError'.tr()),
       data: (limits) {
-        final limited = limits
-            .where((l) => l.isActive && !l.isFullBlock && l.dailyLimitMs > 0)
-            .toList()
-          ..sort((a, b) => a.dailyLimitMs.compareTo(b.dailyLimitMs));
+        final limited =
+            limits
+                .where(
+                  (l) => l.isActive && !l.isFullBlock && l.dailyLimitMs > 0,
+                )
+                .toList()
+              ..sort((a, b) => a.dailyLimitMs.compareTo(b.dailyLimitMs));
 
         if (limited.isEmpty) {
-          return const _Empty(
-            text: "Vaqt cheklovi qo'yilmagan",
+          return _Empty(
+            text: 'analytics.noLimits'.tr(),
             icon: AppIcons.hourglass,
             color: AppColors.warning,
           );
@@ -223,8 +222,8 @@ class _BlockedAppsTab extends ConsumerWidget {
             .toList();
 
         if (blocked.isEmpty) {
-          return const _Empty(
-            text: "Bloklangan ilova yo'q",
+          return _Empty(
+            text: 'analytics.noBlocked'.tr(),
             icon: AppIcons.block,
             color: AppColors.error,
           );
@@ -338,7 +337,9 @@ class _LimitTile extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.end,
             children: [
               Text(
-                overLimit ? 'Tugadi' : 'Qoldi',
+                overLimit
+                    ? 'analytics.timeUp'.tr()
+                    : 'analytics.remaining'.tr(),
                 style: const TextStyle(
                   fontSize: 10,
                   color: AppColors.parvozTextDim,
@@ -423,13 +424,13 @@ class _BlockTile extends StatelessWidget {
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: AppColors.error.withValues(alpha: 0.3)),
             ),
-            child: const Row(
+            child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Icon(AppIcons.block, color: AppColors.error, size: 13),
                 SizedBox(width: 4),
                 Text(
-                  'Bloklangan',
+                  'analytics.blockedBadge'.tr(),
                   style: TextStyle(
                     color: AppColors.error,
                     fontSize: 11,
@@ -448,11 +449,7 @@ class _BlockTile extends StatelessWidget {
 // ─── App icon ────────────────────────────────────────────────────────
 
 class _Icon extends StatelessWidget {
-  const _Icon({
-    required this.packageName,
-    this.iconBase64,
-    this.iconUrl,
-  });
+  const _Icon({required this.packageName, this.iconBase64, this.iconUrl});
 
   final String packageName;
   final String? iconBase64;
@@ -500,8 +497,12 @@ class _Icon extends StatelessWidget {
     final color =
         _palette[packageName.codeUnits.fold<int>(0, (a, b) => a + b) %
             _palette.length];
-    final initials =
-        packageName.split('.').last.padRight(2).substring(0, 2).toUpperCase();
+    final initials = packageName
+        .split('.')
+        .last
+        .padRight(2)
+        .substring(0, 2)
+        .toUpperCase();
     return Container(
       width: _size,
       height: _size,
@@ -554,10 +555,7 @@ class _Empty extends StatelessWidget {
         children: [
           Icon(icon, size: 48, color: color.withValues(alpha: 0.5)),
           const SizedBox(height: 12),
-          Text(
-            text,
-            style: TextStyle(color: color, fontSize: 14),
-          ),
+          Text(text, style: TextStyle(color: color, fontSize: 14)),
         ],
       ),
     );

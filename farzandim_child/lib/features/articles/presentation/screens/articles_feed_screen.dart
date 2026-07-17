@@ -5,6 +5,7 @@
 // Faqat ko'rinish night/glass'ga o'tkazildi (parvoz tokenlar + ParvozHeader).
 // LOGIKA SAQLANGAN — provider'lar, navigatsiya, refresh, ArticleCard tap.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/articles/data/models/article_model.dart';
 import 'package:farzandim_child/features/articles/presentation/providers/articles_providers.dart';
@@ -26,7 +27,7 @@ class ArticlesFeedScreen extends ConsumerWidget {
       body: Column(
         children: [
           ParvozHeader(
-            title: 'Maqolalar',
+            title: 'articles.title'.tr(),
             onBack: () => context.pop(),
           ),
           Expanded(
@@ -37,7 +38,7 @@ class ArticlesFeedScreen extends ConsumerWidget {
               ),
               error: (_, __) => _Empty(
                 icon: Icons.wifi_off_rounded,
-                text: 'Maqolalarni yuklab bo\'lmadi.',
+                text: 'articles.loadFailed'.tr(),
                 onRetry: () => ref.invalidate(backendArticlesProvider),
               ),
             ),
@@ -56,9 +57,9 @@ class _List extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (articles.isEmpty) {
-      return const _Empty(
+      return _Empty(
         icon: Icons.menu_book_rounded,
-        text: 'Hozircha maqola yo\'q. Tez orada qo\'shiladi!',
+        text: 'articles.empty'.tr(),
       );
     }
     return RefreshIndicator(
@@ -122,14 +123,16 @@ class _Empty extends StatelessWidget {
               onTap: onRetry,
               behavior: HitTestBehavior.opaque,
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 24,
+                  vertical: 12,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.parvozGreen,
                   borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Text(
-                  'Qayta urinish',
+                child: Text(
+                  'common.retry'.tr(),
                   style: TextStyle(
                     color: AppColors.parvozOnGreen,
                     fontSize: 14,

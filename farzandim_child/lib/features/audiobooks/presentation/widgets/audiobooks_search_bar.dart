@@ -2,6 +2,7 @@
 // AudiobooksSearchBar — qidirish field
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
 import 'package:flutter/material.dart';
@@ -24,7 +25,7 @@ class AudiobooksSearchBar extends ConsumerWidget {
         child: TextField(
           style: TextStyle(color: context.adaptive.textPrimary),
           decoration: InputDecoration(
-            hintText: 'Audiokitob qidirish...',
+            hintText: 'audiobooks.searchBarHint'.tr(),
             hintStyle: TextStyle(color: context.adaptive.textTertiary),
             prefixIcon: Icon(
               Icons.search,

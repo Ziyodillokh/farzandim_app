@@ -1,5 +1,5 @@
 // ARCH-13: monolit ekran fayli `part` fayllarga bo'lindi.
-// REDIZAYN (Figma): pastki varaq endi FAQAT "Harakatlar tarixi" timeline.
+// REDIZAYN (Figma): pastki varaq endi FAQAT Harakatlar tarixi timeline.
 // HERO (avatar/jonli), manzil kartasi, 3 metrika va Geo-zonalar tugmasi
 // olib tashlandi — manzil/holat suzuvchi `_StatusCard`ga, geo-zonalar
 // top-bar "qatlamlar" ikoniga ko'chdi.
@@ -96,7 +96,7 @@ class _LocationSheet extends StatelessWidget {
 // ═══════════════ HARAKATLAR TARIXI (timeline) ═══════════════
 
 /// Bugungi to'xtashlar (stops) vertikal timeline sifatida — har bir to'xtash
-/// geo-zonaga moslab nomlanadi (Uy/Maktab/... yoki "Noma'lum").
+/// geo-zonaga moslab nomlanadi (Uy/Maktab/... yoki Noma'lum).
 class _HistoryTimeline extends ConsumerWidget {
   const _HistoryTimeline({required this.child});
 
@@ -111,7 +111,10 @@ class _HistoryTimeline extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Harakatlar tarixi', style: _lunb(15, w: FontWeight.w700)),
+        Text(
+          'location.timeline.title'.tr(),
+          style: _lunb(15, w: FontWeight.w700),
+        ),
         const SizedBox(height: AppDimensions.sm + 2),
         stopsAsync.when(
           loading: () => const Padding(
@@ -127,10 +130,10 @@ class _HistoryTimeline extends ConsumerWidget {
               ),
             ),
           ),
-          error: (_, __) => _emptyHistory("Tarixni yuklab bo'lmadi"),
+          error: (_, __) => _emptyHistory('location.timeline.loadError'.tr()),
           data: (stops) {
             if (stops.isEmpty) {
-              return _emptyHistory('Bugun harakat qayd etilmadi');
+              return _emptyHistory('location.timeline.emptyToday'.tr());
             }
             // Eng yangisi tepada.
             final ordered = [...stops]
@@ -174,7 +177,7 @@ class _HistoryTimeline extends ConsumerWidget {
 }
 
 /// Bitta to'xtash qatori — chap relsda doira ikon + ulovchi chiziq,
-/// o'ngda vaqt + joy nomi + ko'cha + "Bordi"/"Kechikdi" belgisi.
+/// o'ngda vaqt + joy nomi + ko'cha + Bordi/"Kechikdi" belgisi.
 class _HistoryTile extends StatelessWidget {
   const _HistoryTile({
     required this.stop,
@@ -198,7 +201,7 @@ class _HistoryTile extends StatelessWidget {
     return SolarIconsBold.mapPoint;
   }
 
-  String get _place => zone?.name ?? "Noma'lum";
+  String get _place => zone?.name ?? 'location.timeline.unknownPlace'.tr();
 
   String get _time {
     final h = stop.arrivedAt.hour.toString().padLeft(2, '0');
@@ -276,7 +279,7 @@ class _HistoryTile extends StatelessWidget {
                           const SizedBox(height: 3),
                           Text(
                             stop.isOngoing
-                                ? 'Hozir shu yerda'
+                                ? 'location.timeline.currentlyHere'.tr()
                                 : stop.durationLabel,
                             style: _lpop(12, c: _dim),
                           ),
@@ -286,8 +289,8 @@ class _HistoryTile extends StatelessWidget {
                     // Har tugagan to'xtash uchun yashil "Bordi" belgisi
                     // (zonadan tashqari "Noma'lum" ham).
                     const SizedBox(width: 8),
-                    const _StatusBadge(
-                      label: 'Bordi',
+                    _StatusBadge(
+                      label: 'location.timeline.visitedBadge'.tr(),
                       color: _success,
                       icon: SolarIconsBold.checkCircle,
                     ),

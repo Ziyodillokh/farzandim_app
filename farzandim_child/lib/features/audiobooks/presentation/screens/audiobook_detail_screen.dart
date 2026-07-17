@@ -17,6 +17,7 @@
 // (birinchi ijroda aniqlanib saqlanadi); hali noma'lum bo'lsa "—".
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
@@ -44,7 +45,9 @@ class AudiobookDetailScreen extends ConsumerStatefulWidget {
 class _AudiobookDetailScreenState extends ConsumerState<AudiobookDetailScreen> {
   int _selectedPart = 0; // hozir tanlangan qism indeksi
 
-  String _partLabel(int i) => '${widget.series.partNumbers[i]}-qism';
+  String _partLabel(int i) => 'audiobooks.partLabel'.tr(
+    namedArgs: {'number': '${widget.series.partNumbers[i]}'},
+  );
 
   @override
   Widget build(BuildContext context) {

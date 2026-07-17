@@ -124,9 +124,9 @@ class _BadgeSpec {
 // QULFLANGAN ko'rinadi (avval 6 tasi hardcode `unlocked: true` edi → "hamma
 // yutuq ochiq bo'lib qolgan" bug'i). Real yutuq unlock bo'lganda `else`
 // shoxida katalogdan chinakam holat bilan ko'rsatiladi.
-const _previewBadges = [
+List<_BadgeSpec> get _previewBadges => [
   _BadgeSpec(
-    '1-kitob',
+    'gamification.achievementFirstBookTitle'.tr(),
     _purple,
     asset: 'assets/icons/badge_book1.png',
     title: 'Birinchi kitob yakunlandi!',
@@ -135,7 +135,7 @@ const _previewBadges = [
         "yangi yutuqni qo'lga kiritdingiz.",
   ),
   _BadgeSpec(
-    '7 kun uzluksiz',
+    'gamification.achievementStreak7Title'.tr(),
     _orange,
     asset: 'assets/icons/badge_7kun.png',
     title: '7 kun uzluksiz!',
@@ -144,7 +144,7 @@ const _previewBadges = [
         "yangi yutuqni qo'lga kiritdingiz.",
   ),
   _BadgeSpec(
-    'Math TOP-100',
+    'gamification.achievementMathTop100Title'.tr(),
     _green,
     asset: 'assets/icons/badge_top100.png',
     title: 'Math TOP-100!',
@@ -153,7 +153,7 @@ const _previewBadges = [
         '100 talik ichiga kirdingiz.',
   ),
   _BadgeSpec(
-    '10-kitob',
+    'gamification.achievementTenBooksTitle'.tr(),
     _red,
     asset: 'assets/icons/badge_book10.png',
     title: '10 ta kitob yakunlandi!',
@@ -162,7 +162,7 @@ const _previewBadges = [
         "yangi yutuqni qo'lga kiritdingiz.",
   ),
   _BadgeSpec(
-    '100 kun',
+    'gamification.achievementStreak100Title'.tr(),
     _amber,
     asset: 'assets/icons/badge_100kun.png',
     title: '100 kun uzluksiz!',
@@ -171,7 +171,7 @@ const _previewBadges = [
         "yangi yutuqni qo'lga kiritdingiz.",
   ),
   _BadgeSpec(
-    'Math TOP-10',
+    'gamification.achievementMathTop10Title'.tr(),
     _stepBlue,
     asset: 'assets/icons/badge_top10.png',
     title: 'Math TOP-10!',
@@ -382,7 +382,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             color: _amber,
                             size: 26,
                           ),
-                          value: '$streak kun',
+                          value: 'statistics.daysCount'.tr(
+                            namedArgs: {'days': '$streak'},
+                          ),
                         ),
                       ),
                       const SizedBox(width: 10),
@@ -456,8 +458,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   height: 40,
                                   alignment: Alignment.center,
                                   decoration: BoxDecoration(
-                                    color: const Color(0xFFFF4D6D)
-                                        .withValues(alpha: 0.16),
+                                    color: const Color(
+                                      0xFFFF4D6D,
+                                    ).withValues(alpha: 0.16),
                                     borderRadius: BorderRadius.circular(12),
                                   ),
                                   child: const Icon(
@@ -469,7 +472,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 const SizedBox(width: 12),
                                 Expanded(
                                   child: Text(
-                                    'Saqlangan videolar',
+                                    'profile.savedVideos'.tr(),
                                     style: _unb(15),
                                   ),
                                 ),
@@ -485,7 +488,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Yutuqlar', style: _unb(16)),
+                            Text('profile.achievements'.tr(), style: _unb(16)),
                             Text(
                               countText,
                               style: _unb(14, w: FontWeight.w600),
@@ -878,7 +881,7 @@ class _BadgeSheet extends StatelessWidget {
                 border: Border.all(color: _glassBorder),
               ),
               child: Text(
-                spec.unlocked ? 'Qabul qilish' : 'OK',
+                spec.unlocked ? 'profile.accept'.tr() : 'OK',
                 style: _pop(15, w: FontWeight.w600),
               ),
             ),

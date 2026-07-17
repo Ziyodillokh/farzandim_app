@@ -6,6 +6,7 @@
 // butun row tap bilan ochiladi: tap → `markAsRecording` + recording
 // ekraniga o'tish. So'rov yo'q yoki expired bo'lsa SizedBox.shrink.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/video_message/presentation/providers/video_request_providers.dart';
@@ -88,12 +89,12 @@ class _Banner extends ConsumerWidget {
               ),
             ),
             const SizedBox(width: 16),
-            const Expanded(
+            Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    "Otangiz video so'radi",
+                    'videoMessage.requestTitle'.tr(),
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 16,
@@ -102,7 +103,7 @@ class _Banner extends ConsumerWidget {
                   ),
                   SizedBox(height: 4),
                   Text(
-                    'Yozish uchun bosing',
+                    'videoMessage.requestSubtitle'.tr(),
                     style: TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13,

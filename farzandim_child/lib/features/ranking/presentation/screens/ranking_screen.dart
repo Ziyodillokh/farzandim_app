@@ -12,6 +12,7 @@
 //
 // Real: filteredUsersProvider (+ viloyat filtri). Bo'sh bo'lsa PREVIEW.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
@@ -92,13 +93,13 @@ class _EmptyRanking extends StatelessWidget {
           ),
           const SizedBox(height: 14),
           Text(
-            'Bu yerda hali reyting yo\'q',
+            'ranking.emptyTitle'.tr(),
             textAlign: TextAlign.center,
             style: _unb(16),
           ),
           const SizedBox(height: 8),
           Text(
-            'Test ishlab DON to\'plang — reytingda paydo bo\'lasiz.',
+            'ranking.emptySubtitle'.tr(),
             textAlign: TextAlign.center,
             style: _pop(13, c: Colors.white.withValues(alpha: 0.6)),
           ),
@@ -231,7 +232,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                       ),
                       Expanded(
                         child: Text(
-                          'DON reytingi',
+                          'ranking.title'.tr(),
                           textAlign: TextAlign.center,
                           style: _unb(20),
                         ),
@@ -278,42 +279,42 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                       // Ro'yxat bo'sh bo'lsa bo'sh karta chiqmasin.
                       if (rows.isNotEmpty)
                         Container(
-                        padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF0A0F16),
-                          borderRadius: BorderRadius.circular(28),
-                        ),
-                        child: Column(
-                          children: [
-                            // Yig'ilganda 1/2/3 ham panel ichida qator.
-                            if (top3.isNotEmpty)
-                              AnimatedCrossFade(
-                                duration: const Duration(milliseconds: 260),
-                                sizeCurve: Curves.easeOutCubic,
-                                crossFadeState: _collapsed
-                                    ? CrossFadeState.showSecond
-                                    : CrossFadeState.showFirst,
-                                firstChild: const SizedBox(
-                                  width: double.infinity,
-                                ),
-                                secondChild: Column(
-                                  children: [
-                                    for (final r in top3) ...[
-                                      _RankTile(row: r, highlight: r.me),
-                                      const SizedBox(height: 8),
+                          padding: const EdgeInsets.fromLTRB(10, 12, 10, 6),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF0A0F16),
+                            borderRadius: BorderRadius.circular(28),
+                          ),
+                          child: Column(
+                            children: [
+                              // Yig'ilganda 1/2/3 ham panel ichida qator.
+                              if (top3.isNotEmpty)
+                                AnimatedCrossFade(
+                                  duration: const Duration(milliseconds: 260),
+                                  sizeCurve: Curves.easeOutCubic,
+                                  crossFadeState: _collapsed
+                                      ? CrossFadeState.showSecond
+                                      : CrossFadeState.showFirst,
+                                  firstChild: const SizedBox(
+                                    width: double.infinity,
+                                  ),
+                                  secondChild: Column(
+                                    children: [
+                                      for (final r in top3) ...[
+                                        _RankTile(row: r, highlight: r.me),
+                                        const SizedBox(height: 8),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
-                              ),
-                            // O'z qatori (r.me) ro'yxatda ham ko'k bilan
-                            // ajralib turadi — scroll qilinganda topiladi.
-                            for (final r in rest) ...[
-                              _RankTile(row: r, highlight: r.me),
-                              const SizedBox(height: 8),
+                              // O'z qatori (r.me) ro'yxatda ham ko'k bilan
+                              // ajralib turadi — scroll qilinganda topiladi.
+                              for (final r in rest) ...[
+                                _RankTile(row: r, highlight: r.me),
+                                const SizedBox(height: 8),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
                     ],
                   ),
                 ),
@@ -346,7 +347,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           borderRadius: BorderRadius.circular(20),
           side: const BorderSide(color: _glassBorder),
         ),
-        title: Text('DON reytingi', style: _unb(16)),
+        title: Text('ranking.helpTitle'.tr(), style: _unb(16)),
         content: Text(
           "Kitob o'qish, test ishlash va kunlik faollik uchun DON ball "
           "to'planadi. Reyting viloyat yoki butun O'zbekiston bo'yicha "
@@ -356,7 +357,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
-            child: Text('Tushunarli', style: _pop(14, c: _blue)),
+            child: Text('ranking.helpClose'.tr(), style: _pop(14, c: _blue)),
           ),
         ],
       ),
@@ -397,7 +398,7 @@ class _RegionFilter extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Viloyat bo\'yicha',
+                      'ranking.byRegion'.tr(),
                       style: _pop(13, w: FontWeight.w600),
                     ),
                     const SizedBox(width: 6),
@@ -418,7 +419,7 @@ class _RegionFilter extends ConsumerWidget {
               Padding(
                 padding: const EdgeInsets.only(left: 12),
                 child: Text(
-                  "Butun O'zbekiston",
+                  'ranking.allUzbekistan'.tr(),
                   style: _pop(13.5, w: FontWeight.w500),
                 ),
               ),
@@ -819,7 +820,10 @@ class _RankTile extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
                 border: Border.all(color: _blue),
               ),
-              child: Text('Siz', style: _pop(10, w: FontWeight.w700)),
+              child: Text(
+                'ranking.you'.tr(),
+                style: _pop(10, w: FontWeight.w700),
+              ),
             ),
             const SizedBox(width: 8),
           ],

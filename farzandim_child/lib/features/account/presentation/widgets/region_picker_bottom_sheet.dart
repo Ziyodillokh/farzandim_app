@@ -6,6 +6,7 @@
 // chaqiriladi va foydalanuvchi tanlagan viloyat string sifatida
 // qaytariladi (yoki `null` agar "X" tugma bilan yopilsa).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -52,8 +53,8 @@ class RegionPickerBottomSheet extends StatelessWidget {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                const Text(
-                  'Hududni tanlang',
+                Text(
+                  'account.regionPicker.title'.tr(),
                   style: TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,

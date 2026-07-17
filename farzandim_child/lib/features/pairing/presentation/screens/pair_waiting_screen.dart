@@ -10,6 +10,7 @@
 //   REJECTED → error UI + qaytishga taklif
 //   EXPIRED  → error UI + qaytishga taklif
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:async';
 
@@ -24,8 +25,7 @@ class PairWaitingScreen extends ConsumerStatefulWidget {
   const PairWaitingScreen({super.key});
 
   @override
-  ConsumerState<PairWaitingScreen> createState() =>
-      _PairWaitingScreenState();
+  ConsumerState<PairWaitingScreen> createState() => _PairWaitingScreenState();
 }
 
 class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
@@ -47,9 +47,7 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
   void _startCountdown() {
     _countdownTimer?.cancel();
     _countdownTimer = Timer.periodic(const Duration(seconds: 1), (_) {
-      final exp = ref
-          .read(pairingStateProvider)
-          .pairRequestExpiresAt;
+      final exp = ref.read(pairingStateProvider).pairRequestExpiresAt;
       if (exp == null) return;
       final diff = exp.difference(DateTime.now());
       if (!mounted) return;
@@ -91,10 +89,10 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
         // Kutamiz, hech narsa qilmaymiz.
         break;
       case PairStatusApproved(
-            :final parentUid,
-            :final childId,
-            :final currentUserId,
-          ):
+        :final parentUid,
+        :final childId,
+        :final currentUserId,
+      ):
         _pollTimer?.cancel();
         _countdownTimer?.cancel();
         await ref
@@ -166,9 +164,7 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
                 decoration: BoxDecoration(
                   color: accent.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  border: Border.all(
-                    color: accent.withValues(alpha: 0.3),
-                  ),
+                  border: Border.all(color: accent.withValues(alpha: 0.3)),
                 ),
                 alignment: Alignment.center,
                 child: isError
@@ -228,7 +224,9 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text(
-                        'Qolgan vaqt: ${_formatLeft(_left)}',
+                        'pairing.wait.timeLeft'.tr(
+                          namedArgs: {'time': _formatLeft(_left)},
+                        ),
                         style: TextStyle(
                           color: pv.pvGreen,
                           fontSize: 15,
@@ -248,14 +246,13 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: pv.pvGreen,
                       foregroundColor: pv.pvOnGreen,
-                      padding:
-                          const EdgeInsets.symmetric(vertical: 16),
+                      padding: const EdgeInsets.symmetric(vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(999),
                       ),
                     ),
-                    child: const Text(
-                      'Qaytadan urinish',
+                    child: Text(
+                      'common.retry'.tr(),
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w600,
@@ -267,11 +264,8 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
                 TextButton(
                   onPressed: _backToPairing,
                   child: Text(
-                    'Bekor qilish',
-                    style: TextStyle(
-                      color: pv.pvTextDim,
-                      fontSize: 15,
-                    ),
+                    'common.cancel'.tr(),
+                    style: TextStyle(color: pv.pvTextDim, fontSize: 15),
                   ),
                 ),
             ],
@@ -282,9 +276,9 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
   }
 
   String _titleFor() {
-    if (_result == 'REJECTED') return 'Rad etildi';
-    if (_result == 'EXPIRED') return 'Muddat tugadi';
-    return "Ota-onangiz tasdiqini kutmoqdamiz";
+    if (_result == 'REJECTED') return 'pairing.wait.rejectedTitle'.tr();
+    if (_result == 'EXPIRED') return 'pairing.wait.expiredTitle'.tr();
+    return 'pairing.wait.waitingTitle'.tr();
   }
 
   String _subtitleFor() {

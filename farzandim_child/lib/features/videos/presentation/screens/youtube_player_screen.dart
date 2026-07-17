@@ -4,13 +4,14 @@
 // webview'da ochamiz — sahifa haqiqiy https domende bo'lgani uchun iframe
 // referer'i to'g'ri va YouTube embed ishlaydi (admin paneldagidek).
 //
-// UX: portretda video 16:9 yuqorida, ostida sarlavha + "To'liq ekran"
+// UX: portretda video 16:9 yuqorida, ostida sarlavha + To'liq ekran
 // tugmasi + tavsif (qora bo'sh joy o'rniga foydali kontent). Gorizontal
 // (to'liq ekran) — tugma bilan: qurilma landscape'ga buriladi, immersive
 // rejim, webview butun ekranni qoplaydi (ClassicVideoPlayer bilan izchil).
 //
 // To'g'ridan-to'g'ri .mp4 havolalar esa ClassicVideoPlayerScreen'da.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -166,11 +167,11 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
   Widget build(BuildContext context) {
     final controller = _controller;
     if (controller == null) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AppColors.parvozBg,
         body: Center(
           child: Text(
-            "Video havolasi noto'g'ri",
+            'videos.youtube.invalidLink'.tr(),
             style: TextStyle(color: AppColors.parvozTextDim),
           ),
         ),
@@ -208,7 +209,9 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final parts = <String>[];
     final cat = v.category.trim();
     if (cat.isNotEmpty && cat != 'Boshqa') parts.add(cat);
-    parts.add("${_fmtViews(v.views)} ko'rish");
+    parts.add(
+      'videos.viewsCount'.tr(namedArgs: {'count': _fmtViews(v.views)}),
+    );
     // Davomiylik faqat MA'LUM bo'lsa (0:00 mock ko'rsatmaymiz).
     if (v.durationSeconds > 0 && v.duration.trim().isNotEmpty) {
       parts.add(v.duration.trim());
@@ -244,11 +247,14 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     final vcat = video.category.trim().toLowerCase();
     final catArticles = ref
         .watch(effectiveArticlesProvider)
-        .where((a) => a.category.trim().toLowerCase() == vcat && vcat.isNotEmpty)
+        .where(
+          (a) => a.category.trim().toLowerCase() == vcat && vcat.isNotEmpty,
+        )
         .toList();
     final vHash = _stableHash(video.id);
-    final ArticleModel? injectedArticle =
-        catArticles.isEmpty ? null : catArticles[vHash % catArticles.length];
+    final ArticleModel? injectedArticle = catArticles.isEmpty
+        ? null
+        : catArticles[vHash % catArticles.length];
     // Random-ish o'rin: 2..6 orasида (related qisqa bo'lsa oxiriga clamp).
     final int articleSlot = related.isEmpty
         ? 0
@@ -592,7 +598,7 @@ class _ChipsHeader extends SliverPersistentHeaderDelegate {
         itemBuilder: (_, i) {
           final c = items[i];
           return _CategoryChip(
-            label: c ?? 'Hammasi',
+            label: c ?? 'videos.categoryAllAlt'.tr(),
             active: c == selected,
             onTap: () => onSelected(c),
           );

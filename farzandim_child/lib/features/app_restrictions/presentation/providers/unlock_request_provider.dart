@@ -2,6 +2,7 @@
 // unlock_request_provider — "Ruxsat so'rash" oqimi (Riverpod)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_unlock_request_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/unlock_request_bridge.dart';
@@ -18,8 +19,11 @@ final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
   final repo = ref.watch(backendUnlockRequestRepositoryProvider);
 
   return UnlockRequestBridge((packageName) async {
-    final ctx =
-        ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+    final ctx = ref
+        .read(routerProvider)
+        .routerDelegate
+        .navigatorKey
+        .currentContext;
     if (ctx == null || !ctx.mounted) return;
 
     // Bola qancha vaqt va nima uchun so'rashini kiritadi.
@@ -34,15 +38,9 @@ final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
     );
     if (!ctx.mounted) return;
     if (ok) {
-      AppSnackBar.info(
-        ctx,
-        "So'rov yuborildi. Ota-onangiz qarorini kuting…",
-      );
+      AppSnackBar.info(ctx, 'unlockRequest.sent'.tr());
     } else {
-      AppSnackBar.error(
-        ctx,
-        "So'rovni yuborib bo'lmadi. Qaytadan urinib ko'ring.",
-      );
+      AppSnackBar.error(ctx, 'unlockRequest.sendError'.tr());
     }
   });
 });

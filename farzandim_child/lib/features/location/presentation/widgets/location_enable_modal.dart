@@ -2,6 +2,7 @@
 // bolada chiqadigan modal. "Yoqish" bosilsa ruxsat so'raladi va/yoki tizim
 // joylashuv sozlamasi ochiladi (Android'da ilova GPS'ni o'zi yoqolmaydi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -88,7 +89,7 @@ class LocationEnableModal extends StatelessWidget {
               ),
               const SizedBox(height: 22),
               Text(
-                'Ota-onangiz joylashuvni yoqishingizni so\'rayapti',
+                'location.enableModal.title'.tr(),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.unbounded(
                   fontSize: 16,
@@ -122,7 +123,7 @@ class LocationEnableModal extends StatelessWidget {
                     onTap: () => _enable(context),
                     child: Center(
                       child: Text(
-                        'Yoqish',
+                        'common.enable'.tr(),
                         style: GoogleFonts.poppins(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -137,7 +138,7 @@ class LocationEnableModal extends StatelessWidget {
               TextButton(
                 onPressed: () => Navigator.of(context).pop(),
                 child: Text(
-                  'Keyinroq',
+                  'common.later'.tr(),
                   style: GoogleFonts.poppins(fontSize: 14, color: _pDim),
                 ),
               ),

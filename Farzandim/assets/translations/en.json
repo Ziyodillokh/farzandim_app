@@ -115,7 +115,8 @@
         "terms": "Terms of Service",
         "suffix": "."
       },
-      "submitButton": "Sign up"
+      "submitButton": "Sign up",
+      "sendEmailError": "Couldn't send email"
     },
     "forgotPassword": {
       "title": "Reset password",
@@ -177,6 +178,43 @@
       "frameHint": "Place the QR code from your main device inside the frame",
       "whereHint": "Shown via Active sessions → Add another account",
       "cameraError": "Camera couldn't be opened. Grant camera permission in settings."
+    },
+    "sessionAccess": {
+      "headerTitle": "Access requests",
+      "empty": "No open requests",
+      "newDeviceTrying": "A new device is trying to sign in",
+      "reject": "Reject",
+      "approve": "Approve",
+      "approveFailed": "Couldn't approve. Please try again.",
+      "requestRejected": "Request rejected",
+      "rejectFailed": "Couldn't reject. Please try again.",
+      "intro": {
+        "title": "Device limit",
+        "body": "This account has 2 active devices. To sign in from a third, request permission from your connected devices.",
+        "requestButton": "Request access"
+      },
+      "waiting": {
+        "title": "Request sent",
+        "body": "A notification was sent to your 2 connected devices. Wait for their approval — don't close this screen."
+      },
+      "waitingSlot": {
+        "title": "Approved!",
+        "body": "Now wait for one of the connected devices to be signed out. You'll sign in automatically once it is."
+      },
+      "rejected": {
+        "title": "Rejected",
+        "body": "The access request was rejected."
+      },
+      "expired": {
+        "title": "Expired",
+        "body": "The request has expired. Please try again.",
+        "retry": "Sign in again"
+      },
+      "requestFailed": "Request failed. Check your connection and try again."
+    },
+    "googleWeb": {
+      "title": "Continue with Google",
+      "subtitle": "Tap the Google button below"
     }
   },
   "formatters": {
@@ -198,7 +236,15 @@
     },
     "unlock": {
       "granted": "Granted {minutes} minutes.",
-      "denied": "Request denied."
+      "denied": "Request denied.",
+      "sheetTitle": "Extra time",
+      "requestWithMinutes": "{name} is requesting {minutes} more minutes for \"{subject}\".",
+      "requestNoMinutes": "{name} is requesting more time for \"{subject}\". How much will you give?",
+      "screenTimeSubject": "screen time",
+      "otherDurationLabel": "Give a different duration:",
+      "approveMinutes": "Approve ({minutes} min)",
+      "minutesChip": "{minutes} min",
+      "deny": "Deny"
     },
     "detail": {
       "notFound": "This notification is no longer available."
@@ -306,7 +352,11 @@
         "6": "Sa",
         "7": "Su"
       }
-    }
+    },
+    "donBalance": "DON balance",
+    "dailySteps": "Daily steps",
+    "dailyStreak": "Daily streak",
+    "streakDays": "{count} days"
   },
   "schedules": {
     "headerTitle": "Schedules",
@@ -358,6 +408,13 @@
       "friday": "Fr",
       "saturday": "Sa",
       "sunday": "Su"
+    },
+    "type": {
+      "school": "School",
+      "sport": "Sport",
+      "sleep": "Sleep",
+      "meal": "Meal",
+      "custom": "Other"
     }
   },
   "fullScreenMap": {
@@ -379,7 +436,16 @@
       "title": "Search address",
       "hint": "Mosque, school, street...",
       "prompt": "Type a place name — nearest ones show first",
-      "noResults": "Nothing found"
+      "noResults": "Nothing found",
+      "promptSubtitle": "Type an address or tap the buttons above to show nearby places.",
+      "noResultsSubtitle": "Try another word.",
+      "category": {
+        "mosque": "Mosque",
+        "school": "School",
+        "park": "Park",
+        "hospital": "Hospital",
+        "shop": "Shop"
+      }
     },
     "cancelButton": "Cancel",
     "mapHint": "Tap on the map to set the center, or drag the marker",
@@ -576,7 +642,20 @@
     "error": {
       "title": "Error loading location"
     },
-    "noChildren": "No children added. First create a child in Dashboard."
+    "noChildren": "No children added. First create a child in Dashboard.",
+    "mapTitle": "Location",
+    "status": {
+      "onStreet": "On the street",
+      "inZone": "At {zone}"
+    },
+    "timeline": {
+      "title": "Movement history",
+      "loadError": "Couldn't load history",
+      "emptyToday": "No movement recorded today",
+      "unknownPlace": "Unknown",
+      "currentlyHere": "Currently here",
+      "visitedBadge": "Visited"
+    }
   },
   "deviceSettings": {
     "permissions": {
@@ -1000,7 +1079,9 @@
       "retry": "Retry",
       "androidDevice": "Android device",
       "browser": "Browser",
-      "unknownDevice": "Unknown device"
+      "unknownDevice": "Unknown device",
+      "newDeviceApprovedTitle": "New device approved",
+      "releaseOneDeviceBody": "To let it in, sign out one of the devices below."
     },
     "pushTest": {
       "menuTitle": "Push check (test)",
@@ -1072,7 +1153,15 @@
     "notPaired": "Child device not connected yet",
     "sendError": "Message not sent",
     "voiceDeviceOnly": "Voice messages can only be sent from the phone",
-    "videoDeviceOnly": "Video can only be sent from the phone"
+    "videoDeviceOnly": "Video can only be sent from the phone",
+    "noChildren": "No child added yet",
+    "startConversation": "Start a conversation",
+    "previewVideo": "📹 Video message",
+    "previewImage": "📷 Photo",
+    "previewFile": "📎 File",
+    "previewVoice": "🎤 Voice message",
+    "previewYesterday": "yesterday",
+    "previewDaysAgo": "{days} d"
   },
   "dailyLimit": {
     "title": "Daily time limit",
@@ -1175,7 +1264,8 @@
       "deletedSnack": "{name} deleted",
       "errorTitle": "Error loading data",
       "errorPrefix": "Error: {error}",
-      "repairAction": "Reconnect (QR)"
+      "repairAction": "Reconnect (QR)",
+      "regenerateFailed": "Couldn't generate a new code. Please try again."
     },
     "addEdit": {
       "addTitle": "Add new child",
@@ -1254,6 +1344,13 @@
       "charging": "{level}% (charging)",
       "noWifi": "No Wi-Fi",
       "never": "Never"
+    },
+    "account": {
+      "nameLabel": "Child's name",
+      "phoneLabel": "Phone number",
+      "birthYearLabel": "Birth year",
+      "generateQr": "Generate QR code",
+      "reconnect": "Reconnect child"
     }
   },
   "appPermissions": {
@@ -1430,5 +1527,52 @@
       "updateButton": "Update",
       "dismissTooltip": "Dismiss (24 hours)"
     }
+  },
+  "childSettings": {
+    "headerTitle": "Child settings",
+    "noZones": "No places added yet",
+    "zonesCount": "{count} places",
+    "uninstallProtection": {
+      "title": "Prevent uninstall",
+      "subtitle": "Your child can't uninstall the Farzandim app from their phone",
+      "errorSnack": "Couldn't update. Please try again."
+    }
+  },
+  "gender": {
+    "male": "Boy",
+    "female": "Girl"
+  },
+  "onboarding": {
+    "version": "Version - 1.0"
+  },
+  "reports": {
+    "booksRead": "Books read",
+    "testsDone": "Tests completed",
+    "dailySteps": "Daily steps",
+    "dailyProgress": "Daily progress",
+    "donBalance": "DON balance",
+    "noRatingYet": "No rating yet",
+    "avgScreenTime": "Average daily screen time",
+    "noScreenTimeData": "No screen time data",
+    "noAppsData": "No app data"
+  },
+  "notificationPrefs": {
+    "headerTitle": "Reminders",
+    "description": "Positive nudges sent to your child. Limited per day and not sent during quiet hours.",
+    "studyTitle": "Lesson / test reminder",
+    "studySubtitle": "\"Try solving one test today 📚\"",
+    "healthTitle": "Sports / health reminder",
+    "healthSubtitle": "\"How about a little exercise 🏃\"",
+    "contentTitle": "New content reminder",
+    "contentSubtitle": "\"New videos are waiting for you 🎬\"",
+    "quietHours": "Quiet hours",
+    "notSet": "Not set",
+    "quietStartHelp": "Quiet hours start",
+    "quietEndHelp": "Quiet hours end",
+    "saveError": "Failed to save"
+  },
+  "categoryBlock": {
+    "title": "Block by category",
+    "subtitle": "Block a whole category of apps with one tap. Newly installed apps are covered automatically too."
   }
 }

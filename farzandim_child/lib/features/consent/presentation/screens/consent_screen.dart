@@ -16,6 +16,7 @@
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:flutter/material.dart';
@@ -39,10 +40,8 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
   @override
   void initState() {
     super.initState();
-    _holdController = AnimationController(
-      vsync: this,
-      duration: _holdDuration,
-    )..addStatusListener(_onHoldStatus);
+    _holdController = AnimationController(vsync: this, duration: _holdDuration)
+      ..addStatusListener(_onHoldStatus);
   }
 
   @override
@@ -98,8 +97,8 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                       const SizedBox(height: 24),
                       const _ShieldBadge(color: AppColors.parvozGreen),
                       const SizedBox(height: 24),
-                      const Text(
-                        'Bu ilova ota-onangiz\nruxsati bilan ishlaydi',
+                      Text(
+                        'consent.title'.tr(),
                         style: TextStyle(
                           color: AppColors.parvozText,
                           fontSize: 26,
@@ -118,34 +117,39 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                         ),
                       ),
                       const SizedBox(height: 24),
-                      const _ConsentBullet(
+                      _ConsentBullet(
                         icon: Icons.location_on_rounded,
-                        title: 'Joylashuv',
-                        text: 'Ilova bolaning joriy joylashuvini va '
+                        title: 'consent.locationTitle'.tr(),
+                        text:
+                            'Ilova bolaning joriy joylashuvini va '
                             'harakat tarixini ota-onaga ko\'rsatadi.',
                       ),
-                      const _ConsentBullet(
+                      _ConsentBullet(
                         icon: Icons.apps_rounded,
-                        title: 'Ilova foydalanish',
-                        text: 'Qaysi ilovalarda qancha vaqt sarflanganini '
+                        title: 'consent.usageTitle'.tr(),
+                        text:
+                            'Qaysi ilovalarda qancha vaqt sarflanganini '
                             'kuzatadi va ota-onaga hisobot beradi.',
                       ),
-                      const _ConsentBullet(
+                      _ConsentBullet(
                         icon: Icons.notifications_active_rounded,
-                        title: 'Bildirishnomalar',
-                        text: 'Ota-ona yuborgan xabarlar, eslatma va '
+                        title: 'consent.notificationsTitle'.tr(),
+                        text:
+                            'Ota-ona yuborgan xabarlar, eslatma va '
                             'SOS push-xabarlarini qabul qiladi.',
                       ),
-                      const _ConsentBullet(
+                      _ConsentBullet(
                         icon: Icons.shield_rounded,
-                        title: 'Xavfsizlik',
-                        text: "Bolaning qurilma ma'lumotlari (batareya, "
+                        title: 'consent.securityTitle'.tr(),
+                        text:
+                            "Bolaning qurilma ma'lumotlari (batareya, "
                             "model) ota-onaga yuboriladi.",
                       ),
-                      const _ConsentBullet(
+                      _ConsentBullet(
                         icon: Icons.lock_rounded,
-                        title: 'Maxfiylik',
-                        text: 'Ma\'lumotlar shifrlangan holda saqlanadi va '
+                        title: 'consent.privacyTitle'.tr(),
+                        text:
+                            'Ma\'lumotlar shifrlangan holda saqlanadi va '
                             'uchinchi shaxslarga berilmaydi.',
                       ),
                       const SizedBox(height: 16),
@@ -165,10 +169,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                 "Tugmani 3 sekund ushlab turing — bu ota-ona "
                 "ekanligingizni tasdiqlaydi.",
                 textAlign: TextAlign.center,
-                style: TextStyle(
-                  color: AppColors.parvozTextDim,
-                  fontSize: 12,
-                ),
+                style: TextStyle(color: AppColors.parvozTextDim, fontSize: 12),
               ),
             ],
           ),
@@ -192,11 +193,7 @@ class _ShieldBadge extends StatelessWidget {
         shape: BoxShape.circle,
         border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
       ),
-      child: Icon(
-        Icons.verified_user_rounded,
-        color: color,
-        size: 38,
-      ),
+      child: Icon(Icons.verified_user_rounded, color: color, size: 38),
     );
   }
 }
@@ -304,9 +301,7 @@ class _LongPressConfirmButton extends StatelessWidget {
                     widthFactor: progress,
                     heightFactor: 1,
                     alignment: Alignment.centerLeft,
-                    child: Container(
-                      color: AppColors.parvozBlue,
-                    ),
+                    child: Container(color: AppColors.parvozBlue),
                   ),
                 ),
                 Center(
@@ -326,8 +321,8 @@ class _LongPressConfirmButton extends StatelessWidget {
                       ],
                       Text(
                         confirming
-                            ? 'Tasdiqlanmoqda...'
-                            : 'Ota-onam tasdiqlaydi',
+                            ? 'consent.confirming'.tr()
+                            : 'consent.confirmButton'.tr(),
                         style: const TextStyle(
                           color: AppColors.parvozOnGreen,
                           fontSize: 17,

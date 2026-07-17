@@ -9,6 +9,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -133,7 +134,7 @@ class VoiceMessageUploadNotifier extends StateNotifier<VoiceUploadState> {
     if (!pairing.isPaired || pairing.parentUid == null) {
       state = state.copyWith(
         status: VoiceUploadStatus.error,
-        errorMessage: 'Pair qilingan emas',
+        errorMessage: 'common.notPaired'.tr(),
       );
       return false;
     }

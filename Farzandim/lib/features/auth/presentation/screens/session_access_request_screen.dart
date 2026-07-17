@@ -1,11 +1,12 @@
 // 3-qurilma kirish so'rovi — "ruxsat so'rash" + tasdiqni kutish (poll).
 //
 // Login 2-qurilma limitiga tushganda bu ekranga o'tiladi (pendingToken bilan).
-// "Ruxsat so'rash" → 2 qurilmaga push → tasdiq + slot bo'shashini kutadi →
+// Ruxsat so'rash → 2 qurilmaga push → tasdiq + slot bo'shashini kutadi →
 // APPROVED + tokenlar kelsa avtomatik kiradi.
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_session_access_repository.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
@@ -65,7 +66,7 @@ class _SessionAccessRequestScreenState
       setState(() {
         _busy = false;
         _phase = _Phase.error;
-        _error = "So'rov yuborilmadi. Internetni tekshirib qayta urining.";
+        _error = 'auth.sessionAccess.requestFailed'.tr();
       });
     }
   }
@@ -165,12 +166,10 @@ class _SessionAccessRequestScreenState
         return _card(
           icon: Icons.devices_rounded,
           iconColor: ParvozColors.blue,
-          title: 'Qurilma limiti',
-          body:
-              'Bu akauntda 2 ta qurilma faol. Uchinchi qurilmadan kirish uchun '
-              "ulangan qurilmalaringizdan ruxsat so'rang.",
+          title: 'auth.sessionAccess.intro.title'.tr(),
+          body: 'auth.sessionAccess.intro.body'.tr(),
           button: ParvozPrimaryButton(
-            label: "Ruxsat so'rash",
+            label: 'auth.sessionAccess.intro.requestButton'.tr(),
             loading: _busy,
             onPressed: _request,
           ),
@@ -179,17 +178,15 @@ class _SessionAccessRequestScreenState
         return _card(
           icon: Icons.notifications_active_rounded,
           iconColor: ParvozColors.blue,
-          title: "So'rov yuborildi",
-          body:
-              'Ulangan 2 ta qurilmangizga bildirishnoma bordi. '
-              'Ular tasdiqlaguncha kuting — ekranni yopmang.',
+          title: 'auth.sessionAccess.waiting.title'.tr(),
+          body: 'auth.sessionAccess.waiting.body'.tr(),
           showSpinner: true,
         );
       case _Phase.waitingSlot:
         return _card(
           icon: Icons.check_circle_rounded,
           iconColor: const Color(0xFF22C55E),
-          title: 'Tasdiqlandi!',
+          title: 'auth.sessionAccess.waitingSlot.title'.tr(),
           body:
               'Endi ulangan qurilmalardan biri chiqarilishini kuting. '
               'Chiqarilishi bilan avtomatik kirasiz.',
@@ -199,10 +196,10 @@ class _SessionAccessRequestScreenState
         return _card(
           icon: Icons.cancel_rounded,
           iconColor: const Color(0xFFFF453A),
-          title: 'Rad etildi',
-          body: "Kirish so'rovi rad etildi.",
+          title: 'auth.sessionAccess.rejected.title'.tr(),
+          body: 'auth.sessionAccess.rejected.body'.tr(),
           button: ParvozPrimaryButton(
-            label: 'Ortga',
+            label: 'common.back'.tr(),
             showArrow: false,
             onPressed: () => context.pop(),
           ),
@@ -211,10 +208,10 @@ class _SessionAccessRequestScreenState
         return _card(
           icon: Icons.schedule_rounded,
           iconColor: const Color(0xFFF2B233),
-          title: 'Muddat tugadi',
-          body: "So'rov muddati tugadi. Qaytadan urinib ko'ring.",
+          title: 'auth.sessionAccess.expired.title'.tr(),
+          body: 'auth.sessionAccess.expired.body'.tr(),
           button: ParvozPrimaryButton(
-            label: 'Qaytadan kirish',
+            label: 'auth.sessionAccess.expired.retry'.tr(),
             showArrow: false,
             onPressed: () => context.pop(),
           ),
@@ -223,10 +220,10 @@ class _SessionAccessRequestScreenState
         return _card(
           icon: Icons.warning_amber_rounded,
           iconColor: const Color(0xFFF2B233),
-          title: 'Xatolik',
+          title: 'common.error'.tr(),
           body: _error,
           button: ParvozPrimaryButton(
-            label: 'Qaytadan',
+            label: 'common.retry'.tr(),
             showArrow: false,
             onPressed: () => setState(() => _phase = _Phase.intro),
           ),

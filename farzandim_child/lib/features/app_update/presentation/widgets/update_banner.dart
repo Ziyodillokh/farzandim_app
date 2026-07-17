@@ -6,6 +6,7 @@
 // "Yangilash" tugma → Store/APK URL'ni ochish.
 // "×" tugma → 24 soatga dismiss (shu versiya uchun).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -29,8 +30,9 @@ class UpdateBanner extends ConsumerWidget {
     if (info == null) return const SizedBox.shrink();
 
     final platform = Theme.of(context).platform;
-    final platformInfo =
-        platform == TargetPlatform.iOS ? info.ios : info.android;
+    final platformInfo = platform == TargetPlatform.iOS
+        ? info.ios
+        : info.android;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
@@ -68,7 +70,9 @@ class UpdateBanner extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Yangi versiya mavjud (${platformInfo.latest})',
+                      'appUpdate.available'.tr(
+                        namedArgs: {'version': platformInfo.latest},
+                      ),
                       style: TextStyle(
                         color: context.adaptive.textPrimary,
                         fontSize: 14,
@@ -104,16 +108,13 @@ class UpdateBanner extends ConsumerWidget {
                     borderRadius: BorderRadius.circular(8),
                   ),
                 ),
-                child: const Text(
-                  'Yangilash',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
+                child: Text(
+                  'appUpdate.updateButton'.tr(),
+                  style: TextStyle(fontSize: 13, fontWeight: FontWeight.w700),
                 ),
               ),
               IconButton(
-                tooltip: 'Yopish (24 soat)',
+                tooltip: 'appUpdate.dismissTooltip'.tr(),
                 icon: const Icon(
                   AppIcons.close,
                   size: 18,

@@ -8,6 +8,7 @@
 
 import 'dart:ui' show ImageFilter;
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:flutter/material.dart';
@@ -233,7 +234,9 @@ class TestCard extends StatelessWidget {
                       children: [
                         Flexible(
                           child: Text(
-                            '${c.savollarSoni} ta test',
+                            'contests.testsCount'.tr(
+                              namedArgs: {'count': '${c.savollarSoni}'},
+                            ),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: tPop(12.5, c: tMuted),

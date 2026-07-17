@@ -12,6 +12,7 @@
 import 'dart:async';
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
 import 'package:flutter/material.dart';
@@ -214,7 +215,12 @@ class _TestBannerCard extends StatelessWidget {
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    '${test.soha} · ${test.savollarSoni} ta savol',
+                    'contests.bannerMeta'.tr(
+                      namedArgs: {
+                        'soha': test.soha,
+                        'count': '${test.savollarSoni}',
+                      },
+                    ),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: tPop(12.5, c: Colors.white.withValues(alpha: 0.85)),
@@ -232,7 +238,7 @@ class _TestBannerCard extends StatelessWidget {
                       ),
                     ),
                     child: Text(
-                      'Batafsil',
+                      'common.details'.tr(),
                       style: tPop(12.5, w: FontWeight.w600),
                     ),
                   ),

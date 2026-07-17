@@ -12,6 +12,7 @@
 // Kartani bosib turish → yoqtirilganlarga qo'shadi. Video ochilganda tarixga
 // yoziladi (/video-player). Ikkalasi backend + lokal (video_engagement_*).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
@@ -94,7 +95,7 @@ class VideosFeedScreen extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: ParvozSearchField(
                 queryProvider: videoFeedSearchProvider,
-                hintText: 'Video qidirish...',
+                hintText: 'videos.feed.searchHint'.tr(),
                 accent: vBlue,
               ),
             ),
@@ -141,7 +142,7 @@ class _VideosHeader extends StatelessWidget {
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
               child: Text(
-                'Videolar',
+                'videos.feed.headerTitle'.tr(),
                 maxLines: 1,
                 style: vUnb(28, w: FontWeight.w600, ls: -0.84),
               ),
@@ -215,7 +216,7 @@ class _CategoryChips extends ConsumerWidget {
         itemBuilder: (_, i) {
           if (i == 0) {
             return _Chip(
-              label: 'Barchasi',
+              label: 'videos.feed.categoryAll'.tr(),
               active: selected == null,
               showClose: false,
               onTap: () => select(null),
@@ -496,13 +497,13 @@ class _EmptyState extends StatelessWidget {
           const _EmptyBadge(icon: SolarIconsOutline.play),
           const SizedBox(height: 20),
           Text(
-            'Videolar hozircha yo\'q',
+            'videos.feed.noVideosTitle'.tr(),
             textAlign: TextAlign.center,
             style: vUnb(18, w: FontWeight.w600, ls: -0.4),
           ),
           const SizedBox(height: 8),
           Text(
-            'Tez orada yangi videolar qo\'shiladi',
+            'videos.feed.noVideosSubtitle'.tr(),
             textAlign: TextAlign.center,
             style: vPop(14, c: vDim),
           ),
@@ -516,7 +517,10 @@ class _EmptyState extends StatelessWidget {
                 color: vBlue,
                 borderRadius: BorderRadius.circular(999),
               ),
-              child: Text('Yangilash', style: vPop(14, w: FontWeight.w600)),
+              child: Text(
+                'videos.feed.refresh'.tr(),
+                style: vPop(14, w: FontWeight.w600),
+              ),
             ),
           ),
         ],

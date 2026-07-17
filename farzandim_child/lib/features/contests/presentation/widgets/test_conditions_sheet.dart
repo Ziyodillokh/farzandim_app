@@ -7,6 +7,7 @@
 // soni va sovrin testning haqiqiy qiymatlari. "Boshlash" → quiz (tanlangan
 // qiyinlik selectedTestDifficultyProvider orqali quiz timeriga o'tadi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/test_difficulty.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
@@ -88,13 +89,13 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
             const SizedBox(height: 16),
             Center(
               child: Text(
-                'Konkurs shartlari',
+                'contests.conditionsTitle'.tr(),
                 style: tUnb(19, w: FontWeight.w700, ls: -0.4),
               ),
             ),
             const SizedBox(height: 22),
             // ── Qiyinlik darajasi ──
-            Text('Qiyinlik darajasi', style: tPop(13, c: tMuted)),
+            Text('contests.difficultyLabel'.tr(), style: tPop(13, c: tMuted)),
             const SizedBox(height: 10),
             Row(
               children: [
@@ -113,7 +114,7 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
             ),
             const _SheetDivider(),
             _InfoBlock(
-              label: 'Savollar soni',
+              label: 'contests.questionsCount'.tr(),
               value: Text(
                 '${c.savollarSoni} ta',
                 style: tUnb(18, w: FontWeight.w700, ls: -0.4),
@@ -121,10 +122,12 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
             ),
             const _SheetDivider(),
             _InfoBlock(
-              label: 'Har bir savol uchun beriladigan vaqt',
+              label: 'contests.timePerQuestion'.tr(),
               // DINAMIK — tanlangan qiyinlikka qarab.
               value: Text(
-                '${_difficulty.secondsPerQuestion} soniyadan',
+                'contests.secondsEach'.tr(
+                  namedArgs: {'seconds': '${_difficulty.secondsPerQuestion}'},
+                ),
                 style: tUnb(18, w: FontWeight.w700, ls: -0.4),
               ),
             ),
@@ -135,7 +138,7 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
             // Avval shunchaki "20 DON" deb turardi — bola hammasini oladi deb
             // o'ylardi.
             _InfoBlock(
-              label: 'Sovrin',
+              label: 'contests.prize'.tr(),
               value: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -147,7 +150,7 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
                   const DonBadge(),
                   const SizedBox(width: 6),
                   Text(
-                    'gacha',
+                    'contests.upTo'.tr(),
                     style: tUnb(13, w: FontWeight.w500, ls: -0.2),
                   ),
                 ],
@@ -268,7 +271,10 @@ class _StartButton extends StatelessWidget {
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Text('Boshlash', style: tPop(16, w: FontWeight.w600)),
+            Text(
+              'welcome.startButton'.tr(),
+              style: tPop(16, w: FontWeight.w600),
+            ),
             const SizedBox(width: 8),
             const Icon(
               Icons.arrow_forward_rounded,

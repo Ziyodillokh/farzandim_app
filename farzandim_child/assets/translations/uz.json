@@ -15,7 +15,23 @@
     "errorPrefix": "Xato: {error}",
     "retry": "Qayta urinish",
     "close": "Yopish",
-    "fallbackChildName": "Bola"
+    "fallbackChildName": "Bola",
+    "weekdaysShort": "Du,Se,Ch,Pa,Ju,Sh,Ya",
+    "details": "Batafsil",
+    "enable": "Yoqish",
+    "later": "Keyinroq",
+    "open": "Ochish",
+    "errorWithMessage": "Xato: {error}",
+    "networkError": "Tarmoq xatosi. Qaytadan urinib ko'ring.",
+    "grantPermission": "Ruxsat berish",
+    "openSettings": "Sozlamalarni ochish",
+    "connect": "Ulanish",
+    "saved": "Saqlandi!",
+    "today": "Bugun",
+    "yesterday": "Kecha",
+    "daysAgo": "{days} kun oldin",
+    "cancelShort": "Bekor",
+    "notPaired": "Ulanmagan"
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -26,7 +42,8 @@
     "home": "Asosiy",
     "videos": "Videolar",
     "quizzes": "Testlar",
-    "audiobooks": "Audiokitoblar"
+    "audiobooks": "Audiokitoblar",
+    "profile": "Profil"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -36,7 +53,8 @@
   },
   "language": {
     "selectTitle": "Tilni tanlang",
-    "selectSubtitle": "Ilova qaysi tilda bo'lishini xohlaysiz?"
+    "selectSubtitle": "Ilova qaysi tilda bo'lishini xohlaysiz?",
+    "version": "Versiya - 1.0"
   },
   "onboarding": {
     "skip": "O'tkazib yuborish",
@@ -101,7 +119,42 @@
     "enterCodeTitle": "Ota-onangiz ilovasidagi kodni kiriting",
     "enterCodeSubtitle": "Kod 5 xonadan iborat va 24 soat amal qiladi",
     "enterButton": "Kirish",
-    "howItWorks": "Bu qanday ishlaydi?"
+    "howItWorks": "Bu qanday ishlaydi?",
+    "qr": {
+      "errorPermissionDenied": "Kameraga ruxsat berilmadi. Brauzer manzil panelidagi qulf belgisini bosib, kamera ruxsatini yoqing.",
+      "errorNoCamera": "Qurilmangizda kamera topilmadi. QR kodni qo'lda kiritishingiz mumkin.",
+      "errorCameraBusy": "Kamera boshqa dastur tomonidan band. Boshqa dastur (Zoom, Meet, Camera app)ni yopib qaytadan urinib ko'ring.",
+      "errorNoSuitableCamera": "Mos kamera topilmadi. Qo'lda kiritish rejimiga o'ting.",
+      "errorInsecure": "Xavfsiz ulanish kerak (HTTPS yoki localhost).",
+      "errorCameraGeneric": "Kamerani ochib bo'lmadi. Qaytadan urining yoki QR kodni qo'lda kiriting.",
+      "notRecognized": "QR kod tanilmadi. To'g'ri kodni skanerlang.",
+      "connecting": "Ulanmoqda...",
+      "dataLoadFailed": "Ulandi, lekin ma'lumotlar yuklanmadi. Qaytadan urinib ko'ring.",
+      "manualTitle": "Tokenni qo'lda kiriting",
+      "scanWithCameraTooltip": "Kamerada skanerlash",
+      "scanTitle": "QR kodni skanerlang",
+      "manualEntry": "Tokenni qo'lda kiritish",
+      "cameraOpenFailed": "Kamera ochilmadi",
+      "cameraOpenFailedCode": "Kamera ochilmadi: {code}",
+      "scanHint": "Ota-ona telefonidagi QR kodni ramka ichiga to'g'rilang",
+      "cameraStarting": "Kamera ochilmoqda...",
+      "permissionTitle": "Kamera ruxsati kerak",
+      "permissionBody": "QR kodni skanerlash uchun kameraga ruxsat bering. Agar oldin rad etgan bo'lsangiz, Sozlamalardan qo'lda yoqing.",
+      "pasteHelp": "Kamera ishlamasa, Parent ilovasidagi QR matnini shu yerga joylab ulanishingiz mumkin.",
+      "pasteButton": "Joylash",
+      "tokenHint": "farzandim:repair:... yoki to'g'ridan-to'g'ri token",
+      "successTitle": "Muvaffaqiyatli ulandingiz!",
+      "successSubtitle": "Telefoningiz ota-onangiz hisobiga bog'landi."
+    },
+    "wait": {
+      "timeLeft": "Qolgan vaqt: {time}",
+      "rejectedTitle": "Rad etildi",
+      "expiredTitle": "Muddat tugadi",
+      "waitingTitle": "Ota-onangiz tasdiqini kutmoqdamiz",
+      "rejectedBody": "Ota-onangiz ulanish so'rovingizni rad etdi.\nYangi kod kiriting yoki ota-onangiz bilan bog'laning.",
+      "expiredBody": "5 daqiqa ichida tasdiq olinmadi.\nQaytadan urinib ko'ring.",
+      "waitingBody": "Ota-onangiz Parent App'da bildirishnomani ko'rib tasdiqlashi kerak. Bu ekran avtomatik yangilanadi."
+    }
   },
   "permissions": {
     "title": "Ruxsatlar",
@@ -149,7 +202,8 @@
     "step4Subtitle": "Vaqt tugagach ko'rsatish uchun",
     "stepNumber": "{number}. {title}",
     "grantButton": "Yoqish",
-    "autoContinueHint": "Hammasi yoqilgach, avtomatik davom etadi"
+    "autoContinueHint": "Hammasi yoqilgach, avtomatik davom etadi",
+    "uninstallProtectionName": "O'chirishni taqiqlash"
   },
   "dashboard": {
     "greeting": "Salom, {name}!",
@@ -194,7 +248,11 @@
     "motivationalLabel": "Bugungi maslahat",
     "scheduleButton": "Mening jadvalim",
     "voiceTestButton": "Ovozli xabar (test)",
-    "videoTestButton": "Video xabar yozish (test)"
+    "videoTestButton": "Video xabar yozish (test)",
+    "newTests": "Yangi testlar",
+    "newTestsSoon": "Tez orada yangi testlar",
+    "newAudiobooks": "Yangi audiokitoblar",
+    "trendVideos": "Trend videolar"
   },
   "voiceChat": {
     "title": "Ovozli xabar",
@@ -217,7 +275,22 @@
     "attachFile": "Fayl",
     "voiceMode": "Ovoz rejimi",
     "videoMode": "Video rejimi",
-    "mediaSendError": "Faylni yuborishda xato"
+    "mediaSendError": "Faylni yuborishda xato",
+    "cameraNotFound": "Kamera topilmadi",
+    "recordFailed": "Yozib bo'lmadi: {error}",
+    "lock": "Bloklash",
+    "tapToFinish": "Tugatish uchun bosing",
+    "pressToRecord": "Bosib turib yozing",
+    "inputHint": "Xabar...",
+    "recording": "Yozilmoqda...",
+    "voiceSent": "Ovozli xabar yuborildi",
+    "parentNotFound": "Ota-ona aniqlanmadi",
+    "messageSendFailed": "Xabar yuborilmadi: {error}",
+    "fileSendError": "Faylni yuborishda xato",
+    "videoPreparing": "Video tayyorlanmoqda…",
+    "videoSendFailed": "Video yuborilmadi: {error}",
+    "videoSent": "Video yuborildi",
+    "startConversationEmpty": "Suhbatni boshlang"
   },
   "videoRecording": {
     "title": "Video xabar",
@@ -250,7 +323,12 @@
       "tabFollowing": "Following",
       "tabForYou": "Siz uchun",
       "searchHint": "Qidirish...",
-      "viewAll": "Barchasi"
+      "viewAll": "Barchasi",
+      "headerTitle": "Videolar",
+      "categoryAll": "Barchasi",
+      "noVideosTitle": "Videolar hozircha yo'q",
+      "noVideosSubtitle": "Tez orada yangi videolar qo'shiladi",
+      "refresh": "Yangilash"
     },
     "filter": {
       "title": "Filtr",
@@ -271,8 +349,29 @@
       "sleepOff": "O'chirilgan",
       "sleepOffButton": "O'chirish",
       "sleepMinutes": "{min} daqiqa",
-      "sleepMinShort": "{min} daq"
-    }
+      "sleepMinShort": "{min} daq",
+      "retry": "Qaytadan urinib ko'rish"
+    },
+    "history": {
+      "title": "Ko'rishlar tarixi",
+      "emptyTitle": "Tarix bo'sh",
+      "emptySubtitle": "Ko'rgan videolaringiz shu yerda chiqadi"
+    },
+    "liked": {
+      "title": "Yoqtirilgan videolar",
+      "emptyTitle": "Hali yoqtirilgan video yo'q",
+      "emptySubtitle": "Videoni bosib turib yoki ♥ bosib qo'shing"
+    },
+    "engagement": {
+      "loadFailed": "Ma'lumot yuklanmadi",
+      "loadFailedSubtitle": "Internetni tekshirib, qayta torting"
+    },
+    "youtube": {
+      "invalidLink": "Video havolasi noto'g'ri",
+      "fullscreen": "To'liq ekran"
+    },
+    "viewsCount": "{count} ko'rish",
+    "categoryAllAlt": "Hammasi"
   },
   "account": {
     "title": "Akkaunt ma'lumotlarini tahrirlash",
@@ -292,7 +391,24 @@
     "savedSnack": "Ma'lumotlaringiz saqlandi ✅",
     "errorPrefix": "Xato: {error}",
     "backButton": "Orqaga",
-    "saveButton": "Saqlash"
+    "saveButton": "Saqlash",
+    "edit": {
+      "errNameRequired": "Ism familiyani kiriting",
+      "errDateFormat": "Sana KK.OO.YYYY formatida bo'lsin",
+      "title": "Akkaunt sozlamalari",
+      "profilePhoto": "Profil rasmi",
+      "uploadPhoto": "Rasm yuklash",
+      "nameLabel": "Ism familiya",
+      "birthLabel": "Farzandingizning tug'ilgan kuni",
+      "birthHint": "KK.OO.YYYY"
+    },
+    "ageDialog": {
+      "title": "Yoshini tanlang",
+      "ageValue": "{age} yosh"
+    },
+    "regionPicker": {
+      "title": "Hududni tanlang"
+    }
   },
   "social": {
     "tabFollowing": "Following",
@@ -316,7 +432,14 @@
     "justNow": "hozir",
     "minutesAgo": "{min} daq oldin",
     "hoursAgo": "{h} soat oldin",
-    "daysAgo": "{d} kun oldin"
+    "daysAgo": "{d} kun oldin",
+    "fallbackTitle": "Bildirishnoma",
+    "sectionToday": "Bugun",
+    "sectionYesterday": "Kecha",
+    "channel": {
+      "name": "Parvoz xabarlari",
+      "desc": "Ota-onadan ovozli/video xabar, foto so'rovi va boshqalar"
+    }
   },
   "gamification": {
     "statusBeginner": "Boshlovchi",
@@ -355,7 +478,11 @@
     "achievementContentCreatorTitle": "Kontent yaratuvchi",
     "achievementContentCreatorDesc": "5 ta post moderatsiyadan o'tdi",
     "achievementHelperTitle": "Yordamchi",
-    "achievementHelperDesc": "Boshqa bolaga to'g'ri javob"
+    "achievementHelperDesc": "Boshqa bolaga to'g'ri javob",
+    "achievementStreak7Title": "7 kun uzluksiz",
+    "achievementMathTop100Title": "Math TOP-100",
+    "achievementTenBooksTitle": "10-kitob",
+    "achievementStreak100Title": "100 kun"
   },
   "schedules": {
     "title": "Mening jadvalim",
@@ -374,7 +501,8 @@
     "allDone": "Bugungi tadbirlar tugadi",
     "todayList": "Bugungi jadval",
     "emptyTitle": "Bugun tadbir yo'q",
-    "emptySubtitle": "Dam olib oling!"
+    "emptySubtitle": "Dam olib oling!",
+    "nowBadge": "HOZIR"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -409,6 +537,291 @@
     "webBrowser": "Web brauzer",
     "aboutBody": "Parvoz — bolalar uchun xavfsiz ta'lim va oilaviy aloqa ilovasi.",
     "version": "Versiya",
-    "copied": "Nusxalandi"
+    "copied": "Nusxalandi",
+    "contactPhone": "Telefon"
+  },
+  "analytics": {
+    "title": "Ilovalar",
+    "tabAll": "Barchasi",
+    "tabLimited": "Vaqt cheklovi",
+    "tabBlocked": "Bloklangan",
+    "limitsLoadError": "Cheklovlar yuklanmadi",
+    "noLimits": "Vaqt cheklovi qo'yilmagan",
+    "noBlocked": "Bloklangan ilova yo'q",
+    "timeUp": "Tugadi",
+    "remaining": "Qoldi",
+    "blockedBadge": "Bloklangan",
+    "blockedSection": "Bloklangan ilovalar",
+    "limitedSection": "Vaqt cheklovi",
+    "limitPerDayMinutes": "{minutes} daq/kun",
+    "dataLoadError": "Ma'lumot yuklanmadi",
+    "noUsageToday": "Bugun ilova ishlatilmagan",
+    "sysHome": "Bosh ekran",
+    "sysGoogleServices": "Google xizmatlari",
+    "sysSettings": "Sozlamalar",
+    "sysSystem": "Tizim",
+    "sysPhone": "Telefon",
+    "sysCamera": "Kamera",
+    "sysGallery": "Galereya",
+    "prevDayTooltip": "Avvalgi kun",
+    "nextDayTooltip": "Keyingi kun",
+    "dateToday": "Bugun · {date}",
+    "dateYesterday": "Kecha · {date}",
+    "last7Days": "Oxirgi 7 kun"
+  },
+  "time": {
+    "lessThanMinute": "< 1 daq",
+    "minutes": "{m} daq",
+    "hours": "{h} soat",
+    "hoursMinutes": "{h} soat {m} daq",
+    "hoursMinutesShort": "{h} st {m} daq"
+  },
+  "statistics": {
+    "title": "Statistika",
+    "booksRead": "O'qilgan kitoblar",
+    "itemsCount": "{count} ta",
+    "testsCompleted": "Ishlangan testlar",
+    "dailySteps": "Kunlik qadamlar",
+    "dailyProgress": "Kunlik rivojlanish",
+    "daysCount": "{days} kun",
+    "donBalance": "DON balansi",
+    "avgScreenTime": "Kunlik o'rtacha ekran vaqti"
+  },
+  "ranking": {
+    "emptyTitle": "Bu yerda hali reyting yo'q",
+    "emptySubtitle": "Test ishlab DON to'plang — reytingda paydo bo'lasiz.",
+    "title": "DON reytingi",
+    "helpTitle": "DON reytingi",
+    "helpContent": "Kitob o'qish, test ishlash va kunlik faollik uchun DON ball to'planadi. Reyting viloyat yoki butun O'zbekiston bo'yicha hisoblanadi.",
+    "helpClose": "Tushunarli",
+    "byRegion": "Viloyat bo'yicha",
+    "allUzbekistan": "Butun O'zbekiston",
+    "you": "Siz"
+  },
+  "profile": {
+    "savedVideos": "Saqlangan videolar",
+    "achievements": "Yutuqlar",
+    "accept": "Qabul qilish"
+  },
+  "contests": {
+    "loadError": "Testlarni yuklab bo'lmadi",
+    "checkInternet": "Internetni tekshirib, qayta torting",
+    "emptyTitle": "Hozircha test yo'q",
+    "emptySubtitle": "Tez orada yangi testlar qo'shiladi",
+    "finishedSnack": "Bu test yakunlangan — natijalar Reytingda",
+    "favAdded": "Sevimlilarga qo'shildi",
+    "favRemoved": "Sevimlilardan olib tashlandi",
+    "preparingQuestions": "Savollar tayyorlanmoqda...",
+    "previous": "Oldingi",
+    "finish": "Yakunlash",
+    "next": "Keyingi",
+    "rulesTitle": "Test qoidalari",
+    "rule1": "Javobni tanlang — to'g'ri yashil, xato qizil bo'ladi",
+    "rule2": "Oldingi / Keyingi bilan savollar orasida harakatlaning",
+    "rule3": "Umumiy vaqt tugasa test avtomatik yakunlanadi",
+    "selectedQuestions": "Tanlangan savollar",
+    "exitTest": "Testdan chiqish",
+    "continueTest": "Davom etish",
+    "result": "Natija",
+    "record": "Rekord",
+    "reward": "Yutuq",
+    "toHome": "Asosiyga",
+    "rematch": "Revansh",
+    "conditionsTitle": "Konkurs shartlari",
+    "difficultyLabel": "Qiyinlik darajasi",
+    "questionsCount": "Savollar soni",
+    "timePerQuestion": "Har bir savol uchun beriladigan vaqt",
+    "secondsEach": "{seconds} soniyadan",
+    "prize": "Sovrin",
+    "upTo": "gacha",
+    "prizeNote": "Har bir to'g'ri javob uchun ulush beriladi. Natija 30% dan past bo'lsa sovrin berilmaydi.",
+    "difficultyEasy": "Oson",
+    "difficultyMedium": "O'rta",
+    "difficultyHard": "Qiyin",
+    "testsCount": "{count} ta test",
+    "bannerMeta": "{soha} · {count} ta savol",
+    "likedQuestionsEmptyTitle": "Hali tanlangan savol yo'q",
+    "likedQuestionsEmptySubtitle": "Test yechayotib ♥ bosib savolni saqlang",
+    "likedTestsTitle": "Sevimli testlar",
+    "likedTestsEmptyTitle": "Hali sevimli test yo'q",
+    "likedTestsEmptySubtitle": "Testni bosib turib sevimlilarga qo'shing",
+    "certificateTitle": "Sertifikat",
+    "preparing": "Tayyorlanmoqda…",
+    "saveShare": "Saqlash / Ulashish",
+    "certificateShareText": "Men Parvoz ilovasida '{title}' olimpiadasida sertifikat oldim! 🏆",
+    "certificateHeading": "SERTIFIKAT",
+    "certificateThis": "Ushbu sertifikat",
+    "certificateBody": "“{title}” olimpiadasini muvaffaqiyatli yakunlagani uchun beriladi",
+    "score": "Ball",
+    "subject": "Fan",
+    "certificateMonths": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr"
+  },
+  "consent": {
+    "title": "Bu ilova ota-onangiz ruxsati bilan ishlaydi",
+    "subtitle": "Ilovani ishlatishni boshlashdan oldin ota-onangiz quyidagi shartlarga rozi bo'lishi kerak.",
+    "locationTitle": "Joylashuv",
+    "locationText": "Ilova bolaning joriy joylashuvini va harakat tarixini ota-onaga ko'rsatadi.",
+    "usageTitle": "Ilovadan foydalanish",
+    "usageText": "Qaysi ilovalarda qancha vaqt sarflanganini kuzatadi va ota-onaga hisobot beradi.",
+    "notificationsTitle": "Bildirishnomalar",
+    "notificationsText": "Ota-ona yuborgan xabarlar, eslatma va SOS push-xabarlarini qabul qiladi.",
+    "securityTitle": "Xavfsizlik",
+    "securityText": "Bolaning qurilma ma'lumotlari (batareya, model) ota-onaga yuboriladi.",
+    "privacyTitle": "Maxfiylik",
+    "privacyText": "Ma'lumotlar shifrlangan holda saqlanadi va uchinchi shaxslarga berilmaydi.",
+    "holdHint": "Tugmani 3 sekund ushlab turing — bu ota-ona ekanligingizni tasdiqlaydi.",
+    "confirming": "Tasdiqlanmoqda...",
+    "confirmButton": "Ota-onam tasdiqlaydi"
+  },
+  "unlockRequest": {
+    "title": "Qo'shimcha vaqt so'rash",
+    "subtitleWithApp": "\"{app}\" uchun ota-onangdan qancha vaqt so'raysan?",
+    "subtitle": "Ota-onangdan qancha qo'shimcha vaqt so'raysan?",
+    "timeLabel": "Vaqt",
+    "reasonLabel": "Sabab (ixtiyoriy)",
+    "reasonHint": "Masalan: darsga tayyorlanyapman",
+    "submit": "SO'RASH",
+    "minutes": "{minutes} daqiqa",
+    "sent": "So'rov yuborildi. Ota-onangiz qarorini kuting…",
+    "sendError": "So'rovni yuborib bo'lmadi. Qaytadan urinib ko'ring.",
+    "approvedSnack": "Ota-onangiz {minutes} daqiqa qo'shimcha vaqt berdi!",
+    "deniedSnack": "So'rovingiz rad etildi."
+  },
+  "appUpdate": {
+    "forceTitle": "Ilovani yangilang",
+    "forceMessage": "Yangi versiya zarur. Eski versiya bilan davom etib bo'lmaydi.",
+    "openAppStore": "App Store'ni ochish",
+    "openPlayMarket": "Play Market'ni ochish",
+    "downloadApk": "Veb-saytdan yuklash (APK)",
+    "currentVersion": "Joriy",
+    "latestVersion": "Yangi",
+    "available": "Yangi versiya mavjud ({version})",
+    "updateButton": "Yangilash",
+    "dismissTooltip": "Yopish (24 soat)"
+  },
+  "background": {
+    "channelName": "Parvoz xizmati",
+    "channelDescription": "Bola joylashuvini va holatini doimiy kuzatish uchun",
+    "notificationTitle": "Parvoz ishlayapti",
+    "notificationText": "Oilangiz bilan bog'liqsiz",
+    "lastUpdate": "Oxirgi yangilanish: {time}"
+  },
+  "location": {
+    "enableModal": {
+      "title": "Ota-onangiz joylashuvni yoqishingizni so'rayapti",
+      "body": "Joylashuvni yoqsangiz ota-onangiz sizni xaritada ko'ra oladi va xavfsizligingizni bilib turadi."
+    }
+  },
+  "audiobooks": {
+    "partLabel": "{number}-qism",
+    "shareComingSoon": "Ulashish tez orada qo'shiladi",
+    "player": {
+      "speed": "Tezlik",
+      "sleepTimer": "Uyqu taymeri",
+      "sleepOff": "O'chirish",
+      "sleepMinutes": "{min} daqiqa"
+    },
+    "feed": {
+      "searchHint": "Kitob yoki muallif qidirish...",
+      "title": "Kitoblar",
+      "newBooks": "Yangi kitoblar",
+      "categoryAll": "Barchasi",
+      "emptyTitle": "Kontent topilmadi",
+      "emptySubtitle": "Boshqa kategoriyani tanlab ko'ring",
+      "searchEmptyTitle": "Hech narsa topilmadi",
+      "searchEmptySubtitle": "Boshqa so'z bilan qidirib ko'ring"
+    },
+    "searchBarHint": "Audiokitob qidirish...",
+    "section": {
+      "viewAll": "Barchasi"
+    }
+  },
+  "books": {
+    "section": {
+      "viewAll": "Barchasi"
+    },
+    "title": "Kitoblar",
+    "categoryAll": "Hammasi",
+    "categorySchool": "Maktab darsliklari",
+    "categoryLiterature": "Adabiyot",
+    "categoryOthers": "Boshqalar",
+    "empty": "Hozircha kitoblar mavjud emas.",
+    "loadFailed": "Yuklab bo'lmadi.",
+    "pdf": {
+      "noLink": "PDF havolasi yo'q",
+      "goToPage": "Sahifaga o'tish",
+      "pageNumberLabel": "Sahifa raqami (1–{total})",
+      "totalPages": "Jami: {total} sahifa",
+      "go": "O'tish",
+      "searchTitle": "Qidirish",
+      "searchUnsupported": "Matn qidirish hozircha qo'llab-quvvatlanmaydi. Keyingi versiyada qo'shiladi.",
+      "openFailed": "PDF ochilmadi",
+      "loading": "Kitob yuklanmoqda...",
+      "firstPage": "Birinchi sahifa",
+      "lastPage": "Oxirgi sahifa"
+    }
+  },
+  "articles": {
+    "title": "Maqolalar",
+    "loadFailed": "Maqolalarni yuklab bo'lmadi.",
+    "empty": "Hozircha maqola yo'q. Tez orada qo'shiladi!"
+  },
+  "content": {
+    "tabAudiobooks": "Audio kitoblar",
+    "videosEmpty": "Hozircha video yo'q",
+    "categoryVideosEmpty": "Bu kategoriyada video yo'q",
+    "recommendedTitle": "Siz uchun tavsiyalar",
+    "mostViewed": "Eng ko'p ko'rilganlar",
+    "categoryAll": "Barchasi",
+    "newLessonBadge": "YANGI DARS",
+    "start": "Boshlash",
+    "viewAll": "Barchasi",
+    "viewsCount": "{count} ko'rilgan",
+    "audiobooksEmpty": "Audiokitoblar topilmadi",
+    "mostListened": "Eng ko'p eshitilganlar",
+    "booksTitle": "Kitoblar",
+    "listen": "Eshitish"
+  },
+  "videoMessage": {
+    "requestTitle": "Otangiz video so'radi",
+    "requestSubtitle": "Yozish uchun bosing"
+  },
+  "voice": {
+    "quickCard": {
+      "justNow": "hozirgina",
+      "title": "Xabarlar",
+      "empty": "Hali xabarlar yo'q"
+    },
+    "senderYou": "Siz",
+    "senderParent": "Ota-ona",
+    "deleteFailed": "Xabar o'chirilmadi",
+    "editTitle": "Xabarni tahrirlash",
+    "editFailed": "Xabar tahrirlanmadi",
+    "documentFallback": "Hujjat",
+    "audioUrlFailed": "Audio URL olinmadi"
+  },
+  "chats": {
+    "title": "Chatlar",
+    "sosButton": "SOS xabar",
+    "startConversation": "Suhbatni boshlang",
+    "voiceMessagePreview": "Ovozli xabar",
+    "sosFailed": "SOS yuborilmadi",
+    "sosConfirmTitle": "DIQQAT! Siz SOS xabar yubormoqchisiz!",
+    "sosSentBody": "SOS xabar yuborildi — ota-onangizga darhol bildirishnoma boradi.",
+    "sosConfirmBody": "Siz haqiqatan SOS xabar yubormoqchimisiz?",
+    "sosSent": "Yuborildi!",
+    "sosSlider": "SOS xabar yuborish"
+  },
+  "chatSettings": {
+    "galleryMobileOnly": "Galereyadan rasm tanlash faqat mobil ilovada",
+    "imageLoadError": "Rasmni yuklashda xato"
+  },
+  "development": {
+    "title": "Rivojlanish ko'rsatkichi",
+    "tests": "Test",
+    "books": "Kitob",
+    "streak": "Streak",
+    "steps": "Qadam",
+    "motivation": "Bu hafta sayohatni boshla — test yech, kitob o'qi, harakat qil! 🚀"
   }
 }

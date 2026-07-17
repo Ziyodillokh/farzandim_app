@@ -15,6 +15,7 @@
 // recommendedBooksProvider, topVideosProvider, activeContestsProvider,
 // unreadNotificationsCountProvider. Backend bo'sh bo'lsa PREVIEW kartalar.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
@@ -271,7 +272,10 @@ class _Header extends ConsumerWidget {
     return Row(
       children: [
         Expanded(
-          child: Text('Asosiy', style: _unb(24, w: FontWeight.w600, ls: -0.72)),
+          child: Text(
+            'nav.home'.tr(),
+            style: _unb(24, w: FontWeight.w600, ls: -0.72),
+          ),
         ),
         _SquareIconButton(
           svg: _chatRoundLineSvg,
@@ -389,7 +393,7 @@ class _StatChipsRow extends ConsumerWidget {
                 size: 26,
                 color: _amber,
               ),
-              value: '$streak kun',
+              value: 'statistics.daysCount'.tr(namedArgs: {'days': '$streak'}),
             ),
           ),
           const SizedBox(width: 6),
@@ -597,11 +601,11 @@ class _EmptyTestsBanner extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    'Yangi testlar',
+                    'dashboard.newTests'.tr(),
                     style: _unb(20, w: FontWeight.w600, ls: -0.6),
                   ),
                   const SizedBox(height: 4),
-                  Text('Tez orada yangi testlar', style: _pop(14, c: _dim)),
+                  Text('dashboard.newTestsSoon'.tr(), style: _pop(14, c: _dim)),
                   const Spacer(),
                   Container(
                     height: 32,
@@ -613,7 +617,7 @@ class _EmptyTestsBanner extends StatelessWidget {
                       border: Border.all(color: _glassBorder),
                     ),
                     child: Text(
-                      'Batafsil',
+                      'common.details'.tr(),
                       style: _pop(12, w: FontWeight.w500),
                     ),
                   ),
@@ -647,7 +651,7 @@ class _AudiobooksSection extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _SectionHeader(
-            title: 'Yangi audiokitoblar',
+            title: 'dashboard.newAudiobooks'.tr(),
             onTap: () => context.push('/audiobooks'),
           ),
           const SizedBox(height: 16),
@@ -788,7 +792,7 @@ class _VideosSection extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         _SectionHeader(
-          title: 'Trend videolar',
+          title: 'dashboard.trendVideos'.tr(),
           onTap: () => context.push('/videos'),
         ),
         const SizedBox(height: 12),

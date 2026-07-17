@@ -5,7 +5,7 @@
 // Sozlamalar → "Bolalarim" bosilganda ochiladi. Har bola karta: avatar +
 // ism + qurilma • batareya + chevron. Pastda "+ Bola qo'shish". Karta
 // bosilsa "Akkount" varag'i: ism / telefon / tug'ilgan yili (qalam →
-// tahrirlash ekrani) + "Bolani qayta ulash" (ulanish varag'i).
+// tahrirlash ekrani) + Bolani qayta ulash (ulanish varag'i).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -67,13 +67,15 @@ class ChildrenManagementScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 56, 20, 16),
               child: Row(
                 children: [
-                  _BackButton(onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(AppRoutes.settings);
-                    }
-                  }),
+                  _BackButton(
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.settings);
+                      }
+                    },
+                  ),
                   Expanded(
                     child: Text(
                       'settings.rows.children.title'.tr(),
@@ -135,7 +137,7 @@ class _ChildCard extends StatelessWidget {
         : (child.deviceInfo?.deviceModel ?? '');
     final clean = rawDevice.trim();
     final device = (clean.isEmpty || clean.toLowerCase().contains('null'))
-        ? 'Qurilma ulanmagan'
+        ? 'dashboard.noDevice'.tr()
         : clean;
     return GestureDetector(
       onTap: onTap,
@@ -219,7 +221,10 @@ class _AddChildButton extends StatelessWidget {
           children: [
             const Icon(Icons.add_rounded, size: 22, color: Colors.white),
             const SizedBox(width: 10),
-            Text("Bola qo'shish", style: _pop(15, w: FontWeight.w500)),
+            Text(
+              'childManagement.list.emptyAddButton'.tr(),
+              style: _pop(15, w: FontWeight.w500),
+            ),
           ],
         ),
       ),
@@ -262,7 +267,7 @@ Future<void> _showAccountSheet(
         .regenerateFamilyCode(child.id);
     if (!context.mounted) return;
     if (!result.isSuccess || result.data == null) {
-      AppToast.error(context, "Yangi kod yaratib bo'lmadi. Qayta urining.");
+      AppToast.error(context, 'childManagement.list.regenerateFailed'.tr());
       return;
     }
     await showConnectChildSheet(
@@ -327,32 +332,32 @@ class _AccountSheet extends StatelessWidget {
                 ),
                 const SizedBox(height: 22),
                 _InfoRow(
-                  label: 'Bola ismi',
+                  label: 'childManagement.account.nameLabel'.tr(),
                   value: child.name,
                   onEdit: openEdit,
                 ),
                 const SizedBox(height: 18),
                 _InfoRow(
-                  label: 'Telefon nomeri',
+                  label: 'childManagement.account.phoneLabel'.tr(),
                   value: phone,
                   onEdit: openEdit,
                 ),
                 const SizedBox(height: 18),
                 _InfoRow(
-                  label: "Tug'ilgan yili",
+                  label: 'childManagement.account.birthYearLabel'.tr(),
                   value: _birthLabel,
                   onEdit: openEdit,
                 ),
                 const SizedBox(height: 70),
                 _SheetPillButton(
                   icon: SolarIconsOutline.qrCode,
-                  label: 'QR kod generatsiya',
+                  label: 'childManagement.account.generateQr'.tr(),
                   onTap: () => Navigator.of(context).pop('qr'),
                 ),
                 const SizedBox(height: 10),
                 _SheetPillButton(
                   icon: SolarIconsOutline.restart,
-                  label: 'Bolani qayta ulash',
+                  label: 'childManagement.account.reconnect'.tr(),
                   onTap: () => Navigator.of(context).pop('reconnect'),
                 ),
               ],

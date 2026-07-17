@@ -270,7 +270,7 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
                   if (items.isEmpty) {
                     return Center(
                       child: Text(
-                        'Suhbatni boshlang',
+                        'chat.startConversation'.tr(),
                         style: _pop(14, c: _dim),
                       ),
                     );
@@ -318,7 +318,9 @@ class _ChatDetailScreenState extends ConsumerState<ChatDetailScreen> {
     if (m.isImage || m.isFile) {
       return _TextBubble(
         msg: m,
-        overrideText: m.isImage ? '📷 Rasm' : '📎 Fayl',
+        overrideText: m.isImage
+            ? 'chat.previewImage'.tr()
+            : 'chat.previewFile'.tr(),
       );
     }
     return _VoiceBubble(

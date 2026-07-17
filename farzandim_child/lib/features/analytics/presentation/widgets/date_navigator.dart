@@ -8,6 +8,7 @@
 // Kelajak sanaga o'tish bloklangan (today > sana keyingisi).
 // LOGIKA SAQLANGAN — faqat ranglar parvoz night tokenlar
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
@@ -28,11 +29,8 @@ class DateNavigator extends ConsumerWidget {
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
         IconButton(
-          icon: const Icon(
-            AppIcons.chevronLeft,
-            color: AppColors.parvozText,
-          ),
-          tooltip: 'Avvalgi kun',
+          icon: const Icon(AppIcons.chevronLeft, color: AppColors.parvozText),
+          tooltip: 'analytics.prevDayTooltip'.tr(),
           onPressed: () => _shift(ref, -1),
         ),
         Padding(
@@ -49,11 +47,9 @@ class DateNavigator extends ConsumerWidget {
         IconButton(
           icon: Icon(
             AppIcons.chevronRight,
-            color: isFuture
-                ? AppColors.parvozTextDim
-                : AppColors.parvozText,
+            color: isFuture ? AppColors.parvozTextDim : AppColors.parvozText,
           ),
-          tooltip: 'Keyingi kun',
+          tooltip: 'analytics.nextDayTooltip'.tr(),
           onPressed: isFuture ? null : () => _shift(ref, 1),
         ),
       ],
@@ -71,9 +67,15 @@ class DateNavigator extends ConsumerWidget {
   static DateTime _truncate(DateTime d) => DateTime(d.year, d.month, d.day);
 
   static String _formatLabel(DateTime selected, DateTime today) {
-    if (selected == today) return 'Bugun · ${_short(selected)}';
+    if (selected == today) {
+      return 'analytics.dateToday'.tr(namedArgs: {'date': _short(selected)});
+    }
     final diff = today.difference(selected).inDays;
-    if (diff == 1) return 'Kecha · ${_short(selected)}';
+    if (diff == 1) {
+      return 'analytics.dateYesterday'.tr(
+        namedArgs: {'date': _short(selected)},
+      );
+    }
     return _short(selected);
   }
 

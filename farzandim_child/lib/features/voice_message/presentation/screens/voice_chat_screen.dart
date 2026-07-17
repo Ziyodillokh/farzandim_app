@@ -203,7 +203,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ref.read(voiceMessageUploadProvider.notifier).reset();
       ChatTopToast.flash(
         context,
-        'Ovozli xabar yuborildi',
+        'voiceChat.voiceSent'.tr(),
         icon: Icons.check_rounded,
       );
       try {
@@ -245,7 +245,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final parentUid = pairing.parentUid;
     if (parentUid == null || parentUid.isEmpty) {
       if (!mounted) return;
-      AppSnackBar.error(context, 'Ota-ona aniqlanmadi');
+      AppSnackBar.error(context, 'voiceChat.parentNotFound'.tr());
       return;
     }
     try {
@@ -256,7 +256,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       ref.invalidate(voiceMessagesProvider);
     } catch (e) {
       if (!mounted) return;
-      AppSnackBar.error(context, 'Xabar yuborilmadi: $e');
+      AppSnackBar.error(
+        context,
+        'voiceChat.messageSendFailed'.tr(namedArgs: {'error': '$e'}),
+      );
     }
   }
 
@@ -271,7 +274,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       );
       if (x != null) await _sendMediaFile(File(x.path));
     } catch (_) {
-      _showError('Faylni yuborishda xato');
+      _showError('voiceChat.fileSendError'.tr());
     }
   }
 
@@ -284,7 +287,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       );
       if (x != null) await _sendMediaFile(File(x.path));
     } catch (_) {
-      _showError('Faylni yuborishda xato');
+      _showError('voiceChat.fileSendError'.tr());
     }
   }
 
@@ -294,7 +297,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       final path = result?.files.single.path;
       if (path != null) await _sendMediaFile(File(path));
     } catch (_) {
-      _showError('Faylni yuborishda xato');
+      _showError('voiceChat.fileSendError'.tr());
     }
   }
 
@@ -302,7 +305,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final pairing = ref.read(pairingStateProvider);
     final parentUid = pairing.parentUid;
     if (parentUid == null || parentUid.isEmpty) {
-      _showError('Ota-ona aniqlanmadi');
+      _showError('voiceChat.parentNotFound'.tr());
       return;
     }
     setState(() => _isMediaUploading = true);
@@ -314,7 +317,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       if (!mounted) return;
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (_) {
-      _showError('Faylni yuborishda xato');
+      _showError('voiceChat.fileSendError'.tr());
     } finally {
       if (mounted) setState(() => _isMediaUploading = false);
     }
@@ -344,7 +347,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     // SnackBar o'rniga. Ish tugagach `videoToast.dismiss()`.
     final videoToast = ChatTopToast.show(
       context,
-      'Video tayyorlanmoqda…',
+      'voiceChat.videoPreparing'.tr(),
       spinner: true,
     );
 
@@ -368,7 +371,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       } catch (e) {
         if (!mounted) return;
         videoToast.dismiss();
-        AppSnackBar.error(context, 'Video yuborilmadi: $e');
+        AppSnackBar.error(
+          context,
+          'voiceChat.videoSendFailed'.tr(namedArgs: {'error': '$e'}),
+        );
         return;
       }
     } else {
@@ -410,7 +416,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       // (Yuqoridagi mobile branch ichida `original` va `fileToUpload`
       // lokal aniqlangan — bu yerga kelmagan.)
       ref.read(videoMessageUploadProvider.notifier).reset();
-      ChatTopToast.flash(context, 'Video yuborildi', icon: Icons.check_rounded);
+      ChatTopToast.flash(
+        context,
+        'voiceChat.videoSent'.tr(),
+        icon: Icons.check_rounded,
+      );
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } else {
       final state = ref.read(videoMessageUploadProvider);
@@ -659,7 +669,7 @@ class _EmptyState extends StatelessWidget {
   Widget build(BuildContext context) {
     return Center(
       child: Text(
-        'Suhbatni boshlang',
+        'voiceChat.startConversationEmpty'.tr(),
         style: GoogleFonts.poppins(fontSize: 14, color: _pDim),
       ),
     );

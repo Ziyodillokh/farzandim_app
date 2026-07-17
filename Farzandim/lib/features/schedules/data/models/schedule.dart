@@ -58,15 +58,15 @@ extension ScheduleTypeX on ScheduleType {
   String get label {
     switch (this) {
       case ScheduleType.school:
-        return 'Maktab';
+        return 'schedules.type.school'.tr();
       case ScheduleType.sport:
-        return 'Sport';
+        return 'schedules.type.sport'.tr();
       case ScheduleType.sleep:
-        return 'Uyqu';
+        return 'schedules.type.sleep'.tr();
       case ScheduleType.meal:
-        return 'Ovqat';
+        return 'schedules.type.meal'.tr();
       case ScheduleType.custom:
-        return 'Boshqa';
+        return 'schedules.type.custom'.tr();
     }
   }
 }

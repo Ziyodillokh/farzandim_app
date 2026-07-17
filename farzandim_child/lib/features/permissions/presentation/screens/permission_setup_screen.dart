@@ -252,7 +252,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                 setMock: (b) => _battery = b,
                               ),
                             ),
-                            // "O'chirishni taqiqlash" — Device Admin. Yoqilsa
+                            // O'chirishni taqiqlash — Device Admin. Yoqilsa
                             // bola ilovani ota-ona ruxsatisiz o'chira olmaydi.
                             _PermRow(
                               icon: Icons.shield_rounded,

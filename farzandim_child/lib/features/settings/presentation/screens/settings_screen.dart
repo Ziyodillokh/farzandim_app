@@ -267,7 +267,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(device, style: _pop(14.5, w: FontWeight.w600)),
-                    Text('settings.currentDevice'.tr(), style: _pop(12, c: _dim)),
+                    Text(
+                      'settings.currentDevice'.tr(),
+                      style: _pop(12, c: _dim),
+                    ),
                   ],
                 ),
               ),
@@ -299,8 +302,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           value: '@parvozyordambot',
           icon: SolarIconsBold.plain,
         ),
-        const _ContactRow(
-          label: 'Telefon',
+        _ContactRow(
+          label: 'settings.contactPhone'.tr(),
           value: '+998 90 755 15 08',
           icon: SolarIconsBold.phone,
         ),

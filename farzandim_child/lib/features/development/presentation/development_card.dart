@@ -5,6 +5,7 @@
 // Halqali indeks (0..100) + trend strelkasi + asosiy ko'rsatkichlar
 // (test/kitob/streak/qadam). Ijobiy, motivatsion ohang.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/development/data/development_summary.dart';
 import 'package:flutter/material.dart';
@@ -29,9 +30,9 @@ class DevelopmentCard extends StatelessWidget {
         children: [
           Row(
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Rivojlanish ko\'rsatkichi',
+                  'development.title'.tr(),
                   style: TextStyle(
                     color: AppColors.textPrimary,
                     fontSize: 16,
@@ -55,13 +56,13 @@ class DevelopmentCard extends StatelessWidget {
                         _Metric(
                           icon: Icons.quiz_rounded,
                           color: AppColors.catBlue,
-                          label: 'Test',
+                          label: 'development.tests'.tr(),
                           value: '${s.testsCompleted}',
                         ),
                         _Metric(
                           icon: Icons.menu_book_rounded,
                           color: AppColors.catMint,
-                          label: 'Kitob',
+                          label: 'development.books'.tr(),
                           value: '${s.booksRead}',
                         ),
                       ],
@@ -72,13 +73,15 @@ class DevelopmentCard extends StatelessWidget {
                         _Metric(
                           icon: Icons.local_fire_department_rounded,
                           color: AppColors.catOrangeLight,
-                          label: 'Streak',
-                          value: '${s.streakDays} kun',
+                          label: 'development.streak'.tr(),
+                          value: 'gamification.streakDays'.tr(
+                            namedArgs: {'days': '${s.streakDays}'},
+                          ),
                         ),
                         _Metric(
                           icon: Icons.directions_walk_rounded,
                           color: AppColors.catLavenderDark,
-                          label: 'Qadam',
+                          label: 'development.steps'.tr(),
                           value: _compact(s.steps),
                         ),
                       ],
@@ -154,10 +157,7 @@ class _ScoreRing extends StatelessWidget {
               ),
               Text(
                 '/ 100',
-                style: TextStyle(
-                  color: AppColors.textTertiary,
-                  fontSize: 11,
-                ),
+                style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
               ),
             ],
           ),
@@ -250,10 +250,7 @@ class _Metric extends StatelessWidget {
                 ),
                 Text(
                   label,
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 11,
-                  ),
+                  style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
                 ),
               ],
             ),

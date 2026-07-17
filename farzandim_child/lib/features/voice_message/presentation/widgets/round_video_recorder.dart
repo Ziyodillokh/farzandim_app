@@ -123,7 +123,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
         if (!mounted) return;
         setState(() {
           _initializing = false;
-          _initError = 'Kamera topilmadi';
+          _initError = 'voiceChat.cameraNotFound'.tr();
         });
         return;
       }
@@ -215,7 +215,7 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
     } catch (e) {
       if (!mounted) return;
       setState(() {
-        _initError = "Yozib bo'lmadi: $e";
+        _initError = 'voiceChat.recordFailed'.tr(namedArgs: {'error': '$e'});
       });
     }
   }
@@ -404,8 +404,8 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
           const SizedBox(height: 24),
           TextButton(
             onPressed: () => Navigator.of(context).pop(),
-            child: const Text(
-              'Yopish',
+            child: Text(
+              'common.close'.tr(),
               style: TextStyle(color: AppColors.primary, fontSize: 14),
             ),
           ),
@@ -530,12 +530,12 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
               children: [
                 _HintChip(
                   icon: AppIcons.back,
-                  text: 'Bekor qilish',
+                  text: 'common.cancel'.tr(),
                   highlight: cancelIntensity > 0.3,
                 ),
                 _HintChip(
                   icon: Icons.arrow_upward,
-                  text: 'Lock',
+                  text: 'voiceChat.lock'.tr(),
                   highlight: -_verticalDrag > 20,
                 ),
               ],
@@ -590,25 +590,25 @@ class _RoundVideoRecorderModalState extends State<_RoundVideoRecorderModal>
   Widget _buildBottomLabel() {
     if (_initError != null) return const SizedBox.shrink();
     if (_isLocked) {
-      return const Text(
-        'Tugatish uchun bosing',
+      return Text(
+        'voiceChat.tapToFinish'.tr(),
         style: TextStyle(color: Colors.white70, fontSize: 13),
       );
     }
     if (_isRecording) {
-      return const Padding(
+      return Padding(
         padding: EdgeInsets.symmetric(horizontal: 24),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            _HintChip(icon: AppIcons.back, text: 'Bekor qilish'),
-            _HintChip(icon: Icons.arrow_upward, text: 'Lock'),
+            _HintChip(icon: AppIcons.back, text: 'common.cancel'.tr()),
+            _HintChip(icon: Icons.arrow_upward, text: 'voiceChat.lock'.tr()),
           ],
         ),
       );
     }
-    return const Text(
-      'Bosib turib yozing',
+    return Text(
+      'voiceChat.pressToRecord'.tr(),
       style: TextStyle(
         color: Colors.white,
         fontSize: 15,

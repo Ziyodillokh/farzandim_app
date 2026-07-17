@@ -248,7 +248,7 @@ class _ProfileNavItem extends ConsumerWidget {
               ),
               const SizedBox(height: 3),
               Text(
-                'Profil',
+                'nav.profile'.tr(),
                 maxLines: 1,
                 style: GoogleFonts.poppins(
                   fontSize: 10,

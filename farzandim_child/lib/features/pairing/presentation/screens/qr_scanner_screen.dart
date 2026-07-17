@@ -18,6 +18,7 @@ import 'dart:developer' as developer;
 
 import 'package:confetti/confetti.dart';
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -90,7 +91,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   /// **Default — `false` (kamera birinchi).** Web va mobil'da ham avval
   /// kamerani ishga tushiramiz. Web'da `mobile_scanner` ZXing back
   /// kamera bilan ishlamasa, `_tryStartCamera` avtomatik front kameraga
-  /// o'tadi; u ham ishlamasa xato ekranida "Token'ni qo'lda kiritish"
+  /// o'tadi; u ham ishlamasa xato ekranida Token'ni qo'lda kiritish
   /// tugmasi paste rejimiga o'tkazadi. Appbar'dagi klaviatura ikonkasi
   /// orqali ham istalgan paytda paste rejimiga o'tish mumkin.
   bool _manualPasteMode = false;
@@ -147,8 +148,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         _camError = null;
       });
     }
-    _qrLog('tryStartCamera: facing=${_controller.facing}, '
-        'triedFront=$_triedFrontFallback');
+    _qrLog(
+      'tryStartCamera: facing=${_controller.facing}, '
+      'triedFront=$_triedFrontFallback',
+    );
     try {
       await _controller.start();
       _qrLog('tryStartCamera: start() OK');
@@ -182,7 +185,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           'belgisini bosib, kamera ruxsatini yoqing.';
     }
     if (s.contains('NotFoundError') || s.contains('unsupported')) {
-      return 'Qurilmangizda kamera topilmadi. QR kodni qo\'lda kiritishingiz mumkin.';
+      return 'pairing.qr.errorNoCamera'.tr();
     }
     if (s.contains('NotReadableError') || s.contains('TrackStartError')) {
       return 'Kamera boshqa dastur tomonidan band. Boshqa dastur (Zoom, '
@@ -190,10 +193,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           'ni yopib qaytadan urinib ko\'ring.';
     }
     if (s.contains('OverconstrainedError')) {
-      return 'Mos kamera topilmadi. Qo\'lda kiritish rejimiga o\'ting.';
+      return 'pairing.qr.errorNoSuitableCamera'.tr();
     }
     if (s.contains('SecurityError')) {
-      return 'Xavfsiz ulanish kerak (HTTPS yoki localhost).';
+      return 'pairing.qr.errorInsecure'.tr();
     }
     return 'Kamerani ochib bo\'lmadi. Qaytadan urining yoki QR kodni '
         'qo\'lda kiriting.';
@@ -209,8 +212,10 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   /// `/auth/repair-redeem` chaqiradi. `farzandim:repair:` prefiksli to'liq
   /// QR matni ham, to'g'ridan-to'g'ri token ham qabul qilinadi.
   Future<void> _processRawToken(String raw) async {
-    _qrLog('processRawToken: raw="${raw.length > 50 ? '${raw.substring(0, 50)}...' : raw}" '
-        '(len=${raw.length}), processing=$_processing');
+    _qrLog(
+      'processRawToken: raw="${raw.length > 50 ? '${raw.substring(0, 50)}...' : raw}" '
+      '(len=${raw.length}), processing=$_processing',
+    );
     if (_processing) {
       _qrLog('processRawToken: SKIP — already processing');
       return;
@@ -220,7 +225,9 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     String? token;
     if (trimmed.startsWith('farzandim:repair:')) {
       token = trimmed.substring('farzandim:repair:'.length);
-      _qrLog('processRawToken: format=farzandim:repair:, token len=${token.length}');
+      _qrLog(
+        'processRawToken: format=farzandim:repair:, token len=${token.length}',
+      );
     } else if (trimmed.length >= 16 && trimmed.length <= 64) {
       token = trimmed;
       _qrLog('processRawToken: format=plain, token len=${token.length}');
@@ -230,13 +237,13 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
 
     if (token == null || token.isEmpty) {
       _qrLog('processRawToken: token NULL or empty — show error');
-      setState(() => _status = 'QR kod tanilmadi. To\'g\'ri kodni skanerlang.');
+      setState(() => _status = 'pairing.qr.notRecognized'.tr());
       return;
     }
 
     setState(() {
       _processing = true;
-      _status = 'Ulanmoqda...';
+      _status = 'pairing.qr.connecting'.tr();
     });
     _qrLog('processRawToken: → POST /auth/repair-redeem');
 
@@ -282,7 +289,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       if (!ok) {
         setState(() {
           _processing = false;
-          _status = "Ulandi, lekin ma'lumotlar yuklanmadi. Qaytadan urinib ko'ring.";
+          _status = 'pairing.qr.dataLoadFailed'.tr();
         });
         return;
       }
@@ -299,9 +306,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       if (!mounted) return;
       context.go('/splash');
     } on DioException catch (e) {
-      _qrLog('processRawToken: DioException — '
-          'status=${e.response?.statusCode}, body=${e.response?.data}, '
-          'message=${e.message}');
+      _qrLog(
+        'processRawToken: DioException — '
+        'status=${e.response?.statusCode}, body=${e.response?.data}, '
+        'message=${e.message}',
+      );
       final msg = _friendlyError(e);
       if (!mounted) return;
       setState(() {
@@ -313,7 +322,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       if (!mounted) return;
       setState(() {
         _processing = false;
-        _status = 'Xato: $e';
+        _status = 'common.errorWithMessage'.tr(namedArgs: {'error': '$e'});
       });
     }
   }
@@ -324,13 +333,15 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       final msg = data['message'];
       if (msg is String && msg.isNotEmpty) return msg;
     }
-    return 'Tarmoq xatosi. Qaytadan urinib ko\'ring.';
+    return 'common.networkError'.tr();
   }
 
   @override
   Widget build(BuildContext context) {
-    _qrLog('build: kIsWeb=$kIsWeb, camState=$_camState, '
-        'processing=$_processing, status=$_status, manualPaste=$_manualPasteMode');
+    _qrLog(
+      'build: kIsWeb=$kIsWeb, camState=$_camState, '
+      'processing=$_processing, status=$_status, manualPaste=$_manualPasteMode',
+    );
 
     // Muvaffaqiyatli ulanish — chiroyli to'liq ekran (boshqa hammasidan ustun).
     if (_success) {
@@ -349,16 +360,20 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             icon: const Icon(Icons.close, color: AppColors.parvozText),
             onPressed: () => Navigator.pop(context),
           ),
-          title: const Text(
-            "Token'ni qo'lda kiriting",
+          title: Text(
+            'pairing.qr.manualTitle'.tr(),
             style: TextStyle(
-                color: AppColors.parvozText, fontWeight: FontWeight.w600),
+              color: AppColors.parvozText,
+              fontWeight: FontWeight.w600,
+            ),
           ),
           actions: [
             IconButton(
-              tooltip: 'Kamerada skanerlash',
-              icon: const Icon(Icons.qr_code_scanner_rounded,
-                  color: AppColors.parvozText),
+              tooltip: 'pairing.qr.scanWithCameraTooltip'.tr(),
+              icon: const Icon(
+                Icons.qr_code_scanner_rounded,
+                color: AppColors.parvozText,
+              ),
               onPressed: () {
                 setState(() => _manualPasteMode = false);
                 // Kameraga qaytsak qaytadan boshlash kerak (controller stop
@@ -387,16 +402,15 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
           icon: const Icon(Icons.close, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
-        title: const Text(
-          'QR kodni skanerlang',
+        title: Text(
+          'pairing.qr.scanTitle'.tr(),
           style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
         ),
         actions: [
           // Paste rejimi — kamera ishlamasa yoki token tayyor bo'lsa.
           IconButton(
-            tooltip: "Token'ni qo'lda kiritish",
-            icon:
-                const Icon(Icons.keyboard_alt_rounded, color: Colors.white),
+            tooltip: 'pairing.qr.manualEntry'.tr(),
+            icon: const Icon(Icons.keyboard_alt_rounded, color: Colors.white),
             onPressed: () => setState(() => _manualPasteMode = true),
           ),
           // Mobil'da torch (web'da effekt bermaydi, lekin tugma bezarar).
@@ -418,20 +432,20 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
       body: switch (_camState) {
         _CamState.starting => const _CameraStartingView(),
         _CamState.denied => _PermissionDeniedView(
-            onRetry: _ensureCameraPermission,
-            onOpenSettings: openAppSettings,
-          ),
+          onRetry: _ensureCameraPermission,
+          onOpenSettings: openAppSettings,
+        ),
         _CamState.error => _CameraErrorView(
-            message: _camError ?? 'Kamera ochilmadi',
-            onRetry: () {
-              _triedFrontFallback = false;
-              // Yangi controller — back camera bilan boshlaymiz.
-              _controller.dispose();
-              _controller = _makeController(CameraFacing.back);
-              _tryStartCamera();
-            },
-            onManualPaste: () => setState(() => _manualPasteMode = true),
-          ),
+          message: _camError ?? 'pairing.qr.cameraOpenFailed'.tr(),
+          onRetry: () {
+            _triedFrontFallback = false;
+            // Yangi controller — back camera bilan boshlaymiz.
+            _controller.dispose();
+            _controller = _makeController(CameraFacing.back);
+            _tryStartCamera();
+          },
+          onManualPaste: () => setState(() => _manualPasteMode = true),
+        ),
         _CamState.granted => _buildScannerBody(context),
       },
     );
@@ -459,7 +473,9 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                     ),
                     const SizedBox(height: 12),
                     Text(
-                      "Kamera ochilmadi: ${error.errorCode.name}",
+                      'pairing.qr.cameraOpenFailedCode'.tr(
+                        namedArgs: {'code': error.errorCode.name},
+                      ),
                       textAlign: TextAlign.center,
                       style: const TextStyle(color: Colors.white),
                     ),
@@ -469,7 +485,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
                         await _controller.stop();
                         await _controller.start();
                       },
-                      child: const Text('Qaytadan urinish'),
+                      child: Text('common.retry'.tr()),
                     ),
                   ],
                 ),
@@ -504,8 +520,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  _status ??
-                      'Ota-ona telefonidagi QR kodni ramka ichiga to\'g\'rilang',
+                  _status ?? 'pairing.qr.scanHint'.tr(),
                   textAlign: TextAlign.center,
                   style: const TextStyle(
                     color: Colors.white,
@@ -540,14 +555,14 @@ class _CameraStartingView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Center(
+    return Center(
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           CircularProgressIndicator(color: Colors.white),
           SizedBox(height: 16),
           Text(
-            'Kamera ochilmoqda...',
+            'pairing.qr.cameraStarting'.tr(),
             style: TextStyle(color: Colors.white70, fontSize: 14),
           ),
         ],
@@ -581,8 +596,8 @@ class _CameraErrorView extends StatelessWidget {
               size: 64,
             ),
             const SizedBox(height: 16),
-            const Text(
-              'Kamera ochilmadi',
+            Text(
+              'pairing.qr.cameraOpenFailed'.tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -605,7 +620,7 @@ class _CameraErrorView extends StatelessWidget {
               child: ElevatedButton.icon(
                 onPressed: onRetry,
                 icon: const Icon(Icons.refresh_rounded),
-                label: const Text('Qaytadan urinish'),
+                label: Text('common.retry'.tr()),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: AppColors.parvozGreen,
                   foregroundColor: AppColors.parvozOnGreen,
@@ -663,8 +678,8 @@ class _PermissionDeniedView extends StatelessWidget {
               size: 72,
             ),
             const SizedBox(height: 20),
-            const Text(
-              'Kamera ruxsati kerak',
+            Text(
+              'pairing.qr.permissionTitle'.tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 20,
@@ -691,7 +706,7 @@ class _PermissionDeniedView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Ruxsat berish'),
+                child: Text('common.grantPermission'.tr()),
               ),
             ),
             const SizedBox(height: 12),
@@ -707,7 +722,7 @@ class _PermissionDeniedView extends StatelessWidget {
                     borderRadius: BorderRadius.circular(12),
                   ),
                 ),
-                child: const Text('Sozlamalarni ochish'),
+                child: Text('common.openSettings'.tr()),
               ),
             ),
           ],
@@ -767,8 +782,7 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
               alignment: Alignment.centerRight,
               child: TextButton.icon(
                 onPressed: () async {
-                  final data =
-                      await Clipboard.getData(Clipboard.kTextPlain);
+                  final data = await Clipboard.getData(Clipboard.kTextPlain);
                   final txt = data?.text?.trim();
                   if (txt == null || txt.isEmpty) return;
                   _controller.text = txt;
@@ -781,8 +795,8 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                   size: 16,
                   color: Colors.white70,
                 ),
-                label: const Text(
-                  'Clipboard',
+                label: Text(
+                  'pairing.qr.pasteButton'.tr(),
                   style: TextStyle(color: Colors.white70, fontSize: 13),
                 ),
               ),
@@ -794,7 +808,7 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
               autofocus: true,
               style: const TextStyle(color: Colors.white, fontSize: 14),
               decoration: InputDecoration(
-                hintText: 'farzandim:repair:... yoki to\'g\'ridan-to\'g\'ri token',
+                hintText: 'pairing.qr.tokenHint'.tr(),
                 hintStyle: const TextStyle(color: Colors.white38),
                 filled: true,
                 // ignore: deprecated_member_use
@@ -840,8 +854,8 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                           strokeWidth: 2,
                         ),
                       )
-                    : const Text(
-                        'Ulanish',
+                    : Text(
+                        'common.connect'.tr(),
                         style: TextStyle(
                           fontSize: 16,
                           fontWeight: FontWeight.w600,
@@ -855,7 +869,9 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
                 widget.status!,
                 textAlign: TextAlign.center,
                 style: const TextStyle(
-                    color: AppColors.parvozBadge, fontSize: 13),
+                  color: AppColors.parvozBadge,
+                  fontSize: 13,
+                ),
               ),
             ],
           ],
@@ -916,38 +932,38 @@ class _PairSuccessView extends StatelessWidget {
                   children: [
                     // Animatsiyali ✓ — oq doira ichida, glow bilan.
                     Container(
-                      width: 132,
-                      height: 132,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.16),
-                        shape: BoxShape.circle,
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.4),
-                          width: 2,
-                        ),
-                      ),
-                      alignment: Alignment.center,
-                      child: Container(
-                        width: 92,
-                        height: 92,
-                        decoration: const BoxDecoration(
-                          color: Colors.white,
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: Color(0x55FFFFFF),
-                              blurRadius: 28,
-                              spreadRadius: 4,
+                          width: 132,
+                          height: 132,
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.16),
+                            shape: BoxShape.circle,
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.4),
+                              width: 2,
                             ),
-                          ],
-                        ),
-                        child: const Icon(
-                          Icons.check_rounded,
-                          color: Color(0xFF16A34A),
-                          size: 56,
-                        ),
-                      ),
-                    )
+                          ),
+                          alignment: Alignment.center,
+                          child: Container(
+                            width: 92,
+                            height: 92,
+                            decoration: const BoxDecoration(
+                              color: Colors.white,
+                              shape: BoxShape.circle,
+                              boxShadow: [
+                                BoxShadow(
+                                  color: Color(0x55FFFFFF),
+                                  blurRadius: 28,
+                                  spreadRadius: 4,
+                                ),
+                              ],
+                            ),
+                            child: const Icon(
+                              Icons.check_rounded,
+                              color: Color(0xFF16A34A),
+                              size: 56,
+                            ),
+                          ),
+                        )
                         .animate()
                         .scale(
                           duration: 500.ms,
@@ -958,15 +974,15 @@ class _PairSuccessView extends StatelessWidget {
                         .fadeIn(duration: 250.ms),
                     const SizedBox(height: 28),
                     Text(
-                      'Muvaffaqiyatli ulandingiz!',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 24,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: -0.3,
-                      ),
-                    )
+                          'pairing.qr.successTitle'.tr(),
+                          textAlign: TextAlign.center,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 24,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
+                          ),
+                        )
                         .animate()
                         .fadeIn(delay: 280.ms, duration: 350.ms)
                         .slideY(begin: 0.25, end: 0, curve: Curves.easeOut),
@@ -974,16 +990,14 @@ class _PairSuccessView extends StatelessWidget {
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 40),
                       child: Text(
-                        "Telefoningiz ota-onangiz hisobiga bog'landi.",
+                        'pairing.qr.successSubtitle'.tr(),
                         textAlign: TextAlign.center,
                         style: TextStyle(
                           color: Colors.white.withValues(alpha: 0.9),
                           fontSize: 15,
                           height: 1.4,
                         ),
-                      )
-                          .animate()
-                          .fadeIn(delay: 420.ms, duration: 350.ms),
+                      ).animate().fadeIn(delay: 420.ms, duration: 350.ms),
                     ),
                     const SizedBox(height: 36),
                     const SizedBox(

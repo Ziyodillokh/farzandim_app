@@ -7,12 +7,13 @@
 //   • Header: ← kvadrat tugma + "Akkount sozlamalari" (chapga)
 //   • Profil rasm qatori: kichik avatar + "Profil rasm" + "Rasm yuklash" pill
 //   • "Ism familiya" input
-//   • "Farzandingizning tug'ilgan kuni" input (KK.OO.YYYY)
+//   • Farzandingizning tug'ilgan kuni input (KK.OO.YYYY)
 //   • Pastda ko'k "Saqlash"
 //
 // LOGIKA SAQLANGAN: uploadMyAvatar + updateMyProfile (backend). Tug'ilgan
 // kundan yosh hisoblanadi; region avvalgi qiymatida saqlanadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/features/account/presentation/providers/child_repository_provider.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
@@ -129,7 +130,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
   Future<void> _onSave() async {
     final name = _nameController.text.trim();
     if (name.isEmpty) {
-      _showSnack("Ism familiyani kiriting", _red);
+      _showSnack('account.edit.errNameRequired'.tr(), _red);
       return;
     }
 
@@ -139,7 +140,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
     if (birthText.isNotEmpty) {
       final parsed = _ageFromBirthText(birthText);
       if (parsed == null) {
-        _showSnack("Sana KK.OO.YYYY formatida bo'lsin", _red);
+        _showSnack('account.edit.errDateFormat'.tr(), _red);
         return;
       }
       age = parsed;
@@ -174,11 +175,14 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
       ref.invalidate(childAvatarUrlProvider(pairing.childId!));
 
       if (!mounted) return;
-      _showSnack('Saqlandi!', _green);
+      _showSnack('common.saved'.tr(), _green);
       Navigator.pop(context);
     } catch (e) {
       if (!mounted) return;
-      _showSnack('Xatolik: $e', _red);
+      _showSnack(
+        'common.errorWithMessage'.tr(namedArgs: {'error': e.toString()}),
+        _red,
+      );
     } finally {
       if (mounted) setState(() => _isLoading = false);
     }
@@ -227,7 +231,9 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                     onTap: () => Navigator.pop(context),
                   ),
                   const SizedBox(width: 14),
-                  Expanded(child: Text('Akkount sozlamalari', style: _unb(19))),
+                  Expanded(
+                    child: Text('account.edit.title'.tr(), style: _unb(19)),
+                  ),
                 ],
               ),
             ),
@@ -244,7 +250,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                   child: Padding(
                     padding: const EdgeInsets.all(24),
                     child: Text(
-                      'Xatolik: $e',
+                      'common.errorWithMessage'.tr(namedArgs: {'error': '$e'}),
                       textAlign: TextAlign.center,
                       style: _pop(13.5, c: _red),
                     ),
@@ -275,7 +281,10 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                             strokeWidth: 2.4,
                           ),
                         )
-                      : Text('Saqlash', style: _pop(15, w: FontWeight.w600)),
+                      : Text(
+                          'common.save'.tr(),
+                          style: _pop(15, w: FontWeight.w600),
+                        ),
                 ),
               ),
             ),
@@ -302,7 +311,9 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                 child: _buildPhoto(),
               ),
               const SizedBox(width: 12),
-              Expanded(child: Text('Profil rasm', style: _pop(14))),
+              Expanded(
+                child: Text('account.edit.profilePhoto'.tr(), style: _pop(14)),
+              ),
               GestureDetector(
                 onTap: _pickPhoto,
                 behavior: HitTestBehavior.opaque,
@@ -317,7 +328,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
                     border: Border.all(color: _glassBorder),
                   ),
                   child: Text(
-                    'Rasm yuklash',
+                    'account.edit.uploadPhoto'.tr(),
                     style: _pop(12.5, w: FontWeight.w600),
                   ),
                 ),
@@ -325,15 +336,18 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
             ],
           ),
           const SizedBox(height: 26),
-          Text('Ism familiya', style: _pop(13.5)),
+          Text('account.edit.nameLabel'.tr(), style: _pop(13.5)),
           const SizedBox(height: 10),
-          _Field(controller: _nameController, hint: 'Ism familiya'),
+          _Field(
+            controller: _nameController,
+            hint: 'account.edit.nameLabel'.tr(),
+          ),
           const SizedBox(height: 18),
           Text("Farzandingizning tug'ilgan kuni", style: _pop(13.5)),
           const SizedBox(height: 10),
           _Field(
             controller: _birthController,
-            hint: 'KK.OO.YYYY',
+            hint: 'account.edit.birthHint'.tr(),
             keyboardType: TextInputType.datetime,
           ),
         ],

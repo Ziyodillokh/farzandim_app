@@ -9,15 +9,16 @@
 // Kartadagi kichik yorliq (inherentDifficulty) — savollar sonidan olinadi
 // (backend darajani bermaydi), faqat ma'lumot uchun; sheet default shu.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 enum TestDifficulty { oson, orta, qiyin }
 
 extension TestDifficultyX on TestDifficulty {
   String get label => switch (this) {
-    TestDifficulty.oson => 'Oson',
-    TestDifficulty.orta => "O'rta",
-    TestDifficulty.qiyin => 'Qiyin',
+    TestDifficulty.oson => 'contests.difficultyEasy'.tr(),
+    TestDifficulty.orta => 'contests.difficultyMedium'.tr(),
+    TestDifficulty.qiyin => 'contests.difficultyHard'.tr(),
   };
 
   /// Yorliq rangi — yashil / amber / qizil.

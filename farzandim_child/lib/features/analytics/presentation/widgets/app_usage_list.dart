@@ -11,6 +11,7 @@
 //
 // LOGIKA SAQLANGAN — faqat ko'rinish parvoz night/glass tokenlar
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
@@ -38,11 +39,11 @@ class AppUsageList extends ConsumerWidget {
       decoration: parvozGlassFlat(radius: 16),
       child: usageAsync.when(
         loading: () => const _LoadingBox(),
-        error: (_, __) => const _EmptyBox(text: "Ma'lumot yuklanmadi"),
+        error: (_, __) => _EmptyBox(text: 'analytics.dataLoadError'.tr()),
         data: (day) {
           final limits = limitsAsync.valueOrNull ?? const <AppLimit>[];
-          final installed = installedAsync.valueOrNull ??
-              const <String, InstalledAppMeta>{};
+          final installed =
+              installedAsync.valueOrNull ?? const <String, InstalledAppMeta>{};
 
           // Parent panel bilan bir xil semantika: bugun ishlatilgan ilovalar
           // + ota-ona qo'ygan cheklov bor (lekin bugun ochilmagan) ilovalar.
@@ -54,7 +55,7 @@ class AppUsageList extends ConsumerWidget {
           );
 
           if (merged.isEmpty) {
-            return const _EmptyBox(text: "Bugun ilova ishlatilmagan");
+            return _EmptyBox(text: 'analytics.noUsageToday'.tr());
           }
 
           final visible = limit != null && limit! < merged.length
@@ -115,8 +116,9 @@ class AppUsageList extends ConsumerWidget {
       // Real nomni installed-apps'dan ustun ko'ramiz — usage endpoint
       // bazan packageName qaytaradi.
       final meta = installed[entry.packageName];
-      final realName =
-          (meta?.appName.isNotEmpty ?? false) ? meta!.appName : entry.appName;
+      final realName = (meta?.appName.isNotEmpty ?? false)
+          ? meta!.appName
+          : entry.appName;
       result.add(
         AppUsageEntry(
           packageName: entry.packageName,
@@ -137,10 +139,7 @@ class AppUsageList extends ConsumerWidget {
       result.add(
         AppUsageEntry(
           packageName: lim.packageName,
-          appName: _displayName(
-            lim.packageName,
-            meta?.appName ?? '',
-          ),
+          appName: _displayName(lim.packageName, meta?.appName ?? ''),
           totalTimeMs: 0,
           lastTimeUsed: DateTime.fromMillisecondsSinceEpoch(0),
           iconBase64: meta?.iconBase64,
@@ -177,24 +176,24 @@ class AppUsageList extends ConsumerWidget {
     return seg[0].toUpperCase() + seg.substring(1);
   }
 
-  static const Map<String, String> _systemNames = {
-    'com.sec.android.app.launcher': 'Bosh ekran',
+  static Map<String, String> get _systemNames => {
+    'com.sec.android.app.launcher': 'analytics.sysHome'.tr(),
     'com.android.launcher': 'Bosh ekran',
     'com.miui.home': 'Bosh ekran',
     'com.google.android.apps.nexuslauncher': 'Bosh ekran',
-    'com.google.android.gms': 'Google xizmatlari',
+    'com.google.android.gms': 'analytics.sysGoogleServices'.tr(),
     'com.google.android.gsf': 'Google xizmatlari',
-    'com.android.settings': 'Sozlamalar',
-    'com.android.systemui': 'Tizim',
+    'com.android.settings': 'analytics.sysSettings'.tr(),
+    'com.android.systemui': 'analytics.sysSystem'.tr(),
     'com.android.vending': 'Play Market',
     'com.android.chrome': 'Chrome',
     'com.google.android.youtube': 'YouTube',
-    'com.android.phone': 'Telefon',
+    'com.android.phone': 'analytics.sysPhone'.tr(),
     'com.samsung.android.dialer': 'Telefon',
     'com.google.android.dialer': 'Telefon',
-    'com.android.camera': 'Kamera',
+    'com.android.camera': 'analytics.sysCamera'.tr(),
     'com.sec.android.app.camera': 'Kamera',
-    'com.android.gallery3d': 'Galereya',
+    'com.android.gallery3d': 'analytics.sysGallery'.tr(),
     'com.sec.android.gallery3d': 'Galereya',
   };
 }
@@ -235,10 +234,7 @@ class _UsageRow extends StatelessWidget {
               ],
             ),
           ),
-          if (trailing != null) ...[
-            const SizedBox(width: 8),
-            trailing,
-          ],
+          if (trailing != null) ...[const SizedBox(width: 8), trailing],
         ],
       ),
     );
@@ -249,20 +245,17 @@ class _UsageRow extends StatelessWidget {
     if (lim == null) {
       return Text(
         app.formattedTime,
-        style: const TextStyle(
-          fontSize: 13,
-          color: AppColors.parvozTextDim,
-        ),
+        style: const TextStyle(fontSize: 13, color: AppColors.parvozTextDim),
       );
     }
 
     if (lim.isFullBlock) {
-      return const Row(
+      return Row(
         children: [
           Icon(AppIcons.block, size: 13, color: AppColors.error),
           SizedBox(width: 4),
           Text(
-            'Bloklangan',
+            'analytics.blockedBadge'.tr(),
             style: TextStyle(
               fontSize: 13,
               color: AppColors.error,
@@ -294,11 +287,7 @@ class _UsageRow extends StatelessWidget {
             ),
             if (overLimit) ...[
               const SizedBox(width: 6),
-              const Icon(
-                AppIcons.warning,
-                size: 13,
-                color: AppColors.error,
-              ),
+              const Icon(AppIcons.warning, size: 13, color: AppColors.error),
             ],
           ],
         ),
@@ -323,8 +312,8 @@ class _UsageRow extends StatelessWidget {
     if (lim == null || lim.isFullBlock) return null;
     final remainingMs = lim.dailyLimitMs - app.totalTimeMs;
     if (remainingMs <= 0) {
-      return const Text(
-        'Tugadi',
+      return Text(
+        'analytics.timeUp'.tr(),
         style: TextStyle(
           fontSize: 12,
           color: AppColors.error,
@@ -335,12 +324,9 @@ class _UsageRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.end,
       children: [
-        const Text(
-          'Qoldi',
-          style: TextStyle(
-            fontSize: 10,
-            color: AppColors.parvozTextDim,
-          ),
+        Text(
+          'analytics.remaining'.tr(),
+          style: TextStyle(fontSize: 10, color: AppColors.parvozTextDim),
         ),
         Text(
           _formatMs(remainingMs),
@@ -429,7 +415,8 @@ class _Fallback extends StatelessWidget {
           ? Icon(icon, color: Colors.white, size: size * 0.52)
           : Text(
               _initialsForName(
-                  app.appName.isEmpty ? app.packageName : app.appName),
+                app.appName.isEmpty ? app.packageName : app.appName,
+              ),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 14,

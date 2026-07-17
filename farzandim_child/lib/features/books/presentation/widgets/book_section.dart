@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -35,8 +36,8 @@ class BookSection extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              const Text(
-                'Barchasi',
+              Text(
+                'books.section.viewAll'.tr(),
                 style: TextStyle(color: AppColors.primary, fontSize: 13),
               ),
             ],
@@ -51,10 +52,8 @@ class BookSection extends StatelessWidget {
             padding: const EdgeInsets.symmetric(horizontal: 16),
             itemCount: books.length,
             separatorBuilder: (_, _) => const SizedBox(width: 12),
-            itemBuilder: (_, i) => BookCard(
-              book: books[i],
-              onTap: () => onTap(books[i]),
-            ),
+            itemBuilder: (_, i) =>
+                BookCard(book: books[i], onTap: () => onTap(books[i])),
           ),
         ),
       ],

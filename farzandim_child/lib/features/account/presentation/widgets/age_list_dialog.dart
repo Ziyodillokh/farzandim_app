@@ -2,6 +2,7 @@
 // AgeListDialog — yosh tanlash dialogi (5-18)
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
@@ -24,10 +25,10 @@ class AgeListDialog extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            const Padding(
+            Padding(
               padding: EdgeInsets.all(16),
               child: Text(
-                'Yoshini tanlang',
+                'account.ageDialog.title'.tr(),
                 style: TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
@@ -46,7 +47,9 @@ class AgeListDialog extends StatelessWidget {
 
                   return ListTile(
                     title: Text(
-                      '$age yosh',
+                      'account.ageDialog.ageValue'.tr(
+                        namedArgs: {'age': '$age'},
+                      ),
                       style: TextStyle(
                         color: AppColors.textPrimary,
                         fontWeight: isSelected

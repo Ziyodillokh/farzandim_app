@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -20,21 +21,23 @@ class BooksFeedScreen extends ConsumerWidget {
       backgroundColor: pv.pvBg,
       body: SafeArea(
         child: asyncBooks.when(
-          loading: () => Center(
-            child: CircularProgressIndicator(color: pv.pvGreen),
-          ),
+          loading: () =>
+              Center(child: CircularProgressIndicator(color: pv.pvGreen)),
           error: (e, _) => _ErrorView(
-              error: e.toString(),
-              onRetry: () => ref.invalidate(backendBooksProvider)),
+            error: e.toString(),
+            onRetry: () => ref.invalidate(backendBooksProvider),
+          ),
           data: (books) {
             if (books.isEmpty) return const _EmptyView();
             // Kategoriya bo'yicha grouplash — oddiy: 3 ta section
             final school = books.where((b) => b.category == 'school').toList();
-            final adabiyot =
-                books.where((b) => b.category == 'adabiyot').toList();
+            final adabiyot = books
+                .where((b) => b.category == 'adabiyot')
+                .toList();
             final other = books
                 .where(
-                    (b) => b.category != 'school' && b.category != 'adabiyot')
+                  (b) => b.category != 'school' && b.category != 'adabiyot',
+                )
                 .toList();
             return RefreshIndicator(
               color: pv.pvGreen,
@@ -49,7 +52,7 @@ class BooksFeedScreen extends ConsumerWidget {
                   Padding(
                     padding: const EdgeInsets.fromLTRB(16, 0, 16, 12),
                     child: Text(
-                      'Kitoblar',
+                      'books.title'.tr(),
                       style: TextStyle(
                         color: pv.pvText,
                         fontSize: 24,
@@ -59,25 +62,25 @@ class BooksFeedScreen extends ConsumerWidget {
                     ),
                   ),
                   BookSection(
-                    title: 'Hammasi',
+                    title: 'books.categoryAll'.tr(),
                     books: books,
                     onTap: (b) => _openPdf(context, b),
                   ),
                   const SizedBox(height: 20),
                   BookSection(
-                    title: 'Maktab darsliklari',
+                    title: 'books.categorySchool'.tr(),
                     books: school,
                     onTap: (b) => _openPdf(context, b),
                   ),
                   if (adabiyot.isNotEmpty) const SizedBox(height: 20),
                   BookSection(
-                    title: 'Adabiyot',
+                    title: 'books.categoryLiterature'.tr(),
                     books: adabiyot,
                     onTap: (b) => _openPdf(context, b),
                   ),
                   if (other.isNotEmpty) const SizedBox(height: 20),
                   BookSection(
-                    title: 'Boshqalar',
+                    title: 'books.categoryOthers'.tr(),
                     books: other,
                     onTap: (b) => _openPdf(context, b),
                   ),
@@ -110,10 +113,7 @@ class _EmptyView extends StatelessWidget {
           children: [
             Icon(AppIcons.menu, size: 64, color: pv.pvTextDim),
             const SizedBox(height: 16),
-            Text(
-              'Hozircha kitoblar mavjud emas.',
-              style: TextStyle(color: pv.pvTextDim),
-            ),
+            Text('books.empty'.tr(), style: TextStyle(color: pv.pvTextDim)),
           ],
         ),
       ),
@@ -138,7 +138,7 @@ class _ErrorView extends StatelessWidget {
             Icon(AppIcons.error, size: 48, color: pv.pvTextDim),
             const SizedBox(height: 16),
             Text(
-              'Yuklab bo\'lmadi.',
+              'books.loadFailed'.tr(),
               style: TextStyle(color: pv.pvText, fontSize: 16),
             ),
             const SizedBox(height: 8),
@@ -147,10 +147,7 @@ class _ErrorView extends StatelessWidget {
               textAlign: TextAlign.center,
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: TextStyle(
-                color: pv.pvTextDim,
-                fontSize: 12,
-              ),
+              style: TextStyle(color: pv.pvTextDim, fontSize: 12),
             ),
             const SizedBox(height: 16),
             FilledButton(
@@ -159,7 +156,7 @@ class _ErrorView extends StatelessWidget {
                 foregroundColor: pv.pvOnGreen,
               ),
               onPressed: onRetry,
-              child: const Text('Qayta urinish'),
+              child: Text('common.retry'.tr()),
             ),
           ],
         ),

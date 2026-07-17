@@ -122,7 +122,7 @@ class _LanguageSelectScreenState extends State<LanguageSelectScreen> {
                   Padding(
                     padding: const EdgeInsets.only(bottom: 20),
                     child: Text(
-                      'Version - 1.0',
+                      'language.version'.tr(),
                       style: GoogleFonts.poppins(
                         fontSize: 14,
                         color: Colors.white.withValues(alpha: 0.2),

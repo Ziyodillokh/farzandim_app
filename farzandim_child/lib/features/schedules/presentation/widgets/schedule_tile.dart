@@ -6,6 +6,7 @@
 // Fon: parvozGlassFlat (soyasiz glass) — ro'yxat itemlar uchun mos.
 // Logika (schedule model, isCurrent, type icon) O'ZGARMAGAN.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -82,7 +83,9 @@ class ScheduleTile extends StatelessWidget {
             ),
             child: Icon(
               _typeIcon(schedule.type),
-              color: isCurrent ? AppColors.parvozGreen : AppColors.parvozTextDim,
+              color: isCurrent
+                  ? AppColors.parvozGreen
+                  : AppColors.parvozTextDim,
               size: 22,
             ),
           ),
@@ -144,8 +147,8 @@ class _HozirBadge extends StatelessWidget {
           ),
         ],
       ),
-      child: const Text(
-        'HOZIR',
+      child: Text(
+        'schedules.nowBadge'.tr(),
         style: TextStyle(
           color: AppColors.parvozOnGreen,
           fontSize: 10,

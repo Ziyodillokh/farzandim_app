@@ -800,7 +800,7 @@ class _MyLocationButton extends StatelessWidget {
 // ════════════════════════ STATUS CARD (Figma) ════════════════════════
 
 /// Xarita ustidagi suzuvchi holat kartasi (Figma): chap — joy ikoni,
-/// markaz — joy holati ("Ko'chada" yoki zona nomi) + manzil, o'ng —
+/// markaz — joy holati (Ko'chada yoki zona nomi) + manzil, o'ng —
 /// recenter (navigatsiya) tugmasi.
 class _StatusCard extends ConsumerWidget {
   const _StatusCard({
@@ -821,7 +821,11 @@ class _StatusCard extends ConsumerWidget {
     // Joriy joylashuv biror zona ichidami — "Uyda"/"Maktabda", aks holda
     // "Ko'chada" (Figma).
     final currentZone = _zoneForStop(location.latLng, zones);
-    final status = currentZone != null ? '${currentZone.name}da' : "Ko'chada";
+    final status = currentZone != null
+        ? 'location.status.inZone'.tr(
+            namedArgs: {'zone': currentZone.name},
+          )
+        : "Ko'chada";
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),
       decoration: BoxDecoration(

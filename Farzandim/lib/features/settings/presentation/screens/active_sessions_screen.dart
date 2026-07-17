@@ -136,9 +136,9 @@ class _RemovalBanner extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
-                  'Yangi qurilma tasdiqlandi',
-                  style: TextStyle(
+                Text(
+                  'settings.sessions.newDeviceApprovedTitle'.tr(),
+                  style: const TextStyle(
                     color: Colors.white,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,

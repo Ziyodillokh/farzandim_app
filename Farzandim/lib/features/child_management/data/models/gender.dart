@@ -1,6 +1,8 @@
 // Bola jinsi uchun enum. String o'rniga enum tanlangan: 'male' dagi tipo
 // kompilatsiyada ushlanmaydi, enum bilan esa switch hamma variantni qamraydi.
 
+import 'package:easy_localization/easy_localization.dart';
+
 /// Bola jinsi.
 enum Gender { male, female }
 
@@ -10,9 +12,9 @@ extension GenderX on Gender {
   String get label {
     switch (this) {
       case Gender.male:
-        return "O'g'il";
+        return 'gender.male'.tr();
       case Gender.female:
-        return 'Qiz';
+        return 'gender.female'.tr();
     }
   }
 }

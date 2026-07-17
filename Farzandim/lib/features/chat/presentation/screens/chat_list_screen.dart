@@ -48,23 +48,23 @@ String _timeLabel(DateTime d) {
         '${d.minute.toString().padLeft(2, '0')}';
   }
   final diff = today.difference(that).inDays;
-  if (diff == 1) return 'kecha';
-  return '$diff kun';
+  if (diff == 1) return 'chat.previewYesterday'.tr();
+  return 'chat.previewDaysAgo'.tr(namedArgs: {'days': diff.toString()});
 }
 
 String _preview(ChatItem? item) {
-  if (item == null) return 'Suhbatni boshlang';
+  if (item == null) return 'chat.startConversation'.tr();
   return switch (item) {
-    VideoItem() => '📹 Video xabar',
+    VideoItem() => 'chat.previewVideo'.tr(),
     VoiceItem(:final message) => _voicePreview(message),
   };
 }
 
 String _voicePreview(VoiceMessage m) {
   if (m.isText) return m.text ?? '';
-  if (m.isImage) return '📷 Rasm';
-  if (m.isFile) return '📎 Fayl';
-  return '🎤 Ovozli xabar';
+  if (m.isImage) return 'chat.previewImage'.tr();
+  if (m.isFile) return 'chat.previewFile'.tr();
+  return 'chat.previewVoice'.tr();
 }
 
 /// "Chatlar" ro'yxati ekrani (real).
@@ -85,16 +85,21 @@ class ChatListScreen extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(20, 26, 20, 12),
               child: Row(
                 children: [
-                  _BackButton(onTap: () {
-                    if (context.canPop()) {
-                      context.pop();
-                    } else {
-                      context.go(AppRoutes.dashboard);
-                    }
-                  }),
+                  _BackButton(
+                    onTap: () {
+                      if (context.canPop()) {
+                        context.pop();
+                      } else {
+                        context.go(AppRoutes.dashboard);
+                      }
+                    },
+                  ),
                   Expanded(
-                    child: Text('chat.title'.tr(),
-                        textAlign: TextAlign.center, style: _unb(22)),
+                    child: Text(
+                      'chat.title'.tr(),
+                      textAlign: TextAlign.center,
+                      style: _unb(22),
+                    ),
                   ),
                   const SizedBox(width: 44),
                 ],
@@ -129,8 +134,11 @@ class _Empty extends StatelessWidget {
           children: [
             const Icon(SolarIconsBold.chatRoundLine, size: 46, color: _dim),
             const SizedBox(height: 14),
-            Text("Hali bola qo'shilmagan",
-                textAlign: TextAlign.center, style: _pop(15, c: _dim)),
+            Text(
+              'chat.noChildren'.tr(),
+              textAlign: TextAlign.center,
+              style: _pop(15, c: _dim),
+            ),
           ],
         ),
       ),
@@ -189,15 +197,19 @@ class _ChatTile extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(child.name,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _unb(16)),
+                  Text(
+                    child.name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(16),
+                  ),
                   const SizedBox(height: 3),
-                  Text(_preview(latest),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: _pop(13, c: _dim)),
+                  Text(
+                    _preview(latest),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(13, c: _dim),
+                  ),
                 ],
               ),
             ),
@@ -205,18 +217,24 @@ class _ChatTile extends ConsumerWidget {
             Column(
               crossAxisAlignment: CrossAxisAlignment.end,
               children: [
-                Text(latest == null ? '' : _timeLabel(latest.createdAt),
-                    style: _pop(12, c: _dim)),
+                Text(
+                  latest == null ? '' : _timeLabel(latest.createdAt),
+                  style: _pop(12, c: _dim),
+                ),
                 const SizedBox(height: 8),
                 if (unread > 0)
                   Container(
                     padding: const EdgeInsets.all(6),
                     constraints: const BoxConstraints(minWidth: 22),
                     decoration: const BoxDecoration(
-                        color: _blue, shape: BoxShape.circle),
-                    child: Text('$unread',
-                        textAlign: TextAlign.center,
-                        style: _pop(11, w: FontWeight.w700)),
+                      color: _blue,
+                      shape: BoxShape.circle,
+                    ),
+                    child: Text(
+                      '$unread',
+                      textAlign: TextAlign.center,
+                      style: _pop(11, w: FontWeight.w700),
+                    ),
                   )
                 else
                   const SizedBox(height: 22),
@@ -247,8 +265,11 @@ class _BackButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: _fieldBorder),
         ),
-        child: const Icon(SolarIconsOutline.arrowLeft,
-            size: 22, color: Colors.white),
+        child: const Icon(
+          SolarIconsOutline.arrowLeft,
+          size: 22,
+          color: Colors.white,
+        ),
       ),
     );
   }

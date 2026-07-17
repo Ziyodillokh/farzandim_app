@@ -9,6 +9,7 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:typed_data';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -46,8 +47,9 @@ class UploadState {
   }
 }
 
-final videoMessageServiceProvider =
-    Provider<VideoMessageService>((ref) => VideoMessageService());
+final videoMessageServiceProvider = Provider<VideoMessageService>(
+  (ref) => VideoMessageService(),
+);
 
 /// Bola yuborgan oxirgi video xabar (status indikator uchun). Pairing
 /// state'dan parentUid + childId o'qiydi. **LEGACY** — Firestore stream.
@@ -58,10 +60,9 @@ final latestVideoMessageProvider = StreamProvider<VideoMessage?>((ref) {
       pairing.childId == null) {
     return Stream.value(null);
   }
-  return ref.watch(videoMessageServiceProvider).latestForChild(
-        parentUid: pairing.parentUid!,
-        childId: pairing.childId!,
-      );
+  return ref
+      .watch(videoMessageServiceProvider)
+      .latestForChild(parentUid: pairing.parentUid!, childId: pairing.childId!);
 });
 
 /// Video xabarlar ro'yxati — Backend fetch + WS `video:received` listen.
@@ -69,8 +70,7 @@ final latestVideoMessageProvider = StreamProvider<VideoMessage?>((ref) {
 /// Voice pattern bilan parallel: pairing.currentUserId orqali Backend
 /// `/api/video-messages` (joriy user'ga aloqador hammasi) → DESC sortlangan
 /// keladi. Bu yerda ASC ga aylantirib qaytaramiz (chat ekran chronological).
-final videoMessagesProvider =
-    StreamProvider<List<VideoMessage>>((ref) async* {
+final videoMessagesProvider = StreamProvider<List<VideoMessage>>((ref) async* {
   final pairing = ref.watch(pairingStateProvider);
   if (!pairing.isPaired) {
     yield const <VideoMessage>[];
@@ -85,16 +85,10 @@ final videoMessagesProvider =
 
   // faqat ota-ona bilan oxirgi 100 ta xabar — to'liq tarix tortilmaydi
   Future<List<VideoMessage>> fetch() async {
-    final raw = await repo.getMessages(
-      peerId: pairing.parentUid,
-      limit: 100,
-    );
+    final raw = await repo.getMessages(peerId: pairing.parentUid, limit: 100);
     return raw
         .map(
-          (m) => VideoMessage.fromBackendJson(
-            m,
-            currentUserId: currentUserId,
-          ),
+          (m) => VideoMessage.fromBackendJson(m, currentUserId: currentUserId),
         )
         .toList();
   }
@@ -114,8 +108,8 @@ final videoMessagesProvider =
 
 final videoMessageUploadProvider =
     StateNotifierProvider<VideoMessageUploadNotifier, UploadState>(
-  (ref) => VideoMessageUploadNotifier(ref),
-);
+      (ref) => VideoMessageUploadNotifier(ref),
+    );
 
 class VideoMessageUploadNotifier extends StateNotifier<UploadState> {
   VideoMessageUploadNotifier(this._ref) : super(const UploadState());
@@ -135,7 +129,7 @@ class VideoMessageUploadNotifier extends StateNotifier<UploadState> {
         pairing.childId == null) {
       state = state.copyWith(
         status: UploadStatus.error,
-        errorMessage: 'Pair qilingan emas',
+        errorMessage: 'common.notPaired'.tr(),
       );
       return false;
     }
@@ -160,10 +154,7 @@ class VideoMessageUploadNotifier extends StateNotifier<UploadState> {
       );
       return true;
     } catch (e) {
-      state = state.copyWith(
-        status: UploadStatus.error,
-        errorMessage: '$e',
-      );
+      state = state.copyWith(status: UploadStatus.error, errorMessage: '$e');
       return false;
     }
   }
@@ -181,15 +172,12 @@ class VideoMessageUploadNotifier extends StateNotifier<UploadState> {
         pairing.childId == null) {
       state = state.copyWith(
         status: UploadStatus.error,
-        errorMessage: 'Pair qilingan emas',
+        errorMessage: 'common.notPaired'.tr(),
       );
       return false;
     }
 
-    state = const UploadState(
-      status: UploadStatus.uploading,
-      progress: 0.0,
-    );
+    state = const UploadState(status: UploadStatus.uploading, progress: 0.0);
 
     try {
       // Sprint 4.4.9 Day 4: Backend POST /video-messages.

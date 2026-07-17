@@ -9,6 +9,7 @@
 //   - "Rad etish" → deny
 //   - tashqariga bossa → null (bekor)
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -77,7 +78,7 @@ class UnlockDecisionSheet extends StatelessWidget {
   Widget build(BuildContext context) {
     final subject = (appName != null && appName!.trim().isNotEmpty)
         ? appName!
-        : 'ekran vaqti';
+        : 'notifications.unlock.screenTimeSubject'.tr();
     final req = requestedMinutes;
     final reasonText = reason?.trim();
     // So'ralgan miqdor bo'lsa, chiplar "boshqa muddat" sifatida shu qiymatni
@@ -115,7 +116,7 @@ class UnlockDecisionSheet extends StatelessWidget {
               ),
             ),
             Text(
-              "Qo'shimcha vaqt",
+              'notifications.unlock.sheetTitle'.tr(),
               style: AppTextStyles.headlineL.copyWith(fontSize: 20),
             ),
             const SizedBox(height: 6),
@@ -144,7 +145,7 @@ class UnlockDecisionSheet extends StatelessWidget {
               ),
               const SizedBox(height: AppDimensions.md),
               Text(
-                'Boshqa muddat berish:',
+                'notifications.unlock.otherDurationLabel'.tr(),
                 style: AppTextStyles.label.copyWith(
                   color: AppColors.textTertiary,
                 ),
@@ -185,7 +186,7 @@ class UnlockDecisionSheet extends StatelessWidget {
                     padding: const EdgeInsets.symmetric(vertical: 14),
                     child: Center(
                       child: Text(
-                        'Rad etish',
+                        'notifications.unlock.deny'.tr(),
                         style: AppTextStyles.bodyM.copyWith(
                           color: AppColors.error,
                           fontWeight: FontWeight.w700,
@@ -271,7 +272,9 @@ class _ApproveRequestedButton extends StatelessWidget {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  'Tasdiqlash ($minutes daqiqa)',
+                  'notifications.unlock.approveMinutes'.tr(
+                    namedArgs: {'minutes': '$minutes'},
+                  ),
                   style: AppTextStyles.bodyM.copyWith(
                     color: Colors.black,
                     fontWeight: FontWeight.w800,
@@ -308,7 +311,9 @@ class _MinuteChip extends StatelessWidget {
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
           child: Text(
-            '$minutes daqiqa',
+            'notifications.unlock.minutesChip'.tr(
+              namedArgs: {'minutes': '$minutes'},
+            ),
             style: AppTextStyles.bodyM.copyWith(
               color: AppColors.primary,
               fontWeight: FontWeight.w700,

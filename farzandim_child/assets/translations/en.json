@@ -15,7 +15,23 @@
     "errorPrefix": "Error: {error}",
     "retry": "Retry",
     "close": "Close",
-    "fallbackChildName": "Child"
+    "fallbackChildName": "Child",
+    "weekdaysShort": "Mo,Tu,We,Th,Fr,Sa,Su",
+    "details": "Details",
+    "enable": "Turn on",
+    "later": "Later",
+    "open": "Open",
+    "errorWithMessage": "Error: {error}",
+    "networkError": "Network error. Please try again.",
+    "grantPermission": "Grant permission",
+    "openSettings": "Open settings",
+    "connect": "Connect",
+    "saved": "Saved!",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "daysAgo": "{days} days ago",
+    "cancelShort": "Cancel",
+    "notPaired": "Not paired"
   },
   "languages": {
     "uz": "Uzbek",
@@ -26,7 +42,8 @@
     "home": "Home",
     "videos": "Videos",
     "quizzes": "Quizzes",
-    "audiobooks": "Audiobooks"
+    "audiobooks": "Audiobooks",
+    "profile": "Profile"
   },
   "welcome": {
     "appName": "Parvoz",
@@ -36,7 +53,8 @@
   },
   "language": {
     "selectTitle": "Choose your language",
-    "selectSubtitle": "Which language do you want to use the app in?"
+    "selectSubtitle": "Which language do you want to use the app in?",
+    "version": "Version - 1.0"
   },
   "onboarding": {
     "skip": "Skip",
@@ -101,7 +119,42 @@
     "enterCodeTitle": "Enter the code from your parent's app",
     "enterCodeSubtitle": "The code is 5 digits and valid for 24 hours",
     "enterButton": "Enter",
-    "howItWorks": "How does this work?"
+    "howItWorks": "How does this work?",
+    "qr": {
+      "errorPermissionDenied": "Camera access denied. Tap the lock icon in the browser address bar and enable camera access.",
+      "errorNoCamera": "No camera found on your device. You can enter the QR code manually.",
+      "errorCameraBusy": "The camera is busy in another app. Close the other app (Zoom, Meet, Camera app) and try again.",
+      "errorNoSuitableCamera": "No suitable camera found. Switch to manual entry mode.",
+      "errorInsecure": "A secure connection is required (HTTPS or localhost).",
+      "errorCameraGeneric": "Could not open the camera. Try again or enter the QR code manually.",
+      "notRecognized": "QR code not recognized. Scan a valid code.",
+      "connecting": "Connecting...",
+      "dataLoadFailed": "Connected, but data did not load. Please try again.",
+      "manualTitle": "Enter the token manually",
+      "scanWithCameraTooltip": "Scan with camera",
+      "scanTitle": "Scan the QR code",
+      "manualEntry": "Enter token manually",
+      "cameraOpenFailed": "Could not open camera",
+      "cameraOpenFailedCode": "Could not open camera: {code}",
+      "scanHint": "Align the QR code on your parent's phone within the frame.",
+      "cameraStarting": "Opening camera...",
+      "permissionTitle": "Camera permission required",
+      "permissionBody": "Grant camera access to scan the QR code. If you denied it before, enable it manually in Settings.",
+      "pasteHelp": "If the camera doesn't work, you can paste the QR text from the Parent app here to connect.",
+      "pasteButton": "Paste",
+      "tokenHint": "farzandim:repair:... or the token itself",
+      "successTitle": "Successfully connected!",
+      "successSubtitle": "Your phone is linked to your parent's account."
+    },
+    "wait": {
+      "timeLeft": "Time left: {time}",
+      "rejectedTitle": "Rejected",
+      "expiredTitle": "Expired",
+      "waitingTitle": "Waiting for your parent's confirmation",
+      "rejectedBody": "Your parent rejected your connection request.\nEnter a new code or contact your parent.",
+      "expiredBody": "No confirmation received within 5 minutes.\nPlease try again.",
+      "waitingBody": "Your parent needs to see the notification in the Parent app and confirm. This screen updates automatically."
+    }
   },
   "permissions": {
     "title": "Permissions",
@@ -118,6 +171,17 @@
     "progress": "{current} / {total}"
   },
   "permissionSetup": {
+    "p_overlay": "Display over other apps",
+    "p_overlayHint": "Find \"Ota-onam\" and turn on \"Allow\"",
+    "p_location": "Allow location access",
+    "p_battery": "Turn off battery optimization",
+    "p_mic": "Allow microphone access",
+    "p_usage": "Allow usage access",
+    "p_backgroundData": "Allow unrestricted background data",
+    "p_notif": "Enable notifications",
+    "p_autostart": "Enable app auto-start",
+    "p_other": "Enable other permissions",
+    "p_notifListener": "Allow notification access",
     "title": "Permissions",
     "subtitle": "Enable these permissions for Farzandim to work correctly",
     "next": "Next",
@@ -138,7 +202,8 @@
     "step4Subtitle": "To show when time runs out",
     "stepNumber": "{number}. {title}",
     "grantButton": "Enable",
-    "autoContinueHint": "Will continue automatically once all are enabled"
+    "autoContinueHint": "Will continue automatically once all are enabled",
+    "uninstallProtectionName": "Prevent uninstall"
   },
   "dashboard": {
     "greeting": "Hi, {name}!",
@@ -183,7 +248,11 @@
     "motivationalLabel": "Tip of the day",
     "scheduleButton": "My schedule",
     "voiceTestButton": "Voice message (test)",
-    "videoTestButton": "Record video (test)"
+    "videoTestButton": "Record video (test)",
+    "newTests": "New tests",
+    "newTestsSoon": "New tests coming soon",
+    "newAudiobooks": "New audiobooks",
+    "trendVideos": "Trending videos"
   },
   "voiceChat": {
     "title": "Voice message",
@@ -206,7 +275,22 @@
     "attachFile": "File",
     "voiceMode": "Voice mode",
     "videoMode": "Video mode",
-    "mediaSendError": "Failed to send file"
+    "mediaSendError": "Failed to send file",
+    "cameraNotFound": "Camera not found",
+    "recordFailed": "Couldn't record: {error}",
+    "lock": "Lock",
+    "tapToFinish": "Tap to finish",
+    "pressToRecord": "Press and hold to record",
+    "inputHint": "Message...",
+    "recording": "Recording...",
+    "voiceSent": "Voice message sent",
+    "parentNotFound": "Parent not found",
+    "messageSendFailed": "Message not sent: {error}",
+    "fileSendError": "Error sending file",
+    "videoPreparing": "Preparing video…",
+    "videoSendFailed": "Video not sent: {error}",
+    "videoSent": "Video sent",
+    "startConversationEmpty": "Start a conversation"
   },
   "videoRecording": {
     "title": "Video message",
@@ -239,7 +323,12 @@
       "tabFollowing": "Following",
       "tabForYou": "For you",
       "searchHint": "Search...",
-      "viewAll": "View all"
+      "viewAll": "View all",
+      "headerTitle": "Videos",
+      "categoryAll": "All",
+      "noVideosTitle": "No videos yet",
+      "noVideosSubtitle": "New videos will be added soon",
+      "refresh": "Refresh"
     },
     "filter": {
       "title": "Filter",
@@ -260,8 +349,29 @@
       "sleepOff": "Off",
       "sleepOffButton": "Turn off",
       "sleepMinutes": "{min} minutes",
-      "sleepMinShort": "{min} min"
-    }
+      "sleepMinShort": "{min} min",
+      "retry": "Try again"
+    },
+    "history": {
+      "title": "Watch history",
+      "emptyTitle": "History is empty",
+      "emptySubtitle": "Videos you watch will appear here"
+    },
+    "liked": {
+      "title": "Liked videos",
+      "emptyTitle": "No liked videos yet",
+      "emptySubtitle": "Add by long-pressing a video or tapping ♥"
+    },
+    "engagement": {
+      "loadFailed": "Failed to load data",
+      "loadFailedSubtitle": "Check your internet and pull to refresh"
+    },
+    "youtube": {
+      "invalidLink": "Invalid video link",
+      "fullscreen": "Fullscreen"
+    },
+    "viewsCount": "{count} views",
+    "categoryAllAlt": "All"
   },
   "account": {
     "title": "Edit profile",
@@ -281,7 +391,24 @@
     "savedSnack": "Saved ✅",
     "errorPrefix": "Error: {error}",
     "backButton": "Back",
-    "saveButton": "Save"
+    "saveButton": "Save",
+    "edit": {
+      "errNameRequired": "Enter your full name",
+      "errDateFormat": "Date must be in DD.MM.YYYY format",
+      "title": "Account settings",
+      "profilePhoto": "Profile photo",
+      "uploadPhoto": "Upload photo",
+      "nameLabel": "Full name",
+      "birthLabel": "Your child's date of birth",
+      "birthHint": "DD.MM.YYYY"
+    },
+    "ageDialog": {
+      "title": "Choose age",
+      "ageValue": "{age} years"
+    },
+    "regionPicker": {
+      "title": "Choose region"
+    }
   },
   "social": {
     "tabFollowing": "Following",
@@ -305,7 +432,14 @@
     "justNow": "just now",
     "minutesAgo": "{min} min ago",
     "hoursAgo": "{h}h ago",
-    "daysAgo": "{d}d ago"
+    "daysAgo": "{d}d ago",
+    "fallbackTitle": "Notification",
+    "sectionToday": "Today",
+    "sectionYesterday": "Yesterday",
+    "channel": {
+      "name": "Parvoz notifications",
+      "desc": "Voice/video messages from parents, photo requests, and more"
+    }
   },
   "gamification": {
     "statusBeginner": "Beginner",
@@ -344,7 +478,11 @@
     "achievementContentCreatorTitle": "Content creator",
     "achievementContentCreatorDesc": "5 moderated posts",
     "achievementHelperTitle": "Helper",
-    "achievementHelperDesc": "Correct answer to another child"
+    "achievementHelperDesc": "Correct answer to another child",
+    "achievementStreak7Title": "7 days in a row",
+    "achievementMathTop100Title": "Math TOP-100",
+    "achievementTenBooksTitle": "10th book",
+    "achievementStreak100Title": "100 days"
   },
   "schedules": {
     "title": "My schedule",
@@ -363,7 +501,8 @@
     "allDone": "Today's events are done",
     "todayList": "Today's schedule",
     "emptyTitle": "No events today",
-    "emptySubtitle": "Take a break!"
+    "emptySubtitle": "Take a break!",
+    "nowBadge": "NOW"
   },
   "settings": {
     "title": "Settings",
@@ -398,6 +537,291 @@
     "webBrowser": "Web browser",
     "aboutBody": "Parvoz — a safe learning and family connection app for children.",
     "version": "Version",
-    "copied": "Copied"
+    "copied": "Copied",
+    "contactPhone": "Phone"
+  },
+  "analytics": {
+    "title": "Apps",
+    "tabAll": "All",
+    "tabLimited": "Time limit",
+    "tabBlocked": "Blocked",
+    "limitsLoadError": "Failed to load restrictions",
+    "noLimits": "No time limits set",
+    "noBlocked": "No blocked apps",
+    "timeUp": "Used up",
+    "remaining": "Left",
+    "blockedBadge": "Blocked",
+    "blockedSection": "Blocked apps",
+    "limitedSection": "Time limit",
+    "limitPerDayMinutes": "{minutes} min/day",
+    "dataLoadError": "Failed to load data",
+    "noUsageToday": "No apps used today",
+    "sysHome": "Home screen",
+    "sysGoogleServices": "Google services",
+    "sysSettings": "Settings",
+    "sysSystem": "System",
+    "sysPhone": "Phone",
+    "sysCamera": "Camera",
+    "sysGallery": "Gallery",
+    "prevDayTooltip": "Previous day",
+    "nextDayTooltip": "Next day",
+    "dateToday": "Today · {date}",
+    "dateYesterday": "Yesterday · {date}",
+    "last7Days": "Last 7 days"
+  },
+  "time": {
+    "lessThanMinute": "< 1 min",
+    "minutes": "{m} min",
+    "hours": "{h} h",
+    "hoursMinutes": "{h} h {m} min",
+    "hoursMinutesShort": "{h} h {m} min"
+  },
+  "statistics": {
+    "title": "Statistics",
+    "booksRead": "Books read",
+    "itemsCount": "{count}",
+    "testsCompleted": "Tests taken",
+    "dailySteps": "Daily steps",
+    "dailyProgress": "Daily progress",
+    "daysCount": "{days} days",
+    "donBalance": "DON balance",
+    "avgScreenTime": "Average daily screen time"
+  },
+  "ranking": {
+    "emptyTitle": "No ranking here yet",
+    "emptySubtitle": "Take tests and earn DON — you'll appear in the ranking.",
+    "title": "DON ranking",
+    "helpTitle": "DON ranking",
+    "helpContent": "You earn DON points for reading books, taking tests and daily activity. The ranking is calculated by region or across all of Uzbekistan.",
+    "helpClose": "Got it",
+    "byRegion": "By region",
+    "allUzbekistan": "All Uzbekistan",
+    "you": "You"
+  },
+  "profile": {
+    "savedVideos": "Saved videos",
+    "achievements": "Achievements",
+    "accept": "Accept"
+  },
+  "contests": {
+    "loadError": "Failed to load tests",
+    "checkInternet": "Check your internet and pull to retry",
+    "emptyTitle": "No tests yet",
+    "emptySubtitle": "New tests will be added soon",
+    "finishedSnack": "This test has ended — results are in the Ranking",
+    "favAdded": "Added to favorites",
+    "favRemoved": "Removed from favorites",
+    "preparingQuestions": "Preparing questions...",
+    "previous": "Previous",
+    "finish": "Finish",
+    "next": "Next",
+    "rulesTitle": "Test rules",
+    "rule1": "Pick an answer — correct turns green, wrong turns red",
+    "rule2": "Move between questions using Previous / Next",
+    "rule3": "When the total time runs out, the test ends automatically",
+    "selectedQuestions": "Selected questions",
+    "exitTest": "Exit test",
+    "continueTest": "Continue",
+    "result": "Result",
+    "record": "Record",
+    "reward": "Reward",
+    "toHome": "To home",
+    "rematch": "Rematch",
+    "conditionsTitle": "Contest terms",
+    "difficultyLabel": "Difficulty level",
+    "questionsCount": "Number of questions",
+    "timePerQuestion": "Time per question",
+    "secondsEach": "{seconds} seconds each",
+    "prize": "Prize",
+    "upTo": "up to",
+    "prizeNote": "Each correct answer earns a share. If the result is below 30%, no prize is given.",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
+    "testsCount": "{count} tests",
+    "bannerMeta": "{soha} · {count} questions",
+    "likedQuestionsEmptyTitle": "No selected questions yet",
+    "likedQuestionsEmptySubtitle": "While taking a test, tap ♥ to save a question",
+    "likedTestsTitle": "Favorite tests",
+    "likedTestsEmptyTitle": "No favorite tests yet",
+    "likedTestsEmptySubtitle": "Long-press a test to add it to favorites",
+    "certificateTitle": "Certificate",
+    "preparing": "Preparing…",
+    "saveShare": "Save / Share",
+    "certificateShareText": "I earned a certificate in the '{title}' olympiad on the Parvoz app! 🏆",
+    "certificateHeading": "CERTIFICATE",
+    "certificateThis": "This certificate",
+    "certificateBody": "is awarded for successfully completing the '{title}' olympiad",
+    "score": "Score",
+    "subject": "Subject",
+    "certificateMonths": "January,February,March,April,May,June,July,August,September,October,November,December"
+  },
+  "consent": {
+    "title": "This app works with your parent's permission",
+    "subtitle": "Before you start using the app, your parent must agree to the following terms.",
+    "locationTitle": "Location",
+    "locationText": "The app shows the parent the child's current location and movement history.",
+    "usageTitle": "App usage",
+    "usageText": "Tracks how much time is spent in each app and reports it to the parent.",
+    "notificationsTitle": "Notifications",
+    "notificationsText": "Receives messages, reminders and SOS push notifications sent by the parent.",
+    "securityTitle": "Safety",
+    "securityText": "The child's device information (battery, model) is sent to the parent.",
+    "privacyTitle": "Privacy",
+    "privacyText": "Data is stored encrypted and is not shared with third parties.",
+    "holdHint": "Hold the button for 3 seconds — this confirms you are a parent.",
+    "confirming": "Confirming...",
+    "confirmButton": "My parent confirms"
+  },
+  "unlockRequest": {
+    "title": "Request extra time",
+    "subtitleWithApp": "How much time will you ask your parent for \"{app}\"?",
+    "subtitle": "How much extra time will you ask your parent for?",
+    "timeLabel": "Time",
+    "reasonLabel": "Reason (optional)",
+    "reasonHint": "For example: I'm preparing for class",
+    "submit": "REQUEST",
+    "minutes": "{minutes} minutes",
+    "sent": "Request sent. Wait for your parent's decision…",
+    "sendError": "Couldn't send the request. Please try again.",
+    "approvedSnack": "Your parent gave you {minutes} extra minutes!",
+    "deniedSnack": "Your request was rejected."
+  },
+  "appUpdate": {
+    "forceTitle": "Update the app",
+    "forceMessage": "A new version is required. You can't continue with the old version.",
+    "openAppStore": "Open App Store",
+    "openPlayMarket": "Open Play Market",
+    "downloadApk": "Download from website (APK)",
+    "currentVersion": "Current",
+    "latestVersion": "New",
+    "available": "New version available ({version})",
+    "updateButton": "Update",
+    "dismissTooltip": "Dismiss (24 hours)"
+  },
+  "background": {
+    "channelName": "Parvoz service",
+    "channelDescription": "For continuous monitoring of the child's location and status",
+    "notificationTitle": "Parvoz is running",
+    "notificationText": "You're connected with your family",
+    "lastUpdate": "Last update: {time}"
+  },
+  "location": {
+    "enableModal": {
+      "title": "Your parent is asking you to turn on location",
+      "body": "If you turn on location, your parent can see you on the map and know you are safe."
+    }
+  },
+  "audiobooks": {
+    "partLabel": "Part {number}",
+    "shareComingSoon": "Sharing will be added soon",
+    "player": {
+      "speed": "Speed",
+      "sleepTimer": "Sleep timer",
+      "sleepOff": "Off",
+      "sleepMinutes": "{min} minutes"
+    },
+    "feed": {
+      "searchHint": "Search book or author...",
+      "title": "Books",
+      "newBooks": "New books",
+      "categoryAll": "All",
+      "emptyTitle": "No content found",
+      "emptySubtitle": "Try selecting another category",
+      "searchEmptyTitle": "Nothing found",
+      "searchEmptySubtitle": "Try a different word"
+    },
+    "searchBarHint": "Search audiobook...",
+    "section": {
+      "viewAll": "All"
+    }
+  },
+  "books": {
+    "section": {
+      "viewAll": "All"
+    },
+    "title": "Books",
+    "categoryAll": "All",
+    "categorySchool": "School textbooks",
+    "categoryLiterature": "Literature",
+    "categoryOthers": "Others",
+    "empty": "No books available yet.",
+    "loadFailed": "Failed to load.",
+    "pdf": {
+      "noLink": "No PDF link",
+      "goToPage": "Go to page",
+      "pageNumberLabel": "Page number (1–{total})",
+      "totalPages": "Total: {total} pages",
+      "go": "Go",
+      "searchTitle": "Search",
+      "searchUnsupported": "Text search is not supported yet. It will be added in the next version.",
+      "openFailed": "Couldn't open PDF",
+      "loading": "Loading book...",
+      "firstPage": "First page",
+      "lastPage": "Last page"
+    }
+  },
+  "articles": {
+    "title": "Articles",
+    "loadFailed": "Failed to load articles.",
+    "empty": "No articles yet. Coming soon!"
+  },
+  "content": {
+    "tabAudiobooks": "Audiobooks",
+    "videosEmpty": "No videos yet",
+    "categoryVideosEmpty": "No videos in this category",
+    "recommendedTitle": "Recommended for you",
+    "mostViewed": "Most viewed",
+    "categoryAll": "All",
+    "newLessonBadge": "NEW LESSON",
+    "start": "Start",
+    "viewAll": "All",
+    "viewsCount": "{count} views",
+    "audiobooksEmpty": "No audiobooks found",
+    "mostListened": "Most listened",
+    "booksTitle": "Books",
+    "listen": "Listen"
+  },
+  "videoMessage": {
+    "requestTitle": "Your dad requested a video",
+    "requestSubtitle": "Tap to record"
+  },
+  "voice": {
+    "quickCard": {
+      "justNow": "just now",
+      "title": "Messenger",
+      "empty": "No messages yet"
+    },
+    "senderYou": "You",
+    "senderParent": "Parent",
+    "deleteFailed": "Message not deleted",
+    "editTitle": "Edit message",
+    "editFailed": "Message not edited",
+    "documentFallback": "Document",
+    "audioUrlFailed": "Couldn't get audio URL"
+  },
+  "chats": {
+    "title": "Chats",
+    "sosButton": "SOS message",
+    "startConversation": "Start a conversation",
+    "voiceMessagePreview": "Voice message",
+    "sosFailed": "Failed to send SOS",
+    "sosConfirmTitle": "ATTENTION! You are sending an SOS!",
+    "sosSentBody": "SOS sent — your parents will be notified immediately.",
+    "sosConfirmBody": "Do you really want to send an SOS?",
+    "sosSent": "Sent!",
+    "sosSlider": "Send SOS"
+  },
+  "chatSettings": {
+    "galleryMobileOnly": "Choosing an image from the gallery is only available in the mobile app",
+    "imageLoadError": "Error loading image"
+  },
+  "development": {
+    "title": "Development score",
+    "tests": "Tests",
+    "books": "Books",
+    "streak": "Streak",
+    "steps": "Steps",
+    "motivation": "Start your journey this week — take a quiz, read a book, stay active! 🚀"
   }
 }

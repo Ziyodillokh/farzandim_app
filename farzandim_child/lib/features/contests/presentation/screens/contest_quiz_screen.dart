@@ -18,6 +18,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:confetti/confetti.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/data/models/quiz_state.dart';
@@ -173,7 +174,7 @@ class _LoadingScreen extends StatelessWidget {
           ),
           const SizedBox(height: 20),
           Text(
-            'Savollar tayyorlanmoqda...',
+            'contests.preparingQuestions'.tr(),
             style: tPop(14, w: FontWeight.w500, c: tMuted),
           ),
         ],
@@ -380,7 +381,7 @@ class _QuestionScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _NavPill(
-                      label: 'Oldingi',
+                      label: 'contests.previous'.tr(),
                       icon: Icons.chevron_left_rounded,
                       leading: true,
                       enabled: state.currentIndex > 0,
@@ -400,7 +401,9 @@ class _QuestionScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _NavPill(
-                      label: state.isLastQuestion ? 'Yakunlash' : 'Keyingi',
+                      label: state.isLastQuestion
+                          ? 'contests.finish'.tr()
+                          : 'contests.next'.tr(),
                       icon: Icons.chevron_right_rounded,
                       leading: false,
                       enabled: true,
@@ -449,20 +452,22 @@ class _QuestionScreen extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(height: 18),
-                Text('Test qoidalari', style: tUnb(18, w: FontWeight.w700)),
+                Text(
+                  'contests.rulesTitle'.tr(),
+                  style: tUnb(18, w: FontWeight.w700),
+                ),
                 const SizedBox(height: 18),
-                const _MenuRow(
+                _MenuRow(
                   icon: Icons.touch_app_rounded,
-                  text: "Javobni tanlang — to'g'ri yashil, xato qizil bo'ladi",
+                  text: 'contests.rule1'.tr(),
                 ),
-                const _MenuRow(
+                _MenuRow(
                   icon: Icons.swap_horiz_rounded,
-                  text:
-                      'Oldingi / Keyingi bilan savollar orasida harakatlaning',
+                  text: 'contests.rule2'.tr(),
                 ),
-                const _MenuRow(
+                _MenuRow(
                   icon: Icons.access_time_rounded,
-                  text: 'Umumiy vaqt tugasa test avtomatik yakunlanadi',
+                  text: 'contests.rule3'.tr(),
                 ),
                 const SizedBox(height: 6),
                 GestureDetector(
@@ -489,7 +494,7 @@ class _QuestionScreen extends ConsumerWidget {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(
-                            'Tanlangan savollar',
+                            'contests.selectedQuestions'.tr(),
                             style: tPop(15, w: FontWeight.w600),
                           ),
                         ),
@@ -520,7 +525,7 @@ class _QuestionScreen extends ConsumerWidget {
                       border: Border.all(color: _red.withValues(alpha: 0.5)),
                     ),
                     child: Text(
-                      'Testdan chiqish',
+                      'contests.exitTest'.tr(),
                       style: tPop(15, w: FontWeight.w600, c: _red),
                     ),
                   ),
@@ -537,7 +542,7 @@ class _QuestionScreen extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(16),
                     ),
                     child: Text(
-                      'Davom etish',
+                      'contests.continueTest'.tr(),
                       style: tPop(15, w: FontWeight.w600),
                     ),
                   ),
@@ -905,7 +910,7 @@ class _ResultScreen extends ConsumerWidget {
             children: [
               _StarsRow(stars: stars),
               const SizedBox(height: 22),
-              Text('Natija', style: tPop(14, c: Colors.white)),
+              Text('contests.result'.tr(), style: tPop(14, c: Colors.white)),
               const SizedBox(height: 12),
               Container(
                 padding: const EdgeInsets.symmetric(
@@ -930,7 +935,7 @@ class _ResultScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _StatColumn(
-                      label: 'Rekord',
+                      label: 'contests.record'.tr(),
                       value: Text(
                         '$record / $total ta',
                         style: tUnb(16, w: FontWeight.w600, ls: -0.48),
@@ -940,7 +945,7 @@ class _ResultScreen extends ConsumerWidget {
                   const SizedBox(width: 12),
                   Expanded(
                     child: _StatColumn(
-                      label: 'Yutuq',
+                      label: 'contests.reward'.tr(),
                       value: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
@@ -963,14 +968,14 @@ class _ResultScreen extends ConsumerWidget {
                 children: [
                   Expanded(
                     child: _SecondaryGlassButton(
-                      label: 'Asosiyga',
+                      label: 'contests.toHome'.tr(),
                       onTap: () => context.go('/dashboard'),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: _PremiumBlueButton(
-                      label: 'Revansh',
+                      label: 'contests.rematch'.tr(),
                       // Qayta yechish — quiz notifier'ini yangilaymiz (backend
                       // tugagan urinishni reset qilib qaytadan boshlaydi).
                       onTap: () => ref.invalidate(quizProvider(contest)),

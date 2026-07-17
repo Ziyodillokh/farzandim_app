@@ -5,6 +5,7 @@
 // Sevimliga olingan testlar (lokal) 2 ustunli grid. Testni bosib turish →
 // olib tashlaydi. Faol test → /contest-start, yakunlangan → snackbar.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
@@ -57,7 +58,7 @@ class LikedTestsScreen extends ConsumerWidget {
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
                         child: Text(
-                          'Sevimli testlar',
+                          'contests.likedTestsTitle'.tr(),
                           maxLines: 1,
                           style: tUnb(20, w: FontWeight.w600, ls: -0.5),
                         ),
@@ -121,13 +122,13 @@ class LikedTestsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            "Hali sevimli test yo'q",
+            'contests.likedTestsEmptyTitle'.tr(),
             textAlign: TextAlign.center,
             style: tUnb(17, w: FontWeight.w600, ls: -0.4),
           ),
           const SizedBox(height: 6),
           Text(
-            'Testni bosib turib sevimlilarga qo\'shing',
+            'contests.likedTestsEmptySubtitle'.tr(),
             textAlign: TextAlign.center,
             style: tPop(13, c: tMuted),
           ),

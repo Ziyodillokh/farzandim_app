@@ -16,7 +16,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-// ─── "Manzillar" dizayn tokenlari (Figma 3-rasm) ───
+// ─── Manzillar dizayn tokenlari (Figma 3-rasm) ───
 const Color _bg = Color(0xFF0B0B10); // qora fon
 const Color _cardBg = Color(0xFF1A1B22); // qoramtir karta (1-rasmga mos)
 const Color _cardBorder = Color(0x14FFFFFF); // oq ~8% chegara
@@ -122,7 +122,7 @@ class _Header extends StatelessWidget {
           Expanded(
             child: Center(
               child: Text(
-                'Manzillar',
+                'geoZones.headerTitle'.tr(),
                 style: AppTextStyles.headlineL.copyWith(
                   fontSize: 22,
                   color: Colors.white,
@@ -374,8 +374,7 @@ class _ZoneCard extends StatelessWidget {
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
-        onTap: () =>
-            context.push(AppRoutes.geoZonesEditPath(childId, zone.id)),
+        onTap: () => context.push(AppRoutes.geoZonesEditPath(childId, zone.id)),
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 11),
           child: Row(

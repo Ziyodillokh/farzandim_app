@@ -7,6 +7,7 @@
 // faqat lock ikon ko'rinadi (long-press unlock). Sleep timer faol
 // bo'lsa yuqori o'ngda hisoblagich.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:async';
 
@@ -408,7 +409,7 @@ class _ClassicVideoPlayerScreenState
             ElevatedButton.icon(
               onPressed: _initController,
               icon: const Icon(Icons.refresh),
-              label: const Text("Qaytadan urinib ko'rish"),
+              label: Text('videos.player.retry'.tr()),
               style: ElevatedButton.styleFrom(
                 backgroundColor: AppColors.parvozGreen,
                 foregroundColor: AppColors.parvozOnGreen,

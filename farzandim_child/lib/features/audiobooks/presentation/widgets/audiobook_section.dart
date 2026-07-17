@@ -2,6 +2,7 @@
 // AudiobookSection — sarlavha + horizontal card list
 // ─────────────────────────────────────────────────────────────────────
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/widgets/audiobook_card.dart';
@@ -65,9 +66,9 @@ class AudiobookSection extends StatelessWidget {
                   ),
                 ],
               ),
-              const Text(
-                'Barchasi',
-                style: TextStyle(color: AppColors.primary, fontSize: 14),
+              Text(
+                'audiobooks.section.viewAll'.tr(),
+                style: const TextStyle(color: AppColors.primary, fontSize: 14),
               ),
             ],
           ),

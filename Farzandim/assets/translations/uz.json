@@ -115,7 +115,8 @@
         "terms": "Foydalanish shartlari",
         "suffix": "ni o'qib chiqdim va qabul qilaman."
       },
-      "submitButton": "Ro'yxatdan o'tish"
+      "submitButton": "Ro'yxatdan o'tish",
+      "sendEmailError": "Email yuborib bo'lmadi"
     },
     "forgotPassword": {
       "title": "Parolni tiklash",
@@ -177,6 +178,43 @@
       "frameHint": "Asosiy qurilmadagi QR kodni ramka ichiga joylang",
       "whereHint": "Faol seanslar → Boshqa hisob qo'shish orqali ko'rsatiladi",
       "cameraError": "Kamera ochilmadi. Sozlamalardan kamera ruxsatini bering."
+    },
+    "sessionAccess": {
+      "headerTitle": "Kirish so'rovlari",
+      "empty": "Ochiq so'rov yo'q",
+      "newDeviceTrying": "Yangi qurilma kirmoqchi",
+      "reject": "Rad etish",
+      "approve": "Tasdiqlash",
+      "approveFailed": "Tasdiqlab bo'lmadi. Qayta urining.",
+      "requestRejected": "So'rov rad etildi",
+      "rejectFailed": "Rad etib bo'lmadi. Qayta urining.",
+      "intro": {
+        "title": "Qurilma limiti",
+        "body": "Bu akkauntda 2 ta qurilma faol. Uchinchi qurilmadan kirish uchun ulangan qurilmalaringizdan ruxsat so'rang.",
+        "requestButton": "Ruxsat so'rash"
+      },
+      "waiting": {
+        "title": "So'rov yuborildi",
+        "body": "Ulangan 2 ta qurilmangizga bildirishnoma bordi. Ular tasdiqlaguncha kuting — ekranni yopmang."
+      },
+      "waitingSlot": {
+        "title": "Tasdiqlandi!",
+        "body": "Endi ulangan qurilmalardan biri chiqarilishini kuting. Chiqarilishi bilan avtomatik kirasiz."
+      },
+      "rejected": {
+        "title": "Rad etildi",
+        "body": "Kirish so'rovi rad etildi."
+      },
+      "expired": {
+        "title": "Muddat tugadi",
+        "body": "So'rov muddati tugadi. Qaytadan urinib ko'ring.",
+        "retry": "Qaytadan kirish"
+      },
+      "requestFailed": "So'rov yuborilmadi. Internetni tekshirib qayta urining."
+    },
+    "googleWeb": {
+      "title": "Google bilan davom etish",
+      "subtitle": "Quyidagi Google tugmasini bosing"
     }
   },
   "formatters": {
@@ -198,7 +236,15 @@
     },
     "unlock": {
       "granted": "{minutes} daqiqa ruxsat berildi.",
-      "denied": "So'rov rad etildi."
+      "denied": "So'rov rad etildi.",
+      "sheetTitle": "Qo'shimcha vaqt",
+      "requestWithMinutes": "{name} — \"{subject}\" uchun {minutes} daqiqa qo'shimcha vaqt so'rayapti.",
+      "requestNoMinutes": "{name} — \"{subject}\" uchun qo'shimcha vaqt so'rayapti. Qancha vaqt berasiz?",
+      "screenTimeSubject": "ekran vaqti",
+      "otherDurationLabel": "Boshqa muddat berish:",
+      "approveMinutes": "Tasdiqlash ({minutes} daqiqa)",
+      "minutesChip": "{minutes} daqiqa",
+      "deny": "Rad etish"
     },
     "detail": {
       "notFound": "Bu bildirishnoma endi mavjud emas."
@@ -306,7 +352,11 @@
         "6": "Sh",
         "7": "Ya"
       }
-    }
+    },
+    "donBalance": "DON balansi",
+    "dailySteps": "Kunlik qadamlar",
+    "dailyStreak": "Kunlik rivojlanish",
+    "streakDays": "{count} kun"
   },
   "schedules": {
     "headerTitle": "Jadvallar",
@@ -358,6 +408,13 @@
       "friday": "Ju",
       "saturday": "Sh",
       "sunday": "Ya"
+    },
+    "type": {
+      "school": "Maktab",
+      "sport": "Sport",
+      "sleep": "Uyqu",
+      "meal": "Ovqat",
+      "custom": "Boshqa"
     }
   },
   "fullScreenMap": {
@@ -379,7 +436,16 @@
       "title": "Manzil qidirish",
       "hint": "Masjid, maktab, ko'cha nomi...",
       "prompt": "Joy nomini yozing — eng yaqinlaridan boshlab chiqadi",
-      "noResults": "Hech narsa topilmadi"
+      "noResults": "Hech narsa topilmadi",
+      "promptSubtitle": "Yaqin joylarni chiqarish uchun manzilni yozing yoki yuqoridagi tugmalarni bosing.",
+      "noResultsSubtitle": "Boshqa so'z bilan urinib ko'ring.",
+      "category": {
+        "mosque": "Masjid",
+        "school": "Maktab",
+        "park": "Bog'",
+        "hospital": "Kasalxona",
+        "shop": "Do'kon"
+      }
     },
     "cancelButton": "Bekor qilish",
     "mapHint": "Xaritada bosib markazni belgilang yoki markerni torting",
@@ -576,7 +642,20 @@
     "error": {
       "title": "Joylashuvni yuklash xatosi"
     },
-    "noChildren": "Bola qo'shilmagan. Avval Dashboard'da bola yarating."
+    "noChildren": "Bola qo'shilmagan. Avval Dashboard'da bola yarating.",
+    "mapTitle": "Joylashuvi",
+    "status": {
+      "onStreet": "Ko'chada",
+      "inZone": "{zone}da"
+    },
+    "timeline": {
+      "title": "Harakatlar tarixi",
+      "loadError": "Tarixni yuklab bo'lmadi",
+      "emptyToday": "Bugun harakat qayd etilmadi",
+      "unknownPlace": "Noma'lum",
+      "currentlyHere": "Hozir shu yerda",
+      "visitedBadge": "Bordi"
+    }
   },
   "deviceSettings": {
     "permissions": {
@@ -1000,7 +1079,9 @@
       "retry": "Qayta urinish",
       "androidDevice": "Android qurilma",
       "browser": "Brauzer",
-      "unknownDevice": "Noma'lum qurilma"
+      "unknownDevice": "Noma'lum qurilma",
+      "newDeviceApprovedTitle": "Yangi qurilma tasdiqlandi",
+      "releaseOneDeviceBody": "Uning kirishi uchun quyidagilardan bitta qurilmani chiqarib yuboring."
     },
     "pushTest": {
       "menuTitle": "Push tekshirish (test)",
@@ -1072,7 +1153,15 @@
     "notPaired": "Bola qurilmasi hali ulanmagan",
     "sendError": "Xabar yuborilmadi",
     "voiceDeviceOnly": "Ovozli xabar faqat telefonda yuboriladi",
-    "videoDeviceOnly": "Video faqat telefonda yuboriladi"
+    "videoDeviceOnly": "Video faqat telefonda yuboriladi",
+    "noChildren": "Hali bola qo'shilmagan",
+    "startConversation": "Suhbatni boshlang",
+    "previewVideo": "📹 Video xabar",
+    "previewImage": "📷 Rasm",
+    "previewFile": "📎 Fayl",
+    "previewVoice": "🎤 Ovozli xabar",
+    "previewYesterday": "kecha",
+    "previewDaysAgo": "{days} kun"
   },
   "dailyLimit": {
     "title": "Kunlik vaqt limiti",
@@ -1175,7 +1264,8 @@
       "deletedSnack": "{name} o'chirildi",
       "errorTitle": "Ma'lumotlarni olishda xato",
       "errorPrefix": "Xatolik: {error}",
-      "repairAction": "Qayta ulash (QR)"
+      "repairAction": "Qayta ulash (QR)",
+      "regenerateFailed": "Yangi kod yaratib bo'lmadi. Qayta urining."
     },
     "addEdit": {
       "addTitle": "Yangi bola qo'shish",
@@ -1254,6 +1344,13 @@
       "charging": "{level}% (zaryadlanmoqda)",
       "noWifi": "Wi-Fi yo'q",
       "never": "Hech qachon"
+    },
+    "account": {
+      "nameLabel": "Bola ismi",
+      "phoneLabel": "Telefon raqami",
+      "birthYearLabel": "Tug'ilgan yili",
+      "generateQr": "QR kod yaratish",
+      "reconnect": "Bolani qayta ulash"
     }
   },
   "appPermissions": {
@@ -1430,5 +1527,52 @@
       "updateButton": "Yangilash",
       "dismissTooltip": "Yopish (24 soat)"
     }
+  },
+  "childSettings": {
+    "headerTitle": "Bola sozlamalari",
+    "noZones": "Hali manzil qo'shilmagan",
+    "zonesCount": "{count} ta manzil",
+    "uninstallProtection": {
+      "title": "O'chirishni taqiqlash",
+      "subtitle": "Bola Farzandim ilovasini telefonidan o'chira olmaydi",
+      "errorSnack": "O'zgartirib bo'lmadi. Qayta urinib ko'ring."
+    }
+  },
+  "gender": {
+    "male": "O'g'il",
+    "female": "Qiz"
+  },
+  "onboarding": {
+    "version": "Versiya - 1.0"
+  },
+  "reports": {
+    "booksRead": "O'qilgan kitoblar",
+    "testsDone": "Ishlangan testlar",
+    "dailySteps": "Kunlik qadamlar",
+    "dailyProgress": "Kunlik rivojlanish",
+    "donBalance": "DON balansi",
+    "noRatingYet": "Reyting hali mavjud emas",
+    "avgScreenTime": "Kunlik o'rtacha ekran vaqti",
+    "noScreenTimeData": "Ekran vaqti ma'lumoti yo'q",
+    "noAppsData": "Ilovalar ma'lumoti yo'q"
+  },
+  "notificationPrefs": {
+    "headerTitle": "Eslatmalar",
+    "description": "Bolaga yuboriladigan ijobiy eslatmalar. Kuniga cheklangan, tinch soatlarda yuborilmaydi.",
+    "studyTitle": "Dars / test eslatmasi",
+    "studySubtitle": "\"Bugun bitta test yechib ko'rchi 📚\"",
+    "healthTitle": "Sport / sog'lom eslatma",
+    "healthSubtitle": "\"Biroz harakat qilsang-chi 🏃\"",
+    "contentTitle": "Yangi kontent eslatmasi",
+    "contentSubtitle": "\"Yangi videolar seni kutyapti 🎬\"",
+    "quietHours": "Tinch soatlar",
+    "notSet": "Belgilanmagan",
+    "quietStartHelp": "Tinch soat boshi",
+    "quietEndHelp": "Tinch soat oxiri",
+    "saveError": "Saqlashda xatolik"
+  },
+  "categoryBlock": {
+    "title": "Kategoriya bo'yicha bloklash",
+    "subtitle": "Butun turkumdagi ilovalarni bir tugma bilan bloklang. Yangi o'rnatilgan ilovalar ham avtomatik qamrab olinadi."
   }
 }

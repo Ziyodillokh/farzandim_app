@@ -20,6 +20,7 @@
 // qo'shilganda avtomatik olinadi).
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
@@ -79,7 +80,7 @@ class AudiobooksFeedScreen extends ConsumerWidget {
                 sliver: SliverToBoxAdapter(
                   child: ParvozSearchField(
                     queryProvider: audiobookFeedSearchProvider,
-                    hintText: 'Kitob yoki muallif qidirish...',
+                    hintText: 'audiobooks.feed.searchHint'.tr(),
                     accent: _blue,
                   ),
                 ),
@@ -150,10 +151,10 @@ class _KitoblarTitle extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return const Align(
+    return Align(
       alignment: Alignment.centerLeft,
       child: Text(
-        'Kitoblar',
+        'audiobooks.feed.title'.tr(),
         style: TextStyle(
           color: Colors.white,
           fontSize: 28,
@@ -185,11 +186,11 @@ class _YangiKitoblarHero extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Row(
+          Row(
             children: [
               Expanded(
                 child: Text(
-                  'Yangi kitoblar',
+                  'audiobooks.feed.newBooks'.tr(),
                   style: TextStyle(
                     color: Colors.white,
                     fontSize: 18,
@@ -272,7 +273,7 @@ class _CategoryChips extends StatelessWidget {
         physics: const BouncingScrollPhysics(),
         children: [
           _Chip(
-            label: 'Barchasi',
+            label: 'audiobooks.feed.categoryAll'.tr(),
             active: selected == null,
             onTap: () => onSelected(null),
           ),
@@ -530,8 +531,8 @@ class _EmptyState extends StatelessWidget {
               color: _textMuted.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Kontent topilmadi',
+            Text(
+              'audiobooks.feed.emptyTitle'.tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -539,8 +540,8 @@ class _EmptyState extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              'Boshqa kategoriyani tanlab ko\'ring',
+            Text(
+              'audiobooks.feed.emptySubtitle'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(color: _textMuted, fontSize: 13),
             ),
@@ -570,8 +571,8 @@ class _NoSearchResults extends StatelessWidget {
               color: _textMuted.withValues(alpha: 0.6),
             ),
             const SizedBox(height: 14),
-            const Text(
-              'Hech narsa topilmadi',
+            Text(
+              'audiobooks.feed.searchEmptyTitle'.tr(),
               style: TextStyle(
                 color: Colors.white,
                 fontSize: 16,
@@ -579,8 +580,8 @@ class _NoSearchResults extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 6),
-            const Text(
-              "Boshqa so'z bilan qidirib ko'ring",
+            Text(
+              'audiobooks.feed.searchEmptySubtitle'.tr(),
               textAlign: TextAlign.center,
               style: TextStyle(color: _textMuted, fontSize: 13),
             ),

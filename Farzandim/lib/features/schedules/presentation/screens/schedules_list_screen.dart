@@ -638,7 +638,7 @@ class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
                 children: [
                   Expanded(
                     child: Text(
-                      'Ilova cheklovlar',
+                      'schedules.appRestrictionsLabel'.tr(),
                       style: AppTextStyles.headlineL.copyWith(
                         fontWeight: FontWeight.bold,
                       ),

@@ -9,6 +9,7 @@
 //   • Reyting          → leaderboardProvider
 // Kitob/test/qadam backend'da hali yo'q → 0. Bola ulanmasa data bo'sh.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart'
@@ -154,7 +155,7 @@ class _StatGrid extends ConsumerWidget {
                   color: Color(0xFFA78BFA),
                 ),
                 value: '$books',
-                label: "O'qilgan kitoblar",
+                label: 'reports.booksRead'.tr(),
               ),
             ),
             const SizedBox(width: 12),
@@ -166,7 +167,7 @@ class _StatGrid extends ConsumerWidget {
                   height: 32,
                 ),
                 value: '$tests',
-                label: 'Ishlangan testlar',
+                label: 'reports.testsDone'.tr(),
               ),
             ),
           ],
@@ -182,7 +183,7 @@ class _StatGrid extends ConsumerWidget {
                   height: 34,
                 ),
                 value: _fmtSteps(todaySteps),
-                label: 'Kunlik qadamlar',
+                label: 'reports.dailySteps'.tr(),
               ),
             ),
             const SizedBox(width: 12),
@@ -194,7 +195,7 @@ class _StatGrid extends ConsumerWidget {
                   color: Color(0xFFFF7A1A),
                 ),
                 value: '$streak kun',
-                label: 'Kunlik rivojlanish',
+                label: 'reports.dailyProgress'.tr(),
               ),
             ),
           ],
@@ -282,7 +283,7 @@ class _DonCard extends ConsumerWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text('DON balansi', style: _pop(13, c: _dim)),
+          Text('reports.donBalance'.tr(), style: _pop(13, c: _dim)),
           const SizedBox(height: 4),
           Row(
             children: [
@@ -303,7 +304,7 @@ class _DonCard extends ConsumerWidget {
           ),
           if (rows.isEmpty) ...[
             const SizedBox(height: 12),
-            Text('Reyting hali mavjud emas', style: _pop(13, c: _dim)),
+            Text('reports.noRatingYet'.tr(), style: _pop(13, c: _dim)),
           ] else ...[
             const SizedBox(height: 12),
             for (final e in rows)
@@ -409,7 +410,7 @@ class _ScreenTimeSection extends ConsumerWidget {
       children: [
         Padding(
           padding: const EdgeInsets.only(left: 4),
-          child: Text("Kunlik o'rtacha ekran vaqti", style: _pop(13, c: _dim)),
+          child: Text('reports.avgScreenTime'.tr(), style: _pop(13, c: _dim)),
         ),
         const SizedBox(height: 2),
         Padding(
@@ -431,7 +432,7 @@ class _ScreenTimeSection extends ConsumerWidget {
           child: maxMs == 0
               ? Center(
                   child: Text(
-                    "Ekran vaqti ma'lumoti yo'q",
+                    'reports.noScreenTimeData'.tr(),
                     style: _pop(13, c: _dim),
                   ),
                 )
@@ -545,7 +546,7 @@ class _TopAppsCard extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(vertical: 28, horizontal: 20),
               child: Center(
                 child: Text(
-                  "Ilovalar ma'lumoti yo'q",
+                  'reports.noAppsData'.tr(),
                   textAlign: TextAlign.center,
                   style: _pop(13, c: _dim),
                 ),

@@ -4,6 +4,7 @@
 // seanslar sahifasiga o'tadi ("bitta qurilmani chiqaring" banneri bilan),
 // so'ng qurilma chiqarilgach 3-qurilma avtomatik kiradi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/auth/data/repositories/backend_session_access_repository.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
@@ -46,7 +47,7 @@ class _SessionAccessApproveScreenState
     } catch (_) {
       if (!mounted) return;
       setState(() => _acting = false);
-      _snack("Tasdiqlab bo'lmadi. Qayta urining.");
+      _snack('auth.sessionAccess.approveFailed'.tr());
     }
   }
 
@@ -58,11 +59,11 @@ class _SessionAccessApproveScreenState
       if (!mounted) return;
       setState(() => _acting = false);
       _reload();
-      _snack("So'rov rad etildi");
+      _snack('auth.sessionAccess.requestRejected'.tr());
     } catch (_) {
       if (!mounted) return;
       setState(() => _acting = false);
-      _snack("Rad etib bo'lmadi. Qayta urining.");
+      _snack('auth.sessionAccess.rejectFailed'.tr());
     }
   }
 
@@ -125,11 +126,11 @@ class _SessionAccessApproveScreenState
             child: Icon(Icons.arrow_back_rounded, color: Colors.white),
           ),
         ),
-        const Expanded(
+        Expanded(
           child: Text(
-            "Kirish so'rovlari",
+            'auth.sessionAccess.headerTitle'.tr(),
             textAlign: TextAlign.center,
-            style: TextStyle(
+            style: const TextStyle(
               color: Colors.white,
               fontSize: 20,
               fontWeight: FontWeight.bold,
@@ -154,7 +155,7 @@ class _SessionAccessApproveScreenState
           ),
           const SizedBox(height: 16),
           Text(
-            "Ochiq so'rov yo'q",
+            'auth.sessionAccess.empty'.tr(),
             style: TextStyle(
               color: Colors.white.withValues(alpha: 0.7),
               fontSize: 16,
@@ -207,7 +208,7 @@ class _SessionAccessApproveScreenState
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      r.ipAddress ?? 'Yangi qurilma kirmoqchi',
+                      r.ipAddress ?? 'auth.sessionAccess.newDeviceTrying'.tr(),
                       style: TextStyle(
                         color: Colors.white.withValues(alpha: 0.5),
                         fontSize: 12,
@@ -223,7 +224,7 @@ class _SessionAccessApproveScreenState
             children: [
               Expanded(
                 child: _btn(
-                  label: 'Rad etish',
+                  label: 'auth.sessionAccess.reject'.tr(),
                   color: const Color(0xFFFF453A),
                   filled: false,
                   onTap: () => _reject(r.id),
@@ -232,7 +233,7 @@ class _SessionAccessApproveScreenState
               const SizedBox(width: 12),
               Expanded(
                 child: _btn(
-                  label: 'Tasdiqlash',
+                  label: 'auth.sessionAccess.approve'.tr(),
                   color: const Color(0xFF22C55E),
                   filled: true,
                   onTap: () => _approve(r.id),

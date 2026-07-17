@@ -10,12 +10,13 @@
 //   • Hero karta — to'liq rasm + gradient overlay + ustiga matn +
 //     "YANGI DARS" (to'q-sariq badge) + yashil-glow "Boshlash" tugma
 //   • "Siz uchun tavsiyalar" (2-ustun grid, rounded-2xl)
-//   • "Eng ko'p ko'rilganlar" (gorizontal, rounded-2xl, ko'rishlar soni)
+//   • Eng ko'p ko'rilganlar (gorizontal, rounded-2xl, ko'rishlar soni)
 //
 // Faqat NIGHT — `AppTheme.darkTheme` bilan majburiy. Ranglar
 // `AppColors.parvoz*` (Premium: surface #162B45, green #2ECC71, badge #F39C12).
 // Real data: effectiveVideosProvider + audiobooks/books (mock yo'q).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
@@ -165,8 +166,8 @@ class _ParvozSegment extends StatelessWidget {
             final idx = controller.index;
             return Row(
               children: [
-                _seg('Videolar', 0, idx, pv),
-                _seg('Audio kitoblar', 1, idx, pv),
+                _seg('nav.videos'.tr(), 0, idx, pv),
+                _seg('content.tabAudiobooks'.tr(), 1, idx, pv),
               ],
             );
           },
@@ -213,9 +214,9 @@ class _VideosTab extends ConsumerWidget {
     final selectedCat = ref.watch(_parvozCategoryProvider);
 
     if (all.isEmpty) {
-      return const _ParvozEmpty(
+      return _ParvozEmpty(
         icon: Icons.video_library_outlined,
-        text: "Hozircha video yo'q",
+        text: 'content.videosEmpty'.tr(),
       );
     }
 
@@ -251,7 +252,7 @@ class _VideosTab extends ConsumerWidget {
               padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 40),
               child: Center(
                 child: Text(
-                  "Bu kategoriyada video yo'q",
+                  'content.categoryVideosEmpty'.tr(),
                   style: TextStyle(
                     color: context.adaptive.pvTextDim,
                     fontSize: 14,
@@ -268,7 +269,7 @@ class _VideosTab extends ConsumerWidget {
           ],
           if (recommended.isNotEmpty) ...[
             _ParvozSectionHeader(
-              title: 'Siz uchun tavsiyalar',
+              title: 'content.recommendedTitle'.tr(),
               onSeeAll: () => context.push('/videos'),
             ),
             const SizedBox(height: 16),
@@ -320,7 +321,7 @@ class _ParvozChips extends ConsumerWidget {
                 border: isSel ? null : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
-                cat ?? 'Barchasi',
+                cat ?? 'content.categoryAll'.tr(),
                 style: TextStyle(
                   color: isSel ? pv.pvOnGreen : pv.pvTextDim,
                   fontSize: 14,
@@ -417,8 +418,8 @@ class _ParvozHeroCard extends StatelessWidget {
                       ),
                     ],
                   ),
-                  child: const Text(
-                    'YANGI DARS',
+                  child: Text(
+                    'content.newLessonBadge'.tr(),
                     style: TextStyle(
                       color: Colors.white,
                       fontSize: 11,
@@ -485,7 +486,7 @@ class _ParvozHeroCard extends StatelessWidget {
                               ),
                               const SizedBox(width: 8),
                               Text(
-                                'Boshlash',
+                                'content.start'.tr(),
                                 style: TextStyle(
                                   color: pv.pvOnGreen,
                                   fontSize: 16,
@@ -551,7 +552,7 @@ class _ParvozSectionHeader extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      'Barchasi',
+                      'content.viewAll'.tr(),
                       style: TextStyle(
                         color: pv.pvGreen,
                         fontSize: 13,
@@ -756,7 +757,9 @@ class _ParvozWideCard extends StatelessWidget {
                       ),
                       const SizedBox(width: 6),
                       Text(
-                        '${_formatViews(video.views)} ko\'rilgan',
+                        'content.viewsCount'.tr(
+                          namedArgs: {'count': _formatViews(video.views)},
+                        ),
                         style: TextStyle(
                           color: pv.pvGreen,
                           fontSize: 11,
@@ -855,7 +858,7 @@ String _formatViews(int v) {
 
 // ─── Audio kitoblar tab (Premium Edition — Stitch) ────────────────────
 // Tartib: kategoriya chiplari → Hero audiokitob (cover + Eshitish + bookmark)
-// → "Siz uchun tavsiyalar" (gorizontal) → "Eng ko'p eshitilganlar" (raqamli
+// → "Siz uchun tavsiyalar" (gorizontal) → Eng ko'p eshitilganlar (raqamli
 // vertikal ro'yxat + play) → Kitoblar (PDF, funksiya saqlanishi uchun).
 class _AudiobooksTab extends ConsumerWidget {
   const _AudiobooksTab();
@@ -869,9 +872,9 @@ class _AudiobooksTab extends ConsumerWidget {
     final books = asyncBooks.valueOrNull ?? const <BookModel>[];
 
     if (all.isEmpty && books.isEmpty) {
-      return const _ParvozEmpty(
+      return _ParvozEmpty(
         icon: Icons.headphones_rounded,
-        text: 'Audiokitoblar topilmadi',
+        text: 'content.audiobooksEmpty'.tr(),
       );
     }
 
@@ -912,7 +915,7 @@ class _AudiobooksTab extends ConsumerWidget {
           ],
           if (recommended.isNotEmpty) ...[
             _ParvozSectionHeader(
-              title: 'Siz uchun tavsiyalar',
+              title: 'content.recommendedTitle'.tr(),
               onSeeAll: () => context.push('/audiobooks'),
             ),
             const SizedBox(height: 16),
@@ -938,14 +941,14 @@ class _AudiobooksTab extends ConsumerWidget {
           if (books.isNotEmpty) ...[
             const SizedBox(height: 32),
             BookSection(
-              title: 'Kitoblar',
+              title: 'content.booksTitle'.tr(),
               books: books,
               onTap: (b) => context.push('/books/pdf', extra: b),
             ),
             if (schoolBooks.isNotEmpty) ...[
               const SizedBox(height: 20),
               BookSection(
-                title: 'Maktab darsliklari',
+                title: 'books.categorySchool'.tr(),
                 books: schoolBooks,
                 onTap: (b) => context.push('/books/pdf', extra: b),
               ),
@@ -953,7 +956,7 @@ class _AudiobooksTab extends ConsumerWidget {
             if (adabiyotBooks.isNotEmpty) ...[
               const SizedBox(height: 20),
               BookSection(
-                title: 'Adabiyot',
+                title: 'books.categoryLiterature'.tr(),
                 books: adabiyotBooks,
                 onTap: (b) => context.push('/books/pdf', extra: b),
               ),
@@ -961,7 +964,7 @@ class _AudiobooksTab extends ConsumerWidget {
             if (otherBooks.isNotEmpty) ...[
               const SizedBox(height: 20),
               BookSection(
-                title: 'Boshqalar',
+                title: 'books.categoryOthers'.tr(),
                 books: otherBooks,
                 onTap: (b) => context.push('/books/pdf', extra: b),
               ),
@@ -1008,7 +1011,7 @@ class _ParvozAudioChips extends ConsumerWidget {
                 border: isSel ? null : Border.all(color: pv.pvBorder, width: 1),
               ),
               child: Text(
-                cat ?? 'Barchasi',
+                cat ?? 'content.categoryAll'.tr(),
                 style: TextStyle(
                   color: isSel ? pv.pvOnGreen : pv.pvTextDim,
                   fontSize: 14,
@@ -1121,7 +1124,7 @@ class _ParvozAudioHero extends ConsumerWidget {
                             ),
                             const SizedBox(width: 6),
                             Text(
-                              'Eshitish',
+                              'content.listen'.tr(),
                               style: TextStyle(
                                 color: pv.pvOnGreen,
                                 fontSize: 16,

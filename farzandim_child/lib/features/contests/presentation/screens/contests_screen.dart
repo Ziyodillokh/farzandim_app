@@ -7,6 +7,7 @@
 // backend (/api/content/olympiads). Kartani bosib turish → sevimlilarga.
 // Faol test → /contest-start, yakunlangan → snackbar.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/data/models/contest_model.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/contests_providers.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_banner_carousel.dart';
@@ -43,16 +44,16 @@ class ContestsScreen extends ConsumerWidget {
       content = _ScrollCenter(
         child: _EmptyBox(
           icon: Icons.wifi_off_rounded,
-          title: "Testlarni yuklab bo'lmadi",
-          subtitle: 'Internetni tekshirib, qayta torting',
+          title: 'contests.loadError'.tr(),
+          subtitle: 'contests.checkInternet'.tr(),
         ),
       );
     } else if (tests.isEmpty) {
-      content = const _ScrollCenter(
+      content = _ScrollCenter(
         child: _EmptyBox(
           icon: Icons.fact_check_outlined,
-          title: "Hozircha test yo'q",
-          subtitle: 'Tez orada yangi testlar qo\'shiladi',
+          title: 'contests.emptyTitle'.tr(),
+          subtitle: 'contests.emptySubtitle'.tr(),
         ),
       );
     } else {
@@ -113,7 +114,7 @@ class ContestsScreen extends ConsumerWidget {
                         fit: BoxFit.scaleDown,
                         alignment: Alignment.centerLeft,
                         child: Text(
-                          'Testlar',
+                          'nav.quizzes'.tr(),
                           maxLines: 1,
                           style: tUnb(28, w: FontWeight.w600, ls: -0.84),
                         ),
@@ -158,11 +159,11 @@ class ContestsScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
             backgroundColor: Color(0xFF0E141C),
             duration: Duration(milliseconds: 1600),
-            content: Text('Bu test yakunlangan — natijalar Reytingda'),
+            content: Text('contests.finishedSnack'.tr()),
           ),
         );
     }
@@ -184,7 +185,7 @@ class ContestsScreen extends ConsumerWidget {
           backgroundColor: const Color(0xFF0E141C),
           duration: const Duration(milliseconds: 1400),
           content: Text(
-            added ? 'Sevimlilarga qo\'shildi' : 'Sevimlilardan olib tashlandi',
+            added ? 'contests.favAdded'.tr() : 'contests.favRemoved'.tr(),
             style: tPop(13, w: FontWeight.w500),
           ),
         ),

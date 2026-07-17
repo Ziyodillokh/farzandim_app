@@ -10,6 +10,7 @@
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/auth/presentation/widgets/google_render_button_stub.dart'
     if (dart.library.html) 'package:farzandim/features/auth/presentation/widgets/google_render_button_web.dart';
 import 'package:flutter/material.dart';
@@ -83,7 +84,7 @@ class _GoogleWebDialogState extends State<_GoogleWebDialog> {
           mainAxisSize: MainAxisSize.min,
           children: [
             Text(
-              'Google bilan davom etish',
+              'auth.googleWeb.title'.tr(),
               textAlign: TextAlign.center,
               style: GoogleFonts.unbounded(
                 fontSize: 16,
@@ -93,7 +94,7 @@ class _GoogleWebDialogState extends State<_GoogleWebDialog> {
             ),
             const SizedBox(height: 8),
             Text(
-              'Quyidagi Google tugmasini bosing',
+              'auth.googleWeb.subtitle'.tr(),
               textAlign: TextAlign.center,
               style: GoogleFonts.poppins(
                 fontSize: 13,
@@ -107,7 +108,7 @@ class _GoogleWebDialogState extends State<_GoogleWebDialog> {
             TextButton(
               onPressed: () => Navigator.of(context).pop(),
               child: Text(
-                'Bekor qilish',
+                'common.cancel'.tr(),
                 style: GoogleFonts.poppins(
                   fontSize: 13.5,
                   color: const Color(0x99FFFFFF),

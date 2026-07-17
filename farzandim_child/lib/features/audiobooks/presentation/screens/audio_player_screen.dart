@@ -28,6 +28,7 @@
 //   - Ikon rangi: oq / #B6BCC5
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audio_player_state.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
@@ -85,7 +86,9 @@ class AudioPlayerScreen extends ConsumerWidget {
         child: Column(
           children: [
             _TopBar(
-              title: partNo != null ? '$partNo-qism' : book.title,
+              title: partNo != null
+                  ? 'audiobooks.partLabel'.tr(namedArgs: {'number': '$partNo'})
+                  : book.title,
               subtitle: partNo != null
                   ? '$seriesTitle · ${book.author}'
                   : book.author,
@@ -119,8 +122,8 @@ class AudioPlayerScreen extends ConsumerWidget {
 
   void _showShareInfo(BuildContext context) {
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Ulashish tez orada qo\'shiladi'),
+      SnackBar(
+        content: Text('audiobooks.shareComingSoon'.tr()),
         duration: Duration(seconds: 2),
       ),
     );
@@ -558,7 +561,7 @@ class _SpeedSheet extends ConsumerWidget {
     const speeds = [0.5, 0.75, 1.0, 1.25, 1.5, 1.75, 2.0];
 
     return _Sheet(
-      title: 'Tezlik',
+      title: 'audiobooks.player.speed'.tr(),
       children: [
         for (final s in speeds)
           _SheetTile(
@@ -587,10 +590,10 @@ class _SleepSheet extends ConsumerWidget {
     final hasTimer = ref.watch(audioPlayerProvider).hasSleepTimer;
 
     return _Sheet(
-      title: 'Uyqu taymeri',
+      title: 'audiobooks.player.sleepTimer'.tr(),
       children: [
         _SheetTile(
-          label: "O'chirish",
+          label: 'audiobooks.player.sleepOff'.tr(),
           selected: !hasTimer,
           onTap: () {
             notifier.cancelSleepTimer();
@@ -599,7 +602,9 @@ class _SleepSheet extends ConsumerWidget {
         ),
         for (final m in const [5, 10, 15, 20, 30, 45])
           _SheetTile(
-            label: '$m daqiqa',
+            label: 'audiobooks.player.sleepMinutes'.tr(
+              namedArgs: {'min': '$m'},
+            ),
             selected: false,
             onTap: () {
               notifier.startSleepTimer(m);

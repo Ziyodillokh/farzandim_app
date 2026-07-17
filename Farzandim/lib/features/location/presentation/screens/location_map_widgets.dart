@@ -1,6 +1,6 @@
 // ARCH-13: monolit ekran fayli `part` fayllarga bo'lindi — private nomlar
 // va vizual xulq o'zgarmagan, faqat fayl tashkiloti.
-// REDIZAYN (Figma): top bar — "Joylashuvi" sarlavha + "qatlamlar" (geo-zona)
+// REDIZAYN (Figma): top bar — Joylashuvi sarlavha + "qatlamlar" (geo-zona)
 // ikoni; bola almashtirish sarlavhani bosib (ko'p bola bo'lsa).
 part of 'location_map_screen.dart';
 
@@ -35,7 +35,7 @@ class _TopBar extends ConsumerWidget {
               children: [
                 Flexible(
                   child: Text(
-                    'Joylashuvi',
+                    'location.mapTitle'.tr(),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     textAlign: TextAlign.center,

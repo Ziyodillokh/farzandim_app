@@ -1,24 +1,34 @@
 // ─────────────────────────────────────────────────────────────────────
-// UpdateBanner — Parent Dashboard top'idagi yumshoq taklif
-// (Sprint 4.4.28)
+// UpdateBanner — Dashboard tepasidagi yumshoq "yangilash" taklifi
 // ─────────────────────────────────────────────────────────────────────
+//
+// Faqat `softUpdateAvailable` state'da ko'rinadi (majburiy yangilash —
+// alohida ForceUpdateDialog). "Yangilash" tugma Store/APK URL'ni ochadi,
+// "×" tugma shu versiyani 24 soatga yashiradi.
+//
+// Dizayn: Parvoz KO'K (dashboard bilan bir xil til) — avval `AppColors`
+// yashil edi, ko'k dashboardda yot ko'rinardi.
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim/features/app_update/presentation/providers/app_update_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
+
+// ─── Parvoz tokenlar (dashboard bilan bir xil) ───
+const Color _blue = Color(0xFF216BFF);
+const Color _white = Colors.white;
+const Color _dim = Color(0x8CFFFFFF); // oq 55%
 
 class UpdateBanner extends ConsumerWidget {
   const UpdateBanner({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final asyncStatus = ref.watch(appUpdateProvider);
-    final status = asyncStatus.valueOrNull;
+    final status = ref.watch(appUpdateProvider).valueOrNull;
     if (status == null || status.state != UpdateState.softUpdateAvailable) {
       return const SizedBox.shrink();
     }
@@ -31,31 +41,29 @@ class UpdateBanner extends ConsumerWidget {
         : info.android;
 
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+      padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
       child: Material(
         color: Colors.transparent,
         child: Container(
           padding: const EdgeInsets.fromLTRB(14, 12, 8, 12),
           decoration: BoxDecoration(
-            color: AppColors.primary.withValues(alpha: 0.12),
-            borderRadius: BorderRadius.circular(16),
-            border: Border.all(
-              color: AppColors.primary.withValues(alpha: 0.35),
-            ),
+            color: _blue.withValues(alpha: 0.12),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: _blue.withValues(alpha: 0.4)),
           ),
           child: Row(
             children: [
               Container(
-                width: 36,
-                height: 36,
+                width: 40,
+                height: 40,
                 decoration: BoxDecoration(
-                  color: AppColors.primary.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(10),
+                  color: _blue.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: Icon(
+                child: const Icon(
                   SolarIconsBold.smartphoneUpdate,
-                  color: AppColors.accent,
-                  size: 20,
+                  color: _blue,
+                  size: 22,
                 ),
               ),
               const SizedBox(width: 12),
@@ -67,10 +75,11 @@ class UpdateBanner extends ConsumerWidget {
                       'appUpdate.banner.title'.tr(
                         namedArgs: {'version': platformInfo.latest},
                       ),
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
+                      style: GoogleFonts.poppins(
+                        color: _white,
                         fontSize: 14,
                         fontWeight: FontWeight.w600,
+                        height: 1.3,
                       ),
                     ),
                     if (info.releaseNotes.isNotEmpty) ...[
@@ -79,10 +88,10 @@ class UpdateBanner extends ConsumerWidget {
                         info.releaseNotes,
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          color: AppColors.textSecondary,
+                        style: GoogleFonts.poppins(
+                          color: _dim,
                           fontSize: 12,
-                          height: 1.3,
+                          height: 1.35,
                         ),
                       ),
                     ],
@@ -93,18 +102,18 @@ class UpdateBanner extends ConsumerWidget {
               TextButton(
                 onPressed: () => _launch(status.targetUrl),
                 style: TextButton.styleFrom(
-                  foregroundColor: AppColors.accent,
+                  foregroundColor: _blue,
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
+                    horizontal: 14,
                     vertical: 8,
                   ),
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(10),
                   ),
                 ),
                 child: Text(
                   'appUpdate.banner.updateButton'.tr(),
-                  style: const TextStyle(
+                  style: GoogleFonts.poppins(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                   ),
@@ -112,10 +121,10 @@ class UpdateBanner extends ConsumerWidget {
               ),
               IconButton(
                 tooltip: 'appUpdate.banner.dismissTooltip'.tr(),
-                icon: Icon(
+                icon: const Icon(
                   SolarIconsBold.closeCircle,
                   size: 18,
-                  color: AppColors.textSecondary,
+                  color: _dim,
                 ),
                 onPressed: () => ref
                     .read(appUpdateProvider.notifier)

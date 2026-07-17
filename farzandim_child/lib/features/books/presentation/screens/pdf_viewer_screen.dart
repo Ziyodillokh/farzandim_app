@@ -1,3 +1,4 @@
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'dart:io';
 
@@ -49,7 +50,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
   Future<void> _downloadAndOpen() async {
     try {
       if (widget.book.pdfUrl.isEmpty) {
-        setState(() => _error = 'PDF havolasi yo\'q');
+        setState(() => _error = 'books.pdf.noLink'.tr());
         return;
       }
       final dir = await getTemporaryDirectory();
@@ -77,7 +78,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         return AlertDialog(
           backgroundColor: pv.pvSurface,
           title: Text(
-            'Sahifaga o\'tish',
+            'books.pdf.goToPage'.tr(),
             style: TextStyle(color: pv.pvText),
           ),
           content: Column(
@@ -89,7 +90,9 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 keyboardType: TextInputType.number,
                 style: TextStyle(color: pv.pvText),
                 decoration: InputDecoration(
-                  labelText: 'Sahifa raqami (1–$_totalPages)',
+                  labelText: 'books.pdf.pageNumberLabel'.tr(
+                    namedArgs: {'total': '$_totalPages'},
+                  ),
                   labelStyle: TextStyle(color: pv.pvTextDim),
                   filled: true,
                   fillColor: pv.pvSurfaceHigh,
@@ -104,11 +107,8 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               ),
               const SizedBox(height: 8),
               Text(
-                'Jami: $_totalPages sahifa',
-                style: TextStyle(
-                  fontSize: 12,
-                  color: pv.pvTextDim,
-                ),
+                'books.pdf.totalPages'.tr(namedArgs: {'total': '$_totalPages'}),
+                style: TextStyle(fontSize: 12, color: pv.pvTextDim),
               ),
             ],
           ),
@@ -116,7 +116,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
             TextButton(
               onPressed: () => Navigator.pop(ctx),
               child: Text(
-                'Bekor',
+                'common.cancelShort'.tr(),
                 style: TextStyle(color: pv.pvTextDim),
               ),
             ),
@@ -131,7 +131,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                   Navigator.pop(ctx, n - 1);
                 }
               },
-              child: const Text('O\'tish'),
+              child: Text('books.pdf.go'.tr()),
             ),
           ],
         );
@@ -150,20 +150,17 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
         return AlertDialog(
           backgroundColor: pv.pvSurface,
           title: Text(
-            'Qidirish',
+            'books.pdf.searchTitle'.tr(),
             style: TextStyle(color: pv.pvText),
           ),
           content: Text(
-            'Matn qidirish hozircha qo\'llab-quvvatlanmaydi. Keyingi versiyada qo\'shiladi.',
+            'books.pdf.searchUnsupported'.tr(),
             style: TextStyle(color: pv.pvTextDim),
           ),
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(ctx),
-              child: Text(
-                'OK',
-                style: TextStyle(color: pv.pvGreen),
-              ),
+              child: Text('OK', style: TextStyle(color: pv.pvGreen)),
             ),
           ],
         );
@@ -184,9 +181,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               height: 56,
               padding: const EdgeInsets.only(left: 4, right: 8),
               decoration: BoxDecoration(
-                border: Border(
-                  bottom: BorderSide(color: pv.pvBorderStrong),
-                ),
+                border: Border(bottom: BorderSide(color: pv.pvBorderStrong)),
               ),
               child: Row(
                 children: [
@@ -216,16 +211,13 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                     ),
                   ),
                   IconButton(
-                    tooltip: 'Qidirish',
+                    tooltip: 'books.pdf.searchTitle'.tr(),
                     icon: Icon(Icons.search, color: pv.pvText),
                     onPressed: _ready ? _showSearchPlaceholder : null,
                   ),
                   IconButton(
-                    tooltip: 'Sahifaga o\'tish',
-                    icon: Icon(
-                      Icons.format_list_numbered,
-                      color: pv.pvText,
-                    ),
+                    tooltip: 'books.pdf.goToPage'.tr(),
+                    icon: Icon(Icons.format_list_numbered, color: pv.pvText),
                     onPressed: _ready ? _jumpToPage : null,
                   ),
                   if (_totalPages > 0)
@@ -233,10 +225,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                       padding: const EdgeInsets.only(left: 2, right: 4),
                       child: Text(
                         '${_currentPage + 1}/$_totalPages',
-                        style: TextStyle(
-                          color: pv.pvTextDim,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: pv.pvTextDim, fontSize: 13),
                       ),
                     ),
                 ],
@@ -289,7 +278,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
               Icon(AppIcons.error, color: pv.pvTextDim, size: 48),
               const SizedBox(height: 16),
               Text(
-                'PDF ochilmadi',
+                'books.pdf.openFailed'.tr(),
                 style: TextStyle(color: pv.pvText, fontSize: 16),
               ),
               const SizedBox(height: 8),
@@ -322,7 +311,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
                 CircularProgressIndicator(color: pv.pvGreen),
                 const SizedBox(height: 16),
                 Text(
-                  'Kitob yuklanmoqda...',
+                  'books.pdf.loading'.tr(),
                   style: TextStyle(color: pv.pvText),
                 ),
               ],
@@ -391,15 +380,13 @@ class _PageScrubber extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         color: pv.pvSurface,
-        border: Border(
-          top: BorderSide(color: pv.pvBorderStrong),
-        ),
+        border: Border(top: BorderSide(color: pv.pvBorderStrong)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: Row(
         children: [
           IconButton(
-            tooltip: 'Birinchi sahifa',
+            tooltip: 'books.pdf.firstPage'.tr(),
             icon: Icon(Icons.first_page, color: pv.pvText),
             onPressed: onFirst,
           ),
@@ -414,7 +401,10 @@ class _PageScrubber extends StatelessWidget {
                 overlayShape: const RoundSliderOverlayShape(overlayRadius: 14),
               ),
               child: Slider(
-                value: currentPage.toDouble().clamp(0, (totalPages - 1).toDouble()),
+                value: currentPage.toDouble().clamp(
+                  0,
+                  (totalPages - 1).toDouble(),
+                ),
                 min: 0,
                 max: (totalPages - 1).toDouble(),
                 divisions: totalPages > 1 ? totalPages - 1 : null,
@@ -424,7 +414,7 @@ class _PageScrubber extends StatelessWidget {
             ),
           ),
           IconButton(
-            tooltip: 'Oxirgi sahifa',
+            tooltip: 'books.pdf.lastPage'.tr(),
             icon: Icon(Icons.last_page, color: pv.pvText),
             onPressed: onLast,
           ),

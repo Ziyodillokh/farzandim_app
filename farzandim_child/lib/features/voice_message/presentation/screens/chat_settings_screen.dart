@@ -39,9 +39,7 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
     // o'zgartirish faqat mobilda. Web user'iga snackbar.
     if (kIsWeb) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Galereyadan rasm tanlash faqat mobil ilovada'),
-        ),
+        SnackBar(content: Text('chatSettings.galleryMobileOnly'.tr())),
       );
       return;
     }
@@ -60,9 +58,9 @@ class _ChatSettingsScreenState extends ConsumerState<ChatSettingsScreen> {
       await ref.read(chatWallpaperProvider.notifier).setImage(dest);
     } catch (_) {
       if (mounted) {
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Rasmni yuklashda xato')));
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('chatSettings.imageLoadError'.tr())),
+        );
       }
     } finally {
       if (mounted) setState(() => _picking = false);

@@ -6,6 +6,7 @@
 // xabar preview ('Siz: 5 sek · 3 daq oldin' yoki 'Ota-ona: ...') + ›.
 // Tap → /voice-chat. Real-time stream orqali yangilanadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/voice_message/data/models/voice_message.dart';
@@ -21,7 +22,7 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
 
   String _relativeTime(DateTime date) {
     final diff = DateTime.now().difference(date);
-    if (diff.inMinutes < 1) return 'hozirgina';
+    if (diff.inMinutes < 1) return 'voice.quickCard.justNow'.tr();
     if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
     if (diff.inHours < 24) return '${diff.inHours} soat oldin';
     return '${diff.inDays} kun oldin';
@@ -124,8 +125,8 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Text(
-                    'Messanger',
+                  Text(
+                    'voice.quickCard.title'.tr(),
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontSize: 15,
@@ -138,15 +139,15 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
                       latest: latest,
                       relativeTime: _relativeTime,
                     ),
-                    loading: () => const Text(
-                      'Yuklanmoqda...',
+                    loading: () => Text(
+                      'common.loading'.tr(),
                       style: TextStyle(
                         color: AppColors.textSecondary,
                         fontSize: 12,
                       ),
                     ),
-                    error: (_, __) => const Text(
-                      'Xato',
+                    error: (_, __) => Text(
+                      'common.error'.tr(),
                       style: TextStyle(color: Colors.red, fontSize: 12),
                     ),
                   ),
@@ -215,12 +216,14 @@ class _PreviewLine extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     if (latest == null || latest!.createdAt == null) {
-      return const Text(
-        "Hali xabarlar yo'q",
+      return Text(
+        'voice.quickCard.empty'.tr(),
         style: TextStyle(color: AppColors.textSecondary, fontSize: 12),
       );
     }
-    final senderText = latest!.sender == 'child' ? 'Siz' : 'Ota-ona';
+    final senderText = latest!.sender == 'child'
+        ? 'voice.senderYou'.tr()
+        : 'voice.senderParent'.tr();
     return Row(
       children: [
         const Icon(AppIcons.mic, size: 12, color: AppColors.textSecondary),

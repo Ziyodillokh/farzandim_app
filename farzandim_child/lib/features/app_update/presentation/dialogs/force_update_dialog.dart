@@ -6,6 +6,7 @@
 // Foydalanuvchi yopa olmaydi (barrierDismissible: false, WillPopScope
 // false). Faqat Store/APK link'ga o'tib telefon'da yangilash mumkin.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -14,10 +15,7 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
 
 class ForceUpdateDialog extends StatelessWidget {
-  const ForceUpdateDialog({
-    required this.status,
-    super.key,
-  });
+  const ForceUpdateDialog({required this.status, super.key});
 
   final AppUpdateStatus status;
 
@@ -42,9 +40,7 @@ class ForceUpdateDialog extends StatelessWidget {
       canPop: false,
       child: Dialog(
         backgroundColor: AppColors.surface,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(20),
-        ),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         insetPadding: const EdgeInsets.all(24),
         child: Padding(
           padding: const EdgeInsets.fromLTRB(24, 28, 24, 24),
@@ -66,8 +62,8 @@ class ForceUpdateDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Ilovani yangilang',
+              Text(
+                'appUpdate.forceTitle'.tr(),
                 style: TextStyle(
                   color: AppColors.textPrimary,
                   fontSize: 20,
@@ -75,8 +71,8 @@ class ForceUpdateDialog extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
-                'Yangi versiya zarur. Eski versiya bilan davom etib bo‘lmaydi.',
+              Text(
+                'appUpdate.forceMessage'.tr(),
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   color: AppColors.textSecondary,
@@ -111,8 +107,8 @@ class ForceUpdateDialog extends StatelessWidget {
               const SizedBox(height: 24),
               _PrimaryButton(
                 label: platform == TargetPlatform.iOS
-                    ? 'App Store ochish'
-                    : 'Play Market ochish',
+                    ? 'appUpdate.openAppStore'.tr()
+                    : 'appUpdate.openPlayMarket'.tr(),
                 icon: platform == TargetPlatform.iOS
                     ? Icons.apple_rounded
                     : Icons.shop_rounded,
@@ -124,7 +120,7 @@ class ForceUpdateDialog extends StatelessWidget {
                   platform != TargetPlatform.iOS) ...[
                 const SizedBox(height: 10),
                 _SecondaryButton(
-                  label: 'Veb-saytdan yuklash (APK)',
+                  label: 'appUpdate.downloadApk'.tr(),
                   icon: Icons.download_rounded,
                   onPressed: () => _launch(platformInfo!.directApkUrl),
                 ),
@@ -154,13 +150,13 @@ class _VersionRow extends StatelessWidget {
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
       children: [
-        _versionChip('Joriy', current, AppColors.textSecondary),
-        const Icon(
-          AppIcons.forward,
-          color: AppColors.textTertiary,
-          size: 20,
+        _versionChip(
+          'appUpdate.currentVersion'.tr(),
+          current,
+          AppColors.textSecondary,
         ),
-        _versionChip('Yangi', latest, AppColors.primary),
+        const Icon(AppIcons.forward, color: AppColors.textTertiary, size: 20),
+        _versionChip('appUpdate.latestVersion'.tr(), latest, AppColors.primary),
       ],
     );
   }
@@ -217,10 +213,7 @@ class _PrimaryButton extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-          ),
+          style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
         ),
       ),
     );
@@ -254,10 +247,7 @@ class _SecondaryButton extends StatelessWidget {
         icon: Icon(icon, size: 18),
         label: Text(
           label,
-          style: const TextStyle(
-            fontSize: 14,
-            fontWeight: FontWeight.w600,
-          ),
+          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );

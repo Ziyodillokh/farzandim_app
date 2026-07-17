@@ -10,6 +10,7 @@
 // ForegroundTaskOptions sozlanadi (autoRunOnBoot: true → telefon
 // yoqilgach service o'zi qayta ishga tushadi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -22,9 +23,8 @@ class BackgroundService {
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'farzandim_child_bg',
-        channelName: 'Parvoz xizmati',
-        channelDescription:
-            "Bola joylashuvini va holatini doimiy kuzatish uchun",
+        channelName: 'background.channelName'.tr(),
+        channelDescription: 'background.channelDescription'.tr(),
         channelImportance: NotificationChannelImportance.LOW,
         priority: NotificationPriority.LOW,
       ),
@@ -69,8 +69,8 @@ class BackgroundService {
       }
 
       await FlutterForegroundTask.startService(
-        notificationTitle: 'Parvoz ishlayapti',
-        notificationText: "Oilangiz bilan bog'liqsiz",
+        notificationTitle: 'background.notificationTitle'.tr(),
+        notificationText: 'background.notificationText'.tr(),
         callback: backgroundEntry,
       );
     } catch (e) {

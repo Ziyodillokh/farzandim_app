@@ -14,10 +14,10 @@
 
 import 'dart:async';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
-import 'package:intl/intl.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
@@ -91,10 +91,7 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     _deviceInfoService = DeviceInfoService();
     _locationService = LocationService();
 
-    await _deviceInfoService!.start(
-      parentUid: _parentUid!,
-      childId: _childId!,
-    );
+    await _deviceInfoService!.start(parentUid: _parentUid!, childId: _childId!);
     await _locationService!.start(
       parentUid: _parentUid!,
       childId: _childId!,
@@ -117,12 +114,15 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // ham jadval bloklari yangilanadi. Native RestrictionService prefs'ni
     // o'qib enforce qiladi.
     _restrictionsSyncService = RestrictionsSyncService(
-      scheduleRepo:
-          BackendScheduleRepository(dio: createBackendDio(TokenStorage())),
-      appLimitRepo:
-          BackendAppLimitRepository(dio: createBackendDio(TokenStorage())),
-      routineRepo:
-          BackendRoutineRepository(dio: createBackendDio(TokenStorage())),
+      scheduleRepo: BackendScheduleRepository(
+        dio: createBackendDio(TokenStorage()),
+      ),
+      appLimitRepo: BackendAppLimitRepository(
+        dio: createBackendDio(TokenStorage()),
+      ),
+      routineRepo: BackendRoutineRepository(
+        dio: createBackendDio(TokenStorage()),
+      ),
       devicePolicyRepo: BackendDevicePolicyRepository(
         dio: createBackendDio(TokenStorage()),
       ),
@@ -142,7 +142,9 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // jim no-op). Bu yer pair'dan keyin VA har ishga tushganda ishlaydi.
     unawaited(
       FcmService(
-        backendRepo: BackendFcmRepository(dio: createBackendDio(TokenStorage())),
+        backendRepo: BackendFcmRepository(
+          dio: createBackendDio(TokenStorage()),
+        ),
       ).refreshRegistration(),
     );
   }
@@ -165,8 +167,10 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.
     final timeStr = DateFormat('HH:mm').format(toTashkent(timestamp));
     FlutterForegroundTask.updateService(
-      notificationTitle: 'Parvoz ishlayapti',
-      notificationText: "Oxirgi yangilanish: $timeStr",
+      notificationTitle: 'background.notificationTitle'.tr(),
+      notificationText: 'background.lastUpdate'.tr(
+        namedArgs: {'time': timeStr},
+      ),
     );
   }
 

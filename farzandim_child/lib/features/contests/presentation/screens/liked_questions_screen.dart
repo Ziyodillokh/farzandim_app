@@ -6,6 +6,7 @@
 // (newest-first). Oldingi/Keyingi tugmasi YO'Q. Har savolni ♥ bosib olib
 // tashlash mumkin.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/contests/presentation/providers/favorite_questions_provider.dart';
 import 'package:farzandim_child/features/contests/presentation/widgets/test_card.dart';
 import 'package:farzandim_child/shared/widgets/math_text.dart';
@@ -58,7 +59,7 @@ class LikedQuestionsScreen extends ConsumerWidget {
                       fit: BoxFit.scaleDown,
                       alignment: Alignment.centerLeft,
                       child: Text(
-                        'Tanlangan savollar',
+                        'contests.selectedQuestions'.tr(),
                         maxLines: 1,
                         style: tUnb(22, w: FontWeight.w700, ls: -0.6),
                       ),
@@ -115,13 +116,13 @@ class LikedQuestionsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 18),
           Text(
-            "Hali tanlangan savol yo'q",
+            'contests.likedQuestionsEmptyTitle'.tr(),
             textAlign: TextAlign.center,
             style: tUnb(17, w: FontWeight.w600, ls: -0.4),
           ),
           const SizedBox(height: 6),
           Text(
-            'Test yechayotib ♥ bosib savolni saqlang',
+            'contests.likedQuestionsEmptySubtitle'.tr(),
             textAlign: TextAlign.center,
             style: tPop(13, c: tMuted),
           ),
