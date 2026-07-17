@@ -15,12 +15,19 @@
 // ```
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
 /// Toast turi — ikona va aksent rangini belgilaydi.
 enum AppToastType { success, error, info, warning }
+
+// Parvoz toast tokenlari — chat va boshqa yangi ekranlar bilan bir xil.
+// Avval AppColors.surface (teal #203A43) + AppColors.info (och ko'k #60A5FA)
+// ishlatilardi — Parvoz'ning neytral-qora foni yonida "eski" ko'rinardi.
+const _pBlue = Color(0xFF216BFF);
+const _pSurfaceDark = Color(0xFF1C232B);
+const _pBorderDark = Color(0x1FFFFFFF);
 
 /// Premium top toast — `Overlay` orqali ko'rsatiladi (Scaffold shart emas).
 class AppToast {
@@ -142,7 +149,8 @@ class _ToastViewState extends State<_ToastView>
       icon: SolarIconsBold.dangerTriangle,
     ),
     AppToastType.info => (
-      color: AppColors.info,
+      // Parvoz ko'k (avval AppColors.info #60A5FA — och, eski).
+      color: _pBlue,
       icon: SolarIconsBold.infoCircle,
     ),
   };
@@ -151,8 +159,11 @@ class _ToastViewState extends State<_ToastView>
   Widget build(BuildContext context) {
     final s = _style;
     final media = MediaQuery.of(context);
+    final isDark = AppColors.isDark;
     return Positioned(
-      top: media.padding.top + AppDimensions.sm,
+      // Status bar ostidan aniq bo'shliq (avval sm — juda tepada, kesilgandek
+      // ko'rinardi).
+      top: media.padding.top + AppDimensions.md,
       left: 0,
       right: 0,
       child: SlideTransition(
@@ -176,15 +187,21 @@ class _ToastViewState extends State<_ToastView>
                         vertical: 14,
                       ),
                       decoration: BoxDecoration(
-                        color: AppColors.surface,
+                        // Parvoz neytral-qora (teal surface o'rniga); light
+                        // rejimда oq.
+                        color: isDark ? _pSurfaceDark : Colors.white,
                         borderRadius: BorderRadius.circular(
                           AppDimensions.radiusL,
                         ),
-                        border: Border.all(color: AppColors.border),
+                        border: Border.all(
+                          color: isDark
+                              ? _pBorderDark
+                              : const Color(0xFFE5E9EF),
+                        ),
                         boxShadow: [
                           BoxShadow(
                             color: Colors.black.withValues(
-                              alpha: AppColors.isDark ? 0.45 : 0.12,
+                              alpha: isDark ? 0.45 : 0.12,
                             ),
                             blurRadius: 24,
                             offset: const Offset(0, 10),
@@ -207,9 +224,11 @@ class _ToastViewState extends State<_ToastView>
                           Expanded(
                             child: Text(
                               widget.message,
-                              style: AppTextStyles.bodyM.copyWith(
+                              style: GoogleFonts.poppins(
+                                fontSize: 14,
                                 fontWeight: FontWeight.w600,
                                 color: AppColors.textPrimary,
+                                height: 1.35,
                               ),
                               maxLines: 3,
                               overflow: TextOverflow.ellipsis,
