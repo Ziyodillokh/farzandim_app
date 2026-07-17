@@ -20,6 +20,7 @@ import 'package:farzandim/features/gamification/presentation/providers/leaderboa
 import 'package:farzandim/features/gamification/presentation/widgets/ranking_avatar.dart';
 import 'package:farzandim/features/location/presentation/providers/child_location_provider.dart';
 import 'package:farzandim/features/location/presentation/providers/child_place_provider.dart';
+import 'package:farzandim/features/location/presentation/widgets/request_location_button.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_sheet.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';

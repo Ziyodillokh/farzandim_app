@@ -6,6 +6,7 @@ import 'dart:async';
 
 import 'package:farzandim_child/core/routing/app_router.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
+import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/features/notifications/data/services/fcm_service.dart';
 import 'package:farzandim_child/shared/widgets/app_snackbar.dart';
@@ -113,6 +114,20 @@ void _handleUnlockDecision(Ref ref, RemoteMessage message) {
   }
 }
 
+/// `location_request` push — ota-ona bola joylashuvni O'CHIRGANда "yoqing"
+/// so'rovi yubordi. Bolada modal ko'rsatamiz: [Yoqish] → tizim joylashuv
+/// sozlamasi ochiladi. Foreground'da ham, push bosilganda ham chiqadi.
+void _handleLocationRequest(Ref ref, RemoteMessage message) {
+  if (message.data['type'] != 'location_request') return;
+  final ctx = ref
+      .read(routerProvider)
+      .routerDelegate
+      .navigatorKey
+      .currentContext;
+  if (ctx == null || !ctx.mounted) return;
+  unawaited(LocationEnableModal.show(ctx));
+}
+
 /// FCM tizimini ishga tushirish — `app.dart` (yoki main) bir marta
 /// `ref.watch(fcmInitializerProvider)` chaqiradi.
 final fcmInitializerProvider = FutureProvider<void>((ref) async {
@@ -122,6 +137,7 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
   service.onForegroundMessage = (msg) {
     _handleUnlockDecision(ref, msg);
     _handleRestrictionsSync(ref, msg);
+    _handleLocationRequest(ref, msg);
   };
   service.onMessageTap = (msg) {
     _handleUnlockDecision(ref, msg);
@@ -129,6 +145,7 @@ final fcmInitializerProvider = FutureProvider<void>((ref) async {
     _handleNudgeTap(ref, msg);
     _handleChatTap(ref, msg);
     _handleDeepLink(ref, msg);
+    _handleLocationRequest(ref, msg);
   };
   await service.init();
 });

@@ -78,6 +78,20 @@ export class LocationController {
     return this.locationService.requestLocationUpdate(childId, user.userId);
   }
 
+  @Post('children/:childId/location/request-enable')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: 'Ask child to ENABLE location (visible push + modal on child)',
+  })
+  @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })
+  @ApiResponse({ status: 200, description: 'Enable-location push sent' })
+  async requestLocationEnable(
+    @Param('childId') childId: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.locationService.requestLocationEnable(childId, user.userId);
+  }
+
   @Get('children/:childId/location')
   @ApiOperation({ summary: 'Get last known location for a child' })
   @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })

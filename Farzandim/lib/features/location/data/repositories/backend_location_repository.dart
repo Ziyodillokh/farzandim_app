@@ -68,6 +68,23 @@ class BackendLocationRepository {
     }
   }
 
+  /// Bola joylashuvni O'CHIRGANда unga "joylashuvni yoqing" so'rovi (backend
+  /// KO'RINADIGAN push yuboradi → bolada modal). `request-update` (wake) dan
+  /// farqi: bu joylashuv o'chiq bo'lganda bolaga qo'lda yoqishni so'raydi.
+  /// `true` — so'rov yuborildi, `false` — xato.
+  Future<bool> requestLocationEnable(String childId) async {
+    try {
+      await _dio.post<void>(
+        '/children/$childId/location/request-enable',
+        data: const <String, dynamic>{},
+      );
+      return true;
+    } on DioException catch (e) {
+      debugPrint('BackendLocationRepository.requestLocationEnable: $e');
+      return false;
+    }
+  }
+
   /// Bola harakat tarixini Backend'dan oladi.
   ///
   /// `from`/`to` ISO 8601 (UTC), `null` bo'lsa backend default ishlatadi.

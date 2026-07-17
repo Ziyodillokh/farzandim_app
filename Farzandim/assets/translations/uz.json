@@ -535,6 +535,12 @@
     }
   },
   "location": {
+    "enableRequest": {
+      "button": "Joylashuvni yoqishni so'rash",
+      "offTitle": "Bola joylashuvni o'chirgan",
+      "sent": "So'rov yuborildi",
+      "error": "So'rov yuborilmadi"
+    },
     "updatedSuffix": "{time} yangilangan",
     "myLocation": {
       "serviceOff": "Joylashuv xizmati (GPS) o'chiq — yoqing",

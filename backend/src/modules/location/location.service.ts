@@ -651,4 +651,35 @@ export class LocationService {
     });
     return { ok: true, sent: result.sent };
   }
+
+  /* ------------------------------------------------------------------ */
+  /*  POST /children/:childId/location/request-enable — "yoqing" so'rovi  */
+  /* ------------------------------------------------------------------ */
+
+  /** Ota-ona bola joylashuvni O'CHIRGANда "joylashuvni yoqing" so'rovini
+   *  yuboradi — KO'RINADIGAN push (bola ilova yopiq bo'lsa ham ko'radi).
+   *  `location_wake` dan farqi: u data-only (avtomatik fix) — bu esa bolaga
+   *  MODAL/bildirishnoma ko'rsatadi, chunki joylashuv o'chiq bo'lsa avtomatik
+   *  fix olib bo'lmaydi, bola qo'lda yoqishi kerak. */
+  async requestLocationEnable(childId: string, userId: string) {
+    const child = await this.prisma.child.findUnique({
+      where: { id: childId },
+    });
+    if (!child) {
+      throw new NotFoundException('Child not found');
+    }
+    if (child.parentId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+    if (!child.childUserId) {
+      return { ok: false, reason: 'not_paired' };
+    }
+    const result = await this.fcm.sendPushToUser(child.childUserId, {
+      title: 'Joylashuvni yoqing',
+      body: "Ota-onangiz joylashuvingizni ko'ra olmayapti. "
+        + 'Iltimos, joylashuvni yoqing.',
+      data: { type: 'location_request', childId },
+    });
+    return { ok: true, sent: result.sent };
+  }
 }

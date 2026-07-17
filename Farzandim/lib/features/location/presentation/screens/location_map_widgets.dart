@@ -186,6 +186,13 @@ class _NoLocationState extends StatelessWidget {
                       style: _lpop(13, c: _dim),
                       textAlign: TextAlign.center,
                     ),
+                    const SizedBox(height: AppDimensions.lg),
+                    // Joylashuv yo'q — bolaga "yoqishni so'rash" (backend push
+                    // yuboradi, bolada modal chiqadi).
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 320),
+                      child: RequestLocationButton(childId: child.id),
+                    ),
                   ],
                 ),
               ),

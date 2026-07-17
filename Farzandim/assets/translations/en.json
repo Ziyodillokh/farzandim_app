@@ -535,6 +535,12 @@
     }
   },
   "location": {
+    "enableRequest": {
+      "button": "Ask to enable location",
+      "offTitle": "Child turned off location",
+      "sent": "Request sent",
+      "error": "Couldn't send request"
+    },
     "updatedSuffix": "updated {time}",
     "myLocation": {
       "serviceOff": "Location (GPS) is off — turn it on",

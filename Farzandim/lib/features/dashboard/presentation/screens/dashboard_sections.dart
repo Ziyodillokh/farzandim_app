@@ -388,8 +388,10 @@ class _LocationCard extends ConsumerWidget {
     final inZone = place.zoneName != null;
     final title = place.zoneName ?? 'dashboard.outdoors'.tr();
     final sub = place.street;
+    // Bola OS'da joylashuv ruxsatini o'chirgan bo'lsa — "yoqishni so'rash".
+    final locationOff = child.deviceInfo?.locationPermission == false;
 
-    return _Card(
+    final card = _Card(
       onTap: () => context.push(AppRoutes.locationPath(child.id)),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -429,6 +431,35 @@ class _LocationCard extends ConsumerWidget {
           ),
         ],
       ),
+    );
+
+    if (!locationOff) return card;
+
+    // Joylashuv o'chiq — karta ostida ogohlantirish + "yoqishni so'rash".
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        card,
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            const Icon(
+              SolarIconsBold.dangerTriangle,
+              size: 15,
+              color: Color(0xFFFBBF24),
+            ),
+            const SizedBox(width: 6),
+            Expanded(
+              child: Text(
+                'location.enableRequest.offTitle'.tr(),
+                style: _pop(12.5, c: const Color(0xFFFBBF24)),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        RequestLocationButton(childId: child.id, dense: true),
+      ],
     );
   }
 }
