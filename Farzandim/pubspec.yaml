@@ -299,7 +299,7 @@ flutter:
     - assets/images/       # welcome_bg, kelajakdagi rasmlar
     - assets/images/premium/ # Parvoz Premium memoji avatarlari (obunachilar)
     - assets/images/leaderboard/ # DON reytingi podium medallari (1/2/3)
-    - assets/stickers/     # bola avatar default stickerlari (boy/girl x yosh)
+    - assets/stickers/     # bola default avatari (default_avatar.svg — yagona)
     - assets/translations/ # uz.json, ru.json, en.json — easy_localization
     - assets/map_styles/   # Google Maps custom JSON style (dark premium)
     - assets/env.json      # API kalitlar (git-ignored, har dev o'zi)

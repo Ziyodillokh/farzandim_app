@@ -244,25 +244,13 @@ class Child {
   /// Bo'sh ro'yxat = hech biri (webFilterEnabled true bo'lsa ham).
   final List<String> blockedWebCategories;
 
-  /// Default avatar sticker yo'li — `assets/stickers/`'dan, jinsi va
-  /// yosh guruhiga qarab.
+  /// Default avatar sticker yo'li — bola o'z rasmini yuklamaguncha
+  /// ko'rsatiladigan ikon. Barcha yosh/jins uchun yagona yangi
+  /// jingalak sochli, ko'zoynakli avatar (Parvoz Premium dizayn).
   ///
-  /// 6 ta sticker mavjud: `{boy|girl}_{5_9|10_14|15_18}.svg`.
-  /// Yosh chegarada bo'lsa pastki guruhga tushadi (yoshi 9 → "5_9",
-  /// yoshi 10 → "10_14"). Mahsulot 6-18 yoshga mo'ljallangan, lekin
-  /// chegaradan tashqari yoshlar (4 yoki 19+) eng yaqin guruhga tushadi.
-  String get defaultStickerPath {
-    final genderPrefix = gender == Gender.male ? 'boy' : 'girl';
-    final String ageRange;
-    if (age <= 9) {
-      ageRange = '5_9';
-    } else if (age <= 14) {
-      ageRange = '10_14';
-    } else {
-      ageRange = '15_18';
-    }
-    return 'assets/stickers/${genderPrefix}_$ageRange.svg';
-  }
+  /// Eski jinsi/yoshga qarab 6 ta SVG olib tashlandi — foydalanuvchi
+  /// yolg'iz zamonaviy ikon so'radi.
+  String get defaultStickerPath => 'assets/stickers/default_avatar.svg';
 
   /// Bola o'zining custom rasmiga egami (bytes yoki URL).
   ///

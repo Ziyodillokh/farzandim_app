@@ -1,0 +1,75 @@
+<svg width="200" height="200" viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg">
+  <title>Default child avatar — curly hair with glasses</title>
+  <!-- fon: yumshoq navy shar -->
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="45%" r="55%">
+      <stop offset="0%" stop-color="#1E2937"/>
+      <stop offset="100%" stop-color="#0B1220"/>
+    </radialGradient>
+    <linearGradient id="skin" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#FDD9B6"/>
+      <stop offset="100%" stop-color="#F4BE93"/>
+    </linearGradient>
+    <linearGradient id="hair" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#7C4A2A"/>
+      <stop offset="100%" stop-color="#5A3520"/>
+    </linearGradient>
+  </defs>
+  <circle cx="100" cy="100" r="100" fill="url(#bg)"/>
+
+  <!-- bo'yin -->
+  <rect x="82" y="150" width="36" height="30" rx="14" fill="url(#skin)"/>
+
+  <!-- yuz -->
+  <circle cx="100" cy="112" r="46" fill="url(#skin)"/>
+
+  <!-- quloqlar -->
+  <ellipse cx="55" cy="112" rx="7" ry="10" fill="url(#skin)"/>
+  <ellipse cx="145" cy="112" rx="7" ry="10" fill="url(#skin)"/>
+
+  <!-- jingalak soch — bir nechta dumaloq bulg'ur -->
+  <g fill="url(#hair)">
+    <ellipse cx="60" cy="82" rx="14" ry="14"/>
+    <ellipse cx="72" cy="70" rx="16" ry="16"/>
+    <ellipse cx="88" cy="62" rx="18" ry="18"/>
+    <ellipse cx="108" cy="60" rx="18" ry="18"/>
+    <ellipse cx="126" cy="66" rx="17" ry="17"/>
+    <ellipse cx="140" cy="78" rx="15" ry="15"/>
+    <ellipse cx="148" cy="94" rx="12" ry="12"/>
+    <ellipse cx="55" cy="96" rx="12" ry="12"/>
+    <!-- peshonaga tushgan kichik jingalaklar -->
+    <circle cx="76" cy="90" r="7"/>
+    <circle cx="90" cy="86" r="7"/>
+    <circle cx="108" cy="84" r="7"/>
+    <circle cx="124" cy="88" r="7"/>
+    <circle cx="136" cy="92" r="6"/>
+  </g>
+
+  <!-- ko'zoynak: doiralar + ko'prik -->
+  <g fill="none" stroke="#1E3A8A" stroke-width="4">
+    <circle cx="82" cy="118" r="14" fill="#0B1220"/>
+    <circle cx="118" cy="118" r="14" fill="#0B1220"/>
+    <path d="M 96,118 L 104,118" stroke-linecap="round"/>
+    <!-- oyoqchalar (chapга-o'ngga) -->
+    <path d="M 68,118 L 60,116" stroke-linecap="round"/>
+    <path d="M 132,118 L 140,116" stroke-linecap="round"/>
+  </g>
+
+  <!-- ko'zlar (ko'zoynak ichida oq + qora doira) -->
+  <circle cx="82" cy="118" r="6" fill="#FFFFFF"/>
+  <circle cx="118" cy="118" r="6" fill="#FFFFFF"/>
+  <circle cx="83" cy="119" r="3.5" fill="#2A2A35"/>
+  <circle cx="119" cy="119" r="3.5" fill="#2A2A35"/>
+  <circle cx="84" cy="118" r="1" fill="#FFFFFF"/>
+  <circle cx="120" cy="118" r="1" fill="#FFFFFF"/>
+
+  <!-- lunj rangi -->
+  <ellipse cx="66" cy="132" rx="7" ry="4" fill="#F09B96" opacity="0.55"/>
+  <ellipse cx="134" cy="132" rx="7" ry="4" fill="#F09B96" opacity="0.55"/>
+
+  <!-- burun -->
+  <path d="M 100,128 Q 96,138 100,140 Q 104,138 100,128 Z" fill="#E7A87A" opacity="0.55"/>
+
+  <!-- kulish -->
+  <path d="M 88,146 Q 100,154 112,146" stroke="#2A2A35" stroke-width="2.6" fill="none" stroke-linecap="round"/>
+</svg>
