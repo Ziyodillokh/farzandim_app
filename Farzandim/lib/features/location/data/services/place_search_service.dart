@@ -28,6 +28,20 @@ final placeSearchServiceProvider = Provider<PlaceSearchService>((ref) {
 /// Qidiruvni ishga tushirishдан oldingi minimal belgilar soni.
 const int kMinSearchChars = 2;
 
+/// Joy kategoriyasi — UI'да mos ikon tanlash uchun (osm_key/osm_value'дан
+/// hosil qilinadi). Bilinmasa `other`.
+enum PlaceKind {
+  school,
+  mosque,
+  park,
+  hospital,
+  shop,
+  restaurant,
+  street,
+  city,
+  other,
+}
+
 /// Qidiruv natijasi — bitta joy taxmini.
 @immutable
 class PlaceSuggestion {
@@ -38,6 +52,7 @@ class PlaceSuggestion {
     required this.latitude,
     required this.longitude,
     required this.distanceMeters,
+    this.kind = PlaceKind.other,
   });
 
   /// Qisqa nom (masalan "Minor masjidi", "22-maktab", "Amir Temur ko'chasi").
@@ -53,6 +68,9 @@ class PlaceSuggestion {
 
   /// Markaz (xarita) dan masofa (metr) — saralash + UI masofa chipi uchun.
   final double distanceMeters;
+
+  /// Kategoriya — UI ikonini tanlash uchun (masjid → gumbaz, maktab → daftar).
+  final PlaceKind kind;
 }
 
 /// Photon (OSM) orqali joy qidiruv xizmati.
@@ -136,6 +154,10 @@ class PlaceSearchService {
             latitude: lat,
             longitude: lng,
             distanceMeters: _haversine(centerLat, centerLng, lat, lng),
+            kind: _kindFromOsm(
+              (props['osm_key'] as String?) ?? '',
+              (props['osm_value'] as String?) ?? '',
+            ),
           ),
         );
       }
@@ -202,5 +224,41 @@ class PlaceSearchService {
             math.sin(dLng / 2) *
             math.sin(dLng / 2);
     return 2 * r * math.asin(math.min(1, math.sqrt(h)));
+  }
+
+  /// OSM `key/value` juftligидan foydalanuvchi ko'radigan kategoriya.
+  /// Photon `osm_key='amenity'`, `osm_value='school'` va h.k. qaytaradi.
+  static PlaceKind _kindFromOsm(String key, String value) {
+    switch (value) {
+      case 'school':
+      case 'kindergarten':
+      case 'university':
+      case 'college':
+        return PlaceKind.school;
+      case 'place_of_worship':
+      case 'mosque':
+        return PlaceKind.mosque;
+      case 'park':
+      case 'garden':
+      case 'playground':
+        return PlaceKind.park;
+      case 'hospital':
+      case 'clinic':
+      case 'pharmacy':
+        return PlaceKind.hospital;
+      case 'restaurant':
+      case 'cafe':
+      case 'fast_food':
+        return PlaceKind.restaurant;
+    }
+    switch (key) {
+      case 'shop':
+        return PlaceKind.shop;
+      case 'highway':
+        return PlaceKind.street;
+      case 'place':
+        return PlaceKind.city;
+    }
+    return PlaceKind.other;
   }
 }

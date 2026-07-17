@@ -2,13 +2,22 @@
 // Manzil qidirish varag'i (Parvoz dizayn) — geo-zona qo'shishда.
 // ─────────────────────────────────────────────────────────────────────
 //
-// Deyarli to'liq ekran modal: tepada qidiruv maydoni (autofokus), pastda
-// jonli taxminlar (as-you-type). Foydalanuvchi "masjid"/"maktab"/ko'cha yozadi
-// → Photon (OSM) markazga yaqin joylarni qaytaradi, ENG YAQINDAN uzoqqa.
-// Natijani bosса → varaq [PlaceSuggestion] bilan yopiladi (xarita o'sha joyga).
+// Layout:
+//   ┌ handle ────────────────────────────────────────────────
+//   │ "Manzil qidirish"                                [×]
+//   │ ┌─────────────────────────────────────────────────┐
+//   │ │ 🔍  Masjid, maktab, ko'cha nomi...             │  ← ko'k glow fokus
+//   │ └─────────────────────────────────────────────────┘
+//   │ [ Masjid ] [ Maktab ] [ Bog' ] [ Kasalxona ]        ← shortcut chip'lar
+//   │
+//   │ ─ Natijalar / bo'sh holat ───
+//   └───────────────────────────────────────────────────────
 //
-// Debounce (350ms) + race himoyasi (so'rov navbat raqami) — eski javob yangi
-// so'rov ustidan yozib qo'ymaydi.
+// Debounce (350ms) + race himoyasi (so'rov navbat raqami) — eski javob
+// yangi so'rov ustidan yozib qo'ymaydi.
+//
+// Natijalar kategoriya ikoni bilan chiqadi (masjid → gumbaz, maktab →
+// daftar, bog' → daraxt, kasalxona → yurak, ko'cha → yo'l, va h.k.).
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/location/data/services/place_search_service.dart';
@@ -21,8 +30,10 @@ import 'package:solar_icons/solar_icons.dart';
 // ════════════ Parvoz tokenlar (lokal) ════════════
 const _sheetBg = Color(0xFF12171C);
 const _fieldBg = Color(0xFF1F262C);
+const _fieldBgFocused = Color(0xFF232B34);
 const _blue = Color(0xFF216BFF);
 const _border = Color(0x1AFFFFFF); // oq 10%
+const _borderFocused = Color(0x66216BFF); // ko'k 40%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 const _dimmer = Color(0x59FFFFFF); // oq 35%
 
@@ -43,6 +54,27 @@ TextStyle _pop(
   FontWeight w = FontWeight.w400,
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.4);
+
+/// Shortcut chip — foydalanuvchi tez-tez qidiradigan joy toifalari.
+/// Tap qilinsa: matn maydoniga yoziladi + qidiruv ishga tushadi.
+class _CategoryShortcut {
+  const _CategoryShortcut(this.icon, this.label, this.query);
+  final IconData icon;
+  final String label;
+  final String query;
+}
+
+const _kShortcuts = <_CategoryShortcut>[
+  _CategoryShortcut(SolarIconsBold.buildings, 'Masjid', 'masjid'),
+  _CategoryShortcut(SolarIconsBold.mapPointSchool, 'Maktab', 'maktab'),
+  _CategoryShortcut(SolarIconsBold.leaf, "Bog'", "bog'"),
+  _CategoryShortcut(
+    SolarIconsBold.mapPointHospital,
+    'Kasalxona',
+    'kasalxona',
+  ),
+  _CategoryShortcut(SolarIconsBold.shop, "Do'kon", "do'kon"),
+];
 
 /// Manzil qidirish varag'ini ochadi. Foydalanuvchi joy tanlasa
 /// [PlaceSuggestion], bekor qilsa `null` qaytaradi.
@@ -79,12 +111,21 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
   final _focus = FocusNode();
 
   // Har matn o'zgarishида oshadigan "avlod" hisoblagichi. Debounce callback
-  // ham, kelган HTTP javob ham `gen != _gen` bo'lsa tashlanadi — eski/uchувчи
+  // ham, kelган HTTP javob ham `gen != _gen` bo'lsa tashlanadi — eski/uchувчi
   // so'rov hech qачон yangi holat ustidan yozmaydi (race-safe).
   int _gen = 0;
   List<PlaceSuggestion> _results = const [];
   bool _loading = false;
   bool _searched = false; // kamida bir marta so'rov yuborildimi
+
+  @override
+  void initState() {
+    super.initState();
+    _focus.addListener(() {
+      // Fokus o'zgarganda border rangini yangilash uchun.
+      if (mounted) setState(() {});
+    });
+  }
 
   @override
   void dispose() {
@@ -148,6 +189,18 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
     _focus.requestFocus();
   }
 
+  /// Shortcut chip'dan so'rov: matn maydonini to'ldirib, darhol qidiradi.
+  void _runShortcut(String query) {
+    HapticFeedback.selectionClick();
+    _controller.text = query;
+    _controller.selection = TextSelection.fromPosition(
+      TextPosition(offset: query.length),
+    );
+    final gen = ++_gen;
+    setState(() => _loading = true);
+    _runSearch(query, gen);
+  }
+
   @override
   Widget build(BuildContext context) {
     final mq = MediaQuery.of(context);
@@ -184,21 +237,21 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
             ),
             // Sarlavha + yopish.
             Padding(
-              padding: const EdgeInsets.fromLTRB(20, 6, 12, 10),
+              padding: const EdgeInsets.fromLTRB(20, 8, 12, 14),
               child: Row(
                 children: [
                   Expanded(
                     child: Text(
                       'geoZoneEdit.search.title'.tr(),
-                      style: _unb(18),
+                      style: _unb(20),
                     ),
                   ),
                   GestureDetector(
                     onTap: () => Navigator.of(context).pop(),
                     behavior: HitTestBehavior.opaque,
                     child: Container(
-                      width: 38,
-                      height: 38,
+                      width: 40,
+                      height: 40,
                       decoration: BoxDecoration(
                         color: _fieldBg,
                         borderRadius: BorderRadius.circular(12),
@@ -225,6 +278,12 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
                 onClear: _clear,
               ),
             ),
+            // Shortcut chip'lar — faqat matn hali bo'sh bo'lsa ko'rinadi
+            // (natija/yuklanish paytida joy egallamasin).
+            if (_controller.text.trim().length < kMinSearchChars) ...[
+              const SizedBox(height: 14),
+              _ShortcutRow(onTap: _runShortcut),
+            ],
             const SizedBox(height: 8),
             Expanded(child: _body()),
           ],
@@ -237,8 +296,10 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
     // 1) Hali yozilmagan / juda qisqa → yo'riqnoma.
     if (_controller.text.trim().length < kMinSearchChars) {
       return _Hint(
-        icon: SolarIconsOutline.magnifier,
-        text: 'geoZoneEdit.search.prompt'.tr(),
+        icon: SolarIconsOutline.mapArrowSquare,
+        title: 'geoZoneEdit.search.prompt'.tr(),
+        subtitle: 'Yaqin joylarni chiqarish uchun manzilni yozing yoki '
+            'yuqoridagi tugmalarni bosing.',
       );
     }
     // 2) Natijalar bor → ro'yxat (yaqindan uzoqqa). Yuklanayotgan bo'lsa
@@ -261,9 +322,9 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
               padding: const EdgeInsets.fromLTRB(12, 8, 12, 24),
               itemCount: _results.length,
               separatorBuilder: (_, __) =>
-                  const Divider(height: 1, color: _border, indent: 60),
+                  const Divider(height: 1, color: _border, indent: 68),
               itemBuilder: (context, i) {
-                // `place`ни bir marta ushlab qolamiz — onTap bosilganда jonli
+                // `place`ни bir marta ushlab qolamiz — onTap bosilганда jonli
                 // `_results[i]`ни qayta o'qimasin (yangi qidiruv natijasi
                 // kelib qolса stale-index/noto'g'ri joy qaytarmasин).
                 final place = _results[i];
@@ -291,7 +352,8 @@ class _AddressSearchSheetState extends ConsumerState<_AddressSearchSheet> {
     if (_searched) {
       return _Hint(
         icon: SolarIconsOutline.mapPointRemove,
-        text: 'geoZoneEdit.search.noResults'.tr(),
+        title: 'geoZoneEdit.search.noResults'.tr(),
+        subtitle: "Boshqa so'z bilan urinib ko'ring.",
       );
     }
     return const SizedBox.shrink();
@@ -317,17 +379,36 @@ class _SearchField extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      height: 52,
+    final hasFocus = focus.hasFocus;
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 180),
+      curve: Curves.easeOut,
+      height: 54,
       padding: const EdgeInsets.symmetric(horizontal: 16),
       decoration: BoxDecoration(
-        color: _fieldBg,
+        color: hasFocus ? _fieldBgFocused : _fieldBg,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _border),
+        border: Border.all(
+          color: hasFocus ? _borderFocused : _border,
+          width: hasFocus ? 1.5 : 1,
+        ),
+        boxShadow: hasFocus
+            ? const [
+                BoxShadow(
+                  color: Color(0x33216BFF),
+                  blurRadius: 18,
+                  spreadRadius: -2,
+                ),
+              ]
+            : null,
       ),
       child: Row(
         children: [
-          const Icon(SolarIconsOutline.magnifier, size: 20, color: _dim),
+          Icon(
+            SolarIconsOutline.magnifier,
+            size: 20,
+            color: hasFocus ? _blue : _dim,
+          ),
           const SizedBox(width: 10),
           Expanded(
             child: TextSelectionTheme(
@@ -379,6 +460,65 @@ class _SearchField extends StatelessWidget {
   }
 }
 
+// ════════════ Kategoriya shortcut qatori ════════════
+
+class _ShortcutRow extends StatelessWidget {
+  const _ShortcutRow({required this.onTap});
+
+  final ValueChanged<String> onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      height: 40,
+      child: ListView.separated(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16),
+        itemCount: _kShortcuts.length,
+        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        itemBuilder: (_, i) {
+          final s = _kShortcuts[i];
+          return _ShortcutChip(shortcut: s, onTap: () => onTap(s.query));
+        },
+      ),
+    );
+  }
+}
+
+class _ShortcutChip extends StatelessWidget {
+  const _ShortcutChip({required this.shortcut, required this.onTap});
+
+  final _CategoryShortcut shortcut;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 14),
+        decoration: BoxDecoration(
+          color: _fieldBg,
+          borderRadius: BorderRadius.circular(20),
+          border: Border.all(color: _border),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(shortcut.icon, size: 16, color: _blue),
+            const SizedBox(width: 6),
+            Text(
+              shortcut.label,
+              style: _pop(13, w: FontWeight.w600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 // ════════════ Natija plitasi ════════════
 
 class _ResultTile extends StatelessWidget {
@@ -389,6 +529,7 @@ class _ResultTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final (icon, tint) = _iconForKind(place.kind);
     return GestureDetector(
       onTap: () {
         HapticFeedback.selectionClick();
@@ -396,23 +537,19 @@ class _ResultTile extends StatelessWidget {
       },
       behavior: HitTestBehavior.opaque,
       child: Padding(
-        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 4),
+        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         child: Row(
           children: [
-            // Joy ikoni.
+            // Kategoriyaga qarab ikon.
             Container(
-              width: 44,
-              height: 44,
+              width: 48,
+              height: 48,
               decoration: BoxDecoration(
-                color: _blue.withValues(alpha: 0.14),
-                borderRadius: BorderRadius.circular(12),
+                color: tint.withValues(alpha: 0.14),
+                borderRadius: BorderRadius.circular(14),
               ),
               alignment: Alignment.center,
-              child: const Icon(
-                SolarIconsBold.mapPoint,
-                size: 21,
-                color: _blue,
-              ),
+              child: Icon(icon, size: 22, color: tint),
             ),
             const SizedBox(width: 12),
             // Nom + manzil.
@@ -425,10 +562,10 @@ class _ResultTile extends StatelessWidget {
                     place.name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _pop(14.5, w: FontWeight.w600),
+                    style: _pop(15, w: FontWeight.w600),
                   ),
                   if (place.address.isNotEmpty) ...[
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 3),
                     Text(
                       place.address,
                       maxLines: 1,
@@ -441,14 +578,45 @@ class _ResultTile extends StatelessWidget {
             ),
             const SizedBox(width: 8),
             // Masofa chipi (eng yaqindan uzoqqa).
-            Text(
-              _fmtDistance(place.distanceMeters),
-              style: _pop(12, w: FontWeight.w600, c: _dimmer),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: _fieldBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Text(
+                _fmtDistance(place.distanceMeters),
+                style: _pop(11.5, w: FontWeight.w600, c: _dim),
+              ),
             ),
           ],
         ),
       ),
     );
+  }
+
+  /// Kategoriyaga mos ikon + rang. Palet fon bilan yaxshi kontrastda.
+  static (IconData, Color) _iconForKind(PlaceKind k) {
+    switch (k) {
+      case PlaceKind.school:
+        return (SolarIconsBold.mapPointSchool, const Color(0xFFFFB020));
+      case PlaceKind.mosque:
+        return (SolarIconsBold.buildings, const Color(0xFF22C55E));
+      case PlaceKind.park:
+        return (SolarIconsBold.leaf, const Color(0xFF34D399));
+      case PlaceKind.hospital:
+        return (SolarIconsBold.mapPointHospital, const Color(0xFFEF4444));
+      case PlaceKind.restaurant:
+        return (SolarIconsBold.chefHat, const Color(0xFFF97316));
+      case PlaceKind.shop:
+        return (SolarIconsBold.shop, const Color(0xFFA78BFA));
+      case PlaceKind.street:
+        return (SolarIconsBold.mapPointWave, const Color(0xFF60A5FA));
+      case PlaceKind.city:
+        return (SolarIconsBold.buildings, const Color(0xFF60A5FA));
+      case PlaceKind.other:
+        return (SolarIconsBold.mapPoint, _blue);
+    }
   }
 
   /// Masofa formati: <1km → "350 m", aks holda "1.2 km". Yaxlitlangan
@@ -463,22 +631,48 @@ class _ResultTile extends StatelessWidget {
 // ════════════ Yo'riqnoma / bo'sh holat ════════════
 
 class _Hint extends StatelessWidget {
-  const _Hint({required this.icon, required this.text});
+  const _Hint({
+    required this.icon,
+    required this.title,
+    this.subtitle,
+  });
 
   final IconData icon;
-  final String text;
+  final String title;
+  final String? subtitle;
 
   @override
   Widget build(BuildContext context) {
     return Center(
       child: Padding(
-        padding: const EdgeInsets.fromLTRB(40, 0, 40, 60),
+        padding: const EdgeInsets.fromLTRB(32, 0, 32, 60),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 54, color: _dimmer),
-            const SizedBox(height: 14),
-            Text(text, textAlign: TextAlign.center, style: _pop(14, c: _dim)),
+            Container(
+              width: 84,
+              height: 84,
+              decoration: BoxDecoration(
+                color: _blue.withValues(alpha: 0.10),
+                borderRadius: BorderRadius.circular(24),
+              ),
+              alignment: Alignment.center,
+              child: Icon(icon, size: 40, color: _blue),
+            ),
+            const SizedBox(height: 18),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: _pop(15, w: FontWeight.w600),
+            ),
+            if (subtitle != null) ...[
+              const SizedBox(height: 6),
+              Text(
+                subtitle!,
+                textAlign: TextAlign.center,
+                style: _pop(13, c: _dim),
+              ),
+            ],
           ],
         ),
       ),
