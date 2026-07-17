@@ -120,7 +120,7 @@ class _FileBubbleState extends ConsumerState<_FileBubble> {
                 decoration: BoxDecoration(
                   color: isOwn
                       ? const Color(0xFF216BFF)
-                      : const Color(0xFF12171E),
+                      : const Color(0xFF1C232B),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),

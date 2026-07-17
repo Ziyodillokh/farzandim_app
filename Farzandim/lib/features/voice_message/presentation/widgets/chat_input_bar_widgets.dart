@@ -19,14 +19,10 @@ class _SendButton extends StatelessWidget {
         height: 46,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [AppColors.primary, AppColors.primaryDark],
-          ),
+          color: _pBlue,
           boxShadow: [
             BoxShadow(
-              color: AppColors.primary.withValues(alpha: 0.28),
+              color: _pBlue.withValues(alpha: 0.28),
               blurRadius: 12,
               spreadRadius: 1,
             ),
@@ -106,7 +102,7 @@ class _RecordingIndicator extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: _pChipBg,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
       ),
@@ -157,7 +153,7 @@ class _RecordingIndicator extends StatelessWidget {
                                 width: 2.5,
                                 height: h,
                                 decoration: BoxDecoration(
-                                  color: AppColors.primary,
+                                  color: _pBlue,
                                   borderRadius: BorderRadius.circular(2),
                                 ),
                               ),
@@ -603,7 +599,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
     final emojis = _categories[_category].emojis;
     return Container(
       height: 256,
-      color: AppColors.surface,
+      color: _pSheetBg,
       child: Column(
         children: [
           // Kategoriya tablari.
@@ -621,7 +617,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
                         border: Border(
                           bottom: BorderSide(
                             color: selected
-                                ? AppColors.primary
+                                ? _pBlue
                                 : Colors.transparent,
                             width: 2,
                           ),
@@ -631,7 +627,7 @@ class _EmojiPanelState extends State<_EmojiPanel> {
                         _categories[i].icon,
                         size: 22,
                         color: selected
-                            ? AppColors.primary
+                            ? _pBlue
                             : AppColors.textSecondary,
                       ),
                     ),

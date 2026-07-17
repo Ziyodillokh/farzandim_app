@@ -12,6 +12,7 @@ import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:open_filex/open_filex.dart';
 import 'package:path_provider/path_provider.dart';
@@ -209,13 +210,14 @@ class VoiceChatBubble extends ConsumerWidget {
         ? (ref.watch(audioSpeedProvider).value ?? 1.0)
         : 1.0;
 
+    // Bola chati bilan bir xil Parvoz tokenlari: own = ko'k, received =
+    // `#1C232B`. Matn/ikona/waveform DOIM OQ own bubble'da (avval qora edi —
+    // ko'k ustida deyarli o'qilmasdi), received'da ko'k aksent.
     final bubbleColor = isOwn
         ? const Color(0xFF216BFF)
-        : const Color(0xFF12171E);
-    final textColor = isOwn ? Colors.black : const Color(0xFFFFFFFF);
-    final waveformColor = isOwn
-        ? Colors.black.withValues(alpha: 0.6)
-        : const Color(0xFF508AFF);
+        : const Color(0xFF1C232B);
+    final textColor = isOwn ? Colors.white : const Color(0xFFFFFFFF);
+    final waveformColor = isOwn ? Colors.white : const Color(0xFF216BFF);
 
     final displayDuration = isPlaying
         ? position
@@ -385,14 +387,14 @@ class VoiceChatBubble extends ConsumerWidget {
                             ),
                             if (isOwn) ...[
                               const SizedBox(width: 4),
+                              // Bola chatidek: ikki galochka (o'qildi) / bitta
+                              // (yuborildi), doim oq (ko'k bubble ustida).
                               Icon(
                                 message.isSeen
-                                    ? SolarIconsBold.checkSquare
-                                    : SolarIconsBold.checkCircle,
-                                size: 14,
-                                color: message.isSeen
-                                    ? Colors.blue.shade400
-                                    : textColor.withValues(alpha: 0.5),
+                                    ? Icons.done_all_rounded
+                                    : Icons.done_rounded,
+                                size: 15,
+                                color: Colors.white,
                               ),
                             ],
                             if (isCurrent) ...[

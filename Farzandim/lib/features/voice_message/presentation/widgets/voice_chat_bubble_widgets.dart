@@ -155,14 +155,9 @@ class _TextBubble extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final bubbleColor = isOwn
-        ? const Color(0xFF216BFF)
-        : const Color(0xFF12171E);
-    // O'z bubble'i KO'K (#216BFF) — matn OQ. Avval qora edi: bu bubble yashil
-    // bo'lgan davrdan qolgan (yashil ustida qora to'g'ri edi), yashil→ko'k
-    // ko'chishida yangilanmay qolgan va ko'k ustida matn deyarli o'qilmasdi.
-    // Bola ilovasidagi chat ham ko'k ustiga oq yozadi.
-    const textColor = Color(0xFFFFFFFF);
+    // Bola chati bilan bir xil Parvoz tokenlari: own = ko'k, received =
+    // `#1C232B`, matn OQ, Poppins shrift, soyasiz. Vaqt+belgi Telegram uslubida
+    // matn bilan BIR QATORDA (Wrap — sig'sa yonida, sig'masa pastda o'ngda).
     final metaColor = isOwn ? Colors.white70 : const Color(0x8CFFFFFF);
 
     return Padding(
@@ -179,35 +174,38 @@ class _TextBubble extends StatelessWidget {
               // Telegram uslubi: uzoq bosilsa tahrirlash/o'chirish menyusi.
               onLongPress: onLongPress,
               child: Container(
-                constraints: const BoxConstraints(minWidth: 72),
-                padding: const EdgeInsets.fromLTRB(14, 10, 12, 8),
+                padding: const EdgeInsets.fromLTRB(12, 7, 9, 7),
                 decoration: BoxDecoration(
-                  color: bubbleColor,
+                  color: isOwn
+                      ? const Color(0xFF216BFF)
+                      : const Color(0xFF1C232B),
                   borderRadius: BorderRadius.only(
                     topLeft: const Radius.circular(18),
                     topRight: const Radius.circular(18),
                     bottomLeft: Radius.circular(isOwn ? 18 : 4),
                     bottomRight: Radius.circular(isOwn ? 4 : 18),
                   ),
-                  boxShadow: _bubbleShadow,
                 ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  mainAxisSize: MainAxisSize.min,
+                child: Wrap(
+                  alignment: WrapAlignment.end,
+                  crossAxisAlignment: WrapCrossAlignment.end,
+                  spacing: 8,
                   children: [
                     Text(
                       message.text ?? '',
-                      style: const TextStyle(
-                        color: textColor,
+                      style: GoogleFonts.poppins(
+                        color: Colors.white,
                         fontSize: 15,
                         height: 1.35,
                       ),
                     ),
-                    const SizedBox(height: 2),
-                    _BubbleMeta(
-                      message: message,
-                      isOwn: isOwn,
-                      color: metaColor,
+                    Padding(
+                      padding: const EdgeInsets.only(bottom: 1),
+                      child: _BubbleMeta(
+                        message: message,
+                        isOwn: isOwn,
+                        color: metaColor,
+                      ),
                     ),
                   ],
                 ),
@@ -241,20 +239,16 @@ class _BubbleMeta extends StatelessWidget {
       children: [
         Text(
           _formatTimeShort(message.createdAt),
-          style: TextStyle(color: color, fontSize: 11),
+          style: GoogleFonts.poppins(color: color, fontSize: 11),
         ),
         if (isOwn) ...[
-          const SizedBox(width: 4),
+          const SizedBox(width: 3),
+          // Bola chatidek: ikki galochka (o'qildi) / bitta (yuborildi), doim
+          // oq. Bu belgi faqat O'Z (ko'k) bubble'ida chiqadi.
           Icon(
-            message.isSeen
-                ? SolarIconsBold.checkSquare
-                : SolarIconsBold.checkCircle,
+            message.isSeen ? Icons.done_all_rounded : Icons.done_rounded,
             size: 14,
-            // Bu belgi faqat O'Z (ko'k) bubble'ida chiqadi. Avval "o'qildi"
-            // holati `Colors.blue.shade700` edi — bubble yashil bo'lgan
-            // davrda ko'rinardi, ko'k bo'lgach ko'k ustida ko'k bo'lib
-            // yo'qoldi. Endi oq (o'qildi) / meta rangi (yuborildi).
-            color: message.isSeen ? Colors.white : color,
+            color: Colors.white,
           ),
         ],
       ],
@@ -335,7 +329,7 @@ class _ImageBubble extends ConsumerWidget {
     final Widget content = hasCaption
         ? DecoratedBox(
             decoration: BoxDecoration(
-              color: isOwn ? const Color(0xFF216BFF) : const Color(0xFF12171E),
+              color: isOwn ? const Color(0xFF216BFF) : const Color(0xFF1C232B),
               borderRadius: radius,
               boxShadow: _bubbleShadow,
             ),

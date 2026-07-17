@@ -11,6 +11,13 @@ import 'package:solar_icons/solar_icons.dart';
 
 part 'chat_input_bar_widgets.dart';
 
+// Parvoz chat tokenlari — bola chati bilan bir xil (eski yashil AppColors
+// o'rniga ko'k aksent + to'q kulrang panel). Faqat KO'RINISH — imkoniyatlar
+// (emoji, attach, video) saqlanadi.
+const _pBlue = Color(0xFF216BFF); // aksent: send, emoji, cursor
+const _pChipBg = Color(0xFF1B2128); // matn maydoni foni
+const _pSheetBg = Color(0xFF15181E); // attach/emoji varaq foni
+
 /// Mic/video tugma rejimi.
 enum ChatRecordMode { voice, video }
 
@@ -150,7 +157,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     setState(() => _showEmoji = false);
     showModalBottomSheet<void>(
       context: context,
-      backgroundColor: AppColors.surface,
+      backgroundColor: _pSheetBg,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -201,7 +208,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
     // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
     return ColoredBox(
       color: _showEmoji && !widget.isRecording
-          ? AppColors.surface
+          ? _pSheetBg
           : Colors.transparent,
       child: SafeArea(
         top: false,
@@ -257,13 +264,13 @@ class _ChatInputBarState extends State<ChatInputBar> {
   }
 
   Widget _buildInputChip() {
-    // Pill — `AppColors.surface` (light=oq, dark=qora), to'liq oval stadium.
+    // Pill — bola chatidek to'q kulrang (`_pChipBg`), to'liq oval stadium.
     // Ichida fonsiz TextField → ichki to'rtburchak yo'q (iPhone uslubi).
     return Container(
       constraints: const BoxConstraints(minHeight: 46, maxHeight: 132),
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
-        color: AppColors.surface,
+        color: _pChipBg,
         borderRadius: BorderRadius.circular(26),
         border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
         boxShadow: [
@@ -298,7 +305,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
               maxLines: 5,
               textInputAction: TextInputAction.newline,
               keyboardType: TextInputType.multiline,
-              cursorColor: AppColors.primary,
+              cursorColor: _pBlue,
               onTap: () {
                 if (_showEmoji) setState(() => _showEmoji = false);
               },
@@ -326,12 +333,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
             padding: const EdgeInsets.all(8),
             constraints: const BoxConstraints(),
             icon: widget.isMediaUploading
-                ? SizedBox(
+                ? const SizedBox(
                     width: 21,
                     height: 21,
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: AppColors.primary,
+                      color: _pBlue,
                     ),
                   )
                 : Transform.rotate(
@@ -400,15 +407,15 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   end: Alignment.bottomRight,
                   colors: disabled
                       ? [
-                          AppColors.primary.withValues(alpha: 0.6),
-                          AppColors.primaryDark.withValues(alpha: 0.6),
+                          _pBlue.withValues(alpha: 0.6),
+                          _pBlue.withValues(alpha: 0.6),
                         ]
-                      : [AppColors.primary, AppColors.primaryDark],
+                      : [_pBlue, _pBlue],
                 ),
           shape: BoxShape.circle,
           boxShadow: [
             BoxShadow(
-              color: (isRecording ? const Color(0xFFFF5252) : AppColors.primary)
+              color: (isRecording ? const Color(0xFFFF5252) : _pBlue)
                   .withValues(alpha: isRecording ? 0.4 : 0.28),
               blurRadius: isRecording ? 18 : 12,
               spreadRadius: 1,

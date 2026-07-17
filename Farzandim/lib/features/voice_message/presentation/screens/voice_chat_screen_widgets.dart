@@ -16,51 +16,63 @@ class _ChatHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bola chati bilan bir xil tuzilish: [orqa chip] [ism markazda Unbounded]
+    // [avatar o'ngда]. 3-nuqta menyu olib tashlandi — avatar bosilsa
+    // sozlamalar ochiladi (bolada ham shunday). Avatar OTA-ONAning haqiqiy
+    // rasmi bo'lib qoladi (bola generic ikona ishlatadi — bu ustunlik).
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: AppDimensions.sm,
-        vertical: AppDimensions.sm,
-      ),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
       child: Row(
         children: [
-          IconButton(
-            icon: const Icon(
-              SolarIconsOutline.arrowLeft,
-              color: Color(0xFFFFFFFF),
+          // Orqa tugma — 44×44 yumaloq-kvadrat chip.
+          GestureDetector(
+            onTap: onBack,
+            child: Container(
+              width: 44,
+              height: 44,
+              decoration: BoxDecoration(
+                color: const Color(0xFF1B2128),
+                borderRadius: BorderRadius.circular(14),
+                border: Border.all(color: const Color(0x1FFFFFFF)),
+              ),
+              child: const Icon(
+                Icons.arrow_back_rounded,
+                color: Colors.white,
+                size: 22,
+              ),
             ),
-            onPressed: onBack,
           ),
-          avatar,
-          const SizedBox(width: AppDimensions.sm),
           Expanded(
             child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   childName,
-                  style: AppTextStyles.bodyM.copyWith(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  textAlign: TextAlign.center,
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
+                  style: GoogleFonts.unbounded(
+                    color: Colors.white,
+                    fontSize: 18,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: -0.4,
+                  ),
                 ),
+                const SizedBox(height: 2),
                 Text(
                   'voiceChat.headerSubtitle'.tr(),
-                  style: AppTextStyles.bodyS.copyWith(
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.poppins(
                     color: const Color(0x8CFFFFFF),
-                    fontSize: 12,
+                    fontSize: 13,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
               ],
             ),
           ),
-          IconButton(
-            icon: const Icon(SolarIconsBold.menuDots, color: Color(0xFFFFFFFF)),
-            onPressed: onInfo,
-            tooltip: 'chatSettings.title'.tr(),
-          ),
+          // Avatar o'ngда — bosilsa chat sozlamalari (bola bilan bir xil).
+          GestureDetector(onTap: onInfo, child: avatar),
         ],
       ),
     );

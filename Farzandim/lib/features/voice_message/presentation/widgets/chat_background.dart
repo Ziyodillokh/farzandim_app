@@ -69,7 +69,9 @@ class ChatBackground extends ConsumerWidget {
       );
     }
 
-    // Default — ilovaning gradient foni.
-    return GradientBackground(child: child);
+    // Default (wallpaper tanlanmagan) — bola chati bilan bir xil qattiq to'q
+    // fon (`#00060A`), ilovaning teal gradient foni EMAS. Preset yoki rasm
+    // wallpaper tanlangan bo'lsa yuqorida qo'llangan (imkoniyat saqlangan).
+    return ColoredBox(color: const Color(0xFF00060A), child: child);
   }
 }

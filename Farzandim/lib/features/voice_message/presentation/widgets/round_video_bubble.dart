@@ -156,7 +156,7 @@ class _RoundVideoBubbleState extends ConsumerState<RoundVideoBubble> {
                     height: _bubbleDiameter,
                     child: ClipOval(
                       child: ColoredBox(
-                        color: const Color(0xFF12171E),
+                        color: const Color(0xFF1C232B),
                         child: Stack(
                           fit: StackFit.expand,
                           children: [
