@@ -112,6 +112,25 @@ GeoZone? _zoneForStop(gmaps.LatLng point, List<GeoZone> zones) {
 /// `gmaps.LatLng` → flutter_map `latlong2.LatLng` (render uchun).
 ll.LatLng _toLL(double lat, double lng) => ll.LatLng(lat, lng);
 
+/// Xarita kamerasi uchun kompensatsiya — bola markerini pastki sheet
+/// yopmasin uchun kamerani biroz JANUBGA suradi. Natijada marker
+/// ekranning yuqori-o'rtasida (~35-40% top-dan) joylashadi.
+///
+/// Formula: metersPerPixel = 156543.03 * cos(lat) * 2^-zoom.
+/// [pixelOffset] — markerni yuqoriga surish miqdori (pikselda).
+ll.LatLng _cameraAnchorFor(
+  double lat,
+  double lng, {
+  required double zoom,
+  double pixelOffset = 260,
+}) {
+  final latRad = lat * (math.pi / 180);
+  final metersPerPixel = 156543.03 * math.cos(latRad) * math.pow(2, -zoom);
+  final metersOffset = pixelOffset * metersPerPixel;
+  final degOffset = metersOffset / 111320.0;
+  return ll.LatLng(lat - degOffset, lng);
+}
+
 /// Bugungi kun uchun tarix so'rovi — mahalliy yarim tundan kun oxirigacha.
 ///
 /// MUHIM: `toMs` kun OXIRI (ertangi yarim tun), `now` EMAS. Aks holda kalit
@@ -188,9 +207,10 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
       return;
     }
     _lastAnimatedTo = target;
+    final zoom = _mapController.camera.zoom;
     _mapController.move(
-      _toLL(target.latitude, target.longitude),
-      _mapController.camera.zoom,
+      _cameraAnchorFor(target.latitude, target.longitude, zoom: zoom),
+      zoom,
     );
   }
 
@@ -205,7 +225,10 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     if (!_mapReady) return;
     _userMovedCamera = false;
     _lastAnimatedTo = loc;
-    _mapController.move(_toLL(loc.latitude, loc.longitude), 16);
+    _mapController.move(
+      _cameraAnchorFor(loc.latitude, loc.longitude, zoom: 16),
+      16,
+    );
   }
 
   /// "Mening joylashuvim" — ota-ona qurilmasining GPS joyini oladi, xaritani
@@ -227,7 +250,10 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
         _locating = false;
       });
       if (_mapReady) {
-        _mapController.move(_toLL(loc.latitude, loc.longitude), 16);
+        _mapController.move(
+          _cameraAnchorFor(loc.latitude, loc.longitude, zoom: 16),
+          16,
+        );
       }
     } else {
       setState(() => _locating = false);
@@ -459,6 +485,13 @@ class _MapLayer extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final here = _toLL(location.latitude, location.longitude);
+    // Kamera avatar'ni ekranning yuqori qismida ko'rsatsin (sheet
+    // ostiga tushmasin) — biroz janubga surilgan boshlang'ich markaz.
+    final initialAnchor = _cameraAnchorFor(
+      location.latitude,
+      location.longitude,
+      zoom: 16,
+    );
     // Yo'l oxirini AYNAN avatar (joriy joylashuv) nuqtasiga ulaymiz — OSRM
     // yo'lni eng yaqin ko'chaga yopishtirgani uchun kichik bo'shliq qolardi
     // va "chiziq turgan joyga bormagan"dek ko'rinardi.
@@ -468,7 +501,7 @@ class _MapLayer extends StatelessWidget {
     return FlutterMap(
       mapController: controller,
       options: MapOptions(
-        initialCenter: here,
+        initialCenter: initialAnchor,
         initialZoom: 16,
         onMapReady: onMapReady,
         onPositionChanged: (camera, hasGesture) {
