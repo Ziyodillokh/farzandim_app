@@ -129,6 +129,15 @@ class UsageSyncService {
       debugPrint(
         'UsageSync: usage ${entries.length} ta entry ($dayKey) — ok=$ok',
       );
+
+      // Bu yergacha yetdik = Usage Access ruxsati BOR (hasPermission o'tdi va
+      // stats keldi). Installed-apps (ikonalar) hali sinxronlanmagan bo'lsa —
+      // DARHOL trigger. Aks holda ikonalar 2 daqiqalik retry timer'ini
+      // kutardi. Ota-onada ilova ikonasi ~60s ichida (birinchi usage sync)
+      // chiqadi, 2 daqiqagacha emas.
+      if (!_installedSynced) {
+        unawaited(_syncInstalledApps());
+      }
     } catch (e) {
       debugPrint('UsageSync usage xato: $e');
     }
