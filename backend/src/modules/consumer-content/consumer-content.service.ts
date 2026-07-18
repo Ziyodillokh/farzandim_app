@@ -557,6 +557,10 @@ export class ConsumerContentService {
       donDelta: don,
       relatedId: audiobookId,
     });
+    // "Birinchi kitob" yutug'i (profil badge #1). Hozircha o'qish uchun matnli
+    // kitob yo'q — shuning uchun badge AUDIOKITOB yakunlanganda beriladi.
+    // Idempotent: allaqachon berilgan bo'lsa qayta bermaydi.
+    await this.gamification.unlockAchievement(ctx.childId, 'first_book');
     return { ok: true, don };
   }
 

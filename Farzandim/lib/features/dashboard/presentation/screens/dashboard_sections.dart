@@ -108,35 +108,46 @@ class _Header extends ConsumerWidget {
               children: [
                 // Qora dumaloq border (gradientli) + uning ustida avatar.
                 // Kichraytirildi (avatar 116→104, ramka 134→120) — dizayner
-                // talabi (~100–110px).
-                Container(
-                  width: 120,
-                  height: 120,
-                  decoration: const BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Color(0xFF1A1F26),
+                // talabi (~100–110px). Avatarga bosilsa — bola sozlamalari.
+                GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onTap: () => context.push(
+                    AppRoutes.childSettingsPath(child.id),
+                    extra: child,
                   ),
-                  child: Center(
-                    child: Stack(
-                      children: [
-                        ChildAvatar(child: child, size: 104, showBorder: false),
-                        Positioned(
-                          right: 5,
-                          bottom: 5,
-                          child: Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              shape: BoxShape.circle,
-                              color: online ? _online : _dim,
-                              border: Border.all(
-                                color: const Color(0xFF0B1119),
-                                width: 3,
+                  child: Container(
+                    width: 120,
+                    height: 120,
+                    decoration: const BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Color(0xFF1A1F26),
+                    ),
+                    child: Center(
+                      child: Stack(
+                        children: [
+                          ChildAvatar(
+                            child: child,
+                            size: 104,
+                            showBorder: false,
+                          ),
+                          Positioned(
+                            right: 5,
+                            bottom: 5,
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: online ? _online : _dim,
+                                border: Border.all(
+                                  color: const Color(0xFF0B1119),
+                                  width: 3,
+                                ),
                               ),
                             ),
                           ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),

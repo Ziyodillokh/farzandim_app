@@ -250,20 +250,22 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Yangi yutuq unlock bo'lsa — confetti + toast (LOGIKA SAQLANGAN).
-    ref.listen(gamificationProfileProvider, (prev, next) {
-      final profile = next.valueOrNull;
-      if (profile == null) return;
+    // Yangi yutuq unlock bo'lsa — confetti + toast. Manba BACKEND
+    // (`ChildProfile.achievements`) — real-time `profile:updated` bilan
+    // yangilanadi (masalan audiokitob yakunlanib 'first_book' berilganda).
+    ref.listen(backendGamificationProvider, (prev, next) {
+      final b = next.valueOrNull;
+      if (b == null) return;
       if (!_initialLoaded) {
-        _previousAchievementIds = profile.unlockedAchievements;
+        _previousAchievementIds = b.unlockedAchievements;
         _initialLoaded = true;
         return;
       }
-      final newIds = profile.unlockedAchievements
+      final newIds = b.unlockedAchievements
           .where((id) => !_previousAchievementIds.contains(id))
           .toList();
       if (newIds.isNotEmpty) {
-        _previousAchievementIds = profile.unlockedAchievements;
+        _previousAchievementIds = b.unlockedAchievements;
         _confetti.play();
         HapticFeedback.heavyImpact();
         for (final id in newIds) {
@@ -317,7 +319,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final steps = rawSteps;
 
     // Yutuqlar: real unlock bo'lsa katalogdan, bo'lmasa PREVIEW grid.
-    final unlockedIds = profile?.unlockedAchievements ?? const <String>[];
+    // Manba BACKEND (`ChildProfile.achievements`) — Firestore emas (o'lik).
+    final unlockedIds = backend?.unlockedAchievements ?? const <String>[];
     final List<_BadgeSpec> badges;
     final String countText;
     if (unlockedIds.isEmpty) {

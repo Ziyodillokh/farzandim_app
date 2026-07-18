@@ -173,6 +173,32 @@ export class GamificationService {
   }
 
   /**
+   * Yutuq (achievement) berish — `ChildProfile.achievements` JSON massiviga
+   * qo'shadi. IDEMPOTENT: allaqachon bor bo'lsa hech nima qilmaydi.
+   *
+   * Frontend `unlockedAchievements` shu ro'yxatni o'qiydi va tegishli badge'ni
+   * ochadi. `profile:updated` real-time emit qilinadi — bola profil ekrani
+   * ochiq bo'lsa darhol confetti + toast ko'rsatadi, aks holda keyingi
+   * yuklashda ochilgan badge ko'rinadi.
+   */
+  async unlockAchievement(
+    childId: string,
+    achievementId: string,
+  ): Promise<void> {
+    const profile = await this.getOrCreateProfile(childId);
+    const current = Array.isArray(profile.achievements)
+      ? (profile.achievements as string[])
+      : [];
+    if (current.includes(achievementId)) return; // allaqachon bor
+
+    const updated = await this.prisma.childProfile.update({
+      where: { childId },
+      data: { achievements: [...current, achievementId] },
+    });
+    this.realtime.emitToChild(childId, 'profile:updated', updated);
+  }
+
+  /**
    * QADAM MUKOFOTI — bola pedometeridan don berish (har 1000 qadam = 5 don).
    *
    * `upsertSteps` chaqiradi: `donDelta` — shu sync'da yangi tegishli don

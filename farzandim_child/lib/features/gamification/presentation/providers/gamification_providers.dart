@@ -40,6 +40,7 @@ class BackendGamification {
     required this.streak,
     required this.level,
     required this.status,
+    this.unlockedAchievements = const [],
   });
 
   final int xp;
@@ -47,6 +48,10 @@ class BackendGamification {
   final int streak;
   final int level;
   final String status;
+
+  /// Ochilgan yutuq ID'lari (backend `ChildProfile.achievements`). Profil
+  /// ekrani badge grid'i shu ro'yxatga qarab qulfni ochadi.
+  final List<String> unlockedAchievements;
 }
 
 Future<BackendGamification?> _fetchBackendGamification(
@@ -65,6 +70,10 @@ Future<BackendGamification?> _fetchBackendGamification(
       streak: (d['streakDays'] as num?)?.toInt() ?? 0,
       level: (d['level'] as num?)?.toInt() ?? 1,
       status: (d['status'] as String?) ?? 'Boshlovchi',
+      // Backend `ChildProfile.achievements` (JSON massiv). Badge grid shu
+      // ro'yxatdan ochiladi (audiokitob yakunlansa 'first_book' qo'shiladi).
+      unlockedAchievements:
+          (d['achievements'] as List?)?.cast<String>() ?? const [],
     );
   } on DioException catch (e) {
     debugPrint('backendGamification: ${e.response?.statusCode} ${e.message}');
