@@ -6,6 +6,7 @@ import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:farzandim/core/cache/swr_cache.dart';
 import 'package:farzandim/core/network/dio_client.dart';
+import 'package:farzandim/core/realtime/socket_client.dart';
 import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:farzandim/core/utils/tashkent_time.dart' as tz;
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
@@ -15,12 +16,31 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 final backendAppUsageRepositoryProvider = Provider<BackendAppUsageRepository>((
   ref,
 ) {
-  return BackendAppUsageRepository(dio: ref.watch(dioClientProvider));
+  return BackendAppUsageRepository(
+    dio: ref.watch(dioClientProvider),
+    socketClient: ref.watch(socketClientProvider),
+  );
 });
 
 class BackendAppUsageRepository {
-  BackendAppUsageRepository({required Dio dio}) : _dio = dio;
+  BackendAppUsageRepository({
+    required Dio dio,
+    required SocketClient socketClient,
+  })  : _dio = dio,
+        _socketClient = socketClient;
   final Dio _dio;
+  final SocketClient _socketClient;
+
+  /// WS `steps:updated` event'laridan shu bolaning bugungi qadam soni.
+  /// Backend `upsertSteps`da emit qiladi (location:updated bilan bir xil
+  /// pattern). Payload: `{childId, date, steps}` — provider real-time oladi.
+  Stream<Map<String, dynamic>> stepsEvents(String childId) async* {
+    await for (final data in _socketClient.eventStream('steps:updated')) {
+      if (data is! Map) continue;
+      if ((data['childId'] as String?) != childId) continue;
+      yield Map<String, dynamic>.from(data);
+    }
+  }
 
   /// Bola qurilmasidagi o'rnatilgan ilovalar ro'yxati.
   Future<List<AppUsageEntry>> getInstalledApps({

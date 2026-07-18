@@ -32,7 +32,6 @@
 // (sensor fon'da ham sanaydi). Kunlik qadam backendga periodik yuboriladi.
 
 import 'dart:async';
-import 'dart:math' as math;
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/boot_time_service.dart';
@@ -62,21 +61,20 @@ class StepCounterService {
   static const _kTodaySteps = 'step.todaySteps.v1';
   static const _kTodayDate = 'step.todayDate.v1';
 
-  /// Bir martalik migratsiya bayrog'i (boot-today seed). Eski o'rnatishlarda
-  /// baseline mid-day qo'yilib qadam kam sanalgan bo'lishi mumkin (telefonda
-  /// 182, ilovada 26). Migratsiyada baseline tiklanadi → keyingi pedometer
-  /// o'qishi cumulative'ni bugungi qadam sifatida qabul qiladi.
-  static const _kSeedMigration = 'step.seedBootTodayMigration.v1';
+  /// Joriy boot sessiyasidagi TYPE_STEP_COUNTER "0 qadam" nuqtasi. Bugungi
+  /// qadam DOIM qayta hisoblanadi (yig'ilmaydi → self-healing):
+  /// `todaySteps = baseSteps + (cumulative - dayBaseline)`. Shu sabab bitta
+  /// noto'g'ri o'qish jamlanib qolmaydi va son telefon bilan o'z-o'zidan
+  /// tuzalib turadi. Yangi kalit → eski o'rnatishlar avtomatik qayta hisoblaydi.
+  static const _kDayBaseline = 'step.dayBaseline.v1';
+
+  /// Bugun AVVALGI boot sessiyalarida sanalgan qadam (kun ichida reboot
+  /// bo'lganda saqlanadi) — `todaySteps = baseSteps + (cumulative-dayBaseline)`.
+  static const _kBaseSteps = 'step.baseSteps.v1';
 
   /// Bir kunlik maqbul qadam shifti (backend clamp bilan bir xil) — qadam
   /// RAQAMI shundan oshib ketmaydi.
   static const int _dayStepMax = 200000;
-
-  /// Sensor "kamaydi" (reboot/glitch) holatida BITTA o'qishda qo'shiladigan
-  /// maksimum. Haqiqiy reboot'da `cumulative` = boot'dan beri qadam (kichik).
-  /// Glitch'da esa `cumulative` hali katta bo'lishi mumkin — uni butunlay
-  /// qo'shsak qadam soni keskin noto'g'ri sakrardi.
-  static const int _rebootAddMax = 60000;
 
   /// Health Connect BO'LMAGAN qurilmada (HONOR/Huawei kabi) birinchi o'qishda
   /// TYPE_STEP_COUNTER "yoqilgandan beri jami"ni bugungi qadam deb qabul
@@ -90,8 +88,19 @@ class StepCounterService {
   Timer? _syncTimer;
   int _lastCumulative = -1;
   int _todaySteps = 0;
+
+  /// Joriy boot sessiyasi baseline (yuqoridagi `_kDayBaseline`). `-1` — hali
+  /// aniqlanmagan (birinchi o'qishda seed qilinadi).
+  int _dayBaseline = -1;
+
+  /// Bugun avvalgi boot sessiyalarida sanalgan qadam (reboot uchun).
+  int _baseSteps = 0;
   String _todayKey = '';
   DateTime? _lastSyncAt;
+
+  /// Oxirgi backend'ga yuborilgan qadam soni — sezilarli o'zgarishda darhol
+  /// yuborish (real-time) uchun.
+  int _lastSyncSteps = 0;
   bool _started = false;
 
   /// Health Connect bu sessiyada bugungi HAQIQIY jamini bergani. `true` bo'lsa
@@ -124,23 +133,18 @@ class StepCounterService {
     final prefs = await SharedPreferences.getInstance();
     _lastCumulative = prefs.getInt(_kLastCumulative) ?? -1;
     _todaySteps = prefs.getInt(_kTodaySteps) ?? 0;
+    _dayBaseline = prefs.getInt(_kDayBaseline) ?? -1;
+    _baseSteps = prefs.getInt(_kBaseSteps) ?? 0;
     _todayKey = prefs.getString(_kTodayDate) ?? _tashkentDayKey();
+    _lastSyncSteps = _todaySteps;
 
     // Boot vaqti — cumulative'ni bugungi qadam deb qabul qilish uchun (HC yo'q
     // qurilmada). Bir marta olamiz; xato bo'lsa null (ehtiyotkor fallback).
+    // MUHIM: `_onStep` HAR o'qishda boot-today'ni tekshirib, cumulative'ni
+    // to'g'ridan-to'g'ri bugungi qadam sifatida oladi (SELF-HEALING). Shu sabab
+    // avvalgi bir martalik migratsiya OLIB TASHLANDI — u faqat bir marta
+    // ishlab, eski o'rnatishlarda tuzatib ulgurmasdi.
     _bootTime = await BootTimeService.bootTime();
-
-    // ─── Bir martalik migratsiya: baseline tiklash ───
-    // Eski o'rnatishlarda baseline mid-day qo'yilib bo'lishi mumkin (ilova
-    // ochilgunga qadar yurilgan qadam yo'qolib — telefonda 182, ilovada 26).
-    // Baseline'ni bir marta tiklaymiz: keyingi pedometer o'qishi boot vaqtiga
-    // qarab cumulative'ni bugungi qadam deb qabul qiladi (boot BUGUN bo'lsa
-    // ANIQ; oldin bo'lsa seed qilinmaydi → over-count yo'q; HC bor bo'lsa HC
-    // ustun). `_todaySteps` saqlanadi — seed faqat oshiradi.
-    if (!(prefs.getBool(_kSeedMigration) ?? false)) {
-      _lastCumulative = -1;
-      await prefs.setBool(_kSeedMigration, true);
-    }
 
     // ─── 1) HEALTH CONNECT (asosiy manba) ───
     // MUHIM: bu ACTIVITY_RECOGNITION'dan MUSTAQIL. Avval pedometer ruxsati
@@ -205,28 +209,29 @@ class StepCounterService {
     }
   }
 
-  /// Health Connect'dagi BUGUNGI jamini `_todaySteps`ga yozadi — bu telefon
-  /// (Samsung) ko'rsatadigan son. HC yo'q/ruxsat yo'q bo'lsa hech nima
-  /// qilmaydi va pedometer hisobi saqlanadi (fallback).
+  /// Health Connect'dagi BUGUNGI jamini telefon truth sifatida oladi va
+  /// day-baseline'ni shunga ANCHOR qiladi: `dayBaseline = cumulative - hc`.
+  /// Shunda `todaySteps = cumulative - dayBaseline = hc` (telefon bilan aynan),
+  /// va HC sync'lar orasida pedometer jonli delta qo'shib turadi (recompute).
+  /// HC yo'q/ruxsat yo'q bo'lsa hech nima qilmaydi (pedometer fallback).
   Future<void> _syncFromHealth() async {
     try {
       final hcSteps = await HealthStepsService.instance.stepsForToday();
       if (hcSteps == null) return;
       final hc = hcSteps.clamp(0, _dayStepMax);
       final today = _tashkentDayKey();
-      final sameDay = today == _todayKey;
-      // Kun almashgan bo'lsa kalitni ham yangilaymiz (HC allaqachon yangi
-      // kunning jamini beradi).
       _todayKey = today;
-      // Kun ICHIDA qadam faqat oshadi. Samsung Health ma'lumotni Health
-      // Connect'ga kechikib yozadi (~10 daqiqa), shuning uchun HC soni
-      // pedometer qo'shib ulgurgan jonli qadamdan ORQADA bo'lishi mumkin —
-      // to'g'ridan-to'g'ri yozsak ekrandagi son kamayib, keyin yana oshib
-      // sakrardi. Kun ALMASHGANDA esa HC yangi kunning (kichik) sonini
-      // beradi — o'shanda to'g'ridan-to'g'ri yozamiz.
-      _todaySteps = sameDay ? math.max(hc, _todaySteps) : hc;
-      // HC haqiqiy jamini berdi — bundan keyin pedometer seed'i (boot-today
-      // taxmini) qo'llanmaydi, faqat jonli delta qo'shiladi.
+      // HC = telefon truth. Ekranga darhol hc'ni qo'yamiz; baseline esa
+      // keyingi `_onStep`da FRESH cumulative bilan anchor qilinadi. MUHIM:
+      // bu yerda _lastCumulative ESKI (fon'da yurilgan qadam qo'shilmagan)
+      // bo'lishi mumkin — undan baseline hisoblasak, fon qadami ikki marta
+      // sanalib son oshib ketardi. Shu sabab `_dayBaseline = -1` (defer) →
+      // `_onStep` joriy cumulative bilan aniq anchor qiladi (today = hc).
+      // Har HC sync son telefon soniga qaytadi, oradagi pedometer jonli qo'shadi.
+      _dayBaseline = -1;
+      _baseSteps = 0;
+      _todaySteps = hc;
+      // HC haqiqiy jamini berdi — bundan keyin boot-today seed qo'llanmaydi.
       _healthProvidedToday = true;
       await _persist();
     } catch (e) {
@@ -238,61 +243,72 @@ class StepCounterService {
     final cumulative = event.steps;
     final today = _tashkentDayKey();
 
-    // Kun almashdi — avvalgi kun yakunini yuborib, bugunni noldan boshlaymiz.
+    // ── Kun almashdi — avvalgi kun yakunini yuborib, bugunni noldan
+    // boshlaymiz (baseline = hozirgi cumulative, baseSteps = 0). ──
     if (today != _todayKey) {
       if (_todaySteps > 0) {
         await _sync(dateKey: _todayKey, steps: _todaySteps);
       }
       _todayKey = today;
+      _dayBaseline = cumulative;
+      _baseSteps = 0;
       _todaySteps = 0;
     }
 
-    int delta;
-    if (_lastCumulative < 0) {
-      // Birinchi o'qish (yangi o'rnatish / prefs tozalangan / reboot).
-      //
-      // Health Connect bugungi jamini bergan bo'lsa (_healthProvidedToday) —
-      // o'shani ustun bilamiz: faqat baseline qo'yamiz (delta = 0).
-      //
-      // Aks holda (HC yo'q — HONOR/Huawei kabi telefonlar): TYPE_STEP_COUNTER
-      // "telefon yoqilgandan beri jami"ni beradi. Telefon o'chiq paytda qadam
-      // sanalmaydi, shuning uchun telefon BUGUN yoqilgan bo'lsa cumulative =
-      // AYNAN bugungi qadam (telefon widjeti ko'rsatadigan son). Avval ilova
-      // baseline'ni shu paytdagi cumulative'ga qo'yib, ilova ochilgunga qadar
-      // yurilgan qadamlarni yo'qotardi (telefonda 182, ilovada 26).
-      if (!_healthProvidedToday && cumulative > 0) {
-        final bootedToday = _bootTime != null &&
-            _tashkentDayKey(_bootTime) == _tashkentDayKey();
-        if (bootedToday) {
-          // Boot BUGUN → cumulative = bugungi qadam (ANIQ; cap kerak emas).
-          _todaySteps = math.max(_todaySteps, cumulative.clamp(0, _dayStepMax));
-        } else if (_bootTime == null && cumulative <= _seedFromBootMax) {
-          // Boot vaqti aniqlanmadi (fallback) — ehtiyotkor cap bilan taxmin.
-          _todaySteps = math.max(_todaySteps, cumulative);
+    // ── Baseline hali aniqlanmagan (yangi kalit / yangi o'rnatish / HC sync
+    // defer) → seed. FRESH cumulative bilan anchor qilamiz. ──
+    if (_dayBaseline < 0) {
+      _baseSteps = 0;
+      if (_healthProvidedToday) {
+        // HC bugungi sonini bergan (_todaySteps = hc) → today = hc bo'lsin.
+        // cumulative >= hc: baseSteps=0, baseline = cumulative - hc.
+        // cumulative < hc (fon'da reboot → pedometer tarixi kichik): HC'ga
+        // ishonamiz — baseSteps = hc, baseline = cumulative (kelgusi qadam
+        // qo'shiladi, HC hozirgi jamini beradi).
+        if (cumulative >= _todaySteps) {
+          _dayBaseline = cumulative - _todaySteps;
+        } else {
+          _baseSteps = _todaySteps;
+          _dayBaseline = cumulative;
         }
-        // Boot BUGUNDAN OLDIN bo'lsa: bugungi baseline yo'q → seed qilmaymiz,
-        // hozirdan oldinga sanaymiz (over-count YO'Q; keyingi yarim tundan
-        // — ilova tirik bo'lsa — telefon bilan aniq mos keladi).
+      } else {
+        // HC yo'q (HONOR/Huawei): TYPE_STEP_COUNTER "yoqilgandan beri jami".
+        // Telefon O'CHIQ paytda qadam sanalmaydi → telefon BUGUN yoqilgan
+        // bo'lsa cumulative = AYNAN bugungi qadam → baseline = 0.
+        final bootedToday = _bootTime != null &&
+            _tashkentDayKey(_bootTime) == today;
+        if (bootedToday) {
+          _dayBaseline = 0; // today = cumulative (ANIQ)
+        } else if (_bootTime == null && cumulative <= _seedFromBootMax) {
+          _dayBaseline = 0; // boot noma'lum, ehtiyotkor: cumulative deb olamiz
+        } else {
+          // Boot bugundan oldin → bugungi baseline noma'lum → hozirdan
+          // oldinga sanaymiz (over-count yo'q; yarim tundan aniq bo'ladi).
+          _dayBaseline = cumulative;
+        }
       }
-      delta = 0; // baseline
-    } else if (cumulative >= _lastCumulative) {
-      delta = cumulative - _lastCumulative;
-    } else {
-      // Sensor kamaydi: reboot (0'dan boshladi) YOKI glitch. Reboot'da
-      // `cumulative` = boot'dan beri qadam (kichik) → qo'shamiz. Glitch'da
-      // `cumulative` hali katta bo'lishi mumkin — butunlay qo'shsak qadam
-      // RAQAMI keskin noto'g'ri sakrardi, shuning uchun maqbul chegaradan
-      // oshsa qo'shmaymiz, faqat baseline'ni tiklaymiz.
-      delta = cumulative <= _rebootAddMax ? cumulative : 0;
     }
-    // Kunlik shift — glitch/xatolar qadam RAQAMINI 96k+ ga sakratmasin.
-    _todaySteps = (_todaySteps + delta).clamp(0, _dayStepMax);
+
+    // ── Reboot / sensor reset: counter avvalgi o'qishdan kichik bo'lib qoldi.
+    // Sanalgan bugungi qadamni `baseSteps`ga muzlatamiz va yangi sessiyani shu
+    // nuqtadan boshlaymiz → qadam YO'QOLMAYDI (dayBaseline=0 bo'lsa ham). ──
+    if (_lastCumulative >= 0 && cumulative < _lastCumulative) {
+      _baseSteps = _todaySteps.clamp(0, _dayStepMax);
+      _dayBaseline = cumulative;
+    }
+
+    // ── Bugungi qadam DOIM qayta hisoblanadi (yig'ilmaydi → self-healing). ──
+    _todaySteps =
+        (_baseSteps + (cumulative - _dayBaseline)).clamp(0, _dayStepMax);
     _lastCumulative = cumulative;
     await _persist();
 
-    // Throttle: 60 sekundda bir marta yuboramiz.
-    if (_lastSyncAt == null ||
-        DateTime.now().difference(_lastSyncAt!).inSeconds > 60) {
+    // ── Real-time: 5s'da bir YOKI ≥20 qadam o'zgarganda darhol yuboramiz. ──
+    final elapsed = _lastSyncAt == null
+        ? 999
+        : DateTime.now().difference(_lastSyncAt!).inSeconds;
+    final changed = (_todaySteps - _lastSyncSteps).abs();
+    if (elapsed > 5 || changed >= 20) {
       await _sync();
     }
   }
@@ -302,6 +318,8 @@ class StepCounterService {
       final prefs = await SharedPreferences.getInstance();
       await prefs.setInt(_kLastCumulative, _lastCumulative);
       await prefs.setInt(_kTodaySteps, _todaySteps);
+      await prefs.setInt(_kDayBaseline, _dayBaseline);
+      await prefs.setInt(_kBaseSteps, _baseSteps);
       await prefs.setString(_kTodayDate, _todayKey);
       // UI keshini yangilaymiz — aks holda ekranda eski son (yangi
       // o'rnatishda 0) turib qolardi.
@@ -311,13 +329,17 @@ class StepCounterService {
 
   Future<void> _sync({String? dateKey, int? steps}) async {
     _lastSyncAt = DateTime.now();
+    final sent = steps ?? _todaySteps;
     try {
       await _backendRepo.upsertSteps(
         childId: _childId,
         entries: [
-          {'date': dateKey ?? _todayKey, 'steps': steps ?? _todaySteps},
+          {'date': dateKey ?? _todayKey, 'steps': sent},
         ],
       );
+      // Backend real-time push shu POST'da yuboriladi — oxirgi yuborilgan
+      // sonni eslab qolamiz (sezilarli o'zgarishda darhol qayta yuborish uchun).
+      _lastSyncSteps = sent;
     } catch (e) {
       debugPrint('StepCounter sync xato: $e');
     }

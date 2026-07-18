@@ -6,6 +6,7 @@ import {
 import { PrismaService } from '../../common/database/prisma.service';
 import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { GamificationService } from '../gamification/gamification.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { GameOpenDto } from './dto/game-open.dto';
@@ -62,6 +63,7 @@ export class AppUsageService {
     private readonly prisma: PrismaService,
     private readonly audit: AuditService,
     private readonly fcm: FcmService,
+    private readonly realtime: RealtimeGateway,
     private readonly gamification: GamificationService,
   ) {}
 
@@ -402,15 +404,18 @@ export class AppUsageService {
     userId: string,
     entries: Array<{ date: string; steps: number }>,
   ) {
-    await this.validateChildAccess(childId, userId);
+    const child = await this.validateChildAccess(childId, userId);
 
     const todayKey = tashkentDayKey();
     let totalDonDelta = 0;
     let activeToday = false;
+    // Bugungi saqlangan (clamp qilingan) qadam — real-time push uchun.
+    let todaySteps: number | null = null;
 
     for (const e of entries) {
       const dateObj = new Date(`${e.date}T00:00:00.000Z`);
       const steps = Math.max(0, Math.min(200000, Math.round(e.steps)));
+      if (e.date === todayKey) todaySteps = steps;
 
       // Shu kun uchun allaqachon berilgan don (idempotentlik).
       const existing = await this.prisma.childStepDaily.findUnique({
@@ -439,6 +444,15 @@ export class AppUsageService {
     // Profilga don qo'shish + streak yangilash (real, backend'da).
     if (totalDonDelta > 0 || activeToday) {
       await this.gamification.awardStepDon(childId, totalDonDelta, activeToday);
+    }
+
+    // ── Real-time: bugungi qadamni ota-onaga (va bola boshqa qurilmalariga)
+    // socket orqali darhol yuboramiz (location:updated bilan bir xil pattern).
+    // Avval faqat HTTP poll orqali (60s) yetardi — endi bir necha soniyada.
+    if (todaySteps !== null) {
+      const payload = { childId, date: todayKey, steps: todaySteps };
+      this.realtime.emitToUser(child.parentId, 'steps:updated', payload);
+      this.realtime.emitToChild(childId, 'steps:updated', payload);
     }
 
     return { ok: true, upserted: entries.length, donAwarded: totalDonDelta };
