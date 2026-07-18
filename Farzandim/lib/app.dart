@@ -453,8 +453,8 @@ class FarzandimApp extends ConsumerWidget {
           // Theme YOKI til o'zgarganda subtree remount bo'ladi (key o'zgaradi):
           // AppColors static getter'lari yangi rangni, `.tr()` yangi tilni
           // o'qiydi. go_router sahifalarni cache qiladi — locale key'da
-          // bo'lmasa til almashganda eski tilda qolib, "refresh" kerak bo'lardi.
-          // Route stack saqlanadi.
+          // bo'lmasa til almashganda eski tilda qolib, "refresh" kerak
+          // bo'lardi. Route stack saqlanadi.
           child: KeyedSubtree(
             key: ValueKey('${themeMode}_${context.locale.languageCode}'),
             child: child ?? const SizedBox.shrink(),
