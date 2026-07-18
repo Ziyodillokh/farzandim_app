@@ -196,9 +196,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       children: [
         Expanded(
           child: Container(
-            constraints: const BoxConstraints(minHeight: 46, maxHeight: 120),
-            padding: const EdgeInsets.symmetric(horizontal: 18),
-            alignment: Alignment.center,
+            padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 3),
             decoration: BoxDecoration(
               color: _pChipBg,
               borderRadius: BorderRadius.circular(23),
