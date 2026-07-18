@@ -245,16 +245,20 @@ class Child {
   final List<String> blockedWebCategories;
 
   /// Default avatar yo'li — bola o'z rasmini yuklamaguncha ko'rsatiladigan
-  /// rasm. JINSI va YOSHIga qarab 6 ta rasmdan biri tanlanadi:
+  /// rasm.
   ///
-  ///   yosh < 10        → 6-10   (boy_6_10 / girl_6_10)
-  ///   10 <= yosh < 14  → 10-14  (boy_10_14 / girl_10_14)
-  ///   yosh >= 14       → 14+    (boy_14 / girl_14)
+  ///   O'G'IL  → yagona `boy.png` (yoshdan qat'i nazar)
+  ///   QIZ     → yoshga qarab 3 tadan biri:
+  ///               yosh < 10        → girl_6_10
+  ///               10 <= yosh < 14  → girl_10_14
+  ///               yosh >= 14       → girl_14
   ///
   /// Yosh kiritilmagan (0) yoki 10 dan kichik — eng yosh guruh (6-10).
-  /// Rasmlar 1:1 (512x512, shaffof fon) — aylana avatar ichida to'liq.
   String get defaultAvatarPath {
-    final g = gender == Gender.female ? 'girl' : 'boy';
+    // O'g'illar uchun yagona default (foydalanuvchi shunday xohlagan).
+    if (gender != Gender.female) {
+      return 'assets/default_avatars/boy.png';
+    }
     final String band;
     if (age >= 14) {
       band = '14';
@@ -263,7 +267,7 @@ class Child {
     } else {
       band = '6_10';
     }
-    return 'assets/default_avatars/${g}_$band.png';
+    return 'assets/default_avatars/girl_$band.png';
   }
 
   /// Bola o'zining custom rasmiga egami (bytes yoki URL).

@@ -109,8 +109,13 @@ class ChildAvatar extends ConsumerWidget {
     return _defaultAvatar();
   }
 
-  // Default avatar — jinsi+yoshga mos PNG (shaffof fon, 1:1). `BoxFit.cover`
-  // + tashqi `ClipOval` bilan aylana ichini to'liq to'ldiradi.
-  Widget _defaultAvatar() =>
-      Image.asset(child.defaultAvatarPath, fit: BoxFit.cover);
+  // Default avatar — jinsi+yoshga mos PNG. `BoxFit.cover` + tashqi `ClipOval`
+  // bilan aylana ichini to'liq to'ldiradi (kvadrat bo'lmagan rasm markazdan
+  // qirqiladi). `cacheWidth` — rasm katta (1536px) bo'lsa ham kichik avatar
+  // uchun kichraytirilib dekod qilinadi (xotira tejash).
+  Widget _defaultAvatar() => Image.asset(
+        child.defaultAvatarPath,
+        fit: BoxFit.cover,
+        cacheWidth: 256,
+      );
 }
