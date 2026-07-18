@@ -1,0 +1,685 @@
+<!doctype html><html lang="uz"><head><meta charset="utf-8">
+<title>Bola Paneli TZ</title><style>
+  * { box-sizing: border-box; }
+  body { font-family: 'Segoe UI', 'Inter', Arial, sans-serif; color: #1a2230;
+         line-height: 1.55; font-size: 12px; margin: 0; padding: 0 8px; }
+  h1 { font-size: 26px; color: #0B1C30; border-bottom: 3px solid #22D3EE;
+       padding-bottom: 8px; margin-top: 18px; }
+  h2 { font-size: 19px; color: #0E7490; margin-top: 26px;
+       border-left: 5px solid #22D3EE; padding-left: 10px;
+       page-break-before: always; }
+  h2:first-of-type { page-break-before: avoid; }
+  h3 { font-size: 15px; color: #0B1C30; margin-top: 20px;
+       background: #EEF3FF; padding: 6px 10px; border-radius: 6px;
+       page-break-after: avoid; }
+  h4 { font-size: 13px; color: #5A6B66; margin-top: 14px; }
+  p, li { font-size: 12px; }
+  code { background: #EEF1FF; color: #0E7490; padding: 1px 5px;
+         border-radius: 4px; font-size: 11px;
+         font-family: 'Consolas', monospace; }
+  pre { background: #0B1C30; color: #CBDBF5; padding: 12px; border-radius: 8px;
+        overflow-x: auto; }
+  pre code { background: none; color: inherit; }
+  table { border-collapse: collapse; width: 100%; margin: 12px 0;
+          font-size: 11px; }
+  th, td { border: 1px solid #D3E4FE; padding: 5px 8px; text-align: left; }
+  th { background: #0E7490; color: #fff; }
+  tr:nth-child(even) td { background: #F8FAFF; }
+  blockquote { border-left: 4px solid #22D3EE; background: #F4F8FF;
+               margin: 10px 0; padding: 8px 14px; color: #3A4658;
+               border-radius: 0 6px 6px 0; }
+  img { display: block; margin: 12px auto; width: 230px;
+        border: 1px solid #D3E4FE; border-radius: 14px;
+        box-shadow: 0 4px 16px rgba(11,28,48,0.12);
+        page-break-inside: avoid; }
+  hr { border: none; border-top: 1px solid #E0E7F2; margin: 18px 0; }
+  a { color: #0E7490; text-decoration: none; }
+</style></head>
+<body><h1>📘 Bola Paneli «Parvoz» — To'liq Texnik Topshiriq (TZ)</h1>
+<blockquote>
+<p>Ushbu hujjat <strong>Farzandim</strong> ekotizimidagi **bola ilovasi (Parvoz)**ning har bir ekranini ipidan-ignasigacha tavsiflaydi: maqsad, qayerdan ochilishi, UI tuzilishi (yuqoridan-pastga har bir blok), ma'lumot manbai (provider + backend), holatlar (loading/bo'sh/xato), foydalanuvchi amallari va muhim eslatmalar.</p>
+<p>Manba: ilova kodi (<code>farzandim_child/lib</code>) to'liq o'qib chiqildi. Hech qaysi ekran qoldirilmadi.</p>
+</blockquote>
+<hr>
+<h2>0. Umumiy ma'lumot</h2>
+<table>
+<thead>
+<tr>
+<th>Parametr</th>
+<th>Qiymat</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Ilova</strong></td>
+<td>Parvoz — bola tomonidagi mobil ilova (<code>farzandim_child</code>)</td>
+</tr>
+<tr>
+<td><strong>Texnologiya</strong></td>
+<td>Flutter (Dart 3), Riverpod (state), go_router (navigatsiya), easy_localization (uz/ru/en)</td>
+</tr>
+<tr>
+<td><strong>Backend</strong></td>
+<td>NestJS + Fastify + Prisma + PostgreSQL (consumer JWT: audience <code>farzandim-consumer</code>)</td>
+</tr>
+<tr>
+<td><strong>Real-time</strong></td>
+<td><a href="http://Socket.io">Socket.io</a> (voice/video/notification/schedule WS event) + FCM push</td>
+</tr>
+<tr>
+<td><strong>Dizayn</strong></td>
+<td>«Parvoz NIGHT/GLASS» (Stitch redizayn) — deep navy fon <code>#0B1C30</code>, aqua aksent <code>#22D3EE</code>, glass kartalar, Plus Jakarta Sans / Inter</td>
+</tr>
+<tr>
+<td><strong>Tema</strong></td>
+<td>Light asosiy (Duolingo-uslub) + Dark fallback; <code>themeModeProvider</code> (light/dark/system)</td>
+</tr>
+<tr>
+<td><strong>Ekranlar soni</strong></td>
+<td>~33 ta route + native overlay (bloklash) + widget-darajadagi SOS</td>
+</tr>
+</tbody>
+</table>
+<h3>Dizayn palitrasi (asosiy tokenlar)</h3>
+<ul>
+<li><strong>Fon:</strong> dark <code>#0B1C30</code> / light <code>#F8F9FF</code></li>
+<li><strong>Karta:</strong> dark <code>#213145</code> / <code>#162B45</code> / light <code>#E5EEFF</code> / oq</li>
+<li><strong>Aqua brend:</strong> dark <code>#22D3EE</code> / light <code>#0E7490</code></li>
+<li><strong>Matn:</strong> dark <code>#F8F9FF</code> / light <code>#0B1C30</code>; muted: <code>#CBDBF5</code> / <code>#5A6B66</code></li>
+<li><strong>Holat ranglari:</strong> success <code>#13C28B</code>, danger <code>#FB3B4E</code>, warning <code>#FF9F1C</code>, gold <code>#FFC83D</code></li>
+<li>Eski tokenlar (<code>AppColors.parvoz*</code>): <code>parvozBg</code>, <code>parvozGreen</code>, <code>parvozSurface</code>, <code>parvozText</code>, <code>parvozTextDim</code>, <code>parvozBorder</code> — ba'zi ekranlar hali shularda.</li>
+</ul>
+<hr>
+<h2>1. Navigatsiya va Routing mantiqi</h2>
+<p><strong>Boshlang'ich route:</strong> <code>/splash</code>. SplashScreen pairing + consent + permissions holatini tekshirib to'g'ri ekranga yo'naltiradi.</p>
+<p><strong>Router refresh:</strong> <code>refreshListenable</code> — <code>pairingStateProvider</code> yoki <code>consentStateProvider</code> o'zgarganda redirect qayta hisoblanadi (router QAYTA yaratilmaydi — aks holda PairingScreen unmount bo'lardi).</p>
+<p><strong>Redirect qoidalari (tartib bilan):</strong></p>
+<ol>
+<li><strong>Consent guard:</strong> <code>consent == notGiven</code> va ekran <code>/consent</code>/<code>/splash</code> emas → <code>/consent</code>. Rozilik berilgach <code>/consent</code>da bo'lsa → <code>/splash</code>.</li>
+<li><strong>Public paths</strong> (pairing oqimi, himoyasiz): <code>/splash</code>, <code>/pairing</code>, <code>/pair-waiting</code>, <code>/qr-scan</code>, <code>/consent</code>, <code>/onboarding</code>.</li>
+<li>Eski <code>/welcome</code> → <code>/pairing</code>.</li>
+<li><strong>Pair yo'q</strong> + himoyalangan ekran → <code>/pairing</code>.</li>
+<li><strong>Pair bor</strong> + hali <code>/pairing</code>da → <code>/splash</code> (permission tekshiruvi uchun).</li>
+<li><strong>Content library flag</strong> (<code>kEnableContentLibrary == false</code>): <code>/analytics</code>, <code>/videos</code>, <code>/audiobooks</code>, <code>/contests</code>, <code>/ranking</code> va h.k. → <code>/dashboard</code> (deep-link himoyasi).</li>
+</ol>
+<p><strong>Sahifa o'tish animatsiyasi:</strong> Dashboard'dan boshqa ekranga <code>_slidePage</code> — 250ms, <code>easeOutCubic</code>, o'ngdan-chapga slide + fade (drill-down hissi).</p>
+<h3>Barcha route'lar xaritasi</h3>
+<table>
+<thead>
+<tr>
+<th>Route</th>
+<th>Ekran</th>
+<th>Guruh</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>/splash</code></td>
+<td>SplashScreen</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/consent</code></td>
+<td>ConsentScreen</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/welcome</code></td>
+<td>WelcomeScreen (eski → <code>/pairing</code>)</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/onboarding</code></td>
+<td>OnboardingScreen (qiziqishlar)</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/pairing</code></td>
+<td>PairingScreen (5 raqamli kod)</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/pair-waiting</code></td>
+<td>PairWaitingScreen</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/qr-scan</code></td>
+<td>QrScannerScreen</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/permissions</code></td>
+<td>PermissionsScreen (runtime)</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/permission-setup</code></td>
+<td>PermissionSetupScreen (4 sistema)</td>
+<td>Auth</td>
+</tr>
+<tr>
+<td><code>/dashboard</code></td>
+<td>ChildDashboardScreen</td>
+<td>Asosiy</td>
+</tr>
+<tr>
+<td><code>/account-edit</code></td>
+<td>AccountEditScreen</td>
+<td>Akkaunt</td>
+</tr>
+<tr>
+<td><code>/settings</code></td>
+<td>SettingsScreen</td>
+<td>Akkaunt</td>
+</tr>
+<tr>
+<td><code>/profile</code></td>
+<td>ProfileScreen (XP/yutuq)</td>
+<td>Akkaunt</td>
+</tr>
+<tr>
+<td><code>/notifications</code></td>
+<td>NotificationsScreen</td>
+<td>Akkaunt</td>
+</tr>
+<tr>
+<td><code>/content</code></td>
+<td>ContentHubScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/videos</code></td>
+<td>VideosFeedScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/video-player</code></td>
+<td>YouTube / Reels / Classic player</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/audiobooks</code></td>
+<td>AudiobooksFeedScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/audio-player</code></td>
+<td>AudioPlayerScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/books</code></td>
+<td>BooksFeedScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/books/pdf</code></td>
+<td>PdfViewerScreen</td>
+<td>Media</td>
+</tr>
+<tr>
+<td><code>/articles</code></td>
+<td>ArticlesFeedScreen</td>
+<td>Maqola</td>
+</tr>
+<tr>
+<td><code>/articles/view</code></td>
+<td>ArticleViewScreen</td>
+<td>Maqola</td>
+</tr>
+<tr>
+<td><code>/contests</code></td>
+<td>ContestsScreen</td>
+<td>Konkurs</td>
+</tr>
+<tr>
+<td><code>/contest-start</code></td>
+<td>ContestStartScreen</td>
+<td>Konkurs</td>
+</tr>
+<tr>
+<td><code>/contest-quiz</code></td>
+<td>ContestQuizScreen</td>
+<td>Konkurs</td>
+</tr>
+<tr>
+<td><code>/certificate</code></td>
+<td>CertificateScreen</td>
+<td>Konkurs</td>
+</tr>
+<tr>
+<td><code>/ranking</code></td>
+<td>RankingScreen</td>
+<td>Reyting</td>
+</tr>
+<tr>
+<td><code>/video-recording</code></td>
+<td>VideoRecordingScreen</td>
+<td>Aloqa</td>
+</tr>
+<tr>
+<td><code>/video-preview</code></td>
+<td>VideoPreviewScreen</td>
+<td>Aloqa</td>
+</tr>
+<tr>
+<td><code>/voice-chat</code></td>
+<td>VoiceChatScreen</td>
+<td>Aloqa</td>
+</tr>
+<tr>
+<td><code>/schedules</code></td>
+<td>SchedulesScreen</td>
+<td>Jadval</td>
+</tr>
+<tr>
+<td><code>/analytics</code></td>
+<td>AnalyticsScreen</td>
+<td>Statistika</td>
+</tr>
+<tr>
+<td><em>native overlay</em></td>
+<td>Ilova bloklash + UnlockRequestModal</td>
+<td>Cheklov</td>
+</tr>
+<tr>
+<td><em>widget</em></td>
+<td>SosButton (alohida route yo'q)</td>
+<td>SOS</td>
+</tr>
+</tbody>
+</table>
+<hr>
+<h2>2. ONBOARDING / AUTH ekranlar</h2>
+<h3>Splash Screen (<code>/splash</code>)</h3>
+<ul>
+<li><strong>Fayl:</strong> <code>splash/presentation/screens/splash_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Ilova har ochilganda birinchi ishga tushadigan boshlang'ich ekran. Routing qarori qabul qiluvchi markaziy nuqta — foydalanuvchini to'g'ri ekranga yo'naltiradi.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Router <code>initialLocation</code>. Shuningdek Onboarding/Pairing/PairWaiting/QrScanner ekranlaridan <code>context.go('/splash')</code> bilan — markaziy routing mantiqini bir joyda ushlab turish uchun.</li>
+<li><strong>UI tuzilishi:</strong> <code>Scaffold</code> (<code>parvozBg</code>) → <code>Center &gt; Column</code>: 112×112 dumaloq logo (<code>ClipOval &gt; Image.asset('child_logo_icon.png')</code>) → 24px → &quot;Parvoz&quot; (<code>parvozText</code>, 28px bold) → 24px → <code>CircularProgressIndicator(parvozGreen)</code>. Animatsiya yo'q.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>ConsentStorage.isParentConsentGiven()</code> (SharedPreferences <code>parent_consent_v1</code>), <code>parentUid</code>/<code>childId</code>/<code>onboarding_seen_v1</code> prefs, <code>UsageStatsService</code> (<code>hasPermission</code>, <code>hasOverlayPermission</code>), <code>Permission.locationAlways/ignoreBatteryOptimizations</code>.</li>
+<li><strong>Routing mantiq (qat'iy tartib):</strong> 1) consent yo'q → <code>/consent</code>; 2) <code>parentUid==null || childId==null</code> → <code>/pairing</code>; 3) <code>onboarding_seen_v1 != true</code> → <code>/onboarding</code>; 4) <code>kIsWeb</code> → <code>/dashboard</code>; 5) 4 sistema ruxsati to'liq → <code>/dashboard</code>, aks holda → <code>/permission-setup</code>.</li>
+<li><strong>Holatlar:</strong> Yagona vizual (logo + matn + spinner). Qaror ~50–250ms (parallel storage o'qish + 250ms brend-flash).</li>
+<li><strong>Eslatma:</strong> Notification/Camera bu yerda tekshirilmaydi (runtime ad-hoc). Web'da permission tekshiruvsiz to'g'ridan-to'g'ri <code>/dashboard</code>.</li>
+</ul>
+<h3>Consent Screen (<code>/consent</code>)</h3>
+<p><img src="docs/screens/01-consent.png" alt="Consent ekrani"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>consent/presentation/screens/consent_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Store compliance — ota-ona roziligi. BIRINCHI ochishda ko'rsatiladi, rozilik berilmaguncha ilova ishlamaydi.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> <code>SplashScreen</code> → <code>isParentConsentGiven()==false</code>. Router himoyasi — ruxsatsiz o'tib bo'lmaydi.</li>
+<li><strong>UI tuzilishi:</strong> <code>Scaffold(parvozBg)</code> → scrollable: <code>_ShieldBadge</code> (72×72 yashil doira + <code>verified_user_rounded</code>) → sarlavha &quot;Bu ilova ota-onangiz ruxsati bilan ishlaydi&quot; (26px, w800) → tavsif → <strong>5 ta <code>_ConsentBullet</code></strong> (Joylashuv / Ilova foydalanish / Bildirishnomalar / Xavfsizlik / Maxfiylik, har biri 36×36 ikon + sarlavha + tavsif) → <strong><code>_LongPressConfirmButton</code></strong> (60px, <code>parvozGreen</code>, ichida <code>parvozBlue</code> progress fill chap→o'ng) → ko'rsatma &quot;Tugmani 3 sekund ushlab turing&quot;.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>consentStateProvider.confirm()</code> → <code>ConsentStorage</code> → prefs <code>parent_consent_v1=true</code>. <code>AnimationController(3s)</code>.</li>
+<li><strong>Holatlar:</strong> Bosish boshlanganda progress to'ladi + <code>HapticFeedback.lightImpact</code>; 3s'dan oldin qo'yib yuborilsa <code>reverse()</code>; 3s to'lganda <code>mediumImpact</code> + &quot;Tasdiqlanmoqda...&quot; + spinner; tugagach router avtomatik o'tadi.</li>
+<li><strong>Eslatma:</strong> 3s long-press — bola tasodifan bosib o'tmasligi uchun.</li>
+</ul>
+<h3>Welcome Screen (<code>/welcome</code>)</h3>
+<ul>
+<li><strong>Fayl:</strong> <code>welcome/presentation/screens/welcome_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Brend kutib olish ekrani (eski oqim). Hozir splash uni bypass qiladi — kod bazasida saqlangan.</li>
+<li><strong>UI tuzilishi:</strong> <code>Scaffold(parvozBg)</code> → logo (<code>child_app_icon_white.png</code>, <code>fadeIn + slideY</code>) → <code>FaroMascot(body, 220)</code> (<code>fadeIn + scale easeOutBack</code>) → tagline → CTA tugma (<code>parvozGreen</code>, &quot;Boshlash&quot; + <code>arrow_forward</code>, → <code>/pairing</code>) → codeHint.</li>
+<li><strong>Eslatma:</strong> Hozirgi oqimda foydalanuvchi ko'rmaydi (splash to'g'ridan <code>/pairing</code>).</li>
+</ul>
+<h3>Onboarding Screen (<code>/onboarding</code>)</h3>
+<p><img src="docs/screens/04-onboarding.png" alt="Onboarding (qiziqishlar) ekrani"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>onboarding/presentation/screens/onboarding_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Pairing'dan keyin BIR MARTA — bola qiziqishlarini tanlaydi (personalizatsiya uchun backendga yuboriladi).</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> <code>SplashScreen</code> → pairing bor, <code>onboarding_seen_v1 != true</code>.</li>
+<li><strong>UI tuzilishi:</strong> Yuqorida &quot;O'tkazib yuborish&quot; → <code>_LogoHero</code> (132×132 glass + yashil glow) → sarlavha + tavsif → <code>_SelectedCounter</code> (yashil pill, 0 da ko'rinmaydi) → <strong>chip grid</strong> (<code>Wrap</code>, <code>kInterestOptions</code> — har biri 32×32 ikon + matn + tanlanganda yashil check, layout shift yo'q, ketma-ket <code>fadeIn+moveY</code>) → pastki tugma (&quot;Boshlash (N ta)&quot; / disabled &quot;minSelect&quot;).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>kInterestOptions</code> (statik), <code>interestsSyncServiceProvider</code> → <code>PUT /children/me/interests</code>, prefs <code>onboarding_seen_v1</code> + <code>child_interests_pending_v1</code>.</li>
+<li><strong>Amallar:</strong> chip → <code>selectionClick</code> toggle; &quot;O'tkazib yuborish&quot; → faqat <code>seen=true</code>; &quot;Boshlash&quot; → prefs pending + backend sync → <code>/splash</code>.</li>
+<li><strong>Eslatma:</strong> Backend xato bo'lsa pending prefs'da qoladi, keyin qayta yuboriladi.</li>
+</ul>
+<h3>Pairing Screen (<code>/pairing</code>)</h3>
+<p><img src="docs/screens/02-pairing.png" alt="Pairing ekrani"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>pairing/presentation/screens/pairing_screen.dart</code></li>
+<li><strong>Maqsad:</strong> 5 raqamli oila ulash kodi (ota-ona ilovasida generatsiya bo'ladi).</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Splash (<code>parentUid/childId == null</code>); Welcome &quot;Boshlash&quot;.</li>
+<li><strong>UI tuzilishi:</strong> <code>Scaffold(parvozBg)</code> → sarlavha (appName + subtitle) → <strong>5 ta kod katakchasi</strong> (58×64, to'lganda 2px <code>parvozGreen</code> border, <code>digitsOnly</code>, <code>maxLength:1</code>) → hint → &quot;Yordam&quot; havola (<code>AlertDialog</code>) → &quot;YOKI&quot; ajratuvchi → <strong>&quot;QR kod orqali ulash&quot;</strong> tugma (<code>parvozGreen</code>, → <code>context.push('/qr-scan')</code>) → <code>_isPairing</code> bo'lsa spinner.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>pairingStateProvider.tryPair(code)</code> → <code>POST /api/auth/child-pair</code>. <code>PairingStatus</code>: pairing/paired/error/awaitingParent.</li>
+<li><strong>Holatlar:</strong> raqam to'lganda avto-fokus keyingi; bo'sh katakchada Backspace → oldingi; 5-raqamda avto-pairing; muvaffaqiyat → <code>/splash</code>; 409 AWAITING_PARENT → <code>/pair-waiting</code>; xato → <code>SnackBar</code> + katakchalar tozalanadi.</li>
+<li><strong>Eslatma:</strong> <code>_isPairing</code> guard ikki marta yuborishni to'xtatadi.</li>
+</ul>
+<h3>Pair Waiting Screen (<code>/pair-waiting</code>)</h3>
+<p><img src="docs/screens/27-pair-waiting.png" alt="27-pair-waiting"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>pairing/presentation/screens/pair_waiting_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Ota-ona tasdiqini kutish (backend <code>AWAITING_PARENT_CONFIRM</code>). Tasdiqlansa avto-dashboard.</li>
+<li><strong>UI tuzilishi:</strong> 120×120 ikon doirasi (kutish → spinner; rejected → qizil block; expired → qizil soat) → sarlavha + tavsif → <strong>countdown pill</strong> (qolgan vaqt M:SS, faqat kutishda) → pastki tugma (&quot;Bekor qilish&quot; / xatoda &quot;Qaytadan urinish&quot;).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>pairingStateProvider</code> (<code>pairRequestId</code>, <code>pairRequestExpiresAt</code>); <code>checkPairStatus(id)</code> → <code>GET /child-pair-status/:id</code> (Pending/Approved/Rejected/Expired/Error sealed).</li>
+<li><strong>Holatlar:</strong> PENDING (polling 3s) / APPROVED (<code>completeFromApprovedPair</code> → <code>/splash</code>) / REJECTED / EXPIRED / ERROR (jim log).</li>
+<li><strong>Eslatma:</strong> <code>Timer.periodic(3s)</code> polling + <code>Timer.periodic(1s)</code> countdown, <code>dispose</code>'da to'xtaydi; <code>_polling</code> flag.</li>
+</ul>
+<h3>QR Scanner Screen (<code>/qr-scan</code>)</h3>
+<p><img src="docs/screens/03-qr-scan.png" alt="QR skaner ekrani"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>pairing/presentation/screens/qr_scanner_screen.dart</code></li>
+<li><strong>Maqsad:</strong> <code>farzandim:repair:{token}</code> QR'ni skanerlab tez qayta ulanish (repair) → <code>POST /api/auth/repair-redeem</code>.</li>
+<li><strong>UI tuzilishi:</strong> 3 rejim — (A) <strong>Muvaffaqiyat</strong> <code>_PairSuccessView</code> (gradient + <code>ConfettiWidget</code> + 132/92px check <code>elasticOut</code> + &quot;Muvaffaqiyatli ulandingiz!&quot; + 2200ms → <code>/splash</code>); (B) <strong>Qo'lda paste</strong> <code>_WebPasteTokenView</code> (clipboard + <code>TextField</code> + &quot;Ulanish&quot;); (C) <strong>Kamera</strong> (<code>MobileScanner</code> + 260×260 viewfinder + status panel; <code>starting/granted/denied/error</code> holatlar).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>POST /auth/repair-redeem</code> (<code>{token, platform}</code>) → <code>accessToken/refreshToken/user.id/child.id/child.parentId</code>; <code>tokenStorageProvider</code>; <code>completeFromApprovedPair</code>.</li>
+<li><strong>Eslatma:</strong> Web'da kamera ruxsati &quot;denied&quot; qaytaradi → to'g'ridan-to'g'ri start; back→front fallback; <code>_humanizeCameraError()</code> O'zbekcha xatolar.</li>
+</ul>
+<h3>Permissions Screen (<code>/permissions</code>)</h3>
+<p><img src="docs/screens/25-permissions.png" alt="25-permissions"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>permissions/presentation/screens/permissions_screen.dart</code></li>
+<li><strong>Maqsad:</strong> 3 runtime ruxsatni (joylashuv, bildirishnoma, kamera) ketma-ket auto-so'rash.</li>
+<li><strong>UI tuzilishi:</strong> sarlavha + tavsif → auto-progress banner (spinner + &quot;N/total&quot;) → <strong>3 ta plitka</strong> (<code>parvozGlass</code>, 48×48 ikon, yoqilsa yashil check) → &quot;Davom etish&quot; (hammasi yoqilsa faol).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>permission_handler</code> (<code>locationWhenInUse</code>→<code>locationAlways</code>, <code>notification</code>, <code>camera</code>); <code>locationServiceProvider.start()</code> + <code>backgroundServiceProvider.start()</code>.</li>
+<li><strong>Holatlar:</strong> initState 800ms → auto-prompt (har biri orasida 400ms); hammasi yoqilsa avto-<code>_onContinue</code> → <code>/permission-setup</code>.</li>
+<li><strong>Eslatma:</strong> Android 11+ da <code>locationAlways</code> Sozlamalarga olib chiqadi; har <code>request()</code> try/catch.</li>
+</ul>
+<h3>Permission Setup Screen (<code>/permission-setup</code>) — yangilangan: 4 ta</h3>
+<p><img src="docs/screens/26-permission-setup.png" alt="26-permission-setup"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>permissions/presentation/screens/permission_setup_screen.dart</code></li>
+<li><strong>Maqsad:</strong> 4 ta ENG ZARUR sistema ruxsati: <strong>Bildirishnoma</strong> (FCM), <strong>Ilova nazorati</strong> (<code>PACKAGE_USAGE_STATS</code>), <strong>Ilova ustida ko'rsatish</strong> (<code>SYSTEM_ALERT_WINDOW</code> — bloklash ekrani), <strong>Quvvat optimizatsiyasi</strong> (xizmat tirik qolishi). (Avval 10 ta edi — qisqartirildi.)</li>
+<li><strong>UI tuzilishi:</strong> Header (qurilma nomi placeholder + sarlavha) → <code>ListView</code> 4 ta <code>_PermissionCard</code> (glass + custom iOS-style toggle 50×30, <code>AnimatedAlign</code> 180ms) → &quot;Keyingisi&quot; (hammasi yoqilsa <code>parvozGreen</code>).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>UsageStatsService</code> (<code>hasPermission</code>/<code>hasOverlayPermission</code>/<code>openSettings</code>/<code>openOverlaySettings</code>), <code>Permission.notification</code>/<code>ignoreBatteryOptimizations</code>. <code>WidgetsBindingObserver</code> → resumed'da <code>_checkAll()</code> avto.</li>
+<li><strong>Holatlar:</strong> Sozlamalardan qaytganda toggle avto-yangilanadi; web'da mock toggle + tugma doim faol.</li>
+<li><strong>Eslatma:</strong> <code>PACKAGE_USAGE_STATS</code> + <code>SYSTEM_ALERT_WINDOW</code> standart <code>permission_handler</code>'da yo'q → <code>UsageStatsService</code> (native kanal). <code>_toggle()</code> try/catch.</li>
+</ul>
+<hr>
+<h2>3. DASHBOARD / AKKAUNT ekranlar</h2>
+<h3>Bosh sahifa — Dashboard (<code>/dashboard</code>)</h3>
+<p><img src="docs/screens/10-dashboard.png" alt="10-dashboard"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>dashboard/presentation/screens/child_dashboard_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Asosiy kirish nuqtasi — XP/daraja/reyting, bugungi videolar, jadval, oila, maslahat, audiokitob, ilova foydalanish va SOS bitta skroll sahifada.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Ishga tushganda; bottom nav &quot;Bosh sahifa&quot;; <code>/permission-setup</code>'dan keyin; notifications &quot;SOS&quot; tugmasidan.</li>
+<li><strong>UI tuzilishi (yuqoridan-pastga):</strong>
+<ol>
+<li><strong>Glass Header</strong> (<code>_GlassHeader</code>, sticky, <code>BackdropFilter blur 20</code>): chap — 40×40 logo + &quot;Parvoz&quot; (aqua, 24px w700); o'ng — bildirishnoma (<code>_IconBtn</code>, o'qilmagan bo'lsa qizil nuqta badge) + sozlamalar tugmalari.</li>
+<li><strong>UpdateBanner</strong> — yangi versiya chiqsa.</li>
+<li><strong>Stats Section</strong> — 3 ta <code>_StatCard</code>: XP (<code>local_fire</code>, <code>${n}k XP</code>), Daraja (<code>star</code>, <code>${level}-Daraja</code>, <code>levelForXp</code>), Reyting (<code>emoji_events</code>, <code>#${regionRank}</code>). Har biri 18px radius + aksent border.</li>
+<li><strong>Videos Section</strong> — gorizontal <code>ListView</code> (196px), <code>_VideoCard</code> (240px, thumbnail 128px + play overlay + duration + sarlavha). Bo'sh → yashirin. Bosish → <code>/video-player</code>.</li>
+<li><strong>Schedule Section</strong> — &quot;Bugungi darslar&quot; karta (48×48 ko'k doira + count). Bosish → <code>/schedules</code>. (<code>todaySchedulesProvider</code>)</li>
+<li><strong>Family Section</strong> — ota-ona kartasi (gradient avatar + ism + &quot;Ulangan&quot; + chat tugma → <code>/voice-chat</code>). (<code>parentInfoProvider</code>)</li>
+<li><strong>Advice Card</strong> — statik &quot;Bugungi maslahat&quot;.</li>
+<li><strong>Audiobook Section</strong> — birinchi kitob (60×60 cover + play). Bosish → <code>audioPlayerProvider.play</code> → <code>/audio-player</code>. (<code>forYouAudiobooksProvider</code>)</li>
+<li><strong>App Usage Section</strong> — <code>AppUsageList(limit:5)</code> + &quot;Hammasini ko'rish (N)&quot; → <code>/analytics</code>. (<code>dailyUsageProvider</code>)</li>
+<li><strong>SOS Card</strong> — qizil karta + hold-to-send (3s).</li>
+<li><strong>ChildBottomNavigation</strong>.</li>
+</ol>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>pairingStateProvider</code>, <code>gamificationProfileProvider</code>, <code>allUsersProvider</code> (viloyat reytingi), <code>childDataStreamProvider</code>, <code>topVideosProvider</code>, <code>todaySchedulesProvider</code>, <code>parentInfoProvider</code>, <code>forYouAudiobooksProvider</code>, <code>dailyUsageProvider</code>, <code>unreadNotificationsCountProvider</code>, <code>sosStateProvider</code>.</li>
+<li><strong>Holatlar:</strong> juftlashmagan → <code>CircularProgressIndicator</code>; pull-to-refresh (analytics + avatar + stream invalidate); bo'limlarda o'z holatlari.</li>
+<li><strong>Eslatma:</strong> <strong>Auto-refresh</strong> <code>Timer.periodic(30s)</code>; <strong>lifecycle resumed</strong> → analytics invalidate; <strong>permission guard</strong> — usage/overlay/battery yo'q bo'lsa <code>/permission-setup</code>; <strong>streak update</strong> initState'da; glass header <code>Positioned</code> Stack ustida.</li>
+</ul>
+<h4>Quyi komponentlar</h4>
+<ul>
+<li><strong>ChildBottomNavigation</strong> (<code>dashboard/.../widgets/child_bottom_navigation.dart</code>): suzuvchi pill (radius 999, soya), 5 <code>_NavItem</code> — home(<code>/dashboard</code> go) / video_library(<code>/content</code>) / send(<code>/voice-chat</code>) / leaderboard(<code>/contests</code>) / person(<code>/profile</code>). Faol — aqua + <code>AnimatedScale(1.12)</code>. Ustida <code>MiniAudioPlayer</code>. <code>kEnableContentLibrary==false</code> → <code>SizedBox.shrink()</code>.</li>
+<li><strong>SOS tugmasi</strong> (<code>_SosCard</code>): qizil karta, hold-to-send 54px tugma — idle/holding(progress + qolgan soniya)/sending(spinner)/sent(yashil check, 4s reset)/error(to'q sariq). <code>Listener</code> (pointer) — 16px siljisa <code>_cancelHold</code>; <code>AnimationController(3s)</code>. <code>sosStateProvider</code>; <code>POST /api/children/:childId/sos-alerts</code> (lat/lng/accuracy — avval <code>getLastKnownPosition</code>, keyin <code>getCurrentPosition</code> 3s timeout). Backend → ota-onaga FCM HIGH + WS.</li>
+<li><strong>AppUsageList</strong> (<code>analytics/.../widgets/app_usage_list.dart</code>): <code>parvozGlassFlat</code>, har <code>_UsageRow</code> — 40×40 ikon (iconUrl→iconBase64→fallback), nom, subtitle (cheklovsiz: vaqt; to'liq blok: qizil &quot;Bloklangan&quot;; limit: &quot;used/limit&quot; + progress bar), trailing &quot;Qoldi/Tugadi&quot;. Manba: <code>dailyUsageProvider</code> + <code>childAppLimitsProvider</code> + <code>installedAppsMapProvider</code>. &lt;1 daqiqa + limitsiz ilovalar yashirin.</li>
+</ul>
+<h3>Profil tahrirlash (<code>/account-edit</code>)</h3>
+<p><img src="docs/screens/24-account-edit.png" alt="24-account-edit"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>account/presentation/screens/account_edit_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Bola profilini tahrirlash — rasm, ism, yosh, viloyat, til.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Settings &quot;Profilni tahrirlash&quot;; Profile avatar tap.</li>
+<li><strong>UI tuzilishi:</strong> <code>ParvozHeader</code> → 120×120 avatar (tap → <code>_pickPhoto</code>, tanlangan bytes → backend URL → placeholder) + &quot;Rasm o'zgartirish&quot; → ism <code>TextField</code> → yosh picker (<code>AgeListDialog</code> 5-18) → viloyat picker (<code>RegionPickerBottomSheet</code>) → til picker (<code>_LanguagePickerSheet</code> uz/ru/en) → pastki &quot;Orqaga&quot;/&quot;Saqlash&quot;.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>childDataStreamProvider</code> (bir martali yuklash, <code>_hasLoaded</code> flag), <code>childRepositoryProvider.uploadMyAvatar/updateMyProfile</code>.</li>
+<li><strong>Saqlash:</strong> validatsiya (ism/yosh/viloyat) → avatar upload → profil update → stream+avatar invalidate → yashil SnackBar + pop.</li>
+<li><strong>Eslatma:</strong> avatar URL cache-bust <code>?t=ms</code>; til → <code>context.setLocale</code>.</li>
+</ul>
+<h3>Sozlamalar (<code>/settings</code>)</h3>
+<p><img src="docs/screens/23-settings.png" alt="23-settings"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>settings/presentation/screens/settings_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>_Header</code> (orqaga + &quot;Sozlamalar&quot;) → <code>ListView</code>: <strong>TIL</strong> (3 <code>_LangRow</code> UZ/RU/EN, tanlanganda yashil check, → <code>setLocale</code>) → <strong>KO'RINISH</strong> (<code>_ToggleRow</code> &quot;Tungi rejim&quot; Switch → <code>themeModeProvider.toggle()</code>) → <strong>HISOB</strong> (&quot;Profilni tahrirlash&quot; → <code>/account-edit</code>; &quot;Qiziqishlar&quot; → <code>InterestsEditSheet</code>) → <strong>ILOVA HAQIDA</strong> (versiya <code>PackageInfo</code>, &quot;Maxfiylik&quot; <code>ZRU-547</code>).</li>
+<li><strong>Eslatma:</strong> orqaga — <code>canPop</code> bo'lsa pop, aks holda <code>/dashboard</code>.</li>
+</ul>
+<h3>Profil — XP, daraja, yutuqlar (<code>/profile</code>)</h3>
+<p><img src="docs/screens/22-profile.png" alt="22-profile"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>gamification/presentation/screens/profile_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>_TopBar</code> (sozlamalar → <code>/settings</code>) → <code>_Hero</code> (116×116 avatar + 3.5px aqua ring + glow; edit badge → <code>/account-edit</code>; &quot;Daraja N&quot; badge; ism + status) → <code>_StatsRow</code> (Daraja / Umumiy XP / Kunlik Seriya) → <code>_ProgressCard</code> (keyingi darajaga progress, <code>xp%100</code>) → <code>_Achievements</code> (<code>GridView</code> 3 ustun, ochilgan rangli / qulflangan <code>lock</code>) → bottom nav + <code>ConfettiWidget</code>.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>gamificationProfileProvider</code>, <code>childAvatarUrlProvider</code>, <code>Achievements.all</code>.</li>
+<li><strong>Eslatma:</strong> yangi yutuq aniqlanganda (<code>ref.listen</code> + <code>_previousAchievementIds</code>) → confetti + <code>heavyImpact</code> + SnackBar; <code>_initialLoaded</code> flag birinchi yuklashda confetti bermaydi.</li>
+</ul>
+<h3>Bildirishnomalar (<code>/notifications</code>)</h3>
+<p><img src="docs/screens/21-notifications.png" alt="21-notifications"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>notifications/presentation/screens/notifications_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Barcha tizim bildirishnomalari — sana guruhlash, o'qilgan/o'qilmagan farq, swipe-o'chirish.</li>
+<li><strong>UI tuzilishi:</strong> <strong>Glass Header</strong> (<code>BackdropFilter blur 18</code>): <code>_TopBar</code> (logo + &quot;Parvoz&quot; + qizil &quot;SOS&quot; pill → <code>/dashboard</code> + sozlamalar) + <code>_FilterTabs</code> (&quot;Hammasi&quot;/&quot;O'qilmagan(N)&quot;); <strong><code>_Body</code></strong>: sana bucket'lar (Bugun/Kecha/Avvalroq) + <code>_NotificationCard</code> (<code>Dismissible</code> swipe-delete; o'qilmagan — yashil mix + glow + &quot;Yangi&quot; chip + 44×44 medallion <code>type.color</code>; tap → markAsRead + <code>relatedRoute</code>); bo'sh → Faro <code>faceSleeping</code>; loading → 6 shimmer skeleton.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>notificationsProvider</code>, <code>filteredNotificationsProvider</code>, <code>notificationTabProvider</code>, <code>unreadNotificationsCountProvider</code>, <code>backendNotificationRepositoryProvider</code> (markAsRead/delete).</li>
+<li><strong>Turlari:</strong> achievement/contest/schedule/parentRequest/voice/geoZone/system/studyNudge/healthNudge/contentReminder.</li>
+<li><strong>Eslatma:</strong> staggered kirish (<code>fadeIn+slideY</code>, 40ms oraliq); real-time yo'q — manual invalidation; pull-to-refresh.</li>
+</ul>
+<hr>
+<h2>4. MEDIA KONTENT ekranlar</h2>
+<h3>Content Hub (<code>/content</code>)</h3>
+<p><img src="docs/screens/11-content.png" alt="11-content"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>content/presentation/screens/content_hub_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Yagona &quot;Kutubxona&quot; — videolar + audiokitoblar + kitoblar bitta ekranda.</li>
+<li><strong>UI tuzilishi:</strong> Parvoz Header (bell + settings) → <strong>segment kontrol</strong> (&quot;Videolar&quot;/&quot;Audio kitoblar&quot;, tanlangan <code>pvGreen</code>, <code>AnimatedContainer</code> 250ms) → <code>TabBarView</code>:
+<ul>
+<li><strong>Videolar tab:</strong> <code>_ParvozChips</code> (kategoriya, &quot;Barchasi&quot;) → <code>_ParvozHeroCard</code> (280px, &quot;YANGI DARS&quot; badge + &quot;Boshlash&quot;) → &quot;Siz uchun tavsiyalar&quot; (<code>_ParvozVideoHList</code>, &quot;Barchasi&quot; → <code>/videos</code>) → &quot;Eng ko'p ko'rilganlar&quot; (<code>_ParvozWideCard</code> + ko'rishlar). Bosish → <code>/video-player</code>.</li>
+<li><strong>Audiokitoblar tab:</strong> <code>_ParvozAudioChips</code> → <code>_ParvozAudioHero</code> (&quot;Eshitish&quot; + bookmark) → &quot;Siz uchun&quot; → &quot;Eng ko'p eshitilganlar&quot; (<code>_ParvozAudioRow</code>) → <strong>Kitoblar seksiyalari</strong> (<code>backendBooksProvider</code>, kategoriya: school/adabiyot/boshqalar → <code>/books/pdf</code>).</li>
+</ul>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>effectiveVideosProvider</code>/<code>_parvozCategoryProvider</code>, <code>effectiveAudiobooksProvider</code>/<code>forYouAudiobooksProvider</code>/<code>mostListenedProvider</code>/<code>audiobookCategoryFilterProvider</code>, <code>backendBooksProvider</code>. <code>CachedNetworkImage</code> (offline kesh).</li>
+<li><strong>Eslatma:</strong> Kitoblar audio-tab ichida (alohida route emas); <code>extendBody</code>; bo'sh → <code>_ParvozEmpty</code>.</li>
+</ul>
+<h3>Videolar Feed (<code>/videos</code>)</h3>
+<p><img src="docs/screens/12-videos.png" alt="12-videos"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>videos/presentation/screens/videos_feed_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>DashboardTopHeader</code> (avatar → <code>/account-edit</code>) → <code>VideosSearchBar</code> → <code>VideoTabs</code> → <code>RefreshIndicator</code> → <code>HeroVideoCard</code> + <code>VideoSection</code> &quot;Top videolar&quot;/&quot;Tavsiya etilgan&quot; → bottom nav.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>heroVideoProvider</code>/<code>topVideosProvider</code>/<code>recommendedVideosProvider</code>/<code>filteredVideosProvider</code>, <code>backendVideosProvider</code> (pull-to-refresh invalidate, 5 daq kesh chetlab), <code>videoSearchQueryProvider</code>, <code>videoFilterProvider</code>.</li>
+<li><strong>Holatlar:</strong> bo'sh → <code>EmptyStateMascot(faceSad)</code> + &quot;Filterni tozalash&quot;.</li>
+</ul>
+<h3>Video Player (<code>/video-player</code>) — 3 variant</h3>
+<p>Router <code>VideoModel</code> turiga qarab tanlaydi: <code>isYouTube</code> → YouTube; <code>isReels</code> → Reels; aks holda → Classic.</p>
+<p><strong>A. YoutubePlayerScreen</strong> (<code>videos/.../youtube_player_screen.dart</code>): YouTube embed <code>${apiUrl}/content/yt/$id</code> proxy sahifa orqali (xato 153 oldini olish — Chrome UA). Portret: 16:9 <code>WebViewWidget</code> + fullscreen tugma + &quot;To'liq ekranda ko'rish&quot; + tashqi YouTube (<code>open_in_new</code>). Landscape: immersiv. <code>markViewed</code> initState'da.</p>
+<p><strong>B. ReelsPlayerScreen</strong> (<code>videos/.../reels_player_screen.dart</code>): vertikal <code>PageView</code> (TikTok-uslub), har reel <code>VideoPlayer</code> (loop, tap → play/pause toggle, swipe → keyingi). <code>effectiveVideosProvider</code> (<code>!isYouTube &amp;&amp; isReels</code>). <code>_viewed</code> Set bilan dedupe <code>markViewed</code>.</p>
+<p><strong>C. ClassicVideoPlayerScreen</strong> (<code>videos/.../classic_video_player_screen.dart</code>): landscape MP4 player. Controls overlay (gradient skrim, markaziy play/pause/replay, top bar, progress slider <code>pvGreen</code>, lock). Double-tap → <code>contain↔cover</code>; tezlik/uyqu taymeri/ekran qulfi (<code>PlayerSettingsBottomSheet</code>, <code>playerSettingsProvider</code>). 20s timeout → retry UI. <code>reportDuration</code> agar davomiylik noma'lum. <code>dispose</code>'da portret + edgeToEdge.</p>
+<h3>Audiokitoblar Feed (<code>/audiobooks</code>)</h3>
+<p><img src="docs/screens/13-audiobooks.png" alt="13-audiobooks"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>audiobooks/presentation/screens/audiobooks_feed_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>DashboardTopHeader</code> → <code>_TopTabs</code> (&quot;Audiokitoblar&quot;/&quot;Kitoblar&quot;) → <code>TabBarView</code>: Tab0 <code>AudiobooksSearchBar</code> + <code>AudiobookSection</code> ×3 (&quot;Siz uchun&quot;/&quot;Eng ko'p o'qilgan&quot;/&quot;Yangi qo'shilgan&quot;); Tab1 <code>BooksFeedBody</code>.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>forYouAudiobooksProvider</code>/<code>mostListenedProvider</code>/<code>newestAudiobooksProvider</code>/<code>filteredAudiobooksProvider</code>. Karta bosish → <code>audioPlayerProvider.play</code>.</li>
+<li><strong>Eslatma:</strong> Books bottom nav'dan olib tashlandi (Sprint 5.x), bu yerga tab bo'lib ko'chdi.</li>
+</ul>
+<h3>Audio Player (<code>/audio-player</code>)</h3>
+<p><img src="docs/screens/13b-audio-player.png" alt="13b-audio-player"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>audiobooks/presentation/screens/audio_player_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>_PlayerTopBar</code> (yopish + uyqu taymeri chip + menu) → <code>_Cover</code> (3:4, glass + yashil glow) → muallif + sarlavha → <code>_SliderRow</code> → <code>_Controls</code> (tezlik chip / -10s / katta play-pause 76px / +10s).</li>
+<li><strong>Bottom sheetlar:</strong> <code>_SpeedPickerSheet</code> (0.5–2.0×) · <code>_AudioMenuSheet</code> · <code>_SleepTimerSheet</code> (5–45 daq) · <code>_DetailsSheet</code> (tafsilot + hashtag).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>audioPlayerProvider</code> (currentBook/isPlaying/position/duration/sleepTimer), <code>audioSpeedProvider</code>. <code>!hasAudio</code> → avto-pop.</li>
+</ul>
+<h3>Kitoblar Feed (<code>/books</code>)</h3>
+<p><img src="docs/screens/14-books.png" alt="14-books"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>books/presentation/screens/books_feed_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>asyncBooks.when</code>: loading spinner / xato <code>_ErrorView</code> (retry) / data <code>RefreshIndicator</code> + <code>BookSection</code> (&quot;Hammasi&quot;/&quot;Maktab darsliklari&quot;/&quot;Adabiyot&quot;/&quot;Boshqalar&quot;) / bo'sh <code>_EmptyView</code>.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>backendBooksProvider</code>. Karta → <code>/books/pdf</code>.</li>
+<li><strong>Eslatma:</strong> ko'proq <code>AudiobooksFeedScreen</code> ichida <code>BooksFeedBody</code> sifatida ishlatiladi.</li>
+</ul>
+<h3>PDF Viewer (<code>/books/pdf</code>)</h3>
+<p><img src="docs/screens/14b-pdf-viewer.png" alt="14b-pdf-viewer"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>books/presentation/screens/pdf_viewer_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> top bar (orqaga + sarlavha + qidirish placeholder + &quot;Sahifaga o'tish&quot; dialog + N/Jami) → kontent (yuklanmoqda: cover + spinner; xato; tayyor: <code>PDFView</code>) → <code>_PageScrubber</code> (slider + first/last page).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>book.pdfUrl</code> → <code>Dio.download</code> → tmp <code>book-{id}.pdf</code> (kesh: <code>File.exists</code>); <code>markRead</code> initState fire-and-forget. <code>flutter_pdfview</code> (vertikal, <code>FitPolicy.WIDTH</code>).</li>
+<li><strong>Eslatma:</strong> qidiruv hali placeholder; tap → bottom bar toggle.</li>
+</ul>
+<hr>
+<h2>5. MAQOLA / KONKURS / REYTING ekranlar</h2>
+<h3>Maqolalar Feed (<code>/articles</code>)</h3>
+<p><img src="docs/screens/15-articles.png" alt="15-articles"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>articles/presentation/screens/articles_feed_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>ParvozHeader</code> (&quot;Maqolalar&quot; + orqaga) → <code>backendArticlesProvider.when</code>: loading spinner / error <code>_Empty</code>(<code>wifi_off</code> + &quot;Qayta urinish&quot;) / bo'sh <code>_Empty</code>(<code>menu_book</code>) / data <code>RefreshIndicator</code> + <code>ListView.separated</code> → <code>ArticleCard</code> (tap → <code>/articles/view</code>, <code>extra: ArticleModel</code>).</li>
+<li><strong>Eslatma:</strong> <code>AlwaysScrollableScrollPhysics</code> (pull-to-refresh bitta elementda ham); bo'sh va xato uchun har xil ikon/matn.</li>
+</ul>
+<h3>Maqola ko'rish (<code>/articles/view</code>)</h3>
+<p><img src="docs/screens/15b-article-view.png" alt="15b-article-view"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>articles/presentation/screens/article_view_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>CustomScrollView</code>: <code>SliverAppBar</code> (cover bo'lsa 240px <code>FlexibleSpaceBar</code> + gradient overlay; doiraviy orqaga tugma) → kontent: sarlavha (26px bold) + kategoriya yashil pill + &quot;yosh guruhi&quot; + divider + <code>MarkdownBody</code> (<code>selectable</code>, maxsus <code>_markdownStyle</code> — p/h1/h2/h3/blockquote/link).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>ArticleModel</code> (<code>extra</code>), <code>markRead(article.id)</code> initState fire-and-forget.</li>
+<li><strong>Eslatma:</strong> cover yo'q bo'lsa <code>expandedHeight:0</code>; <code>flutter_markdown</code>.</li>
+</ul>
+<h3>Konkurslar (<code>/contests</code>)</h3>
+<p><img src="docs/screens/16-contests.png" alt="16-contests"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>contests/presentation/screens/contests_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> Header (&quot;Konkurslar&quot; + &quot;Bilimingni sina, sovrin yut&quot; + &quot;Reyting&quot; pill → <code>/ranking</code>) → <code>ContestsTabs</code> (aktiv/yakunlangan) → <code>_List</code>: loading spinner / xato <code>_ErrorState</code>(retry) / bo'sh (84×84 ikon doirasi) / <code>ListView</code> <code>ContestCard</code>.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>contestsActiveTabProvider</code>, <code>activeContestsProvider</code>/<code>finishedContestsProvider</code>, <code>contestsLoading/ErrorProvider</code>, <code>backendContestsProvider</code>. Palitra <code>CP(context.adaptive.isDark)</code>.</li>
+</ul>
+<h3>Konkurs boshlash (<code>/contest-start</code>)</h3>
+<p><img src="docs/screens/16b-contest-start.png" alt="16b-contest-start"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>contests/presentation/screens/contest_start_screen.dart</code></li>
+<li><strong>Maqsad:</strong> 3 bosqichli tayyorlik: ma'lumot → qoidalar → tayyor/countdown.</li>
+<li><strong>UI tuzilishi:</strong> <code>_TopBar</code> (orqaga + 3 progress segment + &quot;N/3&quot; pill) → <code>PageView</code> (swipe o'chiq):
+<ul>
+<li><strong>Step 0</strong> <code>_ContestInfoStep</code>: 200px rasm + <code>SubjectBadge</code> → sarlavha + tavsif → <code>_StatGroup</code> (Sovrin/Savollar/Vaqt/Ishtirokchilar/Tugash) → &quot;Davom etish&quot;.</li>
+<li><strong>Step 1</strong> <code>_ContestRulesStep</code>: &quot;Konkurs qoidalari&quot; + 5 <code>_RuleCard</code> (Vaqt/Qaytarish yo'q/Internet/Halol/Bonus) → &quot;Davom etish&quot;.</li>
+<li><strong>Step 2</strong> <code>_ContestReadyStep</code>: pulsing trophy (180/124px, <code>_pulseController</code>) + &quot;Tayyormisiz?&quot; + &quot;BOSHLASH&quot; → <code>_startCountdown</code> → <code>_Countdown</code> (3..2..1, <code>elasticOut</code>) → <code>pushReplacement('/contest-quiz')</code>.</li>
+</ul>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>ContestModel</code> (<code>extra</code>). <code>pushReplacement</code> — quiz tugagach <code>/contests</code>ga qaytadi.</li>
+</ul>
+<h3>Konkurs savol-javob (<code>/contest-quiz</code>)</h3>
+<p><img src="docs/screens/16c-contest-quiz.png" alt="16c-contest-quiz">
+<img src="docs/screens/16d-contest-question.png" alt="16d-contest-question"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>contests/presentation/screens/contest_quiz_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>quizProvider(contest).status</code> bo'yicha: <code>loading</code> → <code>_LoadingScreen</code>; <code>intro</code> → <code>_IntroScreen</code> (pulsing quiz + 3 stat + &quot;BOSHLASH&quot;); <code>playing/paused</code> → <code>_QuestionScreen</code>; <code>finished</code> → <code>_ResultScreen</code>. Ustida <code>ConfettiWidget</code>.
+<ul>
+<li><strong><code>_QuestionScreen</code>:</strong> <code>_QuestionTopBar</code> (close → pause dialog + <code>LinearProgressIndicator</code> + &quot;N/10&quot;) → <code>_StreakBadge</code> (<code>streak&gt;=3</code>) → <code>_ScoreTimerRow</code> (score + taymer, <code>&lt;=10s</code> qizil) → savol kartasi + variantlar <code>_OptionCard</code> (to'g'ri <code>catMint</code> + check / xato <code>danger</code> + cancel, harf badge A/B/C) + tushuntirish bloki. Pause dialog (&quot;Chiqish&quot; → <code>quit</code>+<code>/contests</code> / &quot;Davom etish&quot; → <code>resume</code>).</li>
+<li><strong><code>_ResultScreen</code>:</strong> g'olib trophy / mag'lub <code>psychology</code> → &quot;Tabriklaymiz!&quot;/&quot;Yaxshi urinish!&quot; → 5 <code>_ResultStat</code> (To'g'ri/Ball/Aniqlik/Streak/Vaqt) → g'olib bo'lsa &quot;Sertifikat&quot; (<code>p.gold</code>) → &quot;Ulashish&quot; (<code>share_plus</code>) + &quot;Yopish&quot; (<code>/contests</code>).</li>
+</ul>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>quizProvider(contest)</code> (QuizState), <code>certificateRepositoryProvider.fetch(attemptId)</code>.</li>
+<li><strong>Eslatma:</strong> confetti — streak 3/6/9... + g'alaba; taymer <code>&lt;=10s</code> qizil; haptic to'g'ri/xato/timeout; pauzada progress saqlanmaydi.</li>
+</ul>
+<h3>Sertifikat (<code>/certificate</code>)</h3>
+<ul>
+<li><strong>Fayl:</strong> <code>contests/presentation/screens/certificate_screen.dart</code></li>
+<li><strong>Maqsad:</strong> G'olib sertifikatini ko'rsatish + PNG saqlash/ulashish (<code>RepaintBoundary</code> <code>pixelRatio:3</code>).</li>
+<li><strong>UI tuzilishi:</strong> <code>ParvozHeader</code> → <code>RepaintBoundary &gt; _Certificate</code> (340px, gold gradient ramka, deep navy ichki, radial dekoratsiyalar, &quot;PARVOZ&quot; brend, kubok medallion, &quot;SERTIFIKAT&quot;, <code>childNick</code>, olimpiada nomi, natija paneli Natija/Ball/Fan, sana + <code>certificateId</code>) → <code>_ShareButton</code> (&quot;Saqlash / Ulashish&quot;).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>CertificateData</code> (<code>extra</code>). Share → <code>toImage(3x)</code> → tmp PNG → <code>Share.shareXFiles</code>.</li>
+<li><strong>Eslatma:</strong> <code>_sharing</code> flag; palitra qat'iy (theme'siz, doim premium); <code>childNick</code> (to'liq ism emas — maxfiylik); O'zbek oy nomlari.</li>
+</ul>
+<h3>Reyting (<code>/ranking</code>) — yangi Stitch redizayn</h3>
+<p><img src="docs/screens/17-ranking.png" alt="17-ranking"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>ranking/presentation/screens/ranking_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>_Header</code> (orqaga + &quot;Reyting&quot; + range subtitle + trophy) → <code>_RangePills</code> (&quot;Haftalik&quot;/&quot;Oylik&quot;/&quot;Butun davr&quot;, aqua sliding indicator <code>Cubic(.34,1.4,.5,1)</code> 320ms) → <code>_RegionFilter</code> (&quot;Viloyatlar bo'yicha&quot; pill → <code>_RegionSheet</code>) → <code>_List</code>:
+<ul>
+<li><code>_Podium</code> (2-1-3, medal rangli halqa + glow + raqam badge, 1-o'rin 88px + trophy);</li>
+<li><code>_RankTile</code> (4+, raqam + 44px avatar + ism + &quot;SIZ&quot; pill + viloyat + <code>_ScorePill</code> gold star), stagger <code>fadeIn+moveY</code> 45ms;</li>
+<li><code>_StickyCurrentUser</code> (<code>currentRank&gt;3</code> bo'lsa pastda aqua pin).</li>
+</ul>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>filteredUsersProvider</code>, <code>timeRangeProvider</code>, <code>selectedRegionProvider</code>, <code>currentUserRankProvider</code>, <code>rankingTabProvider</code>, <code>backendRankingProvider</code>, <code>scoreFor(user,range)</code>. <code>_RegionSheet</code> — <code>UzbekistanRegions.all</code>.</li>
+<li><strong>Holatlar:</strong> <code>users.length&lt;3</code> → Faro <code>faceExcited</code> bo'sh holat; pull-to-refresh; sticky padding <code>180/120</code>.</li>
+<li><strong>Eslatma:</strong> adaptiv palitra; haptic (range/region selectionClick, refresh mediumImpact); Plus Jakarta Sans.</li>
+</ul>
+<hr>
+<h2>6. ALOQA / JADVAL / CHEKLOV / SOS ekranlar</h2>
+<h3>Video xabar yozish (<code>/video-recording</code>)</h3>
+<p><img src="docs/screens/28-video-recording.png" alt="28-video-recording"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>video_message/presentation/screens/video_recording_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Selfie kamera orqali ≤15s video xabar yozib ota-onaga yuborish.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Ota-ona &quot;Video so'rash&quot; → push/banner → <code>/video-recording?requestId=&lt;ID&gt;</code>; yoki bola o'zi (requestId null).</li>
+<li><strong>UI tuzilishi:</strong> yopish tugma → loading spinner / xato matni / tayyor: <code>RecordingProgressRing</code> (280px, 0→1) + <code>CircularCameraPreview</code> (dumaloq selfie) + timer &quot;X/15 sek&quot; + <code>RecordButton</code> (long-press → yoz, qo'yib yubor → to'xta).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>VideoRecorderService</code> (init/start/stop, <code>maxDurationSeconds=15</code>). Yozilgach <code>VideoPreviewArgs</code> bilan <code>pushReplacement('/video-preview')</code>.</li>
+<li><strong>Eslatma:</strong> <code>Permission.camera</code>+<code>microphone</code> ikkisi ham; min 1500ms (qisqa → o'chiriladi + snackbar); 15s avto-stop; background/dispose → fayl o'chadi.</li>
+</ul>
+<h3>Video xabar ko'rish (<code>/video-preview</code>)</h3>
+<ul>
+<li><strong>Fayl:</strong> <code>video_message/presentation/screens/video_preview_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> yopish → 280px dumaloq <code>VideoPlayer</code> (loop, ovozsiz) + upload paytida progress halqa → status matni (&quot;X soniya&quot;/&quot;Yuklanmoqda X%&quot;/&quot;Yuborildi&quot;) → tugmalar (&quot;Bekor&quot; → fayl o'chir + pop; &quot;Yuborish&quot; → upload).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>videoMessageUploadProvider</code> (idle/uploading/sent/error); <code>BackendVideoMessageRepository.sendMessage(receiverId:parentUid, videoFile, durationSeconds, onProgress)</code> → <code>POST /api/video-messages</code>. Tugagach <code>videoMessagesProvider</code> invalidate.</li>
+<li><strong>Eslatma:</strong> upload paytida yopish disabled; sent → 1200ms snackbar + pop; web — <code>sendBytes()</code>.</li>
+</ul>
+<h3>Ovozli/matnli chat (<code>/voice-chat</code>)</h3>
+<p><img src="docs/screens/18-voice-chat.png" alt="18-voice-chat"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>voice_message/presentation/screens/voice_chat_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Bola↔ota-ona real-time chat: ovoz, yumaloq video, matn, media.</li>
+<li><strong>UI tuzilishi:</strong> <code>_ChatHeader</code> (avatar + ota-ona nomi + holat + <code>more_vert</code> → <code>ChatSettingsScreen</code>) → <code>ChatBackground</code> → <code>ListView</code> (<code>VoiceItem</code>→<code>ChatBubble</code>, <code>VideoItem</code>→<code>RoundVideoBubble</code>, avto-scroll) → bo'sh <code>_EmptyState</code>(mic) → <code>ChatInputBar</code> (videocam + mic long-press + matn + attach; yozish paytida to'lqin vizualizatsiya + taymer + delete).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>chatMessagesProvider</code> (voice+video merge ASC); <code>voiceMessagesProvider</code>/<code>videoMessagesProvider</code> (WS <code>voice:received</code>/<code>video:received</code> refresh); <code>sendText</code>/<code>sendMedia</code>; <code>AudioRecorderService</code> (amplitude stream); <code>AudioPlayerManager</code>.</li>
+<li><strong>Amallar:</strong> mic long-press → ruxsat → yoz → release → min 1500ms → upload; videocam → <code>showRoundVideoRecorder</code> → <code>VideoCompress</code> → upload; ekran ochilganda <code>markAllRead()</code> bulk.</li>
+<li><strong>Eslatma:</strong> web — <code>readAsBytes</code> <code>.webm</code>, compress yo'q; mobile <code>LowQuality</code> (413 himoya); background → yozish avto-bekor; <code>ChatTopToast</code>.</li>
+</ul>
+<h3>Jadval (<code>/schedules</code>)</h3>
+<p><img src="docs/screens/19-schedules.png" alt="19-schedules"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>schedules/presentation/screens/schedules_screen.dart</code></li>
+<li><strong>Maqsad:</strong> Bugungi uxlash/dars jadvali — faqat ko'rish (read-only). Hozir aktiv + keyingisi qachon.</li>
+<li><strong>UI tuzilishi:</strong> <code>ParvozHeader</code> → loading skeleton / xato / bo'sh <code>EmptyStateMascot(faceSleeping)</code> / data: <code>_StatusCard</code> (salomlashuv vaqtga qarab + &quot;Hozir:&quot;/&quot;Keyingi: N daqiqa&quot;) + <code>ParvozSectionLabel</code> &quot;Bugungi jadval&quot; + <code>ScheduleTile</code> ro'yxati (<code>isCurrent</code>).</li>
+<li><strong>Ma'lumot manbai:</strong> <code>activeSchedulesProvider</code> (<code>GET /children/:id/routines</code>), <code>todayRoutinesProvider</code> (<code>/routines/today</code> → today/current/next).</li>
+<li><strong>Eslatma:</strong> <code>Timer.periodic(1 daq)</code> → status yangilanadi; salomlashuv soatga qarab; read-only.</li>
+</ul>
+<h3>Ilovalar statistikasi (<code>/analytics</code>)</h3>
+<p><img src="docs/screens/20-analytics.png" alt="20-analytics"></p>
+<ul>
+<li><strong>Fayl:</strong> <code>analytics/presentation/screens/analytics_screen.dart</code></li>
+<li><strong>UI tuzilishi:</strong> <code>AppBar</code> (orqaga + &quot;Ilovalar&quot; + 3-tab &quot;Barchasi&quot;/&quot;Vaqt cheklovi&quot;/&quot;Bloklangan&quot;) → <code>TabBarView</code>:
+<ul>
+<li><strong>Tab0</strong> <code>_AllAppsTab</code>: <code>AppUsageList()</code>.</li>
+<li><strong>Tab1</strong> <code>_LimitedAppsTab</code>: <code>childAppLimitsProvider</code> → <code>_LimitTile</code> (ikon + &quot;X/Y daqiqa&quot; + progress bar + &quot;Qoldi/Tugadi&quot;). Bo'sh → <code>_Empty(hourglass)</code>.</li>
+<li><strong>Tab2</strong> <code>_BlockedAppsTab</code>: to'liq blok (<code>dailyLimitMs==0</code>) → <code>_BlockTile</code> (qizil &quot;Bloklangan&quot; badge). Bo'sh → <code>_Empty(block)</code>.</li>
+</ul>
+</li>
+<li><strong>Ma'lumot manbai:</strong> <code>childAppLimitsProvider</code> (<code>GET /children/:id/app-limits?isActive=true</code>), <code>installedAppsMapProvider</code>, <code>dailyUsageProvider</code> (<strong>avval native <code>UsageStatsService.getUsageStats(days:1)</code></strong> MethodChannel <code>farzandim/usage_stats</code>, ruxsat yo'q → backend <code>/analytics/usage</code>).</li>
+<li><strong>Eslatma:</strong> bugungi statistika qurilmadan (tezkor, offline); ikon 3 usul (url→base64→fallback); <code>_formatMs</code>.</li>
+</ul>
+<h3>Ilova bloklash overlay + UnlockRequestModal (native + widget)</h3>
+<ul>
+<li><strong>Fayllar:</strong> <code>app_restrictions/.../unlock_request_modal.dart</code>, <code>.../unlock_request_bridge.dart</code>, <code>.../unlock_request_provider.dart</code>, <code>.../restrictions_sync_service.dart</code></li>
+<li><strong>Maqsad:</strong> Native <code>RestrictionService</code> (Accessibility + Foreground Service) bloklangan ilova ochilganda <code>SYSTEM_ALERT_WINDOW</code> overlay ko'rsatadi. Bola &quot;Ruxsat so'rash&quot; bossa → Flutter modal → ota-onaga &quot;qo'shimcha vaqt&quot; so'rovi.</li>
+<li><strong>Qachon/qayerdan ochiladi:</strong> Native overlay (Flutter ekrani EMAS). &quot;Ruxsat so'rash&quot; → Parvoz Intent (<code>unlock_request_package</code>). Cold start: <code>unlockPendingCheckProvider</code> → <code>checkPending()</code> → <code>consumePendingUnlock</code>; ochiq: <code>onUnlockRequested</code> MethodChannel.</li>
+<li><strong><code>UnlockRequestModal</code> UI:</strong> drag handle → <code>lock_clock_rounded</code> + &quot;Qo'shimcha vaqt so'rash&quot; → savol (appName bilan) → <strong>daqiqa chiplari (5/15/30/60, default 15)</strong> → &quot;Sabab (ixtiyoriy)&quot; <code>TextField</code> (200 belgi) → <code>PrimaryButton(&quot;SO'RASH&quot;)</code> (<code>mediumImpact</code> → <code>Navigator.pop(UnlockRequestInput)</code>).</li>
+<li><strong>Bloklash mexanizmi (<code>RestrictionsSyncService</code>, har 30s + WS):</strong> SharedPreferences'ga yozadi — <code>restriction.blocked_packages</code> (limit 0 / schedule BLOCK oynasi <code>&quot;*&quot;</code> / <code>blockAllApps</code> <code>&quot;*&quot;</code> / routine <code>blockedApps</code>), <code>restriction.limits</code> (<code>pkg:minutes</code>), <code>restriction.block_unknown_sources</code>.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>BackendScheduleRepository</code>/<code>AppLimitRepository</code>/<code>RoutineRepository</code>/<code>DevicePolicyRepository</code>, <code>BackendUnlockRequestRepository.createRequest(kind, packageName, requestedMinutes, reason)</code>. MethodChannel <code>farzandim_child/unlock</code> + <code>farzandim/usage_stats</code>.</li>
+<li><strong>Eslatma:</strong> <code>SYSTEM_ALERT_WINDOW</code> + <code>PACKAGE_USAGE_STATS</code> + Accessibility kerak; wrap-around oynalar (22:00–06:00); <code>&quot;*&quot;</code> wildcard barcha ilova; sync 30s safety net + WS darhol.</li>
+</ul>
+<h3>SOS — alohida ekran yo'q (provider + widget)</h3>
+<ul>
+<li><strong>Fayl:</strong> <code>sos/presentation/providers/sos_provider.dart</code> (ekran yo'q — <code>SosButton</code> widget Dashboard'da)</li>
+<li><strong>Maqsad:</strong> Xavf paytida ota-onaga zudlik signal.</li>
+<li><strong>Ma'lumot manbai:</strong> <code>sosStateProvider</code> (idle/sending/sent/error), <code>BackendSosRepository.triggerAlert(childId, lat?, lng?, accuracy?)</code> → <code>POST /api/children/:id/sos-alerts</code>. Joylashuv: <code>getLastKnownPosition</code> (kesh) → <code>getCurrentPosition</code> (3s timeout) → bo'lmasa <code>null</code> (SOS to'xtamaydi).</li>
+<li><strong>Eslatma:</strong> backend → ota-onaga FCM HIGH + WS + Google Maps havola; pairing yo'q → darhol error.</li>
+</ul>
+<hr>
+<h2>7. Kesishuvchi (cross-cutting) komponentlar</h2>
+<h3>7.1 ChildBottomNavigation (suzuvchi pill)</h3>
+<p>5 ta tab: Bosh sahifa (<code>/dashboard</code>, <code>go</code>) · Kutubxona (<code>/content</code>) · Xabar (<code>/voice-chat</code>) · Konkurs (<code>/contests</code>) · Profil (<code>/profile</code>). Faol tab aqua + <code>AnimatedScale(1.12)</code>. <code>kEnableContentLibrary == false</code> bo'lsa nav ko'rinmaydi. Ustida audio o'ynayotganda <code>MiniAudioPlayer</code>.</p>
+<h3>7.2 Ruxsatlar (yangilangan — 4 ta eng zarur)</h3>
+<p>Birinchi ochilishda faqat: <strong>Bildirishnoma</strong> · <strong>Ilova nazorati</strong> (PACKAGE_USAGE_STATS) · <strong>Ilova ustida ko'rsatish</strong> (SYSTEM_ALERT_WINDOW) · <strong>Quvvat optimizatsiyasi</strong>. Geolokatsiya/mikrofon/OEM ruxsatlari ixtiyoriy — keyin Sozlamalardan beriladi. Dashboard <code>_guardPermissions</code> ham shu 3 ta nazorat ruxsatini tekshiradi (lokatsiyasiz ham dashboard ochiladi).</p>
+<h3>7.3 Asosiy backend endpointlar (bola)</h3>
+<ul>
+<li>Auth: <code>POST /auth/child-pair</code>, <code>GET /child-pair-status/:id</code>, <code>POST /auth/repair-redeem</code></li>
+<li>Profil: <code>PUT /children/me/profile</code>, <code>POST /children/:id/avatar</code>, <code>GET /children/:id/avatar/image</code></li>
+<li>Statistika: <code>GET /analytics/usage</code>, <code>GET /children/:id/app-limits</code>, native <code>farzandim/usage_stats</code></li>
+<li>Kontent: videolar/audiokitob/kitob/maqola/konkurs feed'lari + <code>markViewed</code>/<code>markRead</code></li>
+<li>Aloqa: <code>GET/POST /voice-messages</code>, <code>GET/POST /video-messages</code>, <code>POST /children/:id/sos-alerts</code></li>
+<li>Cheklov: <code>GET /children/:id/routines</code>, <code>app-limits</code>, <code>device-policy</code>, unlock-requests</li>
+<li>Bildirishnoma: <code>GET /notifications</code>, <code>markAsRead</code>, <code>deleteNotification</code></li>
+<li>Reyting/XP: <code>GET /leaderboard</code>, gamification profil</li>
+</ul>
+<h3>7.4 Native (Android) integratsiya</h3>
+<ul>
+<li><code>RestrictionService</code> (Accessibility + Foreground Service) — ilova bloklash + o'yin aniqlash</li>
+<li><code>BootReceiver</code> — reboot/update'dan keyin servisni tiklaydi; <code>flutter_foreground_task</code> <code>autoRunOnBoot</code></li>
+<li><code>UsageStatsService</code> (MethodChannel) — usage stats + overlay ruxsati</li>
+<li><code>SYSTEM_ALERT_WINDOW</code> overlay — bloklash ekrani (Flutter UI emas, native)</li>
+</ul>
+<hr>
+<p><em>Hujjat avtomatik generatsiya qilindi — kod o'zgarganda yangilash kerak. Oxirgi yangilanish: 2026-06.</em></p>
+</body></html>
