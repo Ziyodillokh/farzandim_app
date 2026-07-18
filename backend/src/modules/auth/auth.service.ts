@@ -1144,14 +1144,24 @@ export class AuthService {
       if (!session || session.revokedAt) {
         throw new UnauthorizedException('Session revoked');
       }
-      // Refresh token reuse detection: eski rjti bilan kelsa — sessiyani
-      // tugatamiz (o'g'irlangan token belgisi).
+      // rjti mos kelmasa — bu refresh token allaqachon rotatsiya qilingan
+      // (eski nusxa).
+      //
+      // AVVAL: butun sessiyani revoke qilardik ("o'g'irlangan token belgisi").
+      // MUAMMO: bola ilovasida UI-isolate + background-isolate (heartbeat/
+      // lokatsiya) ALOHIDA Dio bilan bir vaqtda /auth/refresh chaqiradi va
+      // ikkovi ham AYNI refresh tokenni yuboradi. "Yutqazgan" isolate eski
+      // rjti bilan kelib, butun sessiyani revoke qilardi → bola O'ZIDAN-O'ZI
+      // CHIQIB KETARDI. Bu 15 daqiqalik access token har tugaganda takror
+      // bo'lardi (foydalanuvchi shikoyati: "o'zidan o'zi chiqib ketyapti").
+      //
+      // ENDI: revoke QILMAYMIZ — shunchaki rad etamiz (401). Yutqazgan isolate
+      // storage'dagi YANGI (rotatsiyalangan) tokenni o'qib davom etadi (klient
+      // tomonda tuzatilgan). Xavfsizlik saqlanadi: o'g'irlangan eski token jti
+      // mos kelmagani uchun baribir yangi token ololmaydi; "hamma joydan
+      // chiqish" esa tokenVersion + session.revokedAt orqali ishlaydi.
       if (payload.rjti && session.jti !== payload.rjti) {
-        await this.prisma.userSession.update({
-          where: { id: session.id },
-          data: { revokedAt: new Date() },
-        });
-        throw new UnauthorizedException('Session revoked');
+        throw new UnauthorizedException('Session rotated');
       }
       newRjti = randomUUID();
       await this.prisma.userSession.update({

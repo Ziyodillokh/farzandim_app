@@ -119,8 +119,11 @@ class _RefreshInterceptor extends Interceptor {
     final completer = Completer<String?>();
     _refreshCompleter = completer;
 
+    // Biz yuborgan refresh token — poyga tekshiruvi uchun `catch`da ham
+    // kerak, shuning uchun `try`'dan TASHQARIDA e'lon qilinadi.
+    String? refreshToken;
     try {
-      final refreshToken = await tokenStorage.readRefreshToken();
+      refreshToken = await tokenStorage.readRefreshToken();
       if (refreshToken == null || refreshToken.isEmpty) {
         completer.complete(null);
         return null;
@@ -156,6 +159,20 @@ class _RefreshInterceptor extends Interceptor {
       // avtomatik qayta uriniladi (finally _refreshCompleter=null).
       final code = e.response?.statusCode;
       if (code == 401 || code == 403) {
+        // ISOLATE POYGASI: UI va background isolate ALOHIDA Dio bilan bir
+        // vaqtda refresh qilishi mumkin. Boshqa isolate allaqachon rotatsiya
+        // qilib storage'ga YANGI token yozgan bo'lsa — bizning token eskirgan,
+        // lekin SESSIYA TIRIK. Storage'dagi token biz yuborgandan farq qilsa,
+        // clear QILMAYMIZ; yangi access token bilan davom etamiz (bola o'zidan
+        // o'zi chiqib ketmasin).
+        final latest = await tokenStorage.readRefreshToken();
+        if (latest != null && latest.isNotEmpty && latest != refreshToken) {
+          final rotatedAccess = await tokenStorage.readAccessToken();
+          completer.complete(rotatedAccess);
+          return rotatedAccess;
+        }
+        // Token o'zgarmagan + backend rad etdi = refresh token haqiqatan bekor
+        // (30-kun tugadi yoki "hamma joydan chiqish"). Endi tozalaymiz.
         await tokenStorage.clear();
       }
       completer.complete(null);
