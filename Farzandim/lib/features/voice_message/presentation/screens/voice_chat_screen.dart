@@ -66,9 +66,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
   Timer? _elapsedTimer;
   StreamSubscription<Amplitude>? _amplitudeSub;
   final List<double> _amplitudes = [];
-  // Amplitude yangilanishi butun ekranni emas, faqat input bar
-  // waveform'ini qayta chizadi (ChatInputBar.amplitudeTick).
-  final ValueNotifier<int> _ampTick = ValueNotifier<int>(0);
   DateTime? _recordingStartedAt;
   bool _isCanceled = false;
 
@@ -224,12 +221,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
         final normalized = ((amp.current + 60) / 60).clamp(0.0, 1.0);
         if (!mounted) return;
         // setState ishlatmaymiz — 10Hz'da butun ekran rebuild bo'lardi.
-        // Tick faqat waveform'ni qayta chizadi.
+        // Amplitudalar send paytida xabar waveform'iga saqlanadi.
         _amplitudes.add(normalized);
         if (_amplitudes.length > _maxAmplitudes) {
           _amplitudes.removeAt(0);
         }
-        _ampTick.value++;
       });
 
       _elapsedSeconds = 0;
@@ -247,6 +243,14 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   Future<void> _onLongPressEnd() async {
     if (!_isRecording) return;
+    // Reentrancy + darhol UI: bola chati endi TAP bilan yozadi (hold emas),
+    // shu sabab stopRecording() await'i davomida ikkinchi tap (send/X) qayta
+    // kirib double-stop qilmasin — _isRecording'ni SINXRON false qilamiz.
+    // Recording qatoridan darhol idle'ga o'tadi (tugmalar bosilmay qoladi).
+    setState(() {
+      _isRecording = false;
+      _elapsedSeconds = 0;
+    });
 
     _elapsedTimer?.cancel();
     await _amplitudeSub?.cancel();
@@ -259,10 +263,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     final filePath = await _recorderService.stopRecording();
 
     if (!mounted) return;
-    setState(() {
-      _isRecording = false;
-      _elapsedSeconds = 0;
-    });
 
     // Bekor qilingan — fayl o'chirib qaytamiz.
     if (_isCanceled) {
@@ -351,25 +351,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
     final original = File(xfile.path);
 
-    // Compress UI feedback
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Row(
-          children: [
-            const SizedBox(
-              width: 16,
-              height: 16,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                color: Colors.white,
-              ),
-            ),
-            const SizedBox(width: 12),
-            Text('voiceChat.videoPreparing'.tr()),
-          ],
-        ),
-        duration: const Duration(seconds: 30),
-      ),
+    // Compress UI feedback — bola chatidagi status toast bilan BIR XIL
+    // (qorong'i dumaloq karta, spinner + matn; avval oq Material SnackBar edi).
+    final prepToast = AppToast.loading(
+      context,
+      'voiceChat.videoPreparing'.tr(),
     );
 
     var fileToUpload = original;
@@ -389,8 +375,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     } catch (e) {
       debugPrint('VideoCompress xato — original yuborilmoqda: $e');
     }
-    if (!mounted) return;
-    ScaffoldMessenger.of(context).hideCurrentSnackBar();
+    if (!mounted) {
+      prepToast.dismiss();
+      return;
+    }
+    prepToast.dismiss();
 
     final ok = await ref
         .read(videoUploadProvider.notifier)
@@ -520,7 +509,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     WidgetsBinding.instance.removeObserver(this);
     _elapsedTimer?.cancel();
     _amplitudeSub?.cancel();
-    _ampTick.dispose();
     _recorderService.dispose();
     AudioPlayerManager.instance.stop();
     _scrollController.dispose();
@@ -570,7 +558,7 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
               _ChatHeader(
                 childName: childName,
                 avatar: child != null
-                    ? ChildAvatar(child: child, size: 40, showBorder: false)
+                    ? ChildAvatar(child: child, size: 44, showBorder: false)
                     : const _FallbackAvatar(),
                 onBack: () => context.pop(),
                 onInfo: _onInfoPressed,
@@ -683,7 +671,6 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                 isMediaUploading: _isMediaUploading,
                 elapsedSeconds: _elapsedSeconds,
                 amplitudes: _amplitudes,
-                amplitudeTick: _ampTick,
                 onLongPressStart: () => unawaited(_onLongPressStart()),
                 onLongPressEnd: () => unawaited(_onLongPressEnd()),
                 onCancel: () => unawaited(_abortRecording()),

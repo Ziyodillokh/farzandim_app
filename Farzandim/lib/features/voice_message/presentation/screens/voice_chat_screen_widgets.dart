@@ -84,16 +84,19 @@ class _FallbackAvatar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Bola chatidagi avatar bilan bir xil: 44px, nozik chegara, ko'k tint 18%,
+    // ikon ham ko'k (#216BFF).
     return Container(
-      width: 40,
-      height: 40,
+      width: 44,
+      height: 44,
       decoration: BoxDecoration(
-        color: const Color(0xFF216BFF).withValues(alpha: 0.2),
+        color: const Color(0xFF216BFF).withValues(alpha: 0.18),
         shape: BoxShape.circle,
+        border: Border.all(color: const Color(0x1FFFFFFF)),
       ),
       child: const Icon(
         SolarIconsBold.user,
-        color: Color(0xFF508AFF),
+        color: Color(0xFF216BFF),
         size: 22,
       ),
     );

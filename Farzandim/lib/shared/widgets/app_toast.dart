@@ -76,6 +76,52 @@ class AppToast {
     _current = entry;
     overlay.insert(entry);
   }
+
+  /// Doimiy (spinner bilan) status toast — masalan "Video tayyorlanmoqda…".
+  /// O'zi yopilmaydi: qaytgan `AppToastHandle.dismiss()` chaqiring. Ko'rinish
+  /// oddiy toast bilan BIR XIL (faqat ikona o'rniga aylanuvchi indikator).
+  static AppToastHandle loading(BuildContext context, String message) {
+    final handle = AppToastHandle._();
+    final overlay = Overlay.maybeOf(context, rootOverlay: true);
+    if (overlay == null) return handle;
+
+    _current?.remove();
+    _current = null;
+
+    late OverlayEntry entry;
+    void removeSelf() {
+      if (_current == entry) {
+        entry.remove();
+        _current = null;
+      }
+    }
+
+    entry = OverlayEntry(
+      builder: (_) => _ToastView(
+        message: message,
+        type: AppToastType.info, // loading → ko'k aksent
+        duration: null, // doimiy — o'zi yopilmaydi
+        spinner: true,
+        onClosed: removeSelf,
+      ),
+    );
+    _current = entry;
+    overlay.insert(entry);
+    handle._dismiss = removeSelf;
+    return handle;
+  }
+}
+
+/// `AppToast.loading()` qaytaradigan tutqich — `dismiss()` bilan yopiladi.
+class AppToastHandle {
+  AppToastHandle._();
+
+  VoidCallback? _dismiss;
+
+  void dismiss() {
+    _dismiss?.call();
+    _dismiss = null;
+  }
 }
 
 class _ToastView extends StatefulWidget {
@@ -84,12 +130,18 @@ class _ToastView extends StatefulWidget {
     required this.type,
     required this.duration,
     required this.onClosed,
+    this.spinner = false,
   });
 
   final String message;
   final AppToastType type;
-  final Duration duration;
+
+  /// `null` — doimiy (o'zi yopilmaydi; `AppToast.loading` uchun).
+  final Duration? duration;
   final VoidCallback onClosed;
+
+  /// `true` — ikona o'rniga aylanuvchi indikator (loading).
+  final bool spinner;
 
   @override
   State<_ToastView> createState() => _ToastViewState();
@@ -119,8 +171,9 @@ class _ToastViewState extends State<_ToastView>
         );
     _fade = CurvedAnimation(parent: _c, curve: Curves.easeOut);
     _c.forward();
-    // Avtomatik yopilish.
-    Future<void>.delayed(widget.duration, _close);
+    // Avtomatik yopilish — faqat `duration` berilgan bo'lsa (loading doimiy).
+    final d = widget.duration;
+    if (d != null) Future<void>.delayed(d, _close);
   }
 
   Future<void> _close() async {
@@ -210,7 +263,8 @@ class _ToastViewState extends State<_ToastView>
                       ),
                       child: Row(
                         children: [
-                          // Tur ikonasi — past-alpha tint doira ichida.
+                          // Tur ikonasi (yoki loading spinner) — past-alpha
+                          // tint doira ichida.
                           Container(
                             width: 38,
                             height: 38,
@@ -218,7 +272,17 @@ class _ToastViewState extends State<_ToastView>
                               color: s.color.withValues(alpha: 0.14),
                               shape: BoxShape.circle,
                             ),
-                            child: Icon(s.icon, color: s.color, size: 22),
+                            child: widget.spinner
+                                ? Padding(
+                                    padding: const EdgeInsets.all(9),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                      valueColor: AlwaysStoppedAnimation<Color>(
+                                        s.color,
+                                      ),
+                                    ),
+                                  )
+                                : Icon(s.icon, color: s.color, size: 22),
                           ),
                           const SizedBox(width: AppDimensions.md),
                           Expanded(

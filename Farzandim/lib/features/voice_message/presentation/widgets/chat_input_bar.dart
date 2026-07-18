@@ -1,25 +1,40 @@
-// Telegram uslubidagi chat input: matn, emoji, attach va mic/video tugma.
-// Mic tugmada tap rejimni almashtiradi (ovoz/video), hold yozishni
-// boshlaydi; matn terilganda mic o'rniga send tugma chiqadi.
+// ─────────────────────────────────────────────────────────────────────
+// ChatInputBar — bola ilovasidagi chat input bilan BIR XIL (Parvoz)
+// ─────────────────────────────────────────────────────────────────────
+//
+// Layout (bola ilovasidagi input bilan aynan bir xil — screenshot 1:1):
+//   idle (matn yo'q):  [ Xabar... maydoni ]  (mic ⭕)  (kamera ⭕)
+//   matn bor:          [ Xabar... maydoni ]  (ko'k send ⭕)
+//   yozilmoqda:        (X ⭕) [ 🔴 0:07  Yozilmoqda... ]  (ko'k send ⭕)
+//
+//   • mic bosilsa — ovoz yozish BOSHLANADI (tap bilan), ko'k send bosilsa
+//     yuboriladi, X — bekor qiladi.
+//   • kamera bosilsa — yumaloq video recorder; UZOQ bosilsa media
+//     biriktirish (galereya/kamera/fayl) paneli ochiladi.
+//
+// Avval bu input emoji tugmasi + qog'oz qisqich (attach) + mic/video toggle
+// tugmasidan iborat edi — bola chatidan farqli, betartibroq ko'rinardi.
+// Endi bola chati bilan aynan bir xil: toza pill + alohida mic + kamera.
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
-part 'chat_input_bar_widgets.dart';
+// Parvoz tokenlar — bola ilovasidagi chat input bilan BIR XIL.
+const _pBlue = Color(0xFF216BFF);
+const _pChipBg = Color(0xFF1B2128);
+const _pFieldBorder = Color(0x1FFFFFFF);
+const _pDim = Color(0x8CFFFFFF);
+const _pSheetBg = Color(0xFF15181E);
+const _pRec = Color(0xFFFF4D4F);
 
-// Parvoz chat tokenlari — bola chati bilan bir xil (eski yashil AppColors
-// o'rniga ko'k aksent + to'q kulrang panel). Faqat KO'RINISH — imkoniyatlar
-// (emoji, attach, video) saqlanadi.
-const _pBlue = Color(0xFF216BFF); // aksent: send, emoji, cursor
-const _pChipBg = Color(0xFF1B2128); // matn maydoni foni
-const _pSheetBg = Color(0xFF15181E); // attach/emoji varaq foni
-
-/// Mic/video tugma rejimi.
-enum ChatRecordMode { voice, video }
+TextStyle _pop(
+  double s, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: s, fontWeight: w, color: c, height: 1.35);
 
 class ChatInputBar extends StatefulWidget {
   const ChatInputBar({
@@ -37,7 +52,6 @@ class ChatInputBar extends StatefulWidget {
     required this.onPickGallery,
     required this.onPickCamera,
     required this.onPickFile,
-    this.amplitudeTick,
     super.key,
   });
 
@@ -46,29 +60,27 @@ class ChatInputBar extends StatefulWidget {
   final bool isVideoUploading;
   final bool isMediaUploading;
   final int elapsedSeconds;
+
+  /// Jonli amplituda (send paytida xabarga saqlanadi — recording row live
+  /// waveform ko'rsatmaydi, bola chati bilan bir xil).
   final List<double> amplitudes;
 
-  /// Amplitude yangilanish signali: berilsa jonli waveform faqat shu
-  /// Listenable orqali qayta chiziladi — ota-ekran setState qilmaydi,
-  /// 10Hz'da butun ekran o'rniga faqat waveform subtree rebuild bo'ladi.
-  final Listenable? amplitudeTick;
-
-  /// Ovoz yozishni boshlash (hold start, voice rejimi).
+  /// Ovoz yozishni boshlash (mic bosilganda).
   final VoidCallback onLongPressStart;
 
-  /// Ovoz yozishni tugatish + yuborish (hold end, voice rejimi).
+  /// Ovoz yozishni tugatish + yuborish (send bosilganda).
   final VoidCallback onLongPressEnd;
 
-  /// Recording'ni bekor qilish (delete tugma).
+  /// Recording'ni bekor qilish (X tugma).
   final VoidCallback onCancel;
 
-  /// Yumaloq video recorder modalini ochish (video rejimi).
+  /// Yumaloq video recorder modalini ochish (kamera tugma).
   final VoidCallback? onVideoPressed;
 
   /// Matn yuborish.
   final ValueChanged<String> onSendText;
 
-  /// Media tanlash callbacks.
+  /// Media tanlash callbacks (kamera tugmani uzoq bosish paneli).
   final VoidCallback onPickGallery;
   final VoidCallback onPickCamera;
   final VoidCallback onPickFile;
@@ -79,10 +91,7 @@ class ChatInputBar extends StatefulWidget {
 
 class _ChatInputBarState extends State<ChatInputBar> {
   late final TextEditingController _controller;
-  late final FocusNode _focusNode;
   String _draft = '';
-  bool _showEmoji = false;
-  ChatRecordMode _mode = ChatRecordMode.voice;
 
   bool get _anyUploading =>
       widget.isVoiceUploading ||
@@ -93,7 +102,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
   void initState() {
     super.initState();
     _controller = TextEditingController();
-    _focusNode = FocusNode();
     _controller.addListener(() {
       if (_controller.text != _draft) {
         setState(() => _draft = _controller.text);
@@ -104,7 +112,6 @@ class _ChatInputBarState extends State<ChatInputBar> {
   @override
   void dispose() {
     _controller.dispose();
-    _focusNode.dispose();
     super.dispose();
   }
 
@@ -116,45 +123,16 @@ class _ChatInputBarState extends State<ChatInputBar> {
     setState(() => _draft = '');
   }
 
-  void _toggleEmoji() {
-    if (_showEmoji) {
-      setState(() => _showEmoji = false);
-      _focusNode.requestFocus();
-    } else {
-      FocusScope.of(context).unfocus();
-      setState(() => _showEmoji = true);
-    }
-  }
-
-  void _insertEmoji(String emoji) {
-    final text = _controller.text;
-    final sel = _controller.selection;
-    final start = sel.start < 0 ? text.length : sel.start;
-    final end = sel.end < 0 ? text.length : sel.end;
-    final newText = text.replaceRange(start, end, emoji);
-    _controller.value = TextEditingValue(
-      text: newText,
-      selection: TextSelection.collapsed(offset: start + emoji.length),
-    );
-  }
-
-  void _toggleMode() {
-    HapticFeedback.selectionClick();
-    setState(() {
-      _mode = _mode == ChatRecordMode.voice
-          ? ChatRecordMode.video
-          : ChatRecordMode.voice;
-    });
-    final hint = _mode == ChatRecordMode.video
-        ? 'voiceChat.videoMode'.tr()
-        : 'voiceChat.voiceMode'.tr();
-    AppToast.info(context, hint);
+  String get _elapsedLabel {
+    final m = widget.elapsedSeconds ~/ 60;
+    final s = (widget.elapsedSeconds % 60).toString().padLeft(2, '0');
+    return '$m:$s';
   }
 
   void _openAttachSheet() {
     if (_anyUploading) return;
     FocusScope.of(context).unfocus();
-    setState(() => _showEmoji = false);
+    HapticFeedback.selectionClick();
     showModalBottomSheet<void>(
       context: context,
       backgroundColor: _pSheetBg,
@@ -163,7 +141,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
       ),
       builder: (sheetContext) => SafeArea(
         child: Padding(
-          padding: const EdgeInsets.symmetric(vertical: 12),
+          padding: const EdgeInsets.symmetric(vertical: 16),
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceEvenly,
             children: [
@@ -203,257 +181,283 @@ class _ChatInputBarState extends State<ChatInputBar> {
 
   @override
   Widget build(BuildContext context) {
+    final bottom = MediaQuery.of(context).padding.bottom;
+    return Padding(
+      padding: EdgeInsets.fromLTRB(14, 8, 14, 10 + bottom),
+      child: widget.isRecording ? _recordingRow() : _idleRow(),
+    );
+  }
+
+  // ── Idle: maydon + mic/kamera yoki send (bola ilovasidagidek) ──
+  Widget _idleRow() {
     final hasText = _draft.trim().isNotEmpty;
-    // Orqa fon yo'q — input wallpaper ustida suzib turadi (iPhone/Telegram).
-    // Faqat emoji paneli ochilganda ostiga solid fon qo'shiladi.
-    return ColoredBox(
-      color: _showEmoji && !widget.isRecording
-          ? _pSheetBg
-          : Colors.transparent,
-      child: SafeArea(
-        top: false,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(8, 6, 8, 6),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  // [0] Recording paytida delete, aks holda bo'sh.
-                  if (widget.isRecording)
-                    IconButton(
-                      onPressed: widget.onCancel,
-                      icon: const Icon(
-                        SolarIconsBold.trashBinMinimalistic,
-                        color: Colors.red,
-                        size: 28,
-                      ),
-                    )
-                  else
-                    const SizedBox.shrink(),
-
-                  // [1] Markaz: recording indicator yoki input chip.
-                  if (widget.isRecording)
-                    Expanded(
-                      child: _RecordingIndicator(
-                        elapsedSeconds: widget.elapsedSeconds,
-                        amplitudes: widget.amplitudes,
-                        amplitudeTick: widget.amplitudeTick,
-                      ),
-                    )
-                  else
-                    Expanded(child: _buildInputChip()),
-
-                  const SizedBox(width: 8),
-
-                  // [2] Oxirgi child: mic/video toggle yoki send.
-                  if (hasText && !widget.isRecording)
-                    _SendButton(onTap: _sendText, disabled: _anyUploading)
-                  else
-                    _buildActionButton(),
-                ],
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.end,
+      children: [
+        Expanded(
+          child: Container(
+            constraints: const BoxConstraints(minHeight: 52, maxHeight: 132),
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: _pChipBg,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: _pFieldBorder),
+            ),
+            child: TextSelectionTheme(
+              data: const TextSelectionThemeData(
+                cursorColor: _pBlue,
+                selectionHandleColor: _pBlue,
+                selectionColor: Color(0x5C216BFF),
+              ),
+              child: TextField(
+                controller: _controller,
+                enabled: !widget.isMediaUploading,
+                style: _pop(15),
+                cursorColor: _pBlue,
+                minLines: 1,
+                maxLines: 5,
+                onSubmitted: (_) => _sendText(),
+                textInputAction: TextInputAction.send,
+                decoration: InputDecoration(
+                  filled: false,
+                  isCollapsed: true,
+                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  border: InputBorder.none,
+                  enabledBorder: InputBorder.none,
+                  focusedBorder: InputBorder.none,
+                  disabledBorder: InputBorder.none,
+                  hintText: 'Xabar...',
+                  hintStyle: _pop(15, c: _pDim),
+                ),
               ),
             ),
-            if (_showEmoji && !widget.isRecording)
-              _EmojiPanel(onEmoji: _insertEmoji),
-          ],
+          ),
         ),
-      ),
+        const SizedBox(width: 10),
+        if (widget.isMediaUploading)
+          const _CircleSpinner()
+        else if (hasText)
+          _CircleAction(icon: Icons.send_rounded, blue: true, onTap: _sendText)
+        else ...[
+          _CircleAction(
+            icon: SolarIconsBold.microphone,
+            busy: widget.isVoiceUploading,
+            onTap: _anyUploading
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    widget.onLongPressStart();
+                  },
+          ),
+          const SizedBox(width: 10),
+          _CircleAction(
+            icon: SolarIconsBold.camera,
+            busy: widget.isVideoUploading,
+            onTap: _anyUploading
+                ? null
+                : () {
+                    HapticFeedback.selectionClick();
+                    widget.onVideoPressed?.call();
+                  },
+            onLongPress: _openAttachSheet,
+          ),
+        ],
+      ],
     );
   }
 
-  Widget _buildInputChip() {
-    // Pill — bola chatidek to'q kulrang (`_pChipBg`), to'liq oval stadium.
-    // Ichida fonsiz TextField → ichki to'rtburchak yo'q (iPhone uslubi).
-    return Container(
-      constraints: const BoxConstraints(minHeight: 46, maxHeight: 132),
-      padding: const EdgeInsets.symmetric(horizontal: 4),
-      decoration: BoxDecoration(
-        color: _pChipBg,
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: AppColors.border.withValues(alpha: 0.6)),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.10),
-            blurRadius: 10,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.end,
-        children: [
-          // Emoji tugma (chap).
-          IconButton(
-            onPressed: widget.isMediaUploading ? null : _toggleEmoji,
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
-            icon: Icon(
-              _showEmoji ? SolarIconsBold.keyboard : SolarIconsBold.smileCircle,
-              color: AppColors.textSecondary,
-              size: 23,
+  // ── Recording: X + (🔴 timer Yozilmoqda...) + ko'k send ──
+  Widget _recordingRow() {
+    return Row(
+      children: [
+        _CircleAction(
+          icon: Icons.close_rounded,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.onCancel();
+          },
+        ),
+        const SizedBox(width: 10),
+        Expanded(
+          child: Container(
+            height: 52,
+            padding: const EdgeInsets.symmetric(horizontal: 18),
+            decoration: BoxDecoration(
+              color: _pChipBg,
+              borderRadius: BorderRadius.circular(26),
+              border: Border.all(color: _pFieldBorder),
             ),
-          ),
-          Expanded(
-            child: TextField(
-              controller: _controller,
-              focusNode: _focusNode,
-              enabled: !widget.isMediaUploading,
-              minLines: 1,
-              maxLines: 5,
-              textInputAction: TextInputAction.newline,
-              keyboardType: TextInputType.multiline,
-              cursorColor: _pBlue,
-              onTap: () {
-                if (_showEmoji) setState(() => _showEmoji = false);
-              },
-              style: TextStyle(color: AppColors.textPrimary, fontSize: 15),
-              decoration: InputDecoration(
-                hintText: 'voiceChat.messageHint'.tr(),
-                hintStyle: TextStyle(
-                  color: AppColors.textSecondary,
-                  fontSize: 15,
-                ),
-                filled: false,
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(vertical: 11),
-                isCollapsed: true,
-              ),
-            ),
-          ),
-          // Attach (media) tugma (o'ng).
-          IconButton(
-            onPressed: widget.isMediaUploading ? null : _openAttachSheet,
-            visualDensity: VisualDensity.compact,
-            padding: const EdgeInsets.all(8),
-            constraints: const BoxConstraints(),
-            icon: widget.isMediaUploading
-                ? const SizedBox(
-                    width: 21,
-                    height: 21,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2,
-                      color: _pBlue,
-                    ),
-                  )
-                : Transform.rotate(
-                    angle: -0.7,
-                    child: Icon(
-                      SolarIconsBold.paperclip,
-                      color: AppColors.textSecondary,
-                      size: 22,
-                    ),
+            child: Row(
+              children: [
+                const _PulsingDot(),
+                const SizedBox(width: 10),
+                Text(_elapsedLabel, style: _pop(15, w: FontWeight.w600)),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Yozilmoqda...',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(13, c: _pDim),
                   ),
+                ),
+              ],
+            ),
           ),
-        ],
+        ),
+        const SizedBox(width: 10),
+        _CircleAction(
+          icon: Icons.send_rounded,
+          blue: true,
+          onTap: () {
+            HapticFeedback.selectionClick();
+            widget.onLongPressEnd();
+          },
+        ),
+      ],
+    );
+  }
+}
+
+// ── Pulsatsiyalanuvchi qizil nuqta (bola ilovasidagidek) ──
+class _PulsingDot extends StatefulWidget {
+  const _PulsingDot();
+
+  @override
+  State<_PulsingDot> createState() => _PulsingDotState();
+}
+
+class _PulsingDotState extends State<_PulsingDot>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _c = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 800),
+  )..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _c.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: Tween<double>(begin: 0.35, end: 1).animate(_c),
+      child: Container(
+        width: 11,
+        height: 11,
+        decoration: const BoxDecoration(color: _pRec, shape: BoxShape.circle),
       ),
     );
   }
+}
 
-  /// Mic/video toggle tugma. ValueKey bilan doim oxirgi child bo'lib
-  /// turishi kerak — aks holda recording boshlanganda long-press
-  /// subscription yo'qolib, onLongPressEnd kelmay qoladi.
-  Widget _buildActionButton() {
-    final isRecording = widget.isRecording;
-    final isVideoMode = _mode == ChatRecordMode.video;
-    final disabled = _anyUploading && !isRecording;
+// ── Doira tugma (bola ilovasidagi `_CircleAction` bilan bir xil) ──
+class _CircleAction extends StatelessWidget {
+  const _CircleAction({
+    required this.icon,
+    required this.onTap,
+    this.onLongPress,
+    this.blue = false,
+    this.busy = false,
+  });
 
+  final IconData icon;
+  final VoidCallback? onTap;
+  final VoidCallback? onLongPress;
+  final bool blue;
+  final bool busy;
+
+  @override
+  Widget build(BuildContext context) {
     return GestureDetector(
-      key: const ValueKey('voice-mic-button'),
+      onTap: onTap,
+      onLongPress: onLongPress,
       behavior: HitTestBehavior.opaque,
-      onTap: disabled
-          ? null
-          : () {
-              if (isRecording) {
-                widget.onLongPressEnd();
-              } else {
-                // Tap rejimni almashtiradi (Telegram'dagidek).
-                _toggleMode();
-              }
-            },
-      onLongPressStart: disabled
-          ? null
-          : (_) {
-              if (isVideoMode) {
-                widget.onVideoPressed?.call();
-              } else {
-                widget.onLongPressStart();
-              }
-            },
-      onLongPressEnd: disabled
-          ? null
-          : (_) {
-              if (!isVideoMode) {
-                widget.onLongPressEnd();
-              }
-            },
       child: Container(
-        width: 46,
-        height: 46,
+        width: 52,
+        height: 52,
         decoration: BoxDecoration(
-          gradient: isRecording
-              ? const LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [Color(0xFFFF5252), Color(0xFFD32F2F)],
-                )
-              : LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: disabled
-                      ? [
-                          _pBlue.withValues(alpha: 0.6),
-                          _pBlue.withValues(alpha: 0.6),
-                        ]
-                      : [_pBlue, _pBlue],
-                ),
+          color: blue ? _pBlue : _pChipBg,
           shape: BoxShape.circle,
-          boxShadow: [
-            BoxShadow(
-              color: (isRecording ? const Color(0xFFFF5252) : _pBlue)
-                  .withValues(alpha: isRecording ? 0.4 : 0.28),
-              blurRadius: isRecording ? 18 : 12,
-              spreadRadius: 1,
-            ),
-          ],
+          border: blue ? null : Border.all(color: _pFieldBorder),
         ),
-        child: disabled
+        child: busy
             ? const Center(
                 child: SizedBox(
                   width: 18,
                   height: 18,
                   child: CircularProgressIndicator(
                     strokeWidth: 2,
-                    color: AppColors.onPrimary,
+                    color: Colors.white,
                   ),
                 ),
               )
-            : AnimatedSwitcher(
-                duration: const Duration(milliseconds: 180),
-                transitionBuilder: (child, anim) =>
-                    ScaleTransition(scale: anim, child: child),
-                child: Icon(
-                  isRecording
-                      ? SolarIconsBold.stop
-                      : isVideoMode
-                      ? SolarIconsBold.videocamera
-                      : SolarIconsBold.microphone,
-                  key: ValueKey(
-                    isRecording
-                        ? 'stop'
-                        : isVideoMode
-                        ? 'video'
-                        : 'mic',
-                  ),
-                  color: AppColors.onPrimary,
-                  size: 24,
-                ),
-              ),
+            : Icon(icon, size: 22, color: Colors.white),
+      ),
+    );
+  }
+}
+
+class _CircleSpinner extends StatelessWidget {
+  const _CircleSpinner();
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 52,
+      height: 52,
+      decoration: BoxDecoration(
+        color: _pChipBg,
+        shape: BoxShape.circle,
+        border: Border.all(color: _pFieldBorder),
+      ),
+      child: const Center(
+        child: SizedBox(
+          width: 18,
+          height: 18,
+          child: CircularProgressIndicator(strokeWidth: 2, color: _pBlue),
+        ),
+      ),
+    );
+  }
+}
+
+class _AttachOption extends StatelessWidget {
+  const _AttachOption({
+    required this.icon,
+    required this.color,
+    required this.label,
+    required this.onTap,
+  });
+
+  final IconData icon;
+  final Color color;
+  final String label;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Container(
+            width: 58,
+            height: 58,
+            decoration: BoxDecoration(
+              color: color.withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: Icon(icon, color: color, size: 28),
+          ),
+          const SizedBox(height: 8),
+          Text(label, style: _pop(13)),
+        ],
       ),
     );
   }

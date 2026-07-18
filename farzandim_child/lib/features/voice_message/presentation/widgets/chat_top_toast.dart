@@ -1,9 +1,11 @@
 // ─────────────────────────────────────────────────────────────────────
-// ChatTopToast — Telegram uslubidagi yuqori "pill" toast (chat uchun)
+// ChatTopToast — yuqori (top) status toast (chat uchun)
 // ─────────────────────────────────────────────────────────────────────
 //
-// Glassmorphic (blur) yumaloq pill, ekran tepasida suzadi. Telegram'dagi
-// "Saqlanmoqda…" / "Video yuborildi" kabi nozik bildirishnomalar uchun.
+// Ota-ona ilovasidagi `AppToast` bilan BIR XIL ko'rinish: qorong'i dumaloq
+// karta (#1C232B), chapda tint-doira ichida ikona/spinner, oq matn, yumshoq
+// soya. Ekran tepasidan chiqadi. Barcha status xabarlari (video/ovoz
+// tayyorlanmoqda / yuborildi) shu bitta ko'rinishda — avval har xil edi.
 //
 //   // Doimiy (spinner bilan) — keyin o'zingiz yopasiz:
 //   final t = ChatTopToast.show(context, 'Video tayyorlanmoqda…', spinner: true);
@@ -13,10 +15,13 @@
 //   // Tez xabar (o'zi yo'qoladi):
 //   ChatTopToast.flash(context, 'Video yuborildi', icon: Icons.check_rounded);
 
-import 'dart:ui';
 import 'package:flutter/material.dart';
 
-import 'package:farzandim_child/core/theme/app_colors.dart';
+// Parvoz status-toast tokenlari — ota-ona `AppToast` bilan bir xil.
+const _toastBg = Color(0xFF1C232B);
+const _toastBorder = Color(0x1FFFFFFF);
+const _toastGreen = Color(0xFF22C55E); // "yuborildi" (success)
+const _toastBlue = Color(0xFF216BFF); // "tayyorlanmoqda" (loading)
 
 /// `show`/`flash` qaytaradigan tutqich — `dismiss()` bilan yopiladi.
 class ChatToastHandle {
@@ -34,6 +39,8 @@ class ChatTopToast {
 
   /// Doimiy toast — `dismiss()` chaqirilguncha turadi. `spinner: true` —
   /// chap tomonda aylanuvchi indikator (yuborilmoqda/tayyorlanmoqda).
+  /// `accent` berilmasa: spinner → ko'k (loading), aks holda → yashil
+  /// (success). Ikona berilmasa yashil check ishlatiladi.
   static ChatToastHandle show(
     BuildContext context,
     String text, {
@@ -48,7 +55,7 @@ class ChatTopToast {
         text: text,
         spinner: spinner,
         icon: icon,
-        accent: accent ?? AppColors.primary,
+        accent: accent ?? (spinner ? _toastBlue : _toastGreen),
         topInset: topInset,
       ),
     );
@@ -69,6 +76,8 @@ class ChatTopToast {
   }
 }
 
+// Ota-ona `AppToast` bilan bir xil ko'rinish: qorong'i dumaloq karta, chapda
+// tint-doira ichida ikona/spinner, oq matn; tepadan silliq tushadi (fade+slide).
 class _ToastView extends StatelessWidget {
   const _ToastView({
     required this.text,
@@ -90,59 +99,84 @@ class _ToastView extends StatelessWidget {
       top: topInset,
       left: 0,
       right: 0,
-      child: Center(
-        child: ClipRRect(
-          borderRadius: BorderRadius.circular(999),
-          child: BackdropFilter(
-            filter: ImageFilter.blur(sigmaX: 20, sigmaY: 20),
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 11),
-              decoration: BoxDecoration(
-                color: Colors.black.withValues(alpha: 0.58),
-                borderRadius: BorderRadius.circular(999),
-                border: Border.all(
-                  color: accent.withValues(alpha: 0.45),
-                  width: 1,
+      child: Align(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 460),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: TweenAnimationBuilder<double>(
+              duration: const Duration(milliseconds: 280),
+              curve: Curves.easeOutCubic,
+              tween: Tween<double>(begin: 0, end: 1),
+              builder: (_, t, child) => Opacity(
+                opacity: t.clamp(0.0, 1.0),
+                child: Transform.translate(
+                  offset: Offset(0, (1 - t) * -24),
+                  child: child,
                 ),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    blurRadius: 16,
-                    offset: const Offset(0, 4),
-                  ),
-                ],
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  if (spinner) ...[
-                    SizedBox(
-                      width: 16,
-                      height: 16,
-                      child: CircularProgressIndicator(
-                        strokeWidth: 2,
-                        valueColor: AlwaysStoppedAnimation<Color>(accent),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                  ] else if (icon != null) ...[
-                    Icon(icon, color: accent, size: 18),
-                    const SizedBox(width: 8),
-                  ],
-                  Flexible(
-                    child: Text(
-                      text,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: const TextStyle(
-                        color: Colors.white,
-                        fontSize: 14,
-                        fontWeight: FontWeight.w600,
-                        letterSpacing: 0.2,
-                      ),
-                    ),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
                   ),
-                ],
+                  decoration: BoxDecoration(
+                    color: _toastBg,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: _toastBorder),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.45),
+                        blurRadius: 24,
+                        offset: const Offset(0, 10),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    children: [
+                      // Tint-doira ichida ikona yoki spinner (AppToast bilan
+                      // bir xil).
+                      Container(
+                        width: 38,
+                        height: 38,
+                        decoration: BoxDecoration(
+                          color: accent.withValues(alpha: 0.14),
+                          shape: BoxShape.circle,
+                        ),
+                        child: spinner
+                            ? Padding(
+                                padding: const EdgeInsets.all(9),
+                                child: CircularProgressIndicator(
+                                  strokeWidth: 2,
+                                  valueColor:
+                                      AlwaysStoppedAnimation<Color>(accent),
+                                ),
+                              )
+                            : Icon(
+                                icon ?? Icons.check_circle_rounded,
+                                color: accent,
+                                size: 22,
+                              ),
+                      ),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          text,
+                          maxLines: 3,
+                          overflow: TextOverflow.ellipsis,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 14,
+                            fontWeight: FontWeight.w600,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
               ),
             ),
           ),
