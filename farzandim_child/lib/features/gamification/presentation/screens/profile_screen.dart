@@ -129,103 +129,79 @@ List<_BadgeSpec> get _previewBadges => [
     'gamification.achievementFirstBookTitle'.tr(),
     _purple,
     asset: 'assets/icons/badge_book1.png',
-    title: 'Birinchi kitob yakunlandi!',
-    desc:
-        "Tabriklaymiz! Siz birinchi kitobingizni oxirigacha o'qib, "
-        "yangi yutuqni qo'lga kiritdingiz.",
+    title: 'gamification.previewFirstBookTitle'.tr(),
+    desc: 'gamification.previewFirstBookDesc'.tr(),
   ),
   _BadgeSpec(
     'gamification.achievementStreak7Title'.tr(),
     _orange,
     asset: 'assets/icons/badge_7kun.png',
-    title: '7 kun uzluksiz!',
-    desc:
-        "Tabriklaymiz! Siz 7 kun uzluksiz shug'ullanib, "
-        "yangi yutuqni qo'lga kiritdingiz.",
+    title: 'gamification.previewStreak7Title'.tr(),
+    desc: 'gamification.previewStreak7Desc'.tr(),
   ),
   _BadgeSpec(
     'gamification.achievementMathTop100Title'.tr(),
     _green,
     asset: 'assets/icons/badge_top100.png',
-    title: 'Math TOP-100!',
-    desc:
-        "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
-        '100 talik ichiga kirdingiz.',
+    title: 'gamification.previewMathTop100Title'.tr(),
+    desc: 'gamification.previewMathTop100Desc'.tr(),
   ),
   _BadgeSpec(
     'gamification.achievementTenBooksTitle'.tr(),
     _red,
     asset: 'assets/icons/badge_book10.png',
-    title: '10 ta kitob yakunlandi!',
-    desc:
-        "Tabriklaymiz! Siz 10 ta kitobni oxirigacha o'qib, "
-        "yangi yutuqni qo'lga kiritdingiz.",
+    title: 'gamification.previewTenBooksTitle'.tr(),
+    desc: 'gamification.previewTenBooksDesc'.tr(),
   ),
   _BadgeSpec(
     'gamification.achievementStreak100Title'.tr(),
     _amber,
     asset: 'assets/icons/badge_100kun.png',
-    title: '100 kun uzluksiz!',
-    desc:
-        "Tabriklaymiz! Siz 100 kun uzluksiz shug'ullanib, "
-        "yangi yutuqni qo'lga kiritdingiz.",
+    title: 'gamification.previewStreak100Title'.tr(),
+    desc: 'gamification.previewStreak100Desc'.tr(),
   ),
   _BadgeSpec(
     'gamification.achievementMathTop10Title'.tr(),
     _stepBlue,
     asset: 'assets/icons/badge_top10.png',
-    title: 'Math TOP-10!',
-    desc:
-        "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi "
-        '10 talik ichiga kirdingiz.',
+    title: 'gamification.previewMathTop10Title'.tr(),
+    desc: 'gamification.previewMathTop10Desc'.tr(),
   ),
   _BadgeSpec(
-    '7 kun uzluksiz',
+    'gamification.achievementStreak7Title'.tr(),
     _orange,
-    title: "7 kun yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz 7 kun uzluksiz "
-        "shug'ullanishingiz kerak",
+    title: 'gamification.goalStreak7Title'.tr(),
+    desc: 'gamification.goalStreak7Desc'.tr(),
   ),
   _BadgeSpec(
-    'Math TOP-100',
+    'gamification.achievementMathTop100Title'.tr(),
     _green,
-    title: "Math TOP-100 yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha "
-        'TOP-100 ga kirishingiz kerak',
+    title: 'gamification.goalMathTop100Title'.tr(),
+    desc: 'gamification.goalMathTop100Desc'.tr(),
   ),
   _BadgeSpec(
-    '1-kitob',
+    'gamification.achievementFirstBookTitle'.tr(),
     _purple,
-    title: "1 - kitob yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz bitta kitobni "
-        'yakunlashingiz kerak',
+    title: 'gamification.goalFirstBookTitle'.tr(),
+    desc: 'gamification.goalFirstBookDesc'.tr(),
   ),
   _BadgeSpec(
-    'Math TOP-10',
+    'gamification.achievementMathTop10Title'.tr(),
     _stepBlue,
-    title: "Math TOP-10 yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha "
-        'TOP-10 ga kirishingiz kerak',
+    title: 'gamification.goalMathTop10Title'.tr(),
+    desc: 'gamification.goalMathTop10Desc'.tr(),
   ),
   _BadgeSpec(
-    '10-kitob',
+    'gamification.achievementTenBooksTitle'.tr(),
     _purple,
-    title: "10 - kitob yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz 10 ta kitobni "
-        'yakunlashingiz kerak',
+    title: 'gamification.goalTenBooksTitle'.tr(),
+    desc: 'gamification.goalTenBooksDesc'.tr(),
   ),
   _BadgeSpec(
-    '100 kun',
+    'gamification.achievementStreak100Title'.tr(),
     _orange,
-    title: "100 - kun yutug'i",
-    desc:
-        "Bu yutuqni qo'lga kiritish uchun siz 100 kun uzluksiz "
-        "shug'ullanishingiz kerak",
+    title: 'gamification.goalStreak100Title'.tr(),
+    desc: 'gamification.goalStreak100Desc'.tr(),
   ),
 ];
 

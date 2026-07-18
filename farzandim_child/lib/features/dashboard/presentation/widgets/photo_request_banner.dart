@@ -8,6 +8,7 @@
 //   - "Rad etish"   → status `declined` ga o'tadi
 // Yo'q bo'lsa: SizedBox.shrink (joy band qilmaydi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/photo/data/models/photo_request.dart';
@@ -155,7 +156,7 @@ class _Banner extends StatelessWidget {
                     vertical: 12,
                   ),
                 ),
-                child: const Text('Rad etish'),
+                child: Text('common.reject'.tr()),
               ),
             ],
           ),

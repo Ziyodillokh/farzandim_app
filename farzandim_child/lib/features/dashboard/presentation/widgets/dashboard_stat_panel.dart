@@ -13,6 +13,7 @@
 //     ichidan `region`. Ranking'dagi viloyat foydalanuvchilari ichida
 //     joriy bola o'rni — yo'q bo'lsa "—" ko'rsatiladi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/features/dashboard/presentation/providers/child_data_provider.dart';
@@ -106,7 +107,7 @@ class DashboardStatPanel extends ConsumerWidget {
               icon: Icons.bolt_rounded,
               iconColor: AppColors.primary,
               value: '$level',
-              label: 'Level',
+              label: 'dashboard.level'.tr(),
             ),
           ),
           const SizedBox(width: 8),

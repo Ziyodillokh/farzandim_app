@@ -5,6 +5,7 @@
 // Ota-ona farzand rivojini kuzatadi — ijobiy, motivatsion (nazorat emas).
 // Halqali indeks (0..100) + trend + asosiy ko'rsatkichlar.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
@@ -67,13 +68,13 @@ class DevelopmentCard extends StatelessWidget {
                         _Metric(
                           icon: SolarIconsBold.questionCircle,
                           color: AppColors.info,
-                          label: 'Test',
+                          label: 'development.tests'.tr(),
                           value: '${s.testsCompleted}',
                         ),
                         _Metric(
                           icon: SolarIconsBold.book,
                           color: AppColors.success,
-                          label: 'Kitob',
+                          label: 'development.books'.tr(),
                           value: '${s.booksRead}',
                         ),
                       ],
@@ -84,13 +85,15 @@ class DevelopmentCard extends StatelessWidget {
                         _Metric(
                           icon: SolarIconsBold.fire,
                           color: AppColors.warning,
-                          label: 'Streak',
-                          value: '${s.streakDays} kun',
+                          label: 'development.streak'.tr(),
+                          value: 'development.streakValue'.tr(
+                            namedArgs: {'days': '${s.streakDays}'},
+                          ),
                         ),
                         _Metric(
                           icon: SolarIconsBold.walking,
                           color: AppColors.primary,
-                          label: 'Qadam',
+                          label: 'development.steps'.tr(),
                           value: _compact(s.steps),
                         ),
                       ],

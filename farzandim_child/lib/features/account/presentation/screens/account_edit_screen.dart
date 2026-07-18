@@ -343,7 +343,7 @@ class _AccountEditScreenState extends ConsumerState<AccountEditScreen> {
             hint: 'account.edit.nameLabel'.tr(),
           ),
           const SizedBox(height: 18),
-          Text("Farzandingizning tug'ilgan kuni", style: _pop(13.5)),
+          Text('account.edit.birthLabel'.tr(), style: _pop(13.5)),
           const SizedBox(height: 10),
           _Field(
             controller: _birthController,

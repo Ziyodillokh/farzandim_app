@@ -95,7 +95,7 @@ class _CertificateScreenState extends State<CertificateScreen> {
     } catch (_) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Ulashib bo\'lmadi. Qayta urining.')),
+          SnackBar(content: Text('contests.shareFailed'.tr())),
         );
       }
     } finally {
@@ -400,7 +400,7 @@ class _Certificate extends StatelessWidget {
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
-                        _Stat(label: 'Natija', value: '${data.percent}%'),
+                        _Stat(label: 'contests.result'.tr(), value: '${data.percent}%'),
                         const _Divider(),
                         _Stat(
                           label: 'contests.score'.tr(),

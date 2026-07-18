@@ -794,7 +794,8 @@
     "editTitle": "Edit message",
     "editSave": "Save",
     "editError": "Could not edit the message",
-    "deleteError": "Could not delete the message"
+    "deleteError": "Could not delete the message",
+    "inputHint": "Message..."
   },
   "chatSettings": {
     "title": "Chat settings",
@@ -1574,5 +1575,12 @@
   "categoryBlock": {
     "title": "Block by category",
     "subtitle": "Block a whole category of apps with one tap. Newly installed apps are covered automatically too."
+  },
+  "development": {
+    "tests": "Test",
+    "books": "Books",
+    "streak": "Streak",
+    "steps": "Steps",
+    "streakValue": "{days} days"
   }
 }

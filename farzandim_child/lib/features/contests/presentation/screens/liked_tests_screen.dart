@@ -149,11 +149,11 @@ class LikedTestsScreen extends ConsumerWidget {
       ScaffoldMessenger.of(context)
         ..hideCurrentSnackBar()
         ..showSnackBar(
-          const SnackBar(
+          SnackBar(
             behavior: SnackBarBehavior.floating,
-            backgroundColor: Color(0xFF0E141C),
-            duration: Duration(milliseconds: 1600),
-            content: Text('Bu test yakunlangan — natijalar Reytingda'),
+            backgroundColor: const Color(0xFF0E141C),
+            duration: const Duration(milliseconds: 1600),
+            content: Text('contests.testDoneSeeRanking'.tr()),
           ),
         );
     }

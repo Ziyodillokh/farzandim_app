@@ -457,7 +457,7 @@ class _RegionFilter extends ConsumerWidget {
           padding: const EdgeInsets.symmetric(vertical: 12),
           children: [
             ListTile(
-              title: Text("Butun O'zbekiston", style: _pop(15)),
+              title: Text('ranking.allUzbekistan'.tr(), style: _pop(15)),
               onTap: () => Navigator.pop(ctx, ''),
             ),
             for (final r in UzbekistanRegions.all)

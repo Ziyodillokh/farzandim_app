@@ -31,7 +31,8 @@
     "yesterday": "Yesterday",
     "daysAgo": "{days} days ago",
     "cancelShort": "Cancel",
-    "notPaired": "Not paired"
+    "notPaired": "Not paired",
+    "reject": "Reject"
   },
   "languages": {
     "uz": "Uzbek",
@@ -252,7 +253,8 @@
     "newTests": "New tests",
     "newTestsSoon": "New tests coming soon",
     "newAudiobooks": "New audiobooks",
-    "trendVideos": "Trending videos"
+    "trendVideos": "Trending videos",
+    "level": "Level"
   },
   "voiceChat": {
     "title": "Voice message",
@@ -482,7 +484,31 @@
     "achievementStreak7Title": "7 days in a row",
     "achievementMathTop100Title": "Math TOP-100",
     "achievementTenBooksTitle": "10th book",
-    "achievementStreak100Title": "100 days"
+    "achievementStreak100Title": "100 days",
+    "previewFirstBookTitle": "First book completed!",
+    "previewFirstBookDesc": "Congratulations! You finished reading your first book and earned a new achievement.",
+    "previewStreak7Title": "7 days in a row!",
+    "previewStreak7Desc": "Congratulations! You studied 7 days in a row and earned a new achievement.",
+    "previewMathTop100Title": "Math TOP-100!",
+    "previewMathTop100Desc": "Congratulations! You made it into the top 100 in mathematics.",
+    "previewTenBooksTitle": "10 books completed!",
+    "previewTenBooksDesc": "Congratulations! You finished reading 10 books and earned a new achievement.",
+    "previewStreak100Title": "100 days in a row!",
+    "previewStreak100Desc": "Congratulations! You studied 100 days in a row and earned a new achievement.",
+    "previewMathTop10Title": "Math TOP-10!",
+    "previewMathTop10Desc": "Congratulations! You made it into the top 10 in mathematics.",
+    "goalStreak7Title": "7-day achievement",
+    "goalStreak7Desc": "To earn this achievement, you need to study 7 days in a row",
+    "goalMathTop100Title": "Math TOP-100 achievement",
+    "goalMathTop100Desc": "To earn this achievement, you need to reach the TOP-100 in mathematics",
+    "goalFirstBookTitle": "1-book achievement",
+    "goalFirstBookDesc": "To earn this achievement, you need to finish one book",
+    "goalMathTop10Title": "Math TOP-10 achievement",
+    "goalMathTop10Desc": "To earn this achievement, you need to reach the TOP-10 in mathematics",
+    "goalTenBooksTitle": "10-book achievement",
+    "goalTenBooksDesc": "To earn this achievement, you need to finish 10 books",
+    "goalStreak100Title": "100-day achievement",
+    "goalStreak100Desc": "To earn this achievement, you need to study 100 days in a row"
   },
   "schedules": {
     "title": "My schedule",
@@ -654,7 +680,9 @@
     "certificateBody": "is awarded for successfully completing the '{title}' olympiad",
     "score": "Score",
     "subject": "Subject",
-    "certificateMonths": "January,February,March,April,May,June,July,August,September,October,November,December"
+    "certificateMonths": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "shareFailed": "Couldn't share. Try again.",
+    "testDoneSeeRanking": "This test is completed — results are in the Ranking"
   },
   "consent": {
     "title": "This app works with your parent's permission",

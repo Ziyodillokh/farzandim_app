@@ -225,7 +225,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
                   disabledBorder: InputBorder.none,
-                  hintText: 'Xabar...',
+                  hintText: 'voiceChat.inputHint'.tr(),
                   hintStyle: _pop(15, c: _pDim),
                 ),
               ),

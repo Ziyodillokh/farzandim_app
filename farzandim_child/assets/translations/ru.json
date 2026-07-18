@@ -31,7 +31,8 @@
     "yesterday": "Вчера",
     "daysAgo": "{days} дн. назад",
     "cancelShort": "Отмена",
-    "notPaired": "Не подключено"
+    "notPaired": "Не подключено",
+    "reject": "Отклонить"
   },
   "languages": {
     "uz": "Узбекский",
@@ -252,7 +253,8 @@
     "newTests": "Новые тесты",
     "newTestsSoon": "Скоро новые тесты",
     "newAudiobooks": "Новые аудиокниги",
-    "trendVideos": "Популярные видео"
+    "trendVideos": "Популярные видео",
+    "level": "Уровень"
   },
   "voiceChat": {
     "title": "Голосовое сообщение",
@@ -482,7 +484,31 @@
     "achievementStreak7Title": "7 дней подряд",
     "achievementMathTop100Title": "Math ТОП-100",
     "achievementTenBooksTitle": "10-я книга",
-    "achievementStreak100Title": "100 дней"
+    "achievementStreak100Title": "100 дней",
+    "previewFirstBookTitle": "Первая книга завершена!",
+    "previewFirstBookDesc": "Поздравляем! Вы дочитали свою первую книгу до конца и получили новое достижение.",
+    "previewStreak7Title": "7 дней подряд!",
+    "previewStreak7Desc": "Поздравляем! Вы занимались 7 дней подряд и получили новое достижение.",
+    "previewMathTop100Title": "Math TOP-100!",
+    "previewMathTop100Desc": "Поздравляем! Вы вошли в сотню лучших по математике.",
+    "previewTenBooksTitle": "10 книг завершено!",
+    "previewTenBooksDesc": "Поздравляем! Вы дочитали 10 книг до конца и получили новое достижение.",
+    "previewStreak100Title": "100 дней подряд!",
+    "previewStreak100Desc": "Поздравляем! Вы занимались 100 дней подряд и получили новое достижение.",
+    "previewMathTop10Title": "Math TOP-10!",
+    "previewMathTop10Desc": "Поздравляем! Вы вошли в десятку лучших по математике.",
+    "goalStreak7Title": "Достижение «7 дней»",
+    "goalStreak7Desc": "Чтобы получить это достижение, нужно заниматься 7 дней подряд",
+    "goalMathTop100Title": "Достижение «Math TOP-100»",
+    "goalMathTop100Desc": "Чтобы получить это достижение, нужно войти в TOP-100 по математике",
+    "goalFirstBookTitle": "Достижение «1 книга»",
+    "goalFirstBookDesc": "Чтобы получить это достижение, нужно завершить одну книгу",
+    "goalMathTop10Title": "Достижение «Math TOP-10»",
+    "goalMathTop10Desc": "Чтобы получить это достижение, нужно войти в TOP-10 по математике",
+    "goalTenBooksTitle": "Достижение «10 книг»",
+    "goalTenBooksDesc": "Чтобы получить это достижение, нужно завершить 10 книг",
+    "goalStreak100Title": "Достижение «100 дней»",
+    "goalStreak100Desc": "Чтобы получить это достижение, нужно заниматься 100 дней подряд"
   },
   "schedules": {
     "title": "Моё расписание",
@@ -654,7 +680,9 @@
     "certificateBody": "выдаётся за успешное завершение олимпиады «{title}»",
     "score": "Балл",
     "subject": "Предмет",
-    "certificateMonths": "январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь"
+    "certificateMonths": "январь,февраль,март,апрель,май,июнь,июль,август,сентябрь,октябрь,ноябрь,декабрь",
+    "shareFailed": "Не удалось поделиться. Попробуйте снова.",
+    "testDoneSeeRanking": "Этот тест завершён — результаты в Рейтинге"
   },
   "consent": {
     "title": "Это приложение работает с разрешения ваших родителей",

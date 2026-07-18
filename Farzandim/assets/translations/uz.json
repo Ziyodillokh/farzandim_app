@@ -794,7 +794,8 @@
     "editTitle": "Xabarni tahrirlash",
     "editSave": "Saqlash",
     "editError": "Xabar tahrirlanmadi",
-    "deleteError": "Xabar o'chirilmadi"
+    "deleteError": "Xabar o'chirilmadi",
+    "inputHint": "Xabar..."
   },
   "chatSettings": {
     "title": "Chat sozlamalari",
@@ -1574,5 +1575,12 @@
   "categoryBlock": {
     "title": "Kategoriya bo'yicha bloklash",
     "subtitle": "Butun turkumdagi ilovalarni bir tugma bilan bloklang. Yangi o'rnatilgan ilovalar ham avtomatik qamrab olinadi."
+  },
+  "development": {
+    "tests": "Test",
+    "books": "Kitob",
+    "streak": "Streak",
+    "steps": "Qadam",
+    "streakValue": "{days} kun"
   }
 }

@@ -31,7 +31,8 @@
     "yesterday": "Kecha",
     "daysAgo": "{days} kun oldin",
     "cancelShort": "Bekor",
-    "notPaired": "Ulanmagan"
+    "notPaired": "Ulanmagan",
+    "reject": "Rad etish"
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -252,7 +253,8 @@
     "newTests": "Yangi testlar",
     "newTestsSoon": "Tez orada yangi testlar",
     "newAudiobooks": "Yangi audiokitoblar",
-    "trendVideos": "Trend videolar"
+    "trendVideos": "Trend videolar",
+    "level": "Daraja"
   },
   "voiceChat": {
     "title": "Ovozli xabar",
@@ -482,7 +484,31 @@
     "achievementStreak7Title": "7 kun uzluksiz",
     "achievementMathTop100Title": "Math TOP-100",
     "achievementTenBooksTitle": "10-kitob",
-    "achievementStreak100Title": "100 kun"
+    "achievementStreak100Title": "100 kun",
+    "previewFirstBookTitle": "Birinchi kitob yakunlandi!",
+    "previewFirstBookDesc": "Tabriklaymiz! Siz birinchi kitobingizni oxirigacha o'qib, yangi yutuqni qo'lga kiritdingiz.",
+    "previewStreak7Title": "7 kun uzluksiz!",
+    "previewStreak7Desc": "Tabriklaymiz! Siz 7 kun uzluksiz shug'ullanib, yangi yutuqni qo'lga kiritdingiz.",
+    "previewMathTop100Title": "Math TOP-100!",
+    "previewMathTop100Desc": "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi 100 talik ichiga kirdingiz.",
+    "previewTenBooksTitle": "10 ta kitob yakunlandi!",
+    "previewTenBooksDesc": "Tabriklaymiz! Siz 10 ta kitobni oxirigacha o'qib, yangi yutuqni qo'lga kiritdingiz.",
+    "previewStreak100Title": "100 kun uzluksiz!",
+    "previewStreak100Desc": "Tabriklaymiz! Siz 100 kun uzluksiz shug'ullanib, yangi yutuqni qo'lga kiritdingiz.",
+    "previewMathTop10Title": "Math TOP-10!",
+    "previewMathTop10Desc": "Tabriklaymiz! Siz matematika bo'yicha eng yaxshi 10 talik ichiga kirdingiz.",
+    "goalStreak7Title": "7 kun yutug'i",
+    "goalStreak7Desc": "Bu yutuqni qo'lga kiritish uchun siz 7 kun uzluksiz shug'ullanishingiz kerak",
+    "goalMathTop100Title": "Math TOP-100 yutug'i",
+    "goalMathTop100Desc": "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha TOP-100 ga kirishingiz kerak",
+    "goalFirstBookTitle": "1 - kitob yutug'i",
+    "goalFirstBookDesc": "Bu yutuqni qo'lga kiritish uchun siz bitta kitobni yakunlashingiz kerak",
+    "goalMathTop10Title": "Math TOP-10 yutug'i",
+    "goalMathTop10Desc": "Bu yutuqni qo'lga kiritish uchun siz matematika bo'yicha TOP-10 ga kirishingiz kerak",
+    "goalTenBooksTitle": "10 - kitob yutug'i",
+    "goalTenBooksDesc": "Bu yutuqni qo'lga kiritish uchun siz 10 ta kitobni yakunlashingiz kerak",
+    "goalStreak100Title": "100 - kun yutug'i",
+    "goalStreak100Desc": "Bu yutuqni qo'lga kiritish uchun siz 100 kun uzluksiz shug'ullanishingiz kerak"
   },
   "schedules": {
     "title": "Mening jadvalim",
@@ -654,7 +680,9 @@
     "certificateBody": "“{title}” olimpiadasini muvaffaqiyatli yakunlagani uchun beriladi",
     "score": "Ball",
     "subject": "Fan",
-    "certificateMonths": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr"
+    "certificateMonths": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr",
+    "shareFailed": "Ulashib bo'lmadi. Qayta urining.",
+    "testDoneSeeRanking": "Bu test yakunlangan — natijalar Reytingda"
   },
   "consent": {
     "title": "Bu ilova ota-onangiz ruxsati bilan ishlaydi",
