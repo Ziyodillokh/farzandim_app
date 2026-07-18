@@ -1287,7 +1287,7 @@
       "nameLabel": "Имя",
       "nameHint": "Введите имя",
       "phoneLabel": "Номер телефона (необязательно)",
-      "phoneHint": "+998 90 123 45 67",
+      "phoneHint": "90 123 45 67",
       "ageLabel": "Возраст",
       "ageHint": "Выберите возраст",
       "ageItem": "{age} лет",

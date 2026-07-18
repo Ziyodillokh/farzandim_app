@@ -9,8 +9,6 @@
 // MA'LUMOT: backend faqat `age` saqlaydi — tug'ilgan kundan yosh hisoblanadi.
 // Sana qo'lda o'zgartirilmasa asliy yosh saqlanadi (round-trip xatosi yo'q).
 
-import 'dart:typed_data';
-
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/core/services/image_picker_service.dart';
@@ -21,6 +19,7 @@ import 'package:farzandim/features/child_management/presentation/screens/connect
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
@@ -93,6 +92,13 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
       _selectedGender != null &&
       (_birthDate != null || _initialAge != null);
 
+  /// Controller lokal raqamни saqlaydi ("+998" prefiks alohida) — saqlashda
+  /// birlashtiramiz. Bo'sh bo'lsa telefon yo'q (ixtiyoriy).
+  String get _composedPhone {
+    final local = _phoneController.text.trim();
+    return local.isEmpty ? '' : '+998$local';
+  }
+
   @override
   void initState() {
     super.initState();
@@ -101,7 +107,12 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
         ref.read(childByIdProvider(widget.childId!)) ?? widget.initialChild;
     if (child != null) {
       _nameController.text = child.name;
-      _phoneController.text = child.phoneNumber ?? '';
+      // "+998901234567" — prefiks alohida ko'rsatiladi, faqat lokal olamiz.
+      final storedDigits =
+          (child.phoneNumber ?? '').replaceAll(RegExp('[^0-9]'), '');
+      _phoneController.text = storedDigits.startsWith('998')
+          ? storedDigits.substring(3)
+          : storedDigits;
       _selectedGender = child.gender;
       _initialAge = child.age;
       // Backend faqat `age` saqlaydi — ko'rsatish uchun taxminiy sana
@@ -280,7 +291,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
       age: age,
       gender: _selectedGender!,
       region: existing.region,
-      phoneNumber: _phoneController.text.trim(),
+      phoneNumber: _composedPhone,
     );
     final result = await ref
         .read(childActionsProvider.notifier)
@@ -310,7 +321,7 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
           age: _ageFromBirth(_birthDate!),
           gender: _selectedGender!,
           region: '',
-          phoneNumber: _phoneController.text.trim(),
+          phoneNumber: _composedPhone,
           photoBytes: _photoBytes,
         );
     if (!mounted) return;
@@ -474,6 +485,19 @@ class _EditChildScreenState extends ConsumerState<EditChildScreen> {
                     controller: _phoneController,
                     hint: 'childManagement.addEdit.phoneHint'.tr(),
                     keyboardType: TextInputType.phone,
+                    // "+998" doimiy prefiks — controller faqat lokal 9 raqam.
+                    prefix: const Text(
+                      '+998',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontSize: 15,
+                        fontWeight: FontWeight.w500,
+                      ),
+                    ),
+                    inputFormatters: [
+                      FilteringTextInputFormatter.digitsOnly,
+                      LengthLimitingTextInputFormatter(9),
+                    ],
                   ),
                   if (_isEdit) ...[
                     const SizedBox(height: 24),
@@ -634,6 +658,8 @@ class _LabeledInput extends StatelessWidget {
     this.hint,
     this.keyboardType,
     this.onChanged,
+    this.prefix,
+    this.inputFormatters,
   });
 
   final String label;
@@ -641,6 +667,8 @@ class _LabeledInput extends StatelessWidget {
   final String? hint;
   final TextInputType? keyboardType;
   final ValueChanged<String>? onChanged;
+  final Widget? prefix;
+  final List<TextInputFormatter>? inputFormatters;
 
   @override
   Widget build(BuildContext context) {
@@ -659,27 +687,39 @@ class _LabeledInput extends StatelessWidget {
               selectionHandleColor: _blue,
               selectionColor: Color(0x5C216BFF),
             ),
-            child: TextField(
-              controller: controller,
-              keyboardType: keyboardType,
-              onChanged: onChanged,
-              cursorColor: _blue,
-              style: _pop(15),
-              decoration: InputDecoration(
-                // Global teal fill va border'larni o'chiramiz — faqat
-                // tashqi Container ko'rinsin (aks holda ichki teal quti).
-                filled: false,
-                isCollapsed: true,
-                contentPadding: const EdgeInsets.symmetric(vertical: 18),
-                border: InputBorder.none,
-                enabledBorder: InputBorder.none,
-                focusedBorder: InputBorder.none,
-                errorBorder: InputBorder.none,
-                focusedErrorBorder: InputBorder.none,
-                disabledBorder: InputBorder.none,
-                hintText: hint,
-                hintStyle: _pop(15, c: _placeholder),
-              ),
+            child: Row(
+              children: [
+                if (prefix != null) ...[
+                  prefix!,
+                  const SizedBox(width: 8),
+                ],
+                Expanded(
+                  child: TextField(
+                    controller: controller,
+                    keyboardType: keyboardType,
+                    onChanged: onChanged,
+                    inputFormatters: inputFormatters,
+                    cursorColor: _blue,
+                    style: _pop(15),
+                    decoration: InputDecoration(
+                      // Global teal fill va border'larni o'chiramiz — faqat
+                      // tashqi Container ko'rinsin (ichki teal quti bo'lmasin).
+                      filled: false,
+                      isCollapsed: true,
+                      contentPadding:
+                          const EdgeInsets.symmetric(vertical: 18),
+                      border: InputBorder.none,
+                      enabledBorder: InputBorder.none,
+                      focusedBorder: InputBorder.none,
+                      errorBorder: InputBorder.none,
+                      focusedErrorBorder: InputBorder.none,
+                      disabledBorder: InputBorder.none,
+                      hintText: hint,
+                      hintStyle: _pop(15, c: _placeholder),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
