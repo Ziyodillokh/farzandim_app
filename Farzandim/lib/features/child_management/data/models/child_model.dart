@@ -1,4 +1,5 @@
 import 'package:farzandim/features/child_management/data/models/child_device_info.dart';
+import 'package:farzandim/features/child_management/data/models/default_avatar.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:flutter/foundation.dart';
 
@@ -254,21 +255,10 @@ class Child {
   ///               yosh >= 14       → girl_14
   ///
   /// Yosh kiritilmagan (0) yoki 10 dan kichik — eng yosh guruh (6-10).
-  String get defaultAvatarPath {
-    // O'g'illar uchun yagona default (foydalanuvchi shunday xohlagan).
-    if (gender != Gender.female) {
-      return 'assets/default_avatars/boy.png';
-    }
-    final String band;
-    if (age >= 14) {
-      band = '14';
-    } else if (age >= 10) {
-      band = '10_14';
-    } else {
-      band = '6_10';
-    }
-    return 'assets/default_avatars/girl_$band.png';
-  }
+  /// Rasmlar 1:1 (shaffof fon) — aylana avatar ichida to'liq.
+  ///
+  /// Mantiq `defaultAvatarAsset`da (DON reytingi ham shu funksiyani ishlatadi).
+  String get defaultAvatarPath => defaultAvatarAsset(gender, age);
 
   /// Bola o'zining custom rasmiga egami (bytes yoki URL).
   ///

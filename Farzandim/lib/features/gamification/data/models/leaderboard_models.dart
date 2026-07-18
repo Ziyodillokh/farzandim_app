@@ -1,5 +1,6 @@
 // Reyting modellari — GET /api/leaderboard javobining typed ko'rinishi.
 
+import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:flutter/foundation.dart';
 
 /// Reytingdagi bitta qator (bola).
@@ -12,6 +13,7 @@ class LeaderboardEntry {
     required this.region,
     required this.don,
     this.age,
+    this.gender,
   });
 
   factory LeaderboardEntry.fromJson(Map<String, dynamic> j) {
@@ -21,8 +23,22 @@ class LeaderboardEntry {
       name: j['name'] as String? ?? '',
       region: j['region'] as String? ?? '',
       age: (j['age'] as num?)?.toInt(),
+      gender: _parseGender(j['gender'] as String?),
       don: (j['don'] as num?)?.toInt() ?? 0,
     );
+  }
+
+  /// Backend 'male'/'female' → `Gender`. Noma'lum/yo'q (eski javob) → `null`
+  /// (default avatar neytral SVG'ga qaytadi).
+  static Gender? _parseGender(String? raw) {
+    switch (raw) {
+      case 'male':
+        return Gender.male;
+      case 'female':
+        return Gender.female;
+      default:
+        return null;
+    }
   }
 
   final int rank;
@@ -30,6 +46,10 @@ class LeaderboardEntry {
   final String name;
   final String region;
   final int? age;
+
+  /// Bola jinsi — default avatar (jinsi+yosh) uchun. Eski backend javobida
+  /// yo'q bo'lsa `null` → neytral fallback.
+  final Gender? gender;
 
   /// Reyting soni — DON. Panel'dagi "DON balansi" bilan AYNAN bir xil manba
   /// (`ChildProfile.donBalance`). Avval bu yerda `xp` o'qilardi va ekranda

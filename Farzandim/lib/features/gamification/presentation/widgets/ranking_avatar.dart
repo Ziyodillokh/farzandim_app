@@ -9,14 +9,24 @@
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:farzandim/core/theme/app_colors.dart';
+import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
+import 'package:farzandim/shared/widgets/default_avatar_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-/// Bola avatari (childId bo'yicha): rasm (proxy) → default avatar SVG.
+/// Bola avatari (childId bo'yicha): rasm (proxy) → jinsi+yoshga mos default.
+///
+/// [gender] berilsa (reyting javobidan) — default avatar jinsi+yoshga mos
+/// PNG bo'ladi. Berilmasa (eski javob) — neytral SVG'ga qaytadi.
 class RankingAvatar extends ConsumerWidget {
-  const RankingAvatar({required this.childId, required this.size, super.key});
+  const RankingAvatar({
+    required this.childId,
+    required this.size,
+    this.gender,
+    this.age,
+    super.key,
+  });
 
   /// Qaysi bolaning avatarи.
   final String childId;
@@ -24,10 +34,11 @@ class RankingAvatar extends ConsumerWidget {
   /// Diametri (kenglik = balandlik).
   final double size;
 
-  /// Default avatar — ChildAvatar bilan bir xil (yagona sticker qoldi).
-  /// Rasmsiz bolalar shuni ko'rsatadi.
-  static const String _defaultAvatarAsset =
-      'assets/stickers/default_avatar.svg';
+  /// Bola jinsi (default avatar tanlash uchun). `null` → neytral fallback.
+  final Gender? gender;
+
+  /// Bola yoshi (default avatar guruhini tanlash uchun).
+  final int? age;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,7 +46,7 @@ class RankingAvatar extends ConsumerWidget {
     return Container(
       width: size,
       height: size,
-      // Sticker SVG foni transparent — surface rangi orqada (ChildAvatar'dek).
+      // Fon transparent — surface rangi orqada (ChildAvatar'dek).
       // AppColors.surface temaga bog'liq (runtime) — const bo'lmaydi.
       decoration: BoxDecoration(
         shape: BoxShape.circle,
@@ -47,13 +58,11 @@ class RankingAvatar extends ConsumerWidget {
           fit: BoxFit.cover,
           memCacheWidth: 200,
           // Rasm yo'q/yuklanmagan bo'lsa — default avatar (HARF emas).
-          placeholder: (_, __) => _defaultAvatar(),
-          errorWidget: (_, __, ___) => _defaultAvatar(),
+          placeholder: (_, __) => defaultAvatarImage(gender: gender, age: age),
+          errorWidget: (_, __, ___) =>
+              defaultAvatarImage(gender: gender, age: age),
         ),
       ),
     );
   }
-
-  Widget _defaultAvatar() =>
-      SvgPicture.asset(_defaultAvatarAsset, fit: BoxFit.cover);
 }

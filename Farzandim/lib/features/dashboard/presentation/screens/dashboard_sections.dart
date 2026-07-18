@@ -743,7 +743,12 @@ class _LeaderboardRow extends StatelessWidget {
     // joriy bola avatar ko'rsatardi, boshqalari HARF edi (nomuvofiq).
     return Row(
       children: [
-        RankingAvatar(childId: entry.childId, size: 24),
+        RankingAvatar(
+          childId: entry.childId,
+          size: 24,
+          gender: entry.gender,
+          age: entry.age,
+        ),
         const SizedBox(width: 8),
         Expanded(
           child: Text(

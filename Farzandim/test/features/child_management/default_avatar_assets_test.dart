@@ -1,5 +1,7 @@
-// 6 default avatar fayli haqiqatan asset-bundle'ga tushganini tekshiradi
+// Default avatar fayllari haqiqatan asset-bundle'ga tushganini tekshiradi
 // (pubspec e'loni + fayl mavjudligi + getter yo'li mosligi).
+//
+// Sxema: o'g'il — yagona boy.png; qiz — 3 ta yosh guruhi.
 
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -8,9 +10,7 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   const paths = [
-    'assets/default_avatars/boy_6_10.png',
-    'assets/default_avatars/boy_10_14.png',
-    'assets/default_avatars/boy_14.png',
+    'assets/default_avatars/boy.png',
     'assets/default_avatars/girl_6_10.png',
     'assets/default_avatars/girl_10_14.png',
     'assets/default_avatars/girl_14.png',

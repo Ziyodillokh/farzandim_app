@@ -10,13 +10,14 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
 import 'package:farzandim/features/gamification/presentation/providers/leaderboard_provider.dart';
+import 'package:farzandim/shared/widgets/default_avatar_image.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -623,7 +624,13 @@ class _PodiumCard extends StatelessWidget {
     return Column(
       mainAxisSize: MainAxisSize.min,
       children: [
-        _Avatar(childId: entry.childId, name: entry.name, size: avatarSz),
+        _Avatar(
+          childId: entry.childId,
+          name: entry.name,
+          size: avatarSz,
+          gender: entry.gender,
+          age: entry.age,
+        ),
         const SizedBox(height: 8),
         Text(
           entry.name,
@@ -700,7 +707,13 @@ class _LeaderRow extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Avatar(childId: entry.childId, name: entry.name, size: 44),
+          _Avatar(
+            childId: entry.childId,
+            name: entry.name,
+            size: 44,
+            gender: entry.gender,
+            age: entry.age,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -743,11 +756,15 @@ class _Avatar extends ConsumerWidget {
     required this.childId,
     required this.name,
     required this.size,
+    this.gender,
+    this.age,
   });
 
   final String childId;
   final String name;
   final double size;
+  final Gender? gender;
+  final int? age;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -767,15 +784,12 @@ class _Avatar extends ConsumerWidget {
     );
   }
 
-  // Rasm yo'q/yuklanmagan — HARF emas, DEFAULT AVATAR (jingalak-ko'zoynak).
-  // Dashboard mini-reyting bilan bir xil (ChildAvatar'dagi kabi asset SVG).
+  // Rasm yo'q/yuklanmagan — HARF emas, jinsi+yoshga mos DEFAULT AVATAR.
+  // Jinsi noma'lum (eski javob) bo'lsa neytral SVG.
   Widget _fallback() {
     return ColoredBox(
       color: const Color(0xFF2A3038),
-      child: SvgPicture.asset(
-        'assets/stickers/default_avatar.svg',
-        fit: BoxFit.cover,
-      ),
+      child: defaultAvatarImage(gender: gender, age: age),
     );
   }
 }
@@ -813,7 +827,13 @@ class _StickyPill extends StatelessWidget {
             ),
             child: Row(
               children: [
-                _Avatar(childId: childId, name: entry.name, size: 44),
+                _Avatar(
+                  childId: childId,
+                  name: entry.name,
+                  size: 44,
+                  gender: entry.gender,
+                  age: entry.age,
+                ),
                 const SizedBox(width: 10),
                 Expanded(
                   child: Text(

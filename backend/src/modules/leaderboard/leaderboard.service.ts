@@ -12,6 +12,8 @@ export interface LeaderboardEntry {
   region: string;
   /** Yosh — bola ilovasidagi "Yosh guruhi" filtri uchun. */
   age: number | null;
+  /** Jinsi ('male'|'female'|null) — default avatar (jinsi+yosh) uchun. */
+  gender: string | null;
   /** Reyting SONI — DON. Ekranlarda ko'rsatiladigan yagona qiymat. */
   don: number;
   /**
@@ -113,7 +115,7 @@ export class LeaderboardService {
       skip,
       take: limit,
       include: {
-        child: { select: { id: true, name: true, region: true, age: true } },
+        child: { select: { id: true, name: true, region: true, age: true, gender: true } },
       },
     });
 
@@ -123,6 +125,7 @@ export class LeaderboardService {
       name: p.child.name,
       region: p.child.region ?? '',
       age: p.child.age,
+      gender: p.child.gender ?? null,
       don: p.donBalance,
       xp: p.donBalance, // eskirgan alias — `don` bilan bir xil
     }));
@@ -131,7 +134,7 @@ export class LeaderboardService {
     if (childId) {
       const my = await this.prisma.childProfile.findUnique({
         where: { childId },
-        include: { child: { select: { name: true, region: true, age: true } } },
+        include: { child: { select: { name: true, region: true, age: true, gender: true } } },
       });
       // Region filtri faol bo'lsa va bola o'sha viloyatda bo'lmasa, "Siz"ni
       // ko'rsatmaymiz (uni o'zi tegishli bo'lmagan viloyat reytingida
@@ -155,6 +158,7 @@ export class LeaderboardService {
           name: my.child.name,
           region: my.child.region ?? '',
           age: my.child.age,
+          gender: my.child.gender ?? null,
           don: my.donBalance,
           xp: my.donBalance, // eskirgan alias — `don` bilan bir xil
         };
@@ -198,7 +202,7 @@ export class LeaderboardService {
     const ids = grouped.map((g) => g.childId);
     const children = await this.prisma.child.findMany({
       where: { id: { in: ids }, ...(region ? { region } : {}) },
-      select: { id: true, name: true, region: true, age: true },
+      select: { id: true, name: true, region: true, age: true, gender: true },
     });
     const childMap = new Map(children.map((c) => [c.id, c]));
 
@@ -212,6 +216,7 @@ export class LeaderboardService {
           name: c.name,
           region: c.region ?? '',
           age: c.age,
+          gender: c.gender ?? null,
           don: g._sum.donDelta ?? 0,
           xp: g._sum.donDelta ?? 0, // eskirgan alias — `don` bilan bir xil
         };
@@ -232,7 +237,7 @@ export class LeaderboardService {
         // boshqa viloyatda "Siz"ni ko'rsatmaymiz).
         const c = await this.prisma.child.findUnique({
           where: { id: childId },
-          select: { name: true, region: true, age: true },
+          select: { name: true, region: true, age: true, gender: true },
         });
         if (c && (!region || (c.region ?? '') === region)) {
           currentChild = {
@@ -241,6 +246,7 @@ export class LeaderboardService {
             name: c.name,
             region: c.region ?? '',
             age: c.age,
+            gender: c.gender ?? null,
             don: 0,
             xp: 0,
           };
