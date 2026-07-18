@@ -196,12 +196,12 @@ class _ChatInputBarState extends State<ChatInputBar> {
       children: [
         Expanded(
           child: Container(
-            constraints: const BoxConstraints(minHeight: 52, maxHeight: 132),
+            constraints: const BoxConstraints(minHeight: 46, maxHeight: 120),
             padding: const EdgeInsets.symmetric(horizontal: 18),
             alignment: Alignment.center,
             decoration: BoxDecoration(
               color: _pChipBg,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(23),
               border: Border.all(color: _pFieldBorder),
             ),
             child: TextSelectionTheme(
@@ -222,7 +222,7 @@ class _ChatInputBarState extends State<ChatInputBar> {
                 decoration: InputDecoration(
                   filled: false,
                   isCollapsed: true,
-                  contentPadding: const EdgeInsets.symmetric(vertical: 14),
+                  contentPadding: const EdgeInsets.symmetric(vertical: 10),
                   border: InputBorder.none,
                   enabledBorder: InputBorder.none,
                   focusedBorder: InputBorder.none,
@@ -281,11 +281,11 @@ class _ChatInputBarState extends State<ChatInputBar> {
         const SizedBox(width: 10),
         Expanded(
           child: Container(
-            height: 52,
+            height: 46,
             padding: const EdgeInsets.symmetric(horizontal: 18),
             decoration: BoxDecoration(
               color: _pChipBg,
-              borderRadius: BorderRadius.circular(26),
+              borderRadius: BorderRadius.circular(23),
               border: Border.all(color: _pFieldBorder),
             ),
             child: Row(
@@ -377,8 +377,8 @@ class _CircleAction extends StatelessWidget {
       onLongPress: onLongPress,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        width: 52,
-        height: 52,
+        width: 46,
+        height: 46,
         decoration: BoxDecoration(
           color: blue ? _pBlue : _pChipBg,
           shape: BoxShape.circle,
@@ -407,8 +407,8 @@ class _CircleSpinner extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 52,
-      height: 52,
+      width: 46,
+      height: 46,
       decoration: BoxDecoration(
         color: _pChipBg,
         shape: BoxShape.circle,
