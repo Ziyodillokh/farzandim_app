@@ -114,3 +114,9 @@ frontend-web/.env.local
 
 # ─── Yangi NestJS backend env ───
 backend/.env
+
+# ─── Manba yo'q, faqat build artefaktlari (lib/pubspec/src yo'q) ───
+# admin_panel/ va frontend-web/ da real manba qolmagan — faqat .dart_tool,
+# build, .next, ephemeral fayllar. Repo shishmasin uchun butunlay ignore.
+admin_panel/
+frontend-web/
