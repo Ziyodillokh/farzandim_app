@@ -197,6 +197,14 @@ class ChildApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: router,
+      // Til o'zgarganda sahifa subtree'sini qayta quramiz (key o'zgaradi →
+      // remount). go_router sahifalarni cache qilgani uchun oddiy rebuild
+      // yetmaydi: locale key'da bo'lmasa til almashganda eski tilda qolib,
+      // bir "refresh" talab qilardi. Route stack saqlanadi.
+      builder: (context, child) => KeyedSubtree(
+        key: ValueKey(context.locale.languageCode),
+        child: child ?? const SizedBox.shrink(),
+      ),
       // easy_localization delegate va supportedLocales —
       // `EasyLocalization` widget'idan keladi (yuqorida wrap qilingan).
       localizationsDelegates: context.localizationDelegates,

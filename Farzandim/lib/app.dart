@@ -450,12 +450,13 @@ class FarzandimApp extends ConsumerWidget {
         maxScaleFactor: 1.15,
         child: ColoredBox(
           color: AppColors.background,
-          // Light/dark toggle'da sahifa subtree'sini qayta quramiz (key
-          // o'zgaradi, remount bo'ladi) — shunda AppColors static getter'lari
-          // yangi rangni o'qiydi, aks holda kartalar eski fonida qolardi.
-          // go_router route stack saqlanadi.
+          // Theme YOKI til o'zgarganda subtree remount bo'ladi (key o'zgaradi):
+          // AppColors static getter'lari yangi rangni, `.tr()` yangi tilni
+          // o'qiydi. go_router sahifalarni cache qiladi — locale key'da
+          // bo'lmasa til almashganda eski tilda qolib, "refresh" kerak bo'lardi.
+          // Route stack saqlanadi.
           child: KeyedSubtree(
-            key: ValueKey(themeMode),
+            key: ValueKey('${themeMode}_${context.locale.languageCode}'),
             child: child ?? const SizedBox.shrink(),
           ),
         ),
