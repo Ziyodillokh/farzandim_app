@@ -49,6 +49,7 @@ import 'package:farzandim_child/features/contests/presentation/screens/contest_q
 import 'package:farzandim_child/features/contests/presentation/screens/contests_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_tests_screen.dart';
 import 'package:farzandim_child/features/contests/presentation/screens/liked_questions_screen.dart';
+import 'package:farzandim_child/features/don_history/presentation/screens/don_history_screen.dart';
 import 'package:farzandim_child/features/ranking/presentation/screens/ranking_screen.dart';
 import 'package:farzandim_child/features/schedules/presentation/screens/schedules_screen.dart';
 import 'package:farzandim_child/features/dashboard/presentation/screens/child_dashboard_screen.dart';
@@ -217,6 +218,7 @@ final routerProvider = Provider<GoRouter>((ref) {
           '/liked-tests',
           '/liked-questions',
           '/ranking',
+          '/don-history',
         };
         if (contentPaths.contains(loc)) {
           return '/dashboard';
@@ -392,6 +394,11 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/ranking',
         pageBuilder: (context, state) =>
             _slidePage(state, const RankingScreen()),
+      ),
+      GoRoute(
+        path: '/don-history',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const DonHistoryScreen()),
       ),
       GoRoute(
         path: '/video-recording',

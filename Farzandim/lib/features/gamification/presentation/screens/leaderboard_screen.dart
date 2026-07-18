@@ -10,6 +10,7 @@ import 'dart:ui' show ImageFilter;
 
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/data/repositories/leaderboard_repository.dart';
@@ -254,7 +255,12 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
           SafeArea(
             child: Column(
               children: [
-                _Header(onBack: () => context.pop(), onHelp: _showHelp),
+                _Header(
+                  onBack: () => context.pop(),
+                  onHelp: _showHelp,
+                  onHistory: () =>
+                      context.push(AppRoutes.donHistoryPath(widget.childId)),
+                ),
                 Expanded(child: _buildScroll(st, top3, rest)),
               ],
             ),
@@ -410,10 +416,15 @@ class _BlueGlow extends StatelessWidget {
 
 // ════════════ Sarlavha ════════════
 class _Header extends StatelessWidget {
-  const _Header({required this.onBack, required this.onHelp});
+  const _Header({
+    required this.onBack,
+    required this.onHelp,
+    required this.onHistory,
+  });
 
   final VoidCallback onBack;
   final VoidCallback onHelp;
+  final VoidCallback onHistory;
 
   @override
   Widget build(BuildContext context) {
@@ -430,6 +441,9 @@ class _Header extends StatelessWidget {
               ),
             ),
           ),
+          // DON tarixi — donlar qayerdan yig'ilgani.
+          _SquareButton(icon: Icons.history_rounded, onTap: onHistory),
+          const SizedBox(width: 8),
           _SquareButton(icon: SolarIconsBold.questionCircle, onTap: onHelp),
         ],
       ),

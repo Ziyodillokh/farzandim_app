@@ -35,6 +35,7 @@ import 'package:farzandim/features/child_management/presentation/screens/control
 import 'package:farzandim/features/child_management/presentation/screens/edit_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
 import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:farzandim/features/don_history/presentation/screens/don_history_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
 import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
 import 'package:farzandim/features/geo_zones/presentation/screens/add_edit_geo_zone_screen.dart';
@@ -551,6 +552,13 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.childAchievementsPattern,
       pageBuilder: (context, state) => _slidePage(
         LeaderboardScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      // DON tarixi — reyting header'idagi tarix ikonasidan ochiladi.
+      path: AppRoutes.donHistoryPattern,
+      pageBuilder: (context, state) => _slidePage(
+        DonHistoryScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

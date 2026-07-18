@@ -111,6 +111,11 @@ class AppRoutes {
 
   static String locationPath(String childId) => '/location/$childId';
 
+  /// Bola DON tarixi — donlar qayerdan yig'ilgani (reyting'dan ochiladi).
+  static const String donHistoryPattern = '/don-history/:childId';
+
+  static String donHistoryPath(String childId) => '/don-history/$childId';
+
   /// Bola harakat tarixi — Polyline xaritada.
   static const String locationHistoryPattern = '/location/:childId/history';
 

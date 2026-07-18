@@ -237,6 +237,12 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
                           style: _unb(20),
                         ),
                       ),
+                      // DON tarixi — donlar qayerdan yig'ilgani.
+                      _RoundBtn(
+                        icon: Icons.history_rounded,
+                        onTap: () => context.push('/don-history'),
+                      ),
+                      const SizedBox(width: 8),
                       _RoundBtn(
                         icon: Icons.question_mark_rounded,
                         onTap: () => _showHelp(context),
