@@ -279,6 +279,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final avatarUrl = (pairing.childId != null && pairing.childId!.isNotEmpty)
         ? ref.watch(childAvatarUrlProvider(pairing.childId!)).valueOrNull
         : null;
+    // Rasm yo'q bo'lsa — harf o'rniga bolaning JINSI+YOSHIga mos default
+    // avatar. Backend'dan `gender` ("male"/"female") va `age` keladi.
+    final childData =
+        (pairing.parentUid != null &&
+            pairing.childId != null &&
+            pairing.childId!.isNotEmpty)
+        ? ref
+              .watch(
+                childDataStreamProvider((
+                  parentUid: pairing.parentUid!,
+                  childId: pairing.childId!,
+                )),
+              )
+              .valueOrNull
+        : null;
+    final defaultAvatarPath = _defaultAvatarPath(
+      childData?['gender'] as String?,
+      (childData?['age'] as num?)?.toInt(),
+    );
     final device =
         ref.watch(_deviceLineProvider).valueOrNull ??
         ('Iphone 16 pro', 98); // PREVIEW (Figma)
@@ -337,6 +356,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 children: [
                   _Header(
                     avatarUrl: avatarUrl,
+                    defaultAvatarPath: defaultAvatarPath,
                     name: childName,
                     onBack: () {
                       if (context.canPop()) {
@@ -580,6 +600,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 class _Header extends StatelessWidget {
   const _Header({
     required this.avatarUrl,
+    required this.defaultAvatarPath,
     required this.name,
     required this.onBack,
     required this.onSettings,
@@ -587,6 +608,7 @@ class _Header extends StatelessWidget {
   });
 
   final String? avatarUrl;
+  final String defaultAvatarPath;
   final String name;
   final VoidCallback onBack;
   final VoidCallback onSettings;
@@ -652,9 +674,15 @@ class _Header extends StatelessWidget {
                     ? Image.network(
                         avatarUrl!,
                         fit: BoxFit.cover,
-                        errorBuilder: (_, __, ___) => _Fallback(name: name),
+                        errorBuilder: (_, __, ___) => _Fallback(
+                          name: name,
+                          defaultAvatarPath: defaultAvatarPath,
+                        ),
                       )
-                    : _Fallback(name: name),
+                    : _Fallback(
+                        name: name,
+                        defaultAvatarPath: defaultAvatarPath,
+                      ),
               ),
             ),
           ),
@@ -664,20 +692,51 @@ class _Header extends StatelessWidget {
   }
 }
 
+/// Jins + yoshga mos default avatar asset yo'li (parent app mantiqidek).
+///   - `female` → yoshga qarab 3 xil: <10 → 6_10, 10-13 → 10_14, ≥14 → 14
+///   - aks holda (male yoki noma'lum) → bitta `boy.png`
+String _defaultAvatarPath(String? gender, int? age) {
+  final isFemale = gender == 'female';
+  if (!isFemale) return 'assets/default_avatars/boy.png';
+  final a = age ?? 6;
+  final band = a >= 14
+      ? '14'
+      : a >= 10
+      ? '10_14'
+      : '6_10';
+  return 'assets/default_avatars/girl_$band.png';
+}
+
 class _Fallback extends StatelessWidget {
-  const _Fallback({required this.name});
+  const _Fallback({required this.name, this.defaultAvatarPath});
   final String name;
+
+  /// Jins+yoshga mos default avatar asset yo'li. `null` yoki asset
+  /// yuklanmasa — bosh harf ko'rsatiladi (eng oxirgi zaxira).
+  final String? defaultAvatarPath;
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: const Color(0xFF66B3FF),
-      alignment: Alignment.center,
-      child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: _unb(38, w: FontWeight.w800),
-      ),
-    );
+    final path = defaultAvatarPath;
+    if (path != null) {
+      return Image.asset(
+        path,
+        fit: BoxFit.cover,
+        cacheWidth: 256,
+        errorBuilder: (_, __, ___) => _letter(),
+      );
+    }
+    return _letter();
   }
+
+  Widget _letter() => Container(
+    color: const Color(0xFF66B3FF),
+    alignment: Alignment.center,
+    child: Text(
+      name.isNotEmpty ? name[0].toUpperCase() : '?',
+      style: _unb(38, w: FontWeight.w800),
+    ),
+  );
 }
 
 class _SquareBtn extends StatelessWidget {
