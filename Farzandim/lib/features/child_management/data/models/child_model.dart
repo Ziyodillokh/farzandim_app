@@ -151,8 +151,8 @@ class Child {
   /// Bola yoshi (yil hisobida).
   final int age;
 
-  /// Bola jinsi — default avatar sticker'i shu maydon va `age` orqali
-  /// tanlanadi (`defaultStickerPath` getter'iga qarang).
+  /// Bola jinsi — default avatar shu maydon va `age` orqali tanlanadi
+  /// (`defaultAvatarPath` getter'iga qarang).
   final Gender gender;
 
   /// Hudud (Toshkent, Samarqand, va h.k.).
@@ -244,17 +244,31 @@ class Child {
   /// Bo'sh ro'yxat = hech biri (webFilterEnabled true bo'lsa ham).
   final List<String> blockedWebCategories;
 
-  /// Default avatar sticker yo'li — bola o'z rasmini yuklamaguncha
-  /// ko'rsatiladigan ikon. Barcha yosh/jins uchun yagona yangi
-  /// jingalak sochli, ko'zoynakli avatar (Parvoz Premium dizayn).
+  /// Default avatar yo'li — bola o'z rasmini yuklamaguncha ko'rsatiladigan
+  /// rasm. JINSI va YOSHIga qarab 6 ta rasmdan biri tanlanadi:
   ///
-  /// Eski jinsi/yoshga qarab 6 ta SVG olib tashlandi — foydalanuvchi
-  /// yolg'iz zamonaviy ikon so'radi.
-  String get defaultStickerPath => 'assets/stickers/default_avatar.svg';
+  ///   yosh < 10        → 6-10   (boy_6_10 / girl_6_10)
+  ///   10 <= yosh < 14  → 10-14  (boy_10_14 / girl_10_14)
+  ///   yosh >= 14       → 14+    (boy_14 / girl_14)
+  ///
+  /// Yosh kiritilmagan (0) yoki 10 dan kichik — eng yosh guruh (6-10).
+  /// Rasmlar 1:1 (512x512, shaffof fon) — aylana avatar ichida to'liq.
+  String get defaultAvatarPath {
+    final g = gender == Gender.female ? 'girl' : 'boy';
+    final String band;
+    if (age >= 14) {
+      band = '14';
+    } else if (age >= 10) {
+      band = '10_14';
+    } else {
+      band = '6_10';
+    }
+    return 'assets/default_avatars/${g}_$band.png';
+  }
 
   /// Bola o'zining custom rasmiga egami (bytes yoki URL).
   ///
-  /// `false` bo'lsa — `defaultStickerPath` SVG sticker ko'rsatiladi.
+  /// `false` bo'lsa — `defaultAvatarPath` rasm ko'rsatiladi.
   bool get hasCustomPhoto => photoBytes != null || photoUrl != null;
 
   // ─── Jonli holat (heartbeat-aware) ──────────────────────────────────

@@ -4,9 +4,8 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:flutter_svg/flutter_svg.dart';
 
-/// Bola avatari — yumaloq, jinsi va yoshga mos default sticker yoki
+/// Bola avatari — yumaloq, jinsi va yoshga mos default rasm yoki
 /// (agar mavjud bo'lsa) custom rasm bilan.
 ///
 /// **3 ta holat (prioritet bo'yicha):**
@@ -14,8 +13,8 @@ import 'package:flutter_svg/flutter_svg.dart';
 ///    tanlagan rasm (transient, ilova yopilguncha)
 /// 2. `child.photoUrl != null` → `Image.network(url)` — Firebase Storage'dan
 ///    (Bosqich 1.6'dan keyin)
-/// 3. aks holda → `assets/stickers/`'dan SVG sticker
-///    (`child.defaultStickerPath`)
+/// 3. aks holda → jinsi+yoshga mos default avatar PNG
+///    (`child.defaultAvatarPath`, `assets/default_avatars/`)
 ///
 /// **Foydalanish:**
 /// ```dart
@@ -103,13 +102,15 @@ class ChildAvatar extends ConsumerWidget {
         fit: BoxFit.cover,
         // Avatar kichik doira — to'liq o'lchamda dekod qilmaslik.
         memCacheWidth: 200,
-        errorWidget: (_, __, ___) => _defaultSticker(),
-        placeholder: (_, __) => _defaultSticker(),
+        errorWidget: (_, __, ___) => _defaultAvatar(),
+        placeholder: (_, __) => _defaultAvatar(),
       );
     }
-    return _defaultSticker();
+    return _defaultAvatar();
   }
 
-  Widget _defaultSticker() =>
-      SvgPicture.asset(child.defaultStickerPath, fit: BoxFit.cover);
+  // Default avatar — jinsi+yoshga mos PNG (shaffof fon, 1:1). `BoxFit.cover`
+  // + tashqi `ClipOval` bilan aylana ichini to'liq to'ldiradi.
+  Widget _defaultAvatar() =>
+      Image.asset(child.defaultAvatarPath, fit: BoxFit.cover);
 }
