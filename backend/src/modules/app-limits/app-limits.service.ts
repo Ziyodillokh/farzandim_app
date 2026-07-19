@@ -15,6 +15,7 @@ import {
   categoryLabel,
   classifyPackage,
 } from '../installed-apps/app-category.util';
+import { tr } from '../../common/i18n/notification-i18n';
 
 const MAX_DAY_MS = 24 * 60 * 60 * 1000; // 86_400_000
 const MAX_WEEK_MS = 7 * MAX_DAY_MS;
@@ -184,15 +185,21 @@ export class AppLimitsService {
     // `restrictions_sync` sync push borardi (pushChildResync), bola cheklov
     // o'zgarganini ko'rmasdi. Endi bola ham xabardor bo'ladi.
     if (entry.childUserId) {
+      const lang = await this.fcm.getUserLang(entry.childUserId);
       const childBody =
         labels.length === 1
-          ? `${labels[0]} uchun vaqt chegarasi yangilandi`
+          ? tr(lang, 'appLimit.bodyOne', { app: labels[0] })
           : labels.length <= 3
-            ? `${labels.slice(0, 3).join(', ')} cheklovlari yangilandi`
-            : `${labels.slice(0, 3).join(', ')} va yana ${labels.length - 3} ta ilova cheklovi yangilandi`;
+            ? tr(lang, 'appLimit.bodyFew', {
+                apps: labels.slice(0, 3).join(', '),
+              })
+            : tr(lang, 'appLimit.bodyMany', {
+                apps: labels.slice(0, 3).join(', '),
+                count: labels.length - 3,
+              });
       try {
         await this.fcm.sendPushToUser(entry.childUserId, {
-          title: 'Ota-onangiz cheklovni yangiladi',
+          title: tr(lang, 'appLimit.title'),
           body: childBody,
           data: { type: 'app_limit', childId, count: String(labels.length) },
         });

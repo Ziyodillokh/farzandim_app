@@ -20,6 +20,7 @@ import { UpdateChildDto } from './dto/update-child.dto';
 import { UpdateDeviceInfoDto } from './dto/update-device-info.dto';
 import { UpdateInterestsDto } from './dto/update-interests.dto';
 import { UpdateMyProfileDto } from './dto/update-my-profile.dto';
+import { tr } from '../../common/i18n/notification-i18n';
 
 const ALLOWED_AVATAR_MIMES = [
   'image/jpeg',
@@ -359,9 +360,10 @@ export class ChildrenService {
       throw new BadRequestException('Child device not paired');
     }
 
+    const lang = await this.fcm.getUserLang(child.childUserId);
     const result = await this.fcm.sendPushToUser(child.childUserId, {
-      title: 'Farzandim',
-      body: 'Qurilma chaqirilmoqda',
+      title: 'Parvoz',
+      body: tr(lang, 'ring.body'),
       data: {
         type: 'ring',
         action: 'start',

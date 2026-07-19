@@ -12,6 +12,7 @@ import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { CreateUnlockRequestDto } from './dto/create-unlock-request.dto';
 import { DecideUnlockRequestDto } from './dto/decide-unlock-request.dto';
+import { tr } from '../../common/i18n/notification-i18n';
 
 /** PENDING so'rov shu muddatda javob kelmasa EXPIRED bo'ladi. */
 const REQUEST_TTL_MS = 15 * 60 * 1000;
@@ -260,9 +261,12 @@ export class UnlockRequestsService {
     });
 
     // Bolaga qaror push'i + bildirishnoma.
+    const unlockLang = request.child.childUserId
+      ? await this.fcm.getUserLang(request.child.childUserId)
+      : 'uz';
     const body = approved
-      ? `Ota-onangiz ${grantedMinutes} daqiqa qo'shimcha vaqt berdi.`
-      : "Ota-onangiz so'rovni rad etdi.";
+      ? tr(unlockLang, 'unlock.approved', { minutes: grantedMinutes ?? 0 })
+      : tr(unlockLang, 'unlock.rejected');
 
     // Push bolaning USER hisobiga boradi (childUserId — FcmToken shu bo'yicha).
     if (request.child.childUserId) {

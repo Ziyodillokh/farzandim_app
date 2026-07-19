@@ -11,6 +11,7 @@ import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
 import { distanceMeters } from '../../common/helpers/haversine';
 import { WriteLocationDto } from './dto/write-location.dto';
 import { LocationHistoryQueryDto } from './dto/location-history-query.dto';
+import { tr } from '../../common/i18n/notification-i18n';
 
 export interface GeofenceEvent {
   zoneId: string;
@@ -333,15 +334,21 @@ export class LocationService {
         this.realtime.emitToChild(childId, 'geo_zone:alert', payload);
 
         try {
+          const zoneLang = await this.fcm.getUserLang(child.parentId);
           await this.fcm.sendPushToUser(child.parentId, {
-            // Professional sarlavha: "{ism} {zona}ga kirdi / {zona}dan chiqdi".
-            // Zona nomi sarlavhada (ota-ona darhol qaysi joy ekanini ko'radi).
-            title: `${child.name} ${event.zoneName}${
-              isEntry ? 'ga kirdi' : 'dan chiqdi'
-            }`,
+            // Zona nomi va ism {param} sifatida — faqat qat'iy matn tarjima.
+            title: isEntry
+              ? tr(zoneLang, 'geoZone.enterTitle', {
+                  name: child.name,
+                  zone: event.zoneName,
+                })
+              : tr(zoneLang, 'geoZone.exitTitle', {
+                  name: child.name,
+                  zone: event.zoneName,
+                }),
             body: isEntry
-              ? 'Belgilangan hududga yetib keldi'
-              : 'Belgilangan hududni tark etdi',
+              ? tr(zoneLang, 'geoZone.enterBody')
+              : tr(zoneLang, 'geoZone.exitBody'),
             data: {
               type: 'geofence',
               event: event.type,
@@ -674,10 +681,10 @@ export class LocationService {
     if (!child.childUserId) {
       return { ok: false, reason: 'not_paired' };
     }
+    const locLang = await this.fcm.getUserLang(child.childUserId);
     const result = await this.fcm.sendPushToUser(child.childUserId, {
-      title: 'Joylashuvni yoqing',
-      body: "Ota-onangiz joylashuvingizni ko'ra olmayapti. "
-        + 'Iltimos, joylashuvni yoqing.',
+      title: tr(locLang, 'locationRequest.title'),
+      body: tr(locLang, 'locationRequest.body'),
       data: { type: 'location_request', childId },
     });
     return { ok: true, sent: result.sent };

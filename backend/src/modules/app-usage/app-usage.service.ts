@@ -11,6 +11,7 @@ import { GamificationService } from '../gamification/gamification.service';
 import { BatchUpsertUsageDto } from './dto/batch-upsert-usage.dto';
 import { GameOpenDto } from './dto/game-open.dto';
 import { ListAppUsageDto } from './dto/list-app-usage.dto';
+import { tr } from '../../common/i18n/notification-i18n';
 
 // O'zbekiston (Toshkent) UTC+5 — DST yo'q. Kun chegarasi shu vaqt bilan.
 const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
@@ -84,9 +85,10 @@ export class AppUsageService {
     appName: string,
   ): Promise<void> {
     try {
+      const lang = await this.fcm.getUserLang(child.parentId);
       await this.fcm.sendPushToUser(child.parentId, {
         title: `${child.name} — ${appName}`,
-        body: "O'yin o'ynayapti",
+        body: tr(lang, 'game.body'),
         data: {
           type: 'game',
           childId: child.id,

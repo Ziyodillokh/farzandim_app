@@ -39,6 +39,7 @@ import {
   extractClientIp,
   resolveGeo,
 } from '../../common/helpers/geo-ip';
+import { tr } from '../../common/i18n/notification-i18n';
 
 const PAIR_REQUEST_TTL_MIN = 5;
 // Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
@@ -1244,9 +1245,10 @@ export class AuthService {
       });
 
       try {
+        const lang = await this.fcm.getUserLang(child.parentId);
         await this.fcm.sendPushToUser(child.parentId, {
-          title: `${child.name} — yangi qurilma`,
-          body: 'Yangi qurilma family code bilan ulanmoqchi. Tasdiqlang.',
+          title: tr(lang, 'pairRequest.title', { name: child.name }),
+          body: tr(lang, 'pairRequest.body'),
           data: {
             type: 'pair_request',
             pairRequestId: pairRequest.id,
@@ -1477,10 +1479,11 @@ export class AuthService {
 
     // Ikkala ulangan qurilmaga jonli signal + push.
     this.realtime.emitToUser(userId, 'session_access:created', payload);
+    const accessLang = await this.fcm.getUserLang(userId);
     void this.fcm
       .sendPushToUser(userId, {
-        title: "Yangi qurilma kirish so'rovi",
-        body: `${label} akauntingizga kirmoqchi. Tasdiqlaysizmi?`,
+        title: tr(accessLang, 'sessionAccess.title'),
+        body: tr(accessLang, 'sessionAccess.body', { label }),
         data: {
           type: 'session_access_request',
           sessionRequestId: request.id,

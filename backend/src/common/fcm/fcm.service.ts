@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import admin from 'firebase-admin';
 import { PrismaService } from '../database/prisma.service';
 import { EnvConfig } from '../config/env.schema';
+import { NotifLang, toNotifLang } from '../i18n/notification-i18n';
 
 export interface PushPayload {
   title: string;
@@ -168,5 +169,20 @@ export class FcmService {
     }
 
     return result;
+  }
+
+  /**
+   * Foydalanuvchining bildirishnoma tili (`User.language`) — push matnini
+   * qabul qiluvchi tilida yuborish uchun. Topilmasa `uz`.
+   *
+   * Ota-onaga ketadigan xabar uchun ota-ona `userId`si, bolaga ketadigan
+   * uchun bolaning `childUserId`si beriladi.
+   */
+  async getUserLang(userId: string): Promise<NotifLang> {
+    const user = await this.prisma.user.findUnique({
+      where: { id: userId },
+      select: { language: true },
+    });
+    return toNotifLang(user?.language);
   }
 }

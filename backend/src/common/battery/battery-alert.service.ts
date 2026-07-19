@@ -1,6 +1,7 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { PrismaService } from '../database/prisma.service';
 import { FcmService } from '../fcm/fcm.service';
+import { tr } from '../i18n/notification-i18n';
 
 /** Batareya shu foizdan past tushganda ota-onaga push (bir marta — crossing). */
 export const LOW_BATTERY_PCT = 10;
@@ -59,9 +60,10 @@ export class BatteryAlertService {
     }
 
     try {
+      const lang = await this.fcm.getUserLang(child.parentId);
       await this.fcm.sendPushToUser(child.parentId, {
-        title: `${child.name} — batareya ${next}%`,
-        body: 'Quvvat kam qoldi. Tezroq quvvatlash kerak.',
+        title: tr(lang, 'battery.title', { name: child.name, pct: next }),
+        body: tr(lang, 'battery.body'),
         data: {
           type: 'low_battery',
           childId: child.id,

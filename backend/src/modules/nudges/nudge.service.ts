@@ -3,6 +3,7 @@ import { Cron } from '@nestjs/schedule';
 import { NotificationType, Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService } from '../../common/fcm/fcm.service';
+import { tr } from '../../common/i18n/notification-i18n';
 
 /** Asia/Tashkent (UTC+5, DST yo'q) — barcha vaqtlar shu mintaqada hisoblanadi. */
 const TASHKENT_OFFSET_MS = 5 * 60 * 60 * 1000;
@@ -30,24 +31,24 @@ interface NudgeChild {
 
 const NUDGE_COPY: Record<
   NudgeKind,
-  { type: string; notif: NotificationType; body: string; route: string }
+  { type: string; notif: NotificationType; bodyKey: string; route: string }
 > = {
   STUDY: {
     type: 'study_nudge',
     notif: NotificationType.STUDY_NUDGE,
-    body: "Bugun bitta test yechib ko'rchi 📚",
+    bodyKey: 'nudge.study',
     route: '/contests',
   },
   HEALTH: {
     type: 'health_nudge',
     notif: NotificationType.HEALTH_NUDGE,
-    body: 'Biroz harakat qilsang-chi 🏃',
+    bodyKey: 'nudge.health',
     route: '/dashboard',
   },
   CONTENT: {
     type: 'content_reminder',
     notif: NotificationType.CONTENT_REMINDER,
-    body: 'Yangi videolar seni kutyapti 🎬',
+    bodyKey: 'nudge.content',
     route: '/videos',
   },
 };
@@ -165,10 +166,12 @@ export class NudgeService {
     if (!child.childUserId) return false;
 
     const copy = NUDGE_COPY[kind];
+    const lang = await this.fcm.getUserLang(child.childUserId);
+    const nudgeBody = tr(lang, copy.bodyKey);
     try {
       await this.fcm.sendPushToUser(child.childUserId, {
         title: 'Parvoz',
-        body: copy.body,
+        body: nudgeBody,
         data: {
           type: copy.type,
           childId: child.id,
@@ -184,7 +187,7 @@ export class NudgeService {
         childId: child.id,
         type: copy.notif,
         title: 'Parvoz',
-        body: copy.body,
+        body: nudgeBody,
         data: { type: copy.type, relatedRoute: copy.route },
       },
     });
