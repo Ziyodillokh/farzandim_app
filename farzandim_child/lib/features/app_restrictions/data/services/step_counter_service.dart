@@ -186,6 +186,17 @@ class StepCounterService {
     debugPrint('=== StepCounterService.start childId=$_childId ===');
   }
 
+  /// Foreground'da (app ochilganda / qaytganda / statistika ekrani ochilganda)
+  /// Health Connect'dagi HAQIQIY jamini DARHOL tortadi — 5 daqiqalik davriy
+  /// sync'ni kutmasdan telefon soniga yaqinlashish uchun. Ekrandagi son
+  /// foydalanuvchi qaraganda eng yangi bo'ladi. HC yo'q/ruxsatsiz bo'lsa
+  /// `_syncFromHealth` jim qaytadi (pedometer jonli sanashda davom etadi).
+  Future<void> syncNow() async {
+    if (!_started || kIsWeb) return;
+    await _syncFromHealth();
+    await _sync();
+  }
+
   /// Health Connect qadam o'qish ruxsatini ta'minlaydi.
   ///
   /// Ruxsat berilmagunicha HAR ishga tushishda so'raladi. Avval `_kHcAsked`

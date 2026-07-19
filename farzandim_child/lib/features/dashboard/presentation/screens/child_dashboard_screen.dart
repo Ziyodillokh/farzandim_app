@@ -152,6 +152,11 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     Future.microtask(_guardPermissions);
     Future.microtask(_guardLocationService);
     Future.microtask(_updateStreak);
+    // Qadamni ochilishda darhol yangilaymiz (telefon soniga yaqin bo'lsin).
+    Future.microtask(() {
+      final stepSvc = ref.read(stepCounterServiceProvider);
+      if (stepSvc != null) unawaited(stepSvc.syncNow());
+    });
     // "O'chirishni taqiqlash" — app ochilganda siyosatni qo'llaymiz (kerak
     // bo'lsa Device Admin dialogini ko'rsatamiz — foreground shart).
     Future.microtask(() => _syncUninstallProtection(allowPrompt: true));
@@ -180,6 +185,11 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
 
   void _refresh() {
     if (!mounted) return;
+    // Qadamni telefon soniga yaqinlashtirish — Health Connect'dan HAQIQIY
+    // jamini darhol tortamiz (davriy 5 daqiqani kutmasdan). onStepsUpdated
+    // UI keshini yangilaydi, quyidagi invalidate esa yangi qiymatni ko'rsatadi.
+    final stepSvc = ref.read(stepCounterServiceProvider);
+    if (stepSvc != null) unawaited(stepSvc.syncNow());
     ref
       ..invalidate(todayStepsProvider)
       ..invalidate(backendContestsProvider);
