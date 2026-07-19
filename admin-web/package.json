@@ -2,7 +2,7 @@
   "name": "farzandim-admin-web",
   "version": "1.0.0",
   "private": true,
-  "description": "Farzandim Admin Panel — Next.js 15 + React 19 + TypeScript",
+  "description": "Parvoz Admin Panel — Next.js 15 + React 19 + TypeScript",
   "scripts": {
     "dev": "next dev --turbopack -p 4300",
     "build": "next build",

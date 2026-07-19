@@ -18,7 +18,7 @@ import android.content.Intent
 class FarzandimDeviceAdminReceiver : DeviceAdminReceiver() {
     override fun onDisableRequested(context: Context, intent: Intent): CharSequence {
         // Bola admin'ni o'chirmoqchi bo'lganda ko'rsatiladigan ogohlantirish.
-        return "Farzandim himoyasi yoqilgan. Ilovani o'chirish uchun avval " +
+        return "Parvoz himoyasi yoqilgan. Ilovani o'chirish uchun avval " +
             "ota-onangizdan ruxsat so'rang."
     }
 

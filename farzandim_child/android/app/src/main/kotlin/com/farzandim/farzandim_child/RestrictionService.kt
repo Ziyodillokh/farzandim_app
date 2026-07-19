@@ -1074,7 +1074,7 @@ class RestrictionService : Service() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             val channel = NotificationChannel(
                 CHANNEL_ID,
-                "Farzandim cheklov xizmati",
+                "Parvoz cheklov xizmati",
                 NotificationManager.IMPORTANCE_LOW,
             ).apply {
                 description = "Ilova cheklovlarini kuzatish"
@@ -1167,7 +1167,7 @@ class RestrictionService : Service() {
 
     private fun buildNotification(): Notification {
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Farzandim faol")
+            .setContentTitle("Parvoz faol")
             .setContentText("Ilova cheklovlari kuzatilmoqda")
             .setSmallIcon(android.R.drawable.ic_menu_info_details)
             .setOngoing(true)

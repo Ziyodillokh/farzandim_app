@@ -637,7 +637,7 @@
     },
     "noLocation": {
       "title": "No location data yet",
-      "subtitle": "Wait for {name} to open Farzandim on their device and grant location permission."
+      "subtitle": "Wait for {name} to open Parvoz on their device and grant location permission."
     },
     "error": {
       "title": "Error loading location"
@@ -752,9 +752,9 @@
   "permissions": {
     "openSettings": "Open settings",
     "micDeniedTitle": "Microphone access needed",
-    "micDeniedBody": "Recording a voice message requires microphone access. Enable the microphone for Farzandim in your phone settings.",
+    "micDeniedBody": "Recording a voice message requires microphone access. Enable the microphone for Parvoz in your phone settings.",
     "cameraDeniedTitle": "Camera access needed",
-    "cameraDeniedBody": "Recording a video message requires camera and microphone access. Enable them for Farzandim in your phone settings.",
+    "cameraDeniedBody": "Recording a video message requires camera and microphone access. Enable them for Parvoz in your phone settings.",
     "notifPrimerTitle": "Stay on top of what matters",
     "notifPrimerBody": "Get an instant alert when your child sends an SOS, enters or leaves a geo-zone, and in other important moments.",
     "notifPrimerAllow": "Allow",
@@ -844,9 +844,9 @@
   },
   "about": {
     "headerTitle": "About",
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "version": "Version 1.0.0",
-    "description1": "Farzandim is a family safety and education app for families in Uzbekistan.",
+    "description1": "Parvoz is a family safety and education app for families in Uzbekistan.",
     "description2": "Our mission is to establish safe and understanding communication between parents and children in every family.",
     "termsLink": "Terms of Service",
     "privacyLink": "Privacy Policy",
@@ -1046,7 +1046,7 @@
     },
     "deleteAccount": "Permanently delete account",
     "comingSoon": "Coming soon",
-    "shareText": "Farzandim — a safe family app for your child's location, screen time and peace of mind. Download: https://farzandimedu.uz",
+    "shareText": "Parvoz — a safe family app for your child's location, screen time and peace of mind. Download: https://farzandimedu.uz",
     "menu": {
       "sosAlerts": "SOS alerts",
       "addChild": "Add child",
@@ -1103,7 +1103,7 @@
     "operator": "Operator",
     "online": "Online",
     "today": "Today",
-    "welcome": "Welcome to Farzandim 24/7 support chat! How can we help you?",
+    "welcome": "Welcome to Parvoz 24/7 support chat! How can we help you?",
     "autoReply": {
       "0": "Thank you for your request! Our specialist will reply shortly.",
       "1": "Got it. Please wait a moment — we're checking.",
@@ -1190,7 +1190,7 @@
     "title": "Connect child's app",
     "copied": "Code copied",
     "instructionsTitle": "Instructions",
-    "step1": "Install the Farzandim app on the child's phone",
+    "step1": "Install the Parvoz app on the child's phone",
     "step2": "Open the app and choose code entry",
     "step3": "Enter this 5-digit code",
     "step4": "The device will connect automatically",
@@ -1312,8 +1312,8 @@
       "regenerateButton": "Connect new device",
       "regenerating": "Creating...",
       "shareButton": "Invite your child",
-      "shareMessage": "Hi! I'm inviting you to the Farzandim app 🎯\n\nThrough this app we'll stay safely connected, and you can also see interesting educational content.\n\n🔑 Family code: {code}\n\nInstall the app and enter this code.\n\nLove, your family ❤️",
-      "shareSubject": "Farzandim app",
+      "shareMessage": "Hi! I'm inviting you to the Parvoz app 🎯\n\nThrough this app we'll stay safely connected, and you can also see interesting educational content.\n\n🔑 Family code: {code}\n\nInstall the app and enter this code.\n\nLove, your family ❤️",
+      "shareSubject": "Parvoz app",
       "errorPrefix": "Error: {error}",
       "regenerateConfirm": {
         "title": "Connect new device",
@@ -1535,7 +1535,7 @@
     "zonesCount": "{count} places",
     "uninstallProtection": {
       "title": "Prevent uninstall",
-      "subtitle": "Your child can't uninstall the Farzandim app from their phone",
+      "subtitle": "Your child can't uninstall the Parvoz app from their phone",
       "errorSnack": "Couldn't update. Please try again."
     }
   },

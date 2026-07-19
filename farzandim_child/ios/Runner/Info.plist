@@ -70,9 +70,9 @@
 		<false/>
 		<!-- ─── Sprint 6 P2: iOS Lite — ruxsat tavsiflari ─── -->
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Farzandim ota-onangizga joylashuvingizni xavfsizlik uchun ko'rsatadi.</string>
+		<string>Parvoz ota-onangizga joylashuvingizni xavfsizlik uchun ko'rsatadi.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Farzandim ilova yopiq bo'lganda ham joylashuvni ota-onangizga yuboradi.</string>
+		<string>Parvoz ilova yopiq bo'lganda ham joylashuvni ota-onangizga yuboradi.</string>
 		<key>NSCameraUsageDescription</key>
 		<string>Rasm va video xabarlar yuborish uchun kamera kerak.</string>
 		<key>NSMicrophoneUsageDescription</key>

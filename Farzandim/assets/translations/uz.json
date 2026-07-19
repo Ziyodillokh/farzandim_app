@@ -637,7 +637,7 @@
     },
     "noLocation": {
       "title": "Hali joylashuv ma'lumoti yo'q",
-      "subtitle": "{name} qurilmasida Farzandim ochilib, joylashuv ruxsati berilishini kuting."
+      "subtitle": "{name} qurilmasida Parvoz ochilib, joylashuv ruxsati berilishini kuting."
     },
     "error": {
       "title": "Joylashuvni yuklash xatosi"
@@ -752,9 +752,9 @@
   "permissions": {
     "openSettings": "Sozlamalarni ochish",
     "micDeniedTitle": "Mikrofonga ruxsat kerak",
-    "micDeniedBody": "Ovozli xabar yozish uchun mikrofon ruxsati kerak. Telefon sozlamalaridan Farzandim uchun mikrofonni yoqing.",
+    "micDeniedBody": "Ovozli xabar yozish uchun mikrofon ruxsati kerak. Telefon sozlamalaridan Parvoz uchun mikrofonni yoqing.",
     "cameraDeniedTitle": "Kameraga ruxsat kerak",
-    "cameraDeniedBody": "Video xabar yozish uchun kamera va mikrofon ruxsati kerak. Telefon sozlamalaridan Farzandim uchun ularni yoqing.",
+    "cameraDeniedBody": "Video xabar yozish uchun kamera va mikrofon ruxsati kerak. Telefon sozlamalaridan Parvoz uchun ularni yoqing.",
     "notifPrimerTitle": "Muhim xabarlardan xabardor bo'ling",
     "notifPrimerBody": "Farzandingiz SOS yuborsa, geo-zonaga kirsa yoki undan chiqsa va boshqa muhim holatlarda darhol bildirishnoma olasiz.",
     "notifPrimerAllow": "Ruxsat berish",
@@ -844,9 +844,9 @@
   },
   "about": {
     "headerTitle": "Ilova haqida",
-    "appName": "Farzandim",
+    "appName": "Parvoz",
     "version": "Versiya 1.0.0",
-    "description1": "Farzandim — O'zbekiston oilalari uchun oilaviy xavfsizlik va ta'lim ilovasi.",
+    "description1": "Parvoz — O'zbekiston oilalari uchun oilaviy xavfsizlik va ta'lim ilovasi.",
     "description2": "Bizning maqsadimiz — har bir oilada ota-onalar va bolalar o'rtasida xavfsiz va tushunchali aloqa o'rnatish.",
     "termsLink": "Foydalanuvchi shartnomasi",
     "privacyLink": "Maxfiylik siyosati",
@@ -1046,7 +1046,7 @@
     },
     "deleteAccount": "Hisobni butunlay o'chirish",
     "comingSoon": "Tez kunda",
-    "shareText": "Farzandim — farzandingiz joylashuvi, ekran vaqti va xotirjamligingiz uchun oilaviy ilova. Yuklab oling: https://farzandimedu.uz",
+    "shareText": "Parvoz — farzandingiz joylashuvi, ekran vaqti va xotirjamligingiz uchun oilaviy ilova. Yuklab oling: https://farzandimedu.uz",
     "menu": {
       "sosAlerts": "SOS alertlar",
       "addChild": "Bola qo'shish",
@@ -1103,7 +1103,7 @@
     "operator": "Operator",
     "online": "Onlayn",
     "today": "Bugun",
-    "welcome": "Farzandim 24/7 qo'llab-quvvatlash chatiga xush kelibsiz! Sizga qanday yordam bera olamiz?",
+    "welcome": "Parvoz 24/7 qo'llab-quvvatlash chatiga xush kelibsiz! Sizga qanday yordam bera olamiz?",
     "autoReply": {
       "0": "So'rovingiz uchun rahmat! Mutaxassisimiz tez orada javob beradi.",
       "1": "Tushunarli. Iltimos, biroz kuting — tekshirib chiqamiz.",
@@ -1190,7 +1190,7 @@
     "title": "Bolani ilovasini ulash",
     "copied": "Kod nusxalandi",
     "instructionsTitle": "Yoriqnoma",
-    "step1": "Farzandim ilovasini bolaning telefoniga o'rnating",
+    "step1": "Parvoz ilovasini bolaning telefoniga o'rnating",
     "step2": "Ilovani oching va kod kiritish bo'limini tanlang",
     "step3": "Ushbu 5 xonali kodni kiriting",
     "step4": "Qurilma avtomatik ulanadi",
@@ -1312,8 +1312,8 @@
       "regenerateButton": "Yangi qurilma ulash",
       "regenerating": "Yaratilmoqda...",
       "shareButton": "Farzandingizni taklif qilish",
-      "shareMessage": "Salom! Men senga Farzandim ilovasini taklif qilyapman 🎯\n\nBu ilova orqali biz xavfsiz aloqada bo'lamiz va sen qiziqarli ta'lim kontentlarini ham ko'rishing mumkin.\n\n🔑 Oila kodi: {code}\n\nIlovani o'rnatib, shu kodni kiritasan.\n\nSevamiz, oilam ❤️",
-      "shareSubject": "Farzandim ilovasi",
+      "shareMessage": "Salom! Men senga Parvoz ilovasini taklif qilyapman 🎯\n\nBu ilova orqali biz xavfsiz aloqada bo'lamiz va sen qiziqarli ta'lim kontentlarini ham ko'rishing mumkin.\n\n🔑 Oila kodi: {code}\n\nIlovani o'rnatib, shu kodni kiritasan.\n\nSevamiz, oilam ❤️",
+      "shareSubject": "Parvoz ilovasi",
       "errorPrefix": "Xato: {error}",
       "regenerateConfirm": {
         "title": "Yangi qurilma ulash",
@@ -1535,7 +1535,7 @@
     "zonesCount": "{count} ta manzil",
     "uninstallProtection": {
       "title": "O'chirishni taqiqlash",
-      "subtitle": "Bola Farzandim ilovasini telefonidan o'chira olmaydi",
+      "subtitle": "Bola Parvoz ilovasini telefonidan o'chira olmaydi",
       "errorSnack": "O'zgartirib bo'lmadi. Qayta urinib ko'ring."
     }
   },

@@ -114,7 +114,7 @@
     "hint": "Bolaning telefonini ota-onaning telefoniga ulang",
     "helpLink": "Kodni qayerdan olaman?",
     "helpTitle": "Kodni qaerdan olaman?",
-    "helpContent": "Ota-onangizdan Farzandim ilovasini ochib, sizning ismingiz qatoridagi kodni so'rang. Kod 5 raqamdan iborat va 24 soat amal qiladi.",
+    "helpContent": "Ota-onangizdan Parvoz ilovasini ochib, sizning ismingiz qatoridagi kodni so'rang. Kod 5 raqamdan iborat va 24 soat amal qiladi.",
     "helpClose": "Tushundim",
     "errorFallback": "Kod noto'g'ri",
     "enterCodeTitle": "Ota-onangiz ilovasidagi kodni kiriting",
@@ -173,7 +173,7 @@
   },
   "permissionSetup": {
     "title": "Ruxsatlar",
-    "subtitle": "Farzandim to'g'ri ishlashi uchun quyidagi ruxsatlarni yoqing",
+    "subtitle": "Parvoz to'g'ri ishlashi uchun quyidagi ruxsatlarni yoqing",
     "next": "Keyingisi",
     "groupMain": "Asosiy",
     "groupHelper": "Yordamchi",

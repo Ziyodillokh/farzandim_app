@@ -10,8 +10,8 @@
 
 const String _signatureDate = '2026-05-12';
 const String _contactEmail = 'shahlomansurovat@gmail.com';
-const String _appName = 'Farzandim';
-const String _legalEntity = 'Farzandim jamoasi (O\'zbekiston, Toshkent)';
+const String _appName = 'Parvoz';
+const String _legalEntity = 'Parvoz jamoasi (O\'zbekiston, Toshkent)';
 
 /// Maxfiylik siyosati / Foydalanish shartlari ekranlari uchun bo'lim.
 class LegalSection {
@@ -144,7 +144,7 @@ abstract final class LegalText {
           'Ota-ona istalgan vaqtda bola ma\'lumotlarini ko\'rishi, '
           'tahrirlashi yoki o\'chirishi mumkin (Sozlamalar → Bolalar '
           'boshqaruvi yoki Hisobni o\'chirish).\n\n'
-          'Tushuntirma: Farzandim "parental control" toifasidagi ilova. '
+          'Tushuntirma: Parvoz "parental control" toifasidagi ilova. '
           'Bola foydalanuvchi emas — vasiy mahsulot foydalanuvchisi. '
           'Bola qurilmasidagi ilova faqat ota-ona o\'rnatishi va '
           'sozlashi mumkin.',

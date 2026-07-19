@@ -19,10 +19,10 @@ const jetbrains = JetBrains_Mono({
 
 export const metadata: Metadata = {
   title: {
-    default: 'Farzandim Admin',
-    template: '%s · Farzandim Admin',
+    default: 'Parvoz Admin',
+    template: '%s · Parvoz Admin',
   },
-  description: 'Farzandim platformasi uchun admin boshqaruv paneli',
+  description: 'Parvoz platformasi uchun admin boshqaruv paneli',
 };
 
 export const viewport: Viewport = {

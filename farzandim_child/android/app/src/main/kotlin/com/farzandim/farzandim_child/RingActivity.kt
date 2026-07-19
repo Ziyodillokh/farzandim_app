@@ -55,7 +55,7 @@ class RingActivity : Activity() {
             setPadding(dp(32), dp(32), dp(32), dp(32))
         }
         val title = TextView(this).apply {
-            text = "Farzandim"
+            text = "Parvoz"
             setTextColor(Color.WHITE)
             textSize = 30f
             gravity = Gravity.CENTER

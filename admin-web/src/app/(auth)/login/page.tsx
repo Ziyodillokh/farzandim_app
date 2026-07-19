@@ -79,7 +79,7 @@ export default function LoginPage() {
             <span className="text-2xl font-bold text-primary-foreground">F</span>
           </div>
           <div>
-            <h1 className="text-2xl font-bold tracking-tight">Farzandim Admin</h1>
+            <h1 className="text-2xl font-bold tracking-tight">Parvoz Admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">
               Boshqaruv panelingizga xush kelibsiz
             </p>
@@ -142,7 +142,7 @@ export default function LoginPage() {
         </Card>
 
         <p className="mt-6 text-center text-xs text-muted-foreground">
-          © 2026 Farzandim. Maxfiy admin panel.
+          © 2026 Parvoz. Maxfiy admin panel.
         </p>
       </div>
     </div>

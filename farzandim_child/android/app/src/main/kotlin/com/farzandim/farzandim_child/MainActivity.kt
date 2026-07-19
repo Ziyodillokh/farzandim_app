@@ -73,7 +73,7 @@ class MainActivity : FlutterFragmentActivity() {
                             putExtra(DevicePolicyManager.EXTRA_DEVICE_ADMIN, admin)
                             putExtra(
                                 DevicePolicyManager.EXTRA_ADD_EXPLANATION,
-                                "Farzandim'ni o'chirishdan himoya qilish uchun " +
+                                "Parvoz'ni o'chirishdan himoya qilish uchun " +
                                     "administrator huquqini yoqing.",
                             )
                         }

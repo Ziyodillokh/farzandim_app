@@ -1,5 +1,5 @@
 /**
- * Farzandim Backend API types
+ * Parvoz Backend API types
  * Swagger /api/docs-json'dan moslangan.
  */
 

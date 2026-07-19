@@ -38,7 +38,7 @@ export default function DashboardPage() {
         <div>
           <h2 className="text-2xl font-bold tracking-tight">Salom! 👋</h2>
           <p className="mt-1 text-sm text-muted-foreground">
-            Farzandim platformasi statistikasi va asosiy ko'rsatkichlar
+            Parvoz platformasi statistikasi va asosiy ko'rsatkichlar
           </p>
         </div>
       </div>

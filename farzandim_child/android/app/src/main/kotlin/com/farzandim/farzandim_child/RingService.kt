@@ -274,7 +274,7 @@ class RingService : Service() {
             PendingIntent.getActivity(this, 2, fullScreenIntent, piFlags)
 
         return NotificationCompat.Builder(this, CHANNEL_ID)
-            .setContentTitle("Farzandim")
+            .setContentTitle("Parvoz")
             .setContentText("Qurilma chaqirilmoqda")
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
             .setPriority(NotificationCompat.PRIORITY_MAX)

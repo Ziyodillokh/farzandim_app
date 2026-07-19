@@ -1,5 +1,5 @@
 name: farzandim
-description: "Farzandim — O'zbekiston ota-onalari uchun oilaviy aloqa va ta'lim platformasi (Parent App)."
+description: "Parvoz — O'zbekiston ota-onalari uchun oilaviy aloqa va ta'lim platformasi (Parent App)."
 # Loyiha private — pub.dev'ga publish qilmaymiz
 publish_to: 'none'
 
@@ -50,7 +50,7 @@ dependencies:
 
   # Firebase App Check — Play Integrity (Android) + DeviceCheck (iOS).
   # API kalitlarini reverse-engineered APK / bot'lardan himoya
-  # qiladi: faqat haqiqiy Farzandim app Firestore/Auth/Functions'ga
+  # qiladi: faqat haqiqiy Parvoz app Firestore/Auth/Functions'ga
   # so'rov yubora oladi (Sprint 2.3).
   firebase_app_check: ^0.3.1+1
 

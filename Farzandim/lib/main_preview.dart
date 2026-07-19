@@ -91,7 +91,7 @@ class _PreviewApp extends ConsumerWidget {
 
     return MaterialApp.router(
       debugShowCheckedModeBanner: false,
-      title: 'Farzandim — UI Preview',
+      title: 'Parvoz — UI Preview',
       scaffoldMessengerKey: _messengerKey,
       localizationsDelegates: context.localizationDelegates,
       supportedLocales: context.supportedLocales,

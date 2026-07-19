@@ -102,7 +102,7 @@ export function Sidebar() {
           <span className="text-base font-bold text-primary-foreground">F</span>
         </div>
         <div className="flex flex-col leading-none">
-          <span className="text-base font-bold tracking-tight text-sidebar-foreground">Farzandim</span>
+          <span className="text-base font-bold tracking-tight text-sidebar-foreground">Parvoz</span>
           <span className="text-2xs font-medium uppercase tracking-wider text-muted-foreground">Admin</span>
         </div>
       </Link>
