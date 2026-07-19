@@ -22,6 +22,8 @@ import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
 
+import 'package:farzandim_child/features/ranking/presentation/widgets/ranking_avatar.dart';
+
 // ════════════ Figma tokenlar ════════════
 const _bg = Color(0xFF00060A);
 const _blue = Color(0xFF216BFF);
@@ -71,6 +73,7 @@ class _Row {
     this.me = false,
     this.age = 10,
     this.gender,
+    this.id = '',
   });
   final int rank;
   final String name;
@@ -79,6 +82,7 @@ class _Row {
   final bool me;
   final int age;
   final String? gender;
+  final String id;
 }
 
 /// Ro'yxat bo'sh bo'lgandagi HALOL holat.
@@ -210,6 +214,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           me: users[i].id == childId,
           age: users[i].age,
           gender: users[i].gender,
+          id: users[i].id,
         ),
     ];
     final meIdx = rows.indexWhere((r) => r.me);
@@ -646,6 +651,7 @@ class _PodiumColumn extends StatelessWidget {
           name: row.name,
           color: row.color,
           size: avatarSize,
+          childId: row.id,
           gender: row.gender,
           age: row.age,
         ),
@@ -830,6 +836,7 @@ class _RankTile extends StatelessWidget {
             name: row.name,
             color: row.color,
             size: 38,
+            childId: row.id,
             gender: row.gender,
             age: row.age,
           ),
@@ -880,6 +887,7 @@ class _Avatar extends StatelessWidget {
     required this.name,
     required this.color,
     required this.size,
+    this.childId,
     this.gender,
     this.age,
   });
@@ -887,50 +895,20 @@ class _Avatar extends StatelessWidget {
   final String name;
   final Color color;
   final double size;
+  final String? childId;
   final String? gender;
   final int? age;
 
   @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: size,
-      height: size,
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
+  Widget build(BuildContext context) => RankingAvatar(
+        name: name,
+        size: size,
+        childId: childId,
+        gender: gender,
+        age: age,
         color: color,
-        shape: BoxShape.circle,
-        border: Border.all(color: const Color(0x33FFFFFF), width: 2),
-      ),
-      // Jins+yoshga mos default avatar (harf o'rniga). Asset yuklanmasa —
-      // bosh harf zaxira sifatida.
-      child: Image.asset(
-        _defaultAvatarPath(gender, age),
-        fit: BoxFit.cover,
-        cacheWidth: 200,
-        errorBuilder: (_, __, ___) => Center(
-          child: Text(
-            name.isNotEmpty ? name[0].toUpperCase() : '?',
-            style: _unb(size * 0.36, w: FontWeight.w700),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-/// Jins + yoshga mos default avatar asset yo'li (profil ekrani bilan bir xil).
-///   - `female` → yoshga qarab 3 xil (6_10 / 10_14 / 14)
-///   - aks holda (male yoki noma'lum) → bitta `boy.png`
-String _defaultAvatarPath(String? gender, int? age) {
-  final isFemale = gender == 'female';
-  if (!isFemale) return 'assets/default_avatars/boy.png';
-  final a = age ?? 6;
-  final band = a >= 14
-      ? '14'
-      : a >= 10
-      ? '10_14'
-      : '6_10';
-  return 'assets/default_avatars/girl_$band.png';
+        borderColor: const Color(0x33FFFFFF),
+      );
 }
 
 class _RoundBtn extends StatelessWidget {

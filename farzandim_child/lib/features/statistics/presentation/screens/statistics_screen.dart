@@ -25,6 +25,7 @@ import 'package:farzandim_child/features/gamification/presentation/providers/gam
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
+import 'package:farzandim_child/features/ranking/presentation/widgets/ranking_avatar.dart';
 import 'package:farzandim_child/features/statistics/presentation/providers/stats_providers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -659,14 +660,25 @@ class _DonCard extends ConsumerWidget {
               const _RankRow(rank: 95, name: 'Akmal', me: true, delta: '+3'),
               const _RankRow(rank: 96, name: 'Javohir', me: false),
             ] else
-              for (final r in rows) _RankRow(rank: r.$1, name: r.$2, me: r.$3),
+              for (final r in rows)
+                _RankRow(
+                  rank: r.$1,
+                  name: r.$2,
+                  me: r.$3,
+                  childId: r.$4,
+                  gender: r.$5,
+                  age: r.$6,
+                ),
           ],
         ),
       ),
     );
   }
 
-  List<(int, String, bool)> _window(List<dynamic> all, String? childId) {
+  List<(int, String, bool, String, String?, int)> _window(
+    List<dynamic> all,
+    String? childId,
+  ) {
     if (all.isEmpty || childId == null) return const [];
     final sorted = [...all]
       ..sort((a, b) => (b.totalScore as int).compareTo(a.totalScore as int));
@@ -679,7 +691,14 @@ class _DonCard extends ConsumerWidget {
     final end = (start + 3).clamp(0, sorted.length);
     return [
       for (var i = start; i < end; i++)
-        (i + 1, sorted[i].name as String, sorted[i].id == childId),
+        (
+          i + 1,
+          sorted[i].name as String,
+          sorted[i].id == childId,
+          sorted[i].id as String,
+          sorted[i].gender as String?,
+          sorted[i].age as int,
+        ),
     ];
   }
 }
@@ -690,12 +709,18 @@ class _RankRow extends StatelessWidget {
     required this.name,
     required this.me,
     this.delta,
+    this.childId,
+    this.gender,
+    this.age,
   });
 
   final int rank;
   final String name;
   final bool me;
   final String? delta;
+  final String? childId;
+  final String? gender;
+  final int? age;
 
   @override
   Widget build(BuildContext context) {
@@ -703,18 +728,13 @@ class _RankRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 6),
       child: Row(
         children: [
-          Container(
-            width: 26,
-            height: 26,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              color: Color(0x1AFFFFFF),
-              shape: BoxShape.circle,
-            ),
-            child: Text(
-              name.isNotEmpty ? name[0].toUpperCase() : '?',
-              style: _pop(12, w: FontWeight.w700),
-            ),
+          RankingAvatar(
+            name: name,
+            size: 26,
+            childId: childId,
+            gender: gender,
+            age: age,
+            color: const Color(0x1AFFFFFF),
           ),
           const SizedBox(width: 10),
           Expanded(
