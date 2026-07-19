@@ -189,6 +189,20 @@ class ChildApp extends ConsumerWidget {
     // Sprint UI.4: theme mode Settings'dan keladi (light/dark/system).
     final themeMode = ref.watch(themeModeProvider);
 
+    // ── Til reaktivligi: locale → router refresh ──────────────────────
+    // context.setLocale() faqat easy_localization holatini yangilaydi;
+    // go_router sahifalarni cache qiladi (Navigator GlobalKey), shuning uchun
+    // til almashganda cache'langan ekran (Profil badge'lari va h.k.) eski
+    // tilda qolardi. Joriy locale'ni provider'ga sinxronlab, router refresh
+    // orqali joriy sahifani QAYTA quramiz.
+    final localeCode = context.locale.languageCode;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final localeNotifier = ref.read(localeRefreshProvider.notifier);
+      if (localeNotifier.state != localeCode) {
+        localeNotifier.state = localeCode;
+      }
+    });
+
     return MaterialApp.router(
       title: 'Parvoz Growth',
       debugShowCheckedModeBanner: false,

@@ -127,6 +127,17 @@ const _publicRoutes = <String>[
   AppRoutes.legalTermsOfService,
 ];
 
+/// Til o'zgarishini `GoRouter.refreshListenable`'ga uzatuvchi provider.
+///
+/// `context.setLocale()` faqat easy_localization holatini yangilaydi; go_router
+/// esa sahifalarni cache qiladi (Navigator GlobalKey) va MaterialApp qayta
+/// qurilsa ham joriy ekranni QAYTA QURMAYDI — natijada til almashganda
+/// ekran eski tilda qolib "bir marta refresh" talab qilardi. `app.dart` joriy
+/// `context.locale`ni shu yerga yozadi; qiymat almashsa `_AuthRefreshNotifier`
+/// fire bo'lib router refresh qiladi → ekran yangi tilda quriladi (theme
+/// reaktivligi bilan AYNAN bir xil yondashuv).
+final localeRefreshProvider = StateProvider<String>((ref) => 'uz');
+
 /// Firebase + Backend auth providerlarga listen qilib `notifyListeners`
 /// chaqiradigan ChangeNotifier — `GoRouter.refreshListenable` uchun.
 ///
@@ -144,7 +155,10 @@ class _AuthRefreshNotifier extends ChangeNotifier {
       ..listen(themeModeProvider, (_, __) => notifyListeners())
       // Til tanlangach (yoki prefs'dan yuklangach) redirect qayta
       // hisoblanadi — til ekranidan welcome'ga avtomatik o'tish uchun.
-      ..listen(languagePickedProvider, (_, __) => notifyListeners());
+      ..listen(languagePickedProvider, (_, __) => notifyListeners())
+      // Til ALMASHGANDA (Sozlamalardagi tanlov) sahifalar QAYTA quriladi —
+      // aks holda cache'langan ekran (masalan Dashboard) eski tilda qolardi.
+      ..listen(localeRefreshProvider, (_, __) => notifyListeners());
   }
 }
 

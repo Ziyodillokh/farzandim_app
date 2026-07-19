@@ -140,6 +140,15 @@ class _VideoPlayerRouteState extends ConsumerState<_VideoPlayerRoute> {
   }
 }
 
+/// Til o'zgarishini `GoRouter.refreshListenable`'ga uzatuvchi provider.
+///
+/// `context.setLocale()` faqat easy_localization holatini yangilaydi; go_router
+/// sahifalarni cache qiladi (Navigator GlobalKey), shuning uchun til almashganda
+/// cache'langan ekran (masalan Profil badge'lari) eski tilda qolib "bir marta
+/// refresh" talab qilardi. `main.dart` joriy locale'ni shu yerga yozadi →
+/// refresh notifier oshadi → router sahifani yangi tilda qayta quradi.
+final localeRefreshProvider = StateProvider<String>((ref) => 'uz');
+
 final routerProvider = Provider<GoRouter>((ref) {
   // Pairing state o'zgarganida router'ni QAYTA yaratmaymiz —
   // aks holda har bir state o'zgarishi initialLocation'ga
@@ -149,6 +158,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.onDispose(refresh.dispose);
   ref.listen<AppPairingState>(pairingStateProvider, (_, __) => refresh.value++);
+  // Til almashganda cache'langan ekranlar (Profil badge'lari va h.k.) QAYTA
+  // quriladi — aks holda eski tilda qolib, refresh/navigatsiya talab qilardi.
+  ref.listen(localeRefreshProvider, (_, __) => refresh.value++);
   // ESLATMA: Parent Consent guard foydalanuvchi so'roviga ko'ra
   // O'CHIRILGAN — rozilik sahifasi endi ko'rsatilmaydi.
 

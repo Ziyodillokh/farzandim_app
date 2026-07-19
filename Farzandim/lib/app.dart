@@ -232,6 +232,21 @@ class FarzandimApp extends ConsumerWidget {
     final themeMode = ref.watch(themeModeProvider);
     AppColors.brightness = themeMode.brightness;
 
+    // ── Til reaktivligi: locale → router refresh ──────────────────────
+    // `context.setLocale()` faqat easy_localization holatini yangilaydi;
+    // go_router sahifalarni cache qiladi (Navigator GlobalKey), shuning uchun
+    // til almashganda joriy ekran (masalan Dashboard) ESKI tilda qolib "bir
+    // marta refresh" talab qilardi. Joriy locale'ni provider'ga sinxronlaymiz
+    // → refreshListenable fire bo'lib router sahifani QAYTA quradi (theme
+    // reaktivligi bilan aynan bir xil mexanizm).
+    final localeCode = context.locale.languageCode;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final localeNotifier = ref.read(localeRefreshProvider.notifier);
+      if (localeNotifier.state != localeCode) {
+        localeNotifier.state = localeCode;
+      }
+    });
+
     // FCM token re-registratsiya — login muvaffaqiyatli tugagach.
     // `fcmInitializerProvider` token'ni startup'da yuboradi, ammo o'sha
     // paytda JWT yo'q bo'lsa 401 olib registratsiya bo'lmaydi. Auth
