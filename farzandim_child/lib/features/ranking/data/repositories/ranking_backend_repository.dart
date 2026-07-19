@@ -98,6 +98,7 @@ class RankingBackendRepository {
       id: id,
       name: (raw['name'] as String?) ?? '—',
       age: (raw['age'] as num?)?.toInt() ?? 8,
+      gender: raw['gender'] as String?,
       region: (raw['region'] as String?) ?? "O'zbekiston",
       totalScore: range == 'all' ? don : 0,
       weeklyScore: range == 'weekly' ? don : 0,

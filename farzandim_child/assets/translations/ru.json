@@ -604,6 +604,13 @@
   },
   "statistics": {
     "title": "Статистика",
+    "shareTitle": "Дневной результат",
+    "shareCardTitle": "СЕГОДНЯШНИЙ ПРОГРЕСС",
+    "shareSteps": "Шаги",
+    "shareStreak": "Дней",
+    "shareTagline": "Каждый день на шаг вперёд — с Parvoz!",
+    "shareButton": "Поделиться",
+    "shareText": "Сегодня я развиваюсь в приложении Parvoz! 🚀",
     "booksRead": "Прочитанные книги",
     "itemsCount": "{count} шт",
     "testsCompleted": "Пройденные тесты",

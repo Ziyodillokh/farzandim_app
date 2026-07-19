@@ -604,6 +604,13 @@
   },
   "statistics": {
     "title": "Statistics",
+    "shareTitle": "Daily result",
+    "shareCardTitle": "TODAY'S PROGRESS",
+    "shareSteps": "Steps",
+    "shareStreak": "Days",
+    "shareTagline": "One step forward every day — with Parvoz!",
+    "shareButton": "Share",
+    "shareText": "Today I'm growing with the Parvoz app! 🚀",
     "booksRead": "Books read",
     "itemsCount": "{count}",
     "testsCompleted": "Tests taken",

@@ -26,6 +26,7 @@ import 'package:farzandim_child/features/consent/presentation/screens/consent_sc
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
+import 'package:farzandim_child/features/statistics/presentation/screens/daily_share_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/statistics_screen.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobook_detail_screen.dart';
@@ -301,6 +302,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/statistics',
         pageBuilder: (context, state) =>
             _slidePage(state, const StatisticsScreen()),
+      ),
+      // Kunlik rivojlanishni ulashish (qadam/DON/streak kartochka → share).
+      GoRoute(
+        path: '/daily-share',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const DailyShareScreen()),
       ),
       GoRoute(
         path: '/videos',

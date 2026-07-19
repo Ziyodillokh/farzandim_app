@@ -8,6 +8,10 @@ class RankingUser {
   final String id;
   final String name;
   final int age;
+
+  /// Jinsi ("male"/"female"/null) — reytingda jins+yoshga mos default
+  /// avatarni ko'rsatish uchun (backend leaderboard qaytaradi).
+  final String? gender;
   final String region;
   final int totalScore;
   final int weeklyScore;
@@ -24,6 +28,7 @@ class RankingUser {
     required this.name,
     required this.age,
     required this.region,
+    this.gender,
     required this.totalScore,
     required this.weeklyScore,
     required this.monthlyScore,

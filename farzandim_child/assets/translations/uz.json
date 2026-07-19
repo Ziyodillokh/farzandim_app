@@ -604,6 +604,13 @@
   },
   "statistics": {
     "title": "Statistika",
+    "shareTitle": "Kunlik natija",
+    "shareCardTitle": "BUGUNGI RIVOJLANISH",
+    "shareSteps": "Qadam",
+    "shareStreak": "Kun",
+    "shareTagline": "Har kuni bir qadam oldinga — Parvoz bilan!",
+    "shareButton": "Ulashish",
+    "shareText": "Men bugun Parvoz ilovasida rivojlanyapman! 🚀",
     "booksRead": "O'qilgan kitoblar",
     "itemsCount": "{count} ta",
     "testsCompleted": "Ishlangan testlar",

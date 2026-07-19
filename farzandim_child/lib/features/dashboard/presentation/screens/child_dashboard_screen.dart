@@ -34,6 +34,7 @@ import 'package:farzandim_child/features/contests/presentation/widgets/test_bann
 import 'package:farzandim_child/features/contests/presentation/widgets/test_conditions_sheet.dart';
 import 'package:farzandim_child/features/dashboard/presentation/widgets/child_bottom_navigation.dart';
 import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
+import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
@@ -43,6 +44,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
@@ -139,11 +141,16 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     with WidgetsBindingObserver {
   Timer? _autoRefreshTimer;
 
+  /// GPS "yoqing" modali shu sessiyada ko'rsatildimi (spam bo'lmasin —
+  /// xizmat yoqilgach `false`ga qaytadi, keyingi o'chishda yana so'raladi).
+  bool _locationModalShown = false;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
     Future.microtask(_guardPermissions);
+    Future.microtask(_guardLocationService);
     Future.microtask(_updateStreak);
     // "O'chirishni taqiqlash" — app ochilganda siyosatni qo'llaymiz (kerak
     // bo'lsa Device Admin dialogini ko'rsatamiz — foreground shart).
@@ -163,7 +170,12 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed) _refresh();
+    if (state == AppLifecycleState.resumed) {
+      _refresh();
+      // Bola Sozlamadan GPS'ni yoqib qaytgan bo'lishi mumkin — qayta tekshiramiz
+      // (yoqilgan bo'lsa modal qayta chiqmaydi, o'chiq bo'lsa bir marta so'raymiz).
+      unawaited(_guardLocationService());
+    }
   }
 
   void _refresh() {
@@ -216,6 +228,25 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     final allGranted =
         batteryStatus.isGranted && usageGranted && overlayGranted;
     if (!allGranted && mounted) context.go('/permission-setup');
+  }
+
+  /// GPS xizmati (qurilma-darajada) O'CHIQ bo'lsa — bolaga "Joylashuvni yoqing"
+  /// modalini DARHOL ko'rsatadi (ota-ona push'ini kutmasdan). Joylashuv RUXSATI
+  /// yo'q bo'lsa tegmaymiz — u onboarding/permission oqimining ishi.
+  Future<void> _guardLocationService() async {
+    if (kIsWeb) return;
+    final perm = await Geolocator.checkPermission();
+    final granted = perm == LocationPermission.always ||
+        perm == LocationPermission.whileInUse;
+    if (!granted) return;
+    if (await Geolocator.isLocationServiceEnabled()) {
+      // Yoqilgan — keyingi o'chishda yana so'ray olishimiz uchun flagni tozalaymiz.
+      _locationModalShown = false;
+      return;
+    }
+    if (_locationModalShown || !mounted) return;
+    _locationModalShown = true;
+    await LocationEnableModal.show(context);
   }
 
   @override

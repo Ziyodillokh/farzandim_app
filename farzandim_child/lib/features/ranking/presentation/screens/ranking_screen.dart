@@ -63,12 +63,22 @@ String _fmtNum(int v) {
 
 /// Ro'yxat elementi (real yoki preview).
 class _Row {
-  const _Row(this.rank, this.name, this.don, this.color, {this.me = false});
+  const _Row(
+    this.rank,
+    this.name,
+    this.don,
+    this.color, {
+    this.me = false,
+    this.age = 10,
+    this.gender,
+  });
   final int rank;
   final String name;
   final int don;
   final Color color;
   final bool me;
+  final int age;
+  final String? gender;
 }
 
 /// Ro'yxat bo'sh bo'lgandagi HALOL holat.
@@ -198,6 +208,8 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           scoreFor(users[i], range),
           users[i].avatarColor,
           me: users[i].id == childId,
+          age: users[i].age,
+          gender: users[i].gender,
         ),
     ];
     final meIdx = rows.indexWhere((r) => r.me);
@@ -630,7 +642,13 @@ class _PodiumColumn extends StatelessWidget {
       children: [
         if (crown) Text('👑', style: _pop(20)),
         const SizedBox(height: 4),
-        _Avatar(name: row.name, color: row.color, size: avatarSize),
+        _Avatar(
+          name: row.name,
+          color: row.color,
+          size: avatarSize,
+          gender: row.gender,
+          age: row.age,
+        ),
         const SizedBox(height: 8),
         Text(
           row.name,
@@ -808,7 +826,13 @@ class _RankTile extends StatelessWidget {
       ),
       child: Row(
         children: [
-          _Avatar(name: row.name, color: row.color, size: 38),
+          _Avatar(
+            name: row.name,
+            color: row.color,
+            size: 38,
+            gender: row.gender,
+            age: row.age,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -852,29 +876,61 @@ class _RankTile extends StatelessWidget {
 // ════════════ Umumiy ════════════
 
 class _Avatar extends StatelessWidget {
-  const _Avatar({required this.name, required this.color, required this.size});
+  const _Avatar({
+    required this.name,
+    required this.color,
+    required this.size,
+    this.gender,
+    this.age,
+  });
 
   final String name;
   final Color color;
   final double size;
+  final String? gender;
+  final int? age;
 
   @override
   Widget build(BuildContext context) {
     return Container(
       width: size,
       height: size,
-      alignment: Alignment.center,
+      clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: color,
         shape: BoxShape.circle,
         border: Border.all(color: const Color(0x33FFFFFF), width: 2),
       ),
-      child: Text(
-        name.isNotEmpty ? name[0].toUpperCase() : '?',
-        style: _unb(size * 0.36, w: FontWeight.w700),
+      // Jins+yoshga mos default avatar (harf o'rniga). Asset yuklanmasa —
+      // bosh harf zaxira sifatida.
+      child: Image.asset(
+        _defaultAvatarPath(gender, age),
+        fit: BoxFit.cover,
+        cacheWidth: 200,
+        errorBuilder: (_, __, ___) => Center(
+          child: Text(
+            name.isNotEmpty ? name[0].toUpperCase() : '?',
+            style: _unb(size * 0.36, w: FontWeight.w700),
+          ),
+        ),
       ),
     );
   }
+}
+
+/// Jins + yoshga mos default avatar asset yo'li (profil ekrani bilan bir xil).
+///   - `female` → yoshga qarab 3 xil (6_10 / 10_14 / 14)
+///   - aks holda (male yoki noma'lum) → bitta `boy.png`
+String _defaultAvatarPath(String? gender, int? age) {
+  final isFemale = gender == 'female';
+  if (!isFemale) return 'assets/default_avatars/boy.png';
+  final a = age ?? 6;
+  final band = a >= 14
+      ? '14'
+      : a >= 10
+      ? '10_14'
+      : '6_10';
+  return 'assets/default_avatars/girl_$band.png';
 }
 
 class _RoundBtn extends StatelessWidget {

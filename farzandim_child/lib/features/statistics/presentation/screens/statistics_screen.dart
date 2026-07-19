@@ -186,6 +186,12 @@ class _Header extends ConsumerWidget {
         ),
         const SizedBox(width: 12),
         Expanded(child: Text('statistics.title'.tr(), style: _unb(24))),
+        // Kunlik rivojlanishni ulashish (qadam/DON/streak kartochka).
+        _RoundIconButton(
+          icon: Icons.ios_share_rounded,
+          onTap: () => context.push('/daily-share'),
+        ),
+        const SizedBox(width: 10),
         _SvgIconButton(
           svg: _chatRoundLineSvg,
           onTap: () => context.push('/chats'),
