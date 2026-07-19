@@ -206,9 +206,23 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun openUsageAccessSettings() {
-        val intent = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-        context.startActivity(intent)
+        // Avval TO'G'RIDAN-TO'G'RI Parvoz Growth'ning usage-access sahifasini
+        // ochishga urinamiz (overlay ruxsati kabi) — foydalanuvchi ilovalar
+        // ro'yxatidan qidirib yurmasin. Android 10+ (API 29+) `package:` data'ni
+        // qo'llab aynan shu ilovaga o'tadi va toggle darhol ko'rinadi. Ba'zi
+        // OEM'larda bu variant qo'llanmasligi mumkin — o'shanda umumiy
+        // ro'yxatga fallback qilamiz (crash bo'lmasin).
+        val direct = Intent(
+            Settings.ACTION_USAGE_ACCESS_SETTINGS,
+            Uri.parse("package:${context.packageName}"),
+        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        try {
+            context.startActivity(direct)
+        } catch (e: Exception) {
+            val list = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            context.startActivity(list)
+        }
     }
 
     /// Drawable → 96x96 PNG → base64 (NO_WRAP). Xato bo'lsa null.
