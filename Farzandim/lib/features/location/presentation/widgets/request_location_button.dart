@@ -29,8 +29,7 @@ class RequestLocationButton extends ConsumerStatefulWidget {
       _RequestLocationButtonState();
 }
 
-class _RequestLocationButtonState
-    extends ConsumerState<RequestLocationButton> {
+class _RequestLocationButtonState extends ConsumerState<RequestLocationButton> {
   bool _sending = false;
 
   static const _blue = Color(0xFF216BFF);
@@ -53,48 +52,65 @@ class _RequestLocationButtonState
   @override
   Widget build(BuildContext context) {
     final height = widget.dense ? 40.0 : 48.0;
-    return SizedBox(
-      width: double.infinity,
-      height: height,
-      child: Material(
-        color: _blue,
-        borderRadius: BorderRadius.circular(widget.dense ? 12 : 14),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: _sending ? null : _send,
-          child: Center(
-            child: _sending
-                ? const SizedBox(
-                    width: 20,
-                    height: 20,
-                    child: CircularProgressIndicator(
-                      strokeWidth: 2.2,
-                      color: Colors.white,
-                    ),
-                  )
-                : Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const Icon(
-                        SolarIconsBold.mapPoint,
+    final radius = BorderRadius.circular(widget.dense ? 12 : 14);
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        borderRadius: radius,
+        // To'liq variantda yumshoq ko'k glow (premium, bola modalidagi bilan
+        // bir xil his). Ixcham (dashboard karta ichida) — flat, siqilmasin.
+        boxShadow: widget.dense
+            ? null
+            : [
+                BoxShadow(
+                  color: _blue.withValues(alpha: 0.35),
+                  blurRadius: 16,
+                  offset: const Offset(0, 5),
+                ),
+              ],
+      ),
+      child: SizedBox(
+        width: double.infinity,
+        height: height,
+        child: Material(
+          color: _blue,
+          borderRadius: radius,
+          clipBehavior: Clip.antiAlias,
+          child: InkWell(
+            onTap: _sending ? null : _send,
+            child: Center(
+              child: _sending
+                  ? const SizedBox(
+                      width: 20,
+                      height: 20,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2.2,
                         color: Colors.white,
-                        size: 18,
                       ),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(
-                          'location.enableRequest.button'.tr(),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: TextStyle(
-                            color: Colors.white,
-                            fontSize: widget.dense ? 13 : 14.5,
-                            fontWeight: FontWeight.w600,
+                    )
+                  : Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(
+                          SolarIconsBold.mapPoint,
+                          color: Colors.white,
+                          size: 18,
+                        ),
+                        const SizedBox(width: 8),
+                        Flexible(
+                          child: Text(
+                            'location.enableRequest.button'.tr(),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: widget.dense ? 13 : 14.5,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
+                      ],
+                    ),
+            ),
           ),
         ),
       ),

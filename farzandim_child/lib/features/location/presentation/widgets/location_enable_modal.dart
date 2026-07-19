@@ -74,17 +74,24 @@ class LocationEnableModal extends StatelessWidget {
               const SizedBox(height: 26),
               // Ko'k porlash + joylashuv ikonasi.
               Container(
-                width: 72,
-                height: 72,
+                width: 76,
+                height: 76,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   color: _pBlue.withValues(alpha: 0.16),
                   border: Border.all(color: _pBlue.withValues(alpha: 0.35)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: _pBlue.withValues(alpha: 0.30),
+                      blurRadius: 26,
+                      spreadRadius: 1,
+                    ),
+                  ],
                 ),
                 child: const Icon(
                   Icons.location_on_rounded,
-                  color: Color(0xFF3C82FF),
-                  size: 34,
+                  color: Color(0xFF4C8DFF),
+                  size: 36,
                 ),
               ),
               const SizedBox(height: 22),
@@ -101,8 +108,7 @@ class LocationEnableModal extends StatelessWidget {
               ),
               const SizedBox(height: 10),
               Text(
-                'Joylashuvni yoqsangiz ota-onangiz sizni xaritada '
-                'ko\'ra oladi va xavfsizligingizni bilib turadi.',
+                'location.enableModal.body'.tr(),
                 textAlign: TextAlign.center,
                 style: GoogleFonts.poppins(
                   fontSize: 14,
