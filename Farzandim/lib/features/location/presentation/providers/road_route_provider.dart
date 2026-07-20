@@ -8,6 +8,8 @@
 //     moslaydi (radiuses = aniqlik, tidy = shovqinni tozalash).
 // Fallback: /match bo'lmasa /route, u ham bo'lmasa tozalанган xom trek.
 
+import 'dart:math' as math;
+
 import 'package:dio/dio.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:farzandim/features/location/data/services/track_cleaner.dart';
@@ -45,9 +47,14 @@ final roadRouteProvider = FutureProvider.autoDispose
       final matched = await _tryMatch(dio, coords, radiuses);
       if (matched != null && matched.length >= 2) return matched;
 
-      // 2) Fallback: eski /route usuli.
-      final routed = await _tryRoute(dio, coords);
-      if (routed != null && routed.length >= 2) return routed;
+      // 2) Fallback: eski /route usuli. LEKIN nuqtalar orasida juda katta
+      //    uzilish bo'lsa ISHLATMAYMIZ: /route eng qisqa yo'lni topadi va
+      //    bola BORMAGAN magistral bo'ylab o'nlab km soxta chiziq chizib
+      //    qo'yadi (xaritada "Angrengacha ketgan yo'l" muammosi).
+      if (_maxGapMeters(pts) < 30000) {
+        final routed = await _tryRoute(dio, coords);
+        if (routed != null && routed.length >= 2) return routed;
+      }
 
       // 3) Eng yomon holat — tozalанган xom trek (to'g'ri chiziq).
       return cleanedLine();
@@ -108,6 +115,36 @@ double _radius(double accuracy) {
   if (accuracy <= 0) return 15;
   return accuracy.clamp(4, 50);
 }
+
+/// Ketma-ket nuqtalar orasidagi ENG KATTA uzilish (metr).
+///
+/// `/route` fallback'ini ishlatish xavfsizmi — shuni hal qilish uchun: uzilish
+/// juda katta bo'lsa OSRM ikki nuqta orasini magistral bilan to'ldirib,
+/// bola bormagan yo'lni chizib qo'yadi.
+double _maxGapMeters(List<ChildLocation> pts) {
+  var maxM = 0.0;
+  for (var i = 1; i < pts.length; i++) {
+    final d = _distM(pts[i - 1], pts[i]);
+    if (d > maxM) maxM = d;
+  }
+  return maxM;
+}
+
+/// Ikki nuqta orasidagi masofa (metr) — haversine.
+double _distM(ChildLocation a, ChildLocation b) {
+  const r = 6371000.0;
+  final dLat = _rad(b.latitude - a.latitude);
+  final dLng = _rad(b.longitude - a.longitude);
+  final h =
+      math.sin(dLat / 2) * math.sin(dLat / 2) +
+      math.cos(_rad(a.latitude)) *
+          math.cos(_rad(b.latitude)) *
+          math.sin(dLng / 2) *
+          math.sin(dLng / 2);
+  return 2 * r * math.asin(math.min(1, math.sqrt(h)));
+}
+
+double _rad(double deg) => deg * math.pi / 180;
 
 /// Trekni `max` ta nuqtaga tekis kamaytiradi (boshi va oxiri saqlanadi).
 List<ChildLocation> _sample(List<ChildLocation> track, int max) {
