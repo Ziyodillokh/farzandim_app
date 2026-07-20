@@ -44,10 +44,11 @@ class TrackCleaner {
     ];
     if (accurate.length < 2) return accurate;
 
-    // 1b) TELEPORT — GPS ba'zan uyali tarmoq (cell tower) bo'yicha o'nlab/yuzlab
-    //     km narida nuqta beradi. Bunday nuqta yo'lga yopishtirilsa, xaritada
-    //     MAGISTRAL bo'ylab uzun soxta chiziq chiziladi (bola u yerga bormagan).
-    //     Shuning uchun jismonan imkonsiz tezlikdagi nuqtani tashlaymiz.
+    // 1b) TELEPORT — GPS ba'zan uyali tarmoq (cell tower) bo'yicha
+    //     o'nlab/yuzlab km narida nuqta beradi. Bunday nuqta yo'lga
+    //     yopishtirilsa, xaritada MAGISTRAL bo'ylab uzun soxta chiziq
+    //     chiziladi (bola u yerga bormagan). Shuning uchun jismonan
+    //     imkonsiz tezlikdagi nuqtani tashlaymiz.
     final grounded = _dropTeleports(accurate, maxSpeedKmh);
     if (grounded.length < 2) return grounded;
 
