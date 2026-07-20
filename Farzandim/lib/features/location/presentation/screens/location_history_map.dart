@@ -11,7 +11,7 @@ class _MapLayer extends StatefulWidget {
     required this.points,
     required this.stops,
     required this.child,
-    required this.routeLine,
+    required this.routeSegments,
     required this.controller,
     required this.openDwellIndex,
     required this.onDwellTap,
@@ -25,9 +25,12 @@ class _MapLayer extends StatefulWidget {
   /// Oxirgi nuqta pin'i uchun bola (avatar). `null` bo'lsa fallback pin.
   final Child? child;
 
-  /// Ko'chalarга yopishtirilган (road-matched) yo'l. Bo'sh bo'lsa — nuqtalar
-  /// orasida to'g'ri chiziq.
-  final List<ll.LatLng> routeLine;
+  /// Ko'chalarga yopishtirilgan yo'l — HAR BO'LAK alohida chiziq.
+  ///
+  /// Alohida bo'laklar MUHIM: signal uzilgan/telefon o'chgan joyni bir-biriga
+  /// ulab qo'ymaslik kerak (avval butun kun bitta chiziq edi va uzilishlar
+  /// shahar bo'ylab to'g'ri chiziq bo'lib chizilardi).
+  final List<List<ll.LatLng>> routeSegments;
   final MapController controller;
   final int? openDwellIndex;
   final void Function(int idx) onDwellTap;
@@ -62,11 +65,14 @@ class _MapLayerState extends State<_MapLayer> {
     final chronological = widget.points;
     final start = chronological.first;
     final end = chronological.last;
-    // Polyline: road-matched yo'l bor bo'lsa uni, aks holda tozalанган
-    // nuqtalar orasidagi to'g'ri chiziq.
-    final linePoints = widget.routeLine.length >= 2
-        ? widget.routeLine
-        : [for (final p in chronological) _ll(p.latitude, p.longitude)];
+    // Chiziq bo'laklari: road-matched yo'l bo'lsa uni, aks holda tozalangan
+    // nuqtalardan bitta bo'lak (fallback).
+    final lineSegments = widget.routeSegments.isNotEmpty
+        ? widget.routeSegments
+        : <List<ll.LatLng>>[
+            if (chronological.length >= 2)
+              [for (final p in chronological) _ll(p.latitude, p.longitude)],
+          ];
 
     final circles = <CircleMarker>[];
     final markers = <Marker>[];
@@ -87,7 +93,10 @@ class _MapLayerState extends State<_MapLayer> {
           ),
         );
         markers.add(
-          Marker(point: at, child: _StopPin(number: i + 1)),
+          Marker(
+            point: at,
+            child: _StopPin(number: i + 1),
+          ),
         );
       }
     } else {
@@ -156,20 +165,15 @@ class _MapLayerState extends State<_MapLayer> {
         onTap: (_, __) => widget.onMapTap(),
       ),
       children: [
-        TileLayer(
-          urlTemplate: mapTileUrl,
-          userAgentPackageName: kMapUserAgent,
+        TileLayer(urlTemplate: mapTileUrl, userAgentPackageName: kMapUserAgent),
+        // Har bo'lak ALOHIDA chiziq — bo'laklar orasi ulanmaydi.
+        PolylineLayer(
+          polylines: [
+            for (final seg in lineSegments)
+              if (seg.length >= 2)
+                Polyline(points: seg, color: AppColors.primary, strokeWidth: 4),
+          ],
         ),
-        if (linePoints.length >= 2)
-          PolylineLayer(
-            polylines: [
-              Polyline(
-                points: linePoints,
-                color: AppColors.primary,
-                strokeWidth: 4,
-              ),
-            ],
-          ),
         CircleLayer(circles: circles),
         MarkerLayer(markers: markers),
         RichAttributionWidget(
@@ -362,11 +366,7 @@ class _HistoryAvatarPin extends StatelessWidget {
       ),
       child: c != null
           ? ChildAvatar(child: c, size: 40, showBorder: false)
-          : Icon(
-              SolarIconsBold.mapPoint,
-              size: 34,
-              color: AppColors.accent,
-            ),
+          : Icon(SolarIconsBold.mapPoint, size: 34, color: AppColors.accent),
     );
   }
 }

@@ -30,7 +30,7 @@ const MIN_STOP_SEC = 180; // 3 daqiqa
 //    (heartbeat har 60s) → har sakrash >10m yangi nuqta → tarixda soxta
 //    "borib-kelish" zigzag + shishgan masofa (masalan 356 km). ──
 /** Aniqligi shundan yomon (kattaroq, m) fix history'ga yozilmaydi (cell-tower/garbage). */
-const MAX_ACCURACY_M = 100;
+const MAX_ACCURACY_M = 50;
 /** Harakat chegarasi (m/s) — shundan tez bo'lsa "harakatda" deb hisoblanadi.
  *  1.0 m/s: sekin yurish ham harakat sanaladi (bola yurishi ~1.0-1.4 m/s),
  *  aks holda piyoda yo'l "statsionar" filtrga tushib chizilmay qolardi. */
@@ -173,7 +173,9 @@ export class LocationService {
     //     qurilma ma'lumotini (batareya/last-seen) baribir yangilaymiz.
     //     Emit'da oxirgi ISHONCHLI nuqta o'zining haqiqiy vaqti bilan ketadi
     //     (soxta "hozir" emas) — klient eskirganlikni ko'rsata oladi.
-    if (acc !== null && acc > MAX_ACCURACY_M) {
+    // `acc === null` ham ISHONCHSIZ: hech bir qatlam uni filtrlay olmaydi
+    // (klient/backend/parent — hammasi 'noma'lum' deb o'tkazib yuborardi).
+    if (acc === null || acc > MAX_ACCURACY_M) {
       await this.prisma.child.update({
         where: { id: childId },
         data: childDeviceUpdate,
@@ -210,12 +212,14 @@ export class LocationService {
       const isMoving = effSpeed !== null && effSpeed >= MOVING_SPEED_MS;
       const minMove = isMoving ? MOVE_MIN_M : JITTER_MIN_M;
       // Statsionar jitter ba'zan 25m'dan ham oshib yoziladi va xaritada
-      // zigzag "chiziqlar to'pi" hosil qiladi — harakatsiz holatda 60m'gacha
-      // siljishlarni eng ko'pi 2 daqiqada bittagina yozamiz.
+      // zigzag "chiziqlar to'pi" hosil qiladi. 2 daqiqalik oyna juda
+      // qisqa edi: uyda o'tirgan bola soatiga ~30 ta tarqoq nuqta berardi
+      // (ota-onada bu ko'chada yurish bo'lib ko'rinardi). Endi harakatsiz
+      // holatda 80m'gacha siljish eng ko'pi 15 daqiqada bir marta yoziladi.
       const lastAt = lastLocation.capturedAt ?? lastLocation.createdAt;
       const dtMs = capturedAt.getTime() - lastAt.getTime();
       const isStationaryJitter =
-        !isMoving && distance < 60 && dtMs < 120_000;
+        !isMoving && distance < 80 && dtMs < 900_000;
       if (distance < minMove || isStationaryJitter) {
         await this.prisma.child.update({
           where: { id: childId },

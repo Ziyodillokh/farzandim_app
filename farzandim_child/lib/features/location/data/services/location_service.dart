@@ -53,13 +53,21 @@ class LocationService {
   /// shu sample'larga tayanadi; <10m dedup bloat'ni oldini oladi.
   static const Duration _heartbeatInterval = Duration(seconds: 60);
 
-  // Yomon-aniqlik guard: uy/cafe ichida (multipath) accuracy 35–70m bo'lib
-  // nuqta ko'chага "sochiladi" (aslida chiqmagansiz). Bundan yomon fix, agar
-  // yaqinда (_sendGuardWindow) yaxshi fix yuborilган bo'lsa, YUBORILMAYDI —
-  // marker/tarix oxirgi yaxshi joyда qoladi. Uzoq yaxshi fix bo'lmasa
-  // yuboramiz (liveness aniqlikдан muhim — bola "yo'qolib" qolmasin).
-  static const double _maxGoodAccuracyM = 35;
-  static const Duration _sendGuardWindow = Duration(seconds: 90);
+  /// Aniqlik darvozasi (SHARTSIZ): bundan yomon fix TARIXGA yozilmaydi.
+  ///
+  /// 50 m — uyali-tarmoq/Wi-Fi fixlarini (100–2000 m) kesadi, lekin haqiqiy
+  /// GPS'ni (odatda 5–30 m) o'tkazadi. Avval 35 m edi, lekin FAQAT "yaqinda
+  /// yuborilgan bo'lsa" — ya'ni 90 soniyada bir marta istalgan axlat o'tardi.
+  static const double _maxGoodAccuracyM = 50;
+
+  /// Tarixga yozish uchun minimal siljish (metr).
+  ///
+  /// Bola qimirlamasa ham har 60 s da nuqta yuborilardi; binoda GPS 25–60 m
+  /// sochilgani uchun ota-onada bu "yurish" bo'lib ko'rinardi.
+  static const double _minSendMoveM = 25;
+
+  /// Qimirlamasa ham shu oraliqda bir marta yuboriladi ("tirikman" nuqtasi).
+  static const Duration _maxIdleSendGap = Duration(minutes: 15);
 
   StreamSubscription<Position>? _positionSub;
   Timer? _heartbeatTimer;
@@ -68,6 +76,8 @@ class LocationService {
   Timer? _startRetryTimer;
   Position? _lastPosition;
   DateTime? _lastSentAt; // guard: oxirgi joylashuv yuborilган vaqt
+  /// Oxirgi TARIXGA yozilgan nuqta — siljish darvozasi shunga taqqoslaydi.
+  Position? _lastSentPos;
   String? _parentUid;
   String? _childId;
 
@@ -314,22 +324,42 @@ class LocationService {
   Future<void> _writeToFirestore(Position position) async {
     if (_parentUid == null || _childId == null) return;
 
-    // Yomon-aniqlik guard — indoor multipath sochilishini kamaytiradi. Yaqinда
-    // yaxshi fix yuborilган bo'lsa, yomon accuracy'ли nuqtani o'tkazib
-    // yuboramiz (oxirgi yaxshi joy saqlanadi; marker ko'chага sakramaydi).
-    // Uzoq yaxshi fix bo'lmasa yuboramiz (liveness — bola yo'qolmasin).
+    // ── 1) ANIQLIK darvozasi (SHARTSIZ) ──────────────────────────────
+    // Avval "yaqinda yuborilgan bo'lsa" shartli edi: 90 soniyada bir marta
+    // ISTALGAN aniqlikdagi (hatto 2000 m masofali uyali-tarmoq) nuqta
+    // o'tib ketardi va tarixni buzardi. Endi 50 m dan yomon fix TARIXGA
+    // umuman yozilmaydi (bolaning "online" holati alohida device-info
+    // heartbeat orqali ketadi — liveness buzilmaydi).
     final acc = position.accuracy;
-    final recentlySent = _lastSentAt != null &&
-        DateTime.now().difference(_lastSentAt!) < _sendGuardWindow;
-    if (acc > _maxGoodAccuracyM && acc > 0 && recentlySent) {
+    if (acc <= 0 || acc > _maxGoodAccuracyM) {
       debugPrint(
         'LocationService: yomon aniqlik (${acc.round()}m) — yuborilmadi',
       );
       return;
     }
 
+    // ── 2) SILJISH darvozasi ─────────────────────────────────────────
+    // Bola qimirlamasa ham har 60 soniyada nuqta yuborilardi. Binoda GPS
+    // 25–60 m "sochilgani" uchun ota-onada bu YURISH bo'lib ko'rinardi
+    // (soatiga ~30 ta tarqoq nuqta). Endi: sezilarli siljish bo'lmasa,
+    // 15 daqiqada bir marta "tirikman" nuqtasi yetarli.
+    final last = _lastSentPos;
+    if (last != null) {
+      final moved = Geolocator.distanceBetween(
+        last.latitude,
+        last.longitude,
+        position.latitude,
+        position.longitude,
+      );
+      final since = _lastSentAt == null
+          ? _maxIdleSendGap
+          : DateTime.now().difference(_lastSentAt!);
+      if (moved < _minSendMoveM && since < _maxIdleSendGap) return;
+    }
+
     // Oxirgi (qabul qilingan) pozitsiyani saqlash — heartbeat qayta yozadi.
     _lastPosition = position;
+    _lastSentPos = position;
 
     // Sprint 4.4: Backend POST /api/location ishlatamiz (JWT auth).
     // Backend Postgres'ga yozadi, geofence check qiladi, parent push.
@@ -453,6 +483,18 @@ class LocationService {
         desiredAccuracy: LocationAccuracy.high,
         timeLimit: const Duration(seconds: 25),
       );
+      // Aniqlik darvozasi wake-fix'ga ham tegishli: ota-ona xaritani ochganda
+      // uyali-tarmoq fix (100–2000 m) yuborilib, tarixda "sakrash" (keraksiz
+      // chiziq) paydo bo'lardi — chunki avval to'g'ridan `_postToBackend`
+      // chaqirilib, barcha filtrlar chetlab o'tilardi.
+      if (position.accuracy <= 0 ||
+          position.accuracy > _maxGoodAccuracyM) {
+        debugPrint(
+          'LocationService: wake fix yomon aniqlik '
+          '(${position.accuracy.round()}m) — yuborilmadi',
+        );
+        return;
+      }
       final service = LocationService()
         .._parentUid = parentUid
         .._childId = childId;

@@ -1,14 +1,21 @@
-// Trekni KO'CHALARGA ANIQ yopishtirilган (road-matched) yo'lга aylantiruvchi
-// provider. Ikki bosqich:
-//  1) TOZALASH (TrackCleaner) — indoor sochilishi + jitter + spike olib
-//     tashlanadi (uy/cafe ичida ko'chага "chiqib qolish" kamayadi).
-//  2) MAP-MATCHING — OSRM `/match` GPS izini yo'lга aniq yopishtiradi. Bu
-//     `/route`дан farqli: /route eng qisqa yo'lni topadi (haydашда egri →
-//     burilганда to'g'rilanadi), /match esa AYNAN yurgan yo'lni yo'l tarmog'iga
-//     moslaydi (radiuses = aniqlik, tidy = shovqinni tozalash).
-// Fallback: /match bo'lmasa /route, u ham bo'lmasa tozalанган xom trek.
-
-import 'dart:math' as math;
+// ─────────────────────────────────────────────────────────────────────
+// roadRouteProvider — trekni ko'chalarga yopishtirilgan CHIZIQLARGA aylantiradi
+// ─────────────────────────────────────────────────────────────────────
+//
+// MUHIM O'ZGARISH: avval butun kun BITTA chiziq edi va OSRM `/match` HAR DOIM
+// chaqirilardi. Natijada:
+//   • uyda o'tirganda GPS sochilishi ko'chaga "yopishib", bola ko'chada
+//     yurgandek ko'rinardi (radius 50 m — 6-qavatdan ko'chagacha yetardi);
+//   • uzilishlar (telefon o'chgan) to'g'ri chiziq bilan ulanardi;
+//   • 6 km avtomobil safari PIYODA profili bilan hovlilardan o'tkazilardi.
+//
+// Endi:
+//   1. Trek segmentlarga bo'linadi (TrackCleaner) — turgan joy alohida.
+//   2. Map-matching FAQAT haqiqiy harakat segmentiga qo'llanadi (shartlar
+//      qat'iy: nuqta soni, masofa, tezlik). Turgan joy hech qachon yo'lga
+//      yopishtirilmaydi.
+//   3. Tezlikka qarab profil: piyoda yoki mashina.
+//   4. Har segment ALOHIDA chiziq — uzilishlar ulanmaydi.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
@@ -17,24 +24,18 @@ import 'package:farzandim/features/location/presentation/providers/location_hist
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
 
-/// Berilган oraliq uchun ko'chalarga yopishtirilган yo'l (polyline nuqtalari).
+/// Ko'chalarga yopishtirilgan yo'l — HAR BO'LAK alohida chiziq.
+///
+/// Bo'sh ro'yxat = chizadigan harakat yo'q (masalan bola kun bo'yi uyda).
+typedef RouteSegments = List<List<LatLng>>;
+
+/// Berilgan oraliq uchun yo'l bo'laklari.
 final roadRouteProvider = FutureProvider.autoDispose
-    .family<List<LatLng>, LocationHistoryQuery>((ref, query) async {
-      final rawTrack = await ref.watch(locationHistoryProvider(query).future);
-      // Avval tozalash — sochilish/jitter yo'lni buzmasin (matching'дан oldin
-      // MUHIM: yomon nuqtalar yo'lга yopishса ko'chага chiqib ketardi).
-      final track = TrackCleaner.clean(rawTrack);
-
-      List<LatLng> cleanedLine() => [
-        for (final p in track) LatLng(p.latitude, p.longitude),
-      ];
-
-      if (track.length < 2) return cleanedLine();
-
-      // OSRM cheklovi ~100 nuqta — tekis namunaga keltiramiz.
-      final pts = _sample(track, 100);
-      final coords = pts.map((p) => '${p.longitude},${p.latitude}').join(';');
-      final radiuses = pts.map((p) => _radius(p.accuracy)).join(';');
+    .family<RouteSegments, LocationHistoryQuery>((ref, query) async {
+      final raw = await ref.watch(locationHistoryProvider(query).future);
+      final cleaned = TrackCleaner.process(raw);
+      final moves = cleaned.movements;
+      if (moves.isEmpty) return const <List<LatLng>>[];
 
       final dio = Dio(
         BaseOptions(
@@ -43,115 +44,143 @@ final roadRouteProvider = FutureProvider.autoDispose
         ),
       );
 
-      // 1) Map-matching (aniq yopishtirish).
-      final matched = await _tryMatch(dio, coords, radiuses);
-      if (matched != null && matched.length >= 2) return matched;
+      final out = <List<LatLng>>[];
+      for (final seg in moves) {
+        final rawLine = [
+          for (final p in seg.points) LatLng(p.latitude, p.longitude),
+        ];
+        if (rawLine.length < 2) continue;
 
-      // 2) Fallback: eski /route usuli. LEKIN nuqtalar orasida juda katta
-      //    uzilish bo'lsa ISHLATMAYMIZ: /route eng qisqa yo'lni topadi va
-      //    bola BORMAGAN magistral bo'ylab o'nlab km soxta chiziq chizib
-      //    qo'yadi (xaritada "Angrengacha ketgan yo'l" muammosi).
-      if (_maxGapMeters(pts) < 30000) {
-        final routed = await _tryRoute(dio, coords);
-        if (routed != null && routed.length >= 2) return routed;
+        // Yo'lga yopishtirishga arzimasa — xom (tozalangan) chiziq.
+        if (!_shouldMatch(seg)) {
+          out.add(rawLine);
+          continue;
+        }
+
+        final matched = await _match(dio, seg);
+        if (matched == null || matched.isEmpty) {
+          out.add(rawLine);
+          continue;
+        }
+        out.addAll(matched);
       }
-
-      // 3) Eng yomon holat — tozalанган xom trek (to'g'ri chiziq).
-      return cleanedLine();
+      return out;
     });
 
-/// OSRM `/match` — GPS izini yo'l tarmog'iga moslaydi.
-Future<List<LatLng>?> _tryMatch(
-  Dio dio,
-  String coords,
-  String radiuses,
-) async {
+/// Segmentni yo'lga yopishtirish kerakmi?
+///
+/// Shovqin to'plamini (turgan joy qoldig'i, yakka sakrash) yo'lga
+/// yopishtirish — aynan "uyda o'tirsam ko'chada yurgan qilib ko'rsatadi"
+/// muammosining sababi. Shuning uchun shartlar qat'iy.
+bool _shouldMatch(TrackSegment seg) {
+  if (seg.isStay) return false;
+  if (seg.points.length < 6) return false; // juda kam nuqta — ishonchsiz
+  if (seg.spanMeters < 150) return false; // joyidan sezilarli ketmagan
+  if (seg.pathMeters < 200) return false;
+  final v = seg.medianSpeedMps;
+  if (v < 0.5 || v > 40) return false; // turgan yoki imkonsiz tez
+  if (seg.duration > const Duration(hours: 2)) return false;
+  return true;
+}
+
+/// OSRM `/match` — bitta segmentni yo'l tarmog'iga moslaydi.
+///
+/// `gaps=split` — OSRM ulab bo'lmaydigan joyni O'ZI bo'lib beradi; biz
+/// har bo'lakni ALOHIDA chiziq qilamiz (avval hammasi bitta ro'yxatga
+/// qo'shilardi va OSRM chizishdan bosh tortgan joy to'g'ri chiziq bo'lardi).
+Future<List<List<LatLng>>?> _match(Dio dio, TrackSegment seg) async {
+  final pts = _sampleByDistance(seg.points, maxPoints: 100, minSpacingM: 20);
+  if (pts.length < 6) return null;
+
+  final coords = pts.map((p) => '${p.longitude},${p.latitude}').join(';');
+  final radiuses = pts.map((p) => _radius(p.accuracy)).join(';');
+  // Tezlikka qarab profil — 2.5 m/s (~9 km/soat) dan tez bo'lsa transport.
+  final profile = seg.medianSpeedMps >= 2.5
+      ? 'routed-car/car'
+      : 'routed-foot/foot';
+
   final url =
-      'https://routing.openstreetmap.de/routed-foot/match/v1/foot/'
-      '$coords?geometries=geojson&overview=full&tidy=true&radiuses=$radiuses';
+      'https://routing.openstreetmap.de/$profile/match/v1/'
+      '${profile.split('/').last}/$coords'
+      '?geometries=geojson&overview=full&tidy=true&gaps=split'
+      '&radiuses=$radiuses';
+
   try {
     final res = await dio.get<Map<String, dynamic>>(url);
     final matchings = res.data?['matchings'] as List?;
     if (matchings == null || matchings.isEmpty) return null;
-    // Bir necha matching bo'lsa (iz bo'linса) tartib bilan ulaymiz.
-    final out = <LatLng>[];
+
+    final lines = <List<LatLng>>[];
     for (final m in matchings) {
-      final line =
-          ((m as Map)['geometry'] as Map?)?['coordinates'] as List?;
-      if (line == null) continue;
-      for (final c in line) {
-        out.add(LatLng((c as List)[1] as double, c[0] as double));
-      }
+      final map = m as Map;
+      // Ishonch past bo'lsa — bu taxmin, chizmaymiz.
+      final conf = (map['confidence'] as num?)?.toDouble() ?? 0;
+      if (conf < 0.3) continue;
+      final coordsList = (map['geometry'] as Map?)?['coordinates'] as List?;
+      if (coordsList == null || coordsList.length < 2) continue;
+      lines.add([
+        for (final c in coordsList)
+          LatLng((c as List)[1] as double, c[0] as double),
+      ]);
     }
-    return out.length >= 2 ? out : null;
+    if (lines.isEmpty) return null;
+
+    // Xavfsizlik: moslashtirilgan yo'l xom yo'ldan 2.5 barobar uzun bo'lsa,
+    // OSRM adashgan (hovli/aylanma qo'shgan) — xom chiziqni afzal ko'ramiz.
+    final matchedLen = lines.fold<double>(0, (a, l) => a + _lineMeters(l));
+    if (matchedLen > seg.pathMeters * 2.5 + 200) return null;
+
+    return lines;
   } catch (_) {
     return null;
   }
 }
 
-/// OSRM `/route` — nuqtalar orasini ko'chalar bo'ylab to'ldiradi (fallback).
-Future<List<LatLng>?> _tryRoute(Dio dio, String coords) async {
-  final url =
-      'https://routing.openstreetmap.de/routed-foot/route/v1/foot/'
-      '$coords?overview=full&geometries=geojson';
-  try {
-    final res = await dio.get<Map<String, dynamic>>(url);
-    final routes = res.data?['routes'] as List?;
-    if (routes == null || routes.isEmpty) return null;
-    final line =
-        ((routes.first as Map)['geometry'] as Map?)?['coordinates'] as List?;
-    if (line == null || line.length < 2) return null;
-    return [
-      for (final c in line) LatLng((c as List)[1] as double, c[0] as double),
-    ];
-  } catch (_) {
-    return null;
-  }
-}
-
-/// OSRM qidiruv radiusi (metr) — aniqlik yomon bo'lsa kengroq, lekin 4–50m
-/// oralig'ida (juda keng radius noto'g'ri yo'lга yopishtirib yuboradi).
+/// OSRM qidiruv radiusi (metr). 50 m juda keng edi — binodagi nuqta
+/// ko'chagacha yetib, ko'chaga yopishardi. Endi eng ko'pi 25 m.
 double _radius(double accuracy) {
   if (accuracy <= 0) return 15;
-  return accuracy.clamp(4, 50);
+  return accuracy.clamp(4, 25);
 }
 
-/// Ketma-ket nuqtalar orasidagi ENG KATTA uzilish (metr).
+/// Masofa bo'yicha siyraklashtirish — indeks bo'yicha emas.
 ///
-/// `/route` fallback'ini ishlatish xavfsizmi — shuni hal qilish uchun: uzilish
-/// juda katta bo'lsa OSRM ikki nuqta orasini magistral bilan to'ldirib,
-/// bola bormagan yo'lni chizib qo'yadi.
-double _maxGapMeters(List<ChildLocation> pts) {
-  var maxM = 0.0;
-  for (var i = 1; i < pts.length; i++) {
-    final d = _distM(pts[i - 1], pts[i]);
-    if (d > maxM) maxM = d;
+/// Indeks bo'yicha namuna olish uy blobiga OSRM byudjetining katta qismini
+/// berardi; masofa bo'yicha olish esa yo'lni tekis qoplaydi.
+List<ChildLocation> _sampleByDistance(
+  List<ChildLocation> pts, {
+  required int maxPoints,
+  required double minSpacingM,
+}) {
+  if (pts.length <= 2) return pts;
+  final out = <ChildLocation>[pts.first];
+  for (var i = 1; i < pts.length - 1; i++) {
+    if (_distM(out.last, pts[i]) >= minSpacingM) out.add(pts[i]);
   }
-  return maxM;
-}
-
-/// Ikki nuqta orasidagi masofa (metr) — haversine.
-double _distM(ChildLocation a, ChildLocation b) {
-  const r = 6371000.0;
-  final dLat = _rad(b.latitude - a.latitude);
-  final dLng = _rad(b.longitude - a.longitude);
-  final h =
-      math.sin(dLat / 2) * math.sin(dLat / 2) +
-      math.cos(_rad(a.latitude)) *
-          math.cos(_rad(b.latitude)) *
-          math.sin(dLng / 2) *
-          math.sin(dLng / 2);
-  return 2 * r * math.asin(math.min(1, math.sqrt(h)));
-}
-
-double _rad(double deg) => deg * math.pi / 180;
-
-/// Trekni `max` ta nuqtaga tekis kamaytiradi (boshi va oxiri saqlanadi).
-List<ChildLocation> _sample(List<ChildLocation> track, int max) {
-  if (track.length <= max) return track;
-  final step = (track.length - 1) / (max - 1);
+  out.add(pts.last);
+  if (out.length <= maxPoints) return out;
+  // Hali ko'p bo'lsa — tekis kamaytiramiz (boshi/oxiri saqlanadi).
+  final step = (out.length - 1) / (maxPoints - 1);
   return [
-    for (var i = 0; i < max; i++)
-      track[(i * step).round().clamp(0, track.length - 1)],
+    for (var i = 0; i < maxPoints; i++)
+      out[(i * step).round().clamp(0, out.length - 1)],
   ];
+}
+
+double _lineMeters(List<LatLng> line) {
+  const d = Distance();
+  var sum = 0.0;
+  for (var i = 1; i < line.length; i++) {
+    sum += d.as(LengthUnit.Meter, line[i - 1], line[i]);
+  }
+  return sum;
+}
+
+double _distM(ChildLocation a, ChildLocation b) {
+  const d = Distance();
+  return d.as(
+    LengthUnit.Meter,
+    LatLng(a.latitude, a.longitude),
+    LatLng(b.latitude, b.longitude),
+  );
 }

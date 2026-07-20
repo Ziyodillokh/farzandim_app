@@ -303,12 +303,13 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     // Ko'chalarga yopishtirilgan yo'l (OSRM). Tayyor bo'lmasa — xom trek
     // (to'g'ri chiziq) bilan ko'rsatamiz.
     final roadRoute = ref.watch(roadRouteProvider(todayQuery)).valueOrNull;
-    // roadRoute tayyor bo'lmasa — tozalanган xom trek (sochilishsiz).
-    final routeLine = (roadRoute != null && roadRoute.length >= 2)
+    // Bo'laklar: road-matched bo'lsa o'shani, aks holda tozalangan xom trek.
+    // Har bo'lak ALOHIDA chiziq — uzilishlar bir-biriga ulanmaydi.
+    final routeSegments = (roadRoute != null && roadRoute.isNotEmpty)
         ? roadRoute
-        : [
-            for (final p in TrackCleaner.clean(track))
-              ll.LatLng(p.latitude, p.longitude),
+        : <List<ll.LatLng>>[
+            for (final seg in TrackCleaner.process(track).movements)
+              [for (final p in seg.points) ll.LatLng(p.latitude, p.longitude)],
           ];
 
     final locationAsync = ref.watch(childLocationProvider(child.id));
@@ -358,7 +359,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                   location: location,
                   child: child,
                   zones: zones,
-                  route: routeLine,
+                  routeSegments: routeSegments,
                   myLocation: _myLocation,
                   controller: _mapController,
                   onUserGesture: _onUserGesture,
@@ -463,7 +464,7 @@ class _MapLayer extends StatelessWidget {
     required this.location,
     required this.child,
     required this.zones,
-    required this.route,
+    required this.routeSegments,
     required this.myLocation,
     required this.controller,
     required this.onUserGesture,
@@ -474,8 +475,9 @@ class _MapLayer extends StatelessWidget {
   final Child child;
   final List<GeoZone> zones;
 
-  /// Ko'chalarga yopishtirilgan bugungi yo'l — ko'k uzuq-uzuq polyline.
-  final List<ll.LatLng> route;
+  /// Ko'chalarga yopishtirilgan bugungi yo'l — HAR BO'LAK alohida chiziq
+  /// (uzilishlar bir-biriga ulanmasin).
+  final List<List<ll.LatLng>> routeSegments;
 
   /// Ota-onaning O'Z joylashuvi (ko'k nuqta). `null` bo'lsa ko'rsatilmaydi.
   final gmaps.LatLng? myLocation;
@@ -493,12 +495,21 @@ class _MapLayer extends StatelessWidget {
       location.longitude,
       zoom: 16,
     );
-    // Yo'l oxirini AYNAN avatar (joriy joylashuv) nuqtasiga ulaymiz — OSRM
-    // yo'lni eng yaqin ko'chaga yopishtirgani uchun kichik bo'shliq qolardi
-    // va "chiziq turgan joyga bormagan"dek ko'rinardi.
-    final line = (route.isNotEmpty && route.last == here)
-        ? route
-        : [...route, here];
+    // Yo'l oxirini avatar (joriy joylashuv) nuqtasiga ulaymiz — lekin FAQAT
+    // yaqin bo'lsa (150 m). Avval shartsiz ulanardi: bola tushdan beri
+    // uydagi bo'lsa ham, ertalabki trek oxiri hozirgi nuqtaga uzun to'g'ri
+    // chiziq bilan tortilardi ("keraksiz chiziq").
+    final lines = <List<ll.LatLng>>[
+      for (final seg in routeSegments)
+        if (seg.length >= 2) seg,
+    ];
+    if (lines.isNotEmpty) {
+      final last = lines.last.last;
+      const dist = ll.Distance();
+      if (last != here && dist.as(ll.LengthUnit.Meter, last, here) <= 150) {
+        lines[lines.length - 1] = [...lines.last, here];
+      }
+    }
     return FlutterMap(
       mapController: controller,
       options: MapOptions(
@@ -519,18 +530,18 @@ class _MapLayer extends StatelessWidget {
           urlTemplate: mapTileUrl,
           userAgentPackageName: kMapUserAgent,
         ),
-        // Bugungi yo'l chizig'i (ko'chaga yopishган) — kamida 2 nuqta bo'lsa.
-        if (line.length >= 2)
-          PolylineLayer(
-            polylines: [
+        // Bugungi yo'l — har bo'lak alohida chiziq (uzilishlar ulanmaydi).
+        PolylineLayer(
+          polylines: [
+            for (final seg in lines)
               Polyline(
-                points: line,
+                points: seg,
                 color: _blue,
                 strokeWidth: 4,
                 pattern: StrokePattern.dashed(segments: const [18.0, 10.0]),
               ),
-            ],
-          ),
+          ],
+        ),
         // Aniqlik halosi + geo-zona doiralari (metrda).
         CircleLayer(
           circles: [
@@ -822,9 +833,7 @@ class _StatusCard extends ConsumerWidget {
     // "Ko'chada" (Figma).
     final currentZone = _zoneForStop(location.latLng, zones);
     final status = currentZone != null
-        ? 'location.status.inZone'.tr(
-            namedArgs: {'zone': currentZone.name},
-          )
+        ? 'location.status.inZone'.tr(namedArgs: {'zone': currentZone.name})
         : "Ko'chada";
     return Container(
       padding: const EdgeInsets.fromLTRB(12, 10, 10, 10),

@@ -1,4 +1,3 @@
-import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/map/map_tiles.dart';
@@ -72,14 +71,19 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
   // qiymati o'zgarmasa List identity bir xil; barqaror identity
   // _MapLayer'dagi dwell keshiga ham asos bo'ladi.
   List<ChildLocation>? _trackMemoInput;
+  CleanedTrack _cleanedMemo = CleanedTrack.empty;
   List<ChildLocation> _trackMemo = const <ChildLocation>[];
   double _distanceKmMemo = 0;
 
   List<ChildLocation> _memoizedTrack(List<ChildLocation> raw) {
     if (!identical(raw, _trackMemoInput)) {
       _trackMemoInput = raw;
-      _trackMemo = TrackCleaner.clean(raw);
-      _distanceKmMemo = _calculateDistanceKm(_trackMemo);
+      _cleanedMemo = TrackCleaner.process(raw);
+      _trackMemo = _cleanedMemo.displayPoints;
+      // Masofa FAQAT harakat bo'laklaridan. Avval butun tozalangan ro'yxat
+      // bo'ylab yig'ilardi — uyda 8 soat o'tirish ~8 km "arvoh masofa"
+      // qo'shardi (GPS sochilishi harakat deb hisoblanardi).
+      _distanceKmMemo = _cleanedMemo.movementMeters / 1000;
     }
     return _trackMemo;
   }
@@ -176,8 +180,9 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     );
     // Ko'chalarга yopishtirilган (road-matched) yo'l — polyline uchun.
     // Tayyor bo'lmasa `_MapLayer` tozalанган trekдан to'g'ri chiziq chizadi.
-    final routeLine =
-        ref.watch(roadRouteProvider(query)).valueOrNull ?? const <ll.LatLng>[];
+    final routeSegments =
+        ref.watch(roadRouteProvider(query)).valueOrNull ??
+        const <List<ll.LatLng>>[];
 
     return Scaffold(
       backgroundColor: AppColors.background,
@@ -212,7 +217,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
                   points: shown,
                   stops: stops,
                   child: child,
-                  routeLine: routeLine,
+                  routeSegments: routeSegments,
                   controller: _mapController,
                   openDwellIndex: _openDwellIndex,
                   onDwellTap: (idx) {
@@ -283,33 +288,7 @@ class _LocationHistoryScreenState extends ConsumerState<LocationHistoryScreen> {
     );
   }
 
-  /// Polyline bo'ylab jami masofani km'da hisoblash (haversine).
-  double _calculateDistanceKm(List<ChildLocation>? points) {
-    if (points == null || points.length < 2) return 0;
-    var total = 0.0;
-    for (var i = 1; i < points.length; i++) {
-      total += _haversineKm(points[i - 1], points[i]);
-    }
-    return total;
-  }
-
-  /// Ikki nuqta orasidagi masofa (km) — Haversine formula.
-  double _haversineKm(ChildLocation a, ChildLocation b) {
-    const earthKm = 6371.0;
-    final dLat = _toRadians(b.latitude - a.latitude);
-    final dLng = _toRadians(b.longitude - a.longitude);
-    final lat1 = _toRadians(a.latitude);
-    final lat2 = _toRadians(b.latitude);
-
-    final h =
-        math.sin(dLat / 2) * math.sin(dLat / 2) +
-        math.sin(dLng / 2) *
-            math.sin(dLng / 2) *
-            math.cos(lat1) *
-            math.cos(lat2);
-    final c = 2 * math.atan2(math.sqrt(h), math.sqrt(1 - h));
-    return earthKm * c;
-  }
-
-  double _toRadians(double degrees) => degrees * math.pi / 180;
+  // Masofa hisobi TrackCleaner'ga ko'chdi (`CleanedTrack.movementMeters`) —
+  // u faqat HARAKAT bo'laklarini qo'shadi, turgan joydagi GPS sochilishini
+  // masofaga qo'shmaydi.
 }
