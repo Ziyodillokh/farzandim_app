@@ -20,6 +20,7 @@ import 'package:farzandim_child/features/audiobooks/data/models/audio_player_sta
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/data/repositories/audiobooks_backend_repository.dart';
 import 'package:farzandim_child/features/audiobooks/data/services/audiobook_audio_handler.dart';
+import 'package:farzandim_child/features/gamification/presentation/providers/gamification_providers.dart';
 import 'package:farzandim_child/features/statistics/presentation/providers/stats_providers.dart';
 
 class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
@@ -28,6 +29,10 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       state = state.copyWith(position: pos);
       // Qolgan joydan davom etish uchun pozitsiyani saqlaymiz (throttle 5s).
       unawaited(_maybeSavePosition(pos));
+      // "Eshitib bo'ldim" — player `completed` bermasa ham (ko'p kitobda
+      // oxirida sukut/outro bor va bola undan oldin chiqib ketadi) oxirgi
+      // 10 soniyaga yetgan bo'lsa mukofot beriladi.
+      _maybeReportNearEnd(pos);
     });
 
     _durationSub = _player.durationStream.listen((dur) {
@@ -56,11 +61,8 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       // Faqat completion'da — chala chiqib ketsa berilmaydi. Har kitob
       // uchun bir marta (backend ham relatedId bo'yicha dedup qiladi).
       final book = state.currentBook;
-      if (s.processingState == ProcessingState.completed &&
-          book != null &&
-          _bookReadReportedFor != book.id) {
-        _bookReadReportedFor = book.id;
-        unawaited(_onBookCompleted(book));
+      if (s.processingState == ProcessingState.completed && book != null) {
+        _reportCompletedOnce(book);
       }
     });
   }
@@ -203,15 +205,49 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
     } catch (_) {}
   }
 
+  /// Oxiriga ~10 soniya qolganda "eshitib bo'ldi" deb hisoblaymiz.
+  ///
+  /// NEGA: player FAQAT aynan oxirigacha o'ynaganda `completed` beradi. Ko'p
+  /// audiokitobda oxirida sukut/outro bo'ladi va bola undan oldin chiqib
+  /// ketadi — u kitobni eshitib bo'lgan, lekin mukofot berilmasdi.
+  void _maybeReportNearEnd(Duration pos) {
+    final book = state.currentBook;
+    if (book == null || _bookReadReportedFor == book.id) return;
+    final dur = state.duration;
+    if (dur.inSeconds <= 0) return;
+    if (dur - pos > const Duration(seconds: 10)) return;
+    _reportCompletedOnce(book);
+  }
+
+  /// Har kitob uchun BIR MARTA hisobot (backend ham relatedId bo'yicha dedup).
+  void _reportCompletedOnce(AudiobookModel book) {
+    if (_bookReadReportedFor == book.id) return;
+    _bookReadReportedFor = book.id;
+    unawaited(_onBookCompleted(book));
+  }
+
   /// Kitob to'liq tinglandi: DON (backend, idempotent) + pozitsiyani tozalash
-  /// (keyingi safar noldan) + statistikani yangilash.
+  /// (keyingi safar noldan) + statistika VA gamifikatsiyani yangilash.
   Future<void> _onBookCompleted(AudiobookModel book) async {
     _lastSavedPos = Duration.zero;
     await _clearSavedPosition(book.id);
-    await _ref
-        .read(audiobooksBackendRepositoryProvider)
-        .reportCompleted(book.id);
-    _ref.invalidate(developmentSummaryProvider);
+    try {
+      await _ref
+          .read(audiobooksBackendRepositoryProvider)
+          .reportCompleted(book.id);
+    } catch (e) {
+      // Tarmoq xatosi — bayroqni tozalaymiz, aks holda mukofot BUTUNLAY
+      // yo'qolardi (bayroq so'rovdan oldin qo'yilib, qayta urinish yo'q edi).
+      debugPrint('AudioPlayer: reportCompleted xato: $e');
+      _bookReadReportedFor = null;
+      return;
+    }
+    // MUHIM: DON balansi va yutuqlar SHU providerda. Invalidate qilinmasa
+    // backend mukofotni bergan bo'lsa ham ekranda eski DON va QULFLANGAN
+    // yutuq turaverardi ("audio eshitdim — yutuq ochilmadi" shikoyati).
+    _ref
+      ..invalidate(developmentSummaryProvider)
+      ..invalidate(backendGamificationProvider);
   }
 
   Future<void> pause() => _player.pause();

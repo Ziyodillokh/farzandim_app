@@ -9,13 +9,17 @@
 //   • Reyting          → leaderboardProvider
 // Kitob/test/qadam backend'da hali yo'q → 0. Bola ulanmasa data bo'sh.
 
+import 'package:cached_network_image/cached_network_image.dart';
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/config/env_config.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart'
     show DailySteps;
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/child_management/data/models/default_avatar.dart';
+import 'package:farzandim/features/child_management/data/models/gender.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
 import 'package:farzandim/features/gamification/data/models/leaderboard_models.dart';
 import 'package:farzandim/features/gamification/presentation/providers/gamification_provider.dart';
@@ -329,7 +333,13 @@ class _RankRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 7),
       child: Row(
         children: [
-          _LetterAvatar(letter: entry.name, size: 28),
+          _LetterAvatar(
+            letter: entry.name,
+            size: 28,
+            childId: entry.childId,
+            gender: entry.gender,
+            age: entry.age,
+          ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
@@ -613,21 +623,65 @@ class _AppTile extends StatelessWidget {
 
 // ════════════ Umumiy widgetlar ════════════
 
-/// Ism bosh harfli dumaloq avatar (reyting uchun).
+/// Reyting avatari: HAQIQIY rasm → jins+yoshga mos default → bosh harf.
+///
+/// Rasm PUBLIC endpoint orqali `childId` bo'yicha olinadi
+/// (`GET /children/:id/avatar/image`) — shu sabab reytingdagi BOSHQA
+/// oiladagi bolalar ham o'z rasmi bilan ko'rinadi (avval hammasi bosh
+/// harf bo'lib turardi).
 class _LetterAvatar extends StatelessWidget {
-  const _LetterAvatar({required this.letter, required this.size});
+  const _LetterAvatar({
+    required this.letter,
+    required this.size,
+    this.childId,
+    this.gender,
+    this.age,
+  });
 
   final String letter;
   final double size;
+  final String? childId;
+  final Gender? gender;
+  final int? age;
 
   @override
   Widget build(BuildContext context) {
-    final ch = letter.isNotEmpty ? letter[0].toUpperCase() : '?';
     return Container(
       width: size,
       height: size,
-      alignment: Alignment.center,
-      decoration: const BoxDecoration(color: _chipBg, shape: BoxShape.circle),
+      clipBehavior: Clip.antiAlias,
+      decoration: const BoxDecoration(
+        color: _chipBg,
+        shape: BoxShape.circle,
+      ),
+      child: _buildImage(),
+    );
+  }
+
+  Widget _buildImage() {
+    final id = childId;
+    if (id != null && id.isNotEmpty) {
+      return CachedNetworkImage(
+        imageUrl: '${EnvConfig.apiUrl}/children/$id/avatar/image',
+        fit: BoxFit.cover,
+        memCacheWidth: 160,
+        placeholder: (_, __) => _defaultAvatar(),
+        errorWidget: (_, __, ___) => _defaultAvatar(),
+      );
+    }
+    return _defaultAvatar();
+  }
+
+  Widget _defaultAvatar() => Image.asset(
+    defaultAvatarAsset(gender ?? Gender.male, age ?? 10),
+    fit: BoxFit.cover,
+    cacheWidth: 160,
+    errorBuilder: (_, __, ___) => _letterFallback(),
+  );
+
+  Widget _letterFallback() {
+    final ch = letter.isNotEmpty ? letter[0].toUpperCase() : '?';
+    return Center(
       child: Text(ch, style: _unb(size * 0.42, w: FontWeight.w700)),
     );
   }

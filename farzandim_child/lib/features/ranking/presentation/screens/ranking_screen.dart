@@ -899,6 +899,9 @@ class _Avatar extends StatelessWidget {
   final String? gender;
   final int? age;
 
+  // Ichki chegara YO'Q: rasm doirani chetigacha to'ldirsin. Avval 2px oq
+  // chegara bor edi va rasm undan ichkariga qisilib, podium halqasi bilan
+  // qo'shilganda "doira ichi to'la emas" bo'lib ko'rinardi.
   @override
   Widget build(BuildContext context) => RankingAvatar(
         name: name,
@@ -907,7 +910,6 @@ class _Avatar extends StatelessWidget {
         gender: gender,
         age: age,
         color: color,
-        borderColor: const Color(0x33FFFFFF),
       );
 }
 
