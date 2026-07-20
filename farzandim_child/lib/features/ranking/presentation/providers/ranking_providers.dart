@@ -22,8 +22,14 @@ enum TimeRange { kunlik, haftalik, oylik, butunDavr }
 final rankingTabProvider =
     StateProvider<RankingTab>((ref) => RankingTab.umumiy);
 
+/// Default davr — BUTUN DAVR (ota-ona ilovasi bilan bir xil ro'yxat chiqsin).
+///
+/// Avval `haftalik` edi: ota-ona ilovasi reytingni `period: 'all'` bilan
+/// so'rardi, bola esa `weekly` bilan → IKKALASIDA BOSHQA-BOSHQA odamlar va
+/// tartib ko'rinardi (foydalanuvchi shikoyati). DON jamg'ariladigan balans
+/// (kamaymaydi), shuning uchun yagona to'g'ri manba — butun davr.
 final timeRangeProvider =
-    StateProvider<TimeRange>((ref) => TimeRange.haftalik);
+    StateProvider<TimeRange>((ref) => TimeRange.butunDavr);
 
 final selectedRegionProvider = StateProvider<String?>((ref) => null);
 final selectedYoshGuruhiProvider =

@@ -242,6 +242,66 @@ export class ChildrenService {
     return { ok: true, notified: true };
   }
 
+  /**
+   * Bola qurilmada JOYLASHUV XIZMATINI o'chirganda ota-onaga xabar beradi.
+   *
+   * Bola ilovasi buni o'zi aniqlaydi (GPS service off) va shu endpointni
+   * chaqiradi. Ota-ona push + ilova ichida bildirishnoma oladi va u yerdan
+   * "Joylashuvni yoqishni so'rash" tugmasini bosishi mumkin.
+   *
+   * Spam bo'lmasligi uchun chaqirish TEZLIGINI klient boshqaradi (bir necha
+   * soatda bir marta) — bu yerda har chaqiruv xabar yuboradi.
+   */
+  async reportLocationDisabled(id: string, userId: string) {
+    const child = await this.prisma.child.findUnique({
+      where: { id },
+      select: { id: true, name: true, parentId: true, childUserId: true },
+    });
+    if (!child) throw new NotFoundException('Child not found');
+    if (child.childUserId !== userId) {
+      throw new ForbiddenException('Forbidden');
+    }
+
+    const title = "Joylashuv o'chirildi";
+    const body =
+      `${child.name} qurilmada joylashuvni o'chirdi — hozir qayerdaligini ` +
+      "ko'rib bo'lmaydi. Yoqishni so'rashingiz mumkin.";
+
+    try {
+      await this.fcm.sendPushToUser(child.parentId, {
+        title,
+        body,
+        data: {
+          type: 'location_disabled',
+          childId: child.id,
+          childName: child.name,
+          priority: 'high',
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Location-disabled push failed for child ${id}`,
+        err as Error,
+      );
+    }
+    try {
+      await this.prisma.notification.create({
+        data: {
+          childId: child.id,
+          type: 'SYSTEM',
+          title,
+          body,
+        },
+      });
+    } catch (err) {
+      this.logger.warn(
+        `Location-disabled notification failed for child ${id}`,
+        err as Error,
+      );
+    }
+    return { ok: true, notified: true };
+  }
+
   /* ------------------------------------------------------------------ */
   /*  POST /children/:id/device-info — qurilma heartbeat (GPS'siz)        */
   /* ------------------------------------------------------------------ */

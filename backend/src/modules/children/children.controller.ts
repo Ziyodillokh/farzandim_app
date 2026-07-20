@@ -131,6 +131,19 @@ export class ChildrenController {
     return this.childrenService.reportUninstallGuardDisabled(id, user.userId);
   }
 
+  @Post(':id/location-disabled')
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({
+    summary: "Bola qurilmada joylashuvni o'chirdi — ota-onaga xabar",
+  })
+  @ApiParam({ name: 'id', description: 'Child ID (UUID)' })
+  async reportLocationDisabled(
+    @Param('id') id: string,
+    @CurrentUser() user: JwtPayload,
+  ) {
+    return this.childrenService.reportLocationDisabled(id, user.userId);
+  }
+
   @Post(':id/device-info')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({

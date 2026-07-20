@@ -48,6 +48,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // ════════════ Figma tokenlar ════════════
 const _bg = Color(0xFF00060A); // sahifa foni
@@ -250,13 +251,39 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
         perm == LocationPermission.whileInUse;
     if (!granted) return;
     if (await Geolocator.isLocationServiceEnabled()) {
-      // Yoqilgan — keyingi o'chishda yana so'ray olishimiz uchun flagni tozalaymiz.
+      // Yoqilgan — keyingi o'chishda yana so'ray olishimiz uchun flagni
+      // tozalaymiz.
       _locationModalShown = false;
       return;
     }
+    // OTA-ONAGA XABAR: bola joylashuvni o'chirdi. Ota-ona push oladi va
+    // u yerdan "Joylashuvni yoqishni so'rash"ni bosa oladi.
+    unawaited(_reportLocationDisabled());
     if (_locationModalShown || !mounted) return;
     _locationModalShown = true;
     await LocationEnableModal.show(context);
+  }
+
+  /// "Joylashuv o'chirildi" xabarini ota-onaga yuboradi — 6 SOATDA BIR MARTA.
+  ///
+  /// Throttle shart: aks holda bola GPS'ni o'chirib qo'ysa, har ilova
+  /// ochilishida/qaytishida ota-onaga push ketardi (spam).
+  Future<void> _reportLocationDisabled() async {
+    final childId = ref.read(pairingStateProvider).childId;
+    if (childId == null || childId.isEmpty) return;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      const key = 'location.disabledReportedAt';
+      final last = prefs.getInt(key) ?? 0;
+      final now = DateTime.now().millisecondsSinceEpoch;
+      if (now - last < const Duration(hours: 6).inMilliseconds) return;
+      await prefs.setInt(key, now);
+      await ref
+          .read(backendDevicePolicyRepositoryProvider)
+          .reportLocationDisabled(childId);
+    } catch (e) {
+      debugPrint('reportLocationDisabled xato: $e');
+    }
   }
 
   @override

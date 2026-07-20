@@ -65,4 +65,20 @@ class BackendDevicePolicyRepository {
       debugPrint('reportUninstallGuardDisabled: $e');
     }
   }
+
+  /// Bola qurilmada JOYLASHUVNI o'chirganda ota-onaga xabar yuboradi
+  /// (`POST /children/:id/location-disabled`).
+  ///
+  /// Ota-ona push oladi va u yerdan "Joylashuvni yoqishni so'rash"ni bosishi
+  /// mumkin. Chaqirish tezligi CHAQIRUVCHIDA cheklanadi (bir necha soatda
+  /// bir marta) — aks holda har ilova ochilishida spam bo'lardi.
+  Future<void> reportLocationDisabled(String childId) async {
+    try {
+      await _dio.post<Map<String, dynamic>>(
+        '/children/$childId/location-disabled',
+      );
+    } on DioException catch (e) {
+      debugPrint('reportLocationDisabled: $e');
+    }
+  }
 }
