@@ -46,6 +46,34 @@ async function bootstrap() {
     },
   );
 
+  // application/x-www-form-urlencoded — TO'LOV WEBHOOK'lari uchun MAJBURIY.
+  // Click (va Payme'ning ba'zi chaqiruvlari) Prepare/Complete so'rovini
+  // shu Content-Type bilan yuboradi. Avval hech qanday parser yo'q edi →
+  // Fastify 415 (Unsupported Media Type) qaytarardi → Click to'lovni
+  // tasdiqlay olmasdi (obuna faollashmasdi). Endi string body
+  // URLSearchParams orqali obyektga aylantiriladi (@Body() / req.body oladi).
+  app.useBodyParser(
+    'application/x-www-form-urlencoded',
+    { bodyLimit: 100 * 1024 * 1024 },
+    (
+      _req: unknown,
+      body: Buffer,
+      done: (err: Error | null, body?: unknown) => void,
+    ) => {
+      if (!body || body.length === 0) {
+        return done(null, {});
+      }
+      try {
+        done(
+          null,
+          Object.fromEntries(new URLSearchParams(body.toString('utf8'))),
+        );
+      } catch (err) {
+        done(err as Error);
+      }
+    },
+  );
+
   const config = app.get(ConfigService<EnvConfig, true>);
 
   // ── Global prefix ──
@@ -99,9 +127,9 @@ async function bootstrap() {
     { limits: { fileSize: 100 * 1024 * 1024 } },
   );
 
-  // application/x-www-form-urlencoded parser is auto-registered by NestJS Fastify
-  // adapter (registerUrlencodedContentParser). No need for @fastify/formbody.
-  // Click webhook receives parsed body via @Body() automatically.
+  // Eslatma: application/x-www-form-urlencoded parser yuqorida qo'lda
+  // qo'shildi (Click webhook uchun). NestJS Fastify adapter uni O'ZI
+  // registratsiya QILMAYDI — busiz webhook 415 qaytarardi.
 
   // ── CORS ──
   const corsOrigins = config

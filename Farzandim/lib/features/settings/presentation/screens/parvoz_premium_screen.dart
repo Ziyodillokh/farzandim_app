@@ -14,10 +14,13 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/settings/data/repositories/backend_payments_repository.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ════════════ Tokenlar (lokal) ════════════
 const _bg = Color(0xFF00060A);
@@ -58,17 +61,69 @@ const _features = <(IconData, String)>[
 /// Tarif kartasi ko'rinishi.
 enum _PlanStyle { glass, blue, dark }
 
-/// Tariflar (paywall) ekrani.
-class ParvozPremiumScreen extends StatelessWidget {
+/// Tariflar (paywall) ekrani — HAQIQIY tariflar backend'dan, "Ulanish"
+/// tugmasi Click to'lov sahifasini ochadi.
+class ParvozPremiumScreen extends ConsumerStatefulWidget {
   /// `ParvozPremiumScreen` konstruktor.
   const ParvozPremiumScreen({super.key});
 
-  void _subscribe(BuildContext context) {
-    AppToast.info(context, 'premium.comingSoon'.tr());
+  @override
+  ConsumerState<ParvozPremiumScreen> createState() =>
+      _ParvozPremiumScreenState();
+}
+
+class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
+  /// Hozir checkout ochilayotgan tarif id (tugmada spinner). `null` — bo'sh.
+  String? _busyPlanId;
+
+  /// Tarifni sotib olish: checkout -> Click to'lov sahifasini ochish.
+  Future<void> _subscribe(PlanEntry plan) async {
+    if (_busyPlanId != null) return;
+    setState(() => _busyPlanId = plan.id);
+    try {
+      final url = await ref
+          .read(backendPaymentsRepositoryProvider)
+          .checkout(planId: plan.id);
+      if (url.isEmpty) throw Exception('empty checkout url');
+      final ok = await launchUrl(
+        Uri.parse(url),
+        mode: LaunchMode.externalApplication,
+      );
+      if (!ok) throw Exception('launch failed');
+    } catch (_) {
+      if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+    } finally {
+      if (mounted) setState(() => _busyPlanId = null);
+    }
+  }
+
+  /// Tarif uslubi tier bo'yicha: free -> glass, standard -> blue, aks -> dark.
+  _PlanStyle _styleFor(PlanEntry p) {
+    if (p.isFree) return _PlanStyle.glass;
+    if (p.entitlementTier == 'premium') return _PlanStyle.dark;
+    return _PlanStyle.blue;
+  }
+
+  /// "29 000 so'm/oy" ko'rinishidagi narx. Bepul bo'lsa i18n "Tekin".
+  String _priceLabel(PlanEntry p) {
+    if (p.isFree) return 'premium.startPrice'.tr();
+    final s = p.priceUzs.toString();
+    final b = StringBuffer();
+    for (var i = 0; i < s.length; i++) {
+      if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
+      b.write(s[i]);
+    }
+    final suffix = switch (p.period) {
+      'yearly' => '/${'premium.perYear'.tr()}',
+      'monthly' => '/${'premium.perMonth'.tr()}',
+      _ => '',
+    };
+    return "$b ${'premium.sum'.tr()}$suffix";
   }
 
   @override
   Widget build(BuildContext context) {
+    final plansAsync = ref.watch(plansProvider);
     return Scaffold(
       backgroundColor: _bg,
       body: Stack(
@@ -109,26 +164,29 @@ class ParvozPremiumScreen extends StatelessWidget {
                           ),
                         ),
                         const SizedBox(height: 24),
-                        _PlanCard(
-                          name: 'premium.startName'.tr(),
-                          price: 'premium.startPrice'.tr(),
-                          style: _PlanStyle.glass,
-                        ),
-                        const SizedBox(height: 16),
-                        _PlanCard(
-                          name: 'premium.standartName'.tr(),
-                          price: 'premium.standartPrice'.tr(),
-                          style: _PlanStyle.blue,
-                          ctaLabel: 'premium.standartCta'.tr(),
-                          onCta: () => _subscribe(context),
-                        ),
-                        const SizedBox(height: 16),
-                        _PlanCard(
-                          name: 'premium.premiumName'.tr(),
-                          price: 'premium.premiumPrice'.tr(),
-                          style: _PlanStyle.dark,
-                          ctaLabel: 'premium.premiumCta'.tr(),
-                          onCta: () => _subscribe(context),
+                        plansAsync.when(
+                          loading: () => const Padding(
+                            padding: EdgeInsets.only(top: 40),
+                            child: CircularProgressIndicator(color: _blue),
+                          ),
+                          error: (_, __) => Padding(
+                            padding: const EdgeInsets.only(top: 40),
+                            child: Text(
+                              'premium.loadError'.tr(),
+                              textAlign: TextAlign.center,
+                              style: _pop(
+                                14,
+                                c: Colors.white.withValues(alpha: 0.6),
+                              ),
+                            ),
+                          ),
+                          data: (res) => _PlansList(
+                            plans: res.plans,
+                            busyPlanId: _busyPlanId,
+                            styleFor: _styleFor,
+                            priceLabel: _priceLabel,
+                            onSubscribe: _subscribe,
+                          ),
                         ),
                       ],
                     ),
@@ -143,6 +201,43 @@ class ParvozPremiumScreen extends StatelessWidget {
   }
 }
 
+/// Tariflar ro'yxati — har biri `_PlanCard` (dizayn saqlanadi).
+class _PlansList extends StatelessWidget {
+  const _PlansList({
+    required this.plans,
+    required this.busyPlanId,
+    required this.styleFor,
+    required this.priceLabel,
+    required this.onSubscribe,
+  });
+
+  final List<PlanEntry> plans;
+  final String? busyPlanId;
+  final _PlanStyle Function(PlanEntry) styleFor;
+  final String Function(PlanEntry) priceLabel;
+  final Future<void> Function(PlanEntry) onSubscribe;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        for (var i = 0; i < plans.length; i++) ...[
+          if (i != 0) const SizedBox(height: 16),
+          _PlanCard(
+            name: plans[i].name,
+            price: priceLabel(plans[i]),
+            style: styleFor(plans[i]),
+            // Bepul tarifda tugma yo'q (obuna talab qilmaydi).
+            ctaLabel: plans[i].isFree ? null : 'premium.subscribeCta'.tr(),
+            loading: busyPlanId == plans[i].id,
+            onCta: plans[i].isFree ? null : () => onSubscribe(plans[i]),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
 // ════════════ Tarif kartasi ════════════
 class _PlanCard extends StatelessWidget {
   const _PlanCard({
@@ -151,6 +246,7 @@ class _PlanCard extends StatelessWidget {
     required this.style,
     this.ctaLabel,
     this.onCta,
+    this.loading = false,
   });
 
   final String name;
@@ -158,6 +254,7 @@ class _PlanCard extends StatelessWidget {
   final _PlanStyle style;
   final String? ctaLabel;
   final VoidCallback? onCta;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
@@ -201,6 +298,7 @@ class _PlanCard extends StatelessWidget {
             _PlanCta(
               label: ctaLabel!,
               filled: style == _PlanStyle.dark,
+              loading: loading,
               onTap: onCta,
             ),
           ],
@@ -285,16 +383,19 @@ class _PlanCta extends StatelessWidget {
     required this.label,
     required this.filled,
     required this.onTap,
+    this.loading = false,
   });
 
   final String label;
   final bool filled;
   final VoidCallback? onTap;
+  final bool loading;
 
   @override
   Widget build(BuildContext context) {
+    final fg = filled ? Colors.white : _ctaDark;
     return GestureDetector(
-      onTap: onTap,
+      onTap: loading ? null : onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
         height: 52,
@@ -304,14 +405,13 @@ class _PlanCta extends StatelessWidget {
           color: filled ? _blue : Colors.white,
           borderRadius: BorderRadius.circular(999),
         ),
-        child: Text(
-          label,
-          style: _pop(
-            16,
-            w: FontWeight.w600,
-            c: filled ? Colors.white : _ctaDark,
-          ),
-        ),
+        child: loading
+            ? SizedBox(
+                width: 22,
+                height: 22,
+                child: CircularProgressIndicator(strokeWidth: 2.4, color: fg),
+              )
+            : Text(label, style: _pop(16, w: FontWeight.w600, c: fg)),
       ),
     );
   }
