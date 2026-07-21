@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation } from '@tanstack/react-query';
 import { toast } from 'sonner';
 import {
@@ -36,6 +36,8 @@ interface PlanFormModalProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onSuccess?: () => void;
+  /** Berilsa — TAHRIRLASH rejimi (mavjud tarif); aks holda yangi yaratish. */
+  plan?: Plan | null;
 }
 
 function slugify(value: string): string {
@@ -59,7 +61,8 @@ const TIER_OPTIONS: { value: Plan['entitlementTier']; label: string }[] = [
   { value: 'premium', label: 'Premium' },
 ];
 
-export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalProps) {
+export function PlanFormModal({ open, onOpenChange, onSuccess, plan }: PlanFormModalProps) {
+  const isEdit = !!plan;
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [slugEdited, setSlugEdited] = useState(false);
@@ -86,6 +89,35 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
     setIsActive(true);
   };
 
+  // Modal ochilganda maydonlarni to'ldiramiz: tahrirlash bo'lsa — mavjud
+  // tarif qiymatlari (narxni o'zgartirish uchun asosiy), aks holda default.
+  useEffect(() => {
+    if (!open) return;
+    if (plan) {
+      setName(plan.name ?? '');
+      setSlug(plan.slug ?? '');
+      setSlugEdited(true);
+      setPriceUzs(String(plan.priceUzs ?? ''));
+      setPeriod(plan.period);
+      setEntitlementTier(plan.entitlementTier);
+      setBadge(plan.badge ?? '');
+      setDescription(plan.description ?? '');
+      setFeatures(new Set(plan.features ?? []));
+      setIsActive(plan.isActive);
+    } else {
+      setName('');
+      setSlug('');
+      setSlugEdited(false);
+      setPriceUzs('');
+      setPeriod('monthly');
+      setEntitlementTier('standard');
+      setBadge('');
+      setDescription('');
+      setFeatures(new Set(TIER_FEATURE_PRESETS.standard));
+      setIsActive(true);
+    }
+  }, [open, plan]);
+
   const handleNameChange = (value: string) => {
     setName(value);
     if (!slugEdited) setSlug(slugify(value));
@@ -109,10 +141,12 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
   };
 
   const mutation = useMutation({
-    mutationFn: () =>
-      monetizationApi.plans.create({
+    mutationFn: () => {
+      // MUHIM: UpdatePlanDto slug'ni QABUL QILMAYDI (OmitType) va backend
+      // forbidNonWhitelisted -> update'da slug yuborilsa 400. Shuning uchun
+      // slug faqat CREATE'da yuboriladi.
+      const base = {
         name: name.trim(),
-        slug: slug.trim(),
         priceUzs: Number(priceUzs) || 0,
         period,
         entitlementTier,
@@ -120,9 +154,13 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
         description: description.trim() || null,
         features: Array.from(features),
         isActive,
-      }),
+      };
+      return plan
+          ? monetizationApi.plans.update(plan.id, base)
+          : monetizationApi.plans.create({ ...base, slug: slug.trim() });
+    },
     onSuccess: () => {
-      toast.success('Tarif yaratildi');
+      toast.success(plan ? 'Tarif yangilandi' : 'Tarif yaratildi');
       onSuccess?.();
       reset();
       onOpenChange(false);
@@ -157,7 +195,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
     >
       <DialogContent className="max-w-2xl">
         <DialogHeader>
-          <DialogTitle>Yangi tarif</DialogTitle>
+          <DialogTitle>{isEdit ? 'Tarifni tahrirlash' : 'Yangi tarif'}</DialogTitle>
           <DialogDescription>Tarif rejasi ma&apos;lumotlarini kiriting.</DialogDescription>
         </DialogHeader>
 
@@ -184,6 +222,8 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
                 }}
                 placeholder="premium-reja"
                 required
+                // Slug tarif identifikatori — yaratilgandan keyin o'zgarmaydi.
+                disabled={isEdit}
               />
             </div>
           </div>
@@ -310,7 +350,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess }: PlanFormModalPr
               Bekor qilish
             </Button>
             <Button type="submit" loading={mutation.isPending}>
-              Yaratish
+              {isEdit ? 'Saqlash' : 'Yaratish'}
             </Button>
           </DialogFooter>
         </form>

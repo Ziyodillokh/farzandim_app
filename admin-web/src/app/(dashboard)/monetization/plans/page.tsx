@@ -31,6 +31,7 @@ const TIER_META: Record<Plan['entitlementTier'], { label: string; variant: 'seco
 export default function PlansPage() {
   const qc = useQueryClient();
   const [createOpen, setCreateOpen] = useState(false);
+  const [editingPlan, setEditingPlan] = useState<Plan | null>(null);
   const { data, isLoading } = useQuery({
     queryKey: ['plans'],
     queryFn: () => monetizationApi.plans.list(),
@@ -54,6 +55,14 @@ export default function PlansPage() {
       />
 
       <PlanFormModal open={createOpen} onOpenChange={setCreateOpen} onSuccess={invalidate} />
+      <PlanFormModal
+        open={!!editingPlan}
+        plan={editingPlan}
+        onOpenChange={(o) => {
+          if (!o) setEditingPlan(null);
+        }}
+        onSuccess={invalidate}
+      />
 
       {isLoading ? (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
@@ -85,7 +94,7 @@ export default function PlansPage() {
       ) : (
         <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {plans.map((plan) => (
-            <PlanCard key={plan.id} plan={plan} />
+            <PlanCard key={plan.id} plan={plan} onEdit={setEditingPlan} />
           ))}
         </div>
       )}
@@ -93,7 +102,7 @@ export default function PlansPage() {
   );
 }
 
-function PlanCard({ plan }: { plan: Plan }) {
+function PlanCard({ plan, onEdit }: { plan: Plan; onEdit: (plan: Plan) => void }) {
   const tier = TIER_META[plan.entitlementTier];
   const highlighted = plan.entitlementTier === 'premium';
 
@@ -148,7 +157,9 @@ function PlanCard({ plan }: { plan: Plan }) {
         )}
       </ul>
 
-      <Button variant="outline" className="mt-6 w-full">Tahrirlash</Button>
+      <Button variant="outline" className="mt-6 w-full" onClick={() => onEdit(plan)}>
+        Tahrirlash
+      </Button>
     </Card>
   );
 }
