@@ -193,13 +193,15 @@ export function PlanFormModal({ open, onOpenChange, onSuccess, plan }: PlanFormM
         onOpenChange(o);
       }}
     >
-      <DialogContent className="max-w-2xl">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[90vh] w-full max-w-2xl flex-col gap-0 overflow-hidden p-0">
+        <DialogHeader className="border-b border-border px-6 py-4">
           <DialogTitle>{isEdit ? 'Tarifni tahrirlash' : 'Yangi tarif'}</DialogTitle>
           <DialogDescription>Tarif rejasi ma&apos;lumotlarini kiriting.</DialogDescription>
         </DialogHeader>
 
-        <form onSubmit={handleSubmit} className="space-y-5">
+        <form onSubmit={handleSubmit} className="flex min-h-0 flex-1 flex-col">
+          {/* Bitta scroll: butun tana bu yerda; footer (Saqlash) doim ko'rinadi. */}
+          <div className="min-h-0 flex-1 space-y-5 overflow-y-auto px-6 py-5">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-1.5">
               <Label htmlFor="plan-name">Nom *</Label>
@@ -305,7 +307,7 @@ export function PlanFormModal({ open, onOpenChange, onSuccess, plan }: PlanFormM
                 {features.size} ta tanlandi
               </span>
             </div>
-            <div className="max-h-72 space-y-4 overflow-y-auto rounded-lg border border-border bg-muted/20 p-4">
+            <div className="space-y-4 rounded-lg border border-border bg-muted/20 p-4">
               {PLAN_FEATURE_GROUPS.map((grp) => (
                 <div key={grp.group} className="space-y-2">
                   <p className="text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -340,7 +342,8 @@ export function PlanFormModal({ open, onOpenChange, onSuccess, plan }: PlanFormM
             <Switch id="plan-active" checked={isActive} onCheckedChange={setIsActive} />
           </div>
 
-          <DialogFooter className="gap-2">
+          </div>
+          <DialogFooter className="gap-2 border-t border-border bg-card px-6 py-4">
             <Button
               type="button"
               variant="outline"
