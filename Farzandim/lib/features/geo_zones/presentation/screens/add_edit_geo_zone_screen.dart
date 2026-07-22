@@ -29,7 +29,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart' show LatLng;
+import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:latlong2/latlong.dart' as ll;
 import 'package:solar_icons/solar_icons.dart';
 

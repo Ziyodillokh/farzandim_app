@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 import 'package:solar_icons/solar_icons.dart';
 
 /// Geo-zona kategoriyasi — kelajak biznes-mantiq uchun (default radius,

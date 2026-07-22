@@ -8,7 +8,7 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/location/data/models/child_location.dart';
 import 'package:flutter/foundation.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart' show LatLng;
 
 @immutable
 class DwellPoint {

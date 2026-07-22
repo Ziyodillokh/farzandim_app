@@ -115,15 +115,7 @@ dependencies:
   # Inter shriftini Internet'dan olib keladi (Google Fonts)
   google_fonts: ^6.2.1
 
-  # Google Maps widget — xarita, marker, geo-zonalar.
-  # Android: API kalit AndroidManifest'ga (build.gradle.kts orqali
-  # local.properties'dan in'ektsiya qilinadi — git'ga tushmaydi).
-  google_maps_flutter: ^2.6.0
 
-  # Places API autocomplete — manzilni qidirish uchun (Bosqich 4.2.2).
-  # API kalit Dart'ga `--dart-define-from-file=env.json` orqali
-  # uzatiladi (`api_keys.dart` String.fromEnvironment'dan o'qiydi).
-  google_places_flutter: ^2.0.8
 
   # Google Sign In — Android/iOS/web. Web uchun `web/index.html` ichida
   # `<meta name="google-signin-client_id" ...>` qo'shish kerak.
@@ -148,11 +140,6 @@ dependencies:
   # latlong2 — flutter_map koordinatalari (LatLng) uchun.
   latlong2: ^0.9.1
 
-  # Mapbox — xarita render. Hozir: OQ raster plitka (light-v11) flutter_map
-  # ичida ishlatiladi (map_tiles.dart). Native SDK (kelajakda GPU vektor)
-  # uchun ham tayyor. Token: MAPBOX_PUBLIC_TOKEN (runtime env.json /
-  # dart-define) + MAPBOX_DOWNLOADS_TOKEN (build). Web'da qo'llanmaydi.
-  mapbox_maps_flutter: ^2.6.0
 
   # QR skaner (kamera) — kirish sahifasida "Akkauntga qo'shilish" → 2-qurilma.
   mobile_scanner: ^6.0.7
