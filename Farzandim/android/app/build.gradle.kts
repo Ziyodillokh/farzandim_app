@@ -120,6 +120,16 @@ android {
     }
 }
 
+// Release APK'dan x86_64 native .so'larni chiqaramiz — real telefonlar arm
+// (x86_64 = faqat emulyator). --target-platform faqat Flutter libs'ni oladi;
+// plugin AAR .so'lari (ML Kit libbarhopper) x86_64'i qoladi — packaging
+// darajasida kesamiz. FAQAT release: debug/emulyator TEGILMAYDI.
+androidComponents {
+    onVariants(selector().withBuildType("release")) { variant ->
+        variant.packaging.jniLibs.excludes.add("**/x86_64/**")
+    }
+}
+
 flutter {
     source = "../.."
 }
