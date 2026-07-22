@@ -70,6 +70,15 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
+            // R8: ishlatilmagan Java/Kotlin (plugin) kodi + resurslarni qisqartirish.
+            // Dart kodiga (libapp.so) ta'sir qilmaydi. proguard-rules.pro reflection
+            // ishlatadigan pluginlarni (Firebase, ML Kit, audio_service, camera...) saqlaydi.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }
