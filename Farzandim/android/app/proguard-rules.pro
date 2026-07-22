@@ -6,6 +6,9 @@
 # Quyidagi qoidalar reflection ishlatadigan pluginlar sinflarini saqlaydi —
 # aks holda R8 ularni "ishlatilmagan" deb o'chirib, runtime crash bo'lardi.
 
+# ── Ilovaning O'Z native komponentlari (MainActivity va h.k.) — R8 tegmasin ──
+-keep class com.farzandim.parent.** { *; }
+
 # ── Flutter engine (Flutter o'z default qoidalarini ham qo'shadi) ──
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }

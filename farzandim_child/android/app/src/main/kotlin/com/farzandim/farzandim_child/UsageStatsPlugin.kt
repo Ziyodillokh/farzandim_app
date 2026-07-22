@@ -206,22 +206,26 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     private fun openUsageAccessSettings() {
-        // Avval TO'G'RIDAN-TO'G'RI Parvoz Growth'ning usage-access sahifasini
-        // ochishga urinamiz (overlay ruxsati kabi) — foydalanuvchi ilovalar
-        // ro'yxatidan qidirib yurmasin. Android 10+ (API 29+) `package:` data'ni
-        // qo'llab aynan shu ilovaga o'tadi va toggle darhol ko'rinadi. Ba'zi
-        // OEM'larda bu variant qo'llanmasligi mumkin — o'shanda umumiy
-        // ro'yxatga fallback qilamiz (crash bo'lmasin).
-        val direct = Intent(
-            Settings.ACTION_USAGE_ACCESS_SETTINGS,
-            Uri.parse("package:${context.packageName}"),
-        ).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+        // Umumiy "Ilova statistikasi (usage access)" ro'yxatini ochamiz — bu
+        // BARCHA qurilmalarda ishonchli ishlaydi.
+        //
+        // ⚠️ Avval `package:` URI bilan to'g'ridan-to'g'ri ilova sahifasiga
+        // o'tardik (qulaylik uchun). LEKIN ba'zi OEM'larda (Samsung One UI,
+        // Xiaomi/MIUI) o'sha maxsus sahifada TOGGLE ko'rinmasdi yoki ruxsat
+        // berib bo'lmasdi — natijada foydalanuvchi usage-access'ni yoqa olmay,
+        // onboarding'da qotib qolib ilovaga KIRA OLMASDI. Umumiy ro'yxatda esa
+        // foydalanuvchi "Parvoz Growth"ni topib yoqadi — hamma joyda ishlaydi.
         try {
-            context.startActivity(direct)
+            context.startActivity(
+                Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         } catch (e: Exception) {
-            val list = Intent(Settings.ACTION_USAGE_ACCESS_SETTINGS)
-                .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            context.startActivity(list)
+            // Juda kam qurilmada bu ekran yo'q — umumiy Sozlamalarga.
+            context.startActivity(
+                Intent(Settings.ACTION_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 

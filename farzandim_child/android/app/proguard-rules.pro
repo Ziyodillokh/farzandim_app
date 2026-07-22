@@ -6,6 +6,14 @@
 # qoidalar reflection / manifest orqali chaqiriladigan plugin sinflarini
 # saqlaydi — aks holda R8 ularni o'chirib runtime crash bo'lardi.
 
+# ── Ilovaning O'Z native komponentlari — R8 TEGMASIN ──
+# UsageStatsPlugin (ilova statistikasi), RestrictionService (ilova cheklovi),
+# BootReceiver, DeviceAdminReceiver (o'chirishni taqiqlash) — manifest va
+# MethodChannel orqali chaqiriladi. R8 obfuscate/optimize qilsa bu kritik
+# funksiyalar (usage-access tekshiruvi, fon xizmat, uninstall himoya) buzilishi
+# mumkin. Shuning uchun ilova paketini butunlay saqlaymiz (hajmi arzimas).
+-keep class com.farzandim.farzandim_child.** { *; }
+
 # ── Flutter engine ──
 -keep class io.flutter.** { *; }
 -keep class io.flutter.plugins.** { *; }
