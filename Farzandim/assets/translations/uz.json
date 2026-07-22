@@ -279,6 +279,37 @@
       "close": "Yopish"
     }
   },
+  "stepsDetail": {
+    "title": "Qadamlar",
+    "week": "Bu hafta",
+    "byDay": "Kunlar bo'yicha",
+    "today": "Bugun",
+    "todayPct": "Bugun kunlik maqsadning {pct}%",
+    "weekTotal": "Hafta jami",
+    "dailyAvg": "Kunlik o'rtacha",
+    "best": "Eng faol"
+  },
+  "streakDetail": {
+    "title": "Rivojlanish",
+    "continuous": "kun ketma-ket faoliyat",
+    "medals": "Medallar",
+    "earnedOf": "{earned} / {total} medal",
+    "nextMilestone": "Keyingi bosqichgacha {n} kun",
+    "maxMilestone": "Eng yuqori bosqichda!",
+    "achieved": "Erishildi",
+    "mFirstBookTitle": "1-kitob",
+    "mFirstBookDesc": "Birinchi kitobni o'qib tugatdi",
+    "mStreak10Title": "10 kun",
+    "mStreak10Desc": "10 kun uzluksiz faoliyat",
+    "mMathTop10Title": "Math TOP-10",
+    "mMathTop10Desc": "Matematika viktorinasi TOP-10",
+    "mContestWinnerTitle": "G'olib",
+    "mContestWinnerDesc": "Olimpiada sovrindori",
+    "mContentCreatorTitle": "Kontent yaratuvchi",
+    "mContentCreatorDesc": "5 ta post moderatsiyadan o'tdi",
+    "mHelperTitle": "Yordamchi",
+    "mHelperDesc": "Boshqa bolaga to'g'ri javob berdi"
+  },
   "dashboard": {
     "status": {
       "online": "Onlayn",

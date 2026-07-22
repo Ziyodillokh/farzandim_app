@@ -831,7 +831,7 @@ class _StepsCard extends ConsumerWidget {
             : _DayState.empty,
     ];
     return _Card(
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.stepsDetailPath(childId)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -891,7 +891,7 @@ class _StreakCard extends ConsumerWidget {
             : _DayState.empty,
     ];
     return _Card(
-      onTap: () {},
+      onTap: () => context.push(AppRoutes.streakDetailPath(childId)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

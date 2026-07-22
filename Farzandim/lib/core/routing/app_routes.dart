@@ -225,6 +225,13 @@ class AppRoutes {
   static String childAchievementsPath(String childId) =>
       '/achievements/$childId';
 
+  /// Qadam batafsil (kunlik/haftalik qadam) — dashboard qadam kartasidan.
+  static const String stepsDetailPattern = '/steps/:childId';
+  static String stepsDetailPath(String childId) => '/steps/$childId';
+
+  static const String streakDetailPattern = '/streak/:childId';
+  static String streakDetailPath(String childId) => '/streak/$childId';
+
   /// SOS alerts list (Sprint 4.4.15).
   static const String sosAlerts = '/sos-alerts';
 

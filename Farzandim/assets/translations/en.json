@@ -279,6 +279,37 @@
       "close": "Close"
     }
   },
+  "stepsDetail": {
+    "title": "Steps",
+    "week": "This week",
+    "byDay": "By day",
+    "today": "Today",
+    "todayPct": "{pct}% of today's goal",
+    "weekTotal": "Week total",
+    "dailyAvg": "Daily avg",
+    "best": "Best day"
+  },
+  "streakDetail": {
+    "title": "Progress",
+    "continuous": "days in a row",
+    "medals": "Medals",
+    "earnedOf": "{earned} / {total} medals",
+    "nextMilestone": "{n} days to the next milestone",
+    "maxMilestone": "Top milestone reached!",
+    "achieved": "Earned",
+    "mFirstBookTitle": "1st book",
+    "mFirstBookDesc": "Completed the first book",
+    "mStreak10Title": "10 days",
+    "mStreak10Desc": "10 days of continuous activity",
+    "mMathTop10Title": "Math TOP-10",
+    "mMathTop10Desc": "Top 10 in math quiz",
+    "mContestWinnerTitle": "Winner",
+    "mContestWinnerDesc": "Olympiad prize-winner",
+    "mContentCreatorTitle": "Content creator",
+    "mContentCreatorDesc": "5 moderated posts",
+    "mHelperTitle": "Helper",
+    "mHelperDesc": "Correct answer to another child"
+  },
   "dashboard": {
     "status": {
       "online": "Online",

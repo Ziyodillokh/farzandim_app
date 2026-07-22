@@ -35,6 +35,8 @@ import 'package:farzandim/features/child_management/presentation/screens/control
 import 'package:farzandim/features/child_management/presentation/screens/edit_child_screen.dart';
 import 'package:farzandim/features/child_management/presentation/screens/family_code_screen.dart';
 import 'package:farzandim/features/dashboard/presentation/screens/dashboard_screen.dart';
+import 'package:farzandim/features/dashboard/presentation/screens/steps_detail_screen.dart';
+import 'package:farzandim/features/dashboard/presentation/screens/streak_detail_screen.dart';
 import 'package:farzandim/features/don_history/presentation/screens/don_history_screen.dart';
 import 'package:farzandim/features/feedback/presentation/screens/feedback_inbox_screen.dart';
 import 'package:farzandim/features/gamification/presentation/screens/leaderboard_screen.dart';
@@ -566,6 +568,20 @@ List<RouteBase> buildAppRoutes() {
       path: AppRoutes.childAchievementsPattern,
       pageBuilder: (context, state) => _slidePage(
         LeaderboardScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      // Qadam batafsil — dashboard "Kunlik qadamlar" kartasidan.
+      path: AppRoutes.stepsDetailPattern,
+      pageBuilder: (context, state) => _slidePage(
+        StepsDetailScreen(childId: state.pathParameters['childId']!),
+      ),
+    ),
+    GoRoute(
+      // Streak batafsil — dashboard "Kunlik rivojlanish" kartasidan.
+      path: AppRoutes.streakDetailPattern,
+      pageBuilder: (context, state) => _slidePage(
+        StreakDetailScreen(childId: state.pathParameters['childId']!),
       ),
     ),
     GoRoute(

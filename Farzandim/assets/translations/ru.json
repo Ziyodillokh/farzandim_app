@@ -279,6 +279,37 @@
       "close": "Закрыть"
     }
   },
+  "stepsDetail": {
+    "title": "Шаги",
+    "week": "Эта неделя",
+    "byDay": "По дням",
+    "today": "Сегодня",
+    "todayPct": "Сегодня {pct}% от дневной цели",
+    "weekTotal": "За неделю",
+    "dailyAvg": "В среднем",
+    "best": "Рекорд"
+  },
+  "streakDetail": {
+    "title": "Развитие",
+    "continuous": "дней подряд активности",
+    "medals": "Медали",
+    "earnedOf": "{earned} / {total} медалей",
+    "nextMilestone": "До следующего этапа {n} дн.",
+    "maxMilestone": "Высший уровень!",
+    "achieved": "Получено",
+    "mFirstBookTitle": "1-я книга",
+    "mFirstBookDesc": "Прочитал(а) первую книгу",
+    "mStreak10Title": "10 дней",
+    "mStreak10Desc": "10 дней непрерывной активности",
+    "mMathTop10Title": "Матем ТОП-10",
+    "mMathTop10Desc": "ТОП-10 в математической викторине",
+    "mContestWinnerTitle": "Победитель",
+    "mContestWinnerDesc": "Призёр олимпиады",
+    "mContentCreatorTitle": "Создатель контента",
+    "mContentCreatorDesc": "5 постов прошли модерацию",
+    "mHelperTitle": "Помощник",
+    "mHelperDesc": "Верный ответ другому ребёнку"
+  },
   "dashboard": {
     "status": {
       "online": "Онлайн",

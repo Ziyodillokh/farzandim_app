@@ -38,8 +38,11 @@ class ChildProfile {
       lastActivityDate: json['lastActivityDate'] != null
           ? DateTime.tryParse(json['lastActivityDate'] as String)?.toLocal()
           : null,
+      // Backend `achievements`ni ID'lar massivi (string[]) sifatida saqlaydi,
+      // masalan ["first_book","streak_10"]. Har elementni String'ga keltiramiz.
       achievements: (json['achievements'] as List<dynamic>? ?? const [])
-          .cast<Map<String, dynamic>>(),
+          .map((e) => e.toString())
+          .toList(),
     );
   }
 
@@ -59,7 +62,9 @@ class ChildProfile {
   final String status;
   final int streakDays;
   final DateTime? lastActivityDate;
-  final List<Map<String, dynamic>> achievements;
+
+  /// Ochilgan yutuqlar ID'lari (masalan `first_book`, `streak_10`).
+  final List<String> achievements;
 }
 
 class BackendGamificationRepository {
