@@ -51,6 +51,19 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
+/// Funksiya kalitini o'qiladigan nomga aylantiradi. Tarjima topilsa — o'sha;
+/// topilmasa kalitni "humanize" qiladi ("full_access" → "Full access"), shunda
+/// xom `planFeatures.xxx` hech qachon ekranda ko'rinmaydi (admin erkin kalit
+/// yozgan bo'lsa ham).
+String _featureLabel(String key) {
+  final path = 'planFeatures.$key';
+  final t = path.tr();
+  if (t != path) return t;
+  final cleaned = key.replaceAll('_', ' ').trim();
+  if (cleaned.isEmpty) return key;
+  return cleaned[0].toUpperCase() + cleaned.substring(1);
+}
+
 /// Tarif kartasi ko'rinishi.
 enum _PlanStyle { glass, blue, dark }
 
@@ -302,23 +315,30 @@ class _PlanCard extends StatelessWidget {
     final dividerColor = blue
         ? Colors.white.withValues(alpha: 0.22)
         : Colors.white.withValues(alpha: 0.1);
+    // Narx rangi: shisha/ko'k kartada oq; to'q (Premium) kartada ko'k urg'u.
+    final priceColor = switch (style) {
+      _PlanStyle.glass => Colors.white.withValues(alpha: 0.92),
+      _PlanStyle.blue => Colors.white,
+      _PlanStyle.dark => const Color(0xFF6FA0FF),
+    };
 
     final content = Padding(
       padding: const EdgeInsets.all(22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Expanded(child: Text(name, style: _unb(26, ls: -0.8))),
-              const SizedBox(width: 12),
-              Text(price, style: _unb(19, ls: -0.4)),
-            ],
+          // Nom tepada, narx pastda — nom endi qisilmaydi va 2 qatorga
+          // sinmaydi (narx bilan bir qatorda emas).
+          Text(name, style: _unb(24, ls: -0.8)),
+          const SizedBox(height: 6),
+          Text(
+            price,
+            style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
           ),
           const SizedBox(height: 18),
           for (var i = 0; i < features.length; i++) ...[
             _PlanFeature(
-              label: 'planFeatures.${features[i]}'.tr(),
+              label: _featureLabel(features[i]),
               color: featureColor,
             ),
             if (i != features.length - 1) ...[

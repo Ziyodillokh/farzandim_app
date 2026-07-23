@@ -1646,6 +1646,20 @@
     "per_app_time_limit": "Ilovalar bo'yicha vaqt cheklovi",
     "paid_contests": "Pulli konkurslar",
     "connect_3_children": "3 tagacha bola ulash",
-    "dual_device_control": "2 qurilmadan nazorat"
+    "dual_device_control": "2 qurilmadan nazorat",
+    "full_access": "To'liq kirish",
+    "audiobooks": "Audiokitoblar",
+    "contests": "Konkurslar",
+    "no_ads": "Reklamasiz",
+    "geolocation": "Geolokatsiya",
+    "screen_time": "Ekran vaqti",
+    "premium_analytics": "Premium tahlil",
+    "basic_analytics": "Asosiy tahlil",
+    "chat": "Xabarlashuv",
+    "video": "Video kutubxona",
+    "xp": "XP ballari",
+    "no_ads_full": "Reklamasiz",
+    "priority_support": "Ustuvor qo'llab-quvvatlash",
+    "family_sharing": "Oila bilan ulashish"
   }
 }

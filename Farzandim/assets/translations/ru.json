@@ -1646,6 +1646,20 @@
     "per_app_time_limit": "Лимит времени по приложениям",
     "paid_contests": "Платные конкурсы",
     "connect_3_children": "До 3 детей",
-    "dual_device_control": "Контроль с 2 устройств"
+    "dual_device_control": "Контроль с 2 устройств",
+    "full_access": "Полный доступ",
+    "audiobooks": "Аудиокниги",
+    "contests": "Конкурсы",
+    "no_ads": "Без рекламы",
+    "geolocation": "Геолокация",
+    "screen_time": "Экранное время",
+    "premium_analytics": "Премиум-аналитика",
+    "basic_analytics": "Базовая аналитика",
+    "chat": "Чат",
+    "video": "Видеотека",
+    "xp": "XP баллы",
+    "no_ads_full": "Без рекламы",
+    "priority_support": "Приоритетная поддержка",
+    "family_sharing": "Семейный доступ"
   }
 }
