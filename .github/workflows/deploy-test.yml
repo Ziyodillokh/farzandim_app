@@ -319,7 +319,8 @@ jobs:
     needs: [changes, parent-quality]
     if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
-    timeout-minutes: 30
+    # Fix'dan keyingi 1-build cache'siz (deps qayta yuklanadi) — 45 daq marja.
+    timeout-minutes: 45
     env:
       SSHPASS: ${{ secrets.SSH_PASSWORD }}
     steps:
@@ -349,18 +350,35 @@ jobs:
           channel: stable
           cache: true
 
+      # Runner root FS (~14GB) tor — Android SDK + Flutter + Gradle keshi
+      # sig'may, kesh ochishda (tar -xf) "No space left" bo'lib deploy to'xtardi.
+      # Keraksiz preinstalled SDK'larni (.NET / Haskell / CodeQL / Boost /
+      # GraalVM / PowerShell + docker образ) o'chirib ~15GB bo'shatamiz.
+      - name: Bo'sh disk joyi ochish
+        run: |
+          echo "Oldin:"; df -h / | tail -1
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost \
+            /usr/local/graalvm /usr/local/share/powershell 2>/dev/null || true
+          sudo docker image prune -af 2>/dev/null || true
+          echo "Keyin:"; df -h / | tail -1
+
       # Gradle dependency keshi — Maven Central ba'zan runner'larga 403
       # (rate-limit) qaytaradi va build yiqiladi. Kesh bo'lsa artefaktlar
       # tarmoqdan qayta yuklanmaydi → 403'ga chidamli + build tezroq.
+      # MUHIM: faqat 'modules-2' (yuklab olingan artefaktlar — 403 himoyasi shu)
+      # + 'wrapper' keshlanadi, butun ~/.gradle/caches EMAS: u build-cache /
+      # transforms bilan 3.4GB gacha shishib, kesh ochishda diskni to'ldirib
+      # deployni to'xtatardi. Kalit 'v2' — eski 3.4GB keshni bekor qiladi.
       - name: Cache Gradle dependencies
         uses: actions/cache@v4
         with:
           path: |
-            ~/.gradle/caches
+            ~/.gradle/caches/modules-2
             ~/.gradle/wrapper
-          key: gradle-${{ runner.os }}-${{ hashFiles('Farzandim/android/**/*.gradle*', 'farzandim_child/android/**/*.gradle*', '**/gradle-wrapper.properties', 'Farzandim/pubspec.lock', 'farzandim_child/pubspec.lock') }}
+          key: gradle-v2-${{ runner.os }}-${{ hashFiles('Farzandim/android/**/*.gradle*', 'farzandim_child/android/**/*.gradle*', '**/gradle-wrapper.properties', 'Farzandim/pubspec.lock', 'farzandim_child/pubspec.lock') }}
           restore-keys: |
-            gradle-${{ runner.os }}-
+            gradle-v2-${{ runner.os }}-
 
       # Runner'da 7GB RAM bor — Gradle/lint xotirasini oshiramiz (lokal 4GB sozlamasi kam edi).
       # Bu "LintClassLoaderBuildService failed to stop" (metaspace/heap OOM) xatosini hal qiladi.
