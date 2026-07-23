@@ -14,6 +14,8 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
+import { EntitlementGuard } from '../../common/entitlement/entitlement.guard';
+import { RequireFeature } from '../../common/entitlement/require-feature.decorator';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { AppLimitsService } from './app-limits.service';
@@ -43,6 +45,8 @@ export class AppLimitsController {
 
   @Post('children/:childId/app-limits')
   @HttpCode(HttpStatus.CREATED)
+  @UseGuards(EntitlementGuard)
+  @RequireFeature('per_app_time_limit')
   @ApiOperation({ summary: 'Create app limit (parent only)' })
   create(
     @Param('childId') childId: string,

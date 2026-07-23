@@ -1618,5 +1618,10 @@
     "streak": "Streak",
     "steps": "Steps",
     "streakValue": "{days} days"
+  },
+  "plans": {
+    "premiumFeature": "Premium feature",
+    "viewPlans": "View plans",
+    "later": "Later"
   }
 }

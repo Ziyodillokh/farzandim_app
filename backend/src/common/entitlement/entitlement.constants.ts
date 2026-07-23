@@ -51,13 +51,22 @@ export const TIER_FEATURES: Record<string, string[]> = {
   ],
 };
 
-/// Daraja bo'yicha maksimal ulanadigan bola soni ('connect_3_children' premium).
-/// NB: bu mahsulot qarori — kerak bo'lsa admin bilan kelishilgan holda o'zgaradi.
+/// Daraja bo'yicha maksimal BOLA soni (mahsulot qarori, 2026-07):
+/// free/standard = 1 bola; premium = 3 bola ('connect_3_children').
 export const TIER_MAX_CHILDREN: Record<string, number> = {
   free: 1,
-  standard: 2,
+  standard: 1,
   premium: 3,
   vip: 3,
+};
+
+/// Daraja bo'yicha maksimal OTA-ONA (co-parent) soni (bir oilaga):
+/// free/standard = 1 (bitta ota YOKI ona); premium = 2 ('dual_device_control').
+export const TIER_MAX_PARENTS: Record<string, number> = {
+  free: 1,
+  standard: 1,
+  premium: 2,
+  vip: 2,
 };
 
 export const DEFAULT_TIER = 'free';

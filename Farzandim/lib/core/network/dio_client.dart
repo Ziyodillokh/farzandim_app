@@ -59,6 +59,8 @@ final dioClientProvider = Provider<Dio>((ref) {
   dio.interceptors.add(
     _RefreshInterceptor(dio: dio, tokenStorage: tokenStorage),
   );
+  // Tarif 403 — qulflangan funksiyani "yuksalting" oynasiga ulaydi.
+  dio.interceptors.add(_EntitlementInterceptor());
   if (kDebugMode) {
     dio.interceptors.add(_LoggingInterceptor());
   }
@@ -216,6 +218,35 @@ class _RefreshInterceptor extends Interceptor {
 /// Callback'siz foydalanuvchi "zombi" holatda qolardi (UI ochiq, barcha
 /// so'rovlar jim 401, hech qanday xabar yo'q).
 void Function()? onSessionExpired;
+
+/// Tarif funksiyasi qulflanganda (403 `FEATURE_NOT_IN_PLAN` yoki
+/// `CHILD_LIMIT_REACHED`) chaqiriladigan global callback. `app.dart` uni
+/// "Tarifni yuksalting" oynasini ko'rsatishga ulaydi. Backend guard bergan
+/// har qanday qulflangan funksiya SHU orqali bitta joyda ishlov oladi.
+void Function(String? feature, String? message)? onFeatureLocked;
+
+// ─── EntitlementInterceptor ────────────────────────────────────────────
+// Backend `@RequireFeature` guard 403 (`code: FEATURE_NOT_IN_PLAN`) yoki
+// bola-limit (`CHILD_LIMIT_REACHED`) qaytarsa — `onFeatureLocked` chaqiradi.
+// Xatoni BLOKLAMAYDI (handler.next) — chaqiruvchi kod ham o'z holicha ishlaydi.
+class _EntitlementInterceptor extends Interceptor {
+  @override
+  void onError(DioException err, ErrorInterceptorHandler handler) {
+    if (err.response?.statusCode == 403) {
+      final data = err.response?.data;
+      if (data is Map) {
+        final code = data['code'] as String?;
+        if (code == 'FEATURE_NOT_IN_PLAN' || code == 'CHILD_LIMIT_REACHED') {
+          onFeatureLocked?.call(
+            data['feature'] as String?,
+            data['message'] as String?,
+          );
+        }
+      }
+    }
+    handler.next(err);
+  }
+}
 
 // ─── 3. LoggingInterceptor ─────────────────────────────────────────────
 // Debug build'da request/response log qiladi. Production'da o'chiriladi

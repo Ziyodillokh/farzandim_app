@@ -4,6 +4,7 @@ import {
   DEFAULT_TIER,
   TIER_FEATURES,
   TIER_MAX_CHILDREN,
+  TIER_MAX_PARENTS,
 } from './entitlement.constants';
 
 export interface Entitlement {
@@ -13,6 +14,8 @@ export interface Entitlement {
   features: string[];
   /** Ulanadigan maksimal bola soni. */
   maxChildren: number;
+  /** Bir oilaga ulanadigan maksimal ota-ona (co-parent) soni. */
+  maxParents: number;
 }
 
 /**
@@ -45,8 +48,10 @@ export class EntitlementService {
         : (TIER_FEATURES[tier] ?? TIER_FEATURES[DEFAULT_TIER]);
     const maxChildren =
       TIER_MAX_CHILDREN[tier] ?? TIER_MAX_CHILDREN[DEFAULT_TIER];
+    const maxParents =
+      TIER_MAX_PARENTS[tier] ?? TIER_MAX_PARENTS[DEFAULT_TIER];
 
-    return { tier, features, maxChildren };
+    return { tier, features, maxChildren, maxParents };
   }
 
   /** Foydalanuvchida shu funksiya yoqilganmi. */

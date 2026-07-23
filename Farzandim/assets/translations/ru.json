@@ -1618,5 +1618,10 @@
     "streak": "Серия",
     "steps": "Шаги",
     "streakValue": "{days} дн."
+  },
+  "plans": {
+    "premiumFeature": "Премиум-функция",
+    "viewPlans": "Посмотреть тарифы",
+    "later": "Позже"
   }
 }

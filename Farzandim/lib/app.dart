@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/core/network/dio_client.dart' show onFeatureLocked;
 import 'package:farzandim/core/realtime/socket_providers.dart';
 import 'package:farzandim/core/routing/app_router.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
@@ -48,6 +49,10 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
 /// banner yopilgach qiymat qayta `null` ga qaytadi.
 // ignore: use_late_for_private_fields_and_variables
 String? _shownSosAlertId;
+
+/// Tarif "yuksalting" oynasi ochiqmi — bir vaqtda bittadan ortiq chiqmasin
+/// (bir nechta 403 ketma-ket kelsa ham).
+bool _upgradeDialogOpen = false;
 
 /// SOS WS payload'idan alert id'sini oladi.
 ///
@@ -246,6 +251,38 @@ class FarzandimApp extends ConsumerWidget {
         localeNotifier.state = localeCode;
       }
     });
+
+    // ── Tarif (entitlement) qulflangan funksiya → "yuksalting" oynasi ──
+    // Backend `@RequireFeature` guard 403 (FEATURE_NOT_IN_PLAN / CHILD_LIMIT_
+    // REACHED) qaytarsa dio interceptor `onFeatureLocked`ni chaqiradi. Shu
+    // yerda bir marta ulaymiz — har qanday qulflangan funksiya (va bola-limit)
+    // uchun bitta markaziy "Premium funksiya" oynasi.
+    onFeatureLocked ??= (feature, message) {
+      final ctx =
+          ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+      if (ctx == null || _upgradeDialogOpen) return;
+      _upgradeDialogOpen = true;
+      showDialog<void>(
+        context: ctx,
+        builder: (dialogCtx) => AlertDialog(
+          title: Text('plans.premiumFeature'.tr()),
+          content: Text(message ?? ''),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(dialogCtx).pop(),
+              child: Text('plans.later'.tr()),
+            ),
+            FilledButton(
+              onPressed: () {
+                Navigator.of(dialogCtx).pop();
+                ref.read(routerProvider).push(AppRoutes.premium);
+              },
+              child: Text('plans.viewPlans'.tr()),
+            ),
+          ],
+        ),
+      ).whenComplete(() => _upgradeDialogOpen = false);
+    };
 
     // FCM token re-registratsiya — login muvaffaqiyatli tugagach.
     // `fcmInitializerProvider` token'ni startup'da yuboradi, ammo o'sha

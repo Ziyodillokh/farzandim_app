@@ -1618,5 +1618,10 @@
     "streak": "Streak",
     "steps": "Qadam",
     "streakValue": "{days} kun"
+  },
+  "plans": {
+    "premiumFeature": "Premium funksiya",
+    "viewPlans": "Tariflarni ko'rish",
+    "later": "Keyinroq"
   }
 }
