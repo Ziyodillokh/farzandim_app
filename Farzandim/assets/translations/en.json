@@ -1626,7 +1626,10 @@
     "premiumFeature": "Premium feature",
     "viewPlans": "View plans",
     "later": "Later",
-    "recommendTier": "{tier} plan recommended"
+    "recommendTier": "{tier} plan recommended",
+    "childLimitMsg": "This plan allows up to {max} children. Upgrade to Premium for more.",
+    "currentPlan": "Your plan",
+    "tierFree": "Free"
   },
   "planFeatures": {
     "app_trial": "App trial",

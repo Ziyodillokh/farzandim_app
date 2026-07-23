@@ -1626,7 +1626,10 @@
     "premiumFeature": "Премиум-функция",
     "viewPlans": "Посмотреть тарифы",
     "later": "Позже",
-    "recommendTier": "Рекомендуется тариф {tier}"
+    "recommendTier": "Рекомендуется тариф {tier}",
+    "childLimitMsg": "В этом тарифе можно до {max} детей. Для большего перейдите на Премиум.",
+    "currentPlan": "Ваш тариф",
+    "tierFree": "Бесплатный"
   },
   "planFeatures": {
     "app_trial": "Пробная версия",

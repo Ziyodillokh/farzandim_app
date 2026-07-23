@@ -14,6 +14,7 @@ import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/settings/data/entitlement.dart';
 import 'package:farzandim/features/settings/data/repositories/backend_payments_repository.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
@@ -64,12 +65,36 @@ class ParvozPremiumScreen extends ConsumerStatefulWidget {
       _ParvozPremiumScreenState();
 }
 
-class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
+class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
+    with WidgetsBindingObserver {
   /// Hozir checkout ochilayotgan tarif id (tugmada spinner). `null` — bo'sh.
   String? _busyPlanId;
 
   /// `true` — yillik ko'rinish (narx = oylik×10, 2 oy tekin). `false` — oylik.
   bool _yearly = false;
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    // Click to'lov sahifasidan qaytilganda tarif + planlarni yangilaymiz —
+    // to'lov tasdiqlangan bo'lsa yangi tarif DARHOL kuchga kiradi.
+    if (state == AppLifecycleState.resumed) {
+      ref
+        ..invalidate(entitlementProvider)
+        ..invalidate(plansProvider);
+    }
+  }
 
   /// Tarifni sotib olish: checkout -> Click to'lov sahifasini ochish.
   Future<void> _subscribe(PlanEntry plan) async {
@@ -161,7 +186,9 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
                             c: Colors.white.withValues(alpha: 0.6),
                           ),
                         ),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 12),
+                        const _CurrentPlanLabel(),
+                        const SizedBox(height: 16),
                         _BillingToggle(
                           yearly: _yearly,
                           onChanged: (v) => setState(() => _yearly = v),
@@ -371,6 +398,23 @@ class _PlanFeature extends StatelessWidget {
           child: Text(label, style: _pop(15, w: FontWeight.w500, c: color)),
         ),
       ],
+    );
+  }
+}
+
+// ════════════ Joriy tarif ("Sizning tarifingiz: Premium") ════════════
+class _CurrentPlanLabel extends ConsumerWidget {
+  const _CurrentPlanLabel();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final tier = ref.watch(entitlementProvider).valueOrNull?.tier ?? 'free';
+    final label = tier == 'free'
+        ? 'plans.tierFree'.tr()
+        : tier[0].toUpperCase() + tier.substring(1);
+    return Text(
+      "${'plans.currentPlan'.tr()}: $label",
+      style: _pop(13, c: Colors.white.withValues(alpha: 0.55)),
     );
   }
 }

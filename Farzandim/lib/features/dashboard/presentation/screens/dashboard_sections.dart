@@ -1081,13 +1081,13 @@ class _ActionCard extends StatelessWidget {
 
 // ════════════════════════ BOLA QO'SHISH (shisha) ════════════════════════
 
-class _AddChildButton extends StatelessWidget {
+class _AddChildButton extends ConsumerWidget {
   const _AddChildButton();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: () => context.push(AppRoutes.addChild),
+      onTap: () => guardAddChild(context, ref),
       behavior: HitTestBehavior.opaque,
       child: _Glass(
         child: SizedBox(
@@ -1163,9 +1163,7 @@ class _BottomBar extends StatelessWidget {
                         ),
                       // 1 yoki 2 bola bo'lsa "+" (qo'shish); 3 ta bo'lsa yo'q.
                       if (children.length < _kMaxChildren)
-                        _AddSwitcherButton(
-                          onTap: () => context.push(AppRoutes.addChild),
-                        ),
+                        const _AddSwitcherButton(),
                     ],
                   ),
                 ),
@@ -1196,15 +1194,13 @@ class _BottomBar extends StatelessWidget {
 }
 
 /// Almashtirgich "+" — yangi bola qo'shish (faqat bolalar < 3 bo'lganda).
-class _AddSwitcherButton extends StatelessWidget {
-  const _AddSwitcherButton({required this.onTap});
-
-  final VoidCallback onTap;
+class _AddSwitcherButton extends ConsumerWidget {
+  const _AddSwitcherButton();
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     return GestureDetector(
-      onTap: onTap,
+      onTap: () => guardAddChild(context, ref),
       behavior: HitTestBehavior.opaque,
       child: Container(
         width: 44,

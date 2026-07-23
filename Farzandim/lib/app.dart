@@ -16,6 +16,7 @@ import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_pr
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_permission_primer.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
+import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
@@ -49,10 +50,6 @@ class _AppScrollBehavior extends MaterialScrollBehavior {
 /// banner yopilgach qiymat qayta `null` ga qaytadi.
 // ignore: use_late_for_private_fields_and_variables
 String? _shownSosAlertId;
-
-/// Tarif "yuksalting" oynasi ochiqmi — bir vaqtda bittadan ortiq chiqmasin
-/// (bir nechta 403 ketma-ket kelsa ham).
-bool _upgradeDialogOpen = false;
 
 /// SOS WS payload'idan alert id'sini oladi.
 ///
@@ -260,33 +257,8 @@ class FarzandimApp extends ConsumerWidget {
     onFeatureLocked ??= (feature, message, requiredTier) {
       final ctx =
           ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
-      if (ctx == null || _upgradeDialogOpen) return;
-      _upgradeDialogOpen = true;
-      // Tavsiya: bola/2-ota-ona → Premium, boshqa → Standard (backend beradi).
-      final tier = requiredTier ?? 'premium';
-      final tierName = tier.isEmpty
-          ? 'Premium'
-          : tier[0].toUpperCase() + tier.substring(1);
-      showDialog<void>(
-        context: ctx,
-        builder: (dialogCtx) => AlertDialog(
-          title: Text('plans.recommendTier'.tr(namedArgs: {'tier': tierName})),
-          content: Text(message ?? ''),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(dialogCtx).pop(),
-              child: Text('plans.later'.tr()),
-            ),
-            FilledButton(
-              onPressed: () {
-                Navigator.of(dialogCtx).pop();
-                ref.read(routerProvider).push(AppRoutes.premium);
-              },
-              child: Text('plans.viewPlans'.tr()),
-            ),
-          ],
-        ),
-      ).whenComplete(() => _upgradeDialogOpen = false);
+      if (ctx == null) return;
+      showUpgradeDialog(ctx, ref, tier: requiredTier, message: message);
     };
 
     // FCM token re-registratsiya — login muvaffaqiyatli tugagach.

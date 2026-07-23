@@ -1626,7 +1626,10 @@
     "premiumFeature": "Premium funksiya",
     "viewPlans": "Tariflarni ko'rish",
     "later": "Keyinroq",
-    "recommendTier": "{tier} tarif tavsiya etiladi"
+    "recommendTier": "{tier} tarif tavsiya etiladi",
+    "childLimitMsg": "Bu tarifda {max} tagacha bola ulash mumkin. Ko'proq bola uchun Premium tarifga o'ting.",
+    "currentPlan": "Sizning tarifingiz",
+    "tierFree": "Bepul"
   },
   "planFeatures": {
     "app_trial": "Ilovani sinab ko'rish",

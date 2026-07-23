@@ -13,6 +13,7 @@ import 'package:farzandim/features/child_management/data/models/child_model.dart
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/child_management/presentation/screens/connect_child_sheet.dart';
 import 'package:farzandim/features/child_management/presentation/widgets/repair_qr_dialog.dart';
+import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
@@ -109,7 +110,7 @@ class ChildrenManagementScreen extends ConsumerWidget {
                     ),
                   const SizedBox(height: 8),
                   _AddChildButton(
-                    onTap: () => context.push(AppRoutes.addChild),
+                    onTap: () => guardAddChild(context, ref),
                   ),
                 ],
               ),
