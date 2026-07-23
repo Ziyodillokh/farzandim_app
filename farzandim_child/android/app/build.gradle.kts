@@ -70,15 +70,16 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // R8: ishlatilmagan Java/Kotlin (plugin) kodi + resurslarni qisqartirish.
-            // Dart kodiga (libapp.so) ta'sir qilmaydi. proguard-rules.pro reflection
-            // ishlatadigan pluginlarni (Firebase, ML Kit, audio_service, camera...) saqlaydi.
-            isMinifyEnabled = true
-            isShrinkResources = true
-            proguardFiles(
-                getDefaultProguardFile("proguard-android-optimize.txt"),
-                "proguard-rules.pro",
-            )
+            // ⚠️ R8 minify HOZIRCHA O'CHIQ (barqarorlik uchun). R8 reflection
+            // ishlatadigan plugin sinflarini obfuscate/o'chirib, ba'zi kod
+            // yo'llarida KUTILMAGANDA native crash ("ilova ishdan chiqdi")
+            // berardi (bola app tasodifiy yopilardi). Boshqa hajm
+            // optimizatsiyalari (assets WebP, x86_64 chiqarish, o'lik dep)
+            // SAQLANGAN — faqat R8 qismi (~11MB) qaytdi. proguard-rules.pro
+            // qoldi (kelajakda qurilmada sinovdan keyin qayta yoqish uchun).
+            // NB: isShrinkResources minifyEnabled=false bilan build xatosi
+            // beradi, shu sabab u ham olib tashlandi.
+            isMinifyEnabled = false
         }
     }
 }
