@@ -46,7 +46,6 @@ export const PLAN_FEATURE_GROUPS: PlanFeatureGroup[] = [
       { key: 'realtime_geolocation', label: 'Real-time geolokatsiya' },
       { key: 'per_app_time_limit', label: "Ilovalar bo'yicha vaqt cheklovi" },
       { key: 'paid_contests', label: 'Pulli konkurslar' },
-      { key: 'ai_recommendations', label: 'AI tavsiya' },
     ],
   },
   {

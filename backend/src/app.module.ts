@@ -55,6 +55,7 @@ import { AdminContentModule } from './admin/admin-content/admin-content.module';
 import { AdminAuditLogModule } from './admin/admin-audit-log/admin-audit-log.module';
 import { AdminSecurityModule } from './admin/admin-security/admin-security.module';
 import { SecuritySettingsModule } from './common/security/security-settings.module';
+import { EntitlementModule } from './common/entitlement/entitlement.module';
 
 // App controller
 import { AppController } from './app.controller';
@@ -106,6 +107,7 @@ import { AppController } from './app.controller';
 
     // Admin modules
     AdminAuthModule,
+    EntitlementModule,
     AdminModeratorsModule,
     AdminUsersModule,
     AdminDashboardModule,

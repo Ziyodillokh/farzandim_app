@@ -14,6 +14,7 @@ import { AuditService } from '../../common/audit/audit.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { BatteryAlertService } from '../../common/battery/battery-alert.service';
 import { PermissionAlertService } from '../../common/permission-alert/permission-alert.service';
+import { EntitlementService } from '../../common/entitlement/entitlement.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
 import { CreateChildDto } from './dto/create-child.dto';
 import { UpdateChildDto } from './dto/update-child.dto';
@@ -29,7 +30,6 @@ const ALLOWED_AVATAR_MIMES = [
   'image/webp',
 ];
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
-const MAX_CHILDREN_PER_PARENT = 3; // Bir ota-ona maksimal 3 ta farzand
 
 @Injectable()
 export class ChildrenService {
@@ -42,6 +42,7 @@ export class ChildrenService {
     private readonly fcm: FcmService,
     private readonly batteryAlert: BatteryAlertService,
     private readonly permissionAlert: PermissionAlertService,
+    private readonly entitlement: EntitlementService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -86,12 +87,20 @@ export class ChildrenService {
     dto: CreateChildDto,
     reqMeta?: { ip?: string; headers?: Record<string, string | string[] | undefined> },
   ) {
-    // Maksimal 3 ta farzand cheklovi.
+    // Bola soni TARIF (entitlement) bo'yicha cheklanadi (free=1, standard=2,
+    // premium=3). Mavjud bolalar tegilmaydi — faqat yangi qo'shish bloklanadi.
     const existingCount = await this.prisma.child.count({ where: { parentId } });
-    if (existingCount >= MAX_CHILDREN_PER_PARENT) {
-      throw new BadRequestException(
-        `Maksimal ${MAX_CHILDREN_PER_PARENT} ta farzand qo'shish mumkin`,
-      );
+    const { tier, maxChildren } =
+      await this.entitlement.getEntitlement(parentId);
+    if (existingCount >= maxChildren) {
+      throw new ForbiddenException({
+        message:
+          `Sizning tarifingizda ('${tier}') maksimal ${maxChildren} ta ` +
+          `farzand ulash mumkin. Ko'proq bola uchun tarifni yuksalting.`,
+        code: 'CHILD_LIMIT_REACHED',
+        tier,
+        maxChildren,
+      });
     }
 
     const familyCode = await this.generateUniqueFamilyCode();
