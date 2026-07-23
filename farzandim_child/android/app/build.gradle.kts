@@ -77,9 +77,12 @@ android {
             // optimizatsiyalari (assets WebP, x86_64 chiqarish, o'lik dep)
             // SAQLANGAN — faqat R8 qismi (~11MB) qaytdi. proguard-rules.pro
             // qoldi (kelajakda qurilmada sinovdan keyin qayta yoqish uchun).
-            // NB: isShrinkResources minifyEnabled=false bilan build xatosi
-            // beradi, shu sabab u ham olib tashlandi.
+            // MUHIM: minify=false bilan shrinkResources ham OSHKORA false
+            // bo'lishi shart — aks holda Flutter gradle plugin/AGP uni yoqib
+            // "Removing unused resources requires code shrinking" build xatosi
+            // beradi (--no-shrink bayrog'i o'zi yetmaydi).
             isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }
