@@ -78,11 +78,26 @@ TextStyle _pop(
 }
 
 /// Asosiy ekran — Parvoz dizayni, dinamik bola monitoringi (real ma'lumotlar).
-class DashboardScreen extends ConsumerWidget {
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
+}
+
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
+  @override
+  void initState() {
+    super.initState();
+    // Ilovaga BIRINCHI kirganda bir martalik "yuksalting" promosi (faqat
+    // bepul tarifda, flag bilan). Bu fon-popup EMAS — ataylab, bir martalik.
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (mounted) maybeShowFirstLaunchPromo(context, ref);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final isAuthed = ref.watch(
       backendAuthProvider.select((s) => s is AuthAuthenticated),
     );
@@ -325,8 +340,16 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                                 height: 30,
                               ),
                               label: 'dashboard.quickActions.weeklyReport'.tr(),
-                              onTap: () => context.push(
-                                AppRoutes.weeklyReportPath(child.id),
+                              // Haftalik hisobot — gated funksiya. Tarifda
+                              // bo'lmasa BOSISHDA "yuksalting" oynasi chiqadi
+                              // (buzuq 403 sahifasi o'rniga).
+                              onTap: () => guardFeature(
+                                context,
+                                ref,
+                                feature: 'weekly_report',
+                                onAllowed: () => context.push(
+                                  AppRoutes.weeklyReportPath(child.id),
+                                ),
                               ),
                             ),
                           ),

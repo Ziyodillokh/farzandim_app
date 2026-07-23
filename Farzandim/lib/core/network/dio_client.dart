@@ -224,16 +224,21 @@ void Function()? onSessionExpired;
 /// "Tarifni yuksalting" oynasini ko'rsatishga ulaydi. Backend guard bergan
 /// har qanday qulflangan funksiya SHU orqali bitta joyda ishlov oladi.
 void Function(String? feature, String? message, String? requiredTier)?
-    onFeatureLocked;
+onFeatureLocked;
 
 // ─── EntitlementInterceptor ────────────────────────────────────────────
 // Backend `@RequireFeature` guard 403 (`code: FEATURE_NOT_IN_PLAN`) yoki
-// bola-limit (`CHILD_LIMIT_REACHED`) qaytarsa — `onFeatureLocked` chaqiradi.
+// bola-limit (`CHILD_LIMIT_REACHED`) qaytarsa — `onFeatureLocked` chaqiradi
+// (foydalanuvchi funksiyani bosganda "yuksalting" oynasi). LEKIN passiv/fon
+// so'rovlar `extra: {'_passive': true}` bilan belgilanadi; ular 403 qaytarsa
+// modal CHIQMAYDI — aks holda dashboard'dagi haftalik qadamlar `/weekly-report`
+// auto-fetch'i 403 bo'lib, ilovaga kirgach oyna o'zidan-o'zi ochilib qolardi.
 // Xatoni BLOKLAMAYDI (handler.next) — chaqiruvchi kod ham o'z holicha ishlaydi.
 class _EntitlementInterceptor extends Interceptor {
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-    if (err.response?.statusCode == 403) {
+    if (err.response?.statusCode == 403 &&
+        err.requestOptions.extra['_passive'] != true) {
       final data = err.response?.data;
       if (data is Map) {
         final code = data['code'] as String?;

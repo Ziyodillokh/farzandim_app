@@ -1629,7 +1629,10 @@
     "recommendTier": "{tier} tarif tavsiya etiladi",
     "childLimitMsg": "Bu tarifda {max} tagacha bola ulash mumkin. Ko'proq bola uchun Premium tarifga o'ting.",
     "currentPlan": "Sizning tarifingiz",
-    "tierFree": "Bepul"
+    "tierFree": "Bepul",
+    "everythingIn": "{plan} tarifidagi barcha imkoniyatlar",
+    "firstLaunchPromo": "Parvoz Premium bilan barcha imkoniyatlarni oching — real-time joylashuv, ilova cheklovlari va boshqalar.",
+    "featureLockedMsg": "Bu funksiya sizning tarifingizda mavjud emas. Uni ochish uchun tarifni yangilang."
   },
   "planFeatures": {
     "app_trial": "Ilovani sinab ko'rish",

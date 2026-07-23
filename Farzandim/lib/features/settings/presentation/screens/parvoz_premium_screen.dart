@@ -260,24 +260,59 @@ class _PlansList extends StatelessWidget {
   final String Function(PlanEntry) priceLabel;
   final Future<void> Function(PlanEntry) onSubscribe;
 
+  /// Tarif darajasi tartibi — delta ("pastki tarifdagi hammasi +") hisoblash
+  /// uchun har tarifning bir pastki tarifini topishda ishlatiladi.
+  static int _rank(String tier) => switch (tier) {
+    'free' => 0,
+    'basic' => 1,
+    'standard' => 2,
+    'premium' => 3,
+    'vip' => 4,
+    _ => 5,
+  };
+
   @override
   Widget build(BuildContext context) {
+    // Daraja bo'yicha tartiblaymiz — har tarifning bir pastki tarifi kerak.
+    final sorted = [...plans]
+      ..sort(
+        (a, b) => _rank(a.entitlementTier).compareTo(_rank(b.entitlementTier)),
+      );
     return Column(
       children: [
-        for (var i = 0; i < plans.length; i++) ...[
+        for (var i = 0; i < sorted.length; i++) ...[
           if (i != 0) const SizedBox(height: 16),
-          _PlanCard(
-            name: plans[i].name,
-            price: priceLabel(plans[i]),
-            style: styleFor(plans[i]),
-            features: plans[i].features,
-            // Bepul tarifda tugma yo'q (obuna talab qilmaydi).
-            ctaLabel: plans[i].isFree ? null : 'premium.subscribeCta'.tr(),
-            loading: busyPlanId == plans[i].id,
-            onCta: plans[i].isFree ? null : () => onSubscribe(plans[i]),
-          ),
+          _buildCard(sorted, i),
         ],
       ],
+    );
+  }
+
+  Widget _buildCard(List<PlanEntry> sorted, int i) {
+    final plan = sorted[i];
+    // Bir pastki tarif (bo'lsa) — uning funksiyalarini qayta yozmaymiz, faqat
+    // "X tarifidagi barchasi" + shu tarifning QO'SHIMCHA funksiyalari.
+    final lower = i > 0 ? sorted[i - 1] : null;
+    String? includesLabel;
+    var shownFeatures = plan.features;
+    if (lower != null) {
+      final lowerSet = lower.features.toSet();
+      shownFeatures = [
+        for (final f in plan.features)
+          if (!lowerSet.contains(f)) f,
+      ];
+      includesLabel = 'plans.everythingIn'.tr(namedArgs: {'plan': lower.name});
+    }
+    return _PlanCard(
+      name: plan.name,
+      price: priceLabel(plan),
+      style: styleFor(plan),
+      includesLabel: includesLabel,
+      features: shownFeatures,
+      // Bepul tarifda tugma yo'q (obuna talab qilmaydi).
+      ctaLabel: plan.isFree ? null : 'premium.subscribeCta'.tr(),
+      loading: busyPlanId == plan.id,
+      onCta: plan.isFree ? null : () => onSubscribe(plan),
     );
   }
 }
@@ -289,6 +324,7 @@ class _PlanCard extends StatelessWidget {
     required this.price,
     required this.style,
     required this.features,
+    this.includesLabel,
     this.ctaLabel,
     this.onCta,
     this.loading = false,
@@ -298,11 +334,41 @@ class _PlanCard extends StatelessWidget {
   final String price;
   final _PlanStyle style;
 
-  /// Admin tanlagan funksiya kalitlari (plan.features) — checkmark bilan.
+  /// "X tarifidagi barchasi" qatori (pastki tarif bo'lsa) — barcha funksiyani
+  /// qayta yozmaslik uchun. `null` bo'lsa ko'rsatilmaydi (eng past tarif).
+  final String? includesLabel;
+
+  /// Shu tarifning QO'SHIMCHA funksiya kalitlari (delta) — checkmark bilan.
   final List<String> features;
   final String? ctaLabel;
   final VoidCallback? onCta;
   final bool loading;
+
+  /// "X tarifidagi barchasi" qatori (bo'lsa, qalin) + qo'shimcha funksiyalar,
+  /// har biri orasida ajratgich chiziq.
+  List<Widget> _buildFeatureRows(Color featureColor, Color dividerColor) {
+    final items = <({String label, bool emphasize})>[
+      if (includesLabel != null) (label: includesLabel!, emphasize: true),
+      for (final f in features) (label: _featureLabel(f), emphasize: false),
+    ];
+    final rows = <Widget>[];
+    for (var i = 0; i < items.length; i++) {
+      rows.add(
+        _PlanFeature(
+          label: items[i].label,
+          color: featureColor,
+          emphasize: items[i].emphasize,
+        ),
+      );
+      if (i != items.length - 1) {
+        rows
+          ..add(const SizedBox(height: 12))
+          ..add(Divider(height: 1, thickness: 1, color: dividerColor))
+          ..add(const SizedBox(height: 12));
+      }
+    }
+    return rows;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -336,17 +402,7 @@ class _PlanCard extends StatelessWidget {
             style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
           ),
           const SizedBox(height: 18),
-          for (var i = 0; i < features.length; i++) ...[
-            _PlanFeature(
-              label: _featureLabel(features[i]),
-              color: featureColor,
-            ),
-            if (i != features.length - 1) ...[
-              const SizedBox(height: 12),
-              Divider(height: 1, thickness: 1, color: dividerColor),
-              const SizedBox(height: 12),
-            ],
-          ],
+          ..._buildFeatureRows(featureColor, dividerColor),
           if (ctaLabel != null) ...[
             const SizedBox(height: 20),
             _PlanCta(
@@ -403,19 +459,37 @@ class _PlanCard extends StatelessWidget {
 }
 
 class _PlanFeature extends StatelessWidget {
-  const _PlanFeature({required this.label, required this.color});
+  const _PlanFeature({
+    required this.label,
+    required this.color,
+    this.emphasize = false,
+  });
 
   final String label;
   final Color color;
+
+  /// `true` — "X tarifidagi barchasi" umumlashtiruvchi qator (qalinroq).
+  final bool emphasize;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(Icons.check_circle_rounded, size: 21, color: color),
+        Icon(
+          emphasize ? Icons.check_circle : Icons.check_circle_rounded,
+          size: emphasize ? 22 : 21,
+          color: color,
+        ),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(label, style: _pop(15, w: FontWeight.w500, c: color)),
+          child: Text(
+            label,
+            style: _pop(
+              15,
+              w: emphasize ? FontWeight.w700 : FontWeight.w500,
+              c: color,
+            ),
+          ),
         ),
       ],
     );
@@ -504,10 +578,7 @@ class _BillingToggle extends StatelessWidget {
                       : const Color(0xFF34C759),
                   borderRadius: BorderRadius.circular(6),
                 ),
-                child: Text(
-                  badge,
-                  style: _pop(10.5, w: FontWeight.w600),
-                ),
+                child: Text(badge, style: _pop(10.5, w: FontWeight.w600)),
               ),
             ],
           ],
@@ -552,7 +623,10 @@ class _PlanCta extends StatelessWidget {
                 height: 22,
                 child: CircularProgressIndicator(strokeWidth: 2.4, color: fg),
               )
-            : Text(label, style: _pop(16, w: FontWeight.w600, c: fg)),
+            : Text(
+                label,
+                style: _pop(16, w: FontWeight.w600, c: fg),
+              ),
       ),
     );
   }

@@ -7,9 +7,11 @@ import 'package:farzandim/core/routing/app_router.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/settings/data/entitlement.dart';
+import 'package:farzandim/features/settings/data/repositories/backend_payments_repository.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 // Brend ko'k — premium (paywall) ekrani bilan bir xil, modal shunga mos.
 const Color _kBlue = Color(0xFF216BFF);
@@ -125,15 +127,9 @@ class _UpgradeDialog extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 24),
-                  _PremiumButton(
-                    label: 'plans.viewPlans'.tr(),
-                    onTap: onView,
-                  ),
+                  _PremiumButton(label: 'plans.viewPlans'.tr(), onTap: onView),
                   const SizedBox(height: 8),
-                  _SecondaryButton(
-                    label: 'plans.later'.tr(),
-                    onTap: onLater,
-                  ),
+                  _SecondaryButton(label: 'plans.later'.tr(), onTap: onLater),
                 ],
               ),
             ),
@@ -231,4 +227,71 @@ void guardAddChild(BuildContext context, WidgetRef ref) {
     return;
   }
   ref.read(routerProvider).push(AppRoutes.addChild);
+}
+
+/// Qulflangan funksiyani gate qiladi: tarifda [feature] bo'lsa [onAllowed]
+/// bajariladi; bo'lmasa BOSISHDA darhol "yuksalting" oynasi chiqadi. Fon
+/// so'rovlaridan emas — faqat foydalanuvchi bosgani uchun (client-side).
+void guardFeature(
+  BuildContext context,
+  WidgetRef ref, {
+  required String feature,
+  required VoidCallback onAllowed,
+  String? tier,
+  String? message,
+}) {
+  final ent = ref.read(entitlementProvider).valueOrNull ?? Entitlement.free;
+  if (ent.has(feature)) {
+    onAllowed();
+    return;
+  }
+  showUpgradeDialog(
+    context,
+    ref,
+    tier: tier ?? _minTierForFeature(ref, feature),
+    message: message ?? 'plans.featureLockedMsg'.tr(),
+  );
+}
+
+/// Berilgan funksiya bor ENG ARZON pullik tarif darajasi (yuklangan
+/// planlardan). Topilmasa 'premium' — top tarif har doim hammasini o'z
+/// ichiga oladi, shuning uchun xavfsiz tavsiya.
+String _minTierForFeature(WidgetRef ref, String feature) {
+  const rank = {'free': 0, 'basic': 1, 'standard': 2, 'premium': 3, 'vip': 4};
+  final plans =
+      ref.read(plansProvider).valueOrNull?.plans ?? const <PlanEntry>[];
+  String? best;
+  var bestRank = 1 << 30;
+  for (final p in plans) {
+    if (p.priceUzs <= 0 || !p.features.contains(feature)) continue;
+    final r = rank[p.entitlementTier] ?? 5;
+    if (r < bestRank) {
+      bestRank = r;
+      best = p.entitlementTier;
+    }
+  }
+  return best ?? 'premium';
+}
+
+/// Ilovaga BIRINCHI kirganda (bir marta, faqat bepul tarifda) "yuksalting"
+/// oynasini ko'rsatadi. Keyingi ochilishlarda takrorlanmaydi — flag saqlanadi.
+/// Bu "o'zidan-o'zi chiqadigan" fon-popup EMAS; ataylab, bir martalik promo.
+Future<void> maybeShowFirstLaunchPromo(
+  BuildContext context,
+  WidgetRef ref,
+) async {
+  const key = 'parvoz_upgrade_promo_seen';
+  final prefs = await SharedPreferences.getInstance();
+  if (prefs.getBool(key) ?? false) return;
+  // Tarif yuklanishini kutamiz (xato/tarmoqda `free` qaytadi).
+  final ent = await ref.read(entitlementProvider.future);
+  await prefs.setBool(key, true); // bir marta ko'rsatildi (yoki o'tkazildi)
+  if (ent.tier != 'free') return; // pullik foydalanuvchi bezovta qilinmaydi
+  if (!context.mounted) return;
+  await showUpgradeDialog(
+    context,
+    ref,
+    tier: 'premium',
+    message: 'plans.firstLaunchPromo'.tr(),
+  );
 }

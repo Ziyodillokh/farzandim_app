@@ -26,8 +26,8 @@ class BackendAppUsageRepository {
   BackendAppUsageRepository({
     required Dio dio,
     required SocketClient socketClient,
-  })  : _dio = dio,
-        _socketClient = socketClient;
+  }) : _dio = dio,
+       _socketClient = socketClient;
   final Dio _dio;
   final SocketClient _socketClient;
 
@@ -150,6 +150,10 @@ class BackendAppUsageRepository {
   Future<WeeklySteps> getWeeklySteps(String childId) async {
     final response = await _dio.get<Map<String, dynamic>>(
       '/children/$childId/weekly-report',
+      // Passiv/fon fetch (dashboard qadamlar kartasi buni AVTO yuklaydi).
+      // `weekly_report` gated bo'lsa 403 keladi — bunda "yuksalting" oynasi
+      // CHIQMASIN (aks holda ilovaga kirgach modal o'zidan-o'zi ochilardi).
+      options: Options(extra: {'_passive': true}),
     );
     final steps = response.data?['steps'] as Map<String, dynamic>? ?? const {};
     final days = (steps['days'] as List<dynamic>? ?? const []).map((d) {
