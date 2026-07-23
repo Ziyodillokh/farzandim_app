@@ -1622,6 +1622,7 @@
   "plans": {
     "premiumFeature": "Premium funksiya",
     "viewPlans": "Tariflarni ko'rish",
-    "later": "Keyinroq"
+    "later": "Keyinroq",
+    "recommendTier": "{tier} tarif tavsiya etiladi"
   }
 }

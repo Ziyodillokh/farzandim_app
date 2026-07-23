@@ -1622,6 +1622,7 @@
   "plans": {
     "premiumFeature": "Premium feature",
     "viewPlans": "View plans",
-    "later": "Later"
+    "later": "Later",
+    "recommendTier": "{tier} plan recommended"
   }
 }

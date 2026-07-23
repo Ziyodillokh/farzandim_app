@@ -257,15 +257,20 @@ class FarzandimApp extends ConsumerWidget {
     // REACHED) qaytarsa dio interceptor `onFeatureLocked`ni chaqiradi. Shu
     // yerda bir marta ulaymiz — har qanday qulflangan funksiya (va bola-limit)
     // uchun bitta markaziy "Premium funksiya" oynasi.
-    onFeatureLocked ??= (feature, message) {
+    onFeatureLocked ??= (feature, message, requiredTier) {
       final ctx =
           ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
       if (ctx == null || _upgradeDialogOpen) return;
       _upgradeDialogOpen = true;
+      // Tavsiya: bola/2-ota-ona → Premium, boshqa → Standard (backend beradi).
+      final tier = requiredTier ?? 'premium';
+      final tierName = tier.isEmpty
+          ? 'Premium'
+          : tier[0].toUpperCase() + tier.substring(1);
       showDialog<void>(
         context: ctx,
         builder: (dialogCtx) => AlertDialog(
-          title: Text('plans.premiumFeature'.tr()),
+          title: Text('plans.recommendTier'.tr(namedArgs: {'tier': tierName})),
           content: Text(message ?? ''),
           actions: [
             TextButton(

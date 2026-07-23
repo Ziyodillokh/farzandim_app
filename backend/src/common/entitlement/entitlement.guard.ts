@@ -6,6 +6,7 @@ import {
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { EntitlementService } from './entitlement.service';
+import { minimumTierFor } from './entitlement.constants';
 import { REQUIRE_FEATURE_KEY } from './require-feature.decorator';
 
 /**
@@ -37,9 +38,11 @@ export class EntitlementGuard implements CanActivate {
     const ok = await this.entitlement.hasFeature(userId, feature);
     if (!ok) {
       throw new ForbiddenException({
-        message: "Bu funksiya sizning tarifingizda mavjud emas",
+        message: 'Bu funksiya sizning tarifingizda mavjud emas',
         code: 'FEATURE_NOT_IN_PLAN',
         feature,
+        // Ilova qaysi tarifni tavsiya qilishni bilishi uchun (standard/premium).
+        requiredTier: minimumTierFor(feature),
       });
     }
     return true;

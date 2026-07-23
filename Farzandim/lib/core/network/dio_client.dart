@@ -223,7 +223,8 @@ void Function()? onSessionExpired;
 /// `CHILD_LIMIT_REACHED`) chaqiriladigan global callback. `app.dart` uni
 /// "Tarifni yuksalting" oynasini ko'rsatishga ulaydi. Backend guard bergan
 /// har qanday qulflangan funksiya SHU orqali bitta joyda ishlov oladi.
-void Function(String? feature, String? message)? onFeatureLocked;
+void Function(String? feature, String? message, String? requiredTier)?
+    onFeatureLocked;
 
 // ─── EntitlementInterceptor ────────────────────────────────────────────
 // Backend `@RequireFeature` guard 403 (`code: FEATURE_NOT_IN_PLAN`) yoki
@@ -240,6 +241,7 @@ class _EntitlementInterceptor extends Interceptor {
           onFeatureLocked?.call(
             data['feature'] as String?,
             data['message'] as String?,
+            data['requiredTier'] as String?,
           );
         }
       }

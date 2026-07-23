@@ -96,8 +96,10 @@ export class ChildrenService {
       throw new ForbiddenException({
         message:
           `Sizning tarifingizda ('${tier}') maksimal ${maxChildren} ta ` +
-          `farzand ulash mumkin. Ko'proq bola uchun tarifni yuksalting.`,
+          `farzand ulash mumkin. Ko'proq bola uchun Premium tarifga o'ting.`,
         code: 'CHILD_LIMIT_REACHED',
+        // Ko'p bola — PREMIUM funksiya (mahsulot qarori).
+        requiredTier: 'premium',
         tier,
         maxChildren,
       });

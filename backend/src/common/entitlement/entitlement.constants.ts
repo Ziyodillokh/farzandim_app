@@ -70,3 +70,19 @@ export const TIER_MAX_PARENTS: Record<string, number> = {
 };
 
 export const DEFAULT_TIER = 'free';
+
+/// Pulli darajalar past→yuqori (tavsiya uchun).
+const PAID_TIER_ORDER = ['standard', 'premium'];
+
+/**
+ * Funksiyani beradigan ENG PAST pulli tarif — "qaysi tarifni tavsiya qilaylik".
+ * Mantiq (mahsulot qarori): oddiy funksiyalar (haftalik hisobot, per-app limit,
+ * real-time geo...) → STANDARD; premium funksiyalar (ko'p bola / 2-ota-ona) →
+ * PREMIUM. Topilmasa premium.
+ */
+export function minimumTierFor(feature: string): string {
+  for (const tier of PAID_TIER_ORDER) {
+    if ((TIER_FEATURES[tier] ?? []).includes(feature)) return tier;
+  }
+  return 'premium';
+}
