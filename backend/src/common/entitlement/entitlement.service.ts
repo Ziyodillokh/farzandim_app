@@ -16,6 +16,10 @@ export interface Entitlement {
   maxChildren: number;
   /** Bir oilaga ulanadigan maksimal ota-ona (co-parent) soni. */
   maxParents: number;
+  /** Joriy tarif 1-haftalik Standart demo (trial) orqali kelganmi. */
+  isTrial: boolean;
+  /** Trial tugash vaqti (ISO) — banner "X kun qoldi" uchun. Trial bo'lmasa null. */
+  trialEndsAt: string | null;
 }
 
 /**
@@ -51,7 +55,13 @@ export class EntitlementService {
     const maxParents =
       TIER_MAX_PARENTS[tier] ?? TIER_MAX_PARENTS[DEFAULT_TIER];
 
-    return { tier, features, maxChildren, maxParents };
+    // Trial holati — ilova bannerni ("Standart demo — X kun qoldi") shu bilan
+    // ko'rsatadi. Faqat trial obuna aktiv bo'lsa `trialEndsAt` beriladi.
+    const isTrial = sub?.isTrial ?? false;
+    const trialEndsAt =
+      isTrial && sub?.expiresAt ? sub.expiresAt.toISOString() : null;
+
+    return { tier, features, maxChildren, maxParents, isTrial, trialEndsAt };
   }
 
   /** Foydalanuvchida shu funksiya yoqilganmi. */

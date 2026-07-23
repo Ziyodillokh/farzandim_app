@@ -10,6 +10,8 @@ class Entitlement {
     required this.features,
     required this.maxChildren,
     required this.maxParents,
+    this.isTrial = false,
+    this.trialEndsAt,
   });
 
   factory Entitlement.fromJson(Map<String, dynamic> j) => Entitlement(
@@ -19,6 +21,10 @@ class Entitlement {
     ],
     maxChildren: (j['maxChildren'] as num?)?.toInt() ?? 1,
     maxParents: (j['maxParents'] as num?)?.toInt() ?? 1,
+    isTrial: (j['isTrial'] as bool?) ?? false,
+    trialEndsAt: j['trialEndsAt'] is String
+        ? DateTime.tryParse(j['trialEndsAt'] as String)
+        : null,
   );
 
   /// 'free' | 'standard' | 'premium' | 'vip'.
@@ -29,8 +35,23 @@ class Entitlement {
   final int maxChildren;
   final int maxParents;
 
+  /// Joriy tarif 1-haftalik Standart demo (trial) orqali kelganmi.
+  final bool isTrial;
+
+  /// Trial tugash vaqti (banner "X kun qoldi" uchun). Trial bo'lmasa null.
+  final DateTime? trialEndsAt;
+
   bool has(String feature) => features.contains(feature);
   bool get isFree => tier == 'free';
+
+  /// Trial tugashiga qolgan kun (yuqoriga yaxlitlangan). Trial emas/tugagan → 0.
+  int get trialDaysLeft {
+    final end = trialEndsAt;
+    if (end == null) return 0;
+    final diff = end.difference(DateTime.now());
+    if (diff.isNegative) return 0;
+    return (diff.inMinutes / (60 * 24)).ceil().clamp(1, 999);
+  }
 
   static const free = Entitlement(
     tier: 'free',

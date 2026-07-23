@@ -1,5 +1,6 @@
 // Tarif (entitlement) gate yordamchilari — qulflangan funksiya / bola-limit
-// bosilganda "yuksalting" oynasi + kerakli tarifga o'tish.
+// bosilganda "yuksalting" oynasi + kerakli tarifga o'tish; hamda Standart
+// 1-haftalik demo (trial) xabarlari (xush kelibsiz / tugadi) va banneri.
 import 'dart:ui';
 
 import 'package:easy_localization/easy_localization.dart';
@@ -20,31 +21,80 @@ const Color _kBlueLight = Color(0xFF6FA0FF);
 bool _dialogOpen = false;
 
 /// Tarif "yuksalting" oynasi — qulflangan funksiya/limitda ko'rsatiladi.
-/// Shisha (frosted) karta: "Keyinroq" (secondary) + "Tariflarni ko'rish"
-/// (premium tugma). [tier] — tavsiya (standard/premium); [message] — sabab.
-/// "Tariflarni ko'rish" bosilsa `/premium` sahifasiga o'tadi.
+/// Shisha (frosted) karta: "Tariflarni ko'rish" (premium) + "Keyinroq".
+/// [tier] — tavsiya (standard/premium); [message] — sabab (ixtiyoriy).
 Future<void> showUpgradeDialog(
   BuildContext context,
   WidgetRef ref, {
   String? tier,
   String? message,
 }) async {
-  if (_dialogOpen) return;
-  _dialogOpen = true;
   final t = (tier == null || tier.isEmpty) ? 'premium' : tier;
   final tierName = t[0].toUpperCase() + t.substring(1);
+  await _showGlassDialog(
+    context,
+    title: 'plans.recommendTier'.tr(namedArgs: {'tier': tierName}),
+    message: message,
+    primaryLabel: 'plans.viewPlans'.tr(),
+    onPrimary: (dCtx) {
+      Navigator.of(dCtx).pop();
+      ref.read(routerProvider).push(AppRoutes.premium);
+    },
+    secondaryLabel: 'plans.later'.tr(),
+  );
+}
+
+/// Trial boshlanganda (1-kirish) — "sovg'a" xush kelibsiz oynasi.
+Future<void> showTrialWelcomeDialog(BuildContext context, WidgetRef ref) async {
+  await _showGlassDialog(
+    context,
+    icon: Icons.card_giftcard_rounded,
+    title: 'trial.welcomeTitle'.tr(),
+    message: 'trial.welcomeBody'.tr(),
+    primaryLabel: 'trial.welcomeCta'.tr(),
+    onPrimary: (dCtx) => Navigator.of(dCtx).pop(),
+  );
+}
+
+/// Trial tugagach (free'ga o'tilganda) — bir martalik xabar + tariflar.
+Future<void> showTrialEndedDialog(BuildContext context, WidgetRef ref) async {
+  await _showGlassDialog(
+    context,
+    title: 'trial.endedTitle'.tr(),
+    message: 'trial.endedBody'.tr(),
+    primaryLabel: 'trial.endedCta'.tr(),
+    onPrimary: (dCtx) {
+      Navigator.of(dCtx).pop();
+      ref.read(routerProvider).push(AppRoutes.premium);
+    },
+    secondaryLabel: 'trial.later'.tr(),
+  );
+}
+
+/// Umumiy shisha (frosted) oyna — bitta joyda (re-entrancy latch bilan).
+Future<void> _showGlassDialog(
+  BuildContext context, {
+  required String title,
+  required String primaryLabel,
+  required void Function(BuildContext dCtx) onPrimary,
+  String? message,
+  String? secondaryLabel,
+  IconData icon = Icons.workspace_premium_rounded,
+}) async {
+  if (_dialogOpen) return;
+  _dialogOpen = true;
   try {
     await showDialog<void>(
       context: context,
       barrierColor: Colors.black.withValues(alpha: 0.55),
-      builder: (dCtx) => _UpgradeDialog(
-        title: 'plans.recommendTier'.tr(namedArgs: {'tier': tierName}),
+      builder: (dCtx) => _GlassDialog(
+        icon: icon,
+        title: title,
         message: message,
-        onView: () {
-          Navigator.of(dCtx).pop();
-          ref.read(routerProvider).push(AppRoutes.premium);
-        },
-        onLater: () => Navigator.of(dCtx).pop(),
+        primaryLabel: primaryLabel,
+        onPrimary: () => onPrimary(dCtx),
+        secondaryLabel: secondaryLabel,
+        onSecondary: () => Navigator.of(dCtx).pop(),
       ),
     );
   } finally {
@@ -52,19 +102,26 @@ Future<void> showUpgradeDialog(
   }
 }
 
-/// Shisha "yuksalting" oynasi — ort fon xiralashadi (frosted glass).
-class _UpgradeDialog extends StatelessWidget {
-  const _UpgradeDialog({
+/// Shisha (frosted) oyna — ort fon xiralashadi. Ikon + sarlavha + matn +
+/// premium tugma (+ ixtiyoriy secondary).
+class _GlassDialog extends StatelessWidget {
+  const _GlassDialog({
+    required this.icon,
     required this.title,
     required this.message,
-    required this.onView,
-    required this.onLater,
+    required this.primaryLabel,
+    required this.onPrimary,
+    this.secondaryLabel,
+    this.onSecondary,
   });
 
+  final IconData icon;
   final String title;
   final String? message;
-  final VoidCallback onView;
-  final VoidCallback onLater;
+  final String primaryLabel;
+  final VoidCallback onPrimary;
+  final String? secondaryLabel;
+  final VoidCallback? onSecondary;
 
   @override
   Widget build(BuildContext context) {
@@ -89,7 +146,7 @@ class _UpgradeDialog extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Premium belgisi — ko'k halqa ichida.
+                  // Belgi — ko'k halqa ichida.
                   Container(
                     width: 54,
                     height: 54,
@@ -98,11 +155,7 @@ class _UpgradeDialog extends StatelessWidget {
                       shape: BoxShape.circle,
                       border: Border.all(color: _kBlue.withValues(alpha: 0.5)),
                     ),
-                    child: const Icon(
-                      Icons.workspace_premium_rounded,
-                      color: _kBlueLight,
-                      size: 28,
-                    ),
+                    child: Icon(icon, color: _kBlueLight, size: 28),
                   ),
                   const SizedBox(height: 18),
                   Text(
@@ -127,9 +180,14 @@ class _UpgradeDialog extends StatelessWidget {
                     ),
                   ],
                   const SizedBox(height: 24),
-                  _PremiumButton(label: 'plans.viewPlans'.tr(), onTap: onView),
-                  const SizedBox(height: 8),
-                  _SecondaryButton(label: 'plans.later'.tr(), onTap: onLater),
+                  _PremiumButton(label: primaryLabel, onTap: onPrimary),
+                  if (secondaryLabel != null) ...[
+                    const SizedBox(height: 8),
+                    _SecondaryButton(
+                      label: secondaryLabel!,
+                      onTap: onSecondary ?? () {},
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -140,7 +198,7 @@ class _UpgradeDialog extends StatelessWidget {
   }
 }
 
-/// Premium tugma — ko'k fon + oq matn ("Tariflarni ko'rish").
+/// Premium tugma — ko'k fon + oq matn.
 class _PremiumButton extends StatelessWidget {
   const _PremiumButton({required this.label, required this.onTap});
 
@@ -273,25 +331,103 @@ String _minTierForFeature(WidgetRef ref, String feature) {
   return best ?? 'premium';
 }
 
-/// Ilovaga BIRINCHI kirganda (bir marta, faqat bepul tarifda) "yuksalting"
-/// oynasini ko'rsatadi. Keyingi ochilishlarda takrorlanmaydi — flag saqlanadi.
-/// Bu "o'zidan-o'zi chiqadigan" fon-popup EMAS; ataylab, bir martalik promo.
-Future<void> maybeShowFirstLaunchPromo(
-  BuildContext context,
-  WidgetRef ref,
-) async {
-  const key = 'parvoz_upgrade_promo_seen';
+/// Ilovaga kirganda trial xabarlarini ko'rsatadi (bir martadan):
+///   • Trial FAOL bo'lsa — "sovg'a" xush kelibsiz oynasi (+ tugash sanasini
+///     eslab qoladi).
+///   • Trial endigina TUGAGAN (free'ga tushgan) bo'lsa — "tugadi" xabari.
+/// Bu fon-popup EMAS — ataylab, bir martalik va foydalanuvchiga tushuntiruvchi.
+Future<void> maybeShowTrialNotice(BuildContext context, WidgetRef ref) async {
   final prefs = await SharedPreferences.getInstance();
-  if (prefs.getBool(key) ?? false) return;
-  // Tarif yuklanishini kutamiz (xato/tarmoqda `free` qaytadi).
   final ent = await ref.read(entitlementProvider.future);
-  await prefs.setBool(key, true); // bir marta ko'rsatildi (yoki o'tkazildi)
-  if (ent.tier != 'free') return; // pullik foydalanuvchi bezovta qilinmaydi
+
+  if (ent.isTrial) {
+    // Trial faol — tugash sanasini saqlab qo'yamiz (keyin "tugadi" ni bilish
+    // uchun) va bir marta xush kelibsiz oynasini ko'rsatamiz.
+    final endIso = ent.trialEndsAt?.toIso8601String();
+    if (endIso != null) await prefs.setString('trial_ends_at', endIso);
+    if (prefs.getBool('trial_welcome_seen') ?? false) return;
+    await prefs.setBool('trial_welcome_seen', true);
+    if (!context.mounted) return;
+    await showTrialWelcomeDialog(context, ref);
+    return;
+  }
+
+  // Trial emas. Pullik foydalanuvchini bezovta qilmaymiz.
+  if (ent.tier != 'free') return;
+  // Avval trial bo'lgan va endi muddati o'tgan bo'lsa — bir martalik "tugadi".
+  final storedIso = prefs.getString('trial_ends_at');
+  if (storedIso == null) return; // hech qachon trial bo'lmagan
+  if (prefs.getBool('trial_ended_seen') ?? false) return;
+  final end = DateTime.tryParse(storedIso);
+  if (end == null || DateTime.now().isBefore(end)) return; // hali tugamagan
+  await prefs.setBool('trial_ended_seen', true);
   if (!context.mounted) return;
-  await showUpgradeDialog(
-    context,
-    ref,
-    tier: 'premium',
-    message: 'plans.firstLaunchPromo'.tr(),
-  );
+  await showTrialEndedDialog(context, ref);
+}
+
+/// Dashboard uchun trial banneri — "Standart demo — X kun qoldi" + "Saqlab
+/// qolish". Faqat trial aktiv bo'lsa ko'rinadi (aks holda bo'sh joy).
+class TrialBanner extends ConsumerWidget {
+  /// `TrialBanner` konstruktor.
+  const TrialBanner({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final ent = ref.watch(entitlementProvider).valueOrNull;
+    if (ent == null || !ent.isTrial) return const SizedBox.shrink();
+    final days = ent.trialDaysLeft;
+    return GestureDetector(
+      onTap: () => ref.read(routerProvider).push(AppRoutes.premium),
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(12, 0, 12, 8),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(18),
+          gradient: LinearGradient(
+            colors: [
+              _kBlue.withValues(alpha: 0.92),
+              _kBlueLight.withValues(alpha: 0.78),
+            ],
+          ),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.card_giftcard_rounded,
+              color: Colors.white,
+              size: 22,
+            ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Text(
+                'trial.daysLeft'.tr(namedArgs: {'days': days.toString()}),
+                style: GoogleFonts.poppins(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w600,
+                  color: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(999),
+              ),
+              child: Text(
+                'trial.keep'.tr(),
+                style: GoogleFonts.poppins(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: _kBlue,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }

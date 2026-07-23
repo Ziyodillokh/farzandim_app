@@ -12,6 +12,7 @@ import { AuthService } from './auth.service';
 import { ConsumerJwtStrategy } from './strategies/consumer-jwt.strategy';
 import { TelegramService } from './strategies/telegram.service';
 import { SocialAuthService } from './strategies/social-auth.service';
+import { TrialModule } from '../trial/trial.module';
 
 @Module({
   imports: [
@@ -36,6 +37,8 @@ import { SocialAuthService } from './strategies/social-auth.service';
     // MailService — email register OTP (nodemailer) uchun AuthService
     // injektsiyasida ishlatiladi (SmsModule bilan bir xil sabab).
     MailModule,
+    // TrialService — signup'da 1-haftalik Standart demo berish (grantStandardTrial).
+    TrialModule,
   ],
   controllers: [AuthController],
   providers: [AuthService, ConsumerJwtStrategy, TelegramService, SocialAuthService],

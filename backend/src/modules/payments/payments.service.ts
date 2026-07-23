@@ -60,7 +60,16 @@ export class PaymentsService {
     if (existing) {
       const updated = await tx.subscription.update({
         where: { id: existing.id },
-        data: { planId: plan.id, status: 'ACTIVE', expiresAt },
+        // To'lov qilindi — bu endi PULLIK obuna (trial emas), shuning uchun
+        // trial belgisi tozalanadi (aks holda "trial tugayapti" push ketardi).
+        data: {
+          planId: plan.id,
+          status: 'ACTIVE',
+          expiresAt,
+          isTrial: false,
+          trialReminderSentAt: null,
+          trialEndedNotifiedAt: null,
+        },
       });
       return updated.id;
     }

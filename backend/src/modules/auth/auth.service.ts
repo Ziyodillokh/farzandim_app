@@ -16,6 +16,7 @@ import { SmsService } from '../../common/sms/sms.service';
 import { MailService } from '../../common/mail/mail.service';
 import { FcmService } from '../../common/fcm/fcm.service';
 import { RealtimeGateway } from '../../common/realtime/realtime.gateway';
+import { TrialService } from '../trial/trial.service';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { EnvConfig } from '../../common/config/env.schema';
 import { TelegramService, TelegramAuthData } from './strategies/telegram.service';
@@ -66,6 +67,7 @@ export class AuthService {
     private readonly socialAuth: SocialAuthService,
     private readonly sms: SmsService,
     private readonly mail: MailService,
+    private readonly trial: TrialService,
   ) {}
 
   /* ------------------------------------------------------------------ */
@@ -614,6 +616,8 @@ export class AuthService {
         },
       });
       auditAction = 'CREATE';
+      // Yangi ota-onaga 1-haftalik Standart demo (bir marta, best-effort).
+      await this.trial.grantStandardTrial(user.id);
     }
 
     if (!user.isActive) {
@@ -732,6 +736,9 @@ export class AuthService {
         name: dto.name?.trim() || null,
       },
     });
+
+    // Yangi ota-onaga 1-haftalik Standart demo (bir marta, best-effort).
+    await this.trial.grantStandardTrial(user.id);
 
     // OTP'ni ishlatib bo'ldik — DB'dan tozalab qo'yamiz (replay attack
     // himoyasi: bir tasdiqlash bilan bir necha akkaunt yaratish mumkin

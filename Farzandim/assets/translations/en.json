@@ -1634,6 +1634,17 @@
     "firstLaunchPromo": "Unlock everything with Parvoz Premium — real-time location, app limits and more.",
     "featureLockedMsg": "This feature isn't in your plan. Upgrade to unlock it."
   },
+  "trial": {
+    "welcomeTitle": "7 days of Standard, free!",
+    "welcomeBody": "You have 7 days of the Standard plan — all core features unlocked. Try it out! When it ends you'll move to the Free plan automatically, and your data stays saved.",
+    "welcomeCta": "Great, let's go",
+    "daysLeft": "Standard trial — {days} days left",
+    "keep": "Keep it",
+    "endedTitle": "Your Standard trial ended",
+    "endedBody": "You're now on the Free plan. Your data is saved — upgrade to Standard or Premium to get it all back.",
+    "endedCta": "View plans",
+    "later": "Later"
+  },
   "planFeatures": {
     "app_trial": "App trial",
     "basic_profile": "Basic profile",

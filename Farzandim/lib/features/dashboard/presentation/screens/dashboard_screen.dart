@@ -89,10 +89,11 @@ class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   void initState() {
     super.initState();
-    // Ilovaga BIRINCHI kirganda bir martalik "yuksalting" promosi (faqat
-    // bepul tarifda, flag bilan). Bu fon-popup EMAS — ataylab, bir martalik.
+    // Ilovaga kirganda trial xabari (bir martadan): trial faol bo'lsa "sovg'a"
+    // xush kelibsiz oynasi; endigina tugagan bo'lsa "tugadi" xabari. Bu
+    // fon-popup EMAS — ataylab, bir martalik va tushuntiruvchi.
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      if (mounted) maybeShowFirstLaunchPromo(context, ref);
+      if (mounted) maybeShowTrialNotice(context, ref);
     });
   }
 
@@ -293,6 +294,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                 // Yangi versiya mavjud bo'lsa (soft-update) — header ostida
                 // yumshoq taklif banneri. upToDate/force holatida ko'rinmaydi.
                 const UpdateBanner(),
+                // Standart demo (trial) banneri — "X kun qoldi". Trial
+                // bo'lmasa bo'sh joy (SizedBox.shrink).
+                const TrialBanner(),
                 Padding(
                   padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
                   child: Column(

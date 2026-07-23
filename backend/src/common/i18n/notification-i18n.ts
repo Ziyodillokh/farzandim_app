@@ -154,6 +154,30 @@ const T: Record<string, Record<NotifLang, string>> = {
     ru: 'Родитель отклонил запрос.',
     en: 'Your parent declined the request.',
   },
+
+  // ── Standart demo (trial) tugayapti (ota-onaga) ──
+  'trialEnding.title': {
+    uz: 'Standart demo tugayapti',
+    ru: 'Пробный Стандарт заканчивается',
+    en: 'Your Standard trial is ending',
+  },
+  'trialEnding.body': {
+    uz: "Standart demoingizga {days} kun qoldi. Imkoniyatlarni saqlab qolish uchun tarifni tanlang.",
+    ru: 'Осталось {days} дн. пробного Стандарта. Выберите тариф, чтобы сохранить возможности.',
+    en: '{days} days left of your Standard trial. Pick a plan to keep the features.',
+  },
+
+  // ── Standart demo tugadi → free (ota-onaga) ──
+  'trialEnded.title': {
+    uz: 'Standart demo tugadi',
+    ru: 'Пробный Стандарт завершён',
+    en: 'Your Standard trial ended',
+  },
+  'trialEnded.body': {
+    uz: "Bepul tarifga o'tdingiz. Ma'lumotlaringiz saqlanib qoldi — Standart yoki Premiumga o'tsangiz hammasi qaytadi.",
+    ru: 'Вы перешли на бесплатный тариф. Все данные сохранены — при переходе на Стандарт или Премиум они вернутся.',
+    en: "You're now on the Free plan. Your data is saved — upgrade to Standard or Premium to get it all back.",
+  },
 };
 
 /**

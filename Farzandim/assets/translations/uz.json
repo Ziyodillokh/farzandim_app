@@ -1634,6 +1634,17 @@
     "firstLaunchPromo": "Parvoz Premium bilan barcha imkoniyatlarni oching — real-time joylashuv, ilova cheklovlari va boshqalar.",
     "featureLockedMsg": "Bu funksiya sizning tarifingizda mavjud emas. Uni ochish uchun tarifni yangilang."
   },
+  "trial": {
+    "welcomeTitle": "7 kunlik Standart sovg'a!",
+    "welcomeBody": "Sizga 7 kun davomida Standart tarif — barcha asosiy imkoniyatlar ochiq. Bemalol sinab ko'ring! Muddat tugagach avtomatik bepul tarifga o'tasiz, ma'lumotlaringiz saqlanib qoladi.",
+    "welcomeCta": "Ajoyib, boshladik",
+    "daysLeft": "Standart demo — {days} kun qoldi",
+    "keep": "Saqlab qolish",
+    "endedTitle": "Standart demo tugadi",
+    "endedBody": "Bepul tarifga o'tdingiz. Ma'lumotlaringiz saqlanib qoldi — Standart yoki Premiumga o'tsangiz hammasi qaytadi.",
+    "endedCta": "Tariflarni ko'rish",
+    "later": "Keyinroq"
+  },
   "planFeatures": {
     "app_trial": "Ilovani sinab ko'rish",
     "basic_profile": "Asosiy profil",
