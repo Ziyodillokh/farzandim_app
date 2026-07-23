@@ -23,6 +23,7 @@ class PlanEntry {
     required this.entitlementTier,
     this.description,
     this.badge,
+    this.features = const [],
   });
 
   factory PlanEntry.fromJson(Map<String, dynamic> j) => PlanEntry(
@@ -34,6 +35,9 @@ class PlanEntry {
     period: (j['period'] as String?) ?? 'monthly',
     entitlementTier: (j['entitlementTier'] as String?) ?? 'free',
     badge: j['badge'] as String?,
+    features: [
+      for (final f in (j['features'] as List? ?? const [])) f as String,
+    ],
   );
 
   final String id;
@@ -50,6 +54,9 @@ class PlanEntry {
   /// 'free' | 'standard' | 'premium'.
   final String entitlementTier;
   final String? badge;
+
+  /// Admin tanlagan funksiya kalitlari (plan.features) — kartada ko'rsatiladi.
+  final List<String> features;
 
   bool get isFree => priceUzs <= 0;
 }
@@ -92,10 +99,15 @@ class BackendPaymentsRepository {
   Future<String> checkout({
     required String planId,
     String provider = 'click',
+    String billingPeriod = 'monthly',
   }) async {
     final res = await _dio.post<Map<String, dynamic>>(
       '/payments/checkout',
-      data: <String, dynamic>{'provider': provider, 'planId': planId},
+      data: <String, dynamic>{
+        'provider': provider,
+        'planId': planId,
+        'billingPeriod': billingPeriod,
+      },
     );
     return (res.data?['checkoutUrl'] as String?) ?? '';
   }

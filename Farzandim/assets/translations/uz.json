@@ -995,7 +995,10 @@
     "cta": "Premiumga ulanish",
     "price": "$5/oy",
     "footer": "Har qanday vaqt obunani bekor qilishingiz mumkin",
-    "comingSoon": "To'lov tizimi tez kunda ulanadi"
+    "comingSoon": "To'lov tizimi tez kunda ulanadi",
+    "monthly": "Oylik",
+    "yearly": "Yillik",
+    "save2m": "2 oy tekin"
   },
   "settings": {
     "title": "Sozlamalar",
@@ -1624,5 +1627,22 @@
     "viewPlans": "Tariflarni ko'rish",
     "later": "Keyinroq",
     "recommendTier": "{tier} tarif tavsiya etiladi"
+  },
+  "planFeatures": {
+    "app_trial": "Ilovani sinab ko'rish",
+    "basic_profile": "Asosiy profil",
+    "screen_time_stats": "Umumiy ekran vaqti statistikasi",
+    "sos": "SOS",
+    "messenger": "Messenjer",
+    "step_counter": "Qadam hisoblagich",
+    "screen_time_limit": "Ekran vaqti limiti",
+    "basic_geolocation": "Asosiy geolokatsiya",
+    "app_install_restriction": "Ilova o'rnatishni cheklash",
+    "weekly_report": "Haftalik hisobot",
+    "realtime_geolocation": "Real-time geolokatsiya",
+    "per_app_time_limit": "Ilovalar bo'yicha vaqt cheklovi",
+    "paid_contests": "Pulli konkurslar",
+    "connect_3_children": "3 tagacha bola ulash",
+    "dual_device_control": "2 qurilmadan nazorat"
   }
 }

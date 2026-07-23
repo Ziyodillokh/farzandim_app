@@ -37,7 +37,12 @@ export class PaymentsService {
     const plan = await tx.plan.findUnique({ where: { id: payment.planId } });
     if (!plan) return null;
 
-    const days = periodDurationDays(plan.period);
+    // Muddat: to'lov summasi oylik narxning ~10 barobari bo'lsa — YILLIK sotib
+    // olingan (365 kun); aks holda plan.period bo'yicha (oylik=30). Shu tarzda
+    // OYLIK plan tanlab yillik sotib olsa ham obuna muddati to'g'ri bo'ladi.
+    const isYearlyPurchase =
+      plan.priceUzs > 0 && payment.amount >= plan.priceUzs * 10;
+    const days = isYearlyPurchase ? 365 : periodDurationDays(plan.period);
     if (days <= 0) return null;
 
     const now = new Date();

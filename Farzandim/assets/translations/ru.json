@@ -995,7 +995,10 @@
     "cta": "Подключить Premium",
     "price": "$5/мес",
     "footer": "Отменить подписку можно в любое время",
-    "comingSoon": "Оплата будет доступна скоро"
+    "comingSoon": "Оплата будет доступна скоро",
+    "monthly": "Ежемесячно",
+    "yearly": "Ежегодно",
+    "save2m": "2 месяца бесплатно"
   },
   "settings": {
     "title": "Настройки",
@@ -1624,5 +1627,22 @@
     "viewPlans": "Посмотреть тарифы",
     "later": "Позже",
     "recommendTier": "Рекомендуется тариф {tier}"
+  },
+  "planFeatures": {
+    "app_trial": "Пробная версия",
+    "basic_profile": "Базовый профиль",
+    "screen_time_stats": "Статистика экранного времени",
+    "sos": "SOS",
+    "messenger": "Мессенджер",
+    "step_counter": "Счётчик шагов",
+    "screen_time_limit": "Лимит экранного времени",
+    "basic_geolocation": "Базовая геолокация",
+    "app_install_restriction": "Ограничение установки приложений",
+    "weekly_report": "Еженедельный отчёт",
+    "realtime_geolocation": "Геолокация в реальном времени",
+    "per_app_time_limit": "Лимит времени по приложениям",
+    "paid_contests": "Платные конкурсы",
+    "connect_3_children": "До 3 детей",
+    "dual_device_control": "Контроль с 2 устройств"
   }
 }

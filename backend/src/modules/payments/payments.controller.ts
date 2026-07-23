@@ -124,12 +124,18 @@ export class PaymentsController {
       throw new BadRequestException('Free plan does not require payment');
     }
 
+    // Yillik = oylik narx × 10 (2 oy tekin). Oylik plan tanlansa ham yillik
+    // sotib olsa bo'ladi — summa shundan kelib chiqib hisoblanadi. Obuna
+    // muddati esa activateSubscriptionTx'da summadan aniqlanadi (365 kun).
+    const isYearly = dto.billingPeriod === 'yearly';
+    const amount = isYearly ? plan.priceUzs * 10 : plan.priceUzs;
+
     const payment = await this.prisma.payment.create({
       data: {
         userId: user.userId,
         planId: plan.id,
         planName: plan.name,
-        amount: plan.priceUzs,
+        amount,
         method: dto.provider,
         status: 'pending',
       },

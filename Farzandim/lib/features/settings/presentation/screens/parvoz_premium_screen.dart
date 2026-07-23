@@ -50,14 +50,6 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
-/// Har tarif kartasida bir xil 4 imkoniyat (ikon + i18n kalit).
-const _features = <(IconData, String)>[
-  (SolarIconsBold.usersGroupTwoRounded, 'premium.benefit1'),
-  (SolarIconsBold.smartphone, 'premium.benefit2'),
-  (SolarIconsBold.handHeart, 'premium.benefit3'),
-  (SolarIconsBold.chatRound, 'premium.benefit4'),
-];
-
 /// Tarif kartasi ko'rinishi.
 enum _PlanStyle { glass, blue, dark }
 
@@ -76,6 +68,9 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
   /// Hozir checkout ochilayotgan tarif id (tugmada spinner). `null` — bo'sh.
   String? _busyPlanId;
 
+  /// `true` — yillik ko'rinish (narx = oylik×10, 2 oy tekin). `false` — oylik.
+  bool _yearly = false;
+
   /// Tarifni sotib olish: checkout -> Click to'lov sahifasini ochish.
   Future<void> _subscribe(PlanEntry plan) async {
     if (_busyPlanId != null) return;
@@ -83,7 +78,10 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
     try {
       final url = await ref
           .read(backendPaymentsRepositoryProvider)
-          .checkout(planId: plan.id);
+          .checkout(
+            planId: plan.id,
+            billingPeriod: _yearly ? 'yearly' : 'monthly',
+          );
       if (url.isEmpty) throw Exception('empty checkout url');
       final ok = await launchUrl(
         Uri.parse(url),
@@ -105,19 +103,19 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
   }
 
   /// "29 000 so'm/oy" ko'rinishidagi narx. Bepul bo'lsa i18n "Tekin".
+  /// Yillik ko'rinishda narx = oylik × 10 (2 oy tekin) va "/yil" qo'shiladi.
   String _priceLabel(PlanEntry p) {
     if (p.isFree) return 'premium.startPrice'.tr();
-    final s = p.priceUzs.toString();
+    final amount = _yearly ? p.priceUzs * 10 : p.priceUzs;
+    final s = amount.toString();
     final b = StringBuffer();
     for (var i = 0; i < s.length; i++) {
       if (i > 0 && (s.length - i) % 3 == 0) b.write(' ');
       b.write(s[i]);
     }
-    final suffix = switch (p.period) {
-      'yearly' => '/${'premium.perYear'.tr()}',
-      'monthly' => '/${'premium.perMonth'.tr()}',
-      _ => '',
-    };
+    final suffix = _yearly
+        ? '/${'premium.perYear'.tr()}'
+        : '/${'premium.perMonth'.tr()}';
     return "$b ${'premium.sum'.tr()}$suffix";
   }
 
@@ -162,6 +160,11 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen> {
                             14,
                             c: Colors.white.withValues(alpha: 0.6),
                           ),
+                        ),
+                        const SizedBox(height: 20),
+                        _BillingToggle(
+                          yearly: _yearly,
+                          onChanged: (v) => setState(() => _yearly = v),
                         ),
                         const SizedBox(height: 24),
                         plansAsync.when(
@@ -227,6 +230,7 @@ class _PlansList extends StatelessWidget {
             name: plans[i].name,
             price: priceLabel(plans[i]),
             style: styleFor(plans[i]),
+            features: plans[i].features,
             // Bepul tarifda tugma yo'q (obuna talab qilmaydi).
             ctaLabel: plans[i].isFree ? null : 'premium.subscribeCta'.tr(),
             loading: busyPlanId == plans[i].id,
@@ -244,6 +248,7 @@ class _PlanCard extends StatelessWidget {
     required this.name,
     required this.price,
     required this.style,
+    required this.features,
     this.ctaLabel,
     this.onCta,
     this.loading = false,
@@ -252,6 +257,9 @@ class _PlanCard extends StatelessWidget {
   final String name;
   final String price;
   final _PlanStyle style;
+
+  /// Admin tanlagan funksiya kalitlari (plan.features) — checkmark bilan.
+  final List<String> features;
   final String? ctaLabel;
   final VoidCallback? onCta;
   final bool loading;
@@ -281,13 +289,12 @@ class _PlanCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 18),
-          for (var i = 0; i < _features.length; i++) ...[
+          for (var i = 0; i < features.length; i++) ...[
             _PlanFeature(
-              icon: _features[i].$1,
-              textKey: _features[i].$2,
+              label: 'planFeatures.${features[i]}'.tr(),
               color: featureColor,
             ),
-            if (i != _features.length - 1) ...[
+            if (i != features.length - 1) ...[
               const SizedBox(height: 12),
               Divider(height: 1, thickness: 1, color: dividerColor),
               const SizedBox(height: 12),
@@ -349,29 +356,99 @@ class _PlanCard extends StatelessWidget {
 }
 
 class _PlanFeature extends StatelessWidget {
-  const _PlanFeature({
-    required this.icon,
-    required this.textKey,
-    required this.color,
-  });
+  const _PlanFeature({required this.label, required this.color});
 
-  final IconData icon;
-  final String textKey;
+  final String label;
   final Color color;
 
   @override
   Widget build(BuildContext context) {
     return Row(
       children: [
-        Icon(icon, size: 22, color: color),
+        Icon(Icons.check_circle_rounded, size: 21, color: color),
         const SizedBox(width: 12),
         Expanded(
-          child: Text(
-            textKey.tr(),
-            style: _pop(15, w: FontWeight.w500, c: color),
-          ),
+          child: Text(label, style: _pop(15, w: FontWeight.w500, c: color)),
         ),
       ],
+    );
+  }
+}
+
+// ════════════ Oylik / Yillik toggle ════════════
+class _BillingToggle extends StatelessWidget {
+  const _BillingToggle({required this.yearly, required this.onChanged});
+
+  final bool yearly;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Container(
+        padding: const EdgeInsets.all(4),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.08),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            _seg('premium.monthly'.tr(), !yearly, () => onChanged(false), null),
+            _seg(
+              'premium.yearly'.tr(),
+              yearly,
+              () => onChanged(true),
+              'premium.save2m'.tr(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _seg(String label, bool active, VoidCallback onTap, String? badge) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 180),
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+        decoration: BoxDecoration(
+          color: active ? _blue : Colors.transparent,
+          borderRadius: BorderRadius.circular(999),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              label,
+              style: _pop(
+                14,
+                w: FontWeight.w600,
+                c: active ? Colors.white : Colors.white.withValues(alpha: 0.7),
+              ),
+            ),
+            if (badge != null) ...[
+              const SizedBox(width: 6),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: active
+                      ? Colors.white.withValues(alpha: 0.22)
+                      : const Color(0xFF34C759),
+                  borderRadius: BorderRadius.circular(6),
+                ),
+                child: Text(
+                  badge,
+                  style: _pop(10.5, w: FontWeight.w600),
+                ),
+              ),
+            ],
+          ],
+        ),
+      ),
     );
   }
 }

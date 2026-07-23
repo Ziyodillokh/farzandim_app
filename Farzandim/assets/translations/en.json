@@ -995,7 +995,10 @@
     "cta": "Get Premium",
     "price": "$5/mo",
     "footer": "You can cancel anytime",
-    "comingSoon": "Payments coming soon"
+    "comingSoon": "Payments coming soon",
+    "monthly": "Monthly",
+    "yearly": "Yearly",
+    "save2m": "2 months free"
   },
   "settings": {
     "title": "Settings",
@@ -1624,5 +1627,22 @@
     "viewPlans": "View plans",
     "later": "Later",
     "recommendTier": "{tier} plan recommended"
+  },
+  "planFeatures": {
+    "app_trial": "App trial",
+    "basic_profile": "Basic profile",
+    "screen_time_stats": "Screen time stats",
+    "sos": "SOS",
+    "messenger": "Messenger",
+    "step_counter": "Step counter",
+    "screen_time_limit": "Screen time limit",
+    "basic_geolocation": "Basic geolocation",
+    "app_install_restriction": "App install restriction",
+    "weekly_report": "Weekly report",
+    "realtime_geolocation": "Real-time location",
+    "per_app_time_limit": "Per-app time limit",
+    "paid_contests": "Paid contests",
+    "connect_3_children": "Up to 3 children",
+    "dual_device_control": "Dual-device control"
   }
 }
