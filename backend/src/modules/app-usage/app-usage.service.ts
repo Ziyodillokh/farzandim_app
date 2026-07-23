@@ -416,15 +416,21 @@ export class AppUsageService {
 
     for (const e of entries) {
       const dateObj = new Date(`${e.date}T00:00:00.000Z`);
-      const steps = Math.max(0, Math.min(200000, Math.round(e.steps)));
-      if (e.date === todayKey) todaySteps = steps;
+      const incoming = Math.max(0, Math.min(200000, Math.round(e.steps)));
 
-      // Shu kun uchun allaqachon berilgan don (idempotentlik).
+      // Shu kun uchun allaqachon saqlangan qadam + berilgan don.
       const existing = await this.prisma.childStepDaily.findUnique({
         where: { childId_date: { childId, date: dateObj } },
-        select: { donAwarded: true },
+        select: { donAwarded: true, steps: true },
       });
       const prevAwarded = existing?.donAwarded ?? 0;
+      const prevSteps = existing?.steps ?? 0;
+      // ⚠️ Qadam kun ichida KAMAYMAYDI ("un-walk" bo'lmaydi). Bola app transient
+      // past/0 qiymat yuborsa (Samsung Health Connect glitch yoki reboot chekka
+      // holati) eski TO'G'RI qiymatni O'CHIRMASLIGIMIZ shart — aks holda haftalik
+      // statistika/badge buziladi. Shuning uchun MAX olamiz (idempotent + xavfsiz).
+      const steps = Math.max(prevSteps, incoming);
+      if (e.date === todayKey) todaySteps = steps;
       const earnedDon =
         Math.floor(steps / STEPS_PER_DON_UNIT) * DON_PER_UNIT;
       // Faqat yangi qism (qadam kamaymaydi; reboot chekka holatda 0'ga clamp).
