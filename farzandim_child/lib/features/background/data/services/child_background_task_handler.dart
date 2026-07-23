@@ -164,13 +164,29 @@ class ChildBackgroundTaskHandler extends TaskHandler {
     unawaited(_offlineBuffer?.flush() ?? Future<void>.value());
 
     // Notification matnini yangilash — foydalanuvchi service ishlayotganini
-    // ko'radi. ForegroundTaskOptions.repeat(60000) ga moslangan.
+    // ko'radi. ⚠️ Bu KOD BG ISOLATE'da ishlaydi — easy_localization u yerda
+    // yuklanmagan, `.tr()` XOM KALIT qaytaradi ("background.notificationTitle"
+    // ko'rinardi). Shu sabab main isolate SharedPreferences'ga yozgan tarjimani
+    // reload bilan o'qiymiz (BackgroundService._cacheNotifStrings).
     final timeStr = DateFormat('HH:mm').format(toTashkent(timestamp));
+    unawaited(_updateNotification(timeStr));
+  }
+
+  Future<void> _updateNotification(String timeStr) async {
+    var title = 'Parvoz';
+    var text = timeStr;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      // Main isolate yozgan yangi qiymatlarni ko'rish uchun reload SHART
+      // (SharedPreferences har isolate'da alohida keshlanadi).
+      await prefs.reload();
+      title = prefs.getString('bg.notifTitle') ?? title;
+      final tpl = prefs.getString('bg.lastUpdateTpl');
+      if (tpl != null) text = tpl.replaceAll('{time}', timeStr);
+    } catch (_) {}
     FlutterForegroundTask.updateService(
-      notificationTitle: 'background.notificationTitle'.tr(),
-      notificationText: 'background.lastUpdate'.tr(
-        namedArgs: {'time': timeStr},
-      ),
+      notificationTitle: title,
+      notificationText: text,
     );
   }
 

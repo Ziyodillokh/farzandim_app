@@ -10,10 +10,13 @@
 // ForegroundTaskOptions sozlanadi (autoRunOnBoot: true → telefon
 // yoqilgach service o'zi qayta ishga tushadi).
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/background/data/services/child_background_task_handler.dart';
 
@@ -41,6 +44,31 @@ class BackgroundService {
         allowWifiLock: true,
       ),
     );
+    // BG isolate `.tr()` ishlata olmaydi → tarjimani hozir (main isolate)
+    // prefs'ga yozamiz (pastdagi izohga qarang).
+    unawaited(_cacheNotifStrings());
+  }
+
+  /// BG isolate `.tr()` ISHLATA OLMAYDI — easy_localization o'sha isolate'da
+  /// yuklanmagan, shu sabab `onRepeatEvent`da xom kalit ("background.
+  /// notificationTitle") ko'rinardi. Yechim: main isolate'da (bu yerda)
+  /// tarjima qilib SharedPreferences'ga yozamiz; `onRepeatEvent` (bg isolate)
+  /// `reload()` bilan o'qiydi. `init()` (har app start, saqlangan til bilan)
+  /// va `start()`da yoziladi.
+  static Future<void> _cacheNotifStrings() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.setString(
+        'bg.notifTitle',
+        'background.notificationTitle'.tr(),
+      );
+      await prefs.setString(
+        'bg.notifText',
+        'background.notificationText'.tr(),
+      );
+      // {time} joy-egasi qoladi (namedArgs'siz .tr()) — bg isolate almashtiradi.
+      await prefs.setString('bg.lastUpdateTpl', 'background.lastUpdate'.tr());
+    } catch (_) {}
   }
 
   /// Service allaqachon ishlamoqda bo'lsa qayta boshlamaymiz.
@@ -68,6 +96,9 @@ class BackgroundService {
         return;
       }
 
+      // BG isolate uchun tarjimani prefs'ga yozamiz (start'dan oldin — service
+      // 60s ichida onRepeatEvent chaqirмасдан oldin tayyor bo'lsin).
+      await _cacheNotifStrings();
       await FlutterForegroundTask.startService(
         notificationTitle: 'background.notificationTitle'.tr(),
         notificationText: 'background.notificationText'.tr(),

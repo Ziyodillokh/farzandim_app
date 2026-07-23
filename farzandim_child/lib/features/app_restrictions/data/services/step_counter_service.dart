@@ -228,23 +228,43 @@ class StepCounterService {
   Future<void> _syncFromHealth() async {
     try {
       final hcSteps = await HealthStepsService.instance.stepsForToday();
-      if (hcSteps == null) return;
+      if (hcSteps == null) return; // HC yo'q/ruxsatsiz — pedometer davom etadi
       final hc = hcSteps.clamp(0, _dayStepMax);
       final today = _tashkentDayKey();
-      _todayKey = today;
-      // HC = telefon truth. Ekranga darhol hc'ni qo'yamiz; baseline esa
-      // keyingi `_onStep`da FRESH cumulative bilan anchor qilinadi. MUHIM:
-      // bu yerda _lastCumulative ESKI (fon'da yurilgan qadam qo'shilmagan)
-      // bo'lishi mumkin — undan baseline hisoblasak, fon qadami ikki marta
-      // sanalib son oshib ketardi. Shu sabab `_dayBaseline = -1` (defer) →
-      // `_onStep` joriy cumulative bilan aniq anchor qiladi (today = hc).
-      // Har HC sync son telefon soniga qaytadi, oradagi pedometer jonli qo'shadi.
-      _dayBaseline = -1;
-      _baseSteps = 0;
-      _todaySteps = hc;
-      // HC haqiqiy jamini berdi — bundan keyin boot-today seed qo'llanmaydi.
-      _healthProvidedToday = true;
-      await _persist();
+
+      // Kun almashgan bo'lsa: avvalgi kun yakunini backendga yuborib, bugunni
+      // noldan boshlaymiz. Aks holda quyidagi taqqoslash eski kunning KATTA
+      // soni bilan bo'lib, bugungi kichik HC qabul qilinmay qolardi.
+      if (today != _todayKey) {
+        if (_todaySteps > 0) {
+          await _sync(dateKey: _todayKey, steps: _todaySteps);
+        }
+        _todayKey = today;
+        _dayBaseline = -1;
+        _baseSteps = 0;
+        _todaySteps = 0;
+        _healthProvidedToday = false;
+      }
+
+      // ⚠️ HEALTH CONNECT FAQAT QO'SHIMCHA (catch-up) — sonni HECH QACHON
+      // PASAYTIRMAYDI. Samsung'da HC BOR, lekin Samsung Health → Health Connect
+      // qadam sinxronizatsiyasi sozlanmagan bo'lsa `getTotalStepsInInterval`
+      // 0 (yoki pedometerdan kam) qaytaradi. AVVAL shartsiz `_todaySteps = hc`
+      // qilinardi → Samsung'da har sync/refresh qadam 0 ga TUSHARDI. Endi HC
+      // joriy sanoqdan KATTA bo'lsagina qabul qilamiz (bu ilova kuzatuvni
+      // boshlashdan OLDIN yurilgan qadamlarni tiklaydi); HC kichik/0 bo'lsa
+      // apparat pedometer (TYPE_STEP_COUNTER — barcha telefonda ishonchli)
+      // sanog'ini SAQLAYMIZ. Ya'ni apparat sanagich asosiy manba, HC to'ldiruvchi.
+      if (hc > _todaySteps) {
+        // baseline defer → keyingi `_onStep` FRESH cumulative bilan anchor
+        // qiladi (today = hc), so'ng pedometer jonli delta qo'shib boradi.
+        _dayBaseline = -1;
+        _baseSteps = 0;
+        _todaySteps = hc;
+        _healthProvidedToday = true;
+        await _persist();
+      }
+      // else: HC kam/0 — hech nima o'zgartirmaymiz, pedometer davom etadi.
     } catch (e) {
       debugPrint('StepCounter: Health sync xato: $e');
     }
