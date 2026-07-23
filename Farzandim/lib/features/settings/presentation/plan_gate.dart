@@ -311,6 +311,28 @@ void guardFeature(
   );
 }
 
+/// Faqat PULLIK tarif (standard/premium) funksiyasi: free bo'lsa BOSISHDA
+/// "yuksalting" oynasi (Standart tavsiya) chiqadi; aks holda [onAllowed]
+/// bajariladi. Lokatsiya, ilova bloklash, rejim/jadval kabi funksiyalar uchun.
+void guardPaid(
+  BuildContext context,
+  WidgetRef ref, {
+  required VoidCallback onAllowed,
+  String? message,
+}) {
+  final ent = ref.read(entitlementProvider).valueOrNull ?? Entitlement.free;
+  if (!ent.isFree) {
+    onAllowed();
+    return;
+  }
+  showUpgradeDialog(
+    context,
+    ref,
+    tier: 'standard',
+    message: message ?? 'plans.featureLockedMsg'.tr(),
+  );
+}
+
 /// Berilgan funksiya bor ENG ARZON pullik tarif darajasi (yuklangan
 /// planlardan). Topilmasa 'premium' — top tarif har doim hammasini o'z
 /// ichiga oladi, shuning uchun xavfsiz tavsiya.

@@ -18,6 +18,8 @@ import { EntitlementGuard } from '../../common/entitlement/entitlement.guard';
 import { RequireFeature } from '../../common/entitlement/require-feature.decorator';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { PaidTierGuard } from '../../common/entitlement/paid-tier.guard';
+import { RequirePaidTier } from '../../common/entitlement/require-paid-tier.decorator';
 import { AppLimitsService } from './app-limits.service';
 import { CreateAppLimitDto } from './dto/create-app-limit.dto';
 import { UpdateAppLimitDto } from './dto/update-app-limit.dto';
@@ -60,6 +62,9 @@ export class AppLimitsController {
     });
   }
 
+  // Ilovani darhol bloklash — faqat pullik tarif (free bloklay olmaydi).
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Post('children/:childId/app-limits/block-now')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Instantly block an app (parent) — #15' })
@@ -84,6 +89,9 @@ export class AppLimitsController {
     return this.service.listCategories(childId, user.userId);
   }
 
+  // Kategoriya bloklash — faqat pullik tarif.
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Post('children/:childId/app-categories')
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Block/unblock a whole category (parent) — #14' })
@@ -114,6 +122,8 @@ export class AppLimitsController {
     return this.service.findOne(id, user.userId);
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Put('app-limits/:id')
   @ApiOperation({ summary: 'Update app limit (parent only)' })
   update(
@@ -128,6 +138,8 @@ export class AppLimitsController {
     });
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Delete('app-limits/:id')
   @ApiOperation({ summary: 'Delete app limit (parent only)' })
   remove(

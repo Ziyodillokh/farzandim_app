@@ -24,6 +24,8 @@ import { LocationHistoryQueryDto } from './dto/location-history-query.dto';
 import { CurrentUser } from '../../common/decorators';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
+import { PaidTierGuard } from '../../common/entitlement/paid-tier.guard';
+import { RequirePaidTier } from '../../common/entitlement/require-paid-tier.decorator';
 
 @ApiTags('Location')
 @ApiBearerAuth('consumer-jwt')
@@ -92,6 +94,9 @@ export class LocationController {
     return this.locationService.requestLocationEnable(childId, user.userId);
   }
 
+  // Lokatsiya ko'rish — faqat pullik tarif (free'da lokatsiya ishlamaydi).
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Get('children/:childId/location')
   @ApiOperation({ summary: 'Get last known location for a child' })
   @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })
@@ -105,6 +110,8 @@ export class LocationController {
     return this.locationService.getLastLocation(childId, user.userId);
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Get('children/:childId/location/history')
   @ApiOperation({ summary: 'Get location history for a child' })
   @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })
@@ -130,6 +137,8 @@ export class LocationController {
     );
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Get('children/:childId/location/stops')
   @ApiOperation({
     summary: "To'xtagan joylar (xaritadagi markerlar) — stop-detection",

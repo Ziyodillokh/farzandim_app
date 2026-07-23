@@ -25,6 +25,8 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ParseUUIDPipe } from '../../common/pipes/parse-uuid.pipe';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto, UpdateScheduleDto } from './dto';
+import { PaidTierGuard } from '../../common/entitlement/paid-tier.guard';
+import { RequirePaidTier } from '../../common/entitlement/require-paid-tier.decorator';
 
 @ApiTags('Schedules')
 @ApiBearerAuth()
@@ -44,6 +46,9 @@ export class SchedulesController {
     return this.schedulesService.listByChild(user.userId, childId);
   }
 
+  // Jadval yaratish — faqat pullik tarif (free jadval qo'ya olmaydi).
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Post('children/:childId/schedules')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a schedule for a child (parent only)' })
@@ -72,6 +77,8 @@ export class SchedulesController {
     return this.schedulesService.findOne(user.userId, id);
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Put('schedules/:id')
   @ApiOperation({ summary: 'Update a schedule (parent only)' })
   @ApiParam({ name: 'id', description: 'Schedule UUID' })
@@ -88,6 +95,8 @@ export class SchedulesController {
     });
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Delete('schedules/:id')
   @ApiOperation({ summary: 'Delete a schedule (parent only)' })
   @ApiParam({ name: 'id', description: 'Schedule UUID' })

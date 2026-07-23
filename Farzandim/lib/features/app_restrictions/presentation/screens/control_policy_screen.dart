@@ -22,6 +22,7 @@ import 'package:farzandim/features/child_management/data/repositories/backend_ch
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/features/schedules/presentation/screens/rejimlar_sheet.dart';
+import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
@@ -117,7 +118,12 @@ class ControlPolicyScreen extends ConsumerWidget {
                         : 'controlsSetup.blockApps.count'.tr(
                             namedArgs: {'count': '$blockedCount'},
                           ),
-                    onTap: () => showBlockAppsSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showBlockAppsSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -130,7 +136,12 @@ class ControlPolicyScreen extends ConsumerWidget {
                         : 'controlsSetup.timeLimit.count'.tr(
                             namedArgs: {'count': '$limitCount'},
                           ),
-                    onTap: () => showDailyLimitSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showDailyLimitSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 12),
 
@@ -143,7 +154,12 @@ class ControlPolicyScreen extends ConsumerWidget {
                         : 'controlsSetup.schedules.count'.tr(
                             namedArgs: {'count': '$scheduleCount'},
                           ),
-                    onTap: () => showRejimlarSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showRejimlarSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 12),
 

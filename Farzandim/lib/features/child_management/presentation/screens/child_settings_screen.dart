@@ -24,6 +24,7 @@ import 'package:farzandim/features/child_management/presentation/providers/child
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/features/schedules/presentation/screens/rejimlar_sheet.dart';
+import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
@@ -149,7 +150,12 @@ class ChildSettingsScreen extends ConsumerWidget {
                         : 'childSettings.zonesCount'.tr(
                             namedArgs: {'count': '$zoneCount'},
                           ),
-                    onTap: () => context.push(AppRoutes.geoZonesPath(childId)),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          context.push(AppRoutes.geoZonesPath(childId)),
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -162,7 +168,12 @@ class ChildSettingsScreen extends ConsumerWidget {
                         : 'controlsSetup.blockApps.count'.tr(
                             namedArgs: {'count': '$blockedCount'},
                           ),
-                    onTap: () => showBlockAppsSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showBlockAppsSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -175,7 +186,12 @@ class ChildSettingsScreen extends ConsumerWidget {
                         : 'controlsSetup.timeLimit.count'.tr(
                             namedArgs: {'count': '$limitCount'},
                           ),
-                    onTap: () => showDailyLimitSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showDailyLimitSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 8),
 
@@ -188,7 +204,12 @@ class ChildSettingsScreen extends ConsumerWidget {
                         : 'controlsSetup.schedules.count'.tr(
                             namedArgs: {'count': '$scheduleCount'},
                           ),
-                    onTap: () => showRejimlarSheet(context, childId: childId),
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () =>
+                          showRejimlarSheet(context, childId: childId),
+                    ),
                   ),
                   const SizedBox(height: 8),
 

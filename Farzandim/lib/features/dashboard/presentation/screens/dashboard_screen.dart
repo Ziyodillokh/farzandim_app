@@ -24,6 +24,7 @@ import 'package:farzandim/features/location/presentation/providers/child_place_p
 import 'package:farzandim/features/location/presentation/widgets/request_location_button.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/notifications_sheet.dart';
+import 'package:farzandim/features/settings/data/entitlement.dart';
 import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/shared/widgets/child_avatar.dart';
 import 'package:flutter/material.dart';
@@ -344,16 +345,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
                                 height: 30,
                               ),
                               label: 'dashboard.quickActions.weeklyReport'.tr(),
-                              // Haftalik hisobot — gated funksiya. Tarifda
-                              // bo'lmasa BOSISHDA "yuksalting" oynasi chiqadi
-                              // (buzuq 403 sahifasi o'rniga).
-                              onTap: () => guardFeature(
-                                context,
-                                ref,
-                                feature: 'weekly_report',
-                                onAllowed: () => context.push(
-                                  AppRoutes.weeklyReportPath(child.id),
-                                ),
+                              // Haftalik hisobot — FREE tarifda ham ochiq.
+                              onTap: () => context.push(
+                                AppRoutes.weeklyReportPath(child.id),
                               ),
                             ),
                           ),

@@ -1632,7 +1632,9 @@
     "tierFree": "Free",
     "everythingIn": "Everything in {plan}",
     "firstLaunchPromo": "Unlock everything with Parvoz Premium — real-time location, app limits and more.",
-    "featureLockedMsg": "This feature isn't in your plan. Upgrade to unlock it."
+    "featureLockedMsg": "This feature isn't in your plan. Upgrade to unlock it.",
+    "locationTitle": "Location tracking",
+    "paidUnlock": "Unlocks with Standard"
   },
   "trial": {
     "welcomeTitle": "7 days of Standard, free!",
@@ -1652,6 +1654,7 @@
     "sos": "SOS",
     "messenger": "Messenger",
     "step_counter": "Step counter",
+    "don_rating": "DON rating",
     "screen_time_limit": "Screen time limit",
     "basic_geolocation": "Basic geolocation",
     "app_install_restriction": "App install restriction",

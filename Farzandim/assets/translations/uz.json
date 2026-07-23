@@ -1632,7 +1632,9 @@
     "tierFree": "Bepul",
     "everythingIn": "{plan} tarifidagi barcha imkoniyatlar",
     "firstLaunchPromo": "Parvoz Premium bilan barcha imkoniyatlarni oching — real-time joylashuv, ilova cheklovlari va boshqalar.",
-    "featureLockedMsg": "Bu funksiya sizning tarifingizda mavjud emas. Uni ochish uchun tarifni yangilang."
+    "featureLockedMsg": "Bu funksiya sizning tarifingizda mavjud emas. Uni ochish uchun tarifni yangilang.",
+    "locationTitle": "Joylashuv kuzatuvi",
+    "paidUnlock": "Standart tarifda ochiladi"
   },
   "trial": {
     "welcomeTitle": "7 kunlik Standart sovg'a!",
@@ -1652,6 +1654,7 @@
     "sos": "SOS",
     "messenger": "Messenjer",
     "step_counter": "Qadam hisoblagich",
+    "don_rating": "DON reyting",
     "screen_time_limit": "Ekran vaqti limiti",
     "basic_geolocation": "Asosiy geolokatsiya",
     "app_install_restriction": "Ilova o'rnatishni cheklash",

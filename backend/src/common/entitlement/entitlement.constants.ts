@@ -11,6 +11,9 @@
 // beradi (aks holda `free`).
 
 // Funksiya guruhlari (admin katalogidagi tartibda; AI tavsiya OLIB TASHLANGAN).
+// FREE (mahsulot qarori, 2026-07): SOS, ekran vaqti (stats), DON reyting,
+// haftalik hisobot, messenger + asosiy profil/qadam. Lokatsiya, ilova
+// bloklash, rejim/jadval — FREE'da YO'Q (standard/premium).
 const FREE_FEATURES = [
   'app_trial',
   'basic_profile',
@@ -18,12 +21,13 @@ const FREE_FEATURES = [
   'sos',
   'messenger',
   'step_counter',
+  'don_rating',
+  'weekly_report',
 ];
 const BASIC_FEATURES = [
   'screen_time_limit',
   'basic_geolocation',
   'app_install_restriction',
-  'weekly_report',
 ];
 const STANDARD_FEATURES = [
   'realtime_geolocation',

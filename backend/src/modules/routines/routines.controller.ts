@@ -25,6 +25,8 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ParseUUIDPipe } from '../../common/pipes/parse-uuid.pipe';
 import { RoutinesService } from './routines.service';
 import { CreateRoutineDto, UpdateRoutineDto } from './dto';
+import { PaidTierGuard } from '../../common/entitlement/paid-tier.guard';
+import { RequirePaidTier } from '../../common/entitlement/require-paid-tier.decorator';
 
 @ApiTags('Routines')
 @ApiBearerAuth()
@@ -55,6 +57,9 @@ export class RoutinesController {
     return this.routinesService.getToday(user.userId, childId);
   }
 
+  // Rejim yaratish — faqat pullik tarif (free rejim qo'ya olmaydi).
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Post('children/:childId/routines')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a routine for a child (parent only)' })
@@ -83,6 +88,8 @@ export class RoutinesController {
     return this.routinesService.findOne(user.userId, id);
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Put('routines/:id')
   @ApiOperation({ summary: 'Update a routine (parent only)' })
   @ApiParam({ name: 'id', description: 'Routine UUID' })
@@ -99,6 +106,8 @@ export class RoutinesController {
     });
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Delete('routines/:id')
   @ApiOperation({ summary: 'Delete a routine (parent only)' })
   @ApiParam({ name: 'id', description: 'Routine UUID' })

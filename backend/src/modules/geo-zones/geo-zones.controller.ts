@@ -27,6 +27,8 @@ import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { ParseUUIDPipe } from '../../common/pipes/parse-uuid.pipe';
 import { GeoZonesService } from './geo-zones.service';
 import { CreateGeoZoneDto, UpdateGeoZoneDto, ListGeoZoneEventsDto } from './dto';
+import { PaidTierGuard } from '../../common/entitlement/paid-tier.guard';
+import { RequirePaidTier } from '../../common/entitlement/require-paid-tier.decorator';
 
 @ApiTags('Geo Zones')
 @ApiBearerAuth()
@@ -46,6 +48,9 @@ export class GeoZonesController {
     return this.geoZonesService.listByChild(user.userId, childId);
   }
 
+  // Geo-zona yaratish — lokatsiya funksiyasi, faqat pullik tarif.
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Post('children/:childId/geo-zones')
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({ summary: 'Create a geo-zone for a child (parent only)' })
@@ -74,6 +79,8 @@ export class GeoZonesController {
     return this.geoZonesService.findOne(user.userId, id);
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Put('geo-zones/:id')
   @ApiOperation({ summary: 'Update a geo-zone (parent only)' })
   @ApiParam({ name: 'id', description: 'Geo-zone UUID' })
@@ -90,6 +97,8 @@ export class GeoZonesController {
     });
   }
 
+  @UseGuards(PaidTierGuard)
+  @RequirePaidTier()
   @Delete('geo-zones/:id')
   @ApiOperation({ summary: 'Delete a geo-zone (parent only)' })
   @ApiParam({ name: 'id', description: 'Geo-zone UUID' })

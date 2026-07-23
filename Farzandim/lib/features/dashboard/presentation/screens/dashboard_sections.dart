@@ -395,6 +395,56 @@ class _LocationCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    // FREE tarifda joylashuv YO'Q — qulflangan karta (fetch qilmaymiz, shuning
+    // uchun auto-popup ham chiqmaydi). Bosilsa "Standart" tavsiya oynasi.
+    final ent = ref.watch(entitlementProvider).valueOrNull ?? Entitlement.free;
+    if (ent.isFree) {
+      return _Card(
+        onTap: () => showUpgradeDialog(
+          context,
+          ref,
+          tier: 'standard',
+          message: 'plans.featureLockedMsg'.tr(),
+        ),
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        child: Row(
+          children: [
+            Icon(
+              Icons.lock_rounded,
+              size: 24,
+              color: Colors.white.withValues(alpha: 0.4),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Text(
+                    'plans.locationTitle'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _unb(16, ls: -0.5),
+                  ),
+                  Text(
+                    'plans.paidUnlock'.tr(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: _pop(13, c: _blue),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            const Icon(
+              SolarIconsBold.altArrowRight,
+              size: 22,
+              color: Color(0x80FFFFFF),
+            ),
+          ],
+        ),
+      );
+    }
     final place = ref.watch(childPlaceProvider(child.id));
     final inZone = place.zoneName != null;
     final title = place.zoneName ?? 'dashboard.outdoors'.tr();

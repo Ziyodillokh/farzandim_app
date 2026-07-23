@@ -12,8 +12,6 @@ import {
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
-import { EntitlementGuard } from '../../common/entitlement/entitlement.guard';
-import { RequireFeature } from '../../common/entitlement/require-feature.decorator';
 import { CurrentUser } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { AppUsageService } from './app-usage.service';
@@ -100,9 +98,8 @@ export class AppUsageController {
     return this.service.gameOpen(childId, user.userId, dto);
   }
 
+  // Haftalik hisobot — FREE tarifda ham ochiq (tarif gate olib tashlandi).
   @Get('children/:childId/weekly-report')
-  @UseGuards(EntitlementGuard)
-  @RequireFeature('weekly_report')
   @ApiOperation({
     summary: 'Weekly report: screen time + steps + top apps (7 days)',
   })
