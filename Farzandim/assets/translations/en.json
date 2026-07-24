@@ -120,16 +120,21 @@
     },
     "forgotPassword": {
       "title": "Reset password",
-      "subtitle": "Enter your email address,\nwe'll send a reset link.",
-      "emailLabel": "Email address",
-      "emailHint": "email@example.com",
-      "submitButton": "Send reset link",
+      "subtitle": "Enter your email or phone number — we'll send a verification code.",
+      "contactLabel": "Email or phone",
+      "contactHint": "email@example.com or +998...",
+      "sendButton": "Send code",
+      "codeSent": "Verification code sent",
+      "sendError": "Couldn't send the code. Please try again later.",
+      "codeLabel": "Verification code",
+      "codeHint": "5-digit code",
+      "newPasswordLabel": "New password",
+      "newPasswordHint": "At least 6 characters",
+      "resetButton": "Reset password",
+      "resetSuccess": "Password updated. You can sign in now.",
+      "resetError": "Couldn't reset the password. Check the code.",
       "remembered": "Remembered? ",
-      "backToSignIn": "Sign in",
-      "dialog": {
-        "title": "Email sent",
-        "content": "A password reset link has been sent to {email}. Please check your inbox."
-      }
+      "backToSignIn": "Sign in"
     },
     "verifyOtp": {
       "title": "SMS code",

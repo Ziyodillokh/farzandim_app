@@ -33,6 +33,10 @@ import {
   VerifyRegisterEmailOtpDto,
 } from './dto/register-email-otp.dto';
 import { LoginDto } from './dto/login.dto';
+import {
+  ForgotPasswordRequestDto,
+  ForgotPasswordResetDto,
+} from './dto/forgot-password.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import { RedeemDeviceLinkDto } from './dto/device-link.dto';
 import { RedeemRepairTokenDto } from './dto/redeem-repair-token.dto';
@@ -159,6 +163,25 @@ export class AuthController {
       ip: req.ip,
       headers: req.headers as Record<string, string | string[] | undefined>,
     });
+  }
+
+  @Post('password/forgot')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Parolni unutdim — OTP so\'rash (logout holatida)' })
+  @ApiResponse({ status: 200, description: 'Generic ok (enumeration himoyasi)' })
+  async forgotPassword(@Body() dto: ForgotPasswordRequestDto) {
+    return this.authService.forgotPasswordRequest(dto);
+  }
+
+  @Post('password/reset')
+  @Public()
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: 'Parolni tiklash — OTP + yangi parol (logout)' })
+  @ApiResponse({ status: 200, description: 'Parol tiklandi' })
+  @ApiResponse({ status: 400, description: 'Kod xato yoki muddati tugagan' })
+  async resetPassword(@Body() dto: ForgotPasswordResetDto) {
+    return this.authService.forgotPasswordReset(dto);
   }
 
   @Post('refresh')

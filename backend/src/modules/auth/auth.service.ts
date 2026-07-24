@@ -27,6 +27,10 @@ import {
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { ChildPairDto } from './dto/child-pair.dto';
 import { RegisterDto } from './dto/register.dto';
+import {
+  ForgotPasswordRequestDto,
+  ForgotPasswordResetDto,
+} from './dto/forgot-password.dto';
 import { LoginDto } from './dto/login.dto';
 import { SocialLoginDto } from './dto/social-login.dto';
 import {
@@ -643,6 +647,142 @@ export class AuthService {
   /* ------------------------------------------------------------------ */
   /*  Email / Telefon + Parol — Register & Login                         */
   /* ------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------ */
+  /*  Parolni unutdim (logout) — OTP so'rash + tiklash                    */
+  /* ------------------------------------------------------------------ */
+
+  /**
+   * Logout holatida parol tiklash uchun OTP yuboradi (telefon SMS yoki email).
+   * Enumeration himoyasi: akkaunt topilmasa ham generic "ok" qaytadi (mavjudlik
+   * oshkor qilinmaydi), lekin haqiqiy SMS/email faqat mavjud akkauntga ketadi.
+   */
+  async forgotPasswordRequest(
+    dto: ForgotPasswordRequestDto,
+  ): Promise<{ ok: true; message: string }> {
+    const phone = dto.phone?.trim();
+    const email = dto.email?.trim().toLowerCase();
+    if (!phone && !email) {
+      throw new BadRequestException('Telefon yoki email kiriting');
+    }
+    const generic = {
+      ok: true as const,
+      message: "Agar akkaunt mavjud bo'lsa, tasdiqlash kodi yuborildi",
+    };
+
+    const user = await this.prisma.user.findFirst({
+      where: phone ? { phone } : { email },
+      select: { id: true },
+    });
+    // Akkaunt yo'q — mavjudlikni oshkor qilmaymiz (generic javob).
+    if (!user) return generic;
+
+    const isPhone = Boolean(phone);
+    const target = (phone ?? email)!;
+
+    // 60s cooldown (spam himoyasi).
+    const recent = await this.prisma.otpCode.findFirst({
+      where: {
+        ...(isPhone ? { phone: target } : { email: target }),
+        createdAt: {
+          gt: new Date(Date.now() - AuthService.REGISTER_OTP_RESEND_COOLDOWN_MS),
+        },
+      },
+    });
+    if (recent) {
+      throw new BadRequestException('Kod yaqinda yuborildi. Biroz kuting.');
+    }
+
+    const code = String(Math.floor(10_000 + Math.random() * 90_000));
+
+    // Avval yuboramiz: yuborib bo'lmasa OtpCode yozilmaydi (cooldown haqiqiy
+    // qayta urinishni bloklamasin).
+    if (isPhone) {
+      if (!this.sms.isSmsConfigured()) {
+        throw new ServiceUnavailableException('SMS xizmati hozircha mavjud emas');
+      }
+      const r = await this.sms.sendRegisterCode(target, code);
+      if (!r.sent) {
+        this.logger.error({ err: r.error }, 'Parol tiklash SMS yuborilmadi');
+        throw new BadGatewayException("SMS yuborib bo'lmadi");
+      }
+    } else {
+      if (!this.mail.isMailConfigured()) {
+        throw new ServiceUnavailableException(
+          'Email xizmati hozircha mavjud emas',
+        );
+      }
+      const r = await this.mail.sendVerifyCode(target, code);
+      if (!r.sent) {
+        this.logger.error({ err: r.error }, 'Parol tiklash email yuborilmadi');
+        throw new BadGatewayException("Email yuborib bo'lmadi");
+      }
+    }
+
+    await this.prisma.otpCode.create({
+      data: {
+        ...(isPhone ? { phone: target } : { email: target }),
+        code,
+        expiresAt: new Date(Date.now() + AuthService.REGISTER_OTP_TTL_MS),
+      },
+    });
+    return generic;
+  }
+
+  /**
+   * OTP kodni tekshirib logout holatida yangi parol o'rnatadi.
+   */
+  async forgotPasswordReset(
+    dto: ForgotPasswordResetDto,
+  ): Promise<{ ok: true }> {
+    const phone = dto.phone?.trim();
+    const email = dto.email?.trim().toLowerCase();
+    if (!phone && !email) {
+      throw new BadRequestException('Telefon yoki email kiriting');
+    }
+    const user = await this.prisma.user.findFirst({
+      where: phone ? { phone } : { email },
+      select: { id: true },
+    });
+    const badCode = () =>
+      new BadRequestException('Kod topilmadi yoki muddati tugagan');
+    if (!user) throw badCode();
+
+    const isPhone = Boolean(phone);
+    const target = (phone ?? email)!;
+    const otp = await this.prisma.otpCode.findFirst({
+      where: {
+        ...(isPhone ? { phone: target } : { email: target }),
+        verifiedAt: null,
+        expiresAt: { gt: new Date() },
+      },
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!otp) throw badCode();
+    if (otp.attempts >= AuthService.REGISTER_OTP_MAX_ATTEMPTS) {
+      throw new BadRequestException("Juda ko'p urinish. Yangi kod so'rang.");
+    }
+    if (otp.code !== dto.code) {
+      await this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { attempts: { increment: 1 } },
+      });
+      throw new BadRequestException("Noto'g'ri kod");
+    }
+
+    const passwordHash = await hashPassword(dto.newPassword);
+    await this.prisma.$transaction([
+      this.prisma.otpCode.update({
+        where: { id: otp.id },
+        data: { verifiedAt: new Date() },
+      }),
+      this.prisma.user.update({
+        where: { id: user.id },
+        data: { passwordHash },
+      }),
+    ]);
+    return { ok: true };
+  }
 
   /**
    * Ota-ona (PARENT) ro'yxatdan o'tishi — email yoki telefon + parol.

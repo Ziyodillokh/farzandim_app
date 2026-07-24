@@ -120,16 +120,21 @@
     },
     "forgotPassword": {
       "title": "Parolni tiklash",
-      "subtitle": "Email manzilingizni kiriting,\nparolni tiklash havolasi yuboriladi.",
-      "emailLabel": "Email manzil",
-      "emailHint": "email@example.com",
-      "submitButton": "Reset linkini yuborish",
+      "subtitle": "Email yoki telefon raqamingizni kiriting — tasdiqlash kodi yuboriladi.",
+      "contactLabel": "Email yoki telefon",
+      "contactHint": "email@example.com yoki +998...",
+      "sendButton": "Kod yuborish",
+      "codeSent": "Tasdiqlash kodi yuborildi",
+      "sendError": "Kod yuborib bo'lmadi. Keyinroq urinib ko'ring.",
+      "codeLabel": "Tasdiqlash kodi",
+      "codeHint": "5 raqamli kod",
+      "newPasswordLabel": "Yangi parol",
+      "newPasswordHint": "Kamida 6 ta belgi",
+      "resetButton": "Parolni tiklash",
+      "resetSuccess": "Parol yangilandi. Endi kirishingiz mumkin.",
+      "resetError": "Parolni tiklab bo'lmadi. Kodni tekshiring.",
       "remembered": "Esladingizmi? ",
-      "backToSignIn": "Akkauntga kirish",
-      "dialog": {
-        "title": "Email yuborildi",
-        "content": "Parolni tiklash havolasi {email} manziliga yuborildi. Email'ingizni tekshiring."
-      }
+      "backToSignIn": "Akkauntga kirish"
     },
     "verifyOtp": {
       "title": "SMS kod",

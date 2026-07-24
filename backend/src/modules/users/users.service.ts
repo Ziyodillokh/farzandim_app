@@ -14,7 +14,7 @@ import { StorageService } from '../../common/storage/storage.service';
 import { SmsService } from '../../common/sms/sms.service';
 import { MailService } from '../../common/mail/mail.service';
 import { AuditService } from '../../common/audit/audit.service';
-import { BUCKETS } from '../../common/storage/storage.constants';
+import { BUCKETS, BucketName } from '../../common/storage/storage.constants';
 import {
   hashPassword,
   verifyPassword,
@@ -135,6 +135,10 @@ export class UsersService {
       throw new NotFoundException('User not found');
     }
 
+    // Media (MinIO) kalitlarini DB o'chirishdan OLDIN yig'amiz — cascade delete
+    // yozuvlarni yo'qotgach kalitlar topilmasdi. Keyin baytlarni o'chiramiz.
+    const media = await this.collectUserMediaKeys(userId);
+
     await this.prisma.$transaction(async (tx) => {
       const children = await tx.child.findMany({
         where: { parentId: userId },
@@ -153,6 +157,11 @@ export class UsersService {
       }
     });
 
+    // MinIO obyektlarini o'chiramiz (best-effort — DB o'chirildi; bu ortiqcha
+    // baytlarni tozalaydi. account-deletion.html "fayllar ham olib tashlanadi"
+    // va'dasini bajaradi. Xato akkaunt o'chirishni buzmaydi).
+    await this.deleteMediaObjects(media);
+
     await this.audit.log(
       userId,
       'user',
@@ -163,6 +172,98 @@ export class UsersService {
     );
 
     return { ok: true, message: "Akkaunt o'chirildi" };
+  }
+
+  /**
+   * Foydalanuvchi (+ uning bolalari) barcha MinIO media kalitlarini yig'adi:
+   * avatarlar, ovozli/video xabarlar, chat media, foto so'rovlari. `deleteAccount`
+   * DB o'chirishdan OLDIN chaqiradi (keyin yozuvlar yo'qoladi).
+   */
+  private async collectUserMediaKeys(
+    userId: string,
+  ): Promise<Array<{ bucket: BucketName; key: string }>> {
+    const objects: Array<{ bucket: BucketName; key: string }> = [];
+    const push = (bucket: BucketName, key: string | null | undefined) => {
+      // http URL = tashqi (Telegram/Google avatar) — MinIO'da emas, o'tkazamiz.
+      if (key && !key.startsWith('http')) objects.push({ bucket, key });
+    };
+
+    const children = await this.prisma.child.findMany({
+      where: { parentId: userId },
+      select: { id: true, childUserId: true, photoPath: true },
+    });
+    const childIds = children.map((c) => c.id);
+    const childUserIds = children
+      .map((c) => c.childUserId)
+      .filter((v): v is string => Boolean(v));
+    const allUserIds = [userId, ...childUserIds];
+
+    // Avatarlar (parent + bola user profillari + bola rasmlari + photo-request).
+    const users = await this.prisma.user.findMany({
+      where: { id: { in: allUserIds } },
+      select: { avatarUrl: true },
+    });
+    for (const u of users) push(BUCKETS.avatars, u.avatarUrl);
+    for (const c of children) push(BUCKETS.avatars, c.photoPath);
+
+    // Ovozli xabarlar (storagePath) + chat media (mediaKey).
+    const voice = await this.prisma.voiceMessage.findMany({
+      where: {
+        OR: [
+          { senderId: { in: allUserIds } },
+          { receiverId: { in: allUserIds } },
+        ],
+      },
+      select: { storagePath: true, mediaKey: true },
+    });
+    for (const v of voice) {
+      push(BUCKETS.voice, v.storagePath);
+      push(BUCKETS.chat, v.mediaKey);
+    }
+
+    // Video xabarlar (storagePath + thumbnail).
+    const video = await this.prisma.videoMessage.findMany({
+      where: {
+        OR: [
+          { senderId: { in: allUserIds } },
+          { receiverId: { in: allUserIds } },
+        ],
+      },
+      select: { storagePath: true, thumbnailPath: true },
+    });
+    for (const v of video) {
+      push(BUCKETS.video, v.storagePath);
+      push(BUCKETS.video, v.thumbnailPath);
+    }
+
+    // Foto so'rovlari (avatars bucket'da — photo-requests.service).
+    const photos = await this.prisma.photoRequest.findMany({
+      where: {
+        OR: [{ parentId: userId }, { childId: { in: childIds } }],
+      },
+      select: { photoPath: true, thumbnailPath: true },
+    });
+    for (const p of photos) {
+      push(BUCKETS.avatars, p.photoPath);
+      push(BUCKETS.avatars, p.thumbnailPath);
+    }
+
+    return objects;
+  }
+
+  /** MinIO obyektlarini best-effort o'chiradi (bittasi yiqilsa boshqalari davom). */
+  private async deleteMediaObjects(
+    objects: Array<{ bucket: BucketName; key: string }>,
+  ): Promise<void> {
+    if (objects.length === 0) return;
+    const results = await Promise.allSettled(
+      objects.map((o) => this.storage.delete(o.bucket, o.key)),
+    );
+    const failed = results.filter((r) => r.status === 'rejected').length;
+    this.logger.log(
+      `deleteAccount media: ${objects.length - failed}/${objects.length} ` +
+        "obyekt o'chirildi",
+    );
   }
 
   /* ------------------------------------------------------------------ */

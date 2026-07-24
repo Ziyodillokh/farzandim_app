@@ -119,17 +119,22 @@
       "sendEmailError": "Не удалось отправить письмо"
     },
     "forgotPassword": {
-      "title": "Восстановление пароля",
-      "subtitle": "Введите ваш email,\nмы отправим ссылку для сброса пароля.",
-      "emailLabel": "Email адрес",
-      "emailHint": "email@example.com",
-      "submitButton": "Отправить ссылку",
+      "title": "Сброс пароля",
+      "subtitle": "Введите email или номер телефона — вам придёт код подтверждения.",
+      "contactLabel": "Email или телефон",
+      "contactHint": "email@example.com или +998...",
+      "sendButton": "Отправить код",
+      "codeSent": "Код подтверждения отправлен",
+      "sendError": "Не удалось отправить код. Попробуйте позже.",
+      "codeLabel": "Код подтверждения",
+      "codeHint": "5-значный код",
+      "newPasswordLabel": "Новый пароль",
+      "newPasswordHint": "Минимум 6 символов",
+      "resetButton": "Сбросить пароль",
+      "resetSuccess": "Пароль обновлён. Теперь вы можете войти.",
+      "resetError": "Не удалось сбросить пароль. Проверьте код.",
       "remembered": "Вспомнили? ",
-      "backToSignIn": "Войти",
-      "dialog": {
-        "title": "Письмо отправлено",
-        "content": "Ссылка для сброса пароля отправлена на {email}. Проверьте вашу почту."
-      }
+      "backToSignIn": "Войти в аккаунт"
     },
     "verifyOtp": {
       "title": "SMS код",
