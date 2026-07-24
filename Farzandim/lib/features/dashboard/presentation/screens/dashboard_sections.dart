@@ -397,8 +397,11 @@ class _LocationCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     // FREE tarifda joylashuv YO'Q — qulflangan karta (fetch qilmaymiz, shuning
     // uchun auto-popup ham chiqmaydi). Bosilsa "Standart" tavsiya oynasi.
-    final ent = ref.watch(entitlementProvider).valueOrNull ?? Entitlement.free;
-    if (ent.isFree) {
+    // MUHIM: faqat ANIQ free bo'lsa qulflaymiz — tarif aniqlanmagan
+    // (yuklanmoqda/xato) bo'lsa normal karta (fail-OPEN), aks holda tarmoq
+    // blip'ida pullik foydalanuvchi ham qulflanib qolardi.
+    final ent = ref.watch(entitlementProvider).valueOrNull;
+    if (ent != null && ent.isFree) {
       return _Card(
         onTap: () => showUpgradeDialog(
           context,

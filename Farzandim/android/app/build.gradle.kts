@@ -105,6 +105,14 @@ android {
             signingConfig = if (hasReleaseKeystore) {
                 signingConfigs.getByName("release")
             } else {
+                // OGOHLANTIRISH: keystore yo'q — release DEBUG kalit bilan
+                // imzolanadi (faqat lokal `flutter run --release` uchun). Bunday
+                // AAB'ni Play'ga YUKLAMANG — Play "debug mode" deb rad etadi.
+                // CI (deploy-test.yml) keystore'ni ANDROID_SIGNING_B64 dan beradi.
+                logger.warn(
+                    "!! RELEASE keystore (key.properties) topilmadi — DEBUG " +
+                        "kalit ishlatilmoqda. Bu build Play'ga YAROQSIZ.",
+                )
                 signingConfigs.getByName("debug")
             }
             // R8: ishlatilmagan Java/Kotlin (plugin) kodi + resurslarni qisqartirish.

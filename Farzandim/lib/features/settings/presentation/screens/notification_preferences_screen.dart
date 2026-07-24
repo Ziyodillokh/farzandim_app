@@ -169,7 +169,7 @@ class _NotificationPreferencesScreenState
         children: [
           Text(
             'Bolaga yuboriladigan ijobiy eslatmalar. Kuniga cheklangan, '
-            'tinch soatlarда yuborilmaydi.',
+            'tinch soatlarda yuborilmaydi.',
             style: AppTextStyles.bodyS.copyWith(color: AppColors.textSecondary),
           ),
           const SizedBox(height: AppDimensions.md),

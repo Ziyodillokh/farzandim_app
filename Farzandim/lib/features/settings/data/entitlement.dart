@@ -65,11 +65,10 @@ class Entitlement {
 /// `ref.invalidate(entitlementProvider)` bilan yangilanadi.
 final entitlementProvider = FutureProvider<Entitlement>((ref) async {
   final dio = ref.watch(dioClientProvider);
-  try {
-    final res = await dio.get<Map<String, dynamic>>('/me/entitlement');
-    return Entitlement.fromJson(res.data ?? const <String, dynamic>{});
-  } catch (_) {
-    // Tarmoq/auth xatosida — free (himoya buzilmaydi, backend guard baribir bor).
-    return Entitlement.free;
-  }
+  // XATO YUTILMAYDI (avval catch→free edi): tarmoq blip'ida u pullik
+  // foydalanuvchini butun sessiya davomida `free`ga "qamab" qo'yardi va
+  // lokatsiya/boshqa gate'lar qulflanib qolardi. Endi AsyncError qaytadi —
+  // fail-OPEN qiladi; backend guard haqiqiy himoya; resume'da qayta uriniladi.
+  final res = await dio.get<Map<String, dynamic>>('/me/entitlement');
+  return Entitlement.fromJson(res.data ?? const <String, dynamic>{});
 });

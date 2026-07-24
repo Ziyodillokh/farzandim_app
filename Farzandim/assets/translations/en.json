@@ -980,6 +980,7 @@
     "startPrice": "Free",
     "subscribeCta": "Subscribe",
     "checkoutError": "Could not open the payment page. Please try again later.",
+    "loadError": "Couldn't load plans",
     "perMonth": "mo",
     "perYear": "yr",
     "sum": "UZS",

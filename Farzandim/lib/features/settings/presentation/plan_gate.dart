@@ -271,9 +271,11 @@ class _SecondaryButton extends StatelessWidget {
 /// darhol "Premium" oynasini ko'rsatadi (formani ochmasdan); aks holda
 /// bola qo'shish ekraniga o'tadi.
 void guardAddChild(BuildContext context, WidgetRef ref) {
-  final ent = ref.read(entitlementProvider).valueOrNull ?? Entitlement.free;
+  final ent = ref.read(entitlementProvider).valueOrNull;
   final count = ref.read(childrenListProvider).length;
-  if (count >= ent.maxChildren) {
+  // Tarif ANIQ bo'lgandagina limitni tekshiramiz (fail-OPEN: aniqlanmagan
+  // bo'lsa o'tkazamiz, backend limitni baribir enforce qiladi).
+  if (ent != null && count >= ent.maxChildren) {
     showUpgradeDialog(
       context,
       ref,
@@ -320,8 +322,11 @@ void guardPaid(
   required VoidCallback onAllowed,
   String? message,
 }) {
-  final ent = ref.read(entitlementProvider).valueOrNull ?? Entitlement.free;
-  if (!ent.isFree) {
+  final ent = ref.read(entitlementProvider).valueOrNull;
+  // Faqat ANIQ `free` bo'lsa bloklaymiz. Aniqlanmagan (yuklanmoqda/xato) —
+  // o'tkazamiz (fail-OPEN): backend guard baribir himoyalaydi, pullik
+  // foydalanuvchini tarmoq blip'ida bezovta qilmaymiz.
+  if (ent == null || !ent.isFree) {
     onAllowed();
     return;
   }
@@ -360,7 +365,13 @@ String _minTierForFeature(WidgetRef ref, String feature) {
 /// Bu fon-popup EMAS — ataylab, bir martalik va foydalanuvchiga tushuntiruvchi.
 Future<void> maybeShowTrialNotice(BuildContext context, WidgetRef ref) async {
   final prefs = await SharedPreferences.getInstance();
-  final ent = await ref.read(entitlementProvider.future);
+  final Entitlement ent;
+  try {
+    ent = await ref.read(entitlementProvider.future);
+  } catch (_) {
+    return; // tarif yuklanmadi — trial xabarini jimgina o'tkazamiz
+  }
+  if (!context.mounted) return;
 
   if (ent.isTrial) {
     // Trial faol — tugash sanasini saqlab qo'yamiz (keyin "tugadi" ni bilish

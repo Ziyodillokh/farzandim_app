@@ -980,6 +980,7 @@
     "startPrice": "Tekin",
     "subscribeCta": "Ulanish",
     "checkoutError": "To'lov sahifasini ochib bo'lmadi. Keyinroq urinib ko'ring.",
+    "loadError": "Tariflarni yuklab bo'lmadi",
     "perMonth": "oy",
     "perYear": "yil",
     "sum": "so'm",

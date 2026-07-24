@@ -94,9 +94,10 @@ export class LocationController {
     return this.locationService.requestLocationEnable(childId, user.userId);
   }
 
-  // Lokatsiya ko'rish — faqat pullik tarif (free'da lokatsiya ishlamaydi).
-  @UseGuards(PaidTierGuard)
-  @RequirePaidTier()
+  // Oxirgi joylashuv — FREE'da ham OCHIQ: SOS (bepul xavfsizlik funksiyasi) shu
+  // orqali favqulodda holatda bolaning joyini ko'rsatadi. Tarix/kuzatuv
+  // (history/stops) va to'liq xarita pullik. Dashboard kartasi client-side
+  // qulflanadi (free'da fetch qilmaydi), lekin SOS oynasi joyni ko'rsata oladi.
   @Get('children/:childId/location')
   @ApiOperation({ summary: 'Get last known location for a child' })
   @ApiParam({ name: 'childId', description: 'Child ID (UUID)' })

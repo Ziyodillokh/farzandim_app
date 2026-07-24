@@ -243,6 +243,9 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
     // snapshot'dagi lastSeenAt bilan noto'g'ri "Aloqa uzildi" ko'rsatmaslik.
     if (state == AppLifecycleState.resumed && mounted) {
       ref.read(childrenRefreshTickProvider.notifier).state++;
+      // Tarif (entitlement)ni qayta o'qiymiz — tarmoq blip'ida `free`ga
+      // qamalib qolgan bo'lsa (fail-open bilan birga) tuzatiladi.
+      ref.invalidate(entitlementProvider);
     }
   }
 
