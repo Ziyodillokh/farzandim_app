@@ -600,7 +600,7 @@ class _UninstallProtectionCardState
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  "O'chirishni taqiqlash",
+                  'childSettings.uninstallProtection.title'.tr(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _unb(16, ls: -0.3),

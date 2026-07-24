@@ -8,6 +8,7 @@
 //   • "Qayerdan": manba bo'yicha yig'indi (qadam / audiokitob / test / ...)
 //   • "Barcha tarix": xronologik ro'yxat (har yozuv + sana + "+N DON")
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/don_history/data/models/don_history_entry.dart';
 import 'package:farzandim/features/don_history/presentation/providers/don_history_provider.dart';
 import 'package:flutter/material.dart';
@@ -53,21 +54,6 @@ String _fmtNum(int v) {
   return b.toString();
 }
 
-const _months = [
-  'yanvar',
-  'fevral',
-  'mart',
-  'aprel',
-  'may',
-  'iyun',
-  'iyul',
-  'avgust',
-  'sentabr',
-  'oktabr',
-  'noyabr',
-  'dekabr',
-];
-
 String _fmtDate(DateTime d) {
   final now = DateTime.now();
   final today = DateTime(now.year, now.month, now.day);
@@ -75,9 +61,10 @@ String _fmtDate(DateTime d) {
   final diff = today.difference(that).inDays;
   final hh = d.hour.toString().padLeft(2, '0');
   final mm = d.minute.toString().padLeft(2, '0');
-  if (diff == 0) return 'Bugun $hh:$mm';
-  if (diff == 1) return 'Kecha $hh:$mm';
-  return '${d.day}-${_months[d.month - 1]}';
+  if (diff == 0) return "${'donHistory.today'.tr()} $hh:$mm";
+  if (diff == 1) return "${'donHistory.yesterday'.tr()} $hh:$mm";
+  final months = 'donHistory.months'.tr().split(',');
+  return '${d.day}-${months[d.month - 1]}';
 }
 
 /// DON tarixi ekrani — berilgan bola uchun.
@@ -110,7 +97,7 @@ class DonHistoryScreen extends ConsumerWidget {
                   Expanded(
                     child: Center(
                       child: Text(
-                        'DON tarixi',
+                        'donHistory.title'.tr(),
                         style: _unb(20, w: FontWeight.w500, ls: -0.6),
                       ),
                     ),
@@ -130,7 +117,7 @@ class DonHistoryScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text(
-                      "Tarixni yuklab bo'lmadi. Keyinroq urinib ko'ring.",
+                      'donHistory.loadError'.tr(),
                       textAlign: TextAlign.center,
                       style: _pop(14, c: _dim),
                     ),
@@ -163,14 +150,14 @@ class _Body extends StatelessWidget {
       children: [
         _HeroCard(totalDon: totalDon, sourceCount: totals.length),
         const SizedBox(height: 22),
-        const _SectionTitle("Qayerdan yig'ilgan"),
+        _SectionTitle('donHistory.sectionSource'.tr()),
         const SizedBox(height: 10),
         for (final t in totals) ...[
           _SourceTotalCard(total: t, grandTotal: totalDon),
           const SizedBox(height: 8),
         ],
         const SizedBox(height: 14),
-        const _SectionTitle('Barcha tarix'),
+        _SectionTitle('donHistory.sectionAll'.tr()),
         const SizedBox(height: 10),
         _HistoryCard(entries: entries),
       ],
@@ -201,7 +188,7 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            "Jami yig'ilgan DON",
+            'donHistory.heroTitle'.tr(),
             style: _pop(13, c: const Color(0xCCFFFFFF)),
           ),
           const SizedBox(height: 8),
@@ -216,8 +203,10 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             sourceCount > 0
-                ? '$sourceCount xil manbadan'
-                : "Hali DON yig'ilmagan",
+                ? 'donHistory.fromSources'.tr(
+                    namedArgs: {'count': '$sourceCount'},
+                  )
+                : 'donHistory.empty'.tr(),
             style: _pop(12, c: const Color(0xB3FFFFFF)),
           ),
         ],
@@ -260,7 +249,7 @@ class _SourceTotalCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(src.label, style: _pop(15, w: FontWeight.w600)),
+                Text(src.label.tr(), style: _pop(15, w: FontWeight.w600)),
                 const SizedBox(height: 6),
                 ClipRRect(
                   borderRadius: BorderRadius.circular(99),
@@ -272,7 +261,10 @@ class _SourceTotalCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text('${total.count} marta', style: _pop(11, c: _dimmer)),
+                Text(
+                  'donHistory.times'.tr(namedArgs: {'count': '${total.count}'}),
+                  style: _pop(11, c: _dimmer),
+                ),
               ],
             ),
           ),
@@ -343,7 +335,7 @@ class _HistoryRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(src.label, style: _pop(14, w: FontWeight.w500)),
+                Text(src.label.tr(), style: _pop(14, w: FontWeight.w500)),
                 const SizedBox(height: 2),
                 Text(_fmtDate(entry.date), style: _pop(12, c: _dimmer)),
               ],
@@ -375,14 +367,13 @@ class _Empty extends StatelessWidget {
             const Icon(Icons.stars_rounded, size: 56, color: _dimmer),
             const SizedBox(height: 16),
             Text(
-              "Hali DON yig'ilmagan",
+              'donHistory.empty'.tr(),
               textAlign: TextAlign.center,
               style: _unb(17),
             ),
             const SizedBox(height: 8),
             Text(
-              'Bola qadam bosib, audiokitob eshitib yoki testda '
-              "qatnashib DON yig'adi — bu yerda ko'rinadi.",
+              'donHistory.emptySubtitle'.tr(),
               textAlign: TextAlign.center,
               style: _pop(13, c: _dim),
             ),

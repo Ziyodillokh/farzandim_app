@@ -50,66 +50,70 @@ class DonSource {
     switch (type) {
       case 'DAILY_GOAL':
         return const DonSource(
-          'Qadamlar',
+          'donHistory.src.steps',
           Icons.directions_walk_rounded,
           Color(0xFF34C759),
         );
       case 'BOOK_READ':
         return const DonSource(
-          'Audiokitoblar',
+          'donHistory.src.audiobooks',
           Icons.headphones_rounded,
           Color(0xFF216BFF),
         );
       case 'CONTEST_JOIN':
         return const DonSource(
-          'Testda qatnashish',
+          'donHistory.src.contestJoin',
           Icons.quiz_rounded,
           Color(0xFFAF7BFF),
         );
       case 'CONTEST_WIN':
         return const DonSource(
-          "Test g'olibi",
+          'donHistory.src.contestWin',
           Icons.emoji_events_rounded,
           Color(0xFFF2B233),
         );
       case 'CREATIVE_JOIN':
         return const DonSource(
-          'Ijodiy tanlov',
+          'donHistory.src.creativeJoin',
           Icons.brush_rounded,
           Color(0xFFFF7A9A),
         );
       case 'CREATIVE_WIN':
         return const DonSource(
-          "Ijodiy tanlov g'olibi",
+          'donHistory.src.creativeWin',
           Icons.emoji_events_rounded,
           Color(0xFFF2B233),
         );
       case 'COURSE_LESSON':
         return const DonSource(
-          'Darslar',
+          'donHistory.src.lessons',
           Icons.menu_book_rounded,
           Color(0xFF20C4B8),
         );
       case 'STREAK_WEEKLY':
         return const DonSource(
-          'Haftalik faollik',
+          'donHistory.src.streak',
           Icons.local_fire_department_rounded,
           Color(0xFFFF7A45),
         );
       case 'CONTENT_POST':
         return const DonSource(
-          'Kontent',
+          'donHistory.src.content',
           Icons.auto_awesome_rounded,
           Color(0xFF20C4B8),
         );
       case 'OTHER':
         return const DonSource(
-          'Videolar',
+          'donHistory.src.videos',
           Icons.play_circle_fill_rounded,
           Color(0xFFFF5A5D),
         );
       default:
-        return const DonSource('Boshqa', Icons.star_rounded, Color(0xFF8CA0B3));
+        return const DonSource(
+          'donHistory.src.other',
+          Icons.star_rounded,
+          Color(0xFF8CA0B3),
+        );
     }
   }
 

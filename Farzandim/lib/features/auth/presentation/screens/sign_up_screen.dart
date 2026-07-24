@@ -195,9 +195,7 @@ class _SignUpScreenState extends ConsumerState<SignUpScreen> {
       setState(
         () => _error = _readDioError(
           e,
-          fallback: _isPhone
-              ? "SMS yuborib bo'lmadi"
-              : "Email yuborib bo'lmadi",
+          fallback: 'auth.signUp.sendCodeError'.tr(),
         ),
       );
     }

@@ -1628,6 +1628,33 @@
     "steps": "Qadam",
     "streakValue": "{days} kun"
   },
+  "donHistory": {
+    "title": "DON tarixi",
+    "loadError": "Tarixni yuklab bo'lmadi. Keyinroq urinib ko'ring.",
+    "sectionSource": "Qayerdan yig'ilgan",
+    "sectionAll": "Barcha tarix",
+    "heroTitle": "Jami yig'ilgan DON",
+    "fromSources": "{count} xil manbadan",
+    "empty": "Hali DON yig'ilmagan",
+    "emptySubtitle": "Bola qadam bosib, audiokitob eshitib yoki testda qatnashib DON yig'adi — bu yerda ko'rinadi.",
+    "times": "{count} marta",
+    "today": "Bugun",
+    "yesterday": "Kecha",
+    "months": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr",
+    "src": {
+      "steps": "Qadamlar",
+      "audiobooks": "Audiokitoblar",
+      "contestJoin": "Testda qatnashish",
+      "contestWin": "Test g'olibi",
+      "creativeJoin": "Ijodiy tanlov",
+      "creativeWin": "Ijodiy tanlov g'olibi",
+      "lessons": "Darslar",
+      "streak": "Haftalik faollik",
+      "content": "Kontent",
+      "videos": "Videolar",
+      "other": "Boshqa"
+    }
+  },
   "plans": {
     "premiumFeature": "Premium funksiya",
     "viewPlans": "Tariflarni ko'rish",

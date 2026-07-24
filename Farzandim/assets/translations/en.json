@@ -1628,6 +1628,33 @@
     "steps": "Steps",
     "streakValue": "{days} days"
   },
+  "donHistory": {
+    "title": "DON history",
+    "loadError": "Couldn't load history. Please try again later.",
+    "sectionSource": "Where it came from",
+    "sectionAll": "All history",
+    "heroTitle": "Total DON earned",
+    "fromSources": "from {count} sources",
+    "empty": "No DON earned yet",
+    "emptySubtitle": "Your child earns DON by taking steps, listening to audiobooks and joining quizzes — it will show up here.",
+    "times": "{count} times",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "months": "January,February,March,April,May,June,July,August,September,October,November,December",
+    "src": {
+      "steps": "Steps",
+      "audiobooks": "Audiobooks",
+      "contestJoin": "Quiz participation",
+      "contestWin": "Quiz winner",
+      "creativeJoin": "Creative contest",
+      "creativeWin": "Contest winner",
+      "lessons": "Lessons",
+      "streak": "Weekly activity",
+      "content": "Content",
+      "videos": "Videos",
+      "other": "Other"
+    }
+  },
   "plans": {
     "premiumFeature": "Premium feature",
     "viewPlans": "View plans",
