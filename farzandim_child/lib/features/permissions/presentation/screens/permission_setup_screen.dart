@@ -139,8 +139,11 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     if (w.isGranted) await Permission.locationAlways.request();
   }
 
-  bool get _allGranted =>
-      _location && _notif && _usage && _overlay && _battery && _uninstallGuard;
+  // Faqat FUNKSIONAL ruxsatlar majburiy (joylashuv/foydalanish/overlay/batareya).
+  // Bildirishnoma va "O'chirishni taqiqlash" (Device Admin) IXTIYORIY — aks holda
+  // ularni rad etgan foydalanuvchi shu ekranda qamalib, ilovaga umuman kira
+  // olmasdi. Device Admin baribir keyin ota-ona siyosati orqali qo'llanadi.
+  bool get _allGranted => _location && _usage && _overlay && _battery;
 
   void _onNext() {
     if (!kIsWeb && !_allGranted) return;

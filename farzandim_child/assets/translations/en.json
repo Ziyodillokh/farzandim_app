@@ -738,7 +738,7 @@
     "channelName": "Parvoz service",
     "channelDescription": "For continuous monitoring of the child's location and status",
     "notificationTitle": "Parvoz is running",
-    "notificationText": "You're connected with your family",
+    "notificationText": "Location and activity are being monitored",
     "lastUpdate": "Last update: {time}"
   },
   "location": {

@@ -738,7 +738,7 @@
     "channelName": "Служба Parvoz",
     "channelDescription": "Для постоянного отслеживания местоположения и состояния ребёнка",
     "notificationTitle": "Parvoz работает",
-    "notificationText": "Вы на связи со своей семьёй",
+    "notificationText": "Отслеживаются геолокация и активность",
     "lastUpdate": "Последнее обновление: {time}"
   },
   "location": {

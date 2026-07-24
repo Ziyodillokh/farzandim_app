@@ -9,6 +9,7 @@
 
 import 'dart:async';
 
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart' show Color;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -62,8 +63,10 @@ class AudiobooksNotifier extends AsyncNotifier<List<AudiobookModel>> {
 /// qaytarsa mock qo'shilmaydi.
 final effectiveAudiobooksProvider = Provider<List<AudiobookModel>>((ref) {
   final real = ref.watch(backendAudiobooksProvider).valueOrNull ?? const [];
-  if (real.length >= 4) return real;
-  // Kam kelsa: real + mock (takrorsiz id bilan)
+  // PRODUCTION: faqat real kontent. MOCK katalog FAQAT debug'da (dizayn/dev) —
+  // release'da soxta, o'ynalmaydigan kitoblar foydalanuvchiga ko'rinmasin.
+  if (!kDebugMode || real.length >= 4) return real;
+  // Debug'da kam kelsa: real + mock (takrorsiz id bilan)
   final existingIds = real.map((b) => b.id).toSet();
   final extras = _mockAudiobooks
       .where((m) => !existingIds.contains(m.id))

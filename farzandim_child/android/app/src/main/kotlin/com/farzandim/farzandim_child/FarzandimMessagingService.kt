@@ -18,11 +18,19 @@ class FarzandimMessagingService : FlutterFirebaseMessagingService() {
     override fun onMessageReceived(remoteMessage: RemoteMessage) {
         val data = remoteMessage.data
         if (data["type"] == "ring") {
-            if (data["action"] == "stop") {
-                RingService.stop(applicationContext)
-            } else {
-                val duration = data["durationMs"]?.toLongOrNull() ?: 30_000L
-                RingService.start(applicationContext, duration)
+            // start*Service() fon/doze holatida ForegroundServiceStartNotAllowed
+            // (A12+) yoki IllegalStateException (A8-11) tashlashi mumkin — bu
+            // messaging jarayonini crash qilardi ("ilova ishdan chiqdi"). try/catch
+            // himoyalaydi (ruxsat berilganda xulq o'zgarmaydi, faqat crashni to'sadi).
+            try {
+                if (data["action"] == "stop") {
+                    RingService.stop(applicationContext)
+                } else {
+                    val duration = data["durationMs"]?.toLongOrNull() ?: 30_000L
+                    RingService.start(applicationContext, duration)
+                }
+            } catch (e: Exception) {
+                android.util.Log.w("FarzandimMessaging", "Ring start/stop failed", e)
             }
             return // native ushladi — Flutter'ga uzatilmaydi
         }
