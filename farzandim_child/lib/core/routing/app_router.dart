@@ -9,7 +9,6 @@
 //   /splash           — startup tekshiruvi
 //   /welcome          — til tanlash (yangi foydalanuvchi birinchi ekrani)
 //   /pairing          — 5 raqamli kod kiritish
-//   /permissions      — runtime perms (location/notification/camera)
 //   /permission-setup — sistema-darajadagi 4 ta perm
 //   /dashboard        — paired + barcha permissions yoqilgach
 //
@@ -59,7 +58,6 @@ import 'package:farzandim_child/features/pairing/presentation/providers/pairing_
 import 'package:farzandim_child/features/pairing/presentation/screens/pair_waiting_screen.dart';
 import 'package:farzandim_child/features/pairing/presentation/screens/pairing_screen.dart';
 import 'package:farzandim_child/features/pairing/presentation/screens/qr_scanner_screen.dart';
-import 'package:farzandim_child/features/permissions/presentation/screens/permissions_screen.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/classic_video_player_screen.dart';
 import 'package:farzandim_child/features/videos/presentation/screens/reels_player_screen.dart';
@@ -272,10 +270,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       ),
       // QR kod orqali qayta ulanish — pairing_screen'dan ochiladi.
       GoRoute(path: '/qr-scan', builder: (_, __) => const QrScannerScreen()),
-      GoRoute(
-        path: '/permissions',
-        builder: (_, __) => const PermissionsScreen(),
-      ),
       GoRoute(
         path: '/dashboard',
         builder: (_, __) => const ChildDashboardScreen(),

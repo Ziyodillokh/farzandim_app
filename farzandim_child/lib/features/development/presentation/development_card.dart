@@ -94,8 +94,7 @@ class DevelopmentCard extends StatelessWidget {
           if (!s.hasActivity) ...[
             const SizedBox(height: 14),
             Text(
-              'Bu hafta sayohatni boshla — test yech, kitob o\'qi, '
-              'harakat qil! 🚀',
+              'development.motivation'.tr(),
               style: TextStyle(
                 color: AppColors.textSecondary,
                 fontSize: 12.5,

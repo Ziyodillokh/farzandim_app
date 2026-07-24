@@ -11,6 +11,7 @@
 import 'dart:async';
 
 import 'package:audio_service/audio_service.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
@@ -133,7 +134,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
 
     final url = book.audioUrl.trim();
     if (url.isEmpty) {
-      state = state.copyWith(error: 'Audio manzili topilmadi');
+      state = state.copyWith(error: 'audiobooks.urlNotFound'.tr());
       return;
     }
 
@@ -160,7 +161,7 @@ class AudioPlayerNotifier extends StateNotifier<AudioPlayerState> {
       await _player.play();
     } catch (e, st) {
       debugPrint('[AudioPlayer] yuklab bo\'lmadi url=$url\n$e\n$st');
-      state = state.copyWith(error: "Audioni ijro etib bo'lmadi: $e");
+      state = state.copyWith(error: 'audiobooks.playFailed'.tr());
     }
   }
 

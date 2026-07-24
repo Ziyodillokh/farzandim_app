@@ -6,6 +6,7 @@
 // ko'rsatiladi. Kelajakda Admin panel orqali real rasm yuklanadi va
 // `imageUrl` to'ldiriladi — UI avtomatik almashadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
@@ -100,7 +101,7 @@ class ContestModel {
 
   String get remainingFormatted {
     final r = remaining;
-    if (r.isNegative) return 'Tugadi';
+    if (r.isNegative) return 'contests.ended'.tr();
     if (r.inDays > 0) return '${r.inDays} kun';
     if (r.inHours > 0) return '${r.inHours} soat';
     return '${r.inMinutes} daqiqa';

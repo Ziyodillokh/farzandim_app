@@ -5,6 +5,8 @@
 // Dashboard'dagi "Bugungi maslahat" banner'i shu yerdan tasodifiy
 // (kun raqamiga ko'ra) bittasini oladi — bir kun ichida o'zgarmaydi.
 
+import 'package:easy_localization/easy_localization.dart';
+
 class MotivationalMessages {
   MotivationalMessages._();
 
@@ -22,7 +24,7 @@ class MotivationalMessages {
   ];
 
   static String getRandom() {
-    final index = DateTime.now().day % messages.length;
-    return messages[index];
+    final index = DateTime.now().day % 10;
+    return 'dashboard.motivational.m${index + 1}'.tr();
   }
 }

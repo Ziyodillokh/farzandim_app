@@ -282,15 +282,8 @@ class _PairWaitingScreenState extends ConsumerState<PairWaitingScreen> {
   }
 
   String _subtitleFor() {
-    if (_result == 'REJECTED') {
-      return 'Ota-onangiz ulanish so\'rovingizni rad etdi.\n'
-          "Yangi kod kiriting yoki ota-onangiz bilan bog'laning.";
-    }
-    if (_result == 'EXPIRED') {
-      return '5 daqiqa ichida tasdiq olinmadi.\n'
-          'Qaytadan urinib ko\'ring.';
-    }
-    return 'Ota-onangiz Parent App\'da bildirishnomani ko\'rib '
-        'tasdiqlashi kerak. Bu ekran avtomatik yangilanadi.';
+    if (_result == 'REJECTED') return 'pairing.wait.rejectedBody'.tr();
+    if (_result == 'EXPIRED') return 'pairing.wait.expiredBody'.tr();
+    return 'pairing.wait.waitingBody'.tr();
   }
 }

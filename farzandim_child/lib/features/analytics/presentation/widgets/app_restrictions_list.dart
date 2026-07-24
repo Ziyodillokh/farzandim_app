@@ -369,7 +369,11 @@ class _LimitedTile extends StatelessWidget {
     final mm = minutes % 60;
     final label = hours == 0
         ? 'analytics.limitPerDayMinutes'.tr(namedArgs: {'minutes': '$minutes'})
-        : (mm == 0 ? '$hours soat/kun' : '${hours}s ${mm}m/kun');
+        : (mm == 0
+              ? 'analytics.hoursPerDay'.tr(namedArgs: {'hours': '$hours'})
+              : 'analytics.hoursMinutesPerDay'.tr(
+                  namedArgs: {'h': '$hours', 'm': '$mm'},
+                ));
 
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),

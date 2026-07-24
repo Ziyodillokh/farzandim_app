@@ -9,6 +9,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
 import 'package:farzandim_child/features/photo/data/models/photo_request.dart';
 import 'package:farzandim_child/features/photo/data/repositories/backend_photo_request_repository.dart';
@@ -17,8 +18,9 @@ import 'package:image_picker/image_picker.dart';
 
 /// Pending photo requests — Backend fetch (polling 10s, Socket adapt
 /// keyinroq).
-final pendingPhotoRequestsProvider =
-    StreamProvider<List<PhotoRequest>>((ref) async* {
+final pendingPhotoRequestsProvider = StreamProvider<List<PhotoRequest>>((
+  ref,
+) async* {
   final pairing = ref.watch(pairingStateProvider);
   if (!pairing.isPaired || pairing.childId == null) {
     yield const [];
@@ -31,17 +33,13 @@ final pendingPhotoRequestsProvider =
   Future<void> fetch() async {
     if (controller.isClosed) return;
     final raw = await repo.getPendingRequests(childId: pairing.childId!);
-    final list =
-        raw.map(PhotoRequest.fromBackendJson).toList(growable: false);
+    final list = raw.map(PhotoRequest.fromBackendJson).toList(growable: false);
     if (!controller.isClosed) controller.add(list);
   }
 
   await fetch(); // initial
   // Polling 10s — Child App'da Socket.io yo'q hozir.
-  final timer = Timer.periodic(
-    const Duration(seconds: 10),
-    (_) => fetch(),
-  );
+  final timer = Timer.periodic(const Duration(seconds: 10), (_) => fetch());
 
   ref.onDispose(() {
     timer.cancel();
@@ -53,10 +51,7 @@ final pendingPhotoRequestsProvider =
 enum CaptureStatus { idle, capturing, uploading, done, error }
 
 class CaptureState {
-  const CaptureState({
-    this.status = CaptureStatus.idle,
-    this.errorMessage,
-  });
+  const CaptureState({this.status = CaptureStatus.idle, this.errorMessage});
 
   final CaptureStatus status;
   final String? errorMessage;
@@ -64,8 +59,8 @@ class CaptureState {
 
 final photoCaptureProvider =
     StateNotifierProvider<PhotoCaptureNotifier, CaptureState>(
-  PhotoCaptureNotifier.new,
-);
+      PhotoCaptureNotifier.new,
+    );
 
 class PhotoCaptureNotifier extends StateNotifier<CaptureState> {
   PhotoCaptureNotifier(this._ref) : super(const CaptureState());
@@ -95,14 +90,11 @@ class PhotoCaptureNotifier extends StateNotifier<CaptureState> {
       state = const CaptureState(status: CaptureStatus.uploading);
       final ok = await _ref
           .read(backendPhotoRequestRepositoryProvider)
-          .uploadPhoto(
-            requestId: request.id,
-            photoFile: File(photo.path),
-          );
+          .uploadPhoto(requestId: request.id, photoFile: File(photo.path));
       if (!ok) {
-        state = const CaptureState(
+        state = CaptureState(
           status: CaptureStatus.error,
-          errorMessage: 'Backend upload xato',
+          errorMessage: 'photo.uploadFailed'.tr(),
         );
         return;
       }

@@ -16,6 +16,7 @@
 import 'dart:async';
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
@@ -107,7 +108,7 @@ class RecommendationsRepository {
     return AudiobookModel(
       id: id,
       title: (raw['title'] as String?) ?? '—',
-      author: (raw['author'] as String?) ?? "Noma'lum",
+      author: (raw['author'] as String?) ?? 'common.unknown'.tr(),
       description: (raw['description'] as String?) ?? '',
       coverUrl: (raw['thumbnail'] as String?) ?? '',
       audioUrl: (raw['audioUrl'] as String?) ?? '',

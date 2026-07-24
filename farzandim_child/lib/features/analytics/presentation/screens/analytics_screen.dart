@@ -215,7 +215,7 @@ class _BlockedAppsTab extends ConsumerWidget {
 
     return limitsAsync.when(
       loading: () => const _Loading(),
-      error: (_, __) => const _Empty(text: "Cheklovlar yuklanmadi"),
+      error: (_, __) => _Empty(text: 'analytics.limitsLoadError'.tr()),
       data: (limits) {
         final blocked = limits
             .where((l) => l.isActive && l.isFullBlock)

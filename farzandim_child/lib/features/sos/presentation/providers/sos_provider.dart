@@ -8,6 +8,7 @@
 // SOS bosilganda **joriy joylashuv** ham backend'ga yuboriladi —
 // ota-onaga kelgan push xabarda Google Maps havolasi bo'lishi uchun.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart' show debugPrint;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:geolocator/geolocator.dart';
@@ -61,7 +62,7 @@ class SosNotifier extends StateNotifier<SosState> {
     if (!pairing.isPaired || pairing.childId == null) {
       state = state.copyWith(
         status: SosStatus.error,
-        errorMessage: 'Ulanmagan',
+        errorMessage: 'common.notPaired'.tr(),
       );
       return;
     }
@@ -81,7 +82,7 @@ class SosNotifier extends StateNotifier<SosState> {
       if (id == null) {
         state = state.copyWith(
           status: SosStatus.error,
-          errorMessage: 'Backend SOS yuborilmadi',
+          errorMessage: 'chats.sosFailed'.tr(),
         );
         return;
       }

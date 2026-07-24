@@ -467,13 +467,13 @@ class _NoSearchResults extends StatelessWidget {
           const _EmptyBadge(icon: SolarIconsOutline.magnifierZoomOut),
           const SizedBox(height: 20),
           Text(
-            'Hech narsa topilmadi',
+            'videos.feed.emptyTitle'.tr(),
             textAlign: TextAlign.center,
             style: vUnb(18, w: FontWeight.w600, ls: -0.4),
           ),
           const SizedBox(height: 8),
           Text(
-            "Boshqa so'z bilan qidirib ko'ring",
+            'videos.feed.emptyHint'.tr(),
             textAlign: TextAlign.center,
             style: vPop(14, c: vDim),
           ),

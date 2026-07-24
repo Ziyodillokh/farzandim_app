@@ -371,12 +371,7 @@ class _RankingScreenState extends ConsumerState<RankingScreen> {
           side: const BorderSide(color: _glassBorder),
         ),
         title: Text('ranking.helpTitle'.tr(), style: _unb(16)),
-        content: Text(
-          "Kitob o'qish, test ishlash va kunlik faollik uchun DON ball "
-          "to'planadi. Reyting viloyat yoki butun O'zbekiston bo'yicha "
-          'hisoblanadi.',
-          style: _pop(13.5, c: _dim),
-        ),
+        content: Text('ranking.helpContent'.tr(), style: _pop(13.5, c: _dim)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(context),
@@ -479,7 +474,7 @@ class _RegionFilter extends ConsumerWidget {
             ),
             for (final r in UzbekistanRegions.all)
               ListTile(
-                title: Text(r, style: _pop(15)),
+                title: Text(UzbekistanRegions.label(r), style: _pop(15)),
                 onTap: () => Navigator.pop(ctx, r),
               ),
           ],
@@ -904,13 +899,13 @@ class _Avatar extends StatelessWidget {
   // qo'shilganda "doira ichi to'la emas" bo'lib ko'rinardi.
   @override
   Widget build(BuildContext context) => RankingAvatar(
-        name: name,
-        size: size,
-        childId: childId,
-        gender: gender,
-        age: age,
-        color: color,
-      );
+    name: name,
+    size: size,
+    childId: childId,
+    gender: gender,
+    age: age,
+    color: color,
+  );
 }
 
 class _RoundBtn extends StatelessWidget {

@@ -8,6 +8,7 @@
 //   • "Qayerdan": manba bo'yicha yig'indi (qadam / audiokitob / test / ...)
 //   • "Barcha tarix": xronologik ro'yxat (har yozuv + sana + "+N DON")
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/don_history/data/models/don_history_entry.dart';
 import 'package:farzandim_child/features/don_history/presentation/providers/don_history_provider.dart';
 import 'package:flutter/material.dart';
@@ -64,8 +65,8 @@ String _fmtDate(DateTime d) {
   final diff = today.difference(that).inDays;
   final hm =
       '${d.hour.toString().padLeft(2, '0')}:${d.minute.toString().padLeft(2, '0')}';
-  if (diff == 0) return 'Bugun $hm';
-  if (diff == 1) return 'Kecha $hm';
+  if (diff == 0) return 'donHistory.today'.tr(namedArgs: {'time': hm});
+  if (diff == 1) return 'donHistory.yesterday'.tr(namedArgs: {'time': hm});
   return '${d.day}-${_months[d.month - 1]}';
 }
 
@@ -99,7 +100,7 @@ class DonHistoryScreen extends ConsumerWidget {
                   ),
                   Expanded(
                     child: Text(
-                      'DON tarixi',
+                      'donHistory.title'.tr(),
                       textAlign: TextAlign.center,
                       style: _unb(20),
                     ),
@@ -120,7 +121,7 @@ class DonHistoryScreen extends ConsumerWidget {
                   child: Padding(
                     padding: const EdgeInsets.all(32),
                     child: Text(
-                      'Tarixni yuklab bo\'lmadi. Keyinroq urinib ko\'ring.',
+                      'donHistory.loadFailed'.tr(),
                       textAlign: TextAlign.center,
                       style: _pop(14, c: _dim),
                     ),
@@ -153,14 +154,14 @@ class _Body extends StatelessWidget {
       children: [
         _HeroCard(totalDon: totalDon, sourceCount: totals.length),
         const SizedBox(height: 22),
-        _SectionTitle('Qayerdan yig\'ilgan'),
+        _SectionTitle('donHistory.collectedFrom'.tr()),
         const SizedBox(height: 10),
         for (final t in totals) ...[
           _SourceTotalCard(total: t, grandTotal: totalDon),
           const SizedBox(height: 8),
         ],
         const SizedBox(height: 14),
-        _SectionTitle('Barcha tarix'),
+        _SectionTitle('donHistory.allHistory'.tr()),
         const SizedBox(height: 10),
         _HistoryCard(entries: entries),
       ],
@@ -191,7 +192,7 @@ class _HeroCard extends StatelessWidget {
       child: Column(
         children: [
           Text(
-            'Jami yig\'ilgan DON',
+            'donHistory.totalCollected'.tr(),
             style: _pop(13, c: const Color(0xCCFFFFFF)),
           ),
           const SizedBox(height: 8),
@@ -206,8 +207,9 @@ class _HeroCard extends StatelessWidget {
           const SizedBox(height: 4),
           Text(
             sourceCount > 0
-                ? '$sourceCount xil manbadan'
-                : 'Hali DON yig\'ilmagan',
+                ? 'donHistory.fromSources'
+                    .tr(namedArgs: {'count': '$sourceCount'})
+                : 'donHistory.emptyTitle'.tr(),
             style: _pop(12, c: const Color(0xB3FFFFFF)),
           ),
         ],
@@ -263,7 +265,12 @@ class _SourceTotalCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 4),
-                Text('${total.count} marta', style: _pop(11, c: _dimmer)),
+                Text(
+                  'donHistory.timesCount'.tr(
+                    namedArgs: {'count': '${total.count}'},
+                  ),
+                  style: _pop(11, c: _dimmer),
+                ),
               ],
             ),
           ),
@@ -363,14 +370,13 @@ class _Empty extends StatelessWidget {
             const Icon(Icons.stars_rounded, size: 56, color: _dimmer),
             const SizedBox(height: 16),
             Text(
-              'Hali DON yig\'ilmagan',
+              'donHistory.emptyTitle'.tr(),
               textAlign: TextAlign.center,
               style: _unb(17),
             ),
             const SizedBox(height: 8),
             Text(
-              'Qadam bosib, audiokitob eshitib yoki testda '
-              'qatnashib DON yig\'ing — bu yerda ko\'rinadi.',
+              'donHistory.emptyHint'.tr(),
               textAlign: TextAlign.center,
               style: _pop(13, c: _dim),
             ),

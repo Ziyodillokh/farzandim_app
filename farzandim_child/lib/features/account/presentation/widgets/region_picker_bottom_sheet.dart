@@ -85,7 +85,7 @@ class RegionPickerBottomSheet extends StatelessWidget {
 
                 return ListTile(
                   title: Text(
-                    region,
+                    UzbekistanRegions.label(region),
                     style: TextStyle(
                       color: AppColors.textPrimary,
                       fontWeight: isSelected

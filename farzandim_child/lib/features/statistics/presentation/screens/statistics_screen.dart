@@ -451,9 +451,11 @@ class _StreakCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kunlik rivojlanish', style: _pop(13, c: _dim)),
+                    Text('statistics.dailyProgress'.tr(),
+                        style: _pop(13, c: _dim)),
                     const SizedBox(height: 2),
-                    Text('$streak kun', style: _unb(20)),
+                    Text('statistics.daysCount'.tr(
+                        namedArgs: {'days': '$streak'}), style: _unb(20)),
                   ],
                 ),
               ),
@@ -502,7 +504,8 @@ class _StepsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Kunlik qadamlar', style: _pop(13, c: _dim)),
+                    Text('statistics.dailySteps'.tr(),
+                        style: _pop(13, c: _dim)),
                     const SizedBox(height: 2),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -781,7 +784,7 @@ class _ScreenTimeSection extends ConsumerWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text("Kunlik o'rtacha ekran vaqti", style: _pop(13, c: _dim)),
+        Text('statistics.avgScreenTime'.tr(), style: _pop(13, c: _dim)),
         const SizedBox(height: 2),
         Text(title, style: _unb(26)),
         const SizedBox(height: 12),

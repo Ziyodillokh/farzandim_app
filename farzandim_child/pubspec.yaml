@@ -165,7 +165,6 @@ flutter:
   uses-material-design: true
 
   assets:
-    - assets/images/
     - assets/icons/         # child_logo_icon.png, child_app_logo.png
     - assets/mascot/        # FARO maskot (PNG + SVG) — 2026-05-14
     - assets/default_avatars/ # jins+yoshga mos default avatar (rasm yo'q bo'lsa)

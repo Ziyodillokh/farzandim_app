@@ -12,6 +12,7 @@
 //   Field: linkedDeviceUid (Ascending)
 
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 
 class RecoveredChildData {
@@ -59,7 +60,8 @@ class ChildRecoveryService {
 
       final parentUid = segments[1];
       final childId = doc.id;
-      final childName = data['name'] as String? ?? 'Bola';
+      final childName =
+          data['name'] as String? ?? 'common.fallbackChildName'.tr();
 
       debugPrint(
         'ChildRecovery: topildi parent=$parentUid, '

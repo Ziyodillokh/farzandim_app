@@ -158,8 +158,8 @@ class _ConditionsSheetState extends ConsumerState<_ConditionsSheet> {
             ),
             const SizedBox(height: 10),
             Text(
-              'Har bir to\'g\'ri javob uchun ulush beriladi. '
-              'Natija 30% dan past bo\'lsa sovrin berilmaydi.',
+              '${'contests.conditionShare'.tr()} '
+              '${'contests.conditionMinScore'.tr()}',
               style: tPop(12, c: tMuted),
             ),
             const SizedBox(height: 26),

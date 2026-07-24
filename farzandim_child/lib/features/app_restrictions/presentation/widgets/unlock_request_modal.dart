@@ -200,7 +200,7 @@ class _UnlockRequestModalState extends State<UnlockRequestModal> {
             ),
             const SizedBox(height: 14),
             PrimaryButton(
-              text: "SO'RASH",
+              text: 'unlockRequest.submit'.tr(),
               icon: Icons.send_rounded,
               onPressed: _submit,
             ),

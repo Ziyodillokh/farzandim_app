@@ -6,6 +6,7 @@
 // bir xil full-width kartani ishlatadi — shu yerda markazlashgan.
 
 import 'package:cached_network_image/cached_network_image.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -49,7 +50,7 @@ String vFmtViews(int v) {
 /// `yonalish` mapper'da "Ta'lim" hardcode, shuning uchun ishlatilmaydi).
 String vGenre(VideoModel v) {
   final c = v.category.trim();
-  return c.isNotEmpty ? c : 'Video';
+  return c.isNotEmpty ? c : 'videos.genreFallback'.tr();
 }
 
 /// Full-width video kartasi — 16:9 thumbnail + play + kanal/janr • ko'rishlar.

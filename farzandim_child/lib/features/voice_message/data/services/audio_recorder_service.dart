@@ -8,6 +8,7 @@
 import 'dart:async';
 import 'dart:io';
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:record/record.dart';
@@ -38,7 +39,7 @@ class AudioRecorderService {
 
     final hasPermission = await _recorder.hasPermission();
     if (!hasPermission) {
-      throw Exception('Mikrofon ruxsati berilmagan');
+      throw Exception('voiceChat.micPermission'.tr());
     }
 
     final directory = await getTemporaryDirectory();

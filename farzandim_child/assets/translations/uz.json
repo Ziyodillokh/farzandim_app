@@ -32,7 +32,9 @@
     "daysAgo": "{days} kun oldin",
     "cancelShort": "Bekor",
     "notPaired": "Ulanmagan",
-    "reject": "Rad etish"
+    "reject": "Rad etish",
+    "unknownDevice": "Noma'lum qurilma",
+    "unknown": "Noma'lum"
   },
   "languages": {
     "uz": "O'zbekcha",
@@ -155,7 +157,9 @@
       "rejectedBody": "Ota-onangiz ulanish so'rovingizni rad etdi.\nYangi kod kiriting yoki ota-onangiz bilan bog'laning.",
       "expiredBody": "5 daqiqa ichida tasdiq olinmadi.\nQaytadan urinib ko'ring.",
       "waitingBody": "Ota-onangiz Parent App'da bildirishnomani ko'rib tasdiqlashi kerak. Bu ekran avtomatik yangilanadi."
-    }
+    },
+    "errorCodeUsed": "Bu kod allaqachon ishlatilgan.",
+    "errorAskNewCode": "Ota-onangizdan yangi kod so'rang (Parent App → Bola → Yangi kod yaratish)."
   },
   "permissions": {
     "title": "Ruxsatlar",
@@ -254,7 +258,33 @@
     "newTestsSoon": "Tez orada yangi testlar",
     "newAudiobooks": "Yangi audiokitoblar",
     "trendVideos": "Trend videolar",
-    "level": "Daraja"
+    "level": "Daraja",
+    "tiles": {
+      "monthlyFlight": "Oy sari\nparvoz",
+      "goldenTales": "Oltin\nertaklar",
+      "jumpChallenge": "Jamp challenge",
+      "cartoonWorld": "Multfilm olami",
+      "funExperiments": "Qiziq tajribalar"
+    },
+    "motivational": {
+      "m1": "Telefondan ko'p foydalanmang, sport bilan shug'ullaning! ⚽",
+      "m2": "Kitob o'qish - eng yaxshi do'st 📚",
+      "m3": "Oilangiz bilan vaqt o'tkazing 👨‍👩‍👧",
+      "m4": "Tabiat sirlari ajoyib - tashqarida o'ynang 🌳",
+      "m5": "Yangi narsalarni o'rganish - kuchingiz manbai 💪",
+      "m6": "Do'stlaringizga yordam bering 🤝",
+      "m7": "Kunni ertalab nonushta bilan boshlang 🍳",
+      "m8": "Yaxshi uyqu - kuch manbai 😴",
+      "m9": "Suv ichish unutmang 💧",
+      "m10": "Har kuni biror narsa o'rganib oling 🎓"
+    },
+    "lastVideoMessage": "Oxirgi video xabar",
+    "seen": "Ko'rdi",
+    "pending": "Kutilmoqda",
+    "photoRequestBody": "Hozir bir foto oling — sizning xavfsizligingiz uchun",
+    "takePhoto": "Foto olish",
+    "photoRequestTitle": "Otangiz foto so'rayapti",
+    "photoSending": "Yuborilmoqda..."
   },
   "voiceChat": {
     "title": "Ovozli xabar",
@@ -373,7 +403,16 @@
       "fullscreen": "To'liq ekran"
     },
     "viewsCount": "{count} ko'rish",
-    "categoryAllAlt": "Hammasi"
+    "categoryAllAlt": "Hammasi",
+    "categories": {
+      "cartoons": "Multfilmlar",
+      "songs": "Qo'shiqlar",
+      "educational": "Ta'limiy",
+      "sport": "Sport",
+      "other": "Boshqa"
+    },
+    "genreFallback": "Video",
+    "loadFailed": "Videoni yuklab bo'lmadi. Internet aloqasini tekshiring."
   },
   "account": {
     "title": "Akkaunt ma'lumotlarini tahrirlash",
@@ -593,7 +632,9 @@
     "nextDayTooltip": "Keyingi kun",
     "dateToday": "Bugun · {date}",
     "dateYesterday": "Kecha · {date}",
-    "last7Days": "Oxirgi 7 kun"
+    "last7Days": "Oxirgi 7 kun",
+    "hoursPerDay": "{hours} soat/kun",
+    "hoursMinutesPerDay": "{h}s {m}m/kun"
   },
   "time": {
     "lessThanMinute": "< 1 daq",
@@ -629,7 +670,11 @@
     "helpClose": "Tushunarli",
     "byRegion": "Viloyat bo'yicha",
     "allUzbekistan": "Butun O'zbekiston",
-    "you": "Siz"
+    "you": "Siz",
+    "selectRegion": "Hududni tanlang",
+    "selectAgeGroup": "Yosh guruhini tanlang",
+    "pointsToNext": "Yana {points} ball — #{rank} ga ko'tarilasiz!",
+    "ageGroupTitle": "Yosh guruhi"
   },
   "profile": {
     "savedVideos": "Saqlangan videolar",
@@ -689,7 +734,21 @@
     "subject": "Fan",
     "certificateMonths": "yanvar,fevral,mart,aprel,may,iyun,iyul,avgust,sentabr,oktabr,noyabr,dekabr",
     "shareFailed": "Ulashib bo'lmadi. Qayta urining.",
-    "testDoneSeeRanking": "Bu test yakunlangan — natijalar Reytingda"
+    "testDoneSeeRanking": "Bu test yakunlangan — natijalar Reytingda",
+    "subjectNativeLang": "Ona tili",
+    "ended": "Tugadi",
+    "conditionShare": "Har bir to'g'ri javob uchun ulush beriladi.",
+    "conditionMinScore": "Natija 30% dan past bo'lsa sovrin berilmaydi."
+  },
+  "blockScreen": {
+    "blocked": "Ilova bloklangan",
+    "limitReached": "Bugungi vaqt tugadi",
+    "blockedSub": "Bu ilovadan foydalanish hozircha cheklangan.\nRuxsat olish uchun ota-onangizga murojaat qiling.",
+    "limitSub": "Bu ilova uchun bugungi vaqting tugadi.\nKo'proq vaqt uchun ota-onangdan so'ra.",
+    "ok": "OK",
+    "requestAccess": "Ruxsat so'rash",
+    "timeRunningOut": "Vaqting tugayapti",
+    "timeRunningOutBody": "{label} uchun bugungi vaqtingga ~10 daqiqa qoldi. Ko'proq vaqt uchun bosib ota-onangdan so'ra."
   },
   "consent": {
     "title": "Bu ilova ota-onangiz ruxsati bilan ishlaydi",
@@ -771,7 +830,9 @@
     "searchBarHint": "Audiokitob qidirish...",
     "section": {
       "viewAll": "Barchasi"
-    }
+    },
+    "urlNotFound": "Audio manzili topilmadi",
+    "playFailed": "Audioni ijro etib bo'lmadi"
   },
   "books": {
     "section": {
@@ -795,7 +856,8 @@
       "openFailed": "PDF ochilmadi",
       "loading": "Kitob yuklanmoqda...",
       "firstPage": "Birinchi sahifa",
-      "lastPage": "Oxirgi sahifa"
+      "lastPage": "Oxirgi sahifa",
+      "pageError": "Sahifani ochib bo'lmadi"
     }
   },
   "articles": {
@@ -847,7 +909,8 @@
     "sosSentBody": "SOS xabar yuborildi — ota-onangizga darhol bildirishnoma boradi.",
     "sosConfirmBody": "Siz haqiqatan SOS xabar yubormoqchimisiz?",
     "sosSent": "Yuborildi!",
-    "sosSlider": "SOS xabar yuborish"
+    "sosSlider": "SOS xabar yuborish",
+    "videoMessage": "📹 Video xabar"
   },
   "chatSettings": {
     "galleryMobileOnly": "Galereyadan rasm tanlash faqat mobil ilovada",
@@ -860,5 +923,38 @@
     "streak": "Streak",
     "steps": "Qadam",
     "motivation": "Bu hafta sayohatni boshla — test yech, kitob o'qi, harakat qil! 🚀"
+  },
+  "regions": {
+    "tashkentCity": "Toshkent shahri",
+    "tashkent": "Toshkent viloyati",
+    "andijan": "Andijon viloyati",
+    "bukhara": "Buxoro viloyati",
+    "fergana": "Farg'ona viloyati",
+    "jizzakh": "Jizzax viloyati",
+    "khorezm": "Xorazm viloyati",
+    "namangan": "Namangan viloyati",
+    "navoi": "Navoiy viloyati",
+    "kashkadarya": "Qashqadaryo viloyati",
+    "samarkand": "Samarqand viloyati",
+    "sirdarya": "Sirdaryo viloyati",
+    "surkhandarya": "Surxondaryo viloyati",
+    "karakalpakstan": "Qoraqalpog'iston Respublikasi",
+    "uzbekistan": "O'zbekiston"
+  },
+  "donHistory": {
+    "title": "DON tarixi",
+    "loadFailed": "Tarixni yuklab bo'lmadi. Keyinroq urinib ko'ring.",
+    "collectedFrom": "Qayerdan yig'ilgan",
+    "allHistory": "Barcha tarix",
+    "totalCollected": "Jami yig'ilgan DON",
+    "fromSources": "{count} xil manbadan",
+    "emptyTitle": "Hali DON yig'ilmagan",
+    "emptyHint": "Qadam bosib, audiokitob eshitib yoki testda qatnashib DON yig'ing — bu yerda ko'rinadi.",
+    "timesCount": "{count} marta",
+    "today": "Bugun {time}",
+    "yesterday": "Kecha {time}"
+  },
+  "photo": {
+    "uploadFailed": "Foto yuklanmadi"
   }
 }

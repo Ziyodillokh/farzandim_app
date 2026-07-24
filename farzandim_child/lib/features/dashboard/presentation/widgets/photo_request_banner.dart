@@ -97,7 +97,7 @@ class _Banner extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Otangiz foto so\'rayapti',
+                      'dashboard.photoRequestTitle'.tr(),
                       style: TextStyle(
                         color: context.adaptive.textPrimary,
                         fontSize: 15,
@@ -106,7 +106,7 @@ class _Banner extends StatelessWidget {
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Hozir bir foto oling — sizning xavfsizligingiz uchun',
+                      'dashboard.photoRequestBody'.tr(),
                       style: TextStyle(
                         color: context.adaptive.textSecondary,
                         fontSize: 12,
@@ -134,7 +134,11 @@ class _Banner extends StatelessWidget {
                           ),
                         )
                       : const Icon(AppIcons.camera, size: 18),
-                  label: Text(_busy ? 'Yuborilmoqda...' : 'Foto olish'),
+                  label: Text(
+                    _busy
+                        ? 'dashboard.photoSending'.tr()
+                        : 'dashboard.takePhoto'.tr(),
+                  ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: _orange,
                     foregroundColor: Colors.white,
@@ -164,7 +168,11 @@ class _Banner extends StatelessWidget {
             Padding(
               padding: const EdgeInsets.only(top: 8),
               child: Text(
-                "Xato: ${captureState.errorMessage ?? 'noma\'lum'}",
+                'common.errorWithMessage'.tr(
+                  namedArgs: {
+                    'error': captureState.errorMessage ?? 'common.unknown'.tr(),
+                  },
+                ),
                 style: const TextStyle(color: AppColors.error, fontSize: 12),
               ),
             ),

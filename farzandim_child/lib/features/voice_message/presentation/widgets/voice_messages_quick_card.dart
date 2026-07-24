@@ -23,9 +23,17 @@ class VoiceMessagesQuickCard extends ConsumerWidget {
   String _relativeTime(DateTime date) {
     final diff = DateTime.now().difference(date);
     if (diff.inMinutes < 1) return 'voice.quickCard.justNow'.tr();
-    if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-    if (diff.inHours < 24) return '${diff.inHours} soat oldin';
-    return '${diff.inDays} kun oldin';
+    if (diff.inMinutes < 60) {
+      return 'notifications.minutesAgo'.tr(
+        namedArgs: {'min': '${diff.inMinutes}'},
+      );
+    }
+    if (diff.inHours < 24) {
+      return 'notifications.hoursAgo'.tr(
+        namedArgs: {'h': '${diff.inHours}'},
+      );
+    }
+    return 'notifications.daysAgo'.tr(namedArgs: {'d': '${diff.inDays}'});
   }
 
   @override

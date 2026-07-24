@@ -266,11 +266,11 @@ class _NotifContent extends ConsumerWidget {
               ? const Center(
                   child: CircularProgressIndicator(color: Colors.white38),
                 )
+              : items.isEmpty
+              ? _buildEmpty()
               : ListView(
                   padding: const EdgeInsets.fromLTRB(20, 8, 20, 16),
-                  children: items.isEmpty
-                      ? _previewRows(context)
-                      : _realRows(context, ref, items),
+                  children: _realRows(context, ref, items),
                 ),
         ),
         // ── Yopish ──
@@ -378,66 +378,32 @@ class _NotifContent extends ConsumerWidget {
     return rows;
   }
 
-  // ── PREVIEW qatorlar — Figma'dagi ro'yxat 1:1 ──
-  List<Widget> _previewRows(BuildContext context) {
-    return [
-      const _SectionLabel(label: 'Bugun'),
-      const SizedBox(height: 4),
-      // SOS karta (Figma).
-      Container(
-        padding: const EdgeInsets.fromLTRB(16, 14, 12, 14),
-        decoration: BoxDecoration(
-          color: Color.alphaBlend(_red.withValues(alpha: 0.12), _sheet),
-          borderRadius: BorderRadius.circular(18),
-        ),
-        child: Row(
-          children: [
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('SOS xabar', style: _unb(15, c: _red)),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Akmaldan xabar oling!',
-                    style: _pop(12.5, c: _red.withValues(alpha: 0.75)),
-                  ),
-                ],
-              ),
-            ),
-            const Icon(Icons.chevron_right_rounded, color: _red, size: 26),
-          ],
-        ),
+  // ── Bo'sh holat: hali bildirishnoma yo'q ──
+  Widget _buildEmpty() {
+    return Center(
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Icon(
+            Icons.notifications_none_rounded,
+            size: 56,
+            color: Colors.white24,
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'notifications.emptyTitle'.tr(),
+            textAlign: TextAlign.center,
+            style: _unb(16),
+          ),
+          const SizedBox(height: 8),
+          Text(
+            'notifications.emptySubtitle'.tr(),
+            textAlign: TextAlign.center,
+            style: _pop(13, c: Colors.white54),
+          ),
+        ],
       ),
-      const SizedBox(height: 6),
-      const _NotifRow(
-        icon: Icons.keyboard_double_arrow_up_rounded,
-        title: 'Ilovada yangilanish mavjud',
-        subtitle: 'Ilovaning yangi versiyasi chiqti',
-      ),
-      const _NotifRow(
-        icon: Icons.priority_high_rounded,
-        title: 'Akmal bloklangan ilovaga kirdi',
-        subtitle: 'Ilovaning yangi versiyasi chiqti',
-      ),
-      const SizedBox(height: 8),
-      const _SectionLabel(label: '12.02.2026'),
-      const _NotifRow(
-        icon: Icons.priority_high_rounded,
-        title: "Akmal bilan aloqa yo'qoldi",
-        subtitle: 'Ilovaning yangi versiyasi chiqti',
-      ),
-      const _NotifRow(
-        icon: Icons.menu_book_rounded,
-        title: 'Akmal bugun bitta kitobni tugatti',
-        subtitle: 'Ilovaning yangi versiyasi chiqti',
-      ),
-      const _NotifRow(
-        icon: Icons.chat_bubble_rounded,
-        title: 'Akmaldan xabar',
-        subtitle: 'Assalomu alaykum!',
-      ),
-    ];
+    );
   }
 }
 

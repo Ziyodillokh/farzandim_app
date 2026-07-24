@@ -25,7 +25,7 @@ class WatchHistoryScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     return _EngagementListView(
-      title: "Ko'rishlar tarixi",
+      title: 'videos.history.title'.tr(),
       value: ref.watch(watchHistoryPageProvider),
       onRefresh: () => ref.read(watchHistoryPageProvider.notifier).refresh(),
       emptyIcon: Icons.history_rounded,

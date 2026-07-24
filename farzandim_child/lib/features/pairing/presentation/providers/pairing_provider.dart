@@ -14,6 +14,7 @@
 // Pairing tugagach DeviceInfoService boshlanadi va Firestore'ga
 // telefon ma'lumotlarini har 60 sekundda yuborib turadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
@@ -129,7 +130,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         await locationService.start(
           parentUid: parentUid,
           childId: childId,
-          childName: childName ?? 'Bola',
+          childName: childName ?? 'common.fallbackChildName'.tr(),
         );
       }
 
@@ -324,21 +325,20 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         case PairingFailureInvalidCode():
           state = state.copyWith(
             status: PairingStatus.error,
-            errorMessage: "Kod noto'g'ri",
+            errorMessage: 'pairing.errorFallback'.tr(),
           );
           return false;
         case PairingFailureAlreadyUsed():
           state = state.copyWith(
             status: PairingStatus.error,
-            errorMessage: 'Bu kod allaqachon ishlatilgan. '
-                "Ota-onangizdan yangi kod so'rang "
-                '(Parent App → Bola → Yangi kod yaratish).',
+            errorMessage: '${'pairing.errorCodeUsed'.tr()} '
+                '${'pairing.errorAskNewCode'.tr()}',
           );
           return false;
-        case PairingFailureNetwork(:final message):
+        case PairingFailureNetwork():
           state = state.copyWith(
             status: PairingStatus.error,
-            errorMessage: 'Tarmoq xatosi: $message',
+            errorMessage: 'common.networkError'.tr(),
           );
           return false;
         case PairingAwaitingParent(
@@ -369,7 +369,7 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       await prefs.setString('currentUserId', result.currentUserId);
       await prefs.setString(
         'childName',
-        childData?['name'] as String? ?? 'Bola',
+        childData?['name'] as String? ?? 'common.fallbackChildName'.tr(),
       );
 
       // 6. State yangilash
@@ -377,7 +377,8 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         status: PairingStatus.paired,
         parentUid: result.parentUid,
         childId: result.childId,
-        childName: childData?['name'] as String? ?? 'Bola',
+        childName: childData?['name'] as String? ??
+            'common.fallbackChildName'.tr(),
         currentUserId: result.currentUserId,
       );
 
@@ -410,7 +411,8 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         await _ref.read(locationServiceProvider).start(
               parentUid: result.parentUid,
               childId: result.childId,
-              childName: childData?['name'] as String? ?? 'Bola',
+              childName: childData?['name'] as String? ??
+                  'common.fallbackChildName'.tr(),
             );
       });
 
@@ -480,14 +482,15 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
       await prefs.setString('currentUserId', currentUserId);
       await prefs.setString(
         'childName',
-        childData?['name'] as String? ?? 'Bola',
+        childData?['name'] as String? ?? 'common.fallbackChildName'.tr(),
       );
 
       state = state.copyWith(
         status: PairingStatus.paired,
         parentUid: parentUid,
         childId: childId,
-        childName: childData?['name'] as String? ?? 'Bola',
+        childName: childData?['name'] as String? ??
+            'common.fallbackChildName'.tr(),
         currentUserId: currentUserId,
       );
 
@@ -503,7 +506,8 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         await locationService.start(
           parentUid: parentUid,
           childId: childId,
-          childName: childData?['name'] as String? ?? 'Bola',
+          childName: childData?['name'] as String? ??
+              'common.fallbackChildName'.tr(),
         );
       }
 

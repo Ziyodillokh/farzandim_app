@@ -5,6 +5,7 @@
 // "Oxirgi video: 5 daq oldin" — Firestore real-time o'qiladi. Hech narsa
 // yuborilmagan bo'lsa SizedBox.shrink (joy band qilmaydi).
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/video_message/data/models/video_message.dart';
@@ -39,10 +40,16 @@ class _Card extends StatelessWidget {
 
   String _relativeTime(DateTime ts) {
     final diff = DateTime.now().difference(ts);
-    if (diff.inSeconds < 60) return 'hozirgina';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} daq oldin';
-    if (diff.inHours < 24) return '${diff.inHours} soat oldin';
-    return '${diff.inDays} kun oldin';
+    if (diff.inSeconds < 60) return 'voice.quickCard.justNow'.tr();
+    if (diff.inMinutes < 60) {
+      return 'notifications.minutesAgo'
+          .tr(namedArgs: {'min': '${diff.inMinutes}'});
+    }
+    if (diff.inHours < 24) {
+      return 'notifications.hoursAgo'
+          .tr(namedArgs: {'h': '${diff.inHours}'});
+    }
+    return 'notifications.daysAgo'.tr(namedArgs: {'d': '${diff.inDays}'});
   }
 
   @override
@@ -80,7 +87,7 @@ class _Card extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Oxirgi video xabar',
+                  'dashboard.lastVideoMessage'.tr(),
                   style: TextStyle(
                     color: context.adaptive.textTertiary,
                     fontSize: 11,
@@ -118,7 +125,7 @@ class _Card extends StatelessWidget {
                 ),
                 const SizedBox(width: 4),
                 Text(
-                  seen ? "Ko'rdi" : 'Kutilmoqda',
+                  seen ? 'dashboard.seen'.tr() : 'dashboard.pending'.tr(),
                   style: TextStyle(
                     color: seen ? AppColors.success : AppColors.warning,
                     fontSize: 11,

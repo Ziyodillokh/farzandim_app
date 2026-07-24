@@ -341,7 +341,7 @@ class _PdfViewerScreenState extends ConsumerState<PdfViewerScreen> {
             setState(() => _error = '$err');
           },
           onPageError: (page, err) {
-            setState(() => _error = 'Sahifa $page xato: $err');
+            setState(() => _error = 'books.pdf.pageError'.tr());
           },
           onViewCreated: (controller) {
             _controller = controller;

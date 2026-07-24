@@ -725,26 +725,26 @@ class _AudiobooksSection extends ConsumerWidget {
           const SizedBox(height: 16),
           if (books.isEmpty)
             // PREVIEW: backend'da audiokitob yo'q — namunaviy muqovalar.
-            const Row(
+            Row(
               children: [
-                Expanded(
+                const Expanded(
                   child: _MockBookCard(
                     title: 'Buyuk\nsarguzasht',
                     color: Color(0xFFD96C2C),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _MockBookCard(
-                    title: 'Oy sari\nparvoz',
-                    color: Color(0xFF1F3A5F),
+                    title: 'dashboard.tiles.monthlyFlight'.tr(),
+                    color: const Color(0xFF1F3A5F),
                   ),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 Expanded(
                   child: _MockBookCard(
-                    title: 'Oltin\nertaklar',
-                    color: Color(0xFFF2C21B),
+                    title: 'dashboard.tiles.goldenTales'.tr(),
+                    color: const Color(0xFFF2C21B),
                   ),
                 ),
               ],
@@ -871,23 +871,23 @@ class _VideosSection extends ConsumerWidget {
             child: ListView(
               scrollDirection: Axis.horizontal,
               clipBehavior: Clip.none,
-              children: const [
+              children: [
                 _MockVideoCard(
-                  title: 'Jamp challenge',
+                  title: 'dashboard.tiles.jumpChallenge'.tr(),
                   views: '169K',
-                  color: Color(0xFFD64B12),
+                  color: const Color(0xFFD64B12),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 _MockVideoCard(
-                  title: 'Multfilm olami',
+                  title: 'dashboard.tiles.cartoonWorld'.tr(),
                   views: '96K',
-                  color: Color(0xFF2E7D5B),
+                  color: const Color(0xFF2E7D5B),
                 ),
-                SizedBox(width: 12),
+                const SizedBox(width: 12),
                 _MockVideoCard(
-                  title: 'Qiziq tajribalar',
+                  title: 'dashboard.tiles.funExperiments'.tr(),
                   views: '54K',
-                  color: Color(0xFF5B4B8A),
+                  color: const Color(0xFF5B4B8A),
                 ),
               ],
             ),

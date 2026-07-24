@@ -199,7 +199,7 @@ class _ClassicVideoPlayerScreenState
       if (!mounted) return;
       setState(() {
         _initializing = false;
-        _initError = "Videoni yuklab bo'lmadi. Internet aloqasini tekshiring.";
+        _initError = 'videos.loadFailed'.tr();
       });
     } finally {
       _initInFlight = false;

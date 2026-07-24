@@ -234,6 +234,20 @@ class RestrictionService : Service() {
         handler.post(pollRunnable)
     }
 
+    /**
+     * Overlay/notification matnini prefs'dan o'qiydi (Dart main-isolate tarjima
+     * yozadi: `flutter.restriction.i18n.<key>`). Yo'q bo'lsa Uzbek fallback —
+     * regressiya yo'q (prefs yozilmasa hozirgi xulq saqlanadi).
+     */
+    private fun i18n(key: String, fallback: String): String {
+        return try {
+            getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE)
+                .getString("flutter.restriction.i18n.$key", null) ?: fallback
+        } catch (e: Exception) {
+            fallback
+        }
+    }
+
     private fun stopMonitoring() {
         Log.d(TAG, "Monitoring stopped")
         isRunning = false
@@ -843,7 +857,11 @@ class RestrictionService : Service() {
         val textGravity = if (isLandscape) Gravity.START else Gravity.CENTER
 
         val title = TextView(ctx).apply {
-            text = if (isLimit) "Bugungi vaqt tugadi" else "Ilova bloklangan"
+            text = if (isLimit) {
+                i18n("limitReached", "Bugungi vaqt tugadi")
+            } else {
+                i18n("blocked", "Ilova bloklangan")
+            }
             setTextColor(titleColor)
             // Landshaftda balandlik kam — sarlavha biroz kichikroq.
             setTextSize(TypedValue.COMPLEX_UNIT_SP, if (isLandscape) 22f else 26f)
@@ -854,11 +872,17 @@ class RestrictionService : Service() {
 
         val subtitle = TextView(ctx).apply {
             text = if (isLimit) {
-                "Bu ilova uchun bugungi vaqting tugadi.\n" +
-                    "Ko'proq vaqt uchun ota-onangdan so'ra."
+                i18n(
+                    "limitSub",
+                    "Bu ilova uchun bugungi vaqting tugadi.\n" +
+                        "Ko'proq vaqt uchun ota-onangdan so'ra.",
+                )
             } else {
-                "Bu ilovadan foydalanish hozircha cheklangan.\n" +
-                    "Ruxsat olish uchun ota-onangizga murojaat qiling."
+                i18n(
+                    "blockedSub",
+                    "Bu ilovadan foydalanish hozircha cheklangan.\n" +
+                        "Ruxsat olish uchun ota-onangizga murojaat qiling.",
+                )
             }
             setTextColor(subColor)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f)
@@ -868,7 +892,7 @@ class RestrictionService : Service() {
 
         // ── Tugmalar qatori: [OK ko'k] [Ruxsat so'rash kulrang] ──────
         val okButton = makeOverlayButton(
-            label = "OK",
+            label = i18n("ok", "OK"),
             bgColor = primaryBlue,
             textColor = Color.WHITE,
         ) {
@@ -881,7 +905,7 @@ class RestrictionService : Service() {
             hideOverlay()
         }
         val requestButton = makeOverlayButton(
-            label = "Ruxsat so'rash",
+            label = i18n("requestAccess", "Ruxsat so'rash"),
             bgColor = secondaryBg,
             textColor = secondaryText,
         ) {
@@ -1142,10 +1166,13 @@ class RestrictionService : Service() {
             tapIntent,
             piFlags,
         )
-        val text = "$label uchun bugungi vaqtingga ~10 daqiqa qoldi. " +
-            "Ko'proq vaqt uchun bosib ota-onangdan so'ra."
+        val text = i18n(
+            "timeRunningOutBody",
+            "{label} uchun bugungi vaqtingga ~10 daqiqa qoldi. " +
+                "Ko'proq vaqt uchun bosib ota-onangdan so'ra.",
+        ).replace("{label}", label)
         val notif = NotificationCompat.Builder(this, WARN_CHANNEL_ID)
-            .setContentTitle("Vaqting tugayapti")
+            .setContentTitle(i18n("timeRunningOut", "Vaqting tugayapti"))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
             .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)

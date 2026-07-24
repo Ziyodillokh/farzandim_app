@@ -277,7 +277,7 @@ class _VideosTab extends ConsumerWidget {
             const SizedBox(height: 32),
           ],
           if (topViewed.isNotEmpty) ...[
-            const _ParvozSectionTitle("Eng ko'p ko'rilganlar"),
+            _ParvozSectionTitle('content.mostViewed'.tr()),
             const SizedBox(height: 16),
             _ParvozWideList(videos: topViewed),
           ],
@@ -923,7 +923,7 @@ class _AudiobooksTab extends ConsumerWidget {
             const SizedBox(height: 32),
           ],
           if (mostListened.isNotEmpty) ...[
-            const _ParvozSectionTitle("Eng ko'p eshitilganlar"),
+            _ParvozSectionTitle('content.mostListened'.tr()),
             const SizedBox(height: 16),
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 20),

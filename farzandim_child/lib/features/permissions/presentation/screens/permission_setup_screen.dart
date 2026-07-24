@@ -259,7 +259,8 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                             // bola ilovani ota-ona ruxsatisiz o'chira olmaydi.
                             _PermRow(
                               icon: Icons.shield_rounded,
-                              title: "O'chirishni taqiqlash",
+                              title: 'permissionSetup.uninstallProtectionName'
+                                  .tr(),
                               value: _uninstallGuard,
                               onChanged: () => _toggle(
                                 current: _uninstallGuard,

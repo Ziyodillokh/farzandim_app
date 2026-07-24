@@ -189,10 +189,10 @@ class AppUsageList extends ConsumerWidget {
     'com.android.chrome': 'Chrome',
     'com.google.android.youtube': 'YouTube',
     'com.android.phone': 'analytics.sysPhone'.tr(),
-    'com.samsung.android.dialer': 'Telefon',
-    'com.google.android.dialer': 'Telefon',
+    'com.samsung.android.dialer': 'analytics.sysPhone'.tr(),
+    'com.google.android.dialer': 'analytics.sysPhone'.tr(),
     'com.android.camera': 'analytics.sysCamera'.tr(),
-    'com.sec.android.app.camera': 'Kamera',
+    'com.sec.android.app.camera': 'analytics.sysCamera'.tr(),
     'com.android.gallery3d': 'analytics.sysGallery'.tr(),
     'com.sec.android.gallery3d': 'Galereya',
   };

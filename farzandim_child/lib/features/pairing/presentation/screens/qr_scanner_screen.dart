@@ -181,16 +181,13 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
   String _humanizeCameraError(Object error) {
     final s = error.toString();
     if (s.contains('NotAllowedError') || s.contains('permissionDenied')) {
-      return 'Kameraga ruxsat berilmadi. Brauzer manzil panelidagi qulf '
-          'belgisini bosib, kamera ruxsatini yoqing.';
+      return 'pairing.qr.errorPermissionDenied'.tr();
     }
     if (s.contains('NotFoundError') || s.contains('unsupported')) {
       return 'pairing.qr.errorNoCamera'.tr();
     }
     if (s.contains('NotReadableError') || s.contains('TrackStartError')) {
-      return 'Kamera boshqa dastur tomonidan band. Boshqa dastur (Zoom, '
-          'Meet, Camera app)'
-          'ni yopib qaytadan urinib ko\'ring.';
+      return 'pairing.qr.errorCameraBusy'.tr();
     }
     if (s.contains('OverconstrainedError')) {
       return 'pairing.qr.errorNoSuitableCamera'.tr();
@@ -198,8 +195,7 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     if (s.contains('SecurityError')) {
       return 'pairing.qr.errorInsecure'.tr();
     }
-    return 'Kamerani ochib bo\'lmadi. Qaytadan urining yoki QR kodni '
-        'qo\'lda kiriting.';
+    return 'pairing.qr.errorCameraGeneric'.tr();
   }
 
   Future<void> _onDetect(BarcodeCapture capture) async {
@@ -637,7 +633,7 @@ class _CameraErrorView extends StatelessWidget {
               child: OutlinedButton.icon(
                 onPressed: onManualPaste,
                 icon: const Icon(Icons.keyboard_alt_rounded),
-                label: const Text("Token'ni qo'lda kiritish"),
+                label: Text('pairing.qr.manualEntry'.tr()),
                 style: OutlinedButton.styleFrom(
                   foregroundColor: Colors.white,
                   side: const BorderSide(color: Colors.white54),
@@ -687,11 +683,10 @@ class _PermissionDeniedView extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            const Text(
-              "QR kodni skanerlash uchun kameraga ruxsat bering. "
-              "Agar oldin rad etgan bo'lsangiz, Sozlamalardan qo'lda yoqing.",
+            Text(
+              'pairing.qr.permissionBody'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white70, height: 1.4),
+              style: const TextStyle(color: Colors.white70, height: 1.4),
             ),
             const SizedBox(height: 24),
             SizedBox(
@@ -768,11 +763,14 @@ class _WebPasteTokenViewState extends State<_WebPasteTokenView> {
           children: [
             const Icon(Icons.qr_code_2, color: Colors.white70, size: 88),
             const SizedBox(height: 16),
-            const Text(
-              "Kamera ishlamasa, Parent ilovasidagi QR matnini\n"
-              "shu yerga joylab ulanishingiz mumkin.",
+            Text(
+              'pairing.qr.pasteHelp'.tr(),
               textAlign: TextAlign.center,
-              style: TextStyle(color: Colors.white, fontSize: 15, height: 1.4),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 15,
+                height: 1.4,
+              ),
             ),
             const SizedBox(height: 24),
             // Clipboard'dan tezkor paste — bola parent ilovasidan

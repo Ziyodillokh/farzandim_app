@@ -5,6 +5,7 @@
 // Logika (filteredUsersProvider, scoreFor, pointsToNext) o'zgartirilmadi.
 // Ko'rinish: parvoz glass + aqua aksent.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/ranking/presentation/providers/ranking_providers.dart';
 import 'package:flutter/material.dart';
@@ -129,7 +130,12 @@ class CurrentUserStickyCard extends ConsumerWidget {
                     ),
                     if (pointsToNext != null && pointsToNext > 0)
                       Text(
-                        "Yana $pointsToNext ball — #${rank - 1} ga ko'tarilasiz!",
+                        'ranking.pointsToNext'.tr(
+                          namedArgs: {
+                            'points': '$pointsToNext',
+                            'rank': '${rank - 1}',
+                          },
+                        ),
                         maxLines: 2,
                         overflow: TextOverflow.ellipsis,
                         style: const TextStyle(

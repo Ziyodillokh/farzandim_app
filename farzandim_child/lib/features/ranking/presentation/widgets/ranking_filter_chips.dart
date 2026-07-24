@@ -5,6 +5,7 @@
 // Faqat tab Hudud yoki Yosh bo'lganda ko'rinadi. Tap → bottom sheet.
 // Logika (selectedRegionProvider, selectedYoshGuruhiProvider) o'zgartirilmadi.
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
@@ -28,8 +29,10 @@ class RankingFilterChips extends ConsumerWidget {
             Expanded(
               child: _FilterButton(
                 icon: AppIcons.mapPin,
-                text: ref.watch(selectedRegionProvider) ??
-                    'Hududni tanlang',
+                text: switch (ref.watch(selectedRegionProvider)) {
+                  final r? => UzbekistanRegions.label(r),
+                  null => 'ranking.selectRegion'.tr(),
+                },
                 onTap: () => _openRegionPicker(context),
               ),
             ),
@@ -37,8 +40,9 @@ class RankingFilterChips extends ConsumerWidget {
             Expanded(
               child: _FilterButton(
                 icon: Icons.cake,
-                text: ref.watch(selectedYoshGuruhiProvider) ??
-                    'Yosh guruhini tanlang',
+                text:
+                    ref.watch(selectedYoshGuruhiProvider) ??
+                    'ranking.selectAgeGroup'.tr(),
                 onTap: () => _openYoshPicker(context),
               ),
             ),
@@ -82,8 +86,7 @@ class _FilterButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: Container(
-        padding:
-            const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: AppColors.parvozSurface,
           borderRadius: BorderRadius.circular(12),
@@ -103,8 +106,11 @@ class _FilterButton extends StatelessWidget {
                 ),
               ),
             ),
-            const Icon(Icons.keyboard_arrow_down,
-                color: AppColors.parvozTextDim, size: 18),
+            const Icon(
+              Icons.keyboard_arrow_down,
+              color: AppColors.parvozTextDim,
+              size: 18,
+            ),
           ],
         ),
       ),
@@ -127,8 +133,7 @@ class _RegionPicker extends ConsumerWidget {
         return Container(
           decoration: const BoxDecoration(
             color: AppColors.parvozSurface,
-            borderRadius:
-                BorderRadius.vertical(top: Radius.circular(24)),
+            borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
             border: Border(
               top: BorderSide(color: AppColors.parvozBorderStrong),
               left: BorderSide(color: AppColors.parvozBorder),
@@ -146,11 +151,11 @@ class _RegionPicker extends ConsumerWidget {
                   borderRadius: BorderRadius.circular(2),
                 ),
               ),
-              const Padding(
-                padding: EdgeInsets.all(16),
+              Padding(
+                padding: const EdgeInsets.all(16),
                 child: Text(
-                  'Hududni tanlang',
-                  style: TextStyle(
+                  'ranking.selectRegion'.tr(),
+                  style: const TextStyle(
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                     color: AppColors.parvozText,
@@ -162,15 +167,15 @@ class _RegionPicker extends ConsumerWidget {
                 child: ListView.separated(
                   controller: scrollController,
                   itemCount: UzbekistanRegions.all.length,
-                  separatorBuilder: (_, __) => const Divider(
-                      color: AppColors.parvozBorder, height: 1),
+                  separatorBuilder: (_, __) =>
+                      const Divider(color: AppColors.parvozBorder, height: 1),
                   itemBuilder: (_, i) {
                     final region = UzbekistanRegions.all[i];
                     final isSelected = region == selected;
 
                     return ListTile(
                       title: Text(
-                        region,
+                        UzbekistanRegions.label(region),
                         style: TextStyle(
                           color: isSelected
                               ? AppColors.parvozGreen
@@ -181,13 +186,14 @@ class _RegionPicker extends ConsumerWidget {
                         ),
                       ),
                       trailing: isSelected
-                          ? const Icon(AppIcons.check,
-                              color: AppColors.parvozGreen)
+                          ? const Icon(
+                              AppIcons.check,
+                              color: AppColors.parvozGreen,
+                            )
                           : null,
                       onTap: () {
-                        ref
-                            .read(selectedRegionProvider.notifier)
-                            .state = region;
+                        ref.read(selectedRegionProvider.notifier).state =
+                            region;
                         Navigator.pop(context);
                       },
                     );
@@ -240,11 +246,11 @@ class _YoshPicker extends ConsumerWidget {
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
-            const Padding(
-              padding: EdgeInsets.all(16),
+            Padding(
+              padding: const EdgeInsets.all(16),
               child: Text(
-                'Yosh guruhi',
-                style: TextStyle(
+                'ranking.ageGroupTitle'.tr(),
+                style: const TextStyle(
                   fontSize: 18,
                   fontWeight: FontWeight.bold,
                   color: AppColors.parvozText,
@@ -255,7 +261,7 @@ class _YoshPicker extends ConsumerWidget {
             for (final yosh in _yoshGuruhlari)
               ListTile(
                 title: Text(
-                  '$yosh yosh',
+                  'account.ageValue'.tr(namedArgs: {'age': yosh}),
                   style: TextStyle(
                     color: yosh == selected
                         ? AppColors.parvozGreen
@@ -266,13 +272,10 @@ class _YoshPicker extends ConsumerWidget {
                   ),
                 ),
                 trailing: yosh == selected
-                    ? const Icon(AppIcons.check,
-                        color: AppColors.parvozGreen)
+                    ? const Icon(AppIcons.check, color: AppColors.parvozGreen)
                     : null,
                 onTap: () {
-                  ref
-                      .read(selectedYoshGuruhiProvider.notifier)
-                      .state = yosh;
+                  ref.read(selectedYoshGuruhiProvider.notifier).state = yosh;
                   Navigator.pop(context);
                 },
               ),

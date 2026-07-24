@@ -196,7 +196,7 @@ class ChatsListScreen extends ConsumerWidget {
         // Default neytral — "yozmoqda" degan taassurot bermasin.
         preview = 'chats.startConversation'.tr();
       case VideoItem():
-        preview = '📹 Video xabar';
+        preview = 'chats.videoMessage'.tr();
       case VoiceItem(:final message):
         preview = message.isText
             ? (message.text ?? '')
@@ -463,8 +463,7 @@ class _SosDialogContentState extends ConsumerState<_SosDialogContent> {
           const SizedBox(height: 8),
           Text(
             _sent
-                ? 'SOS xabar yuborildi — ota-onangizga darhol '
-                      'bildirishnoma boradi.'
+                ? 'chats.sosSentBody'.tr()
                 : 'chats.sosConfirmBody'.tr(),
             textAlign: TextAlign.center,
             style: _pop(13, c: _sent ? _online : _dim),

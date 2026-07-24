@@ -62,12 +62,24 @@ class BackgroundService {
         'bg.notifTitle',
         'background.notificationTitle'.tr(),
       );
-      await prefs.setString(
-        'bg.notifText',
-        'background.notificationText'.tr(),
-      );
+      await prefs.setString('bg.notifText', 'background.notificationText'.tr());
       // {time} joy-egasi qoladi (namedArgs'siz .tr()) — bg isolate almashtiradi.
       await prefs.setString('bg.lastUpdateTpl', 'background.lastUpdate'.tr());
+      // Native block-overlay (RestrictionService) matnlari — bg isolate emas,
+      // NATIVE o'qiydi (flutter.restriction.i18n.*), Uzbek fallback bilan.
+      const overlayKeys = [
+        'blocked',
+        'limitReached',
+        'blockedSub',
+        'limitSub',
+        'ok',
+        'requestAccess',
+        'timeRunningOut',
+        'timeRunningOutBody',
+      ];
+      for (final k in overlayKeys) {
+        await prefs.setString('restriction.i18n.$k', 'blockScreen.$k'.tr());
+      }
     } catch (_) {}
   }
 

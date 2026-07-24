@@ -8,6 +8,7 @@
 
 // ignore_for_file: public_member_api_docs
 
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/config/env_config.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
@@ -38,7 +39,7 @@ VideoModel videoFromApiJson(Map<String, dynamic> raw) {
     videoUrl: videoUrl,
     category: category?.isNotEmpty == true
         ? _humanCategory(category!)
-        : 'Boshqa',
+        : 'videos.categories.other'.tr(),
     soha: _sohaFor(category),
     yonalish: "Ta'lim",
     yoshGuruhi: '$ageFrom-$ageTo',
@@ -52,13 +53,13 @@ VideoModel videoFromApiJson(Map<String, dynamic> raw) {
 String _humanCategory(String slug) {
   switch (slug) {
     case 'multfilmlar':
-      return 'Multfilmlar';
+      return 'videos.categories.cartoons'.tr();
     case 'qoshiqlar':
-      return "Qo'shiqlar";
+      return 'videos.categories.songs'.tr();
     case 'ta-limiy':
-      return "Ta'limiy";
+      return 'videos.categories.educational'.tr();
     case 'sport':
-      return 'Sport';
+      return 'videos.categories.sport'.tr();
     default:
       return slug;
   }

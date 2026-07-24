@@ -535,18 +535,18 @@ class _FullscreenGlassButton extends StatelessWidget {
           borderRadius: BorderRadius.circular(14),
           border: Border.all(color: const Color(0x24FFFFFF)),
         ),
-        child: const Row(
+        child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
+            const Icon(
               Icons.fullscreen_rounded,
               size: 20,
               color: AppColors.parvozText,
             ),
-            SizedBox(width: 8),
+            const SizedBox(width: 8),
             Text(
-              "To'liq ekran",
-              style: TextStyle(
+              'videos.youtube.fullscreen'.tr(),
+              style: const TextStyle(
                 color: AppColors.parvozText,
                 fontSize: 14.5,
                 fontWeight: FontWeight.w600,
