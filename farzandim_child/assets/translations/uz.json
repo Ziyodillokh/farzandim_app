@@ -706,7 +706,9 @@
     "privacyText": "Ma'lumotlar shifrlangan holda saqlanadi va uchinchi shaxslarga berilmaydi.",
     "holdHint": "Tugmani 3 sekund ushlab turing — bu ota-ona ekanligingizni tasdiqlaydi.",
     "confirming": "Tasdiqlanmoqda...",
-    "confirmButton": "Ota-onam tasdiqlaydi"
+    "confirmButton": "Ota-onam tasdiqlaydi",
+    "privacyPolicy": "Maxfiylik siyosati",
+    "decline": "Rad etaman"
   },
   "unlockRequest": {
     "title": "Qo'shimcha vaqt so'rash",

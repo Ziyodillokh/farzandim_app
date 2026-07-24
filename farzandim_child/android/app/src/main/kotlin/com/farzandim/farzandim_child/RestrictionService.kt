@@ -208,12 +208,16 @@ class RestrictionService : Service() {
     }
 
     private fun startMonitoring() {
-        if (isRunning) return
-
         Log.d(TAG, "Monitoring started")
 
+        // startForeground()'ni HAR startForegroundService chaqiruvida bajaramiz
+        // (idempotent — bir xil NOTIFICATION_ID qayta post qilinsa notification
+        // shunchaki yangilanadi). Avval `if (isRunning) return` startForeground'DAN
+        // OLDIN edi: servis (BootReceiver / UsageStatsPlugin / pairing re-entry)
+        // qayta ishga tushganda 2-startForegroundService isRunning=true'da
+        // early-return qilib, o'z 5s muddatida startForeground'siz qolib, A12+
+        // ForegroundServiceDidNotStartInTimeException crash qilardi.
         val notification = buildNotification()
-
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             startForeground(
                 NOTIFICATION_ID,
@@ -224,6 +228,8 @@ class RestrictionService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
+        // Poll-loop esa FAQAT bir marta ishga tushadi (2 marta ishlamasin).
+        if (isRunning) return
         isRunning = true
         handler.post(pollRunnable)
     }

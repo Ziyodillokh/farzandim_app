@@ -41,6 +41,7 @@ import { LeaderboardModule } from './modules/leaderboard/leaderboard.module';
 import { ConsumerContentModule } from './modules/consumer-content/consumer-content.module';
 import { ConsumerOlympiadsModule } from './modules/consumer-olympiads/consumer-olympiads.module';
 import { PaymentsModule } from './modules/payments/payments.module';
+import { RetentionModule } from './modules/retention/retention.module';
 
 // Admin feature modules
 import { AdminAuthModule } from './admin/admin-auth/admin-auth.module';
@@ -104,6 +105,7 @@ import { AppController } from './app.controller';
     ConsumerContentModule,
     ConsumerOlympiadsModule,
     PaymentsModule,
+    RetentionModule,
 
     // Admin modules
     AdminAuthModule,

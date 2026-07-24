@@ -22,6 +22,7 @@
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
+import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
@@ -162,8 +163,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   // Til almashganda cache'langan ekranlar (Profil badge'lari va h.k.) QAYTA
   // quriladi — aks holda eski tilda qolib, refresh/navigatsiya talab qilardi.
   ref.listen(localeRefreshProvider, (_, __) => refresh.value++);
-  // ESLATMA: Parent Consent guard foydalanuvchi so'roviga ko'ra
-  // O'CHIRILGAN — rozilik sahifasi endi ko'rsatilmaydi.
+  // Parent Consent (oshkor rozilik, Play talabi) — rozilik holati o'zgarganda
+  // router redirect qayta ishlaydi (tasdiqlangach /consent'dan chiqadi).
+  ref.listen(consentStateProvider, (_, __) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -173,8 +175,16 @@ final routerProvider = Provider<GoRouter>((ref) {
       final isPaired = pairing.isPaired;
       final loc = state.matchedLocation;
 
-      // Consent sahifasi o'chirilgan — unda qolib ketilgan bo'lsa splash'ga.
-      if (loc == '/consent') {
+      // Oshkor rozilik (Play talabi) — bola ma'lumot yig'ishdan OLDIN rozilik
+      // ekrani. Til tanlash (/welcome) va splash bundan mustasno (ular ma'lumot
+      // yig'maydi). Rozilik tasdiqlangach /consent'dan avtomatik chiqadi.
+      final consent = ref.read(consentStateProvider);
+      const preConsentAllowed = {'/splash', '/welcome', '/consent'};
+      if (consent == ConsentState.notGiven &&
+          !preConsentAllowed.contains(loc)) {
+        return '/consent';
+      }
+      if (consent == ConsentState.given && loc == '/consent') {
         return '/splash';
       }
 

@@ -27,6 +27,7 @@ import { ResetPasswordDto } from './dto/reset-password.dto';
 import { RequestEmailOtpDto } from './dto/request-email-otp.dto';
 import { VerifyEmailDto } from './dto/verify-email.dto';
 import { randomInt } from 'crypto';
+import admin from 'firebase-admin';
 
 const OTP_TTL_MS = 5 * 60 * 1000; // 5 minutes
 const OTP_RESEND_COOLDOWN_MS = 60 * 1000; // 60 seconds
@@ -162,6 +163,12 @@ export class UsersService {
     // va'dasini bajaradi. Xato akkaunt o'chirishni buzmaydi).
     await this.deleteMediaObjects(media);
 
+    // Firestore'dagi bola PII (telefon raqami / XP / bildirishnomalar) —
+    // `users/{userId}` shoxi (recursiveDelete: hujjat + barcha subkolleksiyalar,
+    // shu jumladan `children/{childId}`). parentUid == parent Postgres user id.
+    // Best-effort — xato akkaunt o'chirishni buzmaydi (Postgres/MinIO o'chdi).
+    await this.deleteFirestoreData(userId);
+
     await this.audit.log(
       userId,
       'user',
@@ -264,6 +271,23 @@ export class UsersService {
       `deleteAccount media: ${objects.length - failed}/${objects.length} ` +
         "obyekt o'chirildi",
     );
+  }
+
+  /**
+   * Firestore'dagi `users/{parentUserId}` hujjatini + barcha subkolleksiyalarini
+   * (`children/{childId}` — telefon raqami/XP/notif) recursiv o'chiradi.
+   * firebase-admin FcmService tomonidan init qilinadi. Best-effort.
+   */
+  private async deleteFirestoreData(parentUserId: string): Promise<void> {
+    try {
+      // Init qilinmagan bo'lsa (credential yo'q/dev) — jimgina o'tkazamiz.
+      if (admin.apps.length === 0) return;
+      const db = admin.firestore();
+      await db.recursiveDelete(db.collection('users').doc(parentUserId));
+      this.logger.log(`Firestore users/${parentUserId} o'chirildi`);
+    } catch (err) {
+      this.logger.warn(`Firestore o'chirish xatosi (${parentUserId}): ${err}`);
+    }
   }
 
   /* ------------------------------------------------------------------ */

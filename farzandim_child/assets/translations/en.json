@@ -706,7 +706,9 @@
     "privacyText": "Data is stored encrypted and is not shared with third parties.",
     "holdHint": "Hold the button for 3 seconds — this confirms you are a parent.",
     "confirming": "Confirming...",
-    "confirmButton": "My parent confirms"
+    "confirmButton": "My parent confirms",
+    "privacyPolicy": "Privacy policy",
+    "decline": "Decline"
   },
   "unlockRequest": {
     "title": "Request extra time",
