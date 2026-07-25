@@ -1,0 +1,99 @@
+name: Build child AAB (Play Market)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Bola ilovasining RELEASE .aab (Android App Bundle) faylini yasaydi — Google
+# Play Console'ga yuklash uchun. APK EMAS: Play yangi ilovalar uchun AAB talab
+# qiladi.
+#
+# ISHLATISH: GitHub → Actions → "Build child AAB (Play Market)" → Run workflow.
+# Tugagach, run sahifasidagi "Artifacts" bo'limidan `child-release-aab`ni
+# yuklab oling → ichidagi `app-release.aab`ni Play Console'ga qo'ying.
+#
+# Imzo: deploy-test.yml bilan BIR XIL release keystore (ANDROID_SIGNING_B64) —
+# saytdagi APK bilan bir xil "upload key". versionCode = run raqami (o'suvchi
+# butun son; Play har upload'da yangi versionCode talab qiladi).
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+
+env:
+  FLUTTER_VERSION: '3.44.0'
+  TEST_DOMAIN: farzandimedu.uz
+
+jobs:
+  child-aab:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+
+      # firebase_options.dart + google-services.json (deploy-test bilan bir xil).
+      - name: Restore Firebase config
+        env:
+          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
+        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Bo'sh disk joyi ochish
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost \
+            /usr/local/graalvm /usr/local/share/powershell 2>/dev/null || true
+          sudo docker image prune -af 2>/dev/null || true
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper
+          key: gradle-aab-${{ runner.os }}-${{ hashFiles('farzandim_child/android/**/*.gradle*', '**/gradle-wrapper.properties', 'farzandim_child/pubspec.lock') }}
+          restore-keys: |
+            gradle-aab-${{ runner.os }}-
+
+      - name: Tune Gradle memory for CI
+        run: |
+          gp=farzandim_child/android/gradle.properties
+          if [ -f "$gp" ]; then
+            sed -i 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Xss512k/' "$gp"
+          fi
+
+      # Release keystore + key.properties (parent+child) — deploy-test bilan
+      # bir xil secret, ildizga ochiladi.
+      - name: Restore Android signing (release keystore)
+        env:
+          ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
+        run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
+
+      - name: Build child AAB (release)
+        working-directory: farzandim_child
+        run: |
+          flutter pub get
+          build() {
+            flutter build appbundle --release \
+              --build-number=${{ github.run_number }} \
+              --build-name=1.0.${{ github.run_number }} \
+              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
+          }
+          # Maven Central ba'zan 403 (rate-limit) beradi — bir marta retry.
+          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: child-release-aab
+          path: farzandim_child/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14

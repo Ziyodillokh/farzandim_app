@@ -20,6 +20,8 @@
 // (`refreshListenable` orqali).
 
 import 'package:farzandim_child/core/feature_flags.dart';
+import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
+import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
@@ -158,6 +160,9 @@ final routerProvider = Provider<GoRouter>((ref) {
   final refresh = ValueNotifier<int>(0);
   ref.onDispose(refresh.dispose);
   ref.listen<AppPairingState>(pairingStateProvider, (_, __) => refresh.value++);
+  // Ota-ona roziligi (Play talabi) o'zgarganda redirect qayta hisoblanadi —
+  // rozilik berilgach router /consent'dan keyingi ekranga o'zi o'tkazadi.
+  ref.listen<ConsentState>(consentStateProvider, (_, __) => refresh.value++);
   // Til almashganda cache'langan ekranlar (Profil badge'lari va h.k.) QAYTA
   // quriladi — aks holda eski tilda qolib, refresh/navigatsiya talab qilardi.
   ref.listen(localeRefreshProvider, (_, __) => refresh.value++);
@@ -193,12 +198,30 @@ final routerProvider = Provider<GoRouter>((ref) {
       // qaytaradi va tugma "ishlamayotgandek" ko'rinadi (bug edi).
       const publicPaths = {
         '/splash',
+        '/consent',
         '/pairing',
         '/pair-waiting',
         '/qr-scan',
         '/onboarding',
         '/welcome',
       };
+
+      // ── Ota-ona roziligi (Google Play MAJBURIY) ────────────────────────
+      // Bola ma'lumoti (joylashuv, ilova ishlatilishi) yig'ilishidan OLDIN
+      // oshkor rozilik olinadi. `unknown` — SharedPreferences hali o'qilmagan
+      // (boot): bu paytda YO'NALTIRMAYMIZ, aks holda splash bilan raqobat
+      // qilib "sakrash" bo'ladi. Til tanlash (/welcome) rozilikdan oldin
+      // ochiq — foydalanuvchi matnni o'z tilida o'qiy olishi uchun.
+      final consent = ref.read(consentStateProvider);
+      const preConsentPaths = {'/splash', '/consent', '/welcome'};
+      if (consent == ConsentState.notGiven && !preConsentPaths.contains(loc)) {
+        return '/consent';
+      }
+      // Rozilik bor, lekin foydalanuvchi /consent'da qolib ketgan → splash
+      // to'g'ri ekranni tanlaydi.
+      if (consent == ConsentState.given && loc == '/consent') {
+        return '/splash';
+      }
 
       // Pairing yo'q va himoyalangan ekran → /pairing
       if (!isPaired && !publicPaths.contains(loc)) {
@@ -245,6 +268,8 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
+      // Ota-ona roziligi (Google Play talabi) — ma'lumot yig'ishdan oldin.
+      GoRoute(path: '/consent', builder: (_, __) => const ConsentScreen()),
       GoRoute(
         path: '/welcome',
         builder: (_, __) => const LanguageSelectScreen(),
