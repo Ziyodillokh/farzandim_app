@@ -26,6 +26,7 @@ import {
 } from '@/components/ui/select';
 import { olympiadsApi, type OlympiadCreatePayload, type OlympiadQuestionInput } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
+import { PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
 import { toSuperscript } from '@/lib/superscript';
 import { cn } from '@/lib/utils';
 
@@ -141,6 +142,7 @@ export function OlympiadWizard({
   // Step 3
   const [type, setType] = useState('test');
   const [difficulty, setDifficulty] = useState("o'rta");
+  const [planRequired, setPlanRequired] = useState('free');
   const [xpReward, setXpReward] = useState(50);
   const [shuffleQuestions, setShuffleQuestions] = useState(true);
   const [shuffleAnswers, setShuffleAnswers] = useState(true);
@@ -151,7 +153,7 @@ export function OlympiadWizard({
   const reset = () => {
     setStep(0); setTitle("Iste'dod Uchquni"); setDescription(''); setSubject('Matematika');
     setAgeFrom(9); setAgeTo(12); setCoverKey(null); setDurationMin(30); setQuestions([emptyQuestion()]);
-    setType('test'); setDifficulty("o'rta"); setXpReward(50);
+    setType('test'); setDifficulty("o'rta"); setPlanRequired('free'); setXpReward(50);
     setShuffleQuestions(true); setShuffleAnswers(true); setHideResults(false);
     setAllowBack(true); setCertificateEnabled(true);
   };
@@ -170,6 +172,7 @@ export function OlympiadWizard({
       const end = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
       const payload: OlympiadCreatePayload = {
         title, description, subject, ageFrom, ageTo, type, difficulty,
+        planRequired,
         coverKey,
         startTime: start.toISOString(), endTime: end.toISOString(),
         durationMin, xpReward,
@@ -503,7 +506,22 @@ export function OlympiadWizard({
                 <Field label="DON mukofoti">
                   <Input type="number" min={0} max={1000} value={xpReward} onChange={(e) => setXpReward(+e.target.value)} />
                 </Field>
+                <Field label="Tarif">
+                  <Select value={planRequired} onValueChange={setPlanRequired}>
+                    <SelectTrigger><SelectValue /></SelectTrigger>
+                    <SelectContent>
+                      {PLAN_REQUIRED_OPTIONS.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </Field>
               </div>
+              <p className="rounded-lg bg-muted/50 p-3 text-xs text-muted-foreground">
+                <span className="font-medium text-foreground">Tarif</span> — testni ko&apos;rish uchun kerakli eng past obuna.
+                &quot;Barchasi&quot; = har qanday foydalanuvchi ko&apos;radi. Standard/Premium tanlansa faqat
+                o&apos;sha (yoki yuqori) tarifdagilar ko&apos;radi.
+              </p>
               <div className="space-y-3 rounded-xl border border-border p-4">
                 <Toggle label="Savollarni aralashtirish" checked={shuffleQuestions} onChange={setShuffleQuestions} />
                 <Toggle label="Javoblarni aralashtirish" checked={shuffleAnswers} onChange={setShuffleAnswers} />

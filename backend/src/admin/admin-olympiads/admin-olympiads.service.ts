@@ -48,6 +48,7 @@ export class AdminOlympiadsService {
       ageTo: o.ageTo,
       type: o.type,
       difficulty: o.difficulty,
+      planRequired: o.planRequired ?? 'free',
       startTime: o.startTime.toISOString(),
       endTime: o.endTime.toISOString(),
       durationMin: o.durationMin,
@@ -183,6 +184,7 @@ export class AdminOlympiadsService {
         ageTo: dto.ageTo,
         type: dto.type ?? 'test',
         difficulty: dto.difficulty ?? "o'rta",
+        planRequired: dto.planRequired ?? 'free',
         startTime: start,
         endTime: end,
         durationMin: dto.durationMin ?? 30,
@@ -252,6 +254,7 @@ export class AdminOlympiadsService {
     if (dto.ageTo !== undefined) updates.ageTo = dto.ageTo;
     if (dto.type !== undefined) updates.type = dto.type;
     if (dto.difficulty !== undefined) updates.difficulty = dto.difficulty;
+    if (dto.planRequired !== undefined) updates.planRequired = dto.planRequired;
     if (dto.startTime !== undefined) updates.startTime = new Date(dto.startTime);
     if (dto.endTime !== undefined) updates.endTime = new Date(dto.endTime);
     if (dto.durationMin !== undefined) updates.durationMin = dto.durationMin;

@@ -279,6 +279,8 @@ export interface Olympiad {
   ageTo: number;
   type: 'test' | 'creative' | 'mixed';
   difficulty: string;
+  /** Kerakli eng past tarif ('free' = "Barchasi" — hamma ko'radi). */
+  planRequired: string;
   startTime: string;
   endTime: string;
   durationMin: number;

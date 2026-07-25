@@ -1087,6 +1087,10 @@ model Olympiad {
   durationMin        Int      @default(30) @map("duration_min")
   maxAttempts        Int      @default(1) @map("max_attempts")
   xpReward           Int      @default(50) @map("xp_reward")
+  // Testni ko'rish uchun KERAKLI eng past tarif (video/audiobook/book bilan
+  // bir xil rank tizimi): free=0 < standard < premium < vip. `free` = hamma
+  // ko'radi ("Barchasi"). consumer-olympiads shu bo'yicha filtrlaydi.
+  planRequired       String   @default("free") @map("plan_required")
   shuffleQuestions   Boolean  @default(true) @map("shuffle_questions")
   shuffleAnswers     Boolean  @default(true) @map("shuffle_answers")
   hideResults        Boolean  @default(false) @map("hide_results")
@@ -1102,6 +1106,7 @@ model Olympiad {
   @@index([status])
   @@index([subject])
   @@index([startTime])
+  @@index([planRequired])
   @@map("olympiads")
 }
 

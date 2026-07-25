@@ -284,6 +284,8 @@ export interface OlympiadCreatePayload {
   ageTo: number;
   type: string;
   difficulty: string;
+  /** Kerakli eng past tarif ('free' = "Barchasi"). Ixtiyoriy — default 'free'. */
+  planRequired?: string;
   startTime: string;
   endTime: string;
   durationMin: number;

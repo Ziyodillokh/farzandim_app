@@ -28,6 +28,7 @@ import {
 } from '@/components/ui/select';
 import { olympiadsApi } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
+import { PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
 import type { Olympiad } from '@/types/api.types';
 
 const SUBJECTS = ['Matematika', 'Ona tili', 'Ingliz tili', 'Fizika', 'Kimyo', 'IT / Mantiq'];
@@ -70,6 +71,7 @@ export function OlympiadEditDialog({
   const [ageTo, setAgeTo] = useState(12);
   const [type, setType] = useState<string>('test');
   const [difficulty, setDifficulty] = useState<string>("o'rta");
+  const [planRequired, setPlanRequired] = useState<string>('free');
   const [durationMin, setDurationMin] = useState(30);
   const [startTime, setStartTime] = useState('');
   const [endTime, setEndTime] = useState('');
@@ -86,6 +88,7 @@ export function OlympiadEditDialog({
     setAgeTo(olympiad.ageTo);
     setType(olympiad.type);
     setDifficulty(olympiad.difficulty);
+    setPlanRequired(olympiad.planRequired ?? 'free');
     setDurationMin(olympiad.durationMin);
     setStartTime(toLocalInput(olympiad.startTime));
     setEndTime(toLocalInput(olympiad.endTime));
@@ -123,6 +126,7 @@ export function OlympiadEditDialog({
         ageTo,
         type: type as (typeof TYPES)[number],
         difficulty: difficulty as (typeof DIFFICULTIES)[number],
+        planRequired,
         durationMin,
         startTime: new Date(startTime).toISOString(),
         endTime: new Date(endTime).toISOString(),
@@ -235,6 +239,17 @@ export function OlympiadEditDialog({
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
                   {DIFFICULTIES.map((d) => <SelectItem key={d} value={d}>{d}</SelectItem>)}
+                </SelectContent>
+              </Select>
+            </Field>
+
+            <Field label="Tarif">
+              <Select value={planRequired} onValueChange={setPlanRequired}>
+                <SelectTrigger><SelectValue /></SelectTrigger>
+                <SelectContent>
+                  {PLAN_REQUIRED_OPTIONS.map((opt) => (
+                    <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
             </Field>

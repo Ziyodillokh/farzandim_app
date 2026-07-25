@@ -24,6 +24,23 @@ const CERT_THRESHOLD_PERCENT = 80;
 /** Mukofot uchun minimal natija foizi — bundan past bo'lsa DON/XP berilmaydi. */
 const REWARD_THRESHOLD_PERCENT = 30;
 
+// Tarif rank tizimi — consumer-content bilan bir xil. Obuna shu rankdan past
+// yoki teng testni ko'radi (free=0 → har qanday tarif ko'radi = "Barchasi").
+const PLAN_RANK: Record<string, number> = {
+  free: 0,
+  standard: 1,
+  premium: 2,
+  vip: 3,
+};
+
+/** parentPlan uchun ruxsat etilgan tarif slug'lari (rank <= parentPlan rank). */
+function allowedPlans(parentPlan: string): string[] {
+  const rank = PLAN_RANK[parentPlan] ?? 0;
+  return Object.entries(PLAN_RANK)
+    .filter(([, r]) => r <= rank)
+    .map(([slug]) => slug);
+}
+
 /**
  * Test mukofoti (DON = XP) — to'g'ri javoblarga PROPORSIONAL.
  *
@@ -71,6 +88,7 @@ function olympiadRow(o: {
   ageTo: number;
   type: string;
   difficulty: string;
+  planRequired?: string;
   startTime: Date;
   endTime: Date;
   durationMin: number;
@@ -89,6 +107,7 @@ function olympiadRow(o: {
     ageTo: o.ageTo,
     type: o.type,
     difficulty: o.difficulty,
+    planRequired: o.planRequired ?? 'free',
     startTime: o.startTime.toISOString(),
     endTime: o.endTime.toISOString(),
     durationMin: o.durationMin,
@@ -173,9 +192,12 @@ export class ConsumerOlympiadsService {
     }
   }
 
-  private async loadChild(
-    userId: string,
-  ): Promise<{ childId: string; age: number | null; region: string | null }> {
+  private async loadChild(userId: string): Promise<{
+    childId: string;
+    age: number | null;
+    region: string | null;
+    parentPlan: string;
+  }> {
     const u = await this.prisma.user.findUnique({
       where: { id: userId },
       include: { childRecord: true },
@@ -183,11 +205,27 @@ export class ConsumerOlympiadsService {
     if (!u || u.role !== 'CHILD' || !u.childRecord) {
       throw new ForbiddenException('Child profile required');
     }
+
+    // Ota-onaning AKTIV obunasi → entitlement tarifi (consumer-content bilan
+    // bir xil mantiq). Obuna yo'q/tugagan → 'free'. Testlar shu bo'yicha
+    // filtrlanadi (planRequired). Muddati o'tgan premium avtomatik yopiladi.
+    const subscription = await this.prisma.subscription.findFirst({
+      where: {
+        userId: u.childRecord.parentId,
+        status: 'ACTIVE',
+        OR: [{ expiresAt: null }, { expiresAt: { gt: new Date() } }],
+      },
+      orderBy: { expiresAt: 'desc' },
+      include: { plan: true },
+    });
+    const parentPlan = subscription?.plan?.entitlementTier ?? 'free';
+
     // `region` — reytingdagi "o'z viloyatim" filtri uchun (`region=me`).
     return {
       childId: u.childRecord.id,
       age: u.childRecord.age,
       region: u.childRecord.region,
+      parentPlan,
     };
   }
 
@@ -199,6 +237,8 @@ export class ConsumerOlympiadsService {
       status: 'published',
       ageFrom: { lte: a },
       ageTo: { gte: a },
+      // Tarif gating: obuna ruxsat bergan testlargina (free = hamma ko'radi).
+      planRequired: { in: allowedPlans(child.parentPlan) },
     };
 
     const rows = await this.prisma.olympiad.findMany({
@@ -212,7 +252,7 @@ export class ConsumerOlympiadsService {
   }
 
   async getOlympiadDetail(userId: string, id: string) {
-    await this.loadChild(userId);
+    const child = await this.loadChild(userId);
 
     const o = await this.prisma.olympiad.findUnique({
       where: { id },
@@ -221,7 +261,13 @@ export class ConsumerOlympiadsService {
         questions: { orderBy: [{ orderIdx: 'asc' }] },
       },
     });
-    if (!o || o.status !== 'published') {
+    // Tarif gating ham NotFound beradi — mavjudligini oshkor qilmaymiz (feed'da
+    // ko'rinmagan premium testni ID orqali ochib bo'lmasin).
+    if (
+      !o ||
+      o.status !== 'published' ||
+      !allowedPlans(child.parentPlan).includes(o.planRequired)
+    ) {
       throw new NotFoundException('Olympiad not found');
     }
 
@@ -238,7 +284,13 @@ export class ConsumerOlympiadsService {
       where: { id: olympiadId },
       include: { _count: { select: { questions: true } } },
     });
-    if (!olympiad || olympiad.status !== 'published') {
+    // Tarif gating: ruxsat yo'q testni ID orqali boshlab bo'lmaydi (NotFound —
+    // mavjudligini oshkor qilmaymiz).
+    if (
+      !olympiad ||
+      olympiad.status !== 'published' ||
+      !allowedPlans(child.parentPlan).includes(olympiad.planRequired)
+    ) {
       throw new NotFoundException('Olympiad not found');
     }
 

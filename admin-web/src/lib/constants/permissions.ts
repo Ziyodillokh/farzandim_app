@@ -86,8 +86,13 @@ export const ROLE_PRESETS: Record<string, string[]> = {
 };
 
 export const AGE_OPTIONS = Array.from({ length: 19 }, (_, i) => i); // 0..18
+// Tarif — kontentni ko'rish uchun KERAKLI eng past obuna. Backend rank
+// bilan ishlaydi (free=0 < standard < premium): tanlangan tarifdan YUQORI
+// obunachilar ham ko'radi. Shu sabab `free` = AMALDA "Barchasi" (har qanday
+// tarifdagi, hatto obunasi tugagan foydalanuvchi ham ko'radi) — yorlig'i
+// "Barchasi" deb aniqroq qilib qo'yildi (qiymat o'zgarmadi: 'free').
 export const PLAN_REQUIRED_OPTIONS = [
-  { value: 'free', label: 'Free' },
+  { value: 'free', label: 'Barchasi' },
   { value: 'standard', label: 'Standard' },
   { value: 'premium', label: 'Premium' },
 ];

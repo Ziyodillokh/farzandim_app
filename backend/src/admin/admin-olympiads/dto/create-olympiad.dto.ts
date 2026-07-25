@@ -18,6 +18,8 @@ import { Type } from 'class-transformer';
 const TYPES = ['test', 'creative', 'mixed'] as const;
 const DIFFICULTIES = ['oson', "o'rta", 'qiyin'] as const;
 const STATUSES = ['draft', 'published', 'archived'] as const;
+// Video/audiobook/book DTO'lari bilan bir xil — rank tizimi (free=0 < ...).
+const PLAN_REQUIRED = ['free', 'standard', 'premium', 'vip'] as const;
 
 export class QuestionDto {
   @ApiProperty()
@@ -131,6 +133,13 @@ export class CreateOlympiadDto {
   @Min(0)
   @Max(10000)
   xpReward?: number;
+
+  // Testni ko'rish uchun kerakli eng past tarif. `free` = "Barchasi" (hamma
+  // ko'radi). Ixtiyoriy — berilmasa 'free'. Video/audiobook/book bilan bir xil.
+  @ApiProperty({ required: false, enum: PLAN_REQUIRED, default: 'free' })
+  @IsOptional()
+  @IsEnum(PLAN_REQUIRED)
+  planRequired?: (typeof PLAN_REQUIRED)[number];
 
   @ApiProperty({ required: false })
   @IsOptional()
