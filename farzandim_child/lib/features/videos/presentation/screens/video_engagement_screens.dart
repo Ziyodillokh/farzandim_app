@@ -12,7 +12,6 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/videos/data/repositories/video_engagement_repository.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/video_engagement_providers.dart';
 import 'package:farzandim_child/features/videos/presentation/widgets/video_ui.dart';
-import 'package:farzandim_child/shared/widgets/faro_mascot.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -267,12 +266,30 @@ class _Empty extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          const FaroMascot(variant: FaroVariant.faceSad, size: 120),
-          const SizedBox(height: 18),
+          // Ilova uslubiga mos dumaloq ikon-badge (mascot o'rniga).
+          Container(
+            width: 92,
+            height: 92,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              shape: BoxShape.circle,
+              gradient: LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  vBlue.withValues(alpha: 0.22),
+                  vBlue.withValues(alpha: 0.06),
+                ],
+              ),
+              border: Border.all(color: vBlue.withValues(alpha: 0.30)),
+            ),
+            child: Icon(icon, size: 40, color: vBlue),
+          ),
+          const SizedBox(height: 20),
           Text(
             text,
             textAlign: TextAlign.center,
-            style: vUnb(17, w: FontWeight.w600, ls: -0.4),
+            style: vUnb(18, w: FontWeight.w600, ls: -0.4),
           ),
           const SizedBox(height: 8),
           Text(

@@ -12,6 +12,8 @@
 //
 // Real: filteredUsersProvider (+ viloyat filtri). Bo'sh bo'lsa PREVIEW.
 
+import 'dart:math' as math;
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/constants/uzbekistan_regions.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
@@ -698,7 +700,8 @@ class _PodiumColumn extends StatelessWidget {
   }
 }
 
-/// Lentali dumaloq medal — ustun tepasida (Figma'dagi 🥇 uslubida).
+/// Lentali dumaloq medal — premium tanga uslubi: fluted (tishli) qirra,
+/// metall radial gradient, yaltiroq yoy va mato lentalar.
 class _Medal extends StatelessWidget {
   const _Medal({required this.place, required this.base});
 
@@ -707,84 +710,74 @@ class _Medal extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final dark = Color.lerp(base, Colors.black, 0.35)!;
-    final light = Color.lerp(base, Colors.white, 0.45)!;
+    final dark = Color.lerp(base, Colors.black, 0.42)!;
+    final light = Color.lerp(base, Colors.white, 0.55)!;
+    final ribbon = Color.lerp(base, Colors.black, 0.28)!;
     final numColor = place == 2 ? const Color(0xFF39424E) : Colors.white;
     return SizedBox(
-      width: 58,
-      height: 62,
+      width: 62,
+      height: 66,
       child: Stack(
         alignment: Alignment.topCenter,
+        clipBehavior: Clip.none,
         children: [
-          // Lentalar (medal orqasida, ikki tomonga qiya).
+          // Lentalar — medal orqasidan ikki tomonga qiya (V o'yiqli mato).
           Positioned(
-            top: 0,
-            left: 13,
+            top: 3,
+            left: 14,
             child: Transform.rotate(
-              angle: 0.45,
-              child: Container(
-                width: 11,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: dark,
-                  borderRadius: BorderRadius.circular(3),
-                ),
+              angle: 0.5,
+              alignment: Alignment.topCenter,
+              child: CustomPaint(
+                size: const Size(12, 28),
+                painter: _RibbonPainter(ribbon, light),
               ),
             ),
           ),
           Positioned(
-            top: 0,
-            right: 13,
+            top: 3,
+            right: 14,
             child: Transform.rotate(
-              angle: -0.45,
-              child: Container(
-                width: 11,
-                height: 26,
-                decoration: BoxDecoration(
-                  color: dark,
-                  borderRadius: BorderRadius.circular(3),
-                ),
+              angle: -0.5,
+              alignment: Alignment.topCenter,
+              child: CustomPaint(
+                size: const Size(12, 28),
+                painter: _RibbonPainter(ribbon, light),
               ),
             ),
           ),
-          // Medal doirasi.
+          // Tanga (medal disk).
           Positioned(
-            top: 14,
-            child: Container(
-              width: 46,
-              height: 46,
-              alignment: Alignment.center,
-              decoration: BoxDecoration(
-                shape: BoxShape.circle,
-                gradient: LinearGradient(
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
-                  colors: [light, base, dark],
-                ),
-                border: Border.all(color: light, width: 2),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withValues(alpha: 0.35),
-                    blurRadius: 8,
-                    offset: const Offset(0, 3),
+            top: 12,
+            child: SizedBox(
+              width: 50,
+              height: 50,
+              child: CustomPaint(
+                painter: _CoinPainter(base: base, light: light, dark: dark),
+                child: Center(
+                  child: Container(
+                    width: 33,
+                    height: 33,
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      gradient: RadialGradient(
+                        center: const Alignment(-0.3, -0.4),
+                        colors: [
+                          Color.lerp(base, Colors.white, 0.12)!,
+                          Color.lerp(base, Colors.black, 0.2)!,
+                        ],
+                      ),
+                      border: Border.all(
+                        color: light.withValues(alpha: 0.9),
+                        width: 1.2,
+                      ),
+                    ),
+                    child: Text(
+                      '$place',
+                      style: _unb(16, w: FontWeight.w800, c: numColor),
+                    ),
                   ),
-                ],
-              ),
-              child: Container(
-                width: 32,
-                height: 32,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  color: base.withValues(alpha: 0.55),
-                  border: Border.all(
-                    color: light.withValues(alpha: 0.85),
-                    width: 1.2,
-                  ),
-                ),
-                child: Text(
-                  '$place',
-                  style: _unb(15, w: FontWeight.w800, c: numColor),
                 ),
               ),
             ),
@@ -793,6 +786,105 @@ class _Medal extends StatelessWidget {
       ),
     );
   }
+}
+
+/// Medal lentasi — pastida V o'yiq bo'lgan mato tasma.
+class _RibbonPainter extends CustomPainter {
+  _RibbonPainter(this.color, this.highlight);
+
+  final Color color;
+  final Color highlight;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final w = size.width;
+    final h = size.height;
+    const notch = 6.0;
+    final path = Path()
+      ..moveTo(0, 0)
+      ..lineTo(w, 0)
+      ..lineTo(w, h)
+      ..lineTo(w / 2, h - notch)
+      ..lineTo(0, h)
+      ..close();
+    canvas.drawPath(path, Paint()..color = color);
+    // Markaziy yorug' chiziq — mato buklamasi hissi.
+    canvas.drawRect(
+      Rect.fromLTWH(w / 2 - 0.8, 0, 1.6, h - notch / 2),
+      Paint()..color = highlight.withValues(alpha: 0.25),
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _RibbonPainter old) => old.color != color;
+}
+
+/// Tanga — fluted (tishli) qirra + metall radial gradient + yaltiroq yoy.
+class _CoinPainter extends CustomPainter {
+  _CoinPainter({required this.base, required this.light, required this.dark});
+
+  final Color base;
+  final Color light;
+  final Color dark;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final c = size.center(Offset.zero);
+    final r = size.width / 2;
+    // Yumshoq soya.
+    canvas.drawCircle(
+      c + const Offset(0, 2),
+      r,
+      Paint()
+        ..color = Colors.black.withValues(alpha: 0.30)
+        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4),
+    );
+    // Fluted qirra — perimetr bo'ylab mayda tishlar (tanga chekkasi).
+    const teeth = 30;
+    final rimOuter = r;
+    final rimInner = r - 3.5;
+    final rimPaint = Paint()..style = PaintingStyle.fill;
+    for (var i = 0; i < teeth; i++) {
+      final a0 = (i / teeth) * 2 * math.pi;
+      final a1 = ((i + 1) / teeth) * 2 * math.pi;
+      rimPaint.color = i.isEven ? light : dark;
+      final path = Path()
+        ..moveTo(c.dx + rimInner * math.cos(a0), c.dy + rimInner * math.sin(a0))
+        ..lineTo(c.dx + rimOuter * math.cos(a0), c.dy + rimOuter * math.sin(a0))
+        ..lineTo(c.dx + rimOuter * math.cos(a1), c.dy + rimOuter * math.sin(a1))
+        ..lineTo(c.dx + rimInner * math.cos(a1), c.dy + rimInner * math.sin(a1))
+        ..close();
+      canvas.drawPath(path, rimPaint);
+    }
+    // Asosiy disk — metall radial gradient.
+    final discR = r - 3.5;
+    canvas.drawCircle(
+      c,
+      discR,
+      Paint()
+        ..shader = RadialGradient(
+          center: const Alignment(-0.4, -0.5),
+          colors: [light, base, dark],
+          stops: const [0, 0.55, 1],
+        ).createShader(Rect.fromCircle(center: c, radius: discR)),
+    );
+    // Yaltiroq yoy (yuqori-chap).
+    canvas.drawArc(
+      Rect.fromCircle(center: c, radius: discR - 3),
+      math.pi * 1.05,
+      math.pi * 0.5,
+      false,
+      Paint()
+        ..color = Colors.white.withValues(alpha: 0.38)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.2
+        ..strokeCap = StrokeCap.round,
+    );
+  }
+
+  @override
+  bool shouldRepaint(covariant _CoinPainter old) =>
+      old.base != base || old.light != light || old.dark != dark;
 }
 
 // ════════════ Ro'yxat qatori ════════════

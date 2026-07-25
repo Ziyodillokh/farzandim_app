@@ -643,6 +643,25 @@
     "hoursMinutes": "{h} soat {m} daq",
     "hoursMinutesShort": "{h} st {m} daq"
   },
+  "streakDetail": {
+    "title": "Rivojlanish",
+    "continuous": "kun ketma-ket",
+    "medals": "Medallar",
+    "earnedOf": "{earned} / {total} medal",
+    "nextMilestone": "Keyingi bosqichgacha {n} kun",
+    "maxMilestone": "Eng yuqori bosqichda!",
+    "hint": "Har kuni faol bo'lsang — olov o'chmaydi",
+    "subtitle": "Erishgan va erishishing mumkin bo'lgan yutuqlar",
+    "achieved": "Erishilding",
+    "locked": "Yopiq"
+  },
+  "stepsDetail": {
+    "title": "Qadamlar",
+    "week": "Bu hafta",
+    "todayPct": "Bugun kunlik maqsadning {pct}%",
+    "donInfo": "Har 1000 qadam = 5 don",
+    "donToday": "Bugun ishlab topilgan: {n} don"
+  },
   "statistics": {
     "title": "Statistika",
     "shareTitle": "Kunlik natija",

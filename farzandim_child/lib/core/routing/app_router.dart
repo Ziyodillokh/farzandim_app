@@ -21,13 +21,13 @@
 
 import 'package:farzandim_child/core/feature_flags.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
-import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
-import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/daily_share_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/statistics_screen.dart';
+import 'package:farzandim_child/features/statistics/presentation/screens/steps_detail_screen.dart';
+import 'package:farzandim_child/features/statistics/presentation/screens/streak_detail_screen.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_series.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audiobook_detail_screen.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/screens/audio_player_screen.dart';
@@ -161,9 +161,6 @@ final routerProvider = Provider<GoRouter>((ref) {
   // Til almashganda cache'langan ekranlar (Profil badge'lari va h.k.) QAYTA
   // quriladi — aks holda eski tilda qolib, refresh/navigatsiya talab qilardi.
   ref.listen(localeRefreshProvider, (_, __) => refresh.value++);
-  // Parent Consent (oshkor rozilik, Play talabi) — rozilik holati o'zgarganda
-  // router redirect qayta ishlaydi (tasdiqlangach /consent'dan chiqadi).
-  ref.listen(consentStateProvider, (_, __) => refresh.value++);
 
   return GoRouter(
     initialLocation: '/splash',
@@ -172,19 +169,6 @@ final routerProvider = Provider<GoRouter>((ref) {
       final pairing = ref.read(pairingStateProvider);
       final isPaired = pairing.isPaired;
       final loc = state.matchedLocation;
-
-      // Oshkor rozilik (Play talabi) — bola ma'lumot yig'ishdan OLDIN rozilik
-      // ekrani. Til tanlash (/welcome) va splash bundan mustasno (ular ma'lumot
-      // yig'maydi). Rozilik tasdiqlangach /consent'dan avtomatik chiqadi.
-      final consent = ref.read(consentStateProvider);
-      const preConsentAllowed = {'/splash', '/welcome', '/consent'};
-      if (consent == ConsentState.notGiven &&
-          !preConsentAllowed.contains(loc)) {
-        return '/consent';
-      }
-      if (consent == ConsentState.given && loc == '/consent') {
-        return '/splash';
-      }
 
       // Splash, til va pairing — har doim ruxsat (onboarding oqimi).
       // /welcome — til tanlash (yangi foydalanuvchi); Splash til tanlanmagan
@@ -200,7 +184,6 @@ final routerProvider = Provider<GoRouter>((ref) {
         '/pairing',
         '/pair-waiting',
         '/qr-scan',
-        '/consent',
         '/onboarding',
         '/welcome',
       };
@@ -250,9 +233,6 @@ final routerProvider = Provider<GoRouter>((ref) {
     },
     routes: [
       GoRoute(path: '/splash', builder: (_, __) => const SplashScreen()),
-      // Parent Consent — birinchi ochilishda ko'rsatiladi (Store compliance).
-      // SharedPreferences `parent_consent_v1 = true` saqlangach ko'rsatilmaydi.
-      GoRoute(path: '/consent', builder: (_, __) => const ConsentScreen()),
       GoRoute(
         path: '/welcome',
         builder: (_, __) => const LanguageSelectScreen(),
@@ -306,6 +286,18 @@ final routerProvider = Provider<GoRouter>((ref) {
         path: '/statistics',
         pageBuilder: (context, state) =>
             _slidePage(state, const StatisticsScreen()),
+      ),
+      // "Kunlik rivojlanish" kartasi → streak + medallar batafsil.
+      GoRoute(
+        path: '/streak-detail',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const StreakDetailScreen()),
+      ),
+      // "Kunlik qadamlar" kartasi → qadam batafsil.
+      GoRoute(
+        path: '/steps-detail',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const StepsDetailScreen()),
       ),
       // Kunlik rivojlanishni ulashish (qadam/DON/streak kartochka → share).
       GoRoute(

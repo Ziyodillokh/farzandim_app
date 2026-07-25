@@ -643,6 +643,25 @@
     "hoursMinutes": "{h} ч {m} мин",
     "hoursMinutesShort": "{h} ч {m} мин"
   },
+  "streakDetail": {
+    "title": "Развитие",
+    "continuous": "дней подряд",
+    "medals": "Медали",
+    "earnedOf": "{earned} / {total} медалей",
+    "nextMilestone": "До следующего этапа {n} дн.",
+    "maxMilestone": "Высший уровень!",
+    "hint": "Заходи каждый день — огонь не гаснет",
+    "subtitle": "Полученные и доступные достижения",
+    "achieved": "Получено",
+    "locked": "Закрыто"
+  },
+  "stepsDetail": {
+    "title": "Шаги",
+    "week": "На этой неделе",
+    "todayPct": "Сегодня {pct}% дневной цели",
+    "donInfo": "Каждые 1000 шагов = 5 донов",
+    "donToday": "Заработано сегодня: {n} донов"
+  },
   "statistics": {
     "title": "Статистика",
     "shareTitle": "Дневной результат",

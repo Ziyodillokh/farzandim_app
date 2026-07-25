@@ -643,6 +643,25 @@
     "hoursMinutes": "{h} h {m} min",
     "hoursMinutesShort": "{h} h {m} min"
   },
+  "streakDetail": {
+    "title": "Progress",
+    "continuous": "day streak",
+    "medals": "Medals",
+    "earnedOf": "{earned} / {total} medals",
+    "nextMilestone": "{n} days to the next milestone",
+    "maxMilestone": "Top milestone reached!",
+    "hint": "Stay active daily — keep the flame alive",
+    "subtitle": "Achievements you earned and can earn",
+    "achieved": "Earned",
+    "locked": "Locked"
+  },
+  "stepsDetail": {
+    "title": "Steps",
+    "week": "This week",
+    "todayPct": "{pct}% of today's goal",
+    "donInfo": "Every 1000 steps = 5 don",
+    "donToday": "Earned today: {n} don"
+  },
   "statistics": {
     "title": "Statistics",
     "shareTitle": "Daily result",

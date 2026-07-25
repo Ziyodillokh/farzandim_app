@@ -437,6 +437,7 @@ class _StreakCard extends StatelessWidget {
         (i <= todayIdx && (todayIdx - i) < streak) ? _Day.fire : _Day.empty,
     ];
     return _PanelCard(
+      onTap: () => context.push('/streak-detail'),
       child: Column(
         children: [
           Row(
@@ -451,11 +452,15 @@ class _StreakCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('statistics.dailyProgress'.tr(),
-                        style: _pop(13, c: _dim)),
+                    Text(
+                      'statistics.dailyProgress'.tr(),
+                      style: _pop(13, c: _dim),
+                    ),
                     const SizedBox(height: 2),
-                    Text('statistics.daysCount'.tr(
-                        namedArgs: {'days': '$streak'}), style: _unb(20)),
+                    Text(
+                      'statistics.daysCount'.tr(namedArgs: {'days': '$streak'}),
+                      style: _unb(20),
+                    ),
                   ],
                 ),
               ),
@@ -490,6 +495,7 @@ class _StepsCard extends StatelessWidget {
       for (var i = 0; i < 7; i++) i <= todayIdx ? _Day.check : _Day.empty,
     ];
     return _PanelCard(
+      onTap: () => context.push('/steps-detail'),
       child: Column(
         children: [
           Row(
@@ -504,8 +510,10 @@ class _StepsCard extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('statistics.dailySteps'.tr(),
-                        style: _pop(13, c: _dim)),
+                    Text(
+                      'statistics.dailySteps'.tr(),
+                      style: _pop(13, c: _dim),
+                    ),
                     const SizedBox(height: 2),
                     Row(
                       crossAxisAlignment: CrossAxisAlignment.baseline,
@@ -1075,13 +1083,14 @@ class _AppTile extends StatelessWidget {
 // ════════════ Umumiy panel karta ════════════
 
 class _PanelCard extends StatelessWidget {
-  const _PanelCard({required this.child});
+  const _PanelCard({required this.child, this.onTap});
 
   final Widget child;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    final card = Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: _glass,
@@ -1089,6 +1098,12 @@ class _PanelCard extends StatelessWidget {
         border: Border.all(color: _glassBorder),
       ),
       child: child,
+    );
+    if (onTap == null) return card;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: card,
     );
   }
 }
