@@ -311,8 +311,11 @@ export class AppLimitsService {
     const out = [...limits];
     for (const app of apps) {
       if (existing.has(app.packageName)) continue;
-      // Saqlangan kategoriya bo'lmasa (eski yozuv) — paketdan klassifikatsiya.
-      const cat = app.category ?? classifyPackage(app.packageName);
+      // Har doim paketdan JONLI klassifikatsiya — saqlangan `category` eski
+      // klassifikator versiyasi bilan yozilgan bo'lishi mumkin (masalan Plus
+      // Messenger avval OTHER bo'lib qolgan). Qurilma hozircha o'z
+      // kategoriyasini yubormaydi, shuning uchun jonli hisob to'g'riroq.
+      const cat = classifyPackage(app.packageName);
       if (!blockedCats.has(cat)) continue;
       existing.add(app.packageName);
       out.push({
@@ -602,7 +605,9 @@ export class AppLimitsService {
     const blocked = new Set(blocks.map((b) => b.category));
     const counts = new Map<string, number>();
     for (const a of apps) {
-      const cat = a.category ?? classifyPackage(a.packageName);
+      // Jonli klassifikatsiya (applyCategoryBlocks bilan bir xil mantiq) —
+      // ro'yxatdagi son va haqiqiy bloklanadigan to'plam mos kelishi uchun.
+      const cat = classifyPackage(a.packageName);
       counts.set(cat, (counts.get(cat) ?? 0) + 1);
     }
 
@@ -655,6 +660,16 @@ export class AppLimitsService {
     // Bola limit ro'yxati (augmentatsiya) o'zgardi → darhol sync.
     this.realtime.emitToChild(childId, 'app_limit:updated', { category, block });
     void this.pushChildResync(child);
+    // Ko'rinadigan bildirishnoma — BOLAGA ham, ota-onaning boshqa
+    // qurilmalariga ham (individual ilova bloklashdagi kabi). Avval kategoriya
+    // o'zgarishi faqat jim sync bo'lardi, hech kim ko'rmasdi. Debounce (4s) —
+    // bir nechta kategoriya birdan o'zgarsa BITTA push.
+    this.enqueueLimitNotif(
+      child.id,
+      child.parentId,
+      child.childUserId,
+      categoryLabel(category),
+    );
 
     return this.listCategories(childId, userId);
   }

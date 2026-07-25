@@ -31,6 +31,8 @@ const EXACT: Record<string, AppCategory> = {
   'com.whatsapp.w4b': 'SOCIAL',
   'org.telegram.messenger': 'SOCIAL',
   'org.telegram.messenger.web': 'SOCIAL',
+  'org.telegram.plus': 'SOCIAL', // Plus Messenger (Telegram forki — UZ'da mashhur)
+  'org.thunderdog.challegram': 'SOCIAL', // Telegram X
   'com.snapchat.android': 'SOCIAL',
   'com.twitter.android': 'SOCIAL',
   'com.vkontakte.android': 'SOCIAL',
@@ -39,6 +41,10 @@ const EXACT: Record<string, AppCategory> = {
   'com.pinterest': 'SOCIAL',
   'com.discord': 'SOCIAL',
   'com.imo.android.imoim': 'SOCIAL',
+  'com.viber.voip': 'SOCIAL',
+  'jp.naver.line.android': 'SOCIAL',
+  'com.zing.zalo': 'SOCIAL',
+  'com.skype.raider': 'SOCIAL',
   // VIDEO / striming (TikTok ham — qisqa video striming)
   'com.google.android.youtube': 'VIDEO',
   'com.google.android.apps.youtube.kids': 'VIDEO',
@@ -83,6 +89,7 @@ const KEYWORDS: { needle: string; category: AppCategory }[] = [
   { needle: 'gameloft', category: 'GAME' },
   { needle: 'supercell', category: 'GAME' },
   { needle: 'miniclip', category: 'GAME' },
+  { needle: 'telegram', category: 'SOCIAL' }, // barcha Telegram forklari (Plus...)
   { needle: 'messenger', category: 'SOCIAL' },
   { needle: 'social', category: 'SOCIAL' },
   { needle: 'chat', category: 'SOCIAL' },
