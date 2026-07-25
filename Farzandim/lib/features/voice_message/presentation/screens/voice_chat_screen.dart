@@ -95,8 +95,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     // tarix-tugadi holatlarini tekshiradi, shuning uchun har scroll'da
     // chaqiraversa bo'ladi).
     _scrollController.addListener(() {
+      // reverse:true — eski xabarlar TEPADA (maxScrollExtent tomonida).
+      // Tepaga yaqinlashganda eski sahifani yuklaymiz.
       if (_scrollController.hasClients &&
-          _scrollController.position.pixels <= 80) {
+          _scrollController.position.pixels >=
+              _scrollController.position.maxScrollExtent - 80) {
         ref.read(chatHistoryProvider(widget.childId).notifier).loadOlder();
       }
     });
@@ -139,8 +142,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
 
   void _scrollToBottom() {
     if (_scrollController.hasClients) {
+      // reverse:true ro'yxatda eng yangi xabar offset 0 (past). Pastga
+      // tushish = 0 ga tortish.
       _scrollController.animateTo(
-        _scrollController.position.maxScrollExtent,
+        0,
         duration: const Duration(milliseconds: 300),
         curve: Curves.easeOut,
       );
@@ -525,25 +530,10 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
       chatHistoryProvider(widget.childId).select((s) => s.loading),
     );
 
-    // Eski sahifa tepaga qo'shilganda scroll pozitsiyasini saqlaymiz:
-    // aks holda kontent pastga "sakrab" foydalanuvchi o'qiyotgan joyini
-    // yo'qotadi. Eski maxScrollExtent'ni rebuild'dan oldin olib, yangi
-    // layout'dan keyin farqqa siljitamiz.
-    ref.listen(
-      chatHistoryProvider(widget.childId).select((s) => s.older.length),
-      (prev, next) {
-        if ((prev ?? 0) >= next || !_scrollController.hasClients) return;
-        final oldMax = _scrollController.position.maxScrollExtent;
-        final oldOffset = _scrollController.position.pixels;
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!_scrollController.hasClients) return;
-          final newMax = _scrollController.position.maxScrollExtent;
-          if (newMax > oldMax) {
-            _scrollController.jumpTo(oldOffset + (newMax - oldMax));
-          }
-        });
-      },
-    );
+    // Eslatma: reverse:true ro'yxatda eski sahifa TEPAGA (maxScrollExtent
+    // tomoniga, ekrandan tashqarida) qo'shiladi — pastdagi lanka (offset 0)
+    // siljimaydi, shuning uchun foydalanuvchi o'qiyotgan joyi o'z-o'zidan
+    // saqlanadi. Avvalgi qo'lda jumpTo kompensatsiya endi kerak emas.
 
     return Scaffold(
       backgroundColor: Colors.transparent,
@@ -594,10 +584,16 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
                           ListView.builder(
                             controller: _scrollController,
                             physics: const AlwaysScrollableScrollPhysics(),
+                            // reverse:true — xabarlar pastdan boshlanadi
+                            // (Telegram kabi): kam xabar bo'lsa ham input
+                            // tepasiga tiraladi, tepada osilib qolmaydi.
+                            reverse: true,
                             padding: const EdgeInsets.symmetric(vertical: 12),
                             itemCount: messages.length,
                             itemBuilder: (_, i) {
-                              final item = messages[i];
+                              // i=0 pastda (eng yangi). ASC ro'yxatni
+                              // oxiridan indekslaymiz.
+                              final item = messages[messages.length - 1 - i];
                               // Sealed switch — yangi tip qo'shilsa
                               // exhaustive xato beradi.
                               return switch (item) {
