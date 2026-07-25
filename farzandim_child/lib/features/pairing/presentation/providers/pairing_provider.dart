@@ -26,7 +26,6 @@ import 'package:farzandim_child/features/location/presentation/providers/locatio
 import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
-import 'package:farzandim_child/features/sim_info/presentation/providers/sim_info_provider.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -134,13 +133,11 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         );
       }
 
-      // SIM kartadan telefon raqamini olish + Firestore'ga yozish
-      // (Sprint 4.1 — SOS dialog callButton uchun). Idempotent —
-      // allaqachon bor bo'lsa skip qiladi. Xato bo'lsa jim chiqadi.
-      await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
-            parentUid: parentUid,
-            childId: childId,
-          );
+      // ESLATMA: SIM'dan telefon raqamini AVTOMATIK o'qish OLIB TASHLANDI
+      // (Google Play Families siyosati — bolalar ilovasida shaxsiy
+      // identifikator yig'ish cheklangan; READ_PHONE_* ruxsatlari ham
+      // manifestdan chiqarildi). Raqamni ota-ona o'z ilovasida qo'lda
+      // kiritadi — SOS qo'ng'iroq tugmasi shundan ishlaydi.
 
       // App usage sync timer'ini ishga tushirish (Sprint 4.1 bugfix).
       // Avval faqat PermissionSetupScreen'da chaqirilardi → app
@@ -242,12 +239,6 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
         childName: childName,
       );
     }
-
-    // SIM phone number sync (Sprint 4.1). Idempotent.
-    await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
-          parentUid: parentUid,
-          childId: childId,
-        );
 
     // App usage sync (Sprint 4.1 bugfix — restart'da yo'qolardi).
     _ref.read(usageSyncServiceProvider)?.start();
@@ -416,15 +407,6 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
             );
       });
 
-      // 7b. SIM phone number sync (Sprint 4.1 — SOS dialog uchun).
-      // Idempotent + xato bo'lsa jim chiqadi (non-critical).
-      await safe('SimInfoService', () async {
-        await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
-              parentUid: result.parentUid,
-              childId: result.childId,
-            );
-      });
-
       // 7c. App usage sync (Sprint 4.1 bugfix).
       try {
         _ref.read(usageSyncServiceProvider)?.start();
@@ -510,11 +492,6 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
               'common.fallbackChildName'.tr(),
         );
       }
-
-      await _ref.read(simInfoServiceProvider).syncPhoneNumberIfNeeded(
-            parentUid: parentUid,
-            childId: childId,
-          );
 
       _ref.read(usageSyncServiceProvider)?.start();
       _ref.read(stepCounterServiceProvider)?.start();

@@ -35,8 +35,11 @@
     <uses-permission android:name="android.permission.QUERY_ALL_PACKAGES"
         tools:ignore="QueryAllPackagesPermission"/>
 
-    <uses-permission android:name="android.permission.READ_PHONE_NUMBERS"/>
-    <uses-permission android:name="android.permission.READ_PHONE_STATE"/>
+    <!-- READ_PHONE_NUMBERS / READ_PHONE_STATE OLIB TASHLANDI (Google Play
+         Families siyosati): bolalar ilovasida SIM'dan telefon raqamini
+         avtomatik o'qish shaxsiy identifikator yig'ish hisoblanadi va rad
+         etilish sababi bo'ladi. Bola raqamini ota-ona o'z ilovasida qo'lda
+         kiritadi — SOS qo'ng'iroq tugmasi o'sha raqamdan ishlaydi. -->
 
     <uses-permission android:name="android.permission.SYSTEM_ALERT_WINDOW"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_SPECIAL_USE"

@@ -33,7 +33,9 @@ class MainActivity : FlutterFragmentActivity() {
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
         flutterEngine.plugins.add(UsageStatsPlugin())
-        flutterEngine.plugins.add(SimInfoPlugin())
+        // SimInfoPlugin OLIB TASHLANDI — Google Play Families siyosati:
+        // bolalar ilovasida SIM/telefon raqamini avtomatik o'qish (READ_PHONE_*)
+        // cheklangan. Raqamni ota-ona qo'lda kiritadi.
 
         unlockChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
