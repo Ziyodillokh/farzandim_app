@@ -1,5 +1,6 @@
 package com.farzandim.farzandim_child
 
+import android.app.AlarmManager
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
@@ -70,6 +71,16 @@ class RestrictionService : Service() {
         const val ACTION_START = "com.farzandim.action.START_RESTRICTION"
         const val ACTION_STOP = "com.farzandim.action.STOP_RESTRICTION"
 
+        // Watchdog — servis OEM batareya-menejeri (Xiaomi/Huawei/Oppo/Vivo/
+        // Samsung) tomonidan fonda o'ldirilsa, START_STICKY ko'pincha yordam
+        // bermaydi → bloklash "jimgina" to'xtaydi (bola app'ni qayta ochmaguncha).
+        // Bu alarm zanjiri har ~60s da BootReceiver'ga broadcast yuboradi va
+        // servisni qayta ishga tushiradi (o'lgan bo'lsa) hamda keyingi alarmni
+        // qayta rejalashtiradi. Shu bilan enforcement fonda ham tirik qoladi.
+        const val ACTION_WATCHDOG = "com.farzandim.action.WATCHDOG_RESTART"
+        private const val WATCHDOG_REQ = 4243
+        private const val WATCHDOG_INTERVAL_MS = 60_000L
+
         // Overlay sababi — matn/ikona shunga qarab tanlanadi (#12).
         // BLOCKED = to'liq blok (ota-ona/kategoriya/jadval). LIMIT = kunlik
         // vaqt tugadi.
@@ -117,6 +128,51 @@ class RestrictionService : Service() {
             "com.heytap.market",               // Oppo/Realme App Market
             "com.vivo.appstore",               // Vivo App Store
         )
+
+        /**
+         * Watchdog alarmni (qayta) o'rnatadi — ~60s dan keyin BootReceiver
+         * `ACTION_WATCHDOG` broadcast oladi, servisni tekshirib/qayta ishga
+         * tushiradi va keyingi alarmni rejalashtiradi (o'z-o'zini davolovchi
+         * zanjir). `setAndAllowWhileIdle` — Doze'da ham ishlaydi, maxsus
+         * SCHEDULE_EXACT_ALARM ruxsati kerak emas. Fondan foreground-service
+         * boshlash bu ilovada SYSTEM_ALERT_WINDOW (overlay) ruxsati tufayli
+         * mumkin (A12+ background-FGS cheklovidan istisno).
+         */
+        fun scheduleWatchdog(ctx: Context) {
+            try {
+                val am = ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                val at = System.currentTimeMillis() + WATCHDOG_INTERVAL_MS
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                    am.setAndAllowWhileIdle(AlarmManager.RTC_WAKEUP, at, watchdogPi(ctx))
+                } else {
+                    am.set(AlarmManager.RTC_WAKEUP, at, watchdogPi(ctx))
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "scheduleWatchdog error", e)
+            }
+        }
+
+        /** Watchdog alarmni bekor qiladi (servis ATAYIN to'xtatilganda). */
+        fun cancelWatchdog(ctx: Context) {
+            try {
+                (ctx.getSystemService(Context.ALARM_SERVICE) as AlarmManager)
+                    .cancel(watchdogPi(ctx))
+            } catch (e: Exception) {
+                Log.e(TAG, "cancelWatchdog error", e)
+            }
+        }
+
+        private fun watchdogPi(ctx: Context): PendingIntent {
+            val i = Intent(ctx, BootReceiver::class.java).apply {
+                action = ACTION_WATCHDOG
+            }
+            val flags = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            } else {
+                PendingIntent.FLAG_UPDATE_CURRENT
+            }
+            return PendingIntent.getBroadcast(ctx, WATCHDOG_REQ, i, flags)
+        }
     }
 
     private val handler = Handler(Looper.getMainLooper())
@@ -200,10 +256,24 @@ class RestrictionService : Service() {
 
     override fun onBind(intent: Intent?): IBinder? = null
 
+    /**
+     * App recents'dan surib tashlanganda ba'zi OEM'lar started/foreground
+     * servisni ham o'ldiradi. Agar monitoring faol bo'lsa — watchdog alarm
+     * bilan tez qayta tiklanishini kafolatlaymiz (bloklash uzilib qolmasin).
+     */
+    override fun onTaskRemoved(rootIntent: Intent?) {
+        super.onTaskRemoved(rootIntent)
+        if (isRunning) scheduleWatchdog(this)
+    }
+
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "Service destroyed")
-        stopMonitoring()
+        // MUHIM: tizim/OEM FGS'ni o'ldirganda ham onDestroy chaqiriladi —
+        // bunda watchdog'ni O'CHIRMAYMIZ (explicit=false), aks holda o'z-o'zini
+        // tiklovchi zanjir uzilib, bloklash butunlay to'xtardi. Watchdog faqat
+        // ATAYIN to'xtatishda (ACTION_STOP) o'chadi.
+        stopMonitoring(explicit = false)
         gameExecutor.shutdownNow()
     }
 
@@ -228,6 +298,10 @@ class RestrictionService : Service() {
             startForeground(NOTIFICATION_ID, notification)
         }
 
+        // Watchdog zanjirini HAR startda qayta yoqamiz (idempotent — bitta
+        // alarm yangilanadi). Servis o'lsa ~60s ichida tiklanadi.
+        scheduleWatchdog(this)
+
         // Poll-loop esa FAQAT bir marta ishga tushadi (2 marta ishlamasin).
         if (isRunning) return
         isRunning = true
@@ -248,10 +322,14 @@ class RestrictionService : Service() {
         }
     }
 
-    private fun stopMonitoring() {
-        Log.d(TAG, "Monitoring stopped")
+    private fun stopMonitoring(explicit: Boolean = true) {
+        Log.d(TAG, "Monitoring stopped (explicit=$explicit)")
         isRunning = false
         handler.removeCallbacks(pollRunnable)
+        // Watchdog FAQAT atayin to'xtatishda (ACTION_STOP / unpair) o'chadi.
+        // Tizim FGS'ni o'ldirib onDestroy chaqirsa (explicit=false) — watchdog
+        // QOLADI va servisni ~60s ichida qayta tiklaydi.
+        if (explicit) cancelWatchdog(this)
         hideOverlay()
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
             stopForeground(STOP_FOREGROUND_REMOVE)

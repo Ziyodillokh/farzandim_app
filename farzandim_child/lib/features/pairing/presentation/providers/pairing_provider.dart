@@ -536,10 +536,20 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
 
     await _ref.read(backgroundServiceProvider).stop();
 
+    // Native ilova-cheklov servisini ATAYIN to'xtatamiz (ACTION_STOP →
+    // watchdog alarmi ham bekor bo'ladi). Aks holda o'z-o'zini tiklovchi
+    // watchdog unpair'dan keyin ham servisni tirik ushlab, eski bloklarni
+    // enforce qilaverardi.
+    await UsageStatsService().stopRestrictionService();
+
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('parentUid');
     await prefs.remove('childId');
     await prefs.remove('childName');
+    // Eski bloklangan ilovalar/limitlarni ham tozalaymiz — reboot'dan keyin
+    // BootReceiver servisni qayta boshlasa ham enforce qiladigan narsa qolmasin.
+    await prefs.remove('restriction.blocked_packages');
+    await prefs.remove('restriction.limits');
 
     await _auth.signOut();
 

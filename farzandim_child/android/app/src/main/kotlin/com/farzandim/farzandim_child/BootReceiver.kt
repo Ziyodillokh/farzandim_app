@@ -33,15 +33,21 @@ class BootReceiver : BroadcastReceiver() {
         val action = intent.action
         if (action != Intent.ACTION_BOOT_COMPLETED &&
             action != Intent.ACTION_MY_PACKAGE_REPLACED &&
-            action != "android.intent.action.QUICKBOOT_POWERON"
+            action != "android.intent.action.QUICKBOOT_POWERON" &&
+            action != RestrictionService.ACTION_WATCHDOG
         ) {
             return
         }
 
+        // Watchdog tick — servis fonda o'ldirilgan bo'lsa qayta tiklaydi va
+        // (pastda) keyingi alarmni rejalashtiradi (o'z-o'zini davolovchi zanjir).
+        val isWatchdog = action == RestrictionService.ACTION_WATCHDOG
+
         // RestrictionService faqat USAGE_STATS ruxsati bo'lsa ma'noli ishlaydi
         // (getForegroundPackage/detectAndQueueGame shu ruxsatga tayanadi).
-        // Ruxsat berilmagan (hali sozlanmagan) bo'lsa keraksiz doimiy
-        // notification chiqarmaslik uchun servisni boshlamaymiz.
+        // Ruxsat berilmagan (hali sozlanmagan / bekor qilingan) bo'lsa servisni
+        // boshlamaymiz VA watchdog zanjirini davom ettirmaymiz (keraksiz alarm
+        // aylanmasin — ilova qayta ochilganda Dart uni qaytadan yoqadi).
         if (!hasUsageStats(ctx)) {
             Log.d(TAG, "USAGE_STATS yo'q — RestrictionService boshlanmadi")
             return
@@ -59,6 +65,11 @@ class BootReceiver : BroadcastReceiver() {
             Log.d(TAG, "RestrictionService qayta boshlandi ($action)")
         } catch (e: Exception) {
             Log.e(TAG, "RestrictionService boshlashda xato ($action)", e)
+        } finally {
+            // Zanjir uzilmasin: watchdog tick keyingi alarmni HAR DOIM qayta
+            // o'rnatadi (servis start muvaffaqiyatli bo'lsa u ham o'rnatadi —
+            // bu ikki-himoya: FGS-start bloklansa ham zanjir davom etadi).
+            if (isWatchdog) RestrictionService.scheduleWatchdog(ctx)
         }
     }
 
