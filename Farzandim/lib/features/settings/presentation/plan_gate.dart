@@ -18,6 +18,10 @@ import 'package:shared_preferences/shared_preferences.dart';
 const Color _kBlue = Color(0xFF216BFF);
 const Color _kBlueLight = Color(0xFF6FA0FF);
 
+// Olov rang — trial (demo) banneri uchun: "vaqt tugab boryapti" hissi.
+const Color _kFlame = Color(0xFFF15A0C);
+const Color _kFlameLight = Color(0xFFFFA637);
+
 bool _dialogOpen = false;
 
 /// Tarif "yuksalting" oynasi — qulflangan funksiya/limitda ko'rsatiladi.
@@ -417,11 +421,8 @@ class TrialBanner extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(18),
-          gradient: LinearGradient(
-            colors: [
-              _kBlue.withValues(alpha: 0.92),
-              _kBlueLight.withValues(alpha: 0.78),
-            ],
+          gradient: const LinearGradient(
+            colors: [_kFlame, _kFlameLight],
           ),
         ),
         child: Row(
@@ -454,7 +455,7 @@ class TrialBanner extends ConsumerWidget {
                 style: GoogleFonts.poppins(
                   fontSize: 12.5,
                   fontWeight: FontWeight.w700,
-                  color: _kBlue,
+                  color: _kFlame,
                 ),
               ),
             ),
