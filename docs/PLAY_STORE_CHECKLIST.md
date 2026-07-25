@@ -3,7 +3,9 @@
 > **Maqsad: rad etilmaslik.** Quyidagilar Play Console'da AYNAN shunday
 > to'ldirilishi kerak. Noto'g'ri yoki yetishmagan javob = rad etish.
 >
-> Paket: `com.farzandim.child` · Nom: **Parvoz Growth**
+> Paket: `com.farzandim.growth` · Nom: **Parvoz Growth**
+> (`com.farzandim.child` Play'da band bo'lib chiqdi — shuning uchun
+> `applicationId` `growth`ga o'zgartirildi. iOS bundle ID tegilmadi.)
 > Maxfiylik siyosati: `https://farzandimedu.uz/privacy.html`
 
 ---

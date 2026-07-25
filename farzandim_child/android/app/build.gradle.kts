@@ -43,7 +43,13 @@ android {
     }
 
     defaultConfig {
-        applicationId = "com.farzandim.child"
+        // Google Play'da `com.farzandim.child` band bo'lib chiqdi (boshqa
+        // egada), shuning uchun Play uchun paket `com.farzandim.growth`
+        // (ilova nomi "Parvoz Growth"ga mos). MUHIM: bu o'zgarganda
+        // `google-services.json` ichida SHU paket ro'yxatdan o'tgan bo'lishi
+        // shart — aks holda Gradle "No matching client found" bilan yiqiladi.
+        // Kotlin namespace (com.farzandim.farzandim_child) o'zgarmaydi.
+        applicationId = "com.farzandim.growth"
         minSdk = 28
         targetSdk = 35
         versionCode = flutter.versionCode
