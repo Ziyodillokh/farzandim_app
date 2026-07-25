@@ -54,6 +54,72 @@ const double _sheetInitial = 0.36; // pastki varaqning boshlang'ich ulushi
 /// faqat sezilarli (10 daq+) to'xtashlar dot bo'lib tushadi.
 const int _minStopDotSec = 600;
 
+/// Yaqin to'xtashlarni birlashtirish radiusi — 100m. Shu masofa ichidagi
+/// barcha to'xtashlar BITTA "tochka"ga aylanadi.
+const double _stopMergeRadiusM = 100;
+
+/// 100m radius ichidagi to'xtash "tochka"larini BITTA nuqtaga birlashtiradi.
+/// Bola bir joyga (masalan uyga) kun davomida bir necha marta kelsa, avval
+/// har tashrif alohida amber nuqta bo'lib xaritani to'ldirib yuborardi — GPS
+/// "sakrashi" ham yaqin-yaqin nuqtalar chiqarardi. Endi yaqinlar bitta nuqta:
+/// pozitsiya eng uzoq turган to'xtashniki, davomiylik yig'iladi.
+List<LocationStop> _mergeNearbyStops(
+  List<LocationStop> stops, {
+  double radiusMeters = _stopMergeRadiusM,
+}) {
+  if (stops.length < 2) return stops;
+  const distance = ll.Distance();
+  final groups = <List<LocationStop>>[];
+  for (final s in stops) {
+    var merged = false;
+    for (final g in groups) {
+      final anchor = g.first;
+      final d = distance(
+        ll.LatLng(anchor.latitude, anchor.longitude),
+        ll.LatLng(s.latitude, s.longitude),
+      );
+      if (d <= radiusMeters) {
+        g.add(s);
+        merged = true;
+        break;
+      }
+    }
+    if (!merged) groups.add(<LocationStop>[s]);
+  }
+  return [
+    for (final g in groups)
+      if (g.length == 1) g.first else _combineStops(g),
+  ];
+}
+
+/// Bir guruh yaqin to'xtashni bitta LocationStop'ga jamlaydi (davomiylik +
+/// nuqta soni yig'iladi, vaqt oralig'i eng erta kelish–eng kech ketish).
+LocationStop _combineStops(List<LocationStop> group) {
+  final longest = group.reduce((a, b) => b.durationSec > a.durationSec ? b : a);
+  var totalSec = 0;
+  var totalPoints = 0;
+  var earliest = group.first.arrivedAt;
+  DateTime? latestLeft;
+  for (final s in group) {
+    totalSec += s.durationSec;
+    totalPoints += s.pointCount;
+    if (s.arrivedAt.isBefore(earliest)) earliest = s.arrivedAt;
+    final l = s.leftAt;
+    if (l != null && (latestLeft == null || l.isAfter(latestLeft))) {
+      latestLeft = l;
+    }
+  }
+  return LocationStop(
+    id: longest.id,
+    latitude: longest.latitude,
+    longitude: longest.longitude,
+    arrivedAt: earliest,
+    leftAt: latestLeft,
+    durationSec: totalSec,
+    pointCount: totalPoints,
+  );
+}
+
 /// Unbounded sarlavha stili.
 TextStyle _lunb(
   double size, {
@@ -324,10 +390,12 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
     final stops =
         ref.watch(locationStopsProvider(todayQuery)).valueOrNull ??
         const <LocationStop>[];
-    final longStops = [
+    // 10 daq+ to'xtashlar, so'ng 100m ichidagilar bitta nuqtaga birlashtiriladi
+    // — xarita ustma-ust amber nuqtalar bilan to'lib ketmasin.
+    final longStops = _mergeNearbyStops([
       for (final s in stops)
         if (s.durationSec >= _minStopDotSec) s,
-    ];
+    ]);
 
     final locationAsync = ref.watch(childLocationProvider(child.id));
 
@@ -702,10 +770,8 @@ class _StopDot extends StatelessWidget {
   Widget build(BuildContext context) {
     return GestureDetector(
       behavior: HitTestBehavior.opaque,
-      onTap: () => AppToast.info(
-        context,
-        '${stop.timeRange} · ${stop.durationLabel}',
-      ),
+      onTap: () =>
+          AppToast.info(context, '${stop.timeRange} · ${stop.durationLabel}'),
       child: Container(
         decoration: BoxDecoration(
           color: _warning,
