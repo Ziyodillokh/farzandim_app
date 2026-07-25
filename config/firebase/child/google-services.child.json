@@ -1,0 +1,207 @@
+{
+  "project_info": {
+    "project_number": "163835260058",
+    "firebase_url": "https://farzandim-mvp-default-rtdb.asia-southeast1.firebasedatabase.app",
+    "project_id": "farzandim-mvp",
+    "storage_bucket": "farzandim-mvp.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163835260058:android:bc9bac1f0fc5e301d30323",
+        "android_client_info": {
+          "package_name": "com.farzandim.child"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163835260058-943f2mi61u6g5gt77694mhe6nvm6joob.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farzandim.child",
+            "certificate_hash": "b813c1c7d2571067496dfda7651120ffd9e32687"
+          }
+        },
+        {
+          "client_id": "163835260058-ql9ruuk3lfugp7op1eho6o38jj97ojk6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farzandim.child",
+            "certificate_hash": "201930b0fbe7c456117a390b8895793cb42fea9a"
+          }
+        },
+        {
+          "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVQqj1-NIQwp9G566CS65ruw53Nzx6pDE"
+        },
+        {
+          "current_key": "AIzaSyAR23bYg9GIOgoPs-DvPkX082MKJJvTcTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "163835260058-7e0bl7bmft824tt35q53jjji53foh08o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.farzandim.child"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163835260058:android:72731351799f7f7bd30323",
+        "android_client_info": {
+          "package_name": "com.farzandim.growth"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVQqj1-NIQwp9G566CS65ruw53Nzx6pDE"
+        },
+        {
+          "current_key": "AIzaSyAR23bYg9GIOgoPs-DvPkX082MKJJvTcTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "163835260058-7e0bl7bmft824tt35q53jjji53foh08o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.farzandim.child"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163835260058:android:5d32a5f36a0b4708d30323",
+        "android_client_info": {
+          "package_name": "com.farzandim.parent"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163835260058-3ebusip0tciepc5go359h4f1dtvv9r8u.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farzandim.parent",
+            "certificate_hash": "2bdd866e7e867f4d2dfa4d73a4d539af75511261"
+          }
+        },
+        {
+          "client_id": "163835260058-6qmq2hpg0dfefubfngo127dh7hj7jel8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farzandim.parent",
+            "certificate_hash": "b813c1c7d2571067496dfda7651120ffd9e32687"
+          }
+        },
+        {
+          "client_id": "163835260058-uvj7mstji2oq112u8jpoql88firtbbae.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.farzandim.parent",
+            "certificate_hash": "201930b0fbe7c456117a390b8895793cb42fea9a"
+          }
+        },
+        {
+          "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVQqj1-NIQwp9G566CS65ruw53Nzx6pDE"
+        },
+        {
+          "current_key": "AIzaSyAR23bYg9GIOgoPs-DvPkX082MKJJvTcTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "163835260058-7e0bl7bmft824tt35q53jjji53foh08o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.farzandim.child"
+              }
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:163835260058:android:86d4f06530bfa2cfd30323",
+        "android_client_info": {
+          "package_name": "duyo.uz"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCVQqj1-NIQwp9G566CS65ruw53Nzx6pDE"
+        },
+        {
+          "current_key": "AIzaSyAR23bYg9GIOgoPs-DvPkX082MKJJvTcTs"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "163835260058-setue0esdhp19khilf53l9ttod5c6nlo.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "163835260058-7e0bl7bmft824tt35q53jjji53foh08o.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.farzandim.child"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

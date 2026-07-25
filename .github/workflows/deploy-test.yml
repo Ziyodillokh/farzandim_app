@@ -331,6 +331,17 @@ jobs:
           FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
         run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
 
+      # Bola ilovasi paketi `com.farzandim.growth` ga o'zgardi (Play'da eski
+      # paket band edi). Secret'dagi konfiguratsiya eski paketniki — build
+      # yiqilmasligi va FCM ishlashi uchun repodagi yangisini ustiga qo'yamiz.
+      # Ota-ona ilovasining konfiguratsiyasiga TEGILMAYDI.
+      - name: Override child Firebase config (com.farzandim.growth)
+        run: |
+          cp config/firebase/child/google-services.child.json \
+             farzandim_child/android/app/google-services.json
+          cp config/firebase/child/firebase_options.child.dart \
+             farzandim_child/lib/firebase_options.dart
+
       - name: Create env.json
         env:
           MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}

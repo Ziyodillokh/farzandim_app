@@ -34,6 +34,20 @@ jobs:
           FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
         run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
 
+      # Bola ilovasining Play paketi `com.farzandim.growth` (eski
+      # `com.farzandim.child` Play'da band edi). Secret'dagi eski konfiguratsiya
+      # bu paketni bilmaydi -> Gradle "No matching client found" bilan yiqiladi
+      # va FCM ishlamaydi. Shuning uchun secret ochilgandan KEYIN repodagi
+      # yangilangan konfiguratsiyani ustiga qo'yamiz (ota-onaga tegilmaydi).
+      - name: Override child Firebase config (com.farzandim.growth)
+        run: |
+          cp config/firebase/child/google-services.child.json \
+             farzandim_child/android/app/google-services.json
+          cp config/firebase/child/firebase_options.child.dart \
+             farzandim_child/lib/firebase_options.dart
+          grep -q "com.farzandim.growth" farzandim_child/android/app/google-services.json \
+            && echo "OK: google-services.json yangi paketni o'z ichiga oladi"
+
       - uses: actions/setup-java@v4
         with:
           distribution: temurin
