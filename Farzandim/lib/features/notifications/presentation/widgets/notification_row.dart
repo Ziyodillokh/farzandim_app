@@ -41,6 +41,14 @@ TextStyle _pop(
   Color c = Colors.white,
 }) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.4);
 
+/// Xabar kelgan soat (HH:mm) — ro'yxat kun bo'yicha guruhlangani uchun bu
+/// yerda faqat soat kifoya (sana guruh sarlavhasida).
+String _fmtTime(DateTime t) {
+  final l = t.toLocal();
+  String two(int n) => n.toString().padLeft(2, '0');
+  return '${two(l.hour)}:${two(l.minute)}';
+}
+
 /// Bildirishnomalar ro'yxatidagi bitta qator (Parvoz varaq/sahifa uchun umumiy).
 ///
 /// Rasm 3 dizayni: chapda dumaloq-kvadrat ikon-tayl (tur ikoni), o'ngida
@@ -126,11 +134,27 @@ class NotificationRow extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Text(
-                    title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: _unb(14),
+                  Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          title,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: _unb(14),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      // Kelgan soat (HH:mm).
+                      Padding(
+                        padding: const EdgeInsets.only(top: 1),
+                        child: Text(
+                          _fmtTime(notification.timestamp),
+                          style: _pop(11, c: _dim),
+                        ),
+                      ),
+                    ],
                   ),
                   if (sub.isNotEmpty) ...[
                     const SizedBox(height: 3),
@@ -206,7 +230,22 @@ class SosNotificationCard extends StatelessWidget {
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(SolarIconsBold.altArrowRight, size: 22, color: _sosRed),
+            Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Text(
+                  _fmtTime(notification.timestamp),
+                  style: _pop(11, c: _sosDim),
+                ),
+                const SizedBox(height: 6),
+                const Icon(
+                  SolarIconsBold.altArrowRight,
+                  size: 22,
+                  color: _sosRed,
+                ),
+              ],
+            ),
           ],
         ),
       ),

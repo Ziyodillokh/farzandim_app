@@ -207,7 +207,7 @@ class _NotificationCardState extends State<NotificationCard>
               ],
               const SizedBox(height: 8),
               Text(
-                _timeAgo(widget.notification.createdAt),
+                _fmtWhen(widget.notification.createdAt),
                 style: const TextStyle(
                   color: NotifTokens.muted,
                   fontSize: 12,
@@ -233,21 +233,22 @@ class _NotificationCardState extends State<NotificationCard>
     );
   }
 
-  String _timeAgo(DateTime dt) {
-    final diff = DateTime.now().difference(dt);
-    if (diff.inMinutes < 1) return 'notifications.justNow'.tr();
-    if (diff.inMinutes < 60) {
-      return 'notifications.minutesAgo'.tr(
-        namedArgs: {'min': '${diff.inMinutes}'},
-      );
+  /// Xabar kelgan ANIQ sana + soat: "Bugun, 17:54" / "Kecha, 17:54" /
+  /// "25.07.2026, 17:54" (relative "2 soat oldin" o'rniga — foydalanuvchi
+  /// aniq vaqtni ko'rishni so'radi).
+  String _fmtWhen(DateTime dt) {
+    final l = dt.toLocal();
+    String two(int n) => n.toString().padLeft(2, '0');
+    final time = '${two(l.hour)}:${two(l.minute)}';
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    final that = DateTime(l.year, l.month, l.day);
+    final diffDays = today.difference(that).inDays;
+    if (diffDays == 0) return '${'notifications.sectionToday'.tr()}, $time';
+    if (diffDays == 1) {
+      return '${'notifications.sectionYesterday'.tr()}, $time';
     }
-    if (diff.inHours < 24) {
-      return 'notifications.hoursAgo'.tr(namedArgs: {'h': '${diff.inHours}'});
-    }
-    if (diff.inDays < 7) {
-      return 'notifications.daysAgo'.tr(namedArgs: {'d': '${diff.inDays}'});
-    }
-    return DateFormat.yMd().format(dt);
+    return '${two(l.day)}.${two(l.month)}.${l.year}, $time';
   }
 }
 
