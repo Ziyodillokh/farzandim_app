@@ -20,7 +20,6 @@
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
-import 'package:farzandim_child/features/consent/data/services/consent_storage.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart'
     show kLanguagePickedKey;
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
@@ -74,11 +73,6 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     //    Mavjud (pair bo'lgan) foydalanuvchi til sahifasini qayta ko'rmaydi.
     final languagePicked = prefs.getBool(kLanguagePickedKey) ?? false;
     if (!isPaired && !languagePicked) return '/welcome';
-
-    // Oshkor rozilik (Play talabi) — til tanlangach, ma'lumot yig'ishdan OLDIN.
-    // Berilmagan bo'lsa /consent (router redirect ham buni majburlaydi).
-    final consentGiven = await ConsentStorage.isParentConsentGiven();
-    if (!consentGiven) return '/consent';
 
     // 4. Pair bo'lmagan → kod kiritish.
     if (!isPaired) return '/pairing';

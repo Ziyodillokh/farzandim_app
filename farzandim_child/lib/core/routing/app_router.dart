@@ -165,7 +165,19 @@ final routerProvider = Provider<GoRouter>((ref) {
   return GoRouter(
     initialLocation: '/splash',
     refreshListenable: refresh,
+    // Noma'lum manzil (deep-link, App Link, notification, eski route) — go_router
+    // default "Page Not Found" dead-end ko'rsatardi. O'rniga Splash'ni ko'rsatamiz:
+    // u pairing/permission holatiga qarab to'g'ri ekranga o'zi yo'naltiradi.
+    errorBuilder: (_, __) => const SplashScreen(),
     redirect: (context, state) {
+      // '/' yoki bo'sh manzil — bu router'da '/' route YO'Q (initial: /splash).
+      // Deep-link / OS launcher / FCM `deepLink:'/'` / eski "Page Not Found"
+      // "Home" tugmasi shu yerga olib kelib "no routes for location: /"
+      // dead-end'ini chiqarardi. Markaziy splash'ga yo'naltiramiz — u pairing
+      // holatiga qarab to'g'ri ekranni tanlaydi (re-pair QR оqimida ham).
+      final raw = state.uri.path;
+      if (raw.isEmpty || raw == '/') return '/splash';
+
       final pairing = ref.read(pairingStateProvider);
       final isPaired = pairing.isPaired;
       final loc = state.matchedLocation;

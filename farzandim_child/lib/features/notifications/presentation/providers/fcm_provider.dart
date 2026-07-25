@@ -36,7 +36,8 @@ void _handleNudgeTap(Ref ref, RemoteMessage message) {
   const nudgeTypes = {'study_nudge', 'health_nudge', 'content_reminder'};
   if (!nudgeTypes.contains(message.data['type'])) return;
   final route = message.data['relatedRoute'] as String?;
-  if (route == null || route.isEmpty) return;
+  // '/' — router'da route yo'q (dead-end). Bo'sh yoki '/' bo'lsa — jim.
+  if (route == null || route.isEmpty || route == '/') return;
   ref.read(routerProvider).go(route);
 }
 
@@ -55,6 +56,8 @@ void _handleDeepLink(Ref ref, RemoteMessage message) {
 /// `farzandim://videos` kabi sxema ma'lum bo'limga xaritalanadi (aniq band —
 /// masalan `farzandim://video/123` — bo'lim feed'iga tushadi). Noma'lum → null.
 String? _deepLinkToRoute(String link) {
+  // Bare '/' — router'da route yo'q (dead-end); e'tiborsiz qoldiramiz.
+  if (link == '/') return null;
   if (link.startsWith('/')) return link;
   const prefix = 'farzandim://';
   if (!link.startsWith(prefix)) return null;
