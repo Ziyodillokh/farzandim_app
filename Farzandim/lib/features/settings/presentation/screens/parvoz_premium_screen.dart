@@ -318,7 +318,10 @@ class _PlansList extends StatelessWidget {
 }
 
 // ════════════ Tarif kartasi ════════════
-class _PlanCard extends StatelessWidget {
+// Dastlab faqat bir nechta qator ("_collapsedCount") + "Batafsil" tugmasi
+// ko'rinadi. "Batafsil" bosilsa hamma imkoniyatlar ochiladi va tugma
+// "Ulanish"ga aylanadi (bepul tarifda — "Yig'ish").
+class _PlanCard extends StatefulWidget {
   const _PlanCard({
     required this.name,
     required this.price,
@@ -344,13 +347,21 @@ class _PlanCard extends StatelessWidget {
   final VoidCallback? onCta;
   final bool loading;
 
-  /// "X tarifidagi barchasi" qatori (bo'lsa, qalin) + qo'shimcha funksiyalar,
-  /// har biri orasida ajratgich chiziq.
-  List<Widget> _buildFeatureRows(Color featureColor, Color dividerColor) {
-    final items = <({String label, bool emphasize})>[
-      if (includesLabel != null) (label: includesLabel!, emphasize: true),
-      for (final f in features) (label: _featureLabel(f), emphasize: false),
-    ];
+  @override
+  State<_PlanCard> createState() => _PlanCardState();
+}
+
+class _PlanCardState extends State<_PlanCard> {
+  /// Yig'ilgan holatda ko'rinadigan qatorlar soni (includesLabel + funksiya).
+  static const _collapsedCount = 4;
+  bool _expanded = false;
+
+  /// Qatorlarni ajratgich chiziq bilan quradi.
+  List<Widget> _featureRows(
+    List<({String label, bool emphasize})> items,
+    Color featureColor,
+    Color dividerColor,
+  ) {
     final rows = <Widget>[];
     for (var i = 0; i < items.length; i++) {
       rows.add(
@@ -372,8 +383,9 @@ class _PlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final blue = style == _PlanStyle.blue;
-    final featureColor = switch (style) {
+    final w = widget;
+    final blue = w.style == _PlanStyle.blue;
+    final featureColor = switch (w.style) {
       _PlanStyle.glass => Colors.white.withValues(alpha: 0.78),
       _PlanStyle.blue => Colors.white,
       _PlanStyle.dark => Colors.white.withValues(alpha: 0.9),
@@ -382,41 +394,85 @@ class _PlanCard extends StatelessWidget {
         ? Colors.white.withValues(alpha: 0.22)
         : Colors.white.withValues(alpha: 0.1);
     // Narx rangi: shisha/ko'k kartada oq; to'q (Premium) kartada ko'k urg'u.
-    final priceColor = switch (style) {
+    final priceColor = switch (w.style) {
       _PlanStyle.glass => Colors.white.withValues(alpha: 0.92),
       _PlanStyle.blue => Colors.white,
       _PlanStyle.dark => const Color(0xFF6FA0FF),
     };
 
+    // Barcha qatorlar: "X tarifidagi barchasi" (bo'lsa) + funksiyalar.
+    final items = <({String label, bool emphasize})>[
+      if (w.includesLabel != null) (label: w.includesLabel!, emphasize: true),
+      for (final f in w.features) (label: _featureLabel(f), emphasize: false),
+    ];
+    final hasMore = items.length > _collapsedCount;
+    final visible = (!_expanded && hasMore)
+        ? items.sublist(0, _collapsedCount)
+        : items;
+    final hiddenCount = items.length - _collapsedCount;
+
+    // Pastki tugma: yig'ilgan+ortiqcha bo'lsa "Batafsil"; aks holda "Ulanish"
+    // (obuna bo'lsa); ochilgan bepul tarifda "Yig'ish".
+    final filled = w.style == _PlanStyle.dark;
+    Widget? button;
+    if (!_expanded && hasMore) {
+      button = _PlanCta(
+        label: 'premium.detailsCta'.tr(),
+        filled: filled,
+        onTap: () => setState(() => _expanded = true),
+      );
+    } else if (w.ctaLabel != null) {
+      button = _PlanCta(
+        label: w.ctaLabel!,
+        filled: filled,
+        loading: w.loading,
+        onTap: w.onCta,
+      );
+    } else if (hasMore) {
+      button = _PlanCta(
+        label: 'premium.collapseCta'.tr(),
+        filled: filled,
+        onTap: () => setState(() => _expanded = false),
+      );
+    }
+
     final content = Padding(
       padding: const EdgeInsets.all(22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          // Nom tepada, narx pastda — nom endi qisilmaydi va 2 qatorga
-          // sinmaydi (narx bilan bir qatorda emas).
-          Text(name, style: _unb(24, ls: -0.8)),
-          const SizedBox(height: 6),
-          Text(
-            price,
-            style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
-          ),
-          const SizedBox(height: 18),
-          ..._buildFeatureRows(featureColor, dividerColor),
-          if (ctaLabel != null) ...[
-            const SizedBox(height: 20),
-            _PlanCta(
-              label: ctaLabel!,
-              filled: style == _PlanStyle.dark,
-              loading: loading,
-              onTap: onCta,
+      child: AnimatedSize(
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeInOut,
+        alignment: Alignment.topCenter,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Nom tepada, narx pastda — nom endi qisilmaydi va 2 qatorga
+            // sinmaydi (narx bilan bir qatorda emas).
+            Text(w.name, style: _unb(24, ls: -0.8)),
+            const SizedBox(height: 6),
+            Text(
+              w.price,
+              style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
             ),
+            const SizedBox(height: 18),
+            ..._featureRows(visible, featureColor, dividerColor),
+            if (!_expanded && hasMore) ...[
+              const SizedBox(height: 12),
+              Text(
+                'premium.moreCount'.tr(namedArgs: {'n': '$hiddenCount'}),
+                style: _pop(
+                  12.5,
+                  w: FontWeight.w500,
+                  c: featureColor.withValues(alpha: 0.7),
+                ),
+              ),
+            ],
+            if (button != null) ...[const SizedBox(height: 20), button],
           ],
-        ],
+        ),
       ),
     );
 
-    switch (style) {
+    switch (w.style) {
       case _PlanStyle.glass:
         // Frosted shisha — ort fondagi god-ray xiralashadi.
         return ClipRRect(
