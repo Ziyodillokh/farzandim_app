@@ -3,11 +3,14 @@
 // `NotificationsSheet` orqali ochadi. Ikkalasi ham `NotificationsListView`
 // (kunlik guruhlangan) va bosilganda: SOS -> SOS modali, aks holda detal.
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
 import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/notifications_provider.dart';
+import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notifications_list_view.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -62,9 +65,10 @@ class NotificationsScreen extends ConsumerWidget {
       }
     }
     if (n.type == NotificationType.sos) {
-      // Yagona SOS UI — push/banner bilan bir xil ekran (avval bu yerda
-      // SosSheet, boshqa joyda SosAlertsListScreen ochilardi → "ikki xil").
-      context.push(AppRoutes.sosAlerts);
+      // SOS bosilса — xaritali "SOS xabar" modali (bola joyi + Manzil + Qachon
+      // + Telefon qilish / Xabar yozish). Avval SosAlertsListScreen (ro'yxat)
+      // ochilardi — foydalanuvchi talabiga ko'ra qaytadan shu modal.
+      unawaited(SosSheet.show(context, n));
     } else {
       context.push(AppRoutes.notificationDetail, extra: n);
     }

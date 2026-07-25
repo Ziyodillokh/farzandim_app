@@ -13,7 +13,9 @@ import 'package:farzandim/features/app_update/presentation/dialogs/force_update_
 import 'package:farzandim/features/app_update/presentation/providers/app_update_provider.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
+import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
+import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_permission_primer.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
 import 'package:farzandim/features/settings/presentation/plan_gate.dart';
@@ -323,11 +325,31 @@ class FarzandimApp extends ConsumerWidget {
             behavior: SnackBarBehavior.floating,
             content: _SosBanner(
               childName: childName,
-              // Bosilsa — SOS alertlar ro'yxatiga o'tadi (xarita + tafsilot +
-              // "hal qilindi").
+              // Bosilsa — xaritali "SOS xabar" modali (notification tap bilan
+              // bir xil UI). Navigator konteksti bo'lmasa ro'yxatga fallback.
               onView: () {
                 messenger.hideCurrentSnackBar();
-                ref.read(routerProvider).push(AppRoutes.sosAlerts);
+                final router = ref.read(routerProvider);
+                final navContext =
+                    router.routerDelegate.navigatorKey.currentContext;
+                if (navContext == null) {
+                  router.push(AppRoutes.sosAlerts);
+                  return;
+                }
+                final childId =
+                    (payload['childId'] as String?) ??
+                    (payload['child'] as Map?)?['id'] as String? ??
+                    '';
+                final sosNotif = AppNotification(
+                  id: alertId ?? 'sos-${DateTime.now().millisecondsSinceEpoch}',
+                  type: NotificationType.sos,
+                  childId: childId,
+                  childName: childName ?? '',
+                  title: 'SOS',
+                  message: '',
+                  timestamp: DateTime.now(),
+                );
+                unawaited(SosSheet.show(navContext, sosNotif));
               },
               onDismiss: messenger.hideCurrentSnackBar,
             ),

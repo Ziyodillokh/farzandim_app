@@ -46,7 +46,6 @@ import {
 } from '../../common/helpers/geo-ip';
 import { tr } from '../../common/i18n/notification-i18n';
 
-const PAIR_REQUEST_TTL_MIN = 5;
 // Session access request (2-qurilma limit) — 15 daqiqa amal qiladi.
 const SESSION_ACCESS_TTL_MS = 15 * 60 * 1000;
 
@@ -620,8 +619,8 @@ export class AuthService {
         },
       });
       auditAction = 'CREATE';
-      // Yangi ota-onaga 1-haftalik Standart demo (bir marta, best-effort).
-      await this.trial.grantStandardTrial(user.id);
+      // Demo FAQAT telefon raqami orqali register uchun — Google/Apple
+      // (email/social) login demo OLMAYDI (talab: faqat nomer orqali).
     }
 
     if (!user.isActive) {
@@ -877,8 +876,11 @@ export class AuthService {
       },
     });
 
-    // Yangi ota-onaga 1-haftalik Standart demo (bir marta, best-effort).
-    await this.trial.grantStandardTrial(user.id);
+    // 1-haftalik Standart demo FAQAT telefon raqami orqali ro'yxatdan
+    // o'tganlarga beriladi (email orqali register — demo OLMAYDI).
+    if (phone) {
+      await this.trial.grantStandardTrial(user.id);
+    }
 
     // OTP'ni ishlatib bo'ldik — DB'dan tozalab qo'yamiz (replay attack
     // himoyasi: bir tasdiqlash bilan bir necha akkaunt yaratish mumkin
@@ -1343,79 +1345,33 @@ export class AuthService {
       throw new NotFoundException('Family code not found');
     }
 
-    // Re-pair flow: child already paired => need parent confirmation
+    // Bola allaqachon boshqa qurilmaga ulangan → oila-kodi QR bilan qayta
+    // ulash TO'LIQ BLOKLANADI (bir bola = bir qurilma, qat'iy). Avval bu yerda
+    // "ota-ona tasdiqlaydi" so'rovi yaratilardi va yangi qurilma o'tib olardi —
+    // bu xato edi: ulangan bola profilini boshqa telefonga ko'chirib bo'lardi.
+    //
+    // Yangi qurilmaga o'tish uchun LEGAL yo'llar (ota-ona ilovasida):
+    //   1) Oila kodini qayta generatsiya qilish (joriy qurilma uziladi), yoki
+    //   2) "Qayta ulash" (repair) QR kodini olish (`createChildRepairToken`).
     if (child.childUserId) {
-      // Expire any pending pair requests
-      await this.prisma.childPairRequest.updateMany({
-        where: {
-          childId: child.id,
-          status: 'PENDING',
-          expiresAt: { gt: new Date() },
-        },
-        data: { status: 'EXPIRED', decidedAt: new Date() },
-      });
-
-      const expiresAt = new Date(Date.now() + PAIR_REQUEST_TTL_MIN * 60 * 1000);
-
-      const pairRequest = await this.prisma.childPairRequest.create({
-        data: {
-          childId: child.id,
-          deviceInfo: (dto.deviceInfo as object) ?? undefined,
-          ipAddress: reqMeta?.ip ?? null,
-          userAgent:
-            (reqMeta?.headers?.['user-agent'] as string | undefined) ?? null,
-          expiresAt,
-        },
-      });
-
       await this.audit.log(
         null,
         'auth',
         'PAIR',
-        pairRequest.id,
+        child.id,
         {
-          action: 'PAIR_REQUEST_CREATED',
+          action: 'REPAIR_BLOCKED_ALREADY_PAIRED',
           childId: child.id,
           familyCode: dto.familyCode,
         },
         reqMeta,
       );
-
-      // Realtime + push to parent
-      this.realtime.emitToUser(child.parentId, 'pair_request:created', {
-        id: pairRequest.id,
-        childId: child.id,
-        childName: child.name,
-        deviceInfo: pairRequest.deviceInfo,
-        ipAddress: pairRequest.ipAddress,
-        expiresAt: pairRequest.expiresAt.toISOString(),
-      });
-
-      try {
-        const lang = await this.fcm.getUserLang(child.parentId);
-        await this.fcm.sendPushToUser(child.parentId, {
-          title: tr(lang, 'pairRequest.title', { name: child.name }),
-          body: tr(lang, 'pairRequest.body'),
-          data: {
-            type: 'pair_request',
-            pairRequestId: pairRequest.id,
-            childId: child.id,
-          },
-        });
-      } catch (err) {
-        this.logger.warn(
-          { err, pairRequestId: pairRequest.id },
-          'pair_request push failed',
-        );
-      }
-
       throw new ConflictException({
-        error: 'AWAITING_PARENT_CONFIRM',
+        error: 'ALREADY_PAIRED',
         message:
-          'Bola allaqachon ulangan. Ota-onangiz yangi qurilmani tasdiqlashi kerak.',
-        pairRequestId: pairRequest.id,
-        expiresAt: pairRequest.expiresAt.toISOString(),
-        pollIntervalSec: 3,
+          'Bu bola allaqachon boshqa qurilmaga ulangan. Yangi qurilmaga ' +
+          'ulash uchun ota-ona ilovasidan joriy qurilmani uzing yoki ' +
+          '"Qayta ulash" QR kodini oling.',
       });
     }
 
