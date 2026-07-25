@@ -76,10 +76,10 @@ class StreakDetailScreen extends ConsumerWidget {
                     padding: const EdgeInsets.fromLTRB(16, 4, 16, 32),
                     children: [
                       _StreakHero(streak: streak),
-                      const SizedBox(height: 22),
+                      const SizedBox(height: 24),
                       Row(
                         children: [
-                          Text('streakDetail.medals'.tr(), style: _unb(16)),
+                          Text('streakDetail.medals'.tr(), style: _unb(17)),
                           const Spacer(),
                           _CountPill(
                             text: 'streakDetail.earnedOf'.tr(
@@ -91,7 +91,12 @@ class StreakDetailScreen extends ConsumerWidget {
                           ),
                         ],
                       ),
-                      const SizedBox(height: 12),
+                      const SizedBox(height: 4),
+                      Text(
+                        'streakDetail.subtitle'.tr(),
+                        style: _pop(12, c: _dim),
+                      ),
+                      const SizedBox(height: 14),
                       for (var r = 0; r < _medals.length; r += 2)
                         Padding(
                           padding: const EdgeInsets.only(bottom: 12),
@@ -150,48 +155,63 @@ class _StreakHero extends StatelessWidget {
         : 'streakDetail.nextMilestone'.tr(namedArgs: {'n': '${next - streak}'});
 
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 26),
+      padding: const EdgeInsets.fromLTRB(20, 28, 20, 22),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0xFF2A1710), Color(0xFF0B1119)],
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
+          colors: [Color(0xFF2C1810), Color(0xFF0C1119)],
         ),
-        borderRadius: BorderRadius.circular(26),
-        border: Border.all(color: _line),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: const Color(0x1FFB923C)),
       ),
       child: Column(
         children: [
           SizedBox(
-            width: 190,
-            height: 190,
+            width: 196,
+            height: 196,
             child: Stack(
               alignment: Alignment.center,
               children: [
+                // Yumshoq olov yog'du (halqa ortida).
+                Container(
+                  width: 150,
+                  height: 150,
+                  decoration: const BoxDecoration(
+                    shape: BoxShape.circle,
+                    gradient: RadialGradient(
+                      colors: [Color(0x33FB923C), Color(0x00FB923C)],
+                    ),
+                  ),
+                ),
                 SizedBox(
-                  width: 190,
-                  height: 190,
+                  width: 196,
+                  height: 196,
                   child: CustomPaint(painter: _RingPainter(pct)),
                 ),
                 Column(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    const Icon(SolarIconsBold.fire, size: 36, color: _flame),
-                    const SizedBox(height: 4),
-                    Text('$streak', style: _unb(40, ls: -1.5)),
+                    const Icon(SolarIconsBold.fire, size: 34, color: _flame),
+                    const SizedBox(height: 6),
+                    Text('$streak', style: _unb(42, ls: -1.5)),
+                    const SizedBox(height: 2),
                     Text(
                       'streakDetail.continuous'.tr(),
-                      style: _pop(11.5, c: _dim),
+                      style: _pop(11, c: _dim, w: FontWeight.w500),
                     ),
                   ],
                 ),
               ],
             ),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 16),
+          Text(caption, style: _unb(14.5, ls: -0.3, c: _flameSoft)),
+          const SizedBox(height: 6),
           Text(
-            caption,
-            style: _pop(13.5, c: _flameSoft, w: FontWeight.w500),
+            'streakDetail.hint'.tr(),
+            textAlign: TextAlign.center,
+            style: _pop(12, c: _dim),
           ),
         ],
       ),
@@ -275,11 +295,30 @@ class _MedalCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: _panel2,
-        borderRadius: BorderRadius.circular(18),
+        color: earned ? null : _panel2,
+        gradient: earned
+            ? LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [
+                  medal.color.withValues(alpha: 0.20),
+                  medal.color.withValues(alpha: 0.05),
+                ],
+              )
+            : null,
+        borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: earned ? medal.color.withValues(alpha: 0.35) : _line,
+          color: earned ? medal.color.withValues(alpha: 0.45) : _line,
         ),
+        boxShadow: earned
+            ? [
+                BoxShadow(
+                  color: medal.color.withValues(alpha: 0.16),
+                  blurRadius: 18,
+                  offset: const Offset(0, 8),
+                ),
+              ]
+            : null,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -288,18 +327,18 @@ class _MedalCard extends StatelessWidget {
             clipBehavior: Clip.none,
             children: [
               Container(
-                width: 52,
-                height: 52,
+                width: 54,
+                height: 54,
                 decoration: BoxDecoration(
-                  color: medal.color.withValues(alpha: earned ? 0.16 : 0.06),
-                  borderRadius: BorderRadius.circular(15),
+                  color: medal.color.withValues(alpha: earned ? 0.22 : 0.08),
+                  borderRadius: BorderRadius.circular(16),
                 ),
                 child: Icon(
                   medal.icon,
-                  size: 26,
+                  size: 27,
                   color: earned
                       ? medal.color
-                      : Colors.white.withValues(alpha: 0.28),
+                      : Colors.white.withValues(alpha: 0.38),
                 ),
               ),
               if (!earned)
@@ -308,13 +347,14 @@ class _MedalCard extends StatelessWidget {
                   bottom: -4,
                   child: Container(
                     padding: const EdgeInsets.all(4),
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF11161C),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0C1117),
                       shape: BoxShape.circle,
+                      border: Border.all(color: _line),
                     ),
                     child: const Icon(
                       SolarIconsBold.lock,
-                      size: 13,
+                      size: 12,
                       color: _dim,
                     ),
                   ),
@@ -327,7 +367,7 @@ class _MedalCard extends StatelessWidget {
             style: _unb(
               13.5,
               ls: -0.4,
-              c: earned ? Colors.white : const Color(0xB3FFFFFF),
+              c: earned ? Colors.white : const Color(0xCCFFFFFF),
             ),
           ),
           const SizedBox(height: 4),
@@ -339,15 +379,11 @@ class _MedalCard extends StatelessWidget {
           ),
           const SizedBox(height: 12),
           if (earned)
-            Row(
-              children: [
-                Icon(SolarIconsBold.checkCircle, size: 15, color: medal.color),
-                const SizedBox(width: 5),
-                Text(
-                  'streakDetail.achieved'.tr(),
-                  style: _pop(11.5, c: medal.color, w: FontWeight.w600),
-                ),
-              ],
+            _FooterChip(
+              icon: SolarIconsBold.checkCircle,
+              label: 'streakDetail.achieved'.tr(),
+              color: medal.color,
+              tinted: true,
             )
           else if (showProgress)
             Column(
@@ -363,11 +399,53 @@ class _MedalCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(height: 6),
-                Text('$streak / 10', style: _pop(11, c: _dim)),
+                Text('$streak / 10', style: _pop(11, c: _flameSoft)),
               ],
             )
           else
-            Text('—', style: _pop(11, c: const Color(0x40FFFFFF))),
+            _FooterChip(
+              icon: SolarIconsBold.lock,
+              label: 'streakDetail.locked'.tr(),
+              color: _dim,
+              tinted: false,
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+// ── Medal kartasi pastidagi holat chipi (Erishildi / Yopiq) ──
+class _FooterChip extends StatelessWidget {
+  const _FooterChip({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.tinted,
+  });
+
+  final IconData icon;
+  final String label;
+  final Color color;
+  final bool tinted;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+      decoration: BoxDecoration(
+        color: tinted ? color.withValues(alpha: 0.16) : const Color(0x0DFFFFFF),
+        borderRadius: BorderRadius.circular(999),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 13, color: color),
+          const SizedBox(width: 5),
+          Text(
+            label,
+            style: _pop(11, c: color, w: FontWeight.w600),
+          ),
         ],
       ),
     );
