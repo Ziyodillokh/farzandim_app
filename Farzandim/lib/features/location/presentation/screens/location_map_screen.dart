@@ -49,6 +49,11 @@ const double _radius = 24; // katta kartalar
 const double _radiusSm = 16; // kichik chip/plitkalar
 const double _sheetInitial = 0.36; // pastki varaqning boshlang'ich ulushi
 
+/// Xaritada "tochka" qo'yiladigan minimal to'xtash vaqti — 10 daqiqa.
+/// Backend 3 daqiqadan to'xtashlarni beradi (timeline uchun), lekin xaritaga
+/// faqat sezilarli (10 daq+) to'xtashlar dot bo'lib tushadi.
+const int _minStopDotSec = 600;
+
 /// Unbounded sarlavha stili.
 TextStyle _lunb(
   double size, {
@@ -312,6 +317,18 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
               [for (final p in seg.points) ll.LatLng(p.latitude, p.longitude)],
           ];
 
+    // Bugungi to'xtashlar (backend stop-detection). Xaritada FAQAT 10 daqiqa+
+    // to'xtagan joylarga "tochka" (dot) qo'yamiz — qisqa to'xtashlar (3–9 daq)
+    // faqat pastki "Harakatlar tarixi" timeline'da qoladi, xaritani
+    // to'ldirmaydi.
+    final stops =
+        ref.watch(locationStopsProvider(todayQuery)).valueOrNull ??
+        const <LocationStop>[];
+    final longStops = [
+      for (final s in stops)
+        if (s.durationSec >= _minStopDotSec) s,
+    ];
+
     final locationAsync = ref.watch(childLocationProvider(child.id));
 
     // Yangi location kelganda kamera markerga harakatlanadi
@@ -360,6 +377,7 @@ class _LocationMapScreenState extends ConsumerState<LocationMapScreen> {
                   child: child,
                   zones: zones,
                   routeSegments: routeSegments,
+                  stops: longStops,
                   myLocation: _myLocation,
                   controller: _mapController,
                   onUserGesture: _onUserGesture,
@@ -465,6 +483,7 @@ class _MapLayer extends StatelessWidget {
     required this.child,
     required this.zones,
     required this.routeSegments,
+    required this.stops,
     required this.myLocation,
     required this.controller,
     required this.onUserGesture,
@@ -478,6 +497,9 @@ class _MapLayer extends StatelessWidget {
   /// Ko'chalarga yopishtirilgan bugungi yo'l — HAR BO'LAK alohida chiziq
   /// (uzilishlar bir-biriga ulanmasin).
   final List<List<ll.LatLng>> routeSegments;
+
+  /// Bugungi 10 daqiqa+ to'xtashlar — har biriga xaritada "tochka" qo'yiladi.
+  final List<LocationStop> stops;
 
   /// Ota-onaning O'Z joylashuvi (ko'k nuqta). `null` bo'lsa ko'rsatilmaydi.
   final gmaps.LatLng? myLocation;
@@ -562,6 +584,17 @@ class _MapLayer extends StatelessWidget {
                 borderColor: _blue,
                 borderStrokeWidth: 2,
               ),
+            // 10 daqiqa+ to'xtash "tochka"lari — amber halo (ko'k yo'l va
+            // ko'k zonalardan ajralib tursin).
+            for (final s in stops)
+              CircleMarker(
+                point: _toLL(s.latitude, s.longitude),
+                radius: 24,
+                useRadiusInMeter: true,
+                color: _warning.withValues(alpha: 0.12),
+                borderColor: _warning.withValues(alpha: 0.55),
+                borderStrokeWidth: 1.5,
+              ),
           ],
         ),
         // Markerlar. Ota-ona ko'k nuqtasi AVVAL (bola avatari uning ustida
@@ -577,6 +610,14 @@ class _MapLayer extends StatelessWidget {
                 width: 96,
                 height: 60,
                 child: _ZonePin(zone: zone),
+              ),
+            // 10 daqiqa+ to'xtash tochkalari — bosilса davomiylik/vaqt tooltip.
+            for (final s in stops)
+              Marker(
+                point: _toLL(s.latitude, s.longitude),
+                width: 22,
+                height: 22,
+                child: _StopDot(stop: s),
               ),
             if (myLocation != null)
               Marker(
@@ -646,6 +687,39 @@ class _AvatarPin extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+/// 10 daqiqa+ to'xtash "tochkasi" — amber dot + oq ring. Bosilса o'sha
+/// to'xtashning vaqti va davomiyligi toast'da chiqadi.
+class _StopDot extends StatelessWidget {
+  const _StopDot({required this.stop});
+
+  final LocationStop stop;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => AppToast.info(
+        context,
+        '${stop.timeRange} · ${stop.durationLabel}',
+      ),
+      child: Container(
+        decoration: BoxDecoration(
+          color: _warning,
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2.5),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.35),
+              blurRadius: 5,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
