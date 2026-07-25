@@ -17,6 +17,7 @@ import { ContentStatusBadge } from '@/components/common/status-badge';
 import { DataPagination } from '@/components/common/data-pagination';
 import { EmptyState } from '@/components/common/empty-state';
 import { AudiobookUploadModal } from '@/components/content/audiobook-upload-modal';
+import { AudiobookBatchUploadModal } from '@/components/content/audiobook-batch-upload-modal';
 import { contentApi } from '@/lib/api/admin.api';
 import { cn, formatCompact, formatRelative } from '@/lib/utils';
 import { getApiErrorMessage } from '@/lib/api/client';
@@ -36,6 +37,7 @@ export default function AudiobooksPage() {
   const [status, setStatus] = useState('');
   const [page, setPage] = useState(1);
   const [uploadOpen, setUploadOpen] = useState(false);
+  const [batchOpen, setBatchOpen] = useState(false);
   const limit = 12;
 
   const { data, isLoading, isFetching } = useQuery({
@@ -69,15 +71,26 @@ export default function AudiobooksPage() {
         title="Audiokitoblar"
         count={data?.total}
         actions={
-          <Button onClick={() => setUploadOpen(true)}>
-            <Plus className="h-4 w-4" /> Audiokitob qo&apos;shish
-          </Button>
+          <div className="flex flex-wrap gap-2">
+            <Button variant="outline" onClick={() => setBatchOpen(true)}>
+              <Layers className="h-4 w-4" /> Ko&apos;p qismli yuklash
+            </Button>
+            <Button onClick={() => setUploadOpen(true)}>
+              <Plus className="h-4 w-4" /> Audiokitob qo&apos;shish
+            </Button>
+          </div>
         }
       />
 
       <AudiobookUploadModal
         open={uploadOpen}
         onOpenChange={setUploadOpen}
+        onSuccess={invalidate}
+      />
+
+      <AudiobookBatchUploadModal
+        open={batchOpen}
+        onOpenChange={setBatchOpen}
         onSuccess={invalidate}
       />
 
