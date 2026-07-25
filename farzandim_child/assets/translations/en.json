@@ -763,7 +763,7 @@
     "securityText": "The child's device information (battery, model) is sent to the parent.",
     "privacyTitle": "Privacy",
     "privacyText": "Data is stored encrypted and is not shared with third parties.",
-    "holdHint": "Hold the button for 3 seconds — this confirms you are a parent.",
+    "holdHint": "Only your parent should tap this button.",
     "confirming": "Confirming...",
     "confirmButton": "My parent confirms",
     "privacyPolicy": "Privacy policy",

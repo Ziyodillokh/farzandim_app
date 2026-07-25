@@ -43,17 +43,23 @@ class InstalledAppData {
     required this.packageName,
     required this.appName,
     this.iconBase64,
+    this.category,
   });
 
   final String packageName;
   final String appName;
   final String? iconBase64;
 
+  /// Qurilma aniqlagan haqiqiy kategoriya (GAME/SOCIAL/VIDEO) yoki null
+  /// (noaniq → backend paket nomidan klassifikatsiya qiladi).
+  final String? category;
+
   factory InstalledAppData.fromMap(Map<dynamic, dynamic> map) {
     return InstalledAppData(
       packageName: map['packageName'] as String,
       appName: map['appName'] as String,
       iconBase64: map['iconBase64'] as String?,
+      category: map['category'] as String?,
     );
   }
 }
@@ -129,7 +135,7 @@ class UsageStatsService {
   /// filtri). Har paket uchun oxirgi foreground vaqti. Background isolate
   /// har siklda chaqiradi → yangi o'yin ochilsa ota-onaga push yuboriladi.
   Future<List<({String packageName, String appName, int timestamp})>>
-      getRecentGameForegrounds({required int sinceMs}) async {
+  getRecentGameForegrounds({required int sinceMs}) async {
     try {
       final result = await _channel.invokeMethod<List<dynamic>>(
         'getRecentGameForegrounds',
@@ -156,8 +162,7 @@ class UsageStatsService {
   /// SYSTEM_ALERT_WINDOW ruxsati bormi?
   Future<bool> hasOverlayPermission() async {
     try {
-      return await _channel.invokeMethod<bool>('hasOverlayPermission') ??
-          false;
+      return await _channel.invokeMethod<bool>('hasOverlayPermission') ?? false;
     } catch (e) {
       debugPrint('UsageStats hasOverlayPermission xato: $e');
       return false;

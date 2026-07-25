@@ -5,6 +5,7 @@ import {
   ArrayMinSize,
   IsArray,
   IsBoolean,
+  IsIn,
   IsInt,
   IsOptional,
   IsString,
@@ -12,6 +13,8 @@ import {
   MinLength,
   ValidateNested,
 } from 'class-validator';
+
+import { APP_CATEGORIES, AppCategory } from '../app-category.util';
 
 export class InstalledAppDto {
   @ApiProperty()
@@ -59,6 +62,17 @@ export class InstalledAppDto {
   @IsBoolean()
   @IsOptional()
   isSystem?: boolean = false;
+
+  // Bola qurilmasi ApplicationInfo'dan aniqlagan haqiqiy kategoriya
+  // (GAME/SOCIAL/VIDEO). Bo'lsa backend paket-nomi taxminidan ustun qo'yadi.
+  @ApiPropertyOptional({
+    enum: APP_CATEGORIES,
+    description: "Qurilma aniqlagan haqiqiy kategoriya (GAME/SOCIAL/VIDEO)",
+  })
+  @IsString()
+  @IsIn(APP_CATEGORIES)
+  @IsOptional()
+  category?: AppCategory;
 }
 
 export class BatchUpsertAppsDto {

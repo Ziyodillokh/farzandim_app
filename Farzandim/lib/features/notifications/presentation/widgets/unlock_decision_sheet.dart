@@ -8,13 +8,42 @@
 //   - "Boshqa muddat" chiplari (5/15/30/60) → boshqa miqdor berish
 //   - "Rad etish" → deny
 //   - tashqariga bossa → null (bekor)
+//
+// Dizayn: Parvoz qora+ko'k (daily_limit_sheet.dart bilan bir xil tizim).
+// Eski teal-yashil `AppColors` o'rniga lokal Parvoz tokenlari + ParvozGlass.
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/core/theme/app_colors.dart';
-import 'package:farzandim/core/theme/app_dimensions.dart';
-import 'package:farzandim/core/theme/app_text_styles.dart';
+import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
+
+// ════════════ Parvoz tokenlar (lokal) ════════════
+const _bg = Color(0xFF00060A);
+const _blue = Color(0xFF216BFF);
+const _card = Color(0xFF12171E);
+const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
+const _dim = Color(0x8CFFFFFF); // oq 55%
+const _danger = Color(0xFFFF5A5A);
+
+TextStyle _unb(
+  double size, {
+  FontWeight w = FontWeight.w600,
+  Color c = Colors.white,
+  double ls = -0.3,
+}) => GoogleFonts.unbounded(
+  fontSize: size,
+  fontWeight: w,
+  color: c,
+  letterSpacing: ls,
+  height: 1.25,
+);
+
+TextStyle _pop(
+  double size, {
+  FontWeight w = FontWeight.w400,
+  Color c = Colors.white,
+}) => GoogleFonts.poppins(fontSize: size, fontWeight: w, color: c, height: 1.5);
 
 /// Sheet natijasi — rad etish yoki N daqiqa berish.
 @immutable
@@ -58,13 +87,9 @@ class UnlockDecisionSheet extends StatelessWidget {
   }) {
     return showModalBottomSheet<UnlockDecision>(
       context: context,
-      backgroundColor: AppColors.surface,
       isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusL),
-        ),
-      ),
+      backgroundColor: Colors.transparent,
+      barrierColor: Colors.black.withValues(alpha: 0.55),
       builder: (_) => UnlockDecisionSheet(
         childName: childName,
         appName: appName,
@@ -90,114 +115,90 @@ class UnlockDecisionSheet extends StatelessWidget {
       60,
     ].where((m) => m != req).toList(growable: false);
 
-    return SafeArea(
-      top: false,
-      child: Padding(
-        padding: const EdgeInsets.fromLTRB(
-          AppDimensions.lg,
-          AppDimensions.md,
-          AppDimensions.lg,
-          AppDimensions.lg,
-        ),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Drag handle
-            Center(
-              child: Container(
-                width: 40,
-                height: 4,
-                margin: const EdgeInsets.only(bottom: AppDimensions.md),
-                decoration: BoxDecoration(
-                  color: AppColors.border,
-                  borderRadius: BorderRadius.circular(2),
-                ),
-              ),
-            ),
-            Text(
-              'notifications.unlock.sheetTitle'.tr(),
-              style: AppTextStyles.headlineL.copyWith(fontSize: 20),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              req != null
-                  ? '$childName — "$subject" uchun $req daqiqa '
-                        "qo'shimcha vaqt so'rayapti."
-                  : '$childName — "$subject" uchun qo\'shimcha vaqt '
-                        "so'rayapti. Qancha vaqt berasiz?",
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textSecondary,
-              ),
-            ),
-            // Sabab (bola yozgan bo'lsa).
-            if (reasonText != null && reasonText.isNotEmpty) ...[
-              const SizedBox(height: AppDimensions.md),
-              _ReasonBox(reason: reasonText),
-            ],
-            const SizedBox(height: AppDimensions.lg),
-            // Asosiy amal — bola so'ragan miqdorni o'shancha tasdiqlash.
-            if (req != null) ...[
-              _ApproveRequestedButton(
-                minutes: req,
-                onTap: () =>
-                    Navigator.of(context).pop(UnlockDecision.grant(req)),
-              ),
-              const SizedBox(height: AppDimensions.md),
-              Text(
-                'notifications.unlock.otherDurationLabel'.tr(),
-                style: AppTextStyles.label.copyWith(
-                  color: AppColors.textTertiary,
-                ),
-              ),
-              const SizedBox(height: 10),
-            ],
-            // Daqiqa variantlari (so'ralgan miqdordan boshqa muddatlar).
-            Wrap(
-              spacing: 12,
-              runSpacing: 12,
+    final body = req != null
+        ? 'notifications.unlock.requestWithMinutes'.tr(
+            namedArgs: {
+              'name': childName,
+              'subject': subject,
+              'minutes': '$req',
+            },
+          )
+        : 'notifications.unlock.requestNoMinutes'.tr(
+            namedArgs: {'name': childName, 'subject': subject},
+          );
+
+    return ClipRRect(
+      borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+      child: ColoredBox(
+        color: _bg,
+        child: SafeArea(
+          top: false,
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(20, 10, 20, 20),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                for (final m in chipMinutes)
-                  _MinuteChip(
-                    minutes: m,
-                    onTap: () =>
-                        Navigator.of(context).pop(UnlockDecision.grant(m)),
-                  ),
-              ],
-            ),
-            const SizedBox(height: AppDimensions.lg),
-            // Rad etish
-            SizedBox(
-              width: double.infinity,
-              child: Material(
-                color: AppColors.error.withValues(alpha: 0.12),
-                shape: StadiumBorder(
-                  side: BorderSide(
-                    color: AppColors.error.withValues(alpha: 0.5),
-                    width: 1.4,
-                  ),
-                ),
-                clipBehavior: Clip.antiAlias,
-                child: InkWell(
-                  onTap: () =>
-                      Navigator.of(context).pop(const UnlockDecision.deny()),
-                  customBorder: const StadiumBorder(),
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                    child: Center(
-                      child: Text(
-                        'notifications.unlock.deny'.tr(),
-                        style: AppTextStyles.bodyM.copyWith(
-                          color: AppColors.error,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                // Drag handle
+                Center(
+                  child: Container(
+                    width: 44,
+                    height: 4,
+                    margin: const EdgeInsets.only(bottom: 18),
+                    decoration: BoxDecoration(
+                      color: Colors.white.withValues(alpha: 0.18),
+                      borderRadius: BorderRadius.circular(99),
                     ),
                   ),
                 ),
-              ),
+                Text(
+                  'notifications.unlock.sheetTitle'.tr(),
+                  style: _unb(19, w: FontWeight.w700, ls: -0.4),
+                ),
+                const SizedBox(height: 8),
+                Text(body, style: _pop(14, c: _dim)),
+                // Sabab (bola yozgan bo'lsa).
+                if (reasonText != null && reasonText.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _ReasonBox(reason: reasonText),
+                ],
+                const SizedBox(height: 22),
+                // Asosiy amal — bola so'ragan miqdorni o'shancha tasdiqlash.
+                if (req != null) ...[
+                  _ApproveRequestedButton(
+                    minutes: req,
+                    onTap: () =>
+                        Navigator.of(context).pop(UnlockDecision.grant(req)),
+                  ),
+                  const SizedBox(height: 18),
+                  Text(
+                    'notifications.unlock.otherDurationLabel'.tr(),
+                    style: _pop(13, c: _dim),
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // Daqiqa variantlari (so'ralgan miqdordan boshqa muddatlar).
+                Wrap(
+                  spacing: 12,
+                  runSpacing: 12,
+                  children: [
+                    for (final m in chipMinutes)
+                      _MinuteChip(
+                        minutes: m,
+                        onTap: () =>
+                            Navigator.of(context).pop(UnlockDecision.grant(m)),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 22),
+                // Rad etish
+                _DenyButton(
+                  onTap: () =>
+                      Navigator.of(context).pop(const UnlockDecision.deny()),
+                ),
+              ],
             ),
-          ],
+          ),
         ),
       ),
     );
@@ -213,29 +214,19 @@ class _ReasonBox extends StatelessWidget {
   Widget build(BuildContext context) {
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.all(AppDimensions.md),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: AppColors.surfaceVariant,
-        borderRadius: BorderRadius.circular(AppDimensions.radiusM),
-        border: Border.all(color: AppColors.border),
+        color: _card,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _fieldBorder),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            SolarIconsBold.chatRoundLine,
-            size: 18,
-            color: AppColors.textTertiary,
-          ),
+          const Icon(SolarIconsBold.chatRoundLine, size: 18, color: _dim),
           const SizedBox(width: 8),
           Expanded(
-            child: Text(
-              reason,
-              style: AppTextStyles.bodyS.copyWith(
-                color: AppColors.textPrimary,
-                height: 1.4,
-              ),
-            ),
+            child: Text(reason, style: _pop(14, c: const Color(0xF2FFFFFF))),
           ),
         ],
       ),
@@ -243,7 +234,7 @@ class _ReasonBox extends StatelessWidget {
   }
 }
 
-/// "Tasdiqlash ({N} daqiqa)" — to'liq-kenglik asosiy lime tugma.
+/// "Tasdiqlash ({N} daqiqa)" — to'liq-kenglik asosiy ko'k tugma.
 class _ApproveRequestedButton extends StatelessWidget {
   const _ApproveRequestedButton({required this.minutes, required this.onTap});
   final int minutes;
@@ -251,44 +242,35 @@ class _ApproveRequestedButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: Material(
-        color: AppColors.primary,
-        shape: const StadiumBorder(),
-        clipBehavior: Clip.antiAlias,
-        child: InkWell(
-          onTap: onTap,
-          customBorder: const StadiumBorder(),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  SolarIconsBold.checkCircle,
-                  size: 20,
-                  color: Colors.black,
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  'notifications.unlock.approveMinutes'.tr(
-                    namedArgs: {'minutes': '$minutes'},
-                  ),
-                  style: AppTextStyles.bodyM.copyWith(
-                    color: Colors.black,
-                    fontWeight: FontWeight.w800,
-                  ),
-                ),
-              ],
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: ParvozGlass(
+        blue: true,
+        height: 56,
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(
+              SolarIconsBold.checkCircle,
+              size: 20,
+              color: Colors.white,
             ),
-          ),
+            const SizedBox(width: 8),
+            Text(
+              'notifications.unlock.approveMinutes'.tr(
+                namedArgs: {'minutes': '$minutes'},
+              ),
+              style: _pop(16, w: FontWeight.w500),
+            ),
+          ],
         ),
       ),
     );
   }
 }
 
+/// "Boshqa muddat" chipi — shisha pill (ikkilamchi amal).
 class _MinuteChip extends StatelessWidget {
   const _MinuteChip({required this.minutes, required this.onTap});
   final int minutes;
@@ -296,28 +278,52 @@ class _MinuteChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Material(
-      color: AppColors.primary.withValues(alpha: 0.14),
-      shape: StadiumBorder(
-        side: BorderSide(
-          color: AppColors.primary.withValues(alpha: 0.6),
-          width: 1.4,
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+        decoration: BoxDecoration(
+          color: Colors.white.withValues(alpha: 0.06),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(color: _blue.withValues(alpha: 0.45)),
+        ),
+        child: Text(
+          'notifications.unlock.minutesChip'.tr(
+            namedArgs: {'minutes': '$minutes'},
+          ),
+          style: _pop(15, w: FontWeight.w500),
         ),
       ),
-      clipBehavior: Clip.antiAlias,
-      child: InkWell(
-        onTap: onTap,
-        customBorder: const StadiumBorder(),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+    );
+  }
+}
+
+/// "Rad etish" — to'liq-kenglik qizil (danger) tugma.
+class _DenyButton extends StatelessWidget {
+  const _DenyButton({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.symmetric(vertical: 15),
+        decoration: BoxDecoration(
+          color: _danger.withValues(alpha: 0.12),
+          borderRadius: BorderRadius.circular(999),
+          border: Border.all(
+            color: _danger.withValues(alpha: 0.45),
+            width: 1.4,
+          ),
+        ),
+        child: Center(
           child: Text(
-            'notifications.unlock.minutesChip'.tr(
-              namedArgs: {'minutes': '$minutes'},
-            ),
-            style: AppTextStyles.bodyM.copyWith(
-              color: AppColors.primary,
-              fontWeight: FontWeight.w700,
-            ),
+            'notifications.unlock.deny'.tr(),
+            style: _pop(15, w: FontWeight.w600, c: _danger),
           ),
         ),
       ),

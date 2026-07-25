@@ -167,6 +167,9 @@ class UsageSyncService {
               'appName': a.appName,
               'isSystem': false,
               if (a.iconBase64 != null) 'iconBase64': a.iconBase64,
+              // Qurilma aniqlagan haqiqiy kategoriya (bo'lsa) — backend
+              // kategoriya-bloklashda paket-nomi taxminidan ustun ishlatadi.
+              if (a.category != null) 'category': a.category,
             },
           )
           .toList(growable: false);

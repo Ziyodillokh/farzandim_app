@@ -119,8 +119,11 @@ export class InstalledAppsService {
 
     const ops = dto.apps.map((app: InstalledAppDto) => {
       const iconPath = iconPathByPkg.get(app.packageName) ?? app.iconPath;
-      // Kategoriya bloklash (#14) uchun — paket nomidan klassifikatsiya.
-      const category = classifyPackage(app.packageName);
+      // Kategoriya bloklash (#14): bola qurilmasi ApplicationInfo'dan aniqlagan
+      // HAQIQIY kategoriya (GAME/SOCIAL/VIDEO) bo'lsa — ustun (paket-nomi
+      // taxminidan aniqroq). Aks holda paket nomidan klassifikatsiya (EDU +
+      // qurilma aniqlamagan ilovalar).
+      const category = app.category ?? classifyPackage(app.packageName);
       return this.prisma.installedApp.upsert({
         where: {
           childId_packageName: { childId, packageName: app.packageName },

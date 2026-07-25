@@ -489,7 +489,33 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
             if (iconBase64 != null) {
                 map["iconBase64"] = iconBase64
             }
+            // Haqiqiy Android kategoriyasi (GAME/SOCIAL/VIDEO) — backend
+            // kategoriya-bloklashda paket-nomi taxminidan ustun. Noaniq bo'lsa
+            // qo'shmaymiz → backend classifyPackage hal qiladi.
+            val appInfo = info.activityInfo?.applicationInfo
+            if (appInfo != null) {
+                deviceCategory(appInfo)?.let { map["category"] = it }
+            }
             map
         }
+    }
+
+    /**
+     * ApplicationInfo'dan ishonchli kategoriya (GAME/SOCIAL/VIDEO) yoki null.
+     * Faqat yengil signal — manifest kategoriyasi/flag (og'ir APK-skan YO'Q;
+     * bu 100+ ilova uchun chaqiriladi). EDU/OTHER va aniqlanmaganlar backend
+     * klassifikatoriga qoldiriladi.
+     */
+    private fun deviceCategory(ai: ApplicationInfo): String? {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            when (ai.category) {
+                ApplicationInfo.CATEGORY_GAME -> return "GAME"
+                ApplicationInfo.CATEGORY_SOCIAL -> return "SOCIAL"
+                ApplicationInfo.CATEGORY_VIDEO -> return "VIDEO"
+            }
+        }
+        @Suppress("DEPRECATION")
+        if ((ai.flags and ApplicationInfo.FLAG_IS_GAME) != 0) return "GAME"
+        return null
     }
 }

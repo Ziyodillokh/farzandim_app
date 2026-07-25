@@ -763,7 +763,7 @@
     "securityText": "Bolaning qurilma ma'lumotlari (batareya, model) ota-onaga yuboriladi.",
     "privacyTitle": "Maxfiylik",
     "privacyText": "Ma'lumotlar shifrlangan holda saqlanadi va uchinchi shaxslarga berilmaydi.",
-    "holdHint": "Tugmani 3 sekund ushlab turing — bu ota-ona ekanligingizni tasdiqlaydi.",
+    "holdHint": "Bu tugmani faqat ota-onangiz bossin.",
     "confirming": "Tasdiqlanmoqda...",
     "confirmButton": "Ota-onam tasdiqlaydi",
     "privacyPolicy": "Maxfiylik siyosati",

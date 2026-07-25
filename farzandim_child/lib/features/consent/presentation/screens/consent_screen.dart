@@ -6,9 +6,9 @@
 // /pairing dan oldin. Rozilik berilmaguncha keyingi sahifaga
 // o'tib bo'lmaydi (router redirect himoyasi).
 //
-// "Ota-onam tasdiqlaydi" tugmasi — uzun bosish (3 sek). Bola tasodifan
-// bosib qo'ymasligi va ota-ona ongli ravishda tasdiqlashi uchun.
-// Bosish davomida progress ring 0 dan 1 ga to'lgani ko'rinadi.
+// "Ota-onam tasdiqlaydi" tugmasi — oddiy 1 marta bosish (ilgari 3s ushlab
+// turish edi, soddalashtirildi). Tugmani ota-ona bosishi kutiladi (matn +
+// izoh shuni bildiradi). Bosilgach ma'lumot yig'ishga rozilik yoziladi.
 //
 // Tasdiqlangach: SharedPreferences `parent_consent_v1 = true` yoziladi,
 // router avtomatik /splash → keyingi ekran (pairing yoki dashboard)ga
@@ -31,54 +31,16 @@ class ConsentScreen extends ConsumerStatefulWidget {
   ConsumerState<ConsentScreen> createState() => _ConsentScreenState();
 }
 
-class _ConsentScreenState extends ConsumerState<ConsentScreen>
-    with SingleTickerProviderStateMixin {
-  static const Duration _holdDuration = Duration(seconds: 3);
-
-  late final AnimationController _holdController;
+class _ConsentScreenState extends ConsumerState<ConsentScreen> {
   bool _confirming = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _holdController = AnimationController(vsync: this, duration: _holdDuration)
-      ..addStatusListener(_onHoldStatus);
-  }
-
-  @override
-  void dispose() {
-    _holdController
-      ..removeStatusListener(_onHoldStatus)
-      ..dispose();
-    super.dispose();
-  }
-
-  void _onHoldStatus(AnimationStatus status) {
-    if (status == AnimationStatus.completed && !_confirming) {
-      _confirming = true;
-      HapticFeedback.mediumImpact();
-      unawaited(_finalize());
-    }
-  }
-
-  Future<void> _finalize() async {
+  Future<void> _confirm() async {
+    if (_confirming) return;
+    setState(() => _confirming = true);
+    HapticFeedback.mediumImpact();
+    // Routerning `refreshListenable` o'zgargan state'ni eshitib, /consent dan
+    // keyingi marshrutga (/splash → ...) o'tkazadi — qo'lda navigatsiya yo'q.
     await ref.read(consentStateProvider.notifier).confirm();
-    // Routerning `refreshListenable` o'zgargan state'ni eshitib,
-    // /consent dan keyingi marshrutga (/splash → ...) o'tkazadi.
-    // Bu yerda qo'lda navigatsiya qilmaymiz — redirect ishlaydi.
-  }
-
-  void _onPressStart() {
-    if (_confirming) return;
-    HapticFeedback.lightImpact();
-    _holdController.forward();
-  }
-
-  void _onPressEnd() {
-    if (_confirming) return;
-    if (_holdController.status != AnimationStatus.completed) {
-      _holdController.reverse();
-    }
   }
 
   Future<void> _openPrivacyPolicy() async {
@@ -116,7 +78,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                       const SizedBox(height: 24),
                       Text(
                         'consent.title'.tr(),
-                        style: TextStyle(
+                        style: const TextStyle(
                           color: AppColors.parvozText,
                           fontSize: 26,
                           fontWeight: FontWeight.w800,
@@ -164,11 +126,9 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                 ),
               ),
               const SizedBox(height: 16),
-              _LongPressConfirmButton(
-                holdAnimation: _holdController,
-                onPressStart: _onPressStart,
-                onPressEnd: _onPressEnd,
+              _ConfirmButton(
                 confirming: _confirming,
+                onTap: _confirming ? null : () => unawaited(_confirm()),
               ),
               const SizedBox(height: 12),
               Text(
@@ -177,6 +137,7 @@ class _ConsentScreenState extends ConsumerState<ConsentScreen>
                 style: const TextStyle(
                   color: AppColors.parvozTextDim,
                   fontSize: 12,
+                  height: 1.35,
                 ),
               ),
               const SizedBox(height: 4),
@@ -231,7 +192,7 @@ class _ShieldBadge extends StatelessWidget {
       decoration: BoxDecoration(
         color: color.withValues(alpha: 0.12),
         shape: BoxShape.circle,
-        border: Border.all(color: color.withValues(alpha: 0.30), width: 1),
+        border: Border.all(color: color.withValues(alpha: 0.30)),
       ),
       child: Icon(Icons.verified_user_rounded, color: color, size: 38),
     );
@@ -296,86 +257,67 @@ class _ConsentBullet extends StatelessWidget {
   }
 }
 
-class _LongPressConfirmButton extends StatelessWidget {
-  const _LongPressConfirmButton({
-    required this.holdAnimation,
-    required this.onPressStart,
-    required this.onPressEnd,
-    required this.confirming,
-  });
+/// "Ota-onam tasdiqlaydi" — oddiy 1 marta bosiladigan aqua tugma.
+class _ConfirmButton extends StatelessWidget {
+  const _ConfirmButton({required this.confirming, required this.onTap});
 
-  final Animation<double> holdAnimation;
-  final VoidCallback onPressStart;
-  final VoidCallback onPressEnd;
   final bool confirming;
+  final VoidCallback? onTap;
 
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTapDown: confirming ? null : (_) => onPressStart(),
-      onTapUp: confirming ? null : (_) => onPressEnd(),
-      onTapCancel: confirming ? null : onPressEnd,
-      child: AnimatedBuilder(
-        animation: holdAnimation,
-        builder: (context, _) {
-          final progress = holdAnimation.value;
-          return Container(
-            height: 60,
-            decoration: BoxDecoration(
-              color: AppColors.parvozGreen,
-              borderRadius: BorderRadius.circular(16),
-              boxShadow: [
-                BoxShadow(
-                  color: AppColors.parvozGreen.withValues(alpha: 0.35),
-                  offset: const Offset(0, 6),
-                  blurRadius: 18,
-                  spreadRadius: -4,
-                ),
-              ],
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        height: 60,
+        decoration: BoxDecoration(
+          color: AppColors.parvozGreen,
+          borderRadius: BorderRadius.circular(16),
+          boxShadow: [
+            BoxShadow(
+              color: AppColors.parvozGreen.withValues(alpha: 0.35),
+              offset: const Offset(0, 6),
+              blurRadius: 18,
+              spreadRadius: -4,
             ),
-            child: Stack(
-              children: [
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(16),
-                  child: FractionallySizedBox(
-                    widthFactor: progress,
-                    heightFactor: 1,
-                    alignment: Alignment.centerLeft,
-                    child: Container(color: AppColors.parvozBlue),
+          ],
+        ),
+        child: Center(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              if (confirming) ...[
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(
+                    strokeWidth: 2.4,
+                    color: AppColors.parvozOnGreen,
                   ),
                 ),
-                Center(
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (confirming) ...[
-                        const SizedBox(
-                          width: 18,
-                          height: 18,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2.4,
-                            color: AppColors.parvozOnGreen,
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                      ],
-                      Text(
-                        confirming
-                            ? 'consent.confirming'.tr()
-                            : 'consent.confirmButton'.tr(),
-                        style: const TextStyle(
-                          color: AppColors.parvozOnGreen,
-                          fontSize: 17,
-                          fontWeight: FontWeight.w800,
-                        ),
-                      ),
-                    ],
-                  ),
+                const SizedBox(width: 12),
+              ] else ...[
+                const Icon(
+                  Icons.verified_user_rounded,
+                  color: AppColors.parvozOnGreen,
+                  size: 20,
                 ),
+                const SizedBox(width: 10),
               ],
-            ),
-          );
-        },
+              Text(
+                confirming
+                    ? 'consent.confirming'.tr()
+                    : 'consent.confirmButton'.tr(),
+                style: const TextStyle(
+                  color: AppColors.parvozOnGreen,
+                  fontSize: 17,
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

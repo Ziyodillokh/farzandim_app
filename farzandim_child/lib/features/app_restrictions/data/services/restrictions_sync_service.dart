@@ -17,7 +17,7 @@
 //
 // Sync trigger'lar:
 //   - Pairing tugagach `start(childId)`
-//   - Har 5 daqiqada Timer.periodic
+//   - Har 15 soniyada Timer.periodic (background safety net)
 //   - WS `app_limit:created/updated/deleted` event paytida `sync()` (public)
 //   - WS `schedule:created/updated/deleted` event paytida `sync()` (public)
 
@@ -38,15 +38,19 @@ class RestrictionsSyncService {
     required BackendAppLimitRepository appLimitRepo,
     required BackendRoutineRepository routineRepo,
     required BackendDevicePolicyRepository devicePolicyRepo,
-  })  : _scheduleRepo = scheduleRepo,
-        _appLimitRepo = appLimitRepo,
-        _routineRepo = routineRepo,
-        _devicePolicyRepo = devicePolicyRepo;
+  }) : _scheduleRepo = scheduleRepo,
+       _appLimitRepo = appLimitRepo,
+       _routineRepo = routineRepo,
+       _devicePolicyRepo = devicePolicyRepo;
 
   static const _prefsKeyBlocked = 'restriction.blocked_packages';
   static const _prefsKeyLimits = 'restriction.limits';
   static const _prefsKeyBlockUnknown = 'restriction.block_unknown_sources';
   static const _wildcardAll = '*';
+
+  /// Background periodic sync oralig'i (soniya). Bloklar/limitlar shu muddatda
+  /// kuchga kiradi (native poll — har 1 sek — allaqachon tez).
+  static const _syncIntervalSeconds = 15;
 
   final BackendScheduleRepository _scheduleRepo;
   final BackendAppLimitRepository _appLimitRepo;
@@ -56,7 +60,8 @@ class RestrictionsSyncService {
   String? _childId;
 
   /// Sync boshlash. Pairing tugagandan keyin chaqiriladi.
-  /// Har 5 daqiqada `_syncNow()` chaqiradi (background safety net).
+  /// Har [_syncIntervalSeconds] soniyada `_syncNow()` chaqiradi (background
+  /// safety net).
   void start({required String childId}) {
     _childId = childId;
     _syncTimer?.cancel();
@@ -64,12 +69,14 @@ class RestrictionsSyncService {
     debugPrint('RestrictionsSync: start $childId');
 
     unawaited(_syncNow());
-    // 30 sek — background isolate'da WS yo'q, shu sababli periodic asosiy
-    // manba. Blok/limit shu muddatda kuchga kiradi (avval 1 daqiqa edi →
-    // "1 daqiqadan keyin" sekin sezilardi). Foreground'da WS event darhol
-    // sync qiladi.
+    // 15 sek — background isolate'da WS yo'q, shu sababli periodic asosiy
+    // manba. Blok/limit va vaqt-oyna (schedule) o'zgarishi shu muddatda kuchga
+    // kiradi. Avval 30 sek edi → "real-time bloklash ba'zida kechikadi"
+    // muammosi (ayniqsa jadval BLOCK oynasi boshlanishi/tugashida). 15 sek —
+    // sezilarli tezroq, native nozik blok-servisga tegilmaydi. Foreground'da
+    // WS event darhol sync qiladi.
     _syncTimer = Timer.periodic(
-      const Duration(seconds: 30),
+      const Duration(seconds: _syncIntervalSeconds),
       (_) => unawaited(_syncNow()),
     );
   }

@@ -79,6 +79,23 @@ const EXACT: Record<string, AppCategory> = {
   'com.microblink.photomath': 'EDU',
   'com.brainly': 'EDU',
   'co.brainly': 'EDU',
+  // SOCIAL (kengaytirilgan)
+  'com.tencent.mm': 'SOCIAL',
+  'org.thoughtcrime.securesms': 'SOCIAL',
+  'com.reddit.frontpage': 'SOCIAL',
+  'com.instagram.barcelona': 'SOCIAL',
+  // VIDEO (kengaytirilgan)
+  'com.disney.disneyplus': 'VIDEO',
+  'ru.kinopoisk': 'VIDEO',
+  'com.ivi.client': 'VIDEO',
+  // GAME (kengaytirilgan)
+  'com.epicgames.fortnite': 'GAME',
+  'com.nianticlabs.pokemongo': 'GAME',
+  'com.pubg.krmobile': 'GAME',
+  // EDU (kengaytirilgan)
+  'org.coursera.android': 'EDU',
+  'com.udemy.android': 'EDU',
+  'com.memrise.android.memrisecompanion': 'EDU',
 };
 
 /** Paket nomidagi kalit so'z bo'yicha evristik (EXACT topilmasa). */
