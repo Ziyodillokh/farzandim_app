@@ -66,14 +66,37 @@
 			<string>UIInterfaceOrientationLandscapeLeft</string>
 			<string>UIInterfaceOrientationLandscapeRight</string>
 		</array>
-		<!-- image_picker uchun ruxsat tushuntirishlari. iOS App Store
-	     "usage description" majburiy — yo'q bo'lsa ilova crash bo'ladi. -->
+		<!-- Ruxsat tushuntirishlari. iOS App Store "usage description" majburiy —
+	     yo'q bo'lsa ilova o'sha ruxsatni so'raganda DARHOL crash bo'ladi. -->
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Bola fotosini tanlash uchun galereyaga kirish kerak</string>
 		<key>NSCameraUsageDescription</key>
-		<string>Bola fotosini olish uchun kamera kerak</string>
+		<string>Bola fotosini olish, QR-kod skanerlash va video xabar yozish uchun kamera kerak</string>
+		<!-- record ^5.1.2 (ovozli/video xabar) mikrofon so'raganda bu kalitsiz
+	     iOS ilovani darhol o'ldiradi (reviewer aynan shuni sinaydi). -->
+		<key>NSMicrophoneUsageDescription</key>
+		<string>Ovozli va video xabar yozish uchun mikrofon kerak</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Xaritada o'z joylashuvingizni ko'rsatish uchun kerak</string>
+		<!-- Eksport muvofiqligi: ilova faqat standart HTTPS/TLS ishlatadi (ozod).
+	     Busiz App Store Connect har build'da eksport savolini so'raydi. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
+		<!-- Google Sign-In iOS OAuth redirect sxemasi. ⚠️ MUHIM: quyidagi
+	     qiymatni GoogleService-Info.plist qo'shilgach undagi REVERSED_CLIENT_ID
+	     (iOS OAuth client'niki) bilan ALMASHTIRING. Sign in with Apple bunga
+	     bog'liq emas — u shusiz ham ishlaydi. -->
+		<key>CFBundleURLTypes</key>
+		<array>
+			<dict>
+				<key>CFBundleTypeRole</key>
+				<string>Editor</string>
+				<key>CFBundleURLSchemes</key>
+				<array>
+					<string>com.googleusercontent.apps.931495868029-b7keq7og9afennh7h3smfaunlf34tsuh</string>
+				</array>
+			</dict>
+		</array>
 		<key>UIStatusBarHidden</key>
 		<false/>
 	</dict>
