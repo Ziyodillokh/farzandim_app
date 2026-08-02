@@ -4,6 +4,7 @@
 import 'dart:io' show Platform;
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart' show PlatformException;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_sign_in/google_sign_in.dart';
 import 'package:sign_in_with_apple/sign_in_with_apple.dart';
@@ -65,7 +66,28 @@ class SocialSignInService {
   /// Google sign-in dialog'ini ochadi.
   /// Bekor qilinsa — [SocialSignInCancelled] tashlaydi.
   Future<GoogleSignInResult> signInWithGoogle() async {
-    final account = await _google.signIn();
+    GoogleSignInAccount? account;
+    try {
+      account = await _google.signIn();
+    } on PlatformException catch (e) {
+      // ApiException: 10 (DEVELOPER_ERROR) — ilovaning SHA-1 imzosi
+      // serverClientId egasi bo'lgan Google Cloud loyihasida (Android OAuth
+      // client) ro'yxatdan o'tmagan. Play orqali tarqatilsa Play App Signing
+      // SHA-1'ni ham qo'shish SHART. Xatoni aniq matn bilan ko'taramiz, aks
+      // holda foydalanuvchi "nega ishlamayapti?" deb bilmay qoladi.
+      final msg = e.message ?? '';
+      if (e.code == 'sign_in_failed' &&
+          (msg.contains('10:') ||
+              msg.contains('DEVELOPER_ERROR') ||
+              msg.contains('ApiException: 10'))) {
+        throw Exception(
+          'Google kirish sozlanmagan (ApiException 10 / DEVELOPER_ERROR): '
+          'ilova SHA-1 imzosi Google Cloud loyihasida (serverClientId egasi) '
+          "ro'yxatdan o'tmagan. Play App Signing SHA-1'ni ham qo'shing.",
+        );
+      }
+      rethrow;
+    }
     if (account == null) {
       throw const SocialSignInCancelled();
     }
