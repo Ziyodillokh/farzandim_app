@@ -3,6 +3,7 @@ package com.farzandim.farzandim_child
 import android.app.AppOpsManager
 import android.app.usage.UsageEvents
 import android.app.usage.UsageStatsManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.ApplicationInfo
@@ -79,6 +80,10 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
                 }
                 "hasOverlayPermission" -> result.success(hasOverlayPermission())
                 "isAccessibilityEnabled" -> result.success(isAccessibilityEnabled())
+                "openAccessibilitySettings" -> {
+                    openAccessibilitySettings()
+                    result.success(null)
+                }
                 "openOverlaySettings" -> {
                     openOverlaySettings()
                     result.success(null)
@@ -108,20 +113,68 @@ class UsageStatsPlugin : FlutterPlugin, MethodCallHandler {
     }
 
     /**
-     * RestrictionService (Accessibility Service) yoqilganmi — ota-onaga
-     * "Accessibility holati"ni ko'rsatish uchun (Block 4 / M12). Tizimning
-     * yoqilgan accessibility xizmatlari ro'yxatida bizning servismiz bormi.
+     * Bloklash accessibility xizmati yoqilganmi.
+     *
+     * ⚠️ Avval bu funksiya `RestrictionService`ni qidirardi — u esa oddiy
+     * `Service`, accessibility xizmati EMAS. Ya'ni HECH QACHON `true`
+     * qaytarmasdi va backend'ga doim `accessibilityEnabled=false` ketardi.
+     * Endi haqiqiy [BlockAccessibilityService] tekshiriladi.
+     *
+     * Ikki manba: avval `AccessibilityManager` (ishonchli), bo'lmasa
+     * `Settings.Secure`. Ba'zi OEM'lar komponentni QISQA shaklda saqlaydi
+     * (`paket/.Klass`), shuning uchun oddiy string solishtiruv yetarli emas —
+     * `ComponentName.unflattenFromString` bilan normallashtiramiz.
      */
     private fun isAccessibilityEnabled(): Boolean {
+        val target = ComponentName(
+            context.packageName,
+            BlockAccessibilityService::class.java.name,
+        )
+
+        // 1) Rasmiy API.
+        try {
+            val am = context.getSystemService(Context.ACCESSIBILITY_SERVICE)
+                as? android.view.accessibility.AccessibilityManager
+            val list = am?.getEnabledAccessibilityServiceList(
+                android.accessibilityservice.AccessibilityServiceInfo.FEEDBACK_ALL_MASK,
+            )
+            if (list != null) {
+                val found = list.any {
+                    val id = it.id ?: return@any false
+                    ComponentName.unflattenFromString(id) == target
+                }
+                if (found) return true
+            }
+        } catch (e: Exception) {
+            android.util.Log.w("UsageStatsPlugin", "a11y manager xato: ${e.message}")
+        }
+
+        // 2) Zaxira — Settings.Secure ro'yxati.
         return try {
-            val expected = "${context.packageName}/${RestrictionService::class.java.name}"
             val enabled = Settings.Secure.getString(
                 context.contentResolver,
                 Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES,
             ) ?: return false
-            enabled.split(':').any { it.equals(expected, ignoreCase = true) }
+            enabled.split(':').any {
+                ComponentName.unflattenFromString(it.trim()) == target
+            }
         } catch (_: Exception) {
             false
+        }
+    }
+
+    /** Tizimning "Maxsus imkoniyatlar" sozlamalarini ochadi. */
+    private fun openAccessibilitySettings() {
+        try {
+            context.startActivity(
+                Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
+        } catch (e: Exception) {
+            context.startActivity(
+                Intent(Settings.ACTION_SETTINGS)
+                    .addFlags(Intent.FLAG_ACTIVITY_NEW_TASK),
+            )
         }
     }
 

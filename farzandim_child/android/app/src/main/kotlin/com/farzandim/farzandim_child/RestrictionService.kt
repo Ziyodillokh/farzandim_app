@@ -130,6 +130,38 @@ class RestrictionService : Service() {
         )
 
         /**
+         * Tirik servis nusxasi — [BlockAccessibilityService] shu orqali
+         * overlay'ni SO'RAYDI (o'zi qo'shmaydi). Overlay egasi bitta bo'lishi
+         * shart: `showOverlay()` ichida `hideOverlay()` + `addView()` bor va
+         * ular sinxronlanmagan — ikki chaqiruvchi bo'lsa view ikki marta
+         * qo'shilib, WindowManager istisnosi chiqardi.
+         */
+        @Volatile
+        private var instance: RestrictionService? = null
+
+        /**
+         * Accessibility servis bloklangan ilovani ANIQLAGANDA chaqiradi.
+         *
+         * Bu yerda overlay TO'G'RIDAN-TO'G'RI qo'shilmaydi: paket eslab
+         * qolinadi va servisning MAVJUD bosh-oqim handler'iga bitta
+         * `checkRestrictions()` yuboriladi. Shu tufayli overlay'ning butun
+         * dedupe mantig'i (`ensureOverlay` — paket/sabab/orientatsiya
+         * solishtiruvi) o'zgarishsiz qayta ishlatiladi.
+         *
+         * Servis tirik bo'lmasa — jim qaytadi (watchdog uni tiklaydi).
+         */
+        fun onForegroundFromAccessibility(ctx: Context, pkg: String) {
+            val svc = instance ?: return
+            try {
+                svc.a11yPkg = pkg
+                svc.a11yAt = System.currentTimeMillis()
+                svc.handler.post { svc.checkRestrictions() }
+            } catch (e: Exception) {
+                Log.w(TAG, "a11y hook xato: ${e.message}")
+            }
+        }
+
+        /**
          * Watchdog alarmni (qayta) o'rnatadi — ~60s dan keyin BootReceiver
          * `ACTION_WATCHDOG` broadcast oladi, servisni tekshirib/qayta ishga
          * tushiradi va keyingi alarmni rejalashtiradi (o'z-o'zini davolovchi
@@ -221,6 +253,20 @@ class RestrictionService : Service() {
     // juda tor bo'lib qoladi va uzoq o'ynalgan o'yin queue'ga tushmaydi.
     private var lastForegroundSticky: String? = null
 
+    // Accessibility servisdan kelgan oxirgi foreground paket. UsageStats
+    // hodisalari OEM tomonidan bo'g'ilganda (Samsung/Xiaomi) `queryEvents`
+    // sekin yoki bo'sh keladi; accessibility esa tizimdan DARHOL xabar beradi.
+    // Shu sabab qisqa muddat ichida u ustunlik qiladi. Accessibility yoqilmagan
+    // bo'lsa bu maydon abadiy `null` — ya'ni eski xulq bir zarra o'zgarmaydi.
+    @Volatile
+    private var a11yPkg: String? = null
+
+    @Volatile
+    private var a11yAt = 0L
+
+    /** a11y qiymati shu muddatdan eski bo'lsa e'tiborga olinmaydi. */
+    private val a11yFreshMs = 3_000L
+
     private val pollRunnable = object : Runnable {
         override fun run() {
             if (!isRunning) return
@@ -238,6 +284,7 @@ class RestrictionService : Service() {
     override fun onCreate() {
         super.onCreate()
         Log.d(TAG, "Service created")
+        instance = this
         createNotificationChannel()
         windowManager = getSystemService(Context.WINDOW_SERVICE) as WindowManager
     }
@@ -269,6 +316,7 @@ class RestrictionService : Service() {
     override fun onDestroy() {
         super.onDestroy()
         Log.d(TAG, "Service destroyed")
+        if (instance === this) instance = null
         // MUHIM: tizim/OEM FGS'ni o'ldirganda ham onDestroy chaqiriladi —
         // bunda watchdog'ni O'CHIRMAYMIZ (explicit=false), aks holda o'z-o'zini
         // tiklovchi zanjir uzilib, bloklash butunlay to'xtardi. Watchdog faqat
@@ -395,8 +443,17 @@ class RestrictionService : Service() {
                             ">= $limitMinutes min",
                     )
                 }
+                // Accessibility yo'li uchun e'lon qilamiz — u O(1) o'qiydi.
+                // `getTodayUsageMs` OG'IR (kun boshidan barcha hodisalar) va
+                // accessibility callback'idan hech qachon chaqirilmasligi kerak.
+                BlockPolicy.limitExceeded = BlockPolicy.limitExceeded + foreground
                 ensureOverlay(foreground, REASON_LIMIT)
                 return
+            }
+            // Limit ostida — ro'yxatdan chiqaramiz (ota-ona vaqt qo'shgan yoki
+            // yangi kun boshlangan bo'lishi mumkin).
+            if (foreground in BlockPolicy.limitExceeded) {
+                BlockPolicy.limitExceeded = BlockPolicy.limitExceeded - foreground
             }
             // Limitga PRE_WARNING_MS (10 daqiqa) yoki kamroq qoldi — bir marta
             // ogohlantiramiz (bola qo'shimcha vaqt so'rashga ulgursin). Bosilsa
@@ -767,6 +824,15 @@ class RestrictionService : Service() {
      * buzilmaydi — sticky ham bir xil paket, isNewForeground=false bo'ladi.
      */
     private fun getForegroundPackage(): String? {
+        // Accessibility servisdan YANGI xabar bo'lsa u ustun: tizim bizga
+        // to'g'ridan-to'g'ri aytgan, UsageStats esa bo'g'ilgan bo'lishi mumkin.
+        // Yoqilmagan bo'lsa `a11yPkg` doim null — quyidagi eski yo'l ishlaydi.
+        val fresh = a11yPkg
+        if (fresh != null && System.currentTimeMillis() - a11yAt <= a11yFreshMs) {
+            lastForegroundSticky = fresh
+            return fresh
+        }
+
         return try {
             val usm = getSystemService(Context.USAGE_STATS_SERVICE)
                 as UsageStatsManager

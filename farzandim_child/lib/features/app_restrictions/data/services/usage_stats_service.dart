@@ -77,8 +77,10 @@ class UsageStatsService {
     }
   }
 
-  /// Accessibility xizmati (RestrictionService) yoqilganmi — ota-onaga
-  /// qurilma "Accessibility holati"ni ko'rsatish uchun (Block 4 / M12).
+  /// Bloklash accessibility xizmati (`BlockAccessibilityService`) yoqilganmi.
+  ///
+  /// Yoqilgan bo'lsa bloklangan ilova ochilishi bilanoq (~0.1 soniya) yopiladi;
+  /// yoqilmagan bo'lsa faqat UsageStats poll'i ishlaydi (1-3 soniya kechikish).
   Future<bool> isAccessibilityEnabled() async {
     try {
       return await _channel.invokeMethod<bool>('isAccessibilityEnabled') ??
@@ -86,6 +88,16 @@ class UsageStatsService {
     } catch (e) {
       debugPrint('UsageStats isAccessibilityEnabled xato: $e');
       return false;
+    }
+  }
+
+  /// Tizimning "Maxsus imkoniyatlar" (Accessibility) sozlamalarini ochadi —
+  /// foydalanuvchi u yerdan Parvoz xizmatini qo'lda yoqadi.
+  Future<void> openAccessibilitySettings() async {
+    try {
+      await _channel.invokeMethod<void>('openAccessibilitySettings');
+    } catch (e) {
+      debugPrint('UsageStats openAccessibilitySettings xato: $e');
     }
   }
 

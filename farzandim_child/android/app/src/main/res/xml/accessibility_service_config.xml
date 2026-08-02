@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  BlockAccessibilityService konfiguratsiyasi.
+
+  ⚠️ Google Play muvofiqligi uchun uchta atribut HAL QILUVCHI:
+    canRetrieveWindowContent="false"
+        Ekran MAZMUNI o'qilmaydi — faqat qaysi ilova ochilgani (paket nomi).
+        Bu "accessibility orqali maxfiy ma'lumot yig'asizmi?" savoliga rostgo'y
+        "YO'Q" javob berish imkonini beradi — eng katta xavf-kamaytiruvchi.
+    canPerformGestures="false"
+        Ekranga imo-ishora qilinmaydi.
+    isAccessibilityTool="false"
+        MAJBURIY. Bu bayroq haqiqiy nogironlik vositalari uchun; kuzatuv
+        ilovalari siyosat bo'yicha unga NOMUVOFIQ. "true" qo'yish — to'g'ridan
+        to'g'ri qoidabuzarlik va akkaunt to'xtatilishiga olib keladi.
+
+  accessibilityEventTypes faqat typeWindowStateChanged — minimal qamrov
+  (typeAllMask "eng kam kerakli ruxsat" argumentini buzardi).
+-->
+<accessibility-service xmlns:android="http://schemas.android.com/apk/res/android"
+    android:accessibilityEventTypes="typeWindowStateChanged"
+    android:accessibilityFeedbackType="feedbackGeneric"
+    android:accessibilityFlags="flagDefault"
+    android:canPerformGestures="false"
+    android:canRetrieveWindowContent="false"
+    android:description="@string/accessibility_service_description"
+    android:isAccessibilityTool="false"
+    android:notificationTimeout="100"
+    android:summary="@string/accessibility_service_summary"/>

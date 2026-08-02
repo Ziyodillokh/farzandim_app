@@ -208,7 +208,8 @@
     "stepNumber": "{number}. {title}",
     "grantButton": "Enable",
     "autoContinueHint": "Will continue automatically once all are enabled",
-    "uninstallProtectionName": "Prevent uninstall"
+    "uninstallProtectionName": "Prevent uninstall",
+    "a11yName": "Fast blocking (recommended)"
   },
   "dashboard": {
     "greeting": "Hi, {name}!",
@@ -975,5 +976,17 @@
   },
   "photo": {
     "uploadFailed": "Couldn't upload the photo"
+  },
+  "a11yDisclosure": {
+    "title": "Fast blocking service",
+    "subtitle": "An extra permission is needed so a blocked app closes instantly. This is optional.",
+    "doesTitle": "What it does",
+    "doesText": "When you open an app your parent blocked, Parvoz closes it immediately and shows why. Without it, blocking is delayed by 1-3 seconds.",
+    "notCollectTitle": "What it does NOT do",
+    "notCollectText": "The service only sees which app is open. On-screen text, passwords, messages and personal data are never read or collected.",
+    "optionalTitle": "Optional",
+    "optionalText": "The app works fully without it. You can turn it off any time in your phone settings.",
+    "accept": "I agree, turn on",
+    "decline": "Not now"
   }
 }

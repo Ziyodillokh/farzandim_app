@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Loyihada avval strings.xml yo'q edi. U accessibility servis uchun MAJBURIY:
+  `android:description` string resurs bo'lishi shart (matn bo'lishi mumkin emas).
+
+  Bu matn tizim Sozlamalarining "Maxsus imkoniyatlar" ro'yxatida ko'rinadi —
+  shuning uchun sodda va rostgo'y bo'lishi kerak (Play sharhlovchisi ham
+  aynan shu matnni o'qiydi).
+-->
+<resources>
+    <string name="accessibility_service_summary">Ota-ona bloklagan ilovalarni ochilishidan to\'sadi</string>
+    <string name="accessibility_service_description">Ota-ona bloklagan ilova ochilganda Parvoz uni darhol yopadi va sababini ko\'rsatadi.\n\nXizmat faqat qaysi ilova ochilganini (ilova nomini) ko\'radi. Ekran mazmuni, yozgan matningiz, parollar yoki xabarlar O\'QILMAYDI va yig\'ilmaydi.\n\nBu xizmat ixtiyoriy — yoqmasangiz ham ilova ishlaydi, lekin bloklash sekinroq ishga tushadi.</string>
+</resources>

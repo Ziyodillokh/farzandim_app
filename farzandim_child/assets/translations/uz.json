@@ -208,7 +208,8 @@
     "stepNumber": "{number}. {title}",
     "grantButton": "Yoqish",
     "autoContinueHint": "Hammasi yoqilgach, avtomatik davom etadi",
-    "uninstallProtectionName": "O'chirishni taqiqlash"
+    "uninstallProtectionName": "O'chirishni taqiqlash",
+    "a11yName": "Tez bloklash (tavsiya etiladi)"
   },
   "dashboard": {
     "greeting": "Salom, {name}!",
@@ -975,5 +976,17 @@
   },
   "photo": {
     "uploadFailed": "Foto yuklanmadi"
+  },
+  "a11yDisclosure": {
+    "title": "Tez bloklash xizmati",
+    "subtitle": "Bloklangan ilova ochilishi bilanoq yopilishi uchun qo'shimcha ruxsat kerak. Bu ixtiyoriy.",
+    "doesTitle": "Nima qiladi",
+    "doesText": "Ota-onangiz bloklagan ilova ochilsa, Parvoz uni darhol yopadi va sababini ko'rsatadi. Busiz blok 1-3 soniya kechikadi.",
+    "notCollectTitle": "Nimaga TEGMAYDI",
+    "notCollectText": "Xizmat faqat qaysi ilova ochilganini ko'radi. Ekrandagi matn, parollar, xabarlar va shaxsiy ma'lumotlar o'qilmaydi va yig'ilmaydi.",
+    "optionalTitle": "Ixtiyoriy",
+    "optionalText": "Yoqmasangiz ham ilova to'liq ishlaydi. Istalgan vaqtda telefon Sozlamalaridan o'chirishingiz mumkin.",
+    "accept": "Roziman, yoqish",
+    "decline": "Hozir emas"
   }
 }
