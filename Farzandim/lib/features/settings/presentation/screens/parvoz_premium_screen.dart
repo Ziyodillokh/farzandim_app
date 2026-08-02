@@ -10,16 +10,21 @@
 // Eslatma: hozircha xarid tizimi (in-app purchase) ulanmagan — ulanish
 // tugmalari "tez kunda" toast ko'rsatadi. Real to'lov keyin ulanadi.
 
+import 'dart:async';
+import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim/features/settings/data/apple_iap_service.dart';
 import 'package:farzandim/features/settings/data/entitlement.dart';
 import 'package:farzandim/features/settings/data/repositories/backend_payments_repository.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -81,19 +86,38 @@ class ParvozPremiumScreen extends ConsumerStatefulWidget {
 class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     with WidgetsBindingObserver {
   /// Hozir checkout ochilayotgan tarif id (tugmada spinner). `null` — bo'sh.
+  /// Restore paytida `'_restore'` bo'ladi.
   String? _busyPlanId;
 
   /// `true` — yillik ko'rinish (narx = oylik×10, 2 oy tekin). `false` — oylik.
   bool _yearly = false;
 
+  /// iOS StoreKit — obuna FAQAT Apple IAP orqali (App Store 3.1.1). Android
+  /// va web'da ishlatilmaydi (u yerda Click checkout).
+  final InAppPurchase _iap = InAppPurchase.instance;
+  StreamSubscription<List<PurchaseDetails>>? _iapSub;
+
+  /// iOS bo'lsa Apple IAP. web guard (Platform web'da throw qiladi).
+  bool get _isApple => !kIsWeb && Platform.isIOS;
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    if (_isApple) {
+      // StoreKit xarid/restore natijalari SHU stream'dan keladi.
+      _iapSub = _iap.purchaseStream.listen(
+        _onPurchaseUpdates,
+        onError: (Object _) {
+          if (mounted) setState(() => _busyPlanId = null);
+        },
+      );
+    }
   }
 
   @override
   void dispose() {
+    _iapSub?.cancel();
     WidgetsBinding.instance.removeObserver(this);
     super.dispose();
   }
@@ -109,9 +133,16 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     }
   }
 
-  /// Tarifni sotib olish: checkout -> Click to'lov sahifasini ochish.
+  /// Tarifni sotib olish. iOS'da Apple IAP (App Store 3.1.1), boshqa
+  /// platformalarda Click checkout (tashqi to'lov sahifasi).
   Future<void> _subscribe(PlanEntry plan) async {
     if (_busyPlanId != null) return;
+    // iOS: raqamli obuna FAQAT Apple IAP orqali. Tashqi Click to'lovi iOS'da
+    // ISHLATILMAYDI (Apple 3.1.1 bo'yicha rad etadi).
+    if (_isApple) {
+      await _subscribeApple(plan);
+      return;
+    }
     setState(() => _busyPlanId = plan.id);
     try {
       final url = await ref
@@ -131,6 +162,91 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     } finally {
       if (mounted) setState(() => _busyPlanId = null);
     }
+  }
+
+  /// iOS StoreKit xaridini boshlaydi. Natija `purchaseStream` orqali
+  /// [_onPurchaseUpdates]'ga keladi — shuning uchun bu yerda `finally` yo'q
+  /// (spinner xarid yakunlangach o'chadi).
+  Future<void> _subscribeApple(PlanEntry plan) async {
+    final productId = AppleProductIds.forPlan(
+      plan.entitlementTier,
+      yearly: _yearly,
+    );
+    if (productId == null) {
+      if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+      return;
+    }
+    setState(() => _busyPlanId = plan.id);
+    try {
+      if (!await _iap.isAvailable()) {
+        throw Exception('store unavailable');
+      }
+      final resp = await _iap.queryProductDetails(<String>{productId});
+      if (resp.productDetails.isEmpty) {
+        throw Exception('product not found: $productId');
+      }
+      final param = PurchaseParam(productDetails: resp.productDetails.first);
+      // Obunalar in_app_purchase'da `buyNonConsumable` orqali sotib olinadi.
+      await _iap.buyNonConsumable(purchaseParam: param);
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, 'premium.checkoutError'.tr());
+        setState(() => _busyPlanId = null);
+      }
+    }
+  }
+
+  /// "Xaridlarni tiklash" — Apple MAJBURIY qiladi (yangi qurilma / qayta
+  /// o'rnatishdan keyin obunani qaytarish). Natija `purchaseStream`'ga keladi.
+  Future<void> _restoreApple() async {
+    if (_busyPlanId != null) return;
+    setState(() => _busyPlanId = '_restore');
+    try {
+      await _iap.restorePurchases();
+    } catch (_) {
+      if (mounted) {
+        AppToast.error(context, 'premium.checkoutError'.tr());
+        setState(() => _busyPlanId = null);
+      }
+    }
+  }
+
+  /// StoreKit xarid/restore natijalari: purchased/restored → backend
+  /// tekshiruvi → entitlement yangilash; so'ng har tranzaksiya YOPILADI.
+  Future<void> _onPurchaseUpdates(List<PurchaseDetails> purchases) async {
+    for (final p in purchases) {
+      if (p.status == PurchaseStatus.pending) continue;
+
+      if (p.status == PurchaseStatus.purchased ||
+          p.status == PurchaseStatus.restored) {
+        final ok = await ref
+            .read(backendPaymentsRepositoryProvider)
+            .verifyApplePurchase(
+              productId: p.productID,
+              verificationData: p.verificationData.serverVerificationData,
+              transactionId: p.purchaseID,
+            );
+        if (mounted) {
+          if (ok) {
+            ref
+              ..invalidate(entitlementProvider)
+              ..invalidate(plansProvider);
+            AppToast.success(context, 'premium.subscribed'.tr());
+          } else {
+            AppToast.error(context, 'premium.checkoutError'.tr());
+          }
+        }
+      } else if (p.status == PurchaseStatus.error) {
+        if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+      }
+
+      // Apple: har yakunlangan tranzaksiyani YOPISH shart (aks holda qayta
+      // keladi va xarid "muvaffaqiyatsiz" bo'lib qoladi).
+      if (p.pendingCompletePurchase) {
+        await _iap.completePurchase(p);
+      }
+    }
+    if (mounted) setState(() => _busyPlanId = null);
   }
 
   /// Tarif uslubi tier bo'yicha: free -> glass, standard -> blue, aks -> dark.
@@ -223,12 +339,43 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
                               ),
                             ),
                           ),
-                          data: (res) => _PlansList(
-                            plans: res.plans,
-                            busyPlanId: _busyPlanId,
-                            styleFor: _styleFor,
-                            priceLabel: _priceLabel,
-                            onSubscribe: _subscribe,
+                          data: (res) => Column(
+                            children: [
+                              _PlansList(
+                                plans: res.plans,
+                                busyPlanId: _busyPlanId,
+                                styleFor: _styleFor,
+                                priceLabel: _priceLabel,
+                                onSubscribe: _subscribe,
+                              ),
+                              // Apple MAJBURIY: restore (faqat iOS).
+                              if (_isApple) ...[
+                                const SizedBox(height: 8),
+                                TextButton(
+                                  onPressed: _busyPlanId != null
+                                      ? null
+                                      : _restoreApple,
+                                  child: _busyPlanId == '_restore'
+                                      ? const SizedBox(
+                                          height: 18,
+                                          width: 18,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: _blue,
+                                          ),
+                                        )
+                                      : Text(
+                                          'premium.restore'.tr(),
+                                          style: _pop(
+                                            13,
+                                            c: Colors.white.withValues(
+                                              alpha: 0.7,
+                                            ),
+                                          ),
+                                        ),
+                                ),
+                              ],
+                            ],
                           ),
                         ),
                       ],

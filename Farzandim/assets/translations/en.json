@@ -991,6 +991,8 @@
     "collapseCta": "Collapse",
     "moreCount": "and {n} more features",
     "checkoutError": "Could not open the payment page. Please try again later.",
+    "subscribed": "Subscription activated!",
+    "restore": "Restore purchases",
     "loadError": "Couldn't load plans",
     "perMonth": "mo",
     "perYear": "yr",

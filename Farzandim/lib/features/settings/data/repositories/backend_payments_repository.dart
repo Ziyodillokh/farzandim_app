@@ -111,6 +111,28 @@ class BackendPaymentsRepository {
     );
     return (res.data?['checkoutUrl'] as String?) ?? '';
   }
+
+  /// Apple IAP (StoreKit) xaridini backend'da tekshiradi va muvaffaqiyatli
+  /// bo'lsa obunani beradi/uzaytiradi.
+  ///
+  /// [verificationData] — `serverVerificationData` (StoreKit kvitansiyasi).
+  /// [productId] — App Store product id.
+  /// `true` qaytsa entitlement berildi.
+  Future<bool> verifyApplePurchase({
+    required String productId,
+    required String verificationData,
+    String? transactionId,
+  }) async {
+    final res = await _dio.post<Map<String, dynamic>>(
+      '/payments/apple/verify',
+      data: <String, dynamic>{
+        'productId': productId,
+        'verificationData': verificationData,
+        if (transactionId != null) 'transactionId': transactionId,
+      },
+    );
+    return (res.data?['ok'] as bool?) ?? false;
+  }
 }
 
 /// Tariflar ro'yxati (paywall ekrani uchun).

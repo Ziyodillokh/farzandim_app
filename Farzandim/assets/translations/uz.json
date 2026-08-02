@@ -991,6 +991,8 @@
     "collapseCta": "Yig'ish",
     "moreCount": "va yana {n} ta imkoniyat",
     "checkoutError": "To'lov sahifasini ochib bo'lmadi. Keyinroq urinib ko'ring.",
+    "subscribed": "Obuna faollashtirildi!",
+    "restore": "Xaridlarni tiklash",
     "loadError": "Tariflarni yuklab bo'lmadi",
     "perMonth": "oy",
     "perYear": "yil",

@@ -132,6 +132,8 @@ dependencies:
   # mobilda. `XFile.readAsBytes()` orqali Uint8List olamiz —
   # universal (web/iOS/Android'da bir xil ishlaydi).
   image_picker: ^1.0.7
+  # Apple StoreKit obuna xaridi (iOS App Store 3.1.1). Android'da ishlatilmaydi.
+  in_app_purchase: ^3.2.0
 
   # Audio player — ovozli xabarlarni tinglash uchun (Bosqich 8+9).
   # URL'dan stream, speed control (1x/1.5x/2x), pozitsiya kuzatish.
