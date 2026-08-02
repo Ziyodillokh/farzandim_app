@@ -1,5 +1,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
+
+    <!-- ⚠️ Google Play MAJBURIY talabi (Stalkerware/Monitoring siyosati):
+         ota-ona nazorati ilovalari `isMonitoringTool` bayrog'ini manifestda
+         e'lon qilishi SHART — barcha version code va treklarda. Bu yerda
+         (to'g'ridan-to'g'ri <manifest> ichida, <application> EMAS) turishi
+         kerak — rasmiy hujjatdagi namuna ayni shunday.
+         Qiymat "child_monitoring" = ota-ona farzandini kuzatadi.
+         https://support.google.com/googleplay/android-developer/answer/12955211
+         Eslatma: bu bayroq tufayli Play Protect bola qurilmasida "kuzatuv
+         ilovasi" ogohlantirishini ko'rsatadi — bu KUTILGAN va to'g'ri xulq. -->
+    <meta-data android:name="isMonitoringTool" android:value="child_monitoring"/>
+
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>

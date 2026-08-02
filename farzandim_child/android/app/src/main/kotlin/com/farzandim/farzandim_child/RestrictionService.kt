@@ -847,7 +847,17 @@ class RestrictionService : Service() {
                 @Suppress("DEPRECATION")
                 WindowManager.LayoutParams.TYPE_PHONE,
             WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or
-                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN,
+                WindowManager.LayoutParams.FLAG_LAYOUT_IN_SCREEN or
+                // Bloklangan ilova qulflangan ekran USTIDA ochilsa (masalan
+                // showWhenLocked bilan chiquvchi qo'ng'iroq/o'yin ekrani)
+                // overlay'ni tizim YASHIRARDI: AOSP DisplayPolicy
+                // shouldBeHiddenByKeyguard() activity bo'lmagan oynani
+                // keyguard paytida yashiradi, agar canShowWhenLocked() rost
+                // bo'lmasa — activity bo'lmagan oyna uchun bu aynan shu
+                // bayroq. Endi bloklangan ilova keyguard'ni "occlude" qilsa
+                // ham overlay ustida qoladi. Oddiy (occlude qilinmagan) qulf
+                // ekranida overlay baribir ko'rinmaydi — bu KERAKLI xulq.
+                WindowManager.LayoutParams.FLAG_SHOW_WHEN_LOCKED,
             PixelFormat.OPAQUE,
         )
         params.gravity = Gravity.CENTER

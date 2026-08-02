@@ -63,13 +63,16 @@ class BackendScheduleRepository {
   final Dio _dio;
 
   /// Bola uchun app schedule policy'lar (BLOCK/ALLOW).
-  Future<List<AppSchedulePolicy>> getSchedules(String childId) async {
+  ///
+  /// XAVFSIZLIK (fail-closed): tarmoq xatosida `null` — "BILMAYMAN", "jadval
+  /// yo'q" EMAS. Qarang: `BackendAppLimitRepository.getLimits` izohi.
+  Future<List<AppSchedulePolicy>?> getSchedules(String childId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/schedules',
       );
       final data = response.data;
-      if (data == null) return const [];
+      if (data == null) return null;
       final list = data['schedules'] as List<dynamic>? ?? const [];
       return list
           .map((e) =>
@@ -77,7 +80,7 @@ class BackendScheduleRepository {
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendScheduleRepository.getSchedules: $e');
-      return const [];
+      return null;
     }
   }
 }

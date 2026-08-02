@@ -32,7 +32,9 @@ final activeSchedulesProvider =
   final childId = pairing.childId;
   if (childId == null) return const [];
   final repo = ref.watch(backendRoutineRepositoryProvider);
-  final all = await repo.getRoutines(childId);
+  // Repo tarmoq xatosida `null` qaytaradi (fail-closed enforcement uchun).
+  // Bu yer faqat KO'RSATISH — bo'sh ro'yxat xavfsiz (blok emas).
+  final all = await repo.getRoutines(childId) ?? const <Schedule>[];
   // `today` providerlar uchun ham yaroqli — faqat aktiv.
   return all.where((s) => s.isActive).toList();
 });

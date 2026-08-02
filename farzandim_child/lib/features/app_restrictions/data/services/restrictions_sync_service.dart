@@ -46,6 +46,10 @@ class RestrictionsSyncService {
   static const _prefsKeyBlocked = 'restriction.blocked_packages';
   static const _prefsKeyLimits = 'restriction.limits';
   static const _prefsKeyBlockUnknown = 'restriction.block_unknown_sources';
+
+  /// "Barcha ilovalarni blokla" ning oxirgi ma'lum qiymati. Qurilma-siyosati
+  /// so'rovi tarmoq xatosida `null` qaytarsa shu keshdan o'qiladi.
+  static const _prefsKeyBlockAllCache = 'restriction.block_all_apps_cache';
   static const _wildcardAll = '*';
 
   /// Background periodic sync oralig'i (soniya). Bloklar/limitlar shu muddatda
@@ -94,9 +98,25 @@ class RestrictionsSyncService {
         _appLimitRepo.getLimits(_childId!),
         _routineRepo.getRoutines(_childId!),
       ]);
-      final policies = results[0] as List<AppSchedulePolicy>;
-      final limits = results[1] as List<AppLimit>;
-      final routines = results[2] as List<Schedule>;
+      final policies = results[0] as List<AppSchedulePolicy>?;
+      final limits = results[1] as List<AppLimit>?;
+      final routines = results[2] as List<Schedule>?;
+
+      // ⛔ FAIL-CLOSED — tarmoq uzilgan bo'lsa prefs'ga UMUMAN TEGMAYMIZ.
+      //
+      // Avval repolar xatoda bo'sh ro'yxat qaytarardi va bu yer uni "ota-ona
+      // hech narsani bloklamagan" deb tushunib `blocked_packages`ni bo'sh
+      // string bilan qayta yozardi → bola aviarejimni yoqsa ~15 soniyada
+      // BARCHA bloklar o'chib ketardi (to'liq bypass). Endi bittasi ham
+      // `null` bo'lsa (= "bilmayman") eski, oxirgi ma'lum bloklar kuchda
+      // qoladi — bloklash internetsiz ham ishlaydi.
+      if (policies == null || limits == null || routines == null) {
+        debugPrint(
+          'RestrictionsSync: tarmoq yo\'q — eski bloklar saqlanadi '
+          '(prefs o\'zgartirilmadi)',
+        );
+        return;
+      }
 
       // Qurilma siyosati (blockUnknownSources + blockAllApps) — bitta so'rov.
       final policy = await _devicePolicyRepo.getDevicePolicy(_childId!);
@@ -126,8 +146,21 @@ class RestrictionsSyncService {
 
       // 3a. "Barcha ilovalarni bloklash" (ota-ona dashboard toggle'i) — barcha
       //     foreground ilovani bloklaydi (`*` wildcard, window BLOCK bilan bir
-      //     xil mexanizm). Tarmoq xatosida `null` → o'zgartirmaymiz.
-      if (policy.blockAllApps ?? false) {
+      //     xil mexanizm).
+      //
+      //     Qurilma-siyosati so'rovi ALOHIDA yiqilishi mumkin (yuqoridagi 3 ta
+      //     ro'yxat kelgan bo'lsa ham). Bunda `null` keladi — u holda oxirgi
+      //     ma'lum qiymatni prefs keshidan olamiz, aks holda ota-ona yoqqan
+      //     "hammasini blokla" tarmoq uzilishida jimgina o'chib qolardi.
+      final prefsForPolicy = await SharedPreferences.getInstance();
+      final fetchedBlockAll = policy.blockAllApps;
+      if (fetchedBlockAll != null) {
+        await prefsForPolicy.setBool(_prefsKeyBlockAllCache, fetchedBlockAll);
+      }
+      final blockAll =
+          fetchedBlockAll ??
+          (prefsForPolicy.getBool(_prefsKeyBlockAllCache) ?? false);
+      if (blockAll) {
         blockedPkgs.add(_wildcardAll);
       }
 

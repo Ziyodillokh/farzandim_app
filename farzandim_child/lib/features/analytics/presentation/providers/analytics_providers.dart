@@ -102,7 +102,9 @@ final childAppLimitsProvider =
   final childId = pairing.childId;
   if (childId == null) return const [];
   final repo = ref.watch(backendAppLimitRepositoryProvider);
-  return repo.getLimits(childId);
+  // Repo tarmoq xatosida `null` qaytaradi (fail-closed enforcement uchun).
+  // Bu yer faqat KO'RSATISH — bo'sh ro'yxat xavfsiz (blok emas).
+  return await repo.getLimits(childId) ?? const <AppLimit>[];
 });
 
 /// Installed apps map (packageName → meta). AppLimit'lar uchun

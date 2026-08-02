@@ -30,14 +30,22 @@ class BackendAppLimitRepository {
   ///
   /// `dailyLimitMs == 0` — to'liq block (limitsiz block)
   /// `dailyLimitMs > 0`  — kunlik vaqt cheklovi
-  Future<List<AppLimit>> getLimits(String childId) async {
+  ///
+  /// XAVFSIZLIK (fail-closed): tarmoq xatosida `null` qaytadi — bu "BILMAYMAN"
+  /// degani, "ota-ona hech narsa bloklamagan" EMAS. Avval bo'sh ro'yxat
+  /// qaytardi va `RestrictionsSyncService` uni "limit yo'q" deb tushunib
+  /// SharedPreferences'ni TOZALARDI → bola internetni o'chirsa ~15 soniyada
+  /// BARCHA bloklar o'chib ketardi (aviarejim = to'liq bypass). Endi `null`
+  /// bo'lsa sync prefs'ga umuman tegmaydi va oxirgi ma'lum bloklar kuchda
+  /// qoladi.
+  Future<List<AppLimit>?> getLimits(String childId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/app-limits',
         queryParameters: {'isActive': 'true'},
       );
       final data = response.data;
-      if (data == null) return const [];
+      if (data == null) return null;
       final list = data['limits'] as List<dynamic>? ?? const [];
       return list
           .map((m) => AppLimit.fromJson(m as Map<String, dynamic>))
@@ -47,7 +55,7 @@ class BackendAppLimitRepository {
         'BackendAppLimitRepository.getLimits xato '
         '${e.response?.statusCode} body=${e.response?.data}',
       );
-      return const [];
+      return null;
     }
   }
 }

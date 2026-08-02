@@ -63,13 +63,16 @@ class BackendRoutineRepository {
   final Dio _dio;
 
   /// Bola uchun barcha rejalar.
-  Future<List<Schedule>> getRoutines(String childId) async {
+  ///
+  /// XAVFSIZLIK (fail-closed): tarmoq xatosida `null` — "BILMAYMAN", "reja
+  /// yo'q" EMAS. Qarang: `BackendAppLimitRepository.getLimits` izohi.
+  Future<List<Schedule>?> getRoutines(String childId) async {
     try {
       final response = await _dio.get<Map<String, dynamic>>(
         '/children/$childId/routines',
       );
       final data = response.data;
-      if (data == null) return const [];
+      if (data == null) return null;
       final list = data['routines'] as List<dynamic>? ?? const [];
       return list
           .map((e) =>
@@ -77,7 +80,7 @@ class BackendRoutineRepository {
           .toList();
     } on DioException catch (e) {
       debugPrint('BackendRoutineRepository.getRoutines: $e');
-      return const [];
+      return null;
     }
   }
 
