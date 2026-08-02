@@ -20,9 +20,11 @@ import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { PrismaService } from '../../common/database/prisma.service';
 import { PaymentsService } from './payments.service';
+import { AppleIapService } from './apple-iap.service';
 import { PaymentProviderRegistry } from './providers/registry';
 import { WebhookIpGuard } from './guards/webhook-ip.guard';
 import { CheckoutDto } from './dto/checkout.dto';
+import { AppleVerifyDto } from './dto/apple-verify.dto';
 import type { PaymentProviderKey, WebhookRequest } from './providers/types';
 import type { FastifyRequest, FastifyReply } from 'fastify';
 
@@ -34,6 +36,7 @@ export class PaymentsController {
   constructor(
     private readonly prisma: PrismaService,
     private readonly paymentsService: PaymentsService,
+    private readonly appleIap: AppleIapService,
     private readonly registry: PaymentProviderRegistry,
   ) {}
 
@@ -162,6 +165,17 @@ export class PaymentsController {
       });
       throw new BadGatewayException('Could not open payment page');
     }
+  }
+
+  @Post('apple/verify')
+  @ApiBearerAuth()
+  @UseGuards(ConsumerJwtAuthGuard, RolesGuard)
+  @ApiOperation({ summary: 'Verify Apple IAP purchase and grant subscription' })
+  async appleVerify(
+    @CurrentUser() user: JwtPayload,
+    @Body() dto: AppleVerifyDto,
+  ) {
+    return this.appleIap.verify(user.userId, dto);
   }
 
   @Post('webhook/payme')
