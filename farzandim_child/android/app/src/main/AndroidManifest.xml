@@ -1,17 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- ⚠️ Google Play MAJBURIY talabi (Stalkerware/Monitoring siyosati):
-         ota-ona nazorati ilovalari `isMonitoringTool` bayrog'ini manifestda
-         e'lon qilishi SHART — barcha version code va treklarda. Bu yerda
-         (to'g'ridan-to'g'ri <manifest> ichida, <application> EMAS) turishi
-         kerak — rasmiy hujjatdagi namuna ayni shunday.
-         Qiymat "child_monitoring" = ota-ona farzandini kuzatadi.
-         https://support.google.com/googleplay/android-developer/answer/12955211
-         Eslatma: bu bayroq tufayli Play Protect bola qurilmasida "kuzatuv
-         ilovasi" ogohlantirishini ko'rsatadi — bu KUTILGAN va to'g'ri xulq. -->
-    <meta-data android:name="isMonitoringTool" android:value="child_monitoring"/>
-
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -79,6 +68,22 @@
         android:allowBackup="false"
         android:fullBackupContent="false"
         tools:ignore="DataExtractionRules">
+        <!-- ⚠️ Google Play "Monitoring Apps" siyosati — MAJBURIY deklaratsiya:
+             ota-ona nazorati ilovalari (bizda QUERY_ALL_PACKAGES,
+             PACKAGE_USAGE_STATS, Device Admin uninstall-block, background
+             location) shu flag'ni har bir versionCode/trekда e'lon qilishi
+             shart, aks holda Play review ilovani "monitoring tool" sifatida
+             to'g'ri tasniflay olmaydi va rad etadi.
+             Qiymat "child_monitoring" — ota-ona o'z farzandini nazorat
+             qilish uchun mo'ljallangan ilova.
+             MUHIM: <meta-data> Android sxemasида faqat <application>/
+             <activity>/<service> kabi teglar ichida joylashishi mumkin —
+             <manifest>ning to'g'ridan-to'g'ri farzandi BO'LOLMAYDI (aks
+             holda manifest merge/aapt2 xato beradi). Shuning uchun bu yerda.
+             https://support.google.com/googleplay/android-developer/answer/12955211 -->
+        <meta-data
+            android:name="isMonitoringTool"
+            android:value="child_monitoring"/>
         <activity
             android:name=".MainActivity"
             android:exported="true"
