@@ -49,13 +49,30 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
     final isAndroid = kIsWeb || defaultTargetPlatform == TargetPlatform.android;
     final platform = isAndroid ? info.android : info.ios;
 
+    // ⚠️ `targetUrl` — Google Play DDA 4.5-bandi buzilishi sababli (bola
+    // ilovasi uchun 2026-08-04 rad etish xati, xuddi shu naqsh) NATIV
+    // Android/iOS ilova endi FAQAT `storeUrl`ga o'tadi, `directApkUrl`ga
+    // hech qachon EMAS — Play-tarqatiladigan APK/AAB o'z ichida Play
+    // tashqarisiga APK havolasi tutmasin.
+    //
+    // ⚠️ MUHIM FARQ — WEB build (`kIsWeb`) bundan MUSTASNO: bu — Play'ga
+    // yuborilgan ilova emas, balki bizning O'Z SAYTIMIZ (farzandimedu.uz)
+    // dagi yuklab olish sahifasi — uning butun vazifasi aynan APK'ni
+    // to'g'ridan-to'g'ri tarqatish (Play'siz o'rnatmoqchi bo'lganlar uchun).
+    // Bu yerda DDA 4.5 qo'llanilmaydi (u faqat Play'ga topshirilgan
+    // paket ICHIDAGI kodga tegishli), shuning uchun web'da `directApkUrl`
+    // zaxira sifatida SAQLANADI.
+    final targetUrl = kIsWeb
+        ? (platform.storeUrl ?? platform.directApkUrl)
+        : platform.storeUrl;
+
     final ltMin = compareSemver(current, platform.minSupported) < 0;
     if (info.isForceUpdate || ltMin) {
       return AppUpdateStatus(
         state: UpdateState.forceUpdateRequired,
         currentVersion: current,
         info: info,
-        targetUrl: platform.storeUrl ?? platform.directApkUrl,
+        targetUrl: targetUrl,
       );
     }
 
@@ -73,7 +90,7 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
         state: UpdateState.softUpdateAvailable,
         currentVersion: current,
         info: info,
-        targetUrl: platform.storeUrl ?? platform.directApkUrl,
+        targetUrl: targetUrl,
       );
     }
 

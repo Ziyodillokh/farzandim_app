@@ -6,14 +6,18 @@
 // davom etib bo'lmaydi (PopScope canPop:false). Dizayn: Parvoz KO'K —
 // avval `AppColors` yashil edi, hozirgi ko'k dizaynga mos emas edi.
 //
-// MUHIM: asosiy tugma `status.targetUrl`ni ochadi — provider uni
-// `storeUrl ?? directApkUrl` qilib hisoblagan. Avval dialog to'g'ridan
-// `playStoreUrl`ni ochardi; parent hali Do'konda yo'q (faqat APK), shuning
-// uchun tugma `null` ochib HECH NARSA qilmasdi. Endi APK-only holatda ham
-// ishlaydi va yorliq mos ("Yuklab olish (APK)").
+// ⚠️ Google Play DDA 4.5-bandi buzilishi sababli (2026-08-04, bola ilovasi
+// uchun rad etish xati — "purpose or feature that opens web-based
+// third-party markets") — bu ekran endi FAQAT rasmiy Store havolasini
+// ochadi. Avval "Do'kon yo'q bo'lsa APK'ni asosiy qil" fallback'i va
+// alohida "Yuklab olish (APK)" tugmasi bor edi — Play-tarqatiladigan
+// build HECH QACHON o'z tashqarisiga APK havolasi bermasin. `directApkUrl`
+// modelda saqlanadi (boshqa tarqatish kanallari uchun), lekin bu ekranda
+// ISHLATILMAYDI.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -51,16 +55,24 @@ class ForceUpdateDialog extends StatelessWidget {
         ? null
         : (isIos ? info.ios : info.android);
 
-    // Do'kon havolasi bormi? Yo'q bo'lsa — to'g'ridan APK.
+    // NATIV ilova (kIsWeb=false, Play'ga topshirilgan APK/AAB) — FAQAT
+    // rasmiy Store yorlig'i, APK-fallback YO'Q (Play DDA 4.5).
+    //
+    // WEB build (kIsWeb=true, farzandimedu.uz yuklab-olish sahifasi) —
+    // bu DDA 4.5 doirasiga kirmaydi (Play'ga topshirilgan kod emas), shuning
+    // uchun Store yo'q bo'lsa APK-yorlig'i qoladi — tugma matni haqiqiy
+    // havola (provider'dagi targetUrl) bilan mos bo'lishi uchun.
     final hasStore = platformInfo?.storeUrl != null;
-    final primaryLabel = hasStore
-        ? (isIos
+    final showApkLabel =
+        kIsWeb && !hasStore && platformInfo?.directApkUrl != null;
+    final primaryLabel = showApkLabel
+        ? 'appUpdate.force.downloadApk'.tr()
+        : (isIos
               ? 'appUpdate.force.openAppStore'.tr()
-              : 'appUpdate.force.openPlayStore'.tr())
-        : 'appUpdate.force.downloadApk'.tr();
-    final primaryIcon = hasStore
-        ? (isIos ? SolarIconsBold.smartphone : SolarIconsBold.shop)
-        : SolarIconsBold.download;
+              : 'appUpdate.force.openPlayStore'.tr());
+    final primaryIcon = showApkLabel
+        ? SolarIconsBold.download
+        : (isIos ? SolarIconsBold.smartphone : SolarIconsBold.shop);
 
     return PopScope(
       canPop: false,
@@ -140,20 +152,10 @@ class ForceUpdateDialog extends StatelessWidget {
               _PrimaryButton(
                 label: primaryLabel,
                 icon: primaryIcon,
-                // Provider hisoblagan URL: storeUrl ?? directApkUrl.
+                // Faqat rasmiy Store URL (provider endi APK'ga fallback
+                // qilmaydi — qarang app_update_provider.dart).
                 onPressed: () => _launch(status.targetUrl),
               ),
-              // Do'kon havolasi ASOSIY bo'lsa va APK ham bor bo'lsa — APK
-              // muqobil tugma. APK allaqachon asosiy bo'lsa (do'kon yo'q),
-              // takror ko'rsatmaymiz.
-              if (hasStore && !isIos && platformInfo?.directApkUrl != null) ...[
-                const SizedBox(height: 10),
-                _SecondaryButton(
-                  label: 'appUpdate.force.downloadApk'.tr(),
-                  icon: SolarIconsBold.download,
-                  onPressed: () => _launch(platformInfo!.directApkUrl),
-                ),
-              ],
             ],
           ),
         ),
@@ -239,40 +241,6 @@ class _PrimaryButton extends StatelessWidget {
         label: Text(
           label,
           style: GoogleFonts.poppins(fontSize: 15, fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecondaryButton extends StatelessWidget {
-  const _SecondaryButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: _white,
-          side: const BorderSide(color: _border),
-          padding: const EdgeInsets.symmetric(vertical: 13),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        icon: Icon(icon, size: 18),
-        label: Text(
-          label,
-          style: GoogleFonts.poppins(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );
