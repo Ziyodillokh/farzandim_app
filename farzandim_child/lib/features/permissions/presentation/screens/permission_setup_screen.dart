@@ -12,7 +12,6 @@
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
-import 'package:farzandim_child/features/permissions/presentation/screens/accessibility_disclosure_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/location_disclosure_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
@@ -46,7 +45,8 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
   bool _overlay = false; // Boshqa ilovalar ustida
   bool _battery = false; // Quvvat optimizatsiyasi
   bool _uninstallGuard = false; // O'chirishni taqiqlash (Device Admin)
-  bool _a11y = false; // Tez bloklash (AccessibilityService) — IXTIYORIY
+  // ⏸️ _a11y VAQTINCHA OLIB TASHLANDI — qarang shu fayldagi eski
+  // "_requestAccessibility" o'rnidagi izoh va AndroidManifest.xml.
 
   bool _checking = false;
 
@@ -96,7 +96,6 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
       () => Permission.ignoreBatteryOptimizations.status,
     );
     final uninstallGuard = await _safe(uninstallProtectionService.isActive);
-    final a11y = await _safe(_svc.isAccessibilityEnabled);
 
     if (!mounted) return;
     setState(() {
@@ -106,7 +105,6 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
       _overlay = overlay;
       _battery = battery;
       _uninstallGuard = uninstallGuard;
-      _a11y = a11y;
       _checking = false;
     });
   }
@@ -135,19 +133,13 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     if (s.isPermanentlyDenied) await openAppSettings();
   }
 
-  /// Tez bloklash (AccessibilityService).
-  ///
-  /// ⚠️ Play MAJBURIY talabi: tizim sozlamalarini ochishdan OLDIN alohida
-  /// oshkora tushuntirish ekrani ko'rsatilishi shart. Foydalanuvchi rad etsa
-  /// hech narsa ochilmaydi va ilova bemalol ishlayveradi.
-  Future<void> _requestAccessibility() async {
-    if (_a11y) {
-      // Yoqilgan bo'lsa — o'chirish faqat tizim sozlamalaridan mumkin.
-      await _svc.openAccessibilitySettings();
-      return;
-    }
-    await AccessibilityDisclosureScreen.show(context);
-  }
+  // ⏸️ _requestAccessibility() VAQTINCHA OLIB TASHLANDI (2026-08-06):
+  // AccessibilityService Play tekshiruvidan o'tmadi (APK yuklab olish
+  // bosqichida yiqiladi) — avval accessibility'siz reliz chiqarib,
+  // tasdiqlangач alohida yangilanish sifatida qaytaramiz. Kotlin fayllar
+  // (BlockAccessibilityService.kt, BlockPolicy.kt) va disclosure ekrani
+  // TEGILMAGAN — manifestda ro'yxatdan chiqarilgani uchun ishlamayapti,
+  // xolos. Qarang: docs/BLOKLASH-QUVVATI-VA-A11Y-QARORI.md (2.4-band).
 
   /// Joylashuv — foreground ("ishlatilganda") + fon ("har doim").
   ///
@@ -300,19 +292,9 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                 setMock: (b) => _uninstallGuard = b,
                               ),
                             ),
-                            // Tez bloklash (AccessibilityService) — IXTIYORIY.
-                            // Yoqishdan OLDIN Play talab qiladigan oshkora
-                            // tushuntirish ekrani ko'rsatiladi.
-                            _PermRow(
-                              icon: Icons.bolt_rounded,
-                              title: 'permissionSetup.a11yName'.tr(),
-                              value: _a11y,
-                              onChanged: () => _toggle(
-                                current: _a11y,
-                                request: _requestAccessibility,
-                                setMock: (b) => _a11y = b,
-                              ),
-                            ),
+                            // ⏸️ "Tez bloklash" (AccessibilityService) qatori
+                            // VAQTINCHA OLIB TASHLANDI — qarang initState
+                            // ustidagi izoh.
                           ],
                         ),
                         const SizedBox(height: 8),

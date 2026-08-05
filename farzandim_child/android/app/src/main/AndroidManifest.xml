@@ -151,23 +151,18 @@
                 tools:targetApi="34"/>
         </service>
 
-        <!-- Bloklangan ilovaga KIRISHNI to'suvchi xizmat (ixtiyoriy).
-             Yoqilmasa ilova bugungidek ishlaydi — RestrictionService mustaqil
-             ravishda overlay bilan bloklashda davom etadi.
-             Play: canRetrieveWindowContent=false (ekran mazmuni o'qilmaydi),
-             isAccessibilityTool=false — qarang res/xml/accessibility_service_config.xml -->
-        <service
-            android:name=".BlockAccessibilityService"
-            android:exported="false"
-            android:label="@string/accessibility_service_summary"
-            android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE">
-            <intent-filter>
-                <action android:name="android.accessibilityservice.AccessibilityService"/>
-            </intent-filter>
-            <meta-data
-                android:name="android.accessibilityservice"
-                android:resource="@xml/accessibility_service_config"/>
-        </service>
+        <!-- ⏸️ BlockAccessibilityService VAQTINCHA OLIB TASHLANDI (2026-08-06):
+             Google Play tekshiruvi APK yuklab olinayotgan paytda ("installing
+             app") o'ta olmayapti — sabab shu servis (eng ko'p tekshiriladigan,
+             cheklangan Android ruxsati) deb taxmin qilinmoqda. Avval
+             accessibility'siz alohida tasdiqlangan reliz chiqaramiz, keyin
+             buni alohida yangilanish sifatida qaytadan qo'shamiz.
+
+             QAYTARISH: shu <service> blokini qayta yozing (Kotlin fayllar —
+             BlockAccessibilityService.kt, BlockPolicy.kt — tegilmagan,
+             o'zidan-o'zi tayyor turibdi) + permission_setup_screen.dart'dagi
+             a11y qatorini qaytaring. Qarang: docs/BLOKLASH-QUVVATI-VA-A11Y-QARORI.md
+             (2.4-band, "Rollback — aynan 2 joy"). -->
 
         <receiver
             android:name=".BootReceiver"
