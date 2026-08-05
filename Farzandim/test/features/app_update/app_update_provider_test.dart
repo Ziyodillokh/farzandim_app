@@ -5,6 +5,16 @@
 //   2. Banner dashboardga ulanganmi (UI — dashboard_screen.dart).
 // Bu test 1-qismni pinlaydi: latest > current bo'lsa softUpdateAvailable,
 // teng bo'lsa upToDate, minSupported'dan past bo'lsa forceUpdateRequired.
+//
+// ⚠️ 2026-08-06: Google Play DDA 4.5-bandi buzilishi tufayli (bola ilovasi
+// uchun rad etish xati — "purpose or feature that opens web-based
+// third-party markets") `targetUrl` endi NATIV ilovada (bu test —
+// `debugDefaultTargetPlatformOverride = android`, ya'ni kIsWeb=false)
+// HECH QACHON `directApkUrl`ga tushmaydi — faqat `storeUrl`. Eski testlar
+// aynan shu (endi noto'g'ri) xulqni tekshirardi, shuning uchun yangilandi.
+// `kIsWeb=true` tarmog'i (farzandimedu.uz yuklab-olish sahifasi, u yerda
+// directApkUrl hali ham to'g'ri) VM test'da tekshirib bo'lmaydi — `kIsWeb`
+// compile-time konstanta, faqat haqiqiy web build'da `true` bo'ladi.
 
 import 'package:dio/dio.dart';
 import 'package:farzandim/features/app_update/data/models/app_version_info.dart';
@@ -30,11 +40,15 @@ AppVersionInfo _info({
   required String latest,
   required String minSupported,
   bool isForceUpdate = false,
-  String? directApkUrl = 'https://farzandimedu.uz/app/farzandim-parent.apk',
+  // Standart holatda ikkalasi ham bo'sh — testlar aynan kerakli ssenariyni
+  // (do'kon bilan/siz) o'zi belgilaydi, "yashirin" APK-fallback yo'q.
+  String? playStoreUrl,
+  String? directApkUrl,
 }) {
   final platform = PlatformVersionInfo(
     latest: latest,
     minSupported: minSupported,
+    playStoreUrl: playStoreUrl,
     directApkUrl: directApkUrl,
   );
   return AppVersionInfo(
@@ -76,16 +90,48 @@ void main() {
 
   tearDown(() => debugDefaultTargetPlatformOverride = null);
 
-  test('latest > current → softUpdateAvailable + APK targetUrl', () async {
+  test(
+    'latest > current + storeUrl bor → softUpdateAvailable + storeUrl',
+    () async {
+      final status = await _resolve(
+        _info(
+          latest: '1.2.0',
+          minSupported: '1.0.0',
+          playStoreUrl:
+              'https://play.google.com/store/apps/details?id=com.farzandim.parent',
+          directApkUrl: 'https://farzandimedu.uz/app/farzandim-parent.apk',
+        ),
+      );
+      expect(status.state, UpdateState.softUpdateAvailable);
+      expect(status.currentVersion, '1.0.0');
+      expect(
+        status.targetUrl,
+        'https://play.google.com/store/apps/details?id=com.farzandim.parent',
+        reason:
+            "Play DDA 4.5: storeUrl bor bo'lsa directApkUrl E'TIBORGA "
+            "OLINMAYDI, hatto ikkalasi ham berilgan bo'lsa",
+      );
+    },
+  );
+
+  test('storeUrl YO`Q (faqat directApkUrl) — NATIV ilovada targetUrl null '
+      '(Play DDA 4.5, APK`ga tushmaydi)', () async {
     final status = await _resolve(
-      _info(latest: '1.2.0', minSupported: '1.0.0'),
+      _info(
+        latest: '1.2.0',
+        minSupported: '1.0.0',
+        directApkUrl: 'https://farzandimedu.uz/app/farzandim-parent.apk',
+      ),
     );
     expect(status.state, UpdateState.softUpdateAvailable);
-    expect(status.currentVersion, '1.0.0');
     expect(
       status.targetUrl,
-      'https://farzandimedu.uz/app/farzandim-parent.apk',
-      reason: "do'kon URL yo'q → directApkUrl ishlatilishi shart",
+      isNull,
+      reason:
+          "Play-tarqatiladigan (native) ilova hech qachon o'z ichida "
+          "Play tashqarisiga APK havolasi bermasin — storeUrl yo'q bo'lsa "
+          "tugma jimgina hech narsa qilmaydi, bu Play'dan tashqari APK "
+          'ochishdan xavfsizroq',
     );
   });
 
@@ -96,21 +142,28 @@ void main() {
     expect(status.state, UpdateState.upToDate);
   });
 
-  test('current < minSupported → forceUpdateRequired', () async {
+  test('current < minSupported + storeUrl bor → forceUpdateRequired', () async {
     final status = await _resolve(
-      _info(latest: '2.0.0', minSupported: '1.5.0'),
+      _info(
+        latest: '2.0.0',
+        minSupported: '1.5.0',
+        playStoreUrl:
+            'https://play.google.com/store/apps/details?id=com.farzandim.parent',
+      ),
     );
     expect(status.state, UpdateState.forceUpdateRequired);
     expect(status.targetUrl, isNotNull);
   });
 
-  test('isForceUpdate flag → forceUpdateRequired (latest teng bo`lsa ham)',
-      () async {
-    final status = await _resolve(
-      _info(latest: '1.0.0', minSupported: '1.0.0', isForceUpdate: true),
-    );
-    expect(status.state, UpdateState.forceUpdateRequired);
-  });
+  test(
+    'isForceUpdate flag → forceUpdateRequired (latest teng bo`lsa ham)',
+    () async {
+      final status = await _resolve(
+        _info(latest: '1.0.0', minSupported: '1.0.0', isForceUpdate: true),
+      );
+      expect(status.state, UpdateState.forceUpdateRequired);
+    },
+  );
 
   test('backend null qaytarsa → unknown (crash yo`q)', () async {
     final status = await _resolve(null);
