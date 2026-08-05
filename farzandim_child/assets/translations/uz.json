@@ -774,7 +774,7 @@
     "title": "Bu ilova ota-onangiz ruxsati bilan ishlaydi",
     "subtitle": "Ilovani ishlatishni boshlashdan oldin ota-onangiz quyidagi shartlarga rozi bo'lishi kerak.",
     "locationTitle": "Joylashuv",
-    "locationText": "Ilova bolaning joriy joylashuvini va harakat tarixini ota-onaga ko'rsatadi.",
+    "locationText": "Ilova bolaning joriy joylashuvini va harakat tarixini — hatto ilova yopiq yoki fonda ishlayotganda ham — ota-onaga ko'rsatadi.",
     "usageTitle": "Ilovadan foydalanish",
     "usageText": "Qaysi ilovalarda qancha vaqt sarflanganini kuzatadi va ota-onaga hisobot beradi.",
     "notificationsTitle": "Bildirishnomalar",
@@ -808,7 +808,6 @@
     "forceMessage": "Yangi versiya zarur. Eski versiya bilan davom etib bo'lmaydi.",
     "openAppStore": "App Store'ni ochish",
     "openPlayMarket": "Play Market'ni ochish",
-    "downloadApk": "Veb-saytdan yuklash (APK)",
     "currentVersion": "Joriy",
     "latestVersion": "Yangi",
     "available": "Yangi versiya mavjud ({version})",
@@ -987,6 +986,18 @@
     "optionalTitle": "Ixtiyoriy",
     "optionalText": "Yoqmasangiz ham ilova to'liq ishlaydi. Istalgan vaqtda telefon Sozlamalaridan o'chirishingiz mumkin.",
     "accept": "Roziman, yoqish",
+    "decline": "Hozir emas"
+  },
+  "locationDisclosure": {
+    "title": "Fon joylashuvi",
+    "subtitle": "Ota-onangiz sizning joylashuvingizni doimiy ko'rishi uchun qo'shimcha ruxsat kerak.",
+    "doesTitle": "Nima uchun kerak",
+    "doesText": "Bolaning joylashuvi — hatto Parvoz ilovasi yopiq yoki telefon ekrani o'chiq bo'lganda ham — kuzatiladi, va xavfsizlik zonasi (uy, maktab)ga kirish/chiqishda ota-onaga darhol xabar beriladi.",
+    "alwaysOnTitle": "Doimiy yuborish",
+    "alwaysOnText": "Joylashuv ma'lumoti ilova fonda ishlayotganda ham serverga muntazam yuboriladi — bu SOS tugmasi va xavfsizlik zonalari to'g'ri ishlashi uchun zarur.",
+    "privacyTitle": "Kim ko'radi",
+    "privacyText": "Joylashuv faqat sizga bog'langan ota-ona akkauntiga yuboriladi. Reklama uchun ishlatilmaydi va uchinchi shaxslarga sotilmaydi.",
+    "accept": "Roziman, davom etish",
     "decline": "Hozir emas"
   }
 }

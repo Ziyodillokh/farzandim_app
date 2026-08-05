@@ -28,8 +28,8 @@ const _dismissTtl = Duration(hours: 24);
 
 final appUpdateProvider =
     AsyncNotifierProvider<AppUpdateNotifier, AppUpdateStatus>(
-  AppUpdateNotifier.new,
-);
+      AppUpdateNotifier.new,
+    );
 
 class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
   @override
@@ -56,13 +56,20 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
     final platform = Platform.isAndroid ? info.android : info.ios;
 
     // 1. Force update — versiya minSupported'dan past yoki backend flag.
+    //
+    // ⚠️ `targetUrl` FAQAT `storeUrl` (Play Market/App Store) — Google Play
+    // DDA 4.5-bandi buzilishi sababli (2026-08-04 rad etish xati)
+    // `directApkUrl` zaxira sifatida ham ISHLATILMAYDI. `storeUrl` bo'sh
+    // bo'lsa tugma bosilganda hech narsa ochilmaydi (`_launch` null'da jim
+    // qaytadi) — bu Play'dan tashqarida APK ochishdan XAVFSIZROQ. Backend
+    // `playStoreUrl`ni to'ldirishi SHART (docs/PLAY_STORE_CHECKLIST.md).
     final ltMin = compareSemver(current, platform.minSupported) < 0;
     if (info.isForceUpdate || ltMin) {
       return AppUpdateStatus(
         state: UpdateState.forceUpdateRequired,
         currentVersion: current,
         info: info,
-        targetUrl: platform.storeUrl ?? platform.directApkUrl,
+        targetUrl: platform.storeUrl,
       );
     }
 
@@ -81,7 +88,7 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
         state: UpdateState.softUpdateAvailable,
         currentVersion: current,
         info: info,
-        targetUrl: platform.storeUrl ?? platform.directApkUrl,
+        targetUrl: platform.storeUrl,
       );
     }
 

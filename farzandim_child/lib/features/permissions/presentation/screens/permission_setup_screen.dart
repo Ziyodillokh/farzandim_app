@@ -13,6 +13,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/accessibility_disclosure_screen.dart';
+import 'package:farzandim_child/features/permissions/presentation/screens/location_disclosure_screen.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -148,13 +149,25 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     await AccessibilityDisclosureScreen.show(context);
   }
 
+  /// Joylashuv — foreground ("ishlatilganda") + fon ("har doim").
+  ///
+  /// ⚠️ Play MAJBURIY talabi (2026-08-04 rad etish xati — "Inadequate
+  /// Prominent Disclosure"): FON joylashuvi (`Permission.locationAlways`,
+  /// ACCESS_BACKGROUND_LOCATION) so'ralishidan OLDIN alohida, aynan shu
+  /// ruxsatga bog'liq oshkora tushuntirish ko'rsatilishi shart — umumiy
+  /// consent ekrani (`/consent`) YETARLI EMAS. Qarang: LocationDisclosureScreen.
   Future<void> _requestLocation() async {
     final w = await Permission.locationWhenInUse.request();
     if (w.isPermanentlyDenied) {
       await openAppSettings();
       return;
     }
-    if (w.isGranted) await Permission.locationAlways.request();
+    if (!w.isGranted || !mounted) return;
+
+    // Fon joylashuvidan OLDIN — Play majburiy oshkora tushuntirish.
+    final disclosed = await LocationDisclosureScreen.show(context);
+    if (!disclosed || !mounted) return;
+    await Permission.locationAlways.request();
   }
 
   // Faqat FUNKSIONAL ruxsatlar majburiy (joylashuv/foydalanish/overlay/batareya).

@@ -116,15 +116,14 @@ class ForceUpdateDialog extends StatelessWidget {
                   platformInfo?.playStoreUrl ?? platformInfo?.appStoreUrl,
                 ),
               ),
-              if (platformInfo?.directApkUrl != null &&
-                  platform != TargetPlatform.iOS) ...[
-                const SizedBox(height: 10),
-                _SecondaryButton(
-                  label: 'appUpdate.downloadApk'.tr(),
-                  icon: Icons.download_rounded,
-                  onPressed: () => _launch(platformInfo!.directApkUrl),
-                ),
-              ],
+              // ⚠️ Google Play DDA 4.5-bandi buzilishi sababli "Veb-saytdan
+              // yuklash (APK)" tugmasi OLIB TASHLANDI (2026-08-04 rad etish
+              // xati: "purpose or feature that opens web-based third-party
+              // markets"). Play-tarqatiladigan build HECH QACHON Play'dan
+              // tashqarida APK yuklab olishga undamasin — faqat Play Market
+              // havolasi qoladi. `directApkUrl` modelda saqlanib qoladi
+              // (boshqa tarqatish kanallari uchun), lekin bu ekranda
+              // ISHLATILMAYDI.
             ],
           ),
         ),
@@ -214,40 +213,6 @@ class _PrimaryButton extends StatelessWidget {
         label: Text(
           label,
           style: const TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
-        ),
-      ),
-    );
-  }
-}
-
-class _SecondaryButton extends StatelessWidget {
-  const _SecondaryButton({
-    required this.label,
-    required this.icon,
-    required this.onPressed,
-  });
-  final String label;
-  final IconData icon;
-  final VoidCallback onPressed;
-
-  @override
-  Widget build(BuildContext context) {
-    return SizedBox(
-      width: double.infinity,
-      child: OutlinedButton.icon(
-        onPressed: onPressed,
-        style: OutlinedButton.styleFrom(
-          foregroundColor: AppColors.textPrimary,
-          side: const BorderSide(color: AppColors.border),
-          padding: const EdgeInsets.symmetric(vertical: 12),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        icon: Icon(icon, size: 18),
-        label: Text(
-          label,
-          style: const TextStyle(fontSize: 14, fontWeight: FontWeight.w600),
         ),
       ),
     );

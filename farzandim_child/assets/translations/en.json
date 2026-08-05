@@ -774,7 +774,7 @@
     "title": "This app works with your parent's permission",
     "subtitle": "Before you start using the app, your parent must agree to the following terms.",
     "locationTitle": "Location",
-    "locationText": "The app shows the parent the child's current location and movement history.",
+    "locationText": "The app shows the parent the child's current location and movement history — even when the app is closed or running in the background.",
     "usageTitle": "App usage",
     "usageText": "Tracks how much time is spent in each app and reports it to the parent.",
     "notificationsTitle": "Notifications",
@@ -808,7 +808,6 @@
     "forceMessage": "A new version is required. You can't continue with the old version.",
     "openAppStore": "Open App Store",
     "openPlayMarket": "Open Play Market",
-    "downloadApk": "Download from website (APK)",
     "currentVersion": "Current",
     "latestVersion": "New",
     "available": "New version available ({version})",
@@ -987,6 +986,18 @@
     "optionalTitle": "Optional",
     "optionalText": "The app works fully without it. You can turn it off any time in your phone settings.",
     "accept": "I agree, turn on",
+    "decline": "Not now"
+  },
+  "locationDisclosure": {
+    "title": "Background location",
+    "subtitle": "An extra permission is needed so your parent can see your location at all times.",
+    "doesTitle": "Why it's needed",
+    "doesText": "The child's location is tracked — even when Parvoz is closed or the phone screen is off — and the parent is notified immediately when entering/leaving a safe zone (home, school).",
+    "alwaysOnTitle": "Continuous updates",
+    "alwaysOnText": "Location data is regularly sent to the server even while the app runs in the background — this is required for the SOS button and safe zones to work correctly.",
+    "privacyTitle": "Who sees it",
+    "privacyText": "Location is sent only to the parent account linked to this device. It is not used for advertising and is not sold to third parties.",
+    "accept": "I agree, continue",
     "decline": "Not now"
   }
 }
