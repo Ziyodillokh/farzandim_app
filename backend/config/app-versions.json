@@ -1,8 +1,10 @@
 {
+  "_comment": "Bu fayl faqat lokal fallback/shablon — haqiqiy production nusxa har APK CI build'da .github/workflows/deploy-test.yml ('Update version manifest' bosqichi) tomonidan serverda avtomatik qayta yoziladi va git bilan sinxron EMAS. playStoreUrl'ni o'zgartirsangiz — SHU faylni EMAS, o'sha workflow shablonini tuzating.",
   "parent": {
     "android": {
       "latest": "1.0.0",
       "minSupported": "1.0.0",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim",
       "directApkUrl": "https://farzandimedu.uz/app/farzandim-parent.apk"
     },
     "ios": {
@@ -16,6 +18,7 @@
     "android": {
       "latest": "1.0.0",
       "minSupported": "1.0.0",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.growth",
       "directApkUrl": "https://farzandimedu.uz/app/farzandim-child.apk"
     },
     "ios": {

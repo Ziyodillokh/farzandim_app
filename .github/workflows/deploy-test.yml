@@ -502,16 +502,25 @@ jobs:
             CHILD_V=$(python3 -c "import json; d=json.load(open('current.json')); print(((d.get('child') or {}).get('android') or {}).get('latest','1.0.0'))" 2>/dev/null || echo "1.0.0")
             echo "::error::Child APK build YIQILDI — manifest child versiyasi '$CHILD_V'da saqlandi (yangi child APK yo'q). 'Build child APK' qadami logini tekshiring."
           fi
+          # ⚠️ 2026-08-06: playStoreUrl SHART qo'shildi. Frontend (Farzandim +
+          # farzandim_child app_update_provider.dart) Play DDA 4.5 fix'idan
+          # beri targetUrl'ni FAQAT storeUrl'dan oladi, directApkUrl'ga hech
+          # qachon tushmaydi. Bu shablon avval faqat directApkUrl yozardi —
+          # natijada "Yangilash" tugmasi bossa hech narsa ochilmasdi (targetUrl
+          # null edi), chunki har APK build shu faylni serverda QAYTA YOZIB,
+          # qo'lda qo'shilgan playStoreUrl'ni ham yo'qotardi. Play'da ilova
+          # hali chop etilmagan bo'lsa ham URL to'g'ri turadi — tasdiqlangan
+          # zahoti avtomatik ishlay boshlaydi, qayta deploy shart emas.
           cat > app-versions.json <<EOF
           {
             "parent": {
-              "android": { "latest": "$V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-parent.apk" },
+              "android": { "latest": "$V", "minSupported": "1.0.0", "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-parent.apk" },
               "ios": { "latest": "1.0.0", "minSupported": "1.0.0" },
               "releaseNotes": "Yangi versiya $V",
               "isForceUpdate": false
             },
             "child": {
-              "android": { "latest": "$CHILD_V", "minSupported": "1.0.0", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-child.apk" },
+              "android": { "latest": "$CHILD_V", "minSupported": "1.0.0", "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.growth", "directApkUrl": "https://${TEST_DOMAIN}/app/farzandim-child.apk" },
               "ios": { "latest": "1.0.0", "minSupported": "1.0.0" },
               "releaseNotes": "Yangi versiya $CHILD_V",
               "isForceUpdate": false
