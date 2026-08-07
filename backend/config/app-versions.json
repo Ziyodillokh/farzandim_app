@@ -4,7 +4,7 @@
     "android": {
       "latest": "1.0.0",
       "minSupported": "1.0.0",
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim",
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.parent",
       "directApkUrl": "https://farzandimedu.uz/app/farzandim-parent.apk"
     },
     "ios": {
