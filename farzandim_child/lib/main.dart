@@ -6,6 +6,8 @@
 // 2. Firebase.initializeApp — Firestore, Auth, FCM uchun majburiy.
 // 3. ProviderScope — Riverpod ishlashi uchun ildiz widget.
 
+import 'dart:async';
+
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/offline/offline_buffer.dart';
 import 'package:farzandim_child/core/realtime/socket_providers.dart';
@@ -21,8 +23,9 @@ import 'package:farzandim_child/features/notifications/data/services/fcm_service
 import 'package:farzandim_child/features/notifications/presentation/providers/fcm_provider.dart';
 import 'package:farzandim_child/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:firebase_messaging/firebase_messaging.dart';
-import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
+import 'package:flutter/foundation.dart' show debugPrint, kDebugMode, kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -76,6 +79,38 @@ Future<void> main() async {
     initializeDateFormatting('uz_UZ', null),
     initializeDateFormatting('ru_RU', null),
   ]);
+
+  // ── Crashlytics (faqat Firebase muvaffaqiyatli bo'lganda) ──────────
+  // Yuqoridagi FlutterError/PlatformDispatcher handler'lar FAQAT
+  // Flutter/Dart tarafidagi xatolarni tutadi. Android foreground
+  // servislarida (RestrictionService, watchdog, UsageStatsPlugin va h.k.)
+  // Kotlin darajasidagi crash bu handler'lardan O'TIB KETADI — Crashlytics
+  // SDK esa native crash'larni ham ALOHIDA, avtomatik yozadi. "Ilova
+  // ishdan chiqdi" holatlarini keyingi safar aniq stack trace bilan
+  // tashxislash uchun MUHIM.
+  if (!kIsWeb && Firebase.apps.isNotEmpty) {
+    final previousOnError = FlutterError.onError;
+    FlutterError.onError = (FlutterErrorDetails details) {
+      previousOnError?.call(details);
+      FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+    };
+    final previousPlatformOnError =
+        WidgetsBinding.instance.platformDispatcher.onError;
+    WidgetsBinding.instance.platformDispatcher.onError = (error, stack) {
+      previousPlatformOnError?.call(error, stack);
+      FirebaseCrashlytics.instance
+          .recordError(error, stack, fatal: true)
+          .catchError((Object _) {});
+      return true;
+    };
+    unawaited(
+      FirebaseCrashlytics.instance
+          .setCrashlyticsCollectionEnabled(!kDebugMode)
+          .catchError((Object e) {
+            debugPrint('[DEV] Crashlytics enable xato: $e');
+          }),
+    );
+  }
 
   // Foreground Service notification kanali. Web'da no-op.
   if (!kIsWeb) {
