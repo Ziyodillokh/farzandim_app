@@ -17,17 +17,17 @@
 class AppleProductIds {
   const AppleProductIds._();
 
-  /// Standart — oylik.
-  static const String standardMonthly = 'uz.parvoz.parent.standard.monthly';
+  /// Standart — oylik. App Store Connect'da AYNAN shu nom bilan yaratilgan.
+  static const String standardMonthly = 'parvoz.standard.monthly';
 
   /// Standart — yillik.
-  static const String standardYearly = 'uz.parvoz.parent.standard.yearly';
+  static const String standardYearly = 'parvoz.standard.yearly';
 
   /// Premium — oylik.
-  static const String premiumMonthly = 'uz.parvoz.parent.premium.monthly';
+  static const String premiumMonthly = 'parvoz.premium.monthly';
 
   /// Premium — yillik.
-  static const String premiumYearly = 'uz.parvoz.parent.premium.yearly';
+  static const String premiumYearly = 'parvoz.premium.yearly';
 
   /// `queryProductDetails` uchun barcha ID'lar.
   static const Set<String> all = <String>{

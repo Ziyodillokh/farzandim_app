@@ -266,6 +266,11 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
         }
       } else if (p.status == PurchaseStatus.error) {
         if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+      } else if (p.status == PurchaseStatus.canceled) {
+        // Foydalanuvchi StoreKit oynasida o'zi bekor qilgan — bu XATO EMAS,
+        // shuning uchun toast ko'rsatmaymiz (jim). `_busyPlanId` pastda
+        // baribir tozalanadi (spinner o'chadi, karta qayta bosiladigan
+        // bo'ladi).
       }
 
       // Apple: har yakunlangan tranzaksiyani YOPISH shart (aks holda qayta
