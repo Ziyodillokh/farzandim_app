@@ -134,6 +134,10 @@ dependencies:
   image_picker: ^1.0.7
   # Apple StoreKit obuna xaridi (iOS App Store 3.1.1). Android'da ishlatilmaydi.
   in_app_purchase: ^3.2.0
+  # iOS-specific platform addition (refreshPurchaseVerificationData — renewal
+  # poll uchun). in_app_purchase'ning transitiv qismi, aniq versiya uchun
+  # to'g'ridan-to'g'ri ko'rsatilgan.
+  in_app_purchase_storekit: ^0.4.0
 
   # Audio player — ovozli xabarlarni tinglash uchun (Bosqich 8+9).
   # URL'dan stream, speed control (1x/1.5x/2x), pozitsiya kuzatish.

@@ -18,6 +18,7 @@ import 'package:farzandim/features/notifications/presentation/providers/fcm_prov
 import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_permission_primer.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
+import 'package:farzandim/features/settings/data/apple_receipt_sync_service.dart';
 import 'package:farzandim/features/settings/presentation/plan_gate.dart';
 import 'package:farzandim/features/sos/presentation/providers/sos_provider.dart';
 import 'package:flutter/gestures.dart';
@@ -228,7 +229,10 @@ class FarzandimApp extends ConsumerWidget {
       ..watch(fcmInitializerProvider)
       // Socket.io lifecycle — auth state'ga listen qilib avtomatik
       // connect/disconnect qiladi. Side-effect, value qaytarmaydi.
-      ..watch(socketLifecycleProvider);
+      ..watch(socketLifecycleProvider)
+      // iOS obuna renewal/expiry "poll" — ilova darajasida (faqat
+      // "Tariflar" ekrani ochiq bo'lganda EMAS). Android/web'da no-op.
+      ..watch(appleReceiptSyncServiceProvider);
 
     // Toggle'ga qarab AppColors.brightness o'rnatiladi. Root build
     // descendant'lardan oldin ishlaydi, shuning uchun keyin barcha

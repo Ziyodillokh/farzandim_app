@@ -116,17 +116,20 @@ class BackendPaymentsRepository {
   /// bo'lsa obunani beradi/uzaytiradi.
   ///
   /// [verificationData] — `serverVerificationData` (StoreKit kvitansiyasi).
-  /// [productId] — App Store product id.
-  /// `true` qaytsa entitlement berildi.
+  /// [productId] — App Store product id. Xarid/restore paytida ANIQ
+  /// ma'lum bo'ladi. Renewal-tekshiruv (ilova resume'da jim so'rov,
+  /// `AppleReceiptSyncService`) paytida esa `null` qoldiriladi — backend
+  /// kvitansiya ichidan eng so'nggi mos yozuvni o'zi aniqlaydi.
+  /// `true` qaytsa entitlement berildi/tasdiqlandi.
   Future<bool> verifyApplePurchase({
-    required String productId,
     required String verificationData,
+    String? productId,
     String? transactionId,
   }) async {
     final res = await _dio.post<Map<String, dynamic>>(
       '/payments/apple/verify',
       data: <String, dynamic>{
-        'productId': productId,
+        if (productId != null) 'productId': productId,
         'verificationData': verificationData,
         if (transactionId != null) 'transactionId': transactionId,
       },

@@ -55,7 +55,7 @@ export class AppleIapService {
   async verify(
     userId: string,
     dto: {
-      productId: string;
+      productId?: string;
       verificationData: string;
       transactionId?: string;
     },
@@ -65,8 +65,12 @@ export class AppleIapService {
       throw new ServiceUnavailableException('Apple IAP not configured');
     }
 
-    const parsed = parseProductId(dto.productId);
-    if (!parsed) throw new BadRequestException('Unknown productId');
+    // productId oldindan berilgan bo'lsa (xarid/restore) shuni tekshiramiz;
+    // bo'lmasa (renewal-poll) parseProductId'ga mos KELGAN barcha yozuvlar
+    // orasidan izlaymiz.
+    if (dto.productId && !parseProductId(dto.productId)) {
+      throw new BadRequestException('Unknown productId');
+    }
 
     const receipt = await this.verifyReceipt(dto.verificationData, secret);
     if (!receipt || receipt.status !== 0) {
@@ -75,21 +79,43 @@ export class AppleIapService {
     }
 
     const infos = receipt.latest_receipt_info ?? receipt.receipt?.in_app ?? [];
-    const forProduct = infos.filter((t) => t.product_id === dto.productId);
-    if (forProduct.length === 0) {
+    const candidates = dto.productId
+      ? infos.filter((t) => t.product_id === dto.productId)
+      : // Renewal-poll: aniq productId yo'q — kvitansiyadagi BARCHA bizning
+        // (standard/premium) mahsulotlarimizga mos yozuvlarni ko'rib
+        // chiqamiz (tarif upgrade/downgrade holatini ham to'g'ri qamraydi).
+        infos.filter((t) => t.product_id && parseProductId(t.product_id));
+    if (candidates.length === 0) {
+      // Renewal-poll'da mos yozuv topilmasa — bu XATO emas (foydalanuvchida
+      // hali Apple obunasi yo'q bo'lishi mumkin), jim rad.
+      if (!dto.productId) return { ok: false, reason: 'no_subscription' };
       throw new BadRequestException('Product not found in receipt');
     }
-    // Eng so'nggi (eng katta expires_date_ms) tranzaksiya.
-    forProduct.sort(
+    // Eng so'nggi (eng katta expires_date_ms) tranzaksiya — bir nechta
+    // mahsulot bo'lsa ham (masalan standard->premium upgrade) ENG YANGI
+    // aktiv obunani tanlaydi.
+    candidates.sort(
       (a, b) => Number(b.expires_date_ms ?? 0) - Number(a.expires_date_ms ?? 0),
     );
-    const latest = forProduct[0];
+    const latest = candidates[0];
+    const resolvedProductId = latest.product_id ?? dto.productId;
+    const parsed = resolvedProductId ? parseProductId(resolvedProductId) : null;
+    if (!parsed) throw new BadRequestException('Unknown productId');
     const expiresMs = Number(latest.expires_date_ms ?? 0);
-    const originalTxId = String(
-      latest.original_transaction_id ??
-        latest.transaction_id ??
-        dto.transactionId ??
-        '',
+
+    // MUHIM: `transaction_id` — AYNAN shu tranzaksiya/renewal-siklga xos,
+    // HAR renewal'da YANGISI keladi. `original_transaction_id` esa obuna
+    // umri davomida O'ZGARMAYDI (birinchi xariddan boshlab bir xil qoladi).
+    // Idempotency kalitini `original_transaction_id` bo'yicha qilish
+    // RENEWAL'NI BUTUNLAY BUZAR EDI: birinchi xariddan keyin har qanday
+    // keyingi tekshiruv (hatto YANGI renewal bo'lsa ham) "allaqachon
+    // mavjud" deb to'xtab, `expiresAt` HECH QACHON uzaytirilmasdi. Shu
+    // sabab idempotency AYNAN `transactionId` (renewal-specific) bo'yicha.
+    const transactionId = String(
+      latest.transaction_id ?? dto.transactionId ?? '',
+    );
+    const originalTransactionId = String(
+      latest.original_transaction_id ?? transactionId,
     );
 
     // Muddati o'tgan obuna — entitlement bermaymiz (xato emas, jim rad).
@@ -97,10 +123,12 @@ export class AppleIapService {
       return { ok: false, reason: 'expired' };
     }
 
-    // Idempotency: shu tranzaksiya bo'yicha allaqachon obuna berilgan bo'lsa.
-    if (originalTxId) {
+    // Idempotency: AYNAN shu renewal-tranzaksiya uchun allaqachon entitlement
+    // berilganmi (bir xil oyda ilova bir necha marta ochilganda takroriy
+    // Payment yozuv/uzaytirish bo'lmasin).
+    if (transactionId) {
       const existing = await this.prisma.payment.findFirst({
-        where: { method: 'apple', externalId: originalTxId, status: 'success' },
+        where: { method: 'apple', externalId: transactionId, status: 'success' },
       });
       if (existing) return { ok: true };
     }
@@ -122,14 +150,14 @@ export class AppleIapService {
         amount,
         method: 'apple',
         status: 'pending',
-        externalId: originalTxId || null,
+        externalId: transactionId || null,
       },
     });
 
     await this.payments.markPaymentSuccess(payment.id, {
-      externalId: originalTxId || undefined,
+      externalId: transactionId || undefined,
       providerData: latest,
-      notes: `Apple IAP ${dto.productId}`,
+      notes: `Apple IAP ${resolvedProductId} (original_transaction_id=${originalTransactionId})`,
     });
 
     return { ok: true };
