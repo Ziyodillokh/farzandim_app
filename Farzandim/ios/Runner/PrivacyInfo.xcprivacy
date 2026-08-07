@@ -3,7 +3,7 @@
 <plist version="1.0">
 <dict>
 	<!-- ==================================================================
-	     Parvoz Parents (com.farzandim.parent) — Apple Privacy Manifest
+	     Parvoz Parents (uz.parvoz.parent) — Apple Privacy Manifest
 	     2024-05-01 dan majburiy. Bu manifest FAQAT Runner (ilovaning O'Z
 	     kodi) uchun. Firebase, shared_preferences, path_provider va boshqa
 	     CocoaPods pod'lari O'Z PrivacyInfo.xcprivacy fayllarini olib keladi.

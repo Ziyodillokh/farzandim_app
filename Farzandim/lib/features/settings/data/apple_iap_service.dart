@@ -18,16 +18,16 @@ class AppleProductIds {
   const AppleProductIds._();
 
   /// Standart — oylik.
-  static const String standardMonthly = 'com.farzandim.parent.standard.monthly';
+  static const String standardMonthly = 'uz.parvoz.parent.standard.monthly';
 
   /// Standart — yillik.
-  static const String standardYearly = 'com.farzandim.parent.standard.yearly';
+  static const String standardYearly = 'uz.parvoz.parent.standard.yearly';
 
   /// Premium — oylik.
-  static const String premiumMonthly = 'com.farzandim.parent.premium.monthly';
+  static const String premiumMonthly = 'uz.parvoz.parent.premium.monthly';
 
   /// Premium — yillik.
-  static const String premiumYearly = 'com.farzandim.parent.premium.yearly';
+  static const String premiumYearly = 'uz.parvoz.parent.premium.yearly';
 
   /// `queryProductDetails` uchun barcha ID'lar.
   static const Set<String> all = <String>{
