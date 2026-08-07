@@ -100,6 +100,13 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   /// iOS bo'lsa Apple IAP. web guard (Platform web'da throw qiladi).
   bool get _isApple => !kIsWeb && Platform.isIOS;
 
+  /// iOS: StoreKit'dan yuklangan mahsulot narxlari (productId -> tafsilot).
+  /// Kartadagi narx StoreKit bilan MOS bo'lishi shart — aks holda
+  /// foydalanuvchi "29 000 so'm" ko'radi-yu, xarid bosilganda Apple tizim
+  /// oynasi "$2.99" ko'rsatadi (ikki xil narx = Apple Review rad sababi).
+  final Map<String, ProductDetails> _appleProducts = {};
+  bool _appleProductsLoaded = false;
+
   @override
   void initState() {
     super.initState();
@@ -112,6 +119,27 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
           if (mounted) setState(() => _busyPlanId = null);
         },
       );
+      unawaited(_loadAppleProducts());
+    }
+  }
+
+  /// StoreKit narxlarini oldindan yuklaydi (Apple App Store Connect'dagi
+  /// haqiqiy, mahalliy valyutada formatlangan narx) — [_priceLabel] shundan
+  /// foydalanadi, backend UZS narxi EMAS.
+  Future<void> _loadAppleProducts() async {
+    try {
+      if (!await _iap.isAvailable()) return;
+      final resp = await _iap.queryProductDetails(AppleProductIds.all);
+      if (!mounted) return;
+      setState(() {
+        for (final p in resp.productDetails) {
+          _appleProducts[p.id] = p;
+        }
+        _appleProductsLoaded = true;
+      });
+    } catch (_) {
+      // Jim — StoreKit narxi bo'lmasa _priceLabel "—" ko'rsatadi (so'm
+      // FALLBACK QILINMAYDI, aks holda yana nomuvofiqlik yuzaga keladi).
     }
   }
 
@@ -256,10 +284,31 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     return _PlanStyle.blue;
   }
 
-  /// "29 000 so'm/oy" ko'rinishidagi narx. Bepul bo'lsa i18n "Tekin".
-  /// Yillik ko'rinishda narx = oylik × 10 (2 oy tekin) va "/yil" qo'shiladi.
+  /// "29 000 so'm/oy" ko'rinishidagi narx (Android/web — backend UZS).
+  /// iOS'da esa StoreKit'ning HAQIQIY narxi ("$2.99/oy" kabi) — bu xarid
+  /// bosilganda Apple tizim oynasida ko'rinadigan narx bilan AYNAN mos
+  /// bo'lishi shart. Bepul bo'lsa i18n "Tekin". Android/web'da yillik narx =
+  /// oylik × 10 (2 oy tekin); iOS'da yillik narx App Store Connect'da
+  /// mustaqil belgilangan (StoreKit'dan to'g'ridan-to'g'ri keladi).
   String _priceLabel(PlanEntry p) {
     if (p.isFree) return 'premium.startPrice'.tr();
+    if (_isApple) {
+      final productId = AppleProductIds.forPlan(
+        p.entitlementTier,
+        yearly: _yearly,
+      );
+      final product = productId != null ? _appleProducts[productId] : null;
+      if (product != null) {
+        final suffix = _yearly
+            ? '/${'premium.perYear'.tr()}'
+            : '/${'premium.perMonth'.tr()}';
+        return '${product.price}$suffix';
+      }
+      // StoreKit narxi hali yuklanmagan/topilmadi — backend UZS'ga FALLBACK
+      // QILINMAYDI (bu yana nomuvofiqlikka olib keladi). Yuklanish holatida
+      // "···", umuman topilmasa "—".
+      return _appleProductsLoaded ? '—' : '···';
+    }
     final amount = _yearly ? p.priceUzs * 10 : p.priceUzs;
     final s = amount.toString();
     final b = StringBuffer();
