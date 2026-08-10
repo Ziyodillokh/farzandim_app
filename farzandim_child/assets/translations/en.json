@@ -209,7 +209,11 @@
     "grantButton": "Enable",
     "autoContinueHint": "Will continue automatically once all are enabled",
     "uninstallProtectionName": "Prevent uninstall",
-    "a11yName": "Fast blocking (recommended)"
+    "a11yName": "Fast blocking (recommended)",
+    "alwaysLocTitle": "One more step",
+    "alwaysLocBody": "Android asks for background location separately. After settings open, choose: Permissions → Location → \"Allow all the time\", then return to the app.",
+    "alwaysLocOpen": "Open settings",
+    "alwaysLocLater": "Later"
   },
   "dashboard": {
     "greeting": "Hi, {name}!",

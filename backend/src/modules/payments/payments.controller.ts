@@ -15,6 +15,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
+import { Throttle } from '@nestjs/throttler';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -23,6 +24,7 @@ import { PaymentsService } from './payments.service';
 import { AppleIapService } from './apple-iap.service';
 import { PaymentProviderRegistry } from './providers/registry';
 import { WebhookIpGuard } from './guards/webhook-ip.guard';
+import { CheckoutThrottlerGuard } from './guards/checkout-throttler.guard';
 import { CheckoutDto } from './dto/checkout.dto';
 import { AppleVerifyDto } from './dto/apple-verify.dto';
 import type { PaymentProviderKey, WebhookRequest } from './providers/types';
@@ -103,7 +105,11 @@ export class PaymentsController {
 
   @Post('checkout')
   @ApiBearerAuth()
-  @UseGuards(ConsumerJwtAuthGuard, RolesGuard)
+  // Uzum IB anti-fraud talabi: 10 daqiqada foydalanuvchi boshiga max 5
+  // urinish (guard tartibi muhim — JWT avval ishlashi kerak, shunda
+  // CheckoutThrottlerGuard req.user.userId'ni ko'radi, IP'ga tushmaydi).
+  @Throttle({ checkout: { limit: 5, ttl: 600_000 } })
+  @UseGuards(ConsumerJwtAuthGuard, RolesGuard, CheckoutThrottlerGuard)
   @ApiOperation({ summary: 'Start payment checkout' })
   async checkout(
     @CurrentUser() user: JwtPayload,

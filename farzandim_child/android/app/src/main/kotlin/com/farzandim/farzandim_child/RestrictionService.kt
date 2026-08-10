@@ -1329,7 +1329,8 @@ class RestrictionService : Service() {
             .setContentTitle(i18n("timeRunningOut", "Vaqting tugayapti"))
             .setContentText(text)
             .setStyle(NotificationCompat.BigTextStyle().bigText(text))
-            .setSmallIcon(android.R.drawable.ic_lock_idle_alarm)
+            .setSmallIcon(R.drawable.ic_stat_parvoz)
+            .setColor(0xFF216BFF.toInt())
             .setPriority(NotificationCompat.PRIORITY_HIGH)
             .setAutoCancel(true)
             .setContentIntent(pi)
@@ -1353,10 +1354,19 @@ class RestrictionService : Service() {
     }
 
     private fun buildNotification(): Notification {
+        // Brend Parvoz ikonkasi — Play Monitoring-siyosati doimiy bildirishnoma
+        // ilovani ANIQ identifikatsiya qilishini talab qiladi (avval generic
+        // tizim ikonkasi ic_menu_info_details edi).
+        //
+        // ⚠️ @drawable/ic_stat_parvoz — ALPHA-ONLY vektor. @mipmap/ic_launcher
+        // ISHLATMANG: status-bar small icon faqat alpha kanalidan chiziladi,
+        // adaptive launcher ikonkasining foni to'liq noshaffof → qattiq oq
+        // kvadrat chiqadi va brend belgisi umuman ko'rinmaydi.
         return NotificationCompat.Builder(this, CHANNEL_ID)
             .setContentTitle("Parvoz faol")
             .setContentText("Ilova cheklovlari kuzatilmoqda")
-            .setSmallIcon(android.R.drawable.ic_menu_info_details)
+            .setSmallIcon(R.drawable.ic_stat_parvoz)
+            .setColor(0xFF216BFF.toInt())
             .setOngoing(true)
             .setPriority(NotificationCompat.PRIORITY_LOW)
             .build()

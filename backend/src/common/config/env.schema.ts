@@ -52,6 +52,16 @@ const envSchema = z.object({
 
   PUBLIC_BASE_URL: z.string().url().default('https://farzandimedu.uz'),
 
+  // Google Play / App Store reviewer'i uchun maxsus oila kodi (ixtiyoriy).
+  // Shu kodga ega bola profili uchun "bir bola = bir qurilma" bloki chetlab
+  // o'tiladi — reviewer istalgan qurilmadan qayta-qayta ulanadi
+  // (auth.service.ts childPair). Faqat bitta ataylab yaratilgan demo profil
+  // uchun ishlating, real foydalanuvchi kodini qo'ymang.
+  PLAY_REVIEW_FAMILY_CODE: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().min(5).optional(),
+  ),
+
   PAYME_MERCHANT_ID: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),

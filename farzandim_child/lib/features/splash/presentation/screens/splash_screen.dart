@@ -12,11 +12,14 @@
 // MUHIM: onboarding (qiziqishlar) endi faqat KOD kiritilgandan keyin
 // ochiladi — pair bo'lmagan bola to'g'ridan-to'g'ri /pairing ga boradi.
 //
-// 4 ta sistema ruxsati: locationAlways, ignoreBatteryOptimizations,
-// PACKAGE_USAGE_STATS, SYSTEM_ALERT_WINDOW. Notification/camera —
-// runtime perms — bu yerda tekshirilmaydi (kerak bo'lganda ad-hoc
-// so'raladi). 800ms — SharedPreferences'dan pairing state'ni
-// `PairingNotifier._loadFromStorage` tiklab ulgurishi uchun.
+// 5 ta sistema ruxsati: locationAlways, ignoreBatteryOptimizations,
+// PACKAGE_USAGE_STATS, SYSTEM_ALERT_WINDOW, POST_NOTIFICATIONS.
+// Notification 2026-08-10 dan MAJBURIY gate'ga kirdi: Google Play
+// "Stalkerware/Monitoring" siyosati monitoring ilovadan HAR DOIM ko'rinib
+// turadigan doimiy bildirishnomani talab qiladi — Android 13+ da
+// POST_NOTIFICATIONS rad etilsa foreground-servis bildirishnomasi
+// status-barda KO'RINMAYDI va talab amalda buziladi. Camera — runtime
+// perm — bu yerda tekshirilmaydi (kerak bo'lganda ad-hoc so'raladi).
 
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -84,14 +87,17 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
     // 4. Web preview — permission/UsageStats yo'q.
     if (kIsWeb) return '/dashboard';
 
-    // 5. 4 ta sistema ruxsati — PARALLEL (avval ketma-ket await edi, ~0.3-0.6s
-    //    startup'ni sekinlashtirardi).
+    // 5. 5 ta sistema ruxsati — PARALLEL (avval ketma-ket await edi, ~0.3-0.6s
+    //    startup'ni sekinlashtirardi). Notification — Play Monitoring-siyosati
+    //    "doimiy ko'rinadigan bildirishnoma" talabi uchun majburiy (Android 12-
+    //    da POST_NOTIFICATIONS avtomatik granted, gate'ga ta'sir qilmaydi).
     final usageService = UsageStatsService();
     final checks = await Future.wait<bool>([
       Permission.locationAlways.status.then((s) => s.isGranted),
       Permission.ignoreBatteryOptimizations.status.then((s) => s.isGranted),
       usageService.hasPermission(),
       usageService.hasOverlayPermission(),
+      Permission.notification.status.then((s) => s.isGranted),
     ]);
     final allGranted = checks.every((granted) => granted);
     return allGranted ? '/dashboard' : '/permission-setup';

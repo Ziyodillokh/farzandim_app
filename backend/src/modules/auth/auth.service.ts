@@ -1345,6 +1345,48 @@ export class AuthService {
       throw new NotFoundException('Family code not found');
     }
 
+    // Google Play/App Store REVIEWER istisnosi: `PLAY_REVIEW_FAMILY_CODE`
+    // env'da ko'rsatilgan bitta maxsus profil uchun "bir bola = bir qurilma"
+    // bloki chetlab o'tiladi — reviewer istalgan qurilmadan, istalgan payt
+    // qayta ulanadi (eski qurilma sessiyalari QR-repair'dagi kabi xavfsiz
+    // bekor qilinadi, pastda). Sabab: Play rad xati "Login credentials are
+    // incorrect" (2026-08-10) — reviewer kod bilan bir marta ulangach,
+    // keyingi urinishlari 409 bilan qaytarilardi. Oddiy foydalanuvchi
+    // profillariga TA'SIR QILMAYDI (faqat env'dagi kodga teng bo'lsa).
+    const reviewCode = process.env.PLAY_REVIEW_FAMILY_CODE;
+    const isReviewProfile =
+      !!reviewCode && reviewCode.length >= 5 && dto.familyCode === reviewCode;
+
+    if (child.childUserId && isReviewProfile) {
+      const oldChildUserId = child.childUserId;
+      await this.prisma.userSession.updateMany({
+        where: { userId: oldChildUserId, revokedAt: null },
+        data: { revokedAt: new Date() },
+      });
+      await this.prisma.user
+        .update({
+          where: { id: oldChildUserId },
+          data: { isActive: false, tokenVersion: { increment: 1 } },
+        })
+        .catch(() => undefined);
+      await this.prisma.fcmToken
+        .deleteMany({ where: { userId: oldChildUserId } })
+        .catch(() => undefined);
+      await this.prisma.child.update({
+        where: { id: child.id },
+        data: { childUserId: null, isConnected: false, pairedAt: null },
+      });
+      child.childUserId = null;
+      await this.audit.log(
+        null,
+        'auth',
+        'PAIR',
+        child.id,
+        { action: 'REVIEW_PROFILE_REPAIR', childId: child.id },
+        reqMeta,
+      );
+    }
+
     // Bola allaqachon boshqa qurilmaga ulangan → oila-kodi QR bilan qayta
     // ulash TO'LIQ BLOKLANADI (bir bola = bir qurilma, qat'iy). Avval bu yerda
     // "ota-ona tasdiqlaydi" so'rovi yaratilardi va yangi qurilma o'tib olardi —

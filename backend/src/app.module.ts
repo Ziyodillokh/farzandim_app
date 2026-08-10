@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ScheduleModule } from '@nestjs/schedule';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { validate } from './common/config/env.schema';
 
 // Infrastructure / shared modules
@@ -65,6 +66,19 @@ import { AppController } from './app.controller';
   imports: [
     ConfigModule.forRoot({ isGlobal: true, validate }),
     ScheduleModule.forRoot(),
+
+    // Rate-limit — BARCHA nomli limitlar SHU YERDA, bir marta.
+    // ⚠️ ThrottlerModule @Global: agar u bir necha modulda `forRoot()` bilan
+    // ro'yxatdan o'tsa, oxirgisi avvalgilarini JIMGINA bekor qiladi (nomli
+    // limitlar yo'qoladi va noto'g'ri limit boshqa route'ga qo'llanadi).
+    // Aynan shu 2026-08-10 da `checkout` (5/10daq) limitini `child-pair`
+    // route'iga tarqatib, Play reviewer'ini bloklab qo'ygan edi.
+    //   childPair — 5 xonali oila kodini enumeration qilishga qarshi
+    //   checkout  — Uzum IB anti-fraud talabi (karta brute-force)
+    ThrottlerModule.forRoot([
+      { name: 'childPair', ttl: 600_000, limit: 30 },
+      { name: 'checkout', ttl: 600_000, limit: 5 },
+    ]),
 
     // Infrastructure
     DatabaseModule,

@@ -19,6 +19,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Request } from 'express';
+import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -196,6 +197,10 @@ export class AuthController {
 
   @Post('child-pair')
   @Public()
+  // 5 xonali kodni IP bo'yicha enumeration qilishdan himoya (auth.module'da
+  // ro'yxatdan o'tgan 'childPair' throttler bilan birga ishlaydi).
+  @Throttle({ childPair: { limit: 30, ttl: 600_000 } })
+  @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({
     summary: 'Pair child device using family code (anonymous endpoint)',

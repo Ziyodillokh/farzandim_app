@@ -209,7 +209,11 @@
     "grantButton": "Yoqish",
     "autoContinueHint": "Hammasi yoqilgach, avtomatik davom etadi",
     "uninstallProtectionName": "O'chirishni taqiqlash",
-    "a11yName": "Tez bloklash (tavsiya etiladi)"
+    "a11yName": "Tez bloklash (tavsiya etiladi)",
+    "alwaysLocTitle": "Yana bitta qadam kerak",
+    "alwaysLocBody": "Fon joylashuvi uchun Android alohida ruxsat so'raydi. Sozlamalar ochilgach: Ruxsatlar → Joylashuv → \"Har doim ruxsat berish\" ni tanlang, so'ng ilovaga qayting.",
+    "alwaysLocOpen": "Sozlamalarni ochish",
+    "alwaysLocLater": "Keyinroq"
   },
   "dashboard": {
     "greeting": "Salom, {name}!",

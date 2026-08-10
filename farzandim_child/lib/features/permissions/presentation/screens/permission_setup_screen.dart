@@ -126,11 +126,20 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
     await _checkAll();
   }
 
-  // Bildirishnoma ruxsati — doimiy rad etilgan bo'lsa tizim sozlamalariga
-  // yo'naltiramiz (aks holda tugma abadiy o'chiq qolib, foydalanuvchi qamaladi).
+  // Bildirishnoma ruxsati — rad etilgan HAR QANDAY holatda tizim
+  // sozlamalariga yo'naltiramiz (aks holda tugma abadiy o'chiq qolib,
+  // foydalanuvchi qamaladi — bildirishnoma endi majburiy gate, qarang
+  // `_allGranted`).
+  //
+  // ⚠️ Nega faqat `isPermanentlyDenied` YETARLI EMAS: Android 13 dan PAST
+  // versiyalarda POST_NOTIFICATIONS runtime-ruxsat sifatida mavjud emas —
+  // permission_handler `areNotificationsEnabled()` ni tekshiradi va
+  // `request()` hech qanday tizim dialogini KO'RSATMAY, to'g'ridan-to'g'ri
+  // `denied` qaytaradi (permanentlyDenied EMAS). Foydalanuvchi bildirishnomani
+  // qo'lda o'chirgan bo'lsa, yagona yo'l — ilova sozlamalarini ochish.
   Future<void> _requestNotif() async {
     final s = await Permission.notification.request();
-    if (s.isPermanentlyDenied) await openAppSettings();
+    if (!s.isGranted) await openAppSettings();
   }
 
   // ⏸️ _requestAccessibility() VAQTINCHA OLIB TASHLANDI (2026-08-06):
@@ -150,23 +159,81 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
   /// consent ekrani (`/consent`) YETARLI EMAS. Qarang: LocationDisclosureScreen.
   Future<void> _requestLocation() async {
     final w = await Permission.locationWhenInUse.request();
-    if (w.isPermanentlyDenied) {
+    if (!w.isGranted) {
+      // Rad etilgan har qanday holatda sozlamalarga yo'naltiramiz — aks holda
+      // toggle abadiy o'chiq qolib, foydalanuvchi shu ekranda qamaladi.
       await openAppSettings();
       return;
     }
-    if (!w.isGranted || !mounted) return;
+    if (!mounted) return;
 
     // Fon joylashuvidan OLDIN — Play majburiy oshkora tushuntirish.
     final disclosed = await LocationDisclosureScreen.show(context);
     if (!disclosed || !mounted) return;
-    await Permission.locationAlways.request();
+
+    // ⚠️ Android 11+ (API 30+): ACCESS_BACKGROUND_LOCATION tizim dialogi
+    // BILAN BERILMAYDI — `request()` hech qanday oyna ko'rsatmasdan `denied`
+    // qaytaradi. Yagona yo'l — foydalanuvchini ilova sozlamalariga olib
+    // borish ("Ruxsatlar → Joylashuv → Har doim ruxsat berish"). Bu fallback
+    // bo'lmasa toggle hech qachon yonmaydi va ekran dead-end bo'ladi
+    // (Play reviewer'i ham aynan shu yerda tiqilib qolgan bo'lishi mumkin).
+    final always = await Permission.locationAlways.request();
+    if (always.isGranted || !mounted) return;
+    await _showAlwaysLocationHint();
   }
 
-  // Faqat FUNKSIONAL ruxsatlar majburiy (joylashuv/foydalanish/overlay/batareya).
-  // Bildirishnoma va "O'chirishni taqiqlash" (Device Admin) IXTIYORIY — aks holda
-  // ularni rad etgan foydalanuvchi shu ekranda qamalib, ilovaga umuman kira
-  // olmasdi. Device Admin baribir keyin ota-ona siyosati orqali qo'llanadi.
-  bool get _allGranted => _location && _usage && _overlay && _battery;
+  /// Fon joylashuvi tizim dialogisiz beriladigan holat uchun qisqa yo'riqnoma
+  /// (Android 11+), so'ng ilova sozlamalarini ochadi.
+  Future<void> _showAlwaysLocationHint() async {
+    final proceed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: const Color(0xFF12171E),
+        title: Text(
+          'permissionSetup.alwaysLocTitle'.tr(),
+          style: GoogleFonts.poppins(
+            color: Colors.white,
+            fontSize: 17,
+            fontWeight: FontWeight.w700,
+          ),
+        ),
+        content: Text(
+          'permissionSetup.alwaysLocBody'.tr(),
+          style: GoogleFonts.poppins(color: _dim, fontSize: 14, height: 1.5),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text(
+              'permissionSetup.alwaysLocLater'.tr(),
+              style: GoogleFonts.poppins(color: _dim),
+            ),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'permissionSetup.alwaysLocOpen'.tr(),
+              style: GoogleFonts.poppins(
+                color: _blueLight,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (proceed ?? false) await openAppSettings();
+  }
+
+  // Majburiy ruxsatlar: joylashuv/foydalanish/overlay/batareya + BILDIRISHNOMA.
+  // Bildirishnoma 2026-08-10 dan majburiy: Google Play "Stalkerware/Monitoring"
+  // siyosati monitoring ilovadan doimiy KO'RINIB turadigan bildirishnomani
+  // talab qiladi — Android 13+ da POST_NOTIFICATIONS rad etilsa foreground
+  // bildirishnoma status-barda chiqmaydi va talab amalda buziladi. Qamalib
+  // qolish yo'q: _requestNotif isPermanentlyDenied'da openAppSettings ochadi.
+  // "O'chirishni taqiqlash" (Device Admin) IXTIYORIY bo'lib qoladi.
+  bool get _allGranted =>
+      _location && _usage && _overlay && _battery && _notif;
 
   void _onNext() {
     if (!kIsWeb && !_allGranted) return;

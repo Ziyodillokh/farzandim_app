@@ -1,6 +1,24 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
+    <!-- ⚠️ Google Play "Stalkerware va Monitoring Applications" siyosati —
+         MAJBURIY deklaratsiya. Google'ning RASMIY hujjati bu meta-data'ni
+         AYNAN <manifest> darajasida ko'rsatadi (misol shu tegning bevosita
+         farzandi sifatida berilgan):
+         https://support.google.com/googleplay/android-developer/answer/12955211
+         AAPT2 <manifest> ichidagi <meta-data>ni qo'llab-quvvatlaydi.
+
+         MUHIM — DUBLIKAT ATAYLAB: xuddi shu flag <application> ichida ham
+         takrorlangan (pastda). Sabab: 2026-08-10 rad xatida "Missing
+         isMonitoringTool Flag" deyilgan; qaysi joyni Play skaneri o'qishi
+         hujjatlarda noaniq bo'lgani uchun IKKALASI ham qo'yildi — bu
+         xavfsizroq va hech qanday zarari yo'q. Ikkalasining qiymati BIR XIL
+         bo'lishi shart ("child_monitoring" — ota-ona farzandini nazorat
+         qiladi). Birini o'zgartirsangiz, ikkinchisini ham o'zgartiring. -->
+    <meta-data
+        android:name="isMonitoringTool"
+        android:value="child_monitoring"/>
+
     <uses-permission android:name="android.permission.INTERNET"/>
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
@@ -76,10 +94,9 @@
              to'g'ri tasniflay olmaydi va rad etadi.
              Qiymat "child_monitoring" — ota-ona o'z farzandini nazorat
              qilish uchun mo'ljallangan ilova.
-             MUHIM: <meta-data> Android sxemasида faqat <application>/
-             <activity>/<service> kabi teglar ichida joylashishi mumkin —
-             <manifest>ning to'g'ridan-to'g'ri farzandi BO'LOLMAYDI (aks
-             holda manifest merge/aapt2 xato beradi). Shuning uchun bu yerda.
+             Bu — DUBLIKAT nusxa: asosiysi <manifest> darajasida (fayl
+             boshida, Google hujjatidagi rasmiy joy). Ikkalasi ham ataylab
+             turibdi, qiymatlari bir xil bo'lishi SHART.
              https://support.google.com/googleplay/android-developer/answer/12955211 -->
         <meta-data
             android:name="isMonitoringTool"
