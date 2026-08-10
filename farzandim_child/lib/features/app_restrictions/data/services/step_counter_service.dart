@@ -103,9 +103,21 @@ class StepCounterService {
   int _lastSyncSteps = 0;
   bool _started = false;
 
-  /// Health Connect bu sessiyada bugungi HAQIQIY jamini bergani. `true` bo'lsa
-  /// pedometer seed'i (boot-today) qo'llanmaydi — HC ustun manba.
+  /// Health Connect bu sessiyada bugungi HAQIQIY (noldan katta) jamini bergani.
+  /// `true` bo'lsa pedometer seed'i (boot-today) qo'llanmaydi — HC ustun manba.
   bool _healthProvidedToday = false;
+
+  /// Health Connect O'QILDI (ruxsat bor, javob keldi) — qiymati 0 bo'lsa ham.
+  ///
+  /// ⚠️ Nega alohida: avval faqat `_healthProvidedToday` bor edi va u FAQAT
+  /// `hc > _todaySteps` shartining ICHIDA `true` bo'lardi. Samsung'da HC BOR,
+  /// lekin Samsung Health → Health Connect sinxronizatsiyasi yoqilmagan bo'lsa
+  /// `hc = 0` keladi → bayroq `false` qolib, kod qurilmani "HC YO'Q (Honor)"
+  /// deb hisoblardi va pastdagi xavfli boot-seed tarmog'iga tushardi:
+  /// Samsung sensori reboot'da nolga TUSHMAGANI uchun `cumulative` yuz minglab
+  /// bo'lib, qadam 200 000 ga sakrardi yoki (boot eski bo'lsa) faqat
+  /// o'rnatilgan lahzadan sanalib, telefondagi sondan ancha kam chiqardi.
+  bool _healthReadableToday = false;
 
   /// Qurilma oxirgi marta yoqilgan (boot) vaqti — `start()`da bir marta
   /// olinadi. Boot BUGUN bo'lsa cumulative = bugungi qadam (ANIQ), aks holda
@@ -244,18 +256,24 @@ class StepCounterService {
         _baseSteps = 0;
         _todaySteps = 0;
         _healthProvidedToday = false;
+        _healthReadableToday = false;
       }
 
-      // ⚠️ HEALTH CONNECT FAQAT QO'SHIMCHA (catch-up) — sonni HECH QACHON
-      // PASAYTIRMAYDI. Samsung'da HC BOR, lekin Samsung Health → Health Connect
-      // qadam sinxronizatsiyasi sozlanmagan bo'lsa `getTotalStepsInInterval`
-      // 0 (yoki pedometerdan kam) qaytaradi. AVVAL shartsiz `_todaySteps = hc`
-      // qilinardi → Samsung'da har sync/refresh qadam 0 ga TUSHARDI. Endi HC
-      // joriy sanoqdan KATTA bo'lsagina qabul qilamiz (bu ilova kuzatuvni
-      // boshlashdan OLDIN yurilgan qadamlarni tiklaydi); HC kichik/0 bo'lsa
-      // apparat pedometer (TYPE_STEP_COUNTER — barcha telefonda ishonchli)
-      // sanog'ini SAQLAYMIZ. Ya'ni apparat sanagich asosiy manba, HC to'ldiruvchi.
-      if (hc > _todaySteps) {
+      // HC javob berdi (ruxsat bor) — qiymati 0 bo'lsa ham buni belgilaymiz.
+      // Bu qurilmada Health Connect BOR degani; pastdagi pedometer seed'i
+      // "HC yo'q qurilma" tarmog'iga tushmasligi uchun kritik.
+      _healthReadableToday = true;
+
+      // HEALTH CONNECT — hc > 0 bo'lsa TELEFON HAQIQATI deb qabul qilamiz
+      // (pasaytirishga ham ruxsat), chunki foydalanuvchi telefonida aynan shu
+      // sonni ko'radi va bizning vazifamiz unga MOS KELISH.
+      //
+      // ⚠️ hc == 0 — ALOHIDA holat: Samsung'da HC bor, lekin Samsung Health
+      // qadam sinxronizatsiyasi yoqilmagan bo'lsa 0 keladi. Bunda pedometer
+      // sanog'ini SAQLAYMIZ (aks holda har sync'da qadam 0 ga tushardi —
+      // avvalgi regressiya). Ya'ni: 0 hech qachon pasaytirmaydi, musbat
+      // qiymat esa har doim haqiqat.
+      if (hc > 0 && hc != _todaySteps) {
         // baseline defer → keyingi `_onStep` FRESH cumulative bilan anchor
         // qiladi (today = hc), so'ng pedometer jonli delta qo'shib boradi.
         _dayBaseline = -1;
@@ -263,8 +281,9 @@ class StepCounterService {
         _todaySteps = hc;
         _healthProvidedToday = true;
         await _persist();
+      } else if (hc > 0) {
+        _healthProvidedToday = true;
       }
-      // else: HC kam/0 — hech nima o'zgartirmaymiz, pedometer davom etadi.
     } catch (e) {
       debugPrint('StepCounter: Health sync xato: $e');
     }
@@ -302,18 +321,34 @@ class StepCounterService {
           _baseSteps = _todaySteps;
           _dayBaseline = cumulative;
         }
+      } else if (_healthReadableToday) {
+        // HC BOR, lekin bugun 0 qaytardi (Samsung Health → Health Connect
+        // sinxronizatsiyasi yoqilmagan). Boot-seed QILMAYMIZ: Samsung
+        // sensori reboot'da nolga tushmasligi mumkin va `cumulative` yuz
+        // minglab bo'lib, qadam 200 000 ga sakrardi. Xavfsiz yo'l — hozirdan
+        // oldinga sanash; HC keyinroq ma'lumot bersa yuqoridagi anchor uni
+        // to'g'rilaydi.
+        _dayBaseline = cumulative;
       } else {
-        // HC yo'q (HONOR/Huawei): TYPE_STEP_COUNTER "yoqilgandan beri jami".
-        // Telefon O'CHIQ paytda qadam sanalmaydi → telefon BUGUN yoqilgan
-        // bo'lsa cumulative = AYNAN bugungi qadam → baseline = 0.
+        // HC YO'Q qurilma (HONOR/Huawei): TYPE_STEP_COUNTER "yoqilgandan beri
+        // jami". Telefon O'CHIQ paytda qadam sanalmaydi → telefon BUGUN
+        // yoqilgan bo'lsa cumulative = AYNAN bugungi qadam → baseline = 0.
         final bootedToday = _bootTime != null &&
             _tashkentDayKey(_bootTime) == today;
-        if (bootedToday) {
+        // Ishonchlilik tekshiruvi: boot'dan beri o'tgan soatlarda jismonan
+        // mumkin bo'lgan maksimal qadam. Sensor reboot'da nolga tushmagan
+        // bo'lsa (ba'zi Samsung/Xiaomi) cumulative bu chegaradan oshadi va
+        // biz uni "bugungi qadam" deb qabul qilmaymiz.
+        final hoursSinceBoot = _bootTime == null
+            ? 0
+            : DateTime.now().difference(_bootTime!).inHours + 1;
+        final plausibleMax = (hoursSinceBoot * 2000).clamp(0, _seedFromBootMax);
+        if (bootedToday && cumulative <= plausibleMax) {
           _dayBaseline = 0; // today = cumulative (ANIQ)
         } else if (_bootTime == null && cumulative <= _seedFromBootMax) {
           _dayBaseline = 0; // boot noma'lum, ehtiyotkor: cumulative deb olamiz
         } else {
-          // Boot bugundan oldin → bugungi baseline noma'lum → hozirdan
+          // Boot bugundan oldin YOKI cumulative ishonchsiz katta → hozirdan
           // oldinga sanaymiz (over-count yo'q; yarim tundan aniq bo'ladi).
           _dayBaseline = cumulative;
         }

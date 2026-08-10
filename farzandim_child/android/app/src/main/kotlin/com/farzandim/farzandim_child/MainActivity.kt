@@ -18,6 +18,14 @@ class MainActivity : FlutterFragmentActivity() {
 
     // "O'chirishni taqiqlash" — Device Admin kanali.
     private val adminChannelName = "farzandim_child/device_admin"
+    private var adminChannel: MethodChannel? = null
+
+    // ACTION_ADD_DEVICE_ADMIN natijasini kutish uchun request kodi.
+    // ⚠️ Avval `startActivity` ishlatilardi va Dart'ga shartsiz `false`
+    // qaytarilardi — natijada bola dialogni TASDIQLASA ham ilova buni
+    // BILMASDI: toggle o'chiq qolardi, ota-onaga ham hech narsa xabar
+    // qilinmasdi. Endi natija kutiladi va Dart'ga yetkaziladi.
+    private val reqAddAdmin = 4711
 
     // Qurilma soati — boot (yoqilgan) vaqtini aniqlash uchun. Qadam sanagich
     // (StepCounterService) telefon BUGUN yoqilganini bilib, "yoqilgandan beri
@@ -53,10 +61,11 @@ class MainActivity : FlutterFragmentActivity() {
             }
         }
 
-        MethodChannel(
+        adminChannel = MethodChannel(
             flutterEngine.dartExecutor.binaryMessenger,
             adminChannelName,
-        ).setMethodCallHandler { call, result ->
+        )
+        adminChannel?.setMethodCallHandler { call, result ->
             val dpm =
                 getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
             val admin = ComponentName(this, FarzandimDeviceAdminReceiver::class.java)
@@ -79,8 +88,11 @@ class MainActivity : FlutterFragmentActivity() {
                                     "administrator huquqini yoqing.",
                             )
                         }
-                        startActivity(intent)
-                        // Foydalanuvchi tasdiqlashi kerak — hozircha false.
+                        // startActivityForResult — natija onActivityResult'da
+                        // tekshiriladi va `onAdminResult` orqali Dart'ga
+                        // yuboriladi (bola tasdiqladimi yoki bekor qildimi).
+                        startActivityForResult(intent, reqAddAdmin)
+                        // Dialog hali ochiq — hozircha joriy holatni qaytaramiz.
                         result.success(false)
                     }
                 }
@@ -111,6 +123,18 @@ class MainActivity : FlutterFragmentActivity() {
 
         // Cold start — Activity'ni ochgan intent'dagi extra'ni o'qiymiz.
         readUnlockExtra(intent)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        if (requestCode != reqAddAdmin) return
+        // resultCode'ga ISHONMAYMIZ — ba'zi qurilmalarda (Samsung/Xiaomi)
+        // u RESULT_CANCELED qaytarib, admin baribir yoqilgan bo'ladi.
+        // Yagona ishonchli manba — DevicePolicyManager'ning o'zi.
+        val dpm = getSystemService(Context.DEVICE_POLICY_SERVICE) as DevicePolicyManager
+        val admin = ComponentName(this, FarzandimDeviceAdminReceiver::class.java)
+        val active = dpm.isAdminActive(admin)
+        adminChannel?.invokeMethod("onAdminResult", active)
     }
 
     override fun onNewIntent(intent: Intent) {

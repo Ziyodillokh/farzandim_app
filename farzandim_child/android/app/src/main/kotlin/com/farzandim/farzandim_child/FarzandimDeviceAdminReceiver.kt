@@ -16,6 +16,23 @@ import android.content.Intent
  * (UninstallProtectionService orqali).
  */
 class FarzandimDeviceAdminReceiver : DeviceAdminReceiver() {
+    override fun onEnabled(context: Context, intent: Intent) {
+        super.onEnabled(context, intent)
+        // Admin HAQIQATAN yoqildi. Bayroqni qo'yamiz — Dart uni o'qib
+        // backendga "himoya faol" holatini yuboradi va ota-ona ilovasidagi
+        // toggle "kutilmoqda" emas, "faol" bo'lib ko'rinadi.
+        // (`onDisabled` bilan simmetrik: o'sha yerda deaktivatsiya yoziladi.)
+        try {
+            context.getSharedPreferences(
+                "FlutterSharedPreferences",
+                Context.MODE_PRIVATE,
+            ).edit()
+                .putBoolean("flutter.uninstall_guard.activated", true)
+                .apply()
+        } catch (_: Exception) {
+        }
+    }
+
     override fun onDisableRequested(context: Context, intent: Intent): CharSequence {
         // Bola admin'ni o'chirmoqchi bo'lganda ko'rsatiladigan ogohlantirish.
         return "Parvoz himoyasi yoqilgan. Ilovani o'chirish uchun avval " +

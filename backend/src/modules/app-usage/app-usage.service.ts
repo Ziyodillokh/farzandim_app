@@ -425,11 +425,18 @@ export class AppUsageService {
       });
       const prevAwarded = existing?.donAwarded ?? 0;
       const prevSteps = existing?.steps ?? 0;
-      // ⚠️ Qadam kun ichida KAMAYMAYDI ("un-walk" bo'lmaydi). Bola app transient
-      // past/0 qiymat yuborsa (Samsung Health Connect glitch yoki reboot chekka
-      // holati) eski TO'G'RI qiymatni O'CHIRMASLIGIMIZ shart — aks holda haftalik
-      // statistika/badge buziladi. Shuning uchun MAX olamiz (idempotent + xavfsiz).
-      const steps = Math.max(prevSteps, incoming);
+      // ⚠️ Transient NOL eski to'g'ri qiymatni o'chirmasin (Samsung Health
+      // Connect glitch / reboot chekka holati) — 0 kelsa saqlanganini qoldiramiz.
+      //
+      // Lekin MUSBAT qiymat har doim qabul qilinadi, hatto oldingisidan KICHIK
+      // bo'lsa ham. Avval bu yerda `Math.max(prevSteps, incoming)` turardi va u
+      // bolaning "telefondagi songa moslash" tuzatishini SERVERDA bloklardi:
+      // pedometer bir marta oshib ketsa (Samsung Health filtrlaydi, xom sensor
+      // esa yo'q), Health Connect'ning to'g'ri, kichikroq soni hech qachon
+      // yozilmasdi va ota-ona kun bo'yi noto'g'ri sonni ko'rardi.
+      // DON himoyasi pastdagi `Math.max(prevAwarded, ...)` bilan saqlanadi —
+      // ya'ni qadam tuzatilsa ham berilgan mukofot qaytarib olinmaydi.
+      const steps = incoming > 0 ? incoming : prevSteps;
       if (e.date === todayKey) todaySteps = steps;
       const earnedDon =
         Math.floor(steps / STEPS_PER_DON_UNIT) * DON_PER_UNIT;

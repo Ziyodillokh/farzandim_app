@@ -142,6 +142,10 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     with WidgetsBindingObserver {
   Timer? _autoRefreshTimer;
 
+  /// Device Admin dialogi shu sessiyada ko'rsatildimi — resume'da qayta-qayta
+  /// chiqib bezovta qilmasligi uchun (bola dialogni rad etsa ham).
+  bool _promptedThisSession = false;
+
   /// GPS "yoqing" modali shu sessiyada ko'rsatildimi (spam bo'lmasin —
   /// xizmat yoqilgach `false`ga qaytadi, keyingi o'chishda yana so'raladi).
   bool _locationModalShown = false;
@@ -181,6 +185,12 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
       // Bola Sozlamadan GPS'ni yoqib qaytgan bo'lishi mumkin — qayta tekshiramiz
       // (yoqilgan bo'lsa modal qayta chiqmaydi, o'chiq bo'lsa bir marta so'raymiz).
       unawaited(_guardLocationService());
+      // "O'chirishni taqiqlash" dialogi — RESUME'da ham ruxsat.
+      // ⚠️ Avval dialog FAQAT initState'da (cold start) chiqardi: ota-ona
+      // toggle'ni yoqqan paytda bola ilovasi ochiq bo'lsa, himoya AMALDA
+      // hech qachon yoqilmasdi (toggle esa ota-onada yashil ko'rinardi).
+      // `_promptedThisSession` loop'ning oldini oladi — sessiyada bir marta.
+      unawaited(_syncUninstallProtection(allowPrompt: !_promptedThisSession));
     }
   }
 
@@ -206,6 +216,9 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     if (childId == null) return;
     final repo = ref.read(backendDevicePolicyRepositoryProvider);
     final policy = await repo.getDevicePolicy(childId);
+    if (allowPrompt && (policy.blockUninstall ?? false)) {
+      _promptedThisSession = true;
+    }
     await uninstallProtectionService.apply(
       policy.blockUninstall,
       allowPrompt: allowPrompt,

@@ -82,9 +82,19 @@ class HealthStepsService {
     if (!await hasPermission()) return null;
     try {
       final now = DateTime.now();
-      // Mahalliy yarim tun — Samsung Health ham kunni shunday hisoblaydi
-      // (Toshkent qurilmasida bu UTC+5 kun chegarasi bilan bir xil).
-      final start = DateTime(now.year, now.month, now.day);
+      // Kun boshi — UTC+5 (Toshkent) yarim tuni, StepCounterService va
+      // backend (`tashkentDayKey`) bilan AYNAN bir xil chegara.
+      //
+      // ⚠️ Avval `DateTime(now.year, now.month, now.day)` — qurilma LOKAL
+      // yarim tuni ishlatilardi. Qurilma vaqt mintaqasi UTC+5 bo'lmasa (yoki
+      // avtomatik TZ noto'g'ri bo'lsa) HC oynasi ilovaning "bugun"idan farq
+      // qilib, qadam soni mos kelmasdi.
+      final tashkentNow = now.toUtc().add(const Duration(hours: 5));
+      final start = DateTime.utc(
+        tashkentNow.year,
+        tashkentNow.month,
+        tashkentNow.day,
+      ).subtract(const Duration(hours: 5)).toLocal();
       final total = await _health.getTotalStepsInInterval(start, now);
       if (total == null || total < 0) return null;
       return total;
