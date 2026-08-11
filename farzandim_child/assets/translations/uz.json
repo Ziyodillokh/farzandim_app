@@ -159,7 +159,8 @@
       "waitingBody": "Ota-onangiz Parent App'da bildirishnomani ko'rib tasdiqlashi kerak. Bu ekran avtomatik yangilanadi."
     },
     "errorCodeUsed": "Bu kod allaqachon ishlatilgan.",
-    "errorAskNewCode": "Ota-onangizdan yangi kod so'rang (Parent App → Bola → Yangi kod yaratish)."
+    "errorAskNewCode": "Ota-onangizdan yangi kod so'rang (Parent App → Bola → Yangi kod yaratish).",
+    "tooManyAttempts": "Juda ko'p urinish bo'ldi. Iltimos, 10 daqiqadan keyin qayta urinib ko'ring."
   },
   "permissions": {
     "title": "Ruxsatlar",

@@ -19,7 +19,7 @@ import {
   ApiParam,
 } from '@nestjs/swagger';
 import { Request } from 'express';
-import { Throttle, ThrottlerGuard } from '@nestjs/throttler';
+import { SkipThrottle, Throttle, ThrottlerGuard } from '@nestjs/throttler';
 import { AuthService } from './auth.service';
 import { TelegramAuthDto } from './dto/telegram-auth.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
@@ -197,9 +197,16 @@ export class AuthController {
 
   @Post('child-pair')
   @Public()
-  // 5 xonali kodni IP bo'yicha enumeration qilishdan himoya (auth.module'da
-  // ro'yxatdan o'tgan 'childPair' throttler bilan birga ishlaydi).
+  // 5 xonali kodni IP bo'yicha enumeration qilishdan himoya.
   @Throttle({ childPair: { limit: 30, ttl: 600_000 } })
+  // ⚠️ MAJBURIY: ThrottlerGuard AppModule'da ro'yxatdan o'tgan BARCHA nomli
+  // limitlarni tekshiradi, `@Throttle` esa faqat sanab o'tilganini override
+  // qiladi. Shu sabab `checkout` (5/10daq — to'lov uchun) limiti bu yo'lga ham
+  // qo'llanib, amaldagi cheklov 30 emas 5 bo'lib qolgandi: Play tekshiruvchisi
+  // 5-urinishdan keyin 429 olib, ilovaga kira olmasdi (bu esa aynan
+  // "Login credentials are incorrect" rad sababini qaytarardi). Jonli javob
+  // header'i buni ko'rsatgan edi: `retry-after-checkout`.
+  @SkipThrottle({ checkout: true })
   @UseGuards(ThrottlerGuard)
   @HttpCode(HttpStatus.CREATED)
   @ApiOperation({

@@ -15,7 +15,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth } from '@nestjs/swagger';
-import { Throttle } from '@nestjs/throttler';
+import { SkipThrottle, Throttle } from '@nestjs/throttler';
 import { ConsumerJwtAuthGuard, RolesGuard } from '../../common/guards';
 import { CurrentUser, Public } from '../../common/decorators';
 import { JwtPayload } from '../../common/interfaces/jwt-payload.interface';
@@ -109,6 +109,9 @@ export class PaymentsController {
   // urinish (guard tartibi muhim — JWT avval ishlashi kerak, shunda
   // CheckoutThrottlerGuard req.user.userId'ni ko'radi, IP'ga tushmaydi).
   @Throttle({ checkout: { limit: 5, ttl: 600_000 } })
+  // Simmetrik himoya: guard barcha nomli limitlarni tekshirgani uchun
+  // `childPair` (30/10daq) ham bu yo'lga qo'llanib qolardi — aloqasi yo'q.
+  @SkipThrottle({ childPair: true })
   @UseGuards(ConsumerJwtAuthGuard, RolesGuard, CheckoutThrottlerGuard)
   @ApiOperation({ summary: 'Start payment checkout' })
   async checkout(

@@ -17,6 +17,7 @@
 // ignore_for_file: public_member_api_docs
 
 import 'package:dio/dio.dart';
+import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:flutter/foundation.dart';
@@ -218,6 +219,11 @@ class PairingRepository {
         case 400:
         case 404:
           return const PairingFailureInvalidCode();
+        case 429:
+          // Juda ko'p urinish (server rate-limit). Avval bu `default`ga
+          // tushib "tarmoq xatosi" bo'lib ko'rinardi — foydalanuvchi (va Play
+          // tekshiruvchisi) sababni bilmasdan "kod ishlamayapti" deb o'ylardi.
+          return PairingFailureNetwork('pairing.tooManyAttempts'.tr());
         default:
           return PairingFailureNetwork(e.message ?? 'Unknown');
       }

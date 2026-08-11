@@ -159,7 +159,8 @@
       "waitingBody": "Your parent needs to see the notification in the Parent app and confirm. This screen updates automatically."
     },
     "errorCodeUsed": "This code has already been used.",
-    "errorAskNewCode": "Ask your parent for a new code (Parent App → Child → Create new code)."
+    "errorAskNewCode": "Ask your parent for a new code (Parent App → Child → Create new code).",
+    "tooManyAttempts": "Too many attempts. Please try again in 10 minutes."
   },
   "permissions": {
     "title": "Permissions",
