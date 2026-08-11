@@ -78,14 +78,24 @@
 		<string>Ovozli va video xabar yozish uchun mikrofon kerak</string>
 		<key>NSLocationWhenInUseUsageDescription</key>
 		<string>Xaritada o'z joylashuvingizni ko'rsatish uchun kerak</string>
+		<!-- Ota-ona ilovasi doimiy (background) joylashuvni SO'RAMAYDI — Dart
+	     kodida faqat `Geolocator.requestPermission()` (when-in-use) bor.
+	     Lekin geolocator_apple va permission_handler_apple manbalarida
+	     `requestAlwaysAuthorization` API'siga havola bor, App Store yuklash
+	     tahlili esa shu havolani ko'rib tushuntirish matnini talab qiladi
+	     (ogohlantirish 90683). Busiz har yuklashda warning keladi. Matn
+	     amalda foydalanuvchiga ko'rsatilmaydi, chunki bu ruxsat so'ralmaydi. -->
+		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+		<string>Xaritada o'z joylashuvingizni ko'rsatish uchun kerak. Ilova joylashuvni orqa fonda kuzatmaydi.</string>
 		<!-- Eksport muvofiqligi: ilova faqat standart HTTPS/TLS ishlatadi (ozod).
 	     Busiz App Store Connect har build'da eksport savolini so'raydi. -->
 		<key>ITSAppUsesNonExemptEncryption</key>
 		<false/>
-		<!-- Google Sign-In iOS OAuth redirect sxemasi. ⚠️ MUHIM: quyidagi
-	     qiymatni GoogleService-Info.plist qo'shilgach undagi REVERSED_CLIENT_ID
-	     (iOS OAuth client'niki) bilan ALMASHTIRING. Sign in with Apple bunga
-	     bog'liq emas — u shusiz ham ishlaydi. -->
+		<!-- Google Sign-In iOS OAuth redirect sxemasi = GoogleService-Info.plist
+	     ichidagi REVERSED_CLIENT_ID (farzandim-mvp loyihasining iOS OAuth
+	     client'i). Bu qiymat o'sha plist bilan bir xil bo'lishi SHART, aks
+	     holda Google oynasi ochilib, ilovaga qaytmaydi. Sign in with Apple
+	     bunga bog'liq emas — u shusiz ham ishlaydi. -->
 		<key>CFBundleURLTypes</key>
 		<array>
 			<dict>
@@ -93,7 +103,7 @@
 				<string>Editor</string>
 				<key>CFBundleURLSchemes</key>
 				<array>
-					<string>com.googleusercontent.apps.931495868029-b7keq7og9afennh7h3smfaunlf34tsuh</string>
+					<string>com.googleusercontent.apps.163835260058-q6ngmkie0fp00t666vnh6amnfphcqo46</string>
 				</array>
 			</dict>
 		</array>

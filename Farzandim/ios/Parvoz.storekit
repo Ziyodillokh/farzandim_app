@@ -1,0 +1,118 @@
+{
+  "identifier" : "A1B2C3D4-0000-4000-8000-PARVOZ000001",
+  "nonRenewingSubscriptions" : [
+  ],
+  "products" : [
+  ],
+  "settings" : {
+    "_applicationInternalID" : "1000000001",
+    "_developerTeamID" : "FARZANDIM",
+    "_lastSynchronizedDate" : 0
+  },
+  "subscriptionGroups" : [
+    {
+      "id" : "20000001",
+      "localizations" : [
+      ],
+      "name" : "Parvoz obunalari",
+      "subscriptions" : [
+        {
+          "adHocOffers" : [
+          ],
+          "codeOffers" : [
+          ],
+          "displayPrice" : "1.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "30000001",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Standard tarif — oylik",
+              "displayName" : "Standard (oylik)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "parvoz.standard.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Standard Monthly",
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+          ],
+          "codeOffers" : [
+          ],
+          "displayPrice" : "19.99",
+          "familyShareable" : false,
+          "groupNumber" : 2,
+          "internalID" : "30000002",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Standard tarif — yillik",
+              "displayName" : "Standard (yillik)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "parvoz.standard.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Standard Yearly",
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+          ],
+          "codeOffers" : [
+          ],
+          "displayPrice" : "3.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "30000003",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium tarif — oylik",
+              "displayName" : "Premium (oylik)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "parvoz.premium.monthly",
+          "recurringSubscriptionPeriod" : "P1M",
+          "referenceName" : "Premium Monthly",
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription"
+        },
+        {
+          "adHocOffers" : [
+          ],
+          "codeOffers" : [
+          ],
+          "displayPrice" : "39.99",
+          "familyShareable" : false,
+          "groupNumber" : 1,
+          "internalID" : "30000004",
+          "introductoryOffer" : null,
+          "localizations" : [
+            {
+              "description" : "Premium tarif — yillik",
+              "displayName" : "Premium (yillik)",
+              "locale" : "en_US"
+            }
+          ],
+          "productID" : "parvoz.premium.yearly",
+          "recurringSubscriptionPeriod" : "P1Y",
+          "referenceName" : "Premium Yearly",
+          "subscriptionGroupID" : "20000001",
+          "type" : "RecurringSubscription"
+        }
+      ]
+    }
+  ],
+  "version" : {
+    "major" : 3,
+    "minor" : 0
+  }
+}

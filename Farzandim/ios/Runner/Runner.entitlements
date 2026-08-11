@@ -2,12 +2,14 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- Push Notifications (FCM/APNs). Xcode debug/TestFlight-development
-	     build'da "development" qoladi, App Store/TestFlight distribution
-	     arxivida avtomatik "production" ga almashtiriladi. -->
+	<!-- Push Notifications (FCM/APNs). Bu yerda "development" turishi TO'G'RI:
+	     App Store arxivini imzolashda qiymat provisioning profildan olinadi va
+	     "production" ga almashtiriladi. 2026-08-11 da tekshirilgan —
+	     `codesign -d --entitlements` arxivda "production" ko'rsatdi. -->
 	<key>aps-environment</key>
 	<string>development</string>
-	<!-- Sign in with Apple (sign_in_with_apple ^6.1.4 paketi uchun majburiy). -->
+	<!-- Sign in with Apple (sign_in_with_apple ^6.1.4 paketi uchun majburiy).
+	     Apple qoidasi 4.8: Google login taklif qilinsa, bu ham SHART. -->
 	<key>com.apple.developer.applesignin</key>
 	<array>
 		<string>Default</string>

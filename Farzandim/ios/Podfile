@@ -1,5 +1,10 @@
-# Firebase (firebase_core ^3.6 / iOS SDK 11.x) minimal iOS 13.0 talab qiladi.
-platform :ios, '13.0'
+# Minimal iOS 15.5 — eng baland talab qo'ygan plagin bo'yicha:
+#   mobile_scanner 6.0.11 podspec => s.platform = :ios, '15.5.0'
+# (Firebase iOS SDK 11.x o'zi 13.0 bilan ham kifoya qilardi, lekin
+#  CocoaPods eng balandiga tenglashtiradi — 13.0 qolsa "could not find
+#  compatible versions for mobile_scanner" bilan yiqiladi.)
+# Qamrov: iPhone 6s va undan yangi qurilmalar.
+platform :ios, '15.5'
 
 # CocoaPods analytics sends network stats synchronously affecting flutter build latency.
 ENV['COCOAPODS_DISABLE_STATS'] = 'true'
