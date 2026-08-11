@@ -495,13 +495,21 @@ class FarzandimApp extends ConsumerWidget {
       // Transparent scaffold'larda overscroll paytida oq OS oyna foni
       // ko'rinib qolmasin; bitta joyda hal qilingani uchun har ekranni
       // alohida o'zgartirish shart emas.
-      // Matn-masshtabni cheklaymiz (1.0–1.15): telefonning system "katta
-      // shrift" sozlamasi turlicha bo'lgani uchun ilova har xil ochilardi
-      // (matn kattalashib qattiq balandlikdagi kartalarni overflow qilardi).
-      // Endi barcha qurilmada matn bir xil o'lchamda — accessibility uchun
-      // ozgina (15%) joy qoldiriladi, lekin tartib buzilmaydi.
+      // Matn-masshtabining faqat YUQORI chegarasi cheklanadi (1.15):
+      // telefonning system "katta shrift" sozlamasi bilan matn kattalashib,
+      // qattiq balandlikdagi kartalarni overflow qilardi.
+      //
+      // ⚠️ `minScaleFactor: 1` QO'YMANG — u Material date picker'ni buzadi.
+      // `_DatePickerHeader` sarlavhani `clamp(maxScaleFactor: currentScale)`
+      // bilan cheklaydi; odatiy shriftda currentScale = 1.0. Bizning min=1
+      // bilan kesishganda min va max ikkalasi ham 1.0 bo'lib qoladi, Flutter
+      // esa `assert(maxScale > minScale)` (qat'iy katta) talab qiladi →
+      // "Yangi bola qo'shish" ekranida sana tanlash oynasi qizil xato bilan
+      // yiqilardi (2026-08-11 da aniqlandi).
+      //
+      // Pastki chegara kerak emas: matn kichiklashishi hech qanday tartibni
+      // buzmaydi, aksincha kichik shrift tanlagan foydalanuvchi uchun to'g'ri.
       builder: (context, child) => MediaQuery.withClampedTextScaling(
-        minScaleFactor: 1,
         maxScaleFactor: 1.15,
         child: ColoredBox(
           color: AppColors.background,

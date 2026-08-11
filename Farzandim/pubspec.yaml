@@ -5,7 +5,7 @@ publish_to: 'none'
 
 # Versiya: <semver>+<build_number>
 # Android: build_number = versionCode, iOS: build_number = CFBundleVersion
-version: 1.0.0+2
+version: 1.0.0+3
 
 environment:
   sdk: ^3.11.1

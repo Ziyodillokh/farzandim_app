@@ -109,8 +109,16 @@ Future<void> main() async {
       // erta xatolar ham tutilsin; qolgan aktivatsiyalarni await qilmaymiz —
       // birinchi frame kechikmasin (plugin'lar chaqiriqlarni o'zi navbatlaydi).
       if (!kIsWeb && Firebase.apps.isNotEmpty) {
-        FlutterError.onError =
-            FirebaseCrashlytics.instance.recordFlutterFatalError;
+        FlutterError.onError = (details) {
+          // Debug'da xatoni AVVAL konsolga chiqaramiz. Busiz Crashlytics
+          // handler'i standart ishlovchini butunlay almashtiradi va framework
+          // xatolari (overflow, assertion) hech qayerda ko'rinmaydi — faqat
+          // ekrandagi qizil quti qoladi, stack trace yo'qoladi. Diagnostikani
+          // imkonsiz qiladi (2026-08-11 da aynan shu sabab bola qo'shish
+          // ekranidagi xatoni topish qiyin bo'ldi).
+          if (kDebugMode) FlutterError.presentError(details);
+          FirebaseCrashlytics.instance.recordFlutterFatalError(details);
+        };
         PlatformDispatcher.instance.onError = (error, stack) {
           // Crashlytics fail bo'lsa unhandled bo'lib qolmasin —
           // .catchError bilan yutib yuboramiz.
