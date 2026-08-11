@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Parvoz — Uzum Merchant API",
-    "description": "Uzum Bank Merchant API integratsiyasi (Parvoz / Farzandim).\n\nUzum BIZGA so'rov yuboradi. Foydalanuvchi Uzum ilovasida \"Parvoz\" xizmatini topib, TELEFON RAQAMINI kiritadi va to'laydi.\n\nAuth: HTTP Basic (kollektsiya darajasida).\nSummalar: TIYINDA (1 so'm = 100 tiyin).\nBarcha javoblar HTTP 200; xato holati javob ichida `status: FAILED` + `errorCode`.\n\nTariflar:\n  • Oylik (Standard)  — 29 000 so'm  = 2 900 000 tiyin\n  • Yillik (Premium)  — 290 000 so'm = 29 000 000 tiyin\n\nO'zgaruvchilarni (username/password/serviceId/phone) 'Variables' bo'limida to'ldiring.",
+    "description": "Uzum Bank Merchant API integratsiyasi (Parvoz / Farzandim).\n\nUzum BIZGA so'rov yuboradi. Foydalanuvchi Uzum ilovasida \"Parvoz\" xizmatini topib, TELEFON RAQAMINI kiritadi va to'laydi.\n\nAuth: HTTP Basic (kollektsiya darajasida).\nSummalar: TIYINDA (1 so'm = 100 tiyin).\nBarcha javoblar HTTP 200; xato holati javob ichida `status: FAILED` + `errorCode`.\n\nTariflar (summa tarifni aniqlaydi):\n  • Standard oylik  — 28 000 so'm  = 2 800 000 тийин\n  • Standard yillik — 280 000 so'm = 28 000 000 тийин\n  • Premium oylik   — 45 000 so'm  = 4 500 000 тийин\n  • Premium yillik  — 450 000 so'm = 45 000 000 тийин\n\nO'zgaruvchilarni (username/password/serviceId/phone) 'Variables' bo'limida to'ldiring.",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "auth": {
@@ -29,9 +29,9 @@
     { "key": "transId", "value": "test-trans-0001", "type": "string" },
     {
       "key": "amount",
-      "value": "2900000",
+      "value": "2800000",
       "type": "string",
-      "description": "TIYINDA. 2900000 = 29 000 so'm (Oylik/Standard)"
+      "description": "TIYINDA. 2800000 = 28 000 so'm (Standard oylik). Boshqa variantlar: 28000000 (Standard yillik), 4500000 (Premium oylik), 45000000 (Premium yillik)"
     }
   ],
   "item": [
@@ -72,7 +72,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["create"]
         },
-        "description": "Tranzaksiya yaratadi (PENDING holat). Tarif SUMMA bo'yicha aniqlanadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"timestamp\": ...,\n  \"status\": \"CREATED\",\n  \"transTime\": ...,\n  \"transId\": \"test-trans-0001\",\n  \"amount\": 2900000\n}\n\nIdempotent: bir xil transId bilan qayta yuborilsa (PENDING bo'lsa) O'SHA javob qaytadi."
+        "description": "Tranzaksiya yaratadi (PENDING holat). Tarif SUMMA bo'yicha aniqlanadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"timestamp\": ...,\n  \"status\": \"CREATED\",\n  \"transTime\": ...,\n  \"transId\": \"test-trans-0001\",\n  \"amount\": 2800000\n}\n\nIdempotent: bir xil transId bilan qayta yuborilsa (PENDING bo'lsa) O'SHA javob qaytadi."
       }
     },
     {
@@ -112,7 +112,7 @@
           "host": ["{{baseUrl}}"],
           "path": ["reverse"]
         },
-        "description": "To'lovni bekor qiladi va obunani to'xtatadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"transId\": \"test-trans-0001\",\n  \"status\": \"REVERSED\",\n  \"reverseTime\": ...,\n  \"amount\": 2900000\n}"
+        "description": "To'lovni bekor qiladi va obunani to'xtatadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"transId\": \"test-trans-0001\",\n  \"status\": \"REVERSED\",\n  \"reverseTime\": ...,\n  \"amount\": 2800000\n}"
       }
     },
     {
