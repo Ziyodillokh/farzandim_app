@@ -68,8 +68,8 @@ export class UzumMerchantService {
       return this.failCheck(serviceId, ts, UzumErrorCode.InvalidServiceId);
     }
 
-    const phone = this.extractAccount(body.params);
-    if (!phone) {
+    const account = this.extractAccount(body.params);
+    if (!account) {
       return this.failCheck(
         serviceId,
         ts,
@@ -77,9 +77,11 @@ export class UzumMerchantService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({ where: { phone } });
+    const user = await this.findUserByAccount(account);
     if (!user) {
-      this.logger.warn(`check: abonent topilmadi (${phone})`);
+      this.logger.warn(
+        `check: abonent topilmadi (${this.accountValue(account)})`,
+      );
       return this.failCheck(
         serviceId,
         ts,
@@ -91,7 +93,7 @@ export class UzumMerchantService {
       serviceId,
       timestamp: ts,
       status: UzumStatus.Ok,
-      data: { account: { value: phone } },
+      data: { account: { value: this.accountValue(account) } },
     };
   }
 
@@ -145,8 +147,8 @@ export class UzumMerchantService {
       );
     }
 
-    const phone = this.extractAccount(body.params);
-    if (!phone) {
+    const account = this.extractAccount(body.params);
+    if (!account) {
       return this.failCheck(
         serviceId,
         ts,
@@ -154,7 +156,7 @@ export class UzumMerchantService {
       );
     }
 
-    const user = await this.prisma.user.findUnique({ where: { phone } });
+    const user = await this.findUserByAccount(account);
     if (!user) {
       return this.failCheck(
         serviceId,
@@ -352,19 +354,40 @@ export class UzumMerchantService {
     return serviceId === this.serviceId;
   }
 
-  /** `params` ichidan abonent (telefon) raqamini oladi va normallashtiradi. */
+  /**
+   * `params` ichidan abonent identifikatorini oladi.
+   *
+   * Asosiy holat — TELEFON raqami (Uzum ilovasida foydalanuvchi shuni
+   * kiritadi, `+998XXXXXXXXX` ga normallashtiriladi). Qo'shimcha ravishda
+   * EMAIL ham qabul qilinadi: bazada `email` ham unique, ba'zi ota-onalar
+   * faqat email bilan ro'yxatdan o'tgan bo'lishi mumkin va sinov uchun ham
+   * qulay.
+   */
   private extractAccount(
     params: Record<string, unknown> | undefined,
-  ): string | null {
+  ): { phone: string } | { email: string } | null {
     if (!params) return null;
     for (const key of ACCOUNT_PARAM_KEYS) {
       const raw = params[key];
-      if (typeof raw === 'string' || typeof raw === 'number') {
-        const phone = this.normalizePhone(String(raw));
-        if (phone) return phone;
-      }
+      if (typeof raw !== 'string' && typeof raw !== 'number') continue;
+      const value = String(raw).trim();
+      if (value.length === 0) continue;
+
+      const phone = this.normalizePhone(value);
+      if (phone) return { phone };
+      if (value.includes('@')) return { email: value.toLowerCase() };
     }
     return null;
+  }
+
+  /** Abonentni telefon yoki email bo'yicha topadi. */
+  private findUserByAccount(account: { phone: string } | { email: string }) {
+    return this.prisma.user.findUnique({ where: account });
+  }
+
+  /** Log/`data.account.value` uchun ko'rinadigan qiymat. */
+  private accountValue(account: { phone: string } | { email: string }): string {
+    return 'phone' in account ? account.phone : account.email;
   }
 
   /**
