@@ -32,6 +32,21 @@ class AppleReceiptSyncService {
   final Ref _ref;
   AppLifecycleListener? _listener;
   bool _syncing = false;
+  DateTime? _lastAttemptAt;
+  int _consecutiveFailures = 0;
+
+  /// Ikki urinish orasidagi eng kam vaqt. LOAD-BEARING — busiz cheksiz
+  /// aylanma hosil bo'ladi: `refreshPurchaseVerificationData()` App Store
+  /// login oynasini chiqaradi → oyna ilovani fonga chiqaradi → yopilganda
+  /// `onResume` uyg'onadi → yana `_sync()` → yana oyna. `_syncing` bayrog'i
+  /// buni ushlay olmaydi, chunki har safar oldingi chaqiruv tugagan bo'ladi.
+  static const Duration _minInterval = Duration(minutes: 15);
+
+  /// Ketma-ket shuncha xatodan keyin bu ilova seansida umuman urinilmaydi.
+  /// Kvitansiya olinmasligi odatda barqaror holat (App Store akkaunti yo'q,
+  /// sandbox muhiti) — qayta-qayta urinish faqat foydalanuvchini bezovta
+  /// qiladi.
+  static const int _maxConsecutiveFailures = 3;
 
   bool get _isApple => !kIsWeb && Platform.isIOS;
 
@@ -57,24 +72,44 @@ class AppleReceiptSyncService {
     // Bir vaqtning o'zida bir nechta chaqiruv (masalan tez-tez resume)
     // qatorlashmasin — busiz backend'ga ortiqcha so'rov ketishi mumkin.
     if (_syncing) return;
+
+    // Barqaror xato holati — bu seansda boshqa urinmaymiz.
+    if (_consecutiveFailures >= _maxConsecutiveFailures) return;
+
+    // Tanaffus tugamagan bo'lsa — o'tkazib yuboramiz. Aynan shu shart
+    // "oyna → resume → oyna" aylanmasini uzadi.
+    final last = _lastAttemptAt;
+    if (last != null && DateTime.now().difference(last) < _minInterval) {
+      return;
+    }
+
     _syncing = true;
+    _lastAttemptAt = DateTime.now();
     try {
       final addition = InAppPurchase.instance
           .getPlatformAddition<InAppPurchaseStoreKitPlatformAddition>();
       final data = await addition.refreshPurchaseVerificationData();
       // `null` — hech qachon Apple orqali xarid qilinmagan (yangi
       // o'rnatilgan ilova) yoki kvitansiya hali yo'q. Bu XATO EMAS.
-      if (data == null) return;
+      if (data == null) {
+        _consecutiveFailures = 0;
+        return;
+      }
       final ok = await _ref
           .read(backendPaymentsRepositoryProvider)
           .verifyApplePurchase(verificationData: data.serverVerificationData);
       if (ok) {
         _ref.invalidate(entitlementProvider);
       }
+      _consecutiveFailures = 0;
     } catch (e) {
       // Jim — bu FON tekshiruvi, foydalanuvchiga xato ko'rsatilmaydi
-      // (tarmoq yo'q bo'lishi mumkin). Keyingi resume'da qayta uriniladi.
-      debugPrint('AppleReceiptSyncService._sync xato: $e');
+      // (tarmoq yo'q bo'lishi mumkin). Tanaffus tugagach qayta uriniladi.
+      _consecutiveFailures++;
+      debugPrint(
+        'AppleReceiptSyncService._sync xato '
+        '($_consecutiveFailures/$_maxConsecutiveFailures): $e',
+      );
     } finally {
       _syncing = false;
     }
