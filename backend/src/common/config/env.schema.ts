@@ -106,6 +106,26 @@ const envSchema = z.object({
     z.string().url().optional(),
   ),
 
+  // ── Uzum MERCHANT API (yuqoridagi UZUM_* dan BOSHQA integratsiya) ──
+  // Yuqoridagilar: biz Uzum'ga checkout URL yasaymiz (hozir o'chirilgan).
+  // Quyidagilar: UZUM BIZGA so'rov yuboradi (check/create/confirm/reverse/
+  // status). Login/parol BIZ tomonimizdan belgilanadi va Uzum'ga beriladi;
+  // serviceId dastlab biz beramiz, test tugagach Uzum o'zinikini beradi.
+  // Bo'sh bo'lsa endpointlar 401 qaytaradi (xavfsiz — hech kim kira olmaydi).
+  UZUM_MERCHANT_USERNAME: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  UZUM_MERCHANT_PASSWORD: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  // Uzum `serviceId`ni RAQAM sifatida yuboradi — solishtirish raqamli.
+  UZUM_MERCHANT_API_SERVICE_ID: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.coerce.number().int().positive().optional(),
+  ),
+
   PAYMENT_WEBHOOK_IPS: z.string().default(''),
 
   ESKIZ_EMAIL: z.preprocess(

@@ -8,6 +8,9 @@ import { ClickProvider } from './providers/click.provider';
 import { UzumProvider } from './providers/uzum.provider';
 import { PaymentProviderRegistry } from './providers/registry';
 import { WebhookIpGuard } from './guards/webhook-ip.guard';
+import { UzumMerchantController } from './uzum-merchant/uzum-merchant.controller';
+import { UzumMerchantService } from './uzum-merchant/uzum-merchant.service';
+import { UzumBasicAuthGuard } from './uzum-merchant/uzum-basic-auth.guard';
 import { CheckoutThrottlerGuard } from './guards/checkout-throttler.guard';
 
 @Module({
@@ -17,13 +20,15 @@ import { CheckoutThrottlerGuard } from './guards/checkout-throttler.guard';
   // `checkout` limiti (5) `childPair` route'iga ham qo'llanib, Play
   // reviewer'ini 5 urinishdan keyin bloklab qo'ygan edi (2026-08-10).
   imports: [DatabaseModule],
-  controllers: [PaymentsController],
+  controllers: [PaymentsController, UzumMerchantController],
   providers: [
     PaymentsService,
     AppleIapService,
     PaymeProvider,
     ClickProvider,
     UzumProvider,
+    UzumMerchantService,
+    UzumBasicAuthGuard,
     PaymentProviderRegistry,
     WebhookIpGuard,
     CheckoutThrottlerGuard,

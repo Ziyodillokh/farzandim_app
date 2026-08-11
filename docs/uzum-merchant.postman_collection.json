@@ -1,0 +1,179 @@
+{
+  "info": {
+    "name": "Parvoz — Uzum Merchant API",
+    "description": "Uzum Bank Merchant API integratsiyasi (Parvoz / Farzandim).\n\nUzum BIZGA so'rov yuboradi. Foydalanuvchi Uzum ilovasida \"Parvoz\" xizmatini topib, TELEFON RAQAMINI kiritadi va to'laydi.\n\nAuth: HTTP Basic (kollektsiya darajasida).\nSummalar: TIYINDA (1 so'm = 100 tiyin).\nBarcha javoblar HTTP 200; xato holati javob ichida `status: FAILED` + `errorCode`.\n\nTariflar:\n  • Oylik (Standard)  — 29 000 so'm  = 2 900 000 tiyin\n  • Yillik (Premium)  — 290 000 so'm = 29 000 000 tiyin\n\nO'zgaruvchilarni (username/password/serviceId/phone) 'Variables' bo'limida to'ldiring.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "auth": {
+    "type": "basic",
+    "basic": [
+      { "key": "username", "value": "{{username}}", "type": "string" },
+      { "key": "password", "value": "{{password}}", "type": "string" }
+    ]
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "https://farzandimedu.uz/api/uzum/merchant",
+      "type": "string"
+    },
+    { "key": "username", "value": "", "type": "string" },
+    { "key": "password", "value": "", "type": "string" },
+    { "key": "serviceId", "value": "", "type": "string" },
+    {
+      "key": "phone",
+      "value": "+998901234567",
+      "type": "string",
+      "description": "Ro'yxatdan o'tgan ota-onaning telefon raqami (abonent)"
+    },
+    { "key": "transId", "value": "test-trans-0001", "type": "string" },
+    {
+      "key": "amount",
+      "value": "2900000",
+      "type": "string",
+      "description": "TIYINDA. 2900000 = 29 000 so'm (Oylik/Standard)"
+    }
+  ],
+  "item": [
+    {
+      "name": "1. check — to'lov imkoniyatini tekshirish",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"params\": {\n    \"phone\": \"{{phone}}\"\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/check",
+          "host": ["{{baseUrl}}"],
+          "path": ["check"]
+        },
+        "description": "Abonent (telefon raqami) tizimda bormi — tekshiradi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"timestamp\": 1723363200123,\n  \"status\": \"OK\",\n  \"data\": { \"account\": { \"value\": \"+998901234567\" } }\n}\n\nXato javob:\n{ \"serviceId\": 776128, \"timestamp\": ..., \"status\": \"FAILED\", \"errorCode\": 10008 }"
+      }
+    },
+    {
+      "name": "2. create — tranzaksiya yaratish",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"transId\": \"{{transId}}\",\n  \"params\": {\n    \"phone\": \"{{phone}}\"\n  },\n  \"amount\": {{amount}}\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/create",
+          "host": ["{{baseUrl}}"],
+          "path": ["create"]
+        },
+        "description": "Tranzaksiya yaratadi (PENDING holat). Tarif SUMMA bo'yicha aniqlanadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"timestamp\": ...,\n  \"status\": \"CREATED\",\n  \"transTime\": ...,\n  \"transId\": \"test-trans-0001\",\n  \"amount\": 2900000\n}\n\nIdempotent: bir xil transId bilan qayta yuborilsa (PENDING bo'lsa) O'SHA javob qaytadi."
+      }
+    },
+    {
+      "name": "3. confirm — to'lovni tasdiqlash",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"transId\": \"{{transId}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/confirm",
+          "host": ["{{baseUrl}}"],
+          "path": ["confirm"]
+        },
+        "description": "To'lovni tasdiqlaydi va OBUNANI YOQADI.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"transId\": \"test-trans-0001\",\n  \"status\": \"CONFIRMED\",\n  \"confirmTime\": ...\n}\n\nIdempotent: qayta yuborilsa obuna IKKI marta uzaytirilmaydi."
+      }
+    },
+    {
+      "name": "4. reverse — to'lovni bekor qilish",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"transId\": \"{{transId}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/reverse",
+          "host": ["{{baseUrl}}"],
+          "path": ["reverse"]
+        },
+        "description": "To'lovni bekor qiladi va obunani to'xtatadi.\n\nMuvaffaqiyatli javob:\n{\n  \"serviceId\": 776128,\n  \"transId\": \"test-trans-0001\",\n  \"status\": \"REVERSED\",\n  \"reverseTime\": ...,\n  \"amount\": 2900000\n}"
+      }
+    },
+    {
+      "name": "5. status — tranzaksiya holati",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"transId\": \"{{transId}}\"\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["status"]
+        },
+        "description": "Tranzaksiya holatini qaytaradi.\n\nJavob:\n{ \"serviceId\": 776128, \"transId\": \"test-trans-0001\", \"status\": \"CREATED|CONFIRMED|REVERSED|FAILED\" }\n\nMoslik: pending→CREATED, success→CONFIRMED, cancelled/refunded→REVERSED"
+      }
+    },
+    {
+      "name": "6. (negativ test) noto'g'ri serviceId",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": 111111,\n  \"timestamp\": 1723363200000,\n  \"params\": {\n    \"phone\": \"{{phone}}\"\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/check",
+          "host": ["{{baseUrl}}"],
+          "path": ["check"]
+        },
+        "description": "Kutilgan javob:\n{ \"serviceId\": 111111, \"timestamp\": ..., \"status\": \"FAILED\", \"errorCode\": 10006 }"
+      }
+    },
+    {
+      "name": "7. (negativ test) mavjud bo'lmagan abonent",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"serviceId\": {{serviceId}},\n  \"timestamp\": 1723363200000,\n  \"params\": {\n    \"phone\": \"+998900000000\"\n  }\n}",
+          "options": { "raw": { "language": "json" } }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/check",
+          "host": ["{{baseUrl}}"],
+          "path": ["check"]
+        },
+        "description": "Kutilgan javob:\n{ \"serviceId\": ..., \"timestamp\": ..., \"status\": \"FAILED\", \"errorCode\": 10008 }"
+      }
+    }
+  ]
+}
