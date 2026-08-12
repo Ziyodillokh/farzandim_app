@@ -8,6 +8,18 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { timingSafeEqual } from 'crypto';
 import { EnvConfig } from '../../../common/config/env.schema';
+import { UzumErrorCode, UzumStatus } from './uzum-merchant.constants';
+
+/**
+ * Auth xatosi Uzum formatida qaytadi (`status` + `errorCode: 10001`).
+ * HTTP kodi 401 — Basic auth uchun standart (biznes xatolari esa 400).
+ * Eslatma: `GlobalExceptionFilter` tanaga `statusCode` maydonini qo'shadi,
+ * lekin `status`/`errorCode` o'z joyida qoladi.
+ */
+const authError = {
+  status: UzumStatus.Failed,
+  errorCode: UzumErrorCode.AuthorizationError,
+};
 
 /**
  * Uzum Merchant API uchun HTTP Basic auth.
@@ -34,7 +46,7 @@ export class UzumBasicAuthGuard implements CanActivate {
       this.logger.warn(
         'Uzum Merchant API sozlanmagan (UZUM_MERCHANT_USERNAME/PASSWORD) — so\'rov rad etildi',
       );
-      throw new UnauthorizedException('Uzum merchant API not configured');
+      throw new UnauthorizedException(authError);
     }
 
     const request = context.switchToHttp().getRequest<{
@@ -45,27 +57,27 @@ export class UzumBasicAuthGuard implements CanActivate {
     const [scheme, token] = (raw ?? '').split(' ');
 
     if (scheme !== 'Basic' || !token) {
-      throw new UnauthorizedException('Basic authorization required');
+      throw new UnauthorizedException(authError);
     }
 
     let decoded = '';
     try {
       decoded = Buffer.from(token, 'base64').toString('utf8');
     } catch {
-      throw new UnauthorizedException('Malformed Basic token');
+      throw new UnauthorizedException(authError);
     }
 
     // Parolning o'zida ':' bo'lishi mumkin — faqat BIRINCHI ':' bo'yicha
     // ajratamiz (`split(':')` bilan parol kesilib qolardi).
     const sep = decoded.indexOf(':');
-    if (sep < 0) throw new UnauthorizedException('Malformed Basic token');
+    if (sep < 0) throw new UnauthorizedException(authError);
     const user = decoded.slice(0, sep);
     const pass = decoded.slice(sep + 1);
 
     if (!this.safeEqual(user, this.username) ||
         !this.safeEqual(pass, this.password)) {
       this.logger.warn('Uzum Merchant API: noto\'g\'ri login/parol');
-      throw new UnauthorizedException('Invalid credentials');
+      throw new UnauthorizedException(authError);
     }
 
     return true;
