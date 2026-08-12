@@ -173,6 +173,13 @@ flutter:
     - assets/default_avatars/ # jins+yoshga mos default avatar (rasm yo'q bo'lsa)
     - assets/translations/  # uz.json, ru.json, en.json — easy_localization
     - assets/videos/        # sample.mp4 — mock video placeholder (offline)
+    # Shriftlar BUNDLE (2026-08-12). google_fonts paketi shu papkadagi
+    # `<Oila>-<Variant>.ttf` fayllarni asset manifest orqali topadi va
+    # internetsiz ishlatadi. main.dart'da `allowRuntimeFetching = false`
+    # bo'lgani uchun bu YAGONA manba — busiz har matn stili istisno
+    # tashlardi (Crashlytics: google_fonts_base.dart .loadFontIfNecessary,
+    # 103 xato / 5 foydalanuvchi).
+    - assets/google_fonts/
 
 # Launcher icon konfiguratsiyasi (flutter_launcher_icons)
 flutter_launcher_icons:
