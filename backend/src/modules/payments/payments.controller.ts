@@ -220,7 +220,13 @@ export class PaymentsController {
     res: FastifyReply,
   ) {
     const provider = this.registry.getProvider(providerKey);
-    if (!provider.isConfigured()) {
+    // Payme QAT'IY JSON-RPC protokolida javob kutadi — HTTP 404 + oddiy
+    // `{error: "..."}` ularning parseri uchun buzuq javob va test paytida
+    // chalkashlik tug'diradi. PaymeProvider sozlanmagan holatni O'ZI to'g'ri
+    // ishlaydi: `checkAuth` merchant key bo'lmasa `false` qaytaradi →
+    // JSON-RPC `-32504 Authorization failed` (HTTP 200). Shu sabab payme
+    // uchun bu darvozani o'tkazib yuboramiz (DB'ga umuman tegmaydi).
+    if (providerKey !== 'payme' && !provider.isConfigured()) {
       await res.status(404).send({ error: 'Provider not available' });
       return;
     }
