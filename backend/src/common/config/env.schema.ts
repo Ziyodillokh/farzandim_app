@@ -106,6 +106,26 @@ const envSchema = z.object({
     z.string().url().optional(),
   ),
 
+  // ── Payme fiskalizatsiya (soliq cheki) ────────────────────────────
+  // Payme talabi: `CheckPerformTransaction` javobida `detail.items[]`
+  // qaytarilishi kerak, aks holda chek soliq oborotida ko'rinmaydi.
+  // MXIK (ИКПУ) kodi tasnif.soliq.uz dan olinadi; `package_code` MXIK'ga
+  // bog'langan o'lchov birligi. Bo'sh bo'lsa `detail` UMUMAN qo'shilmaydi
+  // (eski xatti-harakat) — noto'g'ri kod bilan chek yuborilmasin.
+  PAYME_FISCAL_MXIK: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  PAYME_FISCAL_PACKAGE_CODE: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().optional(),
+  ),
+  // QQS foizi (0 = QQS to'lovchisi emas). Standart O'zbekistonda 12.
+  PAYME_FISCAL_VAT_PERCENT: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.coerce.number().int().min(0).max(100).default(0),
+  ),
+
   // ── Uzum MERCHANT API (yuqoridagi UZUM_* dan BOSHQA integratsiya) ──
   // Yuqoridagilar: biz Uzum'ga checkout URL yasaymiz (hozir o'chirilgan).
   // Quyidagilar: UZUM BIZGA so'rov yuboradi (check/create/confirm/reverse/

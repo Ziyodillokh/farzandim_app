@@ -107,6 +107,9 @@ export class PaymeProvider implements PaymentProvider {
   private merchantId: string;
   private merchantKey: string;
   private checkoutUrl: string;
+  private fiscalMxik: string;
+  private fiscalPackageCode: string;
+  private fiscalVatPercent: number;
 
   constructor(
     private readonly config: ConfigService<EnvConfig, true>,
@@ -116,6 +119,38 @@ export class PaymeProvider implements PaymentProvider {
     this.merchantId = this.config.get('PAYME_MERCHANT_ID', { infer: true }) ?? '';
     this.merchantKey = this.config.get('PAYME_MERCHANT_KEY', { infer: true }) ?? '';
     this.checkoutUrl = this.config.get('PAYME_CHECKOUT_URL', { infer: true }) ?? 'https://checkout.paycom.uz';
+    this.fiscalMxik = this.config.get('PAYME_FISCAL_MXIK', { infer: true }) ?? '';
+    this.fiscalPackageCode =
+      this.config.get('PAYME_FISCAL_PACKAGE_CODE', { infer: true }) ?? '';
+    this.fiscalVatPercent =
+      this.config.get('PAYME_FISCAL_VAT_PERCENT', { infer: true }) ?? 0;
+  }
+
+  /**
+   * Soliq cheki uchun `detail` obyekti (Payme fiskalizatsiya talabi).
+   *
+   * MXIK/package_code sozlanmagan bo'lsa `undefined` qaytaradi — ya'ni
+   * `detail` javobga UMUMAN qo'shilmaydi. Bu ataylab: noto'g'ri/bo'sh kod
+   * bilan chek yuborilgandan ko'ra, chek yuborilmagani yaxshiroq (soliq
+   * tomonda xato yozuv paydo bo'lmasin).
+   *
+   * `price` — TIYINDA (Payme shunday kutadi), `count` — 1 (bitta obuna).
+   */
+  private fiscalDetail(title: string, amountTiyin: number) {
+    if (!this.fiscalMxik || !this.fiscalPackageCode) return undefined;
+    return {
+      receipt_type: 0,
+      items: [
+        {
+          title,
+          price: amountTiyin,
+          count: 1,
+          code: this.fiscalMxik,
+          package_code: this.fiscalPackageCode,
+          vat_percent: this.fiscalVatPercent,
+        },
+      ],
+    };
   }
 
   isConfigured(): boolean {
@@ -216,7 +251,13 @@ export class PaymeProvider implements PaymentProvider {
     if (params.amount !== payment.amount * TIYIN) {
       return rpcError(id, ERR.INVALID_AMOUNT, 'Invalid amount');
     }
-    return rpcResult(id, { allow: true });
+    // Fiskalizatsiya: chek soliq oborotida ko'rinishi uchun `detail` kerak
+    // (Payme talabi). MXIK sozlanmagan bo'lsa qo'shilmaydi.
+    const detail = this.fiscalDetail(
+      payment.planName ?? 'Parvoz obuna',
+      payment.amount * TIYIN,
+    );
+    return rpcResult(id, detail ? { allow: true, detail } : { allow: true });
   }
 
   private async createTransaction(
