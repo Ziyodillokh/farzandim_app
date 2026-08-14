@@ -100,6 +100,27 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   /// iOS bo'lsa Apple IAP. web guard (Platform web'da throw qiladi).
   bool get _isApple => !kIsWeb && Platform.isIOS;
 
+  /// ⚠️ ANDROID'DA TASHQI TO'LOVNI KO'RSATISH — Play siyosati kaliti.
+  ///
+  /// Google Play Payments siyosati: ilova ichida foydalanuvchini Play
+  /// Billing'dan BOSHQA to'lov usuliga YETAKLASH taqiqlangan ("developers
+  /// may not lead users to a payment method other than Google Play's
+  /// billing system"). Istisno faqat
+  /// AQSh (sud qarori), YeIH (DMA), Hindiston va Janubiy Koreya uchun —
+  /// O'zbekiston bu ro'yxatda YO'Q.
+  ///
+  /// Hozircha `true`: ilova yopiq testdan shu holatda o'tgan va ega xavfni
+  /// ataylab qabul qildi (2026-08-14). Agar Play "Payments" siyosati bo'yicha
+  /// rad etsa — SHU QIYMATNI `false` QILING, boshqa hech narsa kerak emas:
+  /// narxlar, obuna tugmalari va tashqi checkout Android'da butunlay
+  /// yashiriladi. Web (`kIsWeb`) va iOS (Apple IAP) TEGILMAYDI, ya'ni
+  /// saytdan obuna bo'lish va uning ilovada ishlashi davom etaveradi.
+  static const bool kAndroidExternalCheckoutEnabled = true;
+
+  /// Android'da sotib olish yuzasi (narx + tugma + checkout) ko'rsatiladimi.
+  bool get _androidPurchaseVisible =>
+      kIsWeb || _isApple || kAndroidExternalCheckoutEnabled;
+
   /// iOS: StoreKit'dan yuklangan mahsulot narxlari (productId -> tafsilot).
   /// Kartadagi narx StoreKit bilan MOS bo'lishi shart — aks holda
   /// foydalanuvchi "29 000 so'm" ko'radi-yu, xarid bosilganda Apple tizim
@@ -171,6 +192,9 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       await _subscribeApple(plan);
       return;
     }
+    // Play siyosati kaliti (yuqoridagi `kAndroidExternalCheckoutEnabled`
+    // izohiga qarang) — o'chirilgan bo'lsa tashqi checkout CHAQIRILMAYDI.
+    if (!_androidPurchaseVisible) return;
     setState(() => _busyPlanId = plan.id);
     try {
       final url = await ref

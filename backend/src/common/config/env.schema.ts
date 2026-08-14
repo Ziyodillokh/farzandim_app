@@ -62,6 +62,16 @@ const envSchema = z.object({
     z.string().min(5).optional(),
   ),
 
+  // OTA-ONA ilovasi uchun reviewer akkaunti (ixtiyoriy). Shu email'li
+  // foydalanuvchiga "2 qurilma" limiti QO'LLANMAYDI — aks holda tekshiruvchi
+  // 3-qurilma bo'lib 409 oladi va "ruxsat so'rash" ekranida qotib qoladi
+  // (auth.service.ts enforceParentDeviceLimit). Faqat ataylab yaratilgan
+  // demo akkaunt email'ini qo'ying.
+  PLAY_REVIEW_PARENT_EMAIL: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().email().optional(),
+  ),
+
   PAYME_MERCHANT_ID: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),

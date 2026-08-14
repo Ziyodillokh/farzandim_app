@@ -100,6 +100,28 @@ jobs:
           ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
         run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
 
+      # ⚠️ IMZO HIMOYASI. build.gradle.kts:104-113 — `key.properties` topilmasa
+      # release JIMGINA DEBUG kalit bilan imzolanadi (lokal `flutter run
+      # --release` ishlashi uchun ataylab shunday). Bunday AAB'ni Play darhol
+      # rad etadi ("debug mode"), lekin build MUVAFFAQIYATLI tugaydi — ya'ni
+      # xatoni faqat Play'ga yuklaganda bilasiz. Shuning uchun bu yerda
+      # qattiq to'xtatamiz.
+      - name: Release imzo kaliti borligini tekshirish
+        run: |
+          if [ ! -f Farzandim/android/key.properties ]; then
+            echo "::error::Farzandim/android/key.properties YO'Q — ANDROID_SIGNING_B64"
+            echo "::error::secret'i yo'q yoki buzuq. Build DEBUG kalit bilan imzolanadi"
+            echo "::error::va Play uni rad etadi. To'xtatildi."
+            exit 1
+          fi
+          # Keystore fayli ham haqiqatan chiqqanmi (yo'l key.properties ichida).
+          ks=$(grep -E '^storeFile=' Farzandim/android/key.properties | cut -d= -f2-)
+          if [ -n "$ks" ] && [ ! -f "Farzandim/android/$ks" ] && [ ! -f "$ks" ]; then
+            echo "::error::key.properties bor, lekin keystore fayli topilmadi: $ks"
+            exit 1
+          fi
+          echo "OK: release imzo kaliti joyida"
+
       # ⚠️ XARITA HIMOYASI — bu tekshiruv 2026-08-14 dagi real nosozlikdan
       # keyin qo'shildi: Play'ga yuklangan AAB Mapbox tokenisiz qurilgan edi
       # va ilova JIMGINA zaxira plitkalarga (CARTO Voyager) tushib qolgan edi.
@@ -158,7 +180,7 @@ jobs:
           build() {
             flutter build appbundle --release \
               --build-number="$VC" \
-              --build-name="1.0.$VC" \
+              --build-name="1.0.$RUN_NUMBER" \
               --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
               --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
               --dart-define=MAPBOX_PUBLIC_TOKEN=${MAPBOX_PUBLIC_TOKEN} \

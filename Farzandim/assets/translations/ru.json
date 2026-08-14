@@ -79,7 +79,7 @@
       "passwordHint": "Введите пароль",
       "forgotPassword": "Забыли пароль?",
       "submitButton": "Войти",
-      "signUpButton": "Создать аккаунт"
+      "signUpButton": "Подключиться по QR-коду"
     },
     "signUp": {
       "contactSubtitle": "Начните с телефона или email",

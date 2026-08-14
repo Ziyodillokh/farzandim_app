@@ -79,7 +79,7 @@
       "passwordHint": "Enter your password",
       "forgotPassword": "Forgot password?",
       "submitButton": "Sign in",
-      "signUpButton": "Create account"
+      "signUpButton": "Join account via QR"
     },
     "signUp": {
       "contactSubtitle": "Start with your phone or email",

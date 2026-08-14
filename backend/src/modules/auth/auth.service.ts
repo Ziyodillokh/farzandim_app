@@ -397,6 +397,36 @@ export class AuthService {
     role: string;
   }): Promise<void> {
     if (user.role !== 'PARENT') return;
+
+    // Google Play / App Store REVIEWER istisnosi.
+    //
+    // ⚠️ Nega kerak: bola ilovasi AYNAN shu sababdan rad etilgan edi
+    // ("Login credentials are incorrect" — reviewer ilovaga kira olmagan).
+    // Ota-onada mexanizmi boshqacha, lekin natija bir xil bo'lardi: demo
+    // akkauntda 2 ta faol sessiya bo'lsa (masalan ega o'zi kirgan bo'lsa),
+    // reviewer 3-chi bo'lib 409 DEVICE_LIMIT_REACHED oladi va ilovada
+    // "ruxsat so'rash" ekranida QOTIB QOLADI — tasdiqlash faqat mavjud
+    // qurilmadagi push orqali keladi, reviewer'da unday qurilma yo'q.
+    // UserSession'da muddat ham yo'q, ya'ni eski kirishlar slotni mangu
+    // band qilib turadi.
+    //
+    // Yechim: `PLAY_REVIEW_PARENT_EMAIL` env'idagi AYNAN bitta akkaunt
+    // uchun limit qo'llanmaydi. Oddiy foydalanuvchilarga ta'siri YO'Q.
+    //
+    // Email `buildAuthResponse` uzatadigan obyektda yo'q, shuning uchun
+    // bazadan o'qiymiz — LEKIN faqat env o'rnatilgan bo'lsa, ya'ni oddiy
+    // login yo'liga qo'shimcha so'rov TUSHMAYDI.
+    const reviewEmail = process.env.PLAY_REVIEW_PARENT_EMAIL?.trim();
+    if (reviewEmail) {
+      const u = await this.prisma.user.findUnique({
+        where: { id: user.id },
+        select: { email: true },
+      });
+      if (u?.email && u.email.toLowerCase() === reviewEmail.toLowerCase()) {
+        return;
+      }
+    }
+
     const active = await this.prisma.userSession.count({
       where: { userId: user.id, revokedAt: null },
     });
