@@ -100,6 +100,34 @@ jobs:
           ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
         run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
 
+      # ⚠️ XARITA HIMOYASI — bu tekshiruv 2026-08-14 dagi real nosozlikdan
+      # keyin qo'shildi: Play'ga yuklangan AAB Mapbox tokenisiz qurilgan edi
+      # va ilova JIMGINA zaxira plitkalarga (CARTO Voyager) tushib qolgan edi.
+      # Natijada xaritada binolar/yo'llar ko'rinardi, LEKIN joy NOMLARI yo'q
+      # edi (CARTO Toshkentda yorliqlarni deyarli ko'rsatmaydi). Hech qanday
+      # xato chiqmagani uchun buni faqat foydalanuvchi sezgan.
+      # Qarang: Farzandim/lib/core/map/map_tiles.dart (token bo'sh → CARTO).
+      - name: Mapbox tokeni borligini tekshirish (xarita nomlari uchun)
+        env:
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+        run: |
+          case "$MAPBOX_PUBLIC_TOKEN" in
+            pk.eyJ*)
+              echo "OK: Mapbox public token mavjud — xarita to'liq (POI nomlari bilan)"
+              ;;
+            "")
+              echo "::error::MAPBOX_PUBLIC_TOKEN secret BO'SH. Bunday AAB'da xarita"
+              echo "::error::zaxira plitkalarga tushadi va JOY NOMLARI KO'RINMAYDI."
+              echo "::error::Settings → Secrets and variables → Actions → MAPBOX_PUBLIC_TOKEN"
+              exit 1
+              ;;
+            *)
+              echo "::error::MAPBOX_PUBLIC_TOKEN noto'g'ri formatda (pk.eyJ… bo'lishi kerak)."
+              echo "::error::Ilova uni rad etadi va xarita nomlarsiz qoladi."
+              exit 1
+              ;;
+          esac
+
       - name: Build parent AAB (release)
         working-directory: Farzandim
         env:
