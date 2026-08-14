@@ -21,6 +21,8 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:image_picker_android/image_picker_android.dart';
+import 'package:image_picker_platform_interface/image_picker_platform_interface.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 /// Ilova fonda yoki yopiq bo'lganda keladigan FCM xabarlari (alohida isolate).
@@ -58,6 +60,20 @@ Future<void> main() async {
   await runZonedGuarded<Future<void>>(
     () async {
       WidgetsFlutterBinding.ensureInitialized();
+
+      // Android'ning ZAMONAVIY foto-tanlagichi (Android Photo Picker).
+      //
+      // ⚠️ Play talabi (2026-08-14): ilova READ_MEDIA_IMAGES/READ_MEDIA_VIDEO
+      // so'ramasdan, tizim tanlagichidan foydalanishi shart. Bu bayroq
+      // `image_picker`ni ACTION_PICK_IMAGES (Android 13+, eskiroq versiyalarda
+      // Play services orqali backport) ga o'tkazadi — ruxsat umuman kerak
+      // bo'lmaydi va foydalanuvchi butun galereyaga kirish huquqini bermaydi.
+      // Tanlagich mavjud bo'lmasa plagin o'zi ACTION_GET_CONTENT'ga qaytadi
+      // (u ham tizim tanlagichi, ruxsatsiz ishlaydi) — xavfsiz fallback.
+      final picker = ImagePickerPlatform.instance;
+      if (picker is ImagePickerAndroid) {
+        picker.useAndroidPhotoPicker = true;
+      }
 
       // Mustaqil init'lar parallel ketadi — avval 4 ta ketma-ket await edi
       // va cold start shunga cho'zilardi. Har biri o'z catch'ida: bittasi

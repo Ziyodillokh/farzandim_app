@@ -1,0 +1,170 @@
+name: Build parent AAB (Play Market)
+
+# ─────────────────────────────────────────────────────────────────────────────
+# OTA-ONA ilovasining (Parvoz Parents, com.farzandim.parent) RELEASE .aab
+# faylini yasaydi — Google Play Console'ga yuklash uchun.
+#
+# ISHLATISH: GitHub → Actions → "Build parent AAB (Play Market)" → Run workflow.
+# Tugagach run sahifasidagi "Artifacts" dan `parent-release-aab`ni yuklab oling
+# → ichidagi `app-release.aab`ni Play Console'ga qo'ying.
+#
+# ⚠️ versionCode HAQIDA — bu eng ko'p xato qilinadigan joy:
+# `github.run_number` HAR WORKFLOW uchun ALOHIDA sanaladi va bu yangi fayl
+# bo'lgani uchun u 1 dan boshlanadi. Play'da esa ota-ona ilovasining
+# versionCode 1, 2, ... allaqachon ishlatilgan → "Код версии N уже
+# использован" xatosi chiqardi. Shuning uchun BAZA OFSET (1000) qo'shilgan:
+# birinchi run → 1001, keyingisi → 1002 va h.k. Bu qiymat mavjud har qanday
+# versionCode'dan yuqori va har doim o'sib boradi.
+# Agar boshqa qiymat kerak bo'lsa — `version_code` input orqali qo'lda bering.
+#
+# Imzo: build-child-aab / deploy-test bilan BIR XIL keystore
+# (ANDROID_SIGNING_B64) — Play "upload key" o'zgarmaydi.
+# ─────────────────────────────────────────────────────────────────────────────
+
+on:
+  workflow_dispatch:
+    inputs:
+      version_code:
+        description: "versionCode (bo'sh qoldirilsa: 1000 + run raqami)"
+        required: false
+        default: ''
+
+env:
+  FLUTTER_VERSION: '3.44.0'
+  TEST_DOMAIN: farzandimedu.uz
+  # Play'dagi mavjud ota-ona versionCode'laridan yuqori boshlanish nuqtasi.
+  VERSION_CODE_BASE: 1000
+
+jobs:
+  parent-aab:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+
+      # firebase_options.dart + google-services.json (deploy-test bilan bir xil
+      # secret). Ota-ona uchun override KERAK EMAS — secret'dagi konfiguratsiya
+      # allaqachon com.farzandim.parent uchun (faqat bola paketi o'zgargan edi).
+      - name: Restore Firebase config
+        env:
+          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
+        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
+
+      # assets/env.json — pubspec'da asset deb e'lon qilingan va gitignore'da.
+      # Busiz `flutter build` asset-bundle bosqichida yiqiladi.
+      - name: Create env.json
+        env:
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+        run: |
+          mkdir -p Farzandim/assets
+          printf '{\n  "MAPS_API_KEY": "%s",\n  "API_BASE_URL": "https://%s",\n  "WS_BASE_URL": "wss://%s"\n}\n' \
+            "$MAPS_API_KEY" "$TEST_DOMAIN" "$TEST_DOMAIN" > Farzandim/assets/env.json
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - uses: subosito/flutter-action@v2
+        with:
+          flutter-version: ${{ env.FLUTTER_VERSION }}
+          channel: stable
+          cache: true
+
+      - name: Bo'sh disk joyi ochish
+        run: |
+          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
+            /opt/hostedtoolcache/CodeQL /usr/local/share/boost \
+            /usr/local/graalvm /usr/local/share/powershell 2>/dev/null || true
+          sudo docker image prune -af 2>/dev/null || true
+
+      - name: Cache Gradle dependencies
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.gradle/caches/modules-2
+            ~/.gradle/wrapper
+          key: gradle-parent-aab-${{ runner.os }}-${{ hashFiles('Farzandim/android/**/*.gradle*', '**/gradle-wrapper.properties', 'Farzandim/pubspec.lock') }}
+          restore-keys: |
+            gradle-parent-aab-${{ runner.os }}-
+
+      - name: Tune Gradle memory for CI
+        run: |
+          gp=Farzandim/android/gradle.properties
+          if [ -f "$gp" ]; then
+            sed -i 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Xss512k/' "$gp"
+          fi
+
+      - name: Restore Android signing (release keystore)
+        env:
+          ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
+        run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
+
+      - name: Build parent AAB (release)
+        working-directory: Farzandim
+        env:
+          # Gradle build.gradle.kts System.getenv("MAPS_API_KEY") orqali o'qib,
+          # manifestdagi ${MAPS_API_KEY} placeholder'iga yozadi (xarita uchun).
+          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
+          MAPBOX_DOWNLOADS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
+          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
+          YANDEX_MAPS_KEY: ${{ secrets.YANDEX_MAPS_KEY }}
+          INPUT_VERSION_CODE: ${{ github.event.inputs.version_code }}
+          RUN_NUMBER: ${{ github.run_number }}
+        run: |
+          set -e
+          # versionCode: input berilsa o'sha, aks holda BASE + run raqami.
+          if [ -n "$INPUT_VERSION_CODE" ]; then
+            VC="$INPUT_VERSION_CODE"
+          else
+            VC=$(( VERSION_CODE_BASE + RUN_NUMBER ))
+          fi
+          echo "versionCode = $VC"
+
+          # Mapbox maven auth (native SDK yuklab olish uchun).
+          mkdir -p ~/.gradle
+          grep -q MAPBOX_DOWNLOADS_TOKEN ~/.gradle/gradle.properties 2>/dev/null || \
+            echo "MAPBOX_DOWNLOADS_TOKEN=${MAPBOX_DOWNLOADS_TOKEN}" >> ~/.gradle/gradle.properties
+
+          flutter pub get
+          build() {
+            flutter build appbundle --release \
+              --build-number="$VC" \
+              --build-name="1.0.$VC" \
+              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
+              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
+              --dart-define=MAPBOX_PUBLIC_TOKEN=${MAPBOX_PUBLIC_TOKEN} \
+              --dart-define=YANDEX_MAPS_KEY=${YANDEX_MAPS_KEY}
+          }
+          # Maven Central ba'zan 403 (rate-limit) beradi — bir marta retry.
+          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
+
+      # Play talabi (2026-08-14 rad): READ_MEDIA_IMAGES/READ_MEDIA_VIDEO
+      # bo'lmasligi SHART. Manifestda `tools:node="remove"` qo'yilgan, lekin
+      # kelajakda biror plagin qayta olib kirsa build JIM o'tib ketmasin —
+      # shu yerda qattiq to'xtatamiz.
+      - name: Media ruxsatlari yo'qligini tekshirish (Play talabi)
+        working-directory: Farzandim
+        run: |
+          M=$(find build -path "*merged_manifest*" -name AndroidManifest.xml \
+              -path "*elease*" | head -1)
+          if [ -z "$M" ]; then
+            echo "::warning::merged manifest topilmadi — tekshiruv o'tkazib yuborildi"
+            exit 0
+          fi
+          echo "manifest: $M"
+          # Faqat HAQIQIY uses-permission'ni tekshiramiz (izohlar hisobga olinmaydi).
+          if tr -d '\n' < "$M" | grep -oE '<uses-permission[^>]*>' \
+               | grep -qE 'READ_MEDIA_(IMAGES|VIDEO)'; then
+            echo "::error::READ_MEDIA_IMAGES/VIDEO manifestda BOR — Play buni rad etadi."
+            exit 1
+          fi
+          echo "OK: READ_MEDIA_IMAGES/VIDEO yo'q"
+
+      - name: Upload AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: parent-release-aab
+          path: Farzandim/build/app/outputs/bundle/release/app-release.aab
+          if-no-files-found: error
+          retention-days: 14

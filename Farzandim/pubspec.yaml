@@ -132,6 +132,13 @@ dependencies:
   # mobilda. `XFile.readAsBytes()` orqali Uint8List olamiz —
   # universal (web/iOS/Android'da bir xil ishlaydi).
   image_picker: ^1.0.7
+  # Android platforma implementatsiyasi — TO'G'RIDAN-TO'G'RI kerak, chunki
+  # `useAndroidPhotoPicker` bayrog'i faqat shu paket orqali yoqiladi
+  # (main.dart). Play talabi: READ_MEDIA_IMAGES so'ramasdan tizim foto
+  # tanlagichidan foydalanish. Versiya `image_picker` hal qiladigan bilan
+  # bir xil bo'lishi uchun keng cheklov.
+  image_picker_android: ^0.8.12
+  image_picker_platform_interface: ^2.10.0
   # Apple StoreKit obuna xaridi (iOS App Store 3.1.1). Android'da ishlatilmaydi.
   in_app_purchase: ^3.2.0
   # iOS-specific platform addition (refreshPurchaseVerificationData — renewal
