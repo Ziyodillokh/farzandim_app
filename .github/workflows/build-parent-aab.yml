@@ -114,13 +114,35 @@ jobs:
             echo "::error::va Play uni rad etadi. To'xtatildi."
             exit 1
           fi
-          # Keystore fayli ham haqiqatan chiqqanmi (yo'l key.properties ichida).
-          ks=$(grep -E '^storeFile=' Farzandim/android/key.properties | cut -d= -f2-)
-          if [ -n "$ks" ] && [ ! -f "Farzandim/android/$ks" ] && [ ! -f "$ks" ]; then
-            echo "::error::key.properties bor, lekin keystore fayli topilmadi: $ks"
+          # Keystore fayli ham haqiqatan chiqqanmi.
+          #
+          # ⚠️ YO'L HAQIDA: `storeFile` odatda NISBIY yoziladi
+          # (`storeFile=upload-keystore.jks`), va Gradle uni `file()` bilan
+          # hal qiladi. O'sha chaqiruv `android/app/build.gradle.kts:93` ichida
+          # bo'lgani uchun yo'l **app moduli** papkasiga nisbatan hisoblanadi,
+          # ya'ni haqiqiy joy: `Farzandim/android/app/upload-keystore.jks`.
+          # (Birinchi variantda faqat `android/` va repo ildizi tekshirilib,
+          # guard soxta xato bergan edi — 2026-08-16.)
+          ks=$(grep -E '^storeFile=' Farzandim/android/key.properties | cut -d= -f2- | tr -d '\r')
+          if [ -z "$ks" ]; then
+            echo "::error::key.properties ichida storeFile qatori yo'q"
             exit 1
           fi
-          echo "OK: release imzo kaliti joyida"
+          found=""
+          case "$ks" in
+            /*) [ -f "$ks" ] && found="$ks" ;;                    # absolyut yo'l
+            *)  for p in "Farzandim/android/app/$ks" \
+                         "Farzandim/android/$ks" \
+                         "$ks"; do
+                  [ -f "$p" ] && { found="$p"; break; }
+                done ;;
+          esac
+          if [ -z "$found" ]; then
+            echo "::error::keystore fayli topilmadi (storeFile=$ks). Qaralgan joylar:"
+            echo "::error::  Farzandim/android/app/, Farzandim/android/, repo ildizi"
+            exit 1
+          fi
+          echo "OK: release imzo kaliti joyida — $found"
 
       # ⚠️ XARITA HIMOYASI — bu tekshiruv 2026-08-14 dagi real nosozlikdan
       # keyin qo'shildi: Play'ga yuklangan AAB Mapbox tokenisiz qurilgan edi
