@@ -265,45 +265,68 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
 
   /// StoreKit xarid/restore natijalari: purchased/restored → backend
   /// tekshiruvi → entitlement yangilash; so'ng har tranzaksiya YOPILADI.
+  ///
+  /// LOAD-BEARING: backend so'rovi va tranzaksiyani yopish alohida
+  /// try/finally'larga o'ralgan. Sabab — 2026-08-17 haqiqiy qurilmada
+  /// aniqlangan xato: `verifyApplePurchase` tarmoq uzilishida (masalan
+  /// parvoz rejimi) throw qilsa, eski kodda bu istisno butun funksiyani
+  /// yiqitardi — natijada `completePurchase` HECH QACHON chaqirilmasdi,
+  /// tranzaksiya StoreKit navbatida abadiy "osilib" qolardi va u KEYINGI
+  /// barcha xaridlarni ham bloklardi ("Не удалось открыть страницу оплаты,
+  /// повторите позже"), spinner esa mangu aylanardi (`_busyPlanId`
+  /// tozalanmasdi). Endi tranzaksiya har doim yopiladi — backend
+  /// tasdiqlamasa ham, StoreKit navbati bo'shaydi; `AppleReceiptSyncService`
+  /// keyingi resume'da kvitansiyani qayta yuborib entitlement'ni tuzatadi.
   Future<void> _onPurchaseUpdates(List<PurchaseDetails> purchases) async {
-    for (final p in purchases) {
-      if (p.status == PurchaseStatus.pending) continue;
-
-      if (p.status == PurchaseStatus.purchased ||
-          p.status == PurchaseStatus.restored) {
-        final ok = await ref
-            .read(backendPaymentsRepositoryProvider)
-            .verifyApplePurchase(
-              productId: p.productID,
-              verificationData: p.verificationData.serverVerificationData,
-              transactionId: p.purchaseID,
-            );
-        if (mounted) {
-          if (ok) {
-            ref
-              ..invalidate(entitlementProvider)
-              ..invalidate(plansProvider);
-            AppToast.success(context, 'premium.subscribed'.tr());
-          } else {
-            AppToast.error(context, 'premium.checkoutError'.tr());
+    try {
+      for (final p in purchases) {
+        if (p.status == PurchaseStatus.pending) continue;
+        try {
+          if (p.status == PurchaseStatus.purchased ||
+              p.status == PurchaseStatus.restored) {
+            var ok = false;
+            try {
+              ok = await ref
+                  .read(backendPaymentsRepositoryProvider)
+                  .verifyApplePurchase(
+                    productId: p.productID,
+                    verificationData: p.verificationData.serverVerificationData,
+                    transactionId: p.purchaseID,
+                  );
+            } catch (_) {
+              // Tarmoq/backend xatosi — tranzaksiya baribir pastda
+              // YOPILADI. AppleReceiptSyncService keyingi resume'da qayta
+              // urinadi (kvitansiya StoreKit'da mahalliy saqlanib qoladi).
+              ok = false;
+            }
+            if (mounted) {
+              if (ok) {
+                ref
+                  ..invalidate(entitlementProvider)
+                  ..invalidate(plansProvider);
+                AppToast.success(context, 'premium.subscribed'.tr());
+              } else {
+                AppToast.error(context, 'premium.checkoutError'.tr());
+              }
+            }
+          } else if (p.status == PurchaseStatus.error) {
+            if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+          } else if (p.status == PurchaseStatus.canceled) {
+            // Foydalanuvchi StoreKit oynasida o'zi bekor qilgan — bu XATO
+            // EMAS, shuning uchun toast ko'rsatmaymiz (jim).
+          }
+        } finally {
+          // Apple: har yakunlangan tranzaksiyani YOPISH shart — status yoki
+          // yuqoridagi xatolardan qat'i nazar, aks holda StoreKit navbati
+          // bloklanib qoladi.
+          if (p.pendingCompletePurchase) {
+            await _iap.completePurchase(p);
           }
         }
-      } else if (p.status == PurchaseStatus.error) {
-        if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
-      } else if (p.status == PurchaseStatus.canceled) {
-        // Foydalanuvchi StoreKit oynasida o'zi bekor qilgan — bu XATO EMAS,
-        // shuning uchun toast ko'rsatmaymiz (jim). `_busyPlanId` pastda
-        // baribir tozalanadi (spinner o'chadi, karta qayta bosiladigan
-        // bo'ladi).
       }
-
-      // Apple: har yakunlangan tranzaksiyani YOPISH shart (aks holda qayta
-      // keladi va xarid "muvaffaqiyatsiz" bo'lib qoladi).
-      if (p.pendingCompletePurchase) {
-        await _iap.completePurchase(p);
-      }
+    } finally {
+      if (mounted) setState(() => _busyPlanId = null);
     }
-    if (mounted) setState(() => _busyPlanId = null);
   }
 
   /// Tarif uslubi tier bo'yicha: free -> glass, standard -> blue, aks -> dark.
