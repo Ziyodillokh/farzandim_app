@@ -35,15 +35,22 @@ to'lov usuliga (bizda — Click, tashqi checkout) yo'naltirish **taqiqlangan**.
 Istisno faqat AQSh/YeIH/Hindiston/Janubiy Koreya uchun — **O'zbekiston bu
 ro'yxatda YO'Q**.
 
-- Hozir bu funksiya **yoqilgan** (`kAndroidExternalCheckoutEnabled = true`,
+- **2026-08-18 YANGILANDI:** bayroq endi **o'chirilgan**
+  (`kAndroidExternalCheckoutEnabled = false`,
   `Farzandim/lib/features/settings/presentation/screens/parvoz_premium_screen.dart`).
-- Ilova **yopiq testdan shu holatda o'tgan**, ega xavfni ataylab qabul qilgan.
-- **KILL-SWITCH tayyor:** agar Play rad etsa — shu bitta `bool`ni `false`
-  qiling, boshqa hech narsa o'zgartirish shart emas. Android'da narx/tugma/
-  checkout butunlay yashiriladi (web va iOS/Apple IAP tegilmaydi).
-- **Tavsiya:** birinchi topshirishda shu holicha qoldiring — agar rad
-  etilsa, sabab aniq shu bo'ladi va bitta qatorlik tuzatish bilan qayta
-  yuborasiz.
+  Production ko'rigiga tashqi to'lovsiz boramiz — Payments buzilishi
+  akkauntga strike bo'lib yozilishi mumkin, birinchi chiqishda bu xavfga
+  arzimaydi.
+- Muhim tarix: avvalgi "kill-switch shunchaki UI'ni yashiradi" degan da'vo
+  NOTO'G'RI edi — bayroq faqat `_subscribe()`ni to'xtatardi, narxlar va
+  "Ulanish" tugmalari ko'rinib qolaverar edi (o'lik tugma = Minimum
+  Functionality buzilishi). 2026-08-18 da UI gating haqiqiy qilindi:
+  `false` holatda Android'da pullik tariflarning narxi, "Ulanish" tugmasi va
+  oylik/yillik almashtirgich BUTUNLAY yashirinadi — tariflar faqat
+  imkoniyatlar ro'yxati sifatida ko'rinadi. Web va iOS (Apple IAP)
+  tegilmaydi; saytdan qilingan obuna ilovada ishlashda davom etadi.
+- Qayta yoqish sharti: Google ruxsat bergan alternative-billing hududi yoki
+  Play Billing integratsiyasi tayyor bo'lganda.
 
 ---
 

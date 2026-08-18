@@ -109,13 +109,17 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   /// AQSh (sud qarori), YeIH (DMA), Hindiston va Janubiy Koreya uchun —
   /// O'zbekiston bu ro'yxatda YO'Q.
   ///
-  /// Hozircha `true`: ilova yopiq testdan shu holatda o'tgan va ega xavfni
-  /// ataylab qabul qildi (2026-08-14). Agar Play "Payments" siyosati bo'yicha
-  /// rad etsa — SHU QIYMATNI `false` QILING, boshqa hech narsa kerak emas:
-  /// narxlar, obuna tugmalari va tashqi checkout Android'da butunlay
-  /// yashiriladi. Web (`kIsWeb`) va iOS (Apple IAP) TEGILMAYDI, ya'ni
-  /// saytdan obuna bo'lish va uning ilovada ishlashi davom etaveradi.
-  static const bool kAndroidExternalCheckoutEnabled = true;
+  /// 2026-08-18: `false` — production ko'rigiga tashqi to'lovsiz boramiz.
+  /// Yopiq test shu bayroq `true` holatda o'tgan edi, lekin production
+  /// ko'rigi qattiqroq va Payments buzilishi akkauntga strike bo'lib
+  /// yozilishi mumkin. `false` holatda Android'da: pullik tariflarning
+  /// NARXI ko'rsatilmaydi, "Ulanish" tugmasi va oylik/yillik almashtirgich
+  /// chiqmaydi — tariflar faqat imkoniyatlar ro'yxati sifatida ko'rinadi
+  /// (build/_buildCard shu bayroqqa bo'ysunadi). Web (`kIsWeb`) va iOS
+  /// (Apple IAP) TEGILMAYDI — saytdan obuna bo'lish va uning ilovada
+  /// ishlashi davom etaveradi. Google ruxsat bergan hududlar uchun
+  /// alternative billing yo'lga qo'yilsa qayta `true` qilinadi.
+  static const bool kAndroidExternalCheckoutEnabled = false;
 
   /// Android'da sotib olish yuzasi (narx + tugma + checkout) ko'rsatiladimi.
   bool get _androidPurchaseVisible =>
@@ -419,11 +423,19 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
                         const SizedBox(height: 12),
                         const _CurrentPlanLabel(),
                         const SizedBox(height: 16),
-                        _BillingToggle(
-                          yearly: _yearly,
-                          onChanged: (v) => setState(() => _yearly = v),
-                        ),
-                        const SizedBox(height: 24),
+                        // Xarid yashirilganda oylik/yillik almashtirgich ham
+                        // yashirinadi — narxsiz ekranda u ma'nosiz va
+                        // "to'lovga undash" taassurotini beradi (Play
+                        // Payments siyosati, kAndroidExternalCheckoutEnabled
+                        // izohiga qarang).
+                        if (_androidPurchaseVisible) ...[
+                          _BillingToggle(
+                            yearly: _yearly,
+                            onChanged: (v) => setState(() => _yearly = v),
+                          ),
+                          const SizedBox(height: 24),
+                        ] else
+                          const SizedBox(height: 8),
                         plansAsync.when(
                           loading: () => const Padding(
                             padding: EdgeInsets.only(top: 40),
@@ -448,6 +460,7 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
                                 styleFor: _styleFor,
                                 priceLabel: _priceLabel,
                                 onSubscribe: _subscribe,
+                                purchaseVisible: _androidPurchaseVisible,
                               ),
                               // Apple MAJBURIY: restore (faqat iOS).
                               if (_isApple) ...[
@@ -500,6 +513,7 @@ class _PlansList extends StatelessWidget {
     required this.styleFor,
     required this.priceLabel,
     required this.onSubscribe,
+    required this.purchaseVisible,
   });
 
   final List<PlanEntry> plans;
@@ -507,6 +521,13 @@ class _PlansList extends StatelessWidget {
   final _PlanStyle Function(PlanEntry) styleFor;
   final String Function(PlanEntry) priceLabel;
   final Future<void> Function(PlanEntry) onSubscribe;
+
+  /// `false` (Android, tashqi checkout o'chiq) — pullik kartalarda narx va
+  /// "Ulanish" tugmasi KO'RSATILMAYDI; tariflar faqat imkoniyatlar ro'yxati
+  /// bo'lib qoladi. Play Payments siyosati: tashqi to'lovga yetaklovchi
+  /// narx/CTA ko'rsatishning o'zi ham "leading users to a payment method
+  /// other than Google Play's billing" hisoblanadi.
+  final bool purchaseVisible;
 
   /// Tarif darajasi tartibi — delta ("pastki tarifdagi hammasi +") hisoblash
   /// uchun har tarifning bir pastki tarifini topishda ishlatiladi.
@@ -551,16 +572,19 @@ class _PlansList extends StatelessWidget {
       ];
       includesLabel = 'plans.everythingIn'.tr(namedArgs: {'plan': lower.name});
     }
+    // Xarid yashirilgan rejimda pullik tarifda narx ham, tugma ham yo'q —
+    // bo'sh narx `_PlanCard`da qator sifatida chizilmaydi.
+    final purchasable = !plan.isFree && purchaseVisible;
     return _PlanCard(
       name: plan.name,
-      price: priceLabel(plan),
+      price: plan.isFree || purchaseVisible ? priceLabel(plan) : '',
       style: styleFor(plan),
       includesLabel: includesLabel,
       features: shownFeatures,
       // Bepul tarifda tugma yo'q (obuna talab qilmaydi).
-      ctaLabel: plan.isFree ? null : 'premium.subscribeCta'.tr(),
+      ctaLabel: purchasable ? 'premium.subscribeCta'.tr() : null,
       loading: busyPlanId == plan.id,
-      onCta: plan.isFree ? null : () => onSubscribe(plan),
+      onCta: purchasable ? () => onSubscribe(plan) : null,
     );
   }
 }
@@ -696,11 +720,15 @@ class _PlanCardState extends State<_PlanCard> {
             // Nom tepada, narx pastda — nom endi qisilmaydi va 2 qatorga
             // sinmaydi (narx bilan bir qatorda emas).
             Text(w.name, style: _unb(24, ls: -0.8)),
-            const SizedBox(height: 6),
-            Text(
-              w.price,
-              style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
-            ),
+            // Bo'sh narx (Android'da xarid yashirilgan rejim) — qator umuman
+            // chizilmaydi, karta faqat imkoniyatlar ro'yxatini ko'rsatadi.
+            if (w.price.isNotEmpty) ...[
+              const SizedBox(height: 6),
+              Text(
+                w.price,
+                style: _unb(17, w: FontWeight.w700, c: priceColor, ls: -0.3),
+              ),
+            ],
             const SizedBox(height: 18),
             ..._featureRows(visible, featureColor, dividerColor),
             if (!_expanded && hasMore) ...[
