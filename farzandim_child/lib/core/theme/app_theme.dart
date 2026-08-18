@@ -12,9 +12,25 @@
 //   - useMaterial3: true
 //   - Inter shrift (google_fonts) — Parent App bilan brand consistency
 
-// CupertinoPageTransitionsBuilder endi material.dart'dan eksport qilinadi
-// (yangi Flutter'da cupertino.dart uni `show` bilan bermay qo'ygan edi —
-// analyzer'da undefined_shown_name ogohlantirishi chiqarardi).
+// ⚠️ `CupertinoPageTransitionsBuilder` IKKI XIL JOYDA — Flutter versiyasiga
+// qarab:
+//   • Flutter ≤ 3.41 — material/page_transitions_theme.dart (material.dart
+//     eksport qiladi), ya'ni cupertino importi ORTIQCHA
+//   • Flutter ≥ 3.42 — cupertino/route.dart ga KO'CHIRILGAN, ya'ni cupertino
+//     importi MAJBURIY. Manba: docs.flutter.dev/release/breaking-changes/
+//     decouple-page-transition-builders
+//
+// Lokal muhit (3.41) va CI (3.44) turli versiyada bo'lgani uchun import
+// IKKALASIDA ham turishi kerak: 3.44 busiz "Method not found" bilan
+// yiqiladi, 3.41 esa uni `unnecessary_import` deb belgilaydi — shuning
+// uchun aynan o'sha lint jim qilingan.
+//
+// TARIX: 2026-08-17 da bu import "ishlatilmayapti" deb olib tashlangan edi
+// (lokal analyze toza chiqqan), natijada 2026-08-18 dagi CI build'i
+// yiqildi. Lokal `flutter analyze` CI'ni BASHORAT QILMAYDI — versiyalar
+// tenglashtirilmaguncha shu import olib tashlanmasin.
+// ignore: unnecessary_import
+import 'package:flutter/cupertino.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:flutter/material.dart';
 
