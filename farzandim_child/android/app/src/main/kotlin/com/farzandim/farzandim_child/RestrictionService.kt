@@ -422,6 +422,18 @@ class RestrictionService : Service() {
             return
         }
 
+        // ⚠️ Tizim Sozlamalari HECH QACHON bloklanmaydi (2026-08-18, Google
+        // Play Stalkerware/Monitoring siyosati): foydalanuvchi Device Admin
+        // va boshqa himoyalarni ISTALGAN vaqtda o'chira olishi SHART. Ilgari
+        // "*" wildcard (jadval bloki) Sozlamalarni ham yopardi — reviewer
+        // buni "o'chirib bo'lmaydigan nazorat" deb baholashi mumkin edi.
+        // Bola Sozlamalar orqali cheklovni chetlab o'tishga urinsa, buni
+        // uninstall-himoya oqimi alohida hal qiladi — overlay bilan EMAS.
+        if (foreground == "com.android.settings") {
+            hideOverlay()
+            return
+        }
+
         // 1. Hard block check (prioritet — har holatda overlay)
         //    "*" wildcard — Schedule whole-window BLOCK (Sprint 4.4.25).
         //    Har qanday foreground'ga overlay.

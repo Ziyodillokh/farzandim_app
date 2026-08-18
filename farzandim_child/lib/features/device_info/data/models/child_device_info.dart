@@ -2,11 +2,14 @@
 // ChildDeviceInfo — bola qurilmasining ma'lumotlari
 // ─────────────────────────────────────────────────────────────────────
 //
-// Firestore'da `users/{parentUid}/children/{childId}/deviceInfo` ostida
-// saqlanadi. Parent App ushbu maydonni real-vaqt o'qib bola haqida
-// (telefon modeli, batareya, Wi-Fi, online/offline) ma'lumot ko'rsatadi.
-
-import 'package:cloud_firestore/cloud_firestore.dart';
+// DeviceInfoService backendga yuboradigan qiymatlar to'plami.
+//
+// ⚠️ `wifiName` (SSID) maydoni OLIB TASHLANGAN (2026-08-18) — Google Play
+// "Families Device Identifiers" siyosati: faqat bolalarga mo'ljallangan
+// ilova SSID/BSSID kabi identifikatorlarni yig'ishi/uzatishi TAQIQLANADI
+// (2026-08-17 rad javobining sababi). Qayta qo'shmang.
+// Shu tozalashda ishlatilmayotgan `toFirestore()`/`fromFirestore()` ham
+// olib tashlandi (loyiha backendga Dio orqali yozadi, Firestore'ga emas).
 
 class ChildDeviceInfo {
   final String? deviceModel;
@@ -14,7 +17,6 @@ class ChildDeviceInfo {
   final String? appVersion;
   final int? batteryLevel;
   final bool? isCharging;
-  final String? wifiName;
   final bool isOnline;
   final DateTime? lastSeen;
 
@@ -24,36 +26,7 @@ class ChildDeviceInfo {
     this.appVersion,
     this.batteryLevel,
     this.isCharging,
-    this.wifiName,
     this.isOnline = false,
     this.lastSeen,
   });
-
-  Map<String, dynamic> toFirestore() {
-    return {
-      'deviceModel': deviceModel,
-      'androidVersion': androidVersion,
-      'appVersion': appVersion,
-      'batteryLevel': batteryLevel,
-      'isCharging': isCharging,
-      'wifiName': wifiName,
-      'isOnline': isOnline,
-      'lastSeen': FieldValue.serverTimestamp(),
-    };
-  }
-
-  factory ChildDeviceInfo.fromFirestore(Map<String, dynamic> data) {
-    return ChildDeviceInfo(
-      deviceModel: data['deviceModel'] as String?,
-      androidVersion: data['androidVersion'] as String?,
-      appVersion: data['appVersion'] as String?,
-      batteryLevel: data['batteryLevel'] as int?,
-      isCharging: data['isCharging'] as bool?,
-      wifiName: data['wifiName'] as String?,
-      isOnline: data['isOnline'] as bool? ?? false,
-      lastSeen: data['lastSeen'] != null
-          ? (data['lastSeen'] as Timestamp).toDate()
-          : null,
-    );
-  }
 }

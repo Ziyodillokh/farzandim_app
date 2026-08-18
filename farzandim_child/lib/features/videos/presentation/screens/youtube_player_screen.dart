@@ -16,8 +16,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:share_plus/share_plus.dart';
-import 'package:url_launcher/url_launcher.dart';
 import 'package:webview_flutter/webview_flutter.dart';
 // Android fullscreen callback (setCustomWidgetCallbacks) uchun platform impl.
 // ignore: depend_on_referenced_packages
@@ -92,6 +90,34 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           onPageFinished: (_) {
             if (mounted) setState(() => _loading = false);
           },
+          // ⚠️ Families siyosati (2026-08-18): bolalarga mo'ljallangan
+          // ilovadagi webview OCHIQ WEB'GA chiqish yo'li bo'lmasligi kerak.
+          // YouTube embed ichidagi logotip/`Ko'proq` havolalari bosilsa,
+          // cheklovsiz delegate webview'ni youtube.com'ning istalgan
+          // sahifasiga (u yerdan esa istalgan saytga) olib ketardi. Faqat
+          // o'z backend'imiz (embed sahifa) va YouTube'ning EMBED/player
+          // yo'llariga ruxsat beramiz — qolgan hamma navigatsiya bloklanadi.
+          onNavigationRequest: (request) {
+            final uri = Uri.tryParse(request.url);
+            if (uri == null) return NavigationDecision.prevent;
+            final apiHost = Uri.parse(EnvConfig.apiUrl).host;
+            final h = uri.host;
+            final allowed =
+                h == apiHost ||
+                // YouTube iframe player resurslari (embed o'ynashi uchun).
+                ((h == 'www.youtube.com' ||
+                        h == 'youtube.com' ||
+                        h == 'www.youtube-nocookie.com') &&
+                    (uri.path.startsWith('/embed') ||
+                        uri.path.startsWith('/s/') ||
+                        uri.path.startsWith('/api') ||
+                        uri.path.startsWith('/youtubei') ||
+                        uri.path.startsWith('/iframe_api') ||
+                        uri.path.startsWith('/generate_204')));
+            return allowed
+                ? NavigationDecision.navigate
+                : NavigationDecision.prevent;
+          },
         ),
       )
       ..loadRequest(embedPage);
@@ -153,15 +179,8 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
     );
   }
 
-  Future<void> _openInYoutube() async {
-    final uri = Uri.tryParse(widget.video.videoUrl);
-    if (uri == null) return;
-    try {
-      await launchUrl(uri, mode: LaunchMode.externalApplication);
-    } catch (e) {
-      debugPrint('YoutubePlayer._openInYoutube: $e');
-    }
-  }
+  // _openInYoutube va _share metodlari OLIB TASHLANGAN (2026-08-18) —
+  // Families siyosati, yuqoridagi izohlarga qarang. Qayta tiklamang.
 
   @override
   Widget build(BuildContext context) {
@@ -189,14 +208,6 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
           ? _buildFullscreen()
           : _buildPortrait(controller),
     );
-  }
-
-  Future<void> _share() async {
-    try {
-      await Share.share('${widget.video.title}\n${widget.video.videoUrl}');
-    } catch (e) {
-      debugPrint('YoutubePlayer._share: $e');
-    }
   }
 
   String _fmtViews(int v) {
@@ -267,22 +278,13 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
+          // ⚠️ "YouTube'da ochish" tugmasi OLIB TASHLANDI (2026-08-18) —
+          // Families siyosati: faqat bolalarga mo'ljallangan ilova bolani
+          // kattalar darvozasisiz tashqi ilova/saytga (asosiy YouTube)
+          // chiqara olmaydi. Video ichkarida (embed) o'ynayveradi.
           ParvozHeader(
             title: video.title,
             onBack: () => Navigator.of(context).maybePop(),
-            trailing: GestureDetector(
-              onTap: _openInYoutube,
-              behavior: HitTestBehavior.opaque,
-              child: const SizedBox(
-                width: 40,
-                height: 40,
-                child: Icon(
-                  Icons.open_in_new_rounded,
-                  color: AppColors.parvozText,
-                  size: 22,
-                ),
-              ),
-            ),
           ),
           _videoBox(controller, showFullscreenButton: true),
           Expanded(
@@ -335,12 +337,10 @@ class _YoutubePlayerScreenState extends ConsumerState<YoutubePlayerScreen> {
                                     .toggle(video.id);
                               },
                             ),
-                            const SizedBox(width: 10),
-                            _CircleAction(
-                              icon: Icons.share_rounded,
-                              color: AppColors.parvozText,
-                              onTap: _share,
-                            ),
+                            // ⚠️ "Ulashish" tugmasi OLIB TASHLANDI
+                            // (2026-08-18) — Families: bola YouTube havolasini
+                            // istalgan ilovaga ulashishi tashqi havola
+                            // tarqatish hisoblanadi.
                           ],
                         ),
                         if (video.description.isNotEmpty) ...[

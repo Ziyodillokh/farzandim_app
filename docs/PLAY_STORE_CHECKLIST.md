@@ -45,7 +45,17 @@ https://farzandimedu.uz/privacy.html
 **Umumiy:**
 - Ma'lumot uchinchi tomonlarga uzatiladimi? → **Yo'q** (faqat o'z serverimiz).
 - Ma'lumot uzatishda shifrlanadimi? → **Ha** (HTTPS/WSS).
-- Foydalanuvchi o'chirishni so'ray oladimi? → **Ha** (ilovada akkaunt o'chirish bor).
+- Foydalanuvchi o'chirishni so'ray oladimi? → **Ha**, lekin USUL to'g'ri
+  ko'rsatilsin (2026-08-18 tuzatish): BOLA ilovasida (com.farzandim.growth)
+  akkaunt o'chirish ekrani YO'Q va "Akkaunt yaratadimi?" savoliga **Yo'q**
+  deb javob berilsin — akkauntni ota-ona o'z ilovasida yaratadi, bola faqat
+  oila kodi bilan ulanadi. O'chirish yo'llari: veb-havola
+  https://farzandimedu.uz/account-deletion.html + ota-ona ilovasi
+  (DELETE /children/:id kaskadi va "Hisobni butunlay o'chirish").
+  OTA-ONA ilovasida (com.farzandim.parent) esa in-app o'chirish BOR
+  (Sozlamalar → Hisobni butunlay o'chirish) — u yerda "Ha, ilovada" to'g'ri.
+  ⚠️ Agar bola ilovasi uchun "ilovada o'chirish bor" deb belgilansa —
+  reviewer topa olmaydi va Data Safety noto'g'riligi uchun rad etadi.
 
 **Yig'iladigan ma'lumot turlari (hammasini belgilang):**
 

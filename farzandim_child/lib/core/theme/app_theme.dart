@@ -12,8 +12,10 @@
 //   - useMaterial3: true
 //   - Inter shrift (google_fonts) — Parent App bilan brand consistency
 
+// CupertinoPageTransitionsBuilder endi material.dart'dan eksport qilinadi
+// (yangi Flutter'da cupertino.dart uni `show` bilan bermay qo'ygan edi —
+// analyzer'da undefined_shown_name ogohlantirishi chiqarardi).
 import 'package:farzandim_child/core/theme/app_colors.dart';
-import 'package:flutter/cupertino.dart' show CupertinoPageTransitionsBuilder;
 import 'package:flutter/material.dart';
 
 class AppTheme {
