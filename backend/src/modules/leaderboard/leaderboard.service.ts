@@ -59,6 +59,26 @@ export interface LeaderboardResult {
 export class LeaderboardService {
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Bola ismini reyting uchun NIQOBLAYDI: "Muhammad Abror" → "Muhammad A.".
+   *
+   * Google Play Families siyosati (2026-08-18 audit): bolaning TO'LIQ ismi +
+   * yosh + jins + viloyat kombinatsiyasi barcha begona foydalanuvchilarga
+   * ko'rsatilishi bolani identifikatsiya qilishi mumkin. To'liq ism eng kuchli
+   * identifikator — uni olib tashlasak, qolgan maydonlar (age/gender —
+   * default-avatar va yosh-guruh filtri uchun; region — "Hudud" tab'i uchun)
+   * klientlarni buzmasdan qolaveradi. Bir so'zli ism o'zgarishsiz qoladi.
+   */
+  private maskName(full: string): string {
+    const parts = full.trim().split(/\s+/).filter(Boolean);
+    if (parts.length <= 1) return parts.join('');
+    const initials = parts
+      .slice(1)
+      .map((p) => `${p.charAt(0).toUpperCase()}.`)
+      .join(' ');
+    return `${parts[0]} ${initials}`;
+  }
+
   async getLeaderboard(opts: {
     period: LeaderboardPeriod;
     region?: string;
@@ -122,7 +142,7 @@ export class LeaderboardService {
     const entries: LeaderboardEntry[] = profiles.map((p, i) => ({
       rank: skip + i + 1,
       childId: p.childId,
-      name: p.child.name,
+      name: this.maskName(p.child.name),
       region: p.child.region ?? '',
       age: p.child.age,
       gender: p.child.gender ?? null,
@@ -155,7 +175,7 @@ export class LeaderboardService {
         currentChild = {
           rank: before + 1,
           childId,
-          name: my.child.name,
+          name: this.maskName(my.child.name),
           region: my.child.region ?? '',
           age: my.child.age,
           gender: my.child.gender ?? null,
@@ -213,7 +233,7 @@ export class LeaderboardService {
         const c = childMap.get(g.childId)!;
         return {
           childId: g.childId,
-          name: c.name,
+          name: this.maskName(c.name),
           region: c.region ?? '',
           age: c.age,
           gender: c.gender ?? null,
@@ -243,7 +263,7 @@ export class LeaderboardService {
           currentChild = {
             rank: 0,
             childId,
-            name: c.name,
+            name: this.maskName(c.name),
             region: c.region ?? '',
             age: c.age,
             gender: c.gender ?? null,
