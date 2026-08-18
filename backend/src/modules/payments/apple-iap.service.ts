@@ -4,8 +4,13 @@ import {
   Logger,
   ServiceUnavailableException,
 } from '@nestjs/common';
+import {
+  Environment,
+  SignedDataVerifier,
+} from '@apple/app-store-server-library';
 import { PrismaService } from '../../common/database/prisma.service';
 import { PaymentsService } from './payments.service';
+import { appleRootCaG3 } from './apple-root-ca';
 
 // Apple verifyReceipt endpointlari (legacy, lekin ishlaydi). Kelajakda App
 // Store Server API (StoreKit2 JWS) ga o'tish mumkin.
@@ -47,6 +52,9 @@ function parseProductId(
 export class AppleIapService {
   private readonly logger = new Logger(AppleIapService.name);
 
+  /** Lazy qurilgan JWS verifier'lar (production + sandbox). */
+  private verifiers?: SignedDataVerifier[];
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly payments: PaymentsService,
@@ -60,11 +68,6 @@ export class AppleIapService {
       transactionId?: string;
     },
   ): Promise<{ ok: boolean; reason?: string }> {
-    const secret = process.env.APPLE_IAP_SHARED_SECRET;
-    if (!secret) {
-      throw new ServiceUnavailableException('Apple IAP not configured');
-    }
-
     // productId oldindan berilgan bo'lsa (xarid/restore) shuni tekshiramiz;
     // bo'lmasa (renewal-poll) parseProductId'ga mos KELGAN barcha yozuvlar
     // orasidan izlaymiz.
@@ -72,19 +75,25 @@ export class AppleIapService {
       throw new BadRequestException('Unknown productId');
     }
 
-    const receipt = await this.verifyReceipt(dto.verificationData, secret);
-    if (!receipt || receipt.status !== 0) {
-      this.logger.warn(`verifyReceipt status=${receipt?.status ?? 'null'}`);
-      throw new BadRequestException('Receipt verification failed');
-    }
-
-    const infos = receipt.latest_receipt_info ?? receipt.receipt?.in_app ?? [];
-    const candidates = dto.productId
-      ? infos.filter((t) => t.product_id === dto.productId)
-      : // Renewal-poll: aniq productId yo'q — kvitansiyadagi BARCHA bizning
-        // (standard/premium) mahsulotlarimizga mos yozuvlarni ko'rib
-        // chiqamiz (tarif upgrade/downgrade holatini ham to'g'ri qamraydi).
-        infos.filter((t) => t.product_id && parseProductId(t.product_id));
+    // ⚠️ IKKI XIL FORMAT — ikkalasi ham qo'llab-quvvatlanadi:
+    //
+    //   1) JWS (StoreKit 2).  `in_app_purchase_storekit` 0.4.0 dan boshlab
+    //      StoreKit 2 STANDART bo'lgan va `serverVerificationData` endi
+    //      `header.payload.signature` ko'rinishidagi Apple imzolagan token.
+    //      Eski `verifyReceipt` bunday tokenni tushunmaydi (21002 malformed)
+    //      — ya'ni bu yo'l qo'shilmaguncha iPhone'da foydalanuvchi PUL
+    //      TO'LAB, obuna OLMASDAN qolardi.
+    //
+    //   2) Base64 app-receipt (StoreKit 1).  `AppleReceiptSyncService`
+    //      `refreshPurchaseVerificationData()` orqali AYNAN shuni yuboradi
+    //      (obunani davriy sinxronlash uchun), shuning uchun eski yo'l
+    //      OLIB TASHLANMAYDI — u hali ham ishlaydi.
+    //
+    // Formatni tokenning o'zidan aniqlaymiz, klient nima deyishiga
+    // ishonmaymiz.
+    const candidates = AppleIapService.looksLikeJws(dto.verificationData)
+      ? await this.candidatesFromJws(dto.verificationData, dto.productId)
+      : await this.candidatesFromReceipt(dto.verificationData, dto.productId);
     if (candidates.length === 0) {
       // Renewal-poll'da mos yozuv topilmasa — bu XATO emas (foydalanuvchida
       // hali Apple obunasi yo'q bo'lishi mumkin), jim rad.
@@ -161,6 +170,139 @@ export class AppleIapService {
     });
 
     return { ok: true };
+  }
+
+  /**
+   * Token StoreKit 2 JWS'imi? `header.payload.signature` — uchta base64url
+   * bo'lak. Base64 app-receipt'da esa `.` belgisi umuman uchramaydi, ya'ni
+   * ikki format bir-biri bilan chalkashmaydi.
+   */
+  private static looksLikeJws(data: string): boolean {
+    const parts = data.split('.');
+    return (
+      parts.length === 3 &&
+      parts.every((p) => p.length > 0 && /^[A-Za-z0-9_-]+$/.test(p))
+    );
+  }
+
+  /**
+   * SignedDataVerifier'lar (production + sandbox), bir marta quriladi.
+   *
+   * Ikkitasi kerak, chunki `verifyAndDecodeTransaction` tranzaksiyaning
+   * `environment` maydonini verifier'nikiga qat'iy solishtiradi va mos
+   * kelmasa xato beradi — eski `verifyReceipt`dagi PROD→SANDBOX fallback
+   * mantiqining aynan o'zi.
+   */
+  private buildVerifiers(): SignedDataVerifier[] {
+    if (this.verifiers) return this.verifiers;
+
+    const bundleId = process.env.APPLE_BUNDLE_ID || 'uz.parvoz.parent';
+    // Sertifikat bekor qilinganini va muddatini ONLINE tekshirish. Xavfsizroq
+    // (Apple tavsiyasi), lekin Apple OCSP'siga chiqishni talab qiladi. Agar
+    // server Apple'ga chiqa olmasa — `APPLE_IAP_ONLINE_CHECKS=false`.
+    const online = process.env.APPLE_IAP_ONLINE_CHECKS !== 'false';
+    const roots = [appleRootCaG3()];
+    const list: SignedDataVerifier[] = [];
+
+    // PRODUCTION birinchi — real foydalanuvchilarning aksariyati shu yerda.
+    const rawId = process.env.APPLE_APP_APPLE_ID;
+    const appAppleId = rawId ? Number(rawId) : NaN;
+    if (Number.isFinite(appAppleId) && appAppleId > 0) {
+      list.push(
+        new SignedDataVerifier(
+          roots,
+          online,
+          Environment.PRODUCTION,
+          bundleId,
+          appAppleId,
+        ),
+      );
+    } else {
+      // Kutubxona PRODUCTION verifier'ini appAppleId'siz qurishga YO'L
+      // QO'YMAYDI. Bu jimgina o'tib ketmasligi kerak: aks holda TestFlight
+      // va App Store xaridlari tekshirilmay qoladi.
+      this.logger.error(
+        'APPLE_APP_APPLE_ID o\'rnatilmagan — PRODUCTION/TestFlight iOS ' +
+          'xaridlari TEKSHIRILMAYDI. Qiymatni App Store Connect > Ilova > ' +
+          'App Information > "Apple ID" dan oling (faqat raqamlar).',
+      );
+    }
+
+    // SANDBOX — appAppleId talab qilmaydi (Xcode/sandbox sinovlari uchun).
+    list.push(
+      new SignedDataVerifier(roots, online, Environment.SANDBOX, bundleId),
+    );
+
+    this.verifiers = list;
+    return list;
+  }
+
+  /**
+   * StoreKit 2 JWS tranzaksiyasini Apple imzosi bo'yicha tekshiradi va eski
+   * oqim kutadigan shaklga o'giradi.
+   *
+   * Imzo Apple Root CA G3 gacha bo'lgan sertifikat zanjiri bilan
+   * tasdiqlanadi — ya'ni tokenni Apple'dan boshqa hech kim yasay olmaydi.
+   */
+  private async candidatesFromJws(
+    jws: string,
+    expectedProductId?: string,
+  ): Promise<AppleTransaction[]> {
+    const verifiers = this.buildVerifiers();
+    const errors: string[] = [];
+
+    for (const verifier of verifiers) {
+      try {
+        const tx = await verifier.verifyAndDecodeTransaction(jws);
+        const productId = tx.productId;
+        if (!productId || !parseProductId(productId)) {
+          throw new BadRequestException('Unknown productId');
+        }
+        // Klient aytgan mahsulot Apple imzolagani bilan mos kelishi SHART —
+        // aks holda arzon tarif sotib olib, qimmatini so'rash mumkin bo'lardi.
+        if (expectedProductId && productId !== expectedProductId) {
+          throw new BadRequestException('Product mismatch');
+        }
+        return [
+          {
+            product_id: productId,
+            transaction_id: tx.transactionId,
+            original_transaction_id: tx.originalTransactionId,
+            expires_date_ms:
+              tx.expiresDate != null ? String(tx.expiresDate) : undefined,
+          },
+        ];
+      } catch (e) {
+        if (e instanceof BadRequestException) throw e;
+        errors.push((e as Error)?.message ?? String(e));
+      }
+    }
+
+    this.logger.warn(`JWS tekshiruvi o'tmadi: ${errors.join(' | ')}`);
+    throw new BadRequestException('Receipt verification failed');
+  }
+
+  /** Eski (StoreKit 1) base64 app-receipt yo'li — o'zgarishsiz. */
+  private async candidatesFromReceipt(
+    receiptData: string,
+    expectedProductId?: string,
+  ): Promise<AppleTransaction[]> {
+    const secret = process.env.APPLE_IAP_SHARED_SECRET;
+    if (!secret) {
+      throw new ServiceUnavailableException('Apple IAP not configured');
+    }
+    const receipt = await this.verifyReceipt(receiptData, secret);
+    if (!receipt || receipt.status !== 0) {
+      this.logger.warn(`verifyReceipt status=${receipt?.status ?? 'null'}`);
+      throw new BadRequestException('Receipt verification failed');
+    }
+    const infos = receipt.latest_receipt_info ?? receipt.receipt?.in_app ?? [];
+    return expectedProductId
+      ? infos.filter((t) => t.product_id === expectedProductId)
+      : // Renewal-poll: aniq productId yo'q — kvitansiyadagi BARCHA bizning
+        // (standard/premium) mahsulotlarimizga mos yozuvlarni ko'rib
+        // chiqamiz (tarif upgrade/downgrade holatini ham to'g'ri qamraydi).
+        infos.filter((t) => t.product_id && parseProductId(t.product_id));
   }
 
   private async verifyReceipt(

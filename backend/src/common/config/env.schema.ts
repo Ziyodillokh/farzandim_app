@@ -208,6 +208,22 @@ const envSchema = z.object({
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),
   ),
+
+  // ─── Apple IAP / StoreKit 2 (JWS) tekshiruvi ───────────────────────
+  // App Store Connect > Ilova > App Information > "Apple ID" (faqat raqam).
+  // StoreKit 2 JWS'ini PRODUCTION muhitida tekshirish uchun MAJBURIY:
+  // Apple kutubxonasi production verifier'ini bu qiymatsiz qurmaydi, ya'ni
+  // u bo'lmasa TestFlight va App Store xaridlari tekshirilmaydi.
+  APPLE_APP_APPLE_ID: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.coerce.number().int().positive().optional(),
+  ),
+  // Sertifikat bekor qilinganini Apple OCSP orqali ONLINE tekshirish.
+  // Standart — yoqilgan (xavfsizroq). Server Apple'ga chiqa olmasa 'false'.
+  APPLE_IAP_ONLINE_CHECKS: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.enum(['true', 'false']).optional(),
+  ),
 });
 
 export type EnvConfig = z.infer<typeof envSchema>;

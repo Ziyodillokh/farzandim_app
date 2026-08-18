@@ -109,17 +109,24 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   /// AQSh (sud qarori), YeIH (DMA), Hindiston va Janubiy Koreya uchun —
   /// O'zbekiston bu ro'yxatda YO'Q.
   ///
-  /// 2026-08-18: `false` — production ko'rigiga tashqi to'lovsiz boramiz.
-  /// Yopiq test shu bayroq `true` holatda o'tgan edi, lekin production
-  /// ko'rigi qattiqroq va Payments buzilishi akkauntga strike bo'lib
-  /// yozilishi mumkin. `false` holatda Android'da: pullik tariflarning
-  /// NARXI ko'rsatilmaydi, "Ulanish" tugmasi va oylik/yillik almashtirgich
-  /// chiqmaydi — tariflar faqat imkoniyatlar ro'yxati sifatida ko'rinadi
-  /// (build/_buildCard shu bayroqqa bo'ysunadi). Web (`kIsWeb`) va iOS
-  /// (Apple IAP) TEGILMAYDI — saytdan obuna bo'lish va uning ilovada
-  /// ishlashi davom etaveradi. Google ruxsat bergan hududlar uchun
-  /// alternative billing yo'lga qo'yilsa qayta `true` qilinadi.
-  static const bool kAndroidExternalCheckoutEnabled = false;
+  /// 2026-08-19: `true` — EGA QARORI bilan tashqi Click checkout QAYTARILDI.
+  ///
+  /// Qaror konteksti (kelajakdagi o'zim/boshqa dasturchi uchun):
+  ///   • Play Billing texnik jihatdan ochiq (O'zbekiston merchant sifatida
+  ///     qo'llab-quvvatlanadi, obunadan 15%), LEKIN Google Play O'zbekistonda
+  ///     faqat Visa/Mastercard/Amex/Discover qabul qiladi — UzCard va Humo
+  ///     ISHLAMAYDI. Mijozlarning aksariyati aynan shu ikki kartada, ya'ni
+  ///     Play Billing'ga o'tish daromadning katta qismini yo'qotardi.
+  ///   • Tashqi to'lov Google siyosati bo'yicha faqat AQShda ruxsat etilgan
+  ///     (2025-okt, Epic sudi). O'zbekiston uchun eski qoida kuchida — ya'ni
+  ///     bu bayroq `true` bo'lishi Payments siyosati buzilishi HISOBLANADI.
+  ///     Xavf ega tomonidan ochiq baholanib qabul qilingan.
+  ///
+  /// `true` holatda Android'da narx, "Ulanish" tugmasi va oylik/yillik
+  /// almashtirgich ko'rinadi va Click checkout ochiladi (web bilan bir xil).
+  /// Qayta o'chirish kerak bo'lsa — shu qiymatni `false` qilish KIFOYA,
+  /// boshqa joyga tegish shart emas (UI to'liq shu bayroqqa bo'ysunadi).
+  static const bool kAndroidExternalCheckoutEnabled = true;
 
   /// Android'da sotib olish yuzasi (narx + tugma + checkout) ko'rsatiladimi.
   bool get _androidPurchaseVisible =>
