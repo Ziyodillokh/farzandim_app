@@ -19,7 +19,6 @@ import 'dart:async';
 import 'package:battery_plus/battery_plus.dart';
 import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -31,7 +30,6 @@ import 'package:farzandim_child/features/device_info/data/models/child_device_in
 class DeviceInfoService {
   final DeviceInfoPlugin _deviceInfo = DeviceInfoPlugin();
   final Battery _battery = Battery();
-  final NetworkInfo _networkInfo = NetworkInfo();
   final TokenStorage _tokenStorage = TokenStorage();
   final UsageStatsService _usageStats = UsageStatsService();
 
@@ -91,7 +89,8 @@ class DeviceInfoService {
         if (info.deviceModel != null) 'deviceModel': info.deviceModel,
         if (info.androidVersion != null) 'androidVersion': info.androidVersion,
         if (info.appVersion != null) 'appVersion': info.appVersion,
-        if (info.wifiName != null) 'wifiName': info.wifiName,
+        // `wifiName` ATAYLAB yuborilmaydi — Google Play Families siyosati
+        // SSID uzatishni taqiqlaydi (2026-08-17 rad javobi).
         // OS-ruxsat holatlari (Block 4 / M12) — ota-onaga ko'rsatish uchun.
         if (perms.location != null) 'locationPermission': perms.location,
         if (perms.notification != null)
@@ -116,7 +115,6 @@ class DeviceInfoService {
     String? appVersion;
     int? batteryLevel;
     bool? isCharging;
-    String? wifiName;
 
     try {
       final androidInfo = await _deviceInfo.androidInfo;
@@ -142,21 +140,10 @@ class DeviceInfoService {
       // skip
     }
 
-    // Wi-Fi nomi — Android 9+'da Location ruxsati kerak; yo'q bo'lsa null
-    // qoladi (bu boshqa maydonlarni to'sib qo'ymaydi).
-    try {
-      final ssid = await _networkInfo.getWifiName();
-      if (ssid != null && ssid.isNotEmpty) {
-        final cleaned = ssid.replaceAll('"', '').trim();
-        if (cleaned != '<unknown ssid>' &&
-            cleaned.isNotEmpty &&
-            cleaned != '0x') {
-          wifiName = cleaned;
-        }
-      }
-    } catch (_) {
-      wifiName = null;
-    }
+    // ⚠️ Wi-Fi nomi (SSID) YIG'ILMAYDI — 2026-08-17 Google Play "Families
+    // Device Identifiers" rad javobi: faqat bolalarga mo'ljallangan ilova
+    // SSID/BSSID/AAID/IMEI uzatishi TAQIQLANADI. Ilgari bu yerda
+    // `_networkInfo.getWifiName()` bor edi. Qayta tiklamang.
 
     return ChildDeviceInfo(
       deviceModel: deviceModel,
@@ -164,7 +151,6 @@ class DeviceInfoService {
       appVersion: appVersion,
       batteryLevel: batteryLevel,
       isCharging: isCharging,
-      wifiName: wifiName,
       isOnline: true,
     );
   }

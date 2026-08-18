@@ -31,9 +31,20 @@
 
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
-    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE"/>
+    <!-- ⚠️ ACCESS_WIFI_STATE va CHANGE_WIFI_STATE OLIB TASHLANDI
+         (2026-08-17) — Google Play "Families Device Identifiers" rad javobi.
+         Ular Wi-Fi SSID/BSSID o'qish uchun kerak edi (network_info_plus),
+         faqat bolalarga mo'ljallangan ilovada esa bu TAQIQLANADI.
+         ACCESS_NETWORK_STATE qoladi — u connectivity_plus uchun (internet
+         bor/yo'qligini bilish), hech qanday identifikator bermaydi. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
-    <uses-permission android:name="android.permission.CHANGE_WIFI_STATE"/>
+
+    <!-- Reklama identifikatori (AAID) — Families siyosati bo'yicha TAQIQ.
+         Biror kutubxona (Firebase/Play Services) uni tranzitiv qo'shib
+         qo'yishi mumkin, shuning uchun manifest merger darajasida majburan
+         olib tashlaymiz. Busiz Google avtomatik tekshiruvda rad etadi. -->
+    <uses-permission android:name="com.google.android.gms.permission.AD_ID"
+        tools:node="remove"/>
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>

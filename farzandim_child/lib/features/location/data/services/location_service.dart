@@ -25,7 +25,6 @@ import 'package:device_info_plus/device_info_plus.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:network_info_plus/network_info_plus.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -86,8 +85,6 @@ class LocationService {
   String? _cachedDeviceModel;
   String? _cachedAndroidVersion;
   String? _cachedAppVersion;
-  DateTime? _lastWifiCheck;
-  String? _cachedWifiName;
 
   Future<void> _ensureDeviceInfo() async {
     if (_cachedDeviceModel != null) return;
@@ -106,32 +103,12 @@ class LocationService {
     }
   }
 
-  Future<String?> _getWifiName() async {
-    // Wi-Fi nomi har 5 daqiqada bir marta o'qiladi (battery + permission cost).
-    final now = DateTime.now();
-    if (_lastWifiCheck != null &&
-        now.difference(_lastWifiCheck!).inMinutes < 5) {
-      return _cachedWifiName;
-    }
-    _lastWifiCheck = now;
-    try {
-      final ssid = await NetworkInfo().getWifiName();
-      if (ssid == null || ssid.isEmpty) {
-        _cachedWifiName = null;
-        return null;
-      }
-      final cleaned = ssid.replaceAll('"', '').trim();
-      if (cleaned == '<unknown ssid>' || cleaned.isEmpty) {
-        _cachedWifiName = null;
-        return null;
-      }
-      _cachedWifiName = cleaned;
-      return cleaned;
-    } catch (_) {
-      _cachedWifiName = null;
-      return null;
-    }
-  }
+  // ⚠️ Wi-Fi nomi (SSID) BU YERDA YIG'ILMAYDI — 2026-08-17 Google Play
+  // "Families Device Identifiers" rad javobi. Faqat bolalarga mo'ljallangan
+  // ilova SSID/BSSID/AAID/IMEI kabi identifikatorlarni uzatishi TAQIQLANADI.
+  // Ilgari bu yerda `NetworkInfo().getWifiName()` bor edi va natija
+  // `/location` so'roviga `wifiName` bo'lib qo'shilardi. Qayta tiklamang.
+  // Qarang: https://support.google.com/googleplay/android-developer/answer/9893335
 
   /// Position stream'ga obuna bo'ladi va har 10m harakatda Firestore'ga
   /// yangi joylashuvni yozadi. Permission yo'q bo'lsa jim chiqadi.
@@ -390,7 +367,6 @@ class LocationService {
 
       // Sprint 4.4.23: device info Backend'ga yuborish.
       await _ensureDeviceInfo();
-      final wifiName = await _getWifiName();
 
       final payload = <String, dynamic>{
         'childId': _childId,
@@ -409,7 +385,8 @@ class LocationService {
         if (_cachedAndroidVersion != null)
           'androidVersion': _cachedAndroidVersion,
         if (_cachedAppVersion != null) 'appVersion': _cachedAppVersion,
-        if (wifiName != null) 'wifiName': wifiName,
+        // `wifiName` ATAYLAB yuborilmaydi — Families siyosati (yuqoridagi
+        // izohga qarang). Backend maydonni ixtiyoriy qabul qiladi.
       };
 
       final response = await _dio.post<Map<String, dynamic>>(

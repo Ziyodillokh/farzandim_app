@@ -64,7 +64,11 @@ dependencies:
   # Device info
   device_info_plus: ^11.1.0
   battery_plus: ^6.0.3
-  network_info_plus: ^6.0.0
+  # ⚠️ network_info_plus OLIB TASHLANDI (2026-08-17) — Google Play "Families
+  # Device Identifiers" rad javobi. U Wi-Fi SSID/BSSID o'qiydi, faqat
+  # bolalarga mo'ljallangan ilovada esa bu TAQIQLANADI. Paket bilan birga
+  # ACCESS_WIFI_STATE / CHANGE_WIFI_STATE ruxsatlari ham manifestga kirardi.
+  # Qayta qo'shmang.
   connectivity_plus: ^6.1.0
   package_info_plus: ^8.1.0
 
