@@ -46,7 +46,9 @@ export class UpdateDeviceInfoDto {
   @MaxLength(40)
   appVersion?: string;
 
-  @ApiPropertyOptional({ example: 'MyWiFi' })
+  /** ESKIRGAN — qabul qilinadi, lekin SAQLANMAYDI (2026-08-18, Families
+   *  Device Identifiers). Faqat eski APK'lar 400 olmasligi uchun. */
+  @ApiPropertyOptional({ deprecated: true })
   @IsOptional()
   @IsString()
   @MaxLength(120)

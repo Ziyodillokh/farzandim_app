@@ -344,7 +344,8 @@ export class ChildrenService {
       data.androidVersion = dto.androidVersion;
     }
     if (dto.appVersion !== undefined) data.appVersion = dto.appVersion;
-    if (dto.wifiName !== undefined) data.wifiName = dto.wifiName;
+    // dto.wifiName ATAYLAB saqlanmaydi (2026-08-18, Families Device
+    // Identifiers) — eski APK yuborsa server tashlab yuboradi.
     // OS-ruxsat holatlari (Block 4) — kelgan maydonlarni saqlaymiz.
     if (dto.locationPermission !== undefined) {
       data.locationPermission = dto.locationPermission;

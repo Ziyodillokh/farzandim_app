@@ -107,7 +107,10 @@ export class LocationService {
     if (deviceModel !== undefined) childDeviceUpdate.deviceModel = deviceModel;
     if (androidVersion !== undefined) childDeviceUpdate.androidVersion = androidVersion;
     if (appVersion !== undefined) childDeviceUpdate.appVersion = appVersion;
-    if (wifiName !== undefined) childDeviceUpdate.wifiName = wifiName;
+    // wifiName ATAYLAB saqlanmaydi (2026-08-18) — Families Device
+    // Identifiers: eski APK'lar (versionCode<=5) hali SSID yuborishi
+    // mumkin; server tomonda tashlab yuboramiz. DTO'dagi maydon faqat
+    // validatsiya 400 bermasligi uchun qoldirilgan.
     // Heartbeat kelgani — qurilma ulangan deb belgilaymiz (device-info
     // endpoint bilan bir xil mantiq). Aks holda device-info ishlamay qolsa
     // faqat GPS yuborayotgan bola DB'da isConnected=false bo'lib ota-onada

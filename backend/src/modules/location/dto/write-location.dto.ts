@@ -82,7 +82,14 @@ export class WriteLocationDto {
   @MaxLength(50)
   appVersion?: string;
 
-  @ApiPropertyOptional({ example: 'Home_WiFi', maxLength: 100 })
+  /**
+   * ESKIRGAN — qabul qilinadi, lekin SAQLANMAYDI (2026-08-18).
+   * Google Play Families "Device Identifiers": bola qurilmasidan SSID
+   * yig'ish taqiqlangan. Yangi klientlar (child >= SSID-fix) uni yubormaydi;
+   * maydon faqat ESKI APK'lar (versionCode<=5) validatsiyada 400 olmasligi
+   * uchun qoldirildi. location.service.ts qiymatni e'tiborsiz qoldiradi.
+   */
+  @ApiPropertyOptional({ deprecated: true, maxLength: 100 })
   @IsOptional()
   @IsString()
   @MaxLength(100)

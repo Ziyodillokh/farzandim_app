@@ -159,10 +159,16 @@ yuklab, havolasini bering.
 - Kamida 2 ta telefon skrinshoti (tavsiya: 4–8 ta)
 - Kategoriya: **Parenting** (yoki Education)
 
-**Tavsif yozishda ⚠️:** "kuzatuv", "josuslik", "monitoring" so'zlaridan
-QOCHING — Play bularni "stalkerware" deb belgilashi mumkin. O'rniga:
-"oilaviy xavfsizlik", "ota-ona nazorati", "farzandingiz bilan aloqa",
-"ekran vaqti muvozanati", "ta'lim".
+**Tavsif yozishda ⚠️ (2026-08-18 TUZATILDI):** avvalgi "monitoring
+so'zlaridan qoching" maslahati bola ilovasi uchun siyosatga ZID edi.
+Play "Monitoring apps" siyosati (answer/12955211) monitoring
+funksiyalarini listing'da OSHKORA yozishni TALAB qiladi — yashirish rad
+sababi bo'ladi (ilova manifestida `isMonitoringTool=child_monitoring`
+deklaratsiyasi bor, listing unga mos bo'lishi shart). Qochish kerak
+bo'lgani faqat: "josuslik", "yashirin", "maxfiy", "sezdirmasdan" uslubi.
+To'g'ri ohang: "ota-ona nazorati", "joylashuvni ota-onaga yuboradi",
+"bola doimiy bildirishnoma orqali biladi". Console matni uchun YAGONA
+manba — farzandim_child/PLAY_STORE_LISTING_CHILD.md.
 
 **Ilovaning ikki qismi borligini tavsifda aniq yozing:** bu ilova
 ota-onaning "Parvoz" ilovasi bilan birga ishlaydi va bolaning qurilmasiga
