@@ -176,6 +176,31 @@ ota-ona roziligi bilan o'rnatiladi.
 
 ---
 
+## 4.5) 2026-08-18 AUDITI — kodda tuzatilganlar va MUDDAT
+
+| Nima | Holat |
+|---|---|
+| **targetSdk 35 → 36** | ✅ Tuzatildi. Play 2026-yil **31-avgustdan** API 36 talab qiladi; 35 bilan AAB umuman qabul qilinmaydi |
+| **FGS `dataSync` olib tashlandi** | ✅ Android 15+ da dataSync 24 soatda 6 soat bilan cheklangan; limitdan keyin ANR bilan ilova yiqilardi. Endi faqat `location` (limitsiz) |
+| **`READ_EXTERNAL_STORAGE` API 32 bilan cheklandi** | ✅ Merged manifestda CHEKSIZ edi (plagin qo'shgan). Ota-ona ilovasi aynan media ruxsati uchun bloklangan edi |
+| 16 KB sahifa hajmi | ✅ 11/11 arm64 kutubxona mos (2025-noyabrdan majburiy) |
+| `isMonitoringTool` | ✅ Merged manifestda `<manifest>` VA `<application>` ichida tasdiqlangan |
+
+> Yuqoridagilar **haqiqiy `flutter build appbundle --release` chiqishidan**
+> (merged manifest + AAB ichidagi `.so`) tekshirildi, kod o'qish bilan emas.
+
+## 4.6) 2026-08-10 RAD JAVOBLARI — uchtasi ham
+
+1. **Missing `isMonitoringTool`** (App bundle 2) → kodda yopilgan (`e2ba2418`).
+2. **Login credentials are incorrect** (Version code 4) → ⚠️ **ENG XAVFLISI, bu
+   KODDA emas**. Tekshiruvchi oila kodi bilan bir marta ulangach, keyingi
+   urinishida 409 olardi. Backendda istisno yozilgan, LEKIN u
+   `PLAY_REVIEW_FAMILY_CODE` env'iga bog'liq — **server `.env`'ida
+   o'rnatilmasa, kod umuman ishlamaydi**. 5-bo'limga qarang.
+3. **Privacy policy: missing Health Data** → ✅ yopilgan; jonli
+   `farzandimedu.uz/privacy.html` sahifasida 2.1 "Sog'liq ma'lumotlari"
+   bo'limi bor (2026-08-18 da HTTP 200 bilan tekshirildi).
+
 ## 5) Yuborishdan oldin oxirgi tekshiruv
 
 - [ ] AAB yuklandi (Internal testing)
@@ -187,3 +212,9 @@ ota-ona roziligi bilan o'rnatiladi.
 - [ ] QUERY_ALL_PACKAGES deklaratsiyasi
 - [ ] Listing (ikon, grafika, skrinshot, tavsif)
 - [ ] Test qurilmada consent ekrani chiqishi tekshirildi
+- [ ] **Sign in details**: demo oila kodi kiritilgan VA server `.env`'ida
+      `PLAY_REVIEW_FAMILY_CODE` aynan shu kodga o'rnatilgan (backend restart
+      qilingan). Tekshirish: bitta telefonda demo kod bilan ulan, ilovani
+      o'chirib qayta o'rnat, YANA ulan — ikkinchi marta ham ishlashi SHART
+- [ ] **Health apps** deklaratsiyasi (READ_STEPS so'raladi) to'ldirilgan
+- [ ] Barcha trekdagi ESKI relizlar to'xtatilgan (Google "all versions" dedi)

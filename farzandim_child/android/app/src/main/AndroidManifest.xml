@@ -21,6 +21,20 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
 
+    <!-- ⚠️ READ_EXTERNAL_STORAGE'ni API 32 bilan CHEGARALAYMIZ (2026-08-18).
+         Uni biror plagin (pdf/rasm tanlash) tranzitiv qo'shib qo'yadi va
+         merged manifestda CHEKSIZ ko'rinardi. Android 13+ (API 33) da bu
+         ruxsat allaqachon ishlamaydi — o'rniga READ_MEDIA_* keladi, biz esa
+         ularni umuman so'ramaymiz (tizim tanlagichi ishlatiladi).
+         Cheksiz qolsa Play "Photo and Video Permissions" siyosati bo'yicha
+         keng saqlash ruxsati deb baholaydi — ota-ona ilovasi AYNAN shu sabab
+         (READ_MEDIA_IMAGES) 2026-08-14 da bloklangan edi. `tools:replace`
+         kerak, chunki plagin bu ruxsatni maxSdkVersion'siz e'lon qiladi. -->
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        android:maxSdkVersion="32"
+        tools:replace="android:maxSdkVersion"/>
+
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION"/>
@@ -48,7 +62,10 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_DATA_SYNC"/>
+    <!-- FOREGROUND_SERVICE_DATA_SYNC OLIB TASHLANDI (2026-08-18): endi hech
+         bir xizmat "dataSync" tipini e'lon qilmaydi (yuqoridagi izohga qarang).
+         Ishlatilmaydigan sezgir ruxsatni saqlab qolish Play tekshiruvida
+         ortiqcha savol tug'diradi. -->
     <uses-permission android:name="android.permission.WAKE_LOCK"/>
 
     <uses-permission android:name="android.permission.VIBRATE"/>
@@ -161,9 +178,22 @@
             android:name="com.google.firebase.messaging.default_notification_channel_id"
             android:value="farzandim_child_default"/>
 
+        <!-- ⚠️ "dataSync" ATAYLAB OLIB TASHLANDI (2026-08-18).
+             Android 15+ (API 35) da dataSync tipidagi foreground service
+             24 soat ichida JAMI 6 SOAT ishlashi mumkin; limitdan keyin tizim
+             Service.onTimeout() ni chaqiradi va xizmat bir necha soniyada
+             to'xtamasa "A foreground service of type dataSync did not stop
+             within its timeout" ANR'i bilan ILOVANI YIQITADI.
+             flutter_foreground_task 8.17.0 onTimeout() ni umuman amalga
+             oshirmagan → bola telefonida har kuni kuzatuv uzilib, ilova
+             yopilardi. "location" tipida bunday limit YO'Q va joylashuv
+             uzatish uchun aynan shu tip yetarli (tarmoqqa chiqish FGS tipiga
+             bog'liq emas). Plagin startForeground'ni FOREGROUND_SERVICE_TYPE_
+             MANIFEST bilan chaqiradi — ya'ni shu yerdagi qiymatni oladi,
+             qo'shimcha kod o'zgarishi kerak emas. -->
         <service
             android:name="com.pravera.flutter_foreground_task.service.ForegroundService"
-            android:foregroundServiceType="location|dataSync"
+            android:foregroundServiceType="location"
             android:exported="false"
             android:stopWithTask="false"
             tools:replace="android:foregroundServiceType" />

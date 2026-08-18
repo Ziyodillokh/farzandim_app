@@ -85,7 +85,9 @@ class BackgroundService {
 
   /// Service allaqachon ishlamoqda bo'lsa qayta boshlamaymiz.
   ///
-  /// MUHIM (crash fix): foregroundServiceType manifest'da "location|dataSync".
+  /// MUHIM (crash fix): foregroundServiceType manifest'da "location"
+  /// (dataSync 2026-08-18 da olib tashlandi — Android 15+ dagi 6 soatlik
+  /// timeout ANR'i sababli; manifestdagi izohga qarang).
   /// Android 14+ (API 34) da `location` tipidagi foreground service'ni
   /// joylashuv RUXSATISIZ ishga tushirish `SecurityException` (Foreground
   /// ServiceStartNotAllowed) beradi → ilova NATIVE crash bo'lib yopiladi

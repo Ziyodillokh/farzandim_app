@@ -52,7 +52,14 @@ android {
         // Kotlin namespace (com.farzandim.farzandim_child) o'zgarmaydi.
         applicationId = "com.farzandim.growth"
         minSdk = 28
-        targetSdk = 35
+        // ⚠️ Google Play "Target API level" talabi — 2026-yil 31-avgustdan
+        // BOSHLAB yangi ilovalar VA yangilanishlar Android 16 (API 36) ga
+        // mo'ljallangan bo'lishi SHART. targetSdk 35 bilan shu sanadan keyin
+        // Play Console AAB'ni umuman qabul qilmaydi ("Your app currently
+        // targets API level 35 and must target at least 36").
+        // Ota-ona ilovasi allaqachon 36 da (flutter.targetSdkVersion).
+        // Keyingi muddat: Android 17 (API 37) — taxminan 2027-avgust.
+        targetSdk = 36
         versionCode = flutter.versionCode
         versionName = flutter.versionName
     }
