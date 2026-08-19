@@ -80,7 +80,8 @@ const envSchema = z.object({
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),
   ),
-  // Jonli: https://checkout.paycom.uz  |  Sinov (sandbox): https://checkout.test.paycom.uz
+  // Default (jonli) https://checkout.paycom.uz — o'zgartirmang. checkout.test.paycom.uz
+  // faqat sandbox'da ro'yxatdan o'tgan ALOHIDA kassa uchun; bizning kassa u yerda yo'q.
   PAYME_CHECKOUT_URL: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().url().default('https://checkout.paycom.uz'),

@@ -7,9 +7,14 @@ tushirish uchun **serverdagi `.env`** va **Payme kabineti** sozlanadi.
 |----------------------|-----------------------------------------------------|
 | Kassa ID (merchant)  | `6a7dc4613febcfd2f87a9eb9`                          |
 | Webhook (endpoint)   | `https://farzandimedu.uz/api/payments/webhook/payme` |
-| Test checkout        | `https://checkout.test.paycom.uz`                   |
-| Jonli checkout       | `https://checkout.paycom.uz` (default, env bo'sh)   |
-| Sandbox (tekshiruv)  | `https://test.paycom.uz` (Payme kabineti → Sinov)   |
+| Checkout (jonli)     | `https://checkout.paycom.uz` (default, env bo'sh)   |
+| Sandbox (tekshiruv)  | `https://test.paycom.uz` (Merchant API testlari)    |
+
+> ⚠️ **`checkout.test.paycom.uz` ISHLATILMAYDI** — bizning kassa test
+> muhitida mavjud emas (2026-08-19 tekshirildi: test checkout ham, prod
+> checkout ham hozircha «Поставщик не найден или заблокирован» / ilovada
+> «Tashkilot hisobi topilmadi» deydi). Test kalit faqat **sandbox'dagi
+> Merchant API testlari** bizning webhook'ni chaqirishi uchun.
 
 Kalitlar (test va production) Payme hodimi tomonidan berilgan — ular bu
 hujjatda **yozilmaydi**; serverdagi `.env`da turadi.
@@ -46,9 +51,13 @@ Kod: `backend/src/modules/payments/providers/payme.provider.ts`
 ```env
 PAYME_MERCHANT_ID=6a7dc4613febcfd2f87a9eb9
 PAYME_MERCHANT_KEY=<TEST kalit>
-PAYME_CHECKOUT_URL=https://checkout.test.paycom.uz
+PAYME_CHECKOUT_URL=
 PAYME_ACCOUNT_FIELD=payment_id
 ```
+
+Bu bosqichda ilovadan Payme tanlansa checkout sahifasi **hali ochilmaydi**
+(kassa faol emas) — bu normal. Sinov = Payme sandbox'i (test.paycom.uz)
+bizning webhook'ni test kalit bilan tekshiradi (3-bo'lim).
 
 ### 2b. Jonli ishga o'tish (Payme kassani faollashtirgach)
 
@@ -86,14 +95,20 @@ alohida). Bo'sh qoldirilsa IP tekshirilmaydi (imzo/kalit baribir tekshiriladi).
 
 ## 3. Payme kabinetida (merchant egasi qiladi)
 
+**Hozirgi holat (2026-08-19):** kassa `6a7dc461…` Payme tomonidan hali
+**faollashtirilmagan** — checkout «Поставщик не найден или заблокирован».
+Faollashtirish Payme hodimi tomonidan, odatda sandbox testlari o'tgach.
+Payme hodimiga yuboriladigan ma'lumot: endpoint
+`https://farzandimedu.uz/api/payments/webhook/payme`, account maydoni
+`payment_id`, test kalit serverda, sandbox testlarini o'tkazish mumkin.
+
 1. **Kassa → Endpoint URL**: `https://farzandimedu.uz/api/payments/webhook/payme`
 2. **Sinov (test.paycom.uz)**: endpoint + TEST kalit + test `account` qiymati
    bilan avtomatik testlar ishga tushiriladi. `account.payment_id` sifatida
    **haqiqiy `pending` Payment id** kerak — uni olish:
-   - ilovada Premium → Payme tanlab checkout oching (serverda test kalit,
-     test checkout bo'lishi kerak) — `Payment` yozuvi yaratiladi, yoki
-   - admin panel → Monetizatsiya → To'lovlar'dan `payme` + `pending`
-     yozuv id'si, yoki
+   - ilovada Premium → Payme tanlab «Ulanish» bosing — checkout sahifasi
+     ochilmasa ham backend'da `Payment` (pending) yaratiladi; id'sini
+     admin panel → Monetizatsiya → To'lovlar (`payme` + `pending`) dan oling, yoki
    - `POST /api/payments/checkout` (ota-ona JWT bilan) javobidagi `paymentId`.
 
    Summa = tarif narxi × 100 (tiyin): oylik 29 000 so'm → `2900000`.
@@ -102,8 +117,10 @@ alohida). Bo'sh qoldirilsa IP tekshirilmaydi (imzo/kalit baribir tekshiriladi).
 3. Sandbox hamma testlardan o'tgach Payme kassani **faollashtiradi** →
    2b bo'yicha production kalitga o'ting.
 
-Test kartalar (sandbox checkout): `8600 0691 9540 6311`, `03/99`, SMS `666666`
-(Payme hujjatidan; o'zgargan bo'lsa kabinetdagi "Тестовые карты"ga qarang).
+Payme test kartalari (`8600 0691 9540 6311`, `03/99`, SMS `666666`) faqat
+sandbox'da ro'yxatdan o'tgan kassa uchun ishlaydi — bizda bunday kassa yo'q,
+shuning uchun ilovadan haqiqiy to'lov sinovi kassa faollashgach (production
+kalit bilan) qilinadi.
 
 ---
 

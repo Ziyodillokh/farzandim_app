@@ -23,6 +23,7 @@ import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
 import 'package:solar_icons/solar_icons.dart';
@@ -965,37 +966,38 @@ class _PayMethodSheet extends StatelessWidget {
   }
 }
 
-/// To'lov provayderi brendi (nom, rang, belgi, izoh kaliti).
+/// To'lov provayderi brendi (nom, rasmiy logo, izoh kaliti).
+///
+/// Logolar — rasmiy SVG'lar (`assets/images/payments/`): Click — click.uz
+/// (ko'k belgi + oq yozuv), Payme — cdn.payme.uz gorizontal rangli logo.
+/// Ikkalasi ham to'q fon uchun mos, shuning uchun plashka qo'shilmaydi.
 class _PayBrand {
   const _PayBrand({
     required this.title,
-    required this.color,
-    required this.mark,
+    required this.asset,
     required this.subtitleKey,
   });
 
   factory _PayBrand.of(String key) => switch (key) {
     'payme' => const _PayBrand(
       title: 'Payme',
-      color: Color(0xFF00CCCC),
-      mark: 'P',
+      asset: 'assets/images/payments/payme_logo.svg',
       subtitleKey: 'premium.payViaPayme',
     ),
     _ => const _PayBrand(
       title: 'Click',
-      color: Color(0xFF1FA7FF),
-      mark: 'C',
+      asset: 'assets/images/payments/click_logo.svg',
       subtitleKey: 'premium.payViaClick',
     ),
   };
 
+  /// Semantika (ekran o'quvchi) uchun nom — vizual nom logoning o'zida.
   final String title;
-  final Color color;
-  final String mark;
+  final String asset;
   final String subtitleKey;
 }
 
-/// Bitta to'lov usuli qatori (brend belgisi + nom + izoh + strelka).
+/// Bitta to'lov usuli qatori (rasmiy logo + izoh + strelka).
 class _PayMethodTile extends StatelessWidget {
   const _PayMethodTile({required this.brand, required this.onTap});
 
@@ -1018,31 +1020,25 @@ class _PayMethodTile extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Container(
-                width: 44,
+              // Rasmiy logo — belgilangan kenglikda, chapga tekis (Click
+              // wordmark'i Payme'nikidan kengroq, ikkalasi bir xil joy oladi).
+              SizedBox(
+                width: 96,
                 height: 44,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: brand.color,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Text(
-                  brand.mark,
-                  style: _unb(20, w: FontWeight.w800, ls: 0),
+                child: Semantics(
+                  label: brand.title,
+                  image: true,
+                  child: SvgPicture.asset(
+                    brand.asset,
+                    alignment: Alignment.centerLeft,
+                  ),
                 ),
               ),
               const SizedBox(width: 12),
               Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(brand.title, style: _pop(15, w: FontWeight.w600)),
-                    const SizedBox(height: 2),
-                    Text(
-                      brand.subtitleKey.tr(),
-                      style: _pop(12, c: Colors.white.withValues(alpha: 0.6)),
-                    ),
-                  ],
+                child: Text(
+                  brand.subtitleKey.tr(),
+                  style: _pop(13, c: Colors.white.withValues(alpha: 0.75)),
                 ),
               ),
               Icon(

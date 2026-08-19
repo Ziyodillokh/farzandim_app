@@ -299,6 +299,7 @@ flutter:
     - assets/images/       # welcome_bg, kelajakdagi rasmlar
     - assets/images/premium/ # Parvoz Premium memoji avatarlari (obunachilar)
     - assets/images/leaderboard/ # DON reytingi podium medallari (1/2/3)
+    - assets/images/payments/ # Click / Payme rasmiy logolari (to'lov usuli tanlash)
     - assets/default_avatars/ # bola default avatari — jinsi+yoshga qarab 6 ta
     - assets/stickers/     # reyting neytral fallback (gender yo'q joyda)
     - assets/translations/ # uz.json, ru.json, en.json — easy_localization
