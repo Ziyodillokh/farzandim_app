@@ -73,7 +73,8 @@ String _featureLabel(String key) {
 enum _PlanStyle { glass, blue, dark }
 
 /// Tariflar (paywall) ekrani — HAQIQIY tariflar backend'dan, "Ulanish"
-/// tugmasi Click to'lov sahifasini ochadi.
+/// tugmasi Click yoki Payme to'lov sahifasini ochadi (ikkalasi ham mavjud
+/// bo'lsa — avval to'lov usuli tanlanadi).
 class ParvozPremiumScreen extends ConsumerStatefulWidget {
   /// `ParvozPremiumScreen` konstruktor.
   const ParvozPremiumScreen({super.key});
@@ -184,8 +185,9 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    // Click to'lov sahifasidan qaytilganda tarif + planlarni yangilaymiz —
-    // to'lov tasdiqlangan bo'lsa yangi tarif DARHOL kuchga kiradi.
+    // Click/Payme to'lov sahifasidan qaytilganda tarif + planlarni
+    // yangilaymiz — to'lov tasdiqlangan bo'lsa yangi tarif DARHOL kuchga
+    // kiradi.
     if (state == AppLifecycleState.resumed) {
       ref
         ..invalidate(entitlementProvider)
@@ -194,11 +196,11 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   }
 
   /// Tarifni sotib olish. iOS'da Apple IAP (App Store 3.1.1), boshqa
-  /// platformalarda Click checkout (tashqi to'lov sahifasi).
+  /// platformalarda Click/Payme checkout (tashqi to'lov sahifasi).
   Future<void> _subscribe(PlanEntry plan) async {
     if (_busyPlanId != null) return;
-    // iOS: raqamli obuna FAQAT Apple IAP orqali. Tashqi Click to'lovi iOS'da
-    // ISHLATILMAYDI (Apple 3.1.1 bo'yicha rad etadi).
+    // iOS: raqamli obuna FAQAT Apple IAP orqali. Tashqi Click/Payme to'lovi
+    // iOS'da ISHLATILMAYDI (Apple 3.1.1 bo'yicha rad etadi).
     if (_isApple) {
       await _subscribeApple(plan);
       return;
@@ -206,12 +208,35 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     // Play siyosati kaliti (yuqoridagi `kAndroidExternalCheckoutEnabled`
     // izohiga qarang) — o'chirilgan bo'lsa tashqi checkout CHAQIRILMAYDI.
     if (!_androidPurchaseVisible) return;
+
+    // To'lov usuli: backend qaysi provayderlar sozlanganini aytadi
+    // (`availableProviders`). Bittasi bo'lsa — to'g'ridan-to'g'ri; ikkalasi
+    // (Click + Payme) bo'lsa — foydalanuvchi tanlaydi. Bo'sh bo'lsa (hech biri
+    // sozlanmagan) `click` bilan urinib ko'ramiz — backend 503 → xato toast.
+    final providers =
+        ref.read(plansProvider).valueOrNull?.externalProviders ??
+        const <String>[];
+    String provider;
+    if (providers.length > 1) {
+      final picked = await _PayMethodSheet.show(
+        context,
+        providers: providers,
+        planName: plan.name,
+        priceLabel: _priceLabel(plan),
+      );
+      if (picked == null || !mounted) return; // bekor qildi
+      provider = picked;
+    } else {
+      provider = providers.isNotEmpty ? providers.first : 'click';
+    }
+
     setState(() => _busyPlanId = plan.id);
     try {
       final url = await ref
           .read(backendPaymentsRepositoryProvider)
           .checkout(
             planId: plan.id,
+            provider: provider,
             billingPeriod: _yearly ? 'yearly' : 'monthly',
           );
       if (url.isEmpty) throw Exception('empty checkout url');
@@ -848,6 +873,187 @@ class _CurrentPlanLabel extends ConsumerWidget {
     return Text(
       "${'plans.currentPlan'.tr()}: $label",
       style: _pop(13, c: Colors.white.withValues(alpha: 0.55)),
+    );
+  }
+}
+
+// ════════════ To'lov usuli tanlash (Click / Payme) ════════════
+
+/// Tashqi to'lov provayderi tanlovi — pastdan chiqadigan varaq. Faqat
+/// backend'da BIR NECHTA provayder sozlangan bo'lsa ko'rsatiladi (bittasi
+/// bo'lsa darhol o'sha ochiladi). Natija: `'click'` / `'payme'` yoki `null`
+/// (foydalanuvchi yopdi).
+class _PayMethodSheet extends StatelessWidget {
+  const _PayMethodSheet({
+    required this.providers,
+    required this.planName,
+    required this.priceLabel,
+  });
+
+  /// Ko'rsatiladigan provayder kalitlari (`click`, `payme`) — tartib saqlanadi.
+  final List<String> providers;
+  final String planName;
+  final String priceLabel;
+
+  static Future<String?> show(
+    BuildContext context, {
+    required List<String> providers,
+    required String planName,
+    required String priceLabel,
+  }) {
+    return showModalBottomSheet<String>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _PayMethodSheet(
+        providers: providers,
+        planName: planName,
+        priceLabel: priceLabel,
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bottom = MediaQuery.paddingOf(context).bottom;
+    return Container(
+      margin: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+      padding: EdgeInsets.fromLTRB(16, 12, 16, 16 + bottom),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0B1A2B),
+        borderRadius: BorderRadius.circular(28),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Tutqich
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white.withValues(alpha: 0.25),
+                borderRadius: BorderRadius.circular(999),
+              ),
+            ),
+          ),
+          const SizedBox(height: 16),
+          Text(
+            'premium.payMethodTitle'.tr(),
+            textAlign: TextAlign.center,
+            style: _unb(18, ls: -0.6),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            '$planName · $priceLabel',
+            textAlign: TextAlign.center,
+            style: _pop(13, c: Colors.white.withValues(alpha: 0.6)),
+          ),
+          const SizedBox(height: 16),
+          for (var i = 0; i < providers.length; i++) ...[
+            if (i > 0) const SizedBox(height: 10),
+            _PayMethodTile(
+              brand: _PayBrand.of(providers[i]),
+              onTap: () => Navigator.of(context).pop(providers[i]),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// To'lov provayderi brendi (nom, rang, belgi, izoh kaliti).
+class _PayBrand {
+  const _PayBrand({
+    required this.title,
+    required this.color,
+    required this.mark,
+    required this.subtitleKey,
+  });
+
+  factory _PayBrand.of(String key) => switch (key) {
+    'payme' => const _PayBrand(
+      title: 'Payme',
+      color: Color(0xFF00CCCC),
+      mark: 'P',
+      subtitleKey: 'premium.payViaPayme',
+    ),
+    _ => const _PayBrand(
+      title: 'Click',
+      color: Color(0xFF1FA7FF),
+      mark: 'C',
+      subtitleKey: 'premium.payViaClick',
+    ),
+  };
+
+  final String title;
+  final Color color;
+  final String mark;
+  final String subtitleKey;
+}
+
+/// Bitta to'lov usuli qatori (brend belgisi + nom + izoh + strelka).
+class _PayMethodTile extends StatelessWidget {
+  const _PayMethodTile({required this.brand, required this.onTap});
+
+  final _PayBrand brand;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.white.withValues(alpha: 0.06),
+      borderRadius: BorderRadius.circular(18),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(18),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(18),
+            border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                alignment: Alignment.center,
+                decoration: BoxDecoration(
+                  color: brand.color,
+                  borderRadius: BorderRadius.circular(12),
+                ),
+                child: Text(
+                  brand.mark,
+                  style: _unb(20, w: FontWeight.w800, ls: 0),
+                ),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(brand.title, style: _pop(15, w: FontWeight.w600)),
+                    const SizedBox(height: 2),
+                    Text(
+                      brand.subtitleKey.tr(),
+                      style: _pop(12, c: Colors.white.withValues(alpha: 0.6)),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(
+                SolarIconsBold.altArrowRight,
+                size: 20,
+                color: Colors.white.withValues(alpha: 0.5),
+              ),
+            ],
+          ),
+        ),
+      ),
     );
   }
 }

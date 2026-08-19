@@ -1012,7 +1012,10 @@
     "comingSoon": "Payments coming soon",
     "monthly": "Monthly",
     "yearly": "Yearly",
-    "save2m": "2 months free"
+    "save2m": "2 months free",
+    "payMethodTitle": "Choose a payment method",
+    "payViaClick": "Click app or bank card",
+    "payViaPayme": "Payme app or bank card"
   },
   "settings": {
     "title": "Settings",

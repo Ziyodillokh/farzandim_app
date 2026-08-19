@@ -1012,7 +1012,10 @@
     "comingSoon": "To'lov tizimi tez kunda ulanadi",
     "monthly": "Oylik",
     "yearly": "Yillik",
-    "save2m": "2 oy tekin"
+    "save2m": "2 oy tekin",
+    "payMethodTitle": "To'lov usulini tanlang",
+    "payViaClick": "Click ilovasi yoki bank kartasi",
+    "payViaPayme": "Payme ilovasi yoki bank kartasi"
   },
   "settings": {
     "title": "Sozlamalar",

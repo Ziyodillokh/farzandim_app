@@ -80,7 +80,18 @@ const envSchema = z.object({
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
     z.string().optional(),
   ),
-  PAYME_CHECKOUT_URL: z.string().url().default('https://checkout.paycom.uz'),
+  // Jonli: https://checkout.paycom.uz  |  Sinov (sandbox): https://checkout.test.paycom.uz
+  PAYME_CHECKOUT_URL: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().url().default('https://checkout.paycom.uz'),
+  ),
+  // Payme kassasida sozlangan "account" maydoni nomi (checkout `ac.<nom>`,
+  // webhook `params.account.<nom>`). Kassa hodim tomonidan yaratiladi —
+  // nomi `payment_id` bo'lmasa shu yerda o'zgartiriladi (kod tegilmaydi).
+  PAYME_ACCOUNT_FIELD: z.preprocess(
+    (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
+    z.string().min(1).default('payment_id'),
+  ),
 
   CLICK_SERVICE_ID: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),

@@ -69,6 +69,16 @@ class PlansResult {
   final List<String> availableProviders;
 
   bool get clickAvailable => availableProviders.contains('click');
+  bool get paymeAvailable => availableProviders.contains('payme');
+
+  /// Ilovada ko'rsatiladigan TASHQI to'lov usullari (Android/web checkout),
+  /// barqaror tartibda: Click, keyin Payme. Backend'da kalitlari sozlanmagan
+  /// provayder ro'yxatga kirmaydi (`availableProviders` shuni bildiradi).
+  /// Bo'sh bo'lsa — hech qanday tashqi to'lov yo'q (checkout 503 qaytaradi).
+  List<String> get externalProviders => <String>[
+    for (final p in const ['click', 'payme'])
+      if (availableProviders.contains(p)) p,
+  ];
 }
 
 final backendPaymentsRepositoryProvider = Provider<BackendPaymentsRepository>(
@@ -94,7 +104,8 @@ class BackendPaymentsRepository {
     return PlansResult(plans: plans, availableProviders: providers);
   }
 
-  /// Checkout boshlash — to'lov sahifasi URL'ini qaytaradi (Click).
+  /// Checkout boshlash — to'lov sahifasi URL'ini qaytaradi.
+  /// [provider] — `click` yoki `payme` (backend `availableProviders`dan).
   /// Bo'sh string qaytsa — URL kelmadi (xato).
   Future<String> checkout({
     required String planId,

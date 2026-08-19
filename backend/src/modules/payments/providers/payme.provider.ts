@@ -107,6 +107,13 @@ export class PaymeProvider implements PaymentProvider {
   private merchantId: string;
   private merchantKey: string;
   private checkoutUrl: string;
+  /**
+   * Payme kassasida sozlangan "account" maydoni nomi (checkout'da `ac.<nom>`,
+   * webhook'da `params.account.<nom>`). Kassa Payme hodimi tomonidan
+   * yaratiladi va maydon nomi `payment_id` bo'lmasligi mumkin (`order_id`
+   * kabi) — shuning uchun env orqali sozlanadi, kod o'zgarmaydi.
+   */
+  private accountField: string;
   private fiscalMxik: string;
   private fiscalPackageCode: string;
   private fiscalVatPercent: number;
@@ -119,6 +126,8 @@ export class PaymeProvider implements PaymentProvider {
     this.merchantId = this.config.get('PAYME_MERCHANT_ID', { infer: true }) ?? '';
     this.merchantKey = this.config.get('PAYME_MERCHANT_KEY', { infer: true }) ?? '';
     this.checkoutUrl = this.config.get('PAYME_CHECKOUT_URL', { infer: true }) ?? 'https://checkout.paycom.uz';
+    this.accountField =
+      this.config.get('PAYME_ACCOUNT_FIELD', { infer: true }) ?? 'payment_id';
     this.fiscalMxik = this.config.get('PAYME_FISCAL_MXIK', { infer: true }) ?? '';
     this.fiscalPackageCode =
       this.config.get('PAYME_FISCAL_PACKAGE_CODE', { infer: true }) ?? '';
@@ -176,7 +185,7 @@ export class PaymeProvider implements PaymentProvider {
   }
 
   private async findOrderPayment(account?: Record<string, unknown>) {
-    const paymentId = account?.['payment_id'];
+    const paymentId = account?.[this.accountField];
     if (typeof paymentId !== 'string') return null;
     return this.prisma.payment.findUnique({ where: { id: paymentId } });
   }
@@ -192,7 +201,7 @@ export class PaymeProvider implements PaymentProvider {
     if (!this.isConfigured()) throw new ProviderNotConfiguredError('payme');
     const parts = [
       `m=${this.merchantId}`,
-      `ac.payment_id=${input.paymentId}`,
+      `ac.${this.accountField}=${input.paymentId}`,
       `a=${input.amount * TIYIN}`,
     ];
     if (input.returnUrl) parts.push(`c=${input.returnUrl}`);
@@ -243,10 +252,16 @@ export class PaymeProvider implements PaymentProvider {
   ): Promise<WebhookResponse> {
     const payment = await this.findOrderPayment(params.account);
     if (!payment || payment.method !== 'payme') {
-      return rpcError(id, ERR.ORDER_NOT_FOUND, 'Order not found', 'payment_id');
+      return rpcError(id, ERR.ORDER_NOT_FOUND, 'Order not found', this.accountField);
     }
     if (payment.status === 'success') {
-      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order already paid', 'payment_id');
+      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order already paid', this.accountField);
+    }
+    // Bekor qilingan / yiqilgan buyurtma (Payme tranzaksiyasi -1/-2 yoki
+    // checkout yaratilmagan) qayta to'lanmaydi — ilova har urinishda YANGI
+    // payment_id yaratadi. Faqat `pending` buyurtma to'lanishi mumkin.
+    if (payment.status !== 'pending') {
+      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order unavailable', this.accountField);
     }
     if (params.amount !== payment.amount * TIYIN) {
       return rpcError(id, ERR.INVALID_AMOUNT, 'Invalid amount');
@@ -266,7 +281,7 @@ export class PaymeProvider implements PaymentProvider {
   ): Promise<WebhookResponse> {
     const payment = await this.findOrderPayment(params.account);
     if (!payment || payment.method !== 'payme') {
-      return rpcError(id, ERR.ORDER_NOT_FOUND, 'Order not found', 'payment_id');
+      return rpcError(id, ERR.ORDER_NOT_FOUND, 'Order not found', this.accountField);
     }
     if (params.amount !== payment.amount * TIYIN) {
       return rpcError(id, ERR.INVALID_AMOUNT, 'Invalid amount');
@@ -275,6 +290,27 @@ export class PaymeProvider implements PaymentProvider {
     const existing = readState(payment.providerData);
     if (existing) {
       if (existing.transactionId === params.id) {
+        // Takroriy CreateTransaction (Payme retry) — idempotent javob.
+        // Lekin faqat hali FAOL (state=1) tranzaksiya qaytariladi:
+        //   • allaqachon bajarilgan/bekor qilingan → -31008;
+        //   • 12 soatdan oshgan → timeout bilan bekor (state=-1, reason=4)
+        //     va -31008 (Payme spetsifikatsiyasi + sandbox testi).
+        if (existing.state !== STATE_CREATED) {
+          return rpcError(id, ERR.CANT_PERFORM, 'Transaction is not active');
+        }
+        if (Date.now() - existing.createTime > PAYME_TIMEOUT_MS) {
+          const timedOut: PaymeState = {
+            ...existing,
+            state: STATE_CANCELLED,
+            cancelTime: Date.now(),
+            reason: 4,
+          };
+          await this.prisma.payment.update({
+            where: { id: payment.id },
+            data: { status: 'failed', providerData: stateJson(timedOut) },
+          });
+          return rpcError(id, ERR.CANT_PERFORM, 'Transaction timed out');
+        }
         return rpcResult(id, {
           create_time: existing.createTime,
           transaction: payment.id,
@@ -285,11 +321,14 @@ export class PaymeProvider implements PaymentProvider {
         id,
         ERR.ORDER_UNAVAILABLE,
         'Another transaction open for this order',
-        'payment_id',
+        this.accountField,
       );
     }
     if (payment.status === 'success') {
-      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order already paid', 'payment_id');
+      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order already paid', this.accountField);
+    }
+    if (payment.status !== 'pending') {
+      return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order unavailable', this.accountField);
     }
 
     const now = Date.now();
@@ -453,22 +492,29 @@ export class PaymeProvider implements PaymentProvider {
     const from = typeof params.from === 'number' ? params.from : 0;
     const to = typeof params.to === 'number' ? params.to : Date.now();
 
+    // Payme `from..to` oralig'ini TRANZAKSIYA yaratilgan vaqt (create_time)
+    // bo'yicha kutadi. Payment.createdAt esa checkout ochilgan vaqt — u har
+    // doim create_time'dan OLDIN, shuning uchun DB'da faqat yuqori chegara
+    // (createdAt <= to) bilan toraytirib, aniq filtrni state.createTime
+    // bo'yicha qilamiz (aks holda from≈create_time bo'lsa yozuv tushib
+    // qolardi).
     const rows = await this.prisma.payment.findMany({
       where: {
         method: 'payme',
         externalId: { not: null },
-        createdAt: { gte: new Date(from), lte: new Date(to) },
+        createdAt: { lte: new Date(to) },
       },
     });
     const transactions = rows.flatMap((p) => {
       const state = readState(p.providerData);
       if (!state) return [];
+      if (state.createTime < from || state.createTime > to) return [];
       return [
         {
           id: state.transactionId,
           time: state.createTime,
           amount: p.amount * TIYIN,
-          account: { payment_id: p.id },
+          account: { [this.accountField]: p.id },
           create_time: state.createTime,
           perform_time: state.performTime,
           cancel_time: state.cancelTime,
@@ -478,6 +524,7 @@ export class PaymeProvider implements PaymentProvider {
         },
       ];
     });
+    transactions.sort((a, b) => a.time - b.time);
     return rpcResult(id, { transactions });
   }
 }
