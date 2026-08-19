@@ -93,7 +93,48 @@ alohida). Bo'sh qoldirilsa IP tekshirilmaydi (imzo/kalit baribir tekshiriladi).
 
 ---
 
-## 3. Payme kabinetida (merchant egasi qiladi)
+## 3. Sandbox (test.paycom.uz) — rasmiy hujjat bo'yicha qanday ishlaydi
+
+Manba: developer.help.paycom.uz/pesochnitsa + sandbox interfeysi matni.
+
+- **Kirish:** https://test.paycom.uz → «Введите Merchant ID» (bizning kassa ID
+  `6a7dc4613febcfd2f87a9eb9`) → «Какой ключ использовать?» → **TEST_KEY** →
+  test kalitni kiritish. Sandbox alohida test-kassa TALAB QILMAYDI — ayni
+  production kassa ID ishlatiladi, faqat avtorizatsiya TEST_KEY bilan.
+  Endpoint URL kassa sozlamalaridan olinadi (Payme Business → Kassa →
+  Endpoint URL = `https://farzandimedu.uz/api/payments/webhook/payme`).
+- **Test parametrlari** (chap panel): *Тип счёта* = **Одноразовый** (bir
+  martalik — bizniki shunday, `payment_id` bir marta to'lanadi);
+  *Текущий статус счёта* va *Текущее состояние транзакции* — tester DB
+  holatiga mos qilib tanlaydi. Kutilgan javoblar:
+
+  | Holat (sandbox'da tanlanadi) | Bizning DB | Kutilgan javob | Bizniki |
+  |---|---|---|---|
+  | Ожидает оплаты | `pending`, tranzaksiya yo'q | CheckPerform `allow:true`, Create → yangi tranzaksiya | ✅ |
+  | В процессе (boshqa tranzaksiya band qilgan) | state=1 bor | -31050..-31099 | ✅ -31051 |
+  | Заблокирован (to'langan/bekor) | `success`/`cancelled` | -31050..-31099 | ✅ -31051 |
+  | Не существует | id yo'q | -31050..-31099 | ✅ -31050 |
+  | Неверная авторизация | — | -32504 | ✅ |
+  | Неверная сумма | — | -31001 | ✅ |
+  | Create/Perform/Cancel ikki marta | — | ikkinchi javob birinchisi bilan bir xil | ✅ |
+  | Cancel state 1 → -1, state 2 → -2 | — | reason bilan | ✅ |
+  | GetStatement, CheckTransaction | — | spetsifikatsiya formati | ✅ |
+  | ChangePassword | — | 3 keys (parol almashtirish) | ❌ -32601 (ixtiyoriy; kalit env'da, runtime'da o'zgarmaydi) |
+
+- **Har ssenariy uchun YANGI `payment_id`** (pending) ishlating: 1-ssenariy
+  (Create→Cancel) buyurtmani `cancelled` qiladi, 2-ssenariy (Create→Perform)
+  uchun yangi pending buyurtma kerak — aks holda «Заблокирован» → -31051
+  (bu to'g'ri javob, lekin ssenariy o'tmaydi).
+- **Chek-havola tekshiruvi:** `https://test.paycom.uz/<base64>` sandbox'da
+  bizning checkout havolamizni PARSE qilib ko'rsatadi (m, ac.payment_id, a) —
+  to'lov sahifasi emas, faqat format tekshiruvi. Kerak bo'lsa vaqtincha
+  `PAYME_CHECKOUT_URL=https://test.paycom.uz` qo'yib ilovadan havola oling.
+- **Rasmiy IP'lar** (webhook faqat shulardan keladi): 185.234.113.1 … 185.234.113.15.
+- `SetFiscalData` (ixtiyoriy; fiskalizatsiya yoqilgan kassada to'lov/bekordan
+  keyin Payme chaqiradi) — implement qilingan: `{success:true}`, ma'lumot
+  `providerData.payme.fiscal`ga yoziladi.
+
+## 4. Payme kabinetida (merchant egasi qiladi)
 
 **Hozirgi holat (2026-08-19):** kassa `6a7dc461…` Payme tomonidan hali
 **faollashtirilmagan** — checkout «Поставщик не найден или заблокирован».
@@ -111,7 +152,7 @@ Payme hodimiga yuboriladigan ma'lumot: endpoint
      admin panel → Monetizatsiya → To'lovlar (`payme` + `pending`) dan oling, yoki
    - `POST /api/payments/checkout` (ota-ona JWT bilan) javobidagi `paymentId`.
 
-   Summa = tarif narxi × 100 (tiyin): oylik 29 000 so'm → `2900000`.
+   Summa = tarif narxi × 100 (tiyin): 29 000 so'm → `2900000`, 1 000 so'm → `100000`.
    **Har test seriyasi uchun yangi payment_id** ishlating — to'langan/bekor
    qilingan buyurtma qayta to'lanmaydi (`-31051`), bu to'g'ri xatti-harakat.
 3. Sandbox hamma testlardan o'tgach Payme kassani **faollashtiradi** →
@@ -124,7 +165,7 @@ kalit bilan) qilinadi.
 
 ---
 
-## 4. Tekshirish (serverda / lokal)
+## 5. Tekshirish (serverda / lokal)
 
 Webhook tirikmi (kalitsiz → JSON-RPC auth xatosi, **HTTP 200**):
 
@@ -154,7 +195,7 @@ Unit test: `cd backend && npx jest src/modules/payments/providers/payme.provider
 
 ---
 
-## 5. Xato kodlari (biz qaytaradiganlar)
+## 6. Xato kodlari (biz qaytaradiganlar)
 
 | Kod      | Ma'no                                                     |
 |----------|-----------------------------------------------------------|
@@ -164,14 +205,16 @@ Unit test: `cd backend && npx jest src/modules/payments/providers/payme.provider
 | -31050   | Buyurtma topilmadi (`account.<field>`)                    |
 | -31051   | Buyurtma to'lanmaydi (to'langan / bekor / boshqa tranzaksiya ochiq) |
 | -32504   | Avtorizatsiya xato (kalit mos emas)                       |
+| -32600   | RPC so'rovda `method` yo'q                                |
 | -32601   | Metod topilmadi                                           |
+| -32001 / -32602 | SetFiscalData: chek topilmadi / params noto'g'ri    |
 
 Holatlar: `1` yaratilgan, `2` bajarilgan, `-1` bekor (bajarilmasdan),
 `-2` bekor (bajarilgandan keyin → obuna ham bekor qilinadi).
 
 ---
 
-## 6. Fiskalizatsiya (ixtiyoriy, keyinroq)
+## 7. Fiskalizatsiya (ixtiyoriy, keyinroq)
 
 `PAYME_FISCAL_MXIK` + `PAYME_FISCAL_PACKAGE_CODE` (+ `PAYME_FISCAL_VAT_PERCENT`)
 to'ldirilsa `CheckPerformTransaction` javobiga soliq cheki uchun `detail`

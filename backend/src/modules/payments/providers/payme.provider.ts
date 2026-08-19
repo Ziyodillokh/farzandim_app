@@ -30,7 +30,12 @@ const ERR = {
   ORDER_UNAVAILABLE: -31051,
   AUTH_FAILED: -32504,
   METHOD_NOT_FOUND: -32601,
+  INVALID_REQUEST: -32600,
   PARSE_ERROR: -32700,
+  /** SetFiscalData: chek (Payme tranzaksiyasi) topilmadi. */
+  FISCAL_RECEIPT_NOT_FOUND: -32001,
+  /** SetFiscalData: parametrlar noto'g'ri. */
+  INVALID_PARAMS: -32602,
 } as const;
 
 interface PaymeState {
@@ -40,6 +45,15 @@ interface PaymeState {
   performTime: number;
   cancelTime: number;
   reason: number | null;
+  /**
+   * Payme `SetFiscalData` orqali kelgan soliq cheki ma'lumotlari (ixtiyoriy
+   * metod; kassada fiskalizatsiya yoqilgan bo'lsa to'lov/bekordan keyin
+   * keladi). PERFORM va CANCEL alohida cheklar — alohida saqlanadi.
+   */
+  fiscal?: {
+    perform_data?: Record<string, unknown>;
+    cancel_data?: Record<string, unknown>;
+  };
 }
 
 interface PaymeParams {
@@ -50,6 +64,10 @@ interface PaymeParams {
   reason?: number;
   from?: number;
   to?: number;
+  /** SetFiscalData: 'PERFORM' | 'CANCEL'. */
+  type?: string;
+  /** SetFiscalData: ОФД chek ma'lumotlari. */
+  fiscal_data?: Record<string, unknown>;
 }
 
 function readState(
@@ -223,8 +241,14 @@ export class PaymeProvider implements PaymentProvider {
     if (!this.checkAuth(req.headers)) {
       return rpcError(id, ERR.AUTH_FAILED, 'Authorization failed');
     }
-    if (!body || typeof body.method !== 'string') {
-      return rpcError(id, ERR.PARSE_ERROR, 'Invalid request');
+    // -32600: RPC so'rovda majburiy maydon (`method`) yo'q (Payme "Общие
+    // ошибки"); -32700 faqat JSON o'zi buzilgan holat uchun (uni Fastify
+    // bizgacha 400 bilan qaytaradi).
+    if (!body || typeof body !== 'object') {
+      return rpcError(id, ERR.PARSE_ERROR, 'Parse error');
+    }
+    if (typeof body.method !== 'string') {
+      return rpcError(id, ERR.INVALID_REQUEST, 'Invalid request');
     }
     const params = (body.params ?? {}) as PaymeParams;
 
@@ -241,6 +265,8 @@ export class PaymeProvider implements PaymentProvider {
         return this.checkTransaction(id, params);
       case 'GetStatement':
         return this.getStatement(id, params);
+      case 'SetFiscalData':
+        return this.setFiscalData(id, params);
       default:
         return rpcError(id, ERR.METHOD_NOT_FOUND, 'Method not found');
     }
@@ -262,6 +288,19 @@ export class PaymeProvider implements PaymentProvider {
     // payment_id yaratadi. Faqat `pending` buyurtma to'lanishi mumkin.
     if (payment.status !== 'pending') {
       return rpcError(id, ERR.ORDER_UNAVAILABLE, 'Order unavailable', this.accountField);
+    }
+    // Buyurtmada allaqachon FAOL (state=1) tranzaksiya bor — Payme sandbox
+    // «В процессе» holati: "другая транзакция заняла этот счет" →
+    // -31050..-31099 kutiladi (allow:true EMAS). Bir martalik buyurtma
+    // faqat bitta tranzaksiya bilan to'lanadi.
+    const active = readState(payment.providerData);
+    if (active && active.state === STATE_CREATED) {
+      return rpcError(
+        id,
+        ERR.ORDER_UNAVAILABLE,
+        'Another transaction open for this order',
+        this.accountField,
+      );
     }
     if (params.amount !== payment.amount * TIYIN) {
       return rpcError(id, ERR.INVALID_AMOUNT, 'Invalid amount');
@@ -483,6 +522,47 @@ export class PaymeProvider implements PaymentProvider {
       state: state.state,
       reason: state.reason,
     });
+  }
+
+  /**
+   * SetFiscalData — Payme ОФД'da chek ro'yxatdan o'tgach fiskal ma'lumotni
+   * yuboradi (`type`: PERFORM | CANCEL). Ixtiyoriy metod, lekin kassada
+   * fiskalizatsiya yoqilgan bo'lsa har to'lovdan keyin keladi — -32601
+   * qaytarish Payme tomonida xato sifatida ko'rinadi. Ma'lumot
+   * `providerData.payme.fiscal.{perform_data|cancel_data}` ga saqlanadi
+   * (PERFORM va CANCEL — ikki alohida fiskal chek, hujjat talabi).
+   */
+  private async setFiscalData(
+    id: unknown,
+    params: PaymeParams,
+  ): Promise<WebhookResponse> {
+    const type = params.type;
+    if (
+      (type !== 'PERFORM' && type !== 'CANCEL') ||
+      !params.fiscal_data ||
+      typeof params.fiscal_data !== 'object'
+    ) {
+      return rpcError(id, ERR.INVALID_PARAMS, 'Invalid params: type/fiscal_data');
+    }
+    const payment = await this.findByTransaction(params.id);
+    const state = payment ? readState(payment.providerData) : null;
+    if (!payment || !state) {
+      return rpcError(id, ERR.FISCAL_RECEIPT_NOT_FOUND, 'Receipt not found');
+    }
+    const updated: PaymeState = {
+      ...state,
+      fiscal: {
+        ...(state.fiscal ?? {}),
+        ...(type === 'PERFORM'
+          ? { perform_data: params.fiscal_data }
+          : { cancel_data: params.fiscal_data }),
+      },
+    };
+    await this.prisma.payment.update({
+      where: { id: payment.id },
+      data: { providerData: stateJson(updated) },
+    });
+    return rpcResult(id, { success: true });
   }
 
   private async getStatement(
