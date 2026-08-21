@@ -26,6 +26,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:in_app_purchase/in_app_purchase.dart';
+import 'package:in_app_purchase_storekit/store_kit_2_wrappers.dart';
 import 'package:solar_icons/solar_icons.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -154,6 +155,72 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
         },
       );
       unawaited(_loadAppleProducts());
+      unawaited(_drainStuckAppleTransactions());
+    }
+  }
+
+  /// StoreKit navbatida QOTIB QOLGAN tranzaksiyalarni tozalaydi.
+  ///
+  /// NEGA KERAK. `in_app_purchase_storekit` (StoreKit 2) yangi xaridni
+  /// boshlashdan OLDIN `Transaction.unfinished` ro'yxatini tekshiradi va
+  /// o'sha mahsulot uchun tugallanmagan tranzaksiya topsa, xaridni umuman
+  /// BOSHLAMAYDI — Apple oynasi ochilmaydi, darhol
+  /// `storekit_duplicate_product_object` xatosi qaytadi.
+  ///
+  /// Bunday tranzaksiya 1.0.0+3 buildidan qolgan edi: o'shanda
+  /// `completePurchase` `finally` ichida emasdi va backend tekshiruvi
+  /// yiqilganda tranzaksiya yopilmay qolardi (pastdagi `_onPurchaseUpdates`
+  /// izohiga qarang). Keyingi buildlar YANGI tranzaksiyalarni to'g'ri
+  /// yopadi, lekin ALLAQACHON qotib qolganini hech kim tozalamasdi:
+  /// plagin faqat `Transaction.updates` ni tinglaydi, eski tugallanmagan
+  /// yozuvlar esa u yerga TUSHMAYDI. Natijada iPhone'da xarid butunlay
+  /// ishlamay qolgandi (2026-08-22 da haqiqiy qurilmada aniqlandi).
+  ///
+  /// Tartib muhim: avval kvitansiyani backendga yuborib obunani TIKLAYMIZ
+  /// (agar pul haqiqatan to'langan bo'lsa yo'qolmasin), keyingina
+  /// tranzaksiyani yopamiz.
+  Future<void> _drainStuckAppleTransactions() async {
+    try {
+      final stuck = await SK2Transaction.unfinishedTransactions();
+      if (stuck.isEmpty) return;
+      debugPrint('[IAP] qotib qolgan tranzaksiya: ${stuck.length} ta');
+
+      var recovered = false;
+      for (final t in stuck) {
+        final receipt = t.receiptData;
+        if (receipt != null && receipt.isNotEmpty) {
+          try {
+            final ok = await ref
+                .read(backendPaymentsRepositoryProvider)
+                .verifyApplePurchase(
+                  productId: t.productId,
+                  verificationData: receipt,
+                  transactionId: t.id,
+                );
+            if (ok) recovered = true;
+          } catch (e) {
+            debugPrint("[IAP] eski kvitansiyani tekshirib bo'lmadi: $e");
+          }
+        }
+        // Yopish HAR QANDAY holatda — aks holda yangi xarid bloklanaveradi.
+        final numericId = int.tryParse(t.id);
+        if (numericId == null) {
+          debugPrint('[IAP] tranzaksiya id raqam emas: ${t.id}');
+          continue;
+        }
+        try {
+          await SK2Transaction.finish(numericId);
+          debugPrint('[IAP] tranzaksiya yopildi: ${t.productId} (${t.id})');
+        } catch (e) {
+          debugPrint('[IAP] finish xatosi (${t.id}): $e');
+        }
+      }
+
+      if (recovered && mounted) ref.invalidate(entitlementProvider);
+    } catch (e) {
+      // Bu tozalash IXTIYORIY — yiqilsa ham ekran normal ishlashda davom
+      // etadi (masalan StoreKit 1 rejimida bu API umuman yo'q).
+      debugPrint('[IAP] tugallanmagan tranzaksiyalarni tozalash xatosi: $e');
     }
   }
 
