@@ -22,6 +22,7 @@ import 'package:farzandim/features/settings/data/repositories/backend_payments_r
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -159,6 +160,43 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     }
   }
 
+  /// ⚠️ VAQTINCHA — Apple qaytargan XOM xatoni to'liq ko'rsatadi.
+  ///
+  /// Sinov qurilmasi boshqa odamda va Mac'ga ulab Console log'ini o'qish
+  /// imkoni yo'q. Toast uzun matnni kesib tashlagani uchun dialog: matn
+  /// to'liq ko'rinadi, tanlanadi va bitta tugma bilan nusxalanadi.
+  ///
+  /// APP STORE'GA YUBORISHDAN OLDIN OLIB TASHLANSIN.
+  void _showRawIapError(String productId, Object error) {
+    showDialog<void>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: Text('premium.iapFailed'.tr()),
+        content: SingleChildScrollView(
+          child: SelectableText(
+            '[$productId]\n\n$error',
+            style: const TextStyle(fontSize: 12, height: 1.4),
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () async {
+              await Clipboard.setData(
+                ClipboardData(text: '[$productId]\n$error'),
+              );
+              if (ctx.mounted) Navigator.of(ctx).pop();
+            },
+            child: const Text('Nusxalash'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('OK'),
+          ),
+        ],
+      ),
+    );
+  }
+
   /// StoreKit navbatida QOTIB QOLGAN tranzaksiyalarni tozalaydi.
   ///
   /// NEGA KERAK. `in_app_purchase_storekit` (StoreKit 2) yangi xaridni
@@ -188,7 +226,7 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       var recovered = false;
       for (final t in stuck) {
         final receipt = t.receiptData;
-        if (receipt != null && receipt.isNotEmpty) {
+        if (receipt != null && receipt.isNotEmpty && mounted) {
           try {
             final ok = await ref
                 .read(backendPaymentsRepositoryProvider)
@@ -196,7 +234,10 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
                   productId: t.productId,
                   verificationData: receipt,
                   transactionId: t.id,
-                );
+                )
+                // Tarmoq sekin bo'lsa tozalash cheksiz cho'zilmasin — bu
+                // yerda maqsad obunani tiklash EMAS, xarid yo'lini ochish.
+                .timeout(const Duration(seconds: 6));
             if (ok) recovered = true;
           } catch (e) {
             debugPrint("[IAP] eski kvitansiyani tekshirib bo'lmadi: $e");
@@ -209,7 +250,14 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
           continue;
         }
         try {
-          await SK2Transaction.finish(numericId);
+          // ⚠️ TIMEOUT MAJBURIY. Plaginning Swift `finish` funksiyasida
+          // (InAppPurchasePlugin+StoreKit2.swift) tranzaksiya
+          // `Transaction.all` da topilmasa `completion` UMUMAN
+          // chaqirilmaydi — `else` shoxi yo'q. Ya'ni Dart tomonda Future
+          // abadiy osilib qoladi va butun tozalash to'xtaydi.
+          await SK2Transaction.finish(
+            numericId,
+          ).timeout(const Duration(seconds: 5));
           debugPrint('[IAP] tranzaksiya yopildi: ${t.productId} (${t.id})');
         } catch (e) {
           debugPrint('[IAP] finish xatosi (${t.id}): $e');
@@ -334,6 +382,17 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
     }
     setState(() => _busyPlanId = plan.id);
     try {
+      // ⚠️ POYGANI YOPAMIZ. initState'dagi `unawaited(_drainStuck...)` fon'da
+      // ketadi va foydalanuvchini Subscribe bosishdan TO'SMAYDI. Sekin
+      // internetda u hali tugamagan bo'lishi mumkin — aynan tozalash eng
+      // kerak bo'lgan holatda. Shuning uchun xariddan OLDIN uni yana bir bor,
+      // endi KUTIB chaqiramiz (ikkinchi marta ro'yxat bo'sh bo'lsa darhol
+      // qaytadi, ortiqcha yuk yo'q).
+      await _drainStuckAppleTransactions().timeout(
+        const Duration(seconds: 8),
+        onTimeout: () {},
+      );
+
       // ⚠️ HAR XATO UCHUN ALOHIDA XABAR — ataylab.
       // Ilgari uchala holat ham bitta "To'lov sahifasini ochib bo'lmadi"
       // toastini berardi va sabab NIMA ekanini aniqlab bo'lmasdi (2026-08-21
@@ -364,18 +423,13 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       debugPrint('[IAP] xarid xatosi ($productId): $e');
       if (mounted) {
         // ⚠️ VAQTINCHA DIAGNOSTIKA (2026-08-22).
-        // Apple'ning XOM xato matnini ekranga chiqaramiz. Sabab: sinov
-        // qurilmasi boshqa odamda va Mac'ga ulab Console'dan log o'qish
-        // imkoni yo'q, umumiy xabar esa sababni ko'rsatmaydi va bir necha
-        // build siklini yo'qotdi.
+        // Xom xatoni DIALOG'da ko'rsatamiz, toastda EMAS: `AppToast`
+        // `maxLines: 3` bilan cheklangan va texnik matnni butunlay kesib
+        // tashlaydi — build 7 va 8 aynan shu sababdan foydasiz chiqdi.
         //
-        // App Store'ga YUBORISHDAN OLDIN OLIB TASHLANSIN — foydalanuvchiga
-        // texnik matn ko'rsatish yaxshi tajriba emas. Faqat `'premium.
-        // iapFailed'.tr()` qolishi kerak.
-        AppToast.error(
-          context,
-          '${'premium.iapFailed'.tr()}\n\n[$productId]\n$e',
-        );
+        // App Store'ga YUBORISHDAN OLDIN OLIB TASHLANSIN: bu blok o'rniga
+        // oddiy `AppToast.error(context, 'premium.iapFailed'.tr())` qolsin.
+        _showRawIapError(productId, e);
         setState(() => _busyPlanId = null);
       }
     }
