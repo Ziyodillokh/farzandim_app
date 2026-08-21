@@ -293,11 +293,22 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       }
     } catch (e) {
       // Qolgan hamma narsa (StoreKit navbatida tugallanmagan tranzaksiya,
-      // sandbox akkaunt muammosi, tarmoq uzilishi...). Sababni log'ga
-      // yozamiz — qurilmadan diagnostika qilish uchun yagona yo'l.
+      // sandbox akkaunt muammosi, tarmoq uzilishi...).
       debugPrint('[IAP] xarid xatosi ($productId): $e');
       if (mounted) {
-        AppToast.error(context, 'premium.iapFailed'.tr());
+        // ⚠️ VAQTINCHA DIAGNOSTIKA (2026-08-22).
+        // Apple'ning XOM xato matnini ekranga chiqaramiz. Sabab: sinov
+        // qurilmasi boshqa odamda va Mac'ga ulab Console'dan log o'qish
+        // imkoni yo'q, umumiy xabar esa sababni ko'rsatmaydi va bir necha
+        // build siklini yo'qotdi.
+        //
+        // App Store'ga YUBORISHDAN OLDIN OLIB TASHLANSIN — foydalanuvchiga
+        // texnik matn ko'rsatish yaxshi tajriba emas. Faqat `'premium.
+        // iapFailed'.tr()` qolishi kerak.
+        AppToast.error(
+          context,
+          '${'premium.iapFailed'.tr()}\n\n[$productId]\n$e',
+        );
         setState(() => _busyPlanId = null);
       }
     }
