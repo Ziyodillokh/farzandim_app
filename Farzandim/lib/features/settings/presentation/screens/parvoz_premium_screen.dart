@@ -262,24 +262,42 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       yearly: _yearly,
     );
     if (productId == null) {
-      if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+      if (mounted) AppToast.error(context, 'premium.iapPlanUnavailable'.tr());
       return;
     }
     setState(() => _busyPlanId = plan.id);
     try {
+      // ⚠️ HAR XATO UCHUN ALOHIDA XABAR — ataylab.
+      // Ilgari uchala holat ham bitta "To'lov sahifasini ochib bo'lmadi"
+      // toastini berardi va sabab NIMA ekanini aniqlab bo'lmasdi (2026-08-21
+      // da haqiqiy qurilmada aynan shu vaqt yo'qotdi). Endi foydalanuvchi
+      // xabarning o'zidan nima qilish kerakligini biladi.
       if (!await _iap.isAvailable()) {
-        throw Exception('store unavailable');
+        // Odatda: Ekran vaqti cheklovi ilova ichidagi xaridlarni o'chirgan,
+        // yoki qurilma MDM bilan boshqariladi.
+        throw const _IapFailure('premium.iapDeviceBlocked');
       }
       final resp = await _iap.queryProductDetails(<String>{productId});
       if (resp.productDetails.isEmpty) {
-        throw Exception('product not found: $productId');
+        // Mahsulot App Store Connect'da yo'q yoki hali "Ready to Submit"
+        // holatiga o'tmagan.
+        throw const _IapFailure('premium.iapProductMissing');
       }
       final param = PurchaseParam(productDetails: resp.productDetails.first);
       // Obunalar in_app_purchase'da `buyNonConsumable` orqali sotib olinadi.
       await _iap.buyNonConsumable(purchaseParam: param);
-    } catch (_) {
+    } on _IapFailure catch (e) {
       if (mounted) {
-        AppToast.error(context, 'premium.checkoutError'.tr());
+        AppToast.error(context, e.messageKey.tr());
+        setState(() => _busyPlanId = null);
+      }
+    } catch (e) {
+      // Qolgan hamma narsa (StoreKit navbatida tugallanmagan tranzaksiya,
+      // sandbox akkaunt muammosi, tarmoq uzilishi...). Sababni log'ga
+      // yozamiz — qurilmadan diagnostika qilish uchun yagona yo'l.
+      debugPrint('[IAP] xarid xatosi ($productId): $e');
+      if (mounted) {
+        AppToast.error(context, 'premium.iapFailed'.tr());
         setState(() => _busyPlanId = null);
       }
     }
@@ -539,6 +557,22 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
 }
 
 /// Tariflar ro'yxati — har biri `_PlanCard` (dizayn saqlanadi).
+/// Apple IAP oqimidagi KUTILGAN xatolar — foydalanuvchiga ko'rsatiladigan
+/// tarjima kaliti bilan birga tashiladi.
+///
+/// Oddiy `Exception` o'rniga shu ishlatiladi, chunki `catch (_)` bilan hamma
+/// narsani bir xil xabarga aylantirish sababni yashiradi va nosozlikni
+/// qurilmada topib bo'lmay qoladi.
+class _IapFailure implements Exception {
+  const _IapFailure(this.messageKey);
+
+  /// `premium.*` tarjima kaliti.
+  final String messageKey;
+
+  @override
+  String toString() => '_IapFailure($messageKey)';
+}
+
 class _PlansList extends StatelessWidget {
   const _PlansList({
     required this.plans,

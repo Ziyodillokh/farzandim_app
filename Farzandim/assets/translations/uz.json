@@ -1015,7 +1015,11 @@
     "save2m": "2 oy tekin",
     "payMethodTitle": "To'lov usulini tanlang",
     "payViaClick": "Click ilovasi yoki bank kartasi",
-    "payViaPayme": "Payme ilovasi yoki bank kartasi"
+    "payViaPayme": "Payme ilovasi yoki bank kartasi",
+    "iapDeviceBlocked": "Bu qurilmada ilova ichidagi xaridlar o'chirilgan. Sozlamalar → Ekran vaqti → Kontent va maxfiylik cheklovlari → Ilova ichidagi xaridlar → Ruxsat berish.",
+    "iapProductMissing": "Bu tarif hozircha App Store'da mavjud emas. Keyinroq urinib ko'ring.",
+    "iapPlanUnavailable": "Bu tarifni iOS'da sotib bo'lmaydi.",
+    "iapFailed": "Xaridni yakunlab bo'lmadi. Keyinroq urinib ko'ring."
   },
   "settings": {
     "title": "Sozlamalar",

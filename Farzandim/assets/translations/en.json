@@ -1015,7 +1015,11 @@
     "save2m": "2 months free",
     "payMethodTitle": "Choose a payment method",
     "payViaClick": "Click app or bank card",
-    "payViaPayme": "Payme app or bank card"
+    "payViaPayme": "Payme app or bank card",
+    "iapDeviceBlocked": "In-app purchases are turned off on this device. Settings → Screen Time → Content & Privacy Restrictions → In-app Purchases → Allow.",
+    "iapProductMissing": "This plan is not available in the App Store right now. Please try again later.",
+    "iapPlanUnavailable": "This plan cannot be purchased on iOS.",
+    "iapFailed": "Could not complete the purchase. Please try again later."
   },
   "settings": {
     "title": "Settings",
