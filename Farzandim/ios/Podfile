@@ -44,5 +44,34 @@ end
 post_install do |installer|
   installer.pods_project.targets.each do |target|
     flutter_additional_ios_build_settings(target)
+
+    # ⚠️ permission_handler MAKROLARI — MAJBURIY.
+    #
+    # `permission_handler_apple` iOS'da BARCHA ruxsatlarni standart holatda
+    # O'CHIRIB keladi (PermissionHandlerEnums.h: `#define PERMISSION_CAMERA 0`
+    # va h.k.). Ular shu yerda oshkora yoqilmasa, tegishli kod ilovaga
+    # umuman kompilyatsiya qilinmaydi va plagin HAR DOIM "rad etilgan"
+    # qaytaradi — iOS ruxsat so'rovi HECH QACHON chiqmaydi.
+    #
+    # 2026-08-22 da haqiqiy qurilmada aynan shu aniqlandi: chatda ovozli va
+    # video xabar ishlamasdi, ilova to'g'ridan-to'g'ri "Sozlamalarni oching"
+    # deb yozardi, Sozlamalarda esa Kamera/Mikrofon qatorlari umuman
+    # ko'rinmasdi (tizim hech qachon so'ralmagani uchun).
+    #
+    # Joylashuv va bildirishnoma ta'sirlanmagan edi, chunki ular
+    # `geolocator` va Firebase orqali so'raladi — permission_handler'dan
+    # o'tmaydi.
+    #
+    # Ro'yxat ilovada HAQIQATAN ishlatiladigan ruxsatlar bilan cheklangan
+    # (lib/ bo'ylab `Permission.*` qidiruvi): camera, microphone,
+    # notification. Yangi ruxsat qo'shilsa — bu yerga ham qo'shilsin.
+    target.build_configurations.each do |config|
+      config.build_settings['GCC_PREPROCESSOR_DEFINITIONS'] ||= [
+        '$(inherited)',
+        'PERMISSION_CAMERA=1',
+        'PERMISSION_MICROPHONE=1',
+        'PERMISSION_NOTIFICATIONS=1',
+      ]
+    end
   end
 end

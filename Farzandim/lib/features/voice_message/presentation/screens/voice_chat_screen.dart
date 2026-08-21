@@ -197,7 +197,11 @@ class _VoiceChatScreenState extends ConsumerState<VoiceChatScreen>
     );
     if (outcome != PermissionOutcome.granted) {
       if (!mounted) return;
-      if (outcome == PermissionOutcome.permanentlyDenied) {
+      if (outcome == PermissionOutcome.restricted) {
+        // Qurilma cheklovi — Sozlamalardan yoqib bo'lmaydi, shuning uchun
+        // "Sozlamalarni ochish" taklif QILINMAYDI.
+        AppToast.info(context, 'permissions.restrictedBody'.tr());
+      } else if (outcome == PermissionOutcome.permanentlyDenied) {
         await showOpenAppSettingsDialog(
           context,
           title: 'permissions.micDeniedTitle'.tr(),

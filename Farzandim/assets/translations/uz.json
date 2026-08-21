@@ -797,7 +797,8 @@
     "notifPrimerTitle": "Muhim xabarlardan xabardor bo'ling",
     "notifPrimerBody": "Farzandingiz SOS yuborsa, geo-zonaga kirsa yoki undan chiqsa va boshqa muhim holatlarda darhol bildirishnoma olasiz.",
     "notifPrimerAllow": "Ruxsat berish",
-    "notifPrimerLater": "Keyinroq"
+    "notifPrimerLater": "Keyinroq",
+    "restrictedBody": "Bu qurilmada kamera/mikrofon tizim cheklovi bilan bloklangan (Ekran vaqti yoki boshqaruv profili)."
   },
   "voiceChat": {
     "headerSubtitle": "Shaxsiy yozishmalar",

@@ -797,7 +797,8 @@
     "notifPrimerTitle": "Stay on top of what matters",
     "notifPrimerBody": "Get an instant alert when your child sends an SOS, enters or leaves a geo-zone, and in other important moments.",
     "notifPrimerAllow": "Allow",
-    "notifPrimerLater": "Later"
+    "notifPrimerLater": "Later",
+    "restrictedBody": "Camera/microphone are blocked on this device by a system restriction (Screen Time or a management profile)."
   },
   "voiceChat": {
     "headerSubtitle": "Personal chat",

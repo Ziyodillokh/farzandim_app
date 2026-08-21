@@ -12,6 +12,12 @@ enum PermissionOutcome {
 
   /// Doimiy rad etilgan ("Boshqa so'ramang") — faqat Sozlamalardan yoqiladi.
   permanentlyDenied,
+
+  /// Qurilma darajasida BLOKLANGAN (Ekran vaqti cheklovi yoki MDM profili).
+  /// Foydalanuvchi ilova sozlamalaridan yoqa OLMAYDI — tizim cheklovini
+  /// olib tashlash kerak. Shu sababli `permanentlyDenied` dan ajratilgan:
+  /// "Sozlamalarni ochish" bu holatda foydasiz maslahat bo'lardi.
+  restricted,
 }
 
 /// Runtime ruxsatlarni "just-in-time" so'rab, doimiy rad holatini
@@ -33,6 +39,9 @@ class PermissionService {
     if (status.isGranted || status.isLimited) {
       return PermissionOutcome.granted;
     }
+    if (status.isRestricted) {
+      return PermissionOutcome.restricted;
+    }
     if (status.isPermanentlyDenied) {
       return PermissionOutcome.permanentlyDenied;
     }
@@ -40,6 +49,9 @@ class PermissionService {
     final result = await permission.request();
     if (result.isGranted || result.isLimited) {
       return PermissionOutcome.granted;
+    }
+    if (result.isRestricted) {
+      return PermissionOutcome.restricted;
     }
     if (result.isPermanentlyDenied) {
       return PermissionOutcome.permanentlyDenied;

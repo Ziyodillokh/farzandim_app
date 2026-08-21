@@ -22,7 +22,6 @@ import 'package:farzandim/features/settings/data/repositories/backend_payments_r
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -158,43 +157,6 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       unawaited(_loadAppleProducts());
       unawaited(_drainStuckAppleTransactions());
     }
-  }
-
-  /// ⚠️ VAQTINCHA — Apple qaytargan XOM xatoni to'liq ko'rsatadi.
-  ///
-  /// Sinov qurilmasi boshqa odamda va Mac'ga ulab Console log'ini o'qish
-  /// imkoni yo'q. Toast uzun matnni kesib tashlagani uchun dialog: matn
-  /// to'liq ko'rinadi, tanlanadi va bitta tugma bilan nusxalanadi.
-  ///
-  /// APP STORE'GA YUBORISHDAN OLDIN OLIB TASHLANSIN.
-  void _showRawIapError(String productId, Object error) {
-    showDialog<void>(
-      context: context,
-      builder: (ctx) => AlertDialog(
-        title: Text('premium.iapFailed'.tr()),
-        content: SingleChildScrollView(
-          child: SelectableText(
-            '[$productId]\n\n$error',
-            style: const TextStyle(fontSize: 12, height: 1.4),
-          ),
-        ),
-        actions: [
-          TextButton(
-            onPressed: () async {
-              await Clipboard.setData(
-                ClipboardData(text: '[$productId]\n$error'),
-              );
-              if (ctx.mounted) Navigator.of(ctx).pop();
-            },
-            child: const Text('Nusxalash'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(ctx).pop(),
-            child: const Text('OK'),
-          ),
-        ],
-      ),
-    );
   }
 
   /// StoreKit navbatida QOTIB QOLGAN tranzaksiyalarni tozalaydi.
@@ -422,14 +384,7 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       // sandbox akkaunt muammosi, tarmoq uzilishi...).
       debugPrint('[IAP] xarid xatosi ($productId): $e');
       if (mounted) {
-        // ⚠️ VAQTINCHA DIAGNOSTIKA (2026-08-22).
-        // Xom xatoni DIALOG'da ko'rsatamiz, toastda EMAS: `AppToast`
-        // `maxLines: 3` bilan cheklangan va texnik matnni butunlay kesib
-        // tashlaydi — build 7 va 8 aynan shu sababdan foydasiz chiqdi.
-        //
-        // App Store'ga YUBORISHDAN OLDIN OLIB TASHLANSIN: bu blok o'rniga
-        // oddiy `AppToast.error(context, 'premium.iapFailed'.tr())` qolsin.
-        _showRawIapError(productId, e);
+        AppToast.error(context, 'premium.iapFailed'.tr());
         setState(() => _busyPlanId = null);
       }
     }
