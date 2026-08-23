@@ -67,9 +67,20 @@ const envSchema = z.object({
   // 3-qurilma bo'lib 409 oladi va "ruxsat so'rash" ekranida qotib qoladi
   // (auth.service.ts enforceParentDeviceLimit). Faqat ataylab yaratilgan
   // demo akkaunt email'ini qo'ying.
+  // ⚠️ Qiymat IDENTIFIKATOR: email YOKI +998 telefon raqami (demo akkaunt
+  // qanday ro'yxatdan o'tgan bo'lsa). 2026-08-24 gacha faqat .email()
+  // tekshiruvi bor edi — telefon qiymati qo'yilganda BUTUN BACKEND
+  // yiqilardi (env validatsiyasi startup'da throw qiladi). Auth'dagi
+  // solishtirish mantiqiga mos: email yoki telefon.
   PLAY_REVIEW_PARENT_EMAIL: z.preprocess(
     (v) => (typeof v === 'string' && v.length === 0 ? undefined : v),
-    z.string().email().optional(),
+    z
+      .string()
+      .refine(
+        (v) => /^\+?[0-9]{7,15}$/.test(v) || /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(v),
+        'email yoki +998... telefon raqami bo\'lishi kerak',
+      )
+      .optional(),
   ),
 
   PAYME_MERCHANT_ID: z.preprocess(
