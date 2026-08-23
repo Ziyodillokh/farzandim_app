@@ -74,6 +74,7 @@ export class AppleIapService {
     // bo'lmasa (renewal-poll) parseProductId'ga mos KELGAN barcha yozuvlar
     // orasidan izlaymiz.
     if (dto.productId && !parseProductId(dto.productId)) {
+      this.logger.warn(`verify rad: noma'lum productId=${dto.productId}`);
       throw new BadRequestException('Unknown productId');
     }
 
@@ -100,6 +101,9 @@ export class AppleIapService {
       // Renewal-poll'da mos yozuv topilmasa — bu XATO emas (foydalanuvchida
       // hali Apple obunasi yo'q bo'lishi mumkin), jim rad.
       if (!dto.productId) return { ok: false, reason: 'no_subscription' };
+      this.logger.warn(
+        `verify rad: kvitansiyada mahsulot topilmadi (productId=${dto.productId})`,
+      );
       throw new BadRequestException('Product not found in receipt');
     }
     // Eng so'nggi (eng katta expires_date_ms) tranzaksiya — bir nechta
@@ -135,6 +139,10 @@ export class AppleIapService {
     // Production oyligi 30 kun — 2 daqiqa u yerda hech narsani o'zgartirmaydi.
     const EXPIRY_GRACE_MS = 2 * 60 * 1000;
     if (expiresMs > 0 && expiresMs + EXPIRY_GRACE_MS <= Date.now()) {
+      this.logger.warn(
+        `verify rad: muddati o'tgan (product=${resolvedProductId} ` +
+          `expiresMs=${expiresMs} tx=${transactionId})`,
+      );
       return { ok: false, reason: 'expired' };
     }
 
@@ -145,14 +153,20 @@ export class AppleIapService {
       const existing = await this.prisma.payment.findFirst({
         where: { method: 'apple', externalId: transactionId, status: 'success' },
       });
-      if (existing) return { ok: true };
+      if (existing) {
+        this.logger.log(`Apple IAP OK (idempotent): tx=${transactionId}`);
+        return { ok: true };
+      }
     }
 
     const plan = await this.prisma.plan.findFirst({
       where: { entitlementTier: parsed.tier, isActive: true },
       orderBy: { sortOrder: 'asc' },
     });
-    if (!plan) throw new BadRequestException(`No plan for tier ${parsed.tier}`);
+    if (!plan) {
+      this.logger.warn(`verify rad: '${parsed.tier}' tier uchun plan yo'q`);
+      throw new BadRequestException(`No plan for tier ${parsed.tier}`);
+    }
 
     // Yillik = priceUzs*10 (activateSubscriptionTx summadan 365 kun aniqlaydi,
     // Click oqimidagi bilan bir xil mantiq).
@@ -175,6 +189,10 @@ export class AppleIapService {
       notes: `Apple IAP ${resolvedProductId} (original_transaction_id=${originalTransactionId})`,
     });
 
+    this.logger.log(
+      `Apple IAP OK: user=${userId} product=${resolvedProductId} ` +
+        `tx=${transactionId}`,
+    );
     return { ok: true };
   }
 
