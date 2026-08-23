@@ -416,13 +416,22 @@ export class AuthService {
     // Email `buildAuthResponse` uzatadigan obyektda yo'q, shuning uchun
     // bazadan o'qiymiz — LEKIN faqat env o'rnatilgan bo'lsa, ya'ni oddiy
     // login yo'liga qo'shimcha so'rov TUSHMAYDI.
-    const reviewEmail = process.env.PLAY_REVIEW_PARENT_EMAIL?.trim();
-    if (reviewEmail) {
+    // Env qiymati IDENTIFIKATOR: email YOKI telefon raqami bo'lishi mumkin.
+    // ⚠️ 2026-08-24 tuzatish: ilgari faqat `email` solishtirilardi, demo
+    // akkaunt esa TELEFON bilan ro'yxatdan o'tgan (email=null) — istisno
+    // hech qachon ishlamasdi. Apple tekshiruvchisi ikkinchi qurilmada
+    // (iPad + iPhone'da sinashadi) 409 DEVICE_LIMIT_REACHED olib, "ruxsat
+    // so'rash" ekranida qotib qolardi.
+    const reviewId = process.env.PLAY_REVIEW_PARENT_EMAIL?.trim();
+    if (reviewId) {
       const u = await this.prisma.user.findUnique({
         where: { id: user.id },
-        select: { email: true },
+        select: { email: true, phone: true },
       });
-      if (u?.email && u.email.toLowerCase() === reviewEmail.toLowerCase()) {
+      const emailMatch =
+        u?.email && u.email.toLowerCase() === reviewId.toLowerCase();
+      const phoneMatch = u?.phone && u.phone === reviewId;
+      if (emailMatch || phoneMatch) {
         return;
       }
     }
