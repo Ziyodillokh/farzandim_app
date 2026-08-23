@@ -1020,7 +1020,8 @@
     "iapDeviceBlocked": "Bu qurilmada ilova ichidagi xaridlar o'chirilgan. Sozlamalar → Ekran vaqti → Kontent va maxfiylik cheklovlari → Ilova ichidagi xaridlar → Ruxsat berish.",
     "iapProductMissing": "Bu tarif hozircha App Store'da mavjud emas. Keyinroq urinib ko'ring.",
     "iapPlanUnavailable": "Bu tarifni iOS'da sotib bo'lmaydi.",
-    "iapFailed": "Xaridni yakunlab bo'lmadi. Keyinroq urinib ko'ring."
+    "iapFailed": "Xaridni yakunlab bo'lmadi. Keyinroq urinib ko'ring.",
+    "iapVerifyPending": "To'lov qabul qilindi. Obuna faollashtirilmoqda — bir necha soniyadan so'ng bu ekranni qayta oching."
   },
   "settings": {
     "title": "Sozlamalar",

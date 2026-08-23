@@ -7,6 +7,8 @@ import {
 import {
   Environment,
   SignedDataVerifier,
+  VerificationException,
+  VerificationStatus,
 } from '@apple/app-store-server-library';
 import { PrismaService } from '../../common/database/prisma.service';
 import { PaymentsService } from './payments.service';
@@ -128,7 +130,11 @@ export class AppleIapService {
     );
 
     // Muddati o'tgan obuna — entitlement bermaymiz (xato emas, jim rad).
-    if (expiresMs > 0 && expiresMs <= Date.now()) {
+    // 2 daqiqalik zaxira: server-qurilma soat farqi va sandboxdagi juda
+    // qisqa (5-daqiqalik) obunalarda tekshiruv poygasi radga aylanmasin.
+    // Production oyligi 30 kun — 2 daqiqa u yerda hech narsani o'zgartirmaydi.
+    const EXPIRY_GRACE_MS = 2 * 60 * 1000;
+    if (expiresMs > 0 && expiresMs + EXPIRY_GRACE_MS <= Date.now()) {
       return { ok: false, reason: 'expired' };
     }
 
@@ -248,8 +254,31 @@ export class AppleIapService {
     jws: string,
     expectedProductId?: string,
   ): Promise<AppleTransaction[]> {
+    // Bitta O'TKINCHI xato (masalan OCSP/tarmoq hikchiligi — verifier
+    // enableOnlineChecks bilan Apple'ning bekor-qilish serverlariga
+    // murojaat qiladi) foydalanuvchining muvaffaqiyatli xaridini "yiqilgan"
+    // qilib ko'rsatmasligi uchun butun tekshiruv bir marta qayta uriniladi.
+    // Apple App Review 2.1(b) radi (2026-08-23) tahlilida shu bo'g'in eng
+    // zaif nuqta deb topilgan.
+    try {
+      return await this.candidatesFromJwsOnce(jws, expectedProductId);
+    } catch (e) {
+      // Qat'iy radlar (mahsulot mos emas, buzuq token va h.k.) qayta
+      // urinilmaydi — faqat O'TKINCHI (503) holat retry qilinadi.
+      if (!(e instanceof ServiceUnavailableException)) throw e;
+      this.logger.warn('JWS tekshiruvi 1-urinishda yiqildi — qayta urinish');
+      await new Promise((r) => setTimeout(r, 400));
+      return this.candidatesFromJwsOnce(jws, expectedProductId);
+    }
+  }
+
+  private async candidatesFromJwsOnce(
+    jws: string,
+    expectedProductId?: string,
+  ): Promise<AppleTransaction[]> {
     const verifiers = this.buildVerifiers();
     const errors: string[] = [];
+    let hadRetryable = false;
 
     for (const verifier of verifiers) {
       try {
@@ -274,11 +303,35 @@ export class AppleIapService {
         ];
       } catch (e) {
         if (e instanceof BadRequestException) throw e;
-        errors.push((e as Error)?.message ?? String(e));
+        if (e instanceof VerificationException) {
+          // DIQQAT: VerificationException.message doim BO'SH — sababni
+          // faqat `status` tashiydi, shuning uchun aynan uni loglaymiz.
+          errors.push(`VerificationException(${VerificationStatus[e.status]})`);
+          if (e.status === VerificationStatus.RETRYABLE_VERIFICATION_FAILURE) {
+            hadRetryable = true;
+          }
+        } else {
+          // Kutubxonadan tashqari xato (masalan OCSP'ga tarmoq uzilishi
+          // boshqa ko'rinishda) — buni ham o'tkinchi deb hisoblaymiz.
+          errors.push((e as Error)?.message ?? String(e));
+          hadRetryable = true;
+        }
       }
     }
 
     this.logger.warn(`JWS tekshiruvi o'tmadi: ${errors.join(' | ')}`);
+    if (hadRetryable) {
+      // ⚠️ 400 EMAS, 503: kutubxona RETRYABLE_VERIFICATION_FAILURE ni
+      // odatda OCSP (online bekor-qilish tekshiruvi) yoki tarmoq
+      // hikchiligida otadi. 400 qaytarilsa klient buni QAT'IY rad deb
+      // qabul qiladi, tranzaksiyani yopadi va foydalanuvchining
+      // MUVAFFAQIYATLI to'lovi "yiqilgan" bo'lib ko'rinadi — Apple App
+      // Review 2.1(b) radi (2026-08-23) aynan shu stsenariyga mos.
+      // 503 esa klientdagi retry + "to'lov qabul qilindi" yo'liga tushadi.
+      throw new ServiceUnavailableException(
+        'Receipt verification temporarily unavailable',
+      );
+    }
     throw new BadRequestException('Receipt verification failed');
   }
 

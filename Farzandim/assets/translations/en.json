@@ -1020,7 +1020,8 @@
     "iapDeviceBlocked": "In-app purchases are turned off on this device. Settings → Screen Time → Content & Privacy Restrictions → In-app Purchases → Allow.",
     "iapProductMissing": "This plan is not available in the App Store right now. Please try again later.",
     "iapPlanUnavailable": "This plan cannot be purchased on iOS.",
-    "iapFailed": "Could not complete the purchase. Please try again later."
+    "iapFailed": "Could not complete the purchase. Please try again later.",
+    "iapVerifyPending": "Payment received. Your subscription is being activated — reopen this screen in a few seconds."
   },
   "settings": {
     "title": "Settings",

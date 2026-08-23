@@ -15,6 +15,7 @@ import 'dart:io' show Platform;
 import 'dart:math' as math;
 import 'dart:ui' show ImageFilter;
 
+import 'package:dio/dio.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/settings/data/apple_iap_service.dart';
 import 'package:farzandim/features/settings/data/entitlement.dart';
@@ -270,6 +271,10 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
       ref
         ..invalidate(entitlementProvider)
         ..invalidate(plansProvider);
+      // iOS: o'tkinchi verify xatosida OCHIQ qoldirilgan tranzaksiya bo'lsa,
+      // resume — uni tiklab yopish uchun eng tabiiy payt (foydalanuvchi
+      // ilovaga qaytdi, tarmoq tiklangan bo'lishi mumkin).
+      if (_isApple) unawaited(_drainStuckAppleTransactions());
     }
   }
 
@@ -419,49 +424,107 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
   /// tozalanmasdi). Endi tranzaksiya har doim yopiladi — backend
   /// tasdiqlamasa ham, StoreKit navbati bo'shaydi; `AppleReceiptSyncService`
   /// keyingi resume'da kvitansiyani qayta yuborib entitlement'ni tuzatadi.
+  /// Server tekshiruvi natijasi — [_verifyWithRetry] uchun.
+  ///
+  /// `ok` — obuna berildi; `definitive` — server QAT'IY rad etdi (4xx,
+  /// qayta urinish ma'nosiz); ikkalasi ham false — VAQTINCHALIK xato
+  /// (tarmoq/5xx/timeout), keyinroq qayta urinish mumkin.
+  static ({bool ok, bool definitive}) _vr(bool ok, bool definitive) =>
+      (ok: ok, definitive: definitive);
+
+  /// Xaridni backendda tekshiradi — VAQTINCHALIK xatolarda 3 martagacha
+  /// qayta urinib (0.5s / 1.5s tanaffus bilan).
+  ///
+  /// NEGA retry: Apple App Review 2.1(b) radi (2026-08-23, "failed to
+  /// complete the in-app purchase") tahlili ko'rsatdiki, xarid Apple
+  /// tomonida MUVAFFAQIYATLI o'tib, bitta o'tkinchi server/tarmoq xatosi
+  /// butun oqimni "yiqilgan" qilib ko'rsatishi mumkin edi — retry'siz,
+  /// noto'g'ri xabar bilan. Sandbox'dagi bitta OCSP/tarmoq hikchiligi
+  /// radga aylanardi.
+  Future<({bool ok, bool definitive})> _verifyWithRetry(
+    PurchaseDetails p,
+  ) async {
+    const delays = [Duration(milliseconds: 500), Duration(milliseconds: 1500)];
+    for (var attempt = 0; ; attempt++) {
+      try {
+        final ok = await ref
+            .read(backendPaymentsRepositoryProvider)
+            .verifyApplePurchase(
+              productId: p.productID,
+              verificationData: p.verificationData.serverVerificationData,
+              transactionId: p.purchaseID,
+            )
+            .timeout(const Duration(seconds: 15));
+        // Server javob berdi: ok=false bo'lsa ham bu QAT'IY javob
+        // (masalan muddati o'tgan obuna) — qayta urinish ma'nosiz.
+        return _vr(ok, true);
+      } on DioException catch (e) {
+        final code = e.response?.statusCode;
+        final isDefinitive = code != null &&
+            code >= 400 &&
+            code < 500 &&
+            code != 408 &&
+            code != 429;
+        if (isDefinitive) {
+          debugPrint("[IAP] verify qat'iy rad ($code): ${e.response?.data}");
+          return _vr(false, true);
+        }
+        debugPrint("[IAP] verify o'tkinchi xato (urinish ${attempt + 1}): $e");
+      } catch (e) {
+        debugPrint('[IAP] verify xato (urinish ${attempt + 1}): $e');
+      }
+      if (attempt >= delays.length) return _vr(false, false);
+      await Future<void>.delayed(delays[attempt]);
+    }
+  }
+
   Future<void> _onPurchaseUpdates(List<PurchaseDetails> purchases) async {
     try {
       for (final p in purchases) {
         if (p.status == PurchaseStatus.pending) continue;
+        var completeNow = true;
         try {
           if (p.status == PurchaseStatus.purchased ||
               p.status == PurchaseStatus.restored) {
-            var ok = false;
-            try {
-              ok = await ref
-                  .read(backendPaymentsRepositoryProvider)
-                  .verifyApplePurchase(
-                    productId: p.productID,
-                    verificationData: p.verificationData.serverVerificationData,
-                    transactionId: p.purchaseID,
-                  );
-            } catch (_) {
-              // Tarmoq/backend xatosi — tranzaksiya baribir pastda
-              // YOPILADI. AppleReceiptSyncService keyingi resume'da qayta
-              // urinadi (kvitansiya StoreKit'da mahalliy saqlanib qoladi).
-              ok = false;
-            }
-            if (mounted) {
-              if (ok) {
+            final r = await _verifyWithRetry(p);
+            if (r.ok) {
+              if (mounted) {
                 ref
                   ..invalidate(entitlementProvider)
                   ..invalidate(plansProvider);
                 AppToast.success(context, 'premium.subscribed'.tr());
-              } else {
-                AppToast.error(context, 'premium.checkoutError'.tr());
+              }
+            } else if (r.definitive) {
+              // Server qat'iy rad etdi — tranzaksiyani yopamiz (uni saqlab
+              // turish hech narsani o'zgartirmaydi), halol xabar beramiz.
+              if (mounted) AppToast.error(context, 'premium.iapFailed'.tr());
+            } else {
+              // O'TKINCHI xato: to'lov Apple'da O'TGAN, faqat bizning
+              // server hozircha tasdiqlay olmadi. Tranzaksiyani ATAYLAB
+              // OCHIQ QOLDIRAMIZ — u StoreKit'da saqlanadi va
+              // `_drainStuckAppleTransactions` (ekran ochilishida HAM har
+              // xariddan oldin ishlaydi) uni qayta tekshirib, obunani
+              // tiklaydi va shundan keyingina yopadi. Foydalanuvchiga
+              // "to'lov qabul qilindi" deb halol aytamiz — "xato" emas.
+              completeNow = false;
+              if (mounted) {
+                AppToast.info(context, 'premium.iapVerifyPending'.tr());
               }
             }
           } else if (p.status == PurchaseStatus.error) {
-            if (mounted) AppToast.error(context, 'premium.checkoutError'.tr());
+            // StoreKit xaridni o'zi yakunlay olmadi (to'lov O'TMAGAN).
+            if (mounted) AppToast.error(context, 'premium.iapFailed'.tr());
           } else if (p.status == PurchaseStatus.canceled) {
             // Foydalanuvchi StoreKit oynasida o'zi bekor qilgan — bu XATO
             // EMAS, shuning uchun toast ko'rsatmaymiz (jim).
           }
         } finally {
-          // Apple: har yakunlangan tranzaksiyani YOPISH shart — status yoki
-          // yuqoridagi xatolardan qat'i nazar, aks holda StoreKit navbati
-          // bloklanib qoladi.
-          if (p.pendingCompletePurchase) {
+          // Tranzaksiyani yopish qoidasi:
+          //   - tasdiqlandi / qat'iy rad / error / canceled -> YOPAMIZ
+          //     (aks holda StoreKit navbati keyingi xaridlarni bloklaydi);
+          //   - O'TKINCHI verify xatosi -> OCHIQ QOLDIRAMIZ (yuqoridagi
+          //     izoh) — drain tiklab bo'lgach o'zi yopadi.
+          if (completeNow && p.pendingCompletePurchase) {
             await _iap.completePurchase(p);
           }
         }
