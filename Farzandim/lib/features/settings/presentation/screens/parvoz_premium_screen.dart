@@ -370,7 +370,17 @@ class _ParvozPremiumScreenState extends ConsumerState<ParvozPremiumScreen>
         // yoki qurilma MDM bilan boshqariladi.
         throw const _IapFailure('premium.iapDeviceBlocked');
       }
-      final resp = await _iap.queryProductDetails(<String>{productId});
+      var resp = await _iap.queryProductDetails(<String>{productId});
+      if (resp.productDetails.isEmpty) {
+        // ⚠️ BIR MARTA QAYTA URINAMIZ. Apple App Review muhitida (2026-08-23
+        // radi) StoreKit ba'zan "Waiting for Review" holatidagi obunani
+        // BIRINCHI so'rovda qaytarmasligi hujjatlashtirilgan (developer
+        // forumlari: 818444, 821502) — tekshiruvchi skrinshotida aynan
+        // bizning "tarif hozircha mavjud emas" xabarimiz chiqqan. Qisqa
+        // tanaffusdan keyingi ikkinchi so'rov o'tkinchi hikchilikni yutadi.
+        await Future<void>.delayed(const Duration(milliseconds: 1500));
+        resp = await _iap.queryProductDetails(<String>{productId});
+      }
       if (resp.productDetails.isEmpty) {
         // Mahsulot App Store Connect'da yo'q yoki hali "Ready to Submit"
         // holatiga o'tmagan.
