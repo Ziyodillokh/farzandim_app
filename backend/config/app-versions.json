@@ -10,7 +10,8 @@
     },
     "ios": {
       "latest": "1.0.0",
-      "minSupported": "1.0.0"
+      "minSupported": "1.0.0",
+      "appStoreUrl": "https://apps.apple.com/app/id6798972223"
     },
     "releaseNotes": "Barqarorlik va to'lov oqimidagi tuzatishlar.",
     "isForceUpdate": false
