@@ -1,8 +1,9 @@
 {
-  "_comment": "Bu fayl faqat lokal fallback/shablon — haqiqiy production nusxa har APK CI build'da .github/workflows/deploy-test.yml ('Update version manifest' bosqichi) tomonidan serverda avtomatik qayta yoziladi va git bilan sinxron EMAS. playStoreUrl'ni o'zgartirsangiz — SHU faylni EMAS, o'sha workflow shablonini tuzating.",
+  "_comment": "YAGONA MANBA — do'konlarda JONLI turgan versiyalar. Deploy shu faylni serverga ko'chiradi (avval CI uni har backend deploy'da qayta yozardi, natijada 'latest' deploy run raqamiga (1.0.513) aylanib, foydalanuvchilarga SOXTA yangilanish ko'rsatilardi — Play'da esa hech narsa yo'q edi).",
+  "_howto": "Yangi reliz DO'KONDA CHIQQANDAN KEYIN shu fayldagi 'latest' ni o'zgartiring va push qiling. Qiymat versionName bilan bir xil bo'lishi shart: Android AAB CI'da --build-name=1.0.<run>, iOS'da pubspec 'version:' ning + dan oldingi qismi. Chiqmagan versiyani YOZMANG — foydalanuvchi yangilanish bo'lmagan sahifaga tushadi.",
   "parent": {
     "android": {
-      "latest": "1.0.0",
+      "latest": "1.0.3",
       "minSupported": "1.0.0",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.parent",
       "directApkUrl": "https://farzandimedu.uz/app/farzandim-parent.apk"
@@ -11,12 +12,12 @@
       "latest": "1.0.0",
       "minSupported": "1.0.0"
     },
-    "releaseNotes": "Farzandim ota-ona ilovasi — test versiya.",
+    "releaseNotes": "Barqarorlik va to'lov oqimidagi tuzatishlar.",
     "isForceUpdate": false
   },
   "child": {
     "android": {
-      "latest": "1.0.0",
+      "latest": "1.0.7",
       "minSupported": "1.0.0",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.growth",
       "directApkUrl": "https://farzandimedu.uz/app/farzandim-child.apk"
@@ -25,7 +26,7 @@
       "latest": "1.0.0",
       "minSupported": "1.0.0"
     },
-    "releaseNotes": "Farzandim bola ilovasi — test versiya.",
+    "releaseNotes": "Barqarorlik yaxshilandi va Android 16 qo'llab-quvvatlanadi.",
     "isForceUpdate": false
   }
 }
