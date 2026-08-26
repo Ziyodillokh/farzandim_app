@@ -1,12 +1,12 @@
 {
   "_comment": "YAGONA MANBA — do'konlarda JONLI turgan versiyalar. Deploy shu faylni serverga ko'chiradi (avval CI uni har backend deploy'da qayta yozardi, natijada 'latest' deploy run raqamiga (1.0.513) aylanib, foydalanuvchilarga SOXTA yangilanish ko'rsatilardi — Play'da esa hech narsa yo'q edi).",
   "_howto": "Yangi reliz DO'KONDA CHIQQANDAN KEYIN shu fayldagi 'latest' ni o'zgartiring va push qiling. Qiymat versionName bilan bir xil bo'lishi shart: Android AAB CI'da --build-name=1.0.<run>, iOS'da pubspec 'version:' ning + dan oldingi qismi. Chiqmagan versiyani YOZMANG — foydalanuvchi yangilanish bo'lmagan sahifaga tushadi.",
+  "_no_apk": "'directApkUrl' 2026-08-26'da OLIB TASHLANDI. Saytdagi APK'ning versionCode'i deploy run raqami (500+) edi va Play buildi (3/7) uning ustiga o'rnatilmasdi — APK o'rnatgan odam yangilanishni boshqa hech qachon ololmasdi. Yangilanish endi FAQAT do'kon orqali. Bu maydonni QAYTA QO'SHMANG.",
   "parent": {
     "android": {
       "latest": "1.0.3",
       "minSupported": "1.0.0",
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.parent",
-      "directApkUrl": "https://farzandimedu.uz/app/farzandim-parent.apk"
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.parent"
     },
     "ios": {
       "latest": "1.0.0",
@@ -20,8 +20,7 @@
     "android": {
       "latest": "1.0.7",
       "minSupported": "1.0.0",
-      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.growth",
-      "directApkUrl": "https://farzandimedu.uz/app/farzandim-child.apk"
+      "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.growth"
     },
     "ios": {
       "latest": "1.0.0",

@@ -1,8 +1,18 @@
 name: Deploy → farzandimedu.uz
 
 # ─────────────────────────────────────────────────────────────────────────────
-# Yangi platformani (NestJS backend + Next.js admin + Flutter web/APK) serverning
+# Yangi platformani (NestJS backend + Next.js admin + Flutter web) serverning
 # "chetiga" (alohida papka/port/DB) deploy qiladi. Eski platformaga TEGMAYDI.
+#
+# ⚠️ APK TARQATISH TO'XTATILDI (2026-08-26). Ilgari bu workflow har deploy'da
+# parent+child release APK build qilib serverga (/app/*.apk) yuklardi. Ikkala
+# ilova ham endi do'konda (Play + App Store) — saytdagi APK esa yangilanmas
+# edi: uning versionCode'i deploy run raqami (500+) bo'lgani uchun Play'dagi
+# build (versionCode 3 va 7) ustiga o'rnatilmaydi — Android pastga tushirishga
+# ruxsat bermaydi. Ya'ni APK o'rnatgan odam boshi berk ko'chada qolardi.
+# Yangilanish endi FAQAT do'kon orqali. Play AAB'lari alohida workflow'larda:
+#   .github/workflows/build-parent-aab.yml
+#   .github/workflows/build-child-aab.yml
 #
 # Kerakli repo secretlari (Settings → Secrets and variables → Actions):
 #   SSH_HOST              – server IP/host (masalan 95.182.118.39)
@@ -10,8 +20,9 @@ name: Deploy → farzandimedu.uz
 #   SSH_PASSWORD          – SSH paroli — TO'G'RI kiritilishi shart!
 #   FIREBASE_CONFIGS_B64  – base64( tar.gz ): firebase_options.dart + google-services.json (4 fayl)
 #   MAPS_API_KEY          – (ixtiyoriy) Google Maps kaliti; bo'sh bo'lsa xarita ishlamaydi
-#   ANDROID_SIGNING_B64   – base64( tar.gz ): release keystore + key.properties (parent+child).
-#                           Doimiy imzo → APK telefon ustiga yangilanadi (debug imzo har safar o'zgaradi).
+#   ANDROID_SIGNING_B64   – release keystore + key.properties. Bu workflow'da
+#                           ENDI ISHLATILMAYDI (APK build olib tashlandi), lekin
+#                           build-*-aab.yml uchun KERAK — o'chirmang.
 #
 # Faqat YANGI folderlar deploy qilinadi: backend, admin-web, Farzandim, farzandim_child.
 # Birinchi marta server "bootstrap" qilingan bo'lishi kerak (infra/bootstrap-test.sh).
@@ -37,7 +48,6 @@ on:
           - backend
           - admin-web
           - flutter
-          - apk
 
 concurrency:
   group: deploy-test
@@ -80,10 +90,10 @@ jobs:
 
   # ─────────────────────────── SIFAT DARVOZASI (parent app) ───────────────────────────
   # Regressiya to'sig'i: parent analyze (info ham fail) + unit testlar.
-  # Yiqilsa flutter/apk job'lar ISHGA TUSHMAYDI — buzuq build serverga chiqmaydi.
+  # Yiqilsa flutter job ISHGA TUSHMAYDI — buzuq build serverga chiqmaydi.
   parent-quality:
     needs: changes
-    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
+    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'flutter' || github.event.inputs.component == 'all' }}
     runs-on: ubuntu-22.04
     steps:
       - uses: actions/checkout@v4
@@ -144,7 +154,7 @@ jobs:
           npm run build
 
       # apt ba'zan runner'da osilib qoladi (mirror javob bermaydi) — 2026-08-19
-      # run #502: backend ishi shu qadamda ~4 soat qotib, apk ishi 45 daq
+      # run #502: backend ishi shu qadamda ~4 soat qotib, boshqa ish 45 daq
       # timeout bilan bekor bo'ldi va concurrency navbati butunlay to'xtadi.
       # Shuning uchun: avval update'siz o'rnatish (image'da ro'yxat bor),
       # bo'lmasa update+install — har biri `timeout` bilan, 3 urinish.
@@ -222,7 +232,7 @@ jobs:
           npm run build
 
       # apt ba'zan runner'da osilib qoladi (mirror javob bermaydi) — 2026-08-19
-      # run #502: backend ishi shu qadamda ~4 soat qotib, apk ishi 45 daq
+      # run #502: backend ishi shu qadamda ~4 soat qotib, boshqa ish 45 daq
       # timeout bilan bekor bo'ldi va concurrency navbati butunlay to'xtadi.
       # Shuning uchun: avval update'siz o'rnatish (image'da ro'yxat bor),
       # bo'lmasa update+install — har biri `timeout` bilan, 3 urinish.
@@ -314,7 +324,7 @@ jobs:
             --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
 
       # apt ba'zan runner'da osilib qoladi (mirror javob bermaydi) — 2026-08-19
-      # run #502: backend ishi shu qadamda ~4 soat qotib, apk ishi 45 daq
+      # run #502: backend ishi shu qadamda ~4 soat qotib, boshqa ish 45 daq
       # timeout bilan bekor bo'ldi va concurrency navbati butunlay to'xtadi.
       # Shuning uchun: avval update'siz o'rnatish (image'da ro'yxat bor),
       # bo'lmasa update+install — har biri `timeout` bilan, 3 urinish.
@@ -335,13 +345,20 @@ jobs:
           DEST="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter"
           # rsync --timeout=60 + --partial + 3 urinish: server vaqtincha javob
           # bermay qolsa (keep-alive uzilishi / tarmoq sakrashi) bitta urinishda
-          # yiqilmaydi — APK upload qadamidagi bilan bir xil chidamlilik.
+          # yiqilmaydi.
+          #
+          # ⚠️ Ilgari bu yerda `--exclude '*.apk'` bor edi — u APK'lar SHU
+          # papkada turgani uchun `--delete` ularni o'chirib yubormasin deb
+          # qo'yilgandi. APK tarqatish to'xtatilgach exclude OLIB TASHLANDI:
+          # endi `--delete` eski farzandim-{parent,child}.apk fayllarini
+          # serverdan o'zi tozalaydi va /app/*.apk havolalari 404 beradi.
+          # Maqsad — hech kim boshqa yangilanmaydigan APK o'rnatmasin.
           upload() {
             src="$1"; dst="$2"
             for i in 1 2 3; do
               echo "→ rsync $dst (urinish $i)"
               sshpass -e rsync -az --delete --partial --timeout=60 \
-                --exclude '*.apk' -e "ssh ${SSH_OPTS}" "$src" "$dst" && return 0
+                -e "ssh ${SSH_OPTS}" "$src" "$dst" && return 0
               echo "::warning::$dst urinish $i muvaffaqiyatsiz — 10s'dan keyin qayta"
               sleep 10
             done
@@ -359,198 +376,3 @@ jobs:
           sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
             'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
           exit $FAIL
-
-  # ─────────────────────────── APK (parent + child → release .apk) ───────────────────────────
-  # --no-shrink: R8 minify o'chiq (CI'da R8 "Compilation failed" bermasin). Test uchun yetarli.
-  apk:
-    # parent-quality o'tmasa APK build YO'Q (sifat darvozasi).
-    needs: [changes, parent-quality]
-    if: ${{ needs.changes.outputs.flutter == 'true' || github.event.inputs.component == 'apk' || github.event.inputs.component == 'all' }}
-    runs-on: ubuntu-22.04
-    # Fix'dan keyingi 1-build cache'siz (deps qayta yuklanadi) — 45 daq marja.
-    timeout-minutes: 45
-    env:
-      SSHPASS: ${{ secrets.SSH_PASSWORD }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Restore Firebase config
-        env:
-          FIREBASE_CONFIGS_B64: ${{ secrets.FIREBASE_CONFIGS_B64 }}
-        run: echo "$FIREBASE_CONFIGS_B64" | base64 -d | tar xz
-
-      # Bola ilovasi paketi `com.farzandim.growth` ga o'zgardi (Play'da eski
-      # paket band edi). Secret'dagi konfiguratsiya eski paketniki — build
-      # yiqilmasligi va FCM ishlashi uchun repodagi yangisini ustiga qo'yamiz.
-      # Ota-ona ilovasining konfiguratsiyasiga TEGILMAYDI.
-      - name: Override child Firebase config (com.farzandim.growth)
-        run: |
-          cp config/firebase/child/google-services.child.json \
-             farzandim_child/android/app/google-services.json
-          cp config/firebase/child/firebase_options.child.dart \
-             farzandim_child/lib/firebase_options.dart
-
-      - name: Create env.json
-        env:
-          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-        run: |
-          mkdir -p Farzandim/assets
-          printf '{\n  "MAPS_API_KEY": "%s",\n  "API_BASE_URL": "https://%s",\n  "WS_BASE_URL": "wss://%s"\n}\n' \
-            "$MAPS_API_KEY" "$TEST_DOMAIN" "$TEST_DOMAIN" > Farzandim/assets/env.json
-
-      - uses: actions/setup-java@v4
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - uses: subosito/flutter-action@v2
-        with:
-          flutter-version: ${{ env.FLUTTER_VERSION }}
-          channel: stable
-          cache: true
-
-      # Runner root FS (~14GB) tor — Android SDK + Flutter + Gradle keshi
-      # sig'may, kesh ochishda (tar -xf) "No space left" bo'lib deploy to'xtardi.
-      # Keraksiz preinstalled SDK'larni (.NET / Haskell / CodeQL / Boost /
-      # GraalVM / PowerShell + docker образ) o'chirib ~15GB bo'shatamiz.
-      - name: Bo'sh disk joyi ochish
-        run: |
-          echo "Oldin:"; df -h / | tail -1
-          sudo rm -rf /usr/share/dotnet /opt/ghc /usr/local/.ghcup \
-            /opt/hostedtoolcache/CodeQL /usr/local/share/boost \
-            /usr/local/graalvm /usr/local/share/powershell 2>/dev/null || true
-          sudo docker image prune -af 2>/dev/null || true
-          echo "Keyin:"; df -h / | tail -1
-
-      # Gradle dependency keshi — Maven Central ba'zan runner'larga 403
-      # (rate-limit) qaytaradi va build yiqiladi. Kesh bo'lsa artefaktlar
-      # tarmoqdan qayta yuklanmaydi → 403'ga chidamli + build tezroq.
-      # MUHIM: faqat 'modules-2' (yuklab olingan artefaktlar — 403 himoyasi shu)
-      # + 'wrapper' keshlanadi, butun ~/.gradle/caches EMAS: u build-cache /
-      # transforms bilan 3.4GB gacha shishib, kesh ochishda diskni to'ldirib
-      # deployni to'xtatardi. Kalit 'v2' — eski 3.4GB keshni bekor qiladi.
-      - name: Cache Gradle dependencies
-        uses: actions/cache@v4
-        with:
-          path: |
-            ~/.gradle/caches/modules-2
-            ~/.gradle/wrapper
-          key: gradle-v2-${{ runner.os }}-${{ hashFiles('Farzandim/android/**/*.gradle*', 'farzandim_child/android/**/*.gradle*', '**/gradle-wrapper.properties', 'Farzandim/pubspec.lock', 'farzandim_child/pubspec.lock') }}
-          restore-keys: |
-            gradle-v2-${{ runner.os }}-
-
-      # Runner'da 7GB RAM bor — Gradle/lint xotirasini oshiramiz (lokal 4GB sozlamasi kam edi).
-      # Bu "LintClassLoaderBuildService failed to stop" (metaspace/heap OOM) xatosini hal qiladi.
-      - name: Tune Gradle memory for CI
-        run: |
-          for gp in Farzandim/android/gradle.properties farzandim_child/android/gradle.properties; do
-            [ -f "$gp" ] || continue
-            sed -i 's/^org\.gradle\.jvmargs=.*/org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g -Xss512k/' "$gp"
-            sed -i 's/^kotlin\.daemon\.jvmargs=.*/kotlin.daemon.jvmargs=-Xmx2g/' "$gp"
-            grep -q '^org.gradle.jvmargs' "$gp" || echo 'org.gradle.jvmargs=-Xmx4g -XX:MaxMetaspaceSize=1g' >> "$gp"
-            echo "--- $gp ---"; grep -E 'jvmargs' "$gp"
-          done
-
-      # Doimiy release keystore (har build bir xil imzo → telefon ustiga yangilanadi)
-      - name: Restore Android signing (release keystore)
-        env:
-          ANDROID_SIGNING_B64: ${{ secrets.ANDROID_SIGNING_B64 }}
-        run: echo "$ANDROID_SIGNING_B64" | base64 -d | tar xz
-
-      - name: Build parent APK
-        working-directory: Farzandim
-        env:
-          # Gradle (build.gradle.kts) System.getenv("MAPS_API_KEY") orqali o'qiydi va
-          # AndroidManifest'dagi ${MAPS_API_KEY} placeholder'iga yozadi. Busiz xarita
-          # plitkalari chiqmaydi (bo'sh kalit → bo'm-bo'sh kulrang xarita).
-          MAPS_API_KEY: ${{ secrets.MAPS_API_KEY }}
-          # Mapbox: sk (native SDK yuklash — gradle.properties) + pk (runtime,
-          # dart-define) + Yandex kalit (qidiruv/ko'cha, dart-define).
-          MAPBOX_DOWNLOADS_TOKEN: ${{ secrets.MAPBOX_DOWNLOADS_TOKEN }}
-          MAPBOX_PUBLIC_TOKEN: ${{ secrets.MAPBOX_PUBLIC_TOKEN }}
-          YANDEX_MAPS_KEY: ${{ secrets.YANDEX_MAPS_KEY }}
-        run: |
-          # Mapbox maven auth uchun downloads token'ni gradle.properties'ga yozamiz.
-          mkdir -p ~/.gradle
-          grep -q MAPBOX_DOWNLOADS_TOKEN ~/.gradle/gradle.properties 2>/dev/null || \
-            echo "MAPBOX_DOWNLOADS_TOKEN=${MAPBOX_DOWNLOADS_TOKEN}" >> ~/.gradle/gradle.properties
-          flutter pub get
-          build() {
-            flutter build apk --release --target-platform android-arm,android-arm64 \
-              --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
-              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN} \
-              --dart-define=MAPBOX_PUBLIC_TOKEN=${MAPBOX_PUBLIC_TOKEN} \
-              --dart-define=YANDEX_MAPS_KEY=${YANDEX_MAPS_KEY}
-          }
-          # Maven Central vaqtinchalik 403 (rate-limit) berishi mumkin —
-          # 60s kutib bir marta qayta urinamiz.
-          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
-
-      - name: Build child APK
-        working-directory: farzandim_child
-        continue-on-error: true
-        run: |
-          flutter pub get
-          build() {
-            flutter build apk --release --no-shrink --target-platform android-arm,android-arm64 \
-              --build-number=${{ github.run_number }} --build-name=1.0.${{ github.run_number }} \
-              --dart-define=API_BASE_URL=https://${TEST_DOMAIN} \
-              --dart-define=WS_BASE_URL=wss://${TEST_DOMAIN}
-          }
-          build || { echo "::warning::build yiqildi — 60s'dan keyin retry"; sleep 60; build; }
-
-      # apt ba'zan runner'da osilib qoladi (mirror javob bermaydi) — 2026-08-19
-      # run #502: backend ishi shu qadamda ~4 soat qotib, apk ishi 45 daq
-      # timeout bilan bekor bo'ldi va concurrency navbati butunlay to'xtadi.
-      # Shuning uchun: avval update'siz o'rnatish (image'da ro'yxat bor),
-      # bo'lmasa update+install — har biri `timeout` bilan, 3 urinish.
-      - name: Install transfer tools
-        run: |
-          export DEBIAN_FRONTEND=noninteractive
-          for i in 1 2 3; do
-            if timeout 120 sudo -E apt-get install -y --no-install-recommends sshpass rsync; then break; fi
-            echo "::warning::apt install urinish $i yiqildi — update bilan qayta"
-            timeout 180 sudo -E apt-get update -o Acquire::Retries=3 || true
-            sleep 10
-          done
-          command -v sshpass && command -v rsync
-
-      - name: Upload APKs to server (/app/*.apk)
-        run: |
-          set +e   # xatoni qo'lda boshqaramiz (timeout + retry + resume)
-          P="Farzandim/build/app/outputs/flutter-apk/app-release.apk"
-          C="farzandim_child/build/app/outputs/flutter-apk/app-release.apk"
-          DEST="${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${REMOTE_BASE}/flutter/parent"
-          # rsync --timeout=60: 60s ma'lumot kelmasa uzadi (scp osilib qolardi).
-          # --partial: yarim fayl saqlanadi → retry 0 dan emas, davomidan.
-          upload() {
-            src="$1"; name="$2"
-            for i in 1 2 3; do
-              echo "→ upload $name (urinish $i)"
-              sshpass -e rsync -az --partial --timeout=60 -e "ssh ${SSH_OPTS}" "$src" "${DEST}/${name}" && return 0
-              echo "::warning::$name upload urinish $i muvaffaqiyatsiz — 10s'dan keyin qayta"
-              sleep 10
-            done
-            return 1
-          }
-          FAIL=0
-          upload "$P" "farzandim-parent.apk" || { echo "::error::parent APK upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
-          if [ -f "$C" ]; then
-            upload "$C" "farzandim-child.apk" || { echo "::error::child APK upload muvaffaqiyatsiz (3 urinish)"; FAIL=1; }
-          else
-            echo "child APK build yo'q — o'tkazib yuborildi"
-          fi
-          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            'chmod o+x ~ && chmod -R o+rX ~/new-platform/flutter'
-          exit $FAIL
-
-      # ℹ️ Version manifest (config/app-versions.json) endi CI'da YOZILMAYDI.
-      # U repo'dagi fayl bilan boshqariladi va yuqoridagi rsync uni serverga
-      # ko'chiradi. Sabab: bu qadam 'latest' ni deploy run raqamiga
-      # ('1.0.<run>') qo'yardi — backend har deploy'da versiya soxta oshib,
-      # do'kondagi haqiqiy versiyadan (1.0.3 / 1.0.7) ancha yuqori bo'lib
-      # ketardi va foydalanuvchilarga BO'LMAGAN yangilanish ko'rsatilardi
-      # (2026-08-26 da jonli aniqlandi: server 1.0.513 qaytarardi).
-      # Yangi reliz do'konda chiqqach — backend/config/app-versions.json
-      # dagi 'latest' ni qo'lda yangilang.
