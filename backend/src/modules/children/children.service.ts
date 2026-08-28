@@ -53,6 +53,43 @@ export class ChildrenService {
     return Math.floor(10_000 + Math.random() * 90_000).toString();
   }
 
+  /**
+   * `YYYY-MM-DD` → `Date` (UTC yarim tuni).
+   *
+   * Vaqt qismi ataylab `T00:00:00.000Z`: ustun `@db.Date` bo'lgani uchun
+   * mahalliy vaqt bilan yaratilsa Toshkent (UTC+5) da sana bir kun orqaga
+   * siljib ketardi (14.03 → 13.03).
+   */
+  private parseBirthDate(raw: string): Date {
+    const d = new Date(`${raw}T00:00:00.000Z`);
+    if (Number.isNaN(d.getTime())) {
+      throw new BadRequestException("birthDate noto'g'ri sana");
+    }
+    // Kalendar jihatdan mavjud bo'lmagan sana (masalan 2015-02-31) `Date`
+    // tomonidan JIMGINA keyingi oyga suriladi — buni rad etamiz.
+    if (d.toISOString().slice(0, 10) !== raw) {
+      throw new BadRequestException("birthDate mavjud bo'lmagan sana");
+    }
+    const now = Date.now();
+    if (d.getTime() > now) {
+      throw new BadRequestException("birthDate kelajakda bo'lishi mumkin emas");
+    }
+    // DTO'dagi `@Min(1) @Max(25)` yosh chegarasi bilan mos.
+    if (this.ageFromBirthDate(d) > 25) {
+      throw new BadRequestException('birthDate juda eski (maks 25 yosh)');
+    }
+    return d;
+  }
+
+  /** To'liq yosh: tug'ilgan kun shu yil hali kelmagan bo'lsa bir kam. */
+  private ageFromBirthDate(d: Date): number {
+    const now = new Date();
+    let age = now.getUTCFullYear() - d.getUTCFullYear();
+    const m = now.getUTCMonth() - d.getUTCMonth();
+    if (m < 0 || (m === 0 && now.getUTCDate() < d.getUTCDate())) age--;
+    return age;
+  }
+
   private async generateUniqueFamilyCode(): Promise<string> {
     for (let i = 0; i < 10; i++) {
       const code = this.generateFamilyCode();
@@ -107,10 +144,19 @@ export class ChildrenService {
 
     const familyCode = await this.generateUniqueFamilyCode();
 
+    // ⚠️ `birthDate` DTO'da `YYYY-MM-DD` STRING. Uni xom holda spread qilib
+    // Prisma'ga berib bo'lmaydi: Prisma DateTime input tipi `Date | string`
+    // bo'lgani uchun TypeScript XATO BERMAYDI, lekin runtime'da yiqiladi.
+    // Shu sabab ajratib, `Date`ga aylantiramiz va age'ni undan hisoblaymiz.
+    const { birthDate, ...rest } = dto;
+    const bd = birthDate ? this.parseBirthDate(birthDate) : null;
+
     const child = await this.prisma.child.create({
       data: {
         parentId,
-        ...dto,
+        ...rest,
+        // birthDate berilgan bo'lsa u haqiqat manbai — dto.age e'tiborsiz.
+        ...(bd ? { birthDate: bd, age: this.ageFromBirthDate(bd) } : {}),
         familyCode,
       },
     });
@@ -475,9 +521,17 @@ export class ChildrenService {
       throw new ForbiddenException('Only parent can update');
     }
 
+    // `create` bilan bir xil sabab: birthDate string, Prisma'ga xom berilsa
+    // runtime'da yiqiladi. Berilgan bo'lsa `age` ham undan qayta hisoblanadi.
+    const { birthDate, ...rest } = dto;
+    const bd = birthDate ? this.parseBirthDate(birthDate) : null;
+
     const updated = await this.prisma.child.update({
       where: { id },
-      data: dto,
+      data: {
+        ...rest,
+        ...(bd ? { birthDate: bd, age: this.ageFromBirthDate(bd) } : {}),
+      },
     });
 
     await this.audit.log(userId, 'child', 'UPDATE', id, dto, reqMeta);
@@ -565,6 +619,13 @@ export class ChildrenService {
     if (dto.name !== undefined) data.name = dto.name;
     if (dto.age !== undefined) data.age = dto.age;
     if (dto.region !== undefined) data.region = dto.region;
+    // birthDate berilsa u ustun: `age` shundan qayta hisoblanadi (yuqoridagi
+    // `dto.age` ustiga yoziladi), aks holda ikkalasi zid bo'lib qolardi.
+    if (dto.birthDate !== undefined) {
+      const bd = this.parseBirthDate(dto.birthDate);
+      data.birthDate = bd;
+      data.age = this.ageFromBirthDate(bd);
+    }
 
     const updated = await this.prisma.child.update({
       where: { id: child.id },

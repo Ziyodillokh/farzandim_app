@@ -1296,6 +1296,10 @@ export class AuthService {
         parentId: updated.parentId,
         name: updated.name,
         age: updated.age,
+        // Sana-only `YYYY-MM-DD` — ilova soxta 01.01 yasamasligi uchun.
+        birthDate: updated.birthDate
+          ? updated.birthDate.toISOString().slice(0, 10)
+          : null,
       },
     };
   }
@@ -1514,6 +1518,10 @@ export class AuthService {
         parentId: updatedChild.parentId,
         name: updatedChild.name,
         age: updatedChild.age,
+        // Sana-only `YYYY-MM-DD` — ilova soxta 01.01 yasamasligi uchun.
+        birthDate: updatedChild.birthDate
+          ? updatedChild.birthDate.toISOString().slice(0, 10)
+          : null,
       },
     };
   }
@@ -1583,6 +1591,10 @@ export class AuthService {
           parentId: pairRequest.child.parentId,
           name: pairRequest.child.name,
           age: pairRequest.child.age,
+          // Sana-only `YYYY-MM-DD` — ilova soxta 01.01 yasamasligi uchun.
+          birthDate: pairRequest.child.birthDate
+            ? pairRequest.child.birthDate.toISOString().slice(0, 10)
+            : null,
         },
       };
     }

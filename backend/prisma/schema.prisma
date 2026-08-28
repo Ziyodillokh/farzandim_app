@@ -83,7 +83,16 @@ model Child {
   parentId                 String    @map("parent_id")
   childUserId              String?   @unique @map("child_user_id")
   name                     String
+  // ⚠️ `age` SAQLANADI va O'CHIRILMAYDI — u kontent yosh-filtri, olimpiada
+  // ro'yxati, admin push segmenti va avatar tanlashda ishlatiladi (hammasida
+  // `?? 8` fallback bor). birthDate berilganda server age'ni UNDAN qayta
+  // hisoblab shu ustunga ham yozadi (denormallashtirilgan kesh).
   age                      Int?
+  // Tug'ilgan sana — ko'rsatish va yoshni hisoblash uchun haqiqat manbai.
+  // @db.Date SHART: oddiy DateTime bo'lsa Toshkent (UTC+5) da sana bir kun
+  // siljib ketadi (14.03 → 13.03). Eski bolalarda NULL — UI soxta 01.01
+  // yasamasligi kerak, bo'sh ko'rsatadi.
+  birthDate                DateTime? @db.Date @map("birth_date")
   gender                   String?
   region                   String?
   // SOS "Qo'ng'iroq" uchun bola telefon raqami (ota-ona kiritadi).

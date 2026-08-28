@@ -11,6 +11,7 @@ import {
   IsBoolean,
   IsArray,
   IsIn,
+  Matches,
 } from 'class-validator';
 
 export enum Gender {
@@ -32,6 +33,17 @@ export class UpdateChildDto {
   @Min(1)
   @Max(25)
   age?: number;
+
+  /**
+   * Tug'ilgan sana `YYYY-MM-DD`. Berilsa `age` shundan qayta hisoblanadi
+   * (yuborilgan `age` e'tiborsiz qoladi).
+   */
+  @ApiPropertyOptional({ example: '2015-03-14' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "birthDate YYYY-MM-DD formatda bo'lishi kerak",
+  })
+  birthDate?: string;
 
   @ApiPropertyOptional({ enum: Gender, example: 'male' })
   @IsOptional()

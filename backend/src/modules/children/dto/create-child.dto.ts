@@ -8,6 +8,7 @@ import {
   Min,
   Max,
   IsEnum,
+  Matches,
 } from 'class-validator';
 
 export enum Gender {
@@ -28,6 +29,18 @@ export class CreateChildDto {
   @Min(1)
   @Max(25)
   age?: number;
+
+  /**
+   * Tug'ilgan sana, `YYYY-MM-DD` (sana-only, vaqt/timezone YO'Q).
+   * Berilsa `age` SHU YERDAN hisoblanadi va yuborilgan `age` e'tiborsiz
+   * qoldiriladi — ikkalasi bir-biriga zid bo'lib qolmasligi uchun.
+   */
+  @ApiPropertyOptional({ example: '2015-03-14' })
+  @IsOptional()
+  @Matches(/^\d{4}-\d{2}-\d{2}$/, {
+    message: "birthDate YYYY-MM-DD formatda bo'lishi kerak",
+  })
+  birthDate?: string;
 
   @ApiPropertyOptional({ enum: Gender, example: 'male' })
   @IsOptional()
