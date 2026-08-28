@@ -15,6 +15,7 @@ import 'package:farzandim/features/auth/presentation/providers/backend_auth_prov
 import 'package:farzandim/features/geo_zones/presentation/providers/geo_zones_provider.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
 import 'package:farzandim/features/notifications/presentation/providers/fcm_provider.dart';
+import 'package:farzandim/features/notifications/presentation/providers/unlock_request_sync_provider.dart';
 import 'package:farzandim/features/notifications/presentation/screens/sos_sheet.dart';
 import 'package:farzandim/features/notifications/presentation/widgets/notification_permission_primer.dart';
 import 'package:farzandim/features/pair_requests/presentation/providers/pair_request_providers.dart';
@@ -291,6 +292,11 @@ class FarzandimApp extends ConsumerWidget {
               // registratsiya qilamiz (eski fallback xulqi).
               ref.read(fcmServiceProvider).reRegisterToken();
             }
+            // Bola "qo'shimcha vaqt" so'rovlarini serverdan tortamiz.
+            // Push YAGONA kanal bo'lib qolmasin: yetib bormagan so'rov
+            // ilova ochilganda baribir ko'rinadi. Shu o'qish provayderni
+            // ham yaratadi → u fondan qaytishni o'zi kuzata boshlaydi.
+            unawaited(ref.read(unlockRequestSyncProvider).sync());
           });
         }
       })

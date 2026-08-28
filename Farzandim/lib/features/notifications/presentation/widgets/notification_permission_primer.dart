@@ -25,26 +25,45 @@ const _dim = Color(0x99FFFFFF); // oq 60%
 /// foydalanuvchi ilova nimaligini bilmay turib rad etmaydi.
 ///
 /// Oqim:
-///   - ruxsat allaqachon berilgan  → faqat token saqlanadi (dialogsiz)
+///   - token HAR DOIM registratsiya qilinadi (ruxsat holatidan qat'i nazar)
+///   - ruxsat allaqachon berilgan  → dialog yo'q
 ///   - doimiy rad etilgan          → bezovta qilinmaydi
 ///   - hali so'ralmagan            → rationale ko'rsatiladi → "Ruxsat berish"
-///     bosilsa OS dialogi chiqadi va token saqlanadi
+///     bosilsa OS dialogi chiqadi va token qayta saqlanadi
 class NotificationPermissionPrimer {
   const NotificationPermissionPrimer._();
 
-  /// Kerak bo'lsa primer'ni ko'rsatadi, so'ng ruxsatni so'rab token saqlaydi.
+  /// Token'ni registratsiya qiladi va kerak bo'lsa primer'ni ko'rsatadi.
   static Future<void> ensure(BuildContext context, WidgetRef ref) async {
+    final fcm = ref.read(fcmServiceProvider);
+
+    // ⚠️ TOKEN REGISTRATSIYASI RUXSAT DIALOGIDAN MUSTAQIL — bu qator
+    // eng boshida turishi SHART.
+    //
+    // 2026-08-28'da topilgan xato: registratsiya faqat "ruxsat berilgan"
+    // va "primer qabul qilindi" tarmoqlarida bo'lardi. Qolgan ikki
+    // tarmoq (`isPermanentlyDenied` va "primer avval ko'rsatilgan")
+    // token'siz `return` qilardi. `_primerShownKey` esa `accepted`
+    // tekshirilishidan OLDIN true qilinadi — ya'ni "Keyinroq" ni BIR
+    // MARTA bosgan ota-ona shu tarmoqqa BUTUNLAY qulflanardi va
+    // FcmToken jadvalida undan hech qachon yozuv paydo bo'lmasdi.
+    // Keyinchalik Sozlamalardan bildirishnomani yoqsa ham foyda yo'q edi.
+    // Natijada `sendPushToUser` tokens=0 topib jim qaytardi — bola
+    // "qo'shimcha vaqt" so'rovi ota-onaga umuman yetib bormasdi
+    // (push — ota-ona ilovasidagi YAGONA yetkazish kanali).
+    //
+    // Android'da `getToken()` POST_NOTIFICATIONS ruxsatisiz ham ishlaydi
+    // va data-push fon isolate'ini uyg'otadi — ya'ni ruxsat yo'q bo'lsa
+    // ham so'rov ilova ichidagi ro'yxatga tushadi. iOS'da APNS tayyor
+    // bo'lmasa `getToken()` yiqilishi mumkin; `registerToken()` buni
+    // ichida ushlab, yumshoq log yozadi (ruxsatdan keyin qayta uriniladi).
+    await fcm.registerToken();
+
     final status = await Permission.notification.status;
 
-    // Allaqachon berilgan — faqat token'ni registratsiya qilamiz (dialog yo'q).
-    if (status.isGranted) {
-      await ref.read(fcmServiceProvider).registerToken();
-      return;
-    }
-
-    // Doimiy rad — qayta nag qilmaymiz (foydalanuvchi Sozlamalardan yoqsa
-    // bo'ladi).
-    if (status.isPermanentlyDenied) return;
+    // Allaqachon berilgan yoki doimiy rad — dialog ko'rsatmaymiz.
+    // (Token yuqorida allaqachon saqlandi.)
+    if (status.isGranted || status.isPermanentlyDenied) return;
 
     // Primer avval ko'rsatilgan bo'lsa qayta bezovta qilmaymiz.
     final prefs = await SharedPreferences.getInstance();
@@ -57,7 +76,10 @@ class NotificationPermissionPrimer {
 
     final result = await Permission.notification.request();
     if (result.isGranted) {
-      await ref.read(fcmServiceProvider).registerToken();
+      // iOS'da birinchi urinish APNS token yo'qligi sabab yiqilgan
+      // bo'lishi mumkin — ruxsat berilgach qayta uriniladi. Backend
+      // `fcmToken.upsert` ishlatadi, shuning uchun takror zararsiz.
+      await fcm.registerToken();
     }
   }
 

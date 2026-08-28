@@ -195,11 +195,54 @@ class NotificationsNotifier extends StateNotifier<List<AppNotification>>
     unawaited(_persist());
   }
 
+  /// Serverdan olib kelingan xabarlarni ro'yxatga qo'shadi (push zaxirasi).
+  ///
+  /// Dedup IKKI bosqichli va ikkinchisi SHART: push orqali kelgan
+  /// nusxaning `id`si FCM `messageId` bo'ladi, serverdan kelganiniki esa
+  /// `unlock-<so'rov id>`. Faqat `id` bo'yicha solishtirsak bitta so'rov
+  /// ro'yxatda ikki marta ko'rinardi. Shuning uchun `data`dagi
+  /// `unlockRequestId` ham taqqoslanadi.
+  void addFromServer(List<AppNotification> items) {
+    if (items.isEmpty) return;
+
+    final ids = state.map((n) => n.id).toSet();
+    final requestIds = state
+        .map((n) => n.data?['unlockRequestId'])
+        .whereType<String>()
+        .toSet();
+
+    final fresh = <AppNotification>[];
+    for (final n in items) {
+      if (!n.isDisplayable) continue;
+      if (!ids.add(n.id)) continue;
+      final rid = n.data?['unlockRequestId'];
+      if (rid is String && !requestIds.add(rid)) continue;
+      fresh.add(n);
+    }
+    if (fresh.isEmpty) return;
+
+    // Server yangi→eski tartibda qaytaradi — shu tartibda tepaga qo'yamiz.
+    state = [...fresh, ...state];
+    if (state.length > _maxStored) {
+      state = state.sublist(0, _maxStored);
+    }
+    unawaited(_persist());
+  }
+
   /// FCM dan kelgan xabarni ro'yxatga qo'shadi.
   void addFromFcm(AppNotification notification) {
     // Bo'sh (sarlavhasiz+matnsiz) silent push'lar ro'yxatga tushmasin.
     if (!notification.isDisplayable) return;
     if (state.any((n) => n.id == notification.id)) return;
+    // Unlock so'rovi allaqachon serverdan (sync yoki WS) kelgan bo'lishi
+    // mumkin — u holda `id` boshqacha (`unlock-<id>`) va yuqoridagi
+    // tekshiruv uni ko'rmaydi. `unlockRequestId` — ikki nusxani
+    // bog'laydigan yagona maydon.
+    final rid = notification.data?['unlockRequestId'];
+    if (rid is String &&
+        state.any((n) => n.data?['unlockRequestId'] == rid)) {
+      return;
+    }
     state = [notification, ...state];
     if (state.length > _maxStored) {
       state = state.sublist(0, _maxStored);
