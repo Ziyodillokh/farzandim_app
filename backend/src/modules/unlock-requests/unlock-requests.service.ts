@@ -14,8 +14,19 @@ import { CreateUnlockRequestDto } from './dto/create-unlock-request.dto';
 import { DecideUnlockRequestDto } from './dto/decide-unlock-request.dto';
 import { tr } from '../../common/i18n/notification-i18n';
 
-/** PENDING so'rov shu muddatda javob kelmasa EXPIRED bo'ladi. */
-const REQUEST_TTL_MS = 15 * 60 * 1000;
+/**
+ * PENDING so'rov shu muddatda javob kelmasa EXPIRED bo'ladi.
+ *
+ * 2026-08-29: 15 → 60 daqiqa. 15 daqiqa juda qisqa edi — ota-ona
+ * telefoniga o'sha oraliqda qaramasa (ish, yig'ilish, mashina),
+ * ilovani ochganda so'rov allaqachon EXPIRED bo'lardi va hech narsa
+ * ko'rinmasdi. Bu ayniqsa push yetib bormagan holatda sezilardi.
+ *
+ * ⚠️ Bu FAQAT "javob kutish" muddati. Ota-ona ruxsat bergach `decide()`
+ * `expiresAt` ni `grantedMinutes` dan QAYTA hisoblaydi — ya'ni bola
+ * oladigan qo'shimcha vaqtga bu konstanta ta'sir qilmaydi.
+ */
+const REQUEST_TTL_MS = 60 * 60 * 1000;
 
 @Injectable()
 export class UnlockRequestsService {
