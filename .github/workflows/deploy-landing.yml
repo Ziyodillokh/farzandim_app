@@ -12,12 +12,27 @@ name: Deploy Landing → farzandimedu.uz
 #   SSH_PASSWORD – SSH + sudo paroli
 # ─────────────────────────────────────────────────────────────────────────────
 
+# ⛔ AVTOMATIK DEPLOY O'CHIRILDI (2026-09-05) — FAQAT QO'LDA.
+#
+# SABAB: jonli farzandimedu.uz repo'dagi `landingfarzandim/` dan
+# YANGIROQ. Tekshirildi:
+#   • jonli sahifa 2 ta chunk beradi (index + routes), repo buildi 1 ta;
+#   • jonli BOSH sahifada Play va App Store tugmalari bor,
+#     repo'dagi FarzandimPage.tsx da do'kon havolasi UMUMAN yo'q;
+#   • jonli sahifada .apk havolasi yo'q, repo'da bor edi.
+# Ya'ni saytning haqiqiy manbasi shu repoda EMAS.
+#
+# `push` trigger yoqiq turganda `landingfarzandim/` ga tegilgan har
+# qanday commit eski versiyani qayta yig'ib jonli saytni BOSIB KETARDI —
+# bosh sahifadagi do'kon tugmalari yo'qolib, o'lik APK havolalari
+# qaytardi (APK fayllari 26-avgustda serverdan o'chirilgan).
+#
+# ⚠️ QILINISHI KERAK: saytning haqiqiy manbasini topib shu repoga
+# joylang. Hozir u faqat bitta kompyuterda va zaxirasi yo'q — yo'qolsa
+# sayt qayta yig'ilmaydi.
+#
+# Manba repoga qo'yilgach `push` trigger'ini qaytarish mumkin.
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'landingfarzandim/**'
-      - '.github/workflows/deploy-landing.yml'
   workflow_dispatch:
 
 concurrency:

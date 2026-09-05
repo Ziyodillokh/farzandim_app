@@ -1,8 +1,18 @@
 import logoApp from "../../imports/Main/logo_parvoz_app.png";
 
-// APK yuklab olish linklari (asosiy domen).
-const PARENT_APK = "https://farzandimedu.uz/app/farzandim-parent.apk";
-const CHILD_APK = "https://farzandimedu.uz/app/farzandim-child.apk";
+// ⚠️ APK TARQATISH TO'XTATILDI (2026-08-26). Ilgari bu sahifa
+// farzandimedu.uz/app/*.apk fayllariga ishora qilardi. O'sha APK'larning
+// versionCode'i backend deploy raqami (500+) edi, Play buildlari esa
+// 4 va 7 — Android pastroq versionCode'ni ustiga o'rnatmaydi, ya'ni APK
+// o'rnatgan odam Play'dan yangilanish OLA OLMASDI. Fayllar serverdan
+// o'chirilgan, havolalar o'lik.
+//
+// Yuklab olish endi FAQAT do'kondan. Bu qatorlarni APK'ga qaytarmang.
+const PARENT_PLAY =
+  "https://play.google.com/store/apps/details?id=com.farzandim.parent";
+const PARENT_APPSTORE = "https://apps.apple.com/app/id6798972223";
+const CHILD_PLAY =
+  "https://play.google.com/store/apps/details?id=com.farzandim.growth";
 
 function DownloadIcon({ color }: { color: string }) {
   return (
@@ -23,7 +33,8 @@ function AppCard({
   name,
   tagline,
   desc,
-  apk,
+  playUrl,
+  appStoreUrl,
   accent,
   accentText,
 }: {
@@ -31,7 +42,9 @@ function AppCard({
   name: string;
   tagline: string;
   desc: string;
-  apk: string;
+  playUrl: string;
+  /** Faqat ota-ona ilovasida — bola ilovasi App Store'da yo'q. */
+  appStoreUrl?: string;
   accent: string;
   accentText: string;
 }) {
@@ -77,21 +90,34 @@ function AppCard({
         {desc}
       </p>
 
-      {/* Yuklab olish tugmasi */}
+      {/* Do'kondan yuklab olish */}
       <a
-        href={apk}
-        download
-        rel="noopener"
+        href={playUrl}
+        target="_blank"
+        rel="noopener noreferrer"
         className="flex items-center justify-center gap-2 rounded-full py-3.5 px-5 transition-transform active:scale-95"
         style={{ background: accent, textDecoration: "none" }}
       >
         <DownloadIcon color={accentText} />
         <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 700, fontSize: 16, color: accentText }}>
-          Yuklab olish
+          Play Market
         </span>
       </a>
+      {appStoreUrl && (
+        <a
+          href={appStoreUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center justify-center gap-2 rounded-full py-3 px-5 transition-transform active:scale-95"
+          style={{ border: "1.5px solid rgba(255,255,255,0.25)", textDecoration: "none" }}
+        >
+          <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 600, fontSize: 15, color: "#ffffff" }}>
+            App Store
+          </span>
+        </a>
+      )}
       <span style={{ fontFamily: "Inter, sans-serif", fontWeight: 500, fontSize: 12, color: "rgba(255,255,255,0.45)", textAlign: "center" }}>
-        Android · .apk
+        {appStoreUrl ? "Android va iPhone" : "Android"}
       </span>
     </div>
   );
@@ -147,7 +173,8 @@ export function DownloadPage() {
           name="Parvoz Parents"
           tagline="Ota-onalar uchun"
           desc="Farzandingizni bir ilovadan kuzating: real vaqtda joylashuv va geo-zonalar, ekran vaqti hamda ilovalar nazorati, SOS signal va bildirishnomalar."
-          apk={PARENT_APK}
+          playUrl={PARENT_PLAY}
+          appStoreUrl={PARENT_APPSTORE}
           accent="#4f86ff"
           accentText="#ffffff"
         />
@@ -156,7 +183,7 @@ export function DownloadPage() {
           name="Parvoz Growth"
           tagline="Bolalar uchun"
           desc="Bolangizga xavfsiz ta'limiy kontent — videolar, audiokitoblar va bilim konkurslari. Hammasi yoshiga mos va ota-ona nazoratida."
-          apk={CHILD_APK}
+          playUrl={CHILD_PLAY}
           accent="#22d3ee"
           accentText="#04222b"
         />
