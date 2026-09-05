@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Headphones, MoreHorizontal, Check, X, Trash2, Eye, Layers, Plus, Play } from 'lucide-react';
+import { Headphones, MoreHorizontal, Check, X, Trash2, Eye, Layers, Plus, Play, Pencil } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -24,6 +24,7 @@ import { getApiErrorMessage } from '@/lib/api/client';
 import type { Audiobook } from '@/types/api.types';
 import { contentMediaUrl } from '@/lib/media';
 import { AudiobookPreviewModal } from '@/components/content/audiobook-preview-modal';
+import { AudiobookEditModal } from '@/components/content/audiobook-edit-modal';
 
 const STATUS_TABS = [
   { value: '', label: 'Hammasi' },
@@ -141,6 +142,7 @@ export default function AudiobooksPage() {
               onApprove={() => approve.mutate(book.id)}
               onReject={() => reject.mutate(book.id)}
               onRemove={() => remove.mutate(book.id)}
+              onSaved={invalidate}
             />
           ))}
         </div>
@@ -162,13 +164,16 @@ function AudiobookCard({
   onApprove,
   onReject,
   onRemove,
+  onSaved,
 }: {
   book: Audiobook;
   onApprove: () => void;
   onReject: () => void;
   onRemove: () => void;
+  onSaved: () => void;
 }) {
   const [previewOpen, setPreviewOpen] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
   const cover = contentMediaUrl('thumb', book.thumbStorageKey) ?? book.thumbnail;
   return (
     <>
@@ -214,6 +219,7 @@ function AudiobookCard({
             <DropdownMenuContent align="end">
               <DropdownMenuLabel>Amallar</DropdownMenuLabel>
               <DropdownMenuItem onClick={() => setPreviewOpen(true)}><Eye /> Eshitish</DropdownMenuItem>
+              <DropdownMenuItem onClick={() => setEditOpen(true)}><Pencil /> Batafsil / tahrirlash</DropdownMenuItem>
               {book.status !== 'approved' && (
                 <DropdownMenuItem onClick={onApprove} className="text-success focus:text-success">
                   <Check /> Tasdiqlash
@@ -261,6 +267,12 @@ function AudiobookCard({
         book={book}
         open={previewOpen}
         onOpenChange={setPreviewOpen}
+      />
+      <AudiobookEditModal
+        book={book}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+        onSuccess={onSaved}
       />
     </>
   );

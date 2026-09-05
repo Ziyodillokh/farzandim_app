@@ -179,6 +179,12 @@ export interface Audiobook {
   ageFrom: number;
   ageTo: number;
   category: string | null;
+  // Backend `rowOf()` (audiobooks.service.ts:60,65) bularni HAR DOIM
+  // qaytaradi, lekin tipda yo'q edi — shu sabab tahrirlash oynasini
+  // yozib bo'lmasdi. `category` — ko'rsatish uchun nom, `categoryId` —
+  // saqlash uchun ID; ikkalasi ALOHIDA maydon.
+  categoryId: string | null;
+  xpReward: number;
   planRequired: string;
   status: ContentStatus;
   storageKey?: string | null;

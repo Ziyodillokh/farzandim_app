@@ -143,6 +143,14 @@ export const contentApi = {
       form.append('metadata', JSON.stringify(metadata));
       return api.postForm<Audiobook>('/admin/audiobooks/upload', form, onProgress);
     },
+    // Backend `PATCH /admin/audiobooks/:id` (UpdateAudiobookDto) ALLAQACHON
+    // bor edi, faqat shu klient metodi yo'q edi — shuning uchun panelda
+    // audiokitobni tahrirlash imkoni yo'q edi (videolarda bor, 121-qator).
+    // Ayniqsa `planRequired`ni tuzatib bo'lmasdi: noto'g'ri tarif bilan
+    // yuklangan kitob bolaga umuman ko'rinmaydi va uni o'zgartirishning
+    // yagona yo'li o'chirib qayta yuklash edi.
+    update: (id: string, data: Partial<Audiobook>) =>
+      api.patch<Audiobook>(`/admin/audiobooks/${id}`, data),
     approve: (id: string) => api.post(`/admin/audiobooks/${id}/approve`),
     reject: (id: string) => api.post(`/admin/audiobooks/${id}/reject`),
     remove: (id: string) => api.delete(`/admin/audiobooks/${id}`),
