@@ -34,30 +34,77 @@ class AudiobooksBackendRepository {
   AudiobooksBackendRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;
 
-  Future<List<AudiobookModel>> fetchAudiobooks({
-    int page = 1,
-    int limit = 50,
-  }) async {
+  /// Xavfsizlik chegarasi: kutilmagan holatda cheksiz so'rov ketmasin
+  /// (50 × 40 = 2000 qism). Bundan oshsa qolgani olinmaydi.
+  static const int _maxPages = 40;
+
+  /// BARCHA audiokitob qismlarini olib keladi (hamma sahifani aylanib).
+  ///
+  /// ⚠️ NEGA SIKL KERAK (2026-09-05'da topilgan xato): bitta kitob admin
+  /// panelda HAR QISMI alohida yozuv bo'lib yuklanadi ("Nur borki soya
+  /// bor - 1..41"), bola ilovasi esa ularni `groupIntoSeries` bilan bitta
+  /// kartaga yig'adi. Ya'ni YOZUVLAR soni ≠ KITOBLAR soni.
+  ///
+  /// Ilgari faqat 1-sahifa (limit 50, server `@Max(50)`) so'ralardi va
+  /// keyingi sahifa hech qachon olinmasdi. Natijada 188 ta yozuvdan
+  /// birinchi 50 tasi kelardi — bu esa atigi 41 qismli bitta kitob +
+  /// ikkinchisining 9 qismi, ya'ni ekranda 2 ta kitob. Qolgan 138 yozuv
+  /// (boshqa barcha kitoblar) umuman yuklanmasdi. Videolarda bu bilinmadi,
+  /// chunki har video BITTA yozuv.
+  Future<List<AudiobookModel>> fetchAudiobooks({int limit = 50}) async {
     try {
-      final response = await _dio.get<Map<String, dynamic>>(
-        '/content/audiobooks',
-        queryParameters: {'page': page, 'limit': limit},
-      );
-      final items = (response.data?['items'] as List<dynamic>?) ?? const [];
-      // PERF/offline: birinchi sahifani lokal cache'ga (stale-while-revalidate).
-      if (page == 1) {
-        await ContentCache.save('audiobooks', items);
+      final first = await _fetchPage(page: 1, limit: limit);
+      final rawItems = <Map<String, dynamic>>[...first.items];
+
+      final totalPages = first.totalPages;
+      if (totalPages > 1) {
+        final last = totalPages > _maxPages ? _maxPages : totalPages;
+        if (totalPages > _maxPages) {
+          debugPrint(
+            'AudiobooksBackend: $totalPages sahifa — $_maxPages tasi olindi',
+          );
+        }
+        // Ketma-ket: bola telefonida bir vaqtda ko'p so'rov ochmaymiz
+        // (sekin tarmoqda timeout xavfi). 188 yozuv = 4 ta so'rov.
+        for (var p = 2; p <= last; p++) {
+          final next = await _fetchPage(page: p, limit: limit);
+          if (next.items.isEmpty) break;
+          rawItems.addAll(next.items);
+        }
       }
-      return items
-          .whereType<Map<String, dynamic>>()
-          .map(_toAudiobookModel)
-          .toList(growable: false);
+
+      // Offline cache — endi TO'LIQ ro'yxat saqlanadi, faqat 1-sahifa emas.
+      // Bo'sh javobda keshni o'chirmaymiz: bir martalik nosozlik tufayli
+      // internetsiz foydalanuvchi hamma narsadan ayrilmasin.
+      if (rawItems.isNotEmpty) {
+        await ContentCache.save('audiobooks', rawItems);
+      }
+
+      return rawItems.map(_toAudiobookModel).toList(growable: false);
     } on DioException catch (e) {
       debugPrint(
         'AudiobooksBackend.fetch: ${e.response?.statusCode} ${e.message}',
       );
       rethrow;
     }
+  }
+
+  /// Bitta sahifa: yozuvlar + jami sahifalar soni.
+  Future<({List<Map<String, dynamic>> items, int totalPages})> _fetchPage({
+    required int page,
+    required int limit,
+  }) async {
+    final response = await _dio.get<Map<String, dynamic>>(
+      '/content/audiobooks',
+      queryParameters: {'page': page, 'limit': limit},
+    );
+    final data = response.data;
+    final items = ((data?['items'] as List<dynamic>?) ?? const [])
+        .whereType<Map<String, dynamic>>()
+        .toList(growable: false);
+    final pagination = data?['pagination'] as Map<String, dynamic>?;
+    final totalPages = (pagination?['totalPages'] as num?)?.toInt() ?? 1;
+    return (items: items, totalPages: totalPages);
   }
 
   /// Lokal cache'dagi audiokitoblar (yo'q bo'lsa bo'sh) — cold start'da darhol.
