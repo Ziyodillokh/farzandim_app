@@ -84,19 +84,32 @@ android {
             } else {
                 signingConfigs.getByName("debug")
             }
-            // ⚠️ R8 minify HOZIRCHA O'CHIQ (barqarorlik uchun). R8 reflection
-            // ishlatadigan plugin sinflarini obfuscate/o'chirib, ba'zi kod
-            // yo'llarida KUTILMAGANDA native crash ("ilova ishdan chiqdi")
-            // berardi (bola app tasodifiy yopilardi). Boshqa hajm
-            // optimizatsiyalari (assets WebP, x86_64 chiqarish, o'lik dep)
-            // SAQLANGAN — faqat R8 qismi (~11MB) qaytdi. proguard-rules.pro
-            // qoldi (kelajakda qurilmada sinovdan keyin qayta yoqish uchun).
-            // MUHIM: minify=false bilan shrinkResources ham OSHKORA false
-            // bo'lishi shart — aks holda Flutter gradle plugin/AGP uni yoqib
-            // "Removing unused resources requires code shrinking" build xatosi
-            // beradi (--no-shrink bayrog'i o'zi yetmaydi).
-            isMinifyEnabled = false
-            isShrinkResources = false
+            // R8 minify + resurs qisqartirish YOQIQ (2026-09-05).
+            //
+            // ⚠️ ILGARI NEGA O'CHIQ EDI: R8 yoqilganda ilova tasodifiy
+            // yopilardi va u "R8 ishonchsiz" deb o'chirib qo'yilgandi.
+            // HAQIQIY SABAB BOSHQA edi: proguard-rules.pro yozilgan, lekin
+            // shu yerda `proguardFiles(...)` YO'Q edi — R8 uni umuman
+            // o'qimasdi va faqat standart qoidalar bilan ishlardi. Shu
+            // sababli ilovaning O'Z servislari (BlockAccessibilityService,
+            // FarzandimDeviceAdminReceiver, RestrictionService, RingService,
+            // BootReceiver) obfuscate bo'lib, manifest ularni topolmay
+            // native crash berardi. Muammo qoidalarda emas — ularning
+            // ULANMAGANIDA edi.
+            //
+            // Google Play "App optimization" hisobotida shu sabab
+            // obfuskatsiya 2% ko'rsatardi (chegara 25%) va umumiy baho
+            // LOW edi.
+            //
+            // ⚠️ HAR RELIZDA QURILMADA SINALSIN: bloklash overlay'i,
+            // qadam hisoblagich, fon audiokitob, SOS va Device Admin —
+            // R8 aynan shunday reflection yo'llarini buzadi.
+            isMinifyEnabled = true
+            isShrinkResources = true
+            proguardFiles(
+                getDefaultProguardFile("proguard-android-optimize.txt"),
+                "proguard-rules.pro",
+            )
         }
     }
 }

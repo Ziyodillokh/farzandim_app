@@ -67,7 +67,14 @@
 -keepclassmembers enum * { public static **[] values(); public static ** valueOf(java.lang.String); }
 -keepclasseswithmembernames class * { native <methods>; }
 -keepclassmembers class * implements android.os.Parcelable { public static final ** CREATOR; }
--keep class * implements java.io.Serializable { *; }
+# ⚠️ `-keep class * implements java.io.Serializable { *; }` OLIB
+# TASHLANDI: u har bir kutubxonadagi serializable sinfni saqlab,
+# obfuskatsiyaning asosiy to'sig'i edi. Bizda Java serializatsiyasi
+# ishlatilmaydi (ma'lumot JSON orqali).
+-keepclassmembers class * implements java.io.Serializable {
+    static final long serialVersionUID;
+    private static final java.io.ObjectStreamField[] serialPersistentFields;
+}
 
 # ── Kotlin metadata / coroutines ──
 -keep class kotlin.Metadata { *; }
@@ -77,3 +84,43 @@
 #    record) — odatda o'z consumer qoidalarini olib keladi; dontwarn xavfsizlik ──
 -dontwarn com.baseflow.**
 -dontwarn com.dexterous.**
+
+# ═════════════════════════════════════════════════════════════════════
+# 2026-09-05 — R8 QAYTA YOQILDI. Quyidagilar shu paytda qo'shildi.
+#
+# ⚠️ NEGA R8 ILGARI CRASH BERGAN: bu fayl YOZILGAN, lekin
+# build.gradle.kts da `proguardFiles(...)` YO'Q edi — ya'ni R8 uni
+# UMUMAN O'QIMASDI va faqat standart qoidalar bilan ishlardi. Natijada
+# ilovaning O'Z Kotlin servislari (Accessibility, Device Admin,
+# foreground) obfuscate bo'lib native crash berardi. Muammo qoidalarda
+# emas, ularning ulanmaganida edi.
+# ═════════════════════════════════════════════════════════════════════
+
+# ── Crashlytics (ota-ona ilovasida bor edi, bu yerda yo'q edi) ──
+-keep class com.google.firebase.crashlytics.** { *; }
+-dontwarn com.google.firebase.crashlytics.**
+
+# ── Manifestda NOM bilan ko'rsatilgan komponentlar ──
+# ⚠️ Bu yerda `-keep class * extends Activity/Service/BroadcastReceiver`
+# YOZILMAYDI: AGP birlashtirilgan manifestdagi har bir komponent uchun
+# keep qoidasini O'ZI yaratadi, ya'ni ular ortiqcha bo'lardi — lekin
+# BUTUN kutubxonalarni (AndroidX, Firebase, ExoPlayer...) ham saqlab,
+# obfuskatsiyani 3% ga tushirardi. Ilovaning o'z sinflari yuqoridagi
+# `com.farzandim.farzandim_child.**` qoidasi bilan saqlanadi.
+
+# ── Audio (fon audiokitob) — MediaBrowserService reflection ishlatadi ──
+-keep class com.ryanheise.audioservice.** { *; }
+-keep class com.ryanheise.just_audio.** { *; }
+-dontwarn com.ryanheise.**
+-keep class androidx.media.** { *; }
+-dontwarn androidx.media.**
+
+# ── Qadam hisoblagich va Health Connect ──
+-keep class androidx.health.connect.** { *; }
+-dontwarn androidx.health.connect.**
+-keep class cachet.plugins.health.** { *; }
+-dontwarn cachet.plugins.health.**
+
+# ── Kotlin coroutines ichki sinflari (fon servislar shularga tayanadi) ──
+-keepclassmembers class kotlinx.coroutines.** { volatile <fields>; }
+-keepnames class kotlinx.coroutines.internal.MainDispatcherFactory

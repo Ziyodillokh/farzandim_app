@@ -21,7 +21,12 @@ plugins {
     id("dev.flutter.flutter-plugin-loader") version "1.0.0"
     id("com.android.application") version "8.11.1" apply false
     // START: FlutterFire Configuration
-    id("com.google.gms.google-services") version("4.3.15") apply false
+    // ⚠️ 4.4.1+ SHART: Crashlytics Gradle plagini v3 undan pastini rad etadi
+    // va `uploadCrashlyticsMappingFileRelease` vazifasini yarata olmaydi.
+    // Bu FAQAT minify yoqilganda bilinadi (o'sha vazifa shunda tuziladi) —
+    // shu sabab 4.3.15 bilan R8 build'i yiqilardi. Ota-ona ilovasida
+    // 4.4.2 allaqachon R8 bilan ishlaydi. (2026-09-05)
+    id("com.google.gms.google-services") version("4.4.2") apply false
     // Crash diagnostikasi — native (Kotlin) crash'larni ham avtomatik yozadi
     // (Dart error handler faqat Flutter/Dart tarafini qamrab oladi).
     id("com.google.firebase.crashlytics") version "3.0.2" apply false
