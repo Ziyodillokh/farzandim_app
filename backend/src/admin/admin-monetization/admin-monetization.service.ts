@@ -94,13 +94,24 @@ export class AdminMonetizationService {
     const plan = await this.prisma.plan.findUnique({
       where: { id },
       include: {
-        _count: { select: { payments: true, promocodes: true } },
+        // ⚠️ `subscriptions` SHART: Subscription.plan `onDelete: SetNull`
+        // bilan bog'langan, ya'ni tarifni o'chirish obunachilarning
+        // planId sini NULL qiladi. Keyin loadChildContext plan topolmay
+        // ularni 'free' deb hisoblaydi — TO'LAGAN mijoz butun pullik
+        // kontentdan jimgina ayriladi. (2026-09-05 auditi)
+        _count: {
+          select: { payments: true, promocodes: true, subscriptions: true },
+        },
       },
     });
     if (!plan) throw new NotFoundException('Plan not found');
 
     // If plan has FK references, do a soft delete (deactivate) instead.
-    if (plan._count.payments > 0 || plan._count.promocodes > 0) {
+    if (
+      plan._count.payments > 0 ||
+      plan._count.promocodes > 0 ||
+      plan._count.subscriptions > 0
+    ) {
       const deactivated = await this.prisma.plan.update({
         where: { id },
         data: { isActive: false },

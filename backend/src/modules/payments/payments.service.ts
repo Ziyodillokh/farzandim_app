@@ -1,17 +1,35 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, Logger} from '@nestjs/common';
 import { Prisma, type Payment } from '@prisma/client';
+import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../../common/database/prisma.service';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-function periodDurationDays(period: string): number {
+/**
+ * Tarif davri → kun soni. `null` = MUDDATSIZ (lifetime).
+ *
+ * ⚠️ 2026-09-05'da topilgan xato: `lifetime` bu yerda 0 qaytarardi va
+ * `if (days <= 0) return null` obunani UMUMAN yaratmasdi — lekin to'lov
+ * `success` deb belgilanardi. Ya'ni mijoz pul to'lab hech narsa olmasdi
+ * va bu hech qayerda iz qoldirmasdi. `lifetime` tarif yaratish
+ * CreatePlanDto'da ruxsat etilgan (PLAN_PERIODS), ya'ni bu nazariy emas.
+ *
+ * O'qish tomoni muddatsizlikni ALLAQACHON qo'llab-quvvatlaydi:
+ * `expiresAt: null` → `{ OR: [{ expiresAt: null }, { gt: now }] }` bo'yicha
+ * har doim faol. Shuning uchun to'g'ri yechim — 0 emas, `null`.
+ *
+ * `undefined` = tanilmagan davr (xato).
+ */
+function periodDurationDays(period: string): number | null | undefined {
   switch (period) {
     case 'yearly':
       return 365;
     case 'monthly':
       return 30;
+    case 'lifetime':
+      return null; // muddatsiz
     default:
-      return 0;
+      return undefined; // tanilmadi
   }
 }
 
@@ -23,7 +41,35 @@ export interface PaymentResolution {
 
 @Injectable()
 export class PaymentsService {
+  private readonly logger = new Logger(PaymentsService.name);
+
   constructor(private readonly prisma: PrismaService) {}
+
+  /**
+   * Muddati o'tgan obunalarni EXPIRED ga o'tkazadi (har soat).
+   *
+   * ⚠️ NEGA KERAK: ilgari hech narsa obunani EXPIRED qilmasdi — muddati
+   * tugagan yozuv `status='ACTIVE'` bo'lib qolaverardi. Iste'molchi API
+   * `expiresAt` ni ham tekshirgani uchun to'g'ri ishlardi, admin panel esa
+   * faqat statusga qarardi va foydalanuvchini "obunachi" deb ko'rsatardi.
+   * Ikki ko'rinish bir-biriga zid bo'lib, "to'ladi-yu kontent yo'q"
+   * shikoyatini tekshirib bo'lmasdi.
+   *
+   * Endi shart bitta joyda (`activeSubscriptionWhere`) va bu cron holatni
+   * ham haqiqatga keltiradi — ikkalasi qayta ajralib ketmaydi.
+   *
+   * `expiresAt: null` (lifetime) TEGILMAYDI.
+   */
+  @Cron('0 10 * * * *', { name: 'subscriptions-expire' })
+  async expireOverdueSubscriptions(): Promise<void> {
+    const res = await this.prisma.subscription.updateMany({
+      where: { status: 'ACTIVE', expiresAt: { not: null, lt: new Date() } },
+      data: { status: 'EXPIRED' },
+    });
+    if (res.count > 0) {
+      this.logger.log(`${res.count} ta obuna muddati tugadi → EXPIRED`);
+    }
+  }
 
   /**
    * Activate or extend subscription after successful payment.
@@ -43,7 +89,15 @@ export class PaymentsService {
     const isYearlyPurchase =
       plan.priceUzs > 0 && payment.amount >= plan.priceUzs * 10;
     const days = isYearlyPurchase ? 365 : periodDurationDays(plan.period);
-    if (days <= 0) return null;
+    if (days === undefined) {
+      // Tanilmagan davr — obuna berolmaymiz. JIM O'TMAYMIZ: mijoz pul
+      // to'lagan, buni albatta ko'rish kerak.
+      this.logger.error(
+        `To'lov ${payment.id}: '${plan.period}' davri tanilmadi — ` +
+          `obuna YARATILMADI (plan ${plan.id}, user ${payment.userId})`,
+      );
+      return null;
+    }
 
     const now = new Date();
     const existing = await tx.subscription.findFirst({
@@ -55,7 +109,8 @@ export class PaymentsService {
       existing?.expiresAt && existing.expiresAt > now
         ? existing.expiresAt
         : now;
-    const expiresAt = new Date(base.getTime() + days * DAY_MS);
+    // days === null → lifetime: muddat qo'yilmaydi (abadiy faol).
+    const expiresAt = days === null ? null : new Date(base.getTime() + days * DAY_MS);
 
     if (existing) {
       const updated = await tx.subscription.update({
@@ -101,6 +156,17 @@ export class PaymentsService {
       if (payment.status === 'success') return payment;
 
       const subscriptionId = await this.activateSubscriptionTx(tx, payment);
+
+      // ⚠️ To'lov o'tdi, lekin obuna berilmadi. Ilgari bu HECH QANDAY iz
+      // qoldirmasdi: to'lov 'success', subscriptionId bo'sh — mijoz pul
+      // to'lab hech narsa olmagan va buni bilishning yo'li yo'q edi.
+      if (!subscriptionId && payment.planId) {
+        this.logger.error(
+          `To'lov ${payment.id} MUVAFFAQIYATLI, lekin OBUNA YARATILMADI ` +
+            `(user ${payment.userId}, plan ${payment.planId}, ` +
+            `summa ${payment.amount}). Qo'lda tekshirish kerak.`,
+        );
+      }
 
       return tx.payment.update({
         where: { id: paymentId },

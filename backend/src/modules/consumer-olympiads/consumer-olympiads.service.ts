@@ -35,9 +35,20 @@ const PLAN_RANK: Record<string, number> = {
 
 /** parentPlan uchun ruxsat etilgan tarif slug'lari (rank <= parentPlan rank). */
 function allowedPlans(parentPlan: string): string[] {
-  const rank = PLAN_RANK[parentPlan] ?? 0;
+  // ⚠️ Noma'lum tarif nomi JIM o'tmasin: `?? 0` uni bepulga tushiradi va
+  // TO'LAGAN foydalanuvchi pullik olimpiadalarni yo'qotadi. Bunday holat
+  // faqat log orqali bilinadi (2026-09-05 auditi).
+  const rank = PLAN_RANK[parentPlan];
+  if (rank === undefined) {
+    // eslint-disable-next-line no-console
+    console.error(
+      `[entitlement] TANILMAGAN tarif: '${parentPlan}' — bepul deb ` +
+        'hisoblandi. PLAN_RANK ga qo\'shilishi kerak.',
+    );
+  }
+  const effectiveRank = rank ?? 0;
   return Object.entries(PLAN_RANK)
-    .filter(([, r]) => r <= rank)
+    .filter(([, r]) => r <= effectiveRank)
     .map(([slug]) => slug);
 }
 

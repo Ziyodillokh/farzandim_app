@@ -1,5 +1,9 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import {
+  activeSubscriptionWhere,
+  hasActiveSubscription,
+} from '../../common/subscription/active-subscription';
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { EnvConfig } from '../../common/config/env.schema';
@@ -114,9 +118,12 @@ export class AdminUsersService {
       ];
     }
     if (planFilter) {
-      parentWhere.subscriptions = paidPlan
-        ? { some: { status: 'ACTIVE', plan: { entitlementTier: planFilter } } }
-        : { none: { status: 'ACTIVE' } }; // free — faol obuna yo'q
+      // ⚠️ `expiresAt` SHART: busiz muddati tugagan obuna ham "faol"
+      // ko'rinardi va panel bola ilovasidagi haqiqatga zid javob berardi.
+      parentWhere.subscriptions = hasActiveSubscription(
+        paidPlan,
+        paidPlan ? { plan: { entitlementTier: planFilter } } : undefined,
+      );
     }
 
     const childWhere: Prisma.ChildWhereInput = {};
@@ -152,7 +159,7 @@ export class AdminUsersService {
             where: parentWhere,
             include: {
               subscriptions: {
-                where: { status: 'ACTIVE' },
+                where: activeSubscriptionWhere(),
                 include: { plan: { select: { name: true, entitlementTier: true } } },
                 orderBy: { createdAt: 'desc' },
                 take: 1,

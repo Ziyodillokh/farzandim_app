@@ -61,7 +61,27 @@ const BOOK_ROWS: { title: string; author: string; pages: number; category: strin
   { title: 'Harry Potter va falsafa toshi', author: 'J.K. Rowling', pages: 320, category: 'tarjima' },
 ];
 
+// ⚠️ HALOKATLI SKRIPT — quyida book/audiobook/video/category jadvallari
+// TO'LIQ tozalanadi (deleteMany). Production bazasida yurgizilsa butun
+// kontent yo'qoladi (2026-09-05 holatida 188 ta audiokitob).
+// Shuning uchun lokal bo'lmagan bazada ishlashdan BOSH TORTADI.
+function assertLocalDatabase(): void {
+  const url = process.env.DATABASE_URL ?? '';
+  const isLocal =
+    url.includes('localhost') ||
+    url.includes('127.0.0.1') ||
+    process.env.ALLOW_DESTRUCTIVE_SEED === 'yes-i-am-sure';
+  if (process.env.NODE_ENV === 'production' || !isLocal) {
+    throw new Error(
+      'seed-content HALOKATLI: barcha kontentni o\'chiradi. Faqat lokal ' +
+        'bazada ishlaydi. Ataylab kerak bo\'lsa: ' +
+        'ALLOW_DESTRUCTIVE_SEED=yes-i-am-sure',
+    );
+  }
+}
+
 async function main(): Promise<void> {
+  assertLocalDatabase();
   // Reset content tables (idempotent re-run)
   await prisma.book.deleteMany();
   await prisma.audiobook.deleteMany();
@@ -86,7 +106,7 @@ async function main(): Promise<void> {
         ageTo: [5, 8, 12, 15, 18][i % 5]!,
         categoryId: cat.id,
         category: cat.slug,
-        planRequired: ['free', 'basic', 'standard', 'premium'][i % 4]!,
+        planRequired: ['free', 'standard', 'premium'][i % 3]!,
         status: ['approved', 'approved', 'approved', 'pending', 'rejected'][i % 5]!,
         featured: i < 2,
         views: 1000 + i * 1500,
@@ -107,11 +127,11 @@ async function main(): Promise<void> {
         thumbnail: `https://cdn.farzandimedu.uz/audiobooks/${i + 1}.jpg`,
         durationSec: 45 * 60 + i * 600,
         partsCount: 5 + (i % 8),
-        ageFrom: [3, 6, 9, 12][i % 4]!,
-        ageTo: [9, 12, 15, 18][i % 4]!,
+        ageFrom: [3, 6, 9, 12][i % 3]!,
+        ageTo: [9, 12, 15, 18][i % 3]!,
         categoryId: cat.id,
         category: cat.slug,
-        planRequired: ['free', 'basic', 'premium'][i % 3]!,
+        planRequired: ['free', 'premium'][i % 2]!,
         status: ['approved', 'approved', 'approved', 'pending', 'rejected', 'approved'][i % 6]!,
         listens: 200 + i * 400,
       },

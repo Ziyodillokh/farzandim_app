@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../common/database/prisma.service';
+import { activeSubscriptionWhere } from '../../common/subscription/active-subscription';
 
 @Injectable()
 export class AdminDashboardService {
@@ -99,7 +100,7 @@ export class AdminDashboardService {
           endTime: { gte: now },
         },
       }),
-      this.prisma.subscription.count({ where: { status: 'ACTIVE' } }),
+      this.prisma.subscription.count({ where: activeSubscriptionWhere() }),
       // Kunlik ro'yxatdan o'tish (ota-ona/bola).
       this.prisma.user.groupBy({
         by: ['createdAt', 'role'],

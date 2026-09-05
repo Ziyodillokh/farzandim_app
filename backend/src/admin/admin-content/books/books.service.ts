@@ -10,6 +10,7 @@ import { PrismaService } from '../../../common/database/prisma.service';
 import { StorageService } from '../../../common/storage/storage.service';
 import { BUCKETS } from '../../../common/storage/storage.constants';
 import { CreateBookDto, UpdateBookDto } from './dto/create-book.dto';
+import { normalizePlanRequired } from '../content-meta.utils';
 
 const MAX_PDF_BYTES = 50 * 1024 * 1024;
 const MAX_COVER_BYTES = 5 * 1024 * 1024;
@@ -254,7 +255,7 @@ export class BooksService {
         ageFrom: meta.ageFrom ?? 0,
         ageTo: meta.ageTo ?? 18,
         category: meta.category ?? 'school',
-        planRequired: meta.planRequired ?? 'free',
+        planRequired: normalizePlanRequired(meta.planRequired),
         status: meta.status ?? 'approved',
       },
     });

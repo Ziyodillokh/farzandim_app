@@ -10,6 +10,10 @@ import { PrismaService } from '../../../common/database/prisma.service';
 import { StorageService } from '../../../common/storage/storage.service';
 import { BUCKETS } from '../../../common/storage/storage.constants';
 import { CreateAudiobookDto, UpdateAudiobookDto } from './dto/create-audiobook.dto';
+import {
+  normalizePlanRequired,
+  normalizeXpReward,
+} from '../content-meta.utils';
 
 const MAX_AUDIO_BYTES = 90 * 1024 * 1024;
 const MAX_THUMB_BYTES = 5 * 1024 * 1024;
@@ -273,7 +277,10 @@ export class AudiobooksService {
         ageFrom: meta.ageFrom ?? 0,
         ageTo: meta.ageTo ?? 18,
         categoryId: meta.categoryId ?? null,
-        planRequired: meta.planRequired ?? 'free',
+        planRequired: normalizePlanRequired(meta.planRequired),
+        // xpReward ILGARI umuman yozilmasdi — admin kiritgan DON ball
+        // e'tiborsiz qolib, har doim Prisma standarti (50) ishlatilardi.
+        xpReward: normalizeXpReward(meta.xpReward),
         status: meta.status ?? 'approved',
       },
     });
