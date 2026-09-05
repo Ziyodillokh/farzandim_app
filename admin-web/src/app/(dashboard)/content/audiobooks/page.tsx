@@ -232,9 +232,23 @@ function AudiobookCard({
           </DropdownMenu>
         </div>
 
-        <div className="mb-3 flex items-center gap-2">
+        <div className="mb-3 flex flex-wrap items-center gap-2">
           <ContentStatusBadge status={book.status} />
           <Badge variant="outline" size="sm">{book.ageFrom}–{book.ageTo} yosh</Badge>
+          {/* Tarif — bolaga ko'rinish-ko'rinmasligini AYNAN shu hal qiladi.
+              Server `planRequired IN allowedPlans(ota-ona tarifi)` bilan
+              filtrlaydi; bepul ota-onaga FAQAT `free` kontent ko'rinadi
+              (consumer-content.service.ts:114). Bu qiymat ilgari admin
+              panelda umuman ko'rsatilmasdi — shuning uchun "audiokitoblar
+              yo'qoldi" muammosini tashxislab bo'lmasdi (2026-09-05). */}
+          <Badge
+            variant={book.planRequired === 'free' ? 'success' : 'warning'}
+            size="sm"
+          >
+            {book.planRequired === 'free'
+              ? 'Bepul — hammaga'
+              : `${book.planRequired} — faqat obunachiga`}
+          </Badge>
         </div>
 
         <div className="flex items-center justify-between text-xs text-muted-foreground">
