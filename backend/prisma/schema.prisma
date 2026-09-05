@@ -92,7 +92,7 @@ model Child {
   // @db.Date SHART: oddiy DateTime bo'lsa Toshkent (UTC+5) da sana bir kun
   // siljib ketadi (14.03 → 13.03). Eski bolalarda NULL — UI soxta 01.01
   // yasamasligi kerak, bo'sh ko'rsatadi.
-  birthDate                DateTime? @db.Date @map("birth_date")
+  birthDate                DateTime? @map("birth_date") @db.Date
   gender                   String?
   region                   String?
   // SOS "Qo'ng'iroq" uchun bola telefon raqami (ota-ona kiritadi).
@@ -777,16 +777,16 @@ model AppUsage {
 // Bolaning kunlik qadam soni (Parvoz pedometer → backend). Haftalik
 // hisobotda ko'rsatiladi. `date` — Toshkent (UTC+5) kun chegarasi.
 model ChildStepDaily {
-  id        String   @id @default(uuid())
-  childId   String   @map("child_id")
-  date      DateTime @db.Date
-  steps     Int      @default(0)
+  id         String   @id @default(uuid())
+  childId    String   @map("child_id")
+  date       DateTime @db.Date
+  steps      Int      @default(0)
   // Shu kun uchun qadamlardan ALLAQACHON berilgan don (idempotentlik uchun).
   // Yangi don = floor(steps/1000)*5 − donAwarded. Takror sync don ikki
   // marta bermasin.
-  donAwarded Int     @default(0) @map("don_awarded")
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  donAwarded Int      @default(0) @map("don_awarded")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
 
   child Child @relation(fields: [childId], references: [id], onDelete: Cascade)
 
@@ -1282,22 +1282,22 @@ model Payment {
 // avvalgi Payment-scan approximation o'rniga.
 // ============================================
 model Subscription {
-  id          String             @id @default(uuid())
-  userId      String             @map("user_id")
-  planId      String?            @map("plan_id")
-  status      SubscriptionStatus @default(PENDING)
-  startedAt   DateTime?          @map("started_at")
-  expiresAt   DateTime?          @map("expires_at")
-  autoRenew   Boolean            @default(false) @map("auto_renew")
-  cancelledAt DateTime?          @map("cancelled_at")
+  id                   String             @id @default(uuid())
+  userId               String             @map("user_id")
+  planId               String?            @map("plan_id")
+  status               SubscriptionStatus @default(PENDING)
+  startedAt            DateTime?          @map("started_at")
+  expiresAt            DateTime?          @map("expires_at")
+  autoRenew            Boolean            @default(false) @map("auto_renew")
+  cancelledAt          DateTime?          @map("cancelled_at")
   // 1-haftalik Standart demo (trial) — pullik obunadan farqlash uchun. To'lov
   // qilinganda `false`ga o'tadi (activateSubscriptionTx). Cron shu bo'yicha
   // trial tugashini kuzatadi.
-  isTrial              Boolean   @default(false) @map("is_trial")
-  trialReminderSentAt  DateTime? @map("trial_reminder_sent_at")
-  trialEndedNotifiedAt DateTime? @map("trial_ended_notified_at")
-  createdAt   DateTime           @default(now()) @map("created_at")
-  updatedAt   DateTime           @updatedAt @map("updated_at")
+  isTrial              Boolean            @default(false) @map("is_trial")
+  trialReminderSentAt  DateTime?          @map("trial_reminder_sent_at")
+  trialEndedNotifiedAt DateTime?          @map("trial_ended_notified_at")
+  createdAt            DateTime           @default(now()) @map("created_at")
+  updatedAt            DateTime           @updatedAt @map("updated_at")
 
   user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
   plan     Plan?     @relation(fields: [planId], references: [id], onDelete: SetNull)
@@ -1468,4 +1468,26 @@ model SupportTgState {
   offset Int @default(0)
 
   @@map("support_tg_state")
+}
+
+// Do'kondagi JONLI ilova versiyasi — cron kuniga bir marta App Store va
+// Play'dan o'qib yozadi.
+//
+// ⚠️ NEGA BAZADA, FAYLDA EMAS: deploy `rsync --delete` bilan repo'dagi
+// backend/ ni serverga ko'chiradi — cron config/app-versions.json ga
+// yozsa, keyingi deploy o'chirib tashlaydi. Baza deploy'dan omon qoladi.
+//
+// app-versions.json ASOS bo'lib qoladi (havolalar, minSupported,
+// releaseNotes, isForceUpdate); bu jadval faqat `latest` ni ustidan
+// yozadi va faqat ISHONCHLI qiymat olinganda.
+model StoreVersion {
+  id        String   @id @default(uuid())
+  app       String // parent | child
+  platform  String // android | ios
+  latest    String // "1.0.4"
+  source    String // itunes | play
+  checkedAt DateTime @default(now()) @updatedAt @map("checked_at")
+
+  @@unique([app, platform])
+  @@map("store_versions")
 }

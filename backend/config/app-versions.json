@@ -4,7 +4,7 @@
   "_no_apk": "'directApkUrl' 2026-08-26'da OLIB TASHLANDI. Saytdagi APK'ning versionCode'i deploy run raqami (500+) edi va Play buildi (3/7) uning ustiga o'rnatilmasdi — APK o'rnatgan odam yangilanishni boshqa hech qachon ololmasdi. Yangilanish endi FAQAT do'kon orqali. Bu maydonni QAYTA QO'SHMANG.",
   "parent": {
     "android": {
-      "latest": "1.0.3",
+      "latest": "1.0.4",
       "minSupported": "1.0.0",
       "playStoreUrl": "https://play.google.com/store/apps/details?id=com.farzandim.parent"
     },
