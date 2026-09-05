@@ -64,7 +64,14 @@ class VideosFeedScreen extends ConsumerWidget {
           if (searching)
             const _NoSearchResults()
           else
-            _EmptyState(onRefresh: () => ref.invalidate(backendVideosProvider)),
+            // ⚠️ Xatoni "video yo'q" dan ajratamiz: `videoFeedProvider`
+            // `valueOrNull ?? const []` qiladi, ya'ni 401/500/timeout ham
+            // bo'sh ro'yxatga aylanadi. Sabab ko'rinmasa foydalanuvchi
+            // ham, biz ham nima bo'lganini bilmaymiz.
+            _EmptyState(
+              isError: asyncVideos.hasError,
+              onRefresh: () => ref.invalidate(backendVideosProvider),
+            ),
         ],
       );
     } else {
@@ -484,9 +491,13 @@ class _NoSearchResults extends StatelessWidget {
 }
 
 class _EmptyState extends StatelessWidget {
-  const _EmptyState({required this.onRefresh});
+  const _EmptyState({required this.onRefresh, this.isError = false});
 
   final VoidCallback onRefresh;
+
+  /// true = yuklash XATOSI (tarmoq/server), false = haqiqatan kontent yo'q.
+  /// Ikkalasi bir xil ko'rinsa sababni aniqlab bo'lmaydi.
+  final bool isError;
 
   @override
   Widget build(BuildContext context) {
@@ -497,7 +508,9 @@ class _EmptyState extends StatelessWidget {
           const _EmptyBadge(icon: SolarIconsOutline.play),
           const SizedBox(height: 20),
           Text(
-            'videos.feed.noVideosTitle'.tr(),
+            isError
+                ? 'common.networkError'.tr()
+                : 'videos.feed.noVideosTitle'.tr(),
             textAlign: TextAlign.center,
             style: vUnb(18, w: FontWeight.w600, ls: -0.4),
           ),

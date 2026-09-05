@@ -44,6 +44,12 @@ class AudiobooksFeedScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(effectiveAudiobooksProvider);
+    // Yuklash HOLATI — xatoni bo'sh ro'yxatdan ajratish uchun.
+    // ⚠️ `effectiveAudiobooksProvider` `valueOrNull ?? const []` qiladi,
+    // ya'ni 401/500/timeout ham bo'sh ro'yxatga aylanadi. Busiz tarmoq
+    // xatosi "kontent yo'q" bo'lib ko'rinadi va foydalanuvchi ham, biz
+    // ham sababni bilmaymiz (2026-09-05'da aynan shu chalg'itdi).
+    final loadState = ref.watch(backendAudiobooksProvider);
     // Qismlar ("Kitob nomi N") BITTA kitob kartasiga yig'iladi.
     final feed = groupIntoSeries(ref.watch(audiobookFeedProvider));
     final newest = groupIntoSeries(ref.watch(newestAudiobooksProvider));
@@ -116,7 +122,12 @@ class AudiobooksFeedScreen extends ConsumerWidget {
                   hasScrollBody: false,
                   child: searching
                       ? const _NoSearchResults()
-                      : const _EmptyState(),
+                      : loadState.hasError
+                          ? _ErrorState(
+                              onRetry: () =>
+                                  ref.invalidate(backendAudiobooksProvider),
+                            )
+                          : const _EmptyState(),
                 )
               else
                 SliverPadding(
@@ -506,6 +517,53 @@ class _DonPill extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+}
+
+// ═════════════════════════════════════════════════════════════════════
+// Yuklash XATOSI — "kontent yo'q" dan ATAYLAB farqlanadi.
+// Tarmoq uzilgan, token eskirgan yoki server javob bermagan bo'lishi
+// mumkin; foydalanuvchiga qayta urinish imkoni beriladi.
+// ═════════════════════════════════════════════════════════════════════
+class _ErrorState extends StatelessWidget {
+  const _ErrorState({required this.onRetry});
+
+  final VoidCallback onRetry;
+
+  @override
+  Widget build(BuildContext context) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 60),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(
+              SolarIconsOutline.dangerCircle,
+              size: 56,
+              color: _textMuted.withValues(alpha: 0.6),
+            ),
+            const SizedBox(height: 14),
+            Text(
+              'common.networkError'.tr(),
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            const SizedBox(height: 16),
+            FilledButton.icon(
+              onPressed: onRetry,
+              icon: const Icon(SolarIconsOutline.refresh, size: 18),
+              label: Text('common.retry'.tr()),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
