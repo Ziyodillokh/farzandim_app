@@ -11,20 +11,68 @@ import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/core/theme/app_icons.dart';
 import 'package:flutter/material.dart';
 
+/// Fan nomini kalitga keltiradi — rang/ikon tanlashning YAGONA manbai
+/// (repository ham, sevimlilar keshi ham shu orqali o'tadi).
+///
+/// Backend `subject`ni erkin satr sifatida qabul qiladi, admin sehrgari esa
+/// "Ingliz tili", "IT / Mantiq" kabi yozuvlarni yuboradi. Avval bu yerda aniq
+/// matn bo'yicha (`'Ingliz'`, `'IT'`) solishtirilardi — shuning uchun o'sha
+/// fanlar hech qachon o'z ikonkasini olmasdi, default kubokka tushardi.
+/// Endi registr, ortiqcha bo'sh joy, apostrof turi ("o'" / "oʻ" / "o’") va
+/// "Matematika 8-sinf" kabi qo'shimchalar e'tiborga olinmaydi.
+String contestSubjectKey(String subject) {
+  final s = subject
+      .trim()
+      .toLowerCase()
+      .replaceAll(RegExp("[’ʻ`´]"), "'");
+  if (s.isEmpty) return '';
+  if (s.startsWith('matem') ||
+      s.startsWith('geometr') ||
+      s.startsWith('algebra')) {
+    return 'matematika';
+  }
+  if (s.startsWith('ona til') ||
+      s.startsWith("o'zbek til") ||
+      s.startsWith('adabiyot')) {
+    return 'ona_tili';
+  }
+  if (s.startsWith('ingliz') || s.startsWith('english')) return 'ingliz';
+  if (s.startsWith('fizik')) return 'fizika';
+  if (s.startsWith('kimyo') || s.startsWith('ximiya')) return 'kimyo';
+  if (s.startsWith('biolog')) return 'biologiya';
+  if (s.startsWith('geograf')) return 'geografiya';
+  if (s.startsWith('tarix')) return 'tarix';
+  // "IT", "IT / Mantiq", "Informatika", "Dasturlash" — lekin "Italyan tili"
+  // emas: `\b` so'z chegarasi shart.
+  if (RegExp(r'^it\b').hasMatch(s) ||
+      s.startsWith('informatika') ||
+      s.startsWith('mantiq') ||
+      s.startsWith('dasturlash')) {
+    return 'it';
+  }
+  return s;
+}
+
 /// Soha → rang (sevimli test keshidan tiklashda ham ishlatiladi).
 Color contestSubjectColor(String subject) {
-  switch (subject) {
-    case 'Matematika':
+  switch (contestSubjectKey(subject)) {
+    case 'matematika':
       return AppColors.catIndigo;
-    case 'Ona tili':
+    case 'ona_tili':
       return AppColors.catPink;
-    case 'Ingliz':
+    case 'ingliz':
       return AppColors.catTeal;
-    case 'Fizika':
+    case 'fizika':
       return AppColors.catPurple;
-    case 'Kimyo':
+    case 'kimyo':
       return AppColors.warning;
-    case 'IT':
+    case 'biologiya':
+      return AppColors.catGreen;
+    case 'geografiya':
+      return AppColors.catBlue;
+    case 'tarix':
+      return AppColors.catAmber;
+    case 'it':
       return AppColors.catEmerald;
     default:
       return AppColors.catLavenderDark;
@@ -33,18 +81,25 @@ Color contestSubjectColor(String subject) {
 
 /// Soha → ikon.
 IconData contestSubjectIcon(String subject) {
-  switch (subject) {
-    case 'Matematika':
+  switch (contestSubjectKey(subject)) {
+    case 'matematika':
       return Icons.calculate_outlined;
-    case 'Ona tili':
-      return AppIcons.menu;
-    case 'Ingliz':
+    case 'ona_tili':
+      // Avval `AppIcons.menu` (gamburger) turardi — ochiq kitob to'g'riroq.
+      return Icons.menu_book_outlined;
+    case 'ingliz':
       return Icons.language_outlined;
-    case 'Fizika':
+    case 'fizika':
       return Icons.science_outlined;
-    case 'Kimyo':
+    case 'kimyo':
       return Icons.biotech_outlined;
-    case 'IT':
+    case 'biologiya':
+      return Icons.eco_outlined;
+    case 'geografiya':
+      return Icons.public_outlined;
+    case 'tarix':
+      return Icons.history_edu_outlined;
+    case 'it':
       return Icons.code_outlined;
     default:
       return AppIcons.trophy;

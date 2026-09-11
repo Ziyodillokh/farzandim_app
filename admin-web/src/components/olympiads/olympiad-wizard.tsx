@@ -27,10 +27,11 @@ import {
 import { olympiadsApi, type OlympiadCreatePayload, type OlympiadQuestionInput } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
+import { OLYMPIAD_SUBJECTS } from '@/lib/constants/subjects';
 import { toSuperscript } from '@/lib/superscript';
 import { cn } from '@/lib/utils';
 
-const SUBJECTS = ['Matematika', 'Ona tili', 'Ingliz tili', 'Fizika', 'Kimyo', 'IT / Mantiq'];
+// Fanlar ro'yxati — lib/constants/subjects.ts (tahrirlash oynasi bilan yagona).
 const STEPS = ['Asosiy', 'Vaqt', 'Savollar', 'Sozlamalar'];
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL || '';
@@ -297,7 +298,7 @@ export function OlympiadWizard({
               <Field label="Fan">
                 <Select value={subject} onValueChange={setSubject}>
                   <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>{SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
+                  <SelectContent>{OLYMPIAD_SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}</SelectContent>
                 </Select>
               </Field>
               <div className="grid grid-cols-2 gap-4">

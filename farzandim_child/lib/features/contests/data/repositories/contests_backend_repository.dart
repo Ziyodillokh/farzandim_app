@@ -12,8 +12,6 @@
 
 // ignore_for_file: public_member_api_docs
 
-import 'package:farzandim_child/core/theme/app_icons.dart';
-import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -222,8 +220,11 @@ class ContestsBackendRepository {
       deadline: endTime,
       isActive: lifecycle == 'active',
       imageUrl: imageUrl,
-      placeholderColor: _colorForSubject(subject),
-      placeholderIcon: _iconForSubject(subject),
+      // Rang/ikon — contest_model.dart'dagi yagona moslashtirish (avval shu
+      // yerda ham nusxasi bor edi va ikkalasi "Ingliz tili"/"IT / Mantiq"ni
+      // tanimasdi).
+      placeholderColor: contestSubjectColor(subject),
+      placeholderIcon: contestSubjectIcon(subject),
       bonus: (raw['xpReward'] as num?)?.toInt() ?? 50,
       savollarSoni: questions,
       vaqtChegarasiDaq: (raw['durationMin'] as num?)?.toInt() ?? 30,
@@ -231,44 +232,6 @@ class ContestsBackendRepository {
       maxAge: (raw['ageTo'] as num?)?.toInt(),
       finishedDate: lifecycle == 'finished' ? endTime : null,
     );
-  }
-
-  Color _colorForSubject(String subject) {
-    switch (subject) {
-      case 'Matematika':
-        return AppColors.catIndigo;
-      case 'Ona tili':
-        return AppColors.catPink;
-      case 'Ingliz':
-        return AppColors.catTeal;
-      case 'Fizika':
-        return AppColors.catPurple;
-      case 'Kimyo':
-        return AppColors.warning;
-      case 'IT':
-        return AppColors.catEmerald;
-      default:
-        return AppColors.catLavenderDark;
-    }
-  }
-
-  IconData _iconForSubject(String subject) {
-    switch (subject) {
-      case 'Matematika':
-        return Icons.calculate_outlined;
-      case 'Ona tili':
-        return AppIcons.menu;
-      case 'Ingliz':
-        return Icons.language_outlined;
-      case 'Fizika':
-        return Icons.science_outlined;
-      case 'Kimyo':
-        return Icons.biotech_outlined;
-      case 'IT':
-        return Icons.code_outlined;
-      default:
-        return AppIcons.trophy;
-    }
   }
 }
 

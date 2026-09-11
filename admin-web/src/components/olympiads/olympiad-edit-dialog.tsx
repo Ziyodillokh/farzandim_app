@@ -29,9 +29,10 @@ import {
 import { olympiadsApi } from '@/lib/api/admin.api';
 import { getApiErrorMessage } from '@/lib/api/client';
 import { PLAN_REQUIRED_OPTIONS } from '@/lib/constants/permissions';
+import { subjectOptions } from '@/lib/constants/subjects';
 import type { Olympiad } from '@/types/api.types';
 
-const SUBJECTS = ['Matematika', 'Ona tili', 'Ingliz tili', 'Fizika', 'Kimyo', 'IT / Mantiq'];
+// Fanlar ro'yxati — lib/constants/subjects.ts (tahrirlash oynasi bilan yagona).
 const TYPES = ['test', 'creative', 'mixed'] as const;
 const DIFFICULTIES = ['oson', "o'rta", 'qiyin'] as const;
 
@@ -220,7 +221,7 @@ export function OlympiadEditDialog({
               <Select value={subject} onValueChange={setSubject}>
                 <SelectTrigger><SelectValue /></SelectTrigger>
                 <SelectContent>
-                  {SUBJECTS.map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                  {subjectOptions(olympiad?.subject).map((s) => <SelectItem key={s} value={s}>{s}</SelectItem>)}
                 </SelectContent>
               </Select>
             </Field>
