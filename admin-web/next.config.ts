@@ -4,7 +4,12 @@ const nextConfig: NextConfig = {
   // Admin panel asosiy domen subpath'ida: farzandimedu.uz/admin (root '/' — landing).
   // Next.js barcha route/asset'larni /admin ostiga prefiks qiladi; API chaqiruvlari
   // NEXT_PUBLIC_API_URL (absolyut) bo'lgani uchun basePath ularga ta'sir qilmaydi.
-  basePath: '/admin',
+  // ⚠️ Panel manzili ATAYLAB oddiy emas: '/admin' avtomatik skanerlarning
+  // birinchi urinishi. Bu HIMOYA EMAS — haqiqiy himoya parol va urinishlar
+  // chegarasi — lekin avtomatik hujum shovqinini keskin kamaytiradi.
+  // O'zgartirsangiz nginx'dagi `location` ham SHU BILAN BIR VAQTDA
+  // o'zgarishi shart, aks holda panel butunlay ochilmay qoladi.
+  basePath: '/kirolmaysan',
   reactStrictMode: true,
   experimental: {
     optimizePackageImports: ['lucide-react', '@tabler/icons-react', 'recharts'],

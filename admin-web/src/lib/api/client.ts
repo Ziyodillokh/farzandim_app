@@ -38,13 +38,16 @@ class ApiClient {
     );
   }
 
-  // Login'ga yo'naltirish — basePath '/admin' bilan TO'G'RI yo'l (`/admin/login`,
-  // avval `/login` → domen ildizi = boshqa app'ga otvorardi). Allaqachon login
+  // Login'ga yo'naltirish — basePath bilan TO'G'RI yo'l. Allaqachon login
   // sahifasida bo'lsak QAYTA yo'naltirmaymiz (tez-tez otvorish/loop yo'q).
+  //
+  // ⚠️ Bu BRAUZER yo'li, API emas: quyidagi `/admin/auth/...` tekshiruvlari
+  // backend marshrutlari va ular O'ZGARMAYDI. Panel manzili next.config.ts
+  // dagi `basePath` bilan bir xil bo'lishi shart.
   private redirectToLogin() {
     if (typeof window === 'undefined') return;
     if (window.location.pathname.includes('/login')) return;
-    window.location.href = '/admin/login';
+    window.location.href = '/kirolmaysan/login';
   }
 
   private async handleResponseError(error: AxiosError) {

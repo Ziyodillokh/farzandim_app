@@ -7,7 +7,7 @@
 #   /storage/    → YANGI MinIO public (:9100)
 #   /app/        → Flutter parent web + APK (farzandim-parent.apk)
 #   /child/      → Flutter child web + APK (farzandim-child.apk)
-#   /admin       → admin panel (Next.js, :3101, basePath=/admin)
+#   /kirolmaysan → admin panel (Next.js, :3101, basePath=/kirolmaysan)
 #
 # Eski stack (:3000 backend, :9000 MinIO, /admin Flutter) OLIB TASHLANDI —
 # yangi platforma asosiy domenga ko'chirildi (test.* dan).
@@ -67,8 +67,13 @@ server {
         proxy_set_header Host $host;
     }
 
-    # ── Admin panel (Next.js :3101, basePath=/admin) ──────────────────
-    location /admin {
+    # ── Admin panel (Next.js :3101, basePath=/kirolmaysan) ────────────
+    # ⚠️ Manzil ATAYLAB oddiy emas: '/admin' avtomatik skanerlarning
+    # birinchi urinishi. Bu himoyaning O'RNINI BOSMAYDI (parol va
+    # urinishlar chegarasi asosiy), lekin shovqinni kamaytiradi.
+    # next.config.ts dagi `basePath` bilan BIR XIL bo'lishi SHART —
+    # mos kelmasa panel butunlay ochilmaydi.
+    location /kirolmaysan {
         proxy_pass http://127.0.0.1:3101;
         proxy_http_version 1.1;
         proxy_set_header Host $host;

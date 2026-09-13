@@ -9,6 +9,10 @@ name: Reset admin password
 on:
   workflow_dispatch:
     inputs:
+      email:
+        description: "Admin login (email). Bo'sh = admin@farzandim.uz"
+        required: false
+        default: ''
       password:
         description: "Yangi admin parol (bo'sh = skript standarti)"
         required: false
@@ -25,13 +29,17 @@ jobs:
       SSHPASS: ${{ secrets.SSH_PASSWORD }}
       SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20
       INPUT_PW: ${{ github.event.inputs.password }}
+      INPUT_EMAIL: ${{ github.event.inputs.email }}
     steps:
       - name: Install sshpass
         run: sudo apt-get update && sudo apt-get install -y sshpass
 
       - name: Reset admin on server
         run: |
-          REMOTE="cd ~/new-platform/backend && ADMIN_EMAIL=admin@farzandim.uz"
+          # Email ham input orqali — yangi admin yaratish yoki loginni
+          # almashtirish uchun (skript email bo'yicha upsert qiladi).
+          EMAIL="${INPUT_EMAIL:-admin@farzandim.uz}"
+          REMOTE="cd ~/new-platform/backend && ADMIN_EMAIL='$EMAIL'"
           if [ -n "$INPUT_PW" ]; then
             REMOTE="$REMOTE ADMIN_PASSWORD='$INPUT_PW'"
           fi

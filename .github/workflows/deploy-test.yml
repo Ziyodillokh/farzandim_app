@@ -260,8 +260,8 @@ jobs:
           pm2 reload v2-admin --update-env || pm2 start ~/new-platform/ecosystem.config.js --only v2-admin
           pm2 save
           sleep 2
-          # basePath=/admin → bosh sahifa endi /admin'da (root '/' 404 beradi).
-          curl -fsS http://127.0.0.1:3101/admin -o /dev/null && echo "admin-web OK"
+          # basePath=/kirolmaysan → bosh sahifa o'shanda (root '/' 404 beradi).
+          curl -fsS http://127.0.0.1:3101/kirolmaysan -o /dev/null && echo "admin-web OK"
           EOF
 
   # ─────────────────────────── FLUTTER (parent + child → web) ───────────────────────────
