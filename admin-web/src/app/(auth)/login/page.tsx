@@ -101,9 +101,10 @@ export default function LoginPage() {
           ) : (
             <form onSubmit={handleSubmit(onLogin)} className="flex flex-col gap-4 p-6">
               {/* ⚠️ BU YERDA HISOB MA'LUMOTLARI KO'RSATILMASIN.
-                  2026-09-13 gacha shu blokda HAQIQIY admin login va paroli
-                  ("admin@farzandim.uz / Admin12345") ochiq yozilgan edi —
-                  sahifa esa internetdan hammaga ochiq. Ishlab chiqish
+                  2026-09-13 gacha shu blokda HAQIQIY admin login va
+                  paroli ochiq yozilgan edi — sahifa esa internetdan
+                  hammaga ochiq. (Qiymatlar bu yerda takrorlanmaydi:
+                  ular git tarixida qolmasin.) Ishlab chiqish
                   qulayligi uchun qo'yilgan, lekin production'ga chiqib
                   ketgan. Qayta qo'shmang. */}
 
