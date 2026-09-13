@@ -6,6 +6,7 @@ import { EnvConfig } from '../../common/config/env.schema';
 import { AdminAuthController } from './admin-auth.controller';
 import { AdminAuthService } from './admin-auth.service';
 import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
+import { AdminLoginThrottlerGuard } from './guards/admin-login-throttler.guard';
 
 @Module({
   imports: [
@@ -22,7 +23,7 @@ import { AdminJwtStrategy } from './strategies/admin-jwt.strategy';
     }),
   ],
   controllers: [AdminAuthController],
-  providers: [AdminAuthService, AdminJwtStrategy],
+  providers: [AdminAuthService, AdminJwtStrategy, AdminLoginThrottlerGuard],
   exports: [AdminAuthService, JwtModule, PassportModule],
 })
 export class AdminAuthModule {}

@@ -78,6 +78,9 @@ import { AppController } from './app.controller';
     ThrottlerModule.forRoot([
       { name: 'childPair', ttl: 600_000, limit: 30 },
       { name: 'checkout', ttl: 600_000, limit: 5 },
+      //   adminLogin — panel parolini brute-force qilishga qarshi.
+      //   10 daqiqada 5 urinish (IP + email juftligi bo'yicha).
+      { name: 'adminLogin', ttl: 600_000, limit: 5 },
     ]),
 
     // Infrastructure

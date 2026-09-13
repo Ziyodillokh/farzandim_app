@@ -19,6 +19,8 @@ import { Disable2faDto } from './dto/disable-2fa.dto';
 import { ChangePasswordDto } from './dto/change-password.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { AdminJwtAuthGuard } from '../../common/guards';
+import { Throttle } from '@nestjs/throttler';
+import { AdminLoginThrottlerGuard } from './guards/admin-login-throttler.guard';
 import { CurrentStaff } from '../../common/decorators';
 import { AdminJwtPayload } from '../../common/interfaces/jwt-payload.interface';
 import { Public } from '../../common/decorators';
@@ -54,6 +56,10 @@ export class AdminAuthController {
 
   @Post('login')
   @Public()
+  // ⚠️ Brute-force himoyasi: 10 daqiqada 5 urinish (IP + email).
+  // Ilgari CHEKLOV YO'Q edi — parolni cheksiz sinash mumkin edi.
+  @UseGuards(AdminLoginThrottlerGuard)
+  @Throttle({ adminLogin: { limit: 5, ttl: 600_000 } })
   @HttpCode(HttpStatus.OK)
   @ApiOperation({ summary: 'Admin login with email + password' })
   async login(
@@ -88,6 +94,9 @@ export class AdminAuthController {
     return tokens;
   }
 
+  // 2FA kodi ham 6 xonali — u ham brute-force'ga ochiq bo'lmasin.
+  @UseGuards(AdminLoginThrottlerGuard)
+  @Throttle({ adminLogin: { limit: 5, ttl: 600_000 } })
   @Post('2fa/verify')
   @Public()
   @HttpCode(HttpStatus.OK)
