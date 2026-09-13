@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Mail, Lock, ArrowRight, Shield, Sparkles } from 'lucide-react';
+import { Mail, Lock, ArrowRight, Shield } from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -100,19 +100,19 @@ export default function LoginPage() {
             />
           ) : (
             <form onSubmit={handleSubmit(onLogin)} className="flex flex-col gap-4 p-6">
-              <div className="flex items-center gap-2 rounded-lg bg-primary-soft/60 p-3 text-sm text-foreground">
-                <Sparkles className="h-4 w-4 shrink-0 text-primary" />
-                <span>
-                  Test: <code className="font-mono text-xs">admin@farzandim.uz / Admin12345</code>
-                </span>
-              </div>
+              {/* ⚠️ BU YERDA HISOB MA'LUMOTLARI KO'RSATILMASIN.
+                  2026-09-13 gacha shu blokda HAQIQIY admin login va paroli
+                  ("admin@farzandim.uz / Admin12345") ochiq yozilgan edi —
+                  sahifa esa internetdan hammaga ochiq. Ishlab chiqish
+                  qulayligi uchun qo'yilgan, lekin production'ga chiqib
+                  ketgan. Qayta qo'shmang. */}
 
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="admin@farzandim.uz"
+                  placeholder="email@example.com"
                   icon={<Mail />}
                   autoComplete="email"
                   {...register('email')}
