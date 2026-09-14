@@ -1,4 +1,9 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  BadRequestException,
+  Injectable,
+  Logger,
+  NotFoundException,
+} from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import {
   activeSubscriptionWhere,
@@ -7,6 +12,25 @@ import {
 import { Prisma } from '@prisma/client';
 import { PrismaService } from '../../common/database/prisma.service';
 import { EnvConfig } from '../../common/config/env.schema';
+import { FcmService } from '../../common/fcm/fcm.service';
+import { AdminAuditService } from '../../common/audit/admin-audit.service';
+import { tr } from '../../common/i18n/notification-i18n';
+import { GrantSubscriptionDto } from './dto/grant-subscription.dto';
+
+/** Audit yozuvi uchun so'rov konteksti (ip + user-agent). */
+export interface AdminReqCtx {
+  ip?: string;
+  headers?: Record<string, string | string[] | undefined>;
+}
+
+/** Tarif darajasi — sovg'a hech qachon pastroq tarifga TUSHIRMAYDI. */
+const TIER_RANK: Record<string, number> = {
+  free: 0,
+  basic: 1,
+  standard: 2,
+  premium: 3,
+};
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 export interface RowJson {
   id: string;
@@ -27,9 +51,13 @@ export interface RowJson {
 
 @Injectable()
 export class AdminUsersService {
+  private readonly logger = new Logger(AdminUsersService.name);
+
   constructor(
     private readonly prisma: PrismaService,
     private readonly config: ConfigService<EnvConfig, true>,
+    private readonly fcm: FcmService,
+    private readonly audit: AdminAuditService,
   ) {}
 
   // Bola fotosi @Public proxy orqali (signed MinIO URL brauzerga yetmaydi).
@@ -201,26 +229,261 @@ export class AdminUsersService {
       where: { id },
       include: {
         childrenAsParent: {
-          select: { id: true, name: true, age: true, familyCode: true },
+          select: {
+            id: true,
+            name: true,
+            age: true,
+            familyCode: true,
+            isConnected: true,
+            lastSeenAt: true,
+            photoPath: true,
+          },
         },
+        // Faol obuna (bitta) — "Batafsil" panelida tarif + muddat + trial.
+        subscriptions: {
+          where: activeSubscriptionWhere(),
+          include: {
+            plan: { select: { id: true, name: true, entitlementTier: true } },
+          },
+          orderBy: { expiresAt: 'desc' },
+          take: 1,
+        },
+        _count: { select: { payments: true } },
       },
     });
     if (!user) throw new NotFoundException('User not found');
+    const sub = user.subscriptions[0] ?? null;
     return {
       id: user.id,
       kind: 'parent',
       role: user.role,
       name: user.name?.trim() || '—',
       phone: user.phone,
+      email: user.email,
       telegramId: user.telegramId,
       avatarUrl: user.avatarUrl,
       language: user.language,
       status: user.isActive ? 'active' : 'blocked',
+      trialUsed: user.trialUsed,
       lastActivityAt: user.updatedAt.toISOString(),
       createdAt: user.createdAt.toISOString(),
-      children: user.childrenAsParent,
+      subscription: sub
+        ? {
+            id: sub.id,
+            planId: sub.plan?.id ?? null,
+            planName: sub.plan?.name ?? '—',
+            tier: sub.plan?.entitlementTier ?? 'free',
+            isTrial: sub.isTrial,
+            startedAt: sub.startedAt?.toISOString() ?? null,
+            expiresAt: sub.expiresAt?.toISOString() ?? null,
+          }
+        : null,
+      paymentsCount: user._count.payments,
+      children: user.childrenAsParent.map((c) => ({
+        id: c.id,
+        name: c.name,
+        age: c.age,
+        familyCode: c.familyCode,
+        isConnected: c.isConnected,
+        lastSeenAt: c.lastSeenAt?.toISOString() ?? null,
+        avatarUrl: c.photoPath ? this.childAvatarUrl(c.id) : null,
+      })),
       childrenCount: user.childrenAsParent.length,
     };
+  }
+
+  /**
+   * Admin sovg'asi — ota-onaga tanlangan tarifni `days` kun BEPUL beradi.
+   *
+   * Qoidalar:
+   *  - Faol obuna YO'Q bo'lsa: yangi ACTIVE obuna (isTrial=true, hozirdan
+   *    N kun). Cron (TrialService) tugashiga 2 kun qolganda eslatadi.
+   *  - Faol obuna BOR bo'lsa: muddat N kunga UZAYADI (tugash sanasidan
+   *    boshlab), tarif faqat YUQORIROQ darajaga o'zgaradi — pullik Premium
+   *    mijozga Standart sovg'a qilinsa tarifi tushmaydi, faqat muddat uzayadi.
+   *    Pullik obunaning `isTrial=false` belgisi saqlanadi (aks holda unga
+   *    "demo tugadi" push'i ketardi).
+   *  - `User.trialUsed` TEGILMAYDI — bu ro'yxatdan o'tish trial'i uchun.
+   */
+  async grantSubscription(
+    id: string,
+    dto: GrantSubscriptionDto,
+    staff: { sub: string; email?: string },
+    req: AdminReqCtx,
+  ) {
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true, name: true },
+    });
+    if (!user) throw new NotFoundException('User not found');
+    if (user.role !== 'PARENT') {
+      throw new BadRequestException('Obuna faqat ota-ona akkauntiga beriladi');
+    }
+
+    const plan = await this.prisma.plan.findUnique({ where: { id: dto.planId } });
+    if (!plan || !plan.isActive) {
+      throw new BadRequestException('Tarif topilmadi yoki faol emas');
+    }
+    if (plan.entitlementTier === 'free') {
+      throw new BadRequestException("Bepul tarifni sovg'a qilib bo'lmaydi");
+    }
+
+    const now = new Date();
+    const existing = await this.prisma.subscription.findFirst({
+      where: { userId: id, ...activeSubscriptionWhere(now) },
+      include: { plan: { select: { name: true, entitlementTier: true } } },
+      orderBy: { expiresAt: 'desc' },
+    });
+
+    let subscriptionId: string;
+    let expiresAt: Date;
+    // Amaldagi tarif nomi — pastroq tarif sovg'a qilinsa eski (yuqori) qoladi.
+    let effectivePlanName = plan.name;
+
+    if (existing) {
+      if (existing.expiresAt === null) {
+        // Muddatsiz (lifetime) obuna — uzaytirishning ma'nosi yo'q.
+        throw new BadRequestException('Foydalanuvchida muddatsiz obuna bor');
+      }
+      const base = existing.expiresAt > now ? existing.expiresAt : now;
+      expiresAt = new Date(base.getTime() + dto.days * DAY_MS);
+      const currentRank =
+        TIER_RANK[existing.plan?.entitlementTier ?? 'free'] ?? 0;
+      const giftRank = TIER_RANK[plan.entitlementTier] ?? 0;
+      const upgrade = giftRank > currentRank;
+      if (!upgrade && existing.plan) effectivePlanName = existing.plan.name;
+      const updated = await this.prisma.subscription.update({
+        where: { id: existing.id },
+        data: {
+          planId: upgrade ? plan.id : existing.planId,
+          status: 'ACTIVE',
+          expiresAt,
+          // Yangi tugash sanasi — eslatmalar qayta yuborilsin.
+          trialReminderSentAt: null,
+          trialEndedNotifiedAt: null,
+        },
+      });
+      subscriptionId = updated.id;
+    } else {
+      expiresAt = new Date(now.getTime() + dto.days * DAY_MS);
+      const created = await this.prisma.subscription.create({
+        data: {
+          userId: id,
+          planId: plan.id,
+          status: 'ACTIVE',
+          startedAt: now,
+          expiresAt,
+          isTrial: true,
+        },
+      });
+      subscriptionId = created.id;
+    }
+
+    void this.audit.log(req, {
+      action: 'user.grant_subscription',
+      moderatorId: staff.sub,
+      email: staff.email,
+      resourceType: 'user',
+      resourceId: id,
+      details: {
+        planId: plan.id,
+        planName: plan.name,
+        effectivePlanName,
+        days: dto.days,
+        extended: Boolean(existing),
+        expiresAt: expiresAt.toISOString(),
+        note: dto.note ?? null,
+      },
+    });
+
+    // Push (best-effort) — ilovada "Sizga N kunlik Premium sovg'a qilindi".
+    try {
+      const lang = await this.fcm.getUserLang(id);
+      await this.fcm.sendPushToUser(id, {
+        title: tr(lang, 'giftSubscription.title'),
+        body: tr(lang, 'giftSubscription.body', {
+          plan: effectivePlanName,
+          days: dto.days,
+        }),
+        data: { type: 'giftSubscription', relatedRoute: '/premium' },
+      });
+    } catch (err) {
+      this.logger.warn(`gift push failed (user=${id}): ${err}`);
+    }
+
+    return {
+      ok: true,
+      subscriptionId,
+      planName: effectivePlanName,
+      expiresAt: expiresAt.toISOString(),
+      extended: Boolean(existing),
+    };
+  }
+
+  /**
+   * Ogohlantirish — foydalanuvchiga push yuboradi. `id` ota-ona (User.id)
+   * yoki bola (Child.id) bo'lishi mumkin (ro'yxat ikkalasini aralash beradi):
+   * bola uchun push uning qurilma akkauntiga (childUser) + in-app inbox satri.
+   */
+  async warnUser(
+    id: string,
+    message: string,
+    staff: { sub: string; email?: string },
+    req: AdminReqCtx,
+  ) {
+    const text = message.trim();
+    const user = await this.prisma.user.findUnique({
+      where: { id },
+      select: { id: true, role: true },
+    });
+
+    let delivered = 0;
+    let target: 'parent' | 'child';
+
+    if (user) {
+      target = 'parent';
+      const lang = await this.fcm.getUserLang(user.id);
+      const r = await this.fcm.sendPushToUser(user.id, {
+        title: tr(lang, 'adminWarning.title'),
+        body: text,
+        data: { type: 'adminWarning' },
+      });
+      delivered = r.sent;
+    } else {
+      const child = await this.prisma.child.findUnique({
+        where: { id },
+        select: { id: true, childUserId: true },
+      });
+      if (!child) throw new NotFoundException('User not found');
+      target = 'child';
+      const lang = child.childUserId
+        ? await this.fcm.getUserLang(child.childUserId)
+        : 'uz';
+      const title = tr(lang, 'adminWarning.title');
+      // In-app inbox (bola ilovasi bildirishnomalar ro'yxati).
+      await this.prisma.notification.create({
+        data: { childId: child.id, type: 'SYSTEM', title, body: text },
+      });
+      if (child.childUserId) {
+        const r = await this.fcm.sendPushToUser(child.childUserId, {
+          title,
+          body: text,
+          data: { type: 'adminWarning' },
+        });
+        delivered = r.sent;
+      }
+    }
+
+    void this.audit.log(req, {
+      action: 'user.warn',
+      moderatorId: staff.sub,
+      email: staff.email,
+      resourceType: target === 'parent' ? 'user' : 'child',
+      resourceId: id,
+      details: { message: text, delivered },
+    });
+
+    return { ok: true, target, delivered };
   }
 
   async findChildProfile(id: string) {

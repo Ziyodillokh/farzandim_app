@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { ParvozLogo } from '@/components/layout/parvoz-logo';
 import { useRouter } from 'next/navigation';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -75,9 +76,7 @@ export default function LoginPage() {
       <div className="relative w-full max-w-md">
         {/* Brand */}
         <div className="mb-8 flex flex-col items-center gap-3 text-center">
-          <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary to-primary-glow shadow-primary-glow">
-            <span className="text-2xl font-bold text-primary-foreground">F</span>
-          </div>
+          <ParvozLogo className="h-14 w-14 rounded-2xl shadow-primary-glow" />
           <div>
             <h1 className="text-2xl font-bold tracking-tight">Parvoz Admin</h1>
             <p className="mt-1 text-sm text-muted-foreground">

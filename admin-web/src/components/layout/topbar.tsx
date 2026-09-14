@@ -32,10 +32,13 @@ export function Topbar() {
     'Admin';
 
   return (
-    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border bg-background/80 px-6 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-16 items-center gap-4 border-b border-border/80 bg-background/80 px-6 backdrop-blur-md supports-[backdrop-filter]:bg-background/60">
       {/* Page title */}
-      <div className="flex flex-col">
-        <h1 className="text-base font-bold leading-none">{title}</h1>
+      <div className="flex flex-col gap-0.5">
+        <span className="text-2xs font-semibold uppercase tracking-[0.12em] text-muted-foreground/80">
+          Parvoz Admin
+        </span>
+        <h1 className="text-base font-bold leading-none tracking-tight">{title}</h1>
       </div>
 
       {/* Search (center, hidden on small) */}
@@ -48,7 +51,7 @@ export function Topbar() {
             </kbd>
           }
           placeholder="Qidiruv... (⌘ K)"
-          className="h-9 rounded-full bg-muted/50"
+          className="h-9 rounded-full border-transparent bg-muted/60 focus-within:border-border"
         />
       </div>
 

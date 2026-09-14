@@ -14,8 +14,8 @@ import { PageHeader } from '@/components/common/page-header';
 import { analyticsApi } from '@/lib/api/admin.api';
 import { cn, formatCompact } from '@/lib/utils';
 
-const LIME = 'hsl(78 90% 47%)';
-const COLORS = [LIME, 'hsl(217 91% 60%)', 'hsl(38 92% 50%)', 'hsl(330 81% 60%)'];
+const PRIMARY = 'hsl(var(--primary))';
+const COLORS = [PRIMARY, 'hsl(175 51% 49%)', 'hsl(38 92% 50%)', 'hsl(330 81% 60%)'];
 
 interface AnalyticsOverview {
   users?: number;
@@ -74,15 +74,15 @@ export default function AnalyticsPage() {
                 <AreaChart data={overview?.growth ?? PLACEHOLDER_GROWTH} margin={{ top: 5, right: 5, left: -20, bottom: 0 }}>
                   <defs>
                     <linearGradient id="ag" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%" stopColor={LIME} stopOpacity={0.35} />
-                      <stop offset="95%" stopColor={LIME} stopOpacity={0} />
+                      <stop offset="5%" stopColor={PRIMARY} stopOpacity={0.35} />
+                      <stop offset="95%" stopColor={PRIMARY} stopOpacity={0} />
                     </linearGradient>
                   </defs>
                   <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                   <XAxis dataKey="label" stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} />
                   <YAxis stroke="hsl(var(--muted-foreground))" fontSize={11} tickLine={false} axisLine={false} width={32} />
                   <Tooltip contentStyle={tooltipStyle} />
-                  <Area type="monotone" dataKey="value" stroke={LIME} strokeWidth={2} fill="url(#ag)" />
+                  <Area type="monotone" dataKey="value" stroke={PRIMARY} strokeWidth={2} fill="url(#ag)" />
                 </AreaChart>
               </ResponsiveContainer>
             </div>

@@ -6,8 +6,11 @@
  * ─────────────────────────────────────────────────────────────────────
  * Parvoz Admin — Design Tokens
  * ─────────────────────────────────────────────────────────────────────
- * Yashil (lime) + oq palitra. Light va Dark mode.
- * Radix-based shadcn/ui bilan ishlash uchun HSL formatda.
+ * Brend ko'k (Parvoz logo gradienti #508AFF → #305399) + oq palitra.
+ * Light va Dark mode. Radix-based shadcn/ui bilan ishlash uchun HSL formatda.
+ *
+ * 2026-09-14: lime (#84CC16) o'rniga logo bilan bir xil ko'k — admin panel
+ * ilova brendiga mos bo'lsin. Faqat shu tokenlar o'zgardi, komponentlar emas.
  */
 
 @layer base {
@@ -20,18 +23,18 @@
     --popover: 0 0% 100%;
     --popover-foreground: 240 14% 10%;
 
-    /* Lime green — brendning yuragi */
-    --primary: 78 90% 47%;               /* #84CC16 — lime-500 */
-    --primary-foreground: 240 10% 6%;    /* qora matn lime fonida */
-    --primary-glow: 80 85% 60%;          /* #A3E635 — lime-400, hover */
-    --primary-soft: 76 85% 95%;          /* #ECFCCB — lime-50, soft bg */
+    /* Brend ko'k — logo gradientining yuqori rangi */
+    --primary: 220 100% 66%;             /* #508AFF — logo */
+    --primary-foreground: 0 0% 100%;     /* oq matn ko'k fonida */
+    --primary-glow: 222 52% 40%;         /* #305399 — logo gradient pastki, hover/gradient */
+    --primary-soft: 220 100% 96%;        /* #EBF1FF — soft bg */
 
     /* Ikkilamchi va xira */
     --secondary: 240 5% 96%;
     --secondary-foreground: 240 8% 18%;
     --muted: 240 5% 96%;
     --muted-foreground: 240 6% 38%;      /* #5A5A66 — to'qroq, o'qiladigan xira matn */
-    --accent: 76 70% 96%;                /* lime tinted hover bg */
+    --accent: 220 80% 96%;               /* ko'k tinted hover bg */
     --accent-foreground: 240 8% 16%;
 
     /* Status ranglari */
@@ -47,13 +50,13 @@
     /* Chegaralar va input */
     --border: 240 6% 90%;                /* #E4E4E7 — neutral-200 */
     --input: 240 6% 90%;
-    --ring: 78 90% 47%;                  /* lime focus ring */
+    --ring: 220 100% 66%;                /* brend ko'k focus ring */
 
     /* Sidebar — alohida palette */
-    --sidebar: 0 0% 100%;
+    --sidebar: 220 30% 98.5%;            /* #FAFBFE — biroz ko'kish oq */
     --sidebar-foreground: 240 6% 14%;
-    --sidebar-accent: 76 85% 95%;        /* primary-soft */
-    --sidebar-border: 240 6% 93%;
+    --sidebar-accent: 220 100% 95%;      /* primary-soft */
+    --sidebar-border: 220 14% 92%;
 
     --radius: 0.75rem;                   /* 12px — kartalar */
   }
@@ -66,16 +69,16 @@
     --popover: 240 10% 6%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 78 90% 55%;               /* lime — biroz yorqinroq dark'da */
-    --primary-foreground: 240 10% 4%;
-    --primary-glow: 80 85% 65%;
-    --primary-soft: 78 50% 14%;          /* dark lime bg */
+    --primary: 220 100% 70%;             /* brend ko'k — dark'da biroz yorqinroq */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 222 60% 52%;
+    --primary-soft: 220 50% 14%;         /* dark ko'k bg */
 
     --secondary: 240 5% 12%;
     --secondary-foreground: 0 0% 96%;
     --muted: 240 5% 12%;
     --muted-foreground: 240 5% 68%;      /* dark mode — yorqinroq xira matn */
-    --accent: 78 40% 12%;
+    --accent: 220 35% 13%;
     --accent-foreground: 0 0% 96%;
 
     --destructive: 0 70% 50%;
@@ -89,12 +92,12 @@
 
     --border: 240 6% 14%;
     --input: 240 6% 14%;
-    --ring: 78 90% 55%;
+    --ring: 220 100% 70%;
 
-    --sidebar: 240 10% 5%;
+    --sidebar: 230 12% 5%;
     --sidebar-foreground: 0 0% 96%;
-    --sidebar-accent: 78 40% 14%;
-    --sidebar-border: 240 6% 12%;
+    --sidebar-accent: 220 35% 15%;
+    --sidebar-border: 230 8% 12%;
   }
 }
 

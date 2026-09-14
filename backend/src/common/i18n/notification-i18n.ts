@@ -178,6 +178,25 @@ const T: Record<string, Record<NotifLang, string>> = {
     ru: 'Вы перешли на бесплатный тариф. Все данные сохранены — при переходе на Стандарт или Премиум они вернутся.',
     en: "You're now on the Free plan. Your data is saved — upgrade to Standard or Premium to get it all back.",
   },
+
+  // ── Admin sovg'asi — tarif N kun bepul (ota-onaga) ──
+  'giftSubscription.title': {
+    uz: "Sizga sovg'a! 🎁",
+    ru: 'Вам подарок! 🎁',
+    en: 'A gift for you! 🎁',
+  },
+  'giftSubscription.body': {
+    uz: '{plan} tarifi {days} kunga bepul faollashtirildi. Barcha imkoniyatlardan bahramand bo\'ling!',
+    ru: 'Тариф {plan} активирован бесплатно на {days} дн. Пользуйтесь всеми возможностями!',
+    en: 'The {plan} plan is now free for {days} days. Enjoy all the features!',
+  },
+
+  // ── Admin ogohlantirishi (matn admin tomonidan yoziladi) ──
+  'adminWarning.title': {
+    uz: 'Ogohlantirish',
+    ru: 'Предупреждение',
+    en: 'Warning',
+  },
 };
 
 /**

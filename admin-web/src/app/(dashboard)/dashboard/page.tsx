@@ -133,7 +133,8 @@ interface ChartCardProps {
 }
 
 function ChartCard({ title, subtitle, chart, loading, accent }: ChartCardProps) {
-  const color = accent === 'primary' ? 'hsl(78 90% 47%)' : 'hsl(217 91% 60%)';
+  // primary = brend ko'k (token), ikkinchi grafik — turkuaz (ilova secondary #3DBFB4)
+  const color = accent === 'primary' ? 'hsl(var(--primary))' : 'hsl(175 51% 49%)';
   const labels = chart?.labels ?? [];
   const series = chart?.series ?? [];
 

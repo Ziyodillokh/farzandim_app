@@ -10,6 +10,9 @@ import type {
   AdminNotification,
   AdminUser,
   AdminUserListItem,
+  AdminUserDetail,
+  AdminChildProfile,
+  GrantSubscriptionResult,
   Audiobook,
   AuditLogEntry,
   Book,
@@ -76,13 +79,22 @@ export const usersApi = {
       .get<RawPaginated<AdminUserListItem>>('/admin/users', { params })
       .then(normalizePagination),
 
-  detail: (id: string) => api.get<AdminUserListItem & Record<string, unknown>>(`/admin/users/${id}`),
+  detail: (id: string) => api.get<AdminUserDetail>(`/admin/users/${id}`),
 
-  childProfile: (id: string) => api.get<Record<string, unknown>>(`/admin/child-profiles/${id}`),
+  // Backend: AdminUsersController('admin/users') + @Get('child-profiles/:id')
+  // → yo'l /admin/users/child-profiles/:id (oldin /admin/child-profiles edi — 404).
+  childProfile: (id: string) => api.get<AdminChildProfile>(`/admin/users/child-profiles/${id}`),
 
   block: (id: string) => api.post(`/admin/users/${id}/block`),
   unblock: (id: string) => api.post(`/admin/users/${id}/unblock`),
-  warn: (id: string, message: string) => api.post(`/admin/users/${id}/warn`, { message }),
+  warn: (id: string, message: string) =>
+    api.post<{ ok: true; target: 'parent' | 'child'; delivered: number }>(
+      `/admin/users/${id}/warn`,
+      { message },
+    ),
+  // Sovg'a — tanlangan tarifni N kun bepul (demo). Faqat ota-ona.
+  grantSubscription: (id: string, data: { planId: string; days: number; note?: string }) =>
+    api.post<GrantSubscriptionResult>(`/admin/users/${id}/grant-subscription`, data),
   // Foydalanuvchini VA barcha ma'lumotini serverdan butunlay o'chiradi
   // (qaytarib bo'lmaydi) — backend DB'da kaskad o'chiradi.
   remove: (id: string) => api.delete(`/admin/users/${id}`),

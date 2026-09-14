@@ -127,6 +127,94 @@ export interface AdminUserListItem {
   avatarUrl: string | null;
 }
 
+/** Ota-ona "Batafsil" — GET /admin/users/:id */
+export interface AdminUserDetail {
+  id: string;
+  kind: 'parent';
+  role: UserRole | string;
+  name: string;
+  phone: string | null;
+  email: string | null;
+  telegramId: string | null;
+  avatarUrl: string | null;
+  language: string | null;
+  status: 'active' | 'blocked';
+  trialUsed: boolean;
+  lastActivityAt: string;
+  createdAt: string;
+  subscription: {
+    id: string;
+    planId: string | null;
+    planName: string;
+    tier: string;
+    isTrial: boolean;
+    startedAt: string | null;
+    expiresAt: string | null;
+  } | null;
+  paymentsCount: number;
+  children: Array<{
+    id: string;
+    name: string;
+    age: number | null;
+    familyCode: string | null;
+    isConnected: boolean;
+    lastSeenAt: string | null;
+    avatarUrl: string | null;
+  }>;
+  childrenCount: number;
+}
+
+/** Bola "Batafsil" — GET /admin/users/child-profiles/:id */
+export interface AdminChildProfile {
+  id: string;
+  kind: 'child';
+  name: string;
+  age: number | null;
+  gender: string | null;
+  region: string | null;
+  photoPath: string | null;
+  familyCode: string | null;
+  isConnected: boolean;
+  lastSeenAt: string | null;
+  pairedAt: string | null;
+  device: {
+    model: string | null;
+    androidVersion: string | null;
+    appVersion: string | null;
+    batteryLevel: number | null;
+    isCharging: boolean | null;
+    wifiName: string | null;
+  };
+  phone: string | null;
+  parent: { id: string; name: string | null; phone: string | null } | null;
+  interests: string[];
+  profile: {
+    xp: number;
+    level: number;
+    status: string;
+    streakDays: number;
+    donBalance: number;
+  } | null;
+  recentXpEvents: Array<{
+    id: string;
+    type: string;
+    xpDelta: number;
+    donDelta: number;
+    createdAt: string;
+  }>;
+  createdAt: string;
+}
+
+/** POST /admin/users/:id/grant-subscription natijasi */
+export interface GrantSubscriptionResult {
+  ok: true;
+  subscriptionId: string;
+  planName: string;
+  expiresAt: string;
+  /** Faol obuna bor edi — muddat uzaytirildi (yangi yaratilmadi). */
+  extended: boolean;
+}
+
 // ─── Moderators ─────────────────────────────────────────────────
 export interface Moderator {
   id: string;

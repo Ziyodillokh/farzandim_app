@@ -2,7 +2,18 @@
 
 import { useState } from 'react';
 import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
-import { Search, MoreHorizontal, Eye, Ban, AlertTriangle, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react';
+import {
+  Search,
+  MoreHorizontal,
+  Eye,
+  Ban,
+  AlertTriangle,
+  ChevronLeft,
+  ChevronRight,
+  Download,
+  Trash2,
+  Gift,
+} from 'lucide-react';
 import { toast } from 'sonner';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -18,7 +29,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Separator } from '@/components/ui/separator';
+import { UserDetailSheet } from '@/components/users/user-detail-sheet';
+import { WarnUserDialog } from '@/components/users/warn-user-dialog';
+import { GiftPlanDialog } from '@/components/users/gift-plan-dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -176,6 +189,9 @@ function UserRow({ user }: { user: AdminUserListItem }) {
   const isChild = user.kind === 'child' || user.role === 'CHILD';
   const isActive = user.status === 'active';
   const [confirmOpen, setConfirmOpen] = useState(false);
+  const [detailOpen, setDetailOpen] = useState(false);
+  const [warnOpen, setWarnOpen] = useState(false);
+  const [giftOpen, setGiftOpen] = useState(false);
 
   const handleBlock = async () => {
     try {
@@ -202,7 +218,10 @@ function UserRow({ user }: { user: AdminUserListItem }) {
   });
 
   return (
-    <tr className="border-b border-border last:border-0 transition-colors hover:bg-accent/40">
+    <tr
+      className="group/row cursor-pointer border-b border-border last:border-0 transition-colors hover:bg-accent/40"
+      onClick={() => setDetailOpen(true)}
+    >
       <td className="px-4 py-3">
         <div className="flex items-center gap-3">
           <Avatar className="h-9 w-9">
@@ -215,7 +234,7 @@ function UserRow({ user }: { user: AdminUserListItem }) {
             <AvatarFallback className="text-xs">{initials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="min-w-0">
-            <p className="truncate font-semibold">{user.name}</p>
+            <p className="truncate font-semibold transition-colors group-hover/row:text-primary">{user.name}</p>
             {user.email && (
               <p className="truncate text-xs text-muted-foreground">{user.email}</p>
             )}
@@ -236,9 +255,16 @@ function UserRow({ user }: { user: AdminUserListItem }) {
           {isActive ? 'Faol' : 'Bloklangan'}
         </Badge>
       </td>
-      <td className="px-4 py-3 text-muted-foreground">{user.planLabel || 'Free'}</td>
-      <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(user.lastActivityAt)}</td>
       <td className="px-4 py-3">
+        {user.plan && user.plan !== 'free' ? (
+          <Badge variant="default" size="sm">{user.planLabel}</Badge>
+        ) : (
+          <span className="text-muted-foreground">Free</span>
+        )}
+      </td>
+      <td className="px-4 py-3 text-xs text-muted-foreground">{formatRelative(user.lastActivityAt)}</td>
+      {/* Amallar ustuni — qator bosilganda detail ochilmasin (stopPropagation) */}
+      <td className="px-4 py-3" onClick={(e) => e.stopPropagation()}>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon-sm" aria-label="Amallar">
@@ -247,10 +273,16 @@ function UserRow({ user }: { user: AdminUserListItem }) {
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Amallar</DropdownMenuLabel>
-            <DropdownMenuItem>
+            <DropdownMenuItem onClick={() => setDetailOpen(true)}>
               <Eye /> Batafsil
             </DropdownMenuItem>
-            <DropdownMenuItem>
+            {/* Sovg'a — faqat ota-ona (bolada obuna yo'q) */}
+            {!isChild && (
+              <DropdownMenuItem onClick={() => setGiftOpen(true)}>
+                <Gift /> Tarif sovg&apos;a qilish
+              </DropdownMenuItem>
+            )}
+            <DropdownMenuItem onClick={() => setWarnOpen(true)}>
               <AlertTriangle /> Ogohlantirish
             </DropdownMenuItem>
             <DropdownMenuSeparator />
@@ -265,6 +297,10 @@ function UserRow({ user }: { user: AdminUserListItem }) {
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
+
+        <UserDetailSheet user={user} open={detailOpen} onOpenChange={setDetailOpen} />
+        <WarnUserDialog user={user} open={warnOpen} onOpenChange={setWarnOpen} />
+        {!isChild && <GiftPlanDialog user={user} open={giftOpen} onOpenChange={setGiftOpen} />}
 
         {/* Tasdiqlash oynasi — qaytarib bo'lmaydigan to'liq o'chirish */}
         <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
