@@ -28,6 +28,7 @@ import { NotificationsModule } from './modules/notifications/notifications.modul
 import { FeedbackModule } from './modules/feedback/feedback.module';
 import { GamificationModule } from './modules/gamification/gamification.module';
 import { PhotoRequestsModule } from './modules/photo-requests/photo-requests.module';
+import { ListenSessionsModule } from './modules/listen-sessions/listen-sessions.module';
 import { SosAlertsModule } from './modules/sos-alerts/sos-alerts.module';
 import { InstalledAppsModule } from './modules/installed-apps/installed-apps.module';
 import { AppLimitsModule } from './modules/app-limits/app-limits.module';
@@ -108,6 +109,7 @@ import { AppController } from './app.controller';
     FeedbackModule,
     GamificationModule,
     PhotoRequestsModule,
+    ListenSessionsModule,
     SosAlertsModule,
     InstalledAppsModule,
     AppLimitsModule,

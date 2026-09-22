@@ -134,4 +134,89 @@ export class RealtimeGateway
   emitToChild(childId: string, event: string, payload: unknown): void {
     this.server.to(`child:${childId}`).emit(event, payload);
   }
+
+  /* ================================================================== */
+  /*  Jonli eshitish (listen) — WebRTC signaling relay                   */
+  /*                                                                     */
+  /*  ⚠️ Bu yerdan FAQAT signal (SDP/ICE) o'tadi — OVOZ EMAS. Ovoz       */
+  /*  WebRTC P2P orqali bola→ota-ona to'g'ridan-to'g'ri boradi va        */
+  /*  serverga umuman tegmaydi. Signal shifrlangan media kanalini        */
+  /*  o'rnatish uchun kerak, xolos.                                      */
+  /* ================================================================== */
+
+  /**
+   * Sessiya ishtirokchisini avtorizatsiya qiladi va "boshqa tomon"ni
+   * qaytaradi. Yuboruvchi sessiyaning ota-onasi yoki bolasi bo'lishi shart.
+   */
+  private async resolveSignalTarget(
+    senderUserId: string,
+    sessionId: string,
+  ): Promise<string | null> {
+    const session = await this.prisma.listenSession.findUnique({
+      where: { id: sessionId },
+      include: { child: { select: { childUserId: true } } },
+    });
+    if (!session) return null;
+    if (session.status === 'ENDED' || session.status === 'EXPIRED') return null;
+
+    const childUserId = session.child.childUserId;
+    if (senderUserId === session.parentId) return childUserId;
+    if (childUserId && senderUserId === childUserId) return session.parentId;
+    return null; // yuboruvchi bu sessiyaga aloqador emas
+  }
+
+  /**
+   * WebRTC signalini (offer/answer/ICE) boshqa tomonga uzatadi.
+   * Payload'ning `signal` qismi shaffof — biz uni o'qimaymiz, faqat
+   * yetkazamiz.
+   */
+  @SubscribeMessage('listen:signal')
+  async handleListenSignal(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() body: unknown,
+  ): Promise<{ ok: boolean }> {
+    const payload = body as { sessionId?: unknown; signal?: unknown } | null;
+    const sessionId = payload?.sessionId;
+    if (typeof sessionId !== 'string' || payload?.signal === undefined) {
+      return { ok: false };
+    }
+    const senderUserId = client.data.userId as string;
+    const targetUserId = await this.resolveSignalTarget(senderUserId, sessionId);
+    if (!targetUserId) return { ok: false };
+
+    this.emitToUser(targetUserId, 'listen:signal', {
+      sessionId,
+      signal: payload.signal,
+    });
+    return { ok: true };
+  }
+
+  /**
+   * Bola qurilmasi ulanib, jonli oqim boshlaganini bildiradi →
+   * sessiya ACTIVE bo'ladi, ota-onaga xabar beriladi.
+   */
+  @SubscribeMessage('listen:ready')
+  async handleListenReady(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() sessionId: unknown,
+  ): Promise<{ ok: boolean }> {
+    if (typeof sessionId !== 'string') return { ok: false };
+    const senderUserId = client.data.userId as string;
+
+    const session = await this.prisma.listenSession.findUnique({
+      where: { id: sessionId },
+      include: { child: { select: { childUserId: true } } },
+    });
+    if (!session || session.child.childUserId !== senderUserId) {
+      return { ok: false };
+    }
+    if (session.status !== 'PENDING') return { ok: true };
+
+    await this.prisma.listenSession.update({
+      where: { id: sessionId },
+      data: { status: 'ACTIVE' },
+    });
+    this.emitToUser(session.parentId, 'listen:active', { id: sessionId });
+    return { ok: true };
+  }
 }
