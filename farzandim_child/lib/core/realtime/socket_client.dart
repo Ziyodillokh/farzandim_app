@@ -171,6 +171,25 @@ class SocketClient {
     );
   }
 
+  // ── Jonli eshitish (listen) — WebRTC signaling ────────────────────
+  // Bola socket handshake'da avtomatik `user:<childUserId>` room'ига
+  // qo'shiladi va backend listen:* eventlarini AYNAN shu room'ga emit qiladi,
+  // shuning uchun qo'shimcha room join KERAK EMAS — faqat emit metodlari.
+
+  /// WebRTC signalini (offer/answer/ICE) ota-onaga uzatadi.
+  /// Payload shakli backend kutgani bilan mos: { sessionId, signal }.
+  void emitListenSignal(String sessionId, Map<String, dynamic> signal) {
+    if (_socket == null || !_socket!.connected) return;
+    _socket!.emit('listen:signal', {'sessionId': sessionId, 'signal': signal});
+  }
+
+  /// Bola mikrofon oqimini boshlaganini bildiradi → backend sessiyani
+  /// ACTIVE qiladi. Payload — XOM string sessionId (backend shuni kutadi).
+  void emitListenReady(String sessionId) {
+    if (_socket == null || !_socket!.connected) return;
+    _socket!.emit('listen:ready', sessionId);
+  }
+
   /// Logout / unpair — socket yopiladi.
   void disconnect() {
     _socket?.disconnect();

@@ -141,6 +141,25 @@ class ChildSettingsScreen extends ConsumerWidget {
                     ),
                   if (child != null) const SizedBox(height: 14),
 
+                  // ── Jonli eshitish ──
+                  // Ota-ona bola atrofidagi ovozni JONLI eshitadi. Bola
+                  // qurilmasida "Ota-onangiz tinglamoqda" ko'rinadi, bola
+                  // to'xtata oladi, ovoz saqlanmaydi.
+                  _NavCard(
+                    icon: SolarIconsBold.microphone,
+                    title: 'Jonli eshitish',
+                    subtitle: 'Atrofdagi ovozni jonli tinglash',
+                    onTap: () => guardPaid(
+                      context,
+                      ref,
+                      onAllowed: () => context.push(
+                        AppRoutes.listenPath(childId),
+                        extra: child?.name ?? '',
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 8),
+
                   // ── Manzillar ──
                   _NavCard(
                     icon: SolarIconsBold.map,

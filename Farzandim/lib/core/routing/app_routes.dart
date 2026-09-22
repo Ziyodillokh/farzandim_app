@@ -52,6 +52,10 @@ class AppRoutes {
 
   static String childSettingsPath(String childId) => '/child-settings/$childId';
 
+  // Jonli eshitish — ota-ona bola atrofini JONLI eshitadi (extra: bola ismi).
+  static const String listenPattern = '/listen/:childId';
+  static String listenPath(String childId) => '/listen/$childId';
+
   /// Manzillar (geo-zonalar) o'rnatish — wizard 3-qadam (nazoratdan keyin).
   /// Navigatsiya uchun [addressesSetupPath]'dan foydalaning.
   static const String addressesSetupPattern = '/addresses-setup/:childId';

@@ -45,6 +45,7 @@ import 'package:farzandim/features/geo_zones/presentation/screens/addresses_setu
 import 'package:farzandim/features/geo_zones/presentation/screens/geo_zones_list_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/privacy_policy_screen.dart';
 import 'package:farzandim/features/legal/presentation/screens/terms_of_service_screen.dart';
+import 'package:farzandim/features/listen/presentation/screens/listen_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_history_screen.dart';
 import 'package:farzandim/features/location/presentation/screens/location_map_screen.dart';
 import 'package:farzandim/features/notifications/data/models/app_notification.dart';
@@ -344,6 +345,17 @@ List<RouteBase> buildAppRoutes() {
         ChildSettingsScreen(
           childId: state.pathParameters['childId']!,
           initialChild: state.extra is Child ? state.extra! as Child : null,
+        ),
+      ),
+    ),
+
+    // Jonli eshitish — ota-ona bola atrofini JONLI eshitadi (ovoz saqlanmaydi).
+    GoRoute(
+      path: AppRoutes.listenPattern,
+      pageBuilder: (context, state) => _slidePage(
+        ListenScreen(
+          childId: state.pathParameters['childId']!,
+          childName: state.extra is String ? state.extra! as String : '',
         ),
       ),
     ),

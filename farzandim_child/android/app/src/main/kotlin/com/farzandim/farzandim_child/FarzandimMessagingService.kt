@@ -34,6 +34,23 @@ class FarzandimMessagingService : FlutterFirebaseMessagingService() {
             }
             return // native ushladi — Flutter'ga uzatilmaydi
         }
+        if (data["type"] == "listen_request") {
+            // "Ota-onangiz tinglamoqda" indikatorini DARHOL ko'rsatamiz (ilova
+            // yopiq bo'lsa ham) va full-screen intent MainActivity'ni (Flutter)
+            // oldinga chiqaradi — WebRTC + mikrofon FGS o'sha foreground
+            // kontekstda ishga tushadi. ⚠️ Mikrofon FGS'ni BU YERDA
+            // boshlamaymiz: Android 14+ da `microphone` tipini fondan ishga
+            // tushirib bo'lmaydi.
+            try {
+                ListenService.notifyIndicator(applicationContext, data["sessionId"] ?: "")
+            } catch (e: Exception) {
+                android.util.Log.w("FarzandimMessaging", "listen indicator failed", e)
+            }
+            // super() ni chaqiramiz — ilova FOREGROUND bo'lsa Dart FCM
+            // handleri ham darhol ishlab, ekranni ochib WebRTC'ni boshlaydi.
+            super.onMessageReceived(remoteMessage)
+            return
+        }
         super.onMessageReceived(remoteMessage)
     }
 }

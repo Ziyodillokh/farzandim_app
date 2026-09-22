@@ -38,6 +38,11 @@ dependencies:
   # Sprint 4.4.11: Backend Socket.io real-time events
   # (voice/photo/notification/schedule WS).
   socket_io_client: ^2.0.3+1
+  # Jonli eshitish (ota-ona bola atrofini JONLI eshitadi) uchun WebRTC —
+  # ovoz P2P bola→ota-ona to'g'ridan-to'g'ri o'tadi, serverga tegmaydi va
+  # saqlanmaydi. Bola qurilmasida "Ota-onangiz tinglamoqda" indikatori
+  # doim ko'rinadi (native ListenService).
+  flutter_webrtc: ^0.12.5
 
   # flutter_secure_storage — JWT access/refresh tokenlarini xavfsiz
   # saqlash (KeyStore Android, Keychain iOS).

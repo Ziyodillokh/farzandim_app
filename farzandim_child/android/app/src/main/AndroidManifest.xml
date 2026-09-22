@@ -52,6 +52,9 @@
          ACCESS_NETWORK_STATE qoladi — u connectivity_plus uchun (internet
          bor/yo'qligini bilish), hech qanday identifikator bermaydi. -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- flutter_webrtc talab qiladi (jonli eshitish audio yo'nalishi + ICE). -->
+    <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>
+    <uses-permission android:name="android.permission.CHANGE_NETWORK_STATE"/>
 
     <!-- Reklama identifikatori (AAID) — Families siyosati bo'yicha TAQIQ.
          Biror kutubxona (Firebase/Play Services) uni tranzitiv qo'shib
@@ -62,6 +65,10 @@
 
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <!-- Jonli eshitish (ListenService) uchun — Android 14+ da mikrofon tipli
+         foreground service SHU ruxsatsiz SecurityException bilan crash bo'ladi.
+         Ovoz P2P o'tadi, saqlanmaydi; bola qurilmasida indikator doim ko'rinadi. -->
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE_MICROPHONE"/>
     <!-- FOREGROUND_SERVICE_DATA_SYNC OLIB TASHLANDI (2026-08-18): endi hech
          bir xizmat "dataSync" tipini e'lon qilmaydi (yuqoridagi izohga qarang).
          Ishlatilmaydigan sezgir ruxsatni saqlab qolish Play tekshiruvida
@@ -265,6 +272,17 @@
                 android:value="Ring the child device on parent request (find device)"
                 tools:targetApi="34"/>
         </service>
+
+        <!-- Jonli eshitish foreground service. Tipi 'microphone' — Android 14+
+             da mikrofonni ishlatuvchi FGS uchun MAJBURIY (aks holda crash).
+             Vazifasi: "Ota-onangiz tinglamoqda" o'chirilmaydigan bildirishnomani
+             ko'rsatish va Flutter WebRTC mikrofon oqimini fon rejimida qonuniy
+             ushlab turish. Ovoz P2P o'tadi, saqlanmaydi. -->
+        <service
+            android:name=".ListenService"
+            android:exported="false"
+            android:foregroundServiceType="microphone"
+            tools:targetApi="34"/>
 
         <service
             android:name="com.ryanheise.audioservice.AudioService"

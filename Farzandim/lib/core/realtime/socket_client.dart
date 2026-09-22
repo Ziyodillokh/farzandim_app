@@ -253,6 +253,13 @@ class SocketClient {
     _socket?.emit('leave:child', childId);
   }
 
+  /// Jonli eshitish — WebRTC signalini (answer/ICE) bolaga uzatadi.
+  /// Backend relay `listen:signal` ni sessiyaning boshqa tomoniga yo'naltiradi.
+  /// Payload shakli backend kutgani bilan mos: { sessionId, signal }.
+  void emitListenSignal(String sessionId, Map<String, dynamic> signal) {
+    _socket?.emit('listen:signal', {'sessionId': sessionId, 'signal': signal});
+  }
+
   /// Logout / app tugaganda — socket yopiladi.
   void dispose() {
     _socket?.dispose();
