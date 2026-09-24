@@ -79,6 +79,10 @@
 		<string>Ovozli va video xabarlar yozish uchun mikrofon kerak.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
 		<string>Rasm tanlash va yuborish uchun galereyaga ruxsat kerak.</string>
+		<!-- pedometer plagini iOS'da CoreMotion ishlatadi. Bu matn bo'lmasa
+		     iOS ilovani birinchi murojaatdayoq MAJBURAN yopadi (krash). -->
+		<key>NSMotionUsageDescription</key>
+		<string>Kunlik qadamlaringizni hisoblash uchun harakat sensori kerak.</string>
 		<!-- Fon rejimlari: joylashuv + push + audiokitob background playback -->
 		<key>UIBackgroundModes</key>
 		<array>
