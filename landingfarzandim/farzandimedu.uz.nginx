@@ -96,7 +96,21 @@ server {
         try_files $uri $uri/ /child/index.html;
     }
 
+    # ── Qisqa yuklab olish havolalari (2026-09-25) ────────────────────
+    # Reklama/Telegram uchun: havola bosilsa to'g'ridan-to'g'ri do'konga.
+    #   /ota-ona (=/parent) → iPhone'da App Store, qolganida Google Play
+    #   /bola    (=/growth) → Parvoz Growth (bola ilovasi faqat Android)
+    # $parvoz_parent_store — /etc/nginx/conf.d/parvoz-store-links.conf
+    # ichidagi `map` (map faqat http konteksida ishlaydi, shu sababli
+    # alohida faylda; nusxasi: landingfarzandim/parvoz-store-links.nginx).
+    location = /ota-ona { return 302 $parvoz_parent_store; }
+    location = /parent  { return 302 $parvoz_parent_store; }
+    location = /bola    { return 302 "https://play.google.com/store/apps/details?id=com.farzandim.growth"; }
+    location = /growth  { return 302 "https://play.google.com/store/apps/details?id=com.farzandim.growth"; }
+
     # ── Landing (root) ────────────────────────────────────────────────
+    # ⚠️ Jonli konfigda bu blok :3200 (pm2 parvoz-landing, SSR) ga
+    # proxy_pass qiladi — quyidagi statik variant eskirgan.
     location / {
         root /var/www/farzandim-landing;
         index index.html;
