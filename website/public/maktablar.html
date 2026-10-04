@@ -34,139 +34,122 @@
 <header class="top">
   <a class="brand" href="/"><img src="/assets/img/logo.23d406ad.png" alt="" width="28" height="28">Parvoz</a>
   <nav class="pn" aria-label="Bo‘limlar">
-    <a href="#muammo">Muammo</a>
-    <a href="#panel">Maktab paneli</a>
-    <a href="#emaktab">E-maktab + AI</a>
+    <a href="#dars-rejimi">Dars rejimi</a>
+    <a href="#topshiriqlar">Topshiriqlar</a>
+    <a href="#admin-panel">Admin panel</a>
+    <a href="#e-maktab">E-maktab + AI</a>
     <a href="#hamkorlik">Hamkorlik</a>
-    <a href="#savollar">Savollar</a>
   </nav>
   <a class="btn cta" href="#aloqa">Pilot maktab bo‘lish</a>
 </header>
 
 <main>
-  <!-- ─── HERO ─── -->
-  <section class="sec hero" aria-labelledby="heroT">
-    <div>
-      <p class="eyebrow"><i></i>Parvoz · maktablar uchun konsept</p>
-      <h1 id="heroT"><b>Maktab va oila&nbsp;—</b> <span>bitta tizimda.</span></h1>
-      <p class="lead">Maktab dars paytida telefonni nazorat qiladi, ota-ona farzandining o‘qishini kuzatadi, o‘quvchi esa o‘qishga undaladi.</p>
-      <ul class="chips">
-        <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7C10.5 4 7 4 7 6s3 1 5 1zm0 0c1.5-3 5-3 5-1s-3 1-5 1z"/></svg></span>Bepul panel</li>
-        <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="10.5" r="2.5"/><path d="M8.5 16.5c.8-1.6 2-2.4 3.5-2.4s2.7.8 3.5 2.4"/></svg></span>Dars rejimi</li>
-        <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M9.5 4.5a3 3 0 0 0-3 3 3 3 0 0 0-1.6 5.3A3 3 0 0 0 7.5 17.5 2.5 2.5 0 0 0 12 19V6a2.5 2.5 0 0 0-2.5-1.5z"/><path d="M14.5 4.5a3 3 0 0 1 3 3 3 3 0 0 1 1.6 5.3 3 3 0 0 1-2.6 4.7A2.5 2.5 0 0 1 12 19"/></svg></span>E-maktab + AI</li>
-      </ul>
-      <div class="acts">
-        <a class="btn" href="#aloqa">Pilot maktab bo‘lish</a>
-        <a class="btn ghost" href="#panel">Konsept bilan tanishish</a>
-      </div>
-      <p class="status"><i></i><span><b>Konsept bosqichi.</b> Asos tayyor: “Maktab vaqti” rejimi Parvoz Parents’da allaqachon ishlaydi.</span></p>
-    </div>
-    <div class="phones" aria-hidden="true">
-      <div class="ph l"><img src="/assets/img/shot-p-settings.e5dc02ea.jpg" alt="" width="786" height="1704"></div>
-      <div class="ph r"><img src="/assets/img/shot-p-home.67c02dad.jpg" alt="" width="786" height="1704"></div>
-      <div class="ph c"><img src="/assets/img/shot-p-modes.6b8c478d.jpg" alt="" width="786" height="1704"></div>
-    </div>
-  </section>
+  <!-- ═══ Interaktiv hikoya: chapda boblar, o'ngda sahna (scroll bilan o'ynaydi) ═══ -->
+  <div class="story" id="konsept">
+    <div class="chaps">
+      <section class="chap" data-k="0" aria-labelledby="heroT">
+        <p class="eyebrow"><i></i>Parvoz · maktablar uchun konsept</p>
+        <h1 id="heroT"><b>Maktab va oila&nbsp;—</b> <span>bitta tizimda.</span></h1>
+        <p class="lead">Maktab dars paytida telefonni nazorat qiladi, ota-ona farzandining o‘qishini kuzatadi, o‘quvchi esa o‘qishga undaladi.</p>
+        <ul class="chips">
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 11h16v9H4zM3 7h18v4H3zM12 7v13"/><path d="M12 7C10.5 4 7 4 7 6s3 1 5 1zm0 0c1.5-3 5-3 5-1s-3 1-5 1z"/></svg></span>Bepul panel</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="10.5" r="2.5"/><path d="M8.5 16.5c.8-1.6 2-2.4 3.5-2.4s2.7.8 3.5 2.4"/></svg></span>Dars rejimi</li>
+          <li><span class="ic"><svg viewBox="0 0 24 24"><path d="M9.5 4.5a3 3 0 0 0-3 3 3 3 0 0 0-1.6 5.3A3 3 0 0 0 7.5 17.5 2.5 2.5 0 0 0 12 19V6a2.5 2.5 0 0 0-2.5-1.5z"/><path d="M14.5 4.5a3 3 0 0 1 3 3 3 3 0 0 1 1.6 5.3 3 3 0 0 1-2.6 4.7A2.5 2.5 0 0 1 12 19"/></svg></span>E-maktab + AI</li>
+        </ul>
+        <div class="acts">
+          <a class="btn" href="#aloqa">Pilot maktab bo‘lish</a>
+          <a class="btn ghost" href="#dars-rejimi">Konseptni ko‘rish</a>
+        </div>
+        <p class="status"><i></i><span><b>Konsept bosqichi.</b> Asos tayyor: “Maktab vaqti” rejimi Parvoz Parents’da allaqachon ishlaydi.</span></p>
+        <p class="scroll-cue"><i></i>Pastga aylantiring — sahna jonlanadi</p>
+      </section>
 
-  <!-- ─── MUAMMO ─── -->
-  <section class="sec" id="muammo" aria-labelledby="probT">
-    <p class="eyebrow"><i></i>Muammo</p>
-    <h2 id="probT"><b>Nizom bor&nbsp;—</b> <span>nazorat vositasi yo‘q.</span></h2>
-    <div class="prob">
-      <div class="box rules">
-        <small>Qoidalar</small>
-        <div class="rule"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.5 3.5 2.2 5.5 2.2s4-.7 5.5-2.2V11M21.5 9v5"/></svg></span><div><b>2012-yilgi maktab nizomi</b><p>Dars vaqtida telefon o‘chiriladi — amalda ko‘p maktablarda bajarilmaydi.</p></div></div>
-        <div class="rule"><span class="ic"><svg viewBox="0 0 24 24"><path d="M14 4.5l5.5 5.5M11.5 7l5.5 5.5M12.7 5.8 7.3 11.2l5.5 5.5 5.4-5.4M10 14 4 20"/></svg></span><div><b>Yangi qonun loyihasi</b><p>16 yoshgacha bolalar uchun ijtimoiy tarmoqlarni cheklash taklif qilindi (2026-yil iyun).</p></div></div>
-      </div>
-      <div class="stats-w">
-        <span class="stats-h">10 000 ga yaqin o‘quvchi o‘rtasidagi so‘rov</span>
-        <div class="stats">
-          <div class="box stat"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><p class="n">1&nbsp;000<small>o‘quvchi</small></p><p>telefonda kuniga 10 soatdan ko‘p vaqt o‘tkazadi</p></div>
-          <div class="box stat"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="3.5"/><circle cx="9" cy="9" r="1.1" fill="#fff"/><circle cx="15" cy="9" r="1.1" fill="#fff"/><circle cx="12" cy="12" r="1.1" fill="#fff"/><circle cx="9" cy="15" r="1.1" fill="#fff"/><circle cx="15" cy="15" r="1.1" fill="#fff"/></svg></span><p class="n">300<small>o‘quvchi</small></p><p>qimor o‘yinlariga berilib ketgan</p></div>
-          <div class="box stat hot"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 3l18 18"/><path d="M10.6 5.1A10.4 10.4 0 0 1 12 5c5.5 0 9 5.5 9 7 0 .7-.8 2.1-2.2 3.4M6.6 6.6C4.4 8 3 10.6 3 12c0 1.5 3.5 7 9 7 1.6 0 3-.4 4.3-1.1"/><path d="M9.9 9.9a3 3 0 0 0 4.2 4.2"/></svg></span><p class="n">90,5<small>%</small></p><p>holatda ota-ona bundan bexabar</p></div>
+      <section class="chap" data-k="1" id="dars-rejimi" aria-labelledby="c1T">
+        <p class="num">01<span>Dars vaqti rejimi</span></p>
+        <span class="tag ready">Asos tayyor</span>
+        <h2 id="c1T"><b>Dars paytida&nbsp;—</b> <span>faqat dars.</span></h2>
+        <p class="lead">Dars jadvali bo‘yicha keraksiz ilovalar avtomatik yopiladi. “Maktab vaqti” rejimi Parvoz Parents’da allaqachon ishlaydi.</p>
+        <p class="small">Ilovalarni bloklash hozircha Android qurilmalarda ishlaydi.</p>
+        <p class="tap"><i></i>Sahnani bosing: voqeani qayta ko‘ring.</p>
+      </section>
+
+      <section class="chap" data-k="2" id="topshiriqlar" aria-labelledby="c2T">
+        <p class="num">02<span>Topshiriqlar</span></p>
+        <span class="tag concept">Konsept</span>
+        <h2 id="c2T"><b>Vazifa&nbsp;—</b> <span>to‘g‘ri o‘quvchiga.</span></h2>
+        <p class="lead">Maktab topshiriqni yuboradi, u o‘quvchining Parvoz Growth ilovasida darhol paydo bo‘ladi.</p>
+        <p class="tap"><i></i>Sahnani bosing: topshiriqni qayta yuboring.</p>
+      </section>
+
+      <section class="chap" data-k="3" id="admin-panel" aria-labelledby="c3T">
+        <p class="num">03<span>Admin panel</span></p>
+        <span class="tag concept">Konsept</span>
+        <h2 id="c3T"><b>Butun maktab&nbsp;—</b> <span>bitta ekranda.</span></h2>
+        <p class="lead">Ma’muriyat o‘quvchilar holatini bitta joydan ko‘radi.</p>
+        <p class="small">Joylashuv va shaxsiy yozishmalar faqat ota-onada qoladi.</p>
+      </section>
+
+      <section class="chap" data-k="4" id="e-maktab" aria-labelledby="c4T">
+        <p class="num">04<span>E-maktab + AI</span></p>
+        <span class="tag concept">Konsept</span>
+        <h2 id="c4T"><b>Maktabdagi natija&nbsp;—</b> <span>uyda ham ko‘rinadi.</span></h2>
+        <p class="lead">Baholar AI yordamida tahlil qilinadi: baho o‘zgarsa ota-onaga darhol xabar, o‘quvchiga ertangi darslar eslatmasi.</p>
+        <p class="small">E-maktab bilan integratsiya vazirlik bilan rasmiy kelishuv asosida.</p>
+        <p class="tap"><i></i>Sahnani bosing: xabarlarni qayta ko‘ring.</p>
+      </section>
+    </div>
+
+    <div class="stage-wrap">
+      <div class="stage-box">
+        <div class="stage" id="stage" data-k="0" role="img" aria-label="Maktab paneli va telefon: konsept ko‘rinishi">
+          <div class="st-badge"><span class="tag ready">Ilovada ishlaydi</span><span class="tag concept">Konsept ko‘rinishi</span></div>
+          <svg class="thread" aria-hidden="true"><defs><linearGradient id="thG" x1="0" x2="1"><stop offset="0" stop-color="#2f7bf5" stop-opacity=".2"/><stop offset=".5" stop-color="#9fc4ff"/><stop offset="1" stop-color="#2f7bf5" stop-opacity=".2"/></linearGradient></defs>
+            <path id="th"/><path id="thF"/><circle id="pulse" r="5" fill="#fff" opacity="0"/></svg>
+
+          <div class="panel" id="panel" aria-hidden="true">
+            <div class="pn-h"><img src="/assets/img/logo.23d406ad.png" alt=""><b>Maktab paneli</b><small>7-A sinf</small></div>
+            <div class="pv" data-v="0"><h4>Bugungi dars jadvali</h4>
+              <div class="row"><time>08:30</time>Matematika</div><div class="row"><time>09:20</time>Ona tili</div>
+              <div class="row"><time>10:10</time>Tarix</div><div class="row"><time>11:00</time>Ingliz tili</div></div>
+            <div class="pv" data-v="1"><h4>Dars vaqti rejimi</h4>
+              <div class="row">Dars rejimi<span class="tgl" id="tgl"></span></div>
+              <div class="row">Vaqt<span class="r">08:30–13:30 · Du–Ju</span></div>
+              <div class="apps"><span>O‘yinlar</span><span>Ijtimoiy tarmoqlar</span><span>Video</span></div></div>
+            <div class="pv" data-v="2"><h4>Yangi topshiriq</h4>
+              <div class="fld"><span>Fan</span>Matematika</div><div class="fld"><span>Vazifa</span>12-mashq, 45-bet</div><div class="fld"><span>Muddat</span>Ertaga</div>
+              <button class="send" id="send" type="button" tabindex="-1">Yuborish</button></div>
+            <div class="pv cls" data-v="3"><h4>Sinflar holati · hozir</h4>
+              <div class="row"><span class="dot"></span>7-A<span class="r">Dars rejimi</span></div><div class="row"><span class="dot"></span>7-B<span class="r">Dars rejimi</span></div>
+              <div class="row"><span class="dot amber"></span>8-A<span class="r">Tanaffus</span></div><div class="row"><span class="dot"></span>9-A<span class="r">Dars rejimi</span></div></div>
+            <div class="pv" data-v="4"><h4>E-maktab baholari · bugun</h4>
+              <div class="row grade">Matematika<b>5</b></div><div class="row grade">Ona tili<b class="four">4</b></div><div class="row grade">Tarix<b>5</b></div>
+              <div class="ai" id="ai">AI tahlil</div></div>
+          </div>
+
+          <div class="phone" id="phone" aria-hidden="true">
+            <div class="bez"><div class="scr">
+              <img class="s" src="/assets/img/shot-g-home.2c08365b.jpg" alt="">
+              <img class="s par" src="/assets/img/shot-p-home.67c02dad.jpg" alt="">
+              <div class="dim" id="dim"></div>
+              <div class="modal" id="modal"><img src="/assets/img/shot-m-block.2cba1572.png" alt=""></div>
+              <div class="bans" id="bans"></div>
+              <div class="gl"></div>
+            </div></div>
+          </div>
+          <p class="who" id="who">O‘quvchi telefoni · Parvoz Growth</p>
+          <div class="fly" id="fly" aria-hidden="true"><div class="mcard"><img src="/assets/img/logo.23d406ad.png" alt=""><div><small>Parvoz</small><b></b></div></div></div>
         </div>
       </div>
+      <nav class="rail" id="rail" aria-label="Boblar">
+        <button type="button" data-k="1"><i></i><span>Dars rejimi</span></button>
+        <button type="button" data-k="2"><i></i><span>Topshiriqlar</span></button>
+        <button type="button" data-k="3"><i></i><span>Admin panel</span></button>
+        <button type="button" data-k="4"><i></i><span>E-maktab + AI</span></button>
+      </nav>
     </div>
-    <p class="box claim">Maktab qoidani biladi, lekin dars paytida 30 ta telefonni nazorat qila olmaydi. <b>Parvoz bu nazoratni avtomatlashtiradi.</b></p>
-    <p class="src">Manbalar: Vazirlar Mahkamasining 2012-yilgi qarori (ta’lim muassasalarida mobil telefonlardan foydalanish tartibi); Gazeta.uz, Infoedu.uz (2026-yil iyun); so‘rov natijalari — Kun.uz (2026-yil 10-iyul).</p>
-  </section>
+  </div>
 
-  <!-- ─── MAKTAB PANELI ─── -->
-  <section class="sec split" id="panel" aria-labelledby="panelT">
-    <div>
-      <p class="eyebrow"><i></i>Maktab paneli · bepul · konsept</p>
-      <h2 id="panelT"><b>Dars paytida&nbsp;—</b> <span>faqat dars.</span></h2>
-      <p class="lead">Maktab uchun bepul panel. Dars vaqtida keraksiz ilovalar avtomatik bloklanadi, topshiriqlar to‘g‘ridan-to‘g‘ri o‘quvchi ilovasiga boradi.</p>
-      <ul class="rows">
-        <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 8V5.5A1.5 1.5 0 0 1 5.5 4H8M16 4h2.5A1.5 1.5 0 0 1 20 5.5V8M20 16v2.5a1.5 1.5 0 0 1-1.5 1.5H16M8 20H5.5A1.5 1.5 0 0 1 4 18.5V16"/><circle cx="12" cy="10.5" r="2.5"/><path d="M8.5 16.5c.8-1.6 2-2.4 3.5-2.4s2.7.8 3.5 2.4"/></svg></span><span class="t"><b>Dars vaqti rejimi</b><span class="d">Dars jadvali bo‘yicha keraksiz ilovalar bloklanadi.</span></span><span class="tag ready">Asos tayyor</span></li>
-        <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><rect x="4" y="3.5" width="16" height="17" rx="2.5"/><path d="M8 9l1.5 1.5L12 8M8 15l1.5 1.5L12 14M14.5 9.5H17M14.5 15.5H17"/></svg></span><span class="t"><b>Topshiriqlar</b><span class="d">Maktab o‘quvchi ilovasiga vazifa yuboradi.</span></span><span class="tag concept">Konsept</span></li>
-        <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 3l7.5 3v5.5c0 4.6-3.2 8.3-7.5 9.5-4.3-1.2-7.5-4.9-7.5-9.5V6z"/><path d="M12 8.3l1.1 2.2 2.4.3-1.7 1.7.4 2.4-2.2-1.1-2.2 1.1.4-2.4-1.7-1.7 2.4-.3z"/></svg></span><span class="t"><b>Admin panel</b><span class="d">Ma’muriyat o‘quvchilar holatini bitta joydan ko‘radi.</span></span><span class="tag concept">Konsept</span></li>
-      </ul>
-      <div class="ok"><span class="ic green"><svg viewBox="0 0 24 24"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></span><p><b>Asos tayyor:</b> “Maktab vaqti” rejimi Parvoz Parents’da allaqachon ishlaydi.<small>Ilovalarni bloklash hozircha Android qurilmalarda ishlaydi.</small></p></div>
-    </div>
-    <div class="phones two" aria-hidden="true">
-      <div class="ph a"><img src="/assets/img/shot-p-modes.6b8c478d.jpg" alt="" width="786" height="1704" loading="lazy"></div>
-      <div class="ph b"><img src="/assets/img/shot-p-block.9ae4ab94.jpg" alt="" width="786" height="1704" loading="lazy"></div>
-    </div>
-  </section>
-
-  <!-- ─── E-MAKTAB + AI ─── -->
-  <section class="sec split" id="emaktab" aria-labelledby="emT">
-    <div>
-      <p class="eyebrow"><i></i>E-maktab + AI · konsept</p>
-      <h2 id="emT"><b>Maktabdagi natija&nbsp;—</b> <span>uyda ham ko‘rinadi.</span></h2>
-      <div class="feat4">
-        <article class="box"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M7 15l3.5-3.5 2.5 2.5L17 9"/></svg></span><div><h3>Baholar tahlili</h3><p>Kunlik, haftalik va oylik — AI yordamida.</p></div></article>
-        <article class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span><div><h3>Ota-onaga xabar</h3><p>Baho o‘zgarsa — darhol bildirishnoma.</p></div></article>
-        <article class="box"><span class="ic green"><svg viewBox="0 0 24 24"><path d="M3 5.5c3-1 6-.8 9 1 3-1.8 6-2 9-1V19c-3-1-6-.8-9 1-3-1.8-6-2-9-1z"/><path d="M12 6.5V20"/></svg></span><div><h3>Ertangi darslar</h3><p>O‘quvchiga eslatma va uy vazifasiga undov.</p></div></article>
-        <article class="box"><span class="ic green"><svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9.9 5.6-5-2.6-5 2.6.9-5.6-4-3.9 5.6-.8z"/></svg></span><div><h3>Tengdoshlar ilhomi</h3><p>Yuqori natijali yoshlar yutuqlari namuna sifatida.</p></div></article>
-      </div>
-      <p class="fine">E-maktab bilan integratsiya vazirlik bilan rasmiy kelishuv asosida amalga oshiriladi.</p>
-    </div>
-    <div class="box flowbox">
-      <div class="flow" aria-label="Ishlash tartibi">
-        <span class="s"><span class="ic"><svg viewBox="0 0 24 24"><path d="M2.5 9 12 4.5 21.5 9 12 13.5z"/><path d="M6.5 11v4.5c1.5 1.5 3.5 2.2 5.5 2.2s4-.7 5.5-2.2V11"/></svg></span>E-maktab baholari</span><span class="ar" aria-hidden="true">→</span>
-        <span class="s"><span class="ic"><svg viewBox="0 0 24 24"><path d="M9.5 4.5a3 3 0 0 0-3 3 3 3 0 0 0-1.6 5.3A3 3 0 0 0 7.5 17.5 2.5 2.5 0 0 0 12 19V6a2.5 2.5 0 0 0-2.5-1.5z"/><path d="M14.5 4.5a3 3 0 0 1 3 3 3 3 0 0 1 1.6 5.3 3 3 0 0 1-2.6 4.7A2.5 2.5 0 0 1 12 19"/></svg></span>AI tahlil</span><span class="ar" aria-hidden="true">→</span>
-        <span class="s"><span class="ic"><svg viewBox="0 0 24 24"><path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/></svg></span>Ota-onaga xabar</span><span class="ar" aria-hidden="true">→</span>
-        <span class="s"><span class="ic green"><svg viewBox="0 0 24 24"><path d="M12 3.8l2.5 5.1 5.6.8-4 3.9.9 5.6-5-2.6-5 2.6.9-5.6-4-3.9 5.6-.8z"/></svg></span>O‘quvchiga motivatsiya</span>
-      </div>
-      <div class="nh"><small>Bildirishnoma namunalari</small><span class="tag concept">Konsept</span></div>
-      <div class="notif"><div class="h"><img src="/assets/img/logo.23d406ad.png" alt="">Parvoz Parents<time>14:20</time></div><b>Akmal matematikadan «5» oldi</b><span>Bugungi baholar e-maktabdan avtomatik keldi.</span></div>
-      <div class="notif"><div class="h"><img src="/assets/img/logo.23d406ad.png" alt="">Parvoz Parents<time>Shanba</time></div><b>Haftalik hisobot tayyor</b><span>AI tahlili: qaysi fanda o‘sish bor, qaysisiga e’tibor kerak.</span></div>
-      <div class="notif"><div class="h"><img src="/assets/img/logo.23d406ad.png" alt="">Parvoz Growth<time>19:00</time></div><b>Ertaga: Matematika, Ona tili, Tarix</b><span>Uy vazifasini hozir bajarsang, ertaga darsga tayyor bo‘lasan!</span></div>
-    </div>
-  </section>
-
-  <!-- ─── FOYDA ─── -->
-  <section class="sec" id="foyda" aria-labelledby="benT">
-    <p class="eyebrow"><i></i>Har bir tomon uchun foyda</p>
-    <h2 id="benT"><b>Maktab, ota-ona va o‘quvchi&nbsp;—</b> <span>uchalasi yutadi.</span></h2>
-    <div class="three">
-      <article class="box side"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 20V8l8-4 8 4v12"/><path d="M9.5 20v-5h5v5M3 20h18M8.5 10.5h.01M12 10.5h.01M15.5 10.5h.01"/></svg></span><h3>Maktab</h3><p class="who">bepul</p>
-        <ul><li>Dars paytida intizom</li><li>Topshiriqlarni yuborish</li><li>Ma’muriyat uchun panel</li><li>Nizomni amalda bajarish</li></ul></article>
-      <article class="box side mid"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3.5 19c.7-3 2.9-4.8 5.5-4.8s4.8 1.8 5.5 4.8"/><circle cx="17" cy="9.5" r="2.3"/><path d="M15.5 14.4c2.5-.3 4.4 1.2 5 4.1"/></svg></span><h3>Ota-ona</h3><p class="who">Parvoz Parents</p>
-        <ul><li>Baholar va hisobotlar</li><li>Darhol bildirishnomalar</li><li>Farzand xavfsizligi</li><li>Xotirjamlik</li></ul></article>
-      <article class="box side"><span class="ic"><svg viewBox="0 0 24 24"><path d="M3 8.5 12 4.5l9 4-9 4z"/><path d="M7 10.5v4c1.3 1.2 3 1.8 5 1.8s3.7-.6 5-1.8v-4"/></svg></span><h3>O‘quvchi</h3><p class="who">Parvoz Growth</p>
-        <ul><li>Ertangi darslar eslatmasi</li><li>Uy vazifasiga motivatsiya</li><li>Tengdoshlar ilhomi</li><li>Foydali kontent</li></ul></article>
-    </div>
-  </section>
-
-  <!-- ─── BUGUN ISHLAYDI ─── -->
-  <section class="sec" id="bugun" aria-labelledby="todayT">
-    <p class="eyebrow"><i></i>Bugun ishlaydi</p>
-    <h2 id="todayT"><b>Konsept bo‘sh joyda emas&nbsp;—</b> <span>asos ilovalarda tayyor.</span></h2>
-    <p class="lead">Ota-onalar quyidagilardan hozirning o‘zida Parvoz Parents va Parvoz Growth orqali foydalanadi.</p>
-    <ul class="today today-wrap">
-      <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg></span><span><b>“Maktab vaqti” rejimi</b><span>Dars soatlarida tanlangan ilovalar yopiladi (Android).</span></span></li>
-      <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M12 21s-7-6.2-7-11.5A7 7 0 0 1 19 9.5C19 14.8 12 21 12 21z"/><circle cx="12" cy="9.5" r="2.5"/></svg></span><span><b>“Maktabga yetib keldi”</b><span>“Maktab” hududiga kirish-chiqishda ota-onaga xabar.</span></span></li>
-      <li class="box"><span class="ic" style="background:linear-gradient(145deg,#ff6b78,#d92c3e);box-shadow:0 8px 22px rgba(255,77,94,.3)"><svg viewBox="0 0 24 24"><path d="M12 4.5 2.8 19.5h18.4z"/><path d="M12 10v4.2M12 17.2v.1"/></svg></span><span><b>SOS tugmasi</b><span>Bir bosishda manzil va vaqt ota-ona telefonida.</span></span></li>
-      <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M9 5h9.5M9 12h9.5M9 19h9.5"/><path d="M4 5.2l1.2 1.2L7 4.3M4 12.2l1.2 1.2L7 11.3M4 19.2l1.2 1.2L7 18.3"/></svg></span><span><b>Testlar va olimpiadalar</b><span>Taymer, avtomatik baholash, sertifikat va DON ballari.</span></span></li>
-      <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M4 5.5A2.5 2.5 0 0 1 6.5 3H12v16H6.5A2.5 2.5 0 0 0 4 21.5z"/><path d="M20 5.5A2.5 2.5 0 0 0 17.5 3H12v16h5.5a2.5 2.5 0 0 1 2.5 2.5z"/></svg></span><span><b>Kutubxona</b><span>Maktab darsliklari, audiokitoblar va videolar.</span></span></li>
-      <li class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M8 21h8M12 17v4M7 4h10v5a5 5 0 0 1-10 0z"/><path d="M7 6H4.5a2.5 2.5 0 0 0 2.6 4M17 6h2.5a2.5 2.5 0 0 1-2.6 4"/></svg></span><span><b>Viloyat reytingi</b><span>DON ballari bo‘yicha; ismlar qisqartirib ko‘rsatiladi.</span></span></li>
-    </ul>
-  </section>
-
-  <!-- ─── HAMKORLIK MODELI ─── -->
+  <!-- ═══ Hamkorlik ═══ -->
   <section class="sec" id="hamkorlik" aria-labelledby="modelT">
     <p class="eyebrow"><i></i>Hamkorlik modeli</p>
     <h2 id="modelT"><b>Maktab uchun bepul&nbsp;—</b> <span>bitta maktab, yuzlab oila.</span></h2>
@@ -176,37 +159,25 @@
       <div class="box st"><em>03</em><b>Maktabga xarajat yo‘q</b><p>To‘lovni maktab emas — ota-onalar obuna orqali qiladi.</p></div>
     </div>
     <div class="road">
-      <article class="box"><span class="ic"><svg viewBox="0 0 24 24"><path d="M5 21V4.5M5 4.5h11l-2 4 2 4H5"/></svg></span><div><b>1–2-yil · Pilot maktablar</b><p>Dars vaqti rejimi va maktab paneli sinovdan o‘tadi.</p></div></article>
-      <article class="box"><span class="ic"><svg viewBox="0 0 24 24"><rect x="3.5" y="4" width="17" height="16" rx="2.5"/><path d="M7 15l3.5-3.5 2.5 2.5L17 9"/></svg></span><div><b>3-yildan · Maktablar integratsiyasi</b><p>E-maktab bilan integratsiya — vazirlik bilan rasmiy kelishuv asosida.</p></div></article>
+      <article class="box"><i>1–2-yil</i><div><b>Pilot maktablar</b><p>Dars vaqti rejimi va maktab paneli sinovdan o‘tadi.</p></div></article>
+      <article class="box"><i>3-yildan</i><div><b>Maktablar integratsiyasi</b><p>E-maktab bilan — vazirlik bilan rasmiy kelishuv asosida.</p></div></article>
     </div>
-  </section>
 
-  <!-- ─── SAVOLLAR ─── -->
-  <section class="sec" id="savollar" aria-labelledby="faqT">
-    <p class="eyebrow"><i></i>Savollar</p>
-    <h2 id="faqT"><b>Ko‘p beriladigan</b> <span>savollar.</span></h2>
-    <div class="faq">
+    <div class="faq" id="savollar">
       <details><summary>Maktab uchun haqiqatan bepulmi?</summary><p>Ha, konsept bo‘yicha maktab paneli maktab uchun bepul. To‘lovni maktab emas, xohlagan ota-onalar obuna orqali qiladi — tariflar <a href="/oferta.html">Ommaviy ofertada</a>.</p></details>
-      <details><summary>Panel qachon ishga tushadi?</summary><p>Hozir konsept bosqichida. Reja: 1–2-yil — pilot maktablarda sinov, 3-yildan — maktablar integratsiyasi. Ota-onalar “Maktab vaqti” rejimidan bugunoq Parvoz Parents orqali foydalana oladi.</p></details>
-      <details><summary>Maktab o‘quvchilarning joylashuvi yoki yozishmalarini ko‘radimi?</summary><p>Hozir maktabga hech qanday shaxsiy ma’lumot berilmaydi: joylashuv, xabarlar va statistika faqat ota-onada. Maktab paneli ishga tushganda unda qaysi ma’lumot ko‘rinishi <a href="/privacy.html">Maxfiylik siyosatida</a> oldindan e’lon qilinadi va ota-ona roziligisiz ulashilmaydi.</p></details>
-      <details><summary>Parvoz E-maktab bilan bog‘langanmi?</summary><p>Hali yo‘q. Integratsiya 3-yildan, vazirlik bilan rasmiy kelishuv asosida rejalashtirilgan. Sahifadagi bildirishnomalar — konsept namunalari.</p></details>
-      <details><summary>Qaysi telefonlarda ishlaydi?</summary><p>Parvoz Parents (ota-ona uchun) — iPhone va Android. Parvoz Growth (o‘quvchi uchun) — hozircha Android. Dars vaqtida ilovalarni bloklash Android qurilmalarda ishlaydi.</p></details>
-      <details><summary>Pilot maktab qanday bo‘linadi?</summary><p>Telegram, telefon yoki email orqali yozing — maktab nomi, hudud va aloqa uchun telefon raqamingizni ko‘rsating. Konseptni batafsil tanishtirib, keyingi qadamlarni birga belgilaymiz.</p></details>
+      <details><summary>Panel qachon ishga tushadi?</summary><p>Hozir konsept bosqichida: 1–2-yil — pilot maktablarda sinov, 3-yildan — maktablar integratsiyasi. Ota-onalar “Maktab vaqti” rejimidan bugunoq Parvoz Parents orqali foydalana oladi. E-maktab bilan hali bog‘lanmagan — sahnadagi xabarlar konsept namunalari.</p></details>
+      <details><summary>Maktab o‘quvchilarning shaxsiy ma’lumotlarini ko‘radimi?</summary><p>Hozir maktabga hech qanday shaxsiy ma’lumot berilmaydi: joylashuv, xabarlar va statistika faqat ota-onada. Maktab paneli ishga tushganda unda qaysi ma’lumot ko‘rinishi <a href="/privacy.html">Maxfiylik siyosatida</a> oldindan e’lon qilinadi va ota-ona roziligisiz ulashilmaydi.</p></details>
     </div>
-  </section>
 
-  <!-- ─── ALOQA ─── -->
-  <section class="sec" id="aloqa" aria-labelledby="contT">
-    <div class="contact">
-      <p class="eyebrow"><i></i>Hamkorlik</p>
-      <h2 id="contT">Pilot maktablardan biri bo‘ling.</h2>
-      <p class="lead">Rahbar, o‘rinbosar yoki sinf rahbari bo‘lasizmi — farqi yo‘q. Yozing, konseptni batafsil tanishtiramiz.</p>
+    <div class="contact" id="aloqa">
+      <p class="eyebrow"><i></i>Bog‘lanish</p>
+      <h2>Pilot maktablardan biri bo‘ling.</h2>
+      <p class="lead">Rahbar, o‘rinbosar yoki sinf rahbari bo‘lasizmi — yozing, konseptni batafsil tanishtiramiz.</p>
       <div class="ch">
         <a href="https://t.me/parvozyordambot" target="_blank" rel="noopener"><small>Telegram</small><b>@parvozyordambot</b></a>
         <div><small>Telefon</small><a href="tel:+998907551508">+998 90 755 15 08</a><a href="tel:+998884638100">+998 88 463 81 00</a></div>
         <a href="mailto:farzandimtech@gmail.com?subject=Pilot%20maktab"><small>Email</small><b>farzandimtech@gmail.com</b></a>
       </div>
-      <p class="hint">Murojaatda maktab nomi, hudud va aloqa uchun telefon raqamingizni yozing.</p>
     </div>
   </section>
   <div class="page-end"></div>
@@ -223,5 +194,6 @@
   <p>© 2026 Parvoz · “FARZANDIM TECH” MCHJ · STIR 313 060 726</p>
   <p>Toshkent shahri, Yakkasaroy tumani, Abdulla Qahhor ko‘chasi 6-tor, 23-uy</p>
 </footer>
+<script src="/assets/maktablar.js" defer></script>
 </body>
 </html>
