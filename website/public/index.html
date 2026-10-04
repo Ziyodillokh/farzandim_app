@@ -38,7 +38,7 @@
 ]}
 </script>
 <noscript><style>
-  #gate,#gl,#track,.txt,.rail,#co,.hint,#loader,#geo,#mob,header .hdr-r{ display:none !important; }
+  #gate,#gl,#track,.txt,.rail,#co,.hint,#loader,#geo,#mob,header .hdr-r button{ display:none !important; }
   main.fallback{ display:block !important; max-width:760px; margin:0 auto; padding:110px 22px 60px; }
 </style></noscript>
 <link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -141,7 +141,7 @@ header > *{ pointer-events:auto; }
 .fallback h1{ font-family:var(--disp); font-weight:500; font-size:clamp(30px,6vw,46px); line-height:1.1; margin:0 0 14px; }
 .fallback h2{ font-family:var(--disp); font-weight:500; font-size:22px; margin:34px 0 8px; }
 .fallback p{ color:var(--mute); margin:0 0 8px; }
-.nogl header .hdr-r{ display:none; }
+.nogl header .hdr-r button{ display:none; }
 .fallback a{ color:#8fb8ff; }
 
 @media (max-aspect-ratio: 9/10){
@@ -303,8 +303,8 @@ html.mob{ scroll-snap-type:y proximity; }
 .lockc{ position:absolute; inset:0; } .lockc canvas{ width:100%; height:100%; display:block; }
 
 /* ================= site footer (all versions) ================= */
-.site-foot{ position:relative; z-index:30; background:linear-gradient(rgba(6,11,22,0),var(--ink) 72px); padding:96px clamp(20px,6vw,104px) calc(env(safe-area-inset-bottom,0px) + 28px); color:var(--text); scroll-snap-align:end; }
-.sf-in{ display:grid; grid-template-columns:1.3fr 1fr 1fr 1.1fr; gap:32px clamp(24px,4vw,64px); max-width:1240px; padding-top:32px; border-top:1px solid rgba(157,184,232,.18); }
+.site-foot{ position:relative; z-index:15; background:linear-gradient(rgba(6,11,22,0),var(--ink) 72px); padding:96px clamp(20px,6vw,104px) calc(env(safe-area-inset-bottom,0px) + 28px); color:var(--text); scroll-snap-align:end; }
+.sf-in{ display:grid; grid-template-columns:1.25fr 1fr .85fr 1fr 1.15fr; gap:32px clamp(24px,4vw,64px); max-width:1240px; padding-top:32px; border-top:1px solid rgba(157,184,232,.18); }
 .sf-brand .brand{ color:var(--text); }
 .sf-brand p{ color:var(--mute); margin:14px 0 0; font-size:15px; max-width:26ch; }
 .sf-col{ display:flex; flex-direction:column; align-items:flex-start; gap:9px; font-size:15px; }
@@ -314,6 +314,53 @@ html.mob{ scroll-snap-type:y proximity; }
 .sf-legal{ display:flex; flex-wrap:wrap; gap:6px 22px; max-width:1240px; margin-top:36px; padding-top:20px; border-top:1px solid rgba(157,184,232,.12); color:var(--mute); font-size:13px; }
 .sf-legal a{ text-decoration:underline; text-underline-offset:3px; }
 html.mob .site-foot{ background:#03060d; padding-top:40px; }
+.more + .site-foot{ background:var(--ink); padding-top:8px; } html.mob .more + .site-foot{ background:#03060d; }
+.sf-tag{ font-size:11px; letter-spacing:.04em; color:var(--line); border:1px solid rgba(157,184,232,.3); border-radius:999px; padding:1px 7px; margin-left:4px; vertical-align:1px; }
+
+/* header: "Maktablar uchun" havolasi; sahna tugagach header'ga fon */
+.hlink{ color:var(--mute); text-decoration:none; font-size:14px; font-weight:500; padding:10px 8px; margin-right:4px; }
+.hlink:hover{ color:var(--text); }
+header{ transition:background .35s ease; }
+html.past body > header{ background:linear-gradient(rgba(6,11,22,.94) 62%,rgba(6,11,22,0)); padding-bottom:22px; }
+@media (max-width:640px){ .hlink{ display:none; } }
+
+/* ================= kelajakdagi rejalar (Parvoz Watch) + maktablar ================= */
+.more{ position:relative; z-index:15; background:linear-gradient(rgba(6,11,22,0),var(--ink) 120px); color:var(--text); padding:150px clamp(20px,6vw,104px) 72px; scroll-snap-align:start; }
+html.mob .more{ background:#03060d; padding-top:84px; }
+.mo-in{ max-width:1240px; margin:0 auto; }
+.eyebrow{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--disp); font-weight:500; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--line); }
+.eyebrow i{ width:7px; height:7px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px rgba(47,123,245,.9); }
+.watch{ display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:clamp(32px,5vw,80px); align-items:center; }
+.watch h2{ font-family:var(--disp); font-weight:500; font-size:clamp(32px,3.6vw,54px); line-height:1.06; letter-spacing:-.025em; margin:0 0 18px; text-wrap:balance; }
+.watch h2 span{ color:#5b95ff; }
+.w-lead{ color:var(--mute); font-size:clamp(16px,1.2vw,19px); line-height:1.6; margin:0 0 26px; max-width:46ch; }
+.w-feat{ list-style:none; margin:0 0 26px; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
+.w-feat li{ display:flex; flex-direction:column; gap:3px; padding:14px 16px; border-radius:14px; background:rgba(12,21,38,.75); border:1px solid rgba(157,184,232,.14); }
+.w-feat b{ font-weight:600; font-size:15.5px; } .w-feat span{ color:var(--mute); font-size:14px; line-height:1.45; }
+.w-styles{ display:grid; grid-template-columns:1fr 1fr; gap:10px; margin:0 0 22px; }
+.w-styles figure{ margin:0; display:flex; align-items:center; gap:12px; padding:8px; border-radius:14px; border:1px solid rgba(157,184,232,.14); }
+.w-styles img{ width:92px; height:auto; border-radius:10px; background:#fff; flex:none; }
+.w-styles figcaption{ font-size:13px; color:var(--mute); line-height:1.35; } .w-styles figcaption b{ display:block; color:var(--text); font-weight:600; font-size:14.5px; margin-bottom:2px; }
+.w-status{ display:flex; align-items:flex-start; gap:10px; margin:0; font-size:14.5px; color:var(--mute); line-height:1.5; }
+.w-status i{ flex:none; width:8px; height:8px; margin-top:7px; border-radius:50%; background:var(--gold); box-shadow:0 0 10px rgba(244,194,87,.7); }
+.w-status b{ color:var(--text); font-weight:600; }
+.w-pic{ position:relative; }
+.w-pic::before{ content:""; position:absolute; inset:8% -6% -4%; background:radial-gradient(closest-side,rgba(47,123,245,.35),rgba(47,123,245,0)); filter:blur(10px); }
+.w-pic img{ position:relative; display:block; width:100%; max-width:520px; height:auto; margin:0 auto; border-radius:28px; background:#fff; box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06); }
+.school-band{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:clamp(56px,7vw,96px); padding:clamp(22px,3vw,34px) clamp(22px,3vw,40px); border-radius:22px; text-decoration:none; color:var(--text);
+  background:linear-gradient(120deg,#123a8a 0%,#1d56c9 55%,#2f7bf5 100%); box-shadow:0 24px 60px rgba(17,60,150,.35); transition:transform .2s ease, box-shadow .2s ease; }
+.school-band:hover{ transform:translateY(-2px); box-shadow:0 30px 70px rgba(17,60,150,.5); }
+.sb-txt{ display:flex; flex-direction:column; gap:8px; } .school-band .eyebrow{ margin:0; color:#cfe0ff; } .school-band .eyebrow i{ background:#fff; box-shadow:none; }
+.sb-h{ font-family:var(--disp); font-weight:500; font-size:clamp(20px,2vw,28px); line-height:1.2; letter-spacing:-.015em; }
+.sb-p{ color:#d6e4ff; font-size:15px; line-height:1.5; max-width:62ch; }
+.sb-go{ flex:none; display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:999px; background:#fff; color:#0d2c6b; font-weight:600; font-size:15px; }
+.sb-go b{ transition:transform .2s ease; } .school-band:hover .sb-go b{ transform:translateX(3px); }
+@media (max-width:900px){ .watch{ grid-template-columns:1fr; } .w-pic{ order:-1; } .w-pic img{ max-width:360px; } .school-band{ flex-direction:column; align-items:flex-start; } }
+@media (max-width:520px){ .more{ padding-left:16px; padding-right:16px; } .w-pic img{ max-width:250px; border-radius:22px; }
+  .eyebrow{ font-size:11px; letter-spacing:.1em; } .w-lead{ margin-bottom:20px; }
+  .w-feat{ gap:8px; } .w-feat li{ padding:12px; } .w-feat b{ font-size:14.5px; } .w-feat span{ font-size:13px; }
+  .w-styles{ gap:8px; } .w-styles figure{ flex-direction:column; align-items:flex-start; gap:8px; } .w-styles img{ width:100%; }
+  .school-band{ border-radius:18px; } .sb-p{ font-size:14px; } }
 @media (max-width:900px){ .sf-in{ grid-template-columns:1fr 1fr; } .sf-brand{ grid-column:1 / -1; } }
 @media (max-width:520px){ .sf-in{ grid-template-columns:1fr; gap:26px; } .sf-col{ font-size:15.5px; gap:11px; } .sf-legal{ flex-direction:column; gap:6px; } }
 
@@ -715,7 +762,7 @@ window.__mz={play,state:()=>({K,stageOn})};
  window.addEventListener('error',function(e){ if(!d.classList.contains('ready')&&(!e.target||e.target===window)) fail(); });
  setTimeout(function(){ if(!window.THREE) fail(); },20000); })();</script>
 <canvas id="gl" aria-hidden="true"></canvas>
-<header><a class="brand" id="brand" href="#"><img src="/assets/img/logo.23d406ad.png" alt="">Parvoz</a><div class="hdr-r"><button class="snd" type="button" aria-label="Ovozni yoqish" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="x" d="M16.5 9.5l5 5M21.5 9.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="dl" id="dlTop" type="button">Yuklab olish</button></div></header>
+<header><a class="brand" id="brand" href="#"><img src="/assets/img/logo.23d406ad.png" alt="">Parvoz</a><div class="hdr-r"><a class="hlink" href="/maktablar">Maktablar uchun</a><button class="snd" type="button" aria-label="Ovozni yoqish" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z" fill="currentColor"/><path class="w" d="M16 8.5a5 5 0 0 1 0 7M18.5 6a8.5 8.5 0 0 1 0 12" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/><path class="x" d="M16.5 9.5l5 5M21.5 9.5l-5 5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg></button><button class="dl" id="dlTop" type="button">Yuklab olish</button></div></header>
 <section class="txt hero" id="hero">
   <h1>Farzandingiz xavfsiz. Siz xotirjam.</h1>
   <p>Parvoz ota-ona va farzand telefonlarini bog‘laydi: joylashuv, ekran vaqti, himoya va foydali mashg‘ulotlar bitta tizimda.</p>
@@ -756,6 +803,37 @@ window.__mz={play,state:()=>({K,stageOn})};
   <p>Parvoz Parents: <a href="https://apps.apple.com/app/id6798972223">App Store</a>, <a href="https://play.google.com/store/apps/details?id=com.farzandim.parent">Google Play</a>. Parvoz Growth: <a href="https://play.google.com/store/apps/details?id=com.farzandim.growth">Google Play</a>.</p>
 </main>
 <div id="track"></div>
+<section class="more" id="kelajak" aria-labelledby="kelajakT">
+  <div class="mo-in">
+    <div class="watch">
+      <div class="w-txt">
+        <p class="eyebrow"><i></i>Kelajakdagi rejalar · Parvoz Watch</p>
+        <h2 id="kelajakT">Telefonda, ilovada&nbsp;— <span>endi bilakda ham.</span></h2>
+        <p class="w-lead">Bolalar uchun aqlli soat konsepti. Parvoz Growth imkoniyatlari soatga ulanadi, ota-ona esa hammasini Parvoz Parents orqali ko‘rib turadi.</p>
+        <ul class="w-feat">
+          <li><b>SOS tugmasi</b><span>Alohida tugma: bir bosishda ota-onaga signal.</span></li>
+          <li><b>Joylashuv</b><span>Soat qayerdaligi Parvoz Parents xaritasida.</span></li>
+          <li><b>Oilaga qo‘ng‘iroq</b><span>Yaqinlar ekranda, bitta tugma bilan qo‘ng‘iroq.</span></li>
+          <li><b>Growth funksiyalari</b><span>Bola ilovasi imkoniyatlari soatda.</span></li>
+        </ul>
+        <div class="w-styles" aria-label="Dizayn konseptlari">
+          <figure><img src="/assets/img/watch-classic.6b5b38fa.jpg" alt="Klassik: to‘q ko‘k korpus, havorang tasma" width="1000" height="617" loading="lazy"><figcaption><b>Klassik</b>To‘q ko‘k korpus, havorang tasma</figcaption></figure>
+          <figure><img src="/assets/img/watch-playful.b17d61b1.jpg" alt="O‘yinqaroq: marjon rang korpus, yalpiz rang tasma" width="1000" height="617" loading="lazy"><figcaption><b>O‘yinqaroq</b>Marjon korpus, yalpiz tasma</figcaption></figure>
+        </div>
+        <p class="w-status"><i></i><span><b>Hozirgi holat:</b> dizayn konseptlari tayyor. Parvoz Watch kelajakdagi rejalarimizning bir qismi.</span></p>
+      </div>
+      <div class="w-pic"><img src="/assets/img/watch-classic-hero.8646bd41.jpg" alt="Parvoz Watch konsepti: old kamera, SOS tugmasi, ekranda oila a’zolari va qo‘ng‘iroq tugmasi" width="900" height="1042" loading="lazy"></div>
+    </div>
+    <a class="school-band" href="/maktablar">
+      <span class="sb-txt">
+        <span class="eyebrow"><i></i>Maktablar uchun</span>
+        <span class="sb-h">Dars vaqtida diqqat, darsdan keyin xotirjamlik.</span>
+        <span class="sb-p">Dars vaqti rejimi, “maktabga yetib keldi” xabari, testlar va viloyat reytingi. Maktab rahbarlari va o‘qituvchilar uchun.</span>
+      </span>
+      <span class="sb-go">Batafsil <b aria-hidden="true">→</b></span>
+    </a>
+  </div>
+</section>
 <footer class="site-foot" id="sitefoot">
   <div class="sf-in">
     <div class="sf-brand">
@@ -769,6 +847,11 @@ window.__mz={play,state:()=>({K,stageOn})};
       <a href="https://play.google.com/store/apps/details?id=com.farzandim.parent" target="_blank" rel="noopener">Google Play</a>
       <p class="sf-app">Parvoz Growth <small>farzand uchun</small></p>
       <a href="https://play.google.com/store/apps/details?id=com.farzandim.growth" target="_blank" rel="noopener">Google Play</a>
+    </nav>
+    <nav class="sf-col" aria-label="Parvoz">
+      <h2>Parvoz</h2>
+      <a href="/maktablar">Maktablar uchun</a>
+      <a href="#kelajak" style="white-space:nowrap">Parvoz Watch <small class="sf-tag">konsept</small></a>
     </nav>
     <nav class="sf-col" aria-label="Hujjatlar">
       <h2>Hujjatlar</h2>
@@ -789,6 +872,10 @@ window.__mz={play,state:()=>({K,stageOn})};
     <span>© 2026 Parvoz</span><span>“FARZANDIM TECH” MCHJ · STIR 313 060 726</span><span>Toshkent, O‘zbekiston</span><span>Yer tasviri: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a>, CC BY 4.0</span>
   </div>
 </footer>
+<script>(function(){ /* bo'lim header ostiga kirganda header'ga fon (desktop) */
+ var d=document.documentElement, m=document.getElementById('kelajak'); if(!m) return;
+ function upd(){ d.classList.toggle('past', m.getBoundingClientRect().top<90); }
+ addEventListener('scroll',upd,{passive:true}); addEventListener('resize',upd); upd(); })();</script>
 <script id="dsrc" type="text/plain">
 const EARTH={"e_day": "/assets/img/earth-day.94cd0ca8.jpg", "e_night": "/assets/img/earth-night.10be334c.jpg", "e_brc": "/assets/img/earth-brc.ff8ef7b3.jpg"};
 
