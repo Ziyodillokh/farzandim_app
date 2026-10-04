@@ -330,9 +330,32 @@ html.mob .more{ background:#03060d; padding-top:84px; }
 .mo-in{ max-width:1240px; margin:0 auto; }
 .eyebrow{ display:flex; align-items:center; gap:10px; margin:0 0 18px; font-family:var(--disp); font-weight:500; font-size:12px; letter-spacing:.14em; text-transform:uppercase; color:var(--line); }
 .eyebrow i{ width:7px; height:7px; border-radius:50%; background:var(--blue); box-shadow:0 0 10px rgba(47,123,245,.9); }
-.watch{ display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:clamp(32px,5vw,80px); align-items:center; }
-.watch h2{ font-family:var(--disp); font-weight:500; font-size:clamp(32px,3.6vw,54px); line-height:1.06; letter-spacing:-.025em; margin:0 0 18px; text-wrap:balance; }
-.watch h2 span{ color:#5b95ff; }
+.mo-head{ max-width:780px; margin:0 0 clamp(36px,4.5vw,60px); }
+.mo-head h2{ font-family:var(--disp); font-weight:500; font-size:clamp(34px,4.2vw,62px); line-height:1.04; letter-spacing:-.03em; margin:0 0 16px; }
+.mo-head h2 span{ color:#5b95ff; }
+.mo-head .sub{ color:var(--mute); font-size:clamp(16px,1.25vw,19px); line-height:1.6; margin:0; max-width:52ch; }
+.plan-card{ position:relative; border-radius:32px; border:1px solid rgba(157,184,232,.14); padding:clamp(24px,4vw,56px);
+  background:radial-gradient(90% 120% at 100% 0%,rgba(47,123,245,.12),rgba(47,123,245,0) 60%),linear-gradient(180deg,rgba(12,21,38,.92),rgba(7,13,26,.94)); }
+.plan-card + .plan-card{ margin-top:20px; }
+.plan-card h3{ font-family:var(--disp); font-weight:500; font-size:clamp(28px,3.1vw,46px); line-height:1.07; letter-spacing:-.025em; margin:0 0 16px; text-wrap:balance; }
+.plan-card h3 span{ color:#5b95ff; }
+.watch{ display:grid; grid-template-columns:minmax(0,1.08fr) minmax(0,.92fr); gap:clamp(32px,5vw,72px); align-items:center; }
+.school{ display:grid; grid-template-columns:minmax(0,.9fr) minmax(0,1.1fr); gap:clamp(32px,5vw,72px); align-items:center;
+  background:radial-gradient(90% 120% at 0% 100%,rgba(47,123,245,.2),rgba(47,123,245,0) 62%),linear-gradient(180deg,rgba(12,21,38,.92),rgba(7,13,26,.94)); }
+.sc-pic{ position:relative; height:clamp(380px,36vw,500px); }
+.sc-pic::before{ content:""; position:absolute; inset:6% 4%; background:radial-gradient(closest-side,rgba(47,123,245,.4),rgba(47,123,245,0)); filter:blur(12px); }
+.sc-pic .ph{ --pw:clamp(142px,15vw,205px); }
+.sc-pic .p1{ left:6%; top:9%; transform:rotate(-6deg); filter:brightness(.82); }
+.sc-pic .p2{ right:6%; top:2%; transform:rotate(4deg); z-index:2; }
+.sc-note{ position:absolute; z-index:3; left:0; bottom:6%; display:flex; align-items:center; gap:10px; padding:10px 14px; border-radius:16px; font-size:13.5px; line-height:1.3;
+  background:rgba(20,36,72,.95); border:1px solid rgba(255,255,255,.16); box-shadow:0 12px 30px rgba(0,0,0,.45); }
+.sc-note img{ width:30px; height:30px; border-radius:8px; } .sc-note small{ display:block; color:var(--mute); font-size:11.5px; }
+.sc-list{ list-style:none; margin:0 0 26px; padding:0; display:flex; flex-direction:column; gap:10px; }
+.sc-list li{ display:flex; flex-direction:column; gap:3px; padding:14px 16px 14px 18px; border-radius:14px; background:rgba(12,21,38,.75); border:1px solid rgba(157,184,232,.14); border-left:2px solid var(--blue); }
+.sc-list b{ font-weight:600; font-size:15.5px; display:flex; align-items:center; gap:8px; } .sc-list span{ color:var(--mute); font-size:14px; line-height:1.45; }
+.sc-list em{ font-style:normal; font-size:11px; font-weight:600; letter-spacing:.05em; text-transform:uppercase; color:#b9f3d2; background:rgba(47,191,113,.14); border:1px solid rgba(47,191,113,.45); border-radius:999px; padding:2px 8px; }
+.sc-go{ display:inline-flex; align-items:center; gap:10px; padding:13px 22px; border-radius:999px; background:var(--blue); color:#fff; text-decoration:none; font-weight:600; font-size:15px; box-shadow:0 12px 30px rgba(47,123,245,.35); transition:transform .2s ease, filter .2s; }
+.sc-go:hover{ filter:brightness(1.1); } .sc-go b{ transition:transform .2s ease; } .sc-go:hover b{ transform:translateX(3px); }
 .w-lead{ color:var(--mute); font-size:clamp(16px,1.2vw,19px); line-height:1.6; margin:0 0 26px; max-width:46ch; }
 .w-feat{ list-style:none; margin:0 0 26px; padding:0; display:grid; grid-template-columns:1fr 1fr; gap:10px; }
 .w-feat li{ display:flex; flex-direction:column; gap:3px; padding:14px 16px; border-radius:14px; background:rgba(12,21,38,.75); border:1px solid rgba(157,184,232,.14); }
@@ -347,20 +370,12 @@ html.mob .more{ background:#03060d; padding-top:84px; }
 .w-pic{ position:relative; }
 .w-pic::before{ content:""; position:absolute; inset:8% -6% -4%; background:radial-gradient(closest-side,rgba(47,123,245,.35),rgba(47,123,245,0)); filter:blur(10px); }
 .w-pic img{ position:relative; display:block; width:100%; max-width:520px; height:auto; margin:0 auto; border-radius:28px; background:#fff; box-shadow:0 30px 70px rgba(0,0,0,.55),0 0 0 1px rgba(255,255,255,.06); }
-.school-band{ display:flex; align-items:center; justify-content:space-between; gap:24px; margin-top:clamp(56px,7vw,96px); padding:clamp(22px,3vw,34px) clamp(22px,3vw,40px); border-radius:22px; text-decoration:none; color:var(--text);
-  background:linear-gradient(120deg,#123a8a 0%,#1d56c9 55%,#2f7bf5 100%); box-shadow:0 24px 60px rgba(17,60,150,.35); transition:transform .2s ease, box-shadow .2s ease; }
-.school-band:hover{ transform:translateY(-2px); box-shadow:0 30px 70px rgba(17,60,150,.5); }
-.sb-txt{ display:flex; flex-direction:column; gap:8px; } .school-band .eyebrow{ margin:0; color:#cfe0ff; } .school-band .eyebrow i{ background:#fff; box-shadow:none; }
-.sb-h{ font-family:var(--disp); font-weight:500; font-size:clamp(20px,2vw,28px); line-height:1.2; letter-spacing:-.015em; }
-.sb-p{ color:#d6e4ff; font-size:15px; line-height:1.5; max-width:62ch; }
-.sb-go{ flex:none; display:inline-flex; align-items:center; gap:8px; padding:12px 20px; border-radius:999px; background:#fff; color:#0d2c6b; font-weight:600; font-size:15px; }
-.sb-go b{ transition:transform .2s ease; } .school-band:hover .sb-go b{ transform:translateX(3px); }
-@media (max-width:900px){ .watch{ grid-template-columns:1fr; } .w-pic{ order:-1; } .w-pic img{ max-width:360px; } .school-band{ flex-direction:column; align-items:flex-start; } }
+@media (max-width:900px){ .watch,.school{ grid-template-columns:1fr; } .w-pic,.sc-pic{ order:-1; } .w-pic img{ max-width:360px; } .sc-pic{ width:100%; max-width:440px; margin:0 auto; } }
 @media (max-width:520px){ .more{ padding-left:16px; padding-right:16px; } .w-pic img{ max-width:250px; border-radius:22px; }
   .eyebrow{ font-size:11px; letter-spacing:.1em; } .w-lead{ margin-bottom:20px; }
   .w-feat{ gap:8px; } .w-feat li{ padding:12px; } .w-feat b{ font-size:14.5px; } .w-feat span{ font-size:13px; }
   .w-styles{ gap:8px; } .w-styles figure{ flex-direction:column; align-items:flex-start; gap:8px; } .w-styles img{ width:100%; }
-  .school-band{ border-radius:18px; } .sb-p{ font-size:14px; } }
+  .plan-card{ border-radius:24px; padding:20px 16px 24px; } .sc-pic{ height:330px; } .sc-note{ font-size:12.5px; } .sc-go{ width:100%; justify-content:center; } }
 @media (max-width:900px){ .sf-in{ grid-template-columns:1fr 1fr; } .sf-brand{ grid-column:1 / -1; } }
 @media (max-width:520px){ .sf-in{ grid-template-columns:1fr; gap:26px; } .sf-col{ font-size:15.5px; gap:11px; } .sf-legal{ flex-direction:column; gap:6px; } }
 
@@ -805,10 +820,15 @@ window.__mz={play,state:()=>({K,stageOn})};
 <div id="track"></div>
 <section class="more" id="kelajak" aria-labelledby="kelajakT">
   <div class="mo-in">
-    <div class="watch">
+    <div class="mo-head">
+      <p class="eyebrow"><i></i>Kelajakdagi rejalar</p>
+      <h2 id="kelajakT">Parvoz <span>o‘sishda davom etadi.</span></h2>
+      <p class="sub">Ikki yo‘nalish konsept bosqichida: bolaning bilagi uchun soat va maktablar uchun panel.</p>
+    </div>
+    <article class="plan-card watch" id="watch" aria-labelledby="watchT">
       <div class="w-txt">
-        <p class="eyebrow"><i></i>Kelajakdagi rejalar · Parvoz Watch</p>
-        <h2 id="kelajakT">Telefonda, ilovada&nbsp;— <span>endi bilakda ham.</span></h2>
+        <p class="eyebrow"><i></i>01 · Parvoz Watch · konsept</p>
+        <h3 id="watchT">Telefonda, ilovada&nbsp;— <span>endi bilakda ham.</span></h3>
         <p class="w-lead">Bolalar uchun aqlli soat konsepti. Parvoz Growth imkoniyatlari soatga ulanadi, ota-ona esa hammasini Parvoz Parents orqali ko‘rib turadi.</p>
         <ul class="w-feat">
           <li><b>SOS tugmasi</b><span>Alohida tugma: bir bosishda ota-onaga signal.</span></li>
@@ -823,15 +843,25 @@ window.__mz={play,state:()=>({K,stageOn})};
         <p class="w-status"><i></i><span><b>Hozirgi holat:</b> dizayn konseptlari tayyor. Parvoz Watch kelajakdagi rejalarimizning bir qismi.</span></p>
       </div>
       <div class="w-pic"><img src="/assets/img/watch-classic-hero.8646bd41.jpg" alt="Parvoz Watch konsepti: old kamera, SOS tugmasi, ekranda oila a’zolari va qo‘ng‘iroq tugmasi" width="900" height="1042" loading="lazy"></div>
-    </div>
-    <a class="school-band" href="/maktablar">
-      <span class="sb-txt">
-        <span class="eyebrow"><i></i>Maktablar uchun</span>
-        <span class="sb-h">Dars vaqtida diqqat, darsdan keyin xotirjamlik.</span>
-        <span class="sb-p">Dars vaqti rejimi, “maktabga yetib keldi” xabari, testlar va viloyat reytingi. Maktab rahbarlari va o‘qituvchilar uchun.</span>
-      </span>
-      <span class="sb-go">Batafsil <b aria-hidden="true">→</b></span>
-    </a>
+    </article>
+    <article class="plan-card school" id="maktab" aria-labelledby="maktabT">
+      <div class="sc-pic" aria-hidden="true">
+        <div class="ph p1"><i class="btn1"></i><i class="btn2"></i><div class="bez"><div class="scr"><img class="s" src="/assets/img/shot-p-block.9ae4ab94.jpg" alt="" loading="lazy"><div class="gl"></div></div></div></div>
+        <div class="ph p2"><i class="btn1"></i><i class="btn2"></i><div class="bez"><div class="scr"><img class="s" src="/assets/img/shot-p-modes.6b8c478d.jpg" alt="" loading="lazy"><div class="gl"></div></div></div></div>
+        <div class="sc-note"><img src="/assets/img/logo.23d406ad.png" alt=""><span><small>Maktab vaqti · 08:30–13:30</small>12 ta ilova dars tugaguncha yopiq</span></div>
+      </div>
+      <div class="sc-txt">
+        <p class="eyebrow"><i></i>02 · Maktablar uchun · konsept</p>
+        <h3 id="maktabT">Maktab va oila&nbsp;— <span>bitta tizimda.</span></h3>
+        <p class="w-lead">Maktab dars paytida telefonni nazorat qiladi, ota-ona farzandining o‘qishini kuzatadi, o‘quvchi esa o‘qishga undaladi.</p>
+        <ul class="sc-list">
+          <li><b>Bepul panel</b><span>Maktab uchun bepul: dars intizomi, topshiriqlar, ma’muriyat paneli.</span></li>
+          <li><b>Dars rejimi <em>asos tayyor</em></b><span>Dars jadvali bo‘yicha keraksiz ilovalar bloklanadi.</span></li>
+          <li><b>E-maktab + AI</b><span>Baholar tahlili va baho o‘zgarsa ota-onaga darhol xabar.</span></li>
+        </ul>
+        <a class="sc-go" href="/maktablar">Konseptni ko‘rish <b aria-hidden="true">→</b></a>
+      </div>
+    </article>
   </div>
 </section>
 <footer class="site-foot" id="sitefoot">
@@ -850,7 +880,7 @@ window.__mz={play,state:()=>({K,stageOn})};
     </nav>
     <nav class="sf-col" aria-label="Parvoz">
       <h2>Parvoz</h2>
-      <a href="/maktablar">Maktablar uchun</a>
+      <a href="/maktablar" style="white-space:nowrap">Maktablar uchun <small class="sf-tag">konsept</small></a>
       <a href="#kelajak" style="white-space:nowrap">Parvoz Watch <small class="sf-tag">konsept</small></a>
     </nav>
     <nav class="sf-col" aria-label="Hujjatlar">

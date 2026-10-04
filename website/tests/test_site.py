@@ -114,24 +114,25 @@ class ContentTest(unittest.TestCase):
 
     def test_future_plans_and_schools_are_linked(self):
         index = (PUBLIC / "index.html").read_text(encoding="utf-8")
-        self.assertIn('id="kelajak"', index)
-        self.assertIn("Kelajakdagi rejalar", index)
-        self.assertIn("Parvoz Watch", index)
-        self.assertIn('href="/maktablar"', index)
+        for needle in ('id="kelajak"', "Kelajakdagi rejalar", "Parvoz Watch", 'id="maktab"', 'href="/maktablar"'):
+            self.assertIn(needle, index)
         school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
         self.assertIn('<link rel="canonical" href="https://farzandimedu.uz/maktablar">', school)
-        for section in ("imkoniyatlar", "maxfiylik", "hamkorlik", "kelajakda", "savollar", "aloqa"):
+        for section in ("muammo", "panel", "emaktab", "foyda", "bugun", "hamkorlik", "savollar", "aloqa"):
             self.assertIn(f'id="{section}"', school)
 
-    def test_schools_page_marks_unbuilt_features_as_plans(self):
-        """Maktab kabineti va jadval integratsiyasi hali yo'q — faqat 'Reja' bo'limida bo'lishi shart."""
+    def test_schools_page_labels_concept_honestly(self):
+        """Maktab paneli konsept: tayyor qism 'Asos tayyor', qolganlari 'Konsept' belgisi bilan."""
         school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
-        plans = school.split('id="kelajakda"', 1)[1].split('id="savollar"', 1)[0]
-        before_plans = school.split('id="kelajakda"', 1)[0]
-        for planned in ("Maktab kabineti", "Elektron kundalik", "Davomat"):
-            self.assertIn(planned, plans)
-            self.assertNotIn(planned, before_plans)
-        self.assertIn("Android", before_plans)  # bloklash cheklovi ochiq aytilgan
+        self.assertIn("konsept", school.lower())
+        panel = school.split('id="panel"', 1)[1].split('id="emaktab"', 1)[0]
+        self.assertEqual(panel.count('class="tag ready"'), 1)   # faqat dars vaqti rejimi
+        self.assertEqual(panel.count('class="tag concept"'), 2)  # topshiriqlar, admin panel
+        self.assertIn("Android", panel)                           # bloklash cheklovi ochiq aytilgan
+        emaktab = school.split('id="emaktab"', 1)[1].split('id="foyda"', 1)[0]
+        self.assertIn("vazirlik bilan rasmiy kelishuv", emaktab)
+        self.assertIn('class="tag concept"', emaktab)             # bildirishnomalar — namuna
+        self.assertIn("Kun.uz", school)                           # statistika manbasi ko'rsatilgan
 
     def test_admin_path_is_not_disclosed(self):
         for f in PUBLIC.rglob("*"):
