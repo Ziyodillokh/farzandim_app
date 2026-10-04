@@ -118,21 +118,24 @@ class ContentTest(unittest.TestCase):
             self.assertIn(needle, index)
         school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
         self.assertIn('<link rel="canonical" href="https://farzandimedu.uz/maktablar">', school)
-        for section in ("muammo", "panel", "emaktab", "foyda", "bugun", "hamkorlik", "savollar", "aloqa"):
+        for section in ("dars-rejimi", "topshiriqlar", "admin-panel", "e-maktab", "hamkorlik", "savollar", "aloqa"):
             self.assertIn(f'id="{section}"', school)
+        self.assertIn('src="/assets/maktablar.js"', school)
 
-    def test_schools_page_labels_concept_honestly(self):
-        """Maktab paneli konsept: tayyor qism 'Asos tayyor', qolganlari 'Konsept' belgisi bilan."""
+    def test_schools_story_labels_concept_honestly(self):
+        """Faqat "Dars vaqti rejimi" ilovada bor ('Asos tayyor'); qolgan boblar 'Konsept'."""
         school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
-        self.assertIn("konsept", school.lower())
-        panel = school.split('id="panel"', 1)[1].split('id="emaktab"', 1)[0]
-        self.assertEqual(panel.count('class="tag ready"'), 1)   # faqat dars vaqti rejimi
-        self.assertEqual(panel.count('class="tag concept"'), 2)  # topshiriqlar, admin panel
-        self.assertIn("Android", panel)                           # bloklash cheklovi ochiq aytilgan
-        emaktab = school.split('id="emaktab"', 1)[1].split('id="foyda"', 1)[0]
-        self.assertIn("vazirlik bilan rasmiy kelishuv", emaktab)
-        self.assertIn('class="tag concept"', emaktab)             # bildirishnomalar — namuna
-        self.assertIn("Kun.uz", school)                           # statistika manbasi ko'rsatilgan
+        chapters = {}
+        for k in range(1, 5):
+            part = school.split(f'class="chap" data-k="{k}"', 1)[1]
+            chapters[k] = part.split('class="chap" data-k=', 1)[0].split('class="stage-wrap"', 1)[0]
+        self.assertIn('class="tag ready"', chapters[1])
+        self.assertIn("Android", chapters[1])
+        for k in (2, 3, 4):
+            self.assertIn('class="tag concept"', chapters[k])
+            self.assertNotIn('class="tag ready"', chapters[k])
+        self.assertIn("vazirlik bilan rasmiy kelishuv", chapters[4])
+        self.assertNotIn("Muammo", school)  # foydalanuvchi so'rovi: muammo bo'limi kerak emas
 
     def test_admin_path_is_not_disclosed(self):
         for f in PUBLIC.rglob("*"):
