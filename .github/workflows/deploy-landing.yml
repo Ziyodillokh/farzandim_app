@@ -1,38 +1,30 @@
-name: Deploy Landing → farzandimedu.uz
+name: Deploy Website → farzandimedu.uz
 
 # ─────────────────────────────────────────────────────────────────────────────
-# landingfarzandim (Vite React) o'zgarganda AVTOMATIK build + deploy qiladi:
-#   npm ci + npm run build → dist → serverga rsync → /var/www/farzandim-landing.
-# Serverda landing manba/CI yo'q edi — shu sabab push qilinsa ham qo'lda deploy
-# kerak edi. Endi push = jonli.
+# Asosiy sayt (Parvoz) — manba: website/public/ (statik, build kerak emas).
+# 2026-10-04 dan sayt manbasi SHU REPODA: eski Lovable sayti (repoda yo'q edi)
+# va eskirgan landingfarzandim/ o'rniga keldi.
 #
-# Secretlar (deploy-test.yml bilan BIR XIL — allaqachon sozlangan):
-#   SSH_HOST     – server IP (95.182.118.39)
-#   SSH_USER     – SSH foydalanuvchi (farzandim)
-#   SSH_PASSWORD – SSH + sudo paroli
+#   test   → website/tests (havolalar, rasmlar, huquqiy sahifalar, nginx_switch)
+#   deploy → website/deploy/make-stage.sh → serverga ~/parvoz-deploy →
+#            sudo website/deploy/server-deploy.sh:
+#              • /var/www/parvoz-releases/<vaqt>/ + /var/www/parvoz-site symlink
+#              • nginx: farzandimedu.uz 443-blokida `location /` statik saytga
+#                (faqat birinchi marta; konfig zaxirasi /var/backups/parvoz-nginx/)
+#              • tekshiruv: har fayl xeshi + /api, /socket.io, /app, /child,
+#                admin, /storage holati o'zgarmagan; xato bo'lsa — avtomatik
+#                orqaga qaytarish (nginx konfig + symlink).
+#
+# Secretlar (deploy-test.yml bilan BIR XIL):
+#   SSH_HOST, SSH_USER, SSH_PASSWORD (SSH + sudo paroli)
 # ─────────────────────────────────────────────────────────────────────────────
 
-# ⛔ AVTOMATIK DEPLOY O'CHIRILDI (2026-09-05) — FAQAT QO'LDA.
-#
-# SABAB: jonli farzandimedu.uz repo'dagi `landingfarzandim/` dan
-# YANGIROQ. Tekshirildi:
-#   • jonli sahifa 2 ta chunk beradi (index + routes), repo buildi 1 ta;
-#   • jonli BOSH sahifada Play va App Store tugmalari bor,
-#     repo'dagi FarzandimPage.tsx da do'kon havolasi UMUMAN yo'q;
-#   • jonli sahifada .apk havolasi yo'q, repo'da bor edi.
-# Ya'ni saytning haqiqiy manbasi shu repoda EMAS.
-#
-# `push` trigger yoqiq turganda `landingfarzandim/` ga tegilgan har
-# qanday commit eski versiyani qayta yig'ib jonli saytni BOSIB KETARDI —
-# bosh sahifadagi do'kon tugmalari yo'qolib, o'lik APK havolalari
-# qaytardi (APK fayllari 26-avgustda serverdan o'chirilgan).
-#
-# ⚠️ QILINISHI KERAK: saytning haqiqiy manbasini topib shu repoga
-# joylang. Hozir u faqat bitta kompyuterda va zaxirasi yo'q — yo'qolsa
-# sayt qayta yig'ilmaydi.
-#
-# Manba repoga qo'yilgach `push` trigger'ini qaytarish mumkin.
 on:
+  push:
+    branches: [main]
+    paths:
+      - 'website/**'
+      - '.github/workflows/deploy-landing.yml'
   workflow_dispatch:
 
 concurrency:
@@ -40,43 +32,72 @@ concurrency:
   cancel-in-progress: false
 
 env:
+  DOMAIN: farzandimedu.uz
   SSH_OPTS: -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ConnectTimeout=20 -o ServerAliveInterval=15 -o ServerAliveCountMax=4
-  WEB_ROOT: /var/www/farzandim-landing
 
 jobs:
+  test:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - name: Sayt va deploy vositasi testlari
+        run: python3 -m unittest discover -s website/tests -v
+
   deploy:
-    runs-on: ubuntu-latest
+    needs: test
+    runs-on: ubuntu-22.04
+    timeout-minutes: 15
     env:
       SSHPASS: ${{ secrets.SSH_PASSWORD }}
+      TARGET: ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '22'
-
-      - name: Build landing
-        working-directory: landingfarzandim
+      # apt ba'zan runner'da osilib qoladi — deploy-test.yml dagi kabi timeout + 3 urinish.
+      - name: Install transfer tools
         run: |
-          npm ci
-          npm run build
-          # Guard — build muvaffaqiyatsiz bo'lsa jonli saytni --delete bilan buzmaymiz.
-          test -f dist/index.html || { echo "dist/index.html yo'q — build buzilgan, deploy to'xtatildi"; exit 1; }
+          export DEBIAN_FRONTEND=noninteractive
+          for i in 1 2 3; do
+            if timeout 120 sudo -E apt-get install -y --no-install-recommends sshpass rsync; then break; fi
+            echo "::warning::apt install urinish $i yiqildi — update bilan qayta"
+            timeout 180 sudo -E apt-get update -o Acquire::Retries=3 || true
+            sleep 10
+          done
+          command -v sshpass && command -v rsync
 
-      - name: Install sshpass + rsync
-        run: sudo apt-get update && sudo apt-get install -y sshpass rsync
+      - name: Stage (sayt + xesh manifest + deploy skriptlari)
+        run: bash website/deploy/make-stage.sh "$RUNNER_TEMP/stage"
 
-      - name: Upload build → staging (~/landing-new)
+      - name: Upload → ~/parvoz-deploy
         run: |
-          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" "rm -rf ~/landing-new && mkdir -p ~/landing-new"
-          sshpass -e rsync -az --delete -e "ssh ${SSH_OPTS}" landingfarzandim/dist/ "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:landing-new/"
+          sshpass -e ssh ${SSH_OPTS} "$TARGET" 'mkdir -p ~/parvoz-deploy'
+          sshpass -e rsync -az --delete --timeout=60 -e "ssh ${SSH_OPTS}" "$RUNNER_TEMP/stage/" "$TARGET:parvoz-deploy/"
 
-      - name: Publish → web root (sudo)
+      # Parol sudo'ga stdin orqali beriladi (buyruq qatorida ko'rinmaydi).
+      - name: Publish (sudo server-deploy.sh — tekshiruv va avto-rollback bilan)
         run: |
-          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "echo '$SSHPASS' | sudo -S rsync -a --delete /home/${{ secrets.SSH_USER }}/landing-new/ ${WEB_ROOT}/ && echo '$SSHPASS' | sudo -S chown -R www-data:www-data ${WEB_ROOT} && echo PUBLISHED"
+          sshpass -e ssh ${SSH_OPTS} "$TARGET" \
+            'sudo -S -p "" bash ~/parvoz-deploy/server-deploy.sh ~/parvoz-deploy' <<< "$SSHPASS"
 
-      - name: Verify (HTTPS)
+      - name: Verify (tashqaridan, HTTPS)
         run: |
-          sshpass -e ssh ${SSH_OPTS} "${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}" \
-            "curl -sk -o /dev/null -w 'farzandimedu.uz → HTTP %{http_code}\n' https://farzandimedu.uz/" || true
+          set -e
+          check() {  # $1 yo'l, $2 kutilgan status, $3 (ixtiyoriy) javobda bo'lishi shart bo'lgan matn
+            body="$(curl -sS --max-time 20 -w '\n%{http_code}' "https://${DOMAIN}$1")"
+            code="${body##*$'\n'}"
+            [ "$code" = "$2" ] || { echo "::error::$1 → $code (kutilgan $2)"; exit 1; }
+            [ -z "${3:-}" ] || grep -qF "$3" <<< "$body" || { echo "::error::$1 javobida '$3' yo'q"; exit 1; }
+            echo "✓ $1 → $code"
+          }
+          check /                          200 "<title>Parvoz: farzandingizga erkinlik"
+          check /privacy.html              200 "Maxfiylik siyosati"
+          check /oferta.html               200 "313 060 726"
+          check /tolov-va-qaytarish.html   200 "pul qaytarish"
+          check /account-deletion.html     200 "Akkauntni"
+          check /privacy                   200 "Maxfiylik siyosati"
+          check /robots.txt                200 "Sitemap:"
+          check /parvoz-yoq-sahifa         404 "Bu sahifa topilmadi"
+          # /api holatini server-deploy.sh o'zgarishdan oldingi bilan solishtirgan; bu yerda faqat ogohlantirish.
+          api="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://${DOMAIN}/api" || true)"
+          [ "$api" = "200" ] && echo "✓ /api → 200" || echo "::warning::/api → $api"
