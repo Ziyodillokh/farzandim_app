@@ -1,0 +1,205 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Maxfiylik siyosati — Parvoz</title>
+<meta name="description" content="Parvoz ilovasining maxfiylik siyosati: qanday ma'lumot yig'iladi, qanday ishlatiladi va himoyalanadi.">
+<meta name="robots" content="index, follow">
+<meta name="theme-color" content="#060B16">
+<link rel="canonical" href="https://farzandimedu.uz/privacy.html">
+<meta property="og:type" content="article">
+<meta property="og:site_name" content="Parvoz">
+<meta property="og:locale" content="uz_UZ">
+<meta property="og:url" content="https://farzandimedu.uz/privacy.html">
+<meta property="og:title" content="Maxfiylik siyosati — Parvoz">
+<meta property="og:description" content="Parvoz ilovasining maxfiylik siyosati: qanday ma'lumot yig'iladi, qanday ishlatiladi va himoyalanadi.">
+<meta property="og:image" content="https://farzandimedu.uz/assets/img/og.f36b1669.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="icon" href="/favicon.ico" sizes="any">
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Onest:wght@400;500;600&family=Unbounded:wght@500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="/assets/legal.css">
+</head>
+<body>
+<header class="top">
+  <a class="brand" href="/"><img src="/assets/img/logo.23d406ad.png" alt="" width="28" height="28">Parvoz</a>
+  <a class="home" href="/">Bosh sahifa</a>
+</header>
+<div class="wrap">
+  <nav class="docs" aria-label="Huquqiy hujjatlar">
+    <a href="/privacy.html" aria-current="page">Maxfiylik siyosati</a>
+    <a href="/oferta.html">Ommaviy oferta</a>
+    <a href="/tolov-va-qaytarish.html">To‘lov va qaytarish</a>
+    <a href="/account-deletion.html">Akkauntni o‘chirish</a>
+  </nav>
+  <main class="doc">
+    <h1>Maxfiylik siyosati</h1>
+    <p class="updated">So'nggi yangilanish: 2026-08-07</p>
+    <nav class="toc" aria-label="Mundarija"><b>Mundarija</b>
+      <ul>
+        <li><a href="#b1">1. Kirish</a></li>
+        <li><a href="#b2">2. Yig'iladigan ma'lumotlar</a></li>
+        <li><a href="#b3">2.1. Sog'liq ma'lumotlari (Health Data)</a></li>
+        <li><a href="#b4">2.2. Qurilma boshqaruvi (Device Admin) — ixtiyoriy</a></li>
+        <li><a href="#b5">3. Maqsad va huquqiy asos</a></li>
+        <li><a href="#b6">4. Infratuzilma va uchinchi tomon xizmatlari</a></li>
+        <li><a href="#b7">5. Ma'lumotlarni saqlash muddati</a></li>
+        <li><a href="#b8">6. Bola ma'lumotlari (maxsus himoya)</a></li>
+        <li><a href="#b9">7. Foydalanuvchi huquqlari</a></li>
+        <li><a href="#b10">8. Xavfsizlik</a></li>
+        <li><a href="#b11">9. O'zgarishlar</a></li>
+        <li><a href="#b12">10. Aloqa</a></li>
+        <li><a href="#b13">11. Yuridik holat</a></li>
+      </ul>
+    </nav>
+    <h2 id="b1">1. Kirish</h2>
+    <p>Parvoz — ota-onalar va vasiylar uchun mo'ljallangan oilaviy xavfsizlik va nazorat ilovasi. Ushbu maxfiylik siyosati biz qanday shaxsiy ma'lumotlarni yig'ishimiz, ulardan qanday foydalanishimiz va ularni qanday himoya qilishimizni tushuntiradi.</p>
+    <p>Ilovadan foydalanishni boshlash orqali siz ushbu shartlarga rozilik bildirasiz. Agar siz biron bir bandga rozi bo'lmasangiz, iltimos, ilovani ishlatmang.</p>
+    <p class="note">Mas'ul shaxs: Parvoz jamoasi (O'zbekiston, Toshkent). Aloqa: <a href="mailto:farzandimtech@gmail.com">farzandimtech@gmail.com</a></p>
+
+    <h2 id="b2">2. Yig'iladigan ma'lumotlar</h2>
+    <p><strong>A) Ota-ona/vasiy ma'lumotlari:</strong></p>
+    <ul>
+      <li>Telefon raqami (autentifikatsiya uchun)</li>
+      <li>Email manzili (ixtiyoriy, kirish va parol tiklash uchun)</li>
+      <li>Profil ma'lumotlari (ism, profil rasmi)</li>
+      <li>Qurilma identifikatori (FCM token — push xabarlar uchun)</li>
+      <li>Qurilma turi va OS versiyasi (texnik nosozliklarni aniqlash uchun)</li>
+      <li>Ota-onaning o'z joriy joylashuvi (faqat xaritada "mening joylashuvim" tugmasi bosilganda)</li>
+    </ul>
+    <p><strong>B) Bolaga oid ma'lumotlar (bola qurilmasidagi ilova orqali):</strong></p>
+    <ul>
+      <li>Ism, yosh, jinsi</li>
+      <li>Profil rasmi (ixtiyoriy)</li>
+      <li><strong>Joriy GPS joylashuv va harakat tarixi</strong> — ilova yopiq yoki fonda ishlayotganda ham doimiy yig'iladi (<code>ACCESS_BACKGROUND_LOCATION</code>). Bu — ilovaning asosiy vazifasi: ota-ona farzandi qayerdaligini xaritada ko'rishi va geo-zona ogohlantirishlarini olishi uchun</li>
+      <li>Wi-Fi tarmoq nomi (joylashuv aniqligini oshirish uchun)</li>
+      <li>Foydalanilgan ilovalar, kategoriyalari va vaqtlari (cheklov sozlamalarini ta'minlash uchun)</li>
+      <li>Qurilma model va batareya holati</li>
+      <li><strong>Ovozli xabarlar</strong> — mikrofon orqali yoziladi (<code>RECORD_AUDIO</code>), faqat bola o'zi yozganda va faqat oila ichidagi yozishma uchun</li>
+      <li><strong>Video xabarlar va suratlar</strong> — kamera orqali yoziladi (<code>CAMERA</code>), faqat bola o'zi yozganda yoki ota-ona so'rovini tasdiqlaganda</li>
+      <li><strong>Kunlik qadamlar soni</strong> (sog'liq ma'lumoti — quyidagi 2.1-bandga qarang)</li>
+    </ul>
+    <p class="note">Ovoz va video yozuvlari MinIO xotirasida shifrlangan kanal orqali saqlanadi, faqat shu oila a'zolariga ko'rinadi va boshqa faollik ma'lumotlari bilan bir xil (90 kun) muddatda avtomatik o'chiriladi.</p>
+    <p class="pill">Hech qanday ma'lumot reklama yoki uchinchi tomonlarga sotish uchun ishlatilmaydi.</p>
+
+    <h2 id="b3">2.1. Sog'liq ma'lumotlari (Health Data)</h2>
+    <p>Parvoz Growth (bola ilovasi) bolaning <strong>kunlik qadamlar sonini</strong> Android <strong>Health Connect</strong> tizimidan (yoki qurilmaning o'z qadam sanagich sensoridan) o'qiydi. Bu — so'raladigan yagona sog'liq ma'lumoti turi: yurak urishi, uyqu, vazn, kaloriya yoki boshqa hech qanday tibbiy/sog'liq ma'lumoti o'qilmaydi va yig'ilmaydi.</p>
+    <ul>
+      <li><strong>Ruxsatlar (ikkitasi):</strong>
+        <ul>
+          <li><code>android.permission.health.READ_STEPS</code> — Health Connect'dagi bugungi qadam jamini o'qish (Samsung Health kabi ilovalar ham shu yerga yozadi)</li>
+          <li><code>android.permission.ACTIVITY_RECOGNITION</code> (Jismoniy faollikni aniqlash) — qurilmaning o'z qadam-sanagich sensoridan real vaqtda qadam o'qish, Health Connect mavjud bo'lmagan qurilmalarda</li>
+        </ul>
+        Ikkalasi ham faqat bola ilova ichida aniq rozilik ekranini ko'rib, tasdiqlagandan keyin so'raladi.</li>
+      <li><strong>Maqsad:</strong> ota-onaga bolaning haftalik/kunlik jismoniy faollik (qadam) statistikasini ko'rsatish</li>
+      <li><strong>Ulashish:</strong> qadam ma'lumotlari uchinchi tomonlarga <strong>hech qachon</strong> berilmaydi, sotilmaydi yoki reklama maqsadida ishlatilmaydi — faqat tegishli bolaning ota-ona akkauntida ko'rsatiladi</li>
+      <li><strong>Saqlash muddati:</strong> boshqa faollik ma'lumotlari bilan bir xil — 90 kundan eskisi avtomatik o'chiriladi</li>
+    </ul>
+
+    <h2 id="b4">2.2. Qurilma boshqaruvi (Device Admin) — ixtiyoriy</h2>
+    <p>Ota-ona xohlasa, bola ilovasida <strong>"O'chirishni taqiqlash"</strong> funksiyasini yoqishi mumkin. Yoqilgan holda ilova Android <strong>Device Administrator</strong> huquqini oladi va bola ilovani ota-ona ruxsatisiz o'chira olmaydi.</p>
+    <ul>
+      <li>Bu funksiya <strong>sukut bo'yicha O'CHIQ</strong> — faqat ota-ona ataylab yoqsa ishlaydi</li>
+      <li>Istalgan vaqtda o'chirilishi mumkin: qurilma Sozlamalari → Xavfsizlik → Qurilma administratori ilovalari</li>
+      <li>Device Admin huquqi <strong>faqat</strong> o'chirishdan himoya uchun ishlatiladi — u orqali hech qanday qo'shimcha shaxsiy ma'lumot yig'ilmaydi</li>
+    </ul>
+
+    <h2 id="b5">3. Maqsad va huquqiy asos</h2>
+    <p>Ma'lumotlar quyidagi maqsadlarda qayta ishlanadi: bola xavfsizligini ta'minlash (joylashuv kuzatuvi, geo-zona ogohlantirishlari), ota-ona nazorati (ilova cheklovlari, jadval), ovozli va video xabarlar (oila aloqasi), akkaunt autentifikatsiyasi va xavfsizligi, ilovaning texnik ishlashini ta'minlash.</p>
+    <p><strong>Huquqiy asos:</strong></p>
+    <ul>
+      <li>O'zbekiston Respublikasi: ZRU-547 "Shaxsga doir ma'lumotlar to'g'risida"gi qonun (02.07.2019), 19-modda</li>
+      <li>COPPA (AQSh): ota-onaning aniq roziligi (verifiable parental consent)</li>
+      <li>GDPR (Yevropa foydalanuvchilari uchun, qo'llanilsa): qonuniy manfaat (Art. 6.1(f)) va bolaga oid ma'lumotlar uchun ota-ona roziligi (Art. 8)</li>
+    </ul>
+
+    <h2 id="b6">4. Infratuzilma va uchinchi tomon xizmatlari</h2>
+    <p>Foydalanuvchi ma'lumotlari va media fayllar <strong>o'zimizning xususiy serverlarimizda</strong> (farzandimedu.uz infratuzilmasi) saqlanadi:</p>
+    <ul>
+      <li><strong>PostgreSQL</strong> — asosiy ma'lumotlar bazasi (profillar, sozlamalar, joylashuv yozuvlari)</li>
+      <li><strong>MinIO</strong> — media fayllar xotirasi (rasmlar, ovoz, video)</li>
+      <li>Autentifikatsiya <strong>o'z JWT tizimimiz</strong> orqali (Firebase Auth emas)</li>
+    </ul>
+    <p>Quyidagi tashqi xizmatlar cheklangan maqsadlarda ishlatiladi:</p>
+    <ul>
+      <li><strong>Firebase (Google LLC)</strong>: faqat push-bildirishnomalar (FCM), nosozlik hisobotlari (Crashlytics), anonim analitika (Analytics) va ilova haqiqiyligini tekshirish (App Check). Firebase bizning ma'lumotlar bazamiz sifatida ishlatilMAYDI.</li>
+      <li><strong>Eskiz.uz</strong>: telefon raqamini tasdiqlash uchun SMS-kod yuborish</li>
+      <li><strong>Google Sign-In / Apple Sign-In</strong>: ixtiyoriy ijtimoiy kirish</li>
+      <li><strong>OpenStreetMap</strong>: xarita plitkalarini ko'rsatish (joylashuvni vizualizatsiya qilish)</li>
+      <li><strong>To'lov provayderi</strong>: obuna to'lovlarini qayta ishlash. To'lov (karta) ma'lumotlarini biz saqlamaymiz — ular to'g'ridan-to'g'ri provayder tomonida ishlanadi.</li>
+    </ul>
+    <p class="note">Ushbu xizmatlar o'z maxfiylik siyosatlariga binoan ishlaydi:
+      <a href="https://policies.google.com/privacy">Google</a> ·
+      <a href="https://firebase.google.com/support/privacy">Firebase</a> ·
+      <a href="https://www.apple.com/legal/privacy/">Apple</a>
+    </p>
+
+    <h2 id="b7">5. Ma'lumotlarni saqlash muddati</h2>
+    <ul>
+      <li>Faol akkaunt: akkaunt o'chirilmaguncha saqlanadi</li>
+      <li>Joylashuv va ilova-foydalanish ma'lumotlari: <strong>90 kundan eskisi avtomatik o'chiriladi</strong></li>
+      <li>Akkaunt o'chirilganda: profil, media fayllar va bog'liq ma'lumotlar <strong>darhol</strong> o'chiriladi (server tomonida)</li>
+      <li>Tizim loglari (shaxsni aniqlamaydigan): maksimum 1 yil — xavfsizlik va xato tahlili uchun</li>
+    </ul>
+
+    <h2 id="b8">6. Bola ma'lumotlari (maxsus himoya)</h2>
+    <p>Voyaga yetmagan bolalar uchun maxsus himoya choralari qo'llaniladi. Bola ma'lumotlari faqat ota-ona/vasiy aniq roziligi asosida va minimal hajmda yig'iladi.</p>
+    <p><strong>Bola ma'lumotlari HECH QACHON:</strong></p>
+    <ul>
+      <li>reklama uchun ishlatilmaydi</li>
+      <li>uchinchi tomonlarga sotilmaydi</li>
+      <li>profiling yoki targeting uchun ishlatilmaydi</li>
+      <li>texnik xizmatdan tashqari uchinchi tomon bilan baham ko'rilmaydi</li>
+    </ul>
+    <p class="note">Parvoz "parental control" toifasidagi ilova: bola qurilmasidagi ilovada ma'lumot yig'ishdan oldin aniq rozilik ekrani ko'rsatiladi va uni faqat ota-ona/vasiy tasdiqlashi mumkin.</p>
+
+    <h2 id="b9">7. Foydalanuvchi huquqlari</h2>
+    <ul>
+      <li>Ko'rish: Sozlamalar → Profil va Sozlamalar → Bolalar boshqaruvi</li>
+      <li>Tahrirlash: barcha kiritilgan maydonlar tahrirlanadi</li>
+      <li>O'chirish: Sozlamalar → Hisobni butunlay o'chirish (barcha ma'lumotlar server tomonida o'chiriladi)</li>
+      <li>E'tiroz: <a href="mailto:farzandimtech@gmail.com">farzandimtech@gmail.com</a> manziliga yozing</li>
+    </ul>
+    <p>Murojaat 30 kun ichida javob beriladi (GDPR Art. 12.3 uslubida).</p>
+
+    <h2 id="b10">8. Xavfsizlik</h2>
+    <ul>
+      <li>TLS/HTTPS shifrlash — barcha tarmoq trafigi</li>
+      <li>JWT autentifikatsiya + server tomonida ruxsat nazorati (har bir so'rov serverda tekshiriladi)</li>
+      <li>Tokenlar qurilmada xavfsiz xotirada saqlanadi (Android Keystore / iOS Keychain)</li>
+      <li>App Check (Play Integrity / DeviceCheck) — soxta klientlarni bloklash</li>
+      <li>Audit log va server tomonida atomik tozalash</li>
+    </ul>
+    <p class="note">Ma'lumotlar buzilishi yuz berganda, ta'sirlangan foydalanuvchilar 72 soat ichida xabardor qilinadi (GDPR Art. 33-34 uslubida).</p>
+
+    <h2 id="b11">9. O'zgarishlar</h2>
+    <p>Ushbu maxfiylik siyosati vaqti-vaqti bilan yangilanishi mumkin. Muhim o'zgarishlar bo'lganda foydalanuvchilar ilova ichidagi bildirishnoma va/yoki email orqali xabardor qilinadi.</p>
+
+    <h2 id="b12">10. Aloqa</h2>
+    <div class="card">
+      <p style="margin:0 0 6px"><strong>Email:</strong> <a href="mailto:farzandimtech@gmail.com">farzandimtech@gmail.com</a></p>
+      <p style="margin:0" class="muted">Parvoz jamoasi, Toshkent shahri, O'zbekiston</p>
+    </div>
+
+    <h2 id="b13">11. Yuridik holat</h2>
+    <p>Ushbu maxfiylik siyosati O'zbekiston Respublikasi qonunlariga binoan tartibga solinadi. Hujjat 2026-07-25 sanasida kuchga kirgan.</p>
+  </main>
+</div>
+<footer class="foot">
+  <nav aria-label="Sayt">
+    <a href="/">Bosh sahifa</a>
+    <a href="/privacy.html">Maxfiylik siyosati</a>
+    <a href="/oferta.html">Ommaviy oferta</a>
+    <a href="/tolov-va-qaytarish.html">To‘lov va qaytarish</a>
+    <a href="/account-deletion.html">Akkauntni o‘chirish</a>
+    <a href="https://t.me/parvozyordambot" target="_blank" rel="noopener">Telegram: @parvozyordambot</a>
+    <a href="mailto:farzandimtech@gmail.com">farzandimtech@gmail.com</a>
+  </nav>
+  <p>© 2026 Parvoz · “FARZANDIM TECH” MCHJ · STIR 313 060 726</p>
+  <p>Toshkent shahri, Yakkasaroy tumani, Abdulla Qahhor ko‘chasi 6-tor, 23-uy</p>
+</footer>
+</body>
+</html>
