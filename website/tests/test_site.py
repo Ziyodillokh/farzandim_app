@@ -79,7 +79,7 @@ class LinksTest(unittest.TestCase):
 
     def test_sitemap_urls_resolve(self):
         locs = re.findall(r"<loc>([^<]+)</loc>", (PUBLIC / "sitemap.xml").read_text())
-        self.assertEqual(len(locs), 5)
+        self.assertEqual(len(locs), 6)
         for loc in locs:
             self.assertTrue(resolve_local(urlparse(loc).path), loc)
 
@@ -111,6 +111,27 @@ class ContentTest(unittest.TestCase):
         oferta = (PUBLIC / "oferta.html").read_text(encoding="utf-8")
         for detail in ("313 060 726", "2020 8000 9074 7641 0001", "00083"):
             self.assertIn(detail, oferta)
+
+    def test_future_plans_and_schools_are_linked(self):
+        index = (PUBLIC / "index.html").read_text(encoding="utf-8")
+        self.assertIn('id="kelajak"', index)
+        self.assertIn("Kelajakdagi rejalar", index)
+        self.assertIn("Parvoz Watch", index)
+        self.assertIn('href="/maktablar"', index)
+        school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
+        self.assertIn('<link rel="canonical" href="https://farzandimedu.uz/maktablar">', school)
+        for section in ("imkoniyatlar", "maxfiylik", "hamkorlik", "kelajakda", "savollar", "aloqa"):
+            self.assertIn(f'id="{section}"', school)
+
+    def test_schools_page_marks_unbuilt_features_as_plans(self):
+        """Maktab kabineti va jadval integratsiyasi hali yo'q — faqat 'Reja' bo'limida bo'lishi shart."""
+        school = (PUBLIC / "maktablar.html").read_text(encoding="utf-8")
+        plans = school.split('id="kelajakda"', 1)[1].split('id="savollar"', 1)[0]
+        before_plans = school.split('id="kelajakda"', 1)[0]
+        for planned in ("Maktab kabineti", "Elektron kundalik", "Davomat"):
+            self.assertIn(planned, plans)
+            self.assertNotIn(planned, before_plans)
+        self.assertIn("Android", before_plans)  # bloklash cheklovi ochiq aytilgan
 
     def test_admin_path_is_not_disclosed(self):
         for f in PUBLIC.rglob("*"):
