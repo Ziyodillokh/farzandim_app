@@ -13,8 +13,8 @@
 #    (faqat birinchi marta; keyingi deploy'larda konfig o'zgarmaydi).
 #    O'zgartirishdan oldin zaxira: /var/backups/parvoz-nginx/<vaqt>/.
 # 3. Tekshiruv (127.0.0.1 orqali): har bir fayl xeshi, 404 sahifa, va boshqa
-#    xizmatlar (/api, /socket.io, /app, /child, admin /kirolmaysan, /storage)
-#    holat kodlari o'zgarishdan OLDINGI bilan bir xil.
+#    xizmatlar (/api, /socket.io, /app, /child, admin /kirolmaysan, /storage,
+#    /ota-ona, /bola) holat kodlari o'zgarishdan OLDINGI bilan bir xil.
 # 4. Biror qadam yiqilsa yoki deploy to'xtatilsa (TERM/INT) — nginx konfig va
 #    symlink oldingi holatiga qaytadi. SSH uzilsa (HUP/PIPE) skript to'xtamaydi:
 #    o'zi tekshirib, kerak bo'lsa o'zi qaytaradi. To'liq log: $LOGFILE.
@@ -29,7 +29,8 @@ KEEP_RELEASES=5
 TS="$(date +%Y%m%d-%H%M%S)"
 BACKUP="/var/backups/parvoz-nginx/$TS"
 # Saytga tegishli bo'lmagan, lekin shu domendagi xizmatlar — holati o'zgarmasligi shart.
-GUARDED=("/api" "/api/health" "/socket.io/?EIO=4&transport=polling" "/app/" "/child/" "/kirolmaysan" "/storage/")
+GUARDED=("/api" "/api/health" "/socket.io/?EIO=4&transport=polling" "/app/" "/child/" "/kirolmaysan" "/storage/"
+         "/ota-ona" "/bola")  # do'kon qisqa havolalari (302) — landingfarzandim/parvoz-store-links.nginx
 LOGFILE="/var/log/parvoz-deploy.log"
 
 NGINX_FILES=()
