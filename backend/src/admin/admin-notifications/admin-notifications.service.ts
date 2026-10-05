@@ -6,13 +6,19 @@ import {
   PayloadTooLargeException,
   UnsupportedMediaTypeException,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { Prisma } from '@prisma/client';
-import { randomUUID } from 'crypto';
 import { PrismaService } from '../../common/database/prisma.service';
 import { FcmService, PushPayload } from '../../common/fcm/fcm.service';
 import { AdminAuditService } from '../../common/audit/admin-audit.service';
 import { StorageService } from '../../common/storage/storage.service';
 import { BUCKETS } from '../../common/storage/storage.constants';
+import {
+  newNotificationImageKey,
+  normalizeNotificationImageUrl,
+  notificationImageUrl,
+} from '../../common/storage/notification-image';
+import { EnvConfig } from '../../common/config/env.schema';
 import { CreateNotificationDto } from './dto/create-notification.dto';
 
 const MAX_NOTIF_IMAGE_BYTES = 5 * 1024 * 1024;
@@ -22,7 +28,6 @@ const ALLOWED_IMAGE_MIMES = [
   'image/webp',
   'image/gif',
 ];
-const SIX_DAYS_SEC = 6 * 86_400;
 
 const TARGET_TYPES = ['all', 'parents', 'children', 'premium', 'age_group'] as const;
 const STATUSES = ['sent', 'scheduled', 'queued', 'sending', 'failed'] as const;
@@ -42,11 +47,27 @@ export class AdminNotificationsService {
     private readonly fcm: FcmService,
     private readonly audit: AdminAuditService,
     private readonly storage: StorageService,
+    private readonly config: ConfigService<EnvConfig, true>,
   ) {}
 
+  /** Telefon ochadigan domen (rasm URL'lari shu domendagi proxy'ga ishora qiladi). */
+  private get publicBase(): string {
+    return this.config.get('PUBLIC_BASE_URL', { infer: true });
+  }
+
+  /** Eski presigned rasm URL'ini doimiy proxy URL'ga to'g'rilaydi (boshqalarini o'zgartirmaydi). */
+  private imageUrlOf(url: string | null | undefined): string | null {
+    return normalizeNotificationImageUrl(url ?? null, this.publicBase);
+  }
+
   /**
-   * Port of Fastify `POST /upload-image` handler. Validates size + mime, uploads
-   * to MinIO `contentThumbnails` bucket, and returns a 6-day signed URL.
+   * Validates size + mime, uploads to MinIO `contentThumbnails` bucket and
+   * returns a PERMANENT public media-proxy URL
+   * (`<PUBLIC_BASE_URL>/api/content/media/notif/<uuid>.<ext>`).
+   *
+   * Avval 6 kunlik presigned URL qaytarardi — u telefonga yetmasdi (prod'da
+   * `/storage/` prefiksi imzoni buzadi → 403) va 6 kunda eskirardi, shuning
+   * uchun rasm push'da ham, ilova ichida ham ko'rinmasdi.
    */
   async uploadImage(file: {
     buffer: Buffer;
@@ -73,10 +94,7 @@ export class AdminNotificationsService {
         mimetype: file.mimetype,
       });
     }
-    const ext = file.originalname.includes('.')
-      ? '.' + file.originalname.split('.').pop()
-      : '.jpg';
-    const key = `notifications/${randomUUID()}${ext}`;
+    const key = newNotificationImageKey(file.mimetype);
     try {
       await this.storage.upload(
         BUCKETS.contentThumbnails,
@@ -90,13 +108,8 @@ export class AdminNotificationsService {
       );
       throw err;
     }
-    const url = await this.storage.getSignedUrl(
-      BUCKETS.contentThumbnails,
-      key,
-      SIX_DAYS_SEC,
-    );
     return {
-      url,
+      url: notificationImageUrl(this.publicBase, key),
       storageKey: key,
       bucket: BUCKETS.contentThumbnails,
       sizeBytes: file.buffer.length,
@@ -151,7 +164,7 @@ export class AdminNotificationsService {
       message: n.message,
       targetType: n.targetType,
       filters: n.filters ?? {},
-      imageUrl: n.imageUrl,
+      imageUrl: this.imageUrlOf(n.imageUrl),
       deepLink: n.deepLink,
       status: n.status,
       scheduledAt: n.scheduledAt?.toISOString() ?? null,
@@ -270,6 +283,8 @@ export class AdminNotificationsService {
   async create(dto: CreateNotificationDto, staffId: string | undefined, req: RequestMeta) {
     const scheduled = dto.scheduledAt ? new Date(dto.scheduledAt) : null;
     const willSchedule = scheduled !== null && scheduled.getTime() > Date.now();
+    // Keshlangan eski admin bundle presigned URL yuborsa ham — to'g'rilaymiz.
+    const imageUrl = this.imageUrlOf(dto.imageUrl);
 
     let deliveredCount = 0;
     if (!willSchedule) {
@@ -279,7 +294,7 @@ export class AdminNotificationsService {
         {
           title: dto.title,
           body: dto.message,
-          image: dto.imageUrl ?? undefined,
+          image: imageUrl ?? undefined,
           data: dto.deepLink ? { deepLink: dto.deepLink } : undefined,
         },
       );
@@ -292,7 +307,7 @@ export class AdminNotificationsService {
         message: dto.message,
         targetType: dto.targetType,
         filters: (dto.filters ?? {}) as Prisma.InputJsonValue,
-        imageUrl: dto.imageUrl ?? null,
+        imageUrl,
         deepLink: dto.deepLink ?? null,
         status: willSchedule ? 'scheduled' : 'sent',
         scheduledAt: scheduled,
@@ -322,9 +337,9 @@ export class AdminNotificationsService {
               // In-app inbox: rasm (imageUrl) + deepLink saqlaymiz — bola/ota-ona
               // ilova ichida xabar ustiga bosganda rasm ko'rinsin.
               data:
-                dto.imageUrl || dto.deepLink
+                imageUrl || dto.deepLink
                   ? ({
-                      ...(dto.imageUrl ? { imageUrl: dto.imageUrl } : {}),
+                      ...(imageUrl ? { imageUrl } : {}),
                       ...(dto.deepLink ? { deepLink: dto.deepLink } : {}),
                     } as Prisma.InputJsonValue)
                   : Prisma.JsonNull,
