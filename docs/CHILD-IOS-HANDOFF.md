@@ -54,14 +54,19 @@ build qilish uchun ularni xavfsiz joyga nusxalang (yoki u yerda
    **Cloud Messaging** → Apple app configuration → **Parvoz Growth** →
    APNs Authentication Key → **Upload**: `.p8`, Key ID, Team ID `PLJAB8V75N`.
 
-## 3. Xcode (Mac)
+## 3. Imzolash va App Store build — ✅ BAJARILDI (2026-10-10)
 
-1. `farzandim_child/ios/Runner.xcworkspace`ni oching (`.xcodeproj` emas).
-2. 4 ta target — **Runner**, **ParvozMonitor**, **ParvozShieldConfig**,
-   **ParvozShieldAction** → Signing & Capabilities → Team `PLJAB8V75N`,
-   "Automatically manage signing". Family Controls, App Groups (va Runner'da
-   Push) ko'rinishi kerak — entitlements fayllari tayyor.
-3. Real iPhone'da ishga tushiring (Family Controls simulyatorda ishlamaydi).
+- Jamoada iPhone yo'q edi ("Your team has no devices") — shu Mac (Apple M4 Pro)
+  "My Mac (Designed for iPad)" sifatida ro'yxatdan o'tkazildi va 4 ta target uchun
+  profillar avtomatik yaratildi.
+- `flutter build ipa --release --build-name 1.0.0 --build-number 1` o'tdi →
+  `farzandim_child/build/ios/ipa/Parvoz Growth.ipa`. Tekshirildi: 4 ta qism ham
+  **Apple Distribution** + App Store profili bilan, hammasida Family Controls va
+  App Group, asosiy ilovada `aps-environment = production`.
+- Keyingi build'lar uchun build raqamini oshiring: `--build-number 2`, `3`, ...
+- Xcode orqali iPhone'ga to'g'ridan-to'g'ri o'rnatish uchun: iPhone'ni ulang,
+  Developer Mode'ni yoqing, `flutter run --release -d <iPhone>`. TestFlight
+  orqali o'rnatsangiz, kabel kerak emas.
 
 ## 4. Real qurilmada sinov (Family Sharing)
 
