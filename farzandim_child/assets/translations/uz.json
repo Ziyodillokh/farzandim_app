@@ -214,7 +214,12 @@
     "alwaysLocTitle": "Yana bitta qadam kerak",
     "alwaysLocBody": "Fon joylashuvi uchun Android alohida ruxsat so'raydi. Sozlamalar ochilgach: Ruxsatlar → Joylashuv → \"Har doim ruxsat berish\" ni tanlang, so'ng ilovaga qayting.",
     "alwaysLocOpen": "Sozlamalarni ochish",
-    "alwaysLocLater": "Keyinroq"
+    "alwaysLocLater": "Keyinroq",
+    "iosSubtitle": "Bu ruxsatlar ota-onangizga xavfsiz ekaningizni bilishga yordam beradi. Istalganini keyinroq iPhone Sozlamalarida o'zgartirishingiz mumkin.",
+    "stepsName": "Qadamlar (Harakat va fitnes)",
+    "continue": "Davom etish",
+    "iosFootnote": "Ruxsat bermasangiz ham ilovadan foydalanishingiz mumkin — faqat tegishli funksiya ishlamaydi.",
+    "iosScreenTimeLink": "Ekran vaqtini sozlash (ota-ona uchun)"
   },
   "dashboard": {
     "greeting": "Salom, {name}!",
@@ -1004,5 +1009,49 @@
     "privacyText": "Joylashuv faqat sizga bog'langan ota-ona akkauntiga yuboriladi. Reklama uchun ishlatilmaydi va uchinchi shaxslarga sotilmaydi.",
     "accept": "Roziman, davom etish",
     "decline": "Hozir emas"
+  },
+  "screenTime": {
+    "title": "Ekran vaqti",
+    "settingsSub": "Ilovalarni cheklash (ota-ona uchun)",
+    "intro": "Ota-onangiz Parvoz ilovasida belgilagan vaqtlarda tanlangan ilovalar cheklanadi.",
+    "stepAuthTitle": "1. Ota-ona tasdig'i",
+    "stepAuthBody": "Ota-onangiz o'z Apple ID'si bilan tasdiqlaydi. Buning uchun bu telefon Apple Oila guruhida (Family Sharing) bola akkaunti bilan bo'lishi kerak.",
+    "authApproved": "Tasdiqlangan",
+    "authButton": "Ota-ona tasdig'ini olish",
+    "authDenied": "Tasdiqlanmagan — qayta urinib ko'ring",
+    "stepAppsTitle": "2. Cheklanadigan ilovalar",
+    "stepAppsBody": "Ota-onangiz shu telefonda tanlaydi. Ro'yxat faqat shu telefonda saqlanadi va hech qayerga yuborilmaydi.",
+    "appsNone": "Hali tanlanmagan",
+    "appsSummary": "{apps} ta ilova · {categories} ta toifa · {sites} ta sayt",
+    "appsChoose": "Tanlash",
+    "appsChange": "O'zgartirish",
+    "appsNeedAuth": "Avval ota-ona tasdig'ini oling",
+    "pickerTitle": "Cheklanadigan ilovalar",
+    "pickerCancel": "Bekor qilish",
+    "pickerDone": "Tayyor",
+    "statusTitle": "Hozirgi holat",
+    "statusBlocking": "Cheklov faol",
+    "statusFree": "Cheklov yo'q",
+    "statusBody": "Cheklov ota-onangiz jadvali bo'yicha avtomatik yoqiladi va o'chadi — ilova yopiq bo'lsa ham.",
+    "pinCreateTitle": "Ota-ona PIN kodi",
+    "pinCreateBody": "Ilovalar ro'yxatini faqat siz o'zgartira olishingiz uchun 4 xonali PIN o'rnating.",
+    "pinConfirmTitle": "PIN kodni takrorlang",
+    "pinMismatch": "PIN kodlar mos kelmadi",
+    "pinEnterTitle": "Ota-ona PIN kodini kiriting",
+    "pinWrong": "PIN kod noto'g'ri",
+    "pinLocked": "Juda ko'p urinish. {minutes} daqiqadan keyin qayta urining.",
+    "pinNext": "Davom etish",
+    "pinCancel": "Bekor qilish",
+    "loadError": "Holatni o'qib bo'lmadi. Qayta urinib ko'ring.",
+    "retry": "Qayta urinish",
+    "err": {
+      "invalidAccountType": "Bu telefon Apple Oila guruhida bola akkaunti bilan bo'lishi kerak (Sozlamalar → Oila).",
+      "authorizationCanceled": "Tasdiqlash bekor qilindi.",
+      "restricted": "Bu qurilmada Ekran vaqti cheklangan.",
+      "networkError": "Internet aloqasini tekshirib, qayta urining.",
+      "authenticationMethodUnavailable": "Qurilmada parol (passcode) o'rnatilmagan.",
+      "authorizationConflict": "Boshqa nazorat ilovasi allaqachon ruxsat olgan.",
+      "generic": "Ekran vaqti hozir mavjud emas. Keyinroq urinib ko'ring."
+    }
   }
 }

@@ -33,6 +33,7 @@
 
 import 'dart:async';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/boot_time_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/health_steps_service.dart';
@@ -173,7 +174,11 @@ class StepCounterService {
     // ─── 2) PEDOMETER (jonli qo'shimcha / HC bo'lmasa fallback) ───
     // Faqat shu qism ACTIVITY_RECOGNITION talab qiladi. Ruxsat bo'lmasa
     // servis TO'XTAMAYDI — Health Connect va davriy sync ishlayveradi.
-    final status = await Permission.activityRecognition.request();
+    // iOS'da activityRecognition yo'q — CoreMotion `sensors` (faqat holat,
+    // so'rov ruxsatlar ekranida).
+    final status = PlatformCapabilities.isIOS
+        ? await Permission.sensors.status
+        : await Permission.activityRecognition.request();
     if (status.isGranted) {
       await _sub?.cancel();
       _sub = Pedometer.stepCountStream.listen(
@@ -221,7 +226,11 @@ class StepCounterService {
   /// `start()` ilova ishga tushganda bir marta chaqiriladi, shuning uchun bu
   /// eng ko'pi bilan sessiyaga bitta so'rov. Ruxsat berilgach Health Connect
   /// oynasi umuman chiqmaydi (`hasPermission` darhol `true`).
+  ///
+  /// iOS'da bu yerda SO'RALMAYDI — Motion ruxsati ruxsatlar ekranida (izoh
+  /// bilan) so'raladi; ishga tushishda kontekstsiz tizim oynasi chiqmasin.
   Future<void> _ensureHealthPermission() async {
+    if (PlatformCapabilities.isIOS) return;
     final hc = HealthStepsService.instance;
     try {
       if (!await hc.isAvailable()) return;

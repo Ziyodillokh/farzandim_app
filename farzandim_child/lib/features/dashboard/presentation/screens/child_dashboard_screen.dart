@@ -20,6 +20,7 @@ import 'package:farzandim_child/features/notifications/presentation/screens/noti
 import 'dart:async';
 import 'dart:ui' show ImageFilter;
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
@@ -212,6 +213,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
   /// "O'chirishni taqiqlash" siyosatini backend'dan o'qib qo'llaydi. Bola
   /// admin'ni o'chirgan bo'lsa (native bayroq) — ota-onaga xabar yuboradi.
   Future<void> _syncUninstallProtection({required bool allowPrompt}) async {
+    if (!PlatformCapabilities.hasAndroidControls) return;
     final childId = ref.read(pairingStateProvider).childId;
     if (childId == null) return;
     final repo = ref.read(backendDevicePolicyRepositoryProvider);
@@ -243,8 +245,11 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     } catch (_) {}
   }
 
+  /// Android nazorat ruxsatlari (usage/overlay/batareya) yo'qolsa — qayta
+  /// ruxsatlar ekraniga. iOS'da bunday ruxsatlar yo'q va Apple 5.1.1
+  /// foydalanuvchini majburlashni taqiqlaydi.
   Future<void> _guardPermissions() async {
-    if (kIsWeb) return;
+    if (!PlatformCapabilities.hasAndroidControls) return;
     final usageService = UsageStatsService();
     final batteryStatus = await Permission.ignoreBatteryOptimizations.status;
     final usageGranted = await usageService.hasPermission();

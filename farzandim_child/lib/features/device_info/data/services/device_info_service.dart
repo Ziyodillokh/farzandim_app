@@ -24,6 +24,7 @@ import 'package:permission_handler/permission_handler.dart';
 
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/device_info/data/models/child_device_info.dart';
 
@@ -117,11 +118,19 @@ class DeviceInfoService {
     bool? isCharging;
 
     try {
-      final androidInfo = await _deviceInfo.androidInfo;
-      deviceModel = '${androidInfo.brand} ${androidInfo.model}';
-      androidVersion = 'Android ${androidInfo.version.release}';
+      if (PlatformCapabilities.isIOS) {
+        // Backend maydoni `androidVersion` — ota-onada "OS versiyasi" sifatida
+        // ko'rsatiladi, shuning uchun iOS'da ham shu maydonda yuboriladi.
+        final iosInfo = await _deviceInfo.iosInfo;
+        deviceModel = iosInfo.modelName;
+        androidVersion = '${iosInfo.systemName} ${iosInfo.systemVersion}';
+      } else {
+        final androidInfo = await _deviceInfo.androidInfo;
+        deviceModel = '${androidInfo.brand} ${androidInfo.model}';
+        androidVersion = 'Android ${androidInfo.version.release}';
+      }
     } catch (_) {
-      // iOS yoki plugin xato — skip
+      // plugin xato — skip
     }
 
     try {
@@ -175,6 +184,10 @@ class DeviceInfoService {
       }
     }
 
+    // iOS'da batareya optimizatsiyasi, Accessibility va UsageStats yo'q —
+    // `false` yuborilsa ota-ona ilovasi soxta "ruxsat yo'q" ogohlantirishini
+    // ko'rsatardi. `null` = maydon yuborilmaydi.
+    final hasAndroidControls = PlatformCapabilities.hasAndroidControls;
     return (
       // Background kuzatuv uchun tizim ASLIDA talab qiladigan ruxsat —
       // locationAlways ("Har doim"). whenInUse hisobotda "to'liq" ko'rinib
@@ -182,12 +195,14 @@ class DeviceInfoService {
       // Android <10'da permission_handler buni fine-location'ga map qiladi.
       location: await safe(() => Permission.locationAlways.isGranted),
       notification: await safe(() => Permission.notification.isGranted),
-      background: await safe(
-        () => Permission.ignoreBatteryOptimizations.isGranted,
-      ),
-      accessibility: await safe(_usageStats.isAccessibilityEnabled),
+      background: hasAndroidControls
+          ? await safe(() => Permission.ignoreBatteryOptimizations.isGranted)
+          : null,
+      accessibility: hasAndroidControls
+          ? await safe(_usageStats.isAccessibilityEnabled)
+          : null,
       // PACKAGE_USAGE_STATS — ekran vaqti manbasi.
-      usage: await safe(_usageStats.hasPermission),
+      usage: hasAndroidControls ? await safe(_usageStats.hasPermission) : null,
     );
   }
 

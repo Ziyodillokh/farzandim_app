@@ -20,11 +20,14 @@
 // (`refreshListenable` orqali).
 
 import 'package:farzandim_child/core/feature_flags.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/consent/presentation/providers/consent_provider.dart';
 import 'package:farzandim_child/features/consent/presentation/screens/consent_screen.dart';
 import 'package:farzandim_child/features/account/presentation/screens/account_edit_screen.dart';
 import 'package:farzandim_child/features/settings/presentation/screens/settings_screen.dart';
+import 'package:farzandim_child/features/permissions/presentation/screens/ios_permission_setup_screen.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/permission_setup_screen.dart';
+import 'package:farzandim_child/features/screen_time/presentation/screens/screen_time_screen.dart';
 import 'package:farzandim_child/features/splash/presentation/screens/splash_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/daily_share_screen.dart';
 import 'package:farzandim_child/features/statistics/presentation/screens/statistics_screen.dart';
@@ -264,6 +267,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         }
       }
 
+      // Ilovalar statistikasi (UsageStats) — faqat Android. iOS'da bu ekran
+      // bo'sh/soxta bo'lardi (deep-link himoyasi).
+      if (!PlatformCapabilities.hasAppUsageStats && loc == '/analytics') {
+        return '/dashboard';
+      }
+      // Ekran vaqti (Family Controls) — faqat iOS.
+      if (!PlatformCapabilities.isIOS && loc == '/screen-time') {
+        return '/dashboard';
+      }
+
       return null;
     },
     routes: [
@@ -485,8 +498,15 @@ final routerProvider = Provider<GoRouter>((ref) {
             _slidePage(state, const SchedulesScreen()),
       ),
       GoRoute(
+        path: '/screen-time',
+        pageBuilder: (context, state) =>
+            _slidePage(state, const ScreenTimeScreen()),
+      ),
+      GoRoute(
         path: '/permission-setup',
-        builder: (_, __) => const PermissionSetupScreen(),
+        builder: (_, __) => PlatformCapabilities.isIOS
+            ? const IosPermissionSetupScreen()
+            : const PermissionSetupScreen(),
       ),
     ],
   );

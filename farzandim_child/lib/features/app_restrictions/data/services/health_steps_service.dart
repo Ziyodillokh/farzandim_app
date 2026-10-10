@@ -13,9 +13,17 @@
 //
 // Health Connect bo'lmasa yoki ruxsat berilmasa — `null` qaytadi va
 // chaqiruvchi (StepCounterService) pedometer hisobiga qaytadi (fallback).
+//
+// iOS: Health Connect o'rniga CoreMotion (`CMPedometer`, native
+// MotionStepsPlugin) — HealthKit entitlement'siz bugungi jamini beradi.
+// Ruxsat — Motion & Fitness (`Permission.sensors`).
 
 import 'package:flutter/foundation.dart';
+import 'package:flutter/services.dart';
 import 'package:health/health.dart';
+import 'package:permission_handler/permission_handler.dart';
+
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 
 class HealthStepsService {
   HealthStepsService._();
@@ -27,8 +35,15 @@ class HealthStepsService {
   bool _configured = false;
   bool? _available;
 
+  /// iOS native kanal — ios/Runner/MotionStepsPlugin.swift.
+  static const MethodChannel _motion = MethodChannel('uz.parvoz.growth/motion');
+
   static const List<HealthDataType> _types = [HealthDataType.STEPS];
   static const List<HealthDataAccess> _perms = [HealthDataAccess.READ];
+
+  /// Testlar uchun — keshlangan mavjudlik natijasini tozalaydi.
+  @visibleForTesting
+  void debugReset() => _available = null;
 
   Future<void> _ensureConfigured() async {
     if (_configured) return;
@@ -36,12 +51,21 @@ class HealthStepsService {
     _configured = true;
   }
 
-  /// Health Connect shu qurilmada mavjudmi (SDK tayyormi). Natija keshlanadi.
+  /// Qadam manbai shu qurilmada mavjudmi (Android — Health Connect SDK,
+  /// iOS — CoreMotion qadam sanog'i). Natija keshlanadi.
   Future<bool> isAvailable() async {
     if (kIsWeb) return false;
     final cached = _available;
     if (cached != null) return cached;
     try {
+      if (PlatformCapabilities.isIOS) {
+        _available = await _motion.invokeMethod<bool>('isAvailable') ?? false;
+        return _available!;
+      }
+      if (!PlatformCapabilities.hasHealthConnect) {
+        _available = false;
+        return false;
+      }
       await _ensureConfigured();
       final status = await _health.getHealthConnectSdkStatus();
       _available = status == HealthConnectSdkStatus.sdkAvailable;
@@ -56,6 +80,7 @@ class HealthStepsService {
   Future<bool> hasPermission() async {
     if (!await isAvailable()) return false;
     try {
+      if (PlatformCapabilities.isIOS) return await Permission.sensors.isGranted;
       return await _health.hasPermissions(_types, permissions: _perms) ?? false;
     } catch (e) {
       debugPrint('HealthSteps: hasPermissions xato: $e');
@@ -69,6 +94,9 @@ class HealthStepsService {
     if (!await isAvailable()) return false;
     try {
       if (await hasPermission()) return true;
+      if (PlatformCapabilities.isIOS) {
+        return await Permission.sensors.request().isGranted;
+      }
       return await _health.requestAuthorization(_types, permissions: _perms);
     } catch (e) {
       debugPrint('HealthSteps: requestAuthorization xato: $e');
@@ -95,11 +123,16 @@ class HealthStepsService {
         tashkentNow.month,
         tashkentNow.day,
       ).subtract(const Duration(hours: 5)).toLocal();
-      final total = await _health.getTotalStepsInInterval(start, now);
+      final total = PlatformCapabilities.isIOS
+          ? await _motion.invokeMethod<int>('stepsBetween', {
+              'startMs': start.millisecondsSinceEpoch,
+              'endMs': now.millisecondsSinceEpoch,
+            })
+          : await _health.getTotalStepsInInterval(start, now);
       if (total == null || total < 0) return null;
       return total;
     } catch (e) {
-      debugPrint('HealthSteps: getTotalStepsInInterval xato: $e');
+      debugPrint('HealthSteps: bugungi qadamni o\'qish xato: $e');
       return null;
     }
   }

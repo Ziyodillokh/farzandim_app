@@ -9,6 +9,9 @@
 // init() main.dart'da bir marta chaqiriladi: notification kanali va
 // ForegroundTaskOptions sozlanadi (autoRunOnBoot: true → telefon
 // yoqilgach service o'zi qayta ishga tushadi).
+//
+// iOS'da foreground service yo'q — barcha metodlar no-op. Fon joylashuvi
+// LocationService (geolocator, AppleSettings) orqali ishlaydi.
 
 import 'dart:async';
 
@@ -18,11 +21,13 @@ import 'package:flutter_foreground_task/flutter_foreground_task.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/background/data/services/child_background_task_handler.dart';
 
 class BackgroundService {
   /// Notification kanali va options'ni sozlash. main.dart'dan chaqiriladi.
   static void init() {
+    if (!PlatformCapabilities.hasForegroundService) return;
     FlutterForegroundTask.init(
       androidNotificationOptions: AndroidNotificationOptions(
         channelId: 'farzandim_child_bg',
@@ -95,6 +100,7 @@ class BackgroundService {
   /// ruxsati berilmaguncha service'ni ISHGA TUSHIRMAYMIZ — ruxsat berilgach
   /// (PermissionsScreen) qayta chaqiriladi.
   Future<void> start() async {
+    if (!PlatformCapabilities.hasForegroundService) return;
     try {
       final isRunning = await FlutterForegroundTask.isRunningService;
       if (isRunning) return;
@@ -126,6 +132,7 @@ class BackgroundService {
   }
 
   Future<void> stop() async {
+    if (!PlatformCapabilities.hasForegroundService) return;
     final isRunning = await FlutterForegroundTask.isRunningService;
     if (!isRunning) return;
     await FlutterForegroundTask.stopService();

@@ -15,6 +15,7 @@
 // telefon ma'lumotlarini har 60 sekundda yuborib turadi.
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/restrictions_sync_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
@@ -26,6 +27,7 @@ import 'package:farzandim_child/features/location/presentation/providers/locatio
 import 'package:farzandim_child/features/onboarding/data/interests_sync_service.dart';
 import 'package:farzandim_child/features/pairing/data/models/pairing_state.dart';
 import 'package:farzandim_child/features/pairing/data/repositories/pairing_repository.dart';
+import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/foundation.dart' show debugPrint, kIsWeb;
 import 'package:flutter_foreground_task/flutter_foreground_task.dart';
@@ -254,6 +256,9 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
   /// jim qaytadi — foydalanuvchi PermissionSetupScreen'da yoqishi
   /// kerak (u yer Service'ni o'zi ham boshlaydi).
   Future<void> _startRestrictionServiceIfReady() async {
+    // iOS: native RestrictionService yo'q — cheklovlar restrictionsSync
+    // (Family Controls) orqali, pairing oqimida allaqachon boshlanadi.
+    if (!PlatformCapabilities.hasAndroidControls) return;
     final usage = UsageStatsService();
     final hasUsage = await usage.hasPermission();
     if (hasUsage) {
@@ -540,7 +545,15 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     // watchdog alarmi ham bekor bo'ladi). Aks holda o'z-o'zini tiklovchi
     // watchdog unpair'dan keyin ham servisni tirik ushlab, eski bloklarni
     // enforce qilaverardi.
-    await UsageStatsService().stopRestrictionService();
+    if (PlatformCapabilities.hasAndroidControls) {
+      await UsageStatsService().stopRestrictionService();
+    } else if (PlatformCapabilities.isIOS) {
+      // Family Controls: tanlov, siyosat, jadvallar va ota-ona PIN'i
+      // tozalanadi — boshqa oilaga ulanganda eski cheklovlar qolmasin.
+      _ref.read(restrictionsSyncServiceProvider).dispose();
+      await _safeReset(() => _ref.read(screenTimeChannelProvider).reset());
+      await _safeReset(() => _ref.read(parentPinStoreProvider).clear());
+    }
 
     final prefs = await SharedPreferences.getInstance();
     await prefs.remove('parentUid');
@@ -554,5 +567,13 @@ class PairingNotifier extends StateNotifier<AppPairingState> {
     await _auth.signOut();
 
     state = const AppPairingState();
+  }
+
+  Future<void> _safeReset(Future<void> Function() reset) async {
+    try {
+      await reset();
+    } catch (e) {
+      debugPrint('[Pairing] unpair tozalash xato: $e');
+    }
   }
 }

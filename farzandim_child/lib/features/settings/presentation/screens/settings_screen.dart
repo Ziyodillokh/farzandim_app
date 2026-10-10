@@ -14,6 +14,7 @@
 // bildirishnoma afzalligi SharedPreferences'da (notif_pref_v1).
 
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:easy_localization/easy_localization.dart';
 import 'package:flutter/foundation.dart'
     show defaultTargetPlatform, kIsWeb, TargetPlatform;
@@ -136,6 +137,14 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     subtitle: 'settings.rowAccountSub'.tr(),
                     onTap: () => context.push('/account-edit'),
                   ),
+                  // Ekran vaqti (Apple Family Controls) — faqat iOS.
+                  if (PlatformCapabilities.isIOS)
+                    _SettingsRow(
+                      icon: SolarIconsBold.hourglass,
+                      title: 'screenTime.title'.tr(),
+                      subtitle: 'screenTime.settingsSub'.tr(),
+                      onTap: () => context.push('/screen-time'),
+                    ),
                   _SettingsRow(
                     icon: SolarIconsBold.devices,
                     title: 'settings.rowSessions'.tr(),

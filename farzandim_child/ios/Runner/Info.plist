@@ -4,6 +4,12 @@
 	<dict>
 		<key>CADisableMinimumFrameDurationOnPhone</key>
 		<true/>
+		<key>CFBundleLocalizations</key>
+		<array>
+			<string>en</string>
+			<string>uz</string>
+			<string>ru</string>
+		</array>
 		<key>CFBundleDevelopmentRegion</key>
 		<string>$(DEVELOPMENT_LANGUAGE)</string>
 		<key>CFBundleDisplayName</key>
@@ -15,7 +21,7 @@
 		<key>CFBundleInfoDictionaryVersion</key>
 		<string>6.0</string>
 		<key>CFBundleName</key>
-		<string>farzandim_child</string>
+		<string>Parvoz Growth</string>
 		<key>CFBundlePackageType</key>
 		<string>APPL</string>
 		<key>CFBundleShortVersionString</key>
@@ -70,19 +76,36 @@
 		<false/>
 		<!-- ─── Sprint 6 P2: iOS Lite — ruxsat tavsiflari ─── -->
 		<key>NSLocationWhenInUseUsageDescription</key>
-		<string>Parvoz ota-onangizga joylashuvingizni xavfsizlik uchun ko'rsatadi.</string>
+		<string>Parvoz shares your location with your parents so they know you are safe.</string>
 		<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
-		<string>Parvoz ilova yopiq bo'lganda ham joylashuvni ota-onangizga yuboradi.</string>
+		<string>Parvoz shares your location with your parents even when the app is closed, so they know you are safe and get alerts when you arrive at or leave saved places.</string>
+		<key>NSLocationAlwaysUsageDescription</key>
+		<string>Parvoz shares your location with your parents even when the app is closed, so they know you are safe.</string>
 		<key>NSCameraUsageDescription</key>
-		<string>Rasm va video xabarlar yuborish uchun kamera kerak.</string>
+		<string>Parvoz uses the camera to scan your parent's pairing QR code and to send photo and video messages to your parents.</string>
 		<key>NSMicrophoneUsageDescription</key>
-		<string>Ovozli va video xabarlar yozish uchun mikrofon kerak.</string>
+		<string>Parvoz uses the microphone to record voice and video messages for your parents.</string>
 		<key>NSPhotoLibraryUsageDescription</key>
-		<string>Rasm tanlash va yuborish uchun galereyaga ruxsat kerak.</string>
+		<string>Parvoz lets you choose photos from your library to send to your parents.</string>
 		<!-- pedometer plagini iOS'da CoreMotion ishlatadi. Bu matn bo'lmasa
 		     iOS ilovani birinchi murojaatdayoq MAJBURAN yopadi (krash). -->
 		<key>NSMotionUsageDescription</key>
-		<string>Kunlik qadamlaringizni hisoblash uchun harakat sensori kerak.</string>
+		<string>Parvoz counts your daily steps with the motion sensor and shows them to your parents.</string>
+		<!-- health plagini HealthKit'ni ulaydi: matnlar bo'lmasa App Store yuklashni
+		     rad etadi (ITMS-90683). iOS'da qadamlar CoreMotion (pedometer) orqali. -->
+		<key>NSHealthShareUsageDescription</key>
+		<string>Parvoz counts steps with the iPhone motion sensor and does not read Apple Health data.</string>
+		<key>NSHealthUpdateUsageDescription</key>
+		<string>Parvoz does not write any data to Apple Health.</string>
+		<!-- flutter_foreground_task ishga tushishda shu BGTask'ni ro'yxatdan o'tkazadi —
+		     identifikator bu yerda bo'lmasa iOS ilovani darhol yopadi (krash). -->
+		<key>BGTaskSchedulerPermittedIdentifiers</key>
+		<array>
+			<string>com.pravera.flutter_foreground_task.refresh</string>
+		</array>
+		<!-- Faqat standart HTTPS/TLS — eksport hujjati talab qilinmaydi. -->
+		<key>ITSAppUsesNonExemptEncryption</key>
+		<false/>
 		<!-- Fon rejimlari: joylashuv + push + audiokitob background playback -->
 		<key>UIBackgroundModes</key>
 		<array>

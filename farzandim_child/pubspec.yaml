@@ -60,7 +60,7 @@ dependencies:
 
   # QR kod skaner — bola Parent app'dan QR'ni skanerlab qayta ulanish
   # uchun (re-pair flow). Kamera ruxsati so'raydi (Info.plist + Manifest).
-  mobile_scanner: ^5.2.3
+  mobile_scanner: ^7.4.2
 
   # Qadam sanagich — Android TYPE_STEP_COUNTER sensori (haftalik hisobot).
   # ACTIVITY_RECOGNITION ruxsati talab qilinadi (AndroidManifest).

@@ -32,6 +32,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:farzandim_child/core/auth/token_storage.dart';
 import 'package:farzandim_child/core/network/dio_client.dart';
 import 'package:farzandim_child/core/offline/offline_buffer.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 
 class LocationService {
   // ─── Backend Dio (Sprint 4.4) ─────────────────────────────────────
@@ -214,12 +215,24 @@ class LocationService {
   }
 
   /// Platformaga mos stream sozlamasi — Android'da intervalDuration bor.
+  /// iOS'da foreground service yo'q: ilova fonga o'tganda stream to'xtamasligi
+  /// uchun `allowBackgroundLocationUpdates` (Info.plist UIBackgroundModes
+  /// `location` bilan) va avto-pauza o'chirilgan.
   LocationSettings _streamSettings() {
     if (!kIsWeb && Platform.isAndroid) {
       return AndroidSettings(
         accuracy: LocationAccuracy.high,
         distanceFilter: 10,
         intervalDuration: const Duration(seconds: 5),
+      );
+    }
+    if (PlatformCapabilities.isIOS) {
+      return AppleSettings(
+        accuracy: LocationAccuracy.high,
+        distanceFilter: 10,
+        activityType: ActivityType.other,
+        pauseLocationUpdatesAutomatically: false,
+        allowBackgroundLocationUpdates: true,
       );
     }
     return const LocationSettings(

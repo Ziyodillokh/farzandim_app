@@ -426,7 +426,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
         ],
       ),
       body: switch (_camState) {
-        _CamState.starting => const _CameraStartingView(),
+        // mobile_scanner 7.x: start() MobileScanner vidjeti daraxtga ulanishini
+        // (attach) ~500 ms kutadi, aks holda controllerNotAttached xatosi.
+        // Shuning uchun kamera ishga tushayotganda ham vidjet chiziladi —
+        // ustida "kamera ochilmoqda" qatlami.
+        _CamState.starting => _buildScannerBody(context, starting: true),
         _CamState.denied => _PermissionDeniedView(
           onRetry: _ensureCameraPermission,
           onOpenSettings: openAppSettings,
@@ -447,13 +451,16 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
     );
   }
 
-  Widget _buildScannerBody(BuildContext context) {
+  Widget _buildScannerBody(BuildContext context, {bool starting = false}) {
     return Stack(
       children: [
         MobileScanner(
+          // attach() faqat initState'da — controller almashsa (qayta urinish,
+          // web front-kamera fallback) yangi vidjet yaratilishi shart.
+          key: ObjectKey(_controller),
           controller: _controller,
           onDetect: _onDetect,
-          errorBuilder: (context, error, child) {
+          errorBuilder: (context, error) {
             // mobile_scanner ichki xato (kamera band, OEM driver, va h.k.) —
             // black screen o'rniga aniq xabar.
             return Center(
@@ -539,6 +546,11 @@ class _QrScannerScreenState extends ConsumerState<QrScannerScreen> {
             ),
           ),
         ),
+        // Kamera ishga tushguncha — kamera ko'rinishi ustida to'liq qatlam.
+        if (starting)
+          const Positioned.fill(
+            child: ColoredBox(color: Colors.black, child: _CameraStartingView()),
+          ),
       ],
     );
   }

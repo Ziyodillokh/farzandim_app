@@ -1,0 +1,11 @@
+/* Parvoz Growth — Info.plist ruxsat matnlari (lokalizatsiya). */
+
+"NSCameraUsageDescription" = "Parvoz kameradan ota-onangizning ulanish QR kodini skanerlash hamda ota-onangizga rasm va video xabar yuborish uchun foydalanadi.";
+"NSMicrophoneUsageDescription" = "Parvoz mikrofondan ota-onangizga ovozli va video xabar yozish uchun foydalanadi.";
+"NSPhotoLibraryUsageDescription" = "Parvoz ota-onangizga yuborish uchun galereyadan rasm tanlash imkonini beradi.";
+"NSLocationWhenInUseUsageDescription" = "Parvoz xavfsizligingiz uchun joylashuvingizni ota-onangizga ko'rsatadi.";
+"NSLocationAlwaysAndWhenInUseUsageDescription" = "Parvoz ilova yopiq bo'lganda ham joylashuvingizni ota-onangizga yuboradi — ular xavfsizligingizni biladi va saqlangan joylarga kelganingiz yoki ketganingiz haqida xabar oladi.";
+"NSLocationAlwaysUsageDescription" = "Parvoz ilova yopiq bo'lganda ham joylashuvingizni xavfsizligingiz uchun ota-onangizga yuboradi.";
+"NSMotionUsageDescription" = "Parvoz harakat sensori orqali kunlik qadamlaringizni sanaydi va ota-onangizga ko'rsatadi.";
+"NSHealthShareUsageDescription" = "Parvoz qadamlarni iPhone harakat sensori orqali sanaydi va Apple Salomatlik (Health) ma'lumotlarini o'qimaydi.";
+"NSHealthUpdateUsageDescription" = "Parvoz Apple Salomatlik (Health) ilovasiga hech qanday ma'lumot yozmaydi.";

@@ -20,6 +20,9 @@
 //   - Har 15 soniyada Timer.periodic (background safety net)
 //   - WS `app_limit:created/updated/deleted` event paytida `sync()` (public)
 //   - WS `schedule:created/updated/deleted` event paytida `sync()` (public)
+//
+// Faqat Android: prefs'ni native RestrictionService o'qiydi va paket
+// nomlari Android'niki. iOS'da — IosRestrictionsSyncService (provider tanlaydi).
 
 import 'dart:async';
 
@@ -28,11 +31,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync.dart';
 import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
 
-class RestrictionsSyncService {
+class RestrictionsSyncService implements RestrictionsSync {
   RestrictionsSyncService({
     required BackendScheduleRepository scheduleRepo,
     required BackendAppLimitRepository appLimitRepo,
@@ -66,6 +70,7 @@ class RestrictionsSyncService {
   /// Sync boshlash. Pairing tugagandan keyin chaqiriladi.
   /// Har [_syncIntervalSeconds] soniyada `_syncNow()` chaqiradi (background
   /// safety net).
+  @override
   void start({required String childId}) {
     _childId = childId;
     _syncTimer?.cancel();
@@ -87,6 +92,7 @@ class RestrictionsSyncService {
 
   /// WS event handler'lar uchun public — `app_limit:*` yoki `schedule:*`
   /// kelganda darhol refresh.
+  @override
   Future<void> sync() => _syncNow();
 
   Future<void> _syncNow() async {
@@ -254,6 +260,7 @@ class RestrictionsSyncService {
     return nowMinutes >= startMin || nowMinutes < endMin;
   }
 
+  @override
   void dispose() {
     _syncTimer?.cancel();
     _syncTimer = null;

@@ -13,19 +13,13 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/permissions/presentation/screens/location_disclosure_screen.dart';
+import 'package:farzandim_child/features/permissions/presentation/widgets/permission_setup_widgets.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:permission_handler/permission_handler.dart';
-
-// ════════════ Parvoz tokenlar (lokal, ko'k) ════════════
-const _bg = Color(0xFF02060D);
-const _blue = Color(0xFF216BFF);
-const _blueLight = Color(0xFF3C82FF);
-const _green = Color(0xFF34C759);
-const _dim = Color(0x99FFFFFF);
 
 class PermissionSetupScreen extends ConsumerStatefulWidget {
   const PermissionSetupScreen({super.key});
@@ -199,14 +193,18 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
         ),
         content: Text(
           'permissionSetup.alwaysLocBody'.tr(),
-          style: GoogleFonts.poppins(color: _dim, fontSize: 14, height: 1.5),
+          style: GoogleFonts.poppins(
+            color: PermColors.dim,
+            fontSize: 14,
+            height: 1.5,
+          ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(ctx).pop(false),
             child: Text(
               'permissionSetup.alwaysLocLater'.tr(),
-              style: GoogleFonts.poppins(color: _dim),
+              style: GoogleFonts.poppins(color: PermColors.dim),
             ),
           ),
           TextButton(
@@ -214,7 +212,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
             child: Text(
               'permissionSetup.alwaysLocOpen'.tr(),
               style: GoogleFonts.poppins(
-                color: _blueLight,
+                color: PermColors.blueLight,
                 fontWeight: FontWeight.w600,
               ),
             ),
@@ -243,13 +241,13 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: _bg,
+      backgroundColor: PermColors.bg,
       body: Stack(
         children: [
           const Positioned(
             top: -150,
             right: -60,
-            child: IgnorePointer(child: _CornerGlow()),
+            child: IgnorePointer(child: PermCornerGlow()),
           ),
           SafeArea(
             child: Padding(
@@ -274,7 +272,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                     style: GoogleFonts.poppins(
                       fontSize: 14,
                       height: 1.45,
-                      color: _dim,
+                      color: PermColors.dim,
                     ),
                   ),
                   const SizedBox(height: 26),
@@ -282,11 +280,11 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                     child: ListView(
                       padding: EdgeInsets.zero,
                       children: [
-                        _SectionLabel('permissionSetup.groupMain'.tr()),
+                        PermSectionLabel('permissionSetup.groupMain'.tr()),
                         const SizedBox(height: 10),
-                        _GroupCard(
+                        PermGroupCard(
                           rows: [
-                            _PermRow(
+                            PermRow(
                               icon: Icons.location_on_rounded,
                               title: 'permissionSetup.locName'.tr(),
                               value: _location,
@@ -296,7 +294,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                 setMock: (b) => _location = b,
                               ),
                             ),
-                            _PermRow(
+                            PermRow(
                               icon: Icons.notifications_rounded,
                               title: 'permissionSetup.notifName'.tr(),
                               value: _notif,
@@ -306,7 +304,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                 setMock: (b) => _notif = b,
                               ),
                             ),
-                            _PermRow(
+                            PermRow(
                               icon: Icons.insights_rounded,
                               title: 'permissionSetup.usageName'.tr(),
                               value: _usage,
@@ -319,11 +317,11 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                           ],
                         ),
                         const SizedBox(height: 22),
-                        _SectionLabel('permissionSetup.groupHelper'.tr()),
+                        PermSectionLabel('permissionSetup.groupHelper'.tr()),
                         const SizedBox(height: 10),
-                        _GroupCard(
+                        PermGroupCard(
                           rows: [
-                            _PermRow(
+                            PermRow(
                               icon: Icons.layers_rounded,
                               title: 'permissionSetup.overlayName'.tr(),
                               value: _overlay,
@@ -333,7 +331,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                                 setMock: (b) => _overlay = b,
                               ),
                             ),
-                            _PermRow(
+                            PermRow(
                               icon: Icons.battery_charging_full_rounded,
                               title: 'permissionSetup.batteryName'.tr(),
                               value: _battery,
@@ -347,7 +345,7 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                             ),
                             // O'chirishni taqiqlash — Device Admin. Yoqilsa
                             // bola ilovani ota-ona ruxsatisiz o'chira olmaydi.
-                            _PermRow(
+                            PermRow(
                               icon: Icons.shield_rounded,
                               title: 'permissionSetup.uninstallProtectionName'
                                   .tr(),
@@ -368,234 +366,15 @@ class _PermissionSetupScreenState extends ConsumerState<PermissionSetupScreen>
                       ],
                     ),
                   ),
-                  _NextButton(enabled: kIsWeb || _allGranted, onTap: _onNext),
+                  PermNextButton(
+                    enabled: kIsWeb || _allGranted,
+                    onTap: _onNext,
+                  ),
                 ],
               ),
             ),
           ),
         ],
-      ),
-    );
-  }
-}
-
-// ════════════ Bo'lim sarlavhasi ════════════
-class _SectionLabel extends StatelessWidget {
-  const _SectionLabel(this.text);
-  final String text;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.only(left: 4),
-      child: Text(
-        text,
-        style: GoogleFonts.poppins(
-          fontSize: 14,
-          fontWeight: FontWeight.w500,
-          color: const Color(0xCCFFFFFF),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════ Guruh kartasi (shisha) ════════════
-class _GroupCard extends StatelessWidget {
-  const _GroupCard({required this.rows});
-  final List<Widget> rows;
-
-  @override
-  Widget build(BuildContext context) {
-    final children = <Widget>[];
-    for (var i = 0; i < rows.length; i++) {
-      children.add(rows[i]);
-      if (i < rows.length - 1) {
-        children.add(
-          const Divider(
-            height: 1,
-            thickness: 1,
-            indent: 14,
-            endIndent: 14,
-            color: Color(0x14FFFFFF),
-          ),
-        );
-      }
-    }
-    return Container(
-      decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(22),
-        gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [Color(0x14FFFFFF), Color(0x08FFFFFF)],
-        ),
-        border: Border.all(color: const Color(0x14FFFFFF)),
-      ),
-      child: Column(children: children),
-    );
-  }
-}
-
-// ════════════ Bitta ruxsat qatori ════════════
-class _PermRow extends StatelessWidget {
-  const _PermRow({
-    required this.icon,
-    required this.title,
-    required this.value,
-    required this.onChanged,
-  });
-
-  final IconData icon;
-  final String title;
-  final bool value;
-  final VoidCallback onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 12, 12, 12),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            alignment: Alignment.center,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white,
-            ),
-            child: Icon(icon, size: 22, color: const Color(0xFF12171E)),
-          ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Text(
-              title,
-              style: GoogleFonts.poppins(
-                fontSize: 14.5,
-                fontWeight: FontWeight.w600,
-                color: Colors.white,
-                height: 1.3,
-              ),
-            ),
-          ),
-          const SizedBox(width: 10),
-          _Toggle(value: value, onTap: onChanged),
-        ],
-      ),
-    );
-  }
-}
-
-// ════════════ Yashil toggle ════════════
-class _Toggle extends StatelessWidget {
-  const _Toggle({required this.value, required this.onTap});
-  final bool value;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: onTap,
-      behavior: HitTestBehavior.opaque,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        width: 50,
-        height: 30,
-        padding: const EdgeInsets.all(3),
-        decoration: BoxDecoration(
-          color: value ? _green : Colors.white.withValues(alpha: 0.14),
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: AnimatedAlign(
-          duration: const Duration(milliseconds: 180),
-          curve: Curves.easeOutCubic,
-          alignment: value ? Alignment.centerRight : Alignment.centerLeft,
-          child: Container(
-            width: 24,
-            height: 24,
-            decoration: const BoxDecoration(
-              color: Colors.white,
-              shape: BoxShape.circle,
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════ "Keyingisi" tugma (ko'k) ════════════
-class _NextButton extends StatelessWidget {
-  const _NextButton({required this.enabled, required this.onTap});
-  final bool enabled;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    return Opacity(
-      opacity: enabled ? 1 : 0.5,
-      child: GestureDetector(
-        onTap: enabled ? onTap : null,
-        behavior: HitTestBehavior.opaque,
-        child: Container(
-          height: 58,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(999),
-            gradient: const LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [_blueLight, _blue],
-            ),
-            boxShadow: [
-              BoxShadow(
-                color: _blue.withValues(alpha: 0.4),
-                blurRadius: 24,
-                spreadRadius: -2,
-                offset: const Offset(0, 10),
-              ),
-            ],
-          ),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'permissionSetup.next'.tr(),
-                style: GoogleFonts.poppins(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(width: 8),
-              const Icon(
-                Icons.arrow_forward_rounded,
-                size: 20,
-                color: Colors.white,
-              ),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════ Burchak ko'k yog'du ════════════
-class _CornerGlow extends StatelessWidget {
-  const _CornerGlow();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: 320,
-      height: 320,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: RadialGradient(
-          colors: [Color(0x40216BFF), Color(0x00216BFF)],
-          stops: [0, 0.7],
-        ),
       ),
     );
   }

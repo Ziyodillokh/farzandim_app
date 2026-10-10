@@ -20,13 +20,20 @@
 // POST_NOTIFICATIONS rad etilsa foreground-servis bildirishnomasi
 // status-barda KO'RINMAYDI va talab amalda buziladi. Camera — runtime
 // perm — bu yerda tekshirilmaydi (kerak bo'lganda ad-hoc so'raladi).
+//
+// iOS: Android nazorat ruxsatlari yo'q va Apple 5.1.1 majburlashni
+// taqiqlaydi — ruxsatlar ekrani faqat BIR MARTA (tanishtiruv) ko'rsatiladi,
+// keyin har doim /dashboard.
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/core/theme/app_colors.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
 import 'package:farzandim_child/features/onboarding/presentation/screens/language_select_screen.dart'
     show kLanguagePickedKey;
 import 'package:farzandim_child/features/onboarding/presentation/screens/onboarding_screen.dart'
     show kOnboardingSeenKey;
+import 'package:farzandim_child/features/permissions/presentation/screens/ios_permission_setup_screen.dart'
+    show kPermissionIntroSeenKey;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -86,6 +93,11 @@ class _SplashScreenState extends ConsumerState<SplashScreen> {
 
     // 4. Web preview — permission/UsageStats yo'q.
     if (kIsWeb) return '/dashboard';
+
+    if (PlatformCapabilities.isIOS) {
+      final introSeen = prefs.getBool(kPermissionIntroSeenKey) ?? false;
+      return introSeen ? '/dashboard' : '/permission-setup';
+    }
 
     // 5. 5 ta sistema ruxsati — PARALLEL (avval ketma-ket await edi, ~0.3-0.6s
     //    startup'ni sekinlashtirardi). Notification — Play Monitoring-siyosati

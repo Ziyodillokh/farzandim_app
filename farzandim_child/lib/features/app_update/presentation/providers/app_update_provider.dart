@@ -20,6 +20,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_update/data/models/app_version_info.dart';
 import 'package:farzandim_child/features/app_update/data/repositories/backend_app_version_repository.dart';
 
@@ -64,7 +65,12 @@ class AppUpdateNotifier extends AsyncNotifier<AppUpdateStatus> {
     // qaytadi) — bu Play'dan tashqarida APK ochishdan XAVFSIZROQ. Backend
     // `playStoreUrl`ni to'ldirishi SHART (docs/PLAY_STORE_CHECKLIST.md).
     final ltMin = compareSemver(current, platform.minSupported) < 0;
-    if (info.isForceUpdate || ltMin) {
+    // iOS: App Store havolasi bo'lmasa bloklovchi dialog chiqarmaymiz — tugma
+    // hech narsa ochmaydigan "berk ko'cha" App Review'da rad etiladi (2.1).
+    // `isForceUpdate` ikkala platforma uchun umumiy bayroq bo'lgani sabab
+    // Android uchun yoqilganda iOS'ni ham bloklab qo'ymasin.
+    final canForce = !PlatformCapabilities.isIOS || platform.storeUrl != null;
+    if ((info.isForceUpdate || ltMin) && canForce) {
       return AppUpdateStatus(
         state: UpdateState.forceUpdateRequired,
         currentVersion: current,

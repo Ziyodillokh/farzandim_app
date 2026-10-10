@@ -17,6 +17,7 @@ import 'dart:io';
 import 'dart:math' as math;
 
 import 'package:easy_localization/easy_localization.dart';
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/firebase_options.dart';
@@ -76,8 +77,13 @@ class FcmService {
     if (_initialized) return;
     _initialized = true;
 
-    // 1. Permission so'rash (Android 13+, iOS).
-    await _messaging.requestPermission();
+    // 1. Permission so'rash (Android 13+). iOS'da bu yerda SO'RALMAYDI —
+    // ruxsatlar ekranida izoh bilan so'raladi (kontekstsiz tizim oynasi
+    // ilova ochilishi bilan chiqmasin). FCM token iOS'da ruxsatsiz ham
+    // olinadi (APNs ro'yxatdan o'tish ruxsatga bog'liq emas).
+    if (!PlatformCapabilities.isIOS) {
+      await _messaging.requestPermission();
+    }
     await _setupLocalNotifications();
 
     // 2. Token olish + Backend'ga register (faqat pair'lashgan bo'lsa).
@@ -120,10 +126,11 @@ class FcmService {
   /// HIGH-importance Android notification channel + iOS init.
   Future<void> _setupLocalNotifications() async {
     const androidInit = AndroidInitializationSettings('@mipmap/ic_launcher');
+    // iOS ruxsati ruxsatlar ekranida so'raladi (yuqoridagi izohga qarang).
     const iosInit = DarwinInitializationSettings(
-      requestAlertPermission: true,
-      requestBadgePermission: true,
-      requestSoundPermission: true,
+      requestAlertPermission: false,
+      requestBadgePermission: false,
+      requestSoundPermission: false,
     );
     const initSettings = InitializationSettings(
       android: androidInit,

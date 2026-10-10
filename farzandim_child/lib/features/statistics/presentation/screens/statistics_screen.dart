@@ -17,6 +17,7 @@ import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/features/notifications/presentation/screens/notifications_screen.dart';
 import 'dart:convert';
 
+import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/analytics/data/models/app_usage_entry.dart';
 import 'package:farzandim_child/features/analytics/presentation/providers/analytics_providers.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
@@ -127,8 +128,12 @@ class StatisticsScreen extends ConsumerWidget {
             _StepsCard(steps: steps),
             const SizedBox(height: 12),
             _DonCard(don: don),
-            const SizedBox(height: 20),
-            const _ScreenTimeSection(),
+            // Ekran vaqti — faqat Android (UsageStats). iOS'da bu ma'lumot
+            // Family Controls sharti bilan qurilmadan chiqmaydi.
+            if (PlatformCapabilities.hasAppUsageStats) ...[
+              const SizedBox(height: 20),
+              const _ScreenTimeSection(),
+            ],
           ],
         ),
       ),

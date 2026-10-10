@@ -1,0 +1,228 @@
+import Foundation
+import ManagedSettings
+import os
+
+// ─────────────────────────────────────────────────────────────────────
+// ParvozShield — Runner va ParvozMonitor kengaytmasi uchun UMUMIY mantiq
+// ─────────────────────────────────────────────────────────────────────
+//
+// Apple Family Controls shartlari bo'yicha:
+//   • tanlangan ilovalar (opaque token'lar) FAQAT shu qurilmada, App Group
+//     UserDefaults'da saqlanadi — serverga hech qachon yuborilmaydi;
+//   • backend'dan faqat ilova-nomisiz siyosat keladi: "hammasini bloklash"
+//     va vaqt oynalari (ota-ona jadvali).
+// Cheklov holati har safar siyosat + joriy vaqtdan qayta hisoblanadi, shuning
+// uchun ilova va kengaytma bir xil natijaga keladi.
+//
+// Bu fayl faqat ManagedSettings'ga tayanadi (FamilyControls/SwiftUI emas) —
+// DeviceActivityMonitor kengaytmasining ~6 MB xotira chegarasi uchun.
+
+/// Cheklanadigan token'lar (FamilyActivitySelection'dan, ilova tomonda olinadi).
+struct ParvozShieldTokens: Codable, Equatable {
+  var applications: Set<ApplicationToken>
+  var categories: Set<ActivityCategoryToken>
+  var webDomains: Set<WebDomainToken>
+
+  static let empty = ParvozShieldTokens(applications: [], categories: [], webDomains: [])
+
+  var isEmpty: Bool { applications.isEmpty && categories.isEmpty && webDomains.isEmpty }
+}
+
+enum ParvozShieldError: Error {
+  /// App Group entitlement yo'q yoki noto'g'ri — saqlash imkonsiz.
+  case appGroupUnavailable
+}
+
+enum ParvozShield {
+  static let appGroupId = "group.uz.parvoz.growth"
+  /// Apple: `shield.applications` bir vaqtda ko'pi bilan 50 ta ilova.
+  static let maxShieldedApps = 50
+
+  private static let tokensKey = "screenTime.tokens.v1"
+  private static let policyKey = "screenTime.policy.v1"
+  private static let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("parvoz"))
+  private static let log = Logger(subsystem: "uz.parvoz.growth", category: "ParvozShield")
+
+  // MARK: Saqlash
+
+  static func appGroupDefaults() throws -> UserDefaults {
+    guard let defaults = UserDefaults(suiteName: appGroupId) else {
+      throw ParvozShieldError.appGroupUnavailable
+    }
+    return defaults
+  }
+
+  static func loadTokens() -> ParvozShieldTokens {
+    decode(ParvozShieldTokens.self, key: tokensKey) ?? .empty
+  }
+
+  static func saveTokens(_ tokens: ParvozShieldTokens) throws {
+    try appGroupDefaults().set(try JSONEncoder().encode(tokens), forKey: tokensKey)
+  }
+
+  static func loadPolicy() -> ParvozShieldPolicy {
+    decode(ParvozShieldPolicy.self, key: policyKey) ?? .none
+  }
+
+  static func savePolicy(_ policy: ParvozShieldPolicy) throws {
+    try appGroupDefaults().set(try JSONEncoder().encode(policy), forKey: policyKey)
+  }
+
+  /// Uzish (unpair) paytida — token'lar, siyosat va barcha cheklovlar o'chadi.
+  static func reset() {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    defaults?.removeObject(forKey: tokensKey)
+    defaults?.removeObject(forKey: policyKey)
+    store.clearAllSettings()
+  }
+
+  private static func decode<T: Decodable>(_ type: T.Type, key: String) -> T? {
+    guard let data = UserDefaults(suiteName: appGroupId)?.data(forKey: key) else { return nil }
+    do {
+      return try JSONDecoder().decode(type, from: data)
+    } catch {
+      log.error("\(key, privacy: .public) o'qilmadi: \(error.localizedDescription, privacy: .public)")
+      return nil
+    }
+  }
+
+  // MARK: Qo'llash
+
+  /// Hozir cheklov bo'lishi kerakmi (qo'llamaydi).
+  static func shouldBlock(
+    now: Date = Date(),
+    started: ParvozShieldPolicy.WindowKey? = nil,
+    ended: ParvozShieldPolicy.WindowKey? = nil
+  ) -> Bool {
+    !loadTokens().isEmpty && loadPolicy().isBlocking(at: now, started: started, ended: ended)
+  }
+
+  /// Siyosat va tanlov bo'yicha shield'ni yoqadi yoki o'chiradi.
+  /// `started`/`ended` — DeviceActivity chaqiruvi qaysi oyna uchun kelgani
+  /// (soniyalik kechikishda ham oyna to'g'ri hisoblansin).
+  @discardableResult
+  static func enforce(
+    now: Date = Date(),
+    started: ParvozShieldPolicy.WindowKey? = nil,
+    ended: ParvozShieldPolicy.WindowKey? = nil
+  ) -> Bool {
+    let tokens = loadTokens()
+    guard
+      !tokens.isEmpty,
+      loadPolicy().isBlocking(at: now, started: started, ended: ended)
+    else {
+      clearShield()
+      return false
+    }
+    store.shield.applications = tokens.applications.isEmpty
+      ? nil : cappedApplications(tokens.applications)
+    store.shield.applicationCategories = tokens.categories.isEmpty
+      ? nil : .specific(tokens.categories)
+    store.shield.webDomainCategories = tokens.categories.isEmpty
+      ? nil : .specific(tokens.categories)
+    store.shield.webDomains = tokens.webDomains.isEmpty ? nil : tokens.webDomains
+    return true
+  }
+
+  static func clearShield() {
+    store.shield.applications = nil
+    store.shield.applicationCategories = nil
+    store.shield.webDomains = nil
+    store.shield.webDomainCategories = nil
+  }
+
+  /// 50 tadan ko'p bo'lsa — DETERMINISTIK tartibda birinchi 50 tasi, shunda
+  /// ilova va kengaytma (alohida jarayonlar) bir xil to'plamni cheklaydi.
+  private static func cappedApplications(_ apps: Set<ApplicationToken>) -> Set<ApplicationToken> {
+    guard apps.count > maxShieldedApps else { return apps }
+    let encoder = JSONEncoder()
+    let ordered = apps
+      .map { (token: $0, key: (try? encoder.encode($0))?.base64EncodedString() ?? "") }
+      .sorted { $0.key < $1.key }
+    return Set(ordered.prefix(maxShieldedApps).map(\.token))
+  }
+}
+
+/// Backend'dan keladigan, ilova nomlarisiz siyosat. Vaqt — qurilma mahalliy
+/// vaqti (Android RestrictionsSyncService bilan bir xil semantika).
+struct ParvozShieldPolicy: Codable, Equatable {
+  /// DeviceActivitySchedule eng qisqa oraliq (Apple: 15 daqiqa).
+  static let minimumWindowMinutes = 15
+
+  /// Barcha Parvoz DeviceActivity nomlari shu prefiks bilan boshlanadi.
+  static let activityPrefix = "parvoz."
+
+  /// Har kuni 00:00 da holatni qayta hisoblash — hafta kuni almashganda
+  /// (yarim tundan o'tuvchi oynalar) ilova yopiq bo'lsa ham to'g'ri bo'lsin.
+  static let midnightTick = "parvoz.tick.midnight"
+
+  struct Window: Codable, Equatable {
+    /// 0...1439 — kun boshidan daqiqalar.
+    let startMinute: Int
+    let endMinute: Int
+    /// ISO hafta kunlari: 1 = dushanba ... 7 = yakshanba.
+    let weekdays: [Int]
+
+    var key: WindowKey { WindowKey(startMinute: startMinute, endMinute: endMinute) }
+
+    /// Davomiylik daqiqada (yarim tundan o'tuvchi oynalar ham).
+    var durationMinutes: Int { (endMinute - startMinute + 1440) % 1440 }
+  }
+
+  /// DeviceActivity jadvali nomi — bir xil vaqtli oynalar bitta jadvalni
+  /// bo'lishadi (hafta kuni `isBlocking`da tekshiriladi).
+  struct WindowKey: Hashable {
+    static let prefix = "parvoz.window."
+
+    let startMinute: Int
+    let endMinute: Int
+
+    init(startMinute: Int, endMinute: Int) {
+      self.startMinute = startMinute
+      self.endMinute = endMinute
+    }
+
+    init?(activityName: String) {
+      guard activityName.hasPrefix(Self.prefix) else { return nil }
+      let parts = activityName.dropFirst(Self.prefix.count).split(separator: "-")
+      guard parts.count == 2, let start = Int(parts[0]), let end = Int(parts[1]) else { return nil }
+      self.init(startMinute: start, endMinute: end)
+    }
+
+    var activityName: String { "\(Self.prefix)\(startMinute)-\(endMinute)" }
+  }
+
+  var blockAll: Bool
+  var windows: [Window]
+
+  static let none = ParvozShieldPolicy(blockAll: false, windows: [])
+
+  func isBlocking(
+    at date: Date,
+    started: WindowKey? = nil,
+    ended: WindowKey? = nil,
+    calendar: Calendar = .autoupdatingCurrent
+  ) -> Bool {
+    if blockAll { return true }
+    let parts = calendar.dateComponents([.weekday, .hour, .minute], from: date)
+    guard let weekday = parts.weekday, let hour = parts.hour, let minute = parts.minute else {
+      return false
+    }
+    // Calendar: 1 = yakshanba ... 7 = shanba → ISO: 1 = dushanba ... 7 = yakshanba.
+    let isoWeekday = (weekday + 5) % 7 + 1
+    let nowMinute = hour * 60 + minute
+    return windows.contains { window in
+      if window.key == ended { return false }
+      guard window.weekdays.contains(isoWeekday) else { return false }
+      if window.key == started { return true }
+      return Self.isInWindow(nowMinute, window.startMinute, window.endMinute)
+    }
+  }
+
+  /// Yarim tundan o'tuvchi oynalar ham (22:00–06:00) qo'llab-quvvatlanadi.
+  static func isInWindow(_ now: Int, _ start: Int, _ end: Int) -> Bool {
+    if start == end { return false }
+    if start < end { return now >= start && now < end }
+    return now >= start || now < end
+  }
+}
