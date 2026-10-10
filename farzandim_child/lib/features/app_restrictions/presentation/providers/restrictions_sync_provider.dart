@@ -1,6 +1,7 @@
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_unlock_request_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_routine_repository.dart';
@@ -19,6 +20,7 @@ final restrictionsSyncServiceProvider = Provider<RestrictionsSync>((ref) {
       ? IosRestrictionsSyncService(
           scheduleRepo: ref.watch(backendScheduleRepositoryProvider),
           devicePolicyRepo: ref.watch(backendDevicePolicyRepositoryProvider),
+          unlockRepo: ref.watch(backendUnlockRequestRepositoryProvider),
           channel: ref.watch(screenTimeChannelProvider),
         )
       : RestrictionsSyncService(

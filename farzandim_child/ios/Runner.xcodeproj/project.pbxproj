@@ -9,12 +9,19 @@
 /* Begin PBXBuildFile section */
 		049C8200BC9A407A9DEB4EB7 /* Pods_RunnerTests.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 367BC80A515F38EB0EE9B668 /* Pods_RunnerTests.framework */; };
 		0B7E478DB2C96743E2DED8B4 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = D6B8E8F0DA9D29943B9CFCDA /* PrivacyInfo.xcprivacy */; };
+		10A00125A89A290A99E5E24A /* ParvozShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE6B155B3133667AC575CFC /* ParvozShield.swift */; };
 		1498D2341E8E89220040F4C2 /* GeneratedPluginRegistrant.m in Sources */ = {isa = PBXBuildFile; fileRef = 1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */; };
 		188A7CD9263C1CC37A9CC945 /* InfoPlist.strings in Resources */ = {isa = PBXBuildFile; fileRef = 09F7D7A5DEEE1FFF98E2DE5A /* InfoPlist.strings */; };
 		2A4B983B10246648B6B6C6B7 /* ParvozMonitor.swift in Sources */ = {isa = PBXBuildFile; fileRef = 82BA423AF7C894D75009AC38 /* ParvozMonitor.swift */; };
 		331C808B294A63AB00263BE5 /* RunnerTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 331C807B294A618700263BE5 /* RunnerTests.swift */; };
+		38D963ED4BA7847A6DD5C3BE /* ParvozShieldConfig.swift in Sources */ = {isa = PBXBuildFile; fileRef = B8BD6E10A869F00CA2823AF7 /* ParvozShieldConfig.swift */; };
 		3B3967161E833CAA004F5970 /* AppFrameworkInfo.plist in Resources */ = {isa = PBXBuildFile; fileRef = 3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */; };
+		4B6457AEDB0C55A50C6E66D2 /* ParvozShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE6B155B3133667AC575CFC /* ParvozShield.swift */; };
+		4E22B3E17CB1D1C604049373 /* GoogleService-Info.plist in Resources */ = {isa = PBXBuildFile; fileRef = 5DEF52E81A7FB42D8FDE78E0 /* GoogleService-Info.plist */; };
+		4EB1181BAD3F4D0A0CF4493A /* ParvozShieldConfig.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = C6299C89813BF036B1440826 /* ParvozShieldConfig.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		61952D692F653A55C29CEDDC /* ScreenTimePlugin.swift in Sources */ = {isa = PBXBuildFile; fileRef = FD1E3DD2CC8D2BCF360E3EDF /* ScreenTimePlugin.swift */; };
+		66A2E4053A0B8FC01304A913 /* ParvozShieldAction.swift in Sources */ = {isa = PBXBuildFile; fileRef = 374813C4966C855AB775C51A /* ParvozShieldAction.swift */; };
+		680F59EF514E62E4A25E599B /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 40182D8C87EAE0FE11390704 /* PrivacyInfo.xcprivacy */; };
 		74858FAF1ED2DC5600515810 /* AppDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 74858FAE1ED2DC5600515810 /* AppDelegate.swift */; };
 		77C34F0F8CCEF6443213F73A /* Pods_Runner.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 342013165CD81C06C62927B8 /* Pods_Runner.framework */; };
 		7884E8682EC3CC0700C636F2 /* SceneDelegate.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */; };
@@ -22,13 +29,23 @@
 		7BB5E871132165A6082B8CD4 /* ParvozShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE6B155B3133667AC575CFC /* ParvozShield.swift */; };
 		89A77098438C141B37F847CF /* ParvozMonitor.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 8A082DB1674E56F568010855 /* ParvozMonitor.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 		8B4261C7A9BBA877AA78FE01 /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = 39A9C11C0BB726EC911E2937 /* PrivacyInfo.xcprivacy */; };
+		907DF98E948723512F5718A0 /* ShieldIcon.png in Resources */ = {isa = PBXBuildFile; fileRef = DAFDFF5BA24212DB5F5D1B5F /* ShieldIcon.png */; };
 		97C146FC1CF9000F007C117D /* Main.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FA1CF9000F007C117D /* Main.storyboard */; };
 		97C146FE1CF9000F007C117D /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FD1CF9000F007C117D /* Assets.xcassets */; };
 		97C147011CF9000F007C117D /* LaunchScreen.storyboard in Resources */ = {isa = PBXBuildFile; fileRef = 97C146FF1CF9000F007C117D /* LaunchScreen.storyboard */; };
 		BDAE3710A0674797C0561783 /* ParvozShield.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6EE6B155B3133667AC575CFC /* ParvozShield.swift */; };
+		E6EC5A0FE12DFA721C2A0A9A /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = B668D4F052A46C7C64FF8D98 /* PrivacyInfo.xcprivacy */; };
+		EB1C3C79D4739E804C319B63 /* ParvozShieldAction.appex in Embed Foundation Extensions */ = {isa = PBXBuildFile; fileRef = 601BCAB5983F0DB27CB6440E /* ParvozShieldAction.appex */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
+		0EA6FB4783739FE5A0418042 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 27173EFB4E097A825AF470F1;
+			remoteInfo = ParvozShieldConfig;
+		};
 		202E2BB310823FF1F48A3711 /* PBXContainerItemProxy */ = {
 			isa = PBXContainerItemProxy;
 			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
@@ -43,6 +60,13 @@
 			remoteGlobalIDString = 97C146ED1CF9000F007C117D;
 			remoteInfo = Runner;
 		};
+		5A76FD689833CFF8A83C80FF /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 97C146E61CF9000F007C117D /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 786807EDE2137198CEA8FDC2;
+			remoteInfo = ParvozShieldAction;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXCopyFilesBuildPhase section */
@@ -53,6 +77,8 @@
 			dstSubfolderSpec = 13;
 			files = (
 				89A77098438C141B37F847CF /* ParvozMonitor.appex in Embed Foundation Extensions */,
+				4EB1181BAD3F4D0A0CF4493A /* ParvozShieldConfig.appex in Embed Foundation Extensions */,
+				EB1C3C79D4739E804C319B63 /* ParvozShieldAction.appex in Embed Foundation Extensions */,
 			);
 			name = "Embed Foundation Extensions";
 			runOnlyForDeploymentPostprocessing = 0;
@@ -71,6 +97,7 @@
 
 /* Begin PBXFileReference section */
 		0A16C9B0AEE0AAF4B4294EC9 /* Pods-RunnerTests.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.profile.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.profile.xcconfig"; sourceTree = "<group>"; };
+		0F5BB5D71333173C99D97C5E /* ParvozShieldAction.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ParvozShieldAction.entitlements; sourceTree = "<group>"; };
 		1498D2321E8E86230040F4C2 /* GeneratedPluginRegistrant.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = GeneratedPluginRegistrant.h; sourceTree = "<group>"; };
 		1498D2331E8E89220040F4C2 /* GeneratedPluginRegistrant.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = GeneratedPluginRegistrant.m; sourceTree = "<group>"; };
 		1D0F8ED7BAD4C7DD01936FE8 /* MotionStepsPlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = MotionStepsPlugin.swift; sourceTree = "<group>"; };
@@ -80,9 +107,13 @@
 		339FEB37463D4A289247BCCC /* Pods-Runner.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.debug.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.debug.xcconfig"; sourceTree = "<group>"; };
 		342013165CD81C06C62927B8 /* Pods_Runner.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_Runner.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		367BC80A515F38EB0EE9B668 /* Pods_RunnerTests.framework */ = {isa = PBXFileReference; explicitFileType = wrapper.framework; includeInIndex = 0; path = Pods_RunnerTests.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		374813C4966C855AB775C51A /* ParvozShieldAction.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParvozShieldAction.swift; sourceTree = "<group>"; };
 		39A9C11C0BB726EC911E2937 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		3B3967151E833CAA004F5970 /* AppFrameworkInfo.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; name = AppFrameworkInfo.plist; path = Flutter/AppFrameworkInfo.plist; sourceTree = "<group>"; };
+		40182D8C87EAE0FE11390704 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
 		4AC758056AC40C5575DF723D /* ru */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = ru; path = ru.lproj/InfoPlist.strings; sourceTree = "<group>"; };
+		5DEF52E81A7FB42D8FDE78E0 /* GoogleService-Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = "GoogleService-Info.plist"; sourceTree = "<group>"; };
+		601BCAB5983F0DB27CB6440E /* ParvozShieldAction.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ParvozShieldAction.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		6712E9BC0C8721D7979759E2 /* Pods-RunnerTests.debug.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.debug.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.debug.xcconfig"; sourceTree = "<group>"; };
 		697C985D87CEF60B444363D5 /* Pods-Runner.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.release.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.release.xcconfig"; sourceTree = "<group>"; };
 		6EE6B155B3133667AC575CFC /* ParvozShield.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParvozShield.swift; sourceTree = "<group>"; };
@@ -91,8 +122,10 @@
 		7884E8672EC3CC0400C636F2 /* SceneDelegate.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SceneDelegate.swift; sourceTree = "<group>"; };
 		7A1E0C0130000001000CE117 /* Runner.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = Runner.entitlements; sourceTree = "<group>"; };
 		7AFA3C8E1D35360C0083082E /* Release.xcconfig */ = {isa = PBXFileReference; lastKnownFileType = text.xcconfig; name = Release.xcconfig; path = Flutter/Release.xcconfig; sourceTree = "<group>"; };
+		7F2EFDF63342BE5A902A5A0A /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		82BA423AF7C894D75009AC38 /* ParvozMonitor.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParvozMonitor.swift; sourceTree = "<group>"; };
 		8A082DB1674E56F568010855 /* ParvozMonitor.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ParvozMonitor.appex; sourceTree = BUILT_PRODUCTS_DIR; };
+		92C40E793EBD0C96CE57413B /* Info.plist */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		9740EEB21CF90195004384FC /* Debug.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Debug.xcconfig; path = Flutter/Debug.xcconfig; sourceTree = "<group>"; };
 		9740EEB31CF90195004384FC /* Generated.xcconfig */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.xcconfig; name = Generated.xcconfig; path = Flutter/Generated.xcconfig; sourceTree = "<group>"; };
 		977ECA1FF1CDCDF178D75E53 /* Pods-RunnerTests.release.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-RunnerTests.release.xcconfig"; path = "Target Support Files/Pods-RunnerTests/Pods-RunnerTests.release.xcconfig"; sourceTree = "<group>"; };
@@ -103,12 +136,24 @@
 		97C147021CF9000F007C117D /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist.xml; path = Info.plist; sourceTree = "<group>"; };
 		A2E5475F2C353A5562B06A90 /* ParvozMonitor.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ParvozMonitor.entitlements; sourceTree = "<group>"; };
 		A6F117D723693FAAD4BF8386 /* Pods-Runner.profile.xcconfig */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.xcconfig; name = "Pods-Runner.profile.xcconfig"; path = "Target Support Files/Pods-Runner/Pods-Runner.profile.xcconfig"; sourceTree = "<group>"; };
+		AEE07B56063826DBECBD196B /* ParvozShieldConfig.entitlements */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.entitlements; path = ParvozShieldConfig.entitlements; sourceTree = "<group>"; };
+		B668D4F052A46C7C64FF8D98 /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		B8BD6E10A869F00CA2823AF7 /* ParvozShieldConfig.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ParvozShieldConfig.swift; sourceTree = "<group>"; };
+		C6299C89813BF036B1440826 /* ParvozShieldConfig.appex */ = {isa = PBXFileReference; explicitFileType = "wrapper.app-extension"; includeInIndex = 0; path = ParvozShieldConfig.appex; sourceTree = BUILT_PRODUCTS_DIR; };
 		D6B8E8F0DA9D29943B9CFCDA /* PrivacyInfo.xcprivacy */ = {isa = PBXFileReference; includeInIndex = 1; path = PrivacyInfo.xcprivacy; sourceTree = "<group>"; };
+		DAFDFF5BA24212DB5F5D1B5F /* ShieldIcon.png */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = image.png; path = ShieldIcon.png; sourceTree = "<group>"; };
 		FC8072AFDF715EFF64911664 /* uz */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = text.plist.strings; name = uz; path = uz.lproj/InfoPlist.strings; sourceTree = "<group>"; };
 		FD1E3DD2CC8D2BCF360E3EDF /* ScreenTimePlugin.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = ScreenTimePlugin.swift; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
+		3D51357B0C7ABF5C686CCB57 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		93AF42EB2248DC23917CA210 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
@@ -126,6 +171,13 @@
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 		BDAF6D250DC443D23BDF7F73 /* Frameworks */ = {
+			isa = PBXFrameworksBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E118E907BD3765D15F9A7878 /* Frameworks */ = {
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
@@ -161,12 +213,37 @@
 			path = ParvozMonitor;
 			sourceTree = "<group>";
 		};
+		28997C6FE636E66A22963DB7 /* ParvozShieldAction */ = {
+			isa = PBXGroup;
+			children = (
+				374813C4966C855AB775C51A /* ParvozShieldAction.swift */,
+				7F2EFDF63342BE5A902A5A0A /* Info.plist */,
+				0F5BB5D71333173C99D97C5E /* ParvozShieldAction.entitlements */,
+				B668D4F052A46C7C64FF8D98 /* PrivacyInfo.xcprivacy */,
+			);
+			name = ParvozShieldAction;
+			path = ParvozShieldAction;
+			sourceTree = "<group>";
+		};
 		331C8082294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXGroup;
 			children = (
 				331C807B294A618700263BE5 /* RunnerTests.swift */,
 			);
 			path = RunnerTests;
+			sourceTree = "<group>";
+		};
+		658F51B3B0B46AAF9771D940 /* ParvozShieldConfig */ = {
+			isa = PBXGroup;
+			children = (
+				B8BD6E10A869F00CA2823AF7 /* ParvozShieldConfig.swift */,
+				92C40E793EBD0C96CE57413B /* Info.plist */,
+				AEE07B56063826DBECBD196B /* ParvozShieldConfig.entitlements */,
+				40182D8C87EAE0FE11390704 /* PrivacyInfo.xcprivacy */,
+				DAFDFF5BA24212DB5F5D1B5F /* ShieldIcon.png */,
+			);
+			name = ParvozShieldConfig;
+			path = ParvozShieldConfig;
 			sourceTree = "<group>";
 		};
 		84A6BA9885336AD666F9E148 /* Frameworks */ = {
@@ -200,6 +277,8 @@
 				84A6BA9885336AD666F9E148 /* Frameworks */,
 				B2600717315F1A31F8A7DD72 /* Shared */,
 				284E13996001997E99F64AD2 /* ParvozMonitor */,
+				658F51B3B0B46AAF9771D940 /* ParvozShieldConfig */,
+				28997C6FE636E66A22963DB7 /* ParvozShieldAction */,
 			);
 			sourceTree = "<group>";
 		};
@@ -209,6 +288,8 @@
 				97C146EE1CF9000F007C117D /* Runner.app */,
 				331C8081294A63A400263BE5 /* RunnerTests.xctest */,
 				8A082DB1674E56F568010855 /* ParvozMonitor.appex */,
+				C6299C89813BF036B1440826 /* ParvozShieldConfig.appex */,
+				601BCAB5983F0DB27CB6440E /* ParvozShieldAction.appex */,
 			);
 			name = Products;
 			sourceTree = "<group>";
@@ -230,6 +311,7 @@
 				1D0F8ED7BAD4C7DD01936FE8 /* MotionStepsPlugin.swift */,
 				09F7D7A5DEEE1FFF98E2DE5A /* InfoPlist.strings */,
 				FD1E3DD2CC8D2BCF360E3EDF /* ScreenTimePlugin.swift */,
+				5DEF52E81A7FB42D8FDE78E0 /* GoogleService-Info.plist */,
 			);
 			path = Runner;
 			sourceTree = "<group>";
@@ -246,6 +328,23 @@
 /* End PBXGroup section */
 
 /* Begin PBXNativeTarget section */
+		27173EFB4E097A825AF470F1 /* ParvozShieldConfig */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = FF34A1BAB84FB498EE447FDD /* Build configuration list for PBXNativeTarget "ParvozShieldConfig" */;
+			buildPhases = (
+				3CA8A5FF63BC7F91BFFA0B4C /* Sources */,
+				3D51357B0C7ABF5C686CCB57 /* Frameworks */,
+				EE022C09EAB1FB338BF833D6 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ParvozShieldConfig;
+			productName = ParvozShieldConfig;
+			productReference = C6299C89813BF036B1440826 /* ParvozShieldConfig.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		331C8080294A63A400263BE5 /* RunnerTests */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */;
@@ -282,6 +381,23 @@
 			productReference = 8A082DB1674E56F568010855 /* ParvozMonitor.appex */;
 			productType = "com.apple.product-type.app-extension";
 		};
+		786807EDE2137198CEA8FDC2 /* ParvozShieldAction */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = 10FB61591897C95683CC41F7 /* Build configuration list for PBXNativeTarget "ParvozShieldAction" */;
+			buildPhases = (
+				9FBE4394ECC36FF01889289C /* Sources */,
+				E118E907BD3765D15F9A7878 /* Frameworks */,
+				E53E7224BF8CCC171695BA64 /* Resources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+			);
+			name = ParvozShieldAction;
+			productName = ParvozShieldAction;
+			productReference = 601BCAB5983F0DB27CB6440E /* ParvozShieldAction.appex */;
+			productType = "com.apple.product-type.app-extension";
+		};
 		97C146ED1CF9000F007C117D /* Runner */ = {
 			isa = PBXNativeTarget;
 			buildConfigurationList = 97C147051CF9000F007C117D /* Build configuration list for PBXNativeTarget "Runner" */;
@@ -294,6 +410,7 @@
 				06B1EE4530C6F7FD7F04EE1B /* Embed Foundation Extensions */,
 				9705A1C41CF9048500538489 /* Embed Frameworks */,
 				3B06AD1E1E4923F5004D2608 /* Thin Binary */,
+				A83EA00FD6B40E6C25E5F232 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */,
 				A9E3ACEEB7FC40F8B8EAC0FD /* [CP] Embed Pods Frameworks */,
 				D5E5C3BEC9D8310E3D3E6075 /* [CP] Copy Pods Resources */,
 			);
@@ -301,6 +418,8 @@
 			);
 			dependencies = (
 				0E56727D817588D4E1FD233B /* PBXTargetDependency */,
+				DBE0206E6F44B28036C21856 /* PBXTargetDependency */,
+				AA53399EC78133DC38F682FD /* PBXTargetDependency */,
 			);
 			name = Runner;
 			productName = Runner;
@@ -317,11 +436,21 @@
 				LastUpgradeCheck = 1510;
 				ORGANIZATIONNAME = "";
 				TargetAttributes = {
+					27173EFB4E097A825AF470F1 = {
+						CreatedOnToolsVersion = 16.0;
+						DevelopmentTeam = PLJAB8V75N;
+						ProvisioningStyle = Automatic;
+					};
 					331C8080294A63A400263BE5 = {
 						CreatedOnToolsVersion = 14.0;
 						TestTargetID = 97C146ED1CF9000F007C117D;
 					};
 					7570CF0EF5AFC63274E51C4C = {
+						CreatedOnToolsVersion = 16.0;
+						DevelopmentTeam = PLJAB8V75N;
+						ProvisioningStyle = Automatic;
+					};
+					786807EDE2137198CEA8FDC2 = {
 						CreatedOnToolsVersion = 16.0;
 						DevelopmentTeam = PLJAB8V75N;
 						ProvisioningStyle = Automatic;
@@ -350,6 +479,8 @@
 				97C146ED1CF9000F007C117D /* Runner */,
 				331C8080294A63A400263BE5 /* RunnerTests */,
 				7570CF0EF5AFC63274E51C4C /* ParvozMonitor */,
+				27173EFB4E097A825AF470F1 /* ParvozShieldConfig */,
+				786807EDE2137198CEA8FDC2 /* ParvozShieldAction */,
 			);
 		};
 /* End PBXProject section */
@@ -380,6 +511,24 @@
 				97C146FC1CF9000F007C117D /* Main.storyboard in Resources */,
 				0B7E478DB2C96743E2DED8B4 /* PrivacyInfo.xcprivacy in Resources */,
 				188A7CD9263C1CC37A9CC945 /* InfoPlist.strings in Resources */,
+				4E22B3E17CB1D1C604049373 /* GoogleService-Info.plist in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		E53E7224BF8CCC171695BA64 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				E6EC5A0FE12DFA721C2A0A9A /* PrivacyInfo.xcprivacy in Resources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		EE022C09EAB1FB338BF833D6 /* Resources */ = {
+			isa = PBXResourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				680F59EF514E62E4A25E599B /* PrivacyInfo.xcprivacy in Resources */,
+				907DF98E948723512F5718A0 /* ShieldIcon.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -438,6 +587,24 @@
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
 			shellScript = "/bin/sh \"$FLUTTER_ROOT/packages/flutter_tools/bin/xcode_backend.sh\" build";
+		};
+		A83EA00FD6B40E6C25E5F232 /* FlutterFire: "flutterfire upload-crashlytics-symbols" */ = {
+			isa = PBXShellScriptBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+			);
+			inputFileListPaths = (
+			);
+			inputPaths = (
+			);
+			name = "FlutterFire: \"flutterfire upload-crashlytics-symbols\"";
+			outputFileListPaths = (
+			);
+			outputPaths = (
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+			shellPath = /bin/sh;
+			shellScript = "\n#!/bin/bash\nPATH=\"${PATH}:$FLUTTER_ROOT/bin:${PUB_CACHE}/bin:$HOME/.pub-cache/bin\"\n\nif [ -z \"$PODS_ROOT\" ] || [ ! -d \"$PODS_ROOT/FirebaseCrashlytics\" ]; then\n  # Cannot use \"BUILD_DIR%/Build/*\" as per Firebase documentation, it points to \"flutter-project/build/ios/*\" path which doesn't have run script\n  DERIVED_DATA_PATH=$(echo \"$BUILD_ROOT\" | sed -E 's|(.*DerivedData/[^/]+).*|\\1|')\n  PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT=\"${DERIVED_DATA_PATH}/SourcePackages/checkouts/firebase-ios-sdk/Crashlytics/run\"\nelse\n  PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT=\"$PODS_ROOT/FirebaseCrashlytics/run\"\nfi\n\n# Command to upload symbols script used to upload symbols to Firebase server\nflutterfire upload-crashlytics-symbols --upload-symbols-script-path=\"$PATH_TO_CRASHLYTICS_UPLOAD_SCRIPT\" --platform=ios --apple-project-path=\"${SRCROOT}\" --env-platform-name=\"${PLATFORM_NAME}\" --env-configuration=\"${CONFIGURATION}\" --env-project-dir=\"${PROJECT_DIR}\" --env-built-products-dir=\"${BUILT_PRODUCTS_DIR}\" --env-dwarf-dsym-folder-path=\"${DWARF_DSYM_FOLDER_PATH}\" --env-dwarf-dsym-file-name=\"${DWARF_DSYM_FILE_NAME}\" --env-infoplist-path=\"${INFOPLIST_PATH}\" --default-config=default\n";
 		};
 		A9E3ACEEB7FC40F8B8EAC0FD /* [CP] Embed Pods Frameworks */ = {
 			isa = PBXShellScriptBuildPhase;
@@ -506,6 +673,15 @@
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
+		3CA8A5FF63BC7F91BFFA0B4C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				38D963ED4BA7847A6DD5C3BE /* ParvozShieldConfig.swift in Sources */,
+				4B6457AEDB0C55A50C6E66D2 /* ParvozShield.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		97C146EA1CF9000F007C117D /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -516,6 +692,15 @@
 				78AEC2181461896BAF951A02 /* MotionStepsPlugin.swift in Sources */,
 				61952D692F653A55C29CEDDC /* ScreenTimePlugin.swift in Sources */,
 				7BB5E871132165A6082B8CD4 /* ParvozShield.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		9FBE4394ECC36FF01889289C /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				66A2E4053A0B8FC01304A913 /* ParvozShieldAction.swift in Sources */,
+				10A00125A89A290A99E5E24A /* ParvozShield.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -541,6 +726,18 @@
 			isa = PBXTargetDependency;
 			target = 97C146ED1CF9000F007C117D /* Runner */;
 			targetProxy = 331C8085294A63A400263BE5 /* PBXContainerItemProxy */;
+		};
+		AA53399EC78133DC38F682FD /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ParvozShieldAction;
+			target = 786807EDE2137198CEA8FDC2 /* ParvozShieldAction */;
+			targetProxy = 5A76FD689833CFF8A83C80FF /* PBXContainerItemProxy */;
+		};
+		DBE0206E6F44B28036C21856 /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			name = ParvozShieldConfig;
+			target = 27173EFB4E097A825AF470F1 /* ParvozShieldConfig */;
+			targetProxy = 0EA6FB4783739FE5A0418042 /* PBXContainerItemProxy */;
 		};
 /* End PBXTargetDependency section */
 
@@ -573,6 +770,35 @@
 /* End PBXVariantGroup section */
 
 /* Begin XCBuildConfiguration section */
+		1E0D9FF1F1EA87B99ACE1DA3 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldAction/ParvozShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldAction/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shieldaction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 		203761A744D5B6FDC245BE48 /* Profile */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
@@ -678,6 +904,36 @@
 			};
 			name = Profile;
 		};
+		2F8A0C50674E6EEF72263735 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldConfig/ParvozShieldConfig.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldConfig/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shield;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 		331C8088294A63A400263BE5 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 6712E9BC0C8721D7979759E2 /* Pods-RunnerTests.debug.xcconfig */;
@@ -748,6 +1004,66 @@
 				);
 				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
 				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.monitor;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		45BB1BF3A412348F5B69143A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldAction/ParvozShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldAction/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shieldaction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Release;
+		};
+		7D77AF7218B8EAC12435187A /* Release */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldConfig/ParvozShieldConfig.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldConfig/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shield;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				SDKROOT = iphoneos;
 				SKIP_INSTALL = YES;
@@ -916,6 +1232,36 @@
 			};
 			name = Release;
 		};
+		C61BB11B0F07AC50B4057572 /* Profile */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldAction/ParvozShieldAction.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldAction/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shieldaction;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-O";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+				VALIDATE_PRODUCT = YES;
+			};
+			name = Profile;
+		};
 		CEFB9F8A2CF9EF0CA37A2B97 /* Debug */ = {
 			isa = XCBuildConfiguration;
 			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
@@ -945,9 +1291,48 @@
 			};
 			name = Debug;
 		};
+		F2D5E6329485ED0559C36195 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			baseConfigurationReference = 9740EEB31CF90195004384FC /* Generated.xcconfig */;
+			buildSettings = {
+				APPLICATION_EXTENSION_API_ONLY = YES;
+				CLANG_ENABLE_OBJC_WEAK = NO;
+				CODE_SIGN_ENTITLEMENTS = ParvozShieldConfig/ParvozShieldConfig.entitlements;
+				CODE_SIGN_STYLE = Automatic;
+				CURRENT_PROJECT_VERSION = "$(FLUTTER_BUILD_NUMBER)";
+				DEVELOPMENT_TEAM = PLJAB8V75N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = ParvozShieldConfig/Info.plist;
+				IPHONEOS_DEPLOYMENT_TARGET = 16.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@executable_path/../../Frameworks",
+				);
+				MARKETING_VERSION = "$(FLUTTER_BUILD_NAME)";
+				PRODUCT_BUNDLE_IDENTIFIER = uz.parvoz.growth.shield;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SKIP_INSTALL = YES;
+				SWIFT_OPTIMIZATION_LEVEL = "-Onone";
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 1;
+			};
+			name = Debug;
+		};
 /* End XCBuildConfiguration section */
 
 /* Begin XCConfigurationList section */
+		10FB61591897C95683CC41F7 /* Build configuration list for PBXNativeTarget "ParvozShieldAction" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				45BB1BF3A412348F5B69143A /* Release */,
+				1E0D9FF1F1EA87B99ACE1DA3 /* Debug */,
+				C61BB11B0F07AC50B4057572 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
 		331C8087294A63A400263BE5 /* Build configuration list for PBXNativeTarget "RunnerTests" */ = {
 			isa = XCConfigurationList;
 			buildConfigurations = (
@@ -984,6 +1369,16 @@
 				97C147061CF9000F007C117D /* Debug */,
 				97C147071CF9000F007C117D /* Release */,
 				249021D4217E4FDB00AE95B9 /* Profile */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Release;
+		};
+		FF34A1BAB84FB498EE447FDD /* Build configuration list for PBXNativeTarget "ParvozShieldConfig" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				7D77AF7218B8EAC12435187A /* Release */,
+				F2D5E6329485ED0559C36195 /* Debug */,
+				2F8A0C50674E6EEF72263735 /* Profile */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Release;

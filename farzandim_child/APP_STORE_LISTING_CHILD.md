@@ -173,10 +173,12 @@ HOW TO TEST
 3. After pairing, a permissions screen explains each permission. All of them are optional; tap "Continue".
 
 FAMILY CONTROLS (Screen Time API)
-- Entitlement com.apple.developer.family-controls is approved for uz.parvoz.growth and its DeviceActivityMonitor extension uz.parvoz.growth.monitor.
+- Entitlement com.apple.developer.family-controls (Distribution) is enabled for uz.parvoz.growth and its extensions: uz.parvoz.growth.monitor (DeviceActivityMonitor), uz.parvoz.growth.shield (ShieldConfiguration) and uz.parvoz.growth.shieldaction (ShieldAction).
 - We call AuthorizationCenter.requestAuthorization(for: .child). Supervision therefore works only when this iPhone is signed in with a child Apple Account in the parent's Family Sharing group; the parent approves with their own Apple Account.
 - Path: Settings (gear icon) > Screen Time > "Get parent approval" > set the parent PIN > choose apps (FamilyActivityPicker).
 - The selected apps are opaque tokens stored only on the device (App Group). Our server only sends an app-agnostic schedule (e.g. "restrict from 21:00 to 07:00") and a "restrict now" switch. The DeviceActivityMonitor extension applies and removes the ManagedSettings shield at the schedule boundaries. No app usage data leaves the device.
+- On the Parvoz-branded shield the child can tap "Ask for more time". The ShieldAction extension only stores a flag and shows a local notification; tapping it opens Parvoz, where the child sends the request (minutes + optional reason, without any app name). If the parent approves, the shield is lifted until the granted time ends; a DeviceActivity schedule/event restores it even if the app is closed.
+- Optional always-on protection set by the parent on the device (parent PIN): adult website filter (webContent .auto) and "deny app installation".
 - Screen recording of the whole flow on a Family Sharing child device: <<VIDEO_URL>>
 
 BACKGROUND LOCATION

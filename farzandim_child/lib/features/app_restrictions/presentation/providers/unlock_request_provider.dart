@@ -10,15 +10,15 @@ import 'package:farzandim_child/features/app_restrictions/presentation/widgets/u
 import 'package:farzandim_child/shared/widgets/app_snackbar.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
-/// Native overlay/ogohlantirish → modal → backend so'rov ko'prigi.
-///
-/// Bloklangan ilovada "Ruxsat so'rash" (yoki "vaqting tugayapti" notification)
-/// Parvoz'ni ochadi; bu yerda avval bolaga modal ko'rsatamiz (so'ralgan vaqt +
-/// sabab), keyin backend'ga so'rov yuboramiz va natija snackbar'ini chiqaramiz.
-final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
+/// Bola qo'shimcha vaqt so'raydi: modal (so'ralgan vaqt + sabab) → backend →
+/// natija snackbar'i. [packageName] — Android'da bloklangan ilova ('APP');
+/// iOS'da `null` — ilova nomi serverga yuborilmaydi ('SCREEN_TIME').
+typedef UnlockRequestFlow = Future<void> Function({String? packageName});
+
+final unlockRequestFlowProvider = Provider<UnlockRequestFlow>((ref) {
   final repo = ref.watch(backendUnlockRequestRepositoryProvider);
 
-  return UnlockRequestBridge((packageName) async {
+  return ({String? packageName}) async {
     final ctx = ref
         .read(routerProvider)
         .routerDelegate
@@ -31,7 +31,7 @@ final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
     if (input == null || !ctx.mounted) return; // bekor qildi
 
     final ok = await repo.createRequest(
-      kind: 'APP',
+      kind: packageName == null ? 'SCREEN_TIME' : 'APP',
       packageName: packageName,
       requestedMinutes: input.minutes,
       reason: input.reason,
@@ -42,7 +42,16 @@ final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
     } else {
       AppSnackBar.error(ctx, 'unlockRequest.sendError'.tr());
     }
-  });
+  };
+});
+
+/// Native overlay/ogohlantirish → modal → backend so'rov ko'prigi (Android).
+///
+/// Bloklangan ilovada "Ruxsat so'rash" (yoki "vaqting tugayapti" notification)
+/// Parvoz'ni ochadi; so'rov [unlockRequestFlowProvider] orqali yuboriladi.
+final unlockRequestBridgeProvider = Provider<UnlockRequestBridge>((ref) {
+  final flow = ref.watch(unlockRequestFlowProvider);
+  return UnlockRequestBridge((packageName) => flow(packageName: packageName));
 });
 
 /// App ochilganда bir marta — native kutilayotgan unlock so'rovini tekshiradi.

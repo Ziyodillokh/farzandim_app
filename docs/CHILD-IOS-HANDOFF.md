@@ -1,6 +1,6 @@
 # Parvoz Growth (bola ilovasi) — iOS App Store'ga chiqarish: qolgan ishlar
 
-> Holat: 2026-10-10, branch `feat/child-ios` (lokal, push qilinmagan).
+> Holat: 2026-10-10 (yangilangan), branch `feat/child-ios` (lokal, push qilinmagan).
 > Kod tomoni tayyor: `flutter build ios --release --no-codesign` va
 > `flutter build apk` o'tadi, `flutter analyze` toza, testlar o'tadi.
 > Quyida faqat **Apple/Firebase akkaunti, Mac + Xcode va real iPhone** talab
@@ -14,7 +14,7 @@
 |---|---|
 | 1. Build | iOS 16 target, CocoaPods ziddiyati hal qilindi (mobile_scanner 7.4.2), permission_handler makroslari, Privacy manifest, Info.plist ruxsat matnlari en/uz/ru |
 | 2. iOS oqimi | `PlatformCapabilities` — platforma farqlari bitta joyda. iOS'da: usage yuborilmaydi, foreground service yo'q, ruxsatlar ekrani bloklamaydi va bir marta chiqadi, qadamlar CoreMotion'dan, fon joylashuvi `AppleSettings`, bildirishnoma ruxsati faqat ruxsatlar ekranida |
-| 3. Family Controls | `ScreenTimePlugin.swift` (ruxsat `.child`, ilova tanlash, siyosat), `ParvozMonitor` kengaytmasi (jadval bo'yicha avtomatik yoqish/o'chirish), "Ekran vaqti" ekrani + ota-ona PIN'i, backend jadvali → iOS siyosati |
+| 3. Family Controls | `ScreenTimePlugin.swift` (ruxsat `.child`, ilova tanlash, siyosat), 3 ta kengaytma: `ParvozMonitor` (jadval va qo'shimcha vaqt tugashi), `ParvozShieldConfig` (Parvoz dizaynidagi bloklash ekrani), `ParvozShieldAction` ("Qo'shimcha vaqt so'rash"); "Ekran vaqti" ekrani + ota-ona PIN'i, doimiy himoya (saytlar filtri, o'rnatishni taqiqlash) |
 | 4. Do'kon | `farzandim_child/APP_STORE_LISTING_CHILD.md` — tavsif, App Privacy, Age Rating, Review Notes |
 
 Android xatti-harakati o'zgarmagan (faqat QR skaner kutubxonasi yangilangan —
@@ -22,46 +22,45 @@ pastdagi 6-bandga qarang).
 
 ---
 
-## 1. Apple Developer Portal (developer.apple.com → Certificates, IDs & Profiles)
+## 1. Apple Developer Portal — ✅ BAJARILDI (2026-10-10)
 
-1. **App Group** yarating: `group.uz.parvoz.growth`.
-2. **App ID `uz.parvoz.growth`** (mavjud) → Capabilities:
-   - Push Notifications ✅
-   - App Groups ✅ → `group.uz.parvoz.growth`
-   - Family Controls ✅ (Distribution — allaqachon tasdiqlangan)
-3. **Yangi App ID `uz.parvoz.growth.monitor`** (DeviceActivity kengaytmasi):
-   - App Groups ✅ → `group.uz.parvoz.growth`
-   - Family Controls ✅
-4. ⚠️ **Family Controls Distribution so'rovi kengaytma uchun ham kerak.**
-   Apple ruxsatni har bir bundle ID uchun alohida beradi:
-   https://developer.apple.com/contact/request/family-controls-distribution
-   → `uz.parvoz.growth.monitor` uchun so'rov yuboring (asosiy ilova uchun
-   berilgan javobga havola qiling). Tasdiqlanmaguncha TestFlight/App Store
-   build'i imzolanmaydi; Development (o'z iPhone'ingizda) ishlayveradi.
-5. **APNs kaliti (.p8)** — ota-ona ilovasi uchun yaratilgani shu jamoa
-   (`PLJAB8V75N`) uchun umumiy, qayta ishlatsa bo'ladi.
+- App Group `group.uz.parvoz.growth` yaratildi.
+- App ID'lar: `uz.parvoz.growth` (Push, App Groups, Family Controls Dev + Distribution),
+  `uz.parvoz.growth.monitor`, `.shield`, `.shieldaction`, `.report` (App Groups,
+  Family Controls Dev + Distribution).
+- Family Controls **Distribution** katagi kengaytmalarda ham belgilandi — ruxsat
+  akkauntga biriktirilgan, Apple'ga alohida so'rov **kerak emas**. Yakuniy tasdiq:
+  Xcode App Store profilini yaratganda xato bermasa.
+- `.report` App ID'si zaxira (ekran vaqti hisoboti keyingi versiyada).
 
-## 2. Firebase (push bildirishnomalar uchun SHART)
+## 2. Firebase — qisman bajarildi
 
-Hozir `lib/firebase_options.dart` iOS uchun eski `com.farzandim.child`ga
-sozlangan va `GoogleService-Info.plist` yo'q → iOS'da push ishlamaydi.
+✅ Firebase'da iOS ilova yaratildi: **Parvoz Growth** (`uz.parvoz.growth`,
+`1:163835260058:ios:a57b38449e513cafd30323`).
+✅ `lib/firebase_options.dart` (iOS qismi) va `ios/Runner/GoogleService-Info.plist`
+yangilandi, `firebase.json` ga iOS qo'shildi, Crashlytics dSYM yuklash bosqichi
+qo'shildi (ota-ona ilovasidagidek).
 
-1. Firebase console → loyiha → **Add app → iOS** → bundle `uz.parvoz.growth`.
-2. Project settings → Cloud Messaging → **APNs Authentication Key** (.p8) yuklang.
-3. Mac'da:
-   ```bash
-   cd farzandim_child
-   flutterfire configure   # iOS uchun yangi uz.parvoz.growth ilovasini tanlang
-   ```
-   Tekshiring: `lib/firebase_options.dart` ichida `iosBundleId: 'uz.parvoz.growth'`.
-   (Fayl `.gitignore`da — CI/boshqa kompyuterga alohida ko'chiring.)
+⚠️ Ikkala fayl `.gitignore`da — **faqat shu Mac'da bor**. Boshqa kompyuterda
+build qilish uchun ularni xavfsiz joyga nusxalang (yoki u yerda
+`flutterfire configure` qiling).
+
+❌ **Sizga qoldi — APNs kaliti** (push'siz iOS'da bildirishnoma kelmaydi):
+1. `.p8` kalit: Apple portal → **Keys**. Ota-ona ilovasi uchun yaratilgan kalit
+   bo'lsa — o'sha `.p8` fayl. Bo'lmasa: `+` → nom `Parvoz APNs` → ✅ Apple Push
+   Notifications service (APNs) → Register → **Download** (faqat bir marta!) →
+   Key ID'ni yozib oling.
+2. console.firebase.google.com → **farzandim-mvp** → ⚙️ Project settings →
+   **Cloud Messaging** → Apple app configuration → **Parvoz Growth** →
+   APNs Authentication Key → **Upload**: `.p8`, Key ID, Team ID `PLJAB8V75N`.
 
 ## 3. Xcode (Mac)
 
 1. `farzandim_child/ios/Runner.xcworkspace`ni oching (`.xcodeproj` emas).
-2. **Runner** va **ParvozMonitor** target'lari → Signing & Capabilities →
-   Team `PLJAB8V75N`, "Automatically manage signing". Family Controls, App
-   Groups (va Runner'da Push) ko'rinishi kerak — entitlements fayllari tayyor.
+2. 4 ta target — **Runner**, **ParvozMonitor**, **ParvozShieldConfig**,
+   **ParvozShieldAction** → Signing & Capabilities → Team `PLJAB8V75N`,
+   "Automatically manage signing". Family Controls, App Groups (va Runner'da
+   Push) ko'rinishi kerak — entitlements fayllari tayyor.
 3. Real iPhone'da ishga tushiring (Family Controls simulyatorda ishlamaydi).
 
 ## 4. Real qurilmada sinov (Family Sharing)
@@ -81,6 +80,12 @@ bilan kirilgan test iPhone (iOS 16+), ota-ona telefonida Parvoz ilovasi.
       ilovasini YOPING → vaqt kelganda tanlangan ilovalar bloklanadi, tugaganda ochiladi
 - [ ] Ota-ona "Barcha ilovalarni bloklash"ni yoqadi → bola ilovasi ochilganda/WS
       kelganda tanlangan ilovalar bloklanadi
+- [ ] Bloklangan ilova ochilganda **Parvoz dizaynidagi ekran** chiqadi (tanlangan tilda)
+- [ ] "Qo'shimcha vaqt so'rash" → eslatma keladi → bosilsa Parvoz ochiladi va
+      so'rov oynasi chiqadi → ota-ona ilovasida so'rov ko'rinadi → tasdiqlansa
+      ilova ochiladi → vaqt tugagach (ilova yopiq bo'lsa ham) yana bloklanadi
+- [ ] Ekran vaqti → Doimiy himoya: "Kattalar saytlari" (Safari'da tekshiring) va
+      "Yangi ilova o'rnatishni taqiqlash" (App Store'da o'rnatib ko'ring)
 - [ ] Ilovani o'chirib ko'ring — ota-ona ruxsatisiz o'chmasligi kerak (`.child` tasdig'i)
 - [ ] **Ekran vaqti oqimini ekran yozuviga oling** — App Review uchun video
       (`APP_STORE_LISTING_CHILD.md` 7-band `<<VIDEO_URL>>`)
@@ -114,6 +119,8 @@ real telefonda QR orqali ulanish va qayta ulanishni qo'lda sinab ko'ring.
 |---|---|---|
 | 1 | "Barcha ilovalarni bloklash" iOS'da ilova ochilganda / WS kelganda qo'llanadi (fonda so'rov yo'q). Yaxshilash: backend `restrictions_sync` push'ini `content-available: 1` bilan yuborsin | backend |
 | 2 | Android'dagi per-ilova kunlik limitlar (AppLimit) iOS'da yo'q (DeviceActivityEvent + ota-ona UI kerak) | keyingi versiya |
+| 2a | Bolaning o'z ekran vaqti grafigi (DeviceActivityReport, `.report` App ID tayyor). Ota-ona hozircha o'z iPhone'idagi Sozlamalar → Ekran vaqti'da ko'radi | keyingi versiya |
+| 2b | "Qo'shimcha vaqt" so'rovida ilova nomi yo'q (Apple: ilova nomi serverga chiqmaydi) — ota-ona "ekran vaqti" so'rovi sifatida ko'radi | dizayn bo'yicha |
 | 3 | "Jonli eshitish" faqat Android — ota-ona ilovasi iOS bolada tugmani yashirishi kerak | ota-ona ilovasi |
 | 4 | iOS bolada ota-ona ilovasi Android ruxsat ogohlantirishlarini ko'rsatmasligi kerak (endi bu maydonlar yuborilmaydi — `null`ni to'g'ri ko'rsatishini tekshiring) | ota-ona ilovasi |
 | 5 | Push'dagi rasm iOS'da ko'rinmaydi — Notification Service Extension kerak (ikkala ilovada yo'q) | ikkala ilova |

@@ -28,6 +28,14 @@ struct ParvozShieldTokens: Codable, Equatable {
   var isEmpty: Bool { applications.isEmpty && categories.isEmpty && webDomains.isEmpty }
 }
 
+/// Jadvaldan mustaqil, doimiy himoya (ota-ona PIN bilan yoqadi).
+struct ParvozShieldExtras: Codable, Equatable {
+  var blockAdultWebsites: Bool
+  var denyAppInstallation: Bool
+
+  static let off = ParvozShieldExtras(blockAdultWebsites: false, denyAppInstallation: false)
+}
+
 enum ParvozShieldError: Error {
   /// App Group entitlement yo'q yoki noto'g'ri — saqlash imkonsiz.
   case appGroupUnavailable
@@ -38,8 +46,18 @@ enum ParvozShield {
   /// Apple: `shield.applications` bir vaqtda ko'pi bilan 50 ta ilova.
   static let maxShieldedApps = 50
 
+  /// Vaqtinchalik ruxsat (ota-ona tasdiqlagan qo'shimcha vaqt) jadvali.
+  static let unlockActivity = "parvoz.unlock"
+  static let unlockLimitEvent = "parvoz.unlock.limit"
+  /// Bloklash ekranidagi "vaqt so'rash" belgisi shuncha vaqt amal qiladi.
+  static let pendingRequestTTL: TimeInterval = 30 * 60
+
   private static let tokensKey = "screenTime.tokens.v1"
   private static let policyKey = "screenTime.policy.v1"
+  private static let extrasKey = "screenTime.extras.v1"
+  private static let unlockUntilKey = "screenTime.unlockUntil.v1"
+  private static let pendingRequestKey = "screenTime.pendingUnlockRequest.v1"
+  private static let languageKey = "screenTime.language.v1"
   private static let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("parvoz"))
   private static let log = Logger(subsystem: "uz.parvoz.growth", category: "ParvozShield")
 
@@ -68,11 +86,74 @@ enum ParvozShield {
     try appGroupDefaults().set(try JSONEncoder().encode(policy), forKey: policyKey)
   }
 
+  static func loadExtras() -> ParvozShieldExtras {
+    decode(ParvozShieldExtras.self, key: extrasKey) ?? .off
+  }
+
+  /// Saqlaydi va darhol qo'llaydi (jadvalga bog'liq emas).
+  static func saveExtras(_ extras: ParvozShieldExtras) throws {
+    try appGroupDefaults().set(try JSONEncoder().encode(extras), forKey: extrasKey)
+    applyExtras(extras)
+  }
+
+  static func applyExtras(_ extras: ParvozShieldExtras) {
+    store.webContent.blockedByFilter = extras.blockAdultWebsites ? .auto() : nil
+    store.application.denyAppInstallation = extras.denyAppInstallation ? true : nil
+  }
+
+  // MARK: Vaqtinchalik ruxsat
+
+  static func unlockUntil() -> Date? {
+    let value = UserDefaults(suiteName: appGroupId)?.double(forKey: unlockUntilKey) ?? 0
+    return value > 0 ? Date(timeIntervalSince1970: value) : nil
+  }
+
+  static func isUnlocked(now: Date = Date()) -> Bool {
+    guard let until = unlockUntil() else { return false }
+    return until > now
+  }
+
+  static func setUnlockUntil(_ until: Date?) throws {
+    let defaults = try appGroupDefaults()
+    if let until {
+      defaults.set(until.timeIntervalSince1970, forKey: unlockUntilKey)
+    } else {
+      defaults.removeObject(forKey: unlockUntilKey)
+    }
+  }
+
+  // MARK: Bloklash ekranidan "vaqt so'rash"
+
+  static func markUnlockRequested(now: Date = Date()) {
+    UserDefaults(suiteName: appGroupId)?.set(now.timeIntervalSince1970, forKey: pendingRequestKey)
+  }
+
+  /// Belgi bo'lsa va eskirmagan bo'lsa `true` qaytaradi va uni o'chiradi.
+  static func consumeUnlockRequest(now: Date = Date()) -> Bool {
+    guard let defaults = UserDefaults(suiteName: appGroupId) else { return false }
+    let markedAt = defaults.double(forKey: pendingRequestKey)
+    defaults.removeObject(forKey: pendingRequestKey)
+    guard markedAt > 0 else { return false }
+    return now.timeIntervalSince1970 - markedAt < pendingRequestTTL
+  }
+
+  // MARK: Til (bloklash ekrani va eslatma matnlari uchun)
+
+  static func language() -> ParvozShieldLanguage {
+    let code = UserDefaults(suiteName: appGroupId)?.string(forKey: languageKey) ?? ""
+    return ParvozShieldLanguage(code: code)
+  }
+
+  static func setLanguage(_ code: String) {
+    UserDefaults(suiteName: appGroupId)?.set(code, forKey: languageKey)
+  }
+
   /// Uzish (unpair) paytida — token'lar, siyosat va barcha cheklovlar o'chadi.
   static func reset() {
     let defaults = UserDefaults(suiteName: appGroupId)
-    defaults?.removeObject(forKey: tokensKey)
-    defaults?.removeObject(forKey: policyKey)
+    for key in [tokensKey, policyKey, extrasKey, unlockUntilKey, pendingRequestKey] {
+      defaults?.removeObject(forKey: key)
+    }
     store.clearAllSettings()
   }
 
@@ -94,7 +175,9 @@ enum ParvozShield {
     started: ParvozShieldPolicy.WindowKey? = nil,
     ended: ParvozShieldPolicy.WindowKey? = nil
   ) -> Bool {
-    !loadTokens().isEmpty && loadPolicy().isBlocking(at: now, started: started, ended: ended)
+    !isUnlocked(now: now)
+      && !loadTokens().isEmpty
+      && loadPolicy().isBlocking(at: now, started: started, ended: ended)
   }
 
   /// Siyosat va tanlov bo'yicha shield'ni yoqadi yoki o'chiradi.
@@ -108,6 +191,7 @@ enum ParvozShield {
   ) -> Bool {
     let tokens = loadTokens()
     guard
+      !isUnlocked(now: now),
       !tokens.isEmpty,
       loadPolicy().isBlocking(at: now, started: started, ended: ended)
     else {
@@ -224,5 +308,26 @@ struct ParvozShieldPolicy: Codable, Equatable {
     if start == end { return false }
     if start < end { return now >= start && now < end }
     return now >= start || now < end
+  }
+}
+
+/// Bloklash ekrani va eslatmalar tili — ilovada tanlangan til (uz/ru/en).
+enum ParvozShieldLanguage {
+  case uz, ru, en
+
+  init(code: String) {
+    switch code.prefix(2).lowercased() {
+    case "ru": self = .ru
+    case "en": self = .en
+    default: self = .uz
+    }
+  }
+
+  func pick(uz: String, ru: String, en: String) -> String {
+    switch self {
+    case .uz: return uz
+    case .ru: return ru
+    case .en: return en
+    }
   }
 }

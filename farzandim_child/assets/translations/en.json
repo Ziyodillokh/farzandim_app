@@ -1052,6 +1052,11 @@
       "authenticationMethodUnavailable": "No passcode is set on this device.",
       "authorizationConflict": "Another parental control app already has access.",
       "generic": "Screen Time isn't available right now. Please try later."
-    }
+    },
+    "unlockedUntil": "Extra time: until {time}",
+    "extrasTitle": "Always-on protection",
+    "extrasBody": "Works at all times, regardless of the schedule. Changing it requires the parent PIN.",
+    "extrasAdult": "Block adult websites",
+    "extrasInstall": "Block installing new apps"
   }
 }

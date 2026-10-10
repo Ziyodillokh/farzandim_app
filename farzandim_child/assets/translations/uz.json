@@ -1052,6 +1052,11 @@
       "authenticationMethodUnavailable": "Qurilmada parol (passcode) o'rnatilmagan.",
       "authorizationConflict": "Boshqa nazorat ilovasi allaqachon ruxsat olgan.",
       "generic": "Ekran vaqti hozir mavjud emas. Keyinroq urinib ko'ring."
-    }
+    },
+    "unlockedUntil": "Qo'shimcha vaqt: {time} gacha",
+    "extrasTitle": "Doimiy himoya",
+    "extrasBody": "Jadvaldan qat'i nazar har doim ishlaydi. O'zgartirish uchun ota-ona PIN kodi kerak.",
+    "extrasAdult": "Kattalar saytlarini bloklash",
+    "extrasInstall": "Yangi ilova o'rnatishni taqiqlash"
   }
 }

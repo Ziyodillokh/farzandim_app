@@ -21,10 +21,14 @@ class ScreenTimeStatus {
     required this.apps,
     required this.categories,
     required this.webDomains,
+    this.blockAdultWebsites = false,
+    this.denyAppInstallation = false,
+    this.unlockedUntil,
   });
 
   factory ScreenTimeStatus.fromMap(Map<Object?, Object?> map) {
     final name = map['authorization'] as String?;
+    final unlockedUntilMs = map['unlockedUntilMs'] as int?;
     return ScreenTimeStatus(
       authorization: ScreenTimeAuthorization.values.firstWhere(
         (a) => a.name == name,
@@ -34,6 +38,11 @@ class ScreenTimeStatus {
       apps: map['apps'] as int? ?? 0,
       categories: map['categories'] as int? ?? 0,
       webDomains: map['webDomains'] as int? ?? 0,
+      blockAdultWebsites: map['blockAdultWebsites'] as bool? ?? false,
+      denyAppInstallation: map['denyAppInstallation'] as bool? ?? false,
+      unlockedUntil: unlockedUntilMs == null
+          ? null
+          : DateTime.fromMillisecondsSinceEpoch(unlockedUntilMs),
     );
   }
 
@@ -42,6 +51,13 @@ class ScreenTimeStatus {
   final int apps;
   final int categories;
   final int webDomains;
+
+  /// Doimiy himoya (ota-ona PIN bilan yoqadi).
+  final bool blockAdultWebsites;
+  final bool denyAppInstallation;
+
+  /// Ota-ona bergan qo'shimcha vaqt shu paytgacha (cheklov ochiq).
+  final DateTime? unlockedUntil;
 
   bool get isAuthorized => authorization == ScreenTimeAuthorization.approved;
   bool get hasSelection => apps + categories + webDomains > 0;
@@ -87,15 +103,53 @@ class ScreenTimeChannel {
   }
 
   /// Siyosatni saqlaydi, DeviceActivity jadvallarini yangilaydi va hozirgi
-  /// holatni qo'llaydi. Qaytaradi: hozir cheklov faolmi.
-  Future<bool> applyPolicy(IosShieldPolicy policy) async {
-    final map = await _invokeMap('applyPolicy', policy.toMap());
+  /// holatni qo'llaydi. [languageCode] — bloklash ekrani matnlari tili.
+  /// Qaytaradi: hozir cheklov faolmi.
+  Future<bool> applyPolicy(
+    IosShieldPolicy policy, {
+    String? languageCode,
+  }) async {
+    final map = await _invokeMap('applyPolicy', {
+      ...policy.toMap(),
+      if (languageCode != null) 'language': languageCode,
+    });
     final errors = (map['scheduleErrors'] as List?)?.cast<String>() ?? const [];
     if (errors.isNotEmpty) {
       debugPrint('ScreenTime: jadval xatolari: $errors');
     }
     return map['blocking'] as bool? ?? false;
   }
+
+  /// Ota-ona tasdiqlagan qo'shimcha vaqt: [until] gacha cheklov ochiq,
+  /// cheklangan ilovalardan [minutes] daqiqa foydalanilsa — qaytadi.
+  Future<ScreenTimeStatus> grantUnlock({
+    required DateTime until,
+    required int minutes,
+  }) async {
+    final map = await _invokeMap('grantUnlock', {
+      'untilMs': until.millisecondsSinceEpoch,
+      'minutes': minutes,
+    });
+    return ScreenTimeStatus.fromMap(map);
+  }
+
+  Future<ScreenTimeStatus> clearUnlock() async =>
+      ScreenTimeStatus.fromMap(await _invokeMap('clearUnlock'));
+
+  Future<ScreenTimeStatus> setExtras({
+    required bool blockAdultWebsites,
+    required bool denyAppInstallation,
+  }) async {
+    final map = await _invokeMap('setExtras', {
+      'blockAdultWebsites': blockAdultWebsites,
+      'denyAppInstallation': denyAppInstallation,
+    });
+    return ScreenTimeStatus.fromMap(map);
+  }
+
+  /// Bloklash ekranida "Qo'shimcha vaqt so'rash" bosilganmi (bir martalik).
+  Future<bool> consumePendingUnlockRequest() async =>
+      await _invoke<bool>('consumePendingUnlockRequest') ?? false;
 
   /// Uzish paytida — tanlov, siyosat, jadvallar va cheklovlar o'chiriladi.
   Future<void> reset() => _invoke<void>('reset');

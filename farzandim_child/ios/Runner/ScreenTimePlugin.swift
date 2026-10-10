@@ -9,7 +9,10 @@ import SwiftUI
 ///   • `status` → { authorization, blocking, apps, categories, webDomains }
 ///   • `requestAuthorization` → ota-ona Apple ID bilan tasdiqlaydi (.child)
 ///   • `pickApps` {title, cancel, done} → FamilyActivityPicker; null = bekor
-///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}]} → jadvallar
+///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}], language}
+///   • `grantUnlock` {untilMs, minutes} / `clearUnlock` → ota-ona bergan vaqt
+///   • `setExtras` {blockAdultWebsites, denyAppInstallation}
+///   • `consumePendingUnlockRequest` → bloklash ekranida vaqt so'ralganmi
 ///   • `reset` → uzish paytida hammasini tozalash
 final class ScreenTimePlugin: NSObject, FlutterPlugin {
   private static let channelName = "uz.parvoz.growth/screen_time"
@@ -36,9 +39,20 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       pickApps(call.arguments as? [String: Any] ?? [:], result: result)
     case "applyPolicy":
       applyPolicy(call.arguments, result: result)
+    case "grantUnlock":
+      grantUnlock(call.arguments, result: result)
+    case "clearUnlock":
+      Self.clearUnlock()
+      result(Self.status())
+    case "setExtras":
+      setExtras(call.arguments, result: result)
+    case "consumePendingUnlockRequest":
+      result(ParvozShield.consumeUnlockRequest())
     case "reset":
       let center = DeviceActivityCenter()
-      center.stopMonitoring(Self.managedActivities(center))
+      center.stopMonitoring(center.activities.filter {
+        $0.rawValue.hasPrefix(ParvozShieldPolicy.activityPrefix)
+      })
       ParvozShield.reset()
       UserDefaults(suiteName: ParvozShield.appGroupId)?.removeObject(forKey: Self.selectionKey)
       result(nil)
@@ -58,13 +72,20 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
 
   private static func status() -> [String: Any] {
     let tokens = ParvozShield.loadTokens()
-    return [
+    let extras = ParvozShield.loadExtras()
+    var status: [String: Any] = [
       "authorization": authorizationName(),
       "blocking": isAuthorized && ParvozShield.shouldBlock(),
       "apps": tokens.applications.count,
       "categories": tokens.categories.count,
       "webDomains": tokens.webDomains.count,
+      "blockAdultWebsites": extras.blockAdultWebsites,
+      "denyAppInstallation": extras.denyAppInstallation,
     ]
+    if ParvozShield.isUnlocked(), let until = ParvozShield.unlockUntil() {
+      status["unlockedUntilMs"] = Int(until.timeIntervalSince1970 * 1000)
+    }
+    return status
   }
 
   private static func authorizationName() -> String {
@@ -195,9 +216,14 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       result(FlutterError(code: "badArgs", message: "blockAll/windows kerak", details: nil))
       return
     }
+    if let language = (arguments as? [String: Any])?["language"] as? String {
+      ParvozShield.setLanguage(language)
+    }
     var policy = requested
     var errors: [String] = []
     if Self.isAuthorized {
+      // Doimiy himoya har sync'da qayta qo'llanadi (tizim tiklangan bo'lsa ham).
+      ParvozShield.applyExtras(ParvozShield.loadExtras())
       let sync = Self.syncSchedules(requested.windows)
       errors = sync.errors
       // Jadvali ro'yxatdan o'tmagan oyna saqlanmaydi: aks holda u ilova
@@ -240,8 +266,122 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     return ParvozShieldPolicy(blockAll: blockAll, windows: windows)
   }
 
+  /// Jadval oynalari va yarim tun jadvali (vaqtinchalik ruxsat jadvali emas).
   private static func managedActivities(_ center: DeviceActivityCenter) -> [DeviceActivityName] {
-    center.activities.filter { $0.rawValue.hasPrefix(ParvozShieldPolicy.activityPrefix) }
+    center.activities.filter {
+      $0.rawValue.hasPrefix(ParvozShieldPolicy.WindowKey.prefix)
+        || $0.rawValue == ParvozShieldPolicy.midnightTick
+    }
+  }
+
+  // MARK: Vaqtinchalik ruxsat (ota-ona tasdiqlagan qo'shimcha vaqt)
+
+  /// `untilMs` gacha cheklov ochiladi. Ilova yopiq bo'lsa ham o'z vaqtida
+  /// qaytishi uchun: jadval oxiri = max(until, hozir + 15 daqiqa) (Apple
+  /// minimumi) va cheklangan ilovalardan `minutes` daqiqa foydalanilganda
+  /// hodisa — qaysi biri oldin kelsa, kengaytma cheklovni qayta yoqadi.
+  private func grantUnlock(_ arguments: Any?, result: @escaping FlutterResult) {
+    guard
+      let args = arguments as? [String: Any],
+      let untilMs = (args["untilMs"] as? NSNumber)?.doubleValue,
+      let minutes = args["minutes"] as? Int, minutes > 0
+    else {
+      result(FlutterError(code: "badArgs", message: "untilMs/minutes kerak", details: nil))
+      return
+    }
+    let now = Date()
+    let until = Date(timeIntervalSince1970: untilMs / 1000)
+    guard until > now else {
+      Self.clearUnlock()
+      result(Self.status())
+      return
+    }
+    // Xuddi shu ruxsat allaqachon qo'llangan — jadvalni qayta boshlamaymiz
+    // (foydalanish hisobi noldan boshlanib ketmasin).
+    if let current = ParvozShield.unlockUntil(), abs(current.timeIntervalSince(until)) < 1 {
+      result(Self.status())
+      return
+    }
+    do {
+      try ParvozShield.setUnlockUntil(until)
+    } catch {
+      result(FlutterError(code: "saveFailed", message: error.localizedDescription, details: nil))
+      return
+    }
+    var errors: [String] = []
+    if Self.isAuthorized {
+      errors = Self.scheduleUnlockEnd(now: now, until: until, minutes: minutes)
+      ParvozShield.enforce(now: now)
+    }
+    var status = Self.status()
+    status["scheduleErrors"] = errors
+    result(status)
+  }
+
+  private static func scheduleUnlockEnd(now: Date, until: Date, minutes: Int) -> [String] {
+    let center = DeviceActivityCenter()
+    let activity = DeviceActivityName(ParvozShield.unlockActivity)
+    center.stopMonitoring([activity])
+    let minimumEnd = now.addingTimeInterval(TimeInterval(ParvozShieldPolicy.minimumWindowMinutes * 60))
+    let end = max(until, minimumEnd)
+    let components: Set<Calendar.Component> = [.year, .month, .day, .hour, .minute, .second]
+    let calendar = Calendar.autoupdatingCurrent
+    let schedule = DeviceActivitySchedule(
+      intervalStart: calendar.dateComponents(components, from: now),
+      intervalEnd: calendar.dateComponents(components, from: end),
+      repeats: false
+    )
+    let tokens = ParvozShield.loadTokens()
+    let event = DeviceActivityEvent(
+      applications: tokens.applications,
+      categories: tokens.categories,
+      webDomains: tokens.webDomains,
+      threshold: DateComponents(minute: minutes)
+    )
+    do {
+      try center.startMonitoring(
+        activity,
+        during: schedule,
+        events: [DeviceActivityEvent.Name(ParvozShield.unlockLimitEvent): event]
+      )
+      return []
+    } catch {
+      return ["\(ParvozShield.unlockActivity): \(error.localizedDescription)"]
+    }
+  }
+
+  private static func clearUnlock() {
+    DeviceActivityCenter().stopMonitoring([DeviceActivityName(ParvozShield.unlockActivity)])
+    try? ParvozShield.setUnlockUntil(nil)
+    if isAuthorized {
+      ParvozShield.enforce()
+    }
+  }
+
+  // MARK: Doimiy himoya
+
+  private func setExtras(_ arguments: Any?, result: @escaping FlutterResult) {
+    guard
+      let args = arguments as? [String: Any],
+      let blockAdultWebsites = args["blockAdultWebsites"] as? Bool,
+      let denyAppInstallation = args["denyAppInstallation"] as? Bool
+    else {
+      result(FlutterError(code: "badArgs", message: "extras kerak", details: nil))
+      return
+    }
+    guard Self.isAuthorized else {
+      result(FlutterError(code: "notAuthorized", message: "Family Controls ruxsati yo'q", details: nil))
+      return
+    }
+    do {
+      try ParvozShield.saveExtras(ParvozShieldExtras(
+        blockAdultWebsites: blockAdultWebsites,
+        denyAppInstallation: denyAppInstallation
+      ))
+      result(Self.status())
+    } catch {
+      result(FlutterError(code: "saveFailed", message: error.localizedDescription, details: nil))
+    }
   }
 
   /// Har bir noyob (boshlanish, tugash) juftligi uchun bitta kunlik jadval +

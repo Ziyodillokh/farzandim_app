@@ -24,6 +24,7 @@ import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/uninstall_protection_service.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/usage_stats_service.dart';
+import 'package:farzandim_child/features/app_restrictions/presentation/providers/unlock_request_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
@@ -38,6 +39,8 @@ import 'package:farzandim_child/features/gamification/presentation/providers/gam
 import 'package:farzandim_child/features/location/presentation/widgets/location_enable_modal.dart';
 import 'package:farzandim_child/features/notifications/presentation/providers/notifications_providers.dart';
 import 'package:farzandim_child/features/pairing/presentation/providers/pairing_provider.dart';
+import 'package:farzandim_child/features/screen_time/data/screen_time_channel.dart';
+import 'package:farzandim_child/features/screen_time/presentation/providers/screen_time_providers.dart';
 import 'package:farzandim_child/features/videos/data/models/video_model.dart';
 import 'package:farzandim_child/features/videos/presentation/providers/videos_providers.dart';
 import 'package:flutter/foundation.dart' show kIsWeb;
@@ -166,6 +169,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
     // "O'chirishni taqiqlash" — app ochilganda siyosatni qo'llaymiz (kerak
     // bo'lsa Device Admin dialogini ko'rsatamiz — foreground shart).
     Future.microtask(() => _syncUninstallProtection(allowPrompt: true));
+    Future.microtask(_checkPendingTimeRequest);
     _autoRefreshTimer = Timer.periodic(
       const Duration(seconds: 60),
       (_) => _refresh(),
@@ -192,6 +196,22 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
       // hech qachon yoqilmasdi (toggle esa ota-onada yashil ko'rinardi).
       // `_promptedThisSession` loop'ning oldini oladi — sessiyada bir marta.
       unawaited(_syncUninstallProtection(allowPrompt: !_promptedThisSession));
+      unawaited(_checkPendingTimeRequest());
+    }
+  }
+
+  /// iOS: bloklash ekranida "Qo'shimcha vaqt so'rash" bosilgan bo'lsa (eslatma
+  /// orqali shu yerga keladi) — so'rov oynasini ochadi. Bu yerda (splash
+  /// emas) — navigatsiya dialogni yopib yubormasligi uchun.
+  Future<void> _checkPendingTimeRequest() async {
+    if (!PlatformCapabilities.isIOS) return;
+    try {
+      final hasRequest =
+          await ref.read(screenTimeChannelProvider).consumePendingUnlockRequest();
+      if (!hasRequest || !mounted) return;
+      await ref.read(unlockRequestFlowProvider)();
+    } on ScreenTimeException catch (e) {
+      debugPrint('Dashboard: vaqt so\'rovi tekshiruvi xato: $e');
     }
   }
 

@@ -23,6 +23,24 @@ final backendUnlockRequestRepositoryProvider =
   return BackendUnlockRequestRepository(dio: ref.watch(dioClientProvider));
 });
 
+/// Ota-ona tasdiqlagan, hali amal qilayotgan qo'shimcha vaqt.
+@immutable
+class ActiveUnlockGrant {
+  const ActiveUnlockGrant({required this.expiresAt, required this.remaining});
+
+  factory ActiveUnlockGrant.fromJson(Map<String, dynamic> json) {
+    return ActiveUnlockGrant(
+      expiresAt: DateTime.parse(json['expiresAt'] as String),
+      remaining: Duration(
+        seconds: (json['remainingSeconds'] as num?)?.toInt() ?? 0,
+      ),
+    );
+  }
+
+  final DateTime expiresAt;
+  final Duration remaining;
+}
+
 class BackendUnlockRequestRepository {
   BackendUnlockRequestRepository({required Dio dio}) : _dio = dio;
   final Dio _dio;
@@ -59,6 +77,30 @@ class BackendUnlockRequestRepository {
         '${e.response?.statusCode} body=${e.response?.data}',
       );
       return false;
+    }
+  }
+
+  /// Hozir amal qilayotgan grantlar. Tarmoq/format xatosida `null` —
+  /// chaqiruvchi oxirgi holatni o'zgartirmaydi.
+  Future<List<ActiveUnlockGrant>?> getActiveGrants() async {
+    try {
+      final response = await _dio.get<Map<String, dynamic>>(
+        '/unlock-requests/active',
+      );
+      final grants = response.data?['grants'] as List<dynamic>?;
+      if (grants == null) return null;
+      return grants
+          .map((g) => ActiveUnlockGrant.fromJson(g as Map<String, dynamic>))
+          .toList();
+    } on DioException catch (e) {
+      debugPrint(
+        'BackendUnlockRequestRepository.getActiveGrants xato '
+        '${e.response?.statusCode}',
+      );
+      return null;
+    } on FormatException catch (e) {
+      debugPrint('BackendUnlockRequestRepository.getActiveGrants format: $e');
+      return null;
     }
   }
 }

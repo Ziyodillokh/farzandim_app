@@ -7,7 +7,10 @@
 //    ruxsatisiz o'chirib bo'lmaydi.
 // 2) Cheklanadigan ilovalar — FamilyActivityPicker, ota-ona PIN'i bilan.
 //    Tanlov faqat qurilmada (App Group), serverga yuborilmaydi.
-// 3) Holat — jadval/"hammasini bloklash" bo'yicha cheklov hozir faolmi.
+// 3) Holat — jadval/"hammasini bloklash" bo'yicha cheklov hozir faolmi,
+//    ota-ona bergan qo'shimcha vaqt.
+// 4) Doimiy himoya — kattalar saytlari filtri, ilova o'rnatishni taqiqlash
+//    (ota-ona PIN'i bilan).
 
 import 'dart:async';
 
@@ -88,6 +91,25 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
         await ref.read(screenTimeChannelProvider).requestAuthorization();
         // Ruxsatdan keyin jadvallar ro'yxatdan o'tkazilsin.
         unawaited(ref.read(restrictionsSyncServiceProvider).sync());
+      });
+
+  Future<void> _setExtras(
+    ScreenTimeStatus status, {
+    bool? blockAdultWebsites,
+    bool? denyAppInstallation,
+  }) =>
+      _run(() async {
+        final isParent = await confirmParent(
+          context,
+          ref.read(parentPinStoreProvider),
+        );
+        if (!isParent) return;
+        await ref.read(screenTimeChannelProvider).setExtras(
+              blockAdultWebsites:
+                  blockAdultWebsites ?? status.blockAdultWebsites,
+              denyAppInstallation:
+                  denyAppInstallation ?? status.denyAppInstallation,
+            );
       });
 
   Future<void> _pickApps() => _run(() async {
@@ -193,6 +215,31 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
                 : 'screenTime.statusFree'.tr(),
             isOn: status.isBlocking,
           ),
+          summary: _unlockSummary(status.unlockedUntil),
+        ),
+        const SizedBox(height: 12),
+        _StepCard(
+          title: 'screenTime.extrasTitle'.tr(),
+          body: 'screenTime.extrasBody'.tr(),
+          action: Column(
+            children: [
+              _SwitchRow(
+                title: 'screenTime.extrasAdult'.tr(),
+                value: status.blockAdultWebsites,
+                onChanged: status.isAuthorized && !_busy
+                    ? (v) => _setExtras(status, blockAdultWebsites: v)
+                    : null,
+              ),
+              _SwitchRow(
+                title: 'screenTime.extrasInstall'.tr(),
+                value: status.denyAppInstallation,
+                onChanged: status.isAuthorized && !_busy
+                    ? (v) => _setExtras(status, denyAppInstallation: v)
+                    : null,
+              ),
+            ],
+          ),
+          note: status.isAuthorized ? null : 'screenTime.appsNeedAuth'.tr(),
         ),
         if (error != null) ...[
           const SizedBox(height: 16),
@@ -201,6 +248,12 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
       ],
     );
   }
+}
+
+String? _unlockSummary(DateTime? until) {
+  if (until == null) return null;
+  final time = DateFormat.Hm().format(until);
+  return 'screenTime.unlockedUntil'.tr(namedArgs: {'time': time});
 }
 
 TextStyle _body(double size, {Color color = PermColors.dim}) =>
@@ -270,6 +323,37 @@ class _StepCard extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _SwitchRow extends StatelessWidget {
+  const _SwitchRow({
+    required this.title,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final bool value;
+  final ValueChanged<bool>? onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Expanded(
+          child: Text(
+            title,
+            style: GoogleFonts.poppins(fontSize: 14, color: Colors.white),
+          ),
+        ),
+        Switch.adaptive(
+          value: value,
+          onChanged: onChanged,
+          activeTrackColor: PermColors.green,
+        ),
+      ],
     );
   }
 }
