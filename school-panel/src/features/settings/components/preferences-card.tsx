@@ -1,12 +1,13 @@
 'use client';
 
-import { Languages, Monitor, Moon, Palette, Sun } from 'lucide-react';
+import { Languages, Monitor, Moon, Palette, SlidersHorizontal, Sun } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { useEffect, useState, type ComponentType, type ReactNode } from 'react';
 
 import { SectionCard } from '@/components/common/section-card';
 import { type Locale, LOCALES, useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { SEG_OFF, SEG_ON, SEG_TRACK } from '../styles';
 
 type ThemeKey = 'light' | 'dark' | 'system';
 
@@ -25,7 +26,7 @@ function Segmented({ label, icon, children }: { label: string; icon: ReactNode; 
         {icon}
         {label}
       </p>
-      <div className="grid auto-cols-fr grid-flow-col gap-1 rounded-lg border bg-muted/40 p-1" role="group" aria-label={label}>
+      <div className={cn('grid auto-cols-fr grid-flow-col gap-1', SEG_TRACK)} role="group" aria-label={label}>
         {children}
       </div>
     </div>
@@ -39,8 +40,8 @@ function Option({ active, onClick, children }: { active: boolean; onClick: () =>
       aria-pressed={active}
       onClick={onClick}
       className={cn(
-        'flex h-9 items-center justify-center gap-1.5 rounded-md px-2 text-sm font-medium transition-all [&_svg]:h-4 [&_svg]:w-4',
-        active ? 'bg-card text-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground',
+        'flex h-9 items-center justify-center gap-1.5 rounded-lg px-2 text-sm font-medium transition-all [&_svg]:h-4 [&_svg]:w-4',
+        active ? SEG_ON : SEG_OFF,
       )}
     >
       {children}
@@ -56,7 +57,7 @@ export function PreferencesCard() {
   useEffect(() => setMounted(true), []);
 
   return (
-    <SectionCard title={t('settings.prefs.title')} description={t('settings.prefs.description')}>
+    <SectionCard icon={<SlidersHorizontal />} title={t('settings.prefs.title')} description={t('settings.prefs.description')}>
       <div className="space-y-5">
         <Segmented label={t('settings.prefs.language')} icon={<Languages />}>
           {LOCALES.map((l: Locale) => (

@@ -17,12 +17,12 @@ import { SourceTag } from './source-tag';
 const FEED_LIMIT = 500;
 const PAGE_SIZE = 25;
 
-function SummaryPill({ icon, label, value, className }: { icon: ReactNode; label: string; value: string; className?: string }) {
+function SummaryPill({ icon, label, value, tone }: { icon: ReactNode; label: string; value: string; tone: string }) {
   return (
-    <div className={cn('flex items-center gap-3 rounded-xl border bg-card px-4 py-3 shadow-soft', className)}>
-      <span className="[&_svg]:size-4">{icon}</span>
-      <span className="text-sm text-muted-foreground">{label}</span>
-      <span className="ml-auto font-display text-lg font-semibold tabular-nums">{value}</span>
+    <div className="glass flex items-center gap-3 rounded-2xl px-4 py-3">
+      <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset [&_svg]:size-[18px]', tone)}>{icon}</span>
+      <span className="text-sm font-medium text-muted-foreground">{label}</span>
+      <span className="ml-auto font-display text-xl font-semibold tabular-nums">{value}</span>
     </div>
   );
 }
@@ -53,11 +53,11 @@ export function FeedEventsTab({ options }: { options: Omit<FeedOptions, 'limit'>
         cell: (e) => (
           <div className="flex items-center gap-3">
             <FeedKindIcon item={e} className="h-8 w-8 rounded-lg" />
-            <span className="font-medium">{e.studentName}</span>
+            <span className="whitespace-nowrap font-medium">{e.studentName}</span>
           </div>
         ),
       },
-      { key: 'class', header: t('common.class'), cell: (e) => <Badge variant="outline">{e.className}</Badge> },
+      { key: 'class', header: t('common.class'), cell: (e) => <Badge variant="outline" className="whitespace-nowrap">{e.className}</Badge> },
       {
         key: 'event',
         header: t('attendance.feed.columns.event'),
@@ -78,9 +78,9 @@ export function FeedEventsTab({ options }: { options: Omit<FeedOptions, 'limit'>
   return (
     <>
       <div className="mb-4 grid gap-3 sm:grid-cols-3">
-        <SummaryPill icon={<LogIn className="text-success" />} label={t('attendance.feed.summary.in')} value={formatNumber(summary.in)} />
-        <SummaryPill icon={<LogOut className="text-info" />} label={t('attendance.feed.summary.out')} value={formatNumber(summary.out)} />
-        <SummaryPill icon={<Clock4 className="text-warning" />} label={t('attendance.feed.summary.late')} value={formatNumber(summary.late)} />
+        <SummaryPill icon={<LogIn />} tone="bg-success/10 text-success ring-success/20" label={t('attendance.feed.summary.in')} value={formatNumber(summary.in)} />
+        <SummaryPill icon={<LogOut />} tone="bg-info/10 text-info ring-info/20" label={t('attendance.feed.summary.out')} value={formatNumber(summary.out)} />
+        <SummaryPill icon={<Clock4 />} tone="bg-warning/15 text-warning ring-warning/25" label={t('attendance.feed.summary.late')} value={formatNumber(summary.late)} />
       </div>
       <DataTable
         columns={columns}

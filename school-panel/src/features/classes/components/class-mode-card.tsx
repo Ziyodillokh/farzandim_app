@@ -1,6 +1,6 @@
 'use client';
 
-import { ShieldCheck } from 'lucide-react';
+import { ArrowUpRight, Smartphone } from 'lucide-react';
 import Link from 'next/link';
 
 import { Can } from '@/auth/can';
@@ -67,7 +67,7 @@ function StateHero({ state }: { state: ClassModeState }) {
       <div
         className={cn(
           'flex h-12 w-12 shrink-0 items-center justify-center rounded-xl [&_svg]:size-5',
-          state.restricted ? 'bg-primary text-primary-foreground shadow-primary-glow' : 'bg-muted text-muted-foreground',
+          state.restricted ? 'bg-brand-gradient text-white shadow-primary-glow' : 'bg-muted text-muted-foreground ring-1 ring-inset ring-border/60',
           state.kind === 'EMERGENCY_OFF' && 'bg-destructive/10 text-destructive',
         )}
       >
@@ -88,14 +88,14 @@ export function ClassModeCard({ classId, shift }: { classId: string; shift: Shif
   const mode = useClassMode(classId);
   return (
     <SectionCard
+      icon={<Smartphone />}
       title={t('classes.view.modeTitle')}
       description={shift ? t('classes.view.modeShift', { name: shift.name, start: shift.start, end: shift.end }) : undefined}
       actions={
         <Can perm="schoolMode.view">
-          <Button asChild variant="ghost" size="sm">
-            <Link href="/school-mode">
-              <ShieldCheck />
-              {t('classes.view.modeLink')}
+          <Button asChild variant="ghost" size="icon-sm" className="text-primary hover:text-primary" title={t('classes.view.modeLink')}>
+            <Link href="/school-mode" aria-label={t('classes.view.modeLink')}>
+              <ArrowUpRight />
             </Link>
           </Button>
         </Can>

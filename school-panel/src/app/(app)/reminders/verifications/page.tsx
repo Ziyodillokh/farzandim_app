@@ -8,6 +8,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { SearchInput, Toolbar } from '@/components/common/toolbar';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { VerificationStatus } from '@/data/contracts';
@@ -38,8 +39,8 @@ export default function VerificationsPage() {
       <FinanceCallout className="mb-6" />
 
       <Toolbar className="justify-between">
-        <Tabs value={tab} onValueChange={(v) => setFilter((f) => ({ ...f, page: 1, status: v === 'ALL' ? undefined : (v as VerificationStatus) }))}>
-          <TabsList className="h-auto flex-wrap">
+        <Tabs className="w-full min-w-0 overflow-x-auto sm:w-auto" value={tab} onValueChange={(v) => setFilter((f) => ({ ...f, page: 1, status: v === 'ALL' ? undefined : (v as VerificationStatus) }))}>
+          <TabsList className="w-max">
             {TABS.map((key) => (
               <TabsTrigger key={key} value={key}>
                 {tabLabel(key)}
@@ -55,18 +56,18 @@ export default function VerificationsPage() {
       {list.isLoading && !list.data && (
         <div className="grid gap-4 xl:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-64 rounded-xl" />
+            <Skeleton key={i} className="h-64 rounded-2xl" />
           ))}
         </div>
       )}
       {list.data && list.data.items.length === 0 && (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <EmptyState
             icon={<Inbox />}
             title={filter.search ? t('common.noResults') : t('reminders.verifications.empty.title')}
             description={filter.search ? t('common.noResultsHint') : t('reminders.verifications.empty.description')}
           />
-        </div>
+        </Card>
       )}
       {list.data && list.data.items.length > 0 && (
         <div className="grid gap-4 xl:grid-cols-2">

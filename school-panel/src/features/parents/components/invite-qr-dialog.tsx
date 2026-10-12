@@ -6,7 +6,9 @@ import QRCode from 'react-qr-code';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import type { Guardian } from '@/data/contracts';
+import { INNER_TILE, SELECTED_SOFT } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useCopy } from '../hooks';
 
 const LINK_BASE = 'https://parvoz.uz/link?code=';
@@ -35,7 +37,7 @@ export function InviteQrDialog({ guardian, onOpenChange }: { guardian: Guardian 
             <p className="text-center text-sm font-medium">
               {guardian.fullName} <span className="text-muted-foreground">· {t(`enums.relation.${guardian.relation}`)}</span>
             </p>
-            <div className="rounded-2xl border bg-white p-4 shadow-soft">
+            <div className="rounded-2xl bg-white p-4 shadow-glass ring-1 ring-inset ring-border/60">
               <QRCode value={inviteLink(code)} size={QR_SIZE} aria-label={code} />
             </div>
             <div className="text-center">
@@ -61,12 +63,12 @@ export function InviteQrDialog({ guardian, onOpenChange }: { guardian: Guardian 
               <MessageSquareText className="h-4 w-4 shrink-0" />
               {t('parents.inviteDialog.sms', { phone: guardian.phone })}
             </p>
-            <div className="w-full rounded-xl border bg-muted/40 p-4">
+            <div className={cn(INNER_TILE, 'w-full p-4')}>
               <p className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted-foreground">{t('parents.inviteDialog.stepsTitle')}</p>
               <ol className="space-y-2 text-sm">
                 {steps.map((step, i) => (
                   <li key={step} className="flex items-start gap-2.5">
-                    <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary text-2xs font-semibold text-primary-foreground">
+                    <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-full text-2xs font-semibold', SELECTED_SOFT)}>
                       {i + 1}
                     </span>
                     {step}

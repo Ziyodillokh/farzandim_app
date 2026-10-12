@@ -31,25 +31,32 @@ export function KioskQr() {
   // QR faqat kod almashganda qayta chiziladi (har tikda emas).
   const qr = useMemo(
     () => (
-      <QRCode value={`parvoz-school://checkin?code=${token.code}`} size={232} bgColor="#FFFFFF" fgColor="#060B16" level="M" className="h-auto w-[min(232px,52vw)]" />
+      <QRCode
+        value={`parvoz-school://checkin?code=${token.code}`}
+        size={232}
+        bgColor="#FFFFFF"
+        fgColor="#060A15"
+        level="M"
+        className="h-[min(232px,52vw,30dvh)] w-[min(232px,52vw,30dvh)]"
+      />
     ),
     [token.code],
   );
 
   return (
-    <div className="flex flex-col items-center rounded-[2rem] border border-white/10 bg-white/[0.06] p-6 text-center shadow-2xl backdrop-blur md:p-8">
-      <div className="flex items-center gap-2 text-sm font-semibold uppercase tracking-[0.18em] text-[#9CC0FF]">
+    <div className="glass flex min-h-0 flex-col items-center justify-center rounded-[1.75rem] p-5 text-center xl:p-7">
+      <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-[0.2em] text-brand-300 xl:text-sm">
         <ScanLine className="h-4 w-4" />
         {t('attendance.kiosk.scanTitle')}
       </div>
 
-      <div className="relative mt-6 rounded-3xl bg-white p-5 shadow-[0_0_80px_-12px_rgba(60,130,255,0.55)]">
+      <div className="relative mt-4 rounded-3xl bg-white p-4 shadow-[0_0_80px_-12px_rgba(60,130,255,0.6)] ring-1 ring-brand-300/40 xl:mt-6 xl:p-5">
         <div key={token.code} className="animate-fade-in">
           {qr}
         </div>
       </div>
 
-      <div className="mt-6 flex items-center gap-4">
+      <div className="mt-4 flex items-center gap-4 xl:mt-6">
         <div className="relative h-14 w-14" role="timer" aria-label={t('attendance.kiosk.refreshIn', { seconds })}>
           <svg viewBox="0 0 52 52" className="h-14 w-14 -rotate-90">
             <circle cx="26" cy="26" r={RING_RADIUS} fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="4" />
@@ -58,7 +65,7 @@ export function KioskQr() {
               cy="26"
               r={RING_RADIUS}
               fill="none"
-              stroke={urgent ? '#F5A524' : '#3C82FF'}
+              stroke={urgent ? '#F5A524' : '#508AFF'}
               strokeWidth="4"
               strokeLinecap="round"
               strokeDasharray={RING_LENGTH}
@@ -68,10 +75,10 @@ export function KioskQr() {
           <span className="absolute inset-0 flex items-center justify-center font-display text-sm font-semibold tabular-nums">{seconds}</span>
         </div>
         <div className="text-left">
-          <p className="font-mono text-2xl font-semibold tracking-[0.3em] text-white/90 tabular-nums">
+          <p className="font-mono text-xl font-semibold tracking-[0.3em] text-white/90 tabular-nums xl:text-2xl">
             {token.code.slice(0, 3)} {token.code.slice(3)}
           </p>
-          <p className="mt-0.5 max-w-[240px] text-xs text-white/55">{t('attendance.kiosk.scanHint')}</p>
+          <p className="mt-0.5 max-w-[240px] text-xs text-white/60">{t('attendance.kiosk.scanHint')}</p>
         </div>
       </div>
     </div>

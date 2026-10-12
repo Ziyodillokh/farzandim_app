@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, ShieldAlert, ShieldCheck } from 'lucide-react';
+import { CalendarClock, ShieldAlert, ShieldCheck, SlidersHorizontal } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
@@ -13,7 +13,9 @@ import { Separator } from '@/components/ui/separator';
 import type { CareRequestStatus } from '@/data/contracts';
 import type { CareRequestDetail } from '@/data/mock/services/care';
 import { CARE_REQUEST_STATUSES } from '@/data/schemas/care';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useActivateProtocol, useScheduleMeeting, useUpdateRequestStatus } from '../hooks';
 
 /** "YYYY-MM-DDTHH:MM:SS" → datetime-local qiymati. */
@@ -35,7 +37,7 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
   const canProtocol = request.urgency === 'URGENT' && !request.protocolActivated;
 
   return (
-    <SectionCard title={t('care.request.actions')}>
+    <SectionCard title={t('care.request.actions')} icon={<SlidersHorizontal />}>
       <div className="space-y-5">
         <FormField label={t('care.request.changeStatus')} hint={!request.meetingAt ? t('care.request.needMeeting') : undefined}>
           <Select
@@ -57,31 +59,31 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
         </FormField>
 
         <FormField label={t('care.request.scheduleMeeting')} htmlFor="care-meeting" hint={t('care.request.meetingHint')}>
-          <div className="flex gap-2">
-            <Input id="care-meeting" type="datetime-local" value={meetingAt} onChange={(e) => setMeetingAt(e.target.value)} className="flex-1" />
+          <div className="space-y-2">
+            <Input id="care-meeting" type="datetime-local" value={meetingAt} onChange={(e) => setMeetingAt(e.target.value)} className="w-full min-w-0" />
             <Button
-              variant="soft"
+              variant="outline"
+              className="w-full"
               onClick={() => schedule.mutate({ id: request.id, meetingAt })}
               loading={schedule.isPending}
               disabled={!meetingAt || meetingAt === toLocalInput(request.meetingAt)}
-              aria-label={t('care.request.meetingSave')}
             >
               <CalendarClock />
-              <span className="hidden sm:inline">{t('care.request.meetingSave')}</span>
+              {t('care.request.meetingSave')}
             </Button>
           </div>
         </FormField>
 
         {request.urgency === 'URGENT' && (
           <>
-            <Separator />
+            <Separator className="bg-border/60" />
             {canProtocol ? (
               <Button variant="destructive" className="h-auto w-full whitespace-normal py-2.5" onClick={() => setConfirmOpen(true)}>
                 <ShieldAlert />
                 {t('care.request.protocol.button')}
               </Button>
             ) : (
-              <div className="flex items-center gap-2 rounded-lg bg-success/10 px-3 py-2.5 text-sm font-medium text-success">
+              <div className="flex items-center gap-2 rounded-xl bg-success/10 px-3 py-2.5 text-sm font-medium text-success ring-1 ring-inset ring-success/20">
                 <ShieldCheck className="h-4 w-4" />
                 {t('care.request.protocol.activeTitle')}
               </div>
@@ -100,7 +102,7 @@ export function RequestActions({ request }: { request: CareRequestDetail }) {
         loading={protocol.isPending}
         onConfirm={() => protocol.mutate(request.id, { onSuccess: () => setConfirmOpen(false) })}
       >
-        <ol className="space-y-2 rounded-lg bg-muted/50 p-3 text-sm">
+        <ol className={cn(TILE, 'space-y-2 p-3 text-sm')}>
           {(['step1', 'step2', 'step3', 'step4'] as const).map((step, i) => (
             <li key={step} className="flex gap-2.5">
               <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-destructive/10 text-2xs font-bold text-destructive">{i + 1}</span>

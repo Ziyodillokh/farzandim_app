@@ -38,8 +38,8 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenCha
         {!p ? (
           <Skeleton className="h-64 rounded-2xl" />
         ) : (
-          <div className="space-y-5">
-            <div className="flex items-center gap-4">
+          <div className="min-w-0 space-y-5">
+            <div className="flex min-w-0 items-center gap-4">
               <div className="relative">
                 <StaffAvatar name={p.fullName} photo={p.photo} portrait={p.portrait} size="xl" className="shadow-glass" />
                 <label
@@ -51,8 +51,8 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                   <span className="sr-only">{t('profile.photo.upload')}</span>
                 </label>
               </div>
-              <div className="min-w-0">
-                <p className="truncate font-display text-lg font-semibold leading-tight">{p.fullName}</p>
+              <div className="min-w-0 flex-1">
+                <p className="break-words font-display text-[1.05rem] font-semibold leading-snug">{p.fullName}</p>
                 <Badge className="mt-2">{t(`enums.role.${p.role}`)}</Badge>
               </div>
             </div>
@@ -68,7 +68,7 @@ export function ProfileDialog({ open, onOpenChange }: { open: boolean; onOpenCha
                 {t('profile.photo.hint')} {!p.photo && t('profile.photo.portraitNote')}
               </p>
             </div>
-            <div className="grid gap-2">
+            <div className="grid min-w-0 gap-2">
               <Row icon={<Briefcase />} label={t('profile.fields.position')} value={p.position} />
               <Row icon={<Phone />} label={t('profile.fields.phone')} value={p.phone} />
               <Row icon={<AtSign />} label={t('profile.fields.email')} value={p.email} />

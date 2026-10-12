@@ -6,6 +6,7 @@ import { useState, type ReactNode } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { ErrorState } from '@/components/common/error-state';
+import { StaffAvatar } from '@/components/common/staff-avatar';
 import { MessageStatusBadge } from '@/components/common/status-badges';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -13,7 +14,9 @@ import { Sheet, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetT
 import { Skeleton } from '@/components/ui/skeleton';
 import type { AnnouncementDetail } from '@/data/mock/services/comms';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useAnnouncement, useDuplicateAnnouncement, useRemoveAnnouncement, useSendNow } from '../hooks';
+import { BRAND_GLOW, INNER_TILE } from '../styles';
 import { AudienceChips } from './audience-chips';
 import { DeliveryStats } from './delivery-stats';
 import { MessagePhonePreview } from './message-preview';
@@ -29,7 +32,7 @@ export function AnnouncementSheet({ id, onOpenChange }: { id: string | null; onO
 
   return (
     <Sheet open={Boolean(id)} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-2xl">
+      <SheetContent className="w-[calc(100%-1rem)] overflow-y-auto sm:max-w-2xl">
         <SheetHeader>
           <SheetTitle className="pr-8">{a?.title ?? t('messages.detail.title')}</SheetTitle>
           <SheetDescription className="sr-only">{t('messages.detail.title')}</SheetDescription>
@@ -64,12 +67,15 @@ function DetailBody({ a }: { a: AnnouncementDetail }) {
         <Field label={t('messages.detail.audience')}>
           <AudienceChips kind={a.audience.kind} names={a.audienceNames} max={12} />
         </Field>
-        <div className="grid grid-cols-2 gap-4">
+        <div className="grid gap-4 sm:grid-cols-[minmax(0,1.5fr)_minmax(0,1fr)]">
           <Field label={t('messages.detail.author')}>
-            <p className="text-sm font-medium">{a.authorName}</p>
+            <div className="flex min-w-0 items-center gap-2">
+              <StaffAvatar staffId={a.byStaffId} name={a.authorName} size="sm" />
+              <p className="truncate text-sm font-medium">{a.authorName}</p>
+            </div>
           </Field>
           <Field label={t('messages.detail.when')}>
-            <p className="text-sm font-medium tabular-nums">{when ? formatDate(when, 'd MMMM yyyy, HH:mm') : '—'}</p>
+            <p className="flex h-8 items-center text-sm font-medium tabular-nums">{when ? formatDate(when, 'd MMMM yyyy, HH:mm') : '—'}</p>
           </Field>
         </div>
         {a.status === 'SENT' && (
@@ -81,11 +87,12 @@ function DetailBody({ a }: { a: AnnouncementDetail }) {
         <Field label={t('messages.detail.reach')}>
           <RecipientsSummary reach={a.reach} />
         </Field>
-        <p className="whitespace-pre-line rounded-xl bg-muted/50 p-4 text-sm leading-relaxed">{a.body}</p>
+        <p className={cn(INNER_TILE, 'whitespace-pre-line p-4 text-sm leading-relaxed')}>{a.body}</p>
       </div>
-      <div className="space-y-2">
-        <p className="text-center text-xs font-medium text-muted-foreground">{t('messages.detail.preview')}</p>
-        <MessagePhonePreview title={a.title} body={a.body} important={a.priority === 'IMPORTANT'} className="w-[260px]" />
+      <div className={cn(INNER_TILE, 'relative space-y-3 self-start overflow-hidden p-4')}>
+        <div aria-hidden className={BRAND_GLOW} />
+        <p className="relative text-center text-xs font-medium text-muted-foreground">{t('messages.detail.preview')}</p>
+        <MessagePhonePreview title={a.title} body={a.body} important={a.priority === 'IMPORTANT'} className="relative w-[250px]" />
       </div>
     </div>
   );

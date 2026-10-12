@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { CalendarClock, FileWarning, Save, Send } from 'lucide-react';
+import { CalendarClock, FileWarning, Save, Send, Smartphone, UsersRound } from 'lucide-react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -12,12 +12,15 @@ import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { SectionCard } from '@/components/common/section-card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { clockNow } from '@/data/mock/clock';
 import type { AnnouncementDetail, MessageTemplate } from '@/data/mock/services/comms';
 import { announcementInputSchema, type AnnouncementInput } from '@/data/schemas/comms';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useAnnouncement, useAudienceReach, useClassChoices, useSaveDraft, useSendAnnouncement } from '../hooks';
+import { BRAND_GLOW, ICON_TONES } from '../styles';
 import { AudiencePicker } from './audience-picker';
 import { ContentSection, type ScheduleMode, ScheduleSection } from './compose-sections';
 import { MessagePhonePreview } from './message-preview';
@@ -53,7 +56,7 @@ export function ComposeForm({ id }: { id: string | null }) {
   }
   if (id && (existing.isError || (existing.data && !existing.data.canManage))) {
     return (
-      <div className="rounded-xl border bg-card">
+      <Card>
         <EmptyState
           icon={<FileWarning />}
           title={t('messages.compose.notFound')}
@@ -63,14 +66,14 @@ export function ComposeForm({ id }: { id: string | null }) {
             </Button>
           }
         />
-      </div>
+      </Card>
     );
   }
   return <ComposeEditor key={existing.data?.id ?? 'new'} initial={existing.data ?? null} />;
 }
 
 function ComposeEditor({ initial }: { initial: AnnouncementDetail | null }) {
-  const { t } = useI18n();
+  const { t, tc } = useI18n();
   const router = useRouter();
   const can = useCan();
   const canSchool = can('messages.sendSchool');
@@ -142,7 +145,7 @@ function ComposeEditor({ initial }: { initial: AnnouncementDetail | null }) {
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
         <div className="min-w-0 space-y-6">
           <ContentSection form={form} onTemplate={onTemplate} />
-          <SectionCard title={t('messages.compose.audience')}>
+          <SectionCard icon={<UsersRound />} title={t('messages.compose.audience')}>
             <AudiencePicker
               value={audience}
               onChange={(next) => form.setValue('audience', next, { shouldValidate: form.formState.isSubmitted })}
@@ -166,27 +169,45 @@ function ComposeEditor({ initial }: { initial: AnnouncementDetail | null }) {
           />
         </div>
 
-        <aside className="space-y-4 lg:sticky lg:top-20 lg:self-start">
-          <div className="text-center">
-            <p className="text-sm font-semibold">{t('messages.preview.title')}</p>
-            <p className="text-xs text-muted-foreground">{t('messages.preview.hint')}</p>
-          </div>
-          <MessagePhonePreview title={values.title} body={values.body} important={values.priority === 'IMPORTANT'} />
-          <SectionCard title={t('messages.recipients.title')} bodyClassName="p-4">
+        <aside className="space-y-6 lg:sticky lg:top-24 lg:self-start">
+          <Card className="relative overflow-hidden">
+            <div aria-hidden className={BRAND_GLOW} />
+            <div className="relative flex items-center gap-3 px-5 pt-5">
+              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl [&_svg]:size-[18px]', ICON_TONES.primary)}>
+                <Smartphone />
+              </span>
+              <div className="min-w-0">
+                <p className="text-[0.95rem] font-semibold tracking-[-0.005em]">{t('messages.preview.title')}</p>
+                <p className="text-xs text-muted-foreground">{t('messages.preview.hint')}</p>
+              </div>
+            </div>
+            <div className="relative px-4 pb-5 pt-4">
+              <MessagePhonePreview title={values.title} body={values.body} important={values.priority === 'IMPORTANT'} className="w-[270px]" />
+            </div>
+          </Card>
+          <SectionCard icon={<Send />} title={t('messages.recipients.title')} bodyClassName="p-4">
             <RecipientsSummary reach={reach.data} loading={reach.isLoading} />
           </SectionCard>
         </aside>
       </div>
 
-      <div className="sticky bottom-0 z-10 -mx-4 mt-6 flex flex-wrap items-center justify-end gap-2 border-t bg-background/85 px-4 py-3 backdrop-blur md:-mx-8 md:px-8">
-        <Button type="button" variant="outline" onClick={() => void onDraft()} loading={draft.isPending} disabled={send.isPending}>
-          <Save />
-          {t('messages.compose.saveDraft')}
-        </Button>
-        <Button type="submit" loading={send.isPending} disabled={draft.isPending}>
-          {mode === 'later' ? <CalendarClock /> : <Send />}
-          {mode === 'later' ? t('messages.compose.schedule') : t('messages.compose.send')}
-        </Button>
+      <div className="sticky bottom-4 z-10 mt-6 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-border/60 bg-card px-4 py-3 shadow-glass-lg dark:border-white/[0.08]">
+        <p className="hidden min-w-0 items-center gap-2 text-sm text-muted-foreground sm:flex">
+          <UsersRound className="h-4 w-4 shrink-0 text-primary" />
+          <span className="truncate">
+            {t('messages.recipients.title')}: <span className="font-semibold text-foreground tabular-nums">{tc('messages.recipientsCount', reach.data?.guardians ?? 0)}</span>
+          </span>
+        </p>
+        <div className="ml-auto flex w-full gap-2 sm:w-auto [&>button]:flex-1 sm:[&>button]:flex-none">
+          <Button type="button" variant="outline" onClick={() => void onDraft()} loading={draft.isPending} disabled={send.isPending}>
+            <Save />
+            {t('messages.compose.saveDraft')}
+          </Button>
+          <Button type="submit" loading={send.isPending} disabled={draft.isPending}>
+            {mode === 'later' ? <CalendarClock /> : <Send />}
+            {mode === 'later' ? t('messages.compose.schedule') : t('messages.compose.send')}
+          </Button>
+        </div>
       </div>
 
       <ConfirmDialog

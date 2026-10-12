@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarHeart, CalendarOff, Plus, Trash2 } from 'lucide-react';
+import { CalendarHeart, Plus, Trash2 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { Can } from '@/auth/can';
@@ -11,18 +11,16 @@ import { PageHeader } from '@/components/common/page-header';
 import { SectionCard } from '@/components/common/section-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { Holiday } from '@/data/contracts';
 import { useClockNow } from '@/features/engine/use-clock';
 import { useSchool } from '@/features/school/hooks';
 import { HolidayDialog } from '@/features/school-mode/components/holiday-dialog';
+import { NextHolidayCard } from '@/features/school-mode/components/next-holiday-card';
 import { useRemoveHoliday } from '@/features/school-mode/hooks';
-import { localDate } from '@/features/school-mode/lib';
+import { localDate, TONE_ORB } from '@/features/school-mode/lib';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
-
-const DAY_MS = 86_400_000;
 
 function groupByMonth(holidays: readonly Holiday[]): Array<[string, Holiday[]]> {
   const groups = new Map<string, Holiday[]>();
@@ -31,33 +29,6 @@ function groupByMonth(holidays: readonly Holiday[]): Array<[string, Holiday[]]> 
     groups.set(key, [...(groups.get(key) ?? []), h]);
   }
   return [...groups.entries()];
-}
-
-function NextHolidayCard({ next, today }: { next: Holiday | undefined; today: string }) {
-  const { t, tc, formatDate } = useI18n();
-  if (!next) {
-    return (
-      <Card className="mb-6 flex items-center gap-3 p-5 text-sm text-muted-foreground">
-        <CalendarOff className="h-5 w-5" aria-hidden />
-        {t('schoolMode.holidays.noUpcoming')}
-      </Card>
-    );
-  }
-  const days = Math.round((localDate(next.date).getTime() - localDate(today).getTime()) / DAY_MS);
-  return (
-    <Card className="mb-6 overflow-hidden border-transparent bg-gradient-to-br from-primary to-primary-glow p-6 text-primary-foreground shadow-primary-glow animate-fade-in">
-      <p className="text-xs font-semibold uppercase tracking-wider opacity-85">{t('schoolMode.holidays.next')}</p>
-      <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
-        <div>
-          <p className="font-display text-2xl font-semibold md:text-3xl">{next.name}</p>
-          <p className="mt-1 text-sm opacity-90">{formatDate(localDate(next.date), 'd MMMM, EEEE')}</p>
-        </div>
-        <span className="rounded-full bg-white/20 px-4 py-1.5 text-sm font-semibold">
-          {days === 0 ? t('schoolMode.holidays.today') : tc('schoolMode.holidays.inDays', days)}
-        </span>
-      </div>
-    </Card>
-  );
 }
 
 export default function SchoolModeHolidaysPage() {
@@ -94,7 +65,7 @@ export default function SchoolModeHolidaysPage() {
       ) : school.isLoading ? (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-40 rounded-xl" />
+            <Skeleton key={i} className="h-40 rounded-2xl" />
           ))}
         </div>
       ) : holidays.length === 0 ? (
@@ -108,6 +79,11 @@ export default function SchoolModeHolidaysPage() {
                 key={month}
                 className={cn('animate-slide-up', items.every((h) => h.date < today) && 'opacity-70')}
                 title={<span className="capitalize">{formatDate(localDate(`${month}-01`), 'LLLL yyyy')}</span>}
+                actions={
+                  <Badge variant="secondary" size="sm" className="tabular-nums">
+                    {items.length}
+                  </Badge>
+                }
                 bodyClassName="p-3"
               >
                 <ul className="space-y-1">
@@ -117,8 +93,11 @@ export default function SchoolModeHolidaysPage() {
                     const isNext = h.id === next?.id;
                     const date = localDate(h.date);
                     return (
-                      <li key={h.id} className={cn('group flex items-center gap-3 rounded-lg px-2 py-2', isNext && 'bg-primary/[0.06] ring-1 ring-primary/25')}>
-                        <div className={cn('flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-lg', past ? 'bg-muted text-muted-foreground' : 'bg-primary/10 text-primary')}>
+                      <li
+                        key={h.id}
+                        className={cn('group flex items-center gap-3 rounded-xl px-2 py-2 transition-colors hover:bg-primary/[0.04]', isNext && 'bg-primary/[0.06] ring-1 ring-inset ring-primary/25')}
+                      >
+                        <div className={cn('flex h-11 w-11 shrink-0 flex-col items-center justify-center rounded-xl ring-1 ring-inset', past ? TONE_ORB.muted : TONE_ORB.primary)}>
                           <span className="font-display text-base font-semibold leading-none">{formatDate(date, 'd')}</span>
                           <span className="mt-0.5 text-2xs uppercase">{formatDate(date, 'EEEEEE')}</span>
                         </div>

@@ -6,6 +6,7 @@ import type { AudienceKind } from '@/data/contracts';
 import { type TKey, useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useClassChoices } from '../hooks';
+import { SELECTED_TILE, TILE_BUTTON } from '../styles';
 import { ClassMultiSelect } from './class-multi-select';
 import { GuardianPicker } from './guardian-picker';
 
@@ -53,11 +54,16 @@ export function AudiencePicker({
               disabled={disabled}
               onClick={() => onChange({ ...value, kind })}
               className={cn(
-                'flex items-start gap-3 rounded-xl border p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50',
-                on ? 'border-primary bg-primary/[0.06] ring-1 ring-primary/30' : 'hover:border-primary/40 hover:bg-accent/50',
+                'flex items-start gap-3 p-3 text-left transition-all disabled:cursor-not-allowed disabled:opacity-50',
+                on ? SELECTED_TILE : TILE_BUTTON,
               )}
             >
-              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', on ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+              <span
+                className={cn(
+                  'flex h-9 w-9 shrink-0 items-center justify-center rounded-lg transition-colors',
+                  on ? 'bg-brand-gradient text-white shadow-[0_6px_16px_-6px_hsl(var(--primary)/0.6)]' : 'bg-muted text-muted-foreground',
+                )}
+              >
                 <Icon className="h-4 w-4" />
               </span>
               <span className="min-w-0">

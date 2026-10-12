@@ -65,7 +65,7 @@ export function ClassesStats({
       {showAttendance && (
         <StatCard
           icon={<CalendarCheck2 />}
-          tone="warning"
+          tone="primary"
           label={t('classes.stats.attendance')}
           value={decided ? `${percent(attended, decided)}%` : '—'}
           hint={t('classes.stats.attendanceHint', { present: formatNumber(attended), absent: formatNumber(absent) })}

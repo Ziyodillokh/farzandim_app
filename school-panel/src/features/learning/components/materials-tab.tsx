@@ -28,7 +28,7 @@ function MaterialCard({ material, onAssign }: { material: MaterialRow; onAssign:
   return (
     <Card className="card-glow flex flex-col p-5 animate-fade-in">
       <div className="flex items-start justify-between gap-3">
-        <span className={cn('flex h-11 w-11 items-center justify-center rounded-xl', KIND_TONES[material.kind])}>
+        <span className={cn('flex h-11 w-11 items-center justify-center rounded-2xl ring-1 ring-inset', KIND_TONES[material.kind])}>
           <Icon className="h-5 w-5" />
         </span>
         <Badge variant="secondary" size="sm">{t(`enums.materialKind.${material.kind}`)}</Badge>
@@ -42,7 +42,7 @@ function MaterialCard({ material, onAssign }: { material: MaterialRow; onAssign:
           <span className="flex items-center gap-1"><ListChecks className="h-3.5 w-3.5" />{tc('learning.materials.questions', material.questions)}</span>
         )}
       </div>
-      <div className="mt-auto flex items-center justify-between gap-2 border-t pt-4">
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-border/50 pt-4 dark:border-white/[0.06]">
         <span className={cn('text-xs', material.assignedClasses > 0 ? 'font-medium text-success' : 'text-muted-foreground')}>
           {material.assignedClasses > 0 ? tc('learning.materials.assignedTo', material.assignedClasses) : t('learning.materials.notAssigned')}
         </span>
@@ -77,14 +77,18 @@ export function MaterialsTab() {
       return (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }, (_, i) => (
-            <Skeleton key={i} className="h-56 rounded-xl" />
+            <Skeleton key={i} className="h-56 rounded-2xl" />
           ))}
         </div>
       );
     }
     const items = materials.data ?? [];
     if (items.length === 0) {
-      return <EmptyState icon={<BookOpen />} title={t('learning.materials.empty')} description={t('learning.materials.emptyHint')} className="rounded-xl border border-dashed" />;
+      return (
+        <Card>
+          <EmptyState icon={<BookOpen />} title={t('learning.materials.empty')} description={t('learning.materials.emptyHint')} />
+        </Card>
+      );
     }
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">

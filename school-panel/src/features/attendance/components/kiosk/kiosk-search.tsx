@@ -17,9 +17,9 @@ export function KioskSearch({ onClose, onMark, busy }: { onClose: () => void; on
   const tooShort = debounced.trim().length < 2;
 
   return (
-    <div className="fixed inset-0 z-40 flex justify-end bg-[#060B16]/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
+    <div className="fixed inset-0 z-40 flex justify-end bg-brand-950/60 backdrop-blur-sm animate-fade-in" onClick={onClose}>
       <aside
-        className="flex h-full w-full max-w-xl flex-col border-l border-white/10 bg-[#0A1224] p-6 shadow-2xl animate-slide-in-right md:p-8"
+        className="flex h-full w-full max-w-xl flex-col border-l border-white/10 bg-brand-900/95 p-6 shadow-[-30px_0_80px_-30px_rgba(0,0,0,0.8)] animate-slide-in-right md:p-8"
         onClick={(e) => e.stopPropagation()}
         aria-label={t('attendance.kiosk.searchTitle')}
       >
@@ -40,7 +40,7 @@ export function KioskSearch({ onClose, onMark, busy }: { onClose: () => void; on
             value={query}
             onChange={(e) => setQuery(e.target.value)}
             placeholder={t('attendance.kiosk.searchPlaceholder')}
-            className="h-14 w-full rounded-2xl border border-white/15 bg-white/[0.06] pl-12 pr-4 text-lg text-white placeholder:text-white/35 focus:border-primary/60 focus:outline-none focus:ring-2 focus:ring-primary/40"
+            className="h-14 w-full rounded-2xl border border-white/15 bg-white/[0.06] pl-12 pr-4 text-lg text-white placeholder:text-white/40 focus:border-brand-400/60 focus:outline-none focus:ring-2 focus:ring-brand-500/40"
           />
         </div>
 
@@ -53,7 +53,7 @@ export function KioskSearch({ onClose, onMark, busy }: { onClose: () => void; on
             <ul className="space-y-2">
               {search.data?.map((s) => (
                 <li key={s.id} className="flex items-center gap-4 rounded-2xl border border-white/10 bg-white/[0.04] p-3 pl-4">
-                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/20 font-display text-sm font-semibold text-[#9CC0FF]">
+                  <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-brand-500/20 font-display text-sm font-semibold text-brand-300">
                     {initials(s.name)}
                   </span>
                   <div className="min-w-0 flex-1">
@@ -72,7 +72,7 @@ export function KioskSearch({ onClose, onMark, busy }: { onClose: () => void; on
                       type="button"
                       disabled={busy}
                       onClick={() => onMark(s.id)}
-                      className="h-11 rounded-xl bg-primary px-5 text-sm font-semibold text-white transition-colors hover:bg-primary-glow disabled:opacity-50"
+                      className="h-11 rounded-xl bg-brand-gradient px-5 text-sm font-semibold text-white shadow-[0_8px_24px_-10px_rgba(33,107,255,0.8)] transition hover:brightness-110 disabled:opacity-50"
                     >
                       {t('attendance.kiosk.mark')}
                     </button>

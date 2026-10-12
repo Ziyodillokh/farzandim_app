@@ -11,6 +11,7 @@ import { useI18n } from '@/i18n';
 import { useDebounced } from '@/lib/use-debounced';
 import { cn } from '@/lib/utils';
 import { useGuardianSearch } from '../hooks';
+import { INNER_TILE } from '../styles';
 
 /** Aniq ota-onalarni qidirib tanlash (sinf rahbari — faqat o'z sinfi ota-onalari). */
 export function GuardianPicker({
@@ -52,7 +53,7 @@ export function GuardianPicker({
         <p className="text-xs text-muted-foreground">{t('messages.audience.pickHint')}</p>
       )}
       <Input icon={<Search />} value={search} onChange={(e) => setSearch(e.target.value)} placeholder={t('messages.audience.searchGuardians')} aria-label={t('messages.audience.searchGuardians')} />
-      <div className="max-h-72 space-y-1 overflow-y-auto rounded-xl border p-1.5">
+      <div className={cn(INNER_TILE, 'max-h-72 space-y-0.5 overflow-y-auto p-1.5')}>
         {results.isLoading && !results.data && Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-12 w-full rounded-lg" />)}
         {results.data?.items.length === 0 && <p className="py-6 text-center text-sm text-muted-foreground">{t('messages.audience.noGuardians')}</p>}
         {results.data?.items.map((g) => {
@@ -63,9 +64,9 @@ export function GuardianPicker({
               type="button"
               aria-pressed={on}
               onClick={() => toggle(g.id, g.fullName)}
-              className={cn('flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors', on ? 'bg-primary/10' : 'hover:bg-accent')}
+              className={cn('flex w-full items-center gap-3 rounded-lg px-2.5 py-2 text-left transition-colors', on ? 'bg-primary/[0.09] dark:bg-primary/[0.14]' : 'hover:bg-primary/[0.05]')}
             >
-              <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border', on && 'border-primary bg-primary text-primary-foreground')}>
+              <span className={cn('flex h-5 w-5 shrink-0 items-center justify-center rounded-md border border-input', on && 'border-transparent bg-brand-gradient text-white')}>
                 {on && <Check className="h-3.5 w-3.5" strokeWidth={3} />}
               </span>
               <span className="min-w-0 flex-1">

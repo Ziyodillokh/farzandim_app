@@ -10,6 +10,7 @@ import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { SearchInput, Toolbar } from '@/components/common/toolbar';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { MessageStatus } from '@/data/contracts';
@@ -47,8 +48,8 @@ export default function MessagesPage() {
       <PageHeader title={t('messages.title')} subtitle={t('messages.subtitle')} actions={newButton} />
 
       <Toolbar className="justify-between">
-        <Tabs value={tab} onValueChange={(v) => setFilter((f) => ({ ...f, page: 1, status: v === 'ALL' ? undefined : (v as MessageStatus) }))}>
-          <TabsList className="h-auto flex-wrap">
+        <Tabs className="w-full min-w-0 overflow-x-auto sm:w-auto" value={tab} onValueChange={(v) => setFilter((f) => ({ ...f, page: 1, status: v === 'ALL' ? undefined : (v as MessageStatus) }))}>
+          <TabsList className="w-max">
             {TABS.map((key) => (
               <TabsTrigger key={key} value={key}>
                 {t(`messages.tabs.${key}`)}
@@ -65,20 +66,20 @@ export default function MessagesPage() {
       {list.isLoading && !list.data && (
         <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-60 rounded-xl" />
+            <Skeleton key={i} className="h-64 rounded-2xl" />
           ))}
         </div>
       )}
 
       {list.data && list.data.items.length === 0 && (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <EmptyState
             icon={<MessagesSquare />}
             title={filter.search ? t('common.noResults') : t('messages.empty.title')}
             description={filter.search ? t('common.noResultsHint') : t('messages.empty.description')}
             action={!filter.search && newButton}
           />
-        </div>
+        </Card>
       )}
 
       {list.data && list.data.items.length > 0 && (

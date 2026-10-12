@@ -7,6 +7,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { SearchInput, Toolbar } from '@/components/common/toolbar';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -33,7 +34,7 @@ export default function CareRequestsPage() {
       return (
         <div className="space-y-3">
           {Array.from({ length: 4 }, (_, i) => (
-            <Skeleton key={i} className="h-28 w-full rounded-xl" />
+            <Skeleton key={i} className="h-28 w-full rounded-2xl" />
           ))}
         </div>
       );
@@ -41,7 +42,9 @@ export default function CareRequestsPage() {
     const items = requests.data?.items ?? [];
     if (items.length === 0) {
       return (
-        <EmptyState icon={<Inbox />} title={t('care.requests.empty')} description={t('care.requests.emptyHint')} className="rounded-xl border border-dashed" />
+        <Card>
+          <EmptyState icon={<Inbox />} title={t('care.requests.empty')} description={t('care.requests.emptyHint')} />
+        </Card>
       );
     }
     return (
@@ -57,10 +60,12 @@ export default function CareRequestsPage() {
     <>
       <PageHeader title={t('care.requests.title')} subtitle={t('care.requests.subtitle')} backHref="/care" backLabel={t('care.title')} />
 
-      <div className="mb-5 flex items-start gap-3 rounded-xl border border-primary/15 bg-primary/[0.05] p-4 text-sm">
-        <Lock className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+      <Card className="mb-5 flex items-center gap-3 p-4 text-sm">
+        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+          <Lock className="h-4 w-4" />
+        </span>
         <p className="text-foreground/80">{t('care.requests.confidential')}</p>
-      </div>
+      </Card>
 
       {urgentOpen > 0 && (
         <button
@@ -69,9 +74,9 @@ export default function CareRequestsPage() {
             setStatus('NEW');
             setUrgentOnly(true);
           }}
-          className="mb-5 flex w-full items-center gap-3 rounded-xl border border-destructive/30 bg-destructive/[0.06] p-4 text-left text-sm font-medium text-destructive transition-colors hover:bg-destructive/10"
+          className="mb-5 flex w-full items-center gap-3 rounded-2xl bg-destructive/[0.06] p-4 text-left text-sm font-medium text-destructive ring-1 ring-inset ring-destructive/25 transition-colors hover:bg-destructive/10"
         >
-          <span className="relative flex h-8 w-8 items-center justify-center rounded-lg bg-destructive/15">
+          <span className="relative flex h-9 w-9 items-center justify-center rounded-xl bg-destructive/15">
             <span className="absolute inset-0 rounded-lg bg-destructive/20 animate-pulse-ring" aria-hidden />
             <Siren className="h-4 w-4" />
           </span>
@@ -92,7 +97,7 @@ export default function CareRequestsPage() {
 
       <Toolbar>
         <SearchInput value={search} onChange={onSearch} placeholder={t('care.requests.searchPlaceholder')} />
-        <label className="flex cursor-pointer items-center gap-2 rounded-lg border bg-card px-3 py-2 text-sm shadow-soft">
+        <label className="flex h-10 cursor-pointer items-center gap-2.5 rounded-xl border border-border/70 bg-white/70 px-3 text-sm shadow-soft transition-colors hover:border-primary/40 dark:bg-white/[0.04]">
           <Switch checked={urgentOnly} onCheckedChange={setUrgentOnly} aria-label={t('care.requests.urgentOnly')} />
           {t('care.requests.urgentOnly')}
         </label>

@@ -80,7 +80,7 @@ export function EarlyExitDialog({ open, onOpenChange }: { open: boolean; onOpenC
                   key={name}
                   type="button"
                   onClick={() => form.setValue('pickupBy', name, { shouldValidate: true })}
-                  className="rounded-full border bg-card px-2.5 py-1 font-medium transition-colors hover:border-primary/40 hover:bg-accent"
+                  className="rounded-full bg-white/60 px-2.5 py-1 font-medium ring-1 ring-inset ring-border/60 transition-colors hover:bg-primary/[0.06] hover:text-primary dark:bg-white/[0.04]"
                 >
                   {name}
                 </button>

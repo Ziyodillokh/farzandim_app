@@ -3,6 +3,7 @@
 import { ArrowRight, FilePlus2, FileX2, ScrollText } from 'lucide-react';
 import { useMemo, useState, type ReactNode } from 'react';
 
+import { StaffAvatar } from '@/components/common/staff-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
 import { ScrollArea } from '@/components/ui/scroll-area';
@@ -10,6 +11,7 @@ import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '
 import { Switch } from '@/components/ui/switch';
 import type { AuditLog } from '@/data/contracts';
 import { useI18n } from '@/i18n';
+import { INNER_TILE } from '@/features/classes/styles';
 import { cn } from '@/lib/utils';
 import { auditShape, diffValues, type DiffRow } from '../diff';
 import { DiffValue, FieldLabel } from './diff-value';
@@ -17,7 +19,7 @@ import { DiffValue, FieldLabel } from './diff-value';
 function Meta({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="min-w-0">
-      <dt className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{label}</dt>
+      <dt className="text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{label}</dt>
       <dd className="mt-0.5 truncate text-sm">{children}</dd>
     </div>
   );
@@ -27,7 +29,7 @@ function ChangeRow({ row, shape }: { row: DiffRow; shape: ReturnType<typeof audi
   const showBefore = shape !== 'create';
   const showAfter = shape !== 'delete';
   return (
-    <li className={cn('rounded-lg border p-3', row.kind === 'same' && 'opacity-60')}>
+    <li className={cn('p-3', INNER_TILE, row.kind === 'same' && 'opacity-60')}>
       <FieldLabel field={row.field} />
       <div className="mt-1.5 flex flex-wrap items-center gap-2">
         {showBefore && (
@@ -60,16 +62,23 @@ export function AuditDetailSheet({ entry, onOpenChange }: { entry: AuditLog | nu
           <>
             <SheetHeader className="pr-12">
               <SheetTitle className="leading-snug">{entry.summary}</SheetTitle>
-              <SheetDescription className="flex flex-wrap items-center gap-2">
+              <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{t(`enums.auditModule.${entry.module}`)}</Badge>
-                <span>{formatRelative(entry.at)}</span>
-              </SheetDescription>
+                <SheetDescription>{formatRelative(entry.at)}</SheetDescription>
+              </div>
             </SheetHeader>
             <ScrollArea className="flex-1">
               <div className="space-y-6 p-6">
-                <dl className="grid grid-cols-2 gap-4 rounded-xl border bg-muted/30 p-4">
+                <div className={cn('flex items-center gap-3 p-4', INNER_TILE)}>
+                  <StaffAvatar staffId={entry.actorId} name={entry.actorName} size="lg" />
+                  <div className="min-w-0">
+                    <p className="text-2xs font-semibold uppercase tracking-[0.08em] text-muted-foreground">{t('audit.detail.actor')}</p>
+                    <p className="truncate font-semibold">{entry.actorName}</p>
+                  </div>
+                </div>
+                <dl className={cn('grid grid-cols-2 gap-4 p-4', INNER_TILE)}>
                   <Meta label={t('audit.detail.at')}>{formatDate(entry.at, 'd MMMM yyyy, HH:mm:ss')}</Meta>
-                  <Meta label={t('audit.detail.actor')}>{entry.actorName}</Meta>
+                  <Meta label={t('audit.detail.module')}>{t(`enums.auditModule.${entry.module}`)}</Meta>
                   <Meta label={t('audit.detail.action')}>
                     <code className="text-xs">{entry.action}</code>
                   </Meta>

@@ -24,7 +24,7 @@ function LockedMark() {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <span className="inline-flex cursor-help items-center gap-1.5 text-xs text-muted-foreground">
+        <span className="inline-flex cursor-help items-center gap-1.5 rounded-full bg-white/50 px-2.5 py-1 text-xs text-muted-foreground ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]">
           <Lock className="h-3.5 w-3.5" />
           {t('attendance.classPage.locked')}
         </span>
@@ -42,7 +42,7 @@ function CorrectedBadge({ row }: { row: RosterRow }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant="outline" size="sm" className="cursor-help gap-1 text-muted-foreground">
+        <Badge variant="default" size="sm" className="cursor-help gap-1">
           <History className="h-3 w-3" />
           {t('attendance.classPage.correctedBadge')}
         </Badge>
@@ -87,8 +87,8 @@ export function ClassRoster({
         header: t('attendance.classPage.columns.student'),
         cell: (r) => (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8 no-print">
-              <AvatarFallback className="bg-primary/10 text-2xs font-semibold text-primary">{initials(r.name)}</AvatarFallback>
+            <Avatar className="h-9 w-9 no-print">
+              <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(r.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
               <p className="truncate font-medium">{r.name}</p>
@@ -110,12 +110,12 @@ export function ClassRoster({
           </div>
         ),
       },
-      { key: 'in', header: t('attendance.classPage.columns.in'), className: 'tabular-nums', cell: (r) => r.record?.inAt ?? '—' },
-      { key: 'out', header: t('attendance.classPage.columns.out'), className: 'tabular-nums', cell: (r) => r.record?.outAt ?? '—' },
+      { key: 'in', header: t('attendance.classPage.columns.in'), className: 'font-medium tabular-nums', cell: (r) => r.record?.inAt ?? <span className="text-muted-foreground/60">—</span> },
+      { key: 'out', header: t('attendance.classPage.columns.out'), className: 'font-medium tabular-nums', cell: (r) => r.record?.outAt ?? <span className="text-muted-foreground/60">—</span> },
       {
         key: 'source',
         header: t('attendance.classPage.columns.source'),
-        cell: (r) => (r.record?.inAt ? <SourceTag source={r.record.source} /> : <span className="text-muted-foreground">—</span>),
+        cell: (r) => (r.record?.inAt ? <SourceTag source={r.record.source} /> : <span className="text-muted-foreground/60">—</span>),
       },
     ];
     if (mode === 'view') return base;

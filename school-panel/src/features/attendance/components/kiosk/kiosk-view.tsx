@@ -55,14 +55,17 @@ function KioskScreen() {
   const closeResult = useCallback(() => setOutcome(null), []);
 
   return (
-    <div className="dark relative min-h-screen overflow-hidden bg-hero-gradient text-white">
+    // md+ (planshet/katta ekran): butun interfeys bitta ekranga (100dvh) sig'adi.
+    <div className="dark relative min-h-[100dvh] bg-hero-gradient text-white md:h-[100dvh] md:overflow-y-auto">
       <style>{KEYFRAMES}</style>
-      <div className="pointer-events-none absolute -right-40 -top-40 h-[32rem] w-[32rem] rounded-full bg-primary/25 blur-3xl" />
-      <div className="pointer-events-none absolute -bottom-48 -left-32 h-[34rem] w-[34rem] rounded-full bg-[#305399]/35 blur-3xl" />
+      <div aria-hidden className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -right-40 -top-48 h-[34rem] w-[34rem] rounded-full bg-brand-600/25 blur-3xl" />
+        <div className="absolute -bottom-56 -left-40 h-[36rem] w-[36rem] rounded-full bg-cyan-500/[0.12] blur-3xl" />
+      </div>
 
-      <div className="relative mx-auto flex min-h-screen max-w-[1500px] flex-col gap-6 p-5 md:gap-8 md:p-8 xl:p-10">
+      <div className="relative mx-auto flex min-h-full max-w-[1500px] flex-col gap-4 p-4 md:h-full md:gap-5 md:p-6 xl:gap-6 xl:px-10 xl:py-7">
         <KioskHeader />
-        <main className="grid flex-1 items-stretch gap-6 md:grid-cols-2 md:gap-8">
+        <main className="grid min-h-0 flex-1 items-stretch gap-4 md:grid-cols-2 md:gap-5 xl:gap-6">
           <KioskQr />
           <KioskKeypad
             digits={digits}

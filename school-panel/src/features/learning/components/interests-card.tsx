@@ -1,6 +1,6 @@
 'use client';
 
-import { Info } from 'lucide-react';
+import { Info, Sparkles } from 'lucide-react';
 
 import { ErrorState } from '@/components/common/error-state';
 import { SectionCard } from '@/components/common/section-card';
@@ -10,10 +10,12 @@ import { SUBJECTS } from '@/data/schemas/learning';
 import { useI18n } from '@/i18n';
 import { useLearningInterests } from '../hooks';
 
-/** Ulushga qarab yumshoq rang intensivligi (heatmap). */
+const MAX_ALPHA = 0.5;
+
+/** Ulushga qarab yumshoq rang intensivligi (heatmap). Matn doim asosiy rangda — ikkala mavzuda o'qiladi. */
 function cellStyle(percent: number) {
-  const alpha = Math.min(0.85, 0.05 + percent / 30);
-  return { background: `hsl(var(--primary) / ${alpha.toFixed(2)})`, color: alpha > 0.45 ? 'hsl(var(--primary-foreground))' : undefined };
+  const alpha = Math.min(MAX_ALPHA, 0.04 + percent / 45);
+  return { background: `hsl(var(--primary) / ${alpha.toFixed(2)})` };
 }
 
 /** Qiziqishlar taqsimoti — sinf darajasi bo'yicha TAXMINIY baho (demo, shaxsiy ma'lumotsiz). */
@@ -26,10 +28,11 @@ export function InterestsCard() {
       title={
         <span className="flex flex-wrap items-center gap-2">
           {t('learning.interests.title')}
-          <Badge variant="warning" size="sm">{t('learning.interests.estimate')}</Badge>
+          <Badge variant="info" size="sm">{t('learning.interests.estimate')}</Badge>
         </span>
       }
       description={t('learning.interests.hint')}
+      icon={<Sparkles />}
       bodyClassName="p-0"
     >
       {interests.error ? (
@@ -62,7 +65,7 @@ export function InterestsCard() {
                     {SUBJECTS.map((s) => {
                       const pct = bySubject.get(s) ?? 0;
                       return (
-                        <td key={s} className="rounded-md px-1 py-1.5 text-center text-xs font-semibold tabular-nums transition-colors" style={cellStyle(pct)}>
+                        <td key={s} className="rounded-lg px-1 py-1.5 text-center text-xs font-semibold tabular-nums text-foreground" style={cellStyle(pct)}>
                           {pct}%
                         </td>
                       );
@@ -74,7 +77,7 @@ export function InterestsCard() {
           </table>
         </div>
       )}
-      <p className="flex items-start gap-2 border-t px-5 py-3 text-xs text-muted-foreground">
+      <p className="flex items-start gap-2 border-t border-border/50 px-5 py-3 text-xs text-muted-foreground dark:border-white/[0.06]">
         <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
         {t('learning.privacyNote')}
       </p>

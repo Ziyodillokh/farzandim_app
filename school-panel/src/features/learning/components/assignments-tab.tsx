@@ -41,7 +41,7 @@ export function AssignmentsTab() {
           const Icon = a.materialKind ? KIND_ICONS[a.materialKind] : ClipboardList;
           return (
             <div className="flex items-center gap-3">
-              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-lg', a.materialKind ? KIND_TONES[a.materialKind] : 'bg-muted')}>
+              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset', a.materialKind ? KIND_TONES[a.materialKind] : 'bg-muted ring-border')}>
                 <Icon className="h-4 w-4" />
               </span>
               <div className="min-w-0">

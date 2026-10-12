@@ -43,6 +43,7 @@ export const schoolMode: DeepString<typeof uz> = {
     emergencyClass: 'Экстренное отключение: {classes}',
     emergencyMeta: '{name} · {time} · Причина: {reason}',
     otherShift: '{shift}: {state}',
+    remaining: 'ещё {count} мин',
   },
   kpi: {
     applied: 'Ограничение применено',

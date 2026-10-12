@@ -149,7 +149,16 @@ export function DevicesPanel({
         </div>
       ),
     },
-    { key: 'class', header: t('schoolMode.devices.columns.class'), sortKey: 'class', cell: (r) => <Badge variant="outline">{r.className}</Badge> },
+    {
+      key: 'class',
+      header: t('schoolMode.devices.columns.class'),
+      sortKey: 'class',
+      cell: (r) => (
+        <Badge variant="outline" className="whitespace-nowrap">
+          {r.className}
+        </Badge>
+      ),
+    },
     { key: 'os', header: t('schoolMode.devices.columns.os'), cell: (r) => <DeviceIcon device={r.os} /> },
     { key: 'status', header: t('schoolMode.devices.columns.status'), sortKey: 'status', cell: (r) => <DeviceModeBadge status={r.status} /> },
     {

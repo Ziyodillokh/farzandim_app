@@ -8,9 +8,9 @@ type T = ReturnType<typeof useI18n>['t'];
 export const KIND_ICONS: Record<MaterialKind, LucideIcon> = { AUDIOBOOK: Headphones, VIDEO: Video, TEST: FileQuestion };
 
 export const KIND_TONES: Record<MaterialKind, string> = {
-  AUDIOBOOK: 'bg-chart-5/10 text-chart-5',
-  VIDEO: 'bg-primary/10 text-primary',
-  TEST: 'bg-success/10 text-success',
+  AUDIOBOOK: 'bg-chart-5/10 text-chart-5 ring-chart-5/20',
+  VIDEO: 'bg-primary/10 text-primary ring-primary/15',
+  TEST: 'bg-success/10 text-success ring-success/20',
 };
 
 /** [6, 7, 8] → "6–8-sinflar"; [5] → "5-sinf". */

@@ -1,6 +1,7 @@
 'use client';
 
-import { Lock } from 'lucide-react';
+import { BookOpen, ChartColumn, ClipboardCheck, HeartHandshake, Lock, Megaphone, Smartphone, Users } from 'lucide-react';
+import { useId, type ReactNode } from 'react';
 import { Bar, BarChart, LabelList, ResponsiveContainer, XAxis, YAxis } from 'recharts';
 
 import { SectionCard } from '@/components/common/section-card';
@@ -13,10 +14,13 @@ import { cn } from '@/lib/utils';
 const RATE_WARN = 90;
 
 type Section<K extends keyof MonthlyReport> = NonNullable<MonthlyReport[K]>;
+/** Chop etishda bo'lim ikonkalari ko'rsatilmaydi — sahifa toza oq qoladi. */
+type PrintFlag = { print?: boolean };
+const icon = (print: boolean | undefined, node: ReactNode): ReactNode => (print ? undefined : node);
 
-export function Metric({ label, value }: { label: string; value: React.ReactNode }) {
+export function Metric({ label, value }: { label: string; value: ReactNode }) {
   return (
-    <div className="flex items-center justify-between gap-3 border-b py-2.5 text-sm last:border-0">
+    <div className="flex items-center justify-between gap-3 border-b border-border/50 py-2.5 text-sm last:border-0 dark:border-white/[0.06]">
       <span className="text-muted-foreground">{label}</span>
       <span className="font-semibold tabular-nums">{value}</span>
     </div>
@@ -27,7 +31,7 @@ export function AttendanceTable({ data, print }: { data: Section<'attendance'>; 
   const { t } = useI18n();
   const cols = ['students', 'rate', 'late', 'absent', 'excused'] as const;
   return (
-    <SectionCard title={t('reports.attendance.title')} bodyClassName="p-0">
+    <SectionCard icon={icon(print, <ClipboardCheck />)} title={t('reports.attendance.title')} bodyClassName="p-0">
       <Table>
         <TableHeader>
           <TableRow>
@@ -58,15 +62,22 @@ export function AttendanceTable({ data, print }: { data: Section<'attendance'>; 
 
 export function WeekdayChart({ data, print }: { data: Section<'attendance'>; print: boolean }) {
   const { t } = useI18n();
+  const gradientId = `weekday-${useId().replace(/:/g, '')}`;
   const rows = data.byWeekday.map((w) => ({ ...w, label: t(`enums.weekdayShort.${w.weekday}`) }));
   return (
-    <SectionCard title={t('reports.attendance.weekday')} className="break-inside-avoid">
+    <SectionCard icon={icon(print, <ChartColumn />)} title={t('reports.attendance.weekday')} className="break-inside-avoid">
       <div className="h-48">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={rows} margin={{ top: 22, right: 4, left: 4, bottom: 0 }}>
             <XAxis dataKey="label" interval={0} tickLine={false} axisLine={false} tick={{ fontSize: 12, fill: 'hsl(var(--muted-foreground))' }} />
             <YAxis domain={[0, 100]} hide />
-            <Bar dataKey="rate" fill="hsl(var(--chart-1))" radius={[6, 6, 0, 0]} maxBarSize={34} isAnimationActive={!print}>
+            <defs>
+              <linearGradient id={gradientId} x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="hsl(var(--chart-1))" />
+                <stop offset="100%" stopColor="hsl(199 95% 58%)" stopOpacity={0.75} />
+              </linearGradient>
+            </defs>
+            <Bar dataKey="rate" fill={`url(#${gradientId})`} radius={[8, 8, 2, 2]} maxBarSize={34} isAnimationActive={!print}>
               <LabelList dataKey="rate" position="top" formatter={(v: number) => `${v}%`} fontSize={11} fill="hsl(var(--foreground))" />
             </Bar>
           </BarChart>
@@ -76,10 +87,10 @@ export function WeekdayChart({ data, print }: { data: Section<'attendance'>; pri
   );
 }
 
-export function ParentsTable({ data }: { data: Section<'parents'> }) {
+export function ParentsTable({ data, print }: { data: Section<'parents'> } & PrintFlag) {
   const { t } = useI18n();
   return (
-    <SectionCard title={t('reports.parents.title')} bodyClassName="p-0">
+    <SectionCard icon={icon(print, <Users />)} title={t('reports.parents.title')} bodyClassName="p-0">
       <Table>
         <TableHeader>
           <TableRow>
@@ -97,7 +108,7 @@ export function ParentsTable({ data }: { data: Section<'parents'> }) {
               </TableCell>
               <TableCell className="py-1.5">
                 <div className="flex items-center gap-2">
-                  <Progress value={r.rate} className="h-1.5" indicatorClassName="bg-info" />
+                  <Progress value={r.rate} className="h-1.5" indicatorClassName="bg-gradient-to-r from-primary to-info" />
                   <span className="w-9 text-right text-xs tabular-nums">{r.rate}%</span>
                 </div>
               </TableCell>
@@ -109,10 +120,10 @@ export function ParentsTable({ data }: { data: Section<'parents'> }) {
   );
 }
 
-export function SchoolModeSection({ data }: { data: Section<'schoolMode'> }) {
+export function SchoolModeSection({ data, print }: { data: Section<'schoolMode'> } & PrintFlag) {
   const { t } = useI18n();
   return (
-    <SectionCard title={t('reports.schoolMode.title')} className="break-inside-avoid">
+    <SectionCard icon={icon(print, <Smartphone />)} title={t('reports.schoolMode.title')} className="break-inside-avoid">
       <Metric label={t('reports.schoolMode.applied')} value={data.applied} />
       <Metric label={t('reports.schoolMode.noPermission')} value={data.noPermission} />
       <Metric label={t('reports.schoolMode.offline')} value={data.offline} />
@@ -123,10 +134,10 @@ export function SchoolModeSection({ data }: { data: Section<'schoolMode'> }) {
   );
 }
 
-export function MessagesSection({ data }: { data: Section<'messages'> }) {
+export function MessagesSection({ data, print }: { data: Section<'messages'> } & PrintFlag) {
   const { t, formatNumber } = useI18n();
   return (
-    <SectionCard title={t('reports.messages.title')} className="break-inside-avoid">
+    <SectionCard icon={icon(print, <Megaphone />)} title={t('reports.messages.title')} className="break-inside-avoid">
       <Metric label={t('reports.messages.announcements')} value={data.announcements} />
       <Metric label={t('reports.messages.recipients')} value={formatNumber(data.recipients)} />
       <Metric label={t('reports.messages.delivery')} value={`${data.deliveryRate}%`} />
@@ -136,10 +147,10 @@ export function MessagesSection({ data }: { data: Section<'messages'> }) {
   );
 }
 
-export function LearningSection({ data }: { data: Section<'learning'> }) {
+export function LearningSection({ data, print }: { data: Section<'learning'> } & PrintFlag) {
   const { t, formatNumber } = useI18n();
   return (
-    <SectionCard title={t('reports.learning.title')} className="break-inside-avoid">
+    <SectionCard icon={icon(print, <BookOpen />)} title={t('reports.learning.title')} className="break-inside-avoid">
       <Metric label={t('reports.learning.active')} value={data.avgActiveStudents} />
       <Metric label={t('reports.learning.tasks')} value={formatNumber(data.completedTasks)} />
       <Metric label={t('reports.learning.score')} value={`${data.avgScore}%`} />
@@ -148,10 +159,10 @@ export function LearningSection({ data }: { data: Section<'learning'> }) {
   );
 }
 
-export function CareSection({ data }: { data: Section<'care'> }) {
+export function CareSection({ data, print }: { data: Section<'care'> } & PrintFlag) {
   const { t } = useI18n();
   return (
-    <SectionCard title={t('reports.care.title')} className="break-inside-avoid">
+    <SectionCard icon={icon(print, <HeartHandshake />)} title={t('reports.care.title')} className="break-inside-avoid">
       <div className="grid gap-6 md:grid-cols-5">
         <div className="md:col-span-2">
           <Metric label={t('reports.care.surveys')} value={data.surveys} />

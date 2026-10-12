@@ -58,7 +58,7 @@ export default function StaffPage() {
         />
         <StatCard
           icon={<KeyRound />}
-          tone="warning"
+          tone="muted"
           label={t('staff.stats.demo')}
           value={formatNumber(s?.demo ?? 0)}
           hint={t('staff.stats.demoHint')}

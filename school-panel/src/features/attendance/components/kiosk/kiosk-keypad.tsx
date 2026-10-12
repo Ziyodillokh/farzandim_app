@@ -51,17 +51,19 @@ export function KioskKeypad({
     if (digits.length === CODE_DIGITS && !busy) onSubmit(`${CODE_PREFIX}${digits}`);
   };
 
-  const key = 'flex h-16 items-center justify-center rounded-2xl border border-white/10 bg-white/[0.07] font-display text-2xl font-semibold transition-all hover:bg-white/[0.12] active:scale-95 disabled:opacity-40 md:h-[4.5rem]';
+  // Balandlik ekran balandligiga moslashadi (1366×768 da ham bitta ekranga sig'adi).
+  const key =
+    'flex h-[clamp(2.75rem,7.2dvh,4.25rem)] items-center justify-center rounded-2xl border border-white/10 bg-white/[0.06] font-display text-2xl font-semibold transition-all hover:border-brand-400/40 hover:bg-white/[0.11] active:scale-95 disabled:opacity-40';
 
   return (
-    <form onSubmit={submit} className="flex h-full flex-col rounded-[2rem] border border-white/10 bg-white/[0.04] p-6 backdrop-blur md:p-8">
-      <p className="text-sm font-semibold uppercase tracking-[0.18em] text-[#9CC0FF]">{t('attendance.kiosk.codeTitle')}</p>
+    <form onSubmit={submit} className="glass flex min-h-0 flex-col justify-center rounded-[1.75rem] p-5 xl:p-7">
+      <p className="text-xs font-semibold uppercase tracking-[0.2em] text-brand-300 xl:text-sm">{t('attendance.kiosk.codeTitle')}</p>
 
-      <label className="relative mt-5 flex h-20 cursor-text items-center justify-center gap-1 rounded-2xl border-2 border-primary/50 bg-[#060B16]/60 font-mono text-4xl font-semibold tracking-[0.2em] shadow-[inset_0_2px_12px_rgba(0,0,0,0.35)] md:text-5xl">
+      <label className="relative mt-4 flex h-[clamp(3.5rem,9dvh,5rem)] cursor-text items-center justify-center gap-1 rounded-2xl bg-brand-950/60 font-mono text-[clamp(1.9rem,5dvh,3rem)] font-semibold leading-none tracking-[0.2em] shadow-[inset_0_2px_12px_rgba(0,0,0,0.35)] ring-2 ring-brand-500/50 focus-within:ring-brand-400">
         <span className="text-white/45">{CODE_PREFIX}</span>
         {Array.from({ length: CODE_DIGITS }).map((_, i) => (
-          <span key={i} className={cn('w-[0.8em] text-center', digits[i] ? 'text-white' : 'text-white/20')}>
-            {digits[i] ?? '_'}
+          <span key={i} className={cn('flex w-[0.8em] justify-center', digits[i] ? 'text-white' : 'text-white/25')}>
+            {digits[i] ?? <span className="block h-[0.22em] w-[0.22em] rounded-full bg-current" aria-hidden />}
           </span>
         ))}
         <input
@@ -75,7 +77,7 @@ export function KioskKeypad({
         />
       </label>
 
-      <div className="mt-5 grid grid-cols-3 gap-3">
+      <div className="mt-4 grid grid-cols-3 gap-2.5 xl:gap-3">
         {KEYS.map((k) => (
           <button key={k} type="button" className={key} disabled={busy} onMouseDown={keepFocus} onClick={() => update(digits + k)}>
             {k}
@@ -91,7 +93,7 @@ export function KioskKeypad({
           type="submit"
           onMouseDown={keepFocus}
           disabled={busy || digits.length < CODE_DIGITS}
-          className={cn(key, 'border-transparent bg-primary text-base hover:bg-primary-glow')}
+          className={cn(key, 'border-transparent bg-brand-gradient text-base shadow-[0_10px_30px_-10px_rgba(33,107,255,0.7)] hover:border-transparent hover:brightness-110 disabled:shadow-none')}
           aria-label={t('attendance.kiosk.submit')}
         >
           <Check className="h-7 w-7" />
@@ -101,7 +103,7 @@ export function KioskKeypad({
       <button
         type="button"
         onClick={onOpenSearch}
-        className="mt-5 inline-flex h-14 items-center justify-center gap-2 rounded-2xl border border-white/15 text-base font-semibold text-white/85 transition-colors hover:bg-white/[0.08]"
+        className="mt-4 inline-flex h-12 shrink-0 items-center justify-center gap-2 rounded-2xl border border-white/15 text-base font-semibold text-white/85 transition-colors hover:border-brand-400/40 hover:bg-white/[0.08] xl:h-14"
       >
         <Search className="h-5 w-5" />
         {t('attendance.kiosk.searchOpen')}

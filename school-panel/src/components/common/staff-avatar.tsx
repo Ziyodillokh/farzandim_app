@@ -8,11 +8,20 @@ import { cn, initials } from '@/lib/utils';
 type Size = 'xs' | 'sm' | 'md' | 'lg' | 'xl';
 
 const SIZES: Record<Size, string> = {
-  xs: 'h-6 w-6 text-[0.55rem]',
-  sm: 'h-8 w-8 text-[0.65rem]',
-  md: 'h-10 w-10 text-xs',
-  lg: 'h-12 w-12 text-sm',
-  xl: 'h-24 w-24 rounded-[1.75rem] text-2xl',
+  xs: 'h-6 w-6',
+  sm: 'h-8 w-8',
+  md: 'h-10 w-10',
+  lg: 'h-12 w-12',
+  xl: 'h-24 w-24 rounded-[1.75rem]',
+};
+
+/** Bosh harflar o'lchami fallback'ning o'zida (aks holda bazaviy `text-sm` ustun keladi). */
+const TEXT: Record<Size, string> = {
+  xs: 'text-[0.55rem]',
+  sm: 'text-[0.65rem]',
+  md: 'text-xs',
+  lg: 'text-sm',
+  xl: 'text-2xl',
 };
 
 /**
@@ -42,7 +51,7 @@ export function StaffAvatar({
   return (
     <Avatar className={cn(SIZES[size], size === 'xl' && 'rounded-[1.75rem]', className)}>
       {src && <AvatarImage src={src} alt={label} />}
-      <AvatarFallback className={cn('bg-gradient-to-br from-brand-400 to-brand-800 font-semibold text-white', size === 'xl' && 'rounded-[1.75rem]')}>
+      <AvatarFallback className={cn('bg-gradient-to-br from-brand-400 to-brand-800 font-semibold text-white', TEXT[size], size === 'xl' && 'rounded-[1.75rem]')}>
         {initials(label)}
       </AvatarFallback>
     </Avatar>

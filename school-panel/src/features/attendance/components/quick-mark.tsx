@@ -5,7 +5,7 @@ import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { QUICK_STATUSES, STATUS_TONE } from '../lib';
 
-/** Tezkor belgilash: Keldi / Kechikdi / Kelmadi / Sababli (segmentli tugmalar). */
+/** Tezkor belgilash: Keldi / Kechikdi / Kelmadi / Sababli (segmentli boshqaruv). */
 export function QuickMark({
   current,
   disabled,
@@ -17,7 +17,7 @@ export function QuickMark({
 }) {
   const { t } = useI18n();
   return (
-    <div className="inline-flex rounded-lg border bg-muted/50 p-0.5" role="group">
+    <div className="inline-flex rounded-xl bg-primary/[0.05] p-1 ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]" role="group">
       {QUICK_STATUSES.map((status) => {
         const active = current === status;
         return (
@@ -28,12 +28,11 @@ export function QuickMark({
             aria-pressed={active}
             onClick={() => !active && onSelect(status)}
             className={cn(
-              'h-7 rounded-md px-2.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50',
-              active
-                ? cn('bg-card shadow-soft', STATUS_TONE[status].text)
-                : 'text-muted-foreground hover:bg-card/70 hover:text-foreground',
+              'inline-flex h-7 items-center gap-1.5 rounded-lg px-2.5 text-xs font-semibold transition-all disabled:cursor-not-allowed disabled:opacity-50',
+              active ? cn('bg-card shadow-soft ring-1 ring-border/60', STATUS_TONE[status].text) : 'text-muted-foreground hover:bg-card/70 hover:text-foreground',
             )}
           >
+            {active && <span className={cn('h-1.5 w-1.5 rounded-full', STATUS_TONE[status].dot)} aria-hidden />}
             {t(`attendance.classPage.quick.${status}`)}
           </button>
         );

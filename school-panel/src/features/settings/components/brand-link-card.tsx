@@ -13,6 +13,8 @@ import { useCopy } from '@/features/parents/hooks';
 import { useI18n } from '@/i18n';
 import { BASE_PATH } from '@/lib/base-path';
 import { brandLink, decodeBrand } from '@/lib/brand-link';
+import { cn } from '@/lib/utils';
+import { TILE } from '../styles';
 
 /** "Shu maktab uchun havola" — nom va logo URL fragmentida (serverga ketmaydi). */
 export function BrandLinkCard({ school }: { school: School }) {
@@ -34,15 +36,7 @@ export function BrandLinkCard({ school }: { school: School }) {
   }, [link, school.logo]);
 
   return (
-    <SectionCard
-      title={
-        <span className="flex items-center gap-2">
-          <Link2 className="h-4 w-4 text-primary" />
-          {t('settings.brand.title')}
-        </span>
-      }
-      description={t('settings.brand.description')}
-    >
+    <SectionCard icon={<Link2 />} title={t('settings.brand.title')} description={t('settings.brand.description')}>
       <div className="grid gap-5 md:grid-cols-[1fr_220px]">
         <div className="min-w-0 space-y-3">
           {link ? (
@@ -61,7 +55,7 @@ export function BrandLinkCard({ school }: { school: School }) {
             <Skeleton className="h-10 w-full" />
           )}
           {logoOmitted && (
-            <p className="flex items-start gap-2 rounded-lg bg-warning/10 px-3 py-2 text-xs font-medium text-warning">
+            <p className="flex items-start gap-2 rounded-xl bg-warning/10 px-3 py-2 text-xs font-medium text-warning ring-1 ring-inset ring-warning/25">
               <TriangleAlert className="mt-0.5 h-3.5 w-3.5 shrink-0" />
               {t('settings.brand.logoOmitted')}
             </p>
@@ -71,9 +65,10 @@ export function BrandLinkCard({ school }: { school: School }) {
             {t('settings.brand.explain')}
           </p>
         </div>
-        <div className="rounded-xl border bg-gradient-to-br from-primary/10 via-card to-card p-4">
-          <p className="mb-3 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{t('settings.brand.preview')}</p>
-          <div className="flex flex-col items-center gap-2 rounded-lg border bg-card p-4 text-center shadow-soft">
+        <div className={cn('relative overflow-hidden p-4', TILE)}>
+          <div aria-hidden className="pointer-events-none absolute inset-0 bg-[radial-gradient(80%_70%_at_50%_0%,hsl(var(--primary)/0.14),transparent_70%)]" />
+          <p className="relative mb-3 text-2xs font-semibold uppercase tracking-[0.14em] text-muted-foreground">{t('settings.brand.preview')}</p>
+          <div className="relative flex flex-col items-center gap-2 rounded-xl bg-card p-4 text-center shadow-glass ring-1 ring-border/50">
             <SchoolLogo school={logoOmitted ? { ...school, logo: null } : school} className="h-12 w-12" />
             <p className="line-clamp-2 text-sm font-semibold">{school.name}</p>
             <p className="text-xs text-muted-foreground">{school.city}</p>

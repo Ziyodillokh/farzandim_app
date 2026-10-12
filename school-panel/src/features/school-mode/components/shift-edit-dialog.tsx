@@ -15,7 +15,7 @@ import { MAX_PERIODS, shiftUpdateSchema } from '@/data/schemas/school-mode';
 import { useI18n } from '@/i18n';
 import { cn, hhmmToMinutes, minutesToHhmm } from '@/lib/utils';
 import { useUpdateShift } from '../hooks';
-import { isMessageKey } from '../lib';
+import { isMessageKey, SEG_OFF, SEG_ON, SEG_TRACK, TILE } from '../lib';
 
 type FormValues = { weekdays: number[]; periods: Array<{ start: string; end: string; kind: BellPeriodKind }> };
 
@@ -40,8 +40,8 @@ function WeekdayPicker({ value, onChange }: { value: number[]; onChange: (next: 
             title={t(`enums.weekday.${d}`)}
             onClick={() => onChange(on ? value.filter((x) => x !== d) : [...value, d].sort((a, b) => a - b))}
             className={cn(
-              'h-9 w-11 rounded-lg border text-sm font-semibold transition-colors',
-              on ? 'border-primary bg-primary text-primary-foreground' : 'text-muted-foreground hover:border-primary/40',
+              'h-9 w-11 rounded-lg text-sm font-semibold ring-1 ring-inset transition-colors',
+              on ? 'bg-primary/10 text-primary ring-primary/35' : 'text-muted-foreground ring-border/60 hover:ring-primary/40',
             )}
           >
             {t(`enums.weekdayShort.${d}`)}
@@ -108,17 +108,27 @@ export function ShiftEditDialog({ shift, onOpenChange }: { shift: ShiftRow | nul
                 const rowError = errors.periods?.[i];
                 return (
                   <li key={field.id} className="space-y-1">
-                    <div className={cn('grid grid-cols-2 items-center gap-2 rounded-lg border p-2 sm:grid-cols-[1fr_7rem_7rem_4rem_2.25rem]', row?.kind === 'BREAK' && 'border-dashed bg-muted/40')}>
+                    <div className={cn('grid grid-cols-2 items-center gap-2 p-2 sm:grid-cols-[1fr_7rem_7rem_4rem_2.25rem]', TILE, row?.kind === 'BREAK' && 'bg-transparent dark:bg-transparent')}>
                       <Controller
                         control={form.control}
                         name={`periods.${i}.kind`}
                         render={({ field: kindField }) => (
-                          <div className="col-span-2 flex gap-1 sm:col-span-1">
+                          <div className={cn('col-span-2 grid grid-cols-2 gap-1 sm:col-span-1', SEG_TRACK)} role="radiogroup" aria-label={t('schoolMode.schedule.kind')}>
                             {(['LESSON', 'BREAK'] as const).map((k) => (
-                              <Button key={k} type="button" size="sm" variant={kindField.value === k ? 'soft' : 'ghost'} onClick={() => kindField.onChange(k)} className="flex-1">
+                              <button
+                                key={k}
+                                type="button"
+                                role="radio"
+                                aria-checked={kindField.value === k}
+                                onClick={() => kindField.onChange(k)}
+                                className={cn(
+                                  'flex h-8 items-center justify-center gap-1.5 rounded-lg px-2 text-xs font-medium transition-all [&_svg]:h-3.5 [&_svg]:w-3.5',
+                                  kindField.value === k ? SEG_ON : SEG_OFF,
+                                )}
+                              >
                                 {k === 'LESSON' ? <GraduationCap /> : <Coffee />}
                                 {t(`enums.bellKind.${k}`)}
-                              </Button>
+                              </button>
                             ))}
                           </div>
                         )}

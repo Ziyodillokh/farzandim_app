@@ -19,7 +19,7 @@ type Look = { icon: LucideIcon; ring: string; glow: string; bar: string };
 const LOOKS: Record<'present' | 'late' | 'already' | 'failed', Look> = {
   present: { icon: CheckCircle2, ring: 'bg-emerald-400/15 text-emerald-300', glow: 'from-emerald-400/25', bar: 'bg-emerald-400' },
   late: { icon: Clock4, ring: 'bg-amber-400/15 text-amber-300', glow: 'from-amber-400/25', bar: 'bg-amber-400' },
-  already: { icon: Info, ring: 'bg-[#3C82FF]/20 text-[#9CC0FF]', glow: 'from-[#3C82FF]/25', bar: 'bg-[#3C82FF]' },
+  already: { icon: Info, ring: 'bg-brand-500/20 text-brand-300', glow: 'from-brand-500/25', bar: 'bg-brand-500' },
   failed: { icon: XCircle, ring: 'bg-red-400/15 text-red-300', glow: 'from-red-400/25', bar: 'bg-red-400' },
 };
 
@@ -42,8 +42,8 @@ export function KioskResult({ outcome, onClose }: { outcome: KioskOutcome; onClo
   const Icon = outcome.kind === 'error' ? AlertTriangle : look.icon;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#060B16]/70 p-6 backdrop-blur-md animate-fade-in" onClick={onClose} role="alertdialog" aria-live="assertive">
-      <div className={cn('relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-[#0B1428] bg-gradient-to-b to-[#0B1428] p-10 text-center shadow-2xl animate-slide-up', look.glow)}>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-brand-950/70 p-6 backdrop-blur-md animate-fade-in" onClick={onClose} role="alertdialog" aria-live="assertive">
+      <div className={cn('relative w-full max-w-xl overflow-hidden rounded-[2rem] border border-white/10 bg-brand-900 bg-gradient-to-b to-brand-900 p-10 text-center shadow-[0_40px_90px_-30px_rgba(0,0,0,0.85)] animate-slide-up', look.glow)}>
         <div className={cn('mx-auto flex h-24 w-24 items-center justify-center rounded-full', look.ring)}>
           <Icon className="h-14 w-14" strokeWidth={1.75} />
         </div>

@@ -12,7 +12,9 @@ import { PlatformExplainer } from '@/features/school-mode/components/platform-ex
 import { CategorySettings, GeneralSettings } from '@/features/school-mode/components/policy-settings';
 import { SafetyCallout } from '@/features/school-mode/components/safety-callout';
 import { useSmPolicy, useSmShifts, useUpdatePolicy } from '@/features/school-mode/hooks';
+import { TILE } from '@/features/school-mode/lib';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 
 export default function SchoolModePoliciesPage() {
   const { t } = useI18n();
@@ -38,8 +40,8 @@ export default function SchoolModePoliciesPage() {
       <>
         {header}
         <div className="grid gap-6 xl:grid-cols-2">
-          <Skeleton className="h-64 rounded-xl" />
-          <Skeleton className="h-64 rounded-xl" />
+          <Skeleton className="h-64 rounded-2xl" />
+          <Skeleton className="h-64 rounded-2xl" />
         </div>
       </>
     );
@@ -60,7 +62,7 @@ export default function SchoolModePoliciesPage() {
     <>
       {header}
       {!canManage && (
-        <div className="mb-4 flex items-center gap-2 rounded-xl border bg-muted/40 px-4 py-3 text-sm text-muted-foreground">
+        <div className={cn('mb-4 flex items-center gap-2 px-4 py-3 text-sm text-muted-foreground', TILE)}>
           <Info className="h-4 w-4 shrink-0" aria-hidden />
           {t('schoolMode.policies.readOnly')}
         </div>

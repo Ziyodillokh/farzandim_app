@@ -1,5 +1,6 @@
 'use client';
 
+import { TrendingUp } from 'lucide-react';
 import { Area, AreaChart, CartesianGrid, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -14,7 +15,7 @@ function TrendTooltip({ active, payload, respondentsLabel }: { active?: boolean;
   const point = payload?.[0]?.payload;
   if (!active || !point) return null;
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-soft-lg">
+    <div className="glass-popover rounded-xl px-3 py-2 text-xs">
       <p className="font-semibold">{point.label}</p>
       <p className="mt-0.5 tabular-nums text-muted-foreground">
         <span className="font-semibold text-foreground">{point.wellbeing}</span>/100 · {respondentsLabel}: {point.respondents}
@@ -33,9 +34,9 @@ export function TrendChart({ aggregate, loading }: { aggregate: CareAggregate | 
   }));
 
   return (
-    <SectionCard title={t('care.overview.trendTitle')} description={t('care.overview.trendHint')}>
+    <SectionCard title={t('care.overview.trendTitle')} description={t('care.overview.trendHint')} icon={<TrendingUp />}>
       {loading && !aggregate ? (
-        <Skeleton className="h-56 w-full rounded-lg" />
+        <Skeleton className="h-56 w-full rounded-xl" />
       ) : data.length < 2 ? (
         <EmptyState title={t('care.overview.trendEmpty')} className="py-10" />
       ) : (
@@ -44,8 +45,8 @@ export function TrendChart({ aggregate, loading }: { aggregate: CareAggregate | 
             <AreaChart data={data} margin={{ top: 8, right: 12, bottom: 0, left: -18 }}>
               <defs>
                 <linearGradient id="care-trend-fill" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="hsl(var(--chart-2))" stopOpacity={0.28} />
-                  <stop offset="100%" stopColor="hsl(var(--chart-2))" stopOpacity={0} />
+                  <stop offset="0%" stopColor="hsl(var(--chart-5))" stopOpacity={0.28} />
+                  <stop offset="100%" stopColor="hsl(var(--chart-5))" stopOpacity={0} />
                 </linearGradient>
               </defs>
               <CartesianGrid vertical={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
@@ -55,10 +56,10 @@ export function TrendChart({ aggregate, loading }: { aggregate: CareAggregate | 
               <Area
                 type="monotone"
                 dataKey="wellbeing"
-                stroke="hsl(var(--chart-2))"
+                stroke="hsl(var(--chart-5))"
                 strokeWidth={2.5}
                 fill="url(#care-trend-fill)"
-                dot={{ r: 4, fill: 'hsl(var(--card))', stroke: 'hsl(var(--chart-2))', strokeWidth: 2 }}
+                dot={{ r: 4, fill: 'hsl(var(--card))', stroke: 'hsl(var(--chart-5))', strokeWidth: 2 }}
                 activeDot={{ r: 5 }}
               />
             </AreaChart>

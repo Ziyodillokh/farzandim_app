@@ -5,7 +5,9 @@ import { GraduationCap, Search, Send } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { INNER_TILE } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useBulkInvite, usePendingInvites } from '../hooks';
 
 export type BulkInviteDialogProps = {
@@ -46,7 +48,7 @@ export function BulkInviteDialog({ open, onOpenChange, classId, className, searc
                 : t('parents.bulk.none')}
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-2 rounded-xl border bg-muted/40 p-4">
+        <div className={cn(INNER_TILE, 'space-y-2 p-4')}>
           <p className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{t('parents.bulk.scope')}</p>
           <div className="flex flex-wrap gap-2">
             <Badge variant="outline" className="gap-1.5">

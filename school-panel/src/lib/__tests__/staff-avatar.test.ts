@@ -41,7 +41,7 @@ describe('xodim portretlari', () => {
     const next = assignPortrait(staff, 'Qodirova Zarina Anvarovna');
     expect(next.startsWith('f-')).toBe(true);
     expect(staff.some((s) => s.portrait === next)).toBe(false);
-    const stripped = staff.map(({ portrait: _p, ...s }) => (void _p, s));
+    const stripped = staff.map((s) => ({ ...s, portrait: undefined }));
     expect(assignAllPortraits(stripped).map((s) => s.portrait)).toEqual(staff.map((s) => s.portrait));
   });
 

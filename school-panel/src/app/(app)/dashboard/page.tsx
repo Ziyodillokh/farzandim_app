@@ -15,6 +15,15 @@ import { MyClassCard } from '@/features/dashboard/components/my-class-card';
 import { TrendChart } from '@/features/dashboard/components/trend-chart';
 import { UpcomingCard } from '@/features/dashboard/components/upcoming-card';
 import { useOverview } from '@/features/dashboard/hooks';
+import { cn } from '@/lib/utils';
+
+/** Pastki qator: kartalar soniga qarab muvozanatli ustunlar. */
+const BOTTOM_GRID: Record<number, string> = {
+  1: 'md:grid-cols-1',
+  2: 'md:grid-cols-2',
+  3: 'md:grid-cols-2 xl:grid-cols-3',
+  4: 'md:grid-cols-2 2xl:grid-cols-4',
+};
 
 export default function DashboardPage() {
   const can = useCan();
@@ -54,7 +63,7 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {bottom.length > 0 && <div className="grid gap-6 md:grid-cols-2 2xl:grid-cols-4">{bottom}</div>}
+      {bottom.length > 0 && <div className={cn('grid gap-6', BOTTOM_GRID[bottom.length])}>{bottom}</div>}
     </>
   );
 }

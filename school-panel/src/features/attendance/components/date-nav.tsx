@@ -30,7 +30,7 @@ export function DateNav({
 
   if (!canHistory) {
     return (
-      <div className="flex h-10 items-center gap-2 rounded-lg border bg-card px-3 text-sm font-medium shadow-soft">
+      <div className="glass flex h-10 items-center gap-2 rounded-xl px-3 text-sm font-medium">
         <CalendarDays className="h-4 w-4 text-primary" />
         {label}
       </div>
@@ -48,12 +48,12 @@ export function DateNav({
   };
 
   return (
-    <div className="flex h-10 items-center gap-0.5 rounded-lg border bg-card p-1 shadow-soft">
-      <Button variant="ghost" size="icon-sm" onClick={() => onChange(addDays(value, -1))} aria-label={t('attendance.date.prev')}>
+    <div className="glass flex h-10 items-center gap-0.5 rounded-xl p-1">
+      <Button variant="ghost" size="icon-sm" className="rounded-lg hover:bg-primary/[0.06]" onClick={() => onChange(addDays(value, -1))} aria-label={t('attendance.date.prev')}>
         <ChevronLeft />
       </Button>
       <div className="relative">
-        <Button variant="ghost" size="sm" className="h-8 gap-2 px-2.5 font-medium" onClick={openPicker} aria-label={t('attendance.date.label')}>
+        <Button variant="ghost" size="sm" className="h-8 gap-2 rounded-lg px-2.5 font-medium hover:bg-primary/[0.06]" onClick={openPicker} aria-label={t('attendance.date.label')}>
           <CalendarDays className="text-primary" />
           <span className="capitalize">{label}</span>
         </Button>
@@ -68,11 +68,11 @@ export function DateNav({
           className="pointer-events-none absolute inset-x-0 bottom-0 h-0 w-full opacity-0"
         />
       </div>
-      <Button variant="ghost" size="icon-sm" disabled={isToday} onClick={() => onChange(addDays(value, 1))} aria-label={t('attendance.date.next')}>
+      <Button variant="ghost" size="icon-sm" className="rounded-lg hover:bg-primary/[0.06]" disabled={isToday} onClick={() => onChange(addDays(value, 1))} aria-label={t('attendance.date.next')}>
         <ChevronRight />
       </Button>
       {!isToday && (
-        <Button variant="soft" size="sm" className="ml-0.5 h-8" onClick={() => onChange(today)}>
+        <Button variant="soft" size="sm" className="ml-0.5 h-8 rounded-lg" onClick={() => onChange(today)}>
           {t('attendance.date.today')}
         </Button>
       )}

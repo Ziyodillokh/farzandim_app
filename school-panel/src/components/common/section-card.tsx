@@ -25,7 +25,7 @@ export function SectionCard({
     <Card className={cn('overflow-hidden', className)}>
       {(title || actions) && (
         <div className="flex flex-wrap items-start justify-between gap-3 border-b border-border/50 px-5 py-4 dark:border-white/[0.06]">
-          <div className="flex min-w-0 items-start gap-3">
+          <div className={cn('flex min-w-0 gap-3', description ? 'items-start' : 'items-center')}>
             {icon && (
               <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 [&_svg]:size-[18px]">
                 {icon}

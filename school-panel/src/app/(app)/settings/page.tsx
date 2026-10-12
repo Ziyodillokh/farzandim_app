@@ -3,6 +3,7 @@
 import { Can } from '@/auth/can';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useSchool } from '@/features/school/hooks';
 import { AcademicCard } from '@/features/settings/components/academic-card';
@@ -22,13 +23,13 @@ export default function SettingsPage() {
     <>
       <PageHeader title={t('settings.title')} subtitle={t('settings.subtitle')} />
       {school.isError ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <ErrorState error={school.error} onRetry={() => void school.refetch()} />
-        </div>
+        </Card>
       ) : !data ? (
         <div className="grid gap-6 xl:grid-cols-3">
-          <Skeleton className="h-[420px] rounded-xl xl:col-span-2" />
-          <Skeleton className="h-[420px] rounded-xl" />
+          <Skeleton className="h-[420px] rounded-2xl xl:col-span-2" />
+          <Skeleton className="h-[420px] rounded-2xl" />
         </div>
       ) : (
         <div className="grid items-start gap-6 xl:grid-cols-3 animate-fade-in">

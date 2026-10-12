@@ -4,25 +4,17 @@ import { Lock, MoreHorizontal, Pencil, Power, PowerOff } from 'lucide-react';
 import { useMemo } from 'react';
 
 import type { Column } from '@/components/common/data-table';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Badge, type BadgeProps } from '@/components/ui/badge';
+import { StaffAvatar } from '@/components/common/staff-avatar';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import type { RoleKey } from '@/data/contracts';
 import type { StaffRow } from '@/data/mock/services/staff';
 import { useI18n } from '@/i18n';
-import { cn, initials } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { RoleBadge } from './role-badge';
 
 const MAX_CLASS_BADGES = 3;
 
-export const ROLE_VARIANT: Record<RoleKey, NonNullable<BadgeProps['variant']>> = {
-  DIRECTOR: 'default',
-  ADMIN: 'info',
-  HOMEROOM: 'success',
-  PSYCHOLOGIST: 'warning',
-  DUTY: 'secondary',
-  TEACHER: 'outline',
-};
 
 export type StaffActions = {
   canManage: boolean;
@@ -76,26 +68,24 @@ export function useStaffColumns(actions: StaffActions): Column<StaffRow>[] {
         header: t('staff.columns.name'),
         sortKey: 'name',
         cell: (r) => (
-          <div className={cn('flex items-center gap-3', !r.active && 'opacity-60')}>
-            <Avatar className="h-9 w-9">
-              <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(r.fullName)}</AvatarFallback>
-            </Avatar>
+          <div className={cn('flex items-center gap-3', !r.active && 'opacity-60 grayscale')}>
+            <StaffAvatar name={r.fullName} photo={r.photo ?? null} portrait={r.portrait ?? null} size="sm" />
             <div className="min-w-0">
-              <p className="flex flex-wrap items-center gap-1.5 font-medium">
+              <div className="flex flex-wrap items-center gap-1.5 font-medium">
                 <span className="truncate">{r.fullName}</span>
                 {r.username && (
-                  <Badge variant="warning" size="sm">
+                  <Badge variant="info" size="sm">
                     {t('staff.demoBadge', { username: r.username })}
                   </Badge>
                 )}
                 {r.id === actions.selfId && <Badge size="sm">{t('staff.youBadge')}</Badge>}
-              </p>
+              </div>
               <p className="truncate text-xs text-muted-foreground">{r.position}</p>
             </div>
           </div>
         ),
       },
-      { key: 'role', header: t('staff.columns.role'), sortKey: 'role', cell: (r) => <Badge variant={ROLE_VARIANT[r.role]}>{t(`enums.role.${r.role}`)}</Badge> },
+      { key: 'role', header: t('staff.columns.role'), sortKey: 'role', cell: (r) => <RoleBadge role={r.role} /> },
       {
         key: 'classes',
         header: t('staff.columns.classes'),
