@@ -237,7 +237,8 @@
       "openRestrictions": "Open restrictions",
       "openSchedules": "Open schedules",
       "giveTime": "Grant time",
-      "deny": "Deny"
+      "deny": "Deny",
+      "openChildSettings": "Open child settings"
     },
     "unlock": {
       "granted": "Granted {minutes} minutes.",
@@ -1197,7 +1198,18 @@
     "from": "from",
     "to": "to",
     "timePickerTitle": "Set time",
-    "saved": "Schedule added"
+    "saved": "Schedule added",
+    "iosBlockSwitch": "Block iPhone apps during this time",
+    "iosBlockHint": "The apps your child selected on the iPhone will be blocked during this time window",
+    "iosMinWindow": "On iPhone a schedule must be at least 15 minutes long",
+    "iosAppsBlocked": "iPhone apps are blocked",
+    "iosAppsNotBlocked": "iPhone apps are not blocked",
+    "iosSheetTitle": "iPhone apps",
+    "appsLabel": "Apps to block",
+    "updated": "Schedule updated",
+    "deleted": "Schedule deleted",
+    "deleteTitle": "Delete schedule",
+    "deleteContent": "Delete the \"{name}\" schedule?"
   },
   "chat": {
     "title": "Chats",
@@ -1728,5 +1740,18 @@
     "no_ads_full": "No ads",
     "priority_support": "Priority support",
     "family_sharing": "Family sharing"
+  },
+  "iosChild": {
+    "howItWorksTitle": "How control works on iPhone",
+    "howItWorksBody": "Under Apple's rules, the app list and screen time on an iPhone are not visible to you. Your child picks the apps to control on their own iPhone in Parvoz → Screen Time. Here you block the \"iPhone: selected apps\" entry or set a daily limit on it — it applies to those selected apps.",
+    "screenTimeHint": "iPhone screen time stats are only visible on the child's phone (Apple rule)",
+    "appsHint": "The list of apps on the iPhone and the time spent in them are not visible to parents (Apple rule)",
+    "blockBanner": "On iPhone your child picks the apps themselves (Parvoz → Screen Time). If you block \"iPhone: selected apps\", those selected apps stay blocked at all times.",
+    "limitBanner": "On iPhone your child picks the apps themselves (Parvoz → Screen Time). The limit you set applies to those selected apps.",
+    "uninstallSubtitle": "Deleting apps on the iPhone is forbidden (including Parvoz)",
+    "permissionLabel": "Screen Time permission",
+    "permissionOn": "Enabled",
+    "permissionOff": "Disabled",
+    "permissionUnknown": "Unknown"
   }
 }

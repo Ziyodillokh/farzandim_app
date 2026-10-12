@@ -8,6 +8,10 @@
 // Eslatma: limit MINUTDA saqlanadi; facade.setLimit uni millisekundga
 // aylantiradi. Limitni olib tashlash uchun removeLimit (DELETE)
 // chaqiriladi — 0 daqiqa = blok (limit emas), shuning uchun minimum 1.
+//
+// iPhone bola: ro'yxatda FAQAT virtual `kIosSelectionPackage` ("iPhone:
+// tanlangan ilovalar") ko'rsatiladi (limit bola iPhone'da o'zi tanlagan
+// ilovalarga qo'llanadi) va tepada tushuntirish banneri turadi.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
@@ -15,7 +19,9 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/ios_info_card.dart';
 import 'package:farzandim/shared/widgets/parvoz_search_field.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -201,6 +207,9 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isIos = ref.watch(
+      childByIdProvider(widget.childId).select((c) => c?.isIosDevice ?? false),
+    );
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: ColoredBox(
@@ -228,17 +237,23 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
                 style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),
               const SizedBox(height: 18),
-              // Qidiruv — 100+ ilovani scroll qilib topish o'rniga.
+              // iPhone: ro'yxatda bitta yozuv — qidiruv o'rniga tushuntirish.
+              // Android: qidiruv — 100+ ilovani scroll qilib topish o'rniga.
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 16),
-                child: ParvozSearchField(
-                  controller: _searchCtrl,
-                  hint: 'dailyLimit.searchHint'.tr(),
-                  onChanged: _onQueryChanged,
-                ),
+                child: isIos
+                    ? IosInfoCard(
+                        compact: true,
+                        message: 'iosChild.limitBanner'.tr(),
+                      )
+                    : ParvozSearchField(
+                        controller: _searchCtrl,
+                        hint: 'dailyLimit.searchHint'.tr(),
+                        onChanged: _onQueryChanged,
+                      ),
               ),
               const SizedBox(height: 14),
-              Expanded(child: _buildList()),
+              Expanded(child: _buildList(isIos: isIos)),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
                 child: _SaveButton(loading: _saving, onTap: _onSave),
@@ -259,11 +274,15 @@ class _DailyLimitBodyState extends ConsumerState<_DailyLimitBody> {
     );
   }
 
-  Widget _buildList() {
-    final apps = ref.watch(installedAppsProvider(widget.childId)).valueOrNull;
+  Widget _buildList({required bool isIos}) {
+    final installed = ref
+        .watch(installedAppsProvider(widget.childId))
+        .valueOrNull;
     final restr = ref.watch(restrictionsProvider(widget.childId)).valueOrNull;
     // Ikkalasini ham kutamiz — aks holda limit bir lahza yo'q ko'rinadi.
-    if (apps == null || restr == null) return _fill(const _Loading());
+    if (installed == null || restr == null) return _fill(const _Loading());
+    // iPhone: faqat virtual "tanlangan ilovalar" yozuvi.
+    final apps = installed.forPlatform(isIos: isIos);
     if (apps.isEmpty) {
       return _fill(
         _Empty(

@@ -8,13 +8,15 @@
 //   • Ilovalarni bloklash      → showBlockAppsSheet (tortiladigan varaq)
 //   • Kunlik vaqt limiti       → showDailyLimitSheet
 //   • Rejimlar                 → showRejimlarSheet
-//   • Notanish manbaalar       → inline toggle (blockUnknownSources)
+//   • Notanish manbaalar       → inline toggle (blockUnknownSources;
+//                                iPhone bolada YO'Q — Android tushunchasi)
 //
 // Widgetlar `controls_setup_screen`dagilar bilan bir xil uslubda (nusxa) —
 // dizayn birligi uchun.
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
@@ -42,6 +44,7 @@ const _card = Color(0xFF12171E); // karta foni
 const _chipBg = Color(0xFF1B2128); // ikon doirasi
 const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x8CFFFFFF); // oq 55%
+const _danger = Color(0xFFFF5A5D); // ruxsat o'chirilgan
 
 TextStyle _unb(
   double size, {
@@ -85,9 +88,14 @@ class ChildSettingsScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final child = ref.watch(childByIdProvider(childId)) ?? initialChild;
+    // iPhone bola: "Notanish manbalar" yo'q, o'chirish taqiqi matni boshqacha.
+    final isIos = child?.isIosDevice ?? false;
 
     // Real sanoqlar (sub-matnlar uchun).
-    final restrictions = ref.watch(restrictionsProvider(childId)).valueOrNull;
+    final restrictions = ref
+        .watch(restrictionsProvider(childId))
+        .valueOrNull
+        ?.forPlatform(isIos: isIos);
     final blockedCount = restrictions == null
         ? 0
         : restrictions.where((r) => r.isBlocked).length;
@@ -232,17 +240,20 @@ class ChildSettingsScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 8),
 
-                  // ── Notanish manbaalar (toggle) ──
-                  _UnknownSourcesCard(
-                    childId: childId,
-                    initialValue: child?.blockUnknownSources ?? false,
-                  ),
-                  const SizedBox(height: 8),
+                  // ── Notanish manbaalar (toggle) — iPhone'da yo'q ──
+                  if (!isIos) ...[
+                    _UnknownSourcesCard(
+                      childId: childId,
+                      initialValue: child?.blockUnknownSources ?? false,
+                    ),
+                    const SizedBox(height: 8),
+                  ],
 
                   // ── O'chirishni taqiqlash (Device Admin toggle) ──
                   _UninstallProtectionCard(
                     childId: childId,
                     initialValue: child?.blockUninstall ?? false,
+                    isIos: isIos,
                   ),
                 ],
               ),
@@ -339,6 +350,12 @@ class _ProfileCard extends StatelessWidget {
                     ],
                   ],
                 ),
+                // iPhone: Screen Time (Family Controls) ruxsati holati —
+                // ruxsat o'chsa nazorat ishlamaydi.
+                if (child.isIosDevice) ...[
+                  const SizedBox(height: 3),
+                  _ScreenTimePermissionRow(granted: child.screenTimePermission),
+                ],
               ],
             ),
           ),
@@ -354,6 +371,38 @@ class _ProfileCard extends StatelessWidget {
           ),
         ],
       ),
+    );
+  }
+}
+
+/// "Ekran vaqti ruxsati: Yoqilgan / O'chirilgan / Noma'lum" (faqat iPhone).
+class _ScreenTimePermissionRow extends StatelessWidget {
+  const _ScreenTimePermissionRow({required this.granted});
+
+  /// `true` berilgan, `false` o'chirilgan, `null` noma'lum.
+  final bool? granted;
+
+  @override
+  Widget build(BuildContext context) {
+    final (status, color) = switch (granted) {
+      true => ('iosChild.permissionOn'.tr(), _green),
+      false => ('iosChild.permissionOff'.tr(), _danger),
+      null => ('iosChild.permissionUnknown'.tr(), _dim),
+    };
+    return Text.rich(
+      TextSpan(
+        style: _pop(13, c: _dim),
+        children: [
+          TextSpan(text: '${'iosChild.permissionLabel'.tr()}: '),
+          TextSpan(
+            text: status,
+            style: _pop(13, w: FontWeight.w600, c: color),
+          ),
+        ],
+      ),
+      // Tor ekranda holat (rangli qism) kesilmasin — 2 qatorgacha.
+      maxLines: 2,
+      overflow: TextOverflow.ellipsis,
     );
   }
 }
@@ -559,10 +608,15 @@ class _UninstallProtectionCard extends ConsumerStatefulWidget {
   const _UninstallProtectionCard({
     required this.childId,
     required this.initialValue,
+    required this.isIos,
   });
 
   final String childId;
   final bool initialValue;
+
+  /// iPhone'da bu bayroq Parvoz'ni emas, HAR QANDAY ilovani o'chirishni
+  /// taqiqlaydi — matn shunga mos.
+  final bool isIos;
 
   @override
   ConsumerState<_UninstallProtectionCard> createState() =>
@@ -626,7 +680,9 @@ class _UninstallProtectionCardState
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'childSettings.uninstallProtection.subtitle'.tr(),
+                  widget.isIos
+                      ? 'iosChild.uninstallSubtitle'.tr()
+                      : 'childSettings.uninstallProtection.subtitle'.tr(),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: _pop(13, c: _dim),

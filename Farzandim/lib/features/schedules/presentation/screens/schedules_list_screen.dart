@@ -18,12 +18,15 @@ import 'package:farzandim/core/theme/app_colors.dart';
 import 'package:farzandim/core/theme/app_dimensions.dart';
 import 'package:farzandim/core/theme/app_text_styles.dart';
 import 'package:farzandim/core/utils/extensions.dart';
-import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/schedules/data/models/ios_routine_rules.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
+import 'package:farzandim/features/schedules/presentation/widgets/routine_apps_editor.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/gradient_background.dart';
 import 'package:farzandim/shared/widgets/settings_card.dart';
 import 'package:flutter/material.dart';
@@ -296,7 +299,23 @@ class _ScheduleCard extends ConsumerWidget {
       initialTime: s.endTime,
       helpText: 'schedules.endTimeHelp'.tr(),
     );
-    if (end == null) return;
+    if (end == null || !context.mounted) return;
+    // iPhone: tanlangan ilovalarni bloklaydigan rejim 15 daqiqadan qisqa
+    // bo'lsa iOS uni e'tiborsiz qoldiradi — saqlamaymiz.
+    final isIos = ref.read(childByIdProvider(childId))?.isIosDevice ?? false;
+    final tooShort =
+        isIos &&
+        routineBlocksIosApps(s.blockedApps) &&
+        !isRoutineWindowValidForIos(
+          startHour: start.hour,
+          startMinute: start.minute,
+          endHour: end.hour,
+          endMinute: end.minute,
+        );
+    if (tooShort) {
+      AppToast.error(context, 'rejimlar.iosMinWindow'.tr());
+      return;
+    }
     await ref
         .read(scheduleActionsProvider.notifier)
         .updateSchedule(
@@ -339,31 +358,17 @@ class _ScheduleCard extends ConsumerWidget {
   }
 
   // ─── Ilova cheklovlar (picker) ───
-  Future<void> _editApps(
-    BuildContext context,
-    WidgetRef ref,
-    Schedule s,
-  ) async {
-    final result = await showModalBottomSheet<List<String>>(
-      context: context,
-      backgroundColor: AppColors.surface,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(
-          top: Radius.circular(AppDimensions.radiusL),
-        ),
-      ),
-      builder: (_) => _AppPickerSheet(childId: childId, initial: s.blockedApps),
+  // Android → ilovalar tanlagichi; iPhone → "tanlangan ilovalarni bloklash"
+  // kaliti. Natija shu rejimning `blockedApps`'iga yoziladi.
+  Future<void> _editApps(BuildContext context, WidgetRef ref, Schedule s) {
+    final isIos = ref.read(childByIdProvider(childId))?.isIosDevice ?? false;
+    return editRoutineApps(
+      context,
+      ref,
+      childId: childId,
+      schedule: s,
+      isIos: isIos,
     );
-    if (result == null) return;
-    await ref
-        .read(scheduleActionsProvider.notifier)
-        .updateSchedule(
-          childId: childId,
-          scheduleId: s.id,
-          current: s,
-          blockedApps: result,
-        );
   }
 }
 
@@ -591,166 +596,6 @@ class _DayChip extends StatelessWidget {
             color: selected ? AppColors.onPrimary : AppColors.textPrimary,
             fontWeight: FontWeight.w600,
           ),
-        ),
-      ),
-    );
-  }
-}
-
-// ════════════════════════ APP PICKER SHEET ════════════════════════
-
-class _AppPickerSheet extends ConsumerStatefulWidget {
-  const _AppPickerSheet({required this.childId, required this.initial});
-
-  final String childId;
-  final List<String> initial;
-
-  @override
-  ConsumerState<_AppPickerSheet> createState() => _AppPickerSheetState();
-}
-
-class _AppPickerSheetState extends ConsumerState<_AppPickerSheet> {
-  late final Set<String> _selected = {...widget.initial};
-
-  @override
-  Widget build(BuildContext context) {
-    final installedAsync = ref.watch(installedAppsProvider(widget.childId));
-    return DraggableScrollableSheet(
-      expand: false,
-      initialChildSize: 0.7,
-      maxChildSize: 0.92,
-      minChildSize: 0.5,
-      builder: (context, scrollController) {
-        return Column(
-          children: [
-            const SizedBox(height: AppDimensions.sm),
-            Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: AppColors.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-            Padding(
-              padding: const EdgeInsets.all(AppDimensions.lg),
-              child: Row(
-                children: [
-                  Expanded(
-                    child: Text(
-                      'schedules.appRestrictionsLabel'.tr(),
-                      style: AppTextStyles.headlineL.copyWith(
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ),
-                  TextButton(
-                    onPressed: () =>
-                        Navigator.of(context).pop(_selected.toList()),
-                    child: Text(
-                      'common.save'.tr(),
-                      style: AppTextStyles.bodyM.copyWith(
-                        color: AppColors.accent,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            Expanded(
-              child: installedAsync.when(
-                data: (apps) {
-                  final list = apps.where((a) => a.appName.isNotEmpty).toList()
-                    ..sort((a, b) => a.appName.compareTo(b.appName));
-                  if (list.isEmpty) {
-                    return Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(AppDimensions.xl),
-                        child: Text(
-                          'schedules.appsNotLoaded'.tr(),
-                          style: TextStyle(color: AppColors.textSecondary),
-                        ),
-                      ),
-                    );
-                  }
-                  return ListView.builder(
-                    controller: scrollController,
-                    itemCount: list.length,
-                    itemBuilder: (_, i) => _AppPickRow(
-                      app: list[i],
-                      selected: _selected.contains(list[i].packageName),
-                      onChanged: (sel) => setState(() {
-                        if (sel) {
-                          _selected.add(list[i].packageName);
-                        } else {
-                          _selected.remove(list[i].packageName);
-                        }
-                      }),
-                    ),
-                  );
-                },
-                loading: () => Center(
-                  child: CircularProgressIndicator(color: AppColors.accent),
-                ),
-                error: (e, _) => Center(
-                  child: Text(
-                    friendlyError(e),
-                    style: TextStyle(color: AppColors.textSecondary),
-                  ),
-                ),
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-}
-
-class _AppPickRow extends StatelessWidget {
-  const _AppPickRow({
-    required this.app,
-    required this.selected,
-    required this.onChanged,
-  });
-
-  final AppUsageEntry app;
-  final bool selected;
-  final ValueChanged<bool> onChanged;
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: () => onChanged(!selected),
-      child: Padding(
-        padding: const EdgeInsets.symmetric(
-          horizontal: AppDimensions.lg,
-          vertical: AppDimensions.sm,
-        ),
-        child: Row(
-          children: [
-            AppIconWidget(
-              packageName: app.packageName,
-              iconUrl: app.iconUrl,
-              size: 40,
-            ),
-            const SizedBox(width: AppDimensions.md),
-            Expanded(
-              child: Text(
-                app.appName,
-                style: AppTextStyles.bodyM,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-              ),
-            ),
-            Checkbox(
-              value: selected,
-              activeColor: AppColors.primary,
-              checkColor: AppColors.onPrimary,
-              onChanged: (v) => onChanged(v ?? false),
-            ),
-          ],
         ),
       ),
     );

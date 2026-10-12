@@ -237,7 +237,8 @@
       "openRestrictions": "Cheklovlarga o'tish",
       "openSchedules": "Jadvalga o'tish",
       "giveTime": "Vaqt ber",
-      "deny": "Rad et"
+      "deny": "Rad et",
+      "openChildSettings": "Bola sozlamalariga o'tish"
     },
     "unlock": {
       "granted": "{minutes} daqiqa ruxsat berildi.",
@@ -1197,7 +1198,18 @@
     "from": "dan",
     "to": "gacha",
     "timePickerTitle": "Vaqt belgilash",
-    "saved": "Rejim qo'shildi"
+    "saved": "Rejim qo'shildi",
+    "iosBlockSwitch": "Shu vaqtda iPhone ilovalarini bloklash",
+    "iosBlockHint": "Bola iPhone'da tanlagan ilovalar shu vaqt oralig'ida bloklanadi",
+    "iosMinWindow": "iPhone'da rejim kamida 15 daqiqa bo'lishi kerak",
+    "iosAppsBlocked": "iPhone ilovalari bloklanadi",
+    "iosAppsNotBlocked": "iPhone ilovalari bloklanmaydi",
+    "iosSheetTitle": "iPhone ilovalari",
+    "appsLabel": "Bloklanadigan ilovalar",
+    "updated": "Rejim yangilandi",
+    "deleted": "Rejim o'chirildi",
+    "deleteTitle": "Rejimni o'chirish",
+    "deleteContent": "«{name}» rejimi o'chirilsinmi?"
   },
   "chat": {
     "title": "Chatlar",
@@ -1728,5 +1740,18 @@
     "no_ads_full": "Reklamasiz",
     "priority_support": "Ustuvor qo'llab-quvvatlash",
     "family_sharing": "Oila bilan ulashish"
+  },
+  "iosChild": {
+    "howItWorksTitle": "iPhone'da nazorat qanday ishlaydi",
+    "howItWorksBody": "Apple qoidasiga ko'ra iPhone'dagi ilovalar ro'yxati va ekran vaqti sizga ko'rinmaydi. Bola o'z iPhone'ida Parvoz → Ekran vaqti bo'limida nazorat qilinadigan ilovalarni tanlaydi. Bu yerda esa «iPhone: tanlangan ilovalar» yozuvini bloklaysiz yoki unga kunlik limit qo'yasiz — u shu tanlangan ilovalarga qo'llanadi.",
+    "screenTimeHint": "iPhone ekran vaqti statistikasi faqat bolaning telefonida ko'rinadi (Apple qoidasi)",
+    "appsHint": "iPhone'dagi ilovalar ro'yxati va ularda o'tkazilgan vaqt ota-onaga ko'rinmaydi (Apple qoidasi)",
+    "blockBanner": "iPhone'da bola ilovalarni o'zi tanlaydi (Parvoz → Ekran vaqti). «iPhone: tanlangan ilovalar»ni bloklasangiz, shu tanlangan ilovalar doimo bloklanadi.",
+    "limitBanner": "iPhone'da bola ilovalarni o'zi tanlaydi (Parvoz → Ekran vaqti). Qo'ygan limitingiz shu tanlangan ilovalarga qo'llanadi.",
+    "uninstallSubtitle": "iPhone'da ilovalarni o'chirish taqiqlanadi (Parvoz ham)",
+    "permissionLabel": "Ekran vaqti ruxsati",
+    "permissionOn": "Yoqilgan",
+    "permissionOff": "O'chirilgan",
+    "permissionUnknown": "Noma'lum"
   }
 }

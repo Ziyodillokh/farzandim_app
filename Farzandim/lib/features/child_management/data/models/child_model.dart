@@ -82,6 +82,9 @@ class Child {
     final accessibilityEnabled = json['accessibilityEnabled'] as bool?;
     // Ekran vaqti manbasi — PACKAGE_USAGE_STATS ruxsati.
     final usagePermission = json['usagePermission'] as bool?;
+    // iPhone: Screen Time (Family Controls) ruxsati. Eski backend yubormaydi →
+    // `null` ("noma'lum"); Android bolada ham doim `null`.
+    final screenTimePermission = json['screenTimePermission'] as bool?;
     // Backend top-level fields'dan deviceInfo wrapper yaratamiz.
     final hasDeviceData =
         batteryLevel != null ||
@@ -94,7 +97,8 @@ class Child {
         notificationPermission != null ||
         backgroundAllowed != null ||
         accessibilityEnabled != null ||
-        usagePermission != null;
+        usagePermission != null ||
+        screenTimePermission != null;
     return Child(
       id: json['id'] as String,
       name: (json['name'] as String?) ?? '',
@@ -127,6 +131,7 @@ class Child {
               backgroundAllowed: backgroundAllowed,
               accessibilityEnabled: accessibilityEnabled,
               usagePermission: usagePermission,
+              screenTimePermission: screenTimePermission,
             )
           : null,
       lastSeenAt: _parseIso8601(json['lastSeenAt']),
@@ -291,6 +296,25 @@ class Child {
   /// yo umuman ulanmagan.
   bool get isConnectionLost => isConnected && !isLiveOnline;
 
+  // ─── Platforma (iOS / Android) ──────────────────────────────────────
+  // iPhone'dagi bola ilovasi haqiqiy o'rnatilgan ilovalar/ekran vaqtini
+  // YUBORMAYDI (Apple qoidasi) — faqat bitta virtual `kIosSelectionPackage`
+  // yozuvi. Shu sabab ota-ona UI'si platformaga qarab boshqacha ishlaydi.
+
+  /// Bola qurilmasi iPhone/iPad'mi. Aniqlash tartibi:
+  /// 1) `deviceInfo.androidVersion` ("iOS 18.2", "iPadOS 17") `ios`/`ipados`
+  ///    bilan boshlansa → `true`; `android` bilan boshlansa → `false`;
+  /// 2) aks holda qurilma modeli (`iPhone 15`, `iPad`) bo'yicha;
+  /// 3) hech narsa noma'lum bo'lsa → `false` (Android deb hisoblanadi).
+  bool get isIosDevice => detectIosDevice(
+    osVersion: deviceInfo?.androidVersion,
+    deviceModel: deviceModel ?? deviceInfo?.deviceModel,
+  );
+
+  /// iPhone Screen Time (Family Controls) ruxsati: `true` — berilgan,
+  /// `false` — o'chirilgan, `null` — noma'lum (Android yoki eski backend).
+  bool? get screenTimePermission => deviceInfo?.screenTimePermission;
+
   /// Backend REST POST/PUT uchun JSON (Sprint 4.4).
   ///
   /// Server tomon o'zi boshqaradigan fieldlarni (`id`, `parentId`,
@@ -438,4 +462,17 @@ class Child {
   String toString() =>
       'Child(id: $id, name: $name, age: $age, gender: $gender, '
       'familyCode: $familyCode, hasPhoto: $hasCustomPhoto)';
+}
+
+/// Qurilma iPhone/iPad ekanini OS versiyasi va model nomidan aniqlaydi
+/// (`Child.isIosDevice` shu funksiyaga tayanadi — sof funksiya, testlanadi).
+///
+/// OS versiyasi (`iOS 18.2`, `iPadOS 17`, `Android 14`) modeldan ustun:
+/// u aniq bo'lsa model qaralmaydi. Ikkalasi ham noma'lum bo'lsa → `false`.
+bool detectIosDevice({String? osVersion, String? deviceModel}) {
+  final os = (osVersion ?? '').trim().toLowerCase();
+  if (os.startsWith('ios') || os.startsWith('ipados')) return true;
+  if (os.startsWith('android')) return false;
+  final model = (deviceModel ?? '').trim().toLowerCase();
+  return model.startsWith('iphone') || model.startsWith('ipad');
 }

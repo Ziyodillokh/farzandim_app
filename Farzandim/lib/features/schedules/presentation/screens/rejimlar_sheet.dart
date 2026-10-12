@@ -3,20 +3,26 @@
 // ─────────────────────────────────────────────────────────────────────
 //
 // Pastdan chiqadigan modal sheet (tepaga tortilsa kengayadi, pastga
-// tortilsa yopiladi). Ikki rejim: "Uyqu vaqti" (sleep) va "Maktab vaqti"
-// (school) — har biri "N ta ilova" + "Sozlash" shisha tugma. Sozlash
-// mavjud (ishlayotgan) jadval editoriga olib boradi. "Rejim qo'shish"
-// hozircha "Tez kunda". "Saqlash" sheet'ni yopadi.
+// tortilsa yopiladi). Bolaning HAMMA rejimlari ro'yxati: har karta —
+// nom + bloklanadigan ilovalar xulosasi ("N ta ilova" yoki iPhone'da
+// "iPhone ilovalari bloklanadi"), yoqish/o'chirish kaliti, "Sozlash" va
+// o'chirish (tasdiq bilan). "Sozlash" aynan SHU rejimning `blockedApps`'ini
+// tahrirlaydi (rejim vaqt oynasida bloklanadi; global 24/7 bloklash emas):
+// Android → ilovalar tanlagichi, iPhone → "tanlangan ilovalarni bloklash"
+// kaliti. "Saqlash" sheet'ni yopadi.
 //
-// Ma'lumot: `schedulesProvider(childId)` — type bo'yicha sleep/school
-// topiladi; sanoq = `schedule.blockedApps.length`.
+// Ma'lumot: `schedulesProvider(childId)`; harakatlar
+// `scheduleActionsProvider` (updateSchedule / toggleActive / deleteSchedule).
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
-import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/schedules/data/models/ios_routine_rules.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
 import 'package:farzandim/features/schedules/presentation/screens/add_rejim_sheet.dart';
+import 'package:farzandim/features/schedules/presentation/widgets/routine_apps_editor.dart';
+import 'package:farzandim/shared/widgets/app_switch.dart';
+import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +33,8 @@ const _bg = Color(0xFF00060A);
 const _card = Color(0xFF12171E);
 const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x8CFFFFFF); // oq 55%
+const _green = Color(0xFF34C759); // toggle ON
+const _danger = Color(0xFFFF5A5D);
 
 TextStyle _unb(
   double size, {
@@ -113,26 +121,12 @@ class _RejimlarBody extends ConsumerWidget {
   final String childId;
   final ScrollController scrollController;
 
-  /// "Sozlash" — rejim turiga qarab ilova sozlash varag'ini ochadi.
-  /// Uyqu (sleep) → ilovalarni bloklash; Maktab (school) → kunlik limit;
-  /// boshqasi → bloklash (default). Rejimlar varag'i ustidan ochiladi.
-  void _openConfig(BuildContext context, ScheduleType type) {
-    final title = 'rejimlar.title'.tr();
-    if (type == ScheduleType.school) {
-      showDailyLimitSheet(context, childId: childId, title: title);
-    } else {
-      showBlockAppsSheet(
-        context,
-        childId: childId,
-        title: title,
-        showCategories: false,
-      );
-    }
-  }
-
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final all = ref.watch(schedulesProvider(childId)).valueOrNull ?? const [];
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
 
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
@@ -169,16 +163,16 @@ class _RejimlarBody extends ConsumerWidget {
                   children: [
                     for (final s in all) ...[
                       _ScheduleCard(
-                        label: s.title.isNotEmpty ? s.title : s.type.label,
-                        appCount: s.blockedApps.length,
-                        onConfigure: () => _openConfig(context, s.type),
+                        key: ValueKey(s.id),
+                        childId: childId,
+                        schedule: s,
+                        isIos: isIos,
                       ),
                       const SizedBox(height: 10),
                     ],
                     const SizedBox(height: 8),
                     _AddButton(
-                      onTap: () =>
-                          showAddRejimSheet(context, childId: childId),
+                      onTap: () => showAddRejimSheet(context, childId: childId),
                     ),
                   ],
                 ),
@@ -199,16 +193,123 @@ class _RejimlarBody extends ConsumerWidget {
 
 // ════════════ Rejim kartasi ════════════
 
-class _ScheduleCard extends StatelessWidget {
+/// Bitta rejim kartasi: nom + ilovalar xulosasi + yoqish kaliti, pastda
+/// "Sozlash" va o'chirish. Kalit optimistik (xatoda qaytariladi).
+class _ScheduleCard extends ConsumerStatefulWidget {
   const _ScheduleCard({
-    required this.label,
-    required this.appCount,
-    required this.onConfigure,
+    required this.childId,
+    required this.schedule,
+    required this.isIos,
+    super.key,
   });
 
-  final String label;
-  final int appCount;
-  final VoidCallback onConfigure;
+  final String childId;
+  final Schedule schedule;
+  final bool isIos;
+
+  @override
+  ConsumerState<_ScheduleCard> createState() => _ScheduleCardState();
+}
+
+class _ScheduleCardState extends ConsumerState<_ScheduleCard> {
+  late bool _active = widget.schedule.isActive;
+  bool _toggling = false;
+
+  @override
+  void didUpdateWidget(_ScheduleCard oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (!_toggling && oldWidget.schedule.isActive != widget.schedule.isActive) {
+      _active = widget.schedule.isActive;
+    }
+  }
+
+  String get _label => widget.schedule.title.isNotEmpty
+      ? widget.schedule.title
+      : widget.schedule.type.label;
+
+  /// "N ta ilova" yoki iPhone'da "iPhone ilovalari bloklanadi".
+  String get _subtitle {
+    final apps = widget.schedule.blockedApps;
+    if (widget.isIos) {
+      return routineBlocksIosApps(apps)
+          ? 'rejimlar.iosAppsBlocked'.tr()
+          : 'rejimlar.iosAppsNotBlocked'.tr();
+    }
+    return 'rejimlar.appsCount'.tr(namedArgs: {'count': '${apps.length}'});
+  }
+
+  Future<void> _onToggle(bool value) async {
+    if (_toggling) return;
+    final previous = _active;
+    setState(() {
+      _active = value;
+      _toggling = true;
+    });
+    final result = await ref
+        .read(scheduleActionsProvider.notifier)
+        .toggleActive(
+          childId: widget.childId,
+          scheduleId: widget.schedule.id,
+          current: widget.schedule,
+          isActive: value,
+        );
+    if (!mounted) return;
+    setState(() {
+      _toggling = false;
+      if (!result.isSuccess) _active = previous;
+    });
+    if (!result.isSuccess) {
+      AppToast.error(context, 'errors.generic'.tr());
+    }
+  }
+
+  Future<void> _onConfigure() => editRoutineApps(
+    context,
+    ref,
+    childId: widget.childId,
+    schedule: widget.schedule,
+    isIos: widget.isIos,
+  );
+
+  Future<void> _onDelete() async {
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: _card,
+        title: Text('rejimlar.deleteTitle'.tr(), style: _unb(18)),
+        content: Text(
+          'rejimlar.deleteContent'.tr(namedArgs: {'name': _label}),
+          style: _pop(14, c: _dim),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(false),
+            child: Text('common.cancel'.tr(), style: _pop(14)),
+          ),
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(true),
+            child: Text(
+              'common.delete'.tr(),
+              style: _pop(14, w: FontWeight.w600, c: _danger),
+            ),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+    final result = await ref
+        .read(scheduleActionsProvider.notifier)
+        .deleteSchedule(
+          childId: widget.childId,
+          scheduleId: widget.schedule.id,
+        );
+    if (!mounted) return;
+    if (result.isSuccess) {
+      AppToast.success(context, 'rejimlar.deleted'.tr());
+    } else {
+      AppToast.error(context, 'errors.generic'.tr());
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -219,28 +320,41 @@ class _ScheduleCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: _fieldBorder),
       ),
-      child: Row(
+      child: Column(
         children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: _unb(16),
+          Row(
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      _label,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: _unb(16),
+                    ),
+                    const SizedBox(height: 3),
+                    Text(_subtitle, style: _pop(13, c: _dim)),
+                  ],
                 ),
-                const SizedBox(height: 3),
-                Text(
-                  'rejimlar.appsCount'.tr(namedArgs: {'count': '$appCount'}),
-                  style: _pop(13, c: _dim),
-                ),
-              ],
-            ),
+              ),
+              const SizedBox(width: 12),
+              AppSwitch(
+                value: _active,
+                onChanged: _toggling ? null : _onToggle,
+                activeColor: _green,
+              ),
+            ],
           ),
-          const SizedBox(width: 12),
-          _SozlashButton(onTap: onConfigure),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(child: _SozlashButton(onTap: _onConfigure)),
+              const SizedBox(width: 10),
+              _DeleteButton(onTap: _onDelete),
+            ],
+          ),
         ],
       ),
     );
@@ -259,7 +373,6 @@ class _SozlashButton extends StatelessWidget {
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 104,
         height: 42,
         child: ParvozGlass(
           height: 42,
@@ -267,6 +380,35 @@ class _SozlashButton extends StatelessWidget {
             'rejimlar.configure'.tr(),
             style: _pop(13, w: FontWeight.w500),
           ),
+        ),
+      ),
+    );
+  }
+}
+
+/// O'chirish tugmasi (qizil chiziqli yumaloq) — tasdiq dialogini ochadi.
+class _DeleteButton extends StatelessWidget {
+  const _DeleteButton({required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        width: 42,
+        height: 42,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          border: Border.all(color: _danger.withValues(alpha: 0.5)),
+        ),
+        child: const Icon(
+          Icons.delete_outline_rounded,
+          size: 20,
+          color: _danger,
         ),
       ),
     );

@@ -26,6 +26,7 @@ class ChildDeviceInfo {
     this.backgroundAllowed,
     this.accessibilityEnabled,
     this.usagePermission,
+    this.screenTimePermission,
   });
 
   /// Qurilma modeli (`samsung SM-N950F`, `Redmi Note 12`, va h.k.).
@@ -70,6 +71,10 @@ class ChildDeviceInfo {
   /// PACKAGE_USAGE_STATS ("Foydalanish ma'lumotlari") ruxsati — ekran vaqti /
   /// ilova statistikasi manbasi. `false` bo'lsa ota-onada ekran vaqti bo'sh.
   final bool? usagePermission;
+
+  /// iPhone: Apple Screen Time (Family Controls) ruxsati berilganmi. Faqat
+  /// iOS bola qurilmasi yuboradi — Android'da `null` (eski backendda ham).
+  final bool? screenTimePermission;
 
   // ═══════════════════════ DISPLAY HELPERS ═══════════════════════
 
@@ -123,7 +128,8 @@ class ChildDeviceInfo {
         other.notificationPermission == notificationPermission &&
         other.backgroundAllowed == backgroundAllowed &&
         other.accessibilityEnabled == accessibilityEnabled &&
-        other.usagePermission == usagePermission;
+        other.usagePermission == usagePermission &&
+        other.screenTimePermission == screenTimePermission;
   }
 
   @override
@@ -141,5 +147,6 @@ class ChildDeviceInfo {
     backgroundAllowed,
     accessibilityEnabled,
     usagePermission,
+    screenTimePermission,
   );
 }

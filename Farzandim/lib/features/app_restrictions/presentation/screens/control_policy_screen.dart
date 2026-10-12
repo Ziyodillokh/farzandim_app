@@ -15,6 +15,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
@@ -68,8 +69,15 @@ class ControlPolicyScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final child = ref.watch(childByIdProvider(childId));
+    // iPhone bola: faqat virtual "tanlangan ilovalar" cheklovi hisoblanadi
+    // (eski Android juftlikdan qolganlari sheet'da ko'rinmaydi).
+    final isIos = child?.isIosDevice ?? false;
     // Real sanoqlar (kartalar sub-matni uchun).
-    final restrictions = ref.watch(restrictionsProvider(childId)).valueOrNull;
+    final restrictions = ref
+        .watch(restrictionsProvider(childId))
+        .valueOrNull
+        ?.forPlatform(isIos: isIos);
     final blockedCount = restrictions == null
         ? 0
         : restrictions.where((r) => r.isBlocked).length;
@@ -78,7 +86,6 @@ class ControlPolicyScreen extends ConsumerWidget {
         : restrictions.where((r) => !r.isBlocked && r.limitMinutes > 0).length;
     final scheduleCount =
         ref.watch(schedulesProvider(childId)).valueOrNull?.length ?? 0;
-    final child = ref.watch(childByIdProvider(childId));
 
     return Scaffold(
       backgroundColor: _bg,
@@ -161,13 +168,15 @@ class ControlPolicyScreen extends ConsumerWidget {
                           showRejimlarSheet(context, childId: childId),
                     ),
                   ),
-                  const SizedBox(height: 12),
 
-                  // ── Notanish manbaalar (toggle) ──
-                  _UnknownSourcesCard(
-                    childId: childId,
-                    initialValue: child?.blockUnknownSources ?? false,
-                  ),
+                  // ── Notanish manbaalar (toggle) — iPhone'da yo'q ──
+                  if (!isIos) ...[
+                    const SizedBox(height: 12),
+                    _UnknownSourcesCard(
+                      childId: childId,
+                      initialValue: child?.blockUnknownSources ?? false,
+                    ),
+                  ],
                 ],
               ),
             ),

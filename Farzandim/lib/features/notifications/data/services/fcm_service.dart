@@ -351,9 +351,11 @@ void handleFcmTap(AppNotification notif, GoRouter router) {
       // Qaror varag'i bildirishnomalar ekranidagi kartochkadan ochiladi.
       open(AppRoutes.notifications);
     case NotificationType.permissionChanged:
-      // Ruxsat holati — cheklovlar/qurilma ekraniga (yo'q bo'lsa ro'yxat).
+      // Ruxsat holati — Bola sozlamalariga (iPhone'da "Ekran vaqti ruxsati"
+      // shu yerda ko'rinadi); ekran vaqti statistikasiga emas. Child yo'q
+      // bo'lsa — bildirishnomalar ro'yxati.
       if (notif.childId.isNotEmpty) {
-        open(AppRoutes.appRestrictionsPath(notif.childId));
+        open(AppRoutes.childSettingsPath(notif.childId));
       } else {
         open(AppRoutes.notifications);
       }

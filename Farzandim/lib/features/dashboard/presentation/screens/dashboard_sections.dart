@@ -530,8 +530,54 @@ class _LocationCard extends ConsumerWidget {
 
 // ════════════════════════ EKRAN VAQTI KARTASI ════════════════════════
 
+/// Ekran vaqti kartasi. iPhone bola ilovasi haqiqiy ekran vaqtini yubormaydi
+/// (Apple qoidasi), shu sabab iOS'da statistika provayderlari UMUMAN
+/// kuzatilmaydi (behuda polling yo'q) va "0 min" / "Ma'lumot yig'ilmoqda…"
+/// o'rniga sababi ko'rsatiladi.
 class _ScreenTimeCard extends ConsumerWidget {
   const _ScreenTimeCard({required this.childId});
+
+  final String childId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
+    return isIos
+        ? _IosScreenTimeCard(childId: childId)
+        : _AndroidScreenTimeCard(childId: childId);
+  }
+}
+
+/// iPhone: statistika yo'q — tushuntirish matni (karta bosilsa nazorat
+/// ekraniga o'tadi, u yerda iPhone nazorati qanday ishlashi yozilgan).
+class _IosScreenTimeCard extends StatelessWidget {
+  const _IosScreenTimeCard({required this.childId});
+
+  final String childId;
+
+  @override
+  Widget build(BuildContext context) {
+    return _Card(
+      minHeight: 220,
+      onTap: () => context.push(AppRoutes.appRestrictionsPath(childId)),
+      padding: const EdgeInsets.all(12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text('dashboard.screenTimeLabel'.tr(), style: _pop(14, c: _dim)),
+          const Icon(Icons.phone_iphone, size: 34, color: Colors.white),
+          Text('iosChild.screenTimeHint'.tr(), style: _pop(13, c: _dim)),
+        ],
+      ),
+    );
+  }
+}
+
+class _AndroidScreenTimeCard extends ConsumerWidget {
+  const _AndroidScreenTimeCard({required this.childId});
 
   final String childId;
 

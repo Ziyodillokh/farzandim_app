@@ -6,13 +6,22 @@
 // rejim nomi + vaqt (dan / gacha). Vaqt maydoni bosilsa g'ildirakli
 // "Vaqt belgilash" tanlagich (soat / daqiqa / AM-PM) ochiladi.
 //
+// Bloklanadigan ilovalar rejim SAQLANISHIDAN OLDIN tanlanadi va to'g'ridan-
+// to'g'ri shu rejimning `blockedApps`'iga yoziladi (rejim vaqt oynasida
+// bloklanadi, global 24/7 bloklash emas):
+//   • Android bola → ilovalar tanlagichi (`showRoutineAppPicker`);
+//   • iPhone bola  → "Shu vaqtda iPhone ilovalarini bloklash" kaliti
+//     (default yoqilgan). iOS kamida 15 daqiqalik oynani talab qiladi.
+//
 // Ma'lumot: `scheduleActionsProvider.addSchedule` (type = custom, har kuni).
-// Mock rejimda backendga bormasdan yopiladi (UI preview).
 
 import 'package:easy_localization/easy_localization.dart';
-import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
+import 'package:farzandim/features/schedules/data/models/ios_routine_rules.dart';
 import 'package:farzandim/features/schedules/data/models/schedule.dart';
 import 'package:farzandim/features/schedules/presentation/providers/schedule_providers.dart';
+import 'package:farzandim/features/schedules/presentation/widgets/routine_app_picker.dart';
+import 'package:farzandim/features/schedules/presentation/widgets/routine_apps_editor.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -27,6 +36,7 @@ const _chipBg = Color(0xFF1B2128);
 const _fieldBorder = Color(0x1FFFFFFF); // oq 12%
 const _dim = Color(0x8CFFFFFF); // oq 55%
 const _placeholder = Color(0x59FFFFFF); // oq 35%
+const _error = Color(0xFFFF5A5D);
 
 TextStyle _unb(
   double size, {
@@ -77,8 +87,30 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
   TimeOfDay? _to;
   bool _saving = false;
 
+  /// Android: tanlangan ilovalar (rejim vaqt oynasida bloklanadi).
+  List<String> _blockedApps = const [];
+
+  /// iPhone: bola tanlagan ilovalarni shu vaqtda bloklash (default yoqilgan).
+  bool _iosBlock = true;
+
   bool get _valid =>
       _nameController.text.trim().isNotEmpty && _from != null && _to != null;
+
+  bool get _isIos =>
+      ref.read(childByIdProvider(widget.childId))?.isIosDevice ?? false;
+
+  /// iPhone'da bloklash yoqilgan, lekin oyna iOS uchun juda qisqa.
+  bool _iosWindowTooShort({required bool isIos}) {
+    final from = _from;
+    final to = _to;
+    if (!isIos || !_iosBlock || from == null || to == null) return false;
+    return !isRoutineWindowValidForIos(
+      startHour: from.hour,
+      startMinute: from.minute,
+      endHour: to.hour,
+      endMinute: to.minute,
+    );
+  }
 
   @override
   void dispose() {
@@ -103,9 +135,27 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
     });
   }
 
+  Future<void> _pickApps() async {
+    final picked = await showRoutineAppPicker(
+      context,
+      childId: widget.childId,
+      initial: _blockedApps,
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _blockedApps = picked);
+  }
+
   Future<void> _onSave() async {
     if (!_valid || _saving) return;
+    final isIos = _isIos;
+    if (_iosWindowTooShort(isIos: isIos)) {
+      AppToast.error(context, 'rejimlar.iosMinWindow'.tr());
+      return;
+    }
     final name = _nameController.text.trim();
+    final blockedApps = isIos
+        ? iosRoutineBlockedApps(block: _iosBlock)
+        : _blockedApps;
     setState(() => _saving = true);
     final result = await ref
         .read(scheduleActionsProvider.notifier)
@@ -119,34 +169,30 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
           endHour: _to!.hour,
           endMinute: _to!.minute,
           reminderMinutes: 10,
+          blockedApps: blockedApps,
         );
     if (!mounted) return;
     setState(() => _saving = false);
     if (result.isSuccess) {
-      // Rejim yaratilgach — DARHOL "Ilovalarni bloklash" varag'i ochiladi
-      // (rejim davomida bloklanadigan ilovalarni tanlab saqlash — mantiqiy
-      // ketma-ketlik). Root context bilan (bu varaq pop bo'lgach ham yashaydi).
+      // Ilovalar rejim bilan BIRGA saqlandi (global bloklash ochilmaydi —
+      // u ilovalarni 24/7 bloklab qo'yardi).
       final rootContext = Navigator.of(context, rootNavigator: true).context;
-      final blockTitle = name;
       Navigator.of(context).pop();
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!rootContext.mounted) return;
         AppToast.success(rootContext, 'rejimlar.saved'.tr());
-        showBlockAppsSheet(
-          rootContext,
-          childId: widget.childId,
-          title: blockTitle,
-          showCategories: false,
-        );
       });
     } else {
-      AppToast.error(context, result.error ?? 'rejimlar.saved'.tr());
+      AppToast.error(context, 'errors.generic'.tr());
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final bottomInset = MediaQuery.of(context).viewInsets.bottom;
+    final isIos = ref.watch(
+      childByIdProvider(widget.childId).select((c) => c?.isIosDevice ?? false),
+    );
     return Padding(
       padding: EdgeInsets.only(bottom: bottomInset),
       child: ClipRRect(
@@ -155,7 +201,9 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
           color: _bg,
           child: SafeArea(
             top: false,
-            child: Padding(
+            // Scroll: ilovalar bloklari qo'shilgach klaviatura ochiq paytda
+            // kichik ekranda sig'masligi mumkin.
+            child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(20, 10, 20, 16),
               child: Column(
                 mainAxisSize: MainAxisSize.min,
@@ -211,6 +259,25 @@ class _AddRejimSheetState extends ConsumerState<_AddRejimSheet> {
                       ),
                     ],
                   ),
+                  if (_iosWindowTooShort(isIos: isIos)) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      'rejimlar.iosMinWindow'.tr(),
+                      style: _pop(12.5, c: _error),
+                    ),
+                  ],
+                  const SizedBox(height: 20),
+                  // Ilovalar: iPhone → kalit, Android → tanlagich.
+                  if (isIos)
+                    IosRoutineBlockSwitch(
+                      value: _iosBlock,
+                      onChanged: (v) => setState(() => _iosBlock = v),
+                    )
+                  else ...[
+                    Text('rejimlar.appsLabel'.tr(), style: _pop(14)),
+                    const SizedBox(height: 10),
+                    _AppsField(count: _blockedApps.length, onTap: _pickApps),
+                  ],
                   const SizedBox(height: 28),
                   _SaveButton(
                     enabled: _valid,
@@ -514,6 +581,46 @@ class _TimeField extends StatelessWidget {
               ),
             ),
             const Icon(SolarIconsOutline.clockCircle, size: 20, color: _dim),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+/// Android: "Bloklanadigan ilovalar" maydoni — tanlangan ilovalar soni.
+class _AppsField extends StatelessWidget {
+  const _AppsField({required this.count, required this.onTap});
+
+  final int count;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final has = count > 0;
+    return GestureDetector(
+      onTap: onTap,
+      behavior: HitTestBehavior.opaque,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+        decoration: BoxDecoration(
+          color: _field,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: _fieldBorder),
+        ),
+        child: Row(
+          children: [
+            Expanded(
+              child: Text(
+                has
+                    ? 'rejimlar.appsCount'.tr(namedArgs: {'count': '$count'})
+                    : 'schedules.notSet'.tr(),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: _pop(15, c: has ? Colors.white : _placeholder),
+              ),
+            ),
+            const Icon(Icons.chevron_right_rounded, size: 22, color: _dim),
           ],
         ),
       ),

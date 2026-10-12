@@ -256,17 +256,20 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
   }
 
   /// Tepadan tortilganda tanlangan bolaning provayderlarini qayta o'qiydi.
-  Future<void> _onRefresh(String childId) async {
+  ///
+  /// iPhone bola haqiqiy ekran vaqtini yubormaydi (Apple qoidasi) — uning
+  /// uchun bugungi foydalanish so'rovi yuborilmaydi ([isIos]).
+  Future<void> _onRefresh(String childId, {bool isIos = false}) async {
     ref.read(childrenRefreshTickProvider.notifier).state++;
     ref
-      ..invalidate(todayUsageProvider(childId))
       ..invalidate(weeklyChildUsageProvider(childId))
       ..invalidate(childProfileProvider(childId))
       ..invalidate(childLocationProvider(childId));
+    if (!isIos) ref.invalidate(todayUsageProvider(childId));
     try {
       await Future.wait([
         ref.read(childrenProvider.future),
-        ref.read(todayUsageProvider(childId).future),
+        if (!isIos) ref.read(todayUsageProvider(childId).future),
       ]).timeout(const Duration(seconds: 8));
     } catch (_) {
       // Tarmoq xatosi/timeout — spinner baribir yopiladi.
@@ -286,7 +289,7 @@ class _DashboardBodyState extends ConsumerState<_DashboardBody>
         RefreshIndicator(
           color: _blue,
           backgroundColor: _cardBg,
-          onRefresh: () => _onRefresh(child.id),
+          onRefresh: () => _onRefresh(child.id, isIos: child.isIosDevice),
           child: SingleChildScrollView(
             physics: const AlwaysScrollableScrollPhysics(),
             // Pastki padding = bottom bar (≈92) + bo'shliq, oxirgi karta

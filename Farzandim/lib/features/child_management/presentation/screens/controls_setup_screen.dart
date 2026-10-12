@@ -16,6 +16,7 @@
 
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim/core/routing/app_routes.dart';
+import 'package:farzandim/features/app_restrictions/data/models/app_restriction.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/block_apps_screen.dart';
 import 'package:farzandim/features/app_restrictions/presentation/screens/daily_limit_sheet.dart';
@@ -80,8 +81,14 @@ class ControlsSetupScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
+    final child = ref.watch(childByIdProvider(childId)) ?? initialChild;
+    // iPhone bola: faqat virtual "tanlangan ilovalar" cheklovi hisoblanadi.
+    final isIos = child?.isIosDevice ?? false;
     // Real sanoqlar — yangi bolada hammasi bo'sh (0).
-    final restrictions = ref.watch(restrictionsProvider(childId)).valueOrNull;
+    final restrictions = ref
+        .watch(restrictionsProvider(childId))
+        .valueOrNull
+        ?.forPlatform(isIos: isIos);
     final blockedCount = restrictions == null
         ? 0
         : restrictions.where((r) => r.isBlocked).length;
@@ -90,8 +97,6 @@ class ControlsSetupScreen extends ConsumerWidget {
         : restrictions.where((r) => !r.isBlocked && r.limitMinutes > 0).length;
     final scheduleCount =
         ref.watch(schedulesProvider(childId)).valueOrNull?.length ?? 0;
-
-    final child = ref.watch(childByIdProvider(childId)) ?? initialChild;
 
     final scaffold = Scaffold(
       backgroundColor: _bg,
@@ -168,11 +173,14 @@ class ControlsSetupScreen extends ConsumerWidget {
                           onTap: () =>
                               showRejimlarSheet(context, childId: childId),
                         ),
-                        const SizedBox(height: 12),
-                        _UnknownSourcesCard(
-                          childId: childId,
-                          initialValue: child?.blockUnknownSources ?? false,
-                        ),
+                        // Notanish manbalar — faqat Android.
+                        if (!isIos) ...[
+                          const SizedBox(height: 12),
+                          _UnknownSourcesCard(
+                            childId: childId,
+                            initialValue: child?.blockUnknownSources ?? false,
+                          ),
+                        ],
                         const SizedBox(height: 24),
                       ],
                     ),

@@ -8,7 +8,9 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_usage_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/auth/presentation/providers/backend_auth_provider.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/features/dashboard/presentation/widgets/screen_time_chart.dart';
+import 'package:farzandim/shared/widgets/ios_info_card.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -89,17 +91,12 @@ class AppRestrictionsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final todayMs = ref.watch(todayScreenTimeMsProvider(childId));
-    final weekly = ref.watch(weeklyChildUsageProvider(childId)).valueOrNull;
-    final days = [...?weekly]..sort((a, b) => a.date.compareTo(b.date));
-    // Bugungi soatlik taqsimot (24 ta ms) — kunlik grafik uchun.
-    final hourly =
-        ref.watch(hourlyChildUsageProvider(childId)).valueOrNull ??
-        List<int>.filled(24, 0);
-    final apps =
-        ref.watch(todayUsageProvider(childId)).valueOrNull?.filteredApps ??
-        const <AppUsageEntry>[];
-    final trend = _trendPercent(days, todayMs);
+    // iPhone bola haqiqiy ekran vaqti/ilovalarni yubormaydi (Apple qoidasi):
+    // statistika o'rniga nazorat qanday ishlashi tushuntiriladi va
+    // statistika provayderlari umuman kuzatilmaydi.
+    final isIos = ref.watch(
+      childByIdProvider(childId).select((c) => c?.isIosDevice ?? false),
+    );
 
     return Scaffold(
       backgroundColor: _bg,
@@ -126,48 +123,84 @@ class AppRestrictionsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: 16),
 
-              // ── Jami vaqt + trend ──
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 4),
-                child: Row(
-                  crossAxisAlignment: CrossAxisAlignment.end,
-                  children: [
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'dashboard.screenTimeTotal'.tr(),
-                            style: _pop(14, c: _dim),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(_fmtDur(todayMs), style: _unb(28, ls: -0.8)),
-                        ],
-                      ),
-                    ),
-                    if (trend != null) _TrendChip(percent: trend),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 16),
-
-              // ── Kunlik soatlik bar grafik (X: 24 soat, Y: 60 daqiqa) ──
-              _HourlyChart(hourlyMs: hourly),
-              const SizedBox(height: 4),
-
-              // ── Eng ko'p ishlatilgan ilovalar ──
-              if (apps.isNotEmpty) _AppListCard(apps: apps),
-              if (apps.isNotEmpty) const SizedBox(height: 4),
+              if (isIos)
+                IosInfoCard(
+                  title: 'iosChild.howItWorksTitle'.tr(),
+                  message: 'iosChild.howItWorksBody'.tr(),
+                )
+              else
+                _ScreenTimeStats(childId: childId),
+              SizedBox(height: isIos ? 16 : 4),
 
               // ── Nazorat siyosati → 4 nazorat kartasi hub ──
               _PolicyButton(
-                onTap: () =>
-                    context.push(AppRoutes.controlPolicyPath(childId)),
+                onTap: () => context.push(AppRoutes.controlPolicyPath(childId)),
               ),
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+/// Android: jami vaqt + trend + soatlik grafik + eng ko'p ishlatilgan ilovalar.
+class _ScreenTimeStats extends ConsumerWidget {
+  const _ScreenTimeStats({required this.childId});
+
+  final String childId;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final todayMs = ref.watch(todayScreenTimeMsProvider(childId));
+    final weekly = ref.watch(weeklyChildUsageProvider(childId)).valueOrNull;
+    final days = [...?weekly]..sort((a, b) => a.date.compareTo(b.date));
+    // Bugungi soatlik taqsimot (24 ta ms) — kunlik grafik uchun.
+    final hourly =
+        ref.watch(hourlyChildUsageProvider(childId)).valueOrNull ??
+        List<int>.filled(24, 0);
+    final apps =
+        ref.watch(todayUsageProvider(childId)).valueOrNull?.filteredApps ??
+        const <AppUsageEntry>[];
+    final trend = _trendPercent(days, todayMs);
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // ── Jami vaqt + trend ──
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 4),
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'dashboard.screenTimeTotal'.tr(),
+                      style: _pop(14, c: _dim),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(_fmtDur(todayMs), style: _unb(28, ls: -0.8)),
+                  ],
+                ),
+              ),
+              if (trend != null) _TrendChip(percent: trend),
+            ],
+          ),
+        ),
+        const SizedBox(height: 16),
+
+        // ── Kunlik soatlik bar grafik (X: 24 soat, Y: 60 daqiqa) ──
+        _HourlyChart(hourlyMs: hourly),
+
+        // ── Eng ko'p ishlatilgan ilovalar ──
+        if (apps.isNotEmpty) ...[
+          const SizedBox(height: 4),
+          _AppListCard(apps: apps),
+        ],
+      ],
     );
   }
 }

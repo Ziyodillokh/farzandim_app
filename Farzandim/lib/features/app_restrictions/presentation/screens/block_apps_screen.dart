@@ -7,6 +7,13 @@
 // (har ilovani alohida) va "Kategoriyalarni bloklash" (Ijtimoiy/O'yinlar/...).
 // Toggle'lar lokal, "Saqlash" hammasini backendga qo'llaydi (batch).
 //
+// iPhone bola: kategoriyalar tabi YASHIRILADI (masalan "Boshqa" kategoriyasini
+// bloklash iPhone yozuvini jim bloklab qo'yardi), ro'yxatda FAQAT virtual
+// `kIosSelectionPackage` ("iPhone: tanlangan ilovalar") ko'rsatiladi va tepada
+// tushuntirish banneri turadi. Bu sheet ichida bola bo'yicha tekshiriladi —
+// shu sabab BARCHA chaqiruv joylari (Bola sozlamalari, Nazorat siyosati, ...)
+// qamrab olinadi.
+//
 // Ma'lumot: ilovalar `installedAppsProvider`, blok holati
 // `restrictionsProvider`, kategoriyalar `getCategories`. Saqlash:
 // `blockApp`/`removeLimit` (facade) + `toggleCategory` (repo).
@@ -16,8 +23,10 @@ import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:farzandim/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim/features/app_restrictions/presentation/providers/app_usage_providers.dart';
 import 'package:farzandim/features/app_restrictions/presentation/widgets/app_icon_widget.dart';
+import 'package:farzandim/features/child_management/presentation/providers/children_provider.dart';
 import 'package:farzandim/shared/widgets/app_switch.dart';
 import 'package:farzandim/shared/widgets/app_toast.dart';
+import 'package:farzandim/shared/widgets/ios_info_card.dart';
 import 'package:farzandim/shared/widgets/parvoz_search_field.dart';
 import 'package:farzandim/shared/widgets/parvoz_ui.dart';
 import 'package:flutter/material.dart';
@@ -183,8 +192,14 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
   @override
   void initState() {
     super.initState();
-    _loadCategories();
+    // iPhone'da kategoriyalar tabi yo'q — keraksiz so'rov yubormaymiz.
+    if (!_isIos) _loadCategories();
   }
+
+  /// Bola iPhone'mi (child_model `isIosDevice`). Bola ro'yxati hali
+  /// yuklanmagan bo'lsa `false`.
+  bool get _isIos =>
+      ref.read(childByIdProvider(widget.childId))?.isIosDevice ?? false;
 
   @override
   void dispose() {
@@ -295,6 +310,11 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
 
   @override
   Widget build(BuildContext context) {
+    final isIos = ref.watch(
+      childByIdProvider(widget.childId).select((c) => c?.isIosDevice ?? false),
+    );
+    // iPhone'da kategoriya tabi yo'q (chaqiruvchi so'ragan bo'lsa ham).
+    final showCategories = widget.showCategories && !isIos;
     return ClipRRect(
       borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
       child: ColoredBox(
@@ -322,7 +342,7 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
                 style: _unb(18, w: FontWeight.w700, ls: -0.4),
               ),
               const SizedBox(height: 18),
-              if (widget.showCategories) ...[
+              if (showCategories) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: _SegmentedTabs(
@@ -336,8 +356,18 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
                 ),
                 const SizedBox(height: 14),
               ],
-              // Qidiruv — faqat ilovalar tabida (kategoriyalar 5 ta, kerakmas).
-              if (!(widget.showCategories && _tab == 1)) ...[
+              // iPhone: ro'yxatda bitta yozuv — qidiruv o'rniga tushuntirish.
+              // Android: qidiruv — faqat ilovalar tabida (kategoriyalar 5 ta).
+              if (isIos) ...[
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: IosInfoCard(
+                    compact: true,
+                    message: 'iosChild.blockBanner'.tr(),
+                  ),
+                ),
+                const SizedBox(height: 14),
+              ] else if (!(showCategories && _tab == 1)) ...[
                 Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   child: ParvozSearchField(
@@ -349,9 +379,9 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
                 const SizedBox(height: 14),
               ],
               Expanded(
-                child: (widget.showCategories && _tab == 1)
+                child: (showCategories && _tab == 1)
                     ? _buildCategories()
-                    : _buildApps(),
+                    : _buildApps(isIos: isIos),
               ),
               Padding(
                 padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
@@ -373,11 +403,15 @@ class _BlockAppsBodyState extends ConsumerState<_BlockAppsBody> {
     );
   }
 
-  Widget _buildApps() {
-    final apps = ref.watch(installedAppsProvider(widget.childId)).valueOrNull;
+  Widget _buildApps({required bool isIos}) {
+    final installed = ref
+        .watch(installedAppsProvider(widget.childId))
+        .valueOrNull;
     final restr = ref.watch(restrictionsProvider(widget.childId)).valueOrNull;
     // Ikkalasini ham kutamiz — aks holda bloklangan ilova bir lahza OFF.
-    if (apps == null || restr == null) return _fill(const _Loading());
+    if (installed == null || restr == null) return _fill(const _Loading());
+    // iPhone: faqat virtual "tanlangan ilovalar" yozuvi.
+    final apps = installed.forPlatform(isIos: isIos);
     if (apps.isEmpty) return _fill(_Empty('blockApps.emptyApps'.tr()));
     final orig = <String, bool>{};
     for (final r in restr) {

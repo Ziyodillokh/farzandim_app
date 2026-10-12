@@ -2,6 +2,7 @@
 // Ekran-vaqti ko'rinmaslik bug'lari (Parvoz filtri, Chrome <1min) shu
 // mantiqda edi — regressiyadan himoya.
 
+import 'package:farzandim/core/utils/app_brand.dart';
 import 'package:farzandim/features/app_restrictions/data/models/app_usage.dart';
 import 'package:flutter_test/flutter_test.dart';
 
@@ -106,6 +107,27 @@ void main() {
       final e = AppUsageEntry.fromMap(const {});
       expect(e.packageName, '');
       expect(e.totalTimeMs, 0);
+    });
+  });
+  group('AppUsageEntryListX.forPlatform (iPhone ro`yxati)', () {
+    final apps = [
+      _entry('com.whatsapp', 0, name: 'WhatsApp'),
+      _entry(kIosSelectionPackage, 0, name: 'iPhone: tanlangan ilovalar'),
+      _entry('com.android.chrome', 0, name: 'Chrome'),
+    ];
+
+    test('iPhone: faqat virtual yozuv qoladi (eski Android ilovalar yo`q)', () {
+      final out = apps.forPlatform(isIos: true);
+      expect(out.map((e) => e.packageName), [kIosSelectionPackage]);
+    });
+
+    test('iPhone: virtual yozuv bo`lmasa → bo`sh ro`yxat', () {
+      final out = [_entry('com.whatsapp', 0)].forPlatform(isIos: true);
+      expect(out, isEmpty);
+    });
+
+    test('Android: ro`yxat o`zgarmaydi', () {
+      expect(apps.forPlatform(isIos: false), apps);
     });
   });
 }

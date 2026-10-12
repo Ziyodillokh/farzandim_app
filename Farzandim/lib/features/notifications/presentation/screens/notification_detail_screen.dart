@@ -277,12 +277,20 @@ class _Actions extends ConsumerWidget {
             ),
         ];
       case NotificationType.appLimit:
-      case NotificationType.permissionChanged:
         return [
           if (hasChild)
             primary(
               'notifications.actions.openRestrictions'.tr(),
               () => context.push(AppRoutes.appRestrictionsPath(n.childId)),
+            ),
+        ];
+      case NotificationType.permissionChanged:
+        // Ruxsat holati Bola sozlamalarida ko'rinadi (ekran vaqtida emas).
+        return [
+          if (hasChild)
+            primary(
+              'notifications.actions.openChildSettings'.tr(),
+              () => context.push(AppRoutes.childSettingsPath(n.childId)),
             ),
         ];
       case NotificationType.game:
