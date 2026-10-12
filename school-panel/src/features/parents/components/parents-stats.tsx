@@ -3,10 +3,12 @@
 import { BadgeCheck, MailQuestion, Send, UsersRound } from 'lucide-react';
 
 import { StatCard } from '@/components/common/stat-card';
+import { Progress } from '@/components/ui/progress';
 import type { ParentLinkStatus } from '@/data/contracts';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
-import { percent } from '@/lib/utils';
-import { useGuardianStats } from '../hooks';
+import { cn, percent } from '@/lib/utils';
+import { useGuardianStats, useParentLinkSummary } from '../hooks';
 
 const SEGMENTS: Array<{ key: ParentLinkStatus; className: string }> = [
   { key: 'LINKED', className: 'bg-success' },
@@ -14,13 +16,19 @@ const SEGMENTS: Array<{ key: ParentLinkStatus; className: string }> = [
   { key: 'NOT_INVITED', className: 'bg-muted-foreground/30' },
 ];
 
-/** Ulanish voronkasi: ulangan / taklif yuborilgan / taklif qilinmagan. */
+/**
+ * Ulanish voronkasi: ulangan / taklif yuborilgan / taklif qilinmagan.
+ * "Ulangan" kartasida ikki ulush aniq nomi bilan: ota-onalar ulushi va o'quvchilar ulushi
+ * (bosh sahifa KPI bilan bir xil manba — `parent-links.ts`).
+ */
 export function ParentsStats() {
   const { t, formatNumber } = useI18n();
   const stats = useGuardianStats();
+  const links = useParentLinkSummary();
   const s = stats.data;
   const total = s?.total ?? 0;
-  const share = (n: number) => `${percent(n, total)}%`;
+  const g = links.data?.guardians;
+  const st = links.data?.students;
 
   return (
     <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -44,9 +52,31 @@ export function ParentsStats() {
         icon={<BadgeCheck />}
         tone="success"
         label={t('parents.stats.linked')}
-        value={share(s?.LINKED ?? 0)}
-        hint={formatNumber(s?.LINKED ?? 0)}
-        loading={stats.isLoading}
+        value={`${g?.rate ?? 0}%`}
+        hint={
+          g && (
+            <>
+              {t('parents.stats.guardianShare')} · {t('parents.stats.shareCount', { linked: formatNumber(g.linked), total: formatNumber(g.total) })}
+            </>
+          )
+        }
+        loading={links.isLoading}
+        footer={
+          st && (
+            <div className={cn(TILE, 'space-y-1.5 px-3 py-2 text-xs')}>
+              <div className="flex items-baseline justify-between gap-2">
+                <span className="text-muted-foreground">{t('parents.stats.studentShare')}</span>
+                <span className="font-semibold tabular-nums">{st.rate}%</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <Progress value={st.rate} className="h-1 flex-1" indicatorClassName="bg-info" aria-label={t('parents.stats.studentShare')} />
+                <span className="shrink-0 text-2xs tabular-nums text-muted-foreground">
+                  {t('parents.stats.shareCount', { linked: formatNumber(st.linked), total: formatNumber(st.total) })}
+                </span>
+              </div>
+            </div>
+          )
+        }
       />
       <StatCard
         icon={<Send />}

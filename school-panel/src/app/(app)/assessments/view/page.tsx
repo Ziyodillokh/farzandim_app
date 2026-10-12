@@ -1,15 +1,13 @@
 'use client';
 
-import { PageHeader } from '@/components/common/page-header';
-import { ScreeningDisclaimer } from '@/components/common/screening-disclaimer';
-import { useI18n } from '@/i18n';
+import { Suspense } from 'react';
+
+import { TestView } from '@/features/assessments/components/view/test-view';
 
 export default function Page() {
-  const { t } = useI18n();
   return (
-    <>
-      <PageHeader title={t('assessments.title')} subtitle={t('assessments.subtitle')} />
-      <ScreeningDisclaimer variant="banner" withIq />
-    </>
+    <Suspense>
+      <TestView />
+    </Suspense>
   );
 }

@@ -10,7 +10,7 @@ import { getTables } from '../db';
 import { compareClasses } from '../lookups';
 import type { Tables } from '../tables';
 import { resolveRecord } from './attendance';
-import { computeCareAggregate } from './care-aggregate';
+import { computeCareAggregate, defaultSurvey } from './care-aggregate';
 import { effective } from './comms-announcements';
 
 const MONTH_RE = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -126,7 +126,10 @@ function inMonth(iso: string | null, month: string): boolean {
   return Number.isFinite(ms) && toIsoDate(new Date(ms)).slice(0, 7) === month;
 }
 
-/** Oyning oxirgi so'rovnomasi bo'yicha /care bilan bir xil k-anonim natija; qatnashish — oy bo'yicha. */
+/**
+ * Oy so'rovnomalaridan /care bilan bir xil tanlov (`defaultSurvey`: eng so'nggi k ≥ 5 li,
+ * bo'lmasa eng so'nggisi) bo'yicha k-anonim natija; qatnashish — oy bo'yicha.
+ */
 function careSection(tables: Tables, month: string, today: IsoDate): MonthlyReport['care'] {
   const surveys = tables.careSurveys
     .filter((s) => s.status !== 'DRAFT' && s.weekStart.slice(0, 7) === month)
@@ -135,8 +138,8 @@ function careSection(tables: Tables, month: string, today: IsoDate): MonthlyRepo
   const respondents = tables.careResponses.filter((r) => surveyIds.has(r.surveyId)).length;
   const invited = surveys.reduce((s, v) => s + v.invited, 0);
   const requests = maskSmallCount(tables.careRequests.filter((r) => inMonth(r.createdAt, month)).length);
-  const latest = surveys[surveys.length - 1];
-  const agg = latest ? computeCareAggregate(tables, latest, 'AGE_GROUP', today) : null;
+  const chosen = defaultSurvey(tables, surveys);
+  const agg = chosen ? computeCareAggregate(tables, chosen, 'AGE_GROUP', today) : null;
   return {
     surveys: surveys.length,
     invited,

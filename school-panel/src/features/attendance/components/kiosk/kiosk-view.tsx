@@ -1,11 +1,14 @@
 'use client';
 
+import { QrCode } from 'lucide-react';
 import { useCallback, useState } from 'react';
 
 import { Forbidden } from '@/auth/guards';
-import { useCan } from '@/auth/use-session';
+import { useCan, useSession } from '@/auth/use-session';
+import { Button } from '@/components/ui/button';
 import { ServiceError } from '@/data/contracts';
 import { clockNow } from '@/data/mock/clock';
+import { signInKioskDuty } from '@/features/engine/kiosk-launch';
 import { useI18n } from '@/i18n';
 import { errorKey } from '@/lib/errors';
 import { useKioskCheckIn, useKioskStats } from '../../hooks';
@@ -94,15 +97,27 @@ function KioskScreen() {
   );
 }
 
+/** Ruxsat yo'q (masalan, direktor): demo uchun shu tabni navbatchi sifatida ochish. */
+function KioskForbidden() {
+  const { t } = useI18n();
+  const session = useSession();
+  return (
+    <div className="min-h-screen bg-background p-6">
+      <Forbidden />
+      <div className="mx-auto -mt-10 flex max-w-sm flex-col items-center gap-2 pb-10 text-center">
+        <Button variant="soft" onClick={() => signInKioskDuty(session)}>
+          <QrCode />
+          {t('demo.kioskAsDuty')}
+        </Button>
+        <p className="text-xs text-muted-foreground">{t('demo.kioskAsDutyHint')}</p>
+      </div>
+    </div>
+  );
+}
+
 /** Kirish nuqtasi — to'liq ekran; faqat `attendance.kiosk` ruxsati bilan. */
 export function KioskView() {
   const can = useCan();
-  if (!can('attendance.kiosk')) {
-    return (
-      <div className="min-h-screen bg-background p-6">
-        <Forbidden />
-      </div>
-    );
-  }
+  if (!can('attendance.kiosk')) return <KioskForbidden />;
   return <KioskScreen />;
 }

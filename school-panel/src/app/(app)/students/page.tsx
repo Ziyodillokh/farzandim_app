@@ -1,8 +1,8 @@
 'use client';
 
 import { FileUp, PhoneOff, Plus, UserCheck, Users } from 'lucide-react';
-import { useRouter } from 'next/navigation';
-import { useMemo, useState } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
 import { Can } from '@/auth/can';
 import { useCan } from '@/auth/use-session';
@@ -14,6 +14,7 @@ import { AttendanceBadge, LinkBadge } from '@/components/common/status-badges';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Skeleton } from '@/components/ui/skeleton';
 import { api } from '@/data/api';
 import type { DeviceOs, ParentLinkStatus } from '@/data/contracts';
 import type { StudentFilter, StudentRow } from '@/data/mock/services/students';
@@ -25,7 +26,38 @@ import { useClassOptions, useStudents } from '@/features/students/hooks';
 import { useI18n } from '@/i18n';
 import { downloadCsv } from '@/lib/csv';
 
-export default function StudentsPage() {
+/**
+ * Chuqur havola: `/students?new=1&classId=cls-7a` — yaratish oynasi shu sinf bilan ochiladi
+ * (`students.manage` bo'lsa), `classId` doiradagi sinf bo'lsa ro'yxat ham shu sinfga filtrlanadi.
+ */
+function useCreateDeepLink(
+  classIds: readonly string[] | undefined,
+  canCreate: boolean,
+  onClass: (classId: string) => void,
+): { open: boolean; classId: string | undefined; close: () => void } {
+  const params = useSearchParams();
+  const router = useRouter();
+  const wantsNew = params.get('new') === '1';
+  const requested = params.get('classId');
+  const handled = useRef(false);
+  const [state, setState] = useState<{ open: boolean; classId: string | undefined }>({ open: false, classId: undefined });
+
+  useEffect(() => {
+    if (handled.current || !classIds || (!wantsNew && !requested)) return;
+    handled.current = true;
+    const classId = requested && classIds.includes(requested) ? requested : undefined;
+    if (classId) onClass(classId);
+    if (wantsNew && canCreate) setState({ open: true, classId });
+  }, [classIds, wantsNew, requested, canCreate, onClass]);
+
+  const close = () => {
+    setState({ open: false, classId: undefined });
+    if (wantsNew) router.replace(state.classId ? `/students?classId=${state.classId}` : '/students', { scroll: false });
+  };
+  return { ...state, close };
+}
+
+function StudentsView() {
   const { t, formatDate, formatNumber } = useI18n();
   const router = useRouter();
   const [filter, setFilter] = useState<StudentFilter>({ page: 1, limit: 20, sortBy: 'name', sortDir: 'asc' });
@@ -38,6 +70,9 @@ export default function StudentsPage() {
   const noPhone = useStudents({ limit: 1, device: 'NONE' });
 
   const can = useCan();
+  const classIds = useMemo(() => classes.data?.map((c) => c.id), [classes.data]);
+  const applyClass = useCallback((classId: string) => setFilter((f) => ({ ...f, page: 1, classId })), []);
+  const deepLink = useCreateDeepLink(classIds, can('students.manage'), applyClass);
   // Psixolog: faqat ism va sinf (servis ham qolganini yashiradi).
   const minimal = !can('guardians.link');
   const update = (patch: Partial<StudentFilter>) => setFilter((f) => ({ ...f, page: 1, ...patch }));
@@ -183,8 +218,23 @@ export default function StudentsPage() {
         onRowClick={(r) => router.push(`/students/view?id=${r.id}`)}
       />
 
-      <StudentFormDialog open={createOpen} onOpenChange={setCreateOpen} defaultClassId={filter.classId} />
+      <StudentFormDialog
+        open={createOpen || deepLink.open}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open && deepLink.open) deepLink.close();
+        }}
+        defaultClassId={deepLink.classId ?? filter.classId}
+      />
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
+  );
+}
+
+export default function StudentsPage() {
+  return (
+    <Suspense fallback={<Skeleton className="h-[600px] w-full rounded-2xl" />}>
+      <StudentsView />
+    </Suspense>
   );
 }

@@ -73,7 +73,7 @@ describe('demo triggerlari', () => {
   beforeEach(freshDb);
 
   it('rolga mos turlar', () => {
-    expect(availableTriggers('PSYCHOLOGIST')).toEqual(['CARE_URGENT']);
+    expect(availableTriggers('PSYCHOLOGIST')).toEqual(['CARE_URGENT', 'SURVEY_RESPONSES', 'TEST_COMPLETIONS']);
     expect(availableTriggers('DUTY')).toEqual(['LATE']);
     expect(availableTriggers('DIRECTOR')).toContain('VERIFICATION');
   });

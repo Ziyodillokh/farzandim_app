@@ -1,9 +1,11 @@
 'use client';
 
-import { LayoutDashboard, Maximize, Minimize } from 'lucide-react';
+import { LayoutDashboard, Maximize, Minimize, UserCheck } from 'lucide-react';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 
+import { getSessionScope } from '@/auth/session';
+import { useSession } from '@/auth/use-session';
 import { SchoolLogo } from '@/components/common/school-logo';
 import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
 import { useClockNow } from '@/features/engine/use-clock';
@@ -33,6 +35,9 @@ export function KioskHeader() {
   const { data } = useSchool();
   const now = useClockNow(1000);
   const [fullscreen, toggleFullscreen] = useFullscreen();
+  const session = useSession();
+  // Demo: kiosk shu tabning (navbatchi) sessiyasida ishlayapti.
+  const asDuty = session?.role === 'DUTY' && getSessionScope() === 'tab';
   const control =
     'flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/[0.06] text-white/75 transition-colors hover:border-brand-400/40 hover:bg-white/[0.12] hover:text-white';
 
@@ -46,6 +51,12 @@ export function KioskHeader() {
             <span className="h-1.5 w-1.5 rounded-full bg-brand-400 shadow-[0_0_8px_2px_rgba(80,138,255,0.6)]" aria-hidden />
             {t('attendance.kiosk.title')}
             {data?.school.city && ` · ${data.school.city}`}
+            {asDuty && (
+              <span className="ml-1 inline-flex items-center gap-1 rounded-full bg-cyan-400/15 px-2 py-0.5 text-xs font-semibold text-cyan-200 ring-1 ring-inset ring-cyan-300/30">
+                <UserCheck className="h-3 w-3" aria-hidden />
+                {t('demo.kioskChip')}
+              </span>
+            )}
           </p>
         </div>
       </div>

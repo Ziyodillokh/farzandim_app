@@ -2,27 +2,42 @@ import { type Permission, roleHas } from '@/auth/permissions';
 import type { RoleKey, School } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
 import { minutesToHhmm } from '@/lib/utils';
+import { simulateSurveyResponses } from '../care-sim';
 import { clockMinute, clockNow, clockToday } from '../clock';
 import { toLocalIso } from '../calendar';
 import { assertCan, currentActor, inScope, newId, writeAudit } from '../context';
 import { getTables, resetDb, transact } from '../db';
 import { studentName } from '../lookups';
+import { tickPsychAssignments } from '../psych/sim';
 
-export type DemoTrigger = 'LATE' | 'EARLY_EXIT' | 'CARE_URGENT' | 'VERIFICATION';
+export type DemoTrigger = 'LATE' | 'EARLY_EXIT' | 'CARE_URGENT' | 'VERIFICATION' | 'SURVEY_RESPONSES' | 'TEST_COMPLETIONS';
+
+/** Natija: `count` — so'rovnoma javoblari / test natijalari soni (boshqalarda null). */
+export type DemoTriggerResult = { kind: DemoTrigger; count: number | null };
+
+/** "Tezlashtirish": javoblar/natijalar shuncha daqiqa oldinga simulyatsiya qilinadi. */
+const FAST_FORWARD_MINUTES = 30;
 
 /**
  * Trigger tashqi hodisani simulyatsiya qiladi (o'quvchi QR'i, ota-ona so'rovi,
- * bola murojaati) — faqat shu hodisani ko'ra oladigan rolga va uning doirasida.
+ * bola murojaati, ilovadagi javoblar) — faqat shu hodisani ko'ra oladigan rolga
+ * va uning doirasida.
  */
-const TRIGGER_PERMS: Record<DemoTrigger, readonly Permission[]> = {
-  LATE: ['attendance.view'],
-  EARLY_EXIT: ['attendance.earlyExit'],
-  CARE_URGENT: ['care.individual', 'care.aggregate'],
-  VERIFICATION: ['payments.manage'],
+const TRIGGER_ACCESS: Record<DemoTrigger, { perms: readonly Permission[]; roles?: readonly RoleKey[] }> = {
+  LATE: { perms: ['attendance.view'] },
+  EARLY_EXIT: { perms: ['attendance.earlyExit'] },
+  CARE_URGENT: { perms: ['care.individual', 'care.aggregate'] },
+  VERIFICATION: { perms: ['payments.manage'] },
+  // So'rovnoma natijalarini psixolog (shaxsiy) va direktor (umumlashgan) kuzatadi.
+  SURVEY_RESPONSES: { perms: ['care.surveys'], roles: ['DIRECTOR'] },
+  TEST_COMPLETIONS: { perms: ['assessments.manage'] },
 };
 
 export function availableTriggers(role: RoleKey): DemoTrigger[] {
-  return (Object.keys(TRIGGER_PERMS) as DemoTrigger[]).filter((k) => TRIGGER_PERMS[k].some((p) => roleHas(role, p)));
+  return (Object.keys(TRIGGER_ACCESS) as DemoTrigger[]).filter((k) => {
+    const access = TRIGGER_ACCESS[k];
+    return access.perms.some((p) => roleHas(role, p)) || Boolean(access.roles?.includes(role));
+  });
 }
 
 /** Demo boshqaruvi: tiklash va taqdimot paytida hodisa chaqirish. */
@@ -41,10 +56,18 @@ export const demoService = {
     });
   },
 
-  trigger(kind: DemoTrigger): string {
+  trigger(kind: DemoTrigger): DemoTriggerResult {
     const actor = currentActor();
     if (!availableTriggers(actor.role).includes(kind)) throw new ServiceError('FORBIDDEN', `demo.${kind}`);
-    return transact((t) => {
+    if (kind === 'SURVEY_RESPONSES' || kind === 'TEST_COMPLETIONS') {
+      return transact((t) => {
+        writeAudit(t, actor, 'SETTINGS', 'demo.trigger', `Demo hodisa: ${kind}`);
+        const minute = Math.floor(clockMinute()) + FAST_FORWARD_MINUTES;
+        const run = kind === 'SURVEY_RESPONSES' ? simulateSurveyResponses : tickPsychAssignments;
+        return { kind, count: run(t, clockToday(), minute) };
+      });
+    }
+    transact((t) => {
       const today = clockToday();
       const now = toLocalIso(clockNow());
       const pool = inScope(actor, t.students.filter((s) => !s.archived));
@@ -78,5 +101,6 @@ export const demoService = {
         }
       }
     });
+    return { kind, count: null };
   },
 };

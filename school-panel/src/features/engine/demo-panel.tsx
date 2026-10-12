@@ -1,77 +1,112 @@
 'use client';
 
 import { useQueryClient } from '@tanstack/react-query';
-import { Clock, HeartPulse, LogOut, Receipt, RotateCcw, Sparkles } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { Clock3, Database, ExternalLink, QrCode, RotateCcw, Sparkles, UsersRound, Zap } from 'lucide-react';
+import { useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
 
-import { useCan, useSession } from '@/auth/use-session';
+import { useCan } from '@/auth/use-session';
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { api } from '@/data/api';
-import { availableTriggers, type DemoTrigger } from '@/data/mock/services/demo';
 import { useI18n } from '@/i18n';
+import { errorKey } from '@/lib/errors';
+import { ClockControls } from './clock-controls';
+import { setDemoPanelOpen, toggleDemoPanel, useDemoPanelOpen } from './demo-panel-store';
+import { openKioskAsDuty } from './kiosk-launch';
+import { RoleSwitcher } from './role-switcher';
+import { TriggerList } from './trigger-list';
 
-/** Taqdimot uchun yashirin panel: Ctrl + Shift + D. */
+function PanelSection({ icon, title, hint, children }: { icon: ReactNode; title: string; hint?: string; children: ReactNode }) {
+  return (
+    <section className="space-y-2.5">
+      <div>
+        <h3 className="flex items-center gap-2 text-2xs font-semibold uppercase tracking-[0.12em] text-muted-foreground [&_svg]:size-3.5 [&_svg]:text-primary">
+          {icon}
+          {title}
+        </h3>
+        {hint && <p className="mt-1 text-xs text-muted-foreground">{hint}</p>}
+      </div>
+      {children}
+    </section>
+  );
+}
+
+/** Demo panel: rol, soat, hodisalar, kiosk va tiklash. Topbar "Demo" tugmasi yoki Ctrl + Shift + D. */
 export function DemoPanel() {
   const { t } = useI18n();
   const can = useCan();
-  const session = useSession();
   const queryClient = useQueryClient();
-  const [open, setOpen] = useState(false);
+  const open = useDemoPanelOpen();
   const [confirmReset, setConfirmReset] = useState(false);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'd') {
         e.preventDefault();
-        setOpen((o) => !o);
+        toggleDemoPanel();
       }
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
 
-  const fire = (kind: DemoTrigger) => {
-    api.demo.trigger(kind);
-    void queryClient.invalidateQueries();
-    toast.info(t('demo.triggered'));
+  // Sahifadan chiqilganda (masalan, chiqish) panel ochiq qolmasin.
+  useEffect(() => () => setDemoPanelOpen(false), []);
+
+  const launchKiosk = () => {
+    if (!openKioskAsDuty()) toast.error(t('demo.kioskBlocked'));
   };
 
-  const allowed = session ? availableTriggers(session.role) : [];
-  const triggers: Array<{ kind: DemoTrigger; label: string; icon: typeof Clock }> = [
-    { kind: 'LATE' as const, label: t('demo.triggerLate'), icon: Clock },
-    { kind: 'EARLY_EXIT' as const, label: t('demo.triggerEarlyExit'), icon: LogOut },
-    { kind: 'CARE_URGENT' as const, label: t('demo.triggerCareUrgent'), icon: HeartPulse },
-    { kind: 'VERIFICATION' as const, label: t('demo.triggerVerification'), icon: Receipt },
-  ].filter((x) => allowed.includes(x.kind));
+  const reset = () => {
+    try {
+      api.demo.reset();
+      void queryClient.invalidateQueries();
+      setConfirmReset(false);
+      toast.success(t('demo.resetDone'));
+    } catch (error) {
+      toast.error(t(errorKey(error)));
+    }
+  };
 
   return (
     <>
-      <Sheet open={open} onOpenChange={setOpen}>
-        <SheetContent className="w-[360px]">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+      <Sheet open={open} onOpenChange={setDemoPanelOpen}>
+        <SheetContent className="w-[calc(100%-1rem)] gap-0 p-0 sm:w-[400px] sm:max-w-none">
+          <SheetHeader className="px-5 pb-4 pt-5">
+            <SheetTitle className="flex items-center gap-2 pr-8">
               <Sparkles className="h-4 w-4 text-primary" />
               {t('demo.panelTitle')}
             </SheetTitle>
             <SheetDescription>{t('demo.panelHint')}</SheetDescription>
           </SheetHeader>
-          <div className="mt-6 grid gap-2">
-            {triggers.map(({ kind, label, icon: Icon }) => (
-              <Button key={kind} variant="outline" className="justify-start" onClick={() => fire(kind)}>
-                <Icon />
-                {label}
+          <div className="flex-1 space-y-6 overflow-y-auto overscroll-contain px-5 py-5">
+            <PanelSection icon={<UsersRound />} title={t('demo.sections.roles')} hint={t('demo.rolesHint')}>
+              <RoleSwitcher onSwitched={() => setDemoPanelOpen(false)} />
+            </PanelSection>
+            <PanelSection icon={<Clock3 />} title={t('demo.sections.clock')}>
+              <ClockControls />
+            </PanelSection>
+            <PanelSection icon={<Zap />} title={t('demo.sections.triggers')}>
+              <TriggerList />
+            </PanelSection>
+            <PanelSection icon={<QrCode />} title={t('demo.sections.kiosk')} hint={t('demo.kioskHint')}>
+              <Button variant="outline" className="h-auto min-h-10 w-full justify-start whitespace-normal py-2 text-left" onClick={launchKiosk}>
+                <QrCode className="text-primary" />
+                <span>{t('demo.kioskOpen')}</span>
+                <ExternalLink className="ml-auto opacity-60" />
               </Button>
-            ))}
+            </PanelSection>
+            {can('demo.reset') && (
+              <PanelSection icon={<Database />} title={t('demo.sections.data')}>
+                <Button variant="destructive" className="w-full" onClick={() => setConfirmReset(true)}>
+                  <RotateCcw />
+                  {t('demo.resetTitle')}
+                </Button>
+              </PanelSection>
+            )}
           </div>
-          {can('demo.reset') && (
-            <Button variant="destructive" className="mt-8 w-full" onClick={() => setConfirmReset(true)}>
-              <RotateCcw />
-              {t('demo.resetTitle')}
-            </Button>
-          )}
         </SheetContent>
       </Sheet>
       <ConfirmDialog
@@ -79,13 +114,9 @@ export function DemoPanel() {
         onOpenChange={setConfirmReset}
         title={t('demo.resetTitle')}
         description={t('demo.resetText')}
+        confirmLabel={t('demo.resetTitle')}
         destructive
-        onConfirm={() => {
-          api.demo.reset();
-          void queryClient.invalidateQueries();
-          setConfirmReset(false);
-          toast.success(t('demo.resetDone'));
-        }}
+        onConfirm={reset}
       />
     </>
   );

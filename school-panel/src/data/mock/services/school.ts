@@ -25,7 +25,7 @@ export const schoolService = {
     return transact((t) => {
       const before = { ...t.school };
       t.school = { ...t.school, ...data };
-      writeAudit(t, actor, 'SETTINGS', 'school.update', 'Maktab profili yangilandi', t.school.id, before, t.school);
+      writeAudit(t, actor, 'SETTINGS', 'school.update', 'Maktab profili yangilandi', t.school.id, before, t.school, {});
       return t.school;
     });
   },
@@ -39,7 +39,7 @@ export const schoolService = {
     }
     return transact((t) => {
       t.school = { ...t.school, logo };
-      writeAudit(t, actor, 'SETTINGS', logo ? 'school.logo' : 'school.logoRemove', logo ? 'Maktab logosi yangilandi' : 'Maktab logosi olib tashlandi', t.school.id);
+      writeAudit(t, actor, 'SETTINGS', logo ? 'school.logo' : 'school.logoRemove', logo ? 'Maktab logosi yangilandi' : 'Maktab logosi olib tashlandi', t.school.id, null, null, {});
       return t.school;
     });
   },
@@ -53,7 +53,10 @@ export const schoolService = {
       if (t.holidays.some((h) => h.date === data.date)) throw new ServiceError('CONFLICT', data.date);
       const holiday: Holiday = { id: `hol-${data.date}`, ...data };
       t.holidays = [...t.holidays, holiday].sort((a, b) => a.date.localeCompare(b.date));
-      writeAudit(t, actor, 'SCHOOL_MODE', 'holiday.create', `Bayram kuni qo'shildi: ${data.date} — ${data.name}`, holiday.id);
+      writeAudit(t, actor, 'SCHOOL_MODE', 'holiday.create', `Bayram kuni qo'shildi: ${data.date} — ${data.name}`, holiday.id, null, null, {
+        date: data.date,
+        name: data.name,
+      });
       return holiday;
     });
   },
@@ -66,7 +69,7 @@ export const schoolService = {
       const holiday = t.holidays.find((h) => h.id === id);
       if (!holiday) throw new ServiceError('NOT_FOUND', id);
       t.holidays = t.holidays.filter((h) => h.id !== id);
-      writeAudit(t, actor, 'SCHOOL_MODE', 'holiday.delete', `Bayram kuni olib tashlandi: ${holiday.date}`, id);
+      writeAudit(t, actor, 'SCHOOL_MODE', 'holiday.delete', `Bayram kuni olib tashlandi: ${holiday.date}`, id, null, null, { date: holiday.date });
     });
   },
 };

@@ -19,6 +19,7 @@ import type { AnnouncementDetail, MessageTemplate } from '@/data/mock/services/c
 import { announcementInputSchema, type AnnouncementInput } from '@/data/schemas/comms';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { type ComposePrefill, EMPTY_PREFILL, usePrefillGuardianNames } from '../compose-prefill';
 import { useAnnouncement, useAudienceReach, useClassChoices, useSaveDraft, useSendAnnouncement } from '../hooks';
 import { BRAND_GLOW, ICON_TONES } from '../styles';
 import { AudiencePicker } from './audience-picker';
@@ -41,8 +42,17 @@ function isFuture(value: string): boolean {
   return Boolean(value) && new Date(value).getTime() > clockNow().getTime();
 }
 
-/** Yangi xabar yoki `?id=` bo'yicha qoralama / rejalashtirilgan xabarni tahrirlash. */
-export function ComposeForm({ id }: { id: string | null }) {
+type Audience = AnnouncementInput['audience'];
+
+/** Yangi xabar auditoriyasi: chuqur havoladagi ota-onalar / sinflar, aks holda rol bo'yicha standart. */
+function initialAudience(prefill: ComposePrefill, canSchool: boolean): Audience {
+  if (prefill.guardianIds.length > 0) return { kind: 'GUARDIANS', classIds: [], guardianIds: prefill.guardianIds };
+  if (prefill.classIds.length > 0) return { kind: 'CLASSES', classIds: prefill.classIds, guardianIds: [] };
+  return { kind: canSchool ? 'SCHOOL' : 'CLASSES', classIds: [], guardianIds: [] };
+}
+
+/** Yangi xabar yoki `?id=` bo'yicha qoralama / rejalashtirilgan xabarni tahrirlash. `prefill` — faqat yangi xabarda. */
+export function ComposeForm({ id, prefill = EMPTY_PREFILL }: { id: string | null; prefill?: ComposePrefill }) {
   const { t } = useI18n();
   const existing = useAnnouncement(id);
 
@@ -69,10 +79,10 @@ export function ComposeForm({ id }: { id: string | null }) {
       </Card>
     );
   }
-  return <ComposeEditor key={existing.data?.id ?? 'new'} initial={existing.data ?? null} />;
+  return <ComposeEditor key={existing.data?.id ?? 'new'} initial={existing.data ?? null} prefill={id ? EMPTY_PREFILL : prefill} />;
 }
 
-function ComposeEditor({ initial }: { initial: AnnouncementDetail | null }) {
+function ComposeEditor({ initial, prefill }: { initial: AnnouncementDetail | null; prefill: ComposePrefill }) {
   const { t, tc } = useI18n();
   const router = useRouter();
   const can = useCan();
@@ -89,23 +99,43 @@ function ComposeEditor({ initial }: { initial: AnnouncementDetail | null }) {
     resolver: zodResolver(announcementInputSchema),
     defaultValues: initial
       ? { title: initial.title, body: initial.body, priority: initial.priority, audience: initial.audience }
-      : { title: '', body: '', priority: 'NORMAL', audience: { kind: canSchool ? 'SCHOOL' : 'CLASSES', classIds: [], guardianIds: [] } },
+      : { title: '', body: '', priority: 'NORMAL', audience: initialAudience(prefill, canSchool) },
   });
 
-  // Sinf rahbari: yangi xabar standart holda o'z sinfiga.
+  // Chuqur havoladagi sinflar — faqat doiradagilari qoladi; sinf rahbari: standart holda o'z sinfi.
   useEffect(() => {
-    if (initial || canSchool || !classes.data?.length) return;
-    if ((form.getValues('audience.classIds') ?? []).length === 0) {
-      form.setValue('audience', { kind: 'CLASSES', classIds: classes.data.map((c) => c.id), guardianIds: [] });
+    if (initial || !classes.data?.length) return;
+    const own = classes.data.map((c) => c.id);
+    const current = form.getValues('audience');
+    if (prefill.classIds.length > 0 && current.kind === 'CLASSES') {
+      const kept = (current.classIds ?? []).filter((cid) => own.includes(cid));
+      if (kept.length !== (current.classIds ?? []).length) form.setValue('audience', { kind: 'CLASSES', classIds: kept.length || canSchool ? kept : own, guardianIds: [] });
+      return;
     }
-  }, [initial, canSchool, classes.data, form]);
+    if (canSchool || prefill.guardianIds.length > 0) return;
+    if ((current.classIds ?? []).length === 0) form.setValue('audience', { kind: 'CLASSES', classIds: own, guardianIds: [] });
+  }, [initial, canSchool, classes.data, form, prefill]);
+
+  // Chuqur havoladagi ota-onalar nomi; doiradan tashqaridagilar auditoriyadan olib tashlanadi.
+  const prefillNames = usePrefillGuardianNames(initial ? [] : prefill.guardianIds);
+  useEffect(() => {
+    const found = prefillNames.data;
+    if (!found) return;
+    const current = form.getValues('audience');
+    if (current.kind !== 'GUARDIANS') return;
+    const kept = (current.guardianIds ?? []).filter((gid) => gid in found || !prefill.guardianIds.includes(gid));
+    if (kept.length !== (current.guardianIds ?? []).length) form.setValue('audience', { ...current, guardianIds: kept });
+  }, [prefillNames.data, prefill.guardianIds, form]);
 
   const values = form.watch();
   const audience = { kind: values.audience.kind, classIds: values.audience.classIds ?? [], guardianIds: values.audience.guardianIds ?? [] };
   const reach = useAudienceReach(audience);
   const audienceError = form.formState.errors.audience;
   const audienceMessage = audienceError?.classIds?.message ?? audienceError?.guardianIds?.message ?? audienceError?.message;
-  const knownNames = initial?.audience.kind === 'GUARDIANS' ? Object.fromEntries(initial.audience.guardianIds.map((gid, i) => [gid, initial.audienceNames[i] ?? gid])) : undefined;
+  const knownNames =
+    initial?.audience.kind === 'GUARDIANS'
+      ? Object.fromEntries(initial.audience.guardianIds.map((gid, i) => [gid, initial.audienceNames[i] ?? gid]))
+      : prefillNames.data;
 
   const applyTemplate = (tpl: MessageTemplate) => {
     form.setValue('title', tpl.title, { shouldValidate: form.formState.isSubmitted });

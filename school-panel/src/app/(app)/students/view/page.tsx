@@ -1,29 +1,35 @@
 'use client';
 
-import { Archive, ArchiveRestore, CalendarDays, Pencil, UserRound } from 'lucide-react';
+import { CalendarDays, History, NotebookPen, Sprout, UserRound, type LucideIcon } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
-import { Suspense, useState } from 'react';
+import { Suspense, useEffect, useMemo, useRef } from 'react';
 
-import { Can } from '@/auth/can';
 import { useCan } from '@/auth/use-session';
-import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
-import { SectionCard } from '@/components/common/section-card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { clockToday } from '@/data/mock/clock';
-import { AttendanceCalendar } from '@/features/students/components/attendance-calendar';
-import { GuardiansCard } from '@/features/students/components/guardians-card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { DevelopmentTab } from '@/features/development/components/development-tab';
 import { StudentAvatar } from '@/features/students/components/student-avatar';
-import { StudentFormDialog } from '@/features/students/components/student-form-dialog';
-import { StudentProfileCard } from '@/features/students/components/student-profile-card';
-import { PsychologistNote, StudentModeCard, StudentPrivacyNote, StudentTodayCard } from '@/features/students/components/student-side-cards';
-import { useArchiveStudent, useStudent } from '@/features/students/hooks';
+import { StudentHeaderActions } from '@/features/students/components/student-header-actions';
+import { StudentHistory } from '@/features/students/components/student-history';
+import { StudentNotes } from '@/features/students/components/student-notes';
+import { AttendancePanel, ProfilePanel } from '@/features/students/components/student-tab-panels';
+import { useStudent } from '@/features/students/hooks';
+import { type StudentTab, visibleStudentTabs } from '@/features/students/student-tabs';
 import { useI18n } from '@/i18n';
+import { useTabParam } from '@/lib/use-tab-param';
+
+const TAB_ICONS: Record<StudentTab, LucideIcon> = {
+  profile: UserRound,
+  attendance: CalendarDays,
+  development: Sprout,
+  history: History,
+  notes: NotebookPen,
+};
 
 function DetailSkeleton() {
   return (
@@ -34,42 +40,34 @@ function DetailSkeleton() {
   );
 }
 
+/** O'quvchi 360° kartasi: `?id=&tab=profile|attendance|development|history|notes` (tablar rol bo'yicha). */
 function StudentDetailView() {
   const { t } = useI18n();
   const can = useCan();
   const id = useSearchParams().get('id');
   const student = useStudent(id);
-  const archive = useArchiveStudent();
-  const [editOpen, setEditOpen] = useState(false);
-  const [archiveOpen, setArchiveOpen] = useState(false);
+  const tabs = useMemo(() => visibleStudentTabs(can), [can]);
+  const [tab, setTab] = useTabParam<StudentTab>(tabs, 'profile');
   // Ota-onaga ulash huquqi yo'q rol (psixolog) — faqat ism va sinf.
-  const psychologist = !can('guardians.link');
+  const minimal = !can('guardians.link');
+  // Telefonda tablar gorizontal aylanadi — faol tab ko'rinib tursin.
+  const tabStrip = useRef<HTMLDivElement>(null);
+  const loaded = Boolean(student.data);
+  useEffect(() => {
+    tabStrip.current?.querySelector<HTMLElement>('[data-state="active"]')?.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  }, [tab, loaded]);
 
   if (!id || student.isError) {
     return (
       <>
         <PageHeader backHref="/students" backLabel={t('students.title')} title={t('students.title')} />
         <Card>
-          {id ? (
-            <ErrorState error={student.error} onRetry={() => void student.refetch()} />
-          ) : (
-            <EmptyState icon={<UserRound />} title={t('students.detail.notFound')} />
-          )}
+          {id ? <ErrorState error={student.error} onRetry={() => void student.refetch()} /> : <EmptyState icon={<UserRound />} title={t('students.detail.notFound')} />}
         </Card>
       </>
     );
   }
   const s = student.data;
-
-  const toggleArchive = async () => {
-    if (!s) return;
-    try {
-      await archive.mutateAsync({ id: s.id, archived: !s.archived });
-      setArchiveOpen(false);
-    } catch {
-      // toast — hooks ichida
-    }
-  };
 
   return (
     <>
@@ -100,58 +98,52 @@ function StudentDetailView() {
             </div>
           )
         }
-        actions={
-          s && (
-            <Can perm="students.manage">
-              <Button variant="outline" onClick={() => setEditOpen(true)}>
-                <Pencil />
-                {t('common.edit')}
-              </Button>
-              <Button variant="outline" onClick={() => setArchiveOpen(true)}>
-                {s.archived ? <ArchiveRestore /> : <Archive />}
-                {s.archived ? t('students.restore') : t('students.archive')}
-              </Button>
-            </Can>
-          )
-        }
+        actions={s && <StudentHeaderActions student={s} />}
       />
-
-      {psychologist && <PsychologistNote />}
 
       {!s ? (
         <DetailSkeleton />
       ) : (
-        <div className="grid items-start gap-6 lg:grid-cols-3">
-          <div className={psychologist ? 'min-w-0 space-y-6 lg:col-span-3 xl:col-span-2' : 'min-w-0 space-y-6 lg:col-span-2'}>
-            <StudentProfileCard student={s} minimal={psychologist} />
-            {!psychologist && <GuardiansCard studentId={s.id} guardians={s.guardians} />}
-            {!psychologist && (
-              <SectionCard icon={<CalendarDays />} title={t('students.detail.calendar')}>
-                <AttendanceCalendar studentId={s.id} initialMonth={clockToday().slice(0, 7)} />
-              </SectionCard>
-            )}
-          </div>
-          {!psychologist && (
-            <div className="space-y-6">
-              <StudentTodayCard student={s} />
-              <StudentModeCard student={s} />
-              <StudentPrivacyNote />
+        <Tabs value={tab} onValueChange={(next) => setTab(next as StudentTab)}>
+          {tabs.length > 1 && (
+            <div ref={tabStrip} className="-mx-4 overflow-x-auto px-4 pb-1 sm:mx-0 sm:px-0">
+              <TabsList aria-label={t('students.tabs.label')}>
+                {tabs.map((key) => {
+                  const Icon = TAB_ICONS[key];
+                  return (
+                    <TabsTrigger key={key} value={key}>
+                      <Icon aria-hidden />
+                      {t(`students.tabs.${key}`)}
+                    </TabsTrigger>
+                  );
+                })}
+              </TabsList>
             </div>
           )}
-        </div>
-      )}
-
-      {s && <StudentFormDialog open={editOpen} onOpenChange={setEditOpen} student={s} />}
-      {s && (
-        <ConfirmDialog
-          open={archiveOpen}
-          onOpenChange={setArchiveOpen}
-          title={s.archived ? t('students.restore') : t('students.archive')}
-          description={s.archived ? undefined : t('students.archiveConfirm', { name: `${s.lastName} ${s.firstName}` })}
-          destructive={!s.archived}
-          loading={archive.isPending}
-          onConfirm={() => void toggleArchive()}
-        />
+          <TabsContent value="profile">
+            <ProfilePanel student={s} minimal={minimal} />
+          </TabsContent>
+          {tabs.includes('attendance') && (
+            <TabsContent value="attendance">
+              <AttendancePanel student={s} />
+            </TabsContent>
+          )}
+          {tabs.includes('development') && (
+            <TabsContent value="development">
+              <DevelopmentTab studentId={s.id} />
+            </TabsContent>
+          )}
+          {tabs.includes('history') && (
+            <TabsContent value="history">
+              <StudentHistory studentId={s.id} />
+            </TabsContent>
+          )}
+          {tabs.includes('notes') && (
+            <TabsContent value="notes">
+              <StudentNotes studentId={s.id} />
+            </TabsContent>
+          )}
+        </Tabs>
       )}
     </>
   );

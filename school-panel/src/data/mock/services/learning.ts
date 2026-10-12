@@ -219,7 +219,10 @@ export const learningService = {
       };
       t.assignments.push(assignment);
       const names = assignment.classIds.map((id) => t.classes.find((c) => c.id === id)?.name ?? id).join(', ');
-      writeAudit(t, actor, 'LEARNING', 'learning.assign', `"${material.title}" tayinlandi: ${names}`, assignment.id, null, assignment);
+      writeAudit(t, actor, 'LEARNING', 'learning.assign', `"${material.title}" tayinlandi: ${names}`, assignment.id, null, assignment, {
+        title: material.title,
+        classes: names,
+      });
       return assignment;
     });
   },
@@ -233,7 +236,7 @@ export const learningService = {
       if (!assignment) throw new ServiceError('NOT_FOUND', id);
       if (!canDeleteAssignment(actor, assignment)) throw new ServiceError('FORBIDDEN', id);
       t.assignments = t.assignments.filter((a) => a.id !== id);
-      writeAudit(t, actor, 'LEARNING', 'learning.unassign', 'Topshiriq o\'chirildi', id, assignment, null);
+      writeAudit(t, actor, 'LEARNING', 'learning.unassign', 'Topshiriq o\'chirildi', id, assignment, null, {});
     });
   },
 };

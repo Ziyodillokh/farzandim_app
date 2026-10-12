@@ -1,16 +1,21 @@
 'use client';
 
 import { useSearchParams } from 'next/navigation';
-import { Suspense } from 'react';
+import { Suspense, useMemo } from 'react';
 
 import { PageHeader } from '@/components/common/page-header';
 import { Skeleton } from '@/components/ui/skeleton';
+import { parseComposePrefill } from '@/features/messages/compose-prefill';
 import { ComposeForm } from '@/features/messages/components/compose-form';
 import { useI18n } from '@/i18n';
 
+/** `?id=` — tahrirlash; `?classId=` / `?guardianId=g1,g2` — yangi xabar auditoriyasi oldindan tanlanadi. */
 function ComposeView() {
   const { t } = useI18n();
-  const id = useSearchParams().get('id');
+  const params = useSearchParams();
+  const id = params.get('id');
+  const query = params.toString();
+  const prefill = useMemo(() => parseComposePrefill(new URLSearchParams(query)), [query]);
   return (
     <>
       <PageHeader
@@ -19,7 +24,7 @@ function ComposeView() {
         backHref="/messages"
         backLabel={t('messages.compose.back')}
       />
-      <ComposeForm id={id} />
+      <ComposeForm id={id} prefill={prefill} />
     </>
   );
 }

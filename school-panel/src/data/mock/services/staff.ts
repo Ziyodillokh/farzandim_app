@@ -140,7 +140,7 @@ export const staffService = {
       };
       t.staff = [...t.staff, staff];
       syncHomeroom(t, staff);
-      writeAudit(t, actor, 'STAFF', 'staff.create', `Xodim qo'shildi: ${staff.fullName}`, staff.id, null, withoutPhoto(staff));
+      writeAudit(t, actor, 'STAFF', 'staff.create', `Xodim qo'shildi: ${staff.fullName}`, staff.id, null, withoutPhoto(staff), { name: staff.fullName });
       return staff;
     });
   },
@@ -166,7 +166,7 @@ export const staffService = {
       t.staff = t.staff.map((s) => (s.id === id ? next : s));
       syncHomeroom(t, next);
       // Rasm baytlari auditga yozilmaydi (localStorage to'lib qolmasin).
-      writeAudit(t, actor, 'STAFF', 'staff.update', `Xodim yangilandi: ${next.fullName}`, id, withoutPhoto(before), withoutPhoto(next));
+      writeAudit(t, actor, 'STAFF', 'staff.update', `Xodim yangilandi: ${next.fullName}`, id, withoutPhoto(before), withoutPhoto(next), { name: next.fullName });
       return next;
     });
   },
@@ -191,6 +191,7 @@ export const staffService = {
         id,
         { active: before.active },
         { active },
+        { name: next.fullName },
       );
       return next;
     });

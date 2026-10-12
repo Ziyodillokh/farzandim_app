@@ -15,15 +15,26 @@ import { MyClassCard } from '@/features/dashboard/components/my-class-card';
 import { TrendChart } from '@/features/dashboard/components/trend-chart';
 import { UpcomingCard } from '@/features/dashboard/components/upcoming-card';
 import { useOverview } from '@/features/dashboard/hooks';
+import { DevelopmentCard } from '@/features/development/components/development-card';
 import { cn } from '@/lib/utils';
 
-/** Pastki qator: kartalar soniga qarab muvozanatli ustunlar. */
+/** Pastki qator: kartalar soniga qarab muvozanatli ustunlar (bo'sh katak qolmaydi). */
 const BOTTOM_GRID: Record<number, string> = {
   1: 'md:grid-cols-1',
   2: 'md:grid-cols-2',
   3: 'md:grid-cols-2 xl:grid-cols-3',
   4: 'md:grid-cols-2 2xl:grid-cols-4',
+  5: 'md:grid-cols-2 xl:grid-cols-6',
+  6: 'md:grid-cols-2 xl:grid-cols-3',
 };
+
+/** 5 ta karta: xl'da 3 tor + 2 keng; md'da (2 ustun) oxirgisi to'liq kenglikda. */
+function bottomSpan(count: number, index: number): string {
+  if (count === 3 && index === 2) return 'md:col-span-2 xl:col-span-1';
+  if (count !== 5) return '';
+  if (index < 3) return 'xl:col-span-2';
+  return index === 4 ? 'md:col-span-2 xl:col-span-3' : 'xl:col-span-3';
+}
 
 export default function DashboardPage() {
   const can = useCan();
@@ -39,6 +50,7 @@ export default function DashboardPage() {
     data?.upcoming && <UpcomingCard key="up" items={data.upcoming} />,
     data?.care && !data.careInbox && <CareCard key="care" care={data.care} />,
     data?.learning && <LearningCard key="learn" learning={data.learning} />,
+    data?.development && <DevelopmentCard key="dev-summary" summary={data.development} />,
   ].filter(Boolean);
 
   return (
@@ -63,7 +75,15 @@ export default function DashboardPage() {
         </div>
       </div>
 
-      {bottom.length > 0 && <div className={cn('grid gap-6', BOTTOM_GRID[bottom.length])}>{bottom}</div>}
+      {bottom.length > 0 && (
+        <div className={cn('grid gap-6', BOTTOM_GRID[bottom.length] ?? BOTTOM_GRID[6])}>
+          {bottom.map((card, i) => (
+            <div key={i} className={cn('min-w-0 [&>*]:h-full', bottomSpan(bottom.length, i))}>
+              {card}
+            </div>
+          ))}
+        </div>
+      )}
     </>
   );
 }

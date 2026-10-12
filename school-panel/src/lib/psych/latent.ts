@@ -1,5 +1,5 @@
 import type { DevDomain } from '@/data/contracts';
-import { unitHash } from '@/lib/rng';
+import { hashString, mulberry32, unitHash } from '@/lib/rng';
 
 /**
  * Demo "iste'dod" modeli — deterministik (xesh), korrelyatsiyali sohalar.
@@ -7,8 +7,11 @@ import { unitHash } from '@/lib/rng';
  * shuning uchun jonli natijalar tarix bilan mos keladi.
  */
 export function normalFromHash(...parts: Array<string | number>): number {
-  const u1 = Math.max(1e-9, unitHash(...parts, 'u1'));
-  const u2 = unitHash(...parts, 'u2');
+  // Ikki mustaqil son bitta PRNG oqimidan: `unitHash(..., 'u1'|'u2')` faqat oxirgi belgida farq qilardi
+  // (FNV-1a) — u2 ≈ u1 + const, Box–Muller dumlari buzilardi.
+  const next = mulberry32(hashString(parts.join('|')));
+  const u1 = Math.max(1e-9, next());
+  const u2 = next();
   return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
 }
 

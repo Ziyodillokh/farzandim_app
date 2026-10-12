@@ -21,6 +21,11 @@ export const studentCreateSchema = studentInputSchema.extend({
   guardian: guardianInputSchema.optional(),
 });
 
+/** O'quvchi kartasidagi xodim eslatmasi: 1–1000 belgi (auditga matn yozilmaydi). */
+export const STUDENT_NOTE_MAX = 1000;
+export const studentNoteSchema = z.object({ text: requiredText(STUDENT_NOTE_MAX) });
+
 export type StudentInput = z.input<typeof studentInputSchema>;
+export type StudentNoteInput = z.input<typeof studentNoteSchema>;
 export type StudentCreateInput = z.input<typeof studentCreateSchema>;
 export type GuardianInput = z.input<typeof guardianInputSchema>;

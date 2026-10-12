@@ -164,9 +164,30 @@ function requestsThisWeek(tables: Tables, today: IsoDate): string {
   return maskSmallCount(count);
 }
 
-/** So'rovnoma tanlanmasa — eng so'nggi (qoralama bo'lmagan) so'rovnoma. */
-export function defaultSurvey(surveys: readonly CareSurvey[]): CareSurvey | undefined {
-  return [...surveys].filter((s) => s.status !== 'DRAFT').sort((a, b) => b.weekStart.localeCompare(a.weekStart))[0];
+/** So'rovnomaning distinct respondentlari — maqsadli sinflar bo'yicha (/care natijasi bilan bir xil). */
+export function surveyRespondentCount(tables: Tables, survey: CareSurvey): number {
+  return distinctRespondents(surveyResponses(tables, survey, targetClasses(tables, survey)));
+}
+
+/** Natija ko'rsatishga tayyormi: kamida K distinct respondent. */
+export function isSurveyReady(tables: Tables, survey: CareSurvey): boolean {
+  return surveyRespondentCount(tables, survey) >= CARE_MIN_GROUP;
+}
+
+/** Yangisi birinchi: hafta boshi, so'ng faollashtirilgan vaqt. */
+export function compareSurveysByRecency(a: CareSurvey, b: CareSurvey): number {
+  return b.weekStart.localeCompare(a.weekStart) || (b.activatedAt ?? '').localeCompare(a.activatedAt ?? '');
+}
+
+/**
+ * So'rovnoma tanlanmasa: eng so'nggi qoralama bo'lmagan va kamida K distinct respondentli
+ * so'rovnoma; bunday yo'q bo'lsa — eng so'nggi qoralama bo'lmagani. Shu tufayli yangi
+ * faollashtirilgan (hali javobsiz) so'rovnoma direktor ko'rinishini bo'shatib qo'ymaydi.
+ * `surveys` — nomzodlar (masalan, oylik hisobotda faqat shu oy so'rovnomalari).
+ */
+export function defaultSurvey(tables: Tables, surveys: readonly CareSurvey[] = tables.careSurveys): CareSurvey | undefined {
+  const published = surveys.filter((s) => s.status !== 'DRAFT').sort(compareSurveysByRecency);
+  return published.find((s) => isSurveyReady(tables, s)) ?? published[0];
 }
 
 export function computeCareAggregate(tables: Tables, survey: CareSurvey, breakdown: CareBreakdown, today: IsoDate): CareAggregate {

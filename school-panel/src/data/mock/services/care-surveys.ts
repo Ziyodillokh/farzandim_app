@@ -8,6 +8,8 @@ import {
 } from '@/data/schemas/care';
 import { parseOrThrow } from '@/data/schemas/validate';
 import { percent } from '@/lib/utils';
+import { toLocalIso } from '../calendar';
+import { clockNow } from '../clock';
 import { assertCan, currentActor, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
 import { ageGroupOf } from '../seed/care';
@@ -57,6 +59,8 @@ function setSurveyStatus(id: string, from: CareSurvey['status'], to: CareSurvey[
       for (const other of t.careSurveys) if (other.status === 'ACTIVE') other.status = 'CLOSED';
     }
     survey.status = to;
+    // Simulyatsiya javoblari shu vaqtdan boshlab keladi (care-sim.ts).
+    if (to === 'ACTIVE') survey.activatedAt = toLocalIso(clockNow());
     writeAudit(t, actor, 'CARE', to === 'ACTIVE' ? 'care.survey.activate' : 'care.survey.close', `So'rovnoma: ${survey.title}`, id, { status: from }, { status: to });
     return { ...survey };
   });

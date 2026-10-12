@@ -125,7 +125,7 @@ export const remindersService = {
       assertFuture(data.sendAt);
       const reminder: Reminder = { id: newId('rem'), ...data, byStaffId: actor.staffId };
       t.reminders.push(reminder);
-      writeAudit(t, actor, 'REMINDERS', 'reminder.create', `"${reminder.title}" eslatmasi yaratildi`, reminder.id, null, reminder);
+      writeAudit(t, actor, 'REMINDERS', 'reminder.create', `"${reminder.title}" eslatmasi yaratildi`, reminder.id, null, reminder, { title: reminder.title });
       return reminder;
     });
   },
@@ -140,7 +140,7 @@ export const remindersService = {
       if (timeOf(data.sendAt) !== timeOf(current.sendAt)) assertFuture(data.sendAt);
       const next: Reminder = { ...current, ...data };
       t.reminders[index] = next;
-      writeAudit(t, actor, 'REMINDERS', 'reminder.update', `"${next.title}" eslatmasi tahrirlandi`, id, current, next);
+      writeAudit(t, actor, 'REMINDERS', 'reminder.update', `"${next.title}" eslatmasi tahrirlandi`, id, current, next, { title: next.title });
       return next;
     });
   },
@@ -152,7 +152,7 @@ export const remindersService = {
     transact((t) => {
       const { index, current } = find(t, id);
       t.reminders.splice(index, 1);
-      writeAudit(t, actor, 'REMINDERS', 'reminder.delete', `"${current.title}" eslatmasi o'chirildi`, id, current, null);
+      writeAudit(t, actor, 'REMINDERS', 'reminder.delete', `"${current.title}" eslatmasi o'chirildi`, id, current, null, { title: current.title });
     });
   },
 
@@ -164,7 +164,10 @@ export const remindersService = {
       const { index, current } = find(t, id);
       const next: Reminder = { ...current, active };
       t.reminders[index] = next;
-      writeAudit(t, actor, 'REMINDERS', 'reminder.toggle', `"${next.title}" eslatmasi ${active ? 'yoqildi' : 'to\'xtatildi'}`, id, { active: current.active }, { active });
+      writeAudit(t, actor, 'REMINDERS', 'reminder.toggle', `"${next.title}" eslatmasi ${active ? 'yoqildi' : 'to\'xtatildi'}`, id, { active: current.active }, { active }, {
+        variant: active ? 'on' : 'off',
+        title: next.title,
+      });
       return next;
     });
   },

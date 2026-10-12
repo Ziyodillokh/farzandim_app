@@ -100,7 +100,7 @@ export function DataTable<T>({
             Array.from({ length: skeletonRows }).map((_, i) => (
               <TableRow key={`sk-${i}`} className="hover:bg-transparent">
                 {columns.map((col) => (
-                  <TableCell key={col.key}>
+                  <TableCell key={col.key} className={col.className}>
                     <Skeleton className="h-4 w-full max-w-[160px]" />
                   </TableCell>
                 ))}

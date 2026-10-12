@@ -89,7 +89,8 @@ export function BreakdownChart({
       description={t('care.overview.breakdownHint')}
       icon={<ChartColumnBig />}
       actions={
-        <>
+        // Tor ekranda tanlovlar yangi qatorga o'tadi (sahifa gorizontal siljimasin).
+        <div className="flex flex-wrap justify-end gap-2">
           <Select value={breakdown} onValueChange={(v) => onBreakdownChange(v as CareBreakdown)}>
             <SelectTrigger className="h-9 w-36" aria-label={t('care.overview.breakdownTitle')}>
               <SelectValue />
@@ -111,7 +112,7 @@ export function BreakdownChart({
               ))}
             </SelectContent>
           </Select>
-        </>
+        </div>
       }
     >
       {loading && !aggregate ? (

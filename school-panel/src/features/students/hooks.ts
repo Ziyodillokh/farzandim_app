@@ -14,6 +14,8 @@ export const studentKeys = {
   list: (filter: StudentFilter) => ['students', 'list', filter] as const,
   detail: (id: string) => ['students', 'detail', id] as const,
   month: (id: string, month: string) => ['students', 'month', id, month] as const,
+  history: (id: string) => ['students', 'history', id] as const,
+  notes: (id: string) => ['students', 'notes', id] as const,
   guardians: ['guardians'] as const,
 };
 
@@ -31,6 +33,15 @@ export function useStudentMonth(id: string | null, month: string) {
     queryFn: () => api.attendance.studentMonth(id ?? '', month),
     enabled: Boolean(id),
   });
+}
+
+/** 360° karta: tarix lentasi (faqat tab ochilganda yuklanadi). */
+export function useStudentHistory(id: string | null, enabled = true) {
+  return useQuery({ queryKey: studentKeys.history(id ?? ''), queryFn: () => api.students.history(id ?? ''), enabled: Boolean(id) && enabled });
+}
+
+export function useStudentNotes(id: string | null, enabled = true) {
+  return useQuery({ queryKey: studentKeys.notes(id ?? ''), queryFn: () => api.students.notes(id ?? ''), enabled: Boolean(id) && enabled });
 }
 
 export function useClassOptions() {
@@ -69,6 +80,14 @@ export function useInviteGuardian() {
 
 export function useSimulateLink() {
   return useStudentMutation((guardianId: string) => api.guardians.simulateLink(guardianId), 'common.done');
+}
+
+export function useAddStudentNote() {
+  return useStudentMutation(({ studentId, text }: { studentId: string; text: string }) => api.students.addNote(studentId, text), 'students.notes.added');
+}
+
+export function useDeleteStudentNote() {
+  return useStudentMutation((noteId: string) => api.students.deleteNote(noteId), 'students.notes.deleted');
 }
 
 export function useAddGuardian() {

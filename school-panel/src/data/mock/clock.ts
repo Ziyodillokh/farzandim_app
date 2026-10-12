@@ -1,5 +1,5 @@
 import type { IsoDate } from '@/data/contracts';
-import { readPref, writePref } from '@/lib/prefs';
+import { readPref, removePref, writePref } from '@/lib/prefs';
 import { addDays, isoWeekday, toIsoDate } from './calendar';
 
 /**
@@ -11,9 +11,11 @@ export type ClockMode = 'REAL' | 'SCENARIO';
 export type ClockSpeed = 1 | 10 | 60;
 export const CLOCK_SPEEDS: readonly ClockSpeed[] = [1, 10, 60];
 export const SCENARIO_START_MINUTE = 7 * 60 + 45;
-const SCENARIO_END_MINUTE = 19 * 60;
+export const SCENARIO_END_MINUTE = 19 * 60;
+/** Ssenariy 19:00 da shuncha (real) vaqt turib qolsa — keyingi ochilishda yangi ertalab. */
+const ENDED_STALE_MS = 10 * 60_000;
 
-type ClockState = {
+export type ClockState = {
   mode: ClockMode;
   speed: ClockSpeed;
   scenarioDate: IsoDate;
@@ -64,17 +66,45 @@ function defaultState(): ClockState {
   };
 }
 
+function isClockState(value: unknown): value is ClockState {
+  const v = value as Partial<ClockState> | null;
+  return Boolean(v) && (v?.mode === 'REAL' || v?.mode === 'SCENARIO');
+}
+
+/** Ssenariy 19:00 ga yetgan real vaqt (ms). */
+function scenarioEndAt(s: Pick<ClockState, 'speed' | 'scenarioStartMinute' | 'realStartedAt'>): number {
+  const remaining = Math.max(0, SCENARIO_END_MINUTE - s.scenarioStartMinute);
+  return s.realStartedAt + (remaining / s.speed) * 60_000;
+}
+
+/**
+ * Eskirgan ssenariy: (a) sanasi bugundan oldingi oxirgi ish kunidan ham eski
+ * (bugun boshlangan ssenariy — ataylab tanlangan, tegilmaydi), yoki (b) 19:00 da
+ * 10 daqiqadan ko'proq turib qolgan. Bunday holatda yangi "ertalab" boshlanadi.
+ */
+export function isStaleScenario(s: ClockState, nowMs: number = Date.now()): boolean {
+  if (s.mode !== 'SCENARIO') return false;
+  const today = toIsoDate(new Date(nowMs));
+  const startedToday = toIsoDate(new Date(s.realStartedAt)) === today;
+  if (!startedToday && s.scenarioDate < lastWeekday(addDays(today, -1), [])) return true;
+  return nowMs - scenarioEndAt(s) > ENDED_STALE_MS;
+}
+
 function load(): ClockState {
   if (state) return state;
-  const saved = readPref<ClockState>(PREF_KEY);
-  if (saved && (saved.mode === 'REAL' || saved.mode === 'SCENARIO')) {
-    state = { ...defaultState(), ...saved };
-    return state;
+  const saved = readPref<unknown>(PREF_KEY);
+  if (isClockState(saved)) {
+    const merged = { ...defaultState(), ...saved };
+    if (!isStaleScenario(merged)) {
+      state = merged;
+      return state;
+    }
   }
   state = defaultState();
   // Ssenariy saqlanadi — yangi tab (kiosk) va qayta yuklashda vaqt boshidan boshlanmasin.
   // Haqiqiy vaqt saqlanmaydi: keyingi ochilish kechqurun bo'lsa, yana ssenariy tanlanadi.
   if (state.mode === 'SCENARIO') writePref(PREF_KEY, state);
+  else if (saved) removePref(PREF_KEY);
   return state;
 }
 
@@ -110,6 +140,12 @@ export function clockMinute(): number {
 
 export function getClockState(): Readonly<ClockState> {
   return load();
+}
+
+/** Ssenariy kuni 19:00 ga yetdi ("Demo kuni yakunlandi"). */
+export function scenarioEnded(): boolean {
+  const s = load();
+  return s.mode === 'SCENARIO' && scenarioMinute(s) >= SCENARIO_END_MINUTE;
 }
 
 export function setClockMode(mode: ClockMode, holidays: readonly IsoDate[] = []): void {
@@ -160,8 +196,8 @@ export function bindClockSync(): void {
   clockSyncBound = true;
   window.addEventListener('storage', (event) => {
     if (event.key !== `parvoz-school:${PREF_KEY}`) return;
-    const saved = readPref<ClockState>(PREF_KEY);
-    if (!saved || (saved.mode !== 'REAL' && saved.mode !== 'SCENARIO')) return;
+    const saved = readPref<unknown>(PREF_KEY);
+    if (!isClockState(saved)) return;
     state = { ...defaultState(), ...saved };
     for (const l of listeners) l();
   });

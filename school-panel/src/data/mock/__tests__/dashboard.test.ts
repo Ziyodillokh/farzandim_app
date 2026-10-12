@@ -12,7 +12,7 @@ describe('dashboardService.overview', () => {
     expect(o.attendance).not.toBeNull();
     expect(o.classes?.length).toBeGreaterThan(10);
     expect(o.schoolMode).not.toBeNull();
-    expect(o.parents?.totalStudents).toBeGreaterThan(400);
+    expect(o.parents?.students.total).toBeGreaterThan(400);
     expect(o.care).not.toBeNull();
     expect(o.careInbox).toBeNull();
   });
@@ -22,7 +22,7 @@ describe('dashboardService.overview', () => {
     const o = await dashboardService.overview();
     expect(o.classes?.map((c) => c.classId)).toEqual(['cls-7a']);
     expect(o.care).toBeNull();
-    expect(o.parents && o.parents.totalStudents).toBeLessThan(40);
+    expect(o.parents && o.parents.students.total).toBeLessThan(40);
   });
 
   it('psixolog: murojaatlar qutisi bor, davomat yo\'q', async () => {

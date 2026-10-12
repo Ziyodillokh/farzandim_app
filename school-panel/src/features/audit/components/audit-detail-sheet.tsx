@@ -13,6 +13,7 @@ import type { AuditLog } from '@/data/contracts';
 import { useI18n } from '@/i18n';
 import { INNER_TILE } from '@/features/classes/styles';
 import { cn } from '@/lib/utils';
+import { auditText } from '../audit-text';
 import { auditShape, diffValues, type DiffRow } from '../diff';
 import { DiffValue, FieldLabel } from './diff-value';
 
@@ -61,7 +62,7 @@ export function AuditDetailSheet({ entry, onOpenChange }: { entry: AuditLog | nu
         {entry && (
           <>
             <SheetHeader className="pr-12">
-              <SheetTitle className="leading-snug">{entry.summary}</SheetTitle>
+              <SheetTitle className="leading-snug">{auditText(t, entry)}</SheetTitle>
               <div className="flex flex-wrap items-center gap-2">
                 <Badge variant="outline">{t(`enums.auditModule.${entry.module}`)}</Badge>
                 <SheetDescription>{formatRelative(entry.at)}</SheetDescription>
