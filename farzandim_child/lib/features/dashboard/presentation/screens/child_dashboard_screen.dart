@@ -27,6 +27,7 @@ import 'package:farzandim_child/features/app_restrictions/data/services/usage_st
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/unlock_request_provider.dart';
 import 'package:farzandim_child/features/app_restrictions/presentation/providers/usage_providers.dart';
 import 'package:farzandim_child/features/app_update/presentation/widgets/update_banner.dart';
+import 'package:farzandim_child/features/screen_time/presentation/widgets/ios_setup_banner.dart';
 import 'package:farzandim_child/features/audiobooks/data/models/audiobook_model.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audio_player_provider.dart';
 import 'package:farzandim_child/features/audiobooks/presentation/providers/audiobooks_providers.dart';
@@ -350,6 +351,7 @@ class _ChildDashboardScreenState extends ConsumerState<ChildDashboardScreen>
             padding: EdgeInsets.fromLTRB(16, 18, 16, 122 + bottomInset),
             children: const [
               UpdateBanner(),
+              IosSetupBanner(),
               _Header(),
               SizedBox(height: 14),
               _StatChipsRow(),

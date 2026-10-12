@@ -89,6 +89,7 @@ void main() {
       final policy = IosShieldPolicy.fromBackend(
         schedules: [_schedule(start: '13:30', end: '15:00', days: const [6])],
         blockAll: false,
+        denyAppRemoval: true,
       );
 
       expect(policy.toMap(), {
@@ -96,6 +97,7 @@ void main() {
         'windows': [
           {'start': 810, 'end': 900, 'weekdays': [6]},
         ],
+        'denyAppRemoval': true,
       });
     });
   });

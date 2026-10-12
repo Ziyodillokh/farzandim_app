@@ -219,6 +219,7 @@
     "stepsName": "Qadamlar (Harakat va fitnes)",
     "continue": "Davom etish",
     "iosFootnote": "Ruxsat bermasangiz ham ilovadan foydalanishingiz mumkin — faqat tegishli funksiya ishlamaydi.",
+    "iosLocationAlwaysHint": "Joylashuv uchun «Har doim»ni tanlang — shunda ota-onangiz sizni ilova yopiq bo'lsa ham xaritada ko'radi va uning sozlamalari telefoningizga darhol yetib boradi.",
     "iosScreenTimeLink": "Ekran vaqtini sozlash (ota-ona uchun)"
   },
   "dashboard": {
@@ -1061,6 +1062,10 @@
     "extrasTitle": "Doimiy himoya",
     "extrasBody": "Jadvaldan qat'i nazar har doim ishlaydi. O'zgartirish uchun ota-ona PIN kodi kerak.",
     "extrasAdult": "Kattalar saytlarini bloklash",
-    "extrasInstall": "Yangi ilova o'rnatishni taqiqlash"
+    "extrasInstall": "Yangi ilova o'rnatishni taqiqlash",
+    "bannerAuthTitle": "Ilovalar cheklovi o'chiq",
+    "bannerAuthBody": "Ota-onangiz bilan Parvoz → Ekran vaqti'ni yoqing — aks holda ularning cheklovlari ishlamaydi.",
+    "bannerLocationTitle": "Joylashuv «Har doim» emas",
+    "bannerLocationBody": "Sozlamalarda joylashuvni «Har doim» qiling — ilova yopiq bo'lsa ham ishlashi uchun."
   }
 }

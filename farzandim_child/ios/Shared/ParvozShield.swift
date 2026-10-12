@@ -104,9 +104,12 @@ enum ParvozShield {
     applyExtras(extras)
   }
 
+  /// Doimiy himoya (bola qurilmasida PIN bilan) + ota-onaning
+  /// "O'chirishdan himoya"si (backend siyosati) — jadvaldan mustaqil.
   static func applyExtras(_ extras: ParvozShieldExtras) {
     store.webContent.blockedByFilter = extras.blockAdultWebsites ? .auto() : nil
     store.application.denyAppInstallation = extras.denyAppInstallation ? true : nil
+    store.application.denyAppRemoval = loadPolicy().denyAppRemoval == true ? true : nil
     // Jadval va kunlik limit soatga tayanadi — bola sana/vaqtni qo'lda
     // surib cheklovni aylanib o'tmasin ("Avtomatik" doim yoqiq).
     store.dateAndTime.requireAutomaticDateAndTime = true
@@ -328,8 +331,15 @@ struct ParvozShieldPolicy: Codable, Equatable {
   /// Tanlangan ilovalarga kunlik limit (daqiqa); `nil` — limit yo'q.
   /// Optional — eski saqlangan siyosat ham o'qiladi.
   var dailyLimitMinutes: Int?
+  /// Ota-ona "O'chirishdan himoya"ni yoqqan — ilovalarni o'chirish taqiq.
+  var denyAppRemoval: Bool?
 
-  static let none = ParvozShieldPolicy(blockAll: false, windows: [], dailyLimitMinutes: nil)
+  static let none = ParvozShieldPolicy(
+    blockAll: false,
+    windows: [],
+    dailyLimitMinutes: nil,
+    denyAppRemoval: nil
+  )
 
   func isBlocking(
     at date: Date,

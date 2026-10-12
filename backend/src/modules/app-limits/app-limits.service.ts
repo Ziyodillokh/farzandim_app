@@ -14,6 +14,7 @@ import {
   APP_CATEGORIES,
   categoryLabel,
   classifyPackage,
+  isCategorizable,
 } from '../installed-apps/app-category.util';
 import { tr } from '../../common/i18n/notification-i18n';
 
@@ -301,6 +302,7 @@ export class AppLimitsService {
     const out = [...limits];
     for (const app of apps) {
       if (existing.has(app.packageName)) continue;
+      if (!isCategorizable(app.packageName)) continue;
       // Har doim paketdan JONLI klassifikatsiya — saqlangan `category` eski
       // klassifikator versiyasi bilan yozilgan bo'lishi mumkin (masalan Plus
       // Messenger avval OTHER bo'lib qolgan). Qurilma hozircha o'z
@@ -595,6 +597,7 @@ export class AppLimitsService {
     const blocked = new Set(blocks.map((b) => b.category));
     const counts = new Map<string, number>();
     for (const a of apps) {
+      if (!isCategorizable(a.packageName)) continue;
       // Jonli klassifikatsiya (applyCategoryBlocks bilan bir xil mantiq) —
       // ro'yxatdagi son va haqiqiy bloklanadigan to'plam mos kelishi uchun.
       const cat = classifyPackage(a.packageName);

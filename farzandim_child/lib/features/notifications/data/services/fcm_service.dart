@@ -99,16 +99,13 @@ class FcmService {
     }
     await _setupLocalNotifications();
 
-    // 2. Token olish + Backend'ga register (faqat pair'lashgan bo'lsa).
-    final token = await _messaging.getToken();
-    if (token != null) {
-      await _registerToBackend(token);
-    }
-
-    // 3. Token refresh listener.
+    // 2. Listener'lar TOKENDAN OLDIN ulanadi: iOS'da `getToken()` APNs token
+    // hali kelmagan bo'lsa xato beradi — avval shu xato init'ni to'xtatib,
+    // butun sessiya davomida xabarlar (restrictions_sync, unlock_decision,
+    // location_wake) e'tiborsiz qolardi.
     _onTokenRefreshSub = _messaging.onTokenRefresh.listen(_registerToBackend);
 
-    // 4. Foreground listener — UI ko'rsatish uchun manual local notification.
+    // 3. Foreground listener — UI ko'rsatish uchun manual local notification.
     _onMessageSub = FirebaseMessaging.onMessage.listen((message) {
       debugPrint('FCM foreground: ${message.notification?.title}');
       // location_wake — ota-ona xaritani ochdi, yangi fix yuboriladi.
@@ -121,7 +118,7 @@ class FcmService {
       unawaited(_showLocalNotification(message));
     });
 
-    // 5. Background tap listener.
+    // 4. Background tap listener.
     _onMessageOpenedAppSub = FirebaseMessaging.onMessageOpenedApp.listen((
       message,
     ) {
@@ -129,12 +126,42 @@ class FcmService {
       onMessageTap?.call(message);
     });
 
+    // 5. Token olish + Backend'ga register (faqat pair'lashgan bo'lsa).
+    unawaited(_registerCurrentToken());
+
     // 6. Cold start (terminated app push bossa).
-    final initial = await _messaging.getInitialMessage();
-    if (initial != null) {
-      onMessageTap?.call(initial);
+    try {
+      final initial = await _messaging.getInitialMessage();
+      if (initial != null) {
+        onMessageTap?.call(initial);
+      }
+    } catch (e) {
+      debugPrint('FCM getInitialMessage xato: $e');
     }
   }
+
+  /// iOS'da APNs token ilova ishga tushgandan bir oz keyin keladi —
+  /// shu paytgacha `getToken()` xato beradi. Bir necha marta qayta uriniladi;
+  /// kech kelgan token baribir `onTokenRefresh` orqali yuboriladi.
+  Future<void> _registerCurrentToken() async {
+    for (var attempt = 1; attempt <= _tokenAttempts; attempt++) {
+      try {
+        final isApnsReady = !PlatformCapabilities.isIOS ||
+            await _messaging.getAPNSToken() != null;
+        if (isApnsReady) {
+          final token = await _messaging.getToken();
+          if (token != null) await _registerToBackend(token);
+          return;
+        }
+      } catch (e) {
+        debugPrint('FCM token olinmadi ($attempt/$_tokenAttempts): $e');
+      }
+      await Future<void>.delayed(_tokenRetryDelay);
+    }
+  }
+
+  static const _tokenAttempts = 6;
+  static const _tokenRetryDelay = Duration(seconds: 5);
 
   /// HIGH-importance Android notification channel + iOS init.
   Future<void> _setupLocalNotifications() async {

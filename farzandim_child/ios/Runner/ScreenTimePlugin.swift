@@ -10,7 +10,8 @@ import SwiftUI
 ///   • `requestAuthorization` {mode} → "individual" (Face ID/parol, standart)
 ///     yoki "child" (kuchli himoya: Family Sharing, ota-ona Apple ID)
 ///   • `pickApps` {title, cancel, done} → FamilyActivityPicker; null = bekor
-///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}], dailyLimitMinutes?, language}
+///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}], dailyLimitMinutes?,
+///     denyAppRemoval?, language}
 ///   • `grantUnlock` {untilMs, minutes} / `clearUnlock` → ota-ona bergan vaqt
 ///   • `setExtras` {blockAdultWebsites, denyAppInstallation}
 ///   • `consumePendingUnlockRequest` → bloklash ekranida vaqt so'ralganmi
@@ -248,8 +249,6 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       ParvozShield.setDailyLimitReached(false)
     }
     if Self.isAuthorized {
-      // Doimiy himoya har sync'da qayta qo'llanadi (tizim tiklangan bo'lsa ham).
-      ParvozShield.applyExtras(ParvozShield.loadExtras())
       let sync = Self.syncSchedules(requested.windows)
       errors = sync.errors
       errors += Self.syncDailyLimit(
@@ -265,6 +264,11 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     } catch {
       result(FlutterError(code: "saveFailed", message: error.localizedDescription, details: nil))
       return
+    }
+    if Self.isAuthorized {
+      // Doimiy himoya har sync'da qayta qo'llanadi (tizim tiklangan bo'lsa
+      // ham) — saqlangan siyosatdagi "o'chirishdan himoya" bilan birga.
+      ParvozShield.applyExtras(ParvozShield.loadExtras())
     }
     let isBlocking = Self.isAuthorized ? ParvozShield.enforce() : false
     result(["blocking": isBlocking, "scheduleErrors": errors])
@@ -297,7 +301,12 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     if let minutes = args["dailyLimitMinutes"] as? Int, (1..<1440).contains(minutes) {
       dailyLimit = minutes
     }
-    return ParvozShieldPolicy(blockAll: blockAll, windows: windows, dailyLimitMinutes: dailyLimit)
+    return ParvozShieldPolicy(
+      blockAll: blockAll,
+      windows: windows,
+      dailyLimitMinutes: dailyLimit,
+      denyAppRemoval: args["denyAppRemoval"] as? Bool
+    )
   }
 
   // MARK: Kunlik limit

@@ -125,8 +125,20 @@ void main() {
       'windows': [
         {'start': 1260, 'end': 420, 'weekdays': [1, 2, 3]},
       ],
+      'denyAppRemoval': false,
       'language': 'ru',
     });
+  });
+
+  test('ota-onaning "o\'chirishdan himoya"si iPhone\'ga uzatiladi va '
+      'tarmoq uzilsa saqlanadi', () async {
+    backend.devicePolicy = {'blockAllApps': false, 'blockUninstall': true};
+    await startAndSync();
+    expect(applied.last['denyAppRemoval'], isTrue);
+
+    backend.devicePolicy = null;
+    await service.sync();
+    expect(applied.last['denyAppRemoval'], isTrue);
   });
 
   test('jadval kelmasa (tarmoq yo\'q) siyosat o\'zgartirilmaydi', () async {

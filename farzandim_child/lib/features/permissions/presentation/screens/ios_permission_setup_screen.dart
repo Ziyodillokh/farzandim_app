@@ -81,7 +81,9 @@ class _IosPermissionSetupScreenState
     do {
       _recheckPending = false;
       final results = await Future.wait<bool>([
-        _isGranted(Permission.locationWhenInUse),
+        // Fonda ishlash (ota-ona xaritasi, cheklovlar darhol yetishi) uchun
+        // "Har doim" kerak — "Foydalanish paytida" yetarli emas.
+        _isGranted(Permission.locationAlways),
         _isGranted(Permission.notification),
         _isGranted(Permission.sensors),
       ]);
@@ -111,13 +113,25 @@ class _IosPermissionSetupScreenState
   }
 
   /// "Foydalanish paytida" → keyin "Har doim"ga ko'tarish taklifi (iOS uni
-  /// bir marta ko'rsatadi). Rad etilsa majburlamaymiz; "Har doim" taklifi
-  /// allaqachon ko'rsatilgan bo'lsa — qatorni qayta bosish Sozlamalarni ochadi.
+  /// bir marta ko'rsatadi). "Foydalanish paytida" berilganda permission_handler
+  /// "Har doim"ni `permanentlyDenied` deb ko'rsatadi — shuning uchun taklif
+  /// `_request` orqali emas, to'g'ridan so'raladi (aks holda bola taklifni
+  /// ko'rmay Sozlamalarga otilardi). Taklif allaqachon ko'rsatilgan bo'lsa —
+  /// qatorni qayta bosgan foydalanuvchiga Sozlamalar ochiladi.
   Future<void> _requestLocation() async {
     final whenInUse = await _request(Permission.locationWhenInUse);
     if (!whenInUse.isGranted) return;
-    await _request(Permission.locationAlways);
+    if (await Permission.locationAlways.isGranted) return;
+    final prefs = await SharedPreferences.getInstance();
+    if (prefs.getBool(_prefsKeyAlwaysAsked) ?? false) {
+      await openAppSettings();
+      return;
+    }
+    await prefs.setBool(_prefsKeyAlwaysAsked, true);
+    await Permission.locationAlways.request();
   }
+
+  static const _prefsKeyAlwaysAsked = 'permissionSetup.iosLocationAlwaysAsked';
 
   Future<void> _requestSteps() async {
     final status = await _request(Permission.sensors);
@@ -212,6 +226,20 @@ class _IosPermissionSetupScreenState
                             ),
                           ],
                         ),
+                        if (!_location) ...[
+                          const SizedBox(height: 12),
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4),
+                            child: Text(
+                              'permissionSetup.iosLocationAlwaysHint'.tr(),
+                              style: GoogleFonts.poppins(
+                                fontSize: 12.5,
+                                height: 1.45,
+                                color: PermColors.blueLight,
+                              ),
+                            ),
+                          ),
+                        ],
                         const SizedBox(height: 14),
                         Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),

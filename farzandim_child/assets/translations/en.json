@@ -219,6 +219,7 @@
     "stepsName": "Steps (Motion & Fitness)",
     "continue": "Continue",
     "iosFootnote": "You can use the app without them — only the related feature won't work.",
+    "iosLocationAlwaysHint": "Choose “Always” for location — then your parents can see you on the map even when the app is closed, and their settings reach your phone right away.",
     "iosScreenTimeLink": "Set up Screen Time (for parents)"
   },
   "dashboard": {
@@ -1061,6 +1062,10 @@
     "extrasTitle": "Always-on protection",
     "extrasBody": "Works at all times, regardless of the schedule. Changing it requires the parent PIN.",
     "extrasAdult": "Block adult websites",
-    "extrasInstall": "Block installing new apps"
+    "extrasInstall": "Block installing new apps",
+    "bannerAuthTitle": "App restrictions are off",
+    "bannerAuthBody": "Turn on Parvoz → Screen Time together with your parents — otherwise their limits don't work.",
+    "bannerLocationTitle": "Location isn't set to “Always”",
+    "bannerLocationBody": "Set location to “Always” in Settings so the app keeps working when closed."
   }
 }

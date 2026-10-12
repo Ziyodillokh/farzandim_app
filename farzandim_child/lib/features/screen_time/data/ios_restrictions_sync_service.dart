@@ -59,6 +59,7 @@ class IosRestrictionsSyncService implements RestrictionsSync {
   /// kengaytma bajaradi, "darhol bloklash" esa WS/push bilan keladi.
   static const syncInterval = Duration(seconds: 60);
   static const _prefsKeyBlockAllCache = 'screenTime.blockAllCache.v1';
+  static const _prefsKeyBlockUninstallCache = 'screenTime.blockUninstallCache.v1';
 
   /// Ota-ona ro'yxatidagi `lastSeenAt` eskirmasligi uchun shu oraliqda
   /// virtual element qayta yuboriladi.
@@ -192,12 +193,20 @@ class IosRestrictionsSyncService implements RestrictionsSync {
       return;
     }
     final devicePolicy = await _devicePolicyRepo.getDevicePolicy(childId);
-    final blockAll = await _resolveBlockAll(devicePolicy.blockAllApps);
+    final blockAll = await _resolveCachedFlag(
+      _prefsKeyBlockAllCache,
+      devicePolicy.blockAllApps,
+    );
+    final denyAppRemoval = await _resolveCachedFlag(
+      _prefsKeyBlockUninstallCache,
+      devicePolicy.blockUninstall,
+    );
     final policy = IosShieldPolicy.fromBackend(
       schedules: schedules,
       blockAll: blockAll,
       routines: routines,
       limits: limits,
+      denyAppRemoval: denyAppRemoval,
     );
     final isBlocking = await _channel.applyPolicy(
       policy,
@@ -329,14 +338,15 @@ class IosRestrictionsSyncService implements RestrictionsSync {
   }
 
   /// Qurilma-siyosati so'rovi alohida yiqilsa (`null`) — oxirgi ma'lum
-  /// qiymat, aks holda "hammasini bloklash" tarmoq uzilishida o'chib qolardi.
-  Future<bool> _resolveBlockAll(bool? fetched) async {
+  /// qiymat, aks holda "hammasini bloklash"/"o'chirishdan himoya" tarmoq
+  /// uzilishida o'chib qolardi.
+  Future<bool> _resolveCachedFlag(String key, bool? fetched) async {
     final prefs = await SharedPreferences.getInstance();
     if (fetched != null) {
-      await prefs.setBool(_prefsKeyBlockAllCache, fetched);
+      await prefs.setBool(key, fetched);
       return fetched;
     }
-    return prefs.getBool(_prefsKeyBlockAllCache) ?? false;
+    return prefs.getBool(key) ?? false;
   }
 
   @override

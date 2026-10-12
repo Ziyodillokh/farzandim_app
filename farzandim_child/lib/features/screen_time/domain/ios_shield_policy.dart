@@ -64,6 +64,7 @@ class IosShieldPolicy {
     required this.blockAll,
     required this.windows,
     this.dailyLimitMinutes,
+    this.denyAppRemoval = false,
   });
 
   /// Ota-ona ro'yxatidagi virtual "iPhone: tanlangan ilovalar" elementi.
@@ -87,6 +88,7 @@ class IosShieldPolicy {
     required bool blockAll,
     List<Schedule> routines = const [],
     List<AppLimit> limits = const [],
+    bool denyAppRemoval = false,
   }) {
     final windows = <ShieldWindow>[
       for (final schedule in schedules)
@@ -116,6 +118,7 @@ class IosShieldPolicy {
           : (limitMs / Duration.millisecondsPerMinute)
               .ceil()
               .clamp(1, _minutesPerDay - 1),
+      denyAppRemoval: denyAppRemoval,
     );
   }
 
@@ -142,10 +145,15 @@ class IosShieldPolicy {
   /// Tanlangan ilovalarga kunlik limit (daqiqa); `null` — limit yo'q.
   final int? dailyLimitMinutes;
 
+  /// Ota-onaning "O'chirishdan himoya"si (device-policy `blockUninstall`):
+  /// iPhone'da ilovalarni (Parvoz ham) o'chirish taqiqlanadi.
+  final bool denyAppRemoval;
+
   Map<String, Object> toMap() => {
         'blockAll': blockAll,
         'windows': [for (final w in windows) w.toMap()],
         if (dailyLimitMinutes != null) 'dailyLimitMinutes': dailyLimitMinutes!,
+        'denyAppRemoval': denyAppRemoval,
       };
 
   /// "HH:MM" → kun boshidan daqiqa; noto'g'ri bo'lsa null.
@@ -164,9 +172,15 @@ class IosShieldPolicy {
       other is IosShieldPolicy &&
       other.blockAll == blockAll &&
       other.dailyLimitMinutes == dailyLimitMinutes &&
+      other.denyAppRemoval == denyAppRemoval &&
       listEquals(other.windows, windows);
 
   @override
   int get hashCode =>
-      Object.hash(blockAll, dailyLimitMinutes, Object.hashAll(windows));
+      Object.hash(
+        blockAll,
+        dailyLimitMinutes,
+        denyAppRemoval,
+        Object.hashAll(windows),
+      );
 }
