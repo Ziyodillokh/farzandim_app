@@ -1,6 +1,7 @@
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_device_policy_repository.dart';
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_installed_apps_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_unlock_request_repository.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync.dart';
 import 'package:farzandim_child/features/app_restrictions/data/services/restrictions_sync_service.dart';
@@ -13,14 +14,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 /// Singleton — pairing tugagach `start(childId:)` chaqiriladi.
 /// Android: Backend **Schedule** (window BLOCK/ALLOW) + **AppLimit** (per-package
 /// quota) + **Routine** ("Ilova cheklovlar" per-app) — uchchalasini sync.
-/// iOS: Schedule BLOCK oynalari + "barcha ilovalarni bloklash" → Family
-/// Controls (ilovalar tanlovi qurilmada, ota-ona tomonidan).
+/// iOS: Schedule BLOCK oynalari, "barcha ilovalarni bloklash", virtual
+/// "iPhone: tanlangan ilovalar" elementiga qo'yilgan blok/limit va rejimlar →
+/// Family Controls (ilovalar tanlovi qurilmada, ota-ona tomonidan).
 final restrictionsSyncServiceProvider = Provider<RestrictionsSync>((ref) {
   final RestrictionsSync service = PlatformCapabilities.isIOS
       ? IosRestrictionsSyncService(
           scheduleRepo: ref.watch(backendScheduleRepositoryProvider),
           devicePolicyRepo: ref.watch(backendDevicePolicyRepositoryProvider),
           unlockRepo: ref.watch(backendUnlockRequestRepositoryProvider),
+          appLimitRepo: ref.watch(backendAppLimitRepositoryProvider),
+          routineRepo: ref.watch(backendRoutineRepositoryProvider),
+          installedAppsRepo: ref.watch(backendInstalledAppsRepositoryProvider),
           channel: ref.watch(screenTimeChannelProvider),
         )
       : RestrictionsSyncService(

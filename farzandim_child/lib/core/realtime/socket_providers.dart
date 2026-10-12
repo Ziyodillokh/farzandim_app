@@ -67,6 +67,17 @@ final socketLifecycleProvider = Provider<void>((ref) {
     subs.add(client.eventStream('schedule:deleted').listen(
           (_) => unawaited(sync.sync()),
         ));
+    // Rejim (Routine) — "Ilova cheklovlar" oynalari (Android per-app, iOS
+    // virtual "tanlangan ilovalar" elementi).
+    for (final event in const [
+      'routine:created',
+      'routine:updated',
+      'routine:deleted',
+    ]) {
+      subs.add(client.eventStream(event).listen(
+            (_) => unawaited(sync.sync()),
+          ));
+    }
 
     // "Bir bola = bir qurilma" qoidasi: backend bola yangi qurilmaga
     // (parent tasdiqi yoki QR re-pair orqali) ko'chgan paytda eski qurilma

@@ -9,8 +9,8 @@ import os
 // Apple Family Controls shartlari bo'yicha:
 //   • tanlangan ilovalar (opaque token'lar) FAQAT shu qurilmada, App Group
 //     UserDefaults'da saqlanadi — serverga hech qachon yuborilmaydi;
-//   • backend'dan faqat ilova-nomisiz siyosat keladi: "hammasini bloklash"
-//     va vaqt oynalari (ota-ona jadvali).
+//   • backend'dan faqat ilova-nomisiz siyosat keladi: "hammasini bloklash",
+//     vaqt oynalari (ota-ona jadvali) va tanlangan ilovalarga kunlik limit.
 // Cheklov holati har safar siyosat + joriy vaqtdan qayta hisoblanadi, shuning
 // uchun ilova va kengaytma bir xil natijaga keladi.
 //
@@ -49,6 +49,10 @@ enum ParvozShield {
   /// Vaqtinchalik ruxsat (ota-ona tasdiqlagan qo'shimcha vaqt) jadvali.
   static let unlockActivity = "parvoz.unlock"
   static let unlockLimitEvent = "parvoz.unlock.limit"
+  /// Kunlik limit: har kuni 00:00–23:59 jadvali va tanlangan ilovalardan
+  /// limit daqiqa foydalanilganda keladigan hodisa.
+  static let dailyActivity = "parvoz.daily"
+  static let dailyLimitEvent = "parvoz.daily.limit"
   /// Bloklash ekranidagi "vaqt so'rash" belgisi shuncha vaqt amal qiladi.
   static let pendingRequestTTL: TimeInterval = 30 * 60
 
@@ -58,6 +62,10 @@ enum ParvozShield {
   private static let unlockUntilKey = "screenTime.unlockUntil.v1"
   private static let pendingRequestKey = "screenTime.pendingUnlockRequest.v1"
   private static let languageKey = "screenTime.language.v1"
+  /// Kunlik limit tugagan belgisi shu paytgacha amal qiladi (limit tugagan
+  /// kundan keyingi yarim tun, Unix soniya). Mutlaq vaqt — vaqt mintaqasi
+  /// almashsa ham belgi yo'qolmaydi.
+  private static let dailyLimitReachedKey = "screenTime.dailyLimitReachedUntil.v1"
   private static let store = ManagedSettingsStore(named: ManagedSettingsStore.Name("parvoz"))
   private static let log = Logger(subsystem: "uz.parvoz.growth", category: "ParvozShield")
 
@@ -99,6 +107,9 @@ enum ParvozShield {
   static func applyExtras(_ extras: ParvozShieldExtras) {
     store.webContent.blockedByFilter = extras.blockAdultWebsites ? .auto() : nil
     store.application.denyAppInstallation = extras.denyAppInstallation ? true : nil
+    // Jadval va kunlik limit soatga tayanadi — bola sana/vaqtni qo'lda
+    // surib cheklovni aylanib o'tmasin ("Avtomatik" doim yoqiq).
+    store.dateAndTime.requireAutomaticDateAndTime = true
   }
 
   // MARK: Vaqtinchalik ruxsat
@@ -137,6 +148,31 @@ enum ParvozShield {
     return now.timeIntervalSince1970 - markedAt < pendingRequestTTL
   }
 
+  // MARK: Kunlik limit
+
+  static func isDailyLimitReached(now: Date = Date()) -> Bool {
+    let until = UserDefaults(suiteName: appGroupId)?.double(forKey: dailyLimitReachedKey) ?? 0
+    return now.timeIntervalSince1970 < until
+  }
+
+  /// `true` — limit tugadi, belgi keyingi yarim tungacha amal qiladi;
+  /// `false` — belgi o'chiriladi (ota-ona limitni o'zgartirdi/olib tashladi).
+  static func setDailyLimitReached(
+    _ isReached: Bool,
+    now: Date = Date(),
+    calendar: Calendar = .autoupdatingCurrent
+  ) {
+    let defaults = UserDefaults(suiteName: appGroupId)
+    guard
+      isReached,
+      let until = calendar.date(byAdding: .day, value: 1, to: calendar.startOfDay(for: now))
+    else {
+      defaults?.removeObject(forKey: dailyLimitReachedKey)
+      return
+    }
+    defaults?.set(until.timeIntervalSince1970, forKey: dailyLimitReachedKey)
+  }
+
   // MARK: Til (bloklash ekrani va eslatma matnlari uchun)
 
   static func language() -> ParvozShieldLanguage {
@@ -151,7 +187,7 @@ enum ParvozShield {
   /// Uzish (unpair) paytida — token'lar, siyosat va barcha cheklovlar o'chadi.
   static func reset() {
     let defaults = UserDefaults(suiteName: appGroupId)
-    for key in [tokensKey, policyKey, extrasKey, unlockUntilKey, pendingRequestKey] {
+    for key in [tokensKey, policyKey, extrasKey, unlockUntilKey, pendingRequestKey, dailyLimitReachedKey] {
       defaults?.removeObject(forKey: key)
     }
     store.clearAllSettings()
@@ -177,7 +213,18 @@ enum ParvozShield {
   ) -> Bool {
     !isUnlocked(now: now)
       && !loadTokens().isEmpty
-      && loadPolicy().isBlocking(at: now, started: started, ended: ended)
+      && isPolicyBlocking(now: now, started: started, ended: ended)
+  }
+
+  /// Jadval/"hammasini bloklash" yoki bugungi kunlik limit tugagan.
+  private static func isPolicyBlocking(
+    now: Date,
+    started: ParvozShieldPolicy.WindowKey?,
+    ended: ParvozShieldPolicy.WindowKey?
+  ) -> Bool {
+    let policy = loadPolicy()
+    if policy.dailyLimitMinutes != nil, isDailyLimitReached(now: now) { return true }
+    return policy.isBlocking(at: now, started: started, ended: ended)
   }
 
   /// Siyosat va tanlov bo'yicha shield'ni yoqadi yoki o'chiradi.
@@ -193,7 +240,7 @@ enum ParvozShield {
     guard
       !isUnlocked(now: now),
       !tokens.isEmpty,
-      loadPolicy().isBlocking(at: now, started: started, ended: ended)
+      isPolicyBlocking(now: now, started: started, ended: ended)
     else {
       clearShield()
       return false
@@ -278,8 +325,11 @@ struct ParvozShieldPolicy: Codable, Equatable {
 
   var blockAll: Bool
   var windows: [Window]
+  /// Tanlangan ilovalarga kunlik limit (daqiqa); `nil` — limit yo'q.
+  /// Optional — eski saqlangan siyosat ham o'qiladi.
+  var dailyLimitMinutes: Int?
 
-  static let none = ParvozShieldPolicy(blockAll: false, windows: [])
+  static let none = ParvozShieldPolicy(blockAll: false, windows: [], dailyLimitMinutes: nil)
 
   func isBlocking(
     at date: Date,

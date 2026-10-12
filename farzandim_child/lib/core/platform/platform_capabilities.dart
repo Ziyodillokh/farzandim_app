@@ -9,6 +9,8 @@
 //
 // Apple Family Controls ruxsati shartlari (2026-09, uz.parvoz.growth):
 //   1) nazorat Apple Family Sharing orqali (AuthorizationCenter, .child);
+//      2026-10: Android ota-onalar oila guruhini ocha olmagani uchun standart
+//      rejim .individual (Face ID/parol), .child — ixtiyoriy kuchli himoya;
 //   2) ilovalardan foydalanish ma'lumoti qurilmadan CHIQMAYDI —
 //      iOS'da ilovalar ro'yxati / usage statistikasi serverga YUBORILMAYDI.
 //

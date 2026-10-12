@@ -2,9 +2,10 @@
 // ScreenTimeScreen — iOS "Ekran vaqti" (Apple Family Controls)
 // ─────────────────────────────────────────────────────────────────────
 //
-// 1) Ota-ona tasdig'i — AuthorizationCenter(.child): ota-ona Apple ID bilan,
-//    Family Sharing orqali (Apple sharti). Tasdiqdan keyin ilovani ota-ona
-//    ruxsatisiz o'chirib bo'lmaydi.
+// 1) Himoyani yoqish — standart: AuthorizationCenter(.individual), Face ID
+//    yoki telefon paroli bilan (Oila guruhi kerak emas). Ixtiyoriy kuchli
+//    himoya: (.child) — Family Sharing, ota-ona Apple ID; shunda ruxsatni
+//    ham, ilovani ham ota-ona ruxsatisiz o'chirib bo'lmaydi.
 // 2) Cheklanadigan ilovalar — FamilyActivityPicker, ota-ona PIN'i bilan.
 //    Tanlov faqat qurilmada (App Group), serverga yuborilmaydi.
 // 3) Holat — jadval/"hammasini bloklash" bo'yicha cheklov hozir faolmi,
@@ -87,8 +88,10 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
     }
   }
 
-  Future<void> _requestAuthorization() => _run(() async {
-        await ref.read(screenTimeChannelProvider).requestAuthorization();
+  Future<void> _requestAuthorization({bool strict = false}) => _run(() async {
+        await ref
+            .read(screenTimeChannelProvider)
+            .requestAuthorization(strict: strict);
         // Ruxsatdan keyin jadvallar ro'yxatdan o'tkazilsin.
         unawaited(ref.read(restrictionsSyncServiceProvider).sync());
       });
@@ -176,10 +179,20 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
               : null,
           action: status.isAuthorized
               ? null
-              : _ActionButton(
-                  label: 'screenTime.authButton'.tr(),
-                  isBusy: _busy,
-                  onTap: _requestAuthorization,
+              : Column(
+                  children: [
+                    _ActionButton(
+                      label: 'screenTime.authButton'.tr(),
+                      isBusy: _busy,
+                      onTap: _requestAuthorization,
+                    ),
+                    const SizedBox(height: 6),
+                    _StrictModeLink(
+                      onTap: _busy
+                          ? null
+                          : () => _requestAuthorization(strict: true),
+                    ),
+                  ],
                 ),
           note: status.authorization == ScreenTimeAuthorization.denied
               ? 'screenTime.authDenied'.tr()
@@ -215,7 +228,7 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
                 : 'screenTime.statusFree'.tr(),
             isOn: status.isBlocking,
           ),
-          summary: _unlockSummary(status.unlockedUntil),
+          summary: _statusSummary(status),
         ),
         const SizedBox(height: 12),
         _StepCard(
@@ -250,10 +263,17 @@ class _ScreenTimeScreenState extends ConsumerState<ScreenTimeScreen>
   }
 }
 
-String? _unlockSummary(DateTime? until) {
-  if (until == null) return null;
-  final time = DateFormat.Hm().format(until);
-  return 'screenTime.unlockedUntil'.tr(namedArgs: {'time': time});
+String? _statusSummary(ScreenTimeStatus status) {
+  final lines = [
+    if (status.unlockedUntil case final until?)
+      'screenTime.unlockedUntil'
+          .tr(namedArgs: {'time': DateFormat.Hm().format(until)}),
+    if (status.dailyLimitMinutes case final minutes?)
+      status.isDailyLimitReached
+          ? 'screenTime.dailyLimitReached'.tr()
+          : 'screenTime.dailyLimit'.tr(namedArgs: {'minutes': '$minutes'}),
+  ];
+  return lines.isEmpty ? null : lines.join('\n');
 }
 
 TextStyle _body(double size, {Color color = PermColors.dim}) =>
@@ -322,6 +342,39 @@ class _StepCard extends StatelessWidget {
             Text(note, style: _body(12.5)),
           ],
         ],
+      ),
+    );
+  }
+}
+
+/// Family Sharing bor oilalar uchun ixtiyoriy kuchli himoya (`.child`).
+class _StrictModeLink extends StatelessWidget {
+  const _StrictModeLink({required this.onTap});
+
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'screenTime.strictLink'.tr(),
+              style: GoogleFonts.poppins(
+                fontSize: 13.5,
+                fontWeight: FontWeight.w600,
+                color: PermColors.blueLight,
+              ),
+            ),
+            const SizedBox(height: 2),
+            Text('screenTime.strictHint'.tr(), style: _body(12.5)),
+          ],
+        ),
       ),
     );
   }

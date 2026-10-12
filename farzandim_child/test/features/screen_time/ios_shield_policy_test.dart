@@ -1,3 +1,5 @@
+import 'package:farzandim_child/features/app_restrictions/data/repositories/backend_app_limit_repository.dart';
+import 'package:farzandim_child/features/schedules/data/models/schedule.dart';
 import 'package:farzandim_child/features/schedules/data/repositories/backend_schedule_repository.dart';
 import 'package:farzandim_child/features/screen_time/domain/ios_shield_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -110,5 +112,64 @@ void main() {
         expect(IosShieldPolicy.parseHhMm(value), isNull, reason: value);
       }
     });
+  });
+
+  group('virtual tanlov elementi limiti', () {
+    AppLimit limit(int ms, {bool isActive = true}) => AppLimit(
+          id: 'l',
+          packageName: IosShieldPolicy.selectionPackage,
+          dailyLimitMs: ms,
+          isActive: isActive,
+        );
+
+    IosShieldPolicy policy(List<AppLimit> limits) => IosShieldPolicy.fromBackend(
+          schedules: const [],
+          blockAll: false,
+          limits: limits,
+        );
+
+    test('limit daqiqaga yuqoriga yaxlitlanadi', () {
+      expect(policy([limit(90001)]).dailyLimitMinutes, 2);
+    });
+
+    test('nofaol limit hisobga olinmaydi', () {
+      final result = policy([limit(0, isActive: false)]);
+
+      expect(result.blockAll, isFalse);
+      expect(result.dailyLimitMinutes, isNull);
+    });
+
+    test('limit bir kundan oshmaydi', () {
+      expect(policy([limit(25 * 3600000)]).dailyLimitMinutes, 1439);
+    });
+
+    test('limit yo\'q bo\'lsa toMap\'da kalit bo\'lmaydi', () {
+      expect(policy(const []).toMap().containsKey('dailyLimitMinutes'), isFalse);
+    });
+  });
+
+  test('yakshanba va yarim tundan o\'tuvchi rejim to\'g\'ri oynaga aylanadi', () {
+    final routine = Schedule.fromBackendJson({
+      'id': 'r',
+      'title': 'Uxlash',
+      'type': 'SLEEP',
+      'startHour': 22,
+      'startMinute': 0,
+      'endHour': 7,
+      'endMinute': 0,
+      'weekdays': [6, 7],
+      'isActive': true,
+      'blockedApps': [IosShieldPolicy.selectionPackage],
+    });
+
+    final policy = IosShieldPolicy.fromBackend(
+      schedules: const [],
+      blockAll: false,
+      routines: [routine],
+    );
+
+    expect(policy.windows, const [
+      ShieldWindow(startMinute: 22 * 60, endMinute: 7 * 60, weekdays: [6, 7]),
+    ]);
   });
 }

@@ -24,6 +24,8 @@ class ScreenTimeStatus {
     this.blockAdultWebsites = false,
     this.denyAppInstallation = false,
     this.unlockedUntil,
+    this.dailyLimitMinutes,
+    this.isDailyLimitReached = false,
   });
 
   factory ScreenTimeStatus.fromMap(Map<Object?, Object?> map) {
@@ -43,6 +45,8 @@ class ScreenTimeStatus {
       unlockedUntil: unlockedUntilMs == null
           ? null
           : DateTime.fromMillisecondsSinceEpoch(unlockedUntilMs),
+      dailyLimitMinutes: map['dailyLimitMinutes'] as int?,
+      isDailyLimitReached: map['dailyLimitReached'] as bool? ?? false,
     );
   }
 
@@ -58,6 +62,12 @@ class ScreenTimeStatus {
 
   /// Ota-ona bergan qo'shimcha vaqt shu paytgacha (cheklov ochiq).
   final DateTime? unlockedUntil;
+
+  /// Ota-ona Android'dan qo'ygan kunlik limit (daqiqa); `null` — yo'q.
+  final int? dailyLimitMinutes;
+
+  /// Bugungi kunlik limit tugagan.
+  final bool isDailyLimitReached;
 
   bool get isAuthorized => authorization == ScreenTimeAuthorization.approved;
   bool get hasSelection => apps + categories + webDomains > 0;
@@ -84,9 +94,13 @@ class ScreenTimeChannel {
   Future<ScreenTimeStatus> status() async =>
       ScreenTimeStatus.fromMap(await _invokeMap('status'));
 
-  /// Ota-ona Apple ID bilan tasdiqlaydi (Family Sharing, `.child`).
-  Future<ScreenTimeStatus> requestAuthorization() async =>
-      ScreenTimeStatus.fromMap(await _invokeMap('requestAuthorization'));
+  /// [strict] = false — Face ID/parol bilan (`.individual`, Oila guruhi
+  /// kerak emas). [strict] = true — Family Sharing, ota-ona Apple ID
+  /// (`.child`): bola ruxsatni ham, ilovani ham o'chira olmaydi.
+  Future<ScreenTimeStatus> requestAuthorization({bool strict = false}) async =>
+      ScreenTimeStatus.fromMap(await _invokeMap('requestAuthorization', {
+        'mode': strict ? 'child' : 'individual',
+      }));
 
   /// FamilyActivityPicker. `null` — foydalanuvchi bekor qildi.
   Future<ScreenTimeStatus?> pickApps({

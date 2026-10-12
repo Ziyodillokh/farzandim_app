@@ -19,6 +19,7 @@ import 'dart:math' as math;
 import 'package:easy_localization/easy_localization.dart';
 import 'package:farzandim_child/core/platform/platform_capabilities.dart';
 import 'package:farzandim_child/features/location/data/services/location_service.dart';
+import 'package:farzandim_child/features/screen_time/data/ios_restrictions_sync_service.dart';
 import 'package:farzandim_child/features/notifications/data/repositories/backend_fcm_repository.dart';
 import 'package:farzandim_child/firebase_options.dart';
 import 'package:firebase_core/firebase_core.dart';
@@ -34,10 +35,22 @@ String _defaultChannelDesc = 'notifications.channel.desc'.tr();
 
 /// Data-only FCM background handler — app fon/yopiq holatda keladi.
 /// 'location_wake': ota-ona xaritani ochdi, bitta yangi fix yuboriladi.
+/// 'restrictions_sync' (iOS): ota-ona blok/limit/rejimni o'zgartirdi —
+/// Family Controls siyosati darhol yangilanadi (Android'da buni doimiy
+/// fon servisi qiladi).
 /// Alohida isolate'da ishlaydi — Firebase init majburiy. Best-effort:
 /// xato bo'lsa jim chiqadi, crash yo'q.
 @pragma('vm:entry-point')
 Future<void> fcmBackgroundHandler(RemoteMessage message) async {
+  if (message.data['type'] == 'restrictions_sync' &&
+      PlatformCapabilities.isIOS) {
+    try {
+      await IosRestrictionsSyncService.syncInBackground();
+    } catch (e) {
+      debugPrint('FCM background restrictions_sync xato: $e');
+    }
+    return;
+  }
   if (message.data['type'] != 'location_wake') return;
   try {
     await Firebase.initializeApp(

@@ -7,18 +7,20 @@ import SwiftUI
 ///
 /// Metodlar:
 ///   • `status` → { authorization, blocking, apps, categories, webDomains }
-///   • `requestAuthorization` → ota-ona Apple ID bilan tasdiqlaydi (.child)
+///   • `requestAuthorization` {mode} → "individual" (Face ID/parol, standart)
+///     yoki "child" (kuchli himoya: Family Sharing, ota-ona Apple ID)
 ///   • `pickApps` {title, cancel, done} → FamilyActivityPicker; null = bekor
-///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}], language}
+///   • `applyPolicy` {blockAll, windows:[{start,end,weekdays}], dailyLimitMinutes?, language}
 ///   • `grantUnlock` {untilMs, minutes} / `clearUnlock` → ota-ona bergan vaqt
 ///   • `setExtras` {blockAdultWebsites, denyAppInstallation}
 ///   • `consumePendingUnlockRequest` → bloklash ekranida vaqt so'ralganmi
 ///   • `reset` → uzish paytida hammasini tozalash
 final class ScreenTimePlugin: NSObject, FlutterPlugin {
   private static let channelName = "uz.parvoz.growth/screen_time"
-  /// DeviceActivityCenter bir vaqtda kuzatadigan jadvallar chegarasi
-  /// (yarim tun jadvali uchun bitta joy qoldiriladi).
+  /// DeviceActivityCenter bir vaqtda kuzatadigan jadvallar chegarasi.
   private static let maxSchedules = 20
+  /// Oyna bo'lmagan jadvallar: yarim tun, qo'shimcha vaqt, kunlik limit.
+  private static let reservedSchedules = 3
   /// Picker qayta ochilganda oldingi tanlov ko'rinsin (faqat ilova o'qiydi).
   private static let selectionKey = "screenTime.pickerSelection.v1"
 
@@ -34,7 +36,8 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     case "status":
       result(Self.status())
     case "requestAuthorization":
-      requestAuthorization(result)
+      let mode = (call.arguments as? [String: Any])?["mode"] as? String
+      requestAuthorization(member: mode == "child" ? .child : .individual, result: result)
     case "pickApps":
       pickApps(call.arguments as? [String: Any] ?? [:], result: result)
     case "applyPolicy":
@@ -54,6 +57,7 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
         $0.rawValue.hasPrefix(ParvozShieldPolicy.activityPrefix)
       })
       ParvozShield.reset()
+      // `reset` hamma "parvoz." jadvallarini to'xtatdi (kunlik limit ham).
       UserDefaults(suiteName: ParvozShield.appGroupId)?.removeObject(forKey: Self.selectionKey)
       result(nil)
     default:
@@ -85,6 +89,10 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     if ParvozShield.isUnlocked(), let until = ParvozShield.unlockUntil() {
       status["unlockedUntilMs"] = Int(until.timeIntervalSince1970 * 1000)
     }
+    if let limit = ParvozShield.loadPolicy().dailyLimitMinutes {
+      status["dailyLimitMinutes"] = limit
+      status["dailyLimitReached"] = ParvozShield.isDailyLimitReached()
+    }
     return status
   }
 
@@ -98,10 +106,16 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
 
   // MARK: Ruxsat
 
-  private func requestAuthorization(_ result: @escaping FlutterResult) {
+  /// `.individual` — telefon egasi Face ID/parol bilan tasdiqlaydi (Oila
+  /// guruhi kerak emas, lekin Sozlamalardan bekor qilinishi mumkin).
+  /// `.child` — Family Sharing'dagi bola akkaunti, ota-ona Apple ID bilan.
+  private func requestAuthorization(
+    member: FamilyControlsMember,
+    result: @escaping FlutterResult
+  ) {
     Task { @MainActor in
       do {
-        try await AuthorizationCenter.shared.requestAuthorization(for: .child)
+        try await AuthorizationCenter.shared.requestAuthorization(for: member)
         result(Self.status())
       } catch let error as FamilyControlsError {
         result(FlutterError(
@@ -166,6 +180,7 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
         result(nil)
         return
       }
+      let previousTokens = ParvozShield.loadTokens()
       do {
         try Self.savePickerSelection(picked)
         try ParvozShield.saveTokens(ParvozShieldTokens(
@@ -173,6 +188,12 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
           categories: picked.categoryTokens,
           webDomains: picked.webDomainTokens
         ))
+        // Kunlik limit hodisasi token'lar bilan ro'yxatdan o'tadi — tanlov
+        // o'zgargan bo'lsagina qayta boshlanadi.
+        _ = Self.syncDailyLimit(
+          ParvozShield.loadPolicy().dailyLimitMinutes,
+          isRestartNeeded: ParvozShield.loadTokens() != previousTokens
+        )
         ParvozShield.enforce()
         result(Self.status())
       } catch {
@@ -221,11 +242,20 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
     }
     var policy = requested
     var errors: [String] = []
+    let previousLimit = ParvozShield.loadPolicy().dailyLimitMinutes
+    if previousLimit != requested.dailyLimitMinutes {
+      // Ota-ona limitni o'zgartirdi/olib tashladi — bugungi "tugadi" belgisi bekor.
+      ParvozShield.setDailyLimitReached(false)
+    }
     if Self.isAuthorized {
       // Doimiy himoya har sync'da qayta qo'llanadi (tizim tiklangan bo'lsa ham).
       ParvozShield.applyExtras(ParvozShield.loadExtras())
       let sync = Self.syncSchedules(requested.windows)
       errors = sync.errors
+      errors += Self.syncDailyLimit(
+        requested.dailyLimitMinutes,
+        isRestartNeeded: previousLimit != requested.dailyLimitMinutes
+      )
       // Jadvali ro'yxatdan o'tmagan oyna saqlanmaydi: aks holda u ilova
       // tomonida yoqilib, kengaytma uni hech qachon o'chirmas edi.
       policy.windows = requested.windows.filter { sync.registered.contains($0.key.activityName) }
@@ -263,7 +293,64 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       else { return nil }
       return window
     }
-    return ParvozShieldPolicy(blockAll: blockAll, windows: windows)
+    var dailyLimit: Int?
+    if let minutes = args["dailyLimitMinutes"] as? Int, (1..<1440).contains(minutes) {
+      dailyLimit = minutes
+    }
+    return ParvozShieldPolicy(blockAll: blockAll, windows: windows, dailyLimitMinutes: dailyLimit)
+  }
+
+  // MARK: Kunlik limit
+
+  /// Kunlik limit jadvali: har kuni 00:00–23:59, tanlangan ilovalardan
+  /// [minutes] daqiqa foydalanilganda kengaytma cheklovni yoqadi. Jadval
+  /// faqat limit/tanlov o'zgarganda qayta boshlanadi. iOS 17.4+ da bugungi
+  /// oldingi foydalanish ham hisoblanadi; eskisida qayta boshlash hisobni
+  /// noldan boshlaydi (shuning uchun keraksiz qayta boshlanmaydi).
+  private static func syncDailyLimit(_ minutes: Int?, isRestartNeeded: Bool) -> [String] {
+    let center = DeviceActivityCenter()
+    let activity = DeviceActivityName(ParvozShield.dailyActivity)
+    let tokens = ParvozShield.loadTokens()
+    guard let minutes, !tokens.isEmpty else {
+      center.stopMonitoring([activity])
+      return []
+    }
+    let isMonitoring = center.activities.contains(activity)
+    if isMonitoring && !isRestartNeeded { return [] }
+    center.stopMonitoring([activity])
+    let schedule = DeviceActivitySchedule(
+      intervalStart: DateComponents(hour: 0, minute: 0, second: 0),
+      intervalEnd: DateComponents(hour: 23, minute: 59, second: 59),
+      repeats: true
+    )
+    let threshold = DateComponents(minute: minutes)
+    let event: DeviceActivityEvent
+    if #available(iOS 17.4, *) {
+      event = DeviceActivityEvent(
+        applications: tokens.applications,
+        categories: tokens.categories,
+        webDomains: tokens.webDomains,
+        threshold: threshold,
+        includesPastActivity: true
+      )
+    } else {
+      event = DeviceActivityEvent(
+        applications: tokens.applications,
+        categories: tokens.categories,
+        webDomains: tokens.webDomains,
+        threshold: threshold
+      )
+    }
+    do {
+      try center.startMonitoring(
+        activity,
+        during: schedule,
+        events: [DeviceActivityEvent.Name(ParvozShield.dailyLimitEvent): event]
+      )
+      return []
+    } catch {
+      return ["\(ParvozShield.dailyActivity): \(error.localizedDescription)"]
+    }
   }
 
   /// Jadval oynalari va yarim tun jadvali (vaqtinchalik ruxsat jadvali emas).
@@ -395,7 +482,7 @@ final class ScreenTimePlugin: NSObject, FlutterPlugin {
       keys.append(window.key)
     }
     var errors: [String] = []
-    let windowSlots = maxSchedules - 1
+    let windowSlots = maxSchedules - reservedSchedules
     if keys.count > windowSlots {
       errors.append("limit: \(keys.count - windowSlots) ta oyna kuzatilmaydi")
       keys = Array(keys.prefix(windowSlots))
