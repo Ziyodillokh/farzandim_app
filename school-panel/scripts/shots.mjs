@@ -60,6 +60,7 @@ async function detailQuery(page, path) {
     '/attendance/class': 'id=cls-7a',
     '/care/requests/view': `id=${ids.care}`,
     '/reports/print': 'month=2026-09',
+    '/assessments/view': 'id=tpl-logic',
   };
   return map[path];
 }

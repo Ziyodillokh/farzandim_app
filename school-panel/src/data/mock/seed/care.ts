@@ -58,6 +58,27 @@ function classBias(classId: string, topic: CareTopic): number {
   return (special[classId]?.[topic] ?? 0) + (unitHash(classId, topic) - 0.5) * 0.4;
 }
 
+/**
+ * Bitta o'quvchining javoblari (seed va jonli simulyatsiya uchun yagona model):
+ * sinf "foni" + shovqin, 1..5 oralig'ida; teskari savollar aylantirib yoziladi.
+ * `noise` — [0,1) manba (seed'da ketma-ket RNG, simulyatsiyada (so'rovnoma, o'quvchi) xeshi).
+ */
+export function generateAnswers(
+  questions: readonly CareQuestion[],
+  cls: Pick<SchoolClass, 'id' | 'grade'>,
+  noise: () => number,
+): Record<string, number> {
+  const group = ageGroupOf(cls.grade);
+  const answers: Record<string, number> = {};
+  for (const question of questions) {
+    if (!question.ageGroups.includes(group)) continue;
+    const base = 3.9 + classBias(cls.id, question.topic) + (noise() - 0.5) * 1.6;
+    const score = Math.min(5, Math.max(1, Math.round(base)));
+    answers[question.id] = question.reverse ? 6 - score : score;
+  }
+  return answers;
+}
+
 export function buildSurveys(baseIso: string, classes: SchoolClass[], students: Student[], questions: CareQuestion[], seed: number) {
   const rng = new Random(seed + 17);
   const thisWeek = weekStart(baseIso);
@@ -86,14 +107,7 @@ export function buildSurveys(baseIso: string, classes: SchoolClass[], students: 
       if (!rng.bool(participation)) continue;
       const cls = classById.get(student.classId);
       if (!cls) continue;
-      const group = ageGroupOf(cls.grade);
-      const answers: Record<string, number> = {};
-      for (const question of chosen) {
-        if (!question.ageGroups.includes(group)) continue;
-        const base = 3.9 + classBias(cls.id, question.topic) + (rng.float() - 0.5) * 1.6;
-        const score = Math.min(5, Math.max(1, Math.round(base)));
-        answers[question.id] = question.reverse ? 6 - score : score;
-      }
+      const answers = generateAnswers(chosen, cls, () => rng.float());
       responses.push({
         id: `rsp-${id}-${student.id}`,
         surveyId: id,

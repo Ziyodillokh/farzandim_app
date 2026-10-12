@@ -47,3 +47,6 @@ export type Staff = {
   /** Chizilgan portret kaliti (`f-07`, `m-03`) — `public/avatars/`. */
   portrait?: string;
 };
+
+/** O'quvchi kartasidagi xodim eslatmasi (auditga matn yozilmaydi). */
+export type StudentNote = { id: Id; studentId: Id; classId: Id; at: IsoDateTime; byStaffId: Id; text: string };

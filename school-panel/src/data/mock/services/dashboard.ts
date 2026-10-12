@@ -1,20 +1,42 @@
 import { roleHas } from '@/auth/permissions';
-import type { CareRequestStatus, CareTopicTag, CareUrgency, DeviceModeStatus, IsoDate, ReminderKind, RoleKey } from '@/data/contracts';
-import { percent } from '@/lib/utils';
+import type {
+  CareRequestStatus,
+  CareTopicTag,
+  CareUrgency,
+  DevelopmentSummary,
+  DeviceModeStatus,
+  IsoDate,
+  OpenRequests,
+  ReminderKind,
+  RoleKey,
+  SchoolClass,
+} from '@/data/contracts';
 import { addDays, isSchoolDay } from '../calendar';
 import { clockMinute, clockNow, clockToday } from '../clock';
-import { allowedClassIds, currentActor, inScope, latency } from '../context';
+import { type Actor, allowedClassIds, currentActor, inScope, latency } from '../context';
 import { getTables } from '../db';
 import { compareClasses, studentName } from '../lookups';
+import { activeSafetySignals } from '../notify';
+import { type ParentLinkSummary, parentLinkSummary } from '../parent-links';
 import { classModeState } from '../school-mode-state';
 import type { Tables } from '../tables';
 import { attendedRate, resolveRecord, type DayCounts } from './attendance';
 import { computeCareAggregate, defaultSurvey } from './care-aggregate';
 import { nextOccurrence } from './comms-reminders';
 import { audienceTouchesScope, localIso } from './comms-shared';
+import { developmentSummary } from './development-summary';
+import { openRequests } from './notifications';
 import { exceptionStatus } from './school-mode-model';
 
-export type DashboardAlertKind = 'EMERGENCY' | 'EARLY_EXIT' | 'VERIFICATION' | 'CARE_URGENT' | 'CARE_NEW' | 'ABSENT' | 'NO_PERMISSION';
+export type DashboardAlertKind =
+  | 'EMERGENCY'
+  | 'SAFETY_SIGNAL'
+  | 'EARLY_EXIT'
+  | 'VERIFICATION'
+  | 'CARE_URGENT'
+  | 'CARE_NEW'
+  | 'ABSENT'
+  | 'NO_PERMISSION';
 export type DashboardAlert = { kind: DashboardAlertKind; count: number; href: string; tone: 'destructive' | 'warning' | 'info' };
 
 export type ClassToday = { classId: string; className: string; rate: number; arrived: number; total: number; late: number; absent: number };
@@ -26,7 +48,11 @@ export type DashboardOverview = {
   actorName: string;
   /** Doiradagi sinflardan kamida bittasi uchun bugun o'quv kunimi. */
   schoolDay: boolean;
-  attendance: { counts: DayCounts; rate: number; arrived: number } | null;
+  /**
+   * Bugungi davomat: `rate` — kelganlar / holati aniqlanganlar (`attendedRate`); hali
+   * hech kim aniqlanmagan bo'lsa (decided = 0) — null ("—").
+   */
+  attendance: { counts: DayCounts; rate: number | null; arrived: number; decided: number } | null;
   classes: ClassToday[] | null;
   schoolMode: {
     restrictedClasses: number;
@@ -35,7 +61,12 @@ export type DashboardOverview = {
     devices: Record<DeviceModeStatus, number>;
     activeExceptions: number;
   } | null;
-  parents: { linkedStudents: number; totalStudents: number; rate: number; invited: number } | null;
+  /** Ota-onalar ulanishi: o'quvchilar ulushi va ota-onalar ulushi (`parent-links.ts`). */
+  parents: ParentLinkSummary | null;
+  /** Rolga mos ochiq so'rovlar (erta ketish, to'lov tekshiruvi) — `attendance.view`. */
+  openRequests: OpenRequests | null;
+  /** Rivojlanish xulosasi (psixologik testlar) — rolga mos, k-anonim. */
+  development: DevelopmentSummary | null;
   alerts: DashboardAlert[];
   upcoming: Array<{ id: string; kind: ReminderKind; title: string; sendAt: string }> | null;
   /** Umumlashgan Bola ovozi (k-anonim) — direktor, administrator, psixolog. */
@@ -136,7 +167,7 @@ function careInbox(tables: Tables, today: IsoDate): DashboardOverview['careInbox
 
 /** /care sahifasi bilan bir xil hisob (computeCareAggregate) — raqamlar mos tushadi. */
 function careAggregate(tables: Tables, today: IsoDate): DashboardOverview['care'] {
-  const survey = defaultSurvey(tables.careSurveys);
+  const survey = defaultSurvey(tables);
   if (!survey) return null;
   const agg = computeCareAggregate(tables, survey, 'SCHOOL', today);
   return { participation: agg.participationRate, wellbeing: agg.overall.WELLBEING ?? null, requestsThisWeek: agg.requestsThisWeek };
@@ -156,77 +187,113 @@ function learningSummary(tables: Tables, classIds: Set<string>, totalStudents: n
   };
 }
 
+type Can = (p: Parameters<typeof roleHas>[1]) => boolean;
+
+type SchoolModeInput = {
+  tables: Tables;
+  actor: Actor;
+  classes: readonly SchoolClass[];
+  studentIds: ReadonlySet<string>;
+  today: IsoDate;
+  minute: number;
+  nowMs: number;
+};
+
+function schoolModeSummary({ tables, actor, classes, studentIds, today, minute, nowMs }: SchoolModeInput): NonNullable<DashboardOverview['schoolMode']> {
+  const states = classes.map((c) => classModeState(tables, c, today, minute));
+  const devices: Record<DeviceModeStatus, number> = { APPLIED: 0, NO_PERMISSION: 0, NO_PHONE: 0, OFFLINE: 0 };
+  for (const d of tables.devices) if (studentIds.has(d.studentId)) devices[d.status] += 1;
+  return {
+    restrictedClasses: states.filter((s) => s.restricted).length,
+    activeClasses: states.filter((s) => s.kind === 'LESSON' || s.kind === 'BREAK').length,
+    emergency: tables.emergency.active,
+    devices,
+    activeExceptions: inScope(actor, tables.exceptions).filter((e) => exceptionStatus(e, nowMs) === 'ACTIVE').length,
+  };
+}
+
+/** Xavfsizlik signali havolasi: direktor — /care (umumlashgan), navbatchi — /attendance. */
+function safetyHref(can: Can): string {
+  if (can('care.aggregate')) return '/care';
+  return can('attendance.view') ? '/attendance' : '/dashboard';
+}
+
+type AlertInput = {
+  tables: Tables;
+  actor: Actor;
+  can: Can;
+  nowMs: number;
+  absent: number | null;
+  schoolMode: DashboardOverview['schoolMode'];
+};
+
+function buildAlerts({ tables, actor, can, nowMs, absent, schoolMode }: AlertInput): DashboardAlert[] {
+  const alerts: DashboardAlert[] = [];
+  const push = (kind: DashboardAlertKind, n: number, href: string, tone: DashboardAlert['tone']) => {
+    if (n > 0) alerts.push({ kind, count: n, href, tone });
+  };
+  if (schoolMode?.emergency) push('EMERGENCY', 1, '/school-mode', 'destructive');
+  // Faqat bildirishnoma qabul qiluvchi rollar (direktor, navbatchi) — ism/sinf/matnsiz.
+  push('SAFETY_SIGNAL', activeSafetySignals(tables, actor, nowMs), safetyHref(can), 'destructive');
+  if (can('care.individual')) {
+    const open = tables.careRequests.filter((r) => r.status !== 'RESOLVED');
+    push('CARE_URGENT', open.filter((r) => r.urgency === 'URGENT').length, '/care/requests', 'destructive');
+    push('CARE_NEW', open.filter((r) => r.status === 'NEW').length, '/care/requests', 'info');
+  }
+  if (can('attendance.earlyExit')) {
+    push('EARLY_EXIT', inScope(actor, tables.earlyExits).filter((e) => e.status === 'PENDING').length, '/attendance/early-exit', 'warning');
+  }
+  if (absent !== null) push('ABSENT', absent, '/attendance', 'warning');
+  if (can('payments.manage')) push('VERIFICATION', tables.verifications.filter((v) => v.status === 'OPEN').length, '/reminders/verifications', 'info');
+  if (schoolMode) push('NO_PERMISSION', schoolMode.devices.NO_PERMISSION, '/school-mode', 'info');
+  return alerts;
+}
+
+function upcomingReminders(tables: Tables, actor: Actor, now: Date): NonNullable<DashboardOverview['upcoming']> {
+  return tables.reminders
+    .filter((r) => r.active)
+    .filter((r) => audienceTouchesScope(actor, tables, r.audience))
+    .map((r) => ({ r, next: nextOccurrence(r, now) }))
+    .filter((x): x is { r: (typeof tables.reminders)[number]; next: Date } => x.next !== null)
+    .sort((a, b) => a.next.getTime() - b.next.getTime())
+    .slice(0, UPCOMING_LIMIT)
+    .map(({ r, next }) => ({ id: r.id, kind: r.kind, title: r.title, sendAt: localIso(next) }));
+}
+
+/** Bugungi davomat KPI: qiymat va chiziq bir xil asosda — kelganlar / aniqlanganlar. */
+function attendanceKpi(counts: DayCounts): NonNullable<DashboardOverview['attendance']> {
+  const decided = counts.total - counts.pending;
+  return {
+    counts,
+    rate: decided > 0 ? attendedRate(counts) : null,
+    arrived: counts.present + counts.late + counts.leftEarly,
+    decided,
+  };
+}
+
 export const dashboardService = {
   /** Rolga mos bosh sahifa: ruxsat bo'lmagan bo'lim `null` qaytadi. */
   async overview(): Promise<DashboardOverview> {
     await latency(80, 180);
     const actor = currentActor();
-    const can = (p: Parameters<typeof roleHas>[1]) => roleHas(actor.role, p);
+    const can: Can = (p) => roleHas(actor.role, p);
     const tables = getTables();
     const today = clockToday();
     const minute = clockMinute();
-    const nowMs = clockNow().getTime();
+    const now = clockNow();
+    const nowMs = now.getTime();
     const allowed = allowedClassIds(actor);
-    const classIds = new Set(tables.classes.filter((c) => !allowed || allowed.includes(c.id)).map((c) => c.id));
+    const inScopeClasses = tables.classes.filter((c) => !allowed || allowed.includes(c.id));
+    const classIds = new Set(inScopeClasses.map((c) => c.id));
     const students = tables.students.filter((s) => !s.archived && classIds.has(s.classId));
-    const studentIds = new Set(students.map((s) => s.id));
-    const inScopeClasses = tables.classes.filter((c) => classIds.has(c.id));
     const schoolDay = inScopeClasses.some((c) => {
       const shift = tables.shifts.find((s) => s.id === c.shiftId);
       return Boolean(shift && isSchoolDay(today, shift, tables.holidays));
     });
 
     const att = can('attendance.view') ? attendanceToday(tables, classIds, today) : null;
-
-    let schoolMode: DashboardOverview['schoolMode'] = null;
-    if (can('schoolMode.view')) {
-      const states = inScopeClasses.map((c) => classModeState(tables, c, today, minute));
-      const devices: Record<DeviceModeStatus, number> = { APPLIED: 0, NO_PERMISSION: 0, NO_PHONE: 0, OFFLINE: 0 };
-      for (const d of tables.devices) if (studentIds.has(d.studentId)) devices[d.status] += 1;
-      schoolMode = {
-        restrictedClasses: states.filter((s) => s.restricted).length,
-        activeClasses: states.filter((s) => s.kind === 'LESSON' || s.kind === 'BREAK').length,
-        emergency: tables.emergency.active,
-        devices,
-        activeExceptions: inScope(actor, tables.exceptions).filter((e) => exceptionStatus(e, nowMs) === 'ACTIVE').length,
-      };
-    }
-
-    let parents: DashboardOverview['parents'] = null;
-    if (can('students.view') && !can('care.individual')) {
-      const guardians = new Map(tables.guardians.map((g) => [g.id, g]));
-      const linkedStudents = students.filter((s) => s.guardianIds.some((g) => guardians.get(g)?.linkStatus === 'LINKED')).length;
-      const invited = new Set(students.flatMap((s) => s.guardianIds).filter((g) => guardians.get(g)?.linkStatus === 'INVITED')).size;
-      parents = { linkedStudents, totalStudents: students.length, rate: percent(linkedStudents, students.length), invited };
-    }
-
-    const alerts: DashboardAlert[] = [];
-    const push = (kind: DashboardAlertKind, n: number, href: string, tone: DashboardAlert['tone']) => {
-      if (n > 0) alerts.push({ kind, count: n, href, tone });
-    };
-    if (schoolMode?.emergency) push('EMERGENCY', 1, '/school-mode', 'destructive');
-    if (can('care.individual')) {
-      const open = tables.careRequests.filter((r) => r.status !== 'RESOLVED');
-      push('CARE_URGENT', open.filter((r) => r.urgency === 'URGENT').length, '/care/requests', 'destructive');
-      push('CARE_NEW', open.filter((r) => r.status === 'NEW').length, '/care/requests', 'info');
-    }
-    if (can('attendance.earlyExit')) {
-      push('EARLY_EXIT', inScope(actor, tables.earlyExits).filter((e) => e.status === 'PENDING').length, '/attendance/early-exit', 'warning');
-    }
-    if (att && can('attendance.view')) push('ABSENT', att.totals.absent, '/attendance', 'warning');
-    if (can('payments.manage')) push('VERIFICATION', tables.verifications.filter((v) => v.status === 'OPEN').length, '/reminders/verifications', 'info');
-    if (schoolMode) push('NO_PERMISSION', schoolMode.devices.NO_PERMISSION, '/school-mode', 'info');
-
-    const now = clockNow();
-    const upcoming = can('messages.view')
-      ? tables.reminders
-          .filter((r) => r.active)
-          .filter((r) => audienceTouchesScope(actor, tables, r.audience))
-          .map((r) => ({ r, next: nextOccurrence(r, now) }))
-          .filter((x): x is { r: (typeof tables.reminders)[number]; next: Date } => x.next !== null)
-          .sort((a, b) => a.next.getTime() - b.next.getTime())
-          .slice(0, UPCOMING_LIMIT)
-          .map(({ r, next }) => ({ id: r.id, kind: r.kind, title: r.title, sendAt: localIso(next) }))
+    const schoolMode = can('schoolMode.view')
+      ? schoolModeSummary({ tables, actor, classes: inScopeClasses, studentIds: new Set(students.map((s) => s.id)), today, minute, nowMs })
       : null;
 
     return {
@@ -235,14 +302,14 @@ export const dashboardService = {
       role: actor.role,
       actorName: actor.name,
       schoolDay,
-      attendance: att
-        ? { counts: att.totals, rate: attendedRate(att.totals), arrived: att.totals.present + att.totals.late + att.totals.leftEarly }
-        : null,
+      attendance: att ? attendanceKpi(att.totals) : null,
       classes: att ? att.rows : null,
       schoolMode,
-      parents,
-      alerts,
-      upcoming,
+      parents: can('students.view') && !can('care.individual') ? parentLinkSummary(tables, allowed) : null,
+      openRequests: can('attendance.view') ? openRequests(tables, actor) : null,
+      development: can('development.view') ? developmentSummary(tables, actor, today) : null,
+      alerts: buildAlerts({ tables, actor, can, nowMs, absent: att ? att.totals.absent : null, schoolMode }),
+      upcoming: can('messages.view') ? upcomingReminders(tables, actor, now) : null,
       care: can('care.aggregate') ? careAggregate(tables, today) : null,
       careInbox: can('care.individual') ? careInbox(tables, today) : null,
       learning: can('learning.view') ? learningSummary(tables, classIds, students.length, today) : null,

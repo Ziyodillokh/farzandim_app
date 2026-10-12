@@ -263,7 +263,12 @@ export const attendanceService = {
         existing.corrections.push({ at: clockNow().toISOString(), byStaffId: actor.staffId, from: existing.status, to: status, reason: reason.trim() });
         existing.status = status;
         if ((status === 'PRESENT' || status === 'LATE') && !existing.inAt) existing.inAt = time;
-        writeAudit(tables, actor, 'ATTENDANCE', 'attendance.correct', `${studentName(student)}: ${existing.corrections.at(-1)?.from} → ${status}`, existing.id);
+        writeAudit(tables, actor, 'ATTENDANCE', 'attendance.correct', `${studentName(student)}: ${existing.corrections.at(-1)?.from} → ${status}`, existing.id, null, null, {
+          name: studentName(student),
+          date: today,
+          from: existing.corrections.at(-1)?.from ?? '',
+          to: status,
+        });
         return existing;
       }
       const record: AttendanceRecord = {
@@ -282,7 +287,7 @@ export const attendanceService = {
       if (record.inAt) {
         tables.attendanceEvents.push({ id: `${today}:${studentId}:IN`, at: clockNow().toISOString(), studentId, classId: student.classId, kind: 'IN', source: 'MANUAL', late: status === 'LATE' });
       }
-      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.mark', `${studentName(student)} — ${status}`, record.id);
+      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.mark', `${studentName(student)} — ${status}`, record.id, null, null, { name: studentName(student), status });
       return record;
     });
   },
@@ -307,7 +312,12 @@ export const attendanceService = {
       record.corrections.push({ at: clockNow().toISOString(), byStaffId: actor.staffId, from: record.status, to: data.status, reason: data.reason });
       record.status = data.status;
       if (!stored) tables.attendance.push(record);
-      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.correct', `${studentName(student)} (${data.date}): ${record.corrections.at(-1)?.from} → ${data.status}`, record.id);
+      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.correct', `${studentName(student)} (${data.date}): ${record.corrections.at(-1)?.from} → ${data.status}`, record.id, null, null, {
+        name: studentName(student),
+        date: data.date,
+        from: record.corrections.at(-1)?.from ?? '',
+        to: data.status,
+      });
       return record;
     });
   },
@@ -385,7 +395,11 @@ export const attendanceService = {
       if (guardian) {
         tables.parentNotifications.push({ id: newId('ntf'), at: clockNow().toISOString(), studentId: student.id, guardianId: guardian.id, kind: 'ARRIVED', delivered: true });
       }
-      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.kiosk', `${studentName(student)} (${cls.name}) — ${status}`, `${today}:${student.id}`);
+      writeAudit(tables, actor, 'ATTENDANCE', 'attendance.kiosk', `${studentName(student)} (${cls.name}) — ${status}`, `${today}:${student.id}`, null, null, {
+        name: studentName(student),
+        className: cls.name,
+        status,
+      });
       return { student, className: cls.name, status, alreadyIn: false };
     });
   },
@@ -473,7 +487,7 @@ export const attendanceService = {
         decidedAt: null,
       };
       tables.earlyExits.push(request);
-      writeAudit(tables, actor, 'ATTENDANCE', 'earlyExit.create', `${studentName(student)} — ${data.time}`, request.id);
+      writeAudit(tables, actor, 'ATTENDANCE', 'earlyExit.create', `${studentName(student)} — ${data.time}`, request.id, null, null, { name: studentName(student), time: data.time });
       return request;
     });
   },
@@ -504,7 +518,10 @@ export const attendanceService = {
           tables.parentNotifications.push({ id: newId('ntf'), at: request.decidedAt, studentId: student.id, guardianId: guardian.id, kind: 'EARLY_EXIT', delivered: true });
         }
       }
-      writeAudit(tables, actor, 'ATTENDANCE', approve ? 'earlyExit.approve' : 'earlyExit.reject', `${student ? studentName(student) : request.studentId} — ${request.time}`, request.id);
+      writeAudit(tables, actor, 'ATTENDANCE', approve ? 'earlyExit.approve' : 'earlyExit.reject', `${student ? studentName(student) : request.studentId} — ${request.time}`, request.id, null, null, {
+        name: student ? studentName(student) : request.studentId,
+        time: request.time,
+      });
       return request;
     });
   },

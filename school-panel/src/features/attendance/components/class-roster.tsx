@@ -12,7 +12,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import type { AttendanceStatus } from '@/data/contracts';
 import type { StudentDayRow } from '@/data/mock/services/attendance';
 import { useI18n } from '@/i18n';
-import { initials } from '@/lib/utils';
+import { cn, initials } from '@/lib/utils';
 import { QuickMark } from './quick-mark';
 import { SourceTag } from './source-tag';
 
@@ -35,6 +35,11 @@ function LockedMark() {
 }
 export type RosterMode = 'mark' | 'correct' | 'view';
 
+/** Telefonda (390px) yashiriladigan ustunlar — belgilash tugmalari sig'ishi uchun; ustunlar tartibi o'zgarmaydi. */
+const WIDE_ONLY = 'hidden sm:table-cell';
+/** Telefonda ixcham ichki bo'shliq. */
+const TIGHT = 'px-1.5 sm:px-4';
+
 function CorrectedBadge({ row }: { row: RosterRow }) {
   const { t } = useI18n();
   const last = row.record?.corrections.at(-1);
@@ -42,9 +47,9 @@ function CorrectedBadge({ row }: { row: RosterRow }) {
   return (
     <Tooltip>
       <TooltipTrigger asChild>
-        <Badge variant="default" size="sm" className="cursor-help gap-1">
-          <History className="h-3 w-3" />
-          {t('attendance.classPage.correctedBadge')}
+        <Badge variant="default" size="sm" className="cursor-help gap-1" aria-label={t('attendance.classPage.correctedBadge')}>
+          <History className="h-3 w-3" aria-hidden />
+          <span className="hidden sm:inline">{t('attendance.classPage.correctedBadge')}</span>
         </Badge>
       </TooltipTrigger>
       <TooltipContent className="max-w-xs">
@@ -81,17 +86,19 @@ export function ClassRoster({
 
   const columns = useMemo<Column<RosterRow>[]>(() => {
     const base: Column<RosterRow>[] = [
-      { key: 'no', header: t('attendance.classPage.columns.no'), className: 'w-10 tabular-nums text-muted-foreground', cell: (r) => r.no },
+      { key: 'no', header: t('attendance.classPage.columns.no'), headerClassName: TIGHT, className: cn(TIGHT, 'w-8 tabular-nums text-muted-foreground sm:w-10'), cell: (r) => r.no },
       {
         key: 'student',
         header: t('attendance.classPage.columns.student'),
+        headerClassName: TIGHT,
+        className: TIGHT,
         cell: (r) => (
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9 no-print">
+            <Avatar className="hidden h-9 w-9 sm:flex no-print">
               <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(r.name)}</AvatarFallback>
             </Avatar>
             <div className="min-w-0">
-              <p className="truncate font-medium">{r.name}</p>
+              <p className="text-[13px] font-medium leading-snug max-sm:[overflow-wrap:anywhere] sm:truncate sm:text-sm">{r.name}</p>
               <p className="text-xs text-muted-foreground">
                 {r.studentCode}
                 {r.device === 'NONE' && ` · ${t('enums.device.NONE')}`}
@@ -103,6 +110,8 @@ export function ClassRoster({
       {
         key: 'status',
         header: t('attendance.classPage.columns.status'),
+        headerClassName: TIGHT,
+        className: TIGHT,
         cell: (r) => (
           <div className="flex flex-wrap items-center gap-1.5">
             <AttendanceBadge status={r.record?.status ?? null} />
@@ -110,11 +119,25 @@ export function ClassRoster({
           </div>
         ),
       },
-      { key: 'in', header: t('attendance.classPage.columns.in'), className: 'font-medium tabular-nums', cell: (r) => r.record?.inAt ?? <span className="text-muted-foreground/60">—</span> },
-      { key: 'out', header: t('attendance.classPage.columns.out'), className: 'font-medium tabular-nums', cell: (r) => r.record?.outAt ?? <span className="text-muted-foreground/60">—</span> },
+      {
+        key: 'in',
+        header: t('attendance.classPage.columns.in'),
+        headerClassName: WIDE_ONLY,
+        className: cn(WIDE_ONLY, 'font-medium tabular-nums'),
+        cell: (r) => r.record?.inAt ?? <span className="text-muted-foreground/60">—</span>,
+      },
+      {
+        key: 'out',
+        header: t('attendance.classPage.columns.out'),
+        headerClassName: WIDE_ONLY,
+        className: cn(WIDE_ONLY, 'font-medium tabular-nums'),
+        cell: (r) => r.record?.outAt ?? <span className="text-muted-foreground/60">—</span>,
+      },
       {
         key: 'source',
         header: t('attendance.classPage.columns.source'),
+        headerClassName: WIDE_ONLY,
+        className: WIDE_ONLY,
         cell: (r) => (r.record?.inAt ? <SourceTag source={r.record.source} /> : <span className="text-muted-foreground/60">—</span>),
       },
     ];
@@ -122,8 +145,8 @@ export function ClassRoster({
     const actions: Column<RosterRow> = {
       key: 'actions',
       header: t('attendance.classPage.columns.actions'),
-      headerClassName: 'no-print',
-      className: 'no-print text-right',
+      headerClassName: cn(TIGHT, 'no-print'),
+      className: cn(TIGHT, 'no-print pr-2 text-right sm:pr-4'),
       cell: (r) =>
         mode === 'mark' ? (
           r.record && !canChange ? (

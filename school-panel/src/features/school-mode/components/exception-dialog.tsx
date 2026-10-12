@@ -2,7 +2,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import { Clock, Search, UserRound } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ import { useCreateException } from '../hooks';
 import { EXCEPTION_PRESETS, presetUntil, SEG_OFF, SEG_ON, SEG_TRACK, TILE, TONE_TILE, type ExceptionPreset } from '../lib';
 
 const SEARCH_LIMIT = 8;
-type Picked = Pick<StudentRow, 'id' | 'lastName' | 'firstName' | 'className' | 'studentCode'>;
+export type Picked = Pick<StudentRow, 'id' | 'lastName' | 'firstName' | 'className' | 'studentCode'>;
 
 function StudentPicker({ open, picked, onPick }: { open: boolean; picked: Picked | null; onPick: (s: Picked | null) => void }) {
   const { t } = useI18n();
@@ -89,7 +89,16 @@ function StudentPicker({ open, picked, onPick }: { open: boolean; picked: Picked
 }
 
 /** Vaqtinchalik istisno berish: o'quvchi, muddat (tayyor variantlar yoki vaqt), sabab (majburiy). */
-export function ExceptionDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function ExceptionDialog({
+  open,
+  onOpenChange,
+  defaultStudent,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** O'quvchi kartasidan ochilganda — tanlangan holda keladi. */
+  defaultStudent?: Picked | null;
+}) {
   const { t } = useI18n();
   const now = useClockNow(15_000);
   const create = useCreateException();
@@ -98,13 +107,17 @@ export function ExceptionDialog({ open, onOpenChange }: { open: boolean; onOpenC
   const [custom, setCustom] = useState('');
   const [reason, setReason] = useState('');
 
+  // Faqat ochilganda to'ldiriladi (jonli yangilanishda tanlov o'chmasin).
+  const defaultId = defaultStudent?.id ?? null;
+  const defaultRef = useRef(defaultStudent ?? null);
+  defaultRef.current = defaultStudent ?? null;
   useEffect(() => {
     if (!open) return;
-    setPicked(null);
+    setPicked(defaultRef.current);
     setPreset('lesson');
     setCustom('');
     setReason('');
-  }, [open]);
+  }, [open, defaultId]);
 
   const until = presetUntil(preset, now, custom);
   const valid = Boolean(picked) && reason.trim().length > 0 && /^\d{2}:\d{2}$/.test(until);

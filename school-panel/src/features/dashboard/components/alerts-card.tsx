@@ -31,7 +31,7 @@ export function AlertsCard({ alerts, loading }: { alerts: DashboardAlert[] | und
       ) : (
         <ul className="space-y-2">
           {alerts.map((a) => (
-            <li key={a.kind}>
+            <li key={a.kind} data-alert={a.kind}>
               <Link href={a.href} className={cn(TILE_INTERACTIVE, 'group flex items-center gap-3 px-3 py-2.5')}>
                 <span className={cn(ICON_CHIP, 'h-9 min-w-9 px-2 font-display text-sm font-semibold tabular-nums', toneClass(a.tone))}>
                   {a.kind === 'EMERGENCY' ? '!' : a.count}

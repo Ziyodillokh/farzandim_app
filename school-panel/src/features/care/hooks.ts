@@ -13,6 +13,7 @@ import { errorKey } from '@/lib/errors';
 export const careKeys = {
   all: ['care'] as const,
   surveyOptions: ['care', 'survey-options'] as const,
+  surveySummaries: ['care', 'survey-summaries'] as const,
   aggregate: (query: CareAggregateQuery) => ['care', 'aggregate', query] as const,
   requests: (filter: CareRequestFilter) => ['care', 'requests', filter] as const,
   request: (id: string) => ['care', 'request', id] as const,
@@ -22,6 +23,11 @@ export const careKeys = {
 
 export function useCareSurveyOptions() {
   return useQuery({ queryKey: careKeys.surveyOptions, queryFn: () => api.care.surveyOptions() });
+}
+
+/** Direktor/admin uchun so'rovnomalar ro'yxati (faqat o'qish, `care.aggregate`). */
+export function useCareSurveySummaries(enabled = true) {
+  return useQuery({ queryKey: careKeys.surveySummaries, queryFn: () => api.care.surveySummaries(), enabled });
 }
 
 export function useCareAggregate(query: CareAggregateQuery, enabled = true) {

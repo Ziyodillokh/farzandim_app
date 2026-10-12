@@ -17,6 +17,8 @@ import { BreakdownChart, type ChartTopic } from '@/features/care/components/brea
 import { InsightsCard } from '@/features/care/components/insights-card';
 import { PrivacyBanner } from '@/features/care/components/privacy-banner';
 import { PsychologistLinks } from '@/features/care/components/psychologist-links';
+import { PsychologistWorkspaceCard } from '@/features/care/components/psychologist-workspace-card';
+import { SurveyListCard } from '@/features/care/components/survey-list-card';
 import { TopicScoreCards } from '@/features/care/components/topic-score-cards';
 import { TrendChart } from '@/features/care/components/trend-chart';
 import { useCareAggregate, useCareSurveyOptions } from '@/features/care/hooks';
@@ -45,7 +47,12 @@ export default function CareOverviewPage() {
           <SelectItem key={s.id} value={s.id}>
             <span className="flex items-center gap-2">
               {t('care.overview.weekOf', { date: formatDate(s.weekStart, 'd MMMM') })}
-              {s.status === 'ACTIVE' && <Badge variant="success" size="sm">{t('enums.surveyStatus.ACTIVE')}</Badge>}
+              {s.status === 'ACTIVE' && (
+                <Badge variant="info" size="sm">
+                  {t('enums.surveyStatus.ACTIVE')}
+                </Badge>
+              )}
+              {!s.ready && <span className="text-xs text-muted-foreground">· {t('care.overview.collecting')}</span>}
             </span>
           </SelectItem>
         ))}
@@ -108,7 +115,7 @@ export default function CareOverviewPage() {
         </section>
 
         <div className="grid gap-6 xl:grid-cols-3">
-          <div className="xl:col-span-2">
+          <div className="min-w-0 xl:col-span-2">
             <BreakdownChart
               aggregate={data}
               loading={loading}
@@ -118,7 +125,7 @@ export default function CareOverviewPage() {
               onTopicChange={setTopic}
             />
           </div>
-          <div className="flex flex-col gap-6">
+          <div className="flex min-w-0 flex-col gap-6">
             <InsightsCard aggregate={data} loading={loading} breakdown={breakdown} onSelectTopic={setTopic} />
             <TrendChart aggregate={data} loading={loading} />
           </div>
@@ -133,6 +140,12 @@ export default function CareOverviewPage() {
       <PrivacyBanner />
       {can('care.individual') && <PsychologistLinks />}
       {body()}
+      {!can('care.surveys') && (
+        <div className="mt-6 grid gap-6 xl:grid-cols-3">
+          <SurveyListCard className="xl:col-span-2" />
+          <PsychologistWorkspaceCard />
+        </div>
+      )}
     </>
   );
 }

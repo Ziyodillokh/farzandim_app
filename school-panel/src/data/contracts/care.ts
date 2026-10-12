@@ -22,6 +22,8 @@ export type CareSurvey = {
   questionIds: Id[];
   status: CareSurveyStatus;
   invited: number;
+  /** Faollashtirilgan vaqt (simulyatsiya javoblari shundan boshlanadi). */
+  activatedAt?: IsoDateTime | null;
 };
 
 /** Xom javob — FAQAT psixolog yo'li o'qiydi; umumlashgan servis bu jadvalga tegmaydi. */

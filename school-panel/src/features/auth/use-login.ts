@@ -4,15 +4,12 @@ import { useRouter } from 'next/navigation';
 import { useCallback, useState } from 'react';
 
 import { findDemoAccount } from '@/auth/demo-accounts';
-import { setSession } from '@/auth/session';
-import { toLocalIso } from '@/data/mock/calendar';
-import { clockNow } from '@/data/mock/clock';
-import { transact } from '@/data/mock/db';
+import { signIn } from '@/auth/sign-in';
 
 /** Kichik kechikish — haqiqiy so'rov hissi (va parol taxminiga to'siq). */
 const LOGIN_DELAY_MS = 450;
 
-/** Demo kirish: hisobni tekshiradi, auditga yozadi, sessiyani o'rnatadi va bosh sahifaga o'tadi. */
+/** Demo kirish: hisobni tekshiradi, umumiy sessiya bilan kiradi va bosh sahifaga o'tadi. */
 export function useLogin() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
@@ -32,22 +29,7 @@ export function useLogin() {
           setPendingUser(null);
           return;
         }
-        transact((tables) => {
-          const staff = tables.staff.find((s) => s.id === account.staffId);
-          tables.audit.push({
-            id: `aud-login-${Date.now()}`,
-            at: toLocalIso(clockNow()),
-            actorId: account.staffId,
-            actorName: staff?.fullName ?? account.username,
-            module: 'AUTH',
-            action: 'auth.login',
-            entityId: null,
-            summary: 'Panelga kirdi',
-            before: null,
-            after: null,
-          });
-        });
-        setSession({ staffId: account.staffId, username: account.username, role: account.role, loggedInAt: new Date().toISOString() });
+        signIn(account, 'shared');
         router.replace('/dashboard');
       }, LOGIN_DELAY_MS);
     },

@@ -28,6 +28,7 @@ import { buildIndexes, compareClasses, studentFullName, studentName } from '../l
 import { runListQuery } from '../query';
 import type { Tables } from '../tables';
 import { resolveRecord } from './attendance';
+import { student360 } from './student-360';
 
 export type StudentRow = Student & {
   fullName: string;
@@ -253,7 +254,7 @@ export const studentsService = {
       };
       t.students.push(student);
       t.devices.push({ studentId: id, status: student.device === 'NONE' ? 'NO_PHONE' : 'NO_PERMISSION', lastSeenAt: null });
-      writeAudit(t, actor, 'STUDENTS', 'student.create', `${studentName(student)} qo'shildi`, id, null, student);
+      writeAudit(t, actor, 'STUDENTS', 'student.create', `${studentName(student)} qo'shildi`, id, null, student, { name: studentName(student) });
       return student;
     });
   },
@@ -273,7 +274,7 @@ export const studentsService = {
       if (before.classId !== next.classId) moveOpenItems(t, id, next.classId);
       const device = t.devices.find((d) => d.studentId === id);
       if (device && before.device !== next.device) device.status = next.device === 'NONE' ? 'NO_PHONE' : 'NO_PERMISSION';
-      writeAudit(t, actor, 'STUDENTS', 'student.update', `${studentName(next)} ma'lumotlari yangilandi`, id, before, next);
+      writeAudit(t, actor, 'STUDENTS', 'student.update', `${studentName(next)} ma'lumotlari yangilandi`, id, before, next, { name: studentName(next) });
       return next;
     });
   },
@@ -286,7 +287,7 @@ export const studentsService = {
       const student = t.students.find((s) => s.id === id);
       if (!student) throw new ServiceError('NOT_FOUND', id);
       student.archived = archived;
-      writeAudit(t, actor, 'STUDENTS', archived ? 'student.archive' : 'student.restore', `${studentName(student)} ${archived ? 'arxivga olindi' : 'qayta tiklandi'}`, id);
+      writeAudit(t, actor, 'STUDENTS', archived ? 'student.archive' : 'student.restore', `${studentName(student)} ${archived ? 'arxivga olindi' : 'qayta tiklandi'}`, id, null, null, { name: studentName(student) });
       return student;
     });
   },
@@ -324,6 +325,12 @@ export const studentsService = {
     }
     return { created, skipped };
   },
+
+  /** 360° karta: tarix lentasi va xodim eslatmalari (`student-360.ts`). */
+  history: student360.history,
+  notes: student360.notes,
+  addNote: student360.addNote,
+  deleteNote: student360.deleteNote,
 };
 
 export const guardiansService = {
@@ -361,7 +368,7 @@ export const guardiansService = {
       guardian.linkStatus = 'INVITED';
       guardian.inviteCode = code;
       guardian.inviteExpiresAt = toLocalIso(new Date(clockNow().getTime() + 7 * 86_400_000));
-      writeAudit(t, actor, 'GUARDIANS', 'guardian.invite', `${guardian.fullName}ga Parvoz taklifi yuborildi (SMS)`, guardianId);
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.invite', `${guardian.fullName}ga Parvoz taklifi yuborildi (SMS)`, guardianId, null, null, { name: guardian.fullName });
       return guardian;
     });
   },
@@ -379,7 +386,7 @@ export const guardiansService = {
       guardian.linkedAt = toLocalIso(clockNow());
       guardian.inviteCode = null;
       guardian.inviteExpiresAt = null;
-      writeAudit(t, actor, 'GUARDIANS', 'guardian.linked', `${guardian.fullName} Parvoz Parents'ga ulandi`, guardianId);
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.linked', `${guardian.fullName} Parvoz Parents'ga ulandi`, guardianId, null, null, { name: guardian.fullName });
       return guardian;
     });
   },
@@ -396,7 +403,10 @@ export const guardiansService = {
       const guardian: Guardian = { id: newId('grd'), ...data, linkStatus: 'NOT_INVITED', inviteCode: null, inviteExpiresAt: null, linkedAt: null };
       t.guardians.push(guardian);
       student.guardianIds = [...student.guardianIds, guardian.id];
-      writeAudit(t, actor, 'GUARDIANS', 'guardian.create', `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`, guardian.id);
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.create', `${studentName(student)}ga ota-ona qo'shildi: ${guardian.fullName}`, guardian.id, null, null, {
+        student: studentName(student),
+        name: guardian.fullName,
+      });
       return guardian;
     });
   },
@@ -412,7 +422,7 @@ export const guardiansService = {
       assertGuardianInScope(t, actor, guardianId);
       const before = { ...guardian };
       Object.assign(guardian, data);
-      writeAudit(t, actor, 'GUARDIANS', 'guardian.update', `${guardian.fullName} ma'lumotlari yangilandi`, guardianId, before, guardian);
+      writeAudit(t, actor, 'GUARDIANS', 'guardian.update', `${guardian.fullName} ma'lumotlari yangilandi`, guardianId, before, guardian, { name: guardian.fullName });
       return guardian;
     });
   },

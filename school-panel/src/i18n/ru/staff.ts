@@ -89,6 +89,8 @@ export const staff: DeepString<typeof uz> = {
     care: 'Голос ребёнка',
     learning: 'Growth Learning',
     reports: 'Отчёты',
+    assessments: 'Психологические тесты',
+    development: 'Развитие',
   },
   perm: {
     dashboard: { view: 'Просмотр главной страницы' },
@@ -123,5 +125,7 @@ export const staff: DeepString<typeof uz> = {
     },
     learning: { view: 'Просмотр Growth Learning', assign: 'Назначение материалов и тестов' },
     reports: { view: 'Отчёты и экспорт' },
+    assessments: { manage: 'Психологические тесты: создание, назначение, результаты' },
+    development: { view: 'Дашборд развития (обобщённо)', individual: 'Профиль развития ученика (по имени)' },
   },
 };

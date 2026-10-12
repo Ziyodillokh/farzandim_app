@@ -3,6 +3,7 @@
 import { BellRing, CalendarDays } from 'lucide-react';
 import Link from 'next/link';
 
+import { useCan } from '@/auth/use-session';
 import { SectionCard } from '@/components/common/section-card';
 import { Button } from '@/components/ui/button';
 import type { DashboardOverview } from '@/data/mock/services/dashboard';
@@ -12,14 +13,18 @@ import { ICON_CHIP, TILE } from '../lib/tile';
 
 export function UpcomingCard({ items }: { items: NonNullable<DashboardOverview['upcoming']> }) {
   const { t, formatDate } = useI18n();
+  const can = useCan();
   return (
     <SectionCard
       title={t('dashboard.upcoming.title')}
       icon={<CalendarDays />}
       actions={
-        <Button asChild variant="ghost" size="sm">
-          <Link href="/reminders">{t('dashboard.upcoming.all')}</Link>
-        </Button>
+        // /reminders sahifasi faqat `reminders.manage` uchun — boshqalarga o'lik havola ko'rsatilmaydi.
+        can('reminders.manage') && (
+          <Button asChild variant="ghost" size="sm">
+            <Link href="/reminders">{t('dashboard.upcoming.all')}</Link>
+          </Button>
+        )
       }
       bodyClassName="p-3"
     >

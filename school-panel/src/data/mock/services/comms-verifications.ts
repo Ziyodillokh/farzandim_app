@@ -83,7 +83,11 @@ export const verificationsService = {
       if (data.newDate) applyShift(t, actor, current.paymentReminderId, data.newDate, `Tekshiruv so'rovi bo'yicha: ${data.text}`, 'VERIFIED');
       const next: VerificationRequest = { ...current, status: 'ANSWERED', answer: data.text, answeredByStaffId: actor.staffId, answeredAt: nowLocalIso() };
       t.verifications[index] = next;
-      writeAudit(t, actor, 'PAYMENTS', 'verification.answer', `${guardianName(t, next)}ning tekshiruv so'roviga javob berildi${data.newDate ? ` (yangi sana: ${data.newDate})` : ''}`, id, current, next);
+      writeAudit(t, actor, 'PAYMENTS', 'verification.answer', `${guardianName(t, next)}ning tekshiruv so'roviga javob berildi${data.newDate ? ` (yangi sana: ${data.newDate})` : ''}`, id, current, next, {
+        variant: data.newDate ? 'newDate' : 'plain',
+        name: guardianName(t, next),
+        newDate: data.newDate ?? '',
+      });
       return next;
     });
   },
@@ -97,7 +101,9 @@ export const verificationsService = {
       if (current.status === 'CLOSED') throw new ServiceError('CONFLICT', 'closed');
       const next: VerificationRequest = { ...current, status: 'CLOSED' };
       t.verifications[index] = next;
-      writeAudit(t, actor, 'PAYMENTS', 'verification.close', `${guardianName(t, next)}ning tekshiruv so'rovi yopildi`, id, { status: current.status }, { status: 'CLOSED' });
+      writeAudit(t, actor, 'PAYMENTS', 'verification.close', `${guardianName(t, next)}ning tekshiruv so'rovi yopildi`, id, { status: current.status }, { status: 'CLOSED' }, {
+        name: guardianName(t, next),
+      });
       return next;
     });
   },

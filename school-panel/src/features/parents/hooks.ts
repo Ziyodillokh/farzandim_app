@@ -18,6 +18,7 @@ const EXPORT_PAGE_LIMIT = 500;
 export const parentKeys = {
   list: (filter: GuardianFilter) => ['parents', 'list', filter] as const,
   stats: ['parents', 'stats'] as const,
+  linkSummary: ['parents', 'link-summary'] as const,
   pending: (filter: BulkInviteInput) => ['parents', 'pending', filter] as const,
 };
 
@@ -27,6 +28,11 @@ export function useGuardians(filter: GuardianFilter) {
 
 export function useGuardianStats() {
   return useQuery({ queryKey: parentKeys.stats, queryFn: () => api.guardians.stats() });
+}
+
+/** Ulanish ulushlari: o'quvchilar va ota-onalar (bosh sahifa bilan yagona hisob). */
+export function useParentLinkSummary() {
+  return useQuery({ queryKey: parentKeys.linkSummary, queryFn: () => api.parents.linkSummary() });
 }
 
 /** Joriy filtr (sinf + qidiruv) bo'yicha taklif qilinmaganlar soni — ommaviy taklif uchun. */

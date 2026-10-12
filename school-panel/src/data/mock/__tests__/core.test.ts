@@ -20,6 +20,12 @@ describe('ruxsatlar va marshrutlar', () => {
     const withIndividual = Object.values(ROLES).filter((r) => r.permissions.includes('care.individual'));
     expect(withIndividual.map((r) => r.key)).toEqual(['PSYCHOLOGIST']);
   });
+  it('testlarni faqat psixolog boshqaradi; shaxsiy rivojlanish — psixolog va sinf rahbari', () => {
+    const keysWith = (p: (typeof PERMISSIONS)[number]) => Object.values(ROLES).filter((r) => r.permissions.includes(p)).map((r) => r.key).sort();
+    expect(keysWith('assessments.manage')).toEqual(['PSYCHOLOGIST']);
+    expect(keysWith('development.individual')).toEqual(['HOMEROOM', 'PSYCHOLOGIST']);
+    expect(ROLES.DUTY.permissions.some((p) => p.startsWith('development.') || p.startsWith('assessments.'))).toBe(false);
+  });
 });
 
 describe('xizmatlar: doira va audit', () => {

@@ -54,7 +54,9 @@ export const profileService = {
       const next = { ...s, photo };
       t.staff = t.staff.map((x) => (x.id === staffId ? next : x));
       // Auditda rasm baytlari yo'q — faqat fakt.
-      writeAudit(t, actor, 'STAFF', photo ? 'staff.photo' : 'staff.photoRemove', `Xodim rasmi ${photo ? 'yangilandi' : 'olib tashlandi'}: ${s.fullName}`, staffId);
+      writeAudit(t, actor, 'STAFF', photo ? 'staff.photo' : 'staff.photoRemove', `Xodim rasmi ${photo ? 'yangilandi' : 'olib tashlandi'}: ${s.fullName}`, staffId, null, null, {
+        name: s.fullName,
+      });
       return toInfo(next);
     });
   },

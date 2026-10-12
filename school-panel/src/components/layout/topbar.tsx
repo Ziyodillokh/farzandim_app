@@ -8,6 +8,8 @@ import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet';
 import { useI18n, type Locale } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { DemoButton } from '@/features/engine/demo-button';
+import { NotificationBell } from '@/features/notifications/components/notification-bell';
 import { ClockWidget } from './clock-widget';
 import { CommandPalette } from './command-palette';
 import { ParvozWordmark } from './parvoz-wordmark';
@@ -63,16 +65,16 @@ export function Topbar() {
         <button
           type="button"
           onClick={() => setSearchOpen(true)}
-          className="flex h-10 min-w-0 flex-1 items-center gap-2 rounded-xl bg-white/60 px-3 text-sm text-muted-foreground ring-1 ring-inset ring-border/60 transition-colors hover:ring-primary/40 dark:bg-white/[0.04] md:max-w-md"
+          aria-label={t('shell.searchHint')}
+          className="flex h-10 w-10 shrink-0 items-center justify-center gap-2 rounded-xl bg-white/60 text-sm text-muted-foreground ring-1 ring-inset ring-border/60 transition-colors hover:ring-primary/40 dark:bg-white/[0.04] sm:w-auto sm:min-w-0 sm:flex-1 sm:shrink sm:justify-start sm:px-3 md:max-w-md"
         >
           <Search className="h-4 w-4 shrink-0" />
-          <span className="truncate">{t('shell.searchHint')}</span>
+          <span className="hidden truncate sm:inline">{t('shell.searchHint')}</span>
           <kbd className="ml-auto hidden rounded-md bg-primary/[0.06] px-1.5 py-0.5 text-2xs font-semibold ring-1 ring-inset ring-border/60 dark:bg-white/[0.06] md:inline">{t('shell.searchShortcut')}</kbd>
         </button>
         <div className="ml-auto flex items-center gap-1.5">
-          <span className="hidden rounded-full border border-warning/30 bg-warning/10 px-2.5 py-1 text-2xs font-semibold text-warning 2xl:inline">
-            {t('common.demoBadge')}
-          </span>
+          <DemoButton />
+          <NotificationBell />
           <ClockWidget />
           <span className="hidden sm:block">
             <LanguageSwitch />

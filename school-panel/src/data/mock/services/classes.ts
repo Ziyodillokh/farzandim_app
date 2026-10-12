@@ -173,7 +173,7 @@ export const classesService = {
       const cls: SchoolClass = { id: `cls-${data.grade}${data.letter.toLowerCase()}-${Date.now().toString(36)}`, name, ...data };
       t.classes.push(cls);
       if (cls.homeroomStaffId) assignHomeroom(t, cls.id, cls.homeroomStaffId);
-      writeAudit(t, actor, 'CLASSES', 'class.create', `${name} sinfi yaratildi`, cls.id, null, cls);
+      writeAudit(t, actor, 'CLASSES', 'class.create', `${name} sinfi yaratildi`, cls.id, null, cls, { name });
       return cls;
     });
   },
@@ -193,7 +193,7 @@ export const classesService = {
       const next: SchoolClass = { ...before, ...data, name };
       t.classes[index] = next;
       if (next.homeroomStaffId !== before.homeroomStaffId) assignHomeroom(t, id, next.homeroomStaffId);
-      writeAudit(t, actor, 'CLASSES', 'class.update', `${name} sinfi yangilandi`, id, before, next);
+      writeAudit(t, actor, 'CLASSES', 'class.update', `${name} sinfi yangilandi`, id, before, next, { name });
       return next;
     });
   },
@@ -208,7 +208,7 @@ export const classesService = {
       if (t.students.some((s) => !s.archived && s.classId === id)) throw new ServiceError('CONFLICT', 'class has students');
       t.classes = t.classes.filter((c) => c.id !== id);
       t.staff = t.staff.map((s) => (s.classIds.includes(id) ? { ...s, classIds: s.classIds.filter((c) => c !== id) } : s));
-      writeAudit(t, actor, 'CLASSES', 'class.delete', `${cls.name} sinfi o'chirildi`, id, cls, null);
+      writeAudit(t, actor, 'CLASSES', 'class.delete', `${cls.name} sinfi o'chirildi`, id, cls, null, { name: cls.name });
     });
   },
 
@@ -247,7 +247,7 @@ export const classesService = {
       writeAudit(t, actor, 'GUARDIANS', 'guardian.inviteBulk', `${scope}${invited} ota-onaga Parvoz taklifi yuborildi (SMS)`, filter.classId ?? null, null, {
         invited,
         guardianIds: ids,
-      });
+      }, className ? { variant: 'class', className, count: invited } : { variant: 'all', count: invited });
       return { invited };
     });
   },

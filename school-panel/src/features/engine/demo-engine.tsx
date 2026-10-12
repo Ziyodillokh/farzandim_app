@@ -1,60 +1,81 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useMemo, useRef } from 'react';
 import { toast } from 'sonner';
 
 import { useSession } from '@/auth/use-session';
-import { clockMinute, clockToday, getClockState } from '@/data/mock/clock';
-import { getTables, transact } from '@/data/mock/db';
-import { studentName } from '@/data/mock/lookups';
-import { simulate } from '@/data/mock/simulator';
+import { getClockState, restartMorning, scenarioEnded } from '@/data/mock/clock';
+import { getTables } from '@/data/mock/db';
 import { useI18n } from '@/i18n';
+import type { ArrivalViewer } from './arrivals';
+import { runEngineTick } from './tick';
+import { useArrivalToasts } from './use-arrival-toasts';
 
 const TICK_MS = 1000;
-const MAX_TOASTS_PER_TICK = 2;
+const DAY_ENDED_TOAST_ID = 'demo-day-ended';
+
+/** 19:00 da bir marta — doimiy toast "Demo kuni yakunlandi" + "Qayta boshlash". */
+function useDayEndedNotice(): () => void {
+  const i18n = useI18n();
+  const i18nRef = useRef(i18n);
+  useEffect(() => {
+    i18nRef.current = i18n;
+  }, [i18n]);
+  const shownForEpoch = useRef<number | null>(null);
+
+  return useCallback(() => {
+    const { epoch } = getClockState();
+    if (!scenarioEnded()) {
+      if (shownForEpoch.current !== null) toast.dismiss(DAY_ENDED_TOAST_ID);
+      shownForEpoch.current = null;
+      return;
+    }
+    if (shownForEpoch.current === epoch) return;
+    shownForEpoch.current = epoch;
+    const { t } = i18nRef.current;
+    toast.info(t('demo.dayEnded'), {
+      id: DAY_ENDED_TOAST_ID,
+      description: t('demo.dayEndedHint'),
+      duration: Number.POSITIVE_INFINITY,
+      action: { label: t('demo.restart'), onClick: () => restartMorning() },
+    });
+  }, []);
+}
 
 /**
  * Jonli simulyator: har soniyada demo vaqtini tekshiradi, yangi daqiqa bo'lsa
- * rejadagi kirish/chiqishlarni bazaga yozadi. Birinchi "yetib olish"da
- * (masalan, sahifa 10:00 da ochilsa) toast ko'rsatilmaydi.
+ * kirish/chiqishlar, test natijalari va so'rovnoma javoblarini bazaga yozadi.
+ * Birinchi "yetib olish"da (sahifa 10:00 da ochilsa, ertalab qayta boshlansa)
+ * toast ko'rsatilmaydi; kelish toast'lari rol va doiraga mos.
  */
 export function DemoEngine() {
   const session = useSession();
-  const { t, formatDate } = useI18n();
-  const lastKey = useRef<string>('');
-  const warmedUp = useRef(false);
+  const viewer = useMemo<ArrivalViewer | null>(() => {
+    if (!session) return null;
+    const staff = getTables().staff.find((s) => s.id === session.staffId);
+    return { role: session.role, classIds: staff?.classIds ?? [] };
+  }, [session]);
+  const announceArrivals = useArrivalToasts(viewer);
+  const checkDayEnded = useDayEndedNotice();
 
   useEffect(() => {
     if (!session) return;
+    const lastKey = { current: '' };
+    let warmedUp = false;
     const tick = () => {
-      const date = clockToday();
-      const minute = Math.floor(clockMinute());
-      const epoch = getClockState().epoch;
-      const key = `${date}#${epoch}#${minute}`;
-      if (key === lastKey.current) return;
-      lastKey.current = key;
-      const sim = getTables().sim;
-      if (sim.date === `${date}#${epoch}` && sim.processedUntilMinute >= minute) return;
-      const events = transact((tables) => simulate(tables, date, minute, epoch));
-      if (!warmedUp.current) {
-        warmedUp.current = true;
+      checkDayEnded();
+      const result = runEngineTick(lastKey);
+      if (!result) return;
+      if (!warmedUp || result.catchingUp) {
+        warmedUp = true;
         return;
       }
-      const tables = getTables();
-      for (const event of events.slice(0, MAX_TOASTS_PER_TICK)) {
-        const student = tables.students.find((s) => s.id === event.studentId);
-        const cls = tables.classes.find((c) => c.id === event.classId);
-        if (!student) continue;
-        const label = `${studentName(student)} · ${cls?.name ?? ''}`;
-        const time = formatDate(event.at, 'HH:mm');
-        if (event.kind === 'IN' && event.late) toast.warning(`${label} — ${t('enums.attendanceStatus.LATE')}`, { description: time });
-        else if (event.kind === 'IN') toast.success(`${label} — ${t('enums.attendanceStatus.PRESENT')}`, { description: time, duration: 2500 });
-      }
+      announceArrivals(result.events);
     };
     tick();
     const id = setInterval(tick, TICK_MS);
     return () => clearInterval(id);
-  }, [session, t, formatDate]);
+  }, [session, announceArrivals, checkDayEnded]);
 
   return null;
 }

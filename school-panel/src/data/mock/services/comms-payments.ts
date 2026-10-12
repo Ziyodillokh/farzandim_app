@@ -114,7 +114,11 @@ export function applyShift(t: Tables, actor: Actor, id: string, nextDate: IsoDat
   const before = { nextDate: payment.nextDate, prepaidMonths: payment.prepaidMonths };
   payment.nextDate = nextDate;
   payment.history = [...payment.history, entry(actor, action, note)];
-  writeAudit(t, actor, 'PAYMENTS', 'payment.shift', `${guardianLabel(t, payment)}: eslatma sanasi ${before.nextDate} → ${nextDate}`, id, before, { nextDate });
+  writeAudit(t, actor, 'PAYMENTS', 'payment.shift', `${guardianLabel(t, payment)}: eslatma sanasi ${before.nextDate} → ${nextDate}`, id, before, { nextDate }, {
+    name: guardianLabel(t, payment),
+    fromDate: before.nextDate,
+    toDate: nextDate,
+  });
   return payment;
 }
 
@@ -145,7 +149,10 @@ async function setPaused(id: string, paused: boolean, input: { note: string }): 
     if (payment.paused === paused) throw new ServiceError('CONFLICT', id);
     payment.paused = paused;
     payment.history = [...payment.history, entry(actor, paused ? 'PAUSED' : 'RESUMED', note)];
-    writeAudit(t, actor, 'PAYMENTS', paused ? 'payment.pause' : 'payment.resume', `${guardianLabel(t, payment)}: eslatma ${paused ? 'to\'xtatildi' : 'qayta yoqildi'} — ${note}`, id, { paused: !paused }, { paused });
+    writeAudit(t, actor, 'PAYMENTS', paused ? 'payment.pause' : 'payment.resume', `${guardianLabel(t, payment)}: eslatma ${paused ? 'to\'xtatildi' : 'qayta yoqildi'} — ${note}`, id, { paused: !paused }, { paused }, {
+      name: guardianLabel(t, payment),
+      note,
+    });
     return payment;
   });
 }
@@ -198,7 +205,10 @@ export const paymentsService = {
       }
       const how = data.months ? `${data.months} oyga surildi` : `${data.date} ga o'zgartirildi`;
       const after = targets.map((p) => ({ id: p.id, nextDate: p.nextDate, prepaidMonths: p.prepaidMonths }));
-      writeAudit(t, actor, 'PAYMENTS', 'payment.bulkShift', `${targets.length} oila uchun eslatma sanasi ${how} — ${data.note}`, null, before, after);
+      const params: Record<string, string | number> = data.months
+        ? { variant: 'months', count: targets.length, months: data.months, note: data.note }
+        : { variant: 'date', count: targets.length, date: data.date ?? '', note: data.note };
+      writeAudit(t, actor, 'PAYMENTS', 'payment.bulkShift', `${targets.length} oila uchun eslatma sanasi ${how} — ${data.note}`, null, before, after, params);
       return { updated: targets.length };
     });
   },

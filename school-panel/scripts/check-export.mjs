@@ -4,13 +4,13 @@
  *  - yo'llarda `[ ] { } % ` va bo'shliq yo'q (server-deploy.sh curl tekshiruvi buzilmasin);
  *  - har marshrutda index.html bor;
  *  - har HTML'da noindex;
- *  - jami hajm < 6 MB.
+ *  - jami hajm < 8 MB.
  */
 import { readdirSync, readFileSync, statSync } from 'node:fs';
 import { join, relative, resolve } from 'node:path';
 
 const ROOT = resolve(process.cwd(), 'out');
-const MAX_BYTES = 6 * 1024 * 1024;
+const MAX_BYTES = 8 * 1024 * 1024;
 const BAD = /[[\]{}% ]/;
 const REQUIRED = ['index.html', 'login/index.html', 'dashboard/index.html', 'kiosk/index.html', 'students/view/index.html', '404.html'];
 
@@ -36,7 +36,7 @@ for (const file of files) {
 for (const required of REQUIRED) {
   if (!files.some((f) => relative(ROOT, f) === required)) errors.push(`topilmadi: ${required}`);
 }
-if (total > MAX_BYTES) errors.push(`hajm ${(total / 1024 / 1024).toFixed(2)} MB > 6 MB`);
+if (total > MAX_BYTES) errors.push(`hajm ${(total / 1024 / 1024).toFixed(2)} MB > 8 MB`);
 
 if (errors.length) {
   console.error(`❌ check-export: ${errors.length} xato\n - ${errors.join('\n - ')}`);

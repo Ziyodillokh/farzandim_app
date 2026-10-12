@@ -163,7 +163,9 @@ export const announcementsService = {
       const base: Announcement = found?.current ?? { id: newId('ann'), ...data, status: 'DRAFT', scheduledAt: null, sentAt: null, byStaffId: actor.staffId, stats: { recipients: 0, delivered: 0, read: 0 } };
       const next: Announcement = { ...base, ...data, status: 'DRAFT', scheduledAt: null, sentAt: null, stats: { recipients: reachOf(t, data.audience).guardians, delivered: 0, read: 0 } };
       upsert(t, found?.index ?? -1, next);
-      writeAudit(t, actor, 'MESSAGES', found ? 'announcement.update' : 'announcement.draft', `"${next.title}" qoralama sifatida saqlandi`, next.id, found?.current ?? null, next);
+      writeAudit(t, actor, 'MESSAGES', found ? 'announcement.update' : 'announcement.draft', `"${next.title}" qoralama sifatida saqlandi`, next.id, found?.current ?? null, next, {
+        title: next.title,
+      });
       return next;
     });
   },
@@ -182,7 +184,8 @@ export const announcementsService = {
       const next = deliver(t, base, scheduledAt);
       upsert(t, found?.index ?? -1, next);
       const summary = scheduledAt ? `"${next.title}" xabari ${scheduledAt.slice(0, 16).replace('T', ' ')} ga rejalashtirildi` : `"${next.title}" xabari yuborildi (${next.stats.recipients} ota-ona)`;
-      writeAudit(t, actor, 'MESSAGES', scheduledAt ? 'announcement.schedule' : 'announcement.send', summary, next.id, found?.current ?? null, next);
+      const params: Record<string, string | number> = scheduledAt ? { title: next.title, at: scheduledAt.slice(0, 16).replace('T', ' ') } : { title: next.title, recipients: next.stats.recipients };
+      writeAudit(t, actor, 'MESSAGES', scheduledAt ? 'announcement.schedule' : 'announcement.send', summary, next.id, found?.current ?? null, next, params);
       return next;
     });
   },
@@ -196,7 +199,10 @@ export const announcementsService = {
       const { index, current } = editable(actor, t, id);
       const next = deliver(t, current, null);
       t.announcements[index] = next;
-      writeAudit(t, actor, 'MESSAGES', 'announcement.send', `"${next.title}" xabari yuborildi (${next.stats.recipients} ota-ona)`, id, current, next);
+      writeAudit(t, actor, 'MESSAGES', 'announcement.send', `"${next.title}" xabari yuborildi (${next.stats.recipients} ota-ona)`, id, current, next, {
+        title: next.title,
+        recipients: next.stats.recipients,
+      });
       return next;
     });
   },
@@ -209,7 +215,10 @@ export const announcementsService = {
     transact((t) => {
       const { index, current } = editable(actor, t, id);
       t.announcements.splice(index, 1);
-      writeAudit(t, actor, 'MESSAGES', 'announcement.delete', `"${current.title}" ${current.status === 'DRAFT' ? 'qoralamasi' : 'rejalashtirilgan xabari'} o'chirildi`, id, current, null);
+      writeAudit(t, actor, 'MESSAGES', 'announcement.delete', `"${current.title}" ${current.status === 'DRAFT' ? 'qoralamasi' : 'rejalashtirilgan xabari'} o'chirildi`, id, current, null, {
+        variant: current.status === 'DRAFT' ? 'draft' : 'scheduled',
+        title: current.title,
+      });
     });
   },
 
@@ -226,7 +235,7 @@ export const announcementsService = {
       if (!audience) throw new ServiceError('FORBIDDEN', id);
       const copy: Announcement = { ...source, id: newId('ann'), audience, status: 'DRAFT', scheduledAt: null, sentAt: null, byStaffId: actor.staffId, stats: { recipients: reachOf(t, audience).guardians, delivered: 0, read: 0 } };
       t.announcements.push(copy);
-      writeAudit(t, actor, 'MESSAGES', 'announcement.duplicate', `"${source.title}" xabaridan nusxa olindi`, copy.id, null, copy);
+      writeAudit(t, actor, 'MESSAGES', 'announcement.duplicate', `"${source.title}" xabaridan nusxa olindi`, copy.id, null, copy, { title: source.title });
       return copy;
     });
   },

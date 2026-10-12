@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 
 import { FormField } from '@/components/common/form-field';
@@ -29,17 +29,31 @@ function suggestedTime(): string {
 
 const EMPTY: EarlyExitInput = { studentId: '', time: '12:00', reason: '', pickupBy: '' };
 
-export function EarlyExitDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (open: boolean) => void }) {
+export function EarlyExitDialog({
+  open,
+  onOpenChange,
+  defaultStudent,
+}: {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  /** O'quvchi kartasidan ochilganda — tanlangan holda keladi (o'zgartirish mumkin). */
+  defaultStudent?: StudentRow | null;
+}) {
   const { t } = useI18n();
   const create = useCreateEarlyExit();
   const [student, setStudent] = useState<StudentRow | null>(null);
   const form = useForm<EarlyExitInput>({ resolver: zodResolver(earlyExitInputSchema), defaultValues: EMPTY });
 
+  // Faqat ochilganda to'ldiriladi (jonli yangilanishda tanlov o'chmasin).
+  const defaultId = defaultStudent?.id ?? null;
+  const defaultRef = useRef(defaultStudent ?? null);
+  defaultRef.current = defaultStudent ?? null;
   useEffect(() => {
     if (!open) return;
-    setStudent(null);
-    form.reset({ ...EMPTY, time: suggestedTime() });
-  }, [open, form]);
+    const initial = defaultRef.current;
+    setStudent(initial);
+    form.reset({ ...EMPTY, studentId: initial?.id ?? '', time: suggestedTime() });
+  }, [open, defaultId, form]);
 
   const pick = (next: StudentRow | null) => {
     setStudent(next);

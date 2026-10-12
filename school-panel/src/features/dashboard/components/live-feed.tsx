@@ -3,6 +3,7 @@
 import { LogIn, LogOut, Radio } from 'lucide-react';
 import Link from 'next/link';
 
+import { useCan } from '@/auth/use-session';
 import { SectionCard } from '@/components/common/section-card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,6 +16,8 @@ import { ICON_CHIP, TILE } from '../lib/tile';
 export function LiveFeed() {
   const { t, formatDate } = useI18n();
   const feed = useLiveFeed();
+  // O'quvchi kartasi faqat `students.view` bilan ochiladi (navbatchida yo'q) — aks holda oddiy matn.
+  const canOpenStudent = useCan()('students.view');
 
   return (
     <SectionCard
@@ -58,9 +61,13 @@ export function LiveFeed() {
               </span>
               <div className="min-w-0 flex-1">
                 <p className="truncate text-sm font-medium">
-                  <Link href={`/students/view?id=${e.studentId}`} className="hover:text-primary">
-                    {e.studentName}
-                  </Link>
+                  {canOpenStudent ? (
+                    <Link href={`/students/view?id=${e.studentId}`} className="hover:text-primary">
+                      {e.studentName}
+                    </Link>
+                  ) : (
+                    e.studentName
+                  )}
                 </p>
                 <p className="text-xs text-muted-foreground">
                   {e.kind === 'OUT' ? t('dashboard.feed.out') : e.late ? t('dashboard.feed.lateIn') : t('dashboard.feed.in')}

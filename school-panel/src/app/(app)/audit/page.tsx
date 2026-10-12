@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { api } from '@/data/api';
 import type { AuditLog, AuditModule } from '@/data/contracts';
 import type { AuditFilter } from '@/data/mock/services/staff';
+import { auditText } from '@/features/audit/audit-text';
 import { AuditDetailSheet } from '@/features/audit/components/audit-detail-sheet';
 import { useAuditActors, useAuditLog } from '@/features/audit/hooks';
 import { useI18n } from '@/i18n';
@@ -73,7 +74,7 @@ export default function AuditPage() {
         header: t('audit.columns.summary'),
         cell: (r) => (
           <div className="min-w-0 max-w-xl">
-            <p className="line-clamp-2">{r.summary}</p>
+            <p className="line-clamp-2">{auditText(t, r)}</p>
             <code className="font-mono text-2xs text-muted-foreground/80">{r.action}</code>
           </div>
         ),
@@ -91,7 +92,7 @@ export default function AuditPage() {
         { header: t('audit.columns.actor'), value: (r) => r.actorName },
         { header: t('audit.columns.module'), value: (r) => t(`enums.auditModule.${r.module}`) },
         { header: t('audit.csv.action'), value: (r) => r.action },
-        { header: t('audit.columns.summary'), value: (r) => r.summary },
+        { header: t('audit.columns.summary'), value: (r) => auditText(t, r) },
         { header: t('audit.csv.entity'), value: (r) => r.entityId },
         { header: t('audit.csv.before'), value: (r) => (r.before === null ? '' : JSON.stringify(r.before)) },
         { header: t('audit.csv.after'), value: (r) => (r.after === null ? '' : JSON.stringify(r.after)) },

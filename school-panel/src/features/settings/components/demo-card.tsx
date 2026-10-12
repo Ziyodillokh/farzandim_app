@@ -1,11 +1,12 @@
 'use client';
 
-import { FlaskConical, Keyboard, RotateCcw, ShieldCheck } from 'lucide-react';
+import { FlaskConical, Keyboard, RotateCcw, ShieldCheck, Sparkles } from 'lucide-react';
 import { useState } from 'react';
 
 import { ConfirmDialog } from '@/components/common/confirm-dialog';
 import { SectionCard } from '@/components/common/section-card';
 import { Button } from '@/components/ui/button';
+import { setDemoPanelOpen } from '@/features/engine/demo-panel-store';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useDemoReset } from '../hooks';
@@ -23,6 +24,10 @@ export function DemoCard() {
           <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-success" />
           {t('settings.demo.keeps')}
         </p>
+        <Button variant="soft" className="w-full" onClick={() => setDemoPanelOpen(true)}>
+          <Sparkles />
+          {t('demo.openPanel')}
+        </Button>
         <Button variant="destructive" className="w-full" onClick={() => setConfirm(true)}>
           <RotateCcw />
           {t('demo.resetTitle')}
