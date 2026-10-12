@@ -219,17 +219,7 @@ export class AppLimitsService {
   private async pushChildResync(child: {
     childUserId: string | null;
   }): Promise<void> {
-    if (!child.childUserId) return;
-    try {
-      await this.fcm.sendPushToUser(child.childUserId, {
-        title: '',
-        body: '',
-        dataOnly: true,
-        data: { type: 'restrictions_sync' },
-      });
-    } catch {
-      /* push xatosi limitга ta'sir qilmaydi */
-    }
+    await this.fcm.pushChildResync(child.childUserId);
   }
 
   async findOne(id: string, userId: string) {

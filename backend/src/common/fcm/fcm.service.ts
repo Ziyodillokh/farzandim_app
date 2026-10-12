@@ -86,8 +86,15 @@ export class FcmService {
           // bo'lsa FCM uni 60s'dan keyin tashlaydi (soatlardan keyin kutilmaganda
           // jiringlamasin). priority 'high' — Doze'dan uyg'otadi (load-bearing).
           android: { priority: 'high', ttl: 60_000 },
+          // Apple: faqat `content-available` li (fon) push — push-type
+          // `background` va priority 5 bo'lishi SHART; priority 10 bunday
+          // push uchun xato hisoblanadi va iOS uni yetkazmasligi mumkin.
           apns: {
-            headers: { 'apns-priority': '10', 'apns-expiration': '0' },
+            headers: {
+              'apns-push-type': 'background',
+              'apns-priority': '5',
+              'apns-expiration': '0',
+            },
             payload: { aps: { 'content-available': 1 } },
           },
         }
@@ -140,6 +147,26 @@ export class FcmService {
   /**
    * Send push to all devices of a user, auto-cleaning invalid tokens.
    */
+  /**
+   * Bola qurilmasiga jim "cheklovlarni qayta sync qil" push (`restrictions_sync`).
+   * Ilova fonda/yopiq bo'lsa ham ota-ona o'zgarishi darhol kuchga kiradi
+   * (iOS'da WS va davriy sync faqat ilova ochiq paytda ishlaydi).
+   * Best-effort: childUserId yo'q yoki push xatosi — jim.
+   */
+  async pushChildResync(childUserId: string | null | undefined): Promise<void> {
+    if (!childUserId) return;
+    try {
+      await this.sendPushToUser(childUserId, {
+        title: '',
+        body: '',
+        dataOnly: true,
+        data: { type: 'restrictions_sync' },
+      });
+    } catch (err) {
+      this.logger.warn(`restrictions_sync push yuborilmadi: ${String(err)}`);
+    }
+  }
+
   async sendPushToUser(
     userId: string,
     payload: PushPayload,

@@ -31,6 +31,15 @@ const ALLOWED_AVATAR_MIMES = [
 ];
 const MAX_AVATAR_SIZE_BYTES = 5 * 1024 * 1024; // 5 MB
 
+/** `PUT /children/:id` dagi bola qurilmasida qo'llanadigan siyosat maydonlari. */
+const DEVICE_POLICY_FIELDS = [
+  'blockUnknownSources',
+  'blockAllApps',
+  'blockUninstall',
+  'webFilterEnabled',
+  'blockedWebCategories',
+] as const satisfies readonly (keyof UpdateChildDto)[];
+
 @Injectable()
 export class ChildrenService {
   private readonly logger = new Logger(ChildrenService.name);
@@ -535,6 +544,12 @@ export class ChildrenService {
     });
 
     await this.audit.log(userId, 'child', 'UPDATE', id, dto, reqMeta);
+
+    // Qurilma siyosati o'zgardi — bola ilovasi (fonda/yopiq bo'lsa ham)
+    // darhol qayta sync qilsin (`GET /children/:id/device-policy`).
+    if (DEVICE_POLICY_FIELDS.some((field) => dto[field] !== undefined)) {
+      void this.fcm.pushChildResync(updated.childUserId);
+    }
 
     return updated;
   }
