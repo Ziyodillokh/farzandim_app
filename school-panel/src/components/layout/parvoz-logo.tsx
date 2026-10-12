@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
  * bilan ishlaydi va `next/image` unoptimized SVG uchun basePath qo'shmaydi
  * (→ 404). Inline SVG yo'lga bog'liq emas, tema/DPI'da ham tiniq.
  */
-export function ParvozLogo({ className, title = "Parvoz" }: { className?: string; title?: string }) {
+export function ParvozLogo({ className, title = "Parvoz", decorative = false }: { className?: string; title?: string; decorative?: boolean }) {
   // Bir sahifada bir nechta nusxa bo'lsa gradient id to'qnashmasin.
   const gradId = `parvozGrad-${useId().replace(/:/g, "")}`;
   return (
@@ -17,8 +17,7 @@ export function ParvozLogo({ className, title = "Parvoz" }: { className?: string
       viewBox="0 0 44 44"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      role="img"
-      aria-label={title}
+      {...(decorative ? { "aria-hidden": true } : { role: "img", "aria-label": title })}
       className={cn("shrink-0", className)}
     >
       <rect width="44" height="44" rx="10.301" fill={`url(#${gradId})`} />

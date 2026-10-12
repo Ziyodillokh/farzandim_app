@@ -14,6 +14,7 @@ import { careService } from './mock/services/care';
 import { commsService } from './mock/services/comms';
 import { dashboardService } from './mock/services/dashboard';
 import { learningService } from './mock/services/learning';
+import { profileService } from './mock/services/profile';
 import { reportsService } from './mock/services/reports';
 import { schoolModeService } from './mock/services/school-mode';
 
@@ -32,6 +33,7 @@ export const api = {
   learning: learningService,
   reports: reportsService,
   dashboard: dashboardService,
+  profile: profileService,
   demo: demoService,
 };
 

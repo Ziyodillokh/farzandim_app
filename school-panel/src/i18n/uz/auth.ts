@@ -9,7 +9,10 @@ export const auth = {
   invalid: 'Login yoki parol noto\'g\'ri',
   logout: 'Chiqish',
   demoAccounts: 'Demo hisoblar',
-  demoAccountsHint: 'Rolni tanlang — maydonlar avtomatik to\'ldiriladi.',
+  demoAccountsHint: 'Kartochkani bosing — shu rol bilan darhol kirasiz.',
+  oneClick: 'yoki demo hisob bilan bir bosishda',
+  loginAs: '{role} sifatida kirish',
+  slogan: 'Himoyadan yuksalishgacha',
   heroTitle: 'Maktabga boshqaruv, ota-onaga xotirjamlik, o\'quvchiga xavfsiz muhit',
   heroPoints: {
     schoolMode: 'Dars vaqtida telefonlardan foydalanish tartibi',

@@ -1,3 +1,4 @@
+import { assignAllPortraits } from '@/lib/staff-avatar';
 import { toIsoDate } from '../calendar';
 import type { Tables } from '../tables';
 import { buildAudit, buildEarlyExits } from './audit';
@@ -32,7 +33,7 @@ export function generateSeed(seed: number, now: Date): Tables {
     shifts,
     classes,
     holidays,
-    staff: people.staff,
+    staff: assignAllPortraits(people.staff),
     students: people.students,
     guardians: people.guardians,
     attendance: [],

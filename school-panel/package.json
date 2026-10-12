@@ -51,6 +51,9 @@
     "zod": "^3.24.1"
   },
   "devDependencies": {
+    "@dicebear/core": "9.4.3",
+    "@dicebear/notionists": "9.4.2",
+    "@dicebear/open-peeps": "9.4.2",
     "@eslint/eslintrc": "^3.2.0",
     "@playwright/test": "^1.51.1",
     "@types/node": "^22.10.7",

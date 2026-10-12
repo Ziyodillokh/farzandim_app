@@ -16,6 +16,10 @@ export const shell = {
   collapse: 'Menyuni yig\'ish',
   expand: 'Menyuni ochish',
   poweredBy: 'Parvoz ekotizimi',
+  account: 'Hisob menyusi',
+  myProfile: 'Profilim',
+  openMenu: 'Menyuni ochish',
+  schoolChip: 'Maktab',
   schoolDay: 'O\'quv kuni',
   holiday: 'Dam olish kuni',
 };

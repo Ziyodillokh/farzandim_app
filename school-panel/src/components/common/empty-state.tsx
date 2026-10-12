@@ -18,7 +18,7 @@ export function EmptyState({
   return (
     <div className={cn('flex flex-col items-center justify-center gap-3 px-6 py-14 text-center', className)}>
       {icon && (
-        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary [&_svg]:size-7">{icon}</div>
+        <div className="flex h-14 w-14 items-center justify-center rounded-2xl bg-gradient-to-br from-primary/15 to-sky-400/10 text-primary ring-1 ring-inset ring-primary/15 [&_svg]:size-7">{icon}</div>
       )}
       <div>
         <p className="font-semibold">{title}</p>

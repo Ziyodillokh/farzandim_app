@@ -69,7 +69,7 @@ export function DataTable<T>({
   const showSkeleton = loading && !rows;
 
   return (
-    <div className={cn('overflow-hidden rounded-xl border bg-card', className)}>
+    <div className={cn('glass overflow-hidden rounded-2xl', className)}>
       <Table>
         <TableHeader>
           <TableRow className="hover:bg-transparent">
@@ -125,7 +125,7 @@ export function DataTable<T>({
         <EmptyState icon={<SearchX />} title={emptyTitle ?? t('common.noResults')} description={emptyDescription ?? t('common.noResultsHint')} action={emptyAction} />
       )}
       {pagination && pagination.total > 0 && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t px-4 py-3 text-sm no-print">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-border/60 bg-white/30 px-4 py-3 text-sm dark:bg-white/[0.02] no-print">
           <span className="text-muted-foreground">
             {t('common.showing', {
               from: formatNumber((pagination.page - 1) * pagination.limit + 1),

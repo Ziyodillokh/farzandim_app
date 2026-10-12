@@ -1,3 +1,4 @@
+import { assignPortrait, inferStaffGender } from '@/lib/staff-avatar';
 import { type Permission, roleHas, ROLES, type RoleDefinition } from '@/auth/permissions';
 import type { AuditLog, AuditModule, ListQuery, Paginated, RoleKey, Staff } from '@/data/contracts';
 import { ServiceError } from '@/data/contracts';
@@ -75,6 +76,12 @@ function syncHomeroom(t: Tables, staff: Staff): void {
   );
 }
 
+function withoutPhoto(staff: Staff): Omit<Staff, 'photo'> {
+  const { photo: _photo, ...rest } = staff;
+  void _photo;
+  return rest;
+}
+
 export const staffService = {
   async list(filter: ListQuery & { role?: RoleKey; active?: boolean } = {}): Promise<Paginated<StaffRow>> {
     await latency(80, 160);
@@ -124,10 +131,16 @@ export const staffService = {
     assertCan(actor, 'staff.manage');
     const data = parseOrThrow(staffFormSchema, input);
     return transact((t) => {
-      const staff: Staff = { id: newId('stf'), ...data, classIds: normalizeClassIds(t, data.role, data.classIds), username: null };
+      const staff: Staff = {
+        id: newId('stf'),
+        ...data,
+        classIds: normalizeClassIds(t, data.role, data.classIds),
+        username: null,
+        portrait: assignPortrait(t.staff, data.fullName),
+      };
       t.staff = [...t.staff, staff];
       syncHomeroom(t, staff);
-      writeAudit(t, actor, 'STAFF', 'staff.create', `Xodim qo'shildi: ${staff.fullName}`, staff.id, null, staff);
+      writeAudit(t, actor, 'STAFF', 'staff.create', `Xodim qo'shildi: ${staff.fullName}`, staff.id, null, withoutPhoto(staff));
       return staff;
     });
   },
@@ -142,10 +155,18 @@ export const staffService = {
       const before = t.staff.find((s) => s.id === id);
       if (!before) throw new ServiceError('NOT_FOUND', id);
       if (before.username && data.role !== before.role) throw new ServiceError('CONFLICT', 'demo account role');
-      const next: Staff = { ...before, ...data, active: before.active, classIds: normalizeClassIds(t, data.role, data.classIds) };
+      const genderChanged = inferStaffGender(before.fullName) !== inferStaffGender(data.fullName);
+      const next: Staff = {
+        ...before,
+        ...data,
+        active: before.active,
+        classIds: normalizeClassIds(t, data.role, data.classIds),
+        portrait: genderChanged || !before.portrait ? assignPortrait(t.staff.filter((s) => s.id !== id), data.fullName) : before.portrait,
+      };
       t.staff = t.staff.map((s) => (s.id === id ? next : s));
       syncHomeroom(t, next);
-      writeAudit(t, actor, 'STAFF', 'staff.update', `Xodim yangilandi: ${next.fullName}`, id, before, next);
+      // Rasm baytlari auditga yozilmaydi (localStorage to'lib qolmasin).
+      writeAudit(t, actor, 'STAFF', 'staff.update', `Xodim yangilandi: ${next.fullName}`, id, withoutPhoto(before), withoutPhoto(next));
       return next;
     });
   },
