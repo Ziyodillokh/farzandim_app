@@ -1,7 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { FormField } from '@/components/common/form-field';
@@ -53,13 +53,24 @@ export function StudentFormDialog({
     defaultValues: EMPTY,
   });
 
+  // Formani faqat ochilganda to'ldiramiz: jonli simulyator so'rovlarni tez-tez
+  // yangilaydi va `student` obyekti almashadi — yozilayotgan matn o'chmasin.
+  const wasOpen = useRef(false);
   useEffect(() => {
-    if (!open) return;
-    form.reset(
-      student
-        ? { ...EMPTY, ...student, middleName: student.middleName }
-        : { ...EMPTY, classId: defaultClassId ?? classes.data?.[0]?.id ?? '' },
-    );
+    if (open && !wasOpen.current) {
+      form.reset(
+        student
+          ? { ...EMPTY, ...student, middleName: student.middleName }
+          : { ...EMPTY, classId: defaultClassId ?? classes.data?.[0]?.id ?? '' },
+      );
+    }
+    wasOpen.current = open;
+  }, [open, student, defaultClassId, classes.data, form]);
+
+  // Sinflar ro'yxati kechroq yuklansa — faqat bo'sh sinf maydonini to'ldiramiz.
+  useEffect(() => {
+    const first = classes.data?.[0]?.id;
+    if (open && !student && first && !form.getValues('classId')) form.setValue('classId', defaultClassId ?? first);
   }, [open, student, defaultClassId, classes.data, form]);
 
   const submit = form.handleSubmit(async (values) => {

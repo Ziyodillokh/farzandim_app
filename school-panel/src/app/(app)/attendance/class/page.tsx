@@ -1,7 +1,14 @@
 'use client';
 
-import { ComingSoon } from '@/components/common/coming-soon';
+import { Suspense } from 'react';
 
-export default function Page() {
-  return <ComingSoon titleKey="nav.attendanceBoard" />;
+import { ClassView } from '@/features/attendance/components/class-view';
+import { PageSkeleton } from '@/features/attendance/components/page-skeleton';
+
+export default function AttendanceClassPage() {
+  return (
+    <Suspense fallback={<PageSkeleton />}>
+      <ClassView />
+    </Suspense>
+  );
 }

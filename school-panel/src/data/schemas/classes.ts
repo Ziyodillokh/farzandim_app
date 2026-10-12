@@ -15,3 +15,11 @@ export const classInputSchema = z.object({
 });
 
 export type ClassInput = z.input<typeof classInputSchema>;
+
+/** Ommaviy taklif filtri — ota-onalar ro'yxatidagi joriy filtr. */
+export const bulkInviteSchema = z.object({
+  classId: z.string().min(1).optional(),
+  search: z.string().trim().max(100, msg.tooLong).optional(),
+});
+
+export type BulkInviteInput = z.input<typeof bulkInviteSchema>;

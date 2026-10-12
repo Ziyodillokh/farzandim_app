@@ -106,8 +106,8 @@ export const NAV_GROUP_ORDER: readonly NavGroup[] = ['main', 'school', 'communic
 /** Joriy yo'l uchun eng aniq mos keladigan marshrut (ruxsat tekshiruvi uchun). */
 export function findRoute(path: string): RouteDef | undefined {
   const normalized = path.length > 1 && path.endsWith('/') ? path.slice(0, -1) : path;
-  return ROUTES.filter((r) => !r.parent)
-    .filter((r) => normalized === r.path || normalized.startsWith(`${r.path}/`))
+  // Eng uzun mos yo'l: ichki sahifa (masalan /attendance/corrections) o'z ruxsati bilan tekshiriladi.
+  return ROUTES.filter((r) => normalized === r.path || normalized.startsWith(`${r.path}/`))
     .sort((a, b) => b.path.length - a.path.length)[0];
 }
 

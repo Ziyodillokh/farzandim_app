@@ -10,20 +10,20 @@ type IsPlural<T> = T extends PluralForms ? (keyof T extends keyof PluralForms ? 
 
 /** "students.title" kabi matn kalitlari. */
 export type TextKey<T, P extends string = ''> = {
-  [K in keyof T & string]: T[K] extends string
+  [K in keyof T & (string | number)]: T[K] extends string
     ? `${P}${K}`
     : IsPlural<T[K]> extends true
       ? never
       : TextKey<T[K], `${P}${K}.`>;
-}[keyof T & string];
+}[keyof T & (string | number)];
 
 /** "common.studentsCount" kabi ko'plik kalitlari. */
 export type PluralKey<T, P extends string = ''> = {
-  [K in keyof T & string]: T[K] extends string
+  [K in keyof T & (string | number)]: T[K] extends string
     ? never
     : IsPlural<T[K]> extends true
       ? `${P}${K}`
       : PluralKey<T[K], `${P}${K}.`>;
-}[keyof T & string];
+}[keyof T & (string | number)];
 
 export type Vars = Record<string, string | number>;

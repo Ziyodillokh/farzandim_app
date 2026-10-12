@@ -8,10 +8,10 @@ export type Tone = 'primary' | 'success' | 'warning' | 'destructive' | 'info' | 
 
 const TONES: Record<Tone, string> = {
   primary: 'bg-primary/10 text-primary',
-  success: 'bg-success/12 text-success',
+  success: 'bg-success/10 text-success',
   warning: 'bg-warning/15 text-warning',
   destructive: 'bg-destructive/10 text-destructive',
-  info: 'bg-info/12 text-info',
+  info: 'bg-info/10 text-info',
   muted: 'bg-muted text-muted-foreground',
 };
 

@@ -1,5 +1,6 @@
 import type {
   AttendanceEvent,
+  AttendanceEventKind,
   AttendanceRecord,
   AttendanceStatus,
   EarlyExitRequest,
@@ -19,7 +20,7 @@ import { addDays, dateRange, isSchoolDay } from '../calendar';
 import { clockMinute, clockNow, clockToday } from '../clock';
 import { assertCan, assertClassInScope, currentActor, inScope, latency, newId, writeAudit } from '../context';
 import { getTables, transact } from '../db';
-import { buildIndexes, compareClasses, studentName } from '../lookups';
+import { buildIndexes, compareClasses, compareClassesByShiftNow, studentName } from '../lookups';
 import type { Tables } from '../tables';
 
 export type DayCounts = { present: number; late: number; absent: number; leftEarly: number; excused: number; pending: number; total: number };
@@ -28,6 +29,7 @@ export type ClassBoardRow = {
   classId: string;
   className: string;
   grade: number;
+  shiftId: string;
   shiftName: string;
   homeroomName: string | null;
   counts: DayCounts;
@@ -47,6 +49,27 @@ export type StudentDayRow = {
 };
 
 export type FeedItem = AttendanceEvent & { studentName: string; className: string };
+
+export type ClassOption = { id: string; name: string; grade: number; shiftId: string; shiftName: string };
+
+export type KioskStats = { date: IsoDate; expected: number; arrived: number; late: number; recent: FeedItem[] };
+
+/**
+ * Vaqt bo'yicha (eng yangisi birinchi). `at` ikki ko'rinishda keladi: simulyator —
+ * mahalliy ("2026-10-12T08:03:00"), kiosk/xodim — UTC ("…Z"); satr solishtirish
+ * noto'g'ri tartib beradi, shuning uchun vaqt belgisi solishtiriladi.
+ */
+function byAtDesc(a: { at: string }, b: { at: string }): number {
+  return Date.parse(b.at) - Date.parse(a.at);
+}
+
+function toFeedItems(tables: Tables, events: readonly AttendanceEvent[]): FeedItem[] {
+  const idx = buildIndexes(tables);
+  return events.map((e) => {
+    const s = idx.students.get(e.studentId);
+    return { ...e, studentName: s ? studentName(s) : '—', className: idx.classes.get(e.classId)?.name ?? '' };
+  });
+}
 
 const EMPTY: DayCounts = { present: 0, late: 0, absent: 0, leftEarly: 0, excused: 0, pending: 0, total: 0 };
 
@@ -107,7 +130,9 @@ export const attendanceService = {
     if (day !== today) assertCan(actor, 'attendance.history');
     const idx = buildIndexes(tables);
     const stored = storedMap(tables, day);
-    const classes = inScope(actor, tables.classes.map((c) => ({ ...c, classId: c.id }))).sort(compareClasses);
+    // Bugun — hozir darsdagi smena birinchi; o'tgan kunlar — sinf tartibida.
+    const order = day === today ? compareClassesByShiftNow(tables, day, clockMinute()) : compareClasses;
+    const classes = inScope(actor, tables.classes.map((c) => ({ ...c, classId: c.id }))).sort(order);
     let totals = { ...EMPTY };
     const rows: ClassBoardRow[] = classes.map((cls) => {
       const schoolDay = isClassSchoolDay(tables, cls, day);
@@ -132,6 +157,7 @@ export const attendanceService = {
         classId: cls.id,
         className: cls.name,
         grade: cls.grade,
+        shiftId: cls.shiftId,
         shiftName: idx.shifts.get(cls.shiftId)?.name ?? '',
         homeroomName: cls.homeroomStaffId ? (idx.staff.get(cls.homeroomStaffId)?.fullName ?? null) : null,
         counts,
@@ -143,7 +169,10 @@ export const attendanceService = {
   },
 
   /** Bitta sinfning kun ro'yxati. */
-  async classDay(classId: string, date?: IsoDate): Promise<{ date: IsoDate; className: string; rows: StudentDayRow[] }> {
+  async classDay(
+    classId: string,
+    date?: IsoDate,
+  ): Promise<{ date: IsoDate; className: string; shiftName: string; schoolDay: boolean; rows: StudentDayRow[] }> {
     await latency(60, 140);
     const actor = currentActor();
     assertCan(actor, 'attendance.view');
@@ -155,6 +184,7 @@ export const attendanceService = {
     const cls = tables.classes.find((c) => c.id === classId);
     if (!cls) throw new ServiceError('NOT_FOUND', classId);
     const stored = storedMap(tables, day);
+    const schoolDay = isClassSchoolDay(tables, cls, day);
     const rows = tables.students
       .filter((s) => !s.archived && s.classId === classId)
       .sort((a, b) => studentName(a).localeCompare(studentName(b), 'uz'))
@@ -165,27 +195,36 @@ export const attendanceService = {
         classId: s.classId,
         className: cls.name,
         device: s.device,
-        record: isClassSchoolDay(tables, cls, day) ? resolveRecord(tables, s, day, today, stored.get(s.id)) : null,
+        record: schoolDay ? resolveRecord(tables, s, day, today, stored.get(s.id)) : null,
       }));
-    return { date: day, className: cls.name, rows };
+    const shiftName = tables.shifts.find((sh) => sh.id === cls.shiftId)?.name ?? '';
+    return { date: day, className: cls.name, shiftName, schoolDay, rows };
   },
 
   /** Bugungi jonli oqim (eng yangisi birinchi). */
-  async feed(options: { classId?: string; limit?: number } = {}): Promise<FeedItem[]> {
+  async feed(options: { classId?: string; kind?: AttendanceEventKind; limit?: number } = {}): Promise<FeedItem[]> {
     await latency(40, 100);
     const actor = currentActor();
     assertCan(actor, 'attendance.view');
     if (options.classId) assertClassInScope(actor, options.classId);
     const tables = getTables();
-    const idx = buildIndexes(tables);
     const events = inScope(actor, tables.attendanceEvents)
-      .filter((e) => !options.classId || e.classId === options.classId)
-      .sort((a, b) => b.at.localeCompare(a.at))
+      .filter((e) => (!options.classId || e.classId === options.classId) && (!options.kind || e.kind === options.kind))
+      .sort(byAtDesc)
       .slice(0, options.limit ?? 50);
-    return events.map((e) => {
-      const s = idx.students.get(e.studentId);
-      return { ...e, studentName: s ? studentName(s) : '—', className: idx.classes.get(e.classId)?.name ?? '' };
-    });
+    return toFeedItems(tables, events);
+  },
+
+  /** Doiradagi sinflar (filtr va tanlovlar uchun) — davomat ruxsati yetarli. */
+  async classOptions(): Promise<ClassOption[]> {
+    await latency(20, 60);
+    const actor = currentActor();
+    assertCan(actor, 'attendance.view');
+    const tables = getTables();
+    const shifts = new Map(tables.shifts.map((sh) => [sh.id, sh.name]));
+    return inScope(actor, tables.classes.map((c) => ({ ...c, classId: c.id })))
+      .sort(compareClasses)
+      .map((c) => ({ id: c.id, name: c.name, grade: c.grade, shiftId: c.shiftId, shiftName: shifts.get(c.shiftId) ?? '' }));
   },
 
   /** Xodim qo'lda belgilashi (bugun). Mavjud holatni o'zgartirish — tuzatish (sabab bilan). */
@@ -349,6 +388,26 @@ export const attendanceService = {
       .map((s) => ({ id: s.id, name: studentName(s), className: idx.classes.get(s.classId)?.name ?? '', studentCode: s.studentCode, inToday: inToday.has(s.id) }));
   },
 
+  /** Kiosk ekrani: bugun kelganlar / kechikkanlar va oxirgi kirishlar. */
+  async kioskStats(): Promise<KioskStats> {
+    await latency(20, 60);
+    const actor = currentActor();
+    assertCan(actor, 'attendance.kiosk');
+    const tables = getTables();
+    const today = clockToday();
+    const activeClasses = new Set(tables.classes.filter((c) => isClassSchoolDay(tables, c, today)).map((c) => c.id));
+    const expected = tables.students.filter((s) => !s.archived && activeClasses.has(s.classId)).length;
+    let arrived = 0;
+    let late = 0;
+    for (const r of tables.attendance) {
+      if (r.date !== today || !r.inAt) continue;
+      arrived += 1;
+      if (r.status === 'LATE') late += 1;
+    }
+    const recent = tables.attendanceEvents.filter((e) => e.kind === 'IN').sort(byAtDesc).slice(0, 6);
+    return { date: today, expected, arrived, late, recent: toFeedItems(tables, recent) };
+  },
+
   // ─── Erta ketish ─────────────────────────────────────────────────
 
   async earlyExits(status?: EarlyExitRequest['status']): Promise<Array<EarlyExitRequest & { studentName: string; className: string; decidedByName: string | null }>> {
@@ -442,7 +501,7 @@ export const attendanceService = {
     const allowed = new Set(inScope(actor, tables.students.map((s) => ({ ...s, classId: s.classId }))).map((s) => s.id));
     return tables.parentNotifications
       .filter((n) => allowed.has(n.studentId))
-      .sort((a, b) => b.at.localeCompare(a.at))
+      .sort(byAtDesc)
       .slice(0, limit)
       .map((n) => {
         const s = idx.students.get(n.studentId);

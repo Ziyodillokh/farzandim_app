@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
 import { Can } from '@/auth/can';
+import { useCan } from '@/auth/use-session';
 import { DataTable, type Column, type SortState } from '@/components/common/data-table';
 import { ExportMenu } from '@/components/common/export-menu';
 import { PageHeader } from '@/components/common/page-header';
@@ -37,10 +38,13 @@ export default function StudentsPage() {
   const linked = useStudents({ limit: 1, linkStatus: 'LINKED' });
   const noPhone = useStudents({ limit: 1, device: 'NONE' });
 
+  const can = useCan();
+  // Psixolog: faqat ism va sinf (servis ham qolganini yashiradi).
+  const minimal = !can('guardians.link');
   const update = (patch: Partial<StudentFilter>) => setFilter((f) => ({ ...f, page: 1, ...patch }));
 
-  const columns = useMemo<Column<StudentRow>[]>(
-    () => [
+  const columns = useMemo<Column<StudentRow>[]>(() => {
+    const list: Column<StudentRow>[] = [
       {
         key: 'name',
         header: t('students.columns.name'),
@@ -75,9 +79,9 @@ export default function StudentsPage() {
       { key: 'link', header: t('students.columns.guardians'), sortKey: 'link', cell: (r) => <LinkBadge status={r.linkStatus} /> },
       { key: 'device', header: t('students.columns.device'), cell: (r) => <DeviceIcon device={r.device} /> },
       { key: 'today', header: t('students.columns.today'), cell: (r) => <AttendanceBadge status={r.todayStatus} /> },
-    ],
-    [t, formatDate],
-  );
+    ];
+    return minimal ? list.filter((c) => c.key === 'name' || c.key === 'class') : list;
+  }, [t, formatDate, minimal]);
 
   const exportCsv = async () => {
     const rows = await api.students.exportRows(filter);
@@ -104,7 +108,7 @@ export default function StudentsPage() {
         subtitle={t('students.subtitle')}
         actions={
           <>
-            <ExportMenu onCsv={exportCsv} />
+            {!minimal && <ExportMenu onCsv={exportCsv} />}
             <Can perm="students.manage">
               <Button variant="outline" onClick={() => setImportOpen(true)}>
                 <FileUp />
@@ -119,7 +123,7 @@ export default function StudentsPage() {
         }
       />
 
-      <div className="mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      <div className={minimal ? 'hidden' : 'mb-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-3'}>
         <StatCard icon={<Users />} label={t('students.stats.total')} value={formatNumber(total)} loading={all.isLoading} />
         <StatCard
           icon={<UserCheck />}
@@ -147,19 +151,23 @@ export default function StudentsPage() {
           allLabel={`${t('students.filters.class')}: ${t('common.all')}`}
           className="sm:w-40"
         />
-        <FilterSelect
-          value={filter.linkStatus}
-          onChange={(v) => update({ linkStatus: v as ParentLinkStatus | undefined })}
-          options={(['LINKED', 'INVITED', 'NOT_INVITED'] as const).map((s) => ({ value: s, label: t(`enums.linkStatus.${s}`) }))}
-          allLabel={`${t('students.filters.link')}: ${t('common.all')}`}
-          className="sm:w-56"
-        />
-        <FilterSelect
-          value={filter.device}
-          onChange={(v) => update({ device: v as DeviceOs | undefined })}
-          options={(['IOS', 'ANDROID', 'NONE'] as const).map((d) => ({ value: d, label: t(`enums.device.${d}`) }))}
-          allLabel={`${t('students.filters.device')}: ${t('common.all')}`}
-        />
+        {!minimal && (
+          <>
+            <FilterSelect
+              value={filter.linkStatus}
+              onChange={(v) => update({ linkStatus: v as ParentLinkStatus | undefined })}
+              options={(['LINKED', 'INVITED', 'NOT_INVITED'] as const).map((s) => ({ value: s, label: t(`enums.linkStatus.${s}`) }))}
+              allLabel={`${t('students.filters.link')}: ${t('common.all')}`}
+              className="sm:w-56"
+            />
+            <FilterSelect
+              value={filter.device}
+              onChange={(v) => update({ device: v as DeviceOs | undefined })}
+              options={(['IOS', 'ANDROID', 'NONE'] as const).map((d) => ({ value: d, label: t(`enums.device.${d}`) }))}
+              allLabel={`${t('students.filters.device')}: ${t('common.all')}`}
+            />
+          </>
+        )}
       </Toolbar>
 
       <DataTable

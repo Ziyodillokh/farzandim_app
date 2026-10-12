@@ -38,21 +38,43 @@ function lastWeekday(today: IsoDate, holidays: readonly IsoDate[]): IsoDate {
   return today;
 }
 
+const LIVE_DAY_START = 7 * 60;
+const LIVE_DAY_END = 18 * 60;
+
+/**
+ * Birinchi ochilishda: ish kuni 07:00–18:00 bo'lsa — haqiqiy vaqt, aks holda
+ * (kechqurun, dam olish) — "ertalab 07:45" ssenariysi, taqdimotda panel jonli ko'rinsin.
+ */
+function isLiveHours(now: Date): boolean {
+  const minute = now.getHours() * 60 + now.getMinutes();
+  return isoWeekday(toIsoDate(now)) <= 5 && minute >= LIVE_DAY_START && minute < LIVE_DAY_END;
+}
+
 function defaultState(): ClockState {
+  const now = new Date();
+  const live = isLiveHours(now);
   return {
-    mode: 'REAL',
+    mode: live ? 'REAL' : 'SCENARIO',
     speed: 10,
-    scenarioDate: toIsoDate(new Date()),
+    scenarioDate: live ? toIsoDate(now) : lastWeekday(toIsoDate(now), []),
     scenarioStartMinute: SCENARIO_START_MINUTE,
     realStartedAt: Date.now(),
-    epoch: 0,
+    // Ssenariy yangi "kun" sifatida o'ynaladi (simulyator kaliti date#epoch).
+    epoch: live ? 0 : Date.now(),
   };
 }
 
 function load(): ClockState {
   if (state) return state;
   const saved = readPref<ClockState>(PREF_KEY);
-  state = saved && (saved.mode === 'REAL' || saved.mode === 'SCENARIO') ? { ...defaultState(), ...saved } : defaultState();
+  if (saved && (saved.mode === 'REAL' || saved.mode === 'SCENARIO')) {
+    state = { ...defaultState(), ...saved };
+    return state;
+  }
+  state = defaultState();
+  // Ssenariy saqlanadi — yangi tab (kiosk) va qayta yuklashda vaqt boshidan boshlanmasin.
+  // Haqiqiy vaqt saqlanmaydi: keyingi ochilish kechqurun bo'lsa, yana ssenariy tanlanadi.
+  if (state.mode === 'SCENARIO') writePref(PREF_KEY, state);
   return state;
 }
 

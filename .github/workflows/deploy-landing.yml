@@ -15,6 +15,11 @@ name: Deploy Website → farzandimedu.uz
 #                admin, /storage holati o'zgarmagan; xato bo'lsa — avtomatik
 #                orqaga qaytarish (nginx konfig + symlink).
 #
+# Parvoz School demo paneli (school-panel/, Next.js statik eksport, basePath
+# /school): school-panel job build qiladi (typecheck, lint, vitest, export
+# tekshiruvi, Playwright), deploy job `out/` ni website/public/school/ ga
+# qo'yadi — keyin odatdagi Stage/Publish (har fayl xeshi + avto-rollback).
+#
 # Secretlar (deploy-test.yml bilan BIR XIL):
 #   SSH_HOST, SSH_USER, SSH_PASSWORD (SSH + sudo paroli)
 # ─────────────────────────────────────────────────────────────────────────────
@@ -24,6 +29,7 @@ on:
     branches: [main]
     paths:
       - 'website/**'
+      - 'school-panel/**'
       - '.github/workflows/deploy-landing.yml'
   workflow_dispatch:
 
@@ -44,8 +50,44 @@ jobs:
       - name: Sayt va deploy vositasi testlari
         run: python3 -m unittest discover -s website/tests -v
 
+  school-panel:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: school-panel
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: school-panel/package-lock.json
+      - run: npm ci
+      - run: npm run typecheck
+      - run: npm run lint
+      - run: npm test
+      - run: npm run build
+      - run: npm run check:export
+      - name: Playwright (5 rol × barcha sahifalar)
+        run: |
+          npx playwright install --with-deps chromium
+          npm run e2e
+      - uses: actions/upload-artifact@v4
+        if: failure()
+        with:
+          name: school-panel-playwright
+          path: school-panel/test-results
+          retention-days: 7
+      - uses: actions/upload-artifact@v4
+        with:
+          name: school-panel-out
+          path: school-panel/out
+          retention-days: 3
+          if-no-files-found: error
+
   deploy:
-    needs: test
+    needs: [test, school-panel]
     runs-on: ubuntu-22.04
     timeout-minutes: 15
     env:
@@ -65,6 +107,11 @@ jobs:
             sleep 10
           done
           command -v sshpass && command -v rsync
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: school-panel-out
+          path: website/public/school
 
       - name: Stage (sayt + xesh manifest + deploy skriptlari)
         run: bash website/deploy/make-stage.sh "$RUNNER_TEMP/stage"
@@ -98,6 +145,8 @@ jobs:
           check /privacy                   200 "Maxfiylik siyosati"
           check /robots.txt                200 "Sitemap:"
           check /parvoz-yoq-sahifa         404 "Bu sahifa topilmadi"
+          check /school/                   200 "Parvoz School"
+          check /school/login/             200 "Parvoz School"
           # /api holatini server-deploy.sh o'zgarishdan oldingi bilan solishtirgan; bu yerda faqat ogohlantirish.
           api="$(curl -s -o /dev/null -w '%{http_code}' --max-time 20 "https://${DOMAIN}/api" || true)"
           [ "$api" = "200" ] && echo "✓ /api → 200" || echo "::warning::/api → $api"

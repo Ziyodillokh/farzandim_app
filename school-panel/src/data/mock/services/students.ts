@@ -1,3 +1,4 @@
+import { roleHas } from '@/auth/permissions';
 import type {
   AttendanceRecord,
   DeviceState,
@@ -92,13 +93,22 @@ function newStudentCode(existing: Set<string>, seed: string): string {
   }
 }
 
+/**
+ * Ota-onaga ulash huquqi yo'q rollar (psixolog) uchun: ota-ona, qurilma va
+ * davomat ma'lumotlari servisdan umuman chiqmaydi (TZ: faqat ism va sinf).
+ */
+function redact(row: StudentRow): StudentRow {
+  return { ...row, guardianIds: [], guardianNames: [], linkStatus: 'NOT_INVITED', device: 'NONE', deviceStatus: 'NO_PHONE', todayStatus: null };
+}
+
 export const studentsService = {
   async list(filter: StudentFilter = {}): Promise<Paginated<StudentRow>> {
     await latency(80, 180);
     const actor = currentActor();
     assertCan(actor, 'students.view');
     if (filter.classId) assertClassInScope(actor, filter.classId);
-    const rows = inScope(actor, toRows()).filter(
+    const minimal = !roleHas(actor.role, 'guardians.link');
+    const rows = inScope(actor, toRows()).map((r) => (minimal ? redact(r) : r)).filter(
       (r) =>
         (filter.includeArchived || !r.archived) &&
         (!filter.classId || r.classId === filter.classId) &&
@@ -140,9 +150,9 @@ export const studentsService = {
     const today = clockToday();
     const stored = t.attendance.find((r) => r.date === today && r.studentId === id);
     // Psixolog uchun minimal ma'lumot (TZ: faqat ism va sinf).
-    const minimal = actor.role === 'PSYCHOLOGIST';
+    const minimal = !roleHas(actor.role, 'guardians.link');
     return {
-      ...row,
+      ...(minimal ? redact(row) : row),
       guardians: minimal ? [] : t.guardians.filter((g) => row.guardianIds.includes(g.id)),
       homeroomName: cls?.homeroomStaffId ? (idx.staff.get(cls.homeroomStaffId)?.fullName ?? null) : null,
       shiftName: cls ? (idx.shifts.get(cls.shiftId)?.name ?? '') : '',
