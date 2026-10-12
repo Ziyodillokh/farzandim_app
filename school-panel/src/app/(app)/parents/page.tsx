@@ -12,7 +12,9 @@ import { ExportMenu } from '@/components/common/export-menu';
 import { PageHeader } from '@/components/common/page-header';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import type { Guardian, ParentLinkStatus } from '@/data/contracts';
+import { GlassCallout } from '@/features/messages/components/glass-callout';
 import { BulkInviteDialog } from '@/features/parents/components/bulk-invite-dialog';
 import { InviteQrDialog } from '@/features/parents/components/invite-qr-dialog';
 import { ParentsStats } from '@/features/parents/components/parents-stats';
@@ -114,10 +116,9 @@ export default function ParentsPage() {
 
       <ParentsStats />
 
-      <p className="mb-4 flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
-        <ShieldCheck className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+      <GlassCallout icon={<ShieldCheck />} className="mb-6">
         {t('parents.privacy')}
-      </p>
+      </GlassCallout>
 
       <Toolbar>
         <SearchInput value={filter.search ?? ''} onChange={(search) => update({ search })} placeholder={t('parents.searchPlaceholder')} />
@@ -138,9 +139,9 @@ export default function ParentsPage() {
       </Toolbar>
 
       {guardians.isError ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <ErrorState error={guardians.error} onRetry={() => void guardians.refetch()} />
-        </div>
+        </Card>
       ) : (
         <DataTable
           columns={columns}

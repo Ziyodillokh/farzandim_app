@@ -10,9 +10,9 @@ import { scoreLevel, type ScoreLevel } from '../lib/insights';
 import { TOPIC_ICONS } from '../lib/labels';
 
 const LEVEL_STYLES: Record<ScoreLevel, { chip: string; bar: string; icon: string }> = {
-  GOOD: { chip: 'bg-success/10 text-success', bar: 'bg-success', icon: 'bg-success/10 text-success' },
-  MIDDLE: { chip: 'bg-primary/10 text-primary', bar: 'bg-primary', icon: 'bg-primary/10 text-primary' },
-  LOW: { chip: 'bg-warning/15 text-warning', bar: 'bg-warning', icon: 'bg-warning/15 text-warning' },
+  GOOD: { chip: 'bg-success/10 text-success ring-success/20', bar: 'bg-gradient-to-r from-emerald-300 to-success', icon: 'bg-success/10 text-success ring-success/20' },
+  MIDDLE: { chip: 'bg-primary/10 text-primary ring-primary/15', bar: 'bg-gradient-to-r from-sky-400 to-primary', icon: 'bg-primary/10 text-primary ring-primary/15' },
+  LOW: { chip: 'bg-warning/15 text-warning ring-warning/25', bar: 'bg-gradient-to-r from-amber-300 to-warning', icon: 'bg-warning/15 text-warning ring-warning/25' },
 };
 
 /** Mavzular bo'yicha 0..100 ko'rsatkichlar (maktab bo'yicha, k ≥ 5). */
@@ -28,7 +28,7 @@ export function TopicScoreCards({
     return (
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-5">
         {Array.from({ length: 5 }, (_, i) => (
-          <Skeleton key={i} className="h-32 rounded-xl" />
+          <Skeleton key={i} className="h-36 rounded-2xl" />
         ))}
       </div>
     );
@@ -45,10 +45,10 @@ export function TopicScoreCards({
         return (
           <Card key={topic} className="card-glow flex flex-col gap-3 p-4 animate-fade-in">
             <div className="flex items-start justify-between gap-2">
-              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl', styles.icon)}>
+              <span className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-xl ring-1 ring-inset', styles.icon)}>
                 <Icon className="h-4 w-4" />
               </span>
-              <span className={cn('rounded-full px-2 py-0.5 text-2xs font-semibold', styles.chip)}>
+              <span className={cn('rounded-full px-2 py-0.5 text-2xs font-semibold ring-1 ring-inset', styles.chip)}>
                 {t(`care.overview.level.${level}`)}
               </span>
             </div>
@@ -58,7 +58,7 @@ export function TopicScoreCards({
                 {score}
                 <span className="ml-0.5 text-sm font-normal text-muted-foreground">/100</span>
               </p>
-              <div className="mt-2 h-1.5 overflow-hidden rounded-full bg-muted" aria-hidden>
+              <div className="mt-2.5 h-1.5 overflow-hidden rounded-full bg-primary/[0.08] dark:bg-white/[0.06]" aria-hidden>
                 <div className={cn('h-full rounded-full transition-all duration-700', styles.bar)} style={{ width: `${score}%` }} />
               </div>
             </div>

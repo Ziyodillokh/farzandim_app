@@ -12,6 +12,7 @@ import { learning } from './learning';
 import { messages } from './messages';
 import { nav } from './nav';
 import { parents } from './parents';
+import { profile } from './profile';
 import { reminders } from './reminders';
 import { reports } from './reports';
 import { schoolMode } from './schoolMode';
@@ -42,6 +43,7 @@ export const uz = {
   reports,
   audit,
   settings,
+  profile,
 };
 
 export type Dict = typeof uz;

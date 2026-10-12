@@ -10,7 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import type { VerificationRow } from '@/data/mock/services/comms';
 import { MESSAGE_BODY_MAX } from '@/data/schemas/comms';
+import { INNER_TILE } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useAnswerVerification } from '../hooks';
 
 const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
@@ -56,12 +58,12 @@ export function VerificationAnswerDialog({ request, onOpenChange }: { request: V
           <DialogTitle>{t('reminders.verifications.answerTitle')}</DialogTitle>
           <DialogDescription>{request?.guardianName}</DialogDescription>
         </DialogHeader>
-        {request && <p className="rounded-xl bg-muted/60 p-3 text-sm italic text-muted-foreground">“{request.message}”</p>}
+        {request && <p className={cn(INNER_TILE, 'p-3 text-sm italic text-muted-foreground')}>“{request.message}”</p>}
         <FormField label={t('reminders.verifications.answerLabel')} htmlFor="ver-answer" hint={t('reminders.verifications.answerHint')} error={textError ? { message: textError } : undefined}>
           <Textarea id="ver-answer" rows={4} value={text} onChange={(e) => setText(e.target.value)} placeholder={t('reminders.verifications.answerPlaceholder')} autoFocus />
         </FormField>
         {request?.payment && (
-          <div className="space-y-3 rounded-xl border p-3">
+          <div className={cn(INNER_TILE, 'space-y-3 p-3')}>
             <label className="flex cursor-pointer items-center gap-3 text-sm font-medium">
               <Checkbox checked={changeDate} onCheckedChange={(v) => setChangeDate(v === true)} />
               {t('reminders.verifications.changeDate')}

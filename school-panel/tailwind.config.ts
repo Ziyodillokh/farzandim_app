@@ -39,6 +39,19 @@ const config: Config = {
           accent: 'hsl(var(--sidebar-accent))',
           border: 'hsl(var(--sidebar-border))',
         },
+        // Mavzudan qat'i nazar o'zgarmas brend palitrasi (login, wordmark, kiosk)
+        brand: {
+          100: '#DCE8FF',
+          200: '#B9D1FF',
+          300: '#8FB6FF',
+          400: '#508AFF',
+          500: '#3C82FF',
+          600: '#216BFF',
+          700: '#1A55CC',
+          800: '#305399',
+          900: '#0C1526',
+          950: '#060A15',
+        },
         chart: {
           1: 'hsl(var(--chart-1))',
           2: 'hsl(var(--chart-2))',
@@ -54,8 +67,8 @@ const config: Config = {
         sm: 'calc(var(--radius) - 4px)',
       },
       fontFamily: {
-        sans: ['var(--font-inter)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
-        display: ['var(--font-unbounded)', 'var(--font-inter)', 'ui-sans-serif', 'sans-serif'],
+        sans: ['var(--font-onest)', 'ui-sans-serif', 'system-ui', 'sans-serif'],
+        display: ['var(--font-unbounded)', 'var(--font-onest)', 'ui-sans-serif', 'sans-serif'],
       },
       fontSize: {
         '2xs': ['0.6875rem', { lineHeight: '1rem' }],
@@ -65,6 +78,11 @@ const config: Config = {
         'soft-lg': '0 4px 12px -2px rgb(15 23 42 / 0.06), 0 2px 4px -2px rgb(15 23 42 / 0.05)',
         'soft-xl': '0 18px 40px -12px rgb(15 23 42 / 0.12), 0 6px 12px -6px rgb(15 23 42 / 0.06)',
         'primary-glow': '0 0 0 1px hsl(var(--primary) / 0.18), 0 10px 28px -6px hsl(var(--primary) / 0.35)',
+        glass: 'var(--shadow-glass)',
+        'glass-lg': 'var(--shadow-glass-lg)',
+      },
+      backgroundImage: {
+        'brand-gradient': 'linear-gradient(180deg, hsl(var(--btn-from)), hsl(var(--btn-to)))',
       },
       keyframes: {
         'fade-in': { from: { opacity: '0' }, to: { opacity: '1' } },

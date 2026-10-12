@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { INNER_TILE, SELECTED_SOFT } from '../styles';
 
 export type ClassChoice = { id: string; name: string; grade: number; size: number };
 
@@ -50,13 +51,13 @@ export function ClassMultiSelect({
           const ids = inGrade.map((c) => c.id);
           const allOn = ids.every((id) => selected.has(id));
           return (
-            <div key={grade} className="flex items-center gap-2 rounded-xl border bg-muted/30 p-2">
+            <div key={grade} className={cn(INNER_TILE, 'flex items-center gap-2 p-2')}>
               <button
                 type="button"
                 onClick={() => toggle(ids)}
                 className={cn(
                   'w-16 shrink-0 rounded-lg px-2 py-1.5 text-left text-xs font-semibold transition-colors',
-                  allOn ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-accent hover:text-foreground',
+                  allOn ? SELECTED_SOFT : 'text-muted-foreground hover:bg-primary/[0.06] hover:text-foreground',
                 )}
               >
                 {t('messages.audience.gradeGroup', { grade })}
@@ -71,8 +72,8 @@ export function ClassMultiSelect({
                       aria-pressed={on}
                       onClick={() => toggle([c.id])}
                       className={cn(
-                        'inline-flex items-center gap-1 rounded-lg border px-2.5 py-1 text-sm font-medium transition-all',
-                        on ? 'border-primary bg-primary text-primary-foreground shadow-soft' : 'bg-card hover:border-primary/40',
+                        'inline-flex items-center gap-1 rounded-lg px-2.5 py-1 text-sm font-medium transition-all',
+                        on ? SELECTED_SOFT : 'bg-white/70 ring-1 ring-inset ring-border/70 hover:ring-primary/40 dark:bg-white/[0.04]',
                       )}
                     >
                       {on && <Check className="h-3.5 w-3.5" />}

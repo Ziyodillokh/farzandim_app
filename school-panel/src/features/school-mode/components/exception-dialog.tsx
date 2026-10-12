@@ -18,7 +18,7 @@ import { useI18n } from '@/i18n';
 import { useDebounced } from '@/lib/use-debounced';
 import { cn, initials } from '@/lib/utils';
 import { useCreateException } from '../hooks';
-import { EXCEPTION_PRESETS, presetUntil, type ExceptionPreset } from '../lib';
+import { EXCEPTION_PRESETS, presetUntil, SEG_OFF, SEG_ON, SEG_TRACK, TILE, TONE_TILE, type ExceptionPreset } from '../lib';
 
 const SEARCH_LIMIT = 8;
 type Picked = Pick<StudentRow, 'id' | 'lastName' | 'firstName' | 'className' | 'studentCode'>;
@@ -35,7 +35,7 @@ function StudentPicker({ open, picked, onPick }: { open: boolean; picked: Picked
 
   if (picked) {
     return (
-      <div className="flex items-center gap-3 rounded-xl border bg-primary/[0.04] p-3">
+      <div className={cn('flex items-center gap-3 rounded-xl p-3 ring-1 ring-inset', TONE_TILE.primary)}>
         <Avatar className="h-10 w-10">
           <AvatarFallback className="bg-primary/10 text-sm font-semibold text-primary">{initials(`${picked.lastName} ${picked.firstName}`)}</AvatarFallback>
         </Avatar>
@@ -58,7 +58,7 @@ function StudentPicker({ open, picked, onPick }: { open: boolean; picked: Picked
   return (
     <div className="space-y-2">
       <Input icon={<Search />} value={query} onChange={(e) => setQuery(e.target.value)} placeholder={t('schoolMode.exceptions.dialog.searchStudent')} autoFocus />
-      <div className="max-h-56 overflow-y-auto rounded-xl border">
+      <div className={cn('max-h-56 overflow-y-auto', TILE)}>
         {results.isLoading ? (
           <div className="space-y-2 p-3">
             <Skeleton className="h-8 w-full" />
@@ -70,7 +70,7 @@ function StudentPicker({ open, picked, onPick }: { open: boolean; picked: Picked
           <ul role="listbox" aria-label={t('schoolMode.exceptions.dialog.student')}>
             {items.map((s) => (
               <li key={s.id}>
-                <button type="button" onClick={() => onPick(s)} className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm hover:bg-accent">
+                <button type="button" onClick={() => onPick(s)} className="flex w-full items-center gap-3 px-3 py-2 text-left text-sm transition-colors first:rounded-t-xl last:rounded-b-xl hover:bg-primary/[0.06]">
                   <UserRound className="h-4 w-4 shrink-0 text-muted-foreground" aria-hidden />
                   <span className="min-w-0 flex-1 truncate font-medium">
                     {s.lastName} {s.firstName}
@@ -127,7 +127,7 @@ export function ExceptionDialog({ open, onOpenChange }: { open: boolean; onOpenC
           </div>
           <div className="space-y-2">
             <Label>{t('schoolMode.exceptions.dialog.duration')}</Label>
-            <div className="grid grid-cols-2 gap-2 sm:grid-cols-4" role="radiogroup">
+            <div className={cn('grid grid-cols-2 gap-1 sm:grid-cols-4', SEG_TRACK)} role="radiogroup">
               {EXCEPTION_PRESETS.map((p) => (
                 <button
                   key={p}
@@ -135,10 +135,7 @@ export function ExceptionDialog({ open, onOpenChange }: { open: boolean; onOpenC
                   role="radio"
                   aria-checked={preset === p}
                   onClick={() => setPreset(p)}
-                  className={cn(
-                    'rounded-lg border px-2 py-2 text-sm font-medium transition-colors',
-                    preset === p ? 'border-primary bg-primary/10 text-primary' : 'hover:border-primary/40',
-                  )}
+                  className={cn('h-9 rounded-lg px-2 text-sm font-medium transition-all', preset === p ? SEG_ON : SEG_OFF)}
                 >
                   {t(`schoolMode.exceptions.dialog.presets.${p}`)}
                 </button>

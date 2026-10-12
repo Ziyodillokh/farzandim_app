@@ -25,8 +25,8 @@ export function ClockWidget() {
         <button
           type="button"
           className={cn(
-            'flex h-10 items-center gap-2 rounded-lg border px-3 text-sm transition-colors hover:bg-accent',
-            scenario && 'border-primary/40 bg-primary/5',
+            'flex h-10 items-center gap-2 rounded-xl bg-white/60 px-3 text-sm ring-1 ring-inset ring-border/60 transition-colors hover:ring-primary/40 dark:bg-white/[0.04]',
+            scenario && 'bg-primary/[0.07] ring-primary/30 dark:bg-primary/10',
           )}
         >
           <span className="relative flex h-2 w-2">

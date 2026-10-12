@@ -36,6 +36,7 @@ export const schoolMode = {
     emergencyClass: 'Favqulodda o\'chirish faol: {classes}',
     emergencyMeta: '{name} · {time} · Sabab: {reason}',
     otherShift: '{shift}: {state}',
+    remaining: '{count} daq qoldi',
   },
   kpi: {
     applied: 'Cheklov qo\'llangan',

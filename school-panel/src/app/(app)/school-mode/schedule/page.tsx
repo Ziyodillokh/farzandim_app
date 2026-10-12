@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, Pencil, Users } from 'lucide-react';
+import { CalendarClock, Clock3, Pencil, Users } from 'lucide-react';
 import { useState } from 'react';
 
 import { Can } from '@/auth/can';
@@ -17,6 +17,7 @@ import { SafetyCallout } from '@/features/school-mode/components/safety-callout'
 import { ShiftEditDialog } from '@/features/school-mode/components/shift-edit-dialog';
 import { PeriodList, ShiftTimeline } from '@/features/school-mode/components/shift-timeline';
 import { useSmShifts } from '@/features/school-mode/hooks';
+import { TILE } from '@/features/school-mode/lib';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 
@@ -42,7 +43,8 @@ function ShiftCard({ shift, nowMinute, onEdit }: { shift: ShiftRow; nowMinute: n
   return (
     <SectionCard
       className="animate-slide-up"
-      title={<span className="font-display text-lg">{shift.name}</span>}
+      icon={<Clock3 />}
+      title={<span className="font-display text-base">{shift.name}</span>}
       description={t('schoolMode.schedule.summary', { start: shift.start, end: shift.end, lessons: shift.lessonCount })}
       actions={
         <>
@@ -64,7 +66,9 @@ function ShiftCard({ shift, nowMinute, onEdit }: { shift: ShiftRow; nowMinute: n
               title={t(`enums.weekday.${d}`)}
               className={cn(
                 'inline-flex h-7 w-9 items-center justify-center rounded-md text-xs font-semibold',
-                shift.weekdays.includes(d) ? 'bg-primary/10 text-primary' : 'bg-muted text-muted-foreground/50 line-through',
+                shift.weekdays.includes(d)
+                  ? 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20'
+                  : 'text-muted-foreground/50 line-through ring-1 ring-inset ring-border/50',
               )}
             >
               {t(`enums.weekdayShort.${d}`)}
@@ -73,7 +77,7 @@ function ShiftCard({ shift, nowMinute, onEdit }: { shift: ShiftRow; nowMinute: n
         </div>
         <ShiftTimeline shift={shift} nowMinute={nowMinute} />
         <PeriodList shift={shift} />
-        <div className="rounded-xl bg-muted/40 p-4">
+        <div className={cn('p-4', TILE)}>
           <div className="mb-2 flex flex-wrap items-center justify-between gap-2 text-sm">
             <span className="font-medium">{t('schoolMode.schedule.classesUsing')}</span>
             <span className="inline-flex items-center gap-1.5 text-xs text-muted-foreground">
@@ -86,7 +90,7 @@ function ShiftCard({ shift, nowMinute, onEdit }: { shift: ShiftRow; nowMinute: n
           ) : (
             <div className="flex flex-wrap gap-1.5">
               {shift.classes.map((c) => (
-                <Badge key={c.id} variant="outline" className="bg-card tabular-nums">
+                <Badge key={c.id} variant="outline" className="whitespace-nowrap bg-card/80 tabular-nums">
                   {c.name}
                 </Badge>
               ))}
@@ -112,8 +116,8 @@ export default function SchoolModeSchedulePage() {
         <ErrorState error={shifts.error} onRetry={() => void shifts.refetch()} />
       ) : shifts.isLoading ? (
         <div className="grid gap-6">
-          <Skeleton className="h-80 rounded-xl" />
-          <Skeleton className="h-80 rounded-xl" />
+          <Skeleton className="h-80 rounded-2xl" />
+          <Skeleton className="h-80 rounded-2xl" />
         </div>
       ) : (shifts.data ?? []).length === 0 ? (
         <EmptyState icon={<CalendarClock />} title={t('common.noData')} />

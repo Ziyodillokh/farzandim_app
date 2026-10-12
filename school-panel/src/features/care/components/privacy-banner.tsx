@@ -3,13 +3,16 @@
 import { Clock3, EyeOff, Lock, Stethoscope, Users } from 'lucide-react';
 import type { ReactNode } from 'react';
 
+import { Card } from '@/components/ui/card';
+import { ICON_CHIP, TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
 import { CARE_MIN_GROUP } from '@/lib/k-anon';
+import { cn } from '@/lib/utils';
 
 function Point({ icon, children }: { icon: ReactNode; children: ReactNode }) {
   return (
-    <li className="flex items-start gap-2.5">
-      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-lg bg-card/80 text-primary shadow-soft [&_svg]:size-3.5">
+    <li className={cn(TILE, 'flex items-start gap-3 px-3.5 py-3')}>
+      <span className={cn(ICON_CHIP, 'mt-0.5 h-7 w-7 rounded-lg bg-sky-500/10 text-sky-600 ring-sky-500/20 dark:text-sky-300 [&_svg]:size-3.5')}>
         {icon}
       </span>
       <span className="text-[0.8125rem] leading-relaxed text-foreground/80">{children}</span>
@@ -21,22 +24,25 @@ function Point({ icon, children }: { icon: ReactNode; children: ReactNode }) {
 export function PrivacyBanner() {
   const { t } = useI18n();
   return (
-    <section
-      aria-label={t('care.privacy.title')}
-      className="mb-6 overflow-hidden rounded-xl border border-primary/15 bg-gradient-to-br from-primary/[0.07] via-card to-success/[0.06] p-5 shadow-soft animate-fade-in"
-    >
-      <div className="mb-3 flex items-center gap-2.5">
-        <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
-          <Lock className="h-4 w-4" />
-        </span>
-        <h2 className="font-semibold">{t('care.privacy.title')}</h2>
+    <Card aria-label={t('care.privacy.title')} className="relative mb-6 overflow-hidden p-5 animate-fade-in" role="region">
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_120%_at_0%_0%,hsl(var(--primary)/0.10),transparent_60%),radial-gradient(50%_100%_at_100%_100%,hsl(192_90%_50%/0.08),transparent_60%)]"
+      />
+      <div className="relative">
+        <div className="mb-4 flex items-center gap-3">
+          <span className={cn(ICON_CHIP, 'h-10 w-10 bg-primary/10 text-primary ring-primary/15')}>
+            <Lock className="h-[18px] w-[18px]" />
+          </span>
+          <h2 className="font-semibold tracking-[-0.005em]">{t('care.privacy.title')}</h2>
+        </div>
+        <ul className="grid gap-2.5 md:grid-cols-2">
+          <Point icon={<EyeOff />}>{t('care.privacy.anonymous')}</Point>
+          <Point icon={<Users />}>{t('care.privacy.kAnon', { k: CARE_MIN_GROUP })}</Point>
+          <Point icon={<Stethoscope />}>{t('care.privacy.noDiagnosis')}</Point>
+          <Point icon={<Clock3 />}>{t('care.privacy.notEmergency')}</Point>
+        </ul>
       </div>
-      <ul className="grid gap-3 md:grid-cols-2">
-        <Point icon={<EyeOff />}>{t('care.privacy.anonymous')}</Point>
-        <Point icon={<Users />}>{t('care.privacy.kAnon', { k: CARE_MIN_GROUP })}</Point>
-        <Point icon={<Stethoscope />}>{t('care.privacy.noDiagnosis')}</Point>
-        <Point icon={<Clock3 />}>{t('care.privacy.notEmergency')}</Point>
-      </ul>
-    </section>
+    </Card>
   );
 }

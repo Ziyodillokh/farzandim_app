@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarOff } from 'lucide-react';
+import { CalendarCheck2, CalendarOff } from 'lucide-react';
 import { Cell, Pie, PieChart, ResponsiveContainer, Tooltip } from 'recharts';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -17,11 +17,11 @@ const SLICES: Slice[] = [
   { key: 'absent', label: 'enums.attendanceStatus.ABSENT', color: 'hsl(var(--chart-4))' },
   { key: 'leftEarly', label: 'enums.attendanceStatus.LEFT_EARLY', color: 'hsl(var(--chart-5))' },
   { key: 'excused', label: 'enums.attendanceStatus.EXCUSED', color: 'hsl(var(--chart-1))' },
-  { key: 'pending', label: 'classes.card.noMarks', color: 'hsl(var(--muted))' },
+  { key: 'pending', label: 'classes.card.noMarks', color: 'hsl(var(--muted-foreground) / 0.28)' },
 ];
 
 const TOOLTIP_STYLE = {
-  background: 'hsl(var(--card))',
+  background: 'hsl(var(--popover))',
   border: '1px solid hsl(var(--border))',
   borderRadius: 10,
   color: 'hsl(var(--card-foreground))',
@@ -71,5 +71,9 @@ export function ClassAttendanceCard({ row, loading }: { row: ClassBoardRow | und
     );
   };
 
-  return <SectionCard title={t('classes.view.todayTitle')}>{body()}</SectionCard>;
+  return (
+    <SectionCard icon={<CalendarCheck2 />} title={t('classes.view.todayTitle')}>
+      {body()}
+    </SectionCard>
+  );
 }

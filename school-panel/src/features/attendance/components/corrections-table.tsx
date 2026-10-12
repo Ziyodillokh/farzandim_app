@@ -40,8 +40,8 @@ export function CorrectionsTable({
         header: t('attendance.corrections.columns.student'),
         cell: (r) => (
           <div className="flex items-center gap-2">
-            <span className="font-medium">{r.studentName}</span>
-            <Badge variant="outline" size="sm">
+            <span className="whitespace-nowrap font-medium">{r.studentName}</span>
+            <Badge variant="outline" size="sm" className="whitespace-nowrap">
               {r.className}
             </Badge>
           </div>

@@ -11,6 +11,7 @@ import type { SchoolModeOverview } from '@/data/mock/services/school-mode';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useActivateEmergency, useDeactivateEmergency } from '../hooks';
+import { SEG_OFF, SEG_ON, SEG_TRACK, TILE } from '../lib';
 
 type Scope = 'SCHOOL' | 'CLASS';
 
@@ -31,7 +32,7 @@ function ScopePicker({
   return (
     <div className="space-y-3">
       <Label>{t('schoolMode.emergency.scope')}</Label>
-      <div className="grid grid-cols-2 gap-2" role="radiogroup">
+      <div className={cn('grid grid-cols-2 gap-1', SEG_TRACK)} role="radiogroup">
         {(['SCHOOL', 'CLASS'] as const).map((value) => (
           <button
             key={value}
@@ -39,17 +40,14 @@ function ScopePicker({
             role="radio"
             aria-checked={scope === value}
             onClick={() => onScope(value)}
-            className={cn(
-              'rounded-lg border px-3 py-2.5 text-sm font-medium transition-colors',
-              scope === value ? 'border-destructive bg-destructive/10 text-destructive' : 'hover:bg-accent',
-            )}
+            className={cn('h-9 rounded-lg px-3 text-sm font-medium transition-all', scope === value ? SEG_ON : SEG_OFF)}
           >
             {value === 'SCHOOL' ? t('schoolMode.emergency.scopeSchool') : t('schoolMode.emergency.scopeClass')}
           </button>
         ))}
       </div>
       {scope === 'CLASS' && (
-        <div className="flex max-h-40 flex-wrap gap-1.5 overflow-y-auto rounded-lg border p-2">
+        <div className={cn('flex max-h-40 flex-wrap gap-1.5 overflow-y-auto p-2', TILE)}>
           {classes.map((c) => {
             const on = selected.includes(c.classId);
             return (
@@ -59,8 +57,8 @@ function ScopePicker({
                 aria-pressed={on}
                 onClick={() => onToggle(c.classId)}
                 className={cn(
-                  'rounded-md border px-2.5 py-1 text-xs font-semibold tabular-nums transition-colors',
-                  on ? 'border-destructive bg-destructive text-destructive-foreground' : 'hover:border-destructive/50',
+                  'rounded-lg px-2.5 py-1 text-xs font-semibold tabular-nums ring-1 ring-inset transition-colors',
+                  on ? 'bg-destructive/10 text-destructive ring-destructive/40' : 'bg-card/70 ring-border/60 hover:ring-destructive/40',
                 )}
               >
                 {c.className}
@@ -74,7 +72,7 @@ function ScopePicker({
 }
 
 /** "Favqulodda o'chirish" (sabab majburiy) va "Qayta yoqish" — faqat director/admin. */
-export function EmergencyControls({ overview, inverted }: { overview: SchoolModeOverview | undefined; inverted: boolean }) {
+export function EmergencyControls({ overview }: { overview: SchoolModeOverview | undefined }) {
   const { t } = useI18n();
   const [openOn, setOpenOn] = useState(false);
   const [openOff, setOpenOff] = useState(false);
@@ -101,13 +99,13 @@ export function EmergencyControls({ overview, inverted }: { overview: SchoolMode
   return (
     <Can perm="schoolMode.emergency">
       {emergency.active && (
-        <Button size="lg" variant={inverted ? 'secondary' : 'outline'} onClick={() => setOpenOff(true)}>
+        <Button size="lg" variant="outline" onClick={() => setOpenOff(true)}>
           <Power />
           {t('schoolMode.emergency.restore')}
         </Button>
       )}
       {!schoolWide && (
-        <Button size="lg" variant="destructive" className={cn(inverted && 'ring-2 ring-white/40')} onClick={() => setOpenOn(true)}>
+        <Button size="lg" variant="destructive" onClick={() => setOpenOn(true)}>
           <Siren />
           {t('schoolMode.emergency.button')}
         </Button>

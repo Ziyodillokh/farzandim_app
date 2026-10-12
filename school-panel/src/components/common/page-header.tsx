@@ -26,7 +26,7 @@ export function PageHeader({
     <div className={cn('mb-6 flex flex-wrap items-end justify-between gap-4 animate-fade-in', className)}>
       <div className="min-w-0">
         {backHref && (
-          <Button asChild variant="ghost" size="sm" className="-ml-2 mb-2 h-8 text-muted-foreground no-print">
+          <Button asChild variant="ghost" size="sm" className="mb-3 h-8 rounded-full bg-white/50 px-3 text-muted-foreground ring-1 ring-inset ring-border/60 hover:text-foreground dark:bg-white/[0.04] no-print">
             <Link href={backHref}>
               <ArrowLeft />
               {backLabel}
@@ -34,7 +34,7 @@ export function PageHeader({
           </Button>
         )}
         <div className="flex flex-wrap items-center gap-3">
-          <h1 className="font-display text-2xl font-semibold tracking-tight md:text-[1.7rem]">{title}</h1>
+          <h1 className="font-display text-[1.6rem] font-semibold tracking-[-0.02em] md:text-[1.85rem]">{title}</h1>
           {badge}
         </div>
         {subtitle && <p className="mt-1.5 max-w-3xl text-sm text-muted-foreground">{subtitle}</p>}

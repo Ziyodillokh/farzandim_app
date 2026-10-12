@@ -46,9 +46,11 @@ export function ReportFilters({
     <div className="mb-6 flex flex-wrap items-center gap-2 no-print">
       <Select value={month} onValueChange={onMonthChange}>
         <SelectTrigger className="w-full sm:w-52" aria-label={t('attendance.reports.month')}>
-          <span className="flex items-center gap-2">
-            <CalendarRange className="h-4 w-4 text-primary" />
-            <SelectValue />
+          <span className="!flex min-w-0 items-center gap-2 capitalize">
+            <CalendarRange className="h-4 w-4 shrink-0 text-primary" />
+            <span className="truncate">
+              <SelectValue />
+            </span>
           </span>
         </SelectTrigger>
         <SelectContent>
@@ -61,9 +63,11 @@ export function ReportFilters({
       </Select>
       <Select value={classId ?? ''} onValueChange={onClassChange} disabled={!classes?.length}>
         <SelectTrigger className="w-full sm:w-44" aria-label={t('attendance.reports.class')}>
-          <span className="flex items-center gap-2">
-            <GraduationCap className="h-4 w-4 text-primary" />
-            <SelectValue placeholder={t('attendance.reports.selectClass')} />
+          <span className="!flex min-w-0 items-center gap-2">
+            <GraduationCap className="h-4 w-4 shrink-0 text-primary" />
+            <span className="truncate">
+              <SelectValue placeholder={t('attendance.reports.selectClass')} />
+            </span>
           </span>
         </SelectTrigger>
         <SelectContent>

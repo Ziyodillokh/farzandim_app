@@ -11,6 +11,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ClassDetail } from '@/data/mock/services/classes';
@@ -29,10 +30,10 @@ export function ClassDetailSkeleton() {
       <Skeleton className="h-16 w-72" />
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
         {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton key={i} className="h-28 rounded-xl" />
+          <Skeleton key={i} className="h-28 rounded-2xl" />
         ))}
       </div>
-      <Skeleton className="h-96 rounded-xl" />
+      <Skeleton className="h-96 rounded-2xl" />
     </div>
   );
 }
@@ -50,17 +51,20 @@ export function ClassDetailView({ id }: { id: string | null }) {
 
   if (!id || detail.isError) {
     return (
-      <div className="rounded-xl border bg-card">
-        <EmptyState
-          icon={<GraduationCap />}
-          title={t('classes.view.notFound')}
-          action={
-            <Button asChild variant="outline">
-              <Link href="/classes">{t('classes.view.back')}</Link>
-            </Button>
-          }
-        />
-      </div>
+      <>
+        <PageHeader backHref="/classes" backLabel={t('classes.view.back')} title={t('classes.title')} />
+        <Card>
+          <EmptyState
+            icon={<GraduationCap />}
+            title={t('classes.view.notFound')}
+            action={
+              <Button asChild variant="outline">
+                <Link href="/classes">{t('classes.view.back')}</Link>
+              </Button>
+            }
+          />
+        </Card>
+      </>
     );
   }
   if (!detail.data) return <ClassDetailSkeleton />;
@@ -133,7 +137,7 @@ export function ClassDetailView({ id }: { id: string | null }) {
         {canSeeAttendance && (
           <StatCard
             icon={<CalendarCheck2 />}
-            tone="warning"
+            tone="primary"
             label={t('classes.stats.attendance')}
             value={today?.schoolDay ? `${today.rate}%` : '—'}
             hint={today?.schoolDay ? t('classes.stats.attendanceHint', { present: today.counts.present + today.counts.late, absent: today.counts.absent }) : t('classes.card.notSchoolDay')}

@@ -1,6 +1,19 @@
 'use client';
 
-import { AppWindow, Clapperboard, Gamepad2, GraduationCap, Lock, MessageSquare, MessagesSquare, Phone, Siren, type LucideIcon } from 'lucide-react';
+import {
+  AppWindow,
+  Ban,
+  Clapperboard,
+  Gamepad2,
+  GraduationCap,
+  Lock,
+  MessageSquare,
+  MessagesSquare,
+  Phone,
+  Siren,
+  SlidersHorizontal,
+  type LucideIcon,
+} from 'lucide-react';
 
 import { SectionCard } from '@/components/common/section-card';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -10,6 +23,7 @@ import type { ShiftRow } from '@/data/mock/services/school-mode';
 import { BLOCKABLE_CATEGORIES, type PolicyPatch } from '@/data/schemas/school-mode';
 import { type TKey, useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { TILE, TONE_ORB, TONE_TILE } from '../lib';
 
 export const CATEGORY_ICONS: Record<AppCategory, LucideIcon> = {
   GAME: Gamepad2,
@@ -29,10 +43,10 @@ type Props = { policy: SchoolModePolicy; shifts: ShiftRow[]; canManage: boolean;
 
 function SettingRow({ id, title, hint, checked, disabled, onChange }: { id: string; title: string; hint: string; checked: boolean; disabled: boolean; onChange: (v: boolean) => void }) {
   return (
-    <div className="flex items-start justify-between gap-4">
+    <div className={cn('flex items-center justify-between gap-4 p-3.5', TILE)}>
       <label htmlFor={id} className="min-w-0 cursor-pointer">
         <span className="block text-sm font-medium">{title}</span>
-        <span className="block text-xs text-muted-foreground">{hint}</span>
+        <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>
       </label>
       <Switch id={id} checked={checked} disabled={disabled} onCheckedChange={onChange} />
     </div>
@@ -45,8 +59,8 @@ export function GeneralSettings({ policy, shifts, canManage, onChange }: Props) 
   const toggleShift = (id: string, on: boolean) =>
     onChange({ shiftIds: on ? [...policy.shiftIds, id] : policy.shiftIds.filter((s) => s !== id) });
   return (
-    <SectionCard title={t('schoolMode.policies.general')}>
-      <div className="space-y-5">
+    <SectionCard icon={<SlidersHorizontal />} title={t('schoolMode.policies.general')}>
+      <div className="space-y-3">
         <SettingRow
           id="sm-enabled"
           title={t('schoolMode.policies.enabled')}
@@ -63,12 +77,12 @@ export function GeneralSettings({ policy, shifts, canManage, onChange }: Props) 
           disabled={!canManage}
           onChange={(relaxDuringBreaks) => onChange({ relaxDuringBreaks })}
         />
-        <div>
+        <div className="pt-2">
           <p className="text-sm font-medium">{t('schoolMode.policies.shifts')}</p>
           <p className="mb-2 text-xs text-muted-foreground">{t('schoolMode.policies.shiftsHint')}</p>
           <div className="flex flex-wrap gap-3">
             {shifts.map((s) => (
-              <label key={s.id} className="flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm">
+              <label key={s.id} className={cn('flex cursor-pointer items-center gap-2.5 px-3 py-2 text-sm', TILE)}>
                 <Checkbox checked={policy.shiftIds.includes(s.id)} disabled={!canManage} onCheckedChange={(v) => toggleShift(s.id, v === true)} />
                 <span className="font-medium">{s.name}</span>
                 <span className="text-xs tabular-nums text-muted-foreground">
@@ -91,7 +105,7 @@ export function CategorySettings({ policy, canManage, onChange }: Omit<Props, 's
     onChange({ blockedCategories: on ? [...current, c] : current.filter((x) => x !== c) });
   };
   return (
-    <SectionCard title={t('schoolMode.policies.blocked')} description={t('schoolMode.policies.blockedHint')}>
+    <SectionCard icon={<Ban />} title={t('schoolMode.policies.blocked')} description={t('schoolMode.policies.blockedHint')}>
       <div className="grid gap-3 sm:grid-cols-3">
         {BLOCKABLE_CATEGORIES.map((c) => {
           const Icon = CATEGORY_ICONS[c];
@@ -101,13 +115,13 @@ export function CategorySettings({ policy, canManage, onChange }: Omit<Props, 's
             <label
               key={c}
               className={cn(
-                'flex cursor-pointer flex-col gap-3 rounded-xl border p-4 transition-colors',
-                on ? 'border-primary/40 bg-primary/[0.04]' : 'bg-card',
+                'flex cursor-pointer flex-col gap-3 rounded-xl p-4 ring-1 ring-inset transition-colors',
+                on ? TONE_TILE.primary : TONE_TILE.muted,
                 !canManage && 'cursor-default',
               )}
             >
               <div className="flex items-center justify-between">
-                <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl', on ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground')}>
+                <span className={cn('flex h-10 w-10 items-center justify-center rounded-xl ring-1 ring-inset', on ? TONE_ORB.primary : TONE_ORB.muted)}>
                   <Icon className="h-5 w-5" aria-hidden />
                 </span>
                 <Switch checked={on} disabled={!canManage || last} onCheckedChange={(v) => toggle(c, v)} aria-label={t(`enums.appCategory.${c}`)} />
@@ -120,17 +134,24 @@ export function CategorySettings({ policy, canManage, onChange }: Omit<Props, 's
           );
         })}
       </div>
-      <div className="mt-5 rounded-xl border border-success/30 bg-success/5 p-4">
+      <div className={cn('mt-4 rounded-xl p-4 ring-1 ring-inset', TONE_TILE.success)}>
         <div className="mb-3 flex flex-wrap items-baseline justify-between gap-2">
           <p className="text-sm font-semibold">{t('schoolMode.policies.alwaysAllowed')}</p>
           <p className="text-xs text-muted-foreground">{t('schoolMode.policies.alwaysAllowedHint')}</p>
         </div>
         <ul className="grid gap-2 sm:grid-cols-3">
           {ALWAYS.map(([Icon, key]) => (
-            <li key={key} className="flex items-center gap-2.5 rounded-lg bg-card px-3 py-2.5 text-sm shadow-soft">
-              <Icon className="h-4 w-4 shrink-0 text-success" aria-hidden />
-              <span className="min-w-0 flex-1 font-medium">{t(key)}</span>
-              <Lock className="h-3.5 w-3.5 shrink-0 text-muted-foreground" aria-label={t('schoolMode.policies.locked')} />
+            <li key={key} className="flex flex-col gap-2 rounded-lg bg-white/70 p-3 text-sm ring-1 ring-inset ring-border/50 dark:bg-white/[0.04]">
+              <span className="flex items-center justify-between">
+                <span className={cn('flex h-8 w-8 items-center justify-center rounded-lg ring-1 ring-inset', TONE_ORB.success)}>
+                  <Icon className="h-4 w-4" aria-hidden />
+                </span>
+                <span className="inline-flex items-center gap-1 text-2xs font-medium text-muted-foreground">
+                  <Lock className="h-3 w-3" aria-hidden />
+                  {t('schoolMode.policies.locked')}
+                </span>
+              </span>
+              <span className="font-medium leading-snug">{t(key)}</span>
             </li>
           ))}
         </ul>

@@ -50,7 +50,7 @@ export function CorrectionDialog({ row, date, onClose }: { row: StudentDayRow | 
           </DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4" noValidate>
-          <div className="flex items-center justify-between rounded-lg border bg-muted/40 px-3 py-2.5 text-sm">
+          <div className="flex items-center justify-between rounded-xl bg-white/50 px-3.5 py-2.5 text-sm ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]">
             <span className="text-muted-foreground">{t('attendance.correction.current')}</span>
             <AttendanceBadge status={current} />
           </div>

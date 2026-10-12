@@ -89,7 +89,7 @@ export function BoardView() {
           ) : board.isLoading && !board.data ? (
             <div className="grid gap-4 sm:grid-cols-2 2xl:grid-cols-3">
               {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-44 rounded-xl" />
+                <Skeleton key={i} className="h-44 rounded-2xl" />
               ))}
             </div>
           ) : rows.length === 0 ? (

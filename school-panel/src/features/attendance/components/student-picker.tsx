@@ -20,7 +20,7 @@ function StudentLine({ student }: { student: StudentRow }) {
   return (
     <>
       <Avatar className="h-8 w-8">
-        <AvatarFallback className="bg-primary/10 text-2xs font-semibold text-primary">{initials(student.fullName)}</AvatarFallback>
+        <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(student.fullName)}</AvatarFallback>
       </Avatar>
       <div className="min-w-0 flex-1">
         <p className="truncate text-sm font-medium">{student.fullName}</p>
@@ -40,7 +40,7 @@ export function StudentPicker({ value, onChange, invalid }: { value: StudentRow 
 
   if (value) {
     return (
-      <div className="flex items-center gap-3 rounded-lg border border-primary/30 bg-primary/5 px-3 py-2.5">
+      <div className="flex items-center gap-3 rounded-xl bg-primary/[0.06] px-3 py-2.5 ring-1 ring-inset ring-primary/20">
         <StudentLine student={value} />
         <Button type="button" variant="ghost" size="icon-sm" onClick={() => onChange(null)} aria-label={t('attendance.earlyExit.change')}>
           <X />
@@ -64,7 +64,7 @@ export function StudentPicker({ value, onChange, invalid }: { value: StudentRow 
       {debounced.trim().length < MIN_QUERY ? (
         <p className="text-xs text-muted-foreground">{t('attendance.earlyExit.fields.studentHint')}</p>
       ) : (
-        <div className="max-h-56 divide-y overflow-y-auto rounded-lg border">
+        <div className="max-h-56 divide-y divide-border/60 overflow-y-auto rounded-xl bg-white/50 ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]">
           {search.isLoading && !items
             ? Array.from({ length: 3 }).map((_, i) => (
                 <div key={i} className="flex items-center gap-3 px-3 py-2">
@@ -75,7 +75,7 @@ export function StudentPicker({ value, onChange, invalid }: { value: StudentRow 
             : items?.length === 0
               ? <p className="px-3 py-4 text-center text-sm text-muted-foreground">{t('common.noResults')}</p>
               : items?.map((s) => (
-                  <button key={s.id} type="button" onClick={() => onChange(s)} className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-accent">
+                  <button key={s.id} type="button" onClick={() => onChange(s)} className="flex w-full items-center gap-3 px-3 py-2 text-left transition-colors hover:bg-primary/[0.05]">
                     <StudentLine student={s} />
                   </button>
                 ))}

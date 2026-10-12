@@ -17,6 +17,7 @@ import { addDays, weekStart } from '@/data/mock/calendar';
 import { clockToday } from '@/data/mock/clock';
 import { AGE_GROUPS, CARE_TOPICS, careSurveyInputSchema, MAX_SURVEY_QUESTIONS, type CareSurveyInput } from '@/data/schemas/care';
 import { useI18n } from '@/i18n';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { cn } from '@/lib/utils';
 import { useCareQuestions, useCreateSurvey, useUpdateSurvey } from '../hooks';
 
@@ -91,7 +92,7 @@ export function SurveyFormDialog({ open, onOpenChange, survey }: { open: boolean
               render={({ field }) => (
                 <div className="flex flex-wrap gap-2">
                   {AGE_GROUPS.map((g) => (
-                    <label key={g} className={cn('flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm transition-colors', field.value.includes(g) && 'border-primary/40 bg-primary/[0.05]')}>
+                    <label key={g} className={cn(TILE, 'flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors', field.value.includes(g) && 'ring-primary/40 bg-primary/[0.07] dark:bg-primary/[0.12]')}>
                       <Checkbox checked={field.value.includes(g)} onCheckedChange={(on) => field.onChange(toggle(field.value, g, on === true) as AgeGroup[])} />
                       {t(`enums.ageGroup.${g}`)}
                     </label>
@@ -118,17 +119,17 @@ export function SurveyFormDialog({ open, onOpenChange, survey }: { open: boolean
               control={form.control}
               name="questionIds"
               render={({ field }) => (
-                <ScrollArea className="h-64 rounded-lg border">
+                <ScrollArea className={cn(TILE, 'h-64')}>
                   {visible.length === 0 ? (
                     <p className="p-6 text-center text-sm text-muted-foreground">{t('care.surveys.noQuestions')}</p>
                   ) : (
-                    <ul className="divide-y">
+                    <ul className="divide-y divide-border/50 dark:divide-white/[0.06]">
                       {visible.map((q) => {
                         const checked = field.value.includes(q.id);
                         const full = !checked && field.value.length >= MAX_SURVEY_QUESTIONS;
                         return (
                           <li key={q.id}>
-                            <label className={cn('flex cursor-pointer items-start gap-3 px-3 py-2.5 hover:bg-muted/50', full && 'cursor-not-allowed opacity-50')}>
+                            <label className={cn('flex cursor-pointer items-start gap-3 px-3 py-2.5 transition-colors hover:bg-primary/[0.04] dark:hover:bg-white/[0.04]', full && 'cursor-not-allowed opacity-50')}>
                               <Checkbox className="mt-0.5" checked={checked} disabled={full} onCheckedChange={(on) => field.onChange(toggle(field.value, q.id, on === true))} />
                               <span className="flex-1 text-sm">
                                 {q.text[locale]}

@@ -1,6 +1,8 @@
 'use client';
 
-import { GraduationCap, User, UserCog } from 'lucide-react';
+import { GraduationCap, User } from 'lucide-react';
+
+import { StaffAvatar } from '@/components/common/staff-avatar';
 import { useRouter } from 'next/navigation';
 import { useEffect, useMemo, useState } from 'react';
 
@@ -83,7 +85,7 @@ export function CommandPalette({ open, onOpenChange }: { open: boolean; onOpenCh
               <CommandGroup heading={t('shell.commandStaff')}>
                 {results.staff.map((s) => (
                   <CommandItem key={s.id} value={`stf-${s.id}`} onSelect={() => go('/staff')}>
-                    <UserCog />
+                    <StaffAvatar staffId={s.id} name={s.name} size="xs" />
                     <span className="flex-1">{s.name}</span>
                     <span className="text-xs text-muted-foreground">{s.position}</span>
                   </CommandItem>

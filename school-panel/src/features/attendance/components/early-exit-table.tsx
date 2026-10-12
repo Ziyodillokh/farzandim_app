@@ -5,9 +5,11 @@ import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
 import { EarlyExitBadge } from '@/components/common/status-badges';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import type { api } from '@/data/api';
 import { useI18n } from '@/i18n';
+import { initials } from '@/lib/utils';
 import { fromIsoDate } from '../lib';
 
 export type EarlyExitRow = Awaited<ReturnType<typeof api.attendance.earlyExits>>[number];
@@ -34,9 +36,14 @@ export function EarlyExitTable({
         key: 'student',
         header: t('attendance.earlyExit.columns.student'),
         cell: (r) => (
-          <div>
-            <p className="font-medium">{r.studentName}</p>
-            <p className="text-xs text-muted-foreground">{r.className}</p>
+          <div className="flex items-center gap-3">
+            <Avatar className="h-9 w-9">
+              <AvatarFallback className="bg-gradient-to-br from-brand-400 to-brand-800 text-2xs font-semibold text-white">{initials(r.studentName)}</AvatarFallback>
+            </Avatar>
+            <div className="min-w-0">
+              <p className="whitespace-nowrap font-medium">{r.studentName}</p>
+              <p className="text-xs text-muted-foreground">{r.className}</p>
+            </div>
           </div>
         ),
       },

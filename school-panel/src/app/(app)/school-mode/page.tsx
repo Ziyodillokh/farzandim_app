@@ -1,5 +1,6 @@
 'use client';
 
+import { LayoutGrid, Smartphone } from 'lucide-react';
 import { useMemo, useRef, useState } from 'react';
 
 import { ErrorState } from '@/components/common/error-state';
@@ -63,21 +64,28 @@ export default function SchoolModeLivePage() {
       <StatusHero
         overview={overview.data}
         loading={overview.isLoading}
-        actions={(inverted) => <EmergencyControls overview={overview.data} inverted={inverted} />}
+        actions={<EmergencyControls overview={overview.data} />}
       />
       <LiveKpis overview={overview.data} loading={overview.isLoading} />
 
       <SectionCard
         className="mb-6 animate-slide-up"
+        icon={<LayoutGrid />}
         title={t('schoolMode.classes.title')}
         description={t('schoolMode.classes.description')}
         actions={<ComplianceLegend />}
       >
-        <ClassTiles rows={overview.data?.classes} loading={overview.isLoading} selectedId={filter.classId} onSelect={selectClass} />
+        <ClassTiles
+          rows={overview.data?.classes}
+          shifts={overview.data?.shifts ?? []}
+          loading={overview.isLoading}
+          selectedId={filter.classId}
+          onSelect={selectClass}
+        />
       </SectionCard>
 
       <div ref={devicesRef} className="mb-6 scroll-mt-24">
-        <SectionCard title={t('schoolMode.devices.title')} description={t('schoolMode.devices.description')} bodyClassName="p-4 sm:p-5">
+        <SectionCard icon={<Smartphone />} title={t('schoolMode.devices.title')} description={t('schoolMode.devices.description')} bodyClassName="p-4 sm:p-5">
           <DevicesPanel filter={filter} onFilterChange={setFilter} classOptions={classOptions} />
         </SectionCard>
       </div>

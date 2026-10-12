@@ -1,5 +1,6 @@
 'use client';
 
+import { UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -8,11 +9,10 @@ import { ErrorState } from '@/components/common/error-state';
 import { SectionCard } from '@/components/common/section-card';
 import { AttendanceBadge, LinkBadge } from '@/components/common/status-badges';
 import { SearchInput } from '@/components/common/toolbar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import type { StudentFilter, StudentRow } from '@/data/mock/services/students';
 import { DeviceIcon } from '@/features/students/components/device-icon';
+import { StudentAvatar } from '@/features/students/components/student-avatar';
 import { useI18n } from '@/i18n';
-import { cn, initials } from '@/lib/utils';
 import { useClassStudents } from '../hooks';
 
 const PAGE_SIZE = 10;
@@ -31,13 +31,7 @@ export function ClassStudentsCard({ classId }: { classId: string }) {
         sortKey: 'name',
         cell: (r) => (
           <div className="flex items-center gap-3">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback
-                className={cn('text-2xs font-semibold', r.gender === 'FEMALE' ? 'bg-pink-500/10 text-pink-600' : 'bg-primary/10 text-primary')}
-              >
-                {initials(`${r.lastName} ${r.firstName}`)}
-              </AvatarFallback>
-            </Avatar>
+            <StudentAvatar name={`${r.lastName} ${r.firstName}`} gender={r.gender} size="sm" />
             <div className="min-w-0">
               <p className="truncate font-medium">
                 {r.lastName} {r.firstName}
@@ -56,6 +50,7 @@ export function ClassStudentsCard({ classId }: { classId: string }) {
 
   return (
     <SectionCard
+      icon={<UsersRound />}
       title={t('classes.view.students')}
       description={t('classes.view.studentsHint')}
       actions={

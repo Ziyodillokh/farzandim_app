@@ -14,6 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import type { AgeGroup, CareQuestion } from '@/data/contracts';
 import { AGE_GROUPS, CARE_TOPICS, careQuestionInputSchema, type CareQuestionInput } from '@/data/schemas/care';
 import { useI18n } from '@/i18n';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { cn } from '@/lib/utils';
 import { useCreateQuestion, useUpdateQuestion } from '../hooks';
 
@@ -21,7 +22,7 @@ const EMPTY: CareQuestionInput = { text: { uz: '', ru: '' }, topic: 'WELLBEING',
 
 function ToggleRow({ label, hint, checked, onChange }: { label: string; hint: string; checked: boolean; onChange: (value: boolean) => void }) {
   return (
-    <label className="flex cursor-pointer items-start justify-between gap-4 rounded-lg border p-3">
+    <label className={cn(TILE, 'flex cursor-pointer items-start justify-between gap-4 p-3')}>
       <span>
         <span className="block text-sm font-medium">{label}</span>
         <span className="mt-0.5 block text-xs text-muted-foreground">{hint}</span>
@@ -96,7 +97,7 @@ export function QuestionFormDialog({ open, onOpenChange, question }: { open: boo
                   {AGE_GROUPS.map((g) => {
                     const checked = field.value.includes(g);
                     return (
-                      <label key={g} className={cn('flex cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm', checked && 'border-primary/40 bg-primary/[0.05]')}>
+                      <label key={g} className={cn(TILE, 'flex cursor-pointer items-center gap-2 px-3 py-2 text-sm transition-colors', checked && 'ring-primary/40 bg-primary/[0.07] dark:bg-primary/[0.12]')}>
                         <Checkbox
                           checked={checked}
                           onCheckedChange={(on) => field.onChange((on === true ? [...field.value, g] : field.value.filter((x) => x !== g)) as AgeGroup[])}

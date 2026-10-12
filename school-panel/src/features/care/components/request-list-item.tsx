@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import type { CareRequestRow } from '@/data/mock/services/care';
 import { useI18n } from '@/i18n';
 import { cn, initials } from '@/lib/utils';
+import { Card } from '@/components/ui/card';
 
 /** Murojaatlar qutisidagi bitta qator (faqat psixolog ko'radi). */
 export function RequestListItem({ request }: { request: CareRequestRow }) {
@@ -16,15 +17,16 @@ export function RequestListItem({ request }: { request: CareRequestRow }) {
   const urgentOpen = request.urgency === 'URGENT' && request.status !== 'RESOLVED';
   return (
     <li>
-      <Link
-        href={`/care/requests/view?id=${request.id}`}
-        className={cn(
-          'group flex items-start gap-4 rounded-xl border bg-card p-4 shadow-soft transition-all hover:-translate-y-px hover:border-primary/30 hover:shadow-soft-lg',
-          urgentOpen && 'border-destructive/30 bg-destructive/[0.03]',
-        )}
-      >
+      <Link href={`/care/requests/view?id=${request.id}`} className="group block rounded-2xl focus-visible:outline-none">
+        <Card
+          className={cn(
+            'relative flex items-start gap-4 overflow-hidden p-4 transition-all group-hover:-translate-y-px group-hover:shadow-glass-lg',
+            urgentOpen && 'ring-1 ring-inset ring-destructive/25',
+          )}
+        >
+          {urgentOpen && <span aria-hidden className="absolute inset-y-3 left-0 w-1 rounded-r-full bg-destructive/70" />}
         <Avatar className="h-10 w-10">
-          <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(request.studentName)}</AvatarFallback>
+          <AvatarFallback className="bg-gradient-to-br from-sky-100 to-brand-200 text-xs font-semibold text-brand-800 dark:from-brand-800/60 dark:to-brand-900/60 dark:text-brand-100">{initials(request.studentName)}</AvatarFallback>
         </Avatar>
         <div className="min-w-0 flex-1">
           <div className="flex flex-wrap items-center gap-2">
@@ -59,7 +61,8 @@ export function RequestListItem({ request }: { request: CareRequestRow }) {
             )}
           </div>
         </div>
-        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        <ChevronRight className="mt-2 h-4 w-4 shrink-0 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
+        </Card>
       </Link>
     </li>
   );

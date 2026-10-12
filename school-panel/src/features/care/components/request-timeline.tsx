@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, MessageCircle, NotebookPen, ShieldAlert } from 'lucide-react';
+import { CalendarClock, History, MessageCircle, NotebookPen, ShieldAlert } from 'lucide-react';
 import { useState, type ReactNode } from 'react';
 
 import { SectionCard } from '@/components/common/section-card';
@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import type { CareRequestDetail } from '@/data/mock/services/care';
 import { useI18n } from '@/i18n';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { cn } from '@/lib/utils';
 import { useAddRequestNote } from '../hooks';
 
@@ -46,11 +47,11 @@ export function RequestTimeline({ request }: { request: CareRequestDetail }) {
   };
 
   return (
-    <SectionCard title={t('care.request.timeline')}>
-      <ol className="relative space-y-5 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-border">
+    <SectionCard title={t('care.request.timeline')} icon={<History />}>
+      <ol className="relative space-y-5 before:absolute before:bottom-2 before:left-4 before:top-2 before:w-px before:bg-border/70">
         {items.map((item) => (
           <li key={item.key} className="relative flex gap-3 animate-fade-in">
-            <span className={cn('relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-4 ring-card [&_svg]:size-4', item.tone)}>
+            <span className={cn('relative z-10 flex h-8 w-8 shrink-0 items-center justify-center rounded-full ring-4 ring-background [&_svg]:size-4', item.tone)}>
               {item.icon}
             </span>
             <div className="min-w-0 flex-1 pt-1">
@@ -60,13 +61,13 @@ export function RequestTimeline({ request }: { request: CareRequestDetail }) {
                   {formatDate(item.at, 'd MMM, HH:mm')}
                 </time>
               </div>
-              {item.text && <p className="mt-1 whitespace-pre-line rounded-lg bg-muted/50 px-3 py-2 text-sm text-foreground/85">{item.text}</p>}
+              {item.text && <p className={cn(TILE, 'mt-1.5 whitespace-pre-line px-3 py-2 text-sm text-foreground/85')}>{item.text}</p>}
             </div>
           </li>
         ))}
       </ol>
 
-      <div className="mt-6 space-y-2 border-t pt-5">
+      <div className="mt-6 space-y-2 border-t border-border/50 pt-5 dark:border-white/[0.06]">
         <Textarea
           value={draft}
           onChange={(e) => setDraft(e.target.value)}

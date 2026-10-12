@@ -14,20 +14,21 @@ import { findRoute } from './route-manifest';
 import { useSession } from './use-session';
 
 /** localStorage o'qilguncha (gidratatsiya) — brend yuklovchisi; mos kelmaslik xatosi bo'lmaydi. */
-export function HydrationGate({ children }: { children: ReactNode }) {
+export function HydrationGate({ children, fallback }: { children: ReactNode; fallback?: ReactNode }) {
   const [ready, setReady] = useState(false);
   useEffect(() => setReady(true), []);
-  if (!ready) return <FullScreenLoader />;
+  if (!ready) return <>{fallback ?? <FullScreenLoader />}</>;
   return <>{children}</>;
 }
 
 export function FullScreenLoader() {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="flex flex-col items-center gap-4">
-        <ParvozLogo className="h-14 w-14 animate-pulse rounded-2xl shadow-primary-glow" />
-        <div className="h-1 w-32 overflow-hidden rounded-full bg-muted">
-          <div className="h-full w-1/2 animate-shimmer rounded-full bg-primary/60" />
+    <div className="relative isolate flex min-h-screen items-center justify-center">
+      <div aria-hidden className="aurora-bg" />
+      <div className="flex flex-col items-center gap-5">
+        <ParvozLogo decorative className="h-14 w-14 animate-pulse rounded-2xl shadow-primary-glow" />
+        <div className="h-1 w-32 overflow-hidden rounded-full bg-primary/10">
+          <div className="h-full w-1/2 animate-shimmer rounded-full bg-brand-gradient" />
         </div>
       </div>
     </div>

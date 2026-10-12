@@ -8,6 +8,7 @@ import { DataTable, type SortState } from '@/components/common/data-table';
 import { ErrorState } from '@/components/common/error-state';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
 import { ROLES } from '@/auth/permissions';
+import { Card } from '@/components/ui/card';
 import type { RoleKey } from '@/data/contracts';
 import type { StaffRow } from '@/data/mock/services/staff';
 import { useI18n } from '@/i18n';
@@ -79,9 +80,9 @@ export function StaffTab({ createOpen, onCreateOpenChange }: { createOpen: boole
       </Toolbar>
 
       {staff.isError ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <ErrorState error={staff.error} onRetry={() => void staff.refetch()} />
-        </div>
+        </Card>
       ) : (
         <DataTable
           columns={columns}

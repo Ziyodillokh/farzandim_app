@@ -19,6 +19,10 @@ export const shell: DeepString<typeof uz> = {
   collapse: 'Свернуть меню',
   expand: 'Развернуть меню',
   poweredBy: 'Экосистема Parvoz',
+  account: 'Меню аккаунта',
+  myProfile: 'Мой профиль',
+  openMenu: 'Открыть меню',
+  schoolChip: 'Школа',
   schoolDay: 'Учебный день',
   holiday: 'Выходной день',
 };

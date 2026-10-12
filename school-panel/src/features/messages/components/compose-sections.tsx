@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, Send, Star } from 'lucide-react';
+import { CalendarClock, PenLine, Send, Star, Timer } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { Controller, type UseFormReturn } from 'react-hook-form';
 
@@ -13,6 +13,7 @@ import type { MessageTemplate } from '@/data/mock/services/comms';
 import { type AnnouncementInput, MESSAGE_BODY_MAX, MESSAGE_TITLE_MAX, SMS_SEGMENT } from '@/data/schemas/comms';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { SEGMENT_TRACK } from '../styles';
 import { TemplatePicker } from './template-picker';
 
 export type ScheduleMode = 'now' | 'later';
@@ -20,7 +21,7 @@ export type ScheduleMode = 'now' | 'later';
 /** Segmentli tanlov (2–3 variant). */
 export function Segmented<T extends string>({ value, onChange, options }: { value: T; onChange: (v: T) => void; options: Array<{ value: T; label: string; icon?: ReactNode }> }) {
   return (
-    <div className="inline-flex rounded-lg bg-muted p-1" role="radiogroup">
+    <div className={SEGMENT_TRACK} role="radiogroup">
       {options.map((o) => (
         <button
           key={o.value}
@@ -30,7 +31,7 @@ export function Segmented<T extends string>({ value, onChange, options }: { valu
           onClick={() => onChange(o.value)}
           className={cn(
             'inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-medium transition-all [&_svg]:size-4',
-            value === o.value ? 'bg-card text-foreground shadow-soft' : 'text-muted-foreground hover:text-foreground',
+            value === o.value ? 'bg-card text-foreground shadow-soft ring-1 ring-inset ring-border/50' : 'text-muted-foreground hover:text-foreground',
           )}
         >
           {o.icon}
@@ -53,7 +54,7 @@ export function ContentSection({ form, onTemplate }: { form: UseFormReturn<Annou
   const over = body.length > MESSAGE_BODY_MAX;
 
   return (
-    <SectionCard title={t('messages.compose.content')} actions={<TemplatePicker onPick={onTemplate} />}>
+    <SectionCard icon={<PenLine />} title={t('messages.compose.content')} actions={<TemplatePicker onPick={onTemplate} />}>
       <div className="space-y-4">
         <FormField label={t('messages.compose.titleLabel')} htmlFor="msg-title" error={withMax(errors.title, MESSAGE_TITLE_MAX)}>
           <Input id="msg-title" placeholder={t('messages.compose.titlePlaceholder')} {...form.register('title')} />
@@ -104,7 +105,7 @@ export function ScheduleSection({
 }) {
   const { t } = useI18n();
   return (
-    <SectionCard title={t('messages.compose.when')}>
+    <SectionCard icon={<Timer />} title={t('messages.compose.when')}>
       <div className="flex flex-wrap items-end gap-4">
         <Segmented<ScheduleMode>
           value={mode}

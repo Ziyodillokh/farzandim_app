@@ -14,8 +14,8 @@ export function ChartTooltip({
 }) {
   if (!active || !payload?.length) return null;
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-lg">
-      {label !== undefined && <p className="mb-1 font-medium">{formatLabel ? formatLabel(String(label)) : label}</p>}
+    <div className="glass-popover rounded-xl px-3 py-2 text-xs">
+      {label !== undefined && <p className="mb-1 font-semibold text-foreground">{formatLabel ? formatLabel(String(label)) : label}</p>}
       {payload.map((p) => (
         <p key={String(p.name)} className="flex items-center gap-2 text-muted-foreground">
           <span className="h-2 w-2 rounded-full" style={{ background: p.color }} />

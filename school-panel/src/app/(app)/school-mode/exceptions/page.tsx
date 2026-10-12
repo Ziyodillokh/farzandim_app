@@ -9,6 +9,7 @@ import { DataTable, type Column } from '@/components/common/data-table';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { SearchInput, Toolbar } from '@/components/common/toolbar';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -17,6 +18,7 @@ import { ExceptionDialog } from '@/features/school-mode/components/exception-dia
 import { SafetyCallout } from '@/features/school-mode/components/safety-callout';
 import { useRevokeException, useSmExceptions } from '@/features/school-mode/hooks';
 import { useI18n } from '@/i18n';
+import { initials } from '@/lib/utils';
 
 const TABS: readonly ExceptionStatus[] = ['ACTIVE', 'SCHEDULED', 'EXPIRED', 'REVOKED'];
 /** Faol va hali boshlanmagan istisnolarni bekor qilish mumkin. */
@@ -34,8 +36,27 @@ export default function SchoolModeExceptionsPage() {
   const period = (r: ExceptionRow) => `${formatDate(r.from, 'dd.MM · HH:mm')} – ${formatDate(r.until, 'HH:mm')}`;
 
   const columns: Column<ExceptionRow>[] = [
-    { key: 'student', header: t('schoolMode.exceptions.columns.student'), cell: (r) => <span className="font-medium">{r.studentName}</span> },
-    { key: 'class', header: t('schoolMode.exceptions.columns.class'), cell: (r) => <Badge variant="outline">{r.className}</Badge> },
+    {
+      key: 'student',
+      header: t('schoolMode.exceptions.columns.student'),
+      cell: (r) => (
+        <div className="flex items-center gap-3">
+          <Avatar className="h-9 w-9">
+            <AvatarFallback className="bg-primary/10 text-xs font-semibold text-primary">{initials(r.studentName)}</AvatarFallback>
+          </Avatar>
+          <span className="font-medium">{r.studentName}</span>
+        </div>
+      ),
+    },
+    {
+      key: 'class',
+      header: t('schoolMode.exceptions.columns.class'),
+      cell: (r) => (
+        <Badge variant="outline" className="whitespace-nowrap">
+          {r.className}
+        </Badge>
+      ),
+    },
     {
       key: 'period',
       header: t('schoolMode.exceptions.columns.period'),

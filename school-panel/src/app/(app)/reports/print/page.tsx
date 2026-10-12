@@ -7,7 +7,8 @@ import { Suspense, useEffect, useRef } from 'react';
 
 import { ErrorState } from '@/components/common/error-state';
 import { SchoolLogo } from '@/components/common/school-logo';
-import { ParvozLogo } from '@/components/layout/parvoz-logo';
+import { PageHeader } from '@/components/common/page-header';
+import { ParvozWordmark } from '@/components/layout/parvoz-wordmark';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { clockToday } from '@/data/mock/clock';
@@ -53,28 +54,34 @@ function PrintableReport() {
         </Button>
       </div>
 
-      <header className="mb-8 flex items-start justify-between gap-6 border-b pb-6">
-        <div className="flex items-center gap-4">
-          <SchoolLogo school={school.data?.school} className="h-14 w-14" />
-          <div>
-            <p className="text-sm text-muted-foreground">{school.data?.school.name}</p>
-            <h1 className="font-display text-2xl font-semibold">
-              {t('reports.printTitle')} — {monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}
-            </h1>
-            {r?.until && (
-              <p className="mt-1 text-sm text-muted-foreground">
-                {t('reports.period', { from: formatDate(`${month}-01T12:00:00`, 'd MMMM'), to: formatDate(`${r.until}T12:00:00`, 'd MMMM'), days: r.schoolDays })}
+      <header className="mb-8 border-b border-border/70 pb-6">
+        <div className="mb-5 flex items-center justify-between gap-6">
+          <div className="flex min-w-0 items-center gap-3">
+            <SchoolLogo school={school.data?.school} className="h-12 w-12" />
+            <div className="min-w-0">
+              <p className="truncate font-semibold">{school.data?.school.name}</p>
+              <p className="text-xs text-muted-foreground">
+                {[school.data?.school.city, school.data?.school.academicYear].filter(Boolean).join(' · ')}
               </p>
-            )}
+            </div>
           </div>
+          <ParvozWordmark size="sm" sub="School" className="shrink-0" />
         </div>
-        <ParvozLogo className="h-8 w-auto shrink-0" />
+        <PageHeader
+          className="mb-0"
+          title={`${t('reports.printTitle')} — ${monthLabel.charAt(0).toUpperCase() + monthLabel.slice(1)}`}
+          subtitle={
+            r?.until
+              ? t('reports.period', { from: formatDate(`${month}-01T12:00:00`, 'd MMMM'), to: formatDate(`${r.until}T12:00:00`, 'd MMMM'), days: r.schoolDays })
+              : undefined
+          }
+        />
       </header>
 
-      {!r ? <Skeleton className="h-[600px] rounded-xl" /> : <ReportBody report={r} print />}
+      {!r ? <Skeleton className="h-[600px] rounded-2xl" /> : <ReportBody report={r} print />}
 
       {r && (
-        <footer className="mt-10 border-t pt-4 text-xs text-muted-foreground">
+        <footer className="mt-10 border-t border-border/70 pt-4 text-xs text-muted-foreground">
           {t('reports.generated', { date: formatDate(r.generatedAt, 'dd.MM.yyyy HH:mm'), name: r.generatedBy })} · {t('common.appName')}
         </footer>
       )}

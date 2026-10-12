@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useSession } from '@/auth/use-session';
 import { PageHeader } from '@/components/common/page-header';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ActivityTab } from '@/features/learning/components/activity-tab';
 import { AssignmentsTab } from '@/features/learning/components/assignments-tab';
@@ -27,10 +28,12 @@ export default function LearningPage() {
         subtitle={t('learning.subtitle')}
         badge={ownClass && <Badge variant="info">{t('learning.scopeNote')}</Badge>}
       />
-      <div className="mb-5 flex items-start gap-2.5 rounded-xl border border-primary/15 bg-primary/[0.05] px-4 py-3 text-sm text-foreground/80">
-        <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
+      <Card className="mb-5 flex items-center gap-3 px-4 py-3 text-sm text-foreground/80">
+        <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+          <Info className="h-4 w-4" />
+        </span>
         {t('learning.privacyNote')}
-      </div>
+      </Card>
       <Tabs value={tab} onValueChange={(v) => setTab(v as Tab)}>
         <TabsList>
           <TabsTrigger value="activity">

@@ -37,14 +37,35 @@ export const TONE_DOT: Record<Tone, string> = {
   warning: 'bg-warning',
 };
 
-export const TONE_RING: Record<Tone, string> = {
-  primary: 'border-primary/30 bg-primary/[0.04]',
-  info: 'border-info/30 bg-info/[0.04]',
-  destructive: 'border-destructive/40 bg-destructive/[0.05]',
-  muted: 'border-border',
-  success: 'border-success/30',
-  warning: 'border-warning/30',
+/* ── Aurora shisha: karta ichidagi bo'laklar (to'liq nomlar — Tailwind skaneri uchun) ── */
+
+/** Ichki plitka (shisha karta ichida). */
+export const TILE = 'rounded-xl bg-white/50 ring-1 ring-inset ring-border/60 dark:bg-white/[0.03]';
+
+/** Holat rangidagi ichki plitka foni va halqasi (`rounded-xl ring-1 ring-inset` bilan). */
+export const TONE_TILE: Record<Tone, string> = {
+  primary: 'bg-primary/[0.05] ring-primary/25 dark:bg-primary/[0.08]',
+  info: 'bg-info/[0.06] ring-info/25 dark:bg-info/[0.08]',
+  destructive: 'bg-destructive/[0.06] ring-destructive/35 dark:bg-destructive/[0.1]',
+  muted: 'bg-white/50 ring-border/60 dark:bg-white/[0.03]',
+  success: 'bg-success/[0.06] ring-success/25',
+  warning: 'bg-warning/[0.07] ring-warning/30',
 };
+
+/** Ikonka "orb" — yumshoq rangli plitka (qattiq bg-primary emas). */
+export const TONE_ORB: Record<Tone, string> = {
+  primary: 'bg-primary/10 text-primary ring-primary/20',
+  info: 'bg-info/10 text-info ring-info/25',
+  destructive: 'bg-destructive/10 text-destructive ring-destructive/25',
+  muted: 'bg-muted text-muted-foreground ring-border/60',
+  success: 'bg-success/10 text-success ring-success/25',
+  warning: 'bg-warning/15 text-warning ring-warning/25',
+};
+
+/** Segmentli boshqaruv: trek, faol va nofaol tugma. */
+export const SEG_TRACK = 'rounded-xl bg-primary/[0.05] p-1 ring-1 ring-inset ring-border/60 dark:bg-white/[0.04]';
+export const SEG_ON = 'bg-card text-foreground shadow-soft ring-1 ring-border/60';
+export const SEG_OFF = 'text-muted-foreground hover:text-foreground';
 
 export type ExceptionPreset = 'm15' | 'lesson' | 'endOfDay' | 'custom';
 export const EXCEPTION_PRESETS: readonly ExceptionPreset[] = ['m15', 'lesson', 'endOfDay', 'custom'];

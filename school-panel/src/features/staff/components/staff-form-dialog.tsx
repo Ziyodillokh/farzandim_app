@@ -1,10 +1,11 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 
 import { ROLES } from '@/auth/permissions';
+import { useCan } from '@/auth/use-session';
 import { FormField } from '@/components/common/form-field';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
@@ -13,9 +14,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import type { RoleKey } from '@/data/contracts';
 import type { StaffRow } from '@/data/mock/services/staff';
 import { CLASS_SCOPED_ROLES, staffFormSchema, type StaffInput } from '@/data/schemas/staff';
+import { useSetStaffPhoto } from '@/features/profile/hooks';
 import { useI18n } from '@/i18n';
 import { useCreateStaff, useUpdateStaff } from '../hooks';
 import { ClassMultiSelect } from './class-multi-select';
+import { StaffPhotoField } from './staff-photo-field';
 
 type FormValues = { fullName: string; position: string; role: RoleKey; phone: string; email: string; classIds: string[] };
 
@@ -30,13 +33,18 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
   const { t } = useI18n();
   const create = useCreateStaff();
   const update = useUpdateStaff();
+  const setPhoto = useSetStaffPhoto();
+  const canPhoto = useCan()('staff.manage');
   const form = useForm<FormValues>({ resolver: zodResolver(staffFormSchema), defaultValues: EMPTY });
   const roleLocked = Boolean(row?.username);
+  // undefined — o'zgarmagan; null — olib tashlash; satr — yangi rasm (saqlashda qo'llanadi).
+  const [pendingPhoto, setPendingPhoto] = useState<string | null | undefined>(undefined);
 
   // Faqat ochilganda to'ldiriladi — fon yangilanishlari kiritilgan matnni o'chirmasin.
   const wasOpen = useRef(false);
   useEffect(() => {
     if (open && !wasOpen.current) {
+      setPendingPhoto(undefined);
       form.reset(
         row
           ? { fullName: row.fullName, position: row.position, role: row.role, phone: row.phone, email: row.email, classIds: row.classIds }
@@ -47,16 +55,22 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
   }, [open, row, form]);
 
   const role = form.watch('role');
+  const fullName = form.watch('fullName');
+  const shownPhoto = pendingPhoto === undefined ? (row?.photo ?? null) : pendingPhoto;
 
   const submit = form.handleSubmit(async (values) => {
     const input: StaffInput = { ...values, classIds: isClassScoped(values.role) ? values.classIds : [] };
+    let staffId: string;
     try {
-      if (row) await update.mutateAsync({ id: row.id, input });
-      else await create.mutateAsync({ ...input, active: true });
-      onOpenChange(false);
+      staffId = row ? (await update.mutateAsync({ id: row.id, input })).id : (await create.mutateAsync({ ...input, active: true })).id;
     } catch {
-      // toast — hooks ichida
+      return; // toast — hooks ichida, oyna ochiq qoladi
     }
+    if (canPhoto && pendingPhoto !== undefined) {
+      // Rasm xatosi alohida toast bilan ko'rsatiladi; xodim baribir saqlangan.
+      await setPhoto.mutateAsync({ staffId, photo: pendingPhoto }).catch(() => undefined);
+    }
+    onOpenChange(false);
   });
 
   const { errors } = form.formState;
@@ -69,6 +83,17 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
           <DialogDescription>{t(`staff.roles.desc.${role}`)}</DialogDescription>
         </DialogHeader>
         <form onSubmit={submit} className="grid gap-4" noValidate>
+          {canPhoto && (
+            <StaffPhotoField
+              name={fullName || row?.fullName || ''}
+              photo={shownPhoto}
+              portrait={row?.portrait ?? null}
+              pending={pendingPhoto !== undefined}
+              busy={setPhoto.isPending}
+              onPick={setPendingPhoto}
+              onRemove={() => setPendingPhoto(null)}
+            />
+          )}
           <FormField label={t('staff.form.fullName')} htmlFor="staff-name" error={errors.fullName}>
             <Input id="staff-name" placeholder={t('staff.form.fullNamePlaceholder')} {...form.register('fullName')} />
           </FormField>
@@ -122,7 +147,7 @@ export function StaffFormDialog({ open, onOpenChange, row }: { open: boolean; on
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
               {t('common.cancel')}
             </Button>
-            <Button type="submit" loading={create.isPending || update.isPending}>
+            <Button type="submit" loading={create.isPending || update.isPending || setPhoto.isPending}>
               {t('common.save')}
             </Button>
           </DialogFooter>

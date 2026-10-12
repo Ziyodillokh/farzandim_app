@@ -13,7 +13,9 @@ import { Textarea } from '@/components/ui/textarea';
 import { addMonthsIso, type PaymentRow } from '@/data/mock/services/comms';
 import { MAX_SHIFT_MONTHS } from '@/data/schemas/comms';
 import { Segmented } from '@/features/messages/components/compose-sections';
+import { INNER_TILE } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
+import { cn } from '@/lib/utils';
 import { useBulkShift, useShiftPayment } from '../hooks';
 
 type Mode = 'months' | 'date';
@@ -99,7 +101,7 @@ export function PaymentShiftDialog({ targets, onOpenChange, onDone }: { targets:
                   </SelectContent>
                 </Select>
               </FormField>
-              <label className="flex cursor-pointer items-start gap-3 rounded-xl border p-3">
+              <label className={cn(INNER_TILE, 'flex cursor-pointer items-start gap-3 p-3')}>
                 <Checkbox checked={markPrepaid} onCheckedChange={(v) => setMarkPrepaid(v === true)} className="mt-0.5" />
                 <span>
                   <span className="block text-sm font-medium">{t('reminders.payments.shift.markPrepaid')}</span>
@@ -114,7 +116,7 @@ export function PaymentShiftDialog({ targets, onOpenChange, onDone }: { targets:
           )}
 
           {single && preview && (
-            <div className="flex items-center gap-3 rounded-xl bg-muted/60 px-4 py-3 text-sm tabular-nums">
+            <div className={cn(INNER_TILE, 'flex items-center gap-3 px-4 py-3 text-sm tabular-nums')}>
               <span className="text-muted-foreground">{formatDate(single.nextDate, 'd MMM yyyy')}</span>
               <ArrowRight className="h-4 w-4 text-primary" />
               <span className="font-semibold">{formatDate(preview, 'd MMM yyyy')}</span>

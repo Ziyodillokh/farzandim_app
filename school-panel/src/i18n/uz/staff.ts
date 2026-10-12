@@ -47,6 +47,8 @@ export const staff = {
     selected: 'Tanlandi: {count}',
     clear: 'Tozalash',
     roleLocked: 'Demo hisob roli o\'zgarmaydi',
+    photo: 'Xodim rasmi',
+    photoPending: 'Rasm «Saqlash» bosilganda qo\'llanadi',
   },
   roles: {
     intro: 'Ruxsatlar uch joyda tekshiriladi: menyu (ko\'rinmaydi), sahifa ("Ruxsat yo\'q") va amal (tugma yo\'q, servis ham rad etadi).',

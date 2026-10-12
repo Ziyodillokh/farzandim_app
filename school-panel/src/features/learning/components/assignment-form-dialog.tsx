@@ -17,6 +17,7 @@ import { addDays } from '@/data/mock/calendar';
 import { clockToday } from '@/data/mock/clock';
 import { assignmentInputSchema, type AssignmentInput } from '@/data/schemas/learning';
 import { useI18n } from '@/i18n';
+import { TILE } from '@/features/dashboard/lib/tile';
 import { cn } from '@/lib/utils';
 import { useCreateAssignment, useLearningClassOptions, useLearningMaterials } from '../hooks';
 import { gradesLabel } from '../lib/format';
@@ -108,8 +109,9 @@ export function AssignmentFormDialog({ open, onOpenChange, materialId }: { open:
                         <label
                           key={c.id}
                           className={cn(
-                            'flex cursor-pointer items-center gap-2 rounded-lg border px-2.5 py-2 text-sm transition-colors',
-                            checked && 'border-primary/40 bg-primary/[0.05]',
+                            TILE,
+                            'flex cursor-pointer items-center gap-2 px-2.5 py-2 text-sm transition-colors',
+                            checked && 'bg-primary/[0.07] ring-primary/40 dark:bg-primary/[0.12]',
                             !fits && 'opacity-60',
                           )}
                         >

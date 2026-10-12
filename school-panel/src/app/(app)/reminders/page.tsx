@@ -12,6 +12,7 @@ import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import type { ReminderKind } from '@/data/contracts';
@@ -71,7 +72,7 @@ export default function RemindersPage() {
         <StatCard icon={<Repeat />} tone="info" label={t('reminders.stats.repeating')} value={formatNumber(stats?.repeating ?? 0)} loading={statsLoading} />
         <StatCard icon={<CirclePause />} tone="muted" label={t('reminders.stats.paused')} value={formatNumber(stats?.paused ?? 0)} loading={statsLoading} />
         {can('payments.manage') && (
-          <Link href="/reminders/verifications" className="rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+          <Link href="/reminders/verifications" className="rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
             <StatCard
               icon={<Inbox />}
               tone={(verifications.data?.counts.OPEN ?? 0) > 0 ? 'warning' : 'success'}
@@ -112,19 +113,19 @@ export default function RemindersPage() {
       {list.isLoading && !list.data && (
         <div className="space-y-3">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-36 rounded-xl" />
+            <Skeleton key={i} className="h-36 rounded-2xl" />
           ))}
         </div>
       )}
       {list.data && list.data.items.length === 0 && (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <EmptyState
             icon={<BellRing />}
             title={filter.search || filter.kind ? t('common.noResults') : t(`reminders.empty.${when}.title`)}
             description={filter.search || filter.kind ? t('common.noResultsHint') : t(`reminders.empty.${when}.description`)}
             action={when === 'UPCOMING' && !filter.search && <Button onClick={openCreate}>{t('reminders.add')}</Button>}
           />
-        </div>
+        </Card>
       )}
       {list.data && list.data.items.length > 0 && (
         <div className="space-y-3">

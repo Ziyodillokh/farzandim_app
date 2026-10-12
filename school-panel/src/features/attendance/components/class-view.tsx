@@ -10,7 +10,7 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { ExportMenu } from '@/components/common/export-menu';
 import { PageHeader } from '@/components/common/page-header';
-import { SearchInput, Toolbar } from '@/components/common/toolbar';
+import { SearchInput } from '@/components/common/toolbar';
 import { Badge } from '@/components/ui/badge';
 import type { AttendanceStatus, IsoDate } from '@/data/contracts';
 import { useSchool } from '@/features/school/hooks';
@@ -148,15 +148,15 @@ export function ClassView() {
             </p>
           </div>
           {mode === 'correct' && (
-            <p className="mb-4 flex items-center gap-2 rounded-lg border border-info/25 bg-info/10 px-3 py-2 text-sm text-info no-print">
+            <p className="mb-4 flex items-center gap-2 rounded-xl bg-info/10 px-3.5 py-2.5 text-sm text-info ring-1 ring-inset ring-info/20 no-print">
               <Info className="h-4 w-4 shrink-0" />
               {t('attendance.classPage.pastHint')}
             </p>
           )}
-          <ClassSummary counts={counts} value={statusFilter} onChange={setStatusFilter} />
-          <Toolbar>
-            <SearchInput value={search} onChange={setSearch} placeholder={t('attendance.classPage.searchPlaceholder')} />
-          </Toolbar>
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 no-print">
+            <ClassSummary counts={counts} value={statusFilter} onChange={setStatusFilter} />
+            <SearchInput value={search} onChange={setSearch} placeholder={t('attendance.classPage.searchPlaceholder')} className="sm:w-56" />
+          </div>
           <ClassRoster rows={rows} loading={query.isLoading} mode={mode} busy={mark.isPending} canChange={canChange} onMark={onMark} onCorrect={onCorrect} />
         </>
       )}

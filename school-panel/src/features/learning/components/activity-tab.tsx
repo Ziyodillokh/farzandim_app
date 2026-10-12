@@ -1,6 +1,6 @@
 'use client';
 
-import { Award, BarChart3, CircleCheck, TrendingDown, TrendingUp, Users } from 'lucide-react';
+import { Award, BarChart3, CircleCheck, Minus, TrendingDown, TrendingUp, Users } from 'lucide-react';
 import { useMemo } from 'react';
 
 import { DataTable, type Column } from '@/components/common/data-table';
@@ -18,10 +18,10 @@ import { ClassRateChart, WeeklyActivityChart } from './activity-charts';
 import { InterestsCard } from './interests-card';
 
 function Delta({ value, label }: { value: number; label: string }) {
-  const up = value >= 0;
-  const Icon = up ? TrendingUp : TrendingDown;
+  const Icon = value > 0 ? TrendingUp : value < 0 ? TrendingDown : Minus;
+  const tone = value > 0 ? 'text-success' : value < 0 ? 'text-warning' : 'text-muted-foreground';
   return (
-    <span className={cn('inline-flex items-center gap-1', up ? 'text-success' : 'text-warning')}>
+    <span className={cn('inline-flex items-center gap-1', tone)}>
       <Icon className="h-3.5 w-3.5" />
       {label}
     </span>

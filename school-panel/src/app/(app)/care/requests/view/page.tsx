@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarClock, Clock3, MessageSquareQuote, ShieldAlert, Tag } from 'lucide-react';
+import { CalendarClock, Clock3, MessageSquareQuote, ShieldAlert, Tag, UserRound } from 'lucide-react';
 import { useSearchParams } from 'next/navigation';
 import { Suspense, type ReactNode } from 'react';
 
@@ -17,8 +17,9 @@ import { ConfidentialityCard } from '@/features/care/components/confidentiality-
 import { RequestActions } from '@/features/care/components/request-actions';
 import { RequestTimeline } from '@/features/care/components/request-timeline';
 import { useCareRequest } from '@/features/care/hooks';
+import { ICON_CHIP, TILE } from '@/features/dashboard/lib/tile';
 import { useI18n } from '@/i18n';
-import { initials } from '@/lib/utils';
+import { cn, initials } from '@/lib/utils';
 
 export default function CareRequestViewPage() {
   return (
@@ -31,8 +32,8 @@ export default function CareRequestViewPage() {
 function ViewSkeleton() {
   return (
     <div className="grid gap-6 lg:grid-cols-3">
-      <Skeleton className="h-64 rounded-xl lg:col-span-2" />
-      <Skeleton className="h-64 rounded-xl" />
+      <Skeleton className="h-64 rounded-2xl lg:col-span-2" />
+      <Skeleton className="h-64 rounded-2xl" />
     </div>
   );
 }
@@ -40,7 +41,7 @@ function ViewSkeleton() {
 function Detail({ icon, label, children }: { icon: ReactNode; label: string; children: ReactNode }) {
   return (
     <div className="flex items-start gap-3">
-      <span className="mt-0.5 text-muted-foreground [&_svg]:size-4">{icon}</span>
+      <span className={cn(ICON_CHIP, 'h-8 w-8 rounded-lg bg-primary/[0.07] text-primary/80 ring-primary/10 [&_svg]:size-4')}>{icon}</span>
       <div className="min-w-0">
         <p className="text-xs text-muted-foreground">{label}</p>
         <div className="text-sm font-medium">{children}</div>
@@ -95,8 +96,10 @@ function RequestView() {
       />
 
       {request.protocolActivated && (
-        <div className="mb-6 flex items-start gap-3 rounded-xl border border-destructive/25 bg-destructive/[0.05] p-4 animate-fade-in">
-          <ShieldAlert className="mt-0.5 h-5 w-5 shrink-0 text-destructive" />
+        <div className="mb-6 flex items-start gap-3 rounded-2xl bg-destructive/[0.05] p-4 ring-1 ring-inset ring-destructive/20 animate-fade-in">
+          <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-destructive/10 text-destructive">
+            <ShieldAlert className="h-[18px] w-[18px]" />
+          </span>
           <div className="text-sm">
             <p className="font-semibold text-destructive">{t('care.request.protocol.activeTitle')}</p>
             {request.notified.length > 0 && (
@@ -113,9 +116,10 @@ function RequestView() {
 
       <div className="grid gap-6 lg:grid-cols-3">
         <div className="space-y-6 lg:col-span-2">
-          <SectionCard title={t('care.request.message')}>
-            <figure className="relative rounded-xl bg-gradient-to-br from-primary/[0.06] to-transparent p-5">
-              <MessageSquareQuote className="absolute right-4 top-4 h-6 w-6 text-primary/20" aria-hidden />
+          <SectionCard title={t('care.request.message')} icon={<MessageSquareQuote />}>
+            <figure className={cn(TILE, 'relative overflow-hidden p-5 pl-6')}>
+              <span aria-hidden className="absolute inset-y-4 left-0 w-1 rounded-r-full bg-gradient-to-b from-sky-400 to-primary" />
+              <MessageSquareQuote className="absolute right-4 top-4 h-6 w-6 text-primary/15" aria-hidden />
               <blockquote className="pr-8 text-[0.95rem] leading-relaxed">«{request.message}»</blockquote>
               <figcaption className="mt-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
                 <Badge variant="secondary" size="sm">{t(`enums.careTopicTag.${request.topic}`)}</Badge>
@@ -128,10 +132,10 @@ function RequestView() {
         </div>
 
         <div className="space-y-6">
-          <SectionCard title={t('care.request.student')}>
-            <div className="mb-5 flex items-center gap-3">
+          <SectionCard title={t('care.request.student')} icon={<UserRound />}>
+            <div className={cn(TILE, 'mb-4 flex items-center gap-3 p-3')}>
               <Avatar className="h-12 w-12">
-                <AvatarFallback className="bg-primary/10 font-semibold text-primary">{initials(request.studentName)}</AvatarFallback>
+                <AvatarFallback className="bg-gradient-to-br from-sky-100 to-brand-200 font-semibold text-brand-800 dark:from-brand-800/60 dark:to-brand-900/60 dark:text-brand-100">{initials(request.studentName)}</AvatarFallback>
               </Avatar>
               <div className="min-w-0">
                 <p className="truncate font-semibold">{request.studentName}</p>

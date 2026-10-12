@@ -9,6 +9,7 @@ import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Progress } from '@/components/ui/progress';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { CareBreakdown } from '@/data/schemas/care';
@@ -55,7 +56,11 @@ export default function CareOverviewPage() {
   const body = () => {
     if (options.error) return <ErrorState error={options.error} onRetry={() => void options.refetch()} />;
     if (!loading && !hasSurveys) {
-      return <EmptyState icon={<HeartHandshake />} title={t('care.overview.noSurvey')} description={t('care.overview.noSurveyHint')} />;
+      return (
+        <Card>
+          <EmptyState icon={<HeartHandshake />} title={t('care.overview.noSurvey')} description={t('care.overview.noSurveyHint')} />
+        </Card>
+      );
     }
     if (aggregate.error) return <ErrorState error={aggregate.error} onRetry={() => void aggregate.refetch()} />;
     const wellbeing = data?.overall.WELLBEING;
@@ -94,7 +99,9 @@ export default function CareOverviewPage() {
             <p className="text-sm text-muted-foreground">{t('care.overview.topicsHint')}</p>
           </div>
           {!loading && data && Object.keys(data.overall).length === 0 ? (
-            <EmptyState title={t('care.overview.noData')} className="rounded-xl border border-dashed py-10" />
+            <Card>
+              <EmptyState title={t('care.overview.noData')} className="py-10" />
+            </Card>
           ) : (
             <TopicScoreCards overall={data?.overall} loading={loading} />
           )}

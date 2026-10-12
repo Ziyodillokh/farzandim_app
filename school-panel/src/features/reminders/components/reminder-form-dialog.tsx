@@ -17,6 +17,7 @@ import type { ReminderRow } from '@/data/mock/services/comms';
 import { reminderInputSchema, type ReminderInput } from '@/data/schemas/comms';
 import { AudiencePicker } from '@/features/messages/components/audience-picker';
 import { MessagePhonePreview } from '@/features/messages/components/message-preview';
+import { BRAND_GLOW, INNER_TILE, SELECTED_TILE, TILE_BUTTON } from '@/features/messages/styles';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
 import { useCreateReminder, useUpdateReminder } from '../hooks';
@@ -80,7 +81,7 @@ export function ReminderFormDialog({ open, onOpenChange, reminder }: { open: boo
           <DialogTitle>{reminder ? t('reminders.form.editTitle') : t('reminders.form.createTitle')}</DialogTitle>
           <DialogDescription>{t('reminders.subtitle')}</DialogDescription>
         </DialogHeader>
-        <form onSubmit={(e) => void submit(e)} noValidate className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_290px]">
+        <form onSubmit={(e) => void submit(e)} noValidate className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_288px]">
           <div className="min-w-0 space-y-4">
             <FormField label={t('reminders.form.kind')}>
               <div className="grid grid-cols-2 gap-2 sm:grid-cols-3" role="radiogroup">
@@ -92,8 +93,8 @@ export function ReminderFormDialog({ open, onOpenChange, reminder }: { open: boo
                     aria-checked={values.kind === kind}
                     onClick={() => form.setValue('kind', kind)}
                     className={cn(
-                      'flex items-center gap-2.5 rounded-xl border p-2 text-left text-sm font-medium transition-all',
-                      values.kind === kind ? 'border-primary bg-primary/[0.06] ring-1 ring-primary/30' : 'hover:border-primary/40',
+                      'flex items-center gap-2.5 p-2 text-left text-sm font-medium transition-all',
+                      values.kind === kind ? SELECTED_TILE : TILE_BUTTON,
                     )}
                   >
                     <KindIcon kind={kind} className="h-8 w-8 rounded-lg [&_svg]:size-4" />
@@ -141,7 +142,7 @@ export function ReminderFormDialog({ open, onOpenChange, reminder }: { open: boo
                 error={audienceError}
               />
             </FormField>
-            <label className="flex items-center justify-between gap-4 rounded-xl border p-3">
+            <label className={cn(INNER_TILE, 'flex items-center justify-between gap-4 p-3')}>
               <span>
                 <span className="block text-sm font-medium">{t('reminders.form.active')}</span>
                 <span className="block text-xs text-muted-foreground">{t('reminders.form.activeHint')}</span>
@@ -150,10 +151,11 @@ export function ReminderFormDialog({ open, onOpenChange, reminder }: { open: boo
             </label>
           </div>
 
-          <div className="hidden space-y-2 lg:block">
-            <p className="text-center text-xs font-medium text-muted-foreground">{t('reminders.form.preview')}</p>
+          <div className={cn(INNER_TILE, 'relative hidden self-start overflow-hidden p-3 lg:block')}>
+            <div aria-hidden className={BRAND_GLOW} />
+            <p className="relative mb-3 text-center text-xs font-medium text-muted-foreground">{t('reminders.form.preview')}</p>
             <MessagePhonePreview
-              className="w-[270px]"
+              className="relative w-[260px]"
               title={values.title}
               body={values.body}
               meta={t('reminders.previewMeta', { date: sendLabel })}

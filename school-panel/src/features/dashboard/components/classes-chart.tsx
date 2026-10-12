@@ -1,5 +1,7 @@
 'use client';
 
+import { BarChart3 } from 'lucide-react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Bar, BarChart, CartesianGrid, Cell, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
@@ -8,7 +10,6 @@ import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ClassToday } from '@/data/mock/services/dashboard';
 import { useI18n } from '@/i18n';
-import Link from 'next/link';
 import { ChartTooltip } from './chart-tooltip';
 
 const GOOD = 95;
@@ -29,6 +30,7 @@ export function ClassesChart({ rows, loading }: { rows: ClassToday[] | null | un
     <SectionCard
       title={t('dashboard.classes.title')}
       description={t('dashboard.classes.subtitle')}
+      icon={<BarChart3 />}
       actions={
         <Button asChild variant="ghost" size="sm">
           <Link href="/attendance">{t('dashboard.classes.open')}</Link>
@@ -36,7 +38,7 @@ export function ClassesChart({ rows, loading }: { rows: ClassToday[] | null | un
       }
     >
       {loading ? (
-        <Skeleton className="h-64 w-full" />
+        <Skeleton className="h-64 w-full rounded-xl" />
       ) : data.length === 0 ? (
         <p className="flex h-64 items-center justify-center text-sm text-muted-foreground">{t('dashboard.feed.empty')}</p>
       ) : (
@@ -46,7 +48,7 @@ export function ClassesChart({ rows, loading }: { rows: ClassToday[] | null | un
               <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
               <XAxis dataKey="className" tickLine={false} axisLine={false} interval={0} tick={{ fontSize: 10, fill: 'hsl(var(--muted-foreground))' }} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} tickFormatter={(v: number) => `${v}%`} />
-              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--muted))', opacity: 0.5 }} />
+              <Tooltip content={<ChartTooltip />} cursor={{ fill: 'hsl(var(--primary) / 0.06)' }} />
               <Bar
                 dataKey="rate"
                 name={t('dashboard.trend.rate')}

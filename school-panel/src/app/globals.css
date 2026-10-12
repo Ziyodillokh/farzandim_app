@@ -3,81 +3,108 @@
 @tailwind utilities;
 
 /*
- * Parvoz School — dizayn tokenlari.
- * Asos: admin-web tokenlari. Brend: Parvoz ilovalari ko'ki #216BFF (logo gradienti
- * #508AFF → #305399), yon panel — saytdagi to'q ko'k (#060B16).
+ * Parvoz School — "aurora shisha" dizayn tokenlari.
+ * Brend: Parvoz logosi gradienti #508AFF → #305399, asosiy ko'k #216BFF.
+ * Faqat ko'k / havorang / moviy tuslar (186°–222°) — binafsha yo'q.
+ * Kartalar blursiz shisha (fon fiksirlangan va yumshoq); haqiqiy backdrop-filter
+ * faqat sidebar, topbar, dialog/popover va login kartasida — sekin noutbuklarda ham silliq.
  */
 
 @layer base {
   :root {
-    --background: 220 33% 98%;           /* #F7F9FC */
-    --foreground: 224 32% 12%;           /* #151C2C */
-    --card: 0 0% 100%;
-    --card-foreground: 224 32% 12%;
+    --background: 216 60% 97%;           /* #F2F6FD — aurora ostidagi asos */
+    --foreground: 224 36% 12%;
+    --card: 0 0% 100%;                   /* shaffof EMAS: input, pill, sticky katak */
+    --card-foreground: 224 36% 12%;
     --popover: 0 0% 100%;
-    --popover-foreground: 224 32% 12%;
+    --popover-foreground: 224 36% 12%;
 
-    --primary: 221 100% 56%;             /* #216BFF */
+    --primary: 221 95% 52%;              /* matn uchun AA (shisha ustida) */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 222 52% 40%;         /* #305399 */
-    --primary-soft: 221 100% 96%;        /* #EBF2FF */
+    --primary-glow: 220 52% 39%;         /* #305399 */
+    --primary-soft: 218 100% 96%;
 
-    --secondary: 220 20% 95%;
-    --secondary-foreground: 224 25% 20%;
-    --muted: 220 20% 95%;
-    --muted-foreground: 222 12% 42%;
-    --accent: 221 90% 96%;
-    --accent-foreground: 224 25% 16%;
+    --secondary: 218 45% 95%;
+    --secondary-foreground: 224 30% 18%;
+    --muted: 218 45% 95%;
+    --muted-foreground: 222 16% 38%;
+    --accent: 218 90% 95%;
+    --accent-foreground: 224 30% 16%;
 
-    --destructive: 0 74% 54%;
+    --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
-    --success: 152 62% 40%;
+    --success: 152 62% 36%;
     --success-foreground: 0 0% 100%;
-    --warning: 36 92% 50%;
+    --warning: 34 92% 46%;
     --warning-foreground: 0 0% 100%;
-    --info: 199 89% 48%;
+    --info: 199 89% 42%;
     --info-foreground: 0 0% 100%;
 
-    --border: 220 18% 90%;
-    --input: 220 18% 88%;
-    --ring: 221 100% 56%;
+    --border: 218 35% 88%;
+    --input: 218 30% 85%;
+    --ring: 221 95% 52%;
 
-    --sidebar: 222 58% 6%;               /* #060B16 */
-    --sidebar-foreground: 220 30% 92%;
-    --sidebar-muted: 220 15% 62%;
-    --sidebar-accent: 221 60% 16%;
-    --sidebar-border: 222 35% 13%;
+    /* Yon panel — ikkala mavzuda to'q ko'k shisha (kosmik #060A15 bilan uyg'un) */
+    --sidebar: 222 62% 8%;
+    --sidebar-foreground: 218 40% 94%;
+    --sidebar-muted: 218 22% 68%;
+    --sidebar-accent: 221 60% 18%;
+    --sidebar-border: 222 40% 16%;
 
     --chart-1: 221 100% 56%;
     --chart-2: 152 62% 42%;
     --chart-3: 36 92% 52%;
     --chart-4: 0 74% 58%;
-    --chart-5: 265 70% 60%;
+    --chart-5: 188 80% 40%;
 
     --radius: 0.85rem;
+
+    /* Aurora — ko'k, havorang, moviy */
+    --aurora-1: 221 100% 62%; --aurora-1-a: 0.32;
+    --aurora-2: 199 95% 58%;  --aurora-2-a: 0.22;
+    --aurora-3: 186 85% 52%;  --aurora-3-a: 0.16;
+    --aurora-4: 220 70% 45%;  --aurora-4-a: 0.13;
+
+    /* Shisha sirtlar */
+    --glass: 0 0% 100%;
+    --glass-a: 0.66;
+    --glass-strong-a: 0.84;
+    --popover-a: 0.9;
+    --glass-border: 0 0% 100%;
+    --glass-border-a: 0.75;
+    --glass-sheen: 0 0% 100% / 0.55;
+    --shadow-glass: 0 0 0 1px hsl(221 45% 40% / 0.08), 0 1px 2px hsl(222 60% 25% / 0.04), 0 12px 32px -14px hsl(221 70% 35% / 0.2);
+    --shadow-glass-lg: 0 0 0 1px hsl(221 45% 40% / 0.1), 0 24px 56px -20px hsl(221 70% 30% / 0.3);
+    --nav: 222 62% 8%;  --nav-a: 0.9;
+    --overlay: 222 60% 8%; --overlay-a: 0.38;
+    --btn-from: 217 100% 60%;
+    --btn-to: 222 92% 48%;
+    --blur-sm: 8px;
+    --blur-md: 16px;
+    --blur-lg: 24px;
   }
 
   .dark {
-    --background: 224 40% 5%;
-    --foreground: 220 30% 96%;
-    --card: 224 35% 8%;
-    --card-foreground: 220 30% 96%;
-    --popover: 224 35% 9%;
-    --popover-foreground: 220 30% 96%;
+    --background: 225 55% 5%;
+    --foreground: 220 35% 96%;
+    --card: 222 42% 12%;
+    --card-foreground: 220 35% 96%;
+    --popover: 222 42% 11%;
+    --popover-foreground: 220 35% 96%;
 
-    --primary: 221 100% 62%;
+    --primary: 221 100% 64%;
     --primary-foreground: 0 0% 100%;
     --primary-glow: 222 60% 52%;
     --primary-soft: 221 55% 15%;
 
-    --secondary: 224 25% 13%;
+    --secondary: 222 35% 15%;
     --secondary-foreground: 220 30% 92%;
-    --muted: 224 25% 13%;
-    --muted-foreground: 220 14% 66%;
-    --accent: 221 40% 15%;
+    --muted: 222 35% 15%;
+    --muted-foreground: 219 20% 70%;
+    --accent: 221 40% 16%;
     --accent-foreground: 220 30% 94%;
 
-    --destructive: 0 70% 56%;
+    --destructive: 0 70% 58%;
     --destructive-foreground: 0 0% 100%;
     --success: 152 55% 48%;
     --success-foreground: 224 40% 5%;
@@ -86,15 +113,32 @@
     --info: 199 85% 58%;
     --info-foreground: 224 40% 5%;
 
-    --border: 224 25% 15%;
-    --input: 224 25% 17%;
-    --ring: 221 100% 62%;
+    --border: 221 35% 18%;
+    --input: 221 32% 20%;
+    --ring: 221 100% 64%;
 
-    --sidebar: 224 50% 4%;
-    --sidebar-foreground: 220 30% 92%;
-    --sidebar-muted: 220 14% 58%;
-    --sidebar-accent: 221 50% 14%;
-    --sidebar-border: 224 35% 11%;
+    --sidebar: 224 60% 5%;
+    --sidebar-foreground: 218 40% 94%;
+    --sidebar-muted: 218 20% 64%;
+    --sidebar-accent: 221 50% 16%;
+    --sidebar-border: 224 40% 12%;
+
+    --aurora-1: 221 100% 55%; --aurora-1-a: 0.26;
+    --aurora-2: 199 90% 50%;  --aurora-2-a: 0.12;
+    --aurora-3: 186 85% 45%;  --aurora-3-a: 0.08;
+    --aurora-4: 220 60% 34%;  --aurora-4-a: 0.35;
+
+    --glass: 222 47% 11%;
+    --glass-a: 0.62;
+    --glass-strong-a: 0.8;
+    --popover-a: 0.92;
+    --glass-border: 0 0% 100%;
+    --glass-border-a: 0.07;
+    --glass-sheen: 0 0% 100% / 0.04;
+    --shadow-glass: inset 0 1px 0 hsl(0 0% 100% / 0.05), 0 0 0 1px hsl(225 60% 2% / 0.4), 0 16px 40px -18px hsl(225 80% 2% / 0.8);
+    --shadow-glass-lg: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 0 0 1px hsl(225 60% 2% / 0.5), 0 28px 60px -20px hsl(225 80% 2% / 0.9);
+    --nav: 224 60% 5%; --nav-a: 0.82;
+    --overlay: 225 60% 3%; --overlay-a: 0.55;
   }
 }
 
@@ -102,7 +146,7 @@
   * { @apply border-border; }
   body {
     @apply bg-background text-foreground antialiased;
-    font-feature-settings: 'rlig' 1, 'calt' 1, 'cv11' 1;
+    font-feature-settings: 'rlig' 1, 'calt' 1;
     text-rendering: optimizeLegibility;
   }
   html { @apply scroll-smooth; }
@@ -121,9 +165,10 @@
 
 .bg-hero-gradient {
   background:
-    radial-gradient(circle at 18% 12%, hsl(var(--primary) / 0.22), transparent 45%),
-    radial-gradient(circle at 85% 85%, hsl(var(--primary-glow) / 0.25), transparent 50%),
-    hsl(222 58% 6%);
+    radial-gradient(60% 70% at 12% 0%, hsl(221 100% 60% / 0.34), transparent 70%),
+    radial-gradient(55% 60% at 100% 100%, hsl(192 90% 50% / 0.2), transparent 70%),
+    radial-gradient(40% 50% at 70% 10%, hsl(212 100% 70% / 0.12), transparent 70%),
+    hsl(223 62% 6%);
 }
 
 .bg-mesh-gradient {
@@ -135,7 +180,7 @@
 .card-glow { transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s; }
 .card-glow:hover {
   transform: translateY(-2px);
-  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.15), 0 14px 32px -10px hsl(var(--primary) / 0.22);
+  box-shadow: 0 0 0 1px hsl(var(--primary) / 0.16), var(--shadow-glass-lg);
 }
 
 .shimmer {
@@ -146,10 +191,95 @@
 
 .tabular-nums { font-variant-numeric: tabular-nums; }
 
+/* ── Shisha utilitalari (faqat to'liq nomlar — Tailwind dinamik nomlarni tozalab yuboradi) ── */
+@layer components {
+  .aurora-bg {
+    position: fixed;
+    inset: 0;
+    z-index: -10;
+    pointer-events: none;
+    will-change: transform;
+    background:
+      radial-gradient(55% 45% at 92% 0%, hsl(var(--aurora-1) / var(--aurora-1-a)), transparent 70%),
+      radial-gradient(45% 50% at 0% 40%, hsl(var(--aurora-2) / var(--aurora-2-a)), transparent 70%),
+      radial-gradient(50% 45% at 75% 100%, hsl(var(--aurora-3) / var(--aurora-3-a)), transparent 70%),
+      radial-gradient(40% 40% at 12% 100%, hsl(var(--aurora-4) / var(--aurora-4-a)), transparent 70%),
+      hsl(var(--background));
+  }
+  .glass {
+    background:
+      linear-gradient(180deg, hsl(var(--glass-sheen)), transparent 42%),
+      hsl(var(--glass) / var(--glass-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
+    box-shadow: var(--shadow-glass);
+  }
+  .glass-strong {
+    background:
+      linear-gradient(180deg, hsl(var(--glass-sheen)), transparent 42%),
+      hsl(var(--glass) / var(--glass-strong-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
+    box-shadow: var(--shadow-glass-lg);
+    -webkit-backdrop-filter: blur(var(--blur-lg)) saturate(160%);
+    backdrop-filter: blur(var(--blur-lg)) saturate(160%);
+  }
+  .glass-bar {
+    background: hsl(var(--glass) / var(--glass-strong-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
+    box-shadow: var(--shadow-glass);
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(160%);
+    backdrop-filter: blur(var(--blur-md)) saturate(160%);
+  }
+  .glass-popover {
+    background: hsl(var(--popover) / var(--popover-a));
+    border: 1px solid hsl(var(--glass-border) / var(--glass-border-a));
+    box-shadow: var(--shadow-glass-lg);
+    -webkit-backdrop-filter: blur(var(--blur-md)) saturate(160%);
+    backdrop-filter: blur(var(--blur-md)) saturate(160%);
+  }
+  .glass-nav {
+    background:
+      radial-gradient(120% 40% at 0% 0%, hsl(221 100% 60% / 0.16), transparent 70%),
+      radial-gradient(120% 30% at 100% 100%, hsl(192 90% 50% / 0.08), transparent 70%),
+      hsl(var(--nav) / var(--nav-a));
+    border: 1px solid hsl(0 0% 100% / 0.08);
+    box-shadow: inset 0 1px 0 hsl(0 0% 100% / 0.06), 0 24px 48px -20px hsl(222 70% 10% / 0.45);
+    -webkit-backdrop-filter: blur(var(--blur-md));
+    backdrop-filter: blur(var(--blur-md));
+  }
+  .glass-overlay { background: hsl(var(--overlay) / var(--overlay-a)); }
+  .glass-nav :focus-visible { --tw-ring-offset-color: hsl(var(--nav)); }
+  .text-gradient-brand {
+    background: linear-gradient(120deg, #8fb6ff, #ffffff 45%, #9ddcff);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+}
+
+@media (prefers-reduced-transparency: reduce) {
+  :root { --glass-a: 0.97; --glass-strong-a: 0.98; --popover-a: 0.98; --nav-a: 0.98; }
+  .glass-strong, .glass-bar, .glass-popover, .glass-nav { -webkit-backdrop-filter: none; backdrop-filter: none; }
+  .aurora-bg { opacity: 0.5; }
+}
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+  :root { --glass-strong-a: 0.96; --popover-a: 0.97; --nav-a: 0.97; }
+}
+
+
 /* Chop etish: faqat asosiy kontent, toza oq sahifa */
 @media print {
   @page { margin: 14mm; }
+  :root, .dark {
+    --background: 0 0% 100%; --foreground: 224 36% 12%; --card: 0 0% 100%; --card-foreground: 224 36% 12%;
+    --muted: 220 20% 96%; --muted-foreground: 222 16% 38%; --border: 220 13% 88%;
+    --glass: 0 0% 100%; --glass-a: 1; --glass-strong-a: 1;
+  }
   html, body { background: #fff !important; color: #000 !important; }
+  .aurora-bg { display: none !important; }
+  .glass, .glass-strong, .glass-bar, .glass-popover {
+    background: #fff !important; box-shadow: none !important; border-color: #e5e7eb !important;
+    -webkit-backdrop-filter: none !important; backdrop-filter: none !important;
+  }
   .no-print { display: none !important; }
   .print-only { display: block !important; }
   .print-break { break-before: page; }

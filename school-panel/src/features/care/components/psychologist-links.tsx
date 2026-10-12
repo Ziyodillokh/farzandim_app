@@ -13,12 +13,12 @@ function QuickLink({ href, icon, title, children }: { href: string; icon: ReactN
   return (
     <Link href={href} className="group block">
       <Card className="card-glow flex items-center gap-4 p-4">
-        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary [&_svg]:size-5">{icon}</span>
+        <span className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15 [&_svg]:size-5">{icon}</span>
         <div className="min-w-0 flex-1">
           <p className="font-semibold">{title}</p>
           <div className="mt-1 flex flex-wrap gap-1.5">{children}</div>
         </div>
-        <ArrowRight className="h-4 w-4 text-muted-foreground transition-transform group-hover:translate-x-0.5" />
+        <ArrowRight className="h-4 w-4 text-muted-foreground transition-all group-hover:translate-x-0.5 group-hover:text-primary" />
       </Card>
     </Link>
   );

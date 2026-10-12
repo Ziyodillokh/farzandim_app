@@ -10,16 +10,17 @@ import { Skeleton } from '@/components/ui/skeleton';
 import type { PaymentReminderEntry } from '@/data/contracts';
 import type { PaymentRow } from '@/data/mock/services/comms';
 import { useI18n } from '@/i18n';
+import { ICON_TONES } from '@/features/messages/styles';
 import { cn } from '@/lib/utils';
 import { usePaymentHistory } from '../hooks';
 
 const ACTION_STYLE: Record<PaymentReminderEntry['action'], { icon: LucideIcon; tone: string }> = {
-  CREATED: { icon: CalendarPlus, tone: 'bg-muted text-muted-foreground' },
-  SHIFTED: { icon: CalendarCog, tone: 'bg-primary/10 text-primary' },
-  PAUSED: { icon: CirclePause, tone: 'bg-warning/15 text-warning' },
-  RESUMED: { icon: CirclePlay, tone: 'bg-success/10 text-success' },
-  BULK_SHIFT: { icon: Layers, tone: 'bg-info/10 text-info' },
-  VERIFIED: { icon: ShieldCheck, tone: 'bg-success/10 text-success' },
+  CREATED: { icon: CalendarPlus, tone: ICON_TONES.muted },
+  SHIFTED: { icon: CalendarCog, tone: ICON_TONES.primary },
+  PAUSED: { icon: CirclePause, tone: ICON_TONES.warning },
+  RESUMED: { icon: CirclePlay, tone: ICON_TONES.success },
+  BULK_SHIFT: { icon: Layers, tone: ICON_TONES.sky },
+  VERIFIED: { icon: ShieldCheck, tone: ICON_TONES.cyan },
 };
 
 /** Oila eslatmasining o'zgarishlar tarixi (kim, qachon, nima uchun). */
@@ -29,7 +30,7 @@ export function PaymentHistorySheet({ payment, onOpenChange }: { payment: Paymen
 
   return (
     <Sheet open={Boolean(payment)} onOpenChange={onOpenChange}>
-      <SheetContent className="w-full overflow-y-auto sm:max-w-md">
+      <SheetContent className="w-[calc(100%-1rem)] overflow-y-auto sm:max-w-md">
         <SheetHeader>
           <SheetTitle className="pr-8">{t('reminders.payments.history.title')}</SheetTitle>
           <SheetDescription>{payment?.guardianName}</SheetDescription>
@@ -49,13 +50,15 @@ export function PaymentHistorySheet({ payment, onOpenChange }: { payment: Paymen
           {history.isLoading && Array.from({ length: 3 }).map((_, i) => <Skeleton key={i} className="mb-4 h-16 w-full rounded-xl" />)}
           {history.data?.length === 0 && <EmptyState title={t('reminders.payments.history.empty')} />}
           {history.data && history.data.length > 0 && (
-            <ol className="relative space-y-5 border-l border-border pl-6">
+            <ol className="relative space-y-5 border-l border-border/70 pl-6">
               {history.data.map((entry, i) => {
                 const { icon: Icon, tone } = ACTION_STYLE[entry.action];
                 return (
                   <li key={`${entry.at}-${i}`} className="relative animate-fade-in">
-                    <span className={cn('absolute -left-[37px] top-0 flex h-7 w-7 items-center justify-center rounded-full ring-4 ring-card', tone)}>
-                      <Icon className="h-3.5 w-3.5" />
+                    <span className="absolute -left-[37px] top-0 rounded-full bg-card">
+                      <span className={cn('flex h-7 w-7 items-center justify-center rounded-full', tone)}>
+                        <Icon className="h-3.5 w-3.5" />
+                      </span>
                     </span>
                     <p className="text-sm font-semibold">{t(`reminders.payments.history.actions.${entry.action}`)}</p>
                     <p className="mt-0.5 text-sm text-muted-foreground">{entry.note}</p>

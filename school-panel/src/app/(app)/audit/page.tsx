@@ -10,9 +10,10 @@ import { ErrorState } from '@/components/common/error-state';
 import { ExportMenu } from '@/components/common/export-menu';
 import { PageHeader } from '@/components/common/page-header';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { StaffAvatar } from '@/components/common/staff-avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { api } from '@/data/api';
 import type { AuditLog, AuditModule } from '@/data/contracts';
@@ -23,7 +24,6 @@ import { useI18n } from '@/i18n';
 import { enums } from '@/i18n/uz/enums';
 import { downloadCsv } from '@/lib/csv';
 import { errorKey } from '@/lib/errors';
-import { initials } from '@/lib/utils';
 
 const MODULES = Object.keys(enums.auditModule) as AuditModule[];
 /** Bola ovozi yozuvlari faqat `care.individual` huquqi bilan (servis ham yashiradi). */
@@ -51,7 +51,7 @@ export default function AuditPage() {
         className: 'whitespace-nowrap',
         cell: (r) => (
           <div>
-            <p className="font-medium tabular-nums">{formatDate(r.at, 'HH:mm')}</p>
+            <p className="font-display text-sm font-semibold tabular-nums">{formatDate(r.at, 'HH:mm')}</p>
             <p className="text-xs text-muted-foreground">{formatDate(r.at, 'd MMM yyyy')}</p>
           </div>
         ),
@@ -62,10 +62,8 @@ export default function AuditPage() {
         sortKey: 'actor',
         cell: (r) => (
           <div className="flex items-center gap-2.5">
-            <Avatar className="h-8 w-8">
-              <AvatarFallback className="bg-primary/10 text-2xs font-semibold text-primary">{initials(r.actorName)}</AvatarFallback>
-            </Avatar>
-            <span className="max-w-[180px] truncate">{r.actorName}</span>
+            <StaffAvatar staffId={r.actorId} name={r.actorName} size="sm" />
+            <span className="max-w-[180px] truncate font-medium">{r.actorName}</span>
           </div>
         ),
       },
@@ -76,11 +74,11 @@ export default function AuditPage() {
         cell: (r) => (
           <div className="min-w-0 max-w-xl">
             <p className="line-clamp-2">{r.summary}</p>
-            <code className="text-2xs text-muted-foreground">{r.action}</code>
+            <code className="font-mono text-2xs text-muted-foreground/80">{r.action}</code>
           </div>
         ),
       },
-      { key: 'open', header: '', className: 'w-10 text-muted-foreground', cell: () => <ChevronRight className="h-4 w-4" /> },
+      { key: 'open', header: '', className: 'w-10 text-muted-foreground/60', cell: () => <ChevronRight className="h-4 w-4" /> },
     ],
     [t, formatDate],
   );
@@ -149,9 +147,9 @@ export default function AuditPage() {
       </Toolbar>
 
       {log.isError ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <ErrorState error={log.error} onRetry={() => void log.refetch()} />
-        </div>
+        </Card>
       ) : (
         <DataTable
           columns={columns}

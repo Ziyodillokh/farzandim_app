@@ -1,6 +1,6 @@
 'use client';
 
-import { EyeOff } from 'lucide-react';
+import { ChartColumnBig, EyeOff } from 'lucide-react';
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, type LabelProps, ReferenceLine, ResponsiveContainer, Tooltip, XAxis, YAxis } from 'recharts';
 
 import { SectionCard } from '@/components/common/section-card';
@@ -44,7 +44,7 @@ function RowTooltip({ active, payload, hiddenText, respondentsLabel }: { active?
   const row = payload?.[0]?.payload;
   if (!active || !row) return null;
   return (
-    <div className="rounded-lg border bg-popover px-3 py-2 text-xs shadow-soft-lg">
+    <div className="glass-popover rounded-xl px-3 py-2 text-xs">
       <p className="font-semibold">{row.name}</p>
       {row.score === null ? (
         <p className="mt-0.5 text-muted-foreground">{hiddenText}</p>
@@ -87,6 +87,7 @@ export function BreakdownChart({
     <SectionCard
       title={t('care.overview.breakdownTitle')}
       description={t('care.overview.breakdownHint')}
+      icon={<ChartColumnBig />}
       actions={
         <>
           <Select value={breakdown} onValueChange={(v) => onBreakdownChange(v as CareBreakdown)}>
@@ -100,7 +101,7 @@ export function BreakdownChart({
             </SelectContent>
           </Select>
           <Select value={topic} onValueChange={(v) => onTopicChange(v as ChartTopic)}>
-            <SelectTrigger className="h-9 w-48" aria-label={t('care.overview.topic')}>
+            <SelectTrigger className="h-9 w-56" aria-label={t('care.overview.topic')}>
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -114,7 +115,7 @@ export function BreakdownChart({
       }
     >
       {loading && !aggregate ? (
-        <Skeleton className="h-72 w-full rounded-lg" />
+        <Skeleton className="h-72 w-full rounded-xl" />
       ) : (
         <div style={{ height }} className="animate-fade-in">
           <ResponsiveContainer width="100%" height="100%">
@@ -128,7 +129,7 @@ export function BreakdownChart({
               <CartesianGrid horizontal={false} stroke="hsl(var(--border))" strokeDasharray="3 3" />
               <XAxis type="number" domain={[0, 100]} ticks={[0, 25, 50, 75, 100]} tick={{ fontSize: 11, fill: 'hsl(var(--muted-foreground))' }} axisLine={false} tickLine={false} />
               <YAxis type="category" dataKey="name" width={AXIS_WIDTH[breakdown]} tick={{ fontSize: 12, fill: 'hsl(var(--foreground))' }} axisLine={false} tickLine={false} />
-              <Tooltip cursor={{ fill: 'hsl(var(--muted) / 0.5)' }} content={<RowTooltip hiddenText={hiddenText} respondentsLabel={t('care.overview.respondents')} />} />
+              <Tooltip cursor={{ fill: 'hsl(var(--primary) / 0.06)' }} content={<RowTooltip hiddenText={hiddenText} respondentsLabel={t('care.overview.respondents')} />} />
               {reference !== null && (
                 <ReferenceLine x={reference} stroke="hsl(var(--muted-foreground))" strokeDasharray="4 4" ifOverflow="extendDomain" />
               )}

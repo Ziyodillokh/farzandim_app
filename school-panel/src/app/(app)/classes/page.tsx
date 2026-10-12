@@ -10,8 +10,8 @@ import { EmptyState } from '@/components/common/empty-state';
 import { ErrorState } from '@/components/common/error-state';
 import { PageHeader } from '@/components/common/page-header';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import type { ClassRow } from '@/data/mock/services/classes';
 import { ClassCard } from '@/features/classes/components/class-card';
@@ -89,30 +89,34 @@ export default function ClassesPage() {
       </Toolbar>
 
       {classes.isError ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <ErrorState error={classes.error} onRetry={() => void classes.refetch()} />
-        </div>
+        </Card>
       ) : classes.isLoading ? (
         <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
           {Array.from({ length: SKELETON_CARDS }).map((_, i) => (
-            <Skeleton key={i} className="h-[268px] rounded-xl" />
+            <Skeleton key={i} className="h-[268px] rounded-2xl" />
           ))}
         </div>
       ) : groups.length === 0 ? (
-        <div className="rounded-xl border bg-card">
+        <Card>
           <EmptyState icon={<GraduationCap />} title={t('classes.empty')} description={t('classes.emptyHint')} />
-        </div>
+        </Card>
       ) : (
         <div className="space-y-8">
           {groups.map(({ shift, rows: shiftRows }) => (
             <section key={shift.id} className="animate-fade-in">
-              <div className="mb-3 flex flex-wrap items-center gap-2.5">
-                <h2 className="font-display text-lg font-semibold tracking-tight">{shift.name}</h2>
-                <Badge variant="outline" className="gap-1.5 font-medium text-muted-foreground">
-                  <Clock3 className="h-3 w-3" />
-                  {t('classes.shiftGroup', { start: shift.start, end: shift.end })}
-                </Badge>
-                <span className="text-sm text-muted-foreground">{tc('common.classesCount', shiftRows.length)}</span>
+              <div className="mb-4 flex flex-wrap items-center gap-3">
+                <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary ring-1 ring-inset ring-primary/15">
+                  <Clock3 className="h-[18px] w-[18px]" />
+                </span>
+                <div className="min-w-0">
+                  <h2 className="font-display text-lg font-semibold leading-tight tracking-[-0.01em]">{shift.name}</h2>
+                  <p className="text-xs tabular-nums text-muted-foreground">
+                    {t('classes.shiftGroup', { start: shift.start, end: shift.end })} · {tc('common.classesCount', shiftRows.length)}
+                  </p>
+                </div>
+                <span aria-hidden className="ml-2 hidden h-px flex-1 bg-gradient-to-r from-border to-transparent sm:block" />
               </div>
               <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
                 {shiftRows.map((row) => (

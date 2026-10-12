@@ -1,6 +1,6 @@
 'use client';
 
-import { ImageUp, Trash2 } from 'lucide-react';
+import { ImageIcon, ImageUp, Trash2 } from 'lucide-react';
 import { useRef, useState, type ChangeEvent } from 'react';
 import { toast } from 'sonner';
 
@@ -68,10 +68,10 @@ export function LogoCard({ school }: { school: School }) {
   const busy = processing || setLogo.isPending;
 
   return (
-    <SectionCard title={t('settings.logo.title')} description={t('settings.logo.description')}>
+    <SectionCard icon={<ImageIcon />} title={t('settings.logo.title')} description={t('settings.logo.description')}>
       <div className="flex flex-col items-center gap-4 text-center">
-        <div className="flex h-32 w-32 items-center justify-center rounded-2xl border border-dashed bg-muted/40 p-3">
-          <SchoolLogo school={school} className="h-24 w-24 rounded-2xl text-xl" />
+        <div className="relative flex h-36 w-36 items-center justify-center rounded-3xl border border-dashed border-primary/30 bg-[radial-gradient(circle_at_50%_0%,hsl(var(--primary)/0.12),transparent_70%)] p-3 dark:border-primary/25">
+          <SchoolLogo school={school} className="h-24 w-24 rounded-2xl text-xl shadow-glass" />
         </div>
         {!school.logo && <p className="max-w-xs text-xs text-muted-foreground">{t('settings.logo.placeholder')}</p>}
         <input ref={inputRef} type="file" accept={ACCEPTED.join(',')} className="sr-only" onChange={(e) => void onFile(e)} tabIndex={-1} aria-hidden />

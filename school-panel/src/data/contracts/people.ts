@@ -42,4 +42,8 @@ export type Staff = {
   classIds: Id[];
   username: string | null; // demo hisob bo'lsa
   active: boolean;
+  /** Yuklangan rasm (data URL; haqiqiy backend'da — URL). Bo'lmasa portret ko'rsatiladi. */
+  photo?: string | null;
+  /** Chizilgan portret kaliti (`f-07`, `m-03`) — `public/avatars/`. */
+  portrait?: string;
 };

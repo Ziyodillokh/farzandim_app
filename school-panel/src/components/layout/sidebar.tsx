@@ -13,8 +13,8 @@ import { useI18n } from '@/i18n';
 import { normalizePath } from '@/lib/base-path';
 import { cn } from '@/lib/utils';
 import { buildNav, type NavNode } from './nav-items';
-import { ParvozLogo } from './parvoz-logo';
-import { UserCard } from './user-card';
+import { ParvozWordmark } from './parvoz-wordmark';
+import { UserMenu } from './user-menu';
 
 function isActive(pathname: string, href: string): boolean {
   return pathname === href || pathname.startsWith(`${href}/`);
@@ -29,9 +29,12 @@ function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: stri
 
   const itemClass = (on: boolean) =>
     cn(
-      'group relative flex h-10 w-full items-center gap-3 rounded-lg px-3 text-[0.9rem] font-medium transition-colors',
-      on ? 'bg-sidebar-accent text-white' : 'text-sidebar-muted hover:bg-white/[0.04] hover:text-sidebar-foreground',
+      'group relative flex h-10 w-full items-center gap-3 rounded-xl px-3 text-[0.88rem] font-medium transition-all',
+      on
+        ? 'bg-gradient-to-r from-primary/35 to-primary/[0.06] text-white shadow-[0_8px_20px_-12px_hsl(var(--primary)/0.9)] ring-1 ring-inset ring-white/[0.08] [&>svg:first-of-type]:text-brand-300'
+        : 'text-sidebar-muted hover:bg-white/[0.05] hover:text-white',
     );
+  const edge = <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-brand-400 shadow-[0_0_12px_rgba(80,138,255,0.9)]" />;
 
   if (node.external) {
     return (
@@ -46,7 +49,7 @@ function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: stri
   if (!hasChildren) {
     return (
       <Link href={node.path} onClick={onNavigate} className={itemClass(active)}>
-        {active && <span className="absolute left-0 top-2 h-6 w-1 rounded-r-full bg-primary" />}
+        {active && edge}
         <Icon className="h-[18px] w-[18px] shrink-0" />
         <span className="truncate">{t(node.titleKey)}</span>
       </Link>
@@ -56,13 +59,13 @@ function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: stri
   return (
     <div>
       <button type="button" onClick={() => setOpen((o) => !o)} className={itemClass(active && !open)}>
-        {active && <span className="absolute left-0 top-2 h-6 w-1 rounded-r-full bg-primary" />}
-        <Icon className="h-[18px] w-[18px] shrink-0" />
-        <span className="truncate">{t(node.titleKey)}</span>
+        {active && !open && edge}
+        <Icon className={cn('h-[18px] w-[18px] shrink-0', active && 'text-brand-300')} />
+        <span className={cn('truncate', active && 'text-white')}>{t(node.titleKey)}</span>
         <ChevronDown className={cn('ml-auto h-4 w-4 transition-transform', open && 'rotate-180')} />
       </button>
       {open && (
-        <div className="ml-[1.35rem] mt-0.5 space-y-0.5 border-l border-sidebar-border pl-3">
+        <div className="ml-[1.35rem] mt-1 space-y-0.5 border-l border-white/[0.08] pl-3">
           {node.children.map((child) => {
             const on = pathname === child.path;
             return (
@@ -71,8 +74,10 @@ function NavLink({ node, pathname, onNavigate }: { node: NavNode; pathname: stri
                 href={child.path}
                 onClick={onNavigate}
                 className={cn(
-                  'flex h-9 items-center rounded-md px-2.5 text-[0.85rem] transition-colors',
-                  on ? 'bg-sidebar-accent font-semibold text-white' : 'text-sidebar-muted hover:text-sidebar-foreground',
+                  'relative flex h-9 items-center rounded-lg px-2.5 text-[0.84rem] transition-colors',
+                  on
+                    ? 'bg-white/[0.07] font-semibold text-white before:absolute before:-left-[13px] before:top-1/2 before:h-4 before:w-[2px] before:-translate-y-1/2 before:rounded-full before:bg-brand-400'
+                    : 'text-sidebar-muted hover:bg-white/[0.04] hover:text-white',
                 )}
               >
                 {t(child.titleKey)}
@@ -92,24 +97,27 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
   const pathname = normalizePath(usePathname());
   const { data } = useSchool();
   const sections = buildNav(can);
+  const school = data?.school;
 
   return (
-    <div className="flex h-full flex-col bg-sidebar text-sidebar-foreground">
-      <Link href="/dashboard" onClick={onNavigate} className="flex items-center gap-3 px-5 pb-4 pt-5">
-        <SchoolLogo school={data?.school} className="h-11 w-11" />
+    <div className="flex h-full flex-col text-sidebar-foreground">
+      <Link href="/dashboard" onClick={onNavigate} className="flex items-center px-5 pb-4 pt-5" aria-label="Parvoz School">
+        <ParvozWordmark size="md" sub="School" tone="onDark" />
+      </Link>
+      <div className="mx-3 flex items-center gap-3 rounded-2xl bg-white/[0.04] p-2.5 ring-1 ring-inset ring-white/[0.07]">
+        <SchoolLogo school={school} className="h-10 w-10 shrink-0" />
         <div className="min-w-0 leading-tight">
-          <p className="truncate text-[0.95rem] font-semibold text-white">{data?.school.name ?? '…'}</p>
-          <p className="mt-0.5 flex items-center gap-1.5 text-xs text-sidebar-muted">
-            <ParvozLogo className="h-3.5 w-3.5 rounded" />
-            Parvoz School
+          <p className="truncate text-[0.85rem] font-semibold text-white">{school?.name ?? '…'}</p>
+          <p className="mt-0.5 truncate text-[0.72rem] text-sidebar-muted">
+            {school ? `${school.city} · ${school.academicYear}` : t('shell.schoolChip')}
           </p>
         </div>
-      </Link>
-      <ScrollArea className="flex-1 px-3">
+      </div>
+      <ScrollArea className="mt-3 flex-1 px-3">
         <nav className="flex flex-col gap-5 py-2" aria-label="main">
           {sections.map((section) => (
             <div key={section.group} className="flex flex-col gap-0.5">
-              <p className="mb-1 px-3 text-2xs font-semibold uppercase tracking-[0.14em] text-sidebar-muted/70">
+              <p className="mb-1 px-3 text-[0.66rem] font-semibold uppercase tracking-[0.16em] text-sidebar-muted/75">
                 {t(`nav.groups.${section.group}`)}
               </p>
               {section.items.map((node) => (
@@ -119,15 +127,18 @@ export function SidebarContent({ onNavigate }: { onNavigate?: () => void }) {
           ))}
         </nav>
       </ScrollArea>
-      {session && <UserCard />}
+      {session && <UserMenu variant="sidebar" />}
     </div>
   );
 }
 
+/** Suzuvchi to'q ko'k shisha panel. Sahifadagi yagona `<aside>`. */
 export function Sidebar() {
   return (
-    <aside className="sticky top-0 hidden h-screen w-[272px] shrink-0 border-r border-sidebar-border lg:block no-print">
-      <SidebarContent />
+    <aside className="sticky top-0 hidden h-screen w-[284px] shrink-0 p-3 pr-0 lg:block no-print">
+      <div className="glass-nav h-full overflow-hidden rounded-[22px]">
+        <SidebarContent />
+      </div>
     </aside>
   );
 }

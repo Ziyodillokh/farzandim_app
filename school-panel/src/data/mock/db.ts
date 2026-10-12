@@ -1,3 +1,4 @@
+import { assignAllPortraits } from '@/lib/staff-avatar';
 import { PREF_PREFIX } from '@/lib/prefs';
 import { generateSeed } from './seed';
 import type { DbSnapshot, Tables } from './tables';
@@ -32,10 +33,16 @@ function readStored(): DbSnapshot | null {
     const raw = window.localStorage.getItem(STORAGE_KEY);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as DbSnapshot;
-    return parsed.schemaVersion === SCHEMA_VERSION ? parsed : null;
+    return parsed.schemaVersion === SCHEMA_VERSION ? withPortraits(parsed) : null;
   } catch {
     return null;
   }
+}
+
+/** Yumshoq migratsiya: portretlar qo'shilishidan oldingi saqlangan bazaga portret beriladi. */
+function withPortraits(db: DbSnapshot): DbSnapshot {
+  if (db.tables.staff.every((s) => s.portrait)) return db;
+  return { ...db, tables: { ...db.tables, staff: assignAllPortraits(db.tables.staff) } };
 }
 
 function persist(next: DbSnapshot): void {

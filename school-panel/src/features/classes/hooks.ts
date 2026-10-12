@@ -58,6 +58,16 @@ export function useTodayBoard(enabled: boolean) {
   return useQuery({ queryKey: classKeys.board, queryFn: () => api.attendance.board(), enabled, refetchInterval: BOARD_REFRESH_MS });
 }
 
+/** Sinf rahbari ID'si (portret uchun) — sinflar ro'yxati keshidan. */
+export function useHomeroomOf(classId: string | null, enabled: boolean) {
+  return useQuery({
+    queryKey: classKeys.list({}),
+    queryFn: () => api.classes.list({}),
+    enabled: enabled && Boolean(classId),
+    select: (rows: Awaited<ReturnType<typeof api.classes.list>>) => rows.find((r) => r.id === classId)?.homeroomStaffId ?? null,
+  });
+}
+
 export function useHomeroomOptions(enabled = true) {
   return useQuery({ queryKey: classKeys.homerooms, queryFn: () => api.staff.options('HOMEROOM'), enabled, staleTime: 60_000 });
 }

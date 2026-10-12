@@ -106,8 +106,8 @@ export default function PaymentsPage() {
       </div>
 
       <Toolbar className="justify-between">
-        <Tabs value={filter.filter ?? 'ALL'} onValueChange={(v) => update({ filter: v as PaymentFilterKind })}>
-          <TabsList className="h-auto flex-wrap">
+        <Tabs className="w-full min-w-0 overflow-x-auto sm:w-auto" value={filter.filter ?? 'ALL'} onValueChange={(v) => update({ filter: v as PaymentFilterKind })}>
+          <TabsList className="w-max">
             {FILTERS.map((f) => (
               <TabsTrigger key={f} value={f}>
                 {t(`reminders.payments.filters.${f}`)}
@@ -119,7 +119,7 @@ export default function PaymentsPage() {
       </Toolbar>
 
       {selected.size > 0 && (
-        <div className="sticky top-20 z-20 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-primary/30 bg-card/95 px-4 py-3 shadow-soft-lg backdrop-blur animate-fade-in">
+        <div className="sticky top-24 z-20 mb-4 flex flex-wrap items-center justify-between gap-3 rounded-2xl border border-primary/30 bg-card/95 px-4 py-3 shadow-glass-lg animate-fade-in">
           <p className="text-sm font-semibold">{t('reminders.payments.selected', { count: formatNumber(selected.size) })}</p>
           <div className="flex gap-2">
             <Button variant="ghost" size="sm" onClick={() => setSelected(new Map())}>

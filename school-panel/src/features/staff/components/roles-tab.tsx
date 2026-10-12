@@ -3,21 +3,26 @@
 import { Check, Info, Minus, ShieldCheck } from 'lucide-react';
 import { Fragment, useMemo } from 'react';
 
-import { PERMISSIONS, type Permission, type RoleDefinition } from '@/auth/permissions';
+import { PERMISSIONS, type Permission } from '@/auth/permissions';
 import { ErrorState } from '@/components/common/error-state';
 import { SectionCard } from '@/components/common/section-card';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import type { RoleKey } from '@/data/contracts';
+import type { StaffRow } from '@/data/mock/services/staff';
+import { INNER_TILE } from '@/features/classes/styles';
 import { useI18n } from '@/i18n';
 import type { staff as staffDict } from '@/i18n/uz/staff';
 import { cn } from '@/lib/utils';
-import { useRoles, useStaffSummary } from '../hooks';
-import { ROLE_VARIANT } from './use-staff-columns';
+import { useRoles, useStaffList } from '../hooks';
+import { RoleCard } from './role-card';
+import { ROLE_DOT } from './role-badge';
 
 type ModuleKey = keyof typeof staffDict.modules;
 type Group = { module: ModuleKey; permissions: Permission[] };
+
+const PEOPLE_LIMIT = 200;
 
 function moduleOf(permission: Permission): ModuleKey {
   return permission.split('.')[0] as ModuleKey;
@@ -35,31 +40,12 @@ function groupPermissions(): Group[] {
   return groups;
 }
 
-function RoleCard({ role, staffCount }: { role: RoleDefinition; staffCount: number | undefined }) {
-  const { t } = useI18n();
-  return (
-    <Card className="card-glow flex flex-col p-5 animate-slide-up">
-      <div className="flex items-start justify-between gap-2">
-        <Badge variant={ROLE_VARIANT[role.key]} className="text-sm">
-          {t(`enums.role.${role.key}`)}
-        </Badge>
-        <span className="text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{t(`staff.roles.scope.${role.scope}`)}</span>
-      </div>
-      <p className="mt-3 flex-1 text-sm leading-relaxed text-muted-foreground">{t(`staff.roles.desc.${role.key}`)}</p>
-      <div className="mt-4 flex items-center justify-between border-t pt-3 text-xs">
-        <span className="font-semibold">{t('staff.roles.permCount', { count: role.permissions.length })}</span>
-        {staffCount !== undefined && <span className="text-muted-foreground">{t('staff.roles.staffCount', { count: staffCount })}</span>}
-      </div>
-    </Card>
-  );
-}
-
 function Mark({ granted, label }: { granted: boolean; label: string }) {
   return (
     <span
       className={cn(
         'mx-auto flex h-6 w-6 items-center justify-center rounded-full',
-        granted ? 'bg-success/15 text-success' : 'text-muted-foreground/40',
+        granted ? 'bg-primary/10 text-primary ring-1 ring-inset ring-primary/20' : 'text-muted-foreground/35',
       )}
       title={label}
       aria-label={label}
@@ -73,41 +59,46 @@ function Mark({ granted, label }: { granted: boolean; label: string }) {
 export function RolesTab() {
   const { t } = useI18n();
   const roles = useRoles();
-  const summary = useStaffSummary();
+  const staff = useStaffList({ limit: PEOPLE_LIMIT, active: true, sortBy: 'name', sortDir: 'asc' });
   const groups = useMemo(groupPermissions, []);
+  const byRole = useMemo(() => {
+    const map = new Map<RoleKey, StaffRow[]>();
+    for (const s of staff.data?.items ?? []) map.set(s.role, [...(map.get(s.role) ?? []), s]);
+    return map;
+  }, [staff.data]);
 
-  if (roles.isError) return <ErrorState error={roles.error} onRetry={() => void roles.refetch()} />;
-  if (!roles.data) return <Skeleton className="h-[480px] rounded-xl" />;
+  if (roles.isError) {
+    return (
+      <Card>
+        <ErrorState error={roles.error} onRetry={() => void roles.refetch()} />
+      </Card>
+    );
+  }
+  if (!roles.data) return <Skeleton className="h-[480px] rounded-2xl" />;
 
   const list = roles.data;
   return (
     <div className="space-y-6">
-      <p className="flex items-start gap-2 rounded-xl border border-primary/20 bg-primary/5 px-4 py-3 text-sm text-muted-foreground">
+      <p className={cn('flex items-start gap-2.5 px-4 py-3 text-sm text-muted-foreground', INNER_TILE)}>
         <Info className="mt-0.5 h-4 w-4 shrink-0 text-primary" />
         {t('staff.roles.intro')}
       </p>
       <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
         {list.map((role) => (
-          <RoleCard key={role.key} role={role} staffCount={summary.data?.byRole[role.key]} />
+          <RoleCard key={role.key} role={role} people={staff.data ? (byRole.get(role.key) ?? []) : undefined} />
         ))}
       </div>
-      <SectionCard
-        title={
-          <span className="flex items-center gap-2">
-            <ShieldCheck className="h-4 w-4 text-primary" />
-            {t('staff.roles.matrixTitle')}
-          </span>
-        }
-        description={t('staff.roles.matrixHint')}
-        bodyClassName="p-0"
-      >
+      <SectionCard icon={<ShieldCheck />} title={t('staff.roles.matrixTitle')} description={t('staff.roles.matrixHint')} bodyClassName="p-0">
         <Table>
-          <TableHeader className="sticky top-0 z-10">
+          <TableHeader>
             <TableRow className="hover:bg-transparent">
               <TableHead className="min-w-[240px]">{t('staff.roles.permission')}</TableHead>
               {list.map((role) => (
                 <TableHead key={role.key} className="text-center">
-                  {t(`enums.role.${role.key}`)}
+                  <span className="inline-flex items-center gap-1.5">
+                    <span className={cn('h-1.5 w-1.5 rounded-full', ROLE_DOT[role.key])} aria-hidden />
+                    {t(`enums.role.${role.key}`)}
+                  </span>
                 </TableHead>
               ))}
             </TableRow>
@@ -115,8 +106,8 @@ export function RolesTab() {
           <TableBody>
             {groups.map((group) => (
               <Fragment key={group.module}>
-                <TableRow className="bg-muted/30 hover:bg-muted/30">
-                  <TableCell colSpan={list.length + 1} className="py-2 text-2xs font-semibold uppercase tracking-wider text-primary">
+                <TableRow className="bg-primary/[0.035] hover:bg-primary/[0.035] dark:bg-white/[0.02] dark:hover:bg-white/[0.02]">
+                  <TableCell colSpan={list.length + 1} className="py-2 text-2xs font-semibold uppercase tracking-[0.1em] text-primary">
                     {t(`staff.modules.${group.module}`)}
                   </TableCell>
                 </TableRow>

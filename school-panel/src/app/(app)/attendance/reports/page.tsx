@@ -1,6 +1,6 @@
 'use client';
 
-import { CalendarX2 } from 'lucide-react';
+import { BarChart3, CalendarX2, Grid3x3 } from 'lucide-react';
 import { useMemo, useState } from 'react';
 
 import { EmptyState } from '@/components/common/empty-state';
@@ -79,26 +79,27 @@ export default function AttendanceReportsPage() {
         <div className="space-y-6">
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
             {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 rounded-xl" />
+              <Skeleton key={i} className="h-24 rounded-2xl" />
             ))}
           </div>
-          <Skeleton className="h-96 rounded-xl" />
+          <Skeleton className="h-96 rounded-2xl" />
         </div>
       ) : data.days.length === 0 ? (
         <EmptyState icon={<CalendarX2 />} title={t('attendance.reports.noDays')} description={t('attendance.reports.noDaysHint')} />
       ) : (
         <div className={report.isFetching ? 'opacity-70 transition-opacity' : 'transition-opacity'}>
           <ReportKpis totals={totals} days={data.days.length} />
-          <SectionCard title={t('attendance.reports.chartTitle')} description={t('attendance.reports.chartHint')} className="mb-6 no-print">
+          <SectionCard icon={<BarChart3 />} title={t('attendance.reports.chartTitle')} description={t('attendance.reports.chartHint')} className="mb-6 no-print">
             <DailyRateChart report={data} />
           </SectionCard>
           <SectionCard
+            icon={<Grid3x3 />}
             title={`${t('attendance.reports.matrixTitle')} · ${data.className}`}
             description={<span className="capitalize">{monthLabel}</span>}
             bodyClassName="p-0"
           >
             <MonthMatrix report={data} />
-            <div className="border-t px-4 py-3">
+            <div className="border-t border-border/50 px-4 py-3 dark:border-white/[0.06]">
               <MatrixLegend />
             </div>
           </SectionCard>

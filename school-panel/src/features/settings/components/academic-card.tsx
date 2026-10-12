@@ -1,7 +1,7 @@
 'use client';
 
 import { differenceInCalendarDays } from 'date-fns';
-import { Clock3 } from 'lucide-react';
+import { CalendarRange, Clock3 } from 'lucide-react';
 
 import { SectionCard } from '@/components/common/section-card';
 import { Badge } from '@/components/ui/badge';
@@ -10,6 +10,7 @@ import { fromIsoDate, toIsoDate } from '@/data/mock/calendar';
 import { useClockNow } from '@/features/engine/use-clock';
 import { useI18n } from '@/i18n';
 import { cn } from '@/lib/utils';
+import { ORB, TILE } from '../styles';
 
 const CLOCK_TICK_MS = 60_000;
 
@@ -19,15 +20,19 @@ export function AcademicCard({ school, shifts }: { school: School; shifts: Shift
 
   return (
     <SectionCard
+      icon={<CalendarRange />}
       title={t('settings.academic.title')}
       description={t('settings.academic.description')}
       actions={<Badge variant="default">{t('settings.academic.year', { year: school.academicYear })}</Badge>}
     >
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+      <div className="grid grid-cols-2 gap-3 xl:grid-cols-4">
         {school.quarters.map((q) => {
           const current = today >= q.start && today <= q.end;
           return (
-            <div key={q.no} className={cn('rounded-xl border p-4 transition-colors', current && 'border-primary/50 bg-primary/5 shadow-primary-glow')}>
+            <div
+              key={q.no}
+              className={cn('p-4 transition-colors', TILE, current && 'bg-primary/[0.06] ring-primary/35 dark:bg-primary/[0.1]')}
+            >
               <div className="flex items-center justify-between gap-2">
                 <p className="font-display text-sm font-semibold">{t('settings.academic.quarter', { no: q.no })}</p>
                 {current && <Badge size="sm">{t('settings.academic.current')}</Badge>}
@@ -46,8 +51,8 @@ export function AcademicCard({ school, shifts }: { school: School; shifts: Shift
       <p className="mb-2 mt-6 text-2xs font-semibold uppercase tracking-wide text-muted-foreground">{t('settings.academic.shifts')}</p>
       <div className="grid gap-3 sm:grid-cols-2">
         {shifts.map((s) => (
-          <div key={s.id} className="flex items-center gap-3 rounded-xl border p-4">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-primary/10 text-primary">
+          <div key={s.id} className={cn('flex items-center gap-3 p-4', TILE)}>
+            <div className={cn('h-10 w-10', ORB)}>
               <Clock3 className="h-5 w-5" />
             </div>
             <div className="min-w-0">

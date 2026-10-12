@@ -1,6 +1,6 @@
 'use client';
 
-import { FileUp, Plus, UserCheck, Users, UsersRound } from 'lucide-react';
+import { FileUp, PhoneOff, Plus, UserCheck, Users } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { useMemo, useState } from 'react';
 
@@ -12,7 +12,6 @@ import { PageHeader } from '@/components/common/page-header';
 import { StatCard } from '@/components/common/stat-card';
 import { AttendanceBadge, LinkBadge } from '@/components/common/status-badges';
 import { FilterSelect, SearchInput, Toolbar } from '@/components/common/toolbar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { api } from '@/data/api';
@@ -20,11 +19,11 @@ import type { DeviceOs, ParentLinkStatus } from '@/data/contracts';
 import type { StudentFilter, StudentRow } from '@/data/mock/services/students';
 import { DeviceIcon } from '@/features/students/components/device-icon';
 import { ImportDialog } from '@/features/students/components/import-dialog';
+import { StudentAvatar } from '@/features/students/components/student-avatar';
 import { StudentFormDialog } from '@/features/students/components/student-form-dialog';
 import { useClassOptions, useStudents } from '@/features/students/hooks';
 import { useI18n } from '@/i18n';
 import { downloadCsv } from '@/lib/csv';
-import { initials } from '@/lib/utils';
 
 export default function StudentsPage() {
   const { t, formatDate, formatNumber } = useI18n();
@@ -51,18 +50,20 @@ export default function StudentsPage() {
         sortKey: 'name',
         cell: (r) => (
           <div className="flex items-center gap-3">
-            <Avatar className="h-9 w-9">
-              <AvatarFallback className={r.gender === 'FEMALE' ? 'bg-pink-500/10 text-xs font-semibold text-pink-600' : 'bg-primary/10 text-xs font-semibold text-primary'}>
-                {initials(`${r.lastName} ${r.firstName}`)}
-              </AvatarFallback>
-            </Avatar>
+            <StudentAvatar name={`${r.lastName} ${r.firstName}`} gender={r.gender} />
             <div className="min-w-0">
-              <p className="truncate font-medium">
-                {r.lastName} {r.firstName}
-                {r.archived && <Badge variant="secondary" size="sm" className="ml-2">{t('students.archivedBadge')}</Badge>}
-              </p>
+              <div className="flex min-w-0 items-center gap-2">
+                <span className="truncate font-medium">
+                  {r.lastName} {r.firstName}
+                </span>
+                {r.archived && (
+                  <Badge variant="secondary" size="sm">
+                    {t('students.archivedBadge')}
+                  </Badge>
+                )}
+              </div>
               <p className="truncate text-xs text-muted-foreground">
-                {r.middleName} · {r.studentCode}
+                {r.middleName} · <span className="font-mono">{r.studentCode}</span>
               </p>
             </div>
           </div>
@@ -134,7 +135,7 @@ export default function StudentsPage() {
           loading={linked.isLoading}
         />
         <StatCard
-          icon={<UsersRound />}
+          icon={<PhoneOff />}
           tone="muted"
           label={t('students.stats.noPhone')}
           value={formatNumber(noPhone.data?.pagination.total ?? 0)}

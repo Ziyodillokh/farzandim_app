@@ -1,6 +1,7 @@
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
+import { Building2 } from 'lucide-react';
 import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 
@@ -40,7 +41,7 @@ export function ProfileCard({ school }: { school: School }) {
   });
 
   return (
-    <SectionCard title={t('settings.profile.title')} description={t('settings.profile.description')}>
+    <SectionCard icon={<Building2 />} title={t('settings.profile.title')} description={t('settings.profile.description')}>
       <form onSubmit={submit} className="grid gap-4" noValidate>
         <div className="grid gap-4 sm:grid-cols-[1fr_180px]">
           <FormField label={t('settings.profile.name')} htmlFor="school-name" error={errors.name}>
@@ -79,7 +80,7 @@ export function ProfileCard({ school }: { school: School }) {
             </div>
           </FormField>
         </div>
-        <div className="flex justify-end gap-2 border-t pt-4">
+        <div className="flex justify-end gap-2 border-t border-border/50 pt-4 dark:border-white/[0.06]">
           <Button type="button" variant="ghost" disabled={!isDirty || save.isPending} onClick={() => form.reset(toValues(school))}>
             {t('settings.profile.reset')}
           </Button>
